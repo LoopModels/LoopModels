@@ -25,6 +25,7 @@ TEST(PermTest, BasicAssertions)
                     for (Int i_4 = 0; i_4 < 1; i_4++) {
                         advance_state(PermutationLevelIterator(p,4,0), i_4);
                         for (Int j = 0; j < numloop; j++) tperm[j] = p(j, 0);
+
                         std::vector<Int> perm = tperm;
                         std::sort(tperm.begin(), tperm.end());
                         for (Int j = 0; j < numloop; j++) EXPECT_EQ(tperm[j], j);
@@ -34,7 +35,6 @@ TEST(PermTest, BasicAssertions)
             }
         }
     }
-    
+
     s.clear();
-    std::printf("Hi\n");
 }

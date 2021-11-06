@@ -113,9 +113,9 @@ struct PermutationLevelIterator
     Int level;
     Int offset;
 
-    PermutationLevelIterator(Permutation permobj, Int level, Int num_interior) : permobj(permobj) {
+    PermutationLevelIterator(Permutation permobj, Int lv, Int num_interior) : permobj(permobj) {
         Int nloops = getNLoops(permobj);
-        level = nloops - num_interior - level;
+        level = nloops - num_interior - lv;
         offset = nloops - num_interior;
     };
 };
