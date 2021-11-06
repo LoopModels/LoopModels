@@ -13,8 +13,7 @@ template <class T, size_t M, size_t N> struct Matrix {
     T *ptr;
     const std::array<size_t, D> dims;
 
-    Matrix(T *ptr, const std::array<size_t, D> dims)
-        : ptr(ptr), dims(dims){};
+    Matrix(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
 
     size_t getSize(size_t i) {
         if (i == 0) {
@@ -122,16 +121,20 @@ PermutationSubset initialize_state(PermutationLevelIterator p) {
                              .num_interior = num_interior};
 }
 
-PermutationSubset advance_state(PermutationLevelIterator p, Int i) {
+std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
+                                                 Int i) {
     if (i == 0) {
-        return initialize_state(p);
+        auto ps = initialize_state(p);
+        return std::make_pair(ps, (i+1) < p.level);
+    } else {
+        Int k = p.offset - (((p.level & 1) != 0) ? 1 : i);
+        swap(p.permobj, p.offset - p.level, k);
+        Int num_interior = getNLoops(p.permobj) - p.offset;
+        auto ps = PermutationSubset{.p = p.permobj,
+                                    .subset_size = p.offset - p.level,
+                                    .num_interior = num_interior};
+        return std::make_pair(ps, (i + 1) < p.level);
     }
-    Int k = p.offset - (((p.level & 1) != 0) ? 1 : i);
-    swap(p.permobj, p.offset - p.level, k);
-    Int num_interior = getNLoops(p.permobj) - p.offset;
-    return PermutationSubset{.p = p.permobj,
-                             .subset_size = p.offset - p.level,
-                             .num_interior = num_interior};
 }
 
 // bool compatible(RectangularLoopNest l1, RectangularLoopNest l2, Permutation
