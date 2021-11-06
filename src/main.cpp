@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <array>
 #include <fmt/format.h>
-#include "../include/matrix.hpp"
+#include "../include/math.hpp"
 
 int main() {
     const std::array<size_t, 2> dims{ {2, 2} };
