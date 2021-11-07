@@ -17,7 +17,7 @@ int main() {
     }
     fmt::print("dims: {}, {}\n",  M.dims[0], M.dims[1]);
     fmt::print("A[0, 1]: {}\n",  M(0, 1));
-    M.show();
+    show(M);
     // delete[] f;
     return 0;
 }

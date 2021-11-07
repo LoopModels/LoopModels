@@ -1,15 +1,16 @@
+// We'll follow Julia style, so anything that's not a constructor, destructor,
+// nor an operator will be outside of the struct/class.
 #include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <cstdint>
 
-
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef int32_t Int;
 
-template <class T, size_t M> struct Vector {
+template <typename T, size_t M> struct Vector {
     static constexpr size_t D = !M;
 
     T* ptr;
@@ -17,19 +18,21 @@ template <class T, size_t M> struct Vector {
 
     Vector(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims) {};
 
-    size_t getSize() {return (M == 0) ? dims[0] : M;}
-
     T &operator()(size_t i) { return ptr[i]; }
-
-    void show() {
-        for (size_t i = 0; i < getSize(); i++) {
-            std::printf("%17d", (*this)(i));
-        }
-        std::printf("\n");
-    }
 };
 
-template <class T, size_t M, size_t N> struct Matrix {
+template <typename T, size_t M>
+size_t length(Vector<T, M> v) {return (M == 0) ? v.dims[0] : M;}
+
+template <typename T, size_t M>
+void show(Vector<T, M> v) {
+    for (size_t i = 0; i < length(v); i++) {
+        std::printf("%17d", v(i));
+    }
+    std::printf("\n");
+}
+
+template <typename T, size_t M, size_t N> struct Matrix {
     static constexpr size_t D = (!M + !N);
 
     T *ptr;
@@ -37,74 +40,86 @@ template <class T, size_t M, size_t N> struct Matrix {
 
     Matrix(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
 
-    size_t getSize(size_t i) {
-        if (i == 0) {
-            return (M != 0) ? M : dims[0];
-        } else {
-            return (N != 0) ? N : dims[D - 1];
-        }
-    }
-
-    T &operator()(size_t i, size_t j) { return ptr[i + j * getSize(0)]; }
-
-    void show() {
-        for (size_t i = 0; i < getSize(0); i++) {
-            for (size_t j = 0; j < getSize(1); j++) {
-                std::printf("%17d", (*this)(i, j));
-            }
-            std::printf("\n");
-        }
-    }
-
-    Vector<T, M> getCol(size_t i) {
-        if (M == 0) {
-            return Vector<T, M>(ptr + i * getSize(0), std::array<size_t, 1>{{getSize(0)}});
-        } else {
-            return Vector<T, M>(ptr + i * getSize(0), std::array<size_t, 0>{{}});
-        }
-    }
+    T &operator()(size_t i, size_t j) { return ptr[i + j * size((*this), 0)]; }
 };
+
+template<typename T, size_t M, size_t N>
+size_t size(Matrix<T, M, N> A, size_t i) {
+    static constexpr size_t D = (!M + !N);
+    if (i == 0) {
+        return (M != 0) ? M : A.dims[0];
+    } else {
+        return (N != 0) ? N : A.dims[D - 1];
+    }
+}
+
+template<typename T, size_t M, size_t N>
+Vector<T, M> getCol(Matrix<T, M, N> A, size_t i) {
+    return Vector<T, M>(A.ptr + i * size(A, 0), std::array<size_t, 0>{{}});
+}
+template<typename T, size_t N>
+Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
+    auto s1 = size(A, 0);
+    return Vector<T, 0>(A.ptr + i * s1, std::array<size_t, 1>{{s1}});
+}
+
+template<typename T, size_t M, size_t N>
+void show(Matrix<T, M, N> A) {
+    for (size_t i = 0; i < size(A, 0); i++) {
+        for (size_t j = 0; j < size(A, 1); j++) {
+            std::printf("%17d", A(i, j));
+        }
+        std::printf("\n");
+    }
+}
 
 template <typename T> size_t getNLoops(T x) { return x.data.dims[0]; }
 
+typedef Matrix<Int, 0, 2> PermutationData;
+typedef Vector<Int, 0> PermutationVector;
 struct Permutation {
-    typedef Matrix<Int, 0, 2> M;
-    M data;
+    PermutationData data;
 
     Permutation(Int *ptr, size_t nloops)
-        : data(M(ptr, std::array<size_t, 1>{{nloops}})) {
+        : data(PermutationData(ptr, std::array<size_t, 1>{{nloops}})) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
-    Int &operator()(size_t i, size_t j) { return data(i, j); }
-
-    Permutation init() {
-        auto p = (*this);
-        Int numloops = getNLoops(p);
-        for (Int n = 0; n < numloops; n++) {
-            p(n, 0) = n;
-            p(n, 1) = n;
-        }
-        return p;
-    }
-
-    void show() {
-        auto perm = (*this);
-        auto numloop = getNLoops(perm);
-        std::printf("perm: <");
-        for (Int j = 0; j < numloop - 1; j++)
-            std::printf("%d ", perm(j, 0));
-        std::printf("%d>\n", perm(numloop - 1, 0));
-    }
+    Int& operator()(size_t i) { return data(i, 0); }
 };
 
+PermutationVector inv(Permutation p) {
+    return getCol(p.data, 1);
+}
+
+Int& inv(Permutation p, size_t j) {
+    return p.data(j, 1);
+}
+
+Permutation init(Permutation p) {
+    Int numloops = getNLoops(p);
+    for (Int n = 0; n < numloops; n++) {
+        p(n) = n;
+        inv(p, n) = n;
+    }
+    return p;
+}
+
+void show(Permutation perm) {
+    auto numloop = getNLoops(perm);
+    std::printf("perm: <");
+    for (size_t j = 0; j < numloop - 1; j++)
+        std::printf("%d ", perm(j));
+    std::printf("%d>\n", perm(numloop - 1));
+}
+
 void swap(Permutation p, Int i, Int j) {
-    Int xi = p(i, 0);
-    Int xj = p(j, 0);
-    p(i, 0) = xj;
-    p(j, 0) = xi;
-    p(xj, 1) = i;
-    p(xi, 1) = j;
+    Int xi = p(i);
+    Int xj = p(j);
+    p(i) = xj;
+    p(j) = xi;
+    inv(p, xj) = i;
+    inv(p, xi) = j;
 }
 
 struct PermutationSubset {
@@ -128,7 +143,7 @@ struct PermutationLevelIterator {
     PermutationLevelIterator(PermutationSubset ps) : permobj(ps.p) {
         auto lv = ps.subset_size + 1;
         Int num_exterior = getNLoops(ps.p) - ps.num_interior;
-        Int num_interior = (level >= num_exterior) ? 0 : ps.num_interior;
+        Int num_interior = (lv >= num_exterior) ? 0 : ps.num_interior;
         level = getNLoops(ps.p) - num_interior - lv;
         offset = getNLoops(ps.p) - num_interior;
     }
@@ -158,6 +173,7 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
 }
 
 typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
+typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
 
 struct RectangularLoopNest {
     RektM data;
@@ -168,12 +184,16 @@ struct RectangularLoopNest {
     };
 };
 
+Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
+    return getCol(r.data, j);
+}
+
 /*
 function compatible(l1::TriangularLoopNest, l2::RectangularLoopNest, perm1::Permutation, perm2::Permutation, _i1::Int, _i2::Int = _i1)
   @unpack A, r = l1
   i = perm1[_i1]
-  ub1 = getupperbound(r, i)
-  ub2 = getupperbound(l2, perm2[_i2])
+  ub1 = getUpperbound(r, i)
+  ub2 = getUpperbound(l2, perm2[_i2])
   Δb = SBVector{32,Int32}(undef)
   for j ∈ eachindex(Δb)
     Δb[j] = ub1[j] - ub2[j]
@@ -193,7 +213,7 @@ function compatible(l1::TriangularLoopNest, l2::RectangularLoopNest, perm1::Perm
       # independent || return false
       # TODO: relax restriction
       otherwise_independent(A, j, i) || return false
-      ub_temp = getupperbound(r, j)
+      ub_temp = getUpperbound(r, j)
       for k  eachindex(Δb)
         Δb[k] -= Aᵢⱼ * ub_temp[k]
       end
@@ -241,7 +261,7 @@ compatible(r::RectangularLoopNest, t::TriangularLoopNest, perm2::Permutation, pe
       # independent || return false
       # TODO: relax restriction
       otherwise_independent(A1, j, i1) || return false
-      ub_temp = getupperbound(r1, j)
+      ub_temp = getUpperbound(r1, j)
       Aᵢⱼ = ifelse(flip, -Aᵢⱼ, Aᵢⱼ)
       for k ∈ eachindex(Δb)
         Δb[k] -= Aᵢⱼ * ub_temp[k]
@@ -280,8 +300,8 @@ function compatible(l1::TriangularLoopNest, l2::TriangularLoopNest, perm1::Permu
   @unpack A2, r2 = l2
   i1 = perm1[_i1]
   i2 = perm2[_i2]
-  ub1 = getupperbound(r1, i1)
-  ub2 = getupperbound(r2, i2)
+  ub1 = getUpperbound(r1, i1)
+  ub2 = getUpperbound(r2, i2)
   Δb = SBVector{32,Int32}(undef)
   for j ∈ eachindex(Δb)
     Δb[j] = ub1[j] - ub2[j]
@@ -306,11 +326,15 @@ function compatible(l1::TriangularLoopNest, l2::TriangularLoopNest, perm1::Permu
 end
 */
 
-bool compatible(RectangularLoopNest l1, RectangularLoopNest l2, Permutation perm1, Permutation perm2, Int i1, Int i2){
-    i1 = perm1(i1, 0);
-    i2 = perm2(i2, 0);
-    for (auto i=0; i < MAX_PROGRAM_VARIABLES; i++) {
-        if (l1.data(i, i1) != l2.data(i, i2)) return false;
+//  perm: og -> transform
+// iperm: transform -> og
+bool compatible(RectangularLoopNest l1, RectangularLoopNest l2, Permutation perm1, Permutation perm2, Int _i1, Int _i2){
+    auto i1 = perm1(_i1);
+    auto i2 = perm2(_i2);
+    auto u1 = getUpperbound(l1, i1);
+    auto u2 = getUpperbound(l2, i2);
+    for (size_t i=0; i < MAX_PROGRAM_VARIABLES; i++) {
+        if (u1(i) != u2(i)) return false;
     }
     return true;
 }
@@ -338,16 +362,16 @@ struct TriangularLoopNest {
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
     for (auto k = 0; k < j; k++)
         if (!A(k, j)) return false; // A is symmetric
-    for (auto k = j+1; k < A.getSize(0); k++)
-        if (!((k == i) | (A(k, j) == 0))) return false;
+    for (size_t k = j+1; k < size(A, 0); k++)
+        if (!((k == size_t(i)) | (A(k, j) == 0))) return false;
     return true;
 }
 
 bool zeroMinimum(TrictM A, Int j, Int _j, Permutation perm) {
-    for (auto k = j+1; k < A.getSize(0); k++) {
+    for (size_t k = j+1; k < size(A, 0); k++) {
         auto j_lower_bounded_by_k = A(k, j) < 0;
         if (!j_lower_bounded_by_k) continue;
-        auto _k = perm(k, 1);
+        auto _k = inv(perm, k);
         // A[k,j] < 0 means that `k < C + j`, i.e. `j` has a lower bound of `k`
         auto k_in_perm = _k < _j;
         if (k_in_perm) return false;
@@ -358,35 +382,34 @@ bool zeroMinimum(TrictM A, Int j, Int _j, Permutation perm) {
     return true;
 }
 
-bool upperboundDominates(RektM ubi, Int i, RektM ubj, Int j) {
+bool upperboundDominates(Upperbound ubi, Upperbound ubj) {
     bool all_le = true;
-    for (auto k = 0; k < MAX_PROGRAM_VARIABLES; k++){
-        all_le &= (ubi(k,i) >= ubj(k,j));
+    for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++){
+        all_le &= (ubi(k) >= ubj(k));
     }
     return all_le;
 }
 
-bool zeroInnerIterationsAtMaximum(TrictM A, RektM ub, RectangularLoopNest r, Int i) {
+bool zeroInnerIterationsAtMaximum(TrictM A, Upperbound ub, RectangularLoopNest r, Int i) {
     for (auto j = 0; j < i; j++) {
         auto Aij = A(i, j);
         if (Aij >= 0) continue;
-        if (upperboundDominates(ub, i, r.data, j)) return true;
+        if (upperboundDominates(ub, getUpperbound(r, j))) return true;
     }
-    for (auto j = i+1; j < A.getSize(0); j++) {
+    for (size_t j = i+1; j < size(A, 0); j++) {
         auto Aij = A(i, j);
         if (Aij <= 0) continue;
-        if (upperboundDominates(ub, i, r.data, j)) return true;
+        if (upperboundDominates(ub, getUpperbound(r, j))) return true;
     }
     return false;
 }
 
 /*
-
 function compatible(l1::TriangularLoopNest, l2::RectangularLoopNest, perm1::Permutation, perm2::Permutation, _i1::Int, _i2::Int = _i1)
   @unpack A, r = l1
   i = perm1[_i1]
-  ub1 = getupperbound(r, i)
-  ub2 = getupperbound(l2, perm2[_i2])
+  ub1 = getUpperbound(r, i)
+  ub2 = getUpperbound(l2, perm2[_i2])
   Δb = SBVector{32,Int32}(undef)
   for j ∈ eachindex(Δb)
     Δb[j] = ub1[j] - ub2[j]
@@ -406,7 +429,7 @@ function compatible(l1::TriangularLoopNest, l2::RectangularLoopNest, perm1::Perm
       # independent || return false
       # TODO: relax restriction
       otherwise_independent(A, j, i) || return false
-      ub_temp = getupperbound(r, j)
+      ub_temp = getUpperbound(r, j)
       for k  eachindex(Δb)
         Δb[k] -= Aᵢⱼ * ub_temp[k]
       end
@@ -432,9 +455,9 @@ end
 compatible(r::RectangularLoopNest, t::TriangularLoopNest, perm2::Permutation, perm1::Permutation, _i2, _i1 = _i2) = compatible(t, r, perm1, perm2, _i1, _i2)
 
 bool compatible(TriangularLoopNest l1, RectangularLoopNest l2, Permutation perm1, Permutation perm2, Int _i1, Int _i2) {
-    auto A = getTrit(l1);
-    auto r = getRekt(l1);
-    auto i = perm1(_i1, 0);
+    auto A = l1.getTrit();
+    auto r = l1.getRekt();
+    auto i = perm1(_i1);
     return zeroInnerIterationsAtMaximum(A, ub2, r, i)
 }
 */
