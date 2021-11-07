@@ -252,8 +252,8 @@ size_t length(TriangularLoopNest tri) {
 }
 
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
-    for (auto k = 0; k < j; k++)
-        if (!A(k, j))
+    for (Int k = 0; k < j; k++)
+        if (A(k, j))
             return false; // A is symmetric
     for (size_t k = j + 1; k < size(A, 0); k++)
         if (!((k == size_t(i)) | (A(k, j) == 0)))
@@ -359,7 +359,7 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
         if (iperm(j) < _i1)
             return false;
     }
-    if (delta_b[0])
+    if (delta_b[0] == 0)
         return allzero(delta_b, MAX_PROGRAM_VARIABLES);
     if ((delta_b[0] == -1) && allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1))
         return false;
