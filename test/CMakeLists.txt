@@ -13,8 +13,9 @@ enable_testing()
 
 add_executable(
   runtests
-  matrix_test.cpp
-  perm_test.cpp
+  #matrix_test.cpp
+  #perm_test.cpp
+  compat_test.cpp
 )
 target_link_libraries(
   runtests

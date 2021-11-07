@@ -1,3 +1,4 @@
+#pragma once
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
 #include <array>
@@ -66,6 +67,10 @@ size_t size(Matrix<T, M, N> A, size_t i) {
     }
 }
 
+template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> A) {
+    return size(A, 0) * size(A, 1);
+}
+
 template <typename T, size_t M, size_t N>
 Vector<T, M> getCol(Matrix<T, M, N> A, size_t i) {
     return Vector<T, M>(A.ptr + i * size(A, 0), std::array<size_t, 0>{{}});
@@ -102,6 +107,8 @@ struct Permutation {
 
     Int &operator()(size_t i) { return data(i, 0); }
 };
+
+size_t length(Permutation perm) { return length(perm.data); }
 
 PermutationVector inv(Permutation p) { return getCol(p.data, 1); }
 
@@ -198,6 +205,8 @@ struct RectangularLoopNest {
     };
 };
 
+size_t length(RectangularLoopNest rekt) { return length(rekt.data); }
+
 Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
     return getCol(r.data, j);
 }
@@ -233,9 +242,13 @@ RectangularLoopNest getRekt(TriangularLoopNest tri) {
 }
 
 TrictM getTrit(TriangularLoopNest tri) {
-    TrictM A(tri.raw + tri.nloops * MAX_NUM_LOOPS,
+    TrictM A(tri.raw + length(getRekt(tri)),
              std::array<size_t, 2>{{tri.nloops, tri.nloops}});
     return A;
+}
+
+size_t length(TriangularLoopNest tri) {
+    return length(getTrit(tri)) + length(getRekt(tri));
 }
 
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
