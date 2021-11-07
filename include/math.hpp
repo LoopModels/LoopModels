@@ -1,13 +1,17 @@
+// We'll follow Julia style, so anything that's not a constructor, destructor,
+// nor an operator will be outside of the struct/class.
 #include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
+#include <cstdint>
+
 
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef int32_t Int;
 
-template <class T, size_t M> struct Vector {
+template <typename T, size_t M> struct Vector {
     static constexpr size_t D = !M;
 
     T* ptr;
@@ -15,19 +19,21 @@ template <class T, size_t M> struct Vector {
 
     Vector(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims) {};
 
-    size_t getSize() {return (M == 0) ? dims[0] : M;}
-
     T &operator()(size_t i) { return ptr[i]; }
-
-    void show() {
-        for (size_t i = 0; i < getSize(); i++) {
-            std::printf("%17d", (*this)(i));
-        }
-        std::printf("\n");
-    }
 };
 
-template <class T, size_t M, size_t N> struct Matrix {
+template <typename T, size_t M>
+size_t length(Vector<T, M> v) {return (M == 0) ? v.dims[0] : M;}
+
+template <typename T, size_t M>
+void show(Vector<T, M> v) {
+    for (size_t i = 0; i < length(v); i++) {
+        std::printf("%17d", v(i));
+    }
+    std::printf("\n");
+}
+
+template <typename T, size_t M, size_t N> struct Matrix {
     static constexpr size_t D = (!M + !N);
 
     T *ptr;
@@ -35,74 +41,86 @@ template <class T, size_t M, size_t N> struct Matrix {
 
     Matrix(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
 
-    size_t getSize(size_t i) {
-        if (i == 0) {
-            return (M != 0) ? M : dims[0];
-        } else {
-            return (N != 0) ? N : dims[D - 1];
-        }
-    }
-
-    T &operator()(size_t i, size_t j) { return ptr[i + j * getSize(0)]; }
-
-    void show() {
-        for (size_t i = 0; i < getSize(0); i++) {
-            for (size_t j = 0; j < getSize(1); j++) {
-                std::printf("%17d", (*this)(i, j));
-            }
-            std::printf("\n");
-        }
-    }
-
-    Vector<T, M> getCol(size_t i) {
-        if (M == 0) {
-            return Vector<T, M>(ptr + i * getSize(0), std::array<size_t, 1>{{getSize(0)}});
-        } else {
-            return Vector<T, M>(ptr + i * getSize(0), std::array<size_t, 0>{{}});
-        }
-    }
+    T &operator()(size_t i, size_t j) { return ptr[i + j * size((*this), 0)]; }
 };
+
+template<typename T, size_t M, size_t N>
+size_t size(Matrix<T, M, N> A, size_t i) {
+    static constexpr size_t D = (!M + !N);
+    if (i == 0) {
+        return (M != 0) ? M : A.dims[0];
+    } else {
+        return (N != 0) ? N : A.dims[D - 1];
+    }
+}
+
+template<typename T, size_t M, size_t N>
+Vector<T, M> getCol(Matrix<T, M, N> A, size_t i) {
+    return Vector<T, M>(A.ptr + i * size(A, 0), std::array<size_t, 0>{{}});
+}
+template<typename T, size_t N>
+Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
+    auto s1 = size(A, 0);
+    return Vector<T, 0>(A.ptr + i * s1, std::array<size_t, 1>{{s1}});
+}
+
+template<typename T, size_t M, size_t N>
+void show(Matrix<T, M, N> A) {
+    for (size_t i = 0; i < size(A, 0); i++) {
+        for (size_t j = 0; j < size(A, 1); j++) {
+            std::printf("%17d", A(i, j));
+        }
+        std::printf("\n");
+    }
+}
 
 template <typename T> size_t getNLoops(T x) { return x.data.dims[0]; }
 
+typedef Matrix<Int, 0, 2> PermutationData;
+typedef Vector<Int, 0> PermutationVector;
 struct Permutation {
-    typedef Matrix<Int, 0, 2> M;
-    M data;
+    PermutationData data;
 
     Permutation(Int *ptr, size_t nloops)
-        : data(M(ptr, std::array<size_t, 1>{{nloops}})) {
+        : data(PermutationData(ptr, std::array<size_t, 1>{{nloops}})) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
-    Int &operator()(size_t i, size_t j) { return data(i, j); }
-
-    Permutation init() {
-        auto p = (*this);
-        Int numloops = getNLoops(p);
-        for (Int n = 0; n < numloops; n++) {
-            p(n, 0) = n;
-            p(n, 1) = n;
-        }
-        return p;
-    }
-
-    void show() {
-        auto perm = (*this);
-        auto numloop = getNLoops(perm);
-        std::printf("perm: <");
-        for (Int j = 0; j < numloop - 1; j++)
-            std::printf("%d ", perm(j, 0));
-        std::printf("%d>\n", perm(numloop - 1, 0));
-    }
+    Int &operator()(size_t i) { return data(i, 0); }
 };
 
+PermutationVector inv(Permutation p) {
+    return getCol(p.data, 1);
+}
+
+Int& inv(Permutation p, size_t j) {
+    return p.data(j, 1);
+}
+
+Permutation init(Permutation p) {
+    Int numloops = getNLoops(p);
+    for (Int n = 0; n < numloops; n++) {
+        p(n) = n;
+        inv(p, n) = n;
+    }
+    return p;
+}
+
+void show(Permutation p) {
+    auto numloop = getNLoops(p);
+    std::printf("perm: <");
+    for (Int j = 0; j < numloop - 1; j++)
+        std::printf("%d ", p(j));
+    std::printf("%d>\n", p(numloop - 1));
+}
+
 void swap(Permutation p, Int i, Int j) {
-    Int xi = p(i, 0);
-    Int xj = p(j, 0);
-    p(i, 0) = xj;
-    p(j, 0) = xi;
-    p(xj, 1) = i;
-    p(xi, 1) = j;
+    Int xi = p(i);
+    Int xj = p(j);
+    p(i) = xj;
+    p(j) = xi;
+    inv(p, xj) = i;
+    inv(p, xi) = j;
 }
 
 struct PermutationSubset {
@@ -304,6 +322,7 @@ function compatible(l1::TriangularLoopNest, l2::TriangularLoopNest, perm1::Permu
 end
 */
 
+/*
 bool compatible(RectangularLoopNest l1, RectangularLoopNest l2, Permutation perm1, Permutation perm2, Int i1, Int i2){
     i1 = perm1(i1, 0);
     i2 = perm2(i2, 0);
@@ -336,13 +355,13 @@ struct TriangularLoopNest {
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
     for (auto k = 0; k < j; k++)
         if (!A(k, j)) return false; // A is symmetric
-    for (auto k = j+1; k < A.getSize(0); k++)
+    for (auto k = j+1; k < size(A, 0); k++)
         if (!((k == i) | (A(k, j) == 0))) return false;
     return true;
 }
 
 bool zeroMinimum(TrictM A, Int j, Int _j, Permutation perm) {
-    for (auto k = j+1; k < A.getSize(0); k++) {
+    for (auto k = j+1; k < size(A, 0); k++) {
         auto j_lower_bounded_by_k = A(k, j) < 0;
         if (!j_lower_bounded_by_k) continue;
         auto _k = perm(k, 1);
@@ -370,13 +389,14 @@ bool zeroInnerIterationsAtMaximum(TrictM A, RektM ub, RectangularLoopNest r, Int
         if (Aij >= 0) continue;
         if (upperboundDominates(ub, i, r.data, j)) return true;
     }
-    for (auto j = i+1; j < A.getSize(0); j++) {
+    for (auto j = i+1; j < size(A, 0); j++) {
         auto Aij = A(i, j);
         if (Aij <= 0) continue;
         if (upperboundDominates(ub, i, r.data, j)) return true;
     }
     return false;
 }
+*/
 
 /*
 
