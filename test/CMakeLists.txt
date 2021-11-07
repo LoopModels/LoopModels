@@ -12,15 +12,22 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(
-  runtests
-  #matrix_test.cpp
-  #perm_test.cpp
+  perm_test
+  perm_test.cpp
+)
+add_executable(
+  compat_test
   compat_test.cpp
 )
 target_link_libraries(
-  runtests
+  compat_test
+  gtest_main
+)
+target_link_libraries(
+  perm_test
   gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(runtests)
+gtest_discover_tests(compat_test)
+gtest_discover_tests(perm_test)
