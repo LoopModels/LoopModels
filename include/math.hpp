@@ -2,6 +2,8 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdio>
+#include <cstdint>
+
 
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
