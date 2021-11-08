@@ -11,6 +11,11 @@ const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef int32_t Int;
 
+
+// `show` doesn't print a new line by convention.
+template <typename T>
+void showln(T x) { show(x); std::printf("\n"); }
+
 //
 // Vectors
 //
@@ -20,7 +25,8 @@ template <typename T, size_t M> struct Vector {
     T *ptr;
     const std::array<size_t, D> dims;
 
-    Vector(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
+    Vector(T *ptr) : ptr(ptr), dims(std::array<size_t, 0>{{}}){};
+    Vector(T *ptr, size_t m) : ptr(ptr), dims(std::array<size_t, 1>{{m}}){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
@@ -38,7 +44,6 @@ template <typename T, size_t M> void show(Vector<T, M> v) {
     for (size_t i = 0; i < length(v); i++) {
         std::printf("%17d", v(i));
     }
-    std::printf("\n");
 }
 
 template <typename T> bool allzero(T a, size_t len) {
@@ -57,7 +62,9 @@ template <typename T, size_t M, size_t N> struct Matrix {
     T *ptr;
     const std::array<size_t, D> dims;
 
-    Matrix(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
+    Matrix(T *ptr) : ptr(ptr), dims(std::array<size_t, 0>{{}}){};
+    Matrix(T *ptr, size_t m) : ptr(ptr), dims(std::array<size_t, 1>{{m}}){};
+    Matrix(T *ptr, size_t m, size_t n) : ptr(ptr), dims(std::array<size_t, 2>{{m, n}}){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
@@ -84,12 +91,12 @@ template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> A) {
 
 template <typename T, size_t M, size_t N>
 Vector<T, M> getCol(Matrix<T, M, N> A, size_t i) {
-    return Vector<T, M>(A.ptr + i * size(A, 0), std::array<size_t, 0>{{}});
+    return Vector<T, M>(A.ptr + i * size(A, 0));
 }
 template <typename T, size_t N>
 Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
     auto s1 = size(A, 0);
-    return Vector<T, 0>(A.ptr + i * s1, std::array<size_t, 1>{{s1}});
+    return Vector<T, 0>(A.ptr + i * s1, s1);
 }
 
 template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
@@ -97,7 +104,6 @@ template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
         for (size_t j = 0; j < size(A, 1); j++) {
             std::printf("%17d", A(i, j));
         }
-        std::printf("\n");
     }
 }
 
@@ -112,7 +118,7 @@ struct Permutation {
     PermutationData data;
 
     Permutation(Int *ptr, size_t nloops)
-        : data(PermutationData(ptr, std::array<size_t, 1>{{nloops}})) {
+        : data(PermutationData(ptr, nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
@@ -139,7 +145,7 @@ void show(Permutation perm) {
     std::printf("perm: <");
     for (size_t j = 0; j < numloop - 1; j++)
         std::printf("%d ", perm(j));
-    std::printf("%d>\n", perm(numloop - 1));
+    std::printf("%d>", perm(numloop - 1));
 }
 
 void swap(Permutation p, Int i, Int j) {
@@ -211,7 +217,7 @@ struct RectangularLoopNest {
     RektM data;
 
     RectangularLoopNest(Int *ptr, size_t nloops)
-        : data(RektM(ptr, std::array<size_t, 1>{{nloops}})) {
+        : data(RektM(ptr, nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 };
@@ -254,7 +260,7 @@ RectangularLoopNest getRekt(TriangularLoopNest tri) {
 
 TrictM getTrit(TriangularLoopNest tri) {
     TrictM A(tri.raw + length(getRekt(tri)),
-             std::array<size_t, 2>{{tri.nloops, tri.nloops}});
+             tri.nloops, tri.nloops);
     return A;
 }
 

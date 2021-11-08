@@ -14,7 +14,7 @@ std::vector<Int> tperm(numloop);
 void check_partition(Permutation p, Int num_exterior) {
     for (Int j = 0; j < num_exterior; j++) tperm[j] = p(j);
     std::printf("Testing partition 1: ");
-    show(p);
+    showln(p);
     std::sort(tperm.begin(), tperm.begin() + num_exterior);
     for (Int j = 0; j < num_exterior; j++) {
         EXPECT_EQ(tperm[j], j);
@@ -27,7 +27,7 @@ void recursive_iterator(Permutation p, Int lv = 0, Int num_exterior = 0) {
     if ((lv + 1) == num_exterior) check_partition(p, num_exterior);
     if ((lv + 1) == nloops) {
         for (size_t j = 0; j < numloop; j++) tperm[j] = p(j);
-        show(p);
+        showln(p);
         std::vector<Int> perm = tperm;
         std::sort(tperm.begin(), tperm.end());
         auto ip = inv(p);
@@ -63,7 +63,7 @@ void recursive_iterator_2(PermutationLevelIterator pli, Int lv = 0, Int num_exte
     if ((lv + 1) == num_exterior) check_partition(p, num_exterior);
     if ((lv + 1) == nloops) {
         for (size_t j = 0; j < numloop; j++) tperm[j] = p(j);
-        show(p);
+        showln(p);
         std::vector<Int> perm = tperm;
         std::sort(tperm.begin(), tperm.end());
         auto ip = inv(p);
