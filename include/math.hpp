@@ -22,7 +22,12 @@ template <typename T, size_t M> struct Vector {
 
     Vector(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
 
-    T &operator()(size_t i) { return ptr[i]; }
+    T &operator()(size_t i) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < length(*this)));
+#endif
+        return ptr[i];
+    }
 };
 
 template <typename T, size_t M> size_t length(Vector<T, M> v) {
@@ -54,7 +59,13 @@ template <typename T, size_t M, size_t N> struct Matrix {
 
     Matrix(T *ptr, const std::array<size_t, D> dims) : ptr(ptr), dims(dims){};
 
-    T &operator()(size_t i, size_t j) { return ptr[i + j * size((*this), 0)]; }
+    T &operator()(size_t i, size_t j) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < size(*this, 0)));
+        assert((0 <= j) & (j < size(*this, 1)));
+#endif
+        return ptr[i + j * size((*this), 0)];
+    }
 };
 
 template <typename T, size_t M, size_t N>
@@ -362,7 +373,7 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
     if (delta_b[0] == 0)
         return allzero(delta_b, MAX_PROGRAM_VARIABLES);
     if ((delta_b[0] == -1) && allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1))
-      return zeroInnerIterationsAtMaximum(A, ub2, r, i);
+        return zeroInnerIterationsAtMaximum(A, ub2, r, i);
     return false;
 }
 
