@@ -362,8 +362,8 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
     if (delta_b[0] == 0)
         return allzero(delta_b, MAX_PROGRAM_VARIABLES);
     if ((delta_b[0] == -1) && allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1))
-        return false;
-    return zeroInnerIterationsAtMaximum(A, ub2, r, i);
+      return zeroInnerIterationsAtMaximum(A, ub2, r, i);
+    return false;
 }
 
 bool compatible(RectangularLoopNest r, TriangularLoopNest t, Permutation perm2,

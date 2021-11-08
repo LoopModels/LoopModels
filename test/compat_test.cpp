@@ -45,4 +45,160 @@ TEST(CompatTest, BasicAssertions) {
     EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
     EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), true);
     EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 2, 2), true);
+
+    EXPECT_EQ(compatible(rectl, rectl, perm_rec, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(rectl, rectl, perm_rec, perm_rec, 1, 1), true);
+
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    EXPECT_EQ(compatible(rectl, rectl, perm_rec, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(rectl, rectl, perm_rec, perm_rec, 1, 1), true);
+    EXPECT_EQ(compatible(rectl, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(rectl, rectl, perm_tri, perm_rec, 1, 1), false);
+    swap(perm_tri, 0, 1);
+
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 2, 2), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 2, 2), true);
+
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    swap(perm_tri, 0, 1);
+    swap(perm_tri, 1, 2);
+    // (0,2,1), (0,1)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 2, 2), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 2, 2), true);
+
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    swap(perm_tri, 0, 1);
+    // (2,0,1), (1,0)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 2, 2), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 2, 2), true);
+
+    swap(perm_tri, 0, 1);
+    swap(perm_tri, 1, 2);
+    // (0, 1, 2), (1, 0)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tri, 1, 2);
+    // (0,2,1), (1,0)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tri, 0, 2);
+    swap(perm_tri, 1, 2);
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    // (1,0,2), (0,1)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tri, 0, 2);
+    // (2,0,1), (0,1)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tri, 0, 2);
+    swap(perm_tri, 1, 2);
+    // (1,2,0), (0,1)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    // (1,2,0), (1,0)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tri, 0, 1);
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    // (2,1,0), (0,1)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), false);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_rec, 0, 1);
+    swap(perm_tr2, 0, 1);
+    // (2,1,0), (1,0)
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 0, 0), true);
+    EXPECT_EQ(compatible(trial, rectl, perm_tri, perm_rec, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+
+    swap(perm_tr2, 1, 2);
+    // (2,1,0), (1,2,0) // k <-> n, n <-> k, m <-> m
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 2, 2), true);
+    
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 2, 2), true);
+
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tri, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tri, 2, 2), true);
+    
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tr2, 1, 1), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tr2, 2, 2), true);
+
+    swap(perm_tr2, 0, 1);
+    swap(perm_tr2, 1, 2);
+    // (2,1,0), (2,0,1) // k <-> k, n <-> m, m <-> n
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tri, perm_tr2, 1, 1), false);
+    
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 0, 0), true);
+    EXPECT_EQ(compatible(trial, trial, perm_tr2, perm_tri, 1, 1), false);
+    
 }
