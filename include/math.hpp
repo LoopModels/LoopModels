@@ -1,7 +1,6 @@
 #pragma once
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
-#include <array>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -11,34 +10,43 @@ const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef int32_t Int;
 
-
 // `show` doesn't print a new line by convention.
-template <typename T>
-void showln(T x) { show(x); std::printf("\n"); }
+template <typename T> void showln(T x) {
+    show(x);
+    std::printf("\n");
+}
 
 //
 // Vectors
 //
 template <typename T, size_t M> struct Vector {
-    static constexpr size_t D = !M;
 
     T *ptr;
-    const std::array<size_t, D> dims;
 
-    Vector(T *ptr) : ptr(ptr), dims(std::array<size_t, 0>{{}}){};
-    Vector(T *ptr, size_t m) : ptr(ptr), dims(std::array<size_t, 1>{{m}}){};
+    Vector(T *ptr) : ptr(ptr){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < length(*this)));
+        assert((0 <= i) & (i < M));
+#endif
+        return ptr[i];
+    }
+};
+template <typename T> struct Vector<T, 0> {
+    T *ptr;
+    const size_t len;
+    Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
+
+    T &operator()(size_t i) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < len));
 #endif
         return ptr[i];
     }
 };
 
-template <typename T, size_t M> size_t length(Vector<T, M> v) {
-    return (M == 0) ? v.dims[0] : M;
-}
+template <typename T, size_t M> size_t length(Vector<T, M> v) { return M; }
+template <typename T> size_t length(Vector<T, 0> v) { return v.len; }
 
 template <typename T, size_t M> void show(Vector<T, M> v) {
     for (size_t i = 0; i < length(v); i++) {
@@ -57,32 +65,77 @@ template <typename T> bool allzero(T a, size_t len) {
 // Matrix
 //
 template <typename T, size_t M, size_t N> struct Matrix {
-    static constexpr size_t D = (!M + !N);
-
     T *ptr;
-    const std::array<size_t, D> dims;
 
-    Matrix(T *ptr) : ptr(ptr), dims(std::array<size_t, 0>{{}}){};
-    Matrix(T *ptr, size_t m) : ptr(ptr), dims(std::array<size_t, 1>{{m}}){};
-    Matrix(T *ptr, size_t m, size_t n) : ptr(ptr), dims(std::array<size_t, 2>{{m, n}}){};
+    Matrix(T *ptr) : ptr(ptr){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < size(*this, 0)));
-        assert((0 <= j) & (j < size(*this, 1)));
+        assert((0 <= i) & (i < M));
+        assert((0 <= j) & (j < N));
 #endif
-        return ptr[i + j * size((*this), 0)];
+        return ptr[i + j * M];
+    }
+};
+template <typename T, size_t M> struct Matrix<T, M, 0> {
+    T *ptr;
+
+    size_t N;
+
+    Matrix(T *ptr, size_t n) : ptr(ptr), N(n){};
+
+    T &operator()(size_t i, size_t j) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < M));
+        assert((0 <= j) & (j < N));
+#endif
+        return ptr[i + j * M];
+    }
+};
+template <typename T, size_t N> struct Matrix<T, 0, N> {
+    T *ptr;
+
+    size_t M;
+
+    Matrix(T *ptr, size_t m) : ptr(ptr), M(m){};
+
+    T &operator()(size_t i, size_t j) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < M));
+        assert((0 <= j) & (j < N));
+#endif
+        return ptr[i + j * M];
+    }
+};
+template <typename T> struct Matrix<T, 0, 0> {
+    T *ptr;
+
+    size_t M;
+    size_t N;
+
+    Matrix(T *ptr, size_t m, size_t n) : ptr(ptr), M(m), N(n){};
+
+    T &operator()(size_t i, size_t j) {
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < M));
+        assert((0 <= j) & (j < N));
+#endif
+        return ptr[i + j * M];
     }
 };
 
 template <typename T, size_t M, size_t N>
 size_t size(Matrix<T, M, N> A, size_t i) {
-    static constexpr size_t D = (!M + !N);
-    if (i == 0) {
-        return (M != 0) ? M : A.dims[0];
-    } else {
-        return (N != 0) ? N : A.dims[D - 1];
-    }
+    return i == 0 ? M : N;
+}
+template <typename T, size_t M> size_t size(Matrix<T, M, 0> A, size_t i) {
+    return i == 0 ? M : A.N;
+}
+template <typename T, size_t N> size_t size(Matrix<T, 0, N> A, size_t i) {
+    return i == 0 ? A.M : N;
+}
+template <typename T> size_t size(Matrix<T, 0, 0> A, size_t i) {
+    return i == 0 ? A.M : A.N;
 }
 
 template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> A) {
@@ -107,7 +160,7 @@ template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
     }
 }
 
-template <typename T> size_t getNLoops(T x) { return x.data.dims[0]; }
+template <typename T> size_t getNLoops(T x) { return size(x.data, 0); }
 
 //
 // Permutations
@@ -117,8 +170,7 @@ typedef Vector<Int, 0> PermutationVector;
 struct Permutation {
     PermutationData data;
 
-    Permutation(Int *ptr, size_t nloops)
-        : data(PermutationData(ptr, nloops)) {
+    Permutation(Int *ptr, size_t nloops) : data(PermutationData(ptr, nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
@@ -216,8 +268,7 @@ typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
 struct RectangularLoopNest {
     RektM data;
 
-    RectangularLoopNest(Int *ptr, size_t nloops)
-        : data(RektM(ptr, nloops)) {
+    RectangularLoopNest(Int *ptr, size_t nloops) : data(RektM(ptr, nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 };
@@ -259,8 +310,7 @@ RectangularLoopNest getRekt(TriangularLoopNest tri) {
 }
 
 TrictM getTrit(TriangularLoopNest tri) {
-    TrictM A(tri.raw + length(getRekt(tri)),
-             tri.nloops, tri.nloops);
+    TrictM A(tri.raw + length(getRekt(tri)), tri.nloops, tri.nloops);
     return A;
 }
 
