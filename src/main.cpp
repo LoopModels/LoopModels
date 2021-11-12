@@ -14,7 +14,7 @@ int main() {
             M(n,m) = 10*n+m;
         }
     }
-    fmt::print("dims: {}, {}\n",  M.dims[0], M.dims[1]);
+    fmt::print("dims: {}, {}\n",  size(M, 0), size(M, 1));
     fmt::print("A[0, 1]: {}\n",  M(0, 1));
     showln(M);
     // delete[] f;
