@@ -16,8 +16,9 @@ const Operation SUB2 = 3;
 const Operation DIV = 4;
 const Operation INV = 5;
 const Operation SQRT = 6;
+const Operation IDENTITY = 7;
 
-const Int OPERATION_LENGTH = SQRT + 1;
+const Int OPERATION_LENGTH = IDENTITY + 1;
 OperationCharacteristics opchars[OPERATION_LENGTH] = {
     [ADD] = OperationCharacteristics{.heuristic_cost = 0.5},
     [MUL] = OperationCharacteristics{.heuristic_cost = 0.5},
@@ -26,6 +27,7 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
     [DIV] = OperationCharacteristics{.heuristic_cost = 10.0},
     [INV] = OperationCharacteristics{.heuristic_cost = 10.0},
     [SQRT] = OperationCharacteristics{.heuristic_cost = 10.0},
+    [IDENTITY] = OperationCharacteristics{.heuristic_cost = 0.0},
 };
 
 enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR };
@@ -111,10 +113,14 @@ struct Array {
 // The third index on the first axis of `mlt_off_ids` yields index into the
 // appropriate `ind_typ` container.
 // ind_typ indicates the type of the index.
+// loopnest_to_array_map has length equal to loopnest depth, matches original
+//   order. Each value is a bitmask indicating which loops depend on it.
 struct ArrayRef {
     Int arrayid;
     Matrix<Int, 3, 0> mlt_off_ids;
     Vector<SourceType, 1> ind_typ;
+    Vector<uint32_t, 0> loopnest_to_array_map;
+    // Vector<Int, 0> iperm;
 };
 
 //
@@ -134,10 +140,20 @@ struct Term {
     Vector<SourceType, 0> srct; // type of source
     Vector<Int, 0> srcs;        // source id
     Vector<Int, 0> dsts;        // destination id
-    Vector<bool, 0> loopdeps;   // minimal loopdeps based on source's
+    uint32_t loopdeps;          // minimal loopdeps based on source's
     Int lnid;                   // id of loopnest
 };
 
+bool isadditive(Term t){
+  Operation op = t.op;
+  return (op == ADD) | (op == SUB1) | (op == SUB2) | (op == IDENTITY);
+}
+
+struct TermBundle{
+  Vector<Term, 0> terms; // Can we get the topological sort so these are always contiguous?
+  
+};
+  
 struct Program {
     Vector<Term, 0> terms;
     Vector<TriangularLoopNest, 0> triln;
@@ -145,4 +161,95 @@ struct Program {
     Vector<Array, 0> arrays;
     Vector<ArrayRef, 0> arrayrefs;
     Vector<Const, 0> constants;
+    char* data;
 };
+
+
+Array getArray(Program prg, ArrayRef ar){
+  return prg.arrays[ar.arrayid];
+}
+
+// Flatten affine term relationships
+// struct AffineRelationship{
+// };
+
+bool isContiguousTermIndex(Program prg, Term t, Int mlt, size_t level){
+    // SourceType srct0, srct1;
+    while (true){
+      switch (t.op) {
+      case ADD:
+	for (size_t i = 0; i < 2; i++){
+	  switch (t.srct(i)) {
+	  case MEMORY:
+	    ArrayRef ar = prg.arrayrefs(t.src(i));
+	    if (ar.loopnest_to_array_map(level) != 0) return false;
+	    break;
+	  case TERM:
+	    
+	    break;
+	  case CONSTANT:
+	  
+	    break;
+	  case LOOPINDUCTVAR:
+	  
+	    break;
+	  default:
+	    assert("unreachable");
+	  }
+	}
+	srct1 = t.srct[1];
+	break;
+      case SUB1:
+	t = getsrc(t, 0);
+	mlt *= -1;
+        break;
+      case SUB2:
+        break;
+      case IDENTITY:
+	t = getsrc(t, 0);
+        break;
+      default:
+	return false;
+      }
+    }
+
+}
+
+bool isContiguousReference(Program prg, ArrayRef ar, Array a, size_t level){
+  switch (ar.ind_typ[0]) {
+  case LOOPINDUCTVAR:
+    // contiguous requires:
+    // stride mlt of 1, first dim dense
+    return (ar.mlt_off_ids(0,0) == 1) & (a.dense_knownStride(0, 0));
+  case MEMORY:
+    return false;
+  case TERM:
+    // Here, we need to parse terms
+    Term t = getterm(prg, ar, 0);
+    Int mlt = ar.mlt_off_ids(0,0);
+    return isContiguousTermIndex(prg, t, mlt, level);
+  case CONSTANT:
+    return false;
+  default:
+    assert("unreachable");    
+  }
+}
+bool isContiguousReference(Program prg, ArrayRef ar, size_t i){
+  // loop index `i` must map only to first index
+  if (ar.loopnest_to_array_map[i] != 0x00000001) && return false;
+  return isContiguousReference(prg, ar, getArray(prg, ar));
+}
+
+// 
+size_t memoryCost(Program prg, ArrayRef ar, size_t v, size_t u1, size_t u2){
+  Array a = getArray(prg, ar);
+  // __builtin_ctz(n)
+  if (isContiguousReference(ar, a, v)){
+    
+    
+  } else {
+    
+  }
+}
+
+
