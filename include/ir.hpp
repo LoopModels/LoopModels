@@ -154,23 +154,55 @@ struct TermBundle {
                            // always contiguous?
 };
 
-struct Program {
+constexpr size_t NO_EDGE_COUNT_CACHE = std::numeric_limits<int>::max();
+
+struct Function {
     Vector<Term, 0> terms;
     Vector<TriangularLoopNest, 0> triln;
     Vector<RectangularLoopNest, 0> rectln;
     Vector<Array, 0> arrays;
     Vector<ArrayRef, 0> arrayrefs;
     Vector<Const, 0> constants;
-    char *data;
+    Vector<bool, 0> visited;
+    size_t ne;
+    // char *data;
+
+    Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
+             Vector<RectangularLoopNest, 0> rectln, Vector<Array, 0> arrays,
+             Vector<ArrayRef, 0> arrayrefs, Vector<Const, 0> constants,
+             Vector<bool, 0> visited) terms(terms),
+        triln(triln), rectln(rectln), arrays(arrays), arrayrefs(arrayrefs),
+        constants(constants), visited(visited) : {
+        size_t edge_count = 0;
+        for (size_t j = 0; j < length(terms); ++j)
+            edge_count += length(terms[j].dsts);
+        ne = edge_count;
+    }
 };
 
-Array getArray(Program prg, ArrayRef ar) { return prg.arrays[ar.arrayid]; }
+Array getArray(Function fun, ArrayRef ar) { return fun.arrays[ar.arrayid]; }
+
+void clear(Function fun) {
+    for (size_t j = 0; j < length(fun.visited); ++j) {
+        fun.visited(j) = false;
+    }
+}
+size_t nv(Function fun) { return length(fun.terms); }
+size_t ne(Function fun) { return fun.ne; }
+Vector<Int, 0> &outneighbors(Term t) { return t.dsts; }
+Vector<Int, 0> &outneighbors(Function fun, size_t i) {
+    return outneighbors(fun.term[i]);
+}
+Vector<Int, 0> &inneighbors(Term t) { return t.srcs; }
+Vector<Int, 0> &inneighbors(Function fun, size_t i) {
+    return inneighbors(fun.term[i]);
+}
 
 // Flatten affine term relationships
 // struct AffineRelationship{
 // };
 
-bool isContiguousTermIndex(Program prg, Term t, Int mlt, size_t level) {
+bool isContiguousTermIndex(Function fun, Term t, Int mlt, size_t level) {
     // SourceType srct0, srct1;
     while (true) {
         switch (t.op) {
@@ -178,7 +210,7 @@ bool isContiguousTermIndex(Program prg, Term t, Int mlt, size_t level) {
             for (size_t i = 0; i < 2; i++) {
                 switch (t.srct(i)) {
                 case MEMORY:
-                    ArrayRef ar = prg.arrayrefs(t.src(i));
+                    ArrayRef ar = fun.arrayrefs(t.src(i));
                     if (ar.loopnest_to_array_map(level) != 0)
                         return false;
                     break;
@@ -212,7 +244,7 @@ bool isContiguousTermIndex(Program prg, Term t, Int mlt, size_t level) {
     }
 }
 
-bool isContiguousReference(Program prg, ArrayRef ar, Array a, size_t level) {
+bool isContiguousReference(Function fun, ArrayRef ar, Array a, size_t level) {
     switch (ar.ind_typ[0]) {
     case LOOPINDUCTVAR:
         // contiguous requires:
@@ -222,25 +254,25 @@ bool isContiguousReference(Program prg, ArrayRef ar, Array a, size_t level) {
         return false;
     case TERM:
         // Here, we need to parse terms
-        Term t = getterm(prg, ar, 0);
+        Term t = getterm(fun, ar, 0);
         Int mlt = ar.mlt_off_ids(0, 0);
-        return isContiguousTermIndex(prg, t, mlt, level);
+        return isContiguousTermIndex(fun, t, mlt, level);
     case CONSTANT:
         return false;
     default:
         assert("unreachable");
     }
 }
-bool isContiguousReference(Program prg, ArrayRef ar, size_t i) {
+bool isContiguousReference(Function fun, ArrayRef ar, size_t i) {
     // loop index `i` must map only to first index
     if (ar.loopnest_to_array_map[i] != 0x00000001)
         &&return false;
-    return isContiguousReference(prg, ar, getArray(prg, ar));
+    return isContiguousReference(fun, ar, getArray(fun, ar));
 }
 
 //
-size_t memoryCost(Program prg, ArrayRef ar, size_t v, size_t u1, size_t u2) {
-    Array a = getArray(prg, ar);
+size_t memoryCost(Function fun, ArrayRef ar, size_t v, size_t u1, size_t u2) {
+    Array a = getArray(fun, ar);
     // __builtin_ctz(n)
     if (isContiguousReference(ar, a, v)) {
 
