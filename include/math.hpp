@@ -5,10 +5,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <utility>
 
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
-typedef int32_t Int;
+typedef intptr_t Int;
 
 // `show` doesn't print a new line by convention.
 template <typename T> void showln(T x) {

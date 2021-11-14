@@ -100,7 +100,7 @@ void show(Const c) {
 // Dense indicates that the given axis is known to be contiguous,
 // when including previous axis. E.g., in Julia, a `A = Matrix{Float64}(...)`
 // would have all dims dense, but a `@view(A[1:4,:])` would be `[true,false]`.
-// Basically, this can be used to determine whether or not we can collapse
+// Basically, this can be used to determs(i)ne whether or not we can collapse
 // loops.
 struct Array {
     Matrix<bool, 2, 0> dense_knownStride;
@@ -154,8 +154,6 @@ struct TermBundle {
                            // always contiguous?
 };
 
-constexpr size_t NO_EDGE_COUNT_CACHE = std::numeric_limits<int>::max();
-
 struct Function {
     Vector<Term, 0> terms;
     Vector<TriangularLoopNest, 0> triln;
@@ -170,17 +168,17 @@ struct Function {
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, Vector<Array, 0> arrays,
              Vector<ArrayRef, 0> arrayrefs, Vector<Const, 0> constants,
-             Vector<bool, 0> visited) terms(terms),
-        triln(triln), rectln(rectln), arrays(arrays), arrayrefs(arrayrefs),
-        constants(constants), visited(visited) : {
+             Vector<bool, 0> visited)
+        : terms(terms), triln(triln), rectln(rectln), arrays(arrays),
+          arrayrefs(arrayrefs), constants(constants), visited(visited) {
         size_t edge_count = 0;
         for (size_t j = 0; j < length(terms); ++j)
-            edge_count += length(terms[j].dsts);
+            edge_count += length(terms(j).dsts);
         ne = edge_count;
     }
 };
 
-Array getArray(Function fun, ArrayRef ar) { return fun.arrays[ar.arrayid]; }
+Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
 void clear(Function fun) {
     for (size_t j = 0; j < length(fun.visited); ++j) {
@@ -191,17 +189,18 @@ size_t nv(Function fun) { return length(fun.terms); }
 size_t ne(Function fun) { return fun.ne; }
 Vector<Int, 0> &outneighbors(Term t) { return t.dsts; }
 Vector<Int, 0> &outneighbors(Function fun, size_t i) {
-    return outneighbors(fun.term[i]);
+    return outneighbors(fun.terms(i));
 }
 Vector<Int, 0> &inneighbors(Term t) { return t.srcs; }
 Vector<Int, 0> &inneighbors(Function fun, size_t i) {
-    return inneighbors(fun.term[i]);
+    return inneighbors(fun.terms(i));
 }
 
 // Flatten affine term relationships
 // struct AffineRelationship{
 // };
 
+/*
 bool isContiguousTermIndex(Function fun, Term t, Int mlt, size_t level) {
     // SourceType srct0, srct1;
     while (true) {
@@ -279,3 +278,4 @@ size_t memoryCost(Function fun, ArrayRef ar, size_t v, size_t u1, size_t u2) {
     } else {
     }
 }
+*/
