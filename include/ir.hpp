@@ -96,6 +96,8 @@ void show(Const c) {
     }
 }
 
+// struct Pointer { }
+
 // Column major array
 // Dense indicates that the given axis is known to be contiguous,
 // when including previous axis. E.g., in Julia, a `A = Matrix{Float64}(...)`
@@ -104,7 +106,8 @@ void show(Const c) {
 // loops.
 struct Array {
     Matrix<bool, 2, 0> dense_knownStride;
-    Vector<Int, 0> stride;
+    Matrix<Int, 0, 0> stride; // first row is 1, others correspond to dynamic indices
+    Vector<Int, 0> strideRank;
 };
 
 // array id gives the array
@@ -115,13 +118,33 @@ struct Array {
 // ind_typ indicates the type of the index.
 // loopnest_to_array_map has length equal to loopnest depth, matches original
 //   order. Each value is a bitmask indicating which loops depend on it.
-struct ArrayRef {
+
+// Rows of `R` correspond to strides / program variables, first row is `1`.
+// For example, the `ArrayRef` for `B` in
+// for (int n = 0; n < N; ++n){
+//   for (int m = 0; m < M; ++m){
+//     for (int k = 0; k < K; ++k){
+//       C(m,n) += A(m,k) * B(k,n);
+//     }
+//   }
+// }
+// Would be
+// [ 0  0  1     [ n
+//   1  0  0    m
+//       ]    k ]
+struct AffineArrayRef {
     Int arrayid;
-    Matrix<Int, 3, 0> mlt_off_ids;
-    Vector<SourceType, 1> ind_typ;
-    Vector<uint32_t, 0> loopnest_to_array_map;
+    Matrix<Int, 0, 0> R; // R * [i, j, k] == indices
+    Vector<Int, 0> invariant_ranks;
+    Vector<Int, 0> invariant_ids;
+    // Vector<SourceType, 1> ind_typ;
+    Int offset;
+    // Matrix<Int, 3, 0> mlt_off_ids;
+    
+    // Vector<uint32_t, 0> loopnest_to_array_map;
     // Vector<Int, 0> iperm;
 };
+
 
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
@@ -149,10 +172,27 @@ bool isadditive(Term t) {
     return (op == ADD) | (op == SUB1) | (op == SUB2) | (op == IDENTITY);
 }
 
-struct TermBundle {
-    Vector<Term, 0> terms; // Can we get the topological sort so these are
-                           // always contiguous?
+struct Schedule {
+    Int *ptr;
+    size_t nloops;
 };
+
+size_t getNLoops(Schedule x) { return x.nloops; };
+
+// Assumption: Does not support more than 32 loops.
+struct FastCostSummary {
+    double scalar; // Scalar cost
+    double vector; // Vector cost
+    uint32_t msk0; // First dim loop deps
+    uint32_t msk1; // Second dim loop deps
+    uint32_t msk2; // Loop deps
+}
+
+// dimensions term
+typedef Vector<FastCostSummary, 0>
+    FastCostSummaries;
+
+constexpr Int UNSET_COST = -1;
 
 struct Function {
     Vector<Term, 0> terms;
@@ -162,19 +202,35 @@ struct Function {
     Vector<ArrayRef, 0> arrayrefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
+    Vector<Schedule, 0> bestschedules;
+    Matrix<Schedule, 0> tempschedules;
+    FastCostSummaries fastcostsum;
+    Vector<Vector<Int, 0>, 0> triloopcache;
     size_t ne;
     // char *data;
 
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, Vector<Array, 0> arrays,
              Vector<ArrayRef, 0> arrayrefs, Vector<Const, 0> constants,
-             Vector<bool, 0> visited)
+             Vector<bool, 0> visited, Vector<Schedule, 0> bestschedules,
+             Matrix<Schedule, 0> tempschedules, Matrix<double, 0> tempcosts,
+             FastCostSummaries fastcostsum, Vector << Vector, 0 >,
+             0 > triloopcache)
         : terms(terms), triln(triln), rectln(rectln), arrays(arrays),
-          arrayrefs(arrayrefs), constants(constants), visited(visited) {
+          arrayrefs(arrayrefs), constants(constants), visited(visited),
+          bestschedules(bestschedules), tempschedules(tempschedules),
+          tempcosts(tempcosts), fastcostsum(fastcostsum),
+          triloopcache(triloopcache) {
         size_t edge_count = 0;
         for (size_t j = 0; j < length(terms); ++j)
             edge_count += length(terms(j).dsts);
         ne = edge_count;
+        for (size_t j = 0; j < length(triloopcache); ++j) {
+            Vector<Int, 0> trlc = triloopcache(j);
+            for (size_t k = 0; k < length(trlc); ++k) {
+                trlc(k) = UNSET_COST;
+            }
+        }
     }
 };
 
@@ -194,6 +250,10 @@ Vector<Int, 0> &outneighbors(Function fun, size_t i) {
 Vector<Int, 0> &inneighbors(Term t) { return t.srcs; }
 Vector<Int, 0> &inneighbors(Function fun, size_t i) {
     return inneighbors(fun.terms(i));
+}
+
+Term& getTerm(Function fun, tidx){
+    return fun.terms(tidx);
 }
 
 // Flatten affine term relationships

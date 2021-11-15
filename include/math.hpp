@@ -161,6 +161,58 @@ template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
     }
 }
 
+
+template <typename T> struct StrideMatrix<T> {
+    T *ptr;
+    size_t M;
+    size_t N;
+    size_t S;
+
+    StrideMatrix(T *ptr, size_t M, size_t N, size_t S) : ptr(ptr), M(M), N(N), S(S) {};
+    
+    T &operator()(size_t i, size_t j){
+#ifndef DONOTBOUNDSCHECK
+        assert((0 <= i) & (i < M));
+        assert((0 <= j) & (j < N));
+#endif
+        return ptr[i + j * S];
+    }
+}
+template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
+    return i == 0 ? A.M : A.N;
+}
+template <typename T> size_t length(StrideMatrix<T> A) {
+    return size(A, 0) * size(A, 1);
+}
+template <typename T> void show(StrideMatrix<T> A) {
+    for (size_t i = 0; i < size(A, 0); i++) {
+        for (size_t j = 0; j < size(A, 1); j++) {
+            std::printf("%17d", A(i, j));
+        }
+    }
+}
+// template <typename T> size_t getstride1(Matrix<T> A) {return size(A, 0);}
+// template <typename T> size_t getstride1(StrideMatrix<T> A) {return A.S;}
+template <typename T> StrideMatrix<T> subsetRows(StrideMatrix<T>, size_t r0, size_t r1){
+    return StrideMatrix(A.ptr + r0, r1 - r0, A.N, A.S);
+}
+template <typename T> StrideMatrix<T> subsetCols(StrideMatrix<T>, size_t c0, size_t c1){
+    return StrideMatrix(A.ptr + c0 * A.S, A.M, c1 - c0, A.S);
+}
+template <typename T> StrideMatrix<T> subset(StrideMatrix<T>, size_t r0, size_t r1, size_t c0, size_t c1){
+    return subsetRows(subsetCols(A, c0, c1), r0, r1);
+}
+template <typename T> StrideMatrix<T> subsetRows(Matrix<T>, size_t r0, size_t r1){
+    return StrideMatrix(A.ptr + r0, r1 - r0, A.N, A.M);
+}
+template <typename T> StrideMatrix<T> subsetCols(Matrix<T>, size_t c0, size_t c1){
+    return StrideMatrix(A.ptr + c0 * A.S, A.M, c1 - c0, A.M);
+}
+template <typename T> StrideMatrix<T> subset(Matrix<T>, size_t r0, size_t r1, size_t c0, size_t c1){
+    return subsetRows(subsetCols(A, c0, c1), r0, r1);
+}
+
+
 template <typename T> size_t getNLoops(T x) { return size(x.data, 0); }
 
 //

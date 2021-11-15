@@ -1,14 +1,8 @@
 #pragma once
 
-#include <ir.hpp>
-#include <math.hpp>
-
-struct Schedule {
-    Int *ptr;
-    size_t nloops;
-};
-
-template <> size_t getNLoops(Schedule x) { return x.nloops; };
+#include <algorithm>
+#include "./ir.hpp"
+#include "./math.hpp"
 
 Permutation getpermutation(Schedule x) {
     return Permutation(x.ptr, getNLoops(x));
@@ -29,15 +23,93 @@ void visit(std::vector<Int> sorted, Function fun, size_t idx) {
     sorted.push_back(idx);
 }
 
-void topologicalSort(Function fun, TermBundle tb){
-    std::vector<TermBundle> terms;
+
+std::vector<Int>& topologicalSort(Function fun){
     std::vector<Int> sorted;
     clear(fun);
     for (size_t j = 0; j < nv(fun); j++) {
         visit(sorted, fun, j);
     }
-
+    std::reverse(sorted.begin(), sorted.end());
+    return sorted;
 }
 
+typedef std::vector<std::vector<Int>> TermBundle;
 
-void schedule(Function fun, TermBundle tb) { return; }
+TermBundle& weaklyConnectedComponents(Function fun){
+    TermBundle components;
+    clear(fun);
+    for (size_t j = 0; j < nv(fun); ++j) {
+        if(fun.visited[j]) continue;
+        std::vector<int> sorted;
+        visit(sorted, fun, j);
+        std::reverse(sorted.begin(), sorted.end());
+        components.emplace_back(sorted);
+    }
+    return components;
+}
+
+void fillfastmemcostsum(Function fun){
+    return;
+}
+// fusion(level) -> order(level) -> cost(level) ->
+// fusion(level+1) -> ...
+void schedule_bundle_fusion(Function fun, iterator tidx_begin, iterator tidx_end, size_t level, bool updateBest){
+    for (auto it = tidx_begin; it != tidx_end; ++it){
+        auto [c0, isvalid] = schedule_bundle_order(fun, tidx_begin, it + 1, level);
+        if (!isvalid) break;
+	double c1;
+	if (it == tidx_begin){
+	    c1 = schedule_bundle_fusion(fun, it + 1, tidx_end, level, false);
+	} else {
+	    c1 = getbestcost(fun, it + 1, tidx_end, level);
+	}
+        if ((updateBest) & ((c0 + c1) < best_cost)){
+	    updateBestCost();
+        }
+    }
+}
+// Evaluates [`tidx_begin`, `tidx_end`) as a bundle together, fused at level `level`
+void schedule_bundle_order(Function fun, iterator tidx_begin, iterator tidx_end, size_t level){
+    
+}
+
+void schedule_bundle_level(Function fun, TermBundle tb, size_t level){
+    
+}
+
+// Greedily prefuse elements in tb.
+TermBundle& prefuse(Function fun, std::vector<Int> tb){
+    TermBundle tb;
+    std::vector<Int> currentBundle;
+    currentBundle.push_back(tb(0));
+    for (size_t j = 1; j < tb.size(); ++j){
+	Term termHead = getTerm(fun, j-1);
+	Term termTemp = getTerm(fun, j  );
+	if ((termTemp.lnid != termHead.tid) & (termTemp.loopdeps == termHead.loopdeps)){
+	    // Passed cheap checks.
+	    // Now check memory accesses
+	    if (contiguousMask(fun, termTemp) == contiguousMask(fun, termHead)){
+		tb.emplace_back(currentBundle);
+		currentBundle.clear();
+	    }
+	}
+	currentBundle.push_back(tb(j));
+    }
+    tb.emplace_back(currentBundle);
+    return tb;
+}
+
+// prefuse terms
+void schedule_bundle(Function fun, std::vector<Int> tb){
+    TermBundle tbf = prefuse(fun, tb);
+    schedule_bundle_level(fun, tb, 0);
+    return;
+}
+
+void schedule(Function fun, TermBundle tb) {
+    for (size_t j = 0; j < length(tb); ++j){
+        schedule_bundle(fun, tb[j]);
+    }
+    return;
+}
