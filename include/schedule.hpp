@@ -54,18 +54,26 @@ void fillfastmemcostsum(Function fun){
 }
 // fusion(level) -> order(level) -> cost(level) ->
 // fusion(level+1) -> ...
-void schedule_bundle_fusion(Function fun, iterator tidx_begin, iterator tidx_end, size_t level, bool updateBest){
+//
+// For each level, allocate a (triangular) matrix of schedules and costs; upper triangular, col represents fused len, row fused num
+// This can store/cache all possible fused combinations.
+// We can create views as appropriate so that we can still fill correctly through the recursion.
+// On entry  (updateCost = true), this is when we use the temp at that level to update bestcost.
+void scheduleBundleFusion(Function fun, iterator tidx_begin, iterator tidx_end, size_t level, bool updateCost){
     for (auto it = tidx_begin; it != tidx_end; ++it){
-        auto [c0, isvalid] = schedule_bundle_order(fun, tidx_begin, it + 1, level);
+        auto [c0, isvalid] = scheduleBundleOrder(fun, tidx_begin, it + 1, level);
         if (!isvalid) break;
 	double c1;
 	if (it == tidx_begin){
-	    c1 = schedule_bundle_fusion(fun, it + 1, tidx_end, level, false);
+	    c1 = scheduleBundleFusion(fun, it + 1, tidx_end, level, false);
 	} else {
 	    c1 = getbestcost(fun, it + 1, tidx_end, level);
 	}
-        if ((updateBest) & ((c0 + c1) < best_cost)){
-	    updateBestCost();
+        if (((c0 + c1) < best_cost)){
+	    
+	    if (updateCost){
+		updateBestCost();
+	    }
         }
     }
 }
@@ -89,6 +97,7 @@ TermBundle& prefuse(Function fun, std::vector<Int> tb){
 	if ((termTemp.lnid != termHead.tid) & (termTemp.loopdeps == termHead.loopdeps)){
 	    // Passed cheap checks.
 	    // Now check memory accesses
+	    // Also, should check if they're reductions... We do not want to pre-fuse register tiling candiates.
 	    if (contiguousMask(fun, termTemp) == contiguousMask(fun, termHead)){
 		tb.emplace_back(currentBundle);
 		currentBundle.clear();

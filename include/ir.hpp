@@ -119,6 +119,13 @@ struct Array {
 // loopnest_to_array_map has length equal to loopnest depth, matches original
 //   order. Each value is a bitmask indicating which loops depend on it.
 
+
+enum ArrayRefType {
+    AFFINEARRAYREF,
+    DENSEARRAYREF,
+    SOURCEDARRAYREF
+};
+
 // Rows of `R` correspond to strides / program variables, first row is `1`.
 // For example, the `ArrayRef` for `B` in
 // for (int n = 0; n < N; ++n){
@@ -135,8 +142,8 @@ struct Array {
 struct AffineArrayRef {
     Int arrayid;
     Matrix<Int, 0, 0> R; // R * [i, j, k] == indices
-    Vector<Int, 0> invariant_ranks;
-    Vector<Int, 0> invariant_ids;
+    Vector<Int, 0> idxs;
+    Vector<Int, 0> rank;
     // Vector<SourceType, 1> ind_typ;
     Int offset;
     // Matrix<Int, 3, 0> mlt_off_ids;
@@ -145,6 +152,20 @@ struct AffineArrayRef {
     // Vector<Int, 0> iperm;
 };
 
+struct DenseArrayRef {
+    Int arrayid;
+    Matrix<Int, 0, 0> R;
+    Vector<Int, 0> idxs;
+    Vector<Int, 0> perm; // perm of coef
+    Vector<Int, 0> coef; // [0, 1, 2] indiciates invariants[0]*(i + invariants[1]*(j + invariants[2]*k))
+    Int offset;
+};
+
+// struct SourcedArrayRef {
+//     Int arrayid;
+//     Vector<SourceType, 1> ind_typ;
+//     Matrix<Int, 3, 0> mlt_off_ids;
+// }
 
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
