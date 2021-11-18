@@ -161,23 +161,23 @@ template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
     }
 }
 
-
-template <typename T> struct StrideMatrix<T> {
+template <typename T> struct StrideMatrix {
     T *ptr;
     size_t M;
     size_t N;
     size_t S;
 
-    StrideMatrix(T *ptr, size_t M, size_t N, size_t S) : ptr(ptr), M(M), N(N), S(S) {};
-    
-    T &operator()(size_t i, size_t j){
+    StrideMatrix(T *ptr, size_t M, size_t N, size_t S)
+        : ptr(ptr), M(M), N(N), S(S){};
+
+    T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert((0 <= i) & (i < M));
         assert((0 <= j) & (j < N));
 #endif
         return ptr[i + j * S];
     }
-}
+};
 template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
     return i == 0 ? A.M : A.N;
 }
@@ -193,54 +193,66 @@ template <typename T> void show(StrideMatrix<T> A) {
 }
 // template <typename T> size_t getstride1(Matrix<T> A) {return size(A, 0);}
 // template <typename T> size_t getstride1(StrideMatrix<T> A) {return A.S;}
-template <typename T> StrideMatrix<T> subsetRows(StrideMatrix<T>, size_t r0, size_t r1){
-    return StrideMatrix(A.ptr + r0, r1 - r0, A.N, A.S);
+template <typename T>
+StrideMatrix<T> subsetRows(StrideMatrix<T> A, size_t r0, size_t r1) {
+    return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.S);
 }
-template <typename T> StrideMatrix<T> subsetCols(StrideMatrix<T>, size_t c0, size_t c1){
-    return StrideMatrix(A.ptr + c0 * A.S, A.M, c1 - c0, A.S);
+template <typename T>
+StrideMatrix<T> subsetCols(StrideMatrix<T> A, size_t c0, size_t c1) {
+    return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.S);
 }
-template <typename T> StrideMatrix<T> subset(StrideMatrix<T>, size_t r0, size_t r1, size_t c0, size_t c1){
+template <typename T>
+StrideMatrix<T> subset(StrideMatrix<T> A, size_t r0, size_t r1, size_t c0,
+                       size_t c1) {
     return subsetRows(subsetCols(A, c0, c1), r0, r1);
 }
-template <typename T> StrideMatrix<T> subsetRows(Matrix<T>, size_t r0, size_t r1){
-    return StrideMatrix(A.ptr + r0, r1 - r0, A.N, A.M);
+template <typename T, size_t M, size_t N>
+StrideMatrix<T> subsetRows(Matrix<T, M, N> A, size_t r0, size_t r1) {
+    return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.M);
 }
-template <typename T> StrideMatrix<T> subsetCols(Matrix<T>, size_t c0, size_t c1){
-    return StrideMatrix(A.ptr + c0 * A.S, A.M, c1 - c0, A.M);
+template <typename T, size_t M, size_t N>
+StrideMatrix<T> subsetCols(Matrix<T, M, N> A, size_t c0, size_t c1) {
+    return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.M);
 }
-template <typename T> StrideMatrix<T> subset(Matrix<T>, size_t r0, size_t r1, size_t c0, size_t c1){
+template <typename T, size_t M, size_t N>
+StrideMatrix<T> subset(Matrix<T, M, N> A, size_t r0, size_t r1, size_t c0,
+                       size_t c1) {
     return subsetRows(subsetCols(A, c0, c1), r0, r1);
 }
 
-template <typename T> struct Tensor3<T> {
+template <typename T, size_t M>
+Vector<T,0> subset(Vector<T,M> x, size_t i0, size_t i1){
+    return Vector<T,0>(x.ptr + i0, i1 - i0);
+}
+
+
+template <typename T> struct Tensor3 {
     T *ptr;
     size_t M;
     size_t N;
     size_t O;
-    Tensor3(T *ptr, size_t M, size_t N, size_t O) : ptr(ptr), M(M), N(N), O(O) {};
+    Tensor3(T *ptr, size_t M, size_t N, size_t O)
+        : ptr(ptr), M(M), N(N), O(O){};
 
-    T &operator()(size_t m, size_t n, size_t o){
+    T &operator()(size_t m, size_t n, size_t o) {
 #ifndef DONOTBOUNDSCHECK
         assert((0 <= m) & (m < M));
         assert((0 <= n) & (n < N));
         assert((0 <= o) & (o < O));
 #endif
-	return ptr[m + M*(n + N*o)];
+        return ptr[m + M * (n + N * o)];
     }
-}
+};
 template <typename T> size_t size(Tensor3<T> A, size_t i) {
     return i == 0 ? A.M : (i == 1 ? A.N : A.O);
 }
-template <typename T> size_t length(Tensor3<T> A) {
-    return A.M * A.N * A.O;
+template <typename T> size_t length(Tensor3<T> A) { return A.M * A.N * A.O; }
+template <typename T, size_t M, size_t N>
+Matrix<T, M, N> subsetDim3(Tensor3<T> A, size_t d) {
+    return Matrix<T, M, N>(A.ptr + A.M * A.N * d, A.M, A.N);
 }
-template <typename T> Matrix<T> subsetDim3(Tensor3<T> A, size_t d){
-    return Matrix<T>(A.ptr + A.M*A.N*d, A.M, A.N);
-}
-
 
 template <typename T> size_t getNLoops(T x) { return size(x.data, 0); }
-
 //
 // Permutations
 //
