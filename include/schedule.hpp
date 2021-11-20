@@ -83,10 +83,11 @@ void fillfastmemcostsum(Function fun){
 // This can store/cache all possible fused combinations.
 // We can create views as appropriate so that we can still fill correctly through the recursion.
 // On entry  (updateCost = true), this is when we use the temp at that level to update bestcost.
-void scheduleBundleFusion(Function fun, iterator tidx_begin, iterator tidx_end, size_t level, bool updateCost){
+template <typename I> void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level, bool updateCost){
     for (auto it = tidx_begin; it != tidx_end; ++it){
-        auto [c0, isvalid] = scheduleBundleOrder(fun, tidx_begin, it + 1, level);
-        if (!isvalid) break;
+	std::pair<double,bool> c0isvalid = scheduleBundleOrder(fun, tidx_begin, it + 1, level);
+        if (!c0isvalid.second) break;
+	double c0 = c0isvalid.first;
 	double c1;
 	if (it == tidx_begin){
 	    c1 = scheduleBundleFusion(fun, it + 1, tidx_end, level, false);
@@ -102,9 +103,11 @@ void scheduleBundleFusion(Function fun, iterator tidx_begin, iterator tidx_end, 
     }
 }
 // Evaluates [`tidx_begin`, `tidx_end`) as a bundle together, fused at level `level`
-void schedule_bundle_order(Function fun, iterator tidx_begin, iterator tidx_end, size_t level){
+template <typename I>
+void schedule_bundle_order(Function fun, I tidx_begin, I tidx_end, size_t level){
     
 }
+
 
 void schedule_bundle_level(Function fun, TermBundle tb, size_t level){
     
