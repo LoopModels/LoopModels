@@ -1,6 +1,9 @@
 #pragma once
 
 #include "./math.hpp"
+#include <cstdint>
+#include <string>
+#include <vector>
 
 typedef Int Operation;
 /*
@@ -33,6 +36,21 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 */
 
 enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR };
+
+std::string toString(SourceType s) {
+    switch (s) {
+    case MEMORY:
+        return "Memory";
+    case TERM:
+        return "Term";
+    case CONSTANT:
+        return "Constant";
+    case LOOPINDUCTVAR:
+        return "Induction Variable";
+    default:
+        assert("Unreachable reached; invalid SourceType.");
+    }
+}
 
 enum NumType {
     Float64,
@@ -82,7 +100,7 @@ void show(Const c) {
         std::printf("Int8(%d)", int8_t(b));
         break;
     case UInt64:
-        std::printf("UInt64(%lx)", uint64_t(b));
+        std::printf("UInt64(%lu)", uint64_t(b));
         break;
     case UInt32:
         std::printf("UInt32(%x)", uint32_t(b));
@@ -155,8 +173,8 @@ L*i + M*j + N*k
 A = rand(2,3,4,5)
 B = view(A,1,:,:,:)
 
-1 [ 1 1 0 0   * [i, ik, j, jk]
-M   0 0 1 1 ]
+1 [ 0 1 1 0 0   * [1, i, ik, j, jk]
+M   0 0 0 1 1 ]
 // i + ik
 // M*(j + jk)
 // M = stride(A,2)
@@ -166,10 +184,10 @@ Example:
 
 perm: identity
 
-1 [ 1 0 0   .* [m,
-M   1 0 1       n,
-N   0 1 0       k ]
-K   0 0 0 ]
+1 [ 0 1 0 0   .* [1,
+M   0 1 0 1       m,
+N   0 0 1 0       n,
+K   0 0 0 0 ]     k ]
 # matrix of coefs
 # vector of indices into kron space
 
@@ -183,9 +201,9 @@ mem[offsets[i]:offsets[i+1]-1]
 [ [], [1], [0,0,1] ]
 [  1,  N,   M*M*N  ]
 
-1     [ 1 -2  3    1   * [i, ik, j, jk]
-N       1  8  3    0
-M*M*N   1 82 -1204 0 ]
+1     [ 0  1 -2  3    1   * [1, i, ik, j, jk]
+N       0  1  8  3    0
+M*M*N   0  1 82 -1204 0 ]
 
 1
 M
@@ -253,19 +271,51 @@ end
 // loopnest_to_array_map has length equal to loopnest depth, matches original
 //   order. Each value is a bitmask indicating which loops depend on it.
 
-template <typename T> struct VectorOfVectors {
+template <typename T> struct VoV {
     Vector<T, 0> memory;
     Vector<size_t, 0> offsets;
 
-    VectorOfVectors(Vector<T, 0> memory, Vector<size_t, 0> offsets)
+    VoV(Vector<T, 0> memory, Vector<size_t, 0> offsets)
         : memory(memory), offsets(offsets){};
+
+    Vector<T, 0> operator()(size_t i) {
+        return subset(memory, offsets(i), offsets(i + 1));
+    }
 };
 
-template <typename T> size_t length(VectorOfVectors<T> x) {
-    return length(x.offsets) - 1;
-}
-template <typename T> Vector<T, 0> getCol(VectorOfVectors<T> x, size_t i) {
-    return subset(x.memory, x.offsets(i), x.offsets(i + 1));
+template <typename T> size_t length(VoV<T> x) { return length(x.offsets) - 1; }
+
+template <typename T> struct VoVoV {
+    T *memory;
+    Vector<size_t, 0> innerOffsets;
+    Vector<size_t, 0> outerOffsets;
+    Vector<size_t, 0> memOffsets;
+
+    // memOffsets is preallocated but uninitialized memory
+    // length(memOffsets) = length(outerOffsets)
+    VoVoV(T *memory, Vector<size_t, 0> innerOffsets,
+          Vector<size_t, 0> outerOffsets, Vector<size_t, 0> memBuffer)
+        : memory(memory), innerOffsets(innerOffsets),
+          outerOffsets(outerOffsets), memOffsets(memBuffer) {
+        size_t i = 0;
+        memOffsets(0) = 0;
+        for (size_t j = 1; j < length(outerOffsets); ++j) {
+            i += innerOffsets(outerOffsets(j));
+            memOffsets(j) = i;
+        }
+    }
+
+    VoV<T> operator()(size_t i) {
+        size_t base = memOffsets(i);
+        Vector<T, 0> newMem(memory + base, memOffsets(i + 1) - base);
+        Vector<T, 0> offsets =
+            subset(innerOffsets, outerOffsets(i), outerOffsets(i + 1));
+        return VoV<T>(newMem, offsets);
+    }
+};
+
+template <typename T> size_t length(VoVoV<T> x) {
+    return length(x.outerOffsets) - 1;
 }
 
 // Rows of `R` correspond to strides / program variables, first row is `1`.
@@ -278,18 +328,111 @@ template <typename T> Vector<T, 0> getCol(VectorOfVectors<T> x, size_t i) {
 //   }
 // }
 // Would be
-// [ 0  0  1     [ n
-//   1  0  0    m
-//       ]    k ]
+// [1] [ 0  1  0  1    [ 1
+// [M]   0  1  0  0 ]    n
+//                       m
+//                       k ]
+//
+// Representation:
+// [ ]       []       // ind 0, corresponds to `1`
+// [[1],[M]] [1, 1]   // ind 1, corresponds to `n`
+// [ ]       []       // ind 2, corresponds to `m`
+// [[1]]     [1]      // ind 3, corresponds to `k`
+//
+// Memory representation of coef:
+// memory:  [1, 1, 1]
+// offsets: [0, 0, 2, 2, 3]
+//
+// Memory representation of programVariableCombinations:
+// Program variables inside `Function fun`: [M]
+// Constant 1:
+// memory: []
+// offset: []
+// i_1, SourceType: Induction Variable
+// memory: [1]
+// offset: [0,0,1]
+// i_2, SourceType: Induction Variable
+// memory: []
+// offset: []
+// i_3, SourceType: Induction Variable
+// memory: []
+// offset: [0,0]
+
 struct ArrayRef {
-    size_t arrayid;
-    Vector<SourceType, 1> ind_typ;                                    // layer0;
-    Vector<size_t, 1> ind_id;                                         // layer0;
-    Vector<VectorOfVectors<size_t>, 0> program_variable_combinations; // layer1
-    VectorOfVectors<Int> coef; // length(coef) == length(pvc), map(length, coef)
-                               // == map(length \circ length, pvc)
-    Int offset;
+    size_t arrayID;
+    Vector<SourceType, 1> indTyp;              // layer0;
+    Vector<size_t, 1> indID;                   // layer0;
+    VoVoV<size_t> programVariableCombinations; // layer1
+    VoV<Int> coef;                             // length(coef) == length(pvc)
+                   // map(length, coef) == map(length \circ length, pvc)
 };
+
+static std::string programVarName(size_t i) {
+    return "M_" + std::to_string(i);
+}
+
+void show(ArrayRef ar) {
+    printf("ArrayRef %zu:\n", ar.arrayID);
+
+    for (size_t i = 0; i < length(ar.coef); ++i) {
+        VoV<size_t> pvc = ar.programVariableCombinations(i);
+        Vector<Int,0> coefs = ar.coef(i);
+        std::string indStr = i ? "i_" + std::to_string(i-1) + "(" + toString(ar.indTyp(i-1)) + ")" : "";
+        // [1 (const)]       , coef: 1
+        // [i_1 (Induct Var)], coef: 1
+        //printf();
+        // coefs = [1, 2, 1]
+        // pvc = [[], [0], [0,1] ]
+        // (1 + 2 M_0 + (M_0 M_1)) * i_0 (Induction Variable)
+        //
+        std::string poly = "";
+        for (size_t j = 0; j < length(pvc); ++j) {
+            if (j){
+                poly += " + ";
+            }
+            Vector<size_t,0> index = pvc(j);
+            size_t numIndex = length(index);
+            Int coef = coefs(j);
+            if (numIndex){
+                if (numIndex != 1){ // not 0 by prev `if`
+                    if (coef != 1){
+                        poly += std::to_string(coef) + " (";
+                    }
+                    for (size_t k = 0; k < numIndex; ++k){
+                        poly += programVarName(index(k));
+                        if (k + 1 != numIndex)
+                            poly += " ";
+                    }
+                    if (coef != 1){
+                        poly += ")";
+                    }
+                } else { // numIndex == 1
+                    if (coef != 1){
+                        poly += std::to_string(coef) + " ";
+                    }
+                    poly += programVarName(index(0));
+                }
+            } else {
+                poly += std::to_string(coef);
+            }
+        }
+        if (length(pvc) == 1){
+            if (coefs(0) != 1){
+                poly += " " + indStr;
+            } else if (i) {
+                poly = indStr;
+            }
+        } else {
+            poly = "(" + poly + ")" + indStr;
+        }
+        printf("    %s", poly.c_str());
+        if (i + 1 < length(ar.coef)){
+            printf(" +\n");
+        } else {
+            printf("\n");
+        }
+    }
+}
 
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
@@ -308,7 +451,7 @@ struct Term {
     Vector<SourceType, 0> srct; // type of source
     Vector<Int, 0> srcs;        // source id
     Vector<Int, 0> dsts;        // destination id
-    uint32_t loopdeps;          // minimal loopdeps based on source's
+    uint32_t loopDeps;          // minimal loopdeps based on source's
     Int lnid;                   // id of loopnest
 };
 
@@ -344,7 +487,7 @@ struct Function {
     Vector<Term, 0> terms;
     Vector<TriangularLoopNest, 0> triln;
     Vector<RectangularLoopNest, 0> rectln;
-    //Vector<Array, 0> arrays;
+    // Vector<Array, 0> arrays;
     Vector<ArrayRef, 0> arrayrefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
@@ -357,13 +500,13 @@ struct Function {
     // char *data;
 
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
-             Vector<RectangularLoopNest, 0> rectln, //Vector<Array, 0> arrays,
+             Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
              Vector<ArrayRef, 0> arrayrefs, Vector<Const, 0> constants,
              Vector<bool, 0> visited, Vector<Schedule, 0> bestschedules,
              Matrix<Schedule, 0, 0> tempschedules,
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
              Vector<Vector<Int, 0>, 0> triloopcache) // FIXME: triloopcache type
-        : terms(terms), triln(triln), rectln(rectln), //arrays(arrays),
+        : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
           arrayrefs(arrayrefs), constants(constants), visited(visited),
           bestschedules(bestschedules), tempschedules(tempschedules),
           tempcosts(tempcosts), fastcostsum(fastcostsum),
@@ -400,6 +543,63 @@ Vector<Int, 0> inneighbors(Function fun, size_t i) {
 }
 
 Term &getTerm(Function fun, size_t tidx) { return fun.terms(tidx); }
+
+struct CostSummary {
+    double vCompCost;
+    double sCompCost;
+    double vLoadCost;
+    double sLoadCost;
+    double vStoreCost;
+    double sStoreCost;
+};
+
+struct TermBundle {
+    std::vector<size_t> termIDs;
+    std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
+};
+
+uint32_t getLoopDeps(Function fun, TermBundle tb) {
+    Term t = getTerm(fun, tb.termIDs[0]);
+    return t.loopDeps;
+}
+// for i in 1:I, j in 1:J;
+//   s = 0.0
+//   for ik in 1:3, jk in 1:3
+//      s += A[i + ik, j + jk] * kern[ik,jk];
+//   end
+//   out[i,j] = s
+// end
+//
+// for i in 1:I, j in 1:J
+//    out[i,j] = x[i,j] + x[i,j-1] + x[i,j+1];
+// end
+//
+// i + M*j     = i + M*j
+// i + M*(j-1) = i + M*j - M
+// i + M*(j+1) = i + M*j + M
+//
+// across the three above, we have x = -1, 0, 1
+// 1 [ 0  1  0  [ 1
+// M   x  0  1    i
+//                j ]
+//
+//
+// we have multiple terms with memory references to the same array (`x`)
+// with the smae arrayid, indTyp, indID, programVariableCombinations
+// We are checking for
+// 1. different offsets, and different
+// 2. first rows of coef.
+//
+
+ArrayRef getArrayRef(Function fun, TermBundle tb) {
+    Term t = getTerm(fun, tb.termIDs[0]);
+    return fun.arrayrefs[];
+}
+
+struct BundleGraph {
+    std::vector<TermBundle> termBundles;
+    std::vector<bool> visited;
+};
 
 // Flatten affine term relationships
 // struct AffineRelationship{

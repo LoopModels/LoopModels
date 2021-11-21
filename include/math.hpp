@@ -287,8 +287,8 @@ void show(Permutation perm) {
     auto numloop = getNLoops(perm);
     std::printf("perm: <");
     for (size_t j = 0; j < numloop - 1; j++)
-        std::printf("%d ", perm(j));
-    std::printf("%d>", perm(numloop - 1));
+        std::printf("%ld ", perm(j));
+    std::printf("%ld>", perm(numloop - 1));
 }
 
 void swap(Permutation p, Int i, Int j) {
