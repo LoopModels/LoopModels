@@ -4,8 +4,10 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <cstdio>
 #include <utility>
+#include <vector>
 
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
@@ -37,6 +39,7 @@ template <typename T> struct Vector<T, 0> {
     T *ptr;
     const size_t len;
     Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
+    Vector(std::vector<T>& x) : ptr(&x.front()), len(x.size()){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
@@ -46,13 +49,20 @@ template <typename T> struct Vector<T, 0> {
     }
 };
 
-template <typename T, size_t M> size_t length(Vector<T, M> v) { return M; }
+template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.len; }
 
 template <typename T, size_t M> void show(Vector<T, M> v) {
     for (size_t i = 0; i < length(v); i++) {
-        std::printf("%17d", v(i));
+        std::cout << v(i) << ", ";
     }
+    if (length(v)){
+        std::cout << v(length(v) - 1);
+    }
+}
+
+template <typename T> Vector<T, 0> toVector(std::vector<T>& x) {
+    return Vector<T, 0>(x);
 }
 
 template <typename T> bool allzero(T a, size_t len) {
@@ -126,7 +136,7 @@ template <typename T> struct Matrix<T, 0, 0> {
 };
 
 template <typename T, size_t M, size_t N>
-size_t size(Matrix<T, M, N> A, size_t i) {
+size_t size(Matrix<T, M, N>, size_t i) {
     return i == 0 ? M : N;
 }
 template <typename T, size_t M> size_t size(Matrix<T, M, 0> A, size_t i) {
@@ -221,10 +231,9 @@ StrideMatrix<T> subset(Matrix<T, M, N> A, size_t r0, size_t r1, size_t c0,
 }
 
 template <typename T, size_t M>
-Vector<T,0> subset(Vector<T,M> x, size_t i0, size_t i1){
-    return Vector<T,0>(x.ptr + i0, i1 - i0);
+Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
+    return Vector<T, 0>(x.ptr + i0, i1 - i0);
 }
-
 
 template <typename T> struct Tensor3 {
     T *ptr;

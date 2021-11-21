@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <bit>
 
 typedef Int Operation;
 /*
@@ -49,6 +50,7 @@ std::string toString(SourceType s) {
         return "Induction Variable";
     default:
         assert("Unreachable reached; invalid SourceType.");
+        return "";
     }
 }
 
@@ -76,10 +78,10 @@ void show(Const c) {
     auto b = c.bits;
     switch (c.type) {
     case Float64:
-        std::printf("Float64(%f)", double(b));
+        std::printf("Float64(%f)", std::bit_cast<double>(b));
         break;
     case Float32:
-        std::printf("Float32(%f)", float(b));
+        std::printf("Float32(%f)", std::bit_cast<float>((uint32_t) b));
         break;
     case Float16:
         std::printf("Float16(%x)", uint16_t(b));
@@ -300,8 +302,11 @@ template <typename T> struct VoVoV {
         size_t i = 0;
         memOffsets(0) = 0;
         for (size_t j = 1; j < length(outerOffsets); ++j) {
-            i += innerOffsets(outerOffsets(j));
-            memOffsets(j) = i;
+            size_t last_idx = outerOffsets(j);
+            if (last_idx > 0) {
+                i += innerOffsets(last_idx - 1);
+                memOffsets(j) = i;
+            }
         }
     }
 
@@ -360,54 +365,54 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 struct ArrayRef {
     size_t arrayID;
-    Vector<SourceType, 1> indTyp;              // layer0;
-    Vector<size_t, 1> indID;                   // layer0;
+    Vector<SourceType, 0> indTyp;              // layer0;
+    Vector<size_t, 0> indID;                   // layer0;
     VoVoV<size_t> programVariableCombinations; // layer1
     VoV<Int> coef;                             // length(coef) == length(pvc)
                    // map(length, coef) == map(length \circ length, pvc)
 };
 
-static std::string programVarName(size_t i) {
-    return "M_" + std::to_string(i);
-}
+static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
 void show(ArrayRef ar) {
     printf("ArrayRef %zu:\n", ar.arrayID);
 
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
-        Vector<Int,0> coefs = ar.coef(i);
-        std::string indStr = i ? "i_" + std::to_string(i-1) + "(" + toString(ar.indTyp(i-1)) + ")" : "";
+        Vector<Int, 0> coefs = ar.coef(i);
+        std::string indStr = i ? "i_" + std::to_string(ar.indID(i - 1)) + " (" +
+                                     toString(ar.indTyp(i - 1)) + ")"
+                               : "";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
-        //printf();
+        // printf();
         // coefs = [1, 2, 1]
         // pvc = [[], [0], [0,1] ]
         // (1 + 2 M_0 + (M_0 M_1)) * i_0 (Induction Variable)
         //
         std::string poly = "";
         for (size_t j = 0; j < length(pvc); ++j) {
-            if (j){
+            if (j) {
                 poly += " + ";
             }
-            Vector<size_t,0> index = pvc(j);
+            Vector<size_t, 0> index = pvc(j);
             size_t numIndex = length(index);
             Int coef = coefs(j);
-            if (numIndex){
-                if (numIndex != 1){ // not 0 by prev `if`
-                    if (coef != 1){
+            if (numIndex) {
+                if (numIndex != 1) { // not 0 by prev `if`
+                    if (coef != 1) {
                         poly += std::to_string(coef) + " (";
                     }
-                    for (size_t k = 0; k < numIndex; ++k){
+                    for (size_t k = 0; k < numIndex; ++k) {
                         poly += programVarName(index(k));
                         if (k + 1 != numIndex)
                             poly += " ";
                     }
-                    if (coef != 1){
+                    if (coef != 1) {
                         poly += ")";
                     }
                 } else { // numIndex == 1
-                    if (coef != 1){
+                    if (coef != 1) {
                         poly += std::to_string(coef) + " ";
                     }
                     poly += programVarName(index(0));
@@ -416,17 +421,17 @@ void show(ArrayRef ar) {
                 poly += std::to_string(coef);
             }
         }
-        if (length(pvc) == 1){
-            if (coefs(0) != 1){
+        if (length(pvc) == 1) {
+            if (coefs(0) != 1) {
                 poly += " " + indStr;
             } else if (i) {
                 poly = indStr;
             }
         } else {
-            poly = "(" + poly + ")" + indStr;
+            poly = "(" + poly + ") " + indStr;
         }
         printf("    %s", poly.c_str());
-        if (i + 1 < length(ar.coef)){
+        if (i + 1 < length(ar.coef)) {
             printf(" +\n");
         } else {
             printf("\n");
@@ -591,10 +596,12 @@ uint32_t getLoopDeps(Function fun, TermBundle tb) {
 // 2. first rows of coef.
 //
 
+/*
 ArrayRef getArrayRef(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
     return fun.arrayrefs[];
 }
+*/
 
 struct BundleGraph {
     std::vector<TermBundle> termBundles;
