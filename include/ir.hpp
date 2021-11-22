@@ -36,7 +36,10 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR };
+// SourceType: MEMTERM
+// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 8 bits / dst_term 8 bits
+// size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits / src_term 16 bits / dst_term 16 bits
+enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, MEMTERM };
 
 std::string toString(SourceType s) {
     switch (s) {
@@ -453,9 +456,9 @@ void show(ArrayRef ar) {
 // - Indicate
 struct Term {
     Operation op;               // Operation id
-    Vector<SourceType, 0> srct; // type of source
-    Vector<Int, 0> srcs;        // source id
-    Vector<Int, 0> dsts;        // destination id
+    Vector<SourceType, 0> srcTyp; // type of source
+    Vector<size_t, 0> srcs;        // source id
+    Vector<size_t, 0> dsts;        // destination id
     uint32_t loopDeps;          // minimal loopdeps based on source's
     Int lnid;                   // id of loopnest
 };
@@ -466,14 +469,41 @@ bool isadditive(Term t) {
     return (op == ADD) | (op == SUB1) | (op == SUB2) | (op == IDENTITY);
 }
 */
-
+struct FusionTree {
+    Matrix<Int,0,0> tree;
+};
 struct Schedule {
-    Int *ptr;
-    size_t nloops;
+    Int* ptr;
+    const size_t numTerms;
+    const size_t numLoops;
+    double cost;
 };
 
-size_t getNLoops(Schedule x) { return x.nloops; };
+size_t getNLoops(Schedule x) { return x.numLoops; };
 
+FusionTree fusionMatrix(Schedule s){
+    return FusionTree{Matrix<Int, 0, 0>(s.ptr, s.numTerms, s.numLoops)};
+}
+
+Permutation getPermutation(Schedule s, size_t i) {
+    Int offset = s.numTerms * s.numLoops;
+    Int twoNumLoops = 2*s.numLoops;
+    offset += i * (twoNumLoops + 1);
+    Int* permPtr = s.ptr + offset;
+    return Permutation(permPtr, *(permPtr + twoNumLoops));
+};
+
+Int schedule_size(Schedule s) { return s.numTerms * (3*s.numLoops + 1); };
+
+size_t countScheduled(Schedule s, Int segment, Int level){
+    size_t c = 0;
+    Vector<Int,0> v = getCol(fusionMatrix(s).tree, level);
+    for (size_t i = 0; i < length(v); ++i)
+	c += (v(i) == segment);
+    return c;
+}
+
+    
 // Assumption: Does not support more than 32 loops.
 struct FastCostSummary {
     double scalar; // Scalar cost
@@ -538,13 +568,13 @@ void clear(Function fun) {
 }
 size_t nv(Function fun) { return length(fun.terms); }
 size_t ne(Function fun) { return fun.ne; }
-Vector<Int, 0> outneighbors(Term t) { return t.dsts; }
-Vector<Int, 0> outneighbors(Function fun, size_t i) {
-    return outneighbors(fun.terms(i));
+Vector<size_t, 0> outNeighbors(Term t) { return t.dsts; }
+Vector<size_t, 0> outNeighbors(Function fun, size_t i) {
+    return outNeighbors(fun.terms(i));
 }
-Vector<Int, 0> inneighbors(Term t) { return t.srcs; }
-Vector<Int, 0> inneighbors(Function fun, size_t i) {
-    return inneighbors(fun.terms(i));
+Vector<size_t, 0> inNeighbors(Term t) { return t.srcs; }
+Vector<size_t, 0> inNeighbors(Function fun, size_t i) {
+    return inNeighbors(fun.terms(i));
 }
 
 Term &getTerm(Function fun, size_t tidx) { return fun.terms(tidx); }
@@ -561,12 +591,96 @@ struct CostSummary {
 struct TermBundle {
     std::vector<size_t> termIDs;
     std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
+    std::vector<SourceType> srcTyp;
+    std::vector<size_t> srcs;
+    std::vector<size_t> dsts;
 };
+
+std::vector<size_t>& outNeighbors(TermBundle& tb) { return tb.dsts; }
+std::vector<size_t>& inNeighbors(TermBundle& tb) { return tb.srcs; }
+
+struct TermBundleGraph {
+    std::vector<TermBundle> tbs;
+    Schedule bestSchedule;
+    Schedule tempSchedule;
+    std::vector<std::vector<size_t>> indexSets;
+    std::vector<std::vector<bool>> visited;
+};
+std::vector<size_t>& outNeighbors(TermBundleGraph& tbg, size_t tbId){
+    TermBundle &tb = tbg.tbs[tbId];
+    return outNeighbors(tb);
+}
+std::vector<size_t>& inNeighbors(TermBundleGraph& tbg, size_t tbId){
+    TermBundle &tb = tbg.tbs[tbId];
+    return inNeighbors(tb);
+}
+
+void resetVisited(TermBundleGraph tbg, size_t level){
+    std::vector<bool> &visited = tbg.visited[level];
+    for (size_t i = 0; i < visited.size(); ++i){
+	visited[i] = false;
+    }
+    return;
+}
+void markVisited(TermBundleGraph tbg, size_t tb, size_t level){
+    std::vector<bool> &visited = tbg.visited[level];
+    visited[tb] = true;
+    return;
+}
+
+bool allSourcesVisited(TermBundleGraph tbg, size_t tbId, size_t level){
+    std::vector<bool> &visited = tbg.visited[level];
+    // TermBundle &tb = tbg.tbs[tbId];
+    std::vector<size_t> &srcs = inNeighbors(tbg, tbId);
+    bool allVisited = true;
+    for (size_t i = 0; i < srcs.size(); ++i){
+	allVisited &= visited[srcs[i]];
+    }
+    return allVisited;
+}
+
+std::vector<size_t>& getIndexSet(TermBundleGraph &tbg, size_t node, size_t level){
+    std::vector<size_t> &dsts = outNeighbors(tbg, node);
+    std::vector<size_t> &indexSet = tbg.indexSets[level];
+    // Schedule s = tbg.tempSchedule;
+    indexSet.clear();
+    for (size_t i = 0; i < dsts.size(); ++i){
+	size_t dstId = dsts[i];
+	if (allSourcesVisited(tbg, dstId, level))
+	    indexSet.push_back(dstId);
+    }
+    return indexSet;
+}
+
+uint32_t compatibleLoops(Function &fun, TermBundleGraph &tbg, size_t srcId, size_t dstId, size_t level){
+    size_t j = 0xffffffffffffffff;
+    size_t jInit = j;
+    TermBundle &dst = tbg.tbs[dstId];
+    std::vector<size_t> &srcV = inNeighbors(dst);
+    for (size_t i = 0; i < srcV.size(); ++i){
+	if (srcV[i] == srcId){
+	    SourceType srcT = dst.srcTyp[j];
+	    switch (srcT) {
+	    case TERM:
+		// return same loop as srcId
+		return ;
+	    case MEMTERM:
+		// rotation is possible, so return vector of possiblities
+		return compatibleLoops();
+	    default:
+		assert("invalid src type");
+	    }
+	}
+    }
+    assert("source not found");
+}
 
 uint32_t getLoopDeps(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
     return t.loopDeps;
 }
+
+
 // for i in 1:I, j in 1:J;
 //   s = 0.0
 //   for ik in 1:3, jk in 1:3
@@ -602,11 +716,6 @@ ArrayRef getArrayRef(Function fun, TermBundle tb) {
     return fun.arrayrefs[];
 }
 */
-
-struct BundleGraph {
-    std::vector<TermBundle> termBundles;
-    std::vector<bool> visited;
-};
 
 // Flatten affine term relationships
 // struct AffineRelationship{

@@ -5,17 +5,28 @@
 #include <algorithm>
 #include <vector>
 
-Permutation getpermutation(Schedule x) {
-    return Permutation(x.ptr, getNLoops(x));
-};
-Vector<Int, 0> getbeta(Schedule x) {
-    return Vector<Int, 0>(x.ptr + 2 * getNLoops(x), 1 + 2 * getNLoops(x));
+FusionTree fusionMatrix(Schedule s){
+    return FusionTree{Matrix<Int, 0, 0>(s.ptr, s.numTerms, s.numLoops)};
+}
+
+Permutation getPermutation(Schedule s, size_t i) {
+    Int offset = s.numTerms * s.numLoops;
+    Int twoNumLoops = 2*s.numLoops;
+    offset += i * (twoNumLoops + 1);
+    Int* permPtr = s.ptr + offset;
+    return Permutation(permPtr, *(permPtr + twoNumLoops));
 };
 
-size_t schedule_size(size_t nloops) { return 4 * nloops + 1; };
-size_t schedule_size(Schedule x) { return schedule_size(getNLoops(x)); };
+Int schedule_size(Schedule s) { return s.numTerms * (3*s.numLoops + 1); };
 
-struct BaselineModelCost {};
+size_t countScheduled(Schedule s, Int segment, Int level){
+    size_t c = 0;
+    Vector<Int,0> v = getCol(fusionMatrix(s).tree, level);
+    for (size_t i = 0; i < length(v); ++i)
+	c += (v(i) == segment);
+    return c;
+}
+// struct BaselineModelCost {};
 
 // template <typename A>
 void visit(std::vector<Int> sorted, Function fun, size_t idx) {
@@ -37,10 +48,8 @@ std::vector<Int> topologicalSort(Function fun) {
     return sorted;
 }
 
-typedef std::vector<std::vector<Int>> TermBundle;
-
-TermBundle weaklyConnectedComponents(Function fun) {
-    TermBundle components;
+std::vector<std::vector<Int>> weaklyConnectedComponents(Function fun) {
+    std::vector<std::vector<Int>> components;
     clear(fun);
     for (size_t j = 0; j < nv(fun); ++j) {
         if (fun.visited(j))
@@ -84,15 +93,11 @@ void fillfastmemcostsum(Function fun) { return; }
 // can still fill correctly through the recursion. On entry  (updateCost =
 // true), this is when we use the temp at that level to update bestcost.
 
-void scheduleBundleFusion(Function fun){
-
-}
 
 template <typename I>
 void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,
                           bool updateCost) {
     for (auto it = tidx_begin; it != tidx_end; ++it) {
-        
         auto [c0, isvalid] =
             scheduleBundleOrder(fun, tidx_begin, it + 1, level);
         if (!isvalid)
@@ -120,7 +125,7 @@ void schedule_bundle_order(Function fun, I tidx_begin, I tidx_end,
 void schedule_bundle_level(Function fun, TermBundle tb, size_t level) {}
 
 // Greedily prefuse elements in tb.
-TermBundle &prefuse(Function fun, std::vector<Int> tb) {
+TermBundleGraph &prefuse(Function fun, std::vector<Int> tb) {
     TermBundle tb;
     std::vector<Int> currentBundle;
     currentBundle.push_back(tb(0));
@@ -149,17 +154,32 @@ TermBundle &prefuse(Function fun, std::vector<Int> tb) {
 // at level `l`...
 // 1. iterate over fusion combinations
 
+void scheduleBundleFusion(Function fun, std::vector<TermBundle> tbs, size_t i = 0){
+    TermBundle tb = tbs[i];
+    std::vector<size_t> dsts = outneighbors(tb);
+    for (size_t j = 0; j < dsts.size(); ++j){
 
+    }
+    
+}
 
-void scheduleBundleLevel(Function fun, BundleGraph bg, size_t level){
-    TermBundle headbundle = tbs[0];
+size_t getSegmentSize(TermBundleGraph tbg, size_t segment, size_t level = 0){
+    if (level){
+	return countScheduled(tbg.tempSchedule, segment, level-1);
+    } else {
+	return tbg.tbs.size();
+    }
+}
 
+void scheduleBundleLevel(Function fun, TermBundleGraph tbg, size_t position = 0, size_t level = 0){
+    TermBundle tb = tbg.tbs[position];
+    
 }
 
 // prefuse terms
 void scheduleBundle(Function fun, std::vector<Int> wcc) {
-    BundleGraph bg = prefuse(fun, wcc);
-    scheduleBundleLevel(fun, bg, 0);
+    TermBundleGraph tbg = prefuse(fun, wcc);
+    scheduleBundleLevel(fun, tbg, 0, 0);
     return;
 }
 
