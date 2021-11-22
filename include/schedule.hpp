@@ -104,29 +104,8 @@ void schedule_bundle_order(Function fun, I tidx_begin, I tidx_end,
 void schedule_bundle_level(Function fun, TermBundle tb, size_t level) {}
 
 // Greedily prefuse elements in tb.
-TermBundleGraph &prefuse(Function fun, std::vector<Int> tb) {
-    TermBundle tb;
-    std::vector<Int> currentBundle;
-    currentBundle.push_back(tb(0));
-    for (size_t j = 1; j < tb.size(); ++j) {
-        Term termHead = getTerm(fun, j - 1);
-        Term termTemp = getTerm(fun, j);
-        if ((termTemp.lnid != termHead.tid) &
-            (termTemp.loopdeps == termHead.loopdeps)) {
-            // Passed cheap checks.
-            // Now check memory accesses
-            // Also, should check if they're reductions... We do not want to
-            // pre-fuse register tiling candiates.
-            if (contiguousMask(fun, termTemp) ==
-                contiguousMask(fun, termHead)) {
-                tb.emplace_back(currentBundle);
-                currentBundle.clear();
-            }
-        }
-        currentBundle.push_back(tb(j));
-    }
-    tb.emplace_back(currentBundle);
-    return tb;
+TermBundleGraph &prefuse(Function fun, std::vector<Int> wcc) {
+    std::vector<TermBundle> tbs; 
 }
 
 
@@ -135,7 +114,7 @@ TermBundleGraph &prefuse(Function fun, std::vector<Int> tb) {
 
 void scheduleBundleFusion(Function fun, std::vector<TermBundle> tbs, size_t i = 0){
     TermBundle tb = tbs[i];
-    std::vector<size_t> dsts = outneighbors(tb);
+    std::vector<size_t> dsts = outNeighbors(tb);
     for (size_t j = 0; j < dsts.size(); ++j){
 
     }

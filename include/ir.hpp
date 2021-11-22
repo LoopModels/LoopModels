@@ -652,28 +652,37 @@ std::vector<size_t>& getIndexSet(TermBundleGraph &tbg, size_t node, size_t level
     return indexSet;
 }
 
-uint32_t compatibleLoops(Function &fun, TermBundleGraph &tbg, size_t srcId, size_t dstId, size_t level){
-    size_t j = 0xffffffffffffffff;
-    size_t jInit = j;
+SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId){
     TermBundle &dst = tbg.tbs[dstId];
     std::vector<size_t> &srcV = inNeighbors(dst);
     for (size_t i = 0; i < srcV.size(); ++i){
 	if (srcV[i] == srcId){
-	    SourceType srcT = dst.srcTyp[j];
-	    switch (srcT) {
-	    case TERM:
-		// return same loop as srcId
-		return ;
-	    case MEMTERM:
-		// rotation is possible, so return vector of possiblities
-		return compatibleLoops();
-	    default:
-		assert("invalid src type");
-	    }
+	    return dst.srcTyp[i];
 	}
     }
     assert("source not found");
+    return TERM;
 }
+
+
+// Will probably handle this differently, i.e. check source type, and then
+// only call given MEMTERM.
+/*
+uint32_t compatibleLoops(Function &fun, TermBundleGraph &tbg, size_t srcId,
+size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
+    switch (srcTyp) {
+    case TERM:
+        // return same loop as srcId
+        return ;
+    case MEMTERM:
+        // rotation is possible, so return vector of possiblities
+        return compatibleLoops();
+    default:
+        assert("invalid src type");
+    }
+}
+*/
+
 
 uint32_t getLoopDeps(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
