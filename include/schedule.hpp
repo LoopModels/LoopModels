@@ -5,27 +5,6 @@
 #include <algorithm>
 #include <vector>
 
-FusionTree fusionMatrix(Schedule s){
-    return FusionTree{Matrix<Int, 0, 0>(s.ptr, s.numTerms, s.numLoops)};
-}
-
-Permutation getPermutation(Schedule s, size_t i) {
-    Int offset = s.numTerms * s.numLoops;
-    Int twoNumLoops = 2*s.numLoops;
-    offset += i * (twoNumLoops + 1);
-    Int* permPtr = s.ptr + offset;
-    return Permutation(permPtr, *(permPtr + twoNumLoops));
-};
-
-Int schedule_size(Schedule s) { return s.numTerms * (3*s.numLoops + 1); };
-
-size_t countScheduled(Schedule s, Int segment, Int level){
-    size_t c = 0;
-    Vector<Int,0> v = getCol(fusionMatrix(s).tree, level);
-    for (size_t i = 0; i < length(v); ++i)
-	c += (v(i) == segment);
-    return c;
-}
 // struct BaselineModelCost {};
 
 // template <typename A>
