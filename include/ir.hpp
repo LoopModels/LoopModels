@@ -36,10 +36,10 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-// SourceType: MEMTERM
-// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 8 bits / dst_term 8 bits
-// size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits / src_term 16 bits / dst_term 16 bits
-enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, MEMTERM };
+// SourceType: RAW/WAR
+// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 16 bits
+// size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits / src_term 32 bits
+enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, RAW, WAR };
 
 std::string toString(SourceType s) {
     switch (s) {
@@ -51,6 +51,10 @@ std::string toString(SourceType s) {
         return "Constant";
     case LOOPINDUCTVAR:
         return "Induction Variable";
+    case RAW:
+	return "Read after write";
+    case WAR:
+	return "Write after read";
     default:
         assert("Unreachable reached; invalid SourceType.");
         return "";

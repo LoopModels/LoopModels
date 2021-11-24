@@ -8,37 +8,45 @@
 // struct BaselineModelCost {};
 
 // template <typename A>
-void visit(std::vector<Int> sorted, Function fun, size_t idx) {
-    if (fun.visited(idx))
-        return;
-    auto outs = outneighbors(fun, idx);
-    for (size_t j = 0; j < length(outs); ++j)
-        visit(sorted, fun, outs(j));
+// cycles marks write leading to cycle, and outnum of the write.
+void visit(std::vector<Int> sorted, std::vector<std::pair<Int,Int>> cycles, Function fun, size_t idx) {
+    auto outs = outNeighbors(fun, idx);
+    for (size_t j = 0; j < length(outs); ++j){
+	if (fun.visited(j)){
+	    cycles.push_back(std::make_pair(idx,j));
+	} else {
+	    visit(sorted, cycles, fun, outs(j));
+	}
+    }
     sorted.push_back(idx);
 }
 
-std::vector<Int> topologicalSort(Function fun) {
+std::pair<std::vector<Int>,std::vector<std::pair<Int,Int>>> topologicalSort(Function fun) {
     std::vector<Int> sorted;
+    std::vector<std::pair<Int,Int>> cycles;
     clear(fun);
     for (size_t j = 0; j < nv(fun); j++) {
-        visit(sorted, fun, j);
+	if (!fun.visited(j))
+	    visit(sorted, cycles, fun, j);
     }
     std::reverse(sorted.begin(), sorted.end());
-    return sorted;
+    return std::make_pair(sorted, cycles);
 }
 
-std::vector<std::vector<Int>> weaklyConnectedComponents(Function fun) {
+std::pair<std::vector<std::vector<Int>>,std::vector<std::vector<std::pair<Int,Int>>>> weaklyConnectedComponents(Function fun) {
     std::vector<std::vector<Int>> components;
+    std::vector<std::vector<std::pair<Int,Int>>> cycles;
     clear(fun);
     for (size_t j = 0; j < nv(fun); ++j) {
         if (fun.visited(j))
             continue;
         std::vector<Int> sorted;
-        visit(sorted, fun, j);
+        std::vector<std::pair<Int,Int>> cycles;
+        visit(sorted, cycles, fun, j);
         std::reverse(sorted.begin(), sorted.end());
         components.emplace_back(sorted);
     }
-    return components;
+    return std::make_pair(components, cycles);
 }
 
 void fillfastmemcostsum(Function fun) { return; }
