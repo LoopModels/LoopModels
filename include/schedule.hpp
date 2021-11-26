@@ -9,45 +9,6 @@
 
 // template <typename A>
 // cycles marks write leading to cycle, and outnum of the write.
-void visit(std::vector<Int> sorted, std::vector<std::pair<Int,Int>> cycles, Function fun, size_t idx) {
-    auto outs = outNeighbors(fun, idx);
-    for (size_t j = 0; j < length(outs); ++j){
-	if (fun.visited(j)){
-	    cycles.push_back(std::make_pair(idx,j));
-	} else {
-	    visit(sorted, cycles, fun, outs(j));
-	}
-    }
-    sorted.push_back(idx);
-}
-
-std::pair<std::vector<Int>,std::vector<std::pair<Int,Int>>> topologicalSort(Function fun) {
-    std::vector<Int> sorted;
-    std::vector<std::pair<Int,Int>> cycles;
-    clear(fun);
-    for (size_t j = 0; j < nv(fun); j++) {
-	if (!fun.visited(j))
-	    visit(sorted, cycles, fun, j);
-    }
-    std::reverse(sorted.begin(), sorted.end());
-    return std::make_pair(sorted, cycles);
-}
-
-std::pair<std::vector<std::vector<Int>>,std::vector<std::vector<std::pair<Int,Int>>>> weaklyConnectedComponents(Function fun) {
-    std::vector<std::vector<Int>> components;
-    std::vector<std::vector<std::pair<Int,Int>>> cycles;
-    clear(fun);
-    for (size_t j = 0; j < nv(fun); ++j) {
-        if (fun.visited(j))
-            continue;
-        std::vector<Int> sorted;
-        std::vector<std::pair<Int,Int>> cycles;
-        visit(sorted, cycles, fun, j);
-        std::reverse(sorted.begin(), sorted.end());
-        components.emplace_back(sorted);
-    }
-    return std::make_pair(components, cycles);
-}
 
 void fillfastmemcostsum(Function fun) { return; }
 
@@ -141,6 +102,10 @@ void scheduleBundleLevel(Function fun, TermBundleGraph tbg, size_t position = 0,
     TermBundle tb = tbg.tbs[position];
     
 }
+void scheduleBundleLevel(Function fun, TermBundleGraph tbg, std::vector<std::pair<Int,Int>> cycles, size_t position = 0, size_t level = 0){
+    TermBundle tb = tbg.tbs[position];
+    
+}
 
 // prefuse terms
 void scheduleBundle(Function fun, std::vector<Int> wcc) {
@@ -148,12 +113,19 @@ void scheduleBundle(Function fun, std::vector<Int> wcc) {
     scheduleBundleLevel(fun, tbg, 0, 0);
     return;
 }
+void scheduleBundle(Function fun, std::vector<Int> wcc, std::vector<std::pair<Int,Int>> cycles) {
+    TermBundleGraph tbg = prefuse(fun, wcc);
+    scheduleBundleLevel(fun, tbg, cycles, 0, 0);
+    return;
+}
 
-/*
-void schedule(Function fun, TermBundle tb) {
+
+void schedule(Function fun) {
+    auto [components,cycles] = weaklyConnectedComponents(fun);
+    TermBundleGraph tbg(fun);
     for (size_t j = 0; j < length(tb); ++j) {
         scheduleBundle(fun, tb[j]);
     }
     return;
 }
-*/
+

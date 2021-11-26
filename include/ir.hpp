@@ -603,12 +603,53 @@ struct TermBundle {
 std::vector<size_t>& outNeighbors(TermBundle& tb) { return tb.dsts; }
 std::vector<size_t>& inNeighbors(TermBundle& tb) { return tb.srcs; }
 
+void visit(std::vector<Int> sorted, std::vector<std::pair<Int,Int>> cycles, Function fun, size_t idx) {
+    auto outs = outNeighbors(fun, idx);
+    for (size_t j = 0; j < length(outs); ++j){
+	if (fun.visited(j)){
+	    cycles.push_back(std::make_pair(idx,j));
+	} else {
+	    visit(sorted, cycles, fun, outs(j));
+	}
+    }
+    sorted.push_back(idx);
+}
+
+std::pair<std::vector<Int>,std::vector<std::pair<Int,Int>>> topologicalSort(Function fun) {
+    std::vector<Int> sorted;
+    std::vector<std::pair<Int,Int>> cycles;
+    clear(fun);
+    for (size_t j = 0; j < nv(fun); j++) {
+	if (!fun.visited(j))
+	    visit(sorted, cycles, fun, j);
+    }
+    std::reverse(sorted.begin(), sorted.end());
+    return std::make_pair(sorted, cycles);
+}
+
+std::pair<std::vector<std::vector<Int>>,std::vector<std::vector<std::pair<Int,Int>>>> weaklyConnectedComponents(Function fun) {
+    std::vector<std::vector<Int>> components;
+    std::vector<std::vector<std::pair<Int,Int>>> cycles;
+    clear(fun);
+    for (size_t j = 0; j < nv(fun); ++j) {
+        if (fun.visited(j))
+            continue;
+        std::vector<Int> sorted;
+        std::vector<std::pair<Int,Int>> cycles;
+        visit(sorted, cycles, fun, j);
+        std::reverse(sorted.begin(), sorted.end());
+        components.emplace_back(sorted);
+    }
+    return std::make_pair(components, cycles);
+}
+
 struct TermBundleGraph {
     std::vector<TermBundle> tbs;
     Schedule bestSchedule;
     Schedule tempSchedule;
-    std::vector<std::vector<size_t>> indexSets;
+    // std::vector<std::vector<size_t>> indexSets;
     std::vector<std::vector<bool>> visited;
+    std::vector<std::pair<Int,Int>> cycles;
 };
 std::vector<size_t>& outNeighbors(TermBundleGraph& tbg, size_t tbId){
     TermBundle &tb = tbg.tbs[tbId];
@@ -643,11 +684,11 @@ bool allSourcesVisited(TermBundleGraph tbg, size_t tbId, size_t level){
     return allVisited;
 }
 
-std::vector<size_t>& getIndexSet(TermBundleGraph &tbg, size_t node, size_t level){
+// returns set of all outNeighbors that are covered
+std::vector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node, size_t level){
     std::vector<size_t> &dsts = outNeighbors(tbg, node);
-    std::vector<size_t> &indexSet = tbg.indexSets[level];
-    // Schedule s = tbg.tempSchedule;
-    indexSet.clear();
+    std::vector<size_t> indexSet;// = tbg.indexSets[level];
+    // indexSet.clear();
     for (size_t i = 0; i < dsts.size(); ++i){
 	size_t dstId = dsts[i];
 	if (allSourcesVisited(tbg, dstId, level))
