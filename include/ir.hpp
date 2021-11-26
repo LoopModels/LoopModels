@@ -1,10 +1,13 @@
 #pragma once
 
 #include "./math.hpp"
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
-#include <bit>
 
 typedef Int Operation;
 /*
@@ -37,9 +40,10 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 */
 
 // SourceType: RAW/WAR
-// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 16 bits
-// size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits / src_term 32 bits
-enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, RAW, WAR };
+// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 16
+// bits size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits /
+// src_term 32 bits
+enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, RBW, WBR };
 
 std::string toString(SourceType s) {
     switch (s) {
@@ -51,10 +55,10 @@ std::string toString(SourceType s) {
         return "Constant";
     case LOOPINDUCTVAR:
         return "Induction Variable";
-    case RAW:
-	return "Read after write";
-    case WAR:
-	return "Write after read";
+    case RBW:
+        return "Read before write";
+    case WBR:
+        return "Write before read";
     default:
         assert("Unreachable reached; invalid SourceType.");
         return "";
@@ -88,7 +92,7 @@ void show(Const c) {
         std::printf("Float64(%f)", std::bit_cast<double>(b));
         break;
     case Float32:
-        std::printf("Float32(%f)", std::bit_cast<float>((uint32_t) b));
+        std::printf("Float32(%f)", std::bit_cast<float>((uint32_t)b));
         break;
     case Float16:
         std::printf("Float16(%x)", uint16_t(b));
@@ -459,12 +463,12 @@ void show(ArrayRef ar) {
 // - (For convenience) destination operations.
 // - Indicate
 struct Term {
-    Operation op;               // Operation id
+    Operation op;                 // Operation id
     Vector<SourceType, 0> srcTyp; // type of source
-    Vector<size_t, 0> srcs;        // source id
-    Vector<size_t, 0> dsts;        // destination id
-    uint32_t loopDeps;          // minimal loopdeps based on source's
-    Int lnid;                   // id of loopnest
+    Vector<size_t, 0> srcs;       // source id
+    Vector<size_t, 0> dsts;       // destination id
+    uint32_t loopDeps;            // minimal loopdeps based on source's
+    Int lnid;                     // id of loopnest
 };
 
 /*
@@ -473,41 +477,62 @@ bool isadditive(Term t) {
     return (op == ADD) | (op == SUB1) | (op == SUB2) | (op == IDENTITY);
 }
 */
+// Columns are levels in the loop nest, rows correspond to term groups.
+// At each level, the matrix value indexes into which loop it corresponds to.
+// [ 0 0 0 0
+//   0 1 0 0
+//   0 0 0 0
+//   0 1 1 0
+//   0 1 2 0 ]
+// For example, level 0, all 5 term groups have an index of 0, meaning they
+// are fused into the same group. At level 1, term groups 1 and 3 have index 0,
+// while the remaining term groups have index 1. Thus, term groups 1 and 3
+// are fused into the first loop, and the remaining terms are fused into the
+// second loop.
+// Trivally, all fused together in all four loops:
+// [ 0 0 0 0
+//   0 0 0 0
+//   0 0 0 0 ]
+// Trivially, all immediately split:
+// [ 0 0 0 0
+//   1 0 0 0
+//   2 0 0 0 ]
 struct FusionTree {
-    Matrix<Int,0,0> tree;
+    Matrix<Int, 0, 0> tree;
 };
 struct Schedule {
-    Int* ptr;
-    const size_t numTerms;
-    const size_t numLoops;
+    Int *ptr;
+    const size_t numTermGs; // number of rows in mathrix
+    const size_t numLoops; // number of columns in matrix
     double cost;
 };
 
 size_t getNLoops(Schedule x) { return x.numLoops; };
 
-FusionTree fusionMatrix(Schedule s){
-    return FusionTree{Matrix<Int, 0, 0>(s.ptr, s.numTerms, s.numLoops)};
+FusionTree fusionMatrix(Schedule s) {
+    return FusionTree{Matrix<Int, 0, 0>(s.ptr, s.numTermGs, s.numLoops)};
 }
 
 Permutation getPermutation(Schedule s, size_t i) {
-    Int offset = s.numTerms * s.numLoops;
-    Int twoNumLoops = 2*s.numLoops;
+    Int offset = s.numTermGs * s.numLoops;
+    Int twoNumLoops = 2 * s.numLoops;
     offset += i * (twoNumLoops + 1);
-    Int* permPtr = s.ptr + offset;
+    Int *permPtr = s.ptr + offset;
     return Permutation(permPtr, *(permPtr + twoNumLoops));
 };
 
-Int schedule_size(Schedule s) { return s.numTerms * (3*s.numLoops + 1); };
+Int schedule_size(Schedule s) { return s.numTermGs * (3 * s.numLoops + 1); };
 
-size_t countScheduled(Schedule s, Int segment, Int level){
+/* // commented out because this is broken
+size_t countScheduled(Schedule s, Int segment, Int level) {
     size_t c = 0;
-    Vector<Int,0> v = getCol(fusionMatrix(s).tree, level);
+    Vector<Int, 0> v = getCol(fusionMatrix(s).tree, level);
     for (size_t i = 0; i < length(v); ++i)
-	c += (v(i) == segment);
+        c += (v(i) == segment);
     return c;
 }
+*/
 
-    
 // Assumption: Does not support more than 32 loops.
 struct FastCostSummary {
     double scalar; // Scalar cost
@@ -565,23 +590,25 @@ struct Function {
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
-void clear(Function fun) {
+
+void clearVisited(Function &fun) {
     for (size_t j = 0; j < length(fun.visited); ++j) {
         fun.visited(j) = false;
     }
 }
-size_t nv(Function fun) { return length(fun.terms); }
-size_t ne(Function fun) { return fun.ne; }
-Vector<size_t, 0> outNeighbors(Term t) { return t.dsts; }
-Vector<size_t, 0> outNeighbors(Function fun, size_t i) {
+bool visited(Function fun, size_t i){ return fun.visited(i); }
+size_t nv(Function &fun) { return length(fun.terms); }
+size_t ne(Function &fun) { return fun.ne; }
+Vector<size_t, 0> outNeighbors(Term &t) { return t.dsts; }
+Vector<size_t, 0> outNeighbors(Function &fun, size_t i) {
     return outNeighbors(fun.terms(i));
 }
-Vector<size_t, 0> inNeighbors(Term t) { return t.srcs; }
-Vector<size_t, 0> inNeighbors(Function fun, size_t i) {
+Vector<size_t, 0> inNeighbors(Term &t) { return t.srcs; }
+Vector<size_t, 0> inNeighbors(Function &fun, size_t i) {
     return inNeighbors(fun.terms(i));
 }
 
-Term &getTerm(Function fun, size_t tidx) { return fun.terms(tidx); }
+Term &getTerm(Function &fun, size_t tidx) { return fun.terms(tidx); }
 
 struct CostSummary {
     double vCompCost;
@@ -600,47 +627,126 @@ struct TermBundle {
     std::vector<size_t> dsts;
 };
 
-std::vector<size_t>& outNeighbors(TermBundle& tb) { return tb.dsts; }
-std::vector<size_t>& inNeighbors(TermBundle& tb) { return tb.srcs; }
+std::vector<size_t> &outNeighbors(TermBundle &tb) { return tb.dsts; }
+std::vector<size_t> &inNeighbors(TermBundle &tb) { return tb.srcs; }
 
-void visit(std::vector<Int> sorted, std::vector<std::pair<Int,Int>> cycles, Function fun, size_t idx) {
-    auto outs = outNeighbors(fun, idx);
-    for (size_t j = 0; j < length(outs); ++j){
-	if (fun.visited(j)){
-	    cycles.push_back(std::make_pair(idx,j));
-	} else {
-	    visit(sorted, cycles, fun, outs(j));
-	}
+// Naive algorithm that looks like it may work:
+// 0 -> 1 -> 3 -> 5
+//  \            /
+//   -> 2 -> 4 ->
+// As we do dfs,
+// first, we iterate down 0 -> 1, and build
+// [0, 1, 3, 5] // all unique -> no cycle
+// then, we iterate down 0 -> 2
+// [0, 2, 4, 5] // all unique -> no cycle
+// vs:
+// 0 -> 1 -> 3 -> 0
+// [0, 1, 3, 0] // not unique -> cycle
+//
+// Does not because dfs does not explore all possible paths, meaning
+//   it is likely to miss the cyclic paths, e.g.:
+// 0 -> 1 -> 3 -> 5
+//  \    \<-/    /
+//   -> 2 -> 4 ->
+// [0, 1, 3, 5] // no cycle
+// [0, 2, 4, 5] // no cycle
+//
+
+
+
+template <typename G>
+void visit(std::vector<Int> sorted,
+           G &graph, size_t idx) {
+    auto outs = outNeighbors(graph, idx);
+    visited(graph, idx) = true;
+    for (size_t j = 0; j < length(outs); ++j) {
+        if (!visited(graph, j)) {
+            visit(sorted, graph, outs(j));
+        }
     }
     sorted.push_back(idx);
 }
 
-std::pair<std::vector<Int>,std::vector<std::pair<Int,Int>>> topologicalSort(Function fun) {
+template <typename G>
+std::vector<Int>
+topologicalSort(G &graph) {
     std::vector<Int> sorted;
-    std::vector<std::pair<Int,Int>> cycles;
-    clear(fun);
-    for (size_t j = 0; j < nv(fun); j++) {
-	if (!fun.visited(j))
-	    visit(sorted, cycles, fun, j);
+    clearVisited(graph);
+    for (size_t j = 0; j < nv(graph); j++) {
+        if (!visited(graph, j))
+            visit(sorted, graph, j);
     }
     std::reverse(sorted.begin(), sorted.end());
-    return std::make_pair(sorted, cycles);
+    return sorted;
 }
 
-std::pair<std::vector<std::vector<Int>>,std::vector<std::vector<std::pair<Int,Int>>>> weaklyConnectedComponents(Function fun) {
+template <typename G>
+std::vector<std::vector<Int>>
+weaklyConnectedComponents(G &graph) {
     std::vector<std::vector<Int>> components;
-    std::vector<std::vector<std::pair<Int,Int>>> cycles;
-    clear(fun);
-    for (size_t j = 0; j < nv(fun); ++j) {
-        if (fun.visited(j))
+    clearVisited(graph);
+    for (size_t j = 0; j < nv(graph); ++j) {
+        if (visited(graph, j))
             continue;
         std::vector<Int> sorted;
-        std::vector<std::pair<Int,Int>> cycles;
-        visit(sorted, cycles, fun, j);
+        visit(sorted, graph, j);
         std::reverse(sorted.begin(), sorted.end());
         components.emplace_back(sorted);
     }
-    return std::make_pair(components, cycles);
+    return components;
+}
+
+
+
+// ref: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
+template <typename G>
+void strongConnect(std::vector<std::vector<Int>> &components, std::vector<size_t> &stack, std::vector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack, size_t &index, G &graph, size_t v){
+    indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
+    index += 1;
+    stack.push_back(v);
+
+    auto outN = outNeighbors(graph, v);
+    for (size_t w = 0; w < length(outN); ++w){
+	if (visited(graph, w)){
+	    auto [ wIndex, wLowLink, wOnStack ] = indexLowLinkOnStack[w];
+	    if (wOnStack){
+		auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
+		indexLowLinkOnStack[v] = std::make_tuple(vIndex, std::min(vLowLink, wIndex), vOnStack);
+	    }
+	} else { // not visited
+	    strongConnect(components, stack, indexLowLinkOnStack, index, graph, w);
+	    auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
+	    indexLowLinkOnStack[v] = std::make_tuple(vIndex, std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])), vOnStack);
+	}
+    }
+    auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
+    if (vIndex == vLowLink){
+	size_t w;
+	std::vector<Int> component;
+	do {
+	    w = stack[stack.size()-1];
+	    stack.pop_back();
+	    auto [ wIndex, wLowLink, wOnStack ] = indexLowLinkOnStack[w];
+	    indexLowLinkOnStack[w] = std::make_tuple(wIndex, wLowLink, false);
+	    component.push_back(w);
+	} while (w != v);
+	components.emplace_back(component);
+    }
+}
+
+template <typename G>
+std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
+    std::vector<std::vector<Int>> components;
+    size_t nVertex = nv(graph);
+    std::vector<std::tuple<size_t,size_t,bool>> indexLowLinkOnStack(nVertex);
+    std::vector<size_t> stack;
+    size_t index = 0;
+    clearVisited(graph);
+    for (size_t v = 0; v < nVertex; ++v) {
+	if (!visited(graph, v))
+	    strongConnect(components, stack, indexLowLinkOnStack, index, graph, v);
+    }
+    return components;
 }
 
 struct TermBundleGraph {
@@ -649,66 +755,75 @@ struct TermBundleGraph {
     Schedule tempSchedule;
     // std::vector<std::vector<size_t>> indexSets;
     std::vector<std::vector<bool>> visited;
-    std::vector<std::pair<Int,Int>> cycles;
+    std::vector<std::pair<Int, Int>> cycles;
 };
-std::vector<size_t>& outNeighbors(TermBundleGraph& tbg, size_t tbId){
+
+
+std::vector<size_t> &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return outNeighbors(tb);
 }
-std::vector<size_t>& inNeighbors(TermBundleGraph& tbg, size_t tbId){
+std::vector<size_t> &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return inNeighbors(tb);
 }
 
-void resetVisited(TermBundleGraph tbg, size_t level){
+void clearVisited(TermBundleGraph &tbg, size_t level) {
     std::vector<bool> &visited = tbg.visited[level];
-    for (size_t i = 0; i < visited.size(); ++i){
-	visited[i] = false;
+    for (size_t i = 0; i < visited.size(); ++i) {
+        visited[i] = false;
     }
     return;
 }
-void markVisited(TermBundleGraph tbg, size_t tb, size_t level){
+void clearVisited(TermBundleGraph &tbg) { clearVisited(tbg, 0); }
+bool visited(TermBundleGraph &tbg, size_t i, size_t level){
+    std::vector<bool> &visited = tbg.visited[level];
+    return visited[i];
+}
+bool visited(TermBundleGraph &tbg, size_t i) { return visited(tbg, i, 0); }
+
+void markVisited(TermBundleGraph &tbg, size_t tb, size_t level) {
     std::vector<bool> &visited = tbg.visited[level];
     visited[tb] = true;
     return;
 }
 
-bool allSourcesVisited(TermBundleGraph tbg, size_t tbId, size_t level){
+bool allSourcesVisited(TermBundleGraph &tbg, size_t tbId, size_t level) {
     std::vector<bool> &visited = tbg.visited[level];
     // TermBundle &tb = tbg.tbs[tbId];
     std::vector<size_t> &srcs = inNeighbors(tbg, tbId);
     bool allVisited = true;
-    for (size_t i = 0; i < srcs.size(); ++i){
-	allVisited &= visited[srcs[i]];
+    for (size_t i = 0; i < srcs.size(); ++i) {
+        allVisited &= visited[srcs[i]];
     }
     return allVisited;
 }
 
 // returns set of all outNeighbors that are covered
-std::vector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node, size_t level){
+std::vector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node,
+                                size_t level) {
     std::vector<size_t> &dsts = outNeighbors(tbg, node);
-    std::vector<size_t> indexSet;// = tbg.indexSets[level];
+    std::vector<size_t> indexSet; // = tbg.indexSets[level];
     // indexSet.clear();
-    for (size_t i = 0; i < dsts.size(); ++i){
-	size_t dstId = dsts[i];
-	if (allSourcesVisited(tbg, dstId, level))
-	    indexSet.push_back(dstId);
+    for (size_t i = 0; i < dsts.size(); ++i) {
+        size_t dstId = dsts[i];
+        if (allSourcesVisited(tbg, dstId, level))
+            indexSet.push_back(dstId);
     }
     return indexSet;
 }
 
-SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId){
+SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
     TermBundle &dst = tbg.tbs[dstId];
     std::vector<size_t> &srcV = inNeighbors(dst);
-    for (size_t i = 0; i < srcV.size(); ++i){
-	if (srcV[i] == srcId){
-	    return dst.srcTyp[i];
-	}
+    for (size_t i = 0; i < srcV.size(); ++i) {
+        if (srcV[i] == srcId) {
+            return dst.srcTyp[i];
+        }
     }
     assert("source not found");
     return TERM;
 }
-
 
 // Will probably handle this differently, i.e. check source type, and then
 // only call given MEMTERM.
@@ -728,12 +843,10 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
 }
 */
 
-
 uint32_t getLoopDeps(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
     return t.loopDeps;
 }
-
 
 // for i in 1:I, j in 1:J;
 //   s = 0.0

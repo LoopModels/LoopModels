@@ -13,6 +13,11 @@ const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef intptr_t Int;
 
+template <typename V> // generic function working with many stl containers, e.g. std::vector
+inline size_t length(V &v) { return v.size(); } 
+
+
+
 // `show` doesn't print a new line by convention.
 template <typename T> void showln(T x) {
     show(x);
