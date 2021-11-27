@@ -377,7 +377,7 @@ template <typename T> size_t length(VoVoV<T> x) {
 // offset: [0,0]
 
 // Gives the part of an ArrayRef that is a function of the induction variables.
-struct ArrayRefCore {
+struct ArrayRefStrides {
     size_t arrayId;
     Vector<SourceType, 0> indTyp;              // layer0;
     Vector<size_t, 0> indID;                   // layer0;
@@ -387,13 +387,13 @@ struct ArrayRefCore {
 };
 // Gives a constant offsets.
 struct ArrayRef {
-    size_t arrayRefCoreId;
+    size_t strideId;
     Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
 };
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
-void show(ArrayRefCore ar) {
+void show(ArrayRefStrides ar) {
     printf("ArrayRef %zu:\n", ar.arrayId);
 
     for (size_t i = 0; i < length(ar.coef); ++i) {
@@ -475,7 +475,7 @@ struct Term {
     Vector<size_t, 0> srcs;       // source id
     Vector<size_t, 0> dsts;       // destination id
     uint32_t loopDeps;            // minimal loopdeps based on source's
-    Int lnid;                     // id of loopnest
+    Int lnId;                     // id of loopnest
 };
 
 /*
@@ -559,8 +559,8 @@ struct Function {
     Vector<TriangularLoopNest, 0> triln;
     Vector<RectangularLoopNest, 0> rectln;
     // Vector<Array, 0> arrays;
-    Vector<ArrayRefCore, 0> arrayRefCores;
-    Vector<ArrayRef, 0> arrayRefs;
+    Vector<ArrayRefStrides, 0> arrayRefStrides;
+    Vector<ArrayRef, 0> arrayRef;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
     Vector<Schedule, 0> bestschedules;
@@ -573,14 +573,14 @@ struct Function {
 
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
-             Vector<ArrayRefCore, 0> arrayRefCores,
+             Vector<ArrayRefStrides, 0> arrayRefStrides,
              Vector<ArrayRef, 0> arrayRefs, Vector<Const, 0> constants,
              Vector<bool, 0> visited, Vector<Schedule, 0> bestschedules,
              Matrix<Schedule, 0, 0> tempschedules,
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
              Vector<Vector<Int, 0>, 0> triloopcache) // FIXME: triloopcache type
         : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
-          arrayRefCores(arrayRefCores), arrayRefs(arrayRefs),
+          arrayRefStrides(arrayRefStrides), arrayRefs(arrayRefs),
           constants(constants), visited(visited), bestschedules(bestschedules),
           tempschedules(tempschedules), tempcosts(tempcosts),
           fastcostsum(fastcostsum), triloopcache(triloopcache) {
@@ -659,104 +659,6 @@ std::vector<size_t> &inNeighbors(TermBundle &tb) { return tb.srcs; }
 // [0, 1, 3, 5] // no cycle
 // [0, 2, 4, 5] // no cycle
 //
-
-template <typename G>
-void visit(std::vector<Int> sorted, G &graph, size_t idx) {
-    auto outs = outNeighbors(graph, idx);
-    visited(graph, idx) = true;
-    for (size_t j = 0; j < length(outs); ++j) {
-        if (!visited(graph, j)) {
-            visit(sorted, graph, outs(j));
-        }
-    }
-    sorted.push_back(idx);
-}
-
-template <typename G> std::vector<Int> topologicalSort(G &graph) {
-    std::vector<Int> sorted;
-    clearVisited(graph);
-    for (size_t j = 0; j < nv(graph); j++) {
-        if (!visited(graph, j))
-            visit(sorted, graph, j);
-    }
-    std::reverse(sorted.begin(), sorted.end());
-    return sorted;
-}
-
-template <typename G>
-std::vector<std::vector<Int>> weaklyConnectedComponents(G &graph) {
-    std::vector<std::vector<Int>> components;
-    clearVisited(graph);
-    for (size_t j = 0; j < nv(graph); ++j) {
-        if (visited(graph, j))
-            continue;
-        std::vector<Int> sorted;
-        visit(sorted, graph, j);
-        std::reverse(sorted.begin(), sorted.end());
-        components.emplace_back(sorted);
-    }
-    return components;
-}
-
-// ref:
-// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
-template <typename G>
-void strongConnect(
-    std::vector<std::vector<Int>> &components, std::vector<size_t> &stack,
-    std::vector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack,
-    size_t &index, G &graph, size_t v) {
-    indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
-    index += 1;
-    stack.push_back(v);
-
-    auto outN = outNeighbors(graph, v);
-    for (size_t w = 0; w < length(outN); ++w) {
-        if (visited(graph, w)) {
-            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
-            if (wOnStack) {
-                auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
-                indexLowLinkOnStack[v] = std::make_tuple(
-                    vIndex, std::min(vLowLink, wIndex), vOnStack);
-            }
-        } else { // not visited
-            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
-                          w);
-            auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
-            indexLowLinkOnStack[v] = std::make_tuple(
-                vIndex, std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])),
-                vOnStack);
-        }
-    }
-    auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
-    if (vIndex == vLowLink) {
-        size_t w;
-        std::vector<Int> component;
-        do {
-            w = stack[stack.size() - 1];
-            stack.pop_back();
-            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
-            indexLowLinkOnStack[w] = std::make_tuple(wIndex, wLowLink, false);
-            component.push_back(w);
-        } while (w != v);
-        components.emplace_back(component);
-    }
-}
-
-template <typename G>
-std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
-    std::vector<std::vector<Int>> components;
-    size_t nVertex = nv(graph);
-    std::vector<std::tuple<size_t, size_t, bool>> indexLowLinkOnStack(nVertex);
-    std::vector<size_t> stack;
-    size_t index = 0;
-    clearVisited(graph);
-    for (size_t v = 0; v < nVertex; ++v) {
-        if (!visited(graph, v))
-            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
-                          v);
-    }
-    return components;
-}
 
 struct TermBundleGraph {
     std::vector<TermBundle> tbs;

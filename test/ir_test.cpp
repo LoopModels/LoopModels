@@ -34,6 +34,6 @@ TEST(IRTest, BasicAssertions) {
     // std::vector<size_t> memBuffer().resize(outerOffsets.size());
     VoVoV<size_t> pvc = VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets), toVector(outerOffsets), memBuffer);
 
-    ArrayRefCore ar = ArrayRefCore{ .arrayId = 10, .indTyp = toVector(indTyp), .indID = toVector(indID), .programVariableCombinations = pvc, .coef = coef };
+    ArrayRefStrides ar = ArrayRefStrides{ .arrayId = 10, .indTyp = toVector(indTyp), .indID = toVector(indID), .programVariableCombinations = pvc, .coef = coef };
     showln(ar);
 }
