@@ -4,8 +4,8 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <cstdio>
+#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -13,10 +13,11 @@ const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef intptr_t Int;
 
-template <typename V> // generic function working with many stl containers, e.g. std::vector
-inline size_t length(V &v) { return v.size(); } 
-
-
+template <typename V> // generic function working with many stl containers, e.g.
+                      // std::vector
+                      inline size_t length(V &v) {
+    return v.size();
+}
 
 // `show` doesn't print a new line by convention.
 template <typename T> void showln(T x) {
@@ -44,7 +45,7 @@ template <typename T> struct Vector<T, 0> {
     T *ptr;
     const size_t len;
     Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
-    Vector(std::vector<T>& x) : ptr(&x.front()), len(x.size()){};
+    Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
@@ -61,12 +62,12 @@ template <typename T, size_t M> void show(Vector<T, M> v) {
     for (size_t i = 0; i < length(v); i++) {
         std::cout << v(i) << ", ";
     }
-    if (length(v)){
+    if (length(v)) {
         std::cout << v(length(v) - 1);
     }
 }
 
-template <typename T> Vector<T, 0> toVector(std::vector<T>& x) {
+template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
     return Vector<T, 0>(x);
 }
 

@@ -39,11 +39,11 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-// SourceType: RAW/WAR
+// SourceType: RTW/WTR
 // size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 16
 // bits size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits /
 // src_term 32 bits
-enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, RBW, WBR };
+enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
 
 std::string toString(SourceType s) {
     switch (s) {
@@ -55,10 +55,10 @@ std::string toString(SourceType s) {
         return "Constant";
     case LOOPINDUCTVAR:
         return "Induction Variable";
-    case RBW:
-        return "Read before write";
-    case WBR:
-        return "Write before read";
+    case WTR:
+        return "Write then read";
+    case RTW: // dummy SourceType for indicating a relationship; not lowered
+        return "Read then write";
     default:
         assert("Unreachable reached; invalid SourceType.");
         return "";
@@ -339,7 +339,7 @@ template <typename T> size_t length(VoVoV<T> x) {
 // for (int n = 0; n < N; ++n){
 //   for (int m = 0; m < M; ++m){
 //     for (int k = 0; k < K; ++k){
-//       C(m,n) += A(m,k) * B(k,n);
+//       C(m,n) += A(m,k) * B(k+n,n);
 //     }
 //   }
 // }
@@ -348,6 +348,8 @@ template <typename T> size_t length(VoVoV<T> x) {
 // [M]   0  1  0  0 ]    n
 //                       m
 //                       k ]
+//
+// Corresponding to k + n*M;
 //
 // Representation:
 // [ ]       []       // ind 0, corresponds to `1`
@@ -374,26 +376,31 @@ template <typename T> size_t length(VoVoV<T> x) {
 // memory: []
 // offset: [0,0]
 
-struct ArrayRef {
-    size_t arrayID;
+// Gives the part of an ArrayRef that is a function of the induction variables.
+struct ArrayRefCore {
+    size_t arrayId;
     Vector<SourceType, 0> indTyp;              // layer0;
     Vector<size_t, 0> indID;                   // layer0;
     VoVoV<size_t> programVariableCombinations; // layer1
     VoV<Int> coef;                             // length(coef) == length(pvc)
                    // map(length, coef) == map(length \circ length, pvc)
 };
+// Gives a constant offsets.
+struct ArrayRef {
+    size_t arrayRefCoreId;
+    Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
+};
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
-void show(ArrayRef ar) {
-    printf("ArrayRef %zu:\n", ar.arrayID);
+void show(ArrayRefCore ar) {
+    printf("ArrayRef %zu:\n", ar.arrayId);
 
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
         Vector<Int, 0> coefs = ar.coef(i);
-        std::string indStr = i ? "i_" + std::to_string(ar.indID(i - 1)) + " (" +
-                                     toString(ar.indTyp(i - 1)) + ")"
-                               : "";
+        std::string indStr = "i_" + std::to_string(ar.indID(i)) + " (" +
+                             toString(ar.indTyp(i)) + ")";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
         // printf();
@@ -435,7 +442,7 @@ void show(ArrayRef ar) {
         if (length(pvc) == 1) {
             if (coefs(0) != 1) {
                 poly += " " + indStr;
-            } else if (i) {
+            } else {
                 poly = indStr;
             }
         } else {
@@ -503,7 +510,7 @@ struct FusionTree {
 struct Schedule {
     Int *ptr;
     const size_t numTermGs; // number of rows in mathrix
-    const size_t numLoops; // number of columns in matrix
+    const size_t numLoops;  // number of columns in matrix
     double cost;
 };
 
@@ -552,7 +559,8 @@ struct Function {
     Vector<TriangularLoopNest, 0> triln;
     Vector<RectangularLoopNest, 0> rectln;
     // Vector<Array, 0> arrays;
-    Vector<ArrayRef, 0> arrayrefs;
+    Vector<ArrayRefCore, 0> arrayRefCores;
+    Vector<ArrayRef, 0> arrayRefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
     Vector<Schedule, 0> bestschedules;
@@ -565,16 +573,17 @@ struct Function {
 
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
-             Vector<ArrayRef, 0> arrayrefs, Vector<Const, 0> constants,
+             Vector<ArrayRefCore, 0> arrayRefCores,
+             Vector<ArrayRef, 0> arrayRefs, Vector<Const, 0> constants,
              Vector<bool, 0> visited, Vector<Schedule, 0> bestschedules,
              Matrix<Schedule, 0, 0> tempschedules,
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
              Vector<Vector<Int, 0>, 0> triloopcache) // FIXME: triloopcache type
         : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
-          arrayrefs(arrayrefs), constants(constants), visited(visited),
-          bestschedules(bestschedules), tempschedules(tempschedules),
-          tempcosts(tempcosts), fastcostsum(fastcostsum),
-          triloopcache(triloopcache) {
+          arrayRefCores(arrayRefCores), arrayRefs(arrayRefs),
+          constants(constants), visited(visited), bestschedules(bestschedules),
+          tempschedules(tempschedules), tempcosts(tempcosts),
+          fastcostsum(fastcostsum), triloopcache(triloopcache) {
         size_t edge_count = 0;
         for (size_t j = 0; j < length(terms); ++j)
             edge_count += length(terms(j).dsts);
@@ -590,13 +599,12 @@ struct Function {
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
-
 void clearVisited(Function &fun) {
     for (size_t j = 0; j < length(fun.visited); ++j) {
         fun.visited(j) = false;
     }
 }
-bool visited(Function fun, size_t i){ return fun.visited(i); }
+bool visited(Function fun, size_t i) { return fun.visited(i); }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
 Vector<size_t, 0> outNeighbors(Term &t) { return t.dsts; }
@@ -652,11 +660,8 @@ std::vector<size_t> &inNeighbors(TermBundle &tb) { return tb.srcs; }
 // [0, 2, 4, 5] // no cycle
 //
 
-
-
 template <typename G>
-void visit(std::vector<Int> sorted,
-           G &graph, size_t idx) {
+void visit(std::vector<Int> sorted, G &graph, size_t idx) {
     auto outs = outNeighbors(graph, idx);
     visited(graph, idx) = true;
     for (size_t j = 0; j < length(outs); ++j) {
@@ -667,9 +672,7 @@ void visit(std::vector<Int> sorted,
     sorted.push_back(idx);
 }
 
-template <typename G>
-std::vector<Int>
-topologicalSort(G &graph) {
+template <typename G> std::vector<Int> topologicalSort(G &graph) {
     std::vector<Int> sorted;
     clearVisited(graph);
     for (size_t j = 0; j < nv(graph); j++) {
@@ -681,8 +684,7 @@ topologicalSort(G &graph) {
 }
 
 template <typename G>
-std::vector<std::vector<Int>>
-weaklyConnectedComponents(G &graph) {
+std::vector<std::vector<Int>> weaklyConnectedComponents(G &graph) {
     std::vector<std::vector<Int>> components;
     clearVisited(graph);
     for (size_t j = 0; j < nv(graph); ++j) {
@@ -696,41 +698,47 @@ weaklyConnectedComponents(G &graph) {
     return components;
 }
 
-
-
-// ref: https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
+// ref:
+// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
 template <typename G>
-void strongConnect(std::vector<std::vector<Int>> &components, std::vector<size_t> &stack, std::vector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack, size_t &index, G &graph, size_t v){
+void strongConnect(
+    std::vector<std::vector<Int>> &components, std::vector<size_t> &stack,
+    std::vector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack,
+    size_t &index, G &graph, size_t v) {
     indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
     index += 1;
     stack.push_back(v);
 
     auto outN = outNeighbors(graph, v);
-    for (size_t w = 0; w < length(outN); ++w){
-	if (visited(graph, w)){
-	    auto [ wIndex, wLowLink, wOnStack ] = indexLowLinkOnStack[w];
-	    if (wOnStack){
-		auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
-		indexLowLinkOnStack[v] = std::make_tuple(vIndex, std::min(vLowLink, wIndex), vOnStack);
-	    }
-	} else { // not visited
-	    strongConnect(components, stack, indexLowLinkOnStack, index, graph, w);
-	    auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
-	    indexLowLinkOnStack[v] = std::make_tuple(vIndex, std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])), vOnStack);
-	}
+    for (size_t w = 0; w < length(outN); ++w) {
+        if (visited(graph, w)) {
+            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
+            if (wOnStack) {
+                auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+                indexLowLinkOnStack[v] = std::make_tuple(
+                    vIndex, std::min(vLowLink, wIndex), vOnStack);
+            }
+        } else { // not visited
+            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
+                          w);
+            auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+            indexLowLinkOnStack[v] = std::make_tuple(
+                vIndex, std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])),
+                vOnStack);
+        }
     }
-    auto [ vIndex, vLowLink, vOnStack ] = indexLowLinkOnStack[v];
-    if (vIndex == vLowLink){
-	size_t w;
-	std::vector<Int> component;
-	do {
-	    w = stack[stack.size()-1];
-	    stack.pop_back();
-	    auto [ wIndex, wLowLink, wOnStack ] = indexLowLinkOnStack[w];
-	    indexLowLinkOnStack[w] = std::make_tuple(wIndex, wLowLink, false);
-	    component.push_back(w);
-	} while (w != v);
-	components.emplace_back(component);
+    auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+    if (vIndex == vLowLink) {
+        size_t w;
+        std::vector<Int> component;
+        do {
+            w = stack[stack.size() - 1];
+            stack.pop_back();
+            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
+            indexLowLinkOnStack[w] = std::make_tuple(wIndex, wLowLink, false);
+            component.push_back(w);
+        } while (w != v);
+        components.emplace_back(component);
     }
 }
 
@@ -738,26 +746,30 @@ template <typename G>
 std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
     std::vector<std::vector<Int>> components;
     size_t nVertex = nv(graph);
-    std::vector<std::tuple<size_t,size_t,bool>> indexLowLinkOnStack(nVertex);
+    std::vector<std::tuple<size_t, size_t, bool>> indexLowLinkOnStack(nVertex);
     std::vector<size_t> stack;
     size_t index = 0;
     clearVisited(graph);
     for (size_t v = 0; v < nVertex; ++v) {
-	if (!visited(graph, v))
-	    strongConnect(components, stack, indexLowLinkOnStack, index, graph, v);
+        if (!visited(graph, v))
+            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
+                          v);
     }
     return components;
 }
 
 struct TermBundleGraph {
     std::vector<TermBundle> tbs;
+    std::vector<std::vector<bool>> visited;
+};
+struct WeaklyConnectedComponentOptimizer {
+    TermBundleGraph tbg;
     Schedule bestSchedule;
     Schedule tempSchedule;
-    // std::vector<std::vector<size_t>> indexSets;
-    std::vector<std::vector<bool>> visited;
-    std::vector<std::pair<Int, Int>> cycles;
+    std::vector<std::vector<Int>>
+        stronglyConnectedComponents; // strongly connected components within the
+                                     // weakly connected component
 };
-
 
 std::vector<size_t> &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
@@ -776,7 +788,7 @@ void clearVisited(TermBundleGraph &tbg, size_t level) {
     return;
 }
 void clearVisited(TermBundleGraph &tbg) { clearVisited(tbg, 0); }
-bool visited(TermBundleGraph &tbg, size_t i, size_t level){
+bool visited(TermBundleGraph &tbg, size_t i, size_t level) {
     std::vector<bool> &visited = tbg.visited[level];
     return visited[i];
 }
@@ -826,7 +838,7 @@ SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
 }
 
 // Will probably handle this differently, i.e. check source type, and then
-// only call given MEMTERM.
+// only call given .
 /*
 uint32_t compatibleLoops(Function &fun, TermBundleGraph &tbg, size_t srcId,
 size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
@@ -834,7 +846,7 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
     case TERM:
         // return same loop as srcId
         return ;
-    case MEMTERM:
+    case RBW/WBR:
         // rotation is possible, so return vector of possiblities
         return compatibleLoops();
     default:

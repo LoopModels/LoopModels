@@ -41,7 +41,6 @@ void fillfastmemcostsum(Function fun) { return; }
 // can still fill correctly through the recursion. On entry  (updateCost =
 // true), this is when we use the temp at that level to update bestcost.
 
-
 template <typename I>
 void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,
                           bool updateCost) {
@@ -74,37 +73,36 @@ void schedule_bundle_level(Function fun, TermBundle tb, size_t level) {}
 
 // Greedily prefuse elements in tb.
 TermBundleGraph &prefuse(Function fun, std::vector<Int> wcc) {
-    std::vector<TermBundle> tbs; 
+    std::vector<TermBundle> tbs;
 }
-
 
 // at level `l`...
 // 1. iterate over fusion combinations
 
-void scheduleBundleFusion(Function fun, std::vector<TermBundle> tbs, size_t i = 0){
+void scheduleBundleFusion(Function fun, std::vector<TermBundle> tbs,
+                          size_t i = 0) {
     TermBundle tb = tbs[i];
     std::vector<size_t> dsts = outNeighbors(tb);
-    for (size_t j = 0; j < dsts.size(); ++j){
-
+    for (size_t j = 0; j < dsts.size(); ++j) {
     }
-    
 }
 
-size_t getSegmentSize(TermBundleGraph tbg, size_t segment, size_t level = 0){
-    if (level){
-	return countScheduled(tbg.tempSchedule, segment, level-1);
+size_t getSegmentSize(TermBundleGraph tbg, size_t segment, size_t level = 0) {
+    if (level) {
+        return countScheduled(tbg.tempSchedule, segment, level - 1);
     } else {
-	return tbg.tbs.size();
+        return tbg.tbs.size();
     }
 }
 
-void scheduleBundleLevel(Function fun, TermBundleGraph tbg, size_t position = 0, size_t level = 0){
+void scheduleBundleLevel(Function fun, TermBundleGraph tbg, size_t position = 0,
+                         size_t level = 0) {
     TermBundle tb = tbg.tbs[position];
-    
 }
-void scheduleBundleLevel(Function fun, TermBundleGraph tbg, std::vector<std::pair<Int,Int>> cycles, size_t position = 0, size_t level = 0){
+void scheduleBundleLevel(Function fun, TermBundleGraph tbg,
+                         std::vector<std::pair<Int, Int>> cycles,
+                         size_t position = 0, size_t level = 0) {
     TermBundle tb = tbg.tbs[position];
-    
 }
 
 // prefuse terms
@@ -113,19 +111,18 @@ void scheduleBundle(Function fun, std::vector<Int> wcc) {
     scheduleBundleLevel(fun, tbg, 0, 0);
     return;
 }
-void scheduleBundle(Function fun, std::vector<Int> wcc, std::vector<std::pair<Int,Int>> cycles) {
+void scheduleBundle(Function fun, std::vector<Int> wcc,
+                    std::vector<std::pair<Int, Int>> cycles) {
     TermBundleGraph tbg = prefuse(fun, wcc);
     scheduleBundleLevel(fun, tbg, cycles, 0, 0);
     return;
 }
 
-
 void schedule(Function fun) {
-    auto [components,cycles] = weaklyConnectedComponents(fun);
+    std::vector<std::vector<Int>> components = weaklyConnectedComponents(fun);
     TermBundleGraph tbg(fun);
     for (size_t j = 0; j < length(tb); ++j) {
         scheduleBundle(fun, tb[j]);
     }
     return;
 }
-
