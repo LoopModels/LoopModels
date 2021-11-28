@@ -1,13 +1,14 @@
 #pragma once
 
-#include "./math.hpp"
 #include "./graphs.hpp"
+#include "./math.hpp"
 #include "./smallsets.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -382,8 +383,8 @@ template <typename T> size_t length(VoVoV<T> x) {
 struct ArrayRefStrides {
     size_t arrayId;
     Vector<std::pair<size_t, SourceType>, 0> inds; // layer0;
-    VoVoV<size_t> programVariableCombinations; // layer1
-    VoV<Int> coef;                             // length(coef) == length(pvc)
+    VoVoV<size_t> programVariableCombinations;     // layer1
+    VoV<Int> coef; // length(coef) == length(pvc)
                    // map(length, coef) == map(length \circ length, pvc)
 };
 // Gives a constant offsets.
@@ -406,9 +407,9 @@ void show(ArrayRefStrides ar) {
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
         Vector<Int, 0> coefs = ar.coef(i);
-	auto [indId, indTyp] = ar.inds(i);
-        std::string indStr = "i_" + std::to_string(indId) + " (" +
-                             toString(indTyp) + ")";
+        auto [indId, indTyp] = ar.inds(i);
+        std::string indStr =
+            "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
         // printf();
@@ -473,10 +474,12 @@ struct CostSummary {
     // double vStoreCost;
     // double sStoreCost;
 
-    CostSummary() : vCost(0.0), sCost(0.0){};//, vLoadCost(0.0), sLoadCost(0.0), vStoreCost(0.0), sStoreCost(0.0) {};
-    void operator+=(CostSummary cs){
-	vCost += cs.vCost;
-	sCost += cs.sCost;
+    CostSummary()
+        : vCost(0.0), sCost(0.0){}; //, vLoadCost(0.0), sLoadCost(0.0),
+                                    // vStoreCost(0.0), sStoreCost(0.0) {};
+    void operator+=(CostSummary cs) {
+        vCost += cs.vCost;
+        sCost += cs.sCost;
     }
 };
 //
@@ -492,13 +495,13 @@ struct CostSummary {
 // - (For convenience) destination operations.
 // - Indicate
 struct Term {
-    Operation op;                 // Operation id
+    Operation op; // Operation id
     CostSummary costSummary;
-    Vector<std::pair<size_t,SourceType>, 0> srcs; // type of source
-    Vector<std::pair<size_t,SourceType>, 0> dsts;       // destination id
+    Vector<std::pair<size_t, SourceType>, 0> srcs; // type of source
+    Vector<std::pair<size_t, SourceType>, 0> dsts; // destination id
     // Vector<size_t, 0> srcs;       // source id
-    uint32_t loopDeps;            // minimal loopdeps based on source's
-    Int lnId;                     // id of loopnest
+    uint32_t loopDeps; // minimal loopdeps based on source's
+    Int loopNestId;    // id of loopnest
 };
 
 /*
@@ -630,88 +633,174 @@ void clearVisited(Function &fun) {
 bool visited(Function fun, size_t i) { return fun.visited(i); }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
-Vector<std::pair<size_t,SourceType>, 0> outNeighbors(Term &t) { return t.dsts; }
-Vector<std::pair<size_t,SourceType>, 0> outNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Term &t) {
+    return t.dsts;
+}
+Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Function &fun, size_t i) {
     return outNeighbors(fun.terms(i));
 }
-Vector<std::pair<size_t,SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
-Vector<std::pair<size_t,SourceType>, 0> inNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
+Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
     return inNeighbors(fun.terms(i));
 }
 
 Term &getTerm(Function &fun, size_t tidx) { return fun.terms(tidx); }
 
 struct TermBundle {
-    std::vector<size_t> termIDs;
-    SmallSet<size_t> loads;  // arrayRef ids
-    SmallSet<size_t> stores; // arrayRef ids
-    CostSummary costSummary;
+    // std::vector<size_t> termIDs;
+    SmallSet termIds;
+    SmallSet srcTerms;
+    SmallSet dstTerms;
+    SmallSet srcTermsDirect;
+    SmallSet dstTermsDirect;
+    SmallSet loads;  // arrayRef ids
+    SmallSet stores; // arrayRef ids
     // std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
-    std::vector<SourceType> srcTyp;
-    std::vector<size_t> srcs; // ids within TermBundleGraph
-    std::vector<size_t> dsts; // ids within TermBundleGraph
+    SmallSet srcTermBundles; // termBundles
+    SmallSet dstTermBundles; // termBundles
+    std::unordered_set<size_t> RTWs;
+    std::unordered_set<size_t> WTRs;
+    CostSummary costSummary;
+    TermBundle(size_t maxTerms, size_t maxArrayRefs, size_t maxTermBundles)
+        : termIds(SmallSet(maxTerms)), srcTerms(SmallSet(maxTerms)),
+          dstTerms(SmallSet(maxTerms)), srcTermsDirect(SmallSet(maxTerms)),
+          dstTermsDirect(SmallSet(maxTerms)), loads(SmallSet(maxArrayRefs)),
+          stores(SmallSet(maxArrayRefs)),
+          srcTermBundles(SmallSet(maxTermBundles)),
+          dstTermBundles(SmallSet(maxTermBundles)) {}
 };
 
+// inline uint32_t lowerQuarter(uint32_t x) { return x & 0x000000ff; }
+// inline uint64_t lowerQuarter(uint64_t x) { return x & 0x000000000000ffff; }
+// inline uint32_t upperHalf(uint32_t x) { return x & 0xffff0000; }
+// inline uint64_t upperHalf(uint64_t x) { return x & 0xffffffff00000000; }
 
-uint32_t lowerQuarter(uint32_t x) { return x & 0x000000ff; }
-uint64_t lowerQuarter(uint64_t x) { return x & 0x000000000000ffff; }
+inline uint16_t firstQuarter(uint16_t x) { return (x & 0xf000) >> 12; }
+inline uint32_t firstQuarter(uint32_t x) { return (x & 0xff000000) >> 24; }
+inline uint64_t firstQuarter(uint64_t x) {
+    return (x & 0xffff000000000000) >> 48;
+}
+inline uint16_t secondQuarter(uint16_t x) { return (x & 0x0f00) >> 8; }
+inline uint32_t secondQuarter(uint32_t x) { return (x & 0x00ff0000) >> 16; }
+inline uint64_t secondQuarter(uint64_t x) {
+    return (x & 0x0000ffff00000000) >> 32;
+}
+inline uint16_t lowerHalf(uint16_t x) { return x & 0x00ff; }
+inline uint32_t lowerHalf(uint32_t x) { return x & 0x0000ffff; }
+inline uint64_t lowerHalf(uint64_t x) { return x & 0x00000000ffffffff; }
 
-
-std::vector<size_t> &outNeighbors(TermBundle &tb) { return tb.dsts; }
-std::vector<size_t> &inNeighbors(TermBundle &tb) { return tb.srcs; }
-
-struct TermBundleGraph {
-    std::vector<TermBundle> tbs;
-    std::vector<size_t> tbId; // mapping of `Term` to `TermBundle`.
-    std::vector<std::vector<bool>> visited;
-
-    TermBundleGraph(Function &fun, std::vector<Int> &wcc) {
-	
-	
-    }
-};
-/*
-void push(TermBundleGraph &tbg, std::vector<size_t> tbIds, Function &fun, size_t idx, size_t tbId){
-    tbIds.push_back(tbId);
+void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
+          size_t idx, size_t tbId) {
+    termToTermBundle.push_back(tbId);
     Term t = fun.terms[idx];
-    tb.termIDs.push_back(idx);
+    push(tb.termIds, idx);
     // MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW
-    for (size_t i = 0; i < length(tb.srcs); ++i){
-	auto [srcId, srcTyp] = t.srcs[i];
-	switch (srcTyp){
-	case MEMORY:
-	    tb.loads.push_back(srcId);
-	    break;
-	case TERM:
-	    break;
-	case WTR:
-	    tb.loads.push_back(lowerQuarter(srcId));
-	    break;
-	default:
-	    break;
-	}
+    // Here, we fill out srcTerms and dstTerms; only later once all Term <->
+    // TermBundle mappings are known do we fill srcTermbundles/dstTermbundles
+    for (size_t i = 0; i < length(t.srcs); ++i) {
+        auto [srcId, srcTyp] = t.srcs[i];
+        switch (srcTyp) {
+        case MEMORY:
+            push(tb.loads, srcId);
+            break;
+        case TERM:
+            push(tb.srcTerms, srcId);
+            push(tb.srcTermsDirect, srcId);
+            break;
+        case WTR: // this is the read, so write is src
+            push(tb.srcTerms, lowerHalf(srcId));
+            push(tb.loads, secondQuarter(srcId));
+            tb.WTRs.insert(srcId);
+            break;
+        case RTW: // this is the read, so write is dst
+            push(tb.dstTerms, lowerHalf(srcId));
+            push(tb.loads, firstQuarter(srcId));
+            // tb.RTWs.insert(srcId);
+        default:
+            break;
+        }
     }
-    for (size_t i = 0; i < length(t.dsts); ++i){
-	auto [srcId, srcTyp] = t.dsts[i];
-	switch (srcTyp){
-	case MEMORY:
-	    tb.stores.push_back(srcId);
-	    break;
-	case TERM:
-	    
-	    break;
-	case WTR:
-	    tb.stores.push_back(lowerQuarter(srcId));
-	    break;
-	default:
-	    break;
-	}
+    for (size_t i = 0; i < length(t.dsts); ++i) {
+        auto [srcId, srcTyp] = t.dsts[i];
+        switch (srcTyp) {
+        case MEMORY:
+            push(tb.stores, srcId);
+            break;
+        case TERM:
+            push(tb.dstTerms, srcId);
+            push(tb.dstTermsDirect, srcId);
+            break;
+        case WTR: // this is the write, so read is dst
+            push(tb.dstTerms, lowerHalf(srcId));
+            push(tb.stores, firstQuarter(srcId));
+            break;
+        case RTW: // this is the write, so read is src
+            push(tb.srcTerms, lowerHalf(srcId));
+            push(tb.stores, secondQuarter(srcId));
+            tb.RTWs.insert(srcId);
+            break;
+        default:
+            break;
+        }
     }
     tb.costSummary += t.costSummary;
 }
-*/
 
+SmallSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
+SmallSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
 
+// for `match` to work well, calls should try to roughly follow topological
+// order as best as they can. This is because we rely on inclusion of `Term t`
+// in either the `srcTermsDirect` or `dstTermsDirect. Depending on the order we
+// iterate over the graph, it may be that even though we ultimately append `t`
+// into `srcTermsDirect` or `dstTermsDirect`, it is not yet included at the time
+// we call `mismatch`.
+//
+// Note that `match` is used in `prefuse` as an optimization meant to speed up
+// this library by reducing the search space; correctness does not depend on it.
+bool match(Function &fun, TermBundle &tb, size_t tid) {
+    Term &t = fun.terms[tid];
+    size_t members = length(tb.termIds);
+    if (members) {
+        Term &firstMember = fun.terms[tb.termIds[0]];
+        if (firstMember.loopNestId != t.loopNestId)
+            return false;
+        return contains(tb.srcTermsDirect, tid) |
+               contains(tb.dstTermsDirect, tid);
+    }
+    return true;
+}
+
+struct TermBundleGraph {
+    std::vector<TermBundle> tbs;
+    std::vector<size_t> termToTermBundle; // mapping of `Term` to `TermBundle`.
+    std::vector<std::vector<bool>> visited;
+
+    TermBundleGraph(Function &fun, std::vector<Int> &wcc) {
+        // iterate over the weakly connected component wcc
+        // it should be roughly topologically sorted,
+        // so just iterate over terms, greedily checking whether each matches
+        // the most recent `TermBundle`. If so, add them to the previous. If
+        // not, allocate a new one and add them to it. Upon finishing, construct
+        // the TermBundleGraph from this collection of `TermBundle`s, using a
+        // `termToTermBundle` map.
+        /*
+        size_t i = 0;
+        size_t j = 0;
+        TermBundle tb;
+        do {
+            if (i)
+
+                ++i;
+        } while (i < wcc.size());
+        for (size_t i = 0; i < wcc.size(); ++i) {
+            if (i)
+                if (mismatch(fun, tbs[j], fun.terms[wcc[i]]))
+                    TermBundle tb;
+        }
+        */
+    }
+};
 
 struct WeaklyConnectedComponentOptimizer {
     TermBundleGraph tbg;
@@ -722,11 +811,11 @@ struct WeaklyConnectedComponentOptimizer {
                                      // weakly connected component
 };
 
-std::vector<size_t> &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
+SmallSet &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return outNeighbors(tb);
 }
-std::vector<size_t> &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
+SmallSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return inNeighbors(tb);
 }
@@ -810,10 +899,6 @@ uint32_t getLoopDeps(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
     return t.loopDeps;
 }
-
-
-
-
 
 // for i in 1:I, j in 1:J;
 //   s = 0.0
