@@ -1,7 +1,8 @@
-#include "../include/math.hpp"
 #include "../include/ir.hpp"
+#include "../include/math.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <utility>
 
 TEST(IRTest, BasicAssertions) {
     EXPECT_EQ(3, 3);
@@ -19,8 +20,10 @@ TEST(IRTest, BasicAssertions) {
     // (3 M_0 M_1) i_18 (Term) +
     // (5 + 7 M_0) i_3 (Induction Variable) +
     // (11 + 13 (M_0 M_2) + 17 (M_0 M_1 M_2)) i_0 (Induction Variable)
-    std::vector<SourceType> indTyp({LOOPINDUCTVAR, MEMORY, TERM, LOOPINDUCTVAR, LOOPINDUCTVAR});
-    std::vector<size_t> indID({2, 8, 18, 3, 0});
+    std::vector<std::pair<size_t, SourceType>> inds(
+        {std::make_pair(2, LOOPINDUCTVAR), std::make_pair(8, MEMORY),
+         std::make_pair(18, TERM), std::make_pair(3, LOOPINDUCTVAR),
+         std::make_pair(0, LOOPINDUCTVAR)});
     std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
     std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
     VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
@@ -32,8 +35,13 @@ TEST(IRTest, BasicAssertions) {
     size_t raw[16];
     Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // std::vector<size_t> memBuffer().resize(outerOffsets.size());
-    VoVoV<size_t> pvc = VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets), toVector(outerOffsets), memBuffer);
+    VoVoV<size_t> pvc =
+        VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
+                      toVector(outerOffsets), memBuffer);
 
-    ArrayRefStrides ar = ArrayRefStrides{ .arrayId = 10, .indTyp = toVector(indTyp), .indID = toVector(indID), .programVariableCombinations = pvc, .coef = coef };
+    ArrayRefStrides ar = ArrayRefStrides{.arrayId = 10,
+                                         .inds = toVector(inds),
+                                         .programVariableCombinations = pvc,
+                                         .coef = coef};
     showln(ar);
 }

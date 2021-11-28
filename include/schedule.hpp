@@ -2,6 +2,7 @@
 
 #include "./ir.hpp"
 #include "./math.hpp"
+#include "./graphs.hpp"
 #include <algorithm>
 #include <vector>
 
@@ -124,5 +125,5 @@ void schedule(Function fun) {
     for (size_t j = 0; j < length(tb); ++j) {
         scheduleBundle(fun, tb[j]);
     }
-    return;
+    return void;
 }

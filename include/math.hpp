@@ -40,6 +40,7 @@ template <typename T, size_t M> struct Vector {
 #endif
         return ptr[i];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 template <typename T> struct Vector<T, 0> {
     T *ptr;
@@ -53,6 +54,7 @@ template <typename T> struct Vector<T, 0> {
 #endif
         return ptr[i];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
@@ -93,6 +95,7 @@ template <typename T, size_t M, size_t N> struct Matrix {
 #endif
         return ptr[i + j * M];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 template <typename T, size_t M> struct Matrix<T, M, 0> {
     T *ptr;
@@ -108,6 +111,7 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
 #endif
         return ptr[i + j * M];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
     T *ptr;
@@ -123,6 +127,7 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
 #endif
         return ptr[i + j * M];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 template <typename T> struct Matrix<T, 0, 0> {
     T *ptr;
@@ -139,6 +144,7 @@ template <typename T> struct Matrix<T, 0, 0> {
 #endif
         return ptr[i + j * M];
     }
+    T &operator[](size_t i) { return ptr[i]; }
 };
 
 template <typename T, size_t M, size_t N>

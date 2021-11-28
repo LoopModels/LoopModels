@@ -1,3 +1,9 @@
+#pragma once
+
+#include "./math.hpp"
+#include <vector>
+#include <tuple>
+
 template <typename G>
 void visit(std::vector<Int> sorted, G &graph, size_t idx) {
     auto outs = outNeighbors(graph, idx);
@@ -95,4 +101,39 @@ std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
     }
     return components;
 }
+
+
+// Naive algorithm that looks like it may work to identify cycles:
+// 0 -> 1 -> 3 -> 5
+//  \            /
+//   -> 2 -> 4 ->
+// As we do dfs,
+// first, we iterate down 0 -> 1, and build
+// [0, 1, 3, 5] // all unique -> no cycle
+// then, we iterate down 0 -> 2
+// [0, 2, 4, 5] // all unique -> no cycle
+// vs:
+// 0 -> 1 -> 3 -> 0
+// [0, 1, 3, 0] // not unique -> cycle
+//
+// However, it does not because dfs does not explore all possible paths, meaning
+//   it is likely to miss the cyclic paths, e.g.:
+// 0 -> 1 -> 3 -> 5
+//  \    \<-/    /
+//   -> 2 -> 4 ->
+// [0, 1, 3, 5] // no cycle
+// [0, 2, 4, 5] // no cycle
+//
+// Thus a better approach is to group a TermBundle by strongly connected
+// components.
+// We shall take the approach of:
+//
+// 1. Split graph into weakly connected components. For each wcc:
+// 2. Prefuse these weakly connected components.
+// 3. Group these into strongly connected components.
+// 4. Iterate over schedules by strongly connected components.
+
+
+
+
 

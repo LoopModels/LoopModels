@@ -1,6 +1,8 @@
 #pragma once
 
 #include "./math.hpp"
+#include "./graphs.hpp"
+#include "./smallsets.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -379,14 +381,19 @@ template <typename T> size_t length(VoVoV<T> x) {
 // Gives the part of an ArrayRef that is a function of the induction variables.
 struct ArrayRefStrides {
     size_t arrayId;
-    Vector<SourceType, 0> indTyp;              // layer0;
-    Vector<size_t, 0> indID;                   // layer0;
+    Vector<std::pair<size_t, SourceType>, 0> inds; // layer0;
     VoVoV<size_t> programVariableCombinations; // layer1
     VoV<Int> coef;                             // length(coef) == length(pvc)
                    // map(length, coef) == map(length \circ length, pvc)
 };
 // Gives a constant offsets.
+// struct ArrayRefOffsets {
+//     Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
+// };
+// struct ArrayIndexPermutation {
+// };
 struct ArrayRef {
+    // size_t offsetId;
     size_t strideId;
     Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
 };
@@ -399,8 +406,9 @@ void show(ArrayRefStrides ar) {
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
         Vector<Int, 0> coefs = ar.coef(i);
-        std::string indStr = "i_" + std::to_string(ar.indID(i)) + " (" +
-                             toString(ar.indTyp(i)) + ")";
+	auto [indId, indTyp] = ar.inds(i);
+        std::string indStr = "i_" + std::to_string(indId) + " (" +
+                             toString(indTyp) + ")";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
         // printf();
@@ -457,6 +465,20 @@ void show(ArrayRefStrides ar) {
     }
 }
 
+struct CostSummary {
+    double vCost;
+    double sCost;
+    // double vLoadCost;
+    // double sLoadCost;
+    // double vStoreCost;
+    // double sStoreCost;
+
+    CostSummary() : vCost(0.0), sCost(0.0){};//, vLoadCost(0.0), sLoadCost(0.0), vStoreCost(0.0), sStoreCost(0.0) {};
+    void operator+=(CostSummary cs){
+	vCost += cs.vCost;
+	sCost += cs.sCost;
+    }
+};
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
 // These will typically map to a single CPU instruction.
@@ -471,9 +493,10 @@ void show(ArrayRefStrides ar) {
 // - Indicate
 struct Term {
     Operation op;                 // Operation id
-    Vector<SourceType, 0> srcTyp; // type of source
-    Vector<size_t, 0> srcs;       // source id
-    Vector<size_t, 0> dsts;       // destination id
+    CostSummary costSummary;
+    Vector<std::pair<size_t,SourceType>, 0> srcs; // type of source
+    Vector<std::pair<size_t,SourceType>, 0> dsts;       // destination id
+    // Vector<size_t, 0> srcs;       // source id
     uint32_t loopDeps;            // minimal loopdeps based on source's
     Int lnId;                     // id of loopnest
 };
@@ -560,7 +583,7 @@ struct Function {
     Vector<RectangularLoopNest, 0> rectln;
     // Vector<Array, 0> arrays;
     Vector<ArrayRefStrides, 0> arrayRefStrides;
-    Vector<ArrayRef, 0> arrayRef;
+    Vector<ArrayRef, 0> arrayRefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
     Vector<Schedule, 0> bestschedules;
@@ -607,63 +630,89 @@ void clearVisited(Function &fun) {
 bool visited(Function fun, size_t i) { return fun.visited(i); }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
-Vector<size_t, 0> outNeighbors(Term &t) { return t.dsts; }
-Vector<size_t, 0> outNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t,SourceType>, 0> outNeighbors(Term &t) { return t.dsts; }
+Vector<std::pair<size_t,SourceType>, 0> outNeighbors(Function &fun, size_t i) {
     return outNeighbors(fun.terms(i));
 }
-Vector<size_t, 0> inNeighbors(Term &t) { return t.srcs; }
-Vector<size_t, 0> inNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t,SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
+Vector<std::pair<size_t,SourceType>, 0> inNeighbors(Function &fun, size_t i) {
     return inNeighbors(fun.terms(i));
 }
 
 Term &getTerm(Function &fun, size_t tidx) { return fun.terms(tidx); }
 
-struct CostSummary {
-    double vCompCost;
-    double sCompCost;
-    double vLoadCost;
-    double sLoadCost;
-    double vStoreCost;
-    double sStoreCost;
-};
-
 struct TermBundle {
     std::vector<size_t> termIDs;
-    std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
+    SmallSet<size_t> loads;  // arrayRef ids
+    SmallSet<size_t> stores; // arrayRef ids
+    CostSummary costSummary;
+    // std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
     std::vector<SourceType> srcTyp;
-    std::vector<size_t> srcs;
-    std::vector<size_t> dsts;
+    std::vector<size_t> srcs; // ids within TermBundleGraph
+    std::vector<size_t> dsts; // ids within TermBundleGraph
 };
+
+
+uint32_t lowerQuarter(uint32_t x) { return x & 0x000000ff; }
+uint64_t lowerQuarter(uint64_t x) { return x & 0x000000000000ffff; }
+
 
 std::vector<size_t> &outNeighbors(TermBundle &tb) { return tb.dsts; }
 std::vector<size_t> &inNeighbors(TermBundle &tb) { return tb.srcs; }
 
-// Naive algorithm that looks like it may work:
-// 0 -> 1 -> 3 -> 5
-//  \            /
-//   -> 2 -> 4 ->
-// As we do dfs,
-// first, we iterate down 0 -> 1, and build
-// [0, 1, 3, 5] // all unique -> no cycle
-// then, we iterate down 0 -> 2
-// [0, 2, 4, 5] // all unique -> no cycle
-// vs:
-// 0 -> 1 -> 3 -> 0
-// [0, 1, 3, 0] // not unique -> cycle
-//
-// Does not because dfs does not explore all possible paths, meaning
-//   it is likely to miss the cyclic paths, e.g.:
-// 0 -> 1 -> 3 -> 5
-//  \    \<-/    /
-//   -> 2 -> 4 ->
-// [0, 1, 3, 5] // no cycle
-// [0, 2, 4, 5] // no cycle
-//
-
 struct TermBundleGraph {
     std::vector<TermBundle> tbs;
+    std::vector<size_t> tbId; // mapping of `Term` to `TermBundle`.
     std::vector<std::vector<bool>> visited;
+
+    TermBundleGraph(Function &fun, std::vector<Int> &wcc) {
+	
+	
+    }
 };
+/*
+void push(TermBundleGraph &tbg, std::vector<size_t> tbIds, Function &fun, size_t idx, size_t tbId){
+    tbIds.push_back(tbId);
+    Term t = fun.terms[idx];
+    tb.termIDs.push_back(idx);
+    // MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW
+    for (size_t i = 0; i < length(tb.srcs); ++i){
+	auto [srcId, srcTyp] = t.srcs[i];
+	switch (srcTyp){
+	case MEMORY:
+	    tb.loads.push_back(srcId);
+	    break;
+	case TERM:
+	    break;
+	case WTR:
+	    tb.loads.push_back(lowerQuarter(srcId));
+	    break;
+	default:
+	    break;
+	}
+    }
+    for (size_t i = 0; i < length(t.dsts); ++i){
+	auto [srcId, srcTyp] = t.dsts[i];
+	switch (srcTyp){
+	case MEMORY:
+	    tb.stores.push_back(srcId);
+	    break;
+	case TERM:
+	    
+	    break;
+	case WTR:
+	    tb.stores.push_back(lowerQuarter(srcId));
+	    break;
+	default:
+	    break;
+	}
+    }
+    tb.costSummary += t.costSummary;
+}
+*/
+
+
+
 struct WeaklyConnectedComponentOptimizer {
     TermBundleGraph tbg;
     Schedule bestSchedule;
@@ -761,6 +810,10 @@ uint32_t getLoopDeps(Function fun, TermBundle tb) {
     Term t = getTerm(fun, tb.termIDs[0]);
     return t.loopDeps;
 }
+
+
+
+
 
 // for i in 1:I, j in 1:J;
 //   s = 0.0
