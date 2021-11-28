@@ -125,5 +125,5 @@ void schedule(Function fun) {
     for (size_t j = 0; j < length(tb); ++j) {
         scheduleBundle(fun, tb[j]);
     }
-    return void;
+    return;
 }
