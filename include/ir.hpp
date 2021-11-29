@@ -2,7 +2,7 @@
 
 #include "./graphs.hpp"
 #include "./math.hpp"
-#include "./smallsets.hpp"
+#include "./bitsets.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -648,26 +648,26 @@ Term &getTerm(Function &fun, size_t tidx) { return fun.terms(tidx); }
 
 struct TermBundle {
     // std::vector<size_t> termIDs;
-    SmallSet termIds;
-    SmallSet srcTerms;
-    SmallSet dstTerms;
-    SmallSet srcTermsDirect;
-    SmallSet dstTermsDirect;
-    SmallSet loads;  // arrayRef ids
-    SmallSet stores; // arrayRef ids
+    BitSet termIds;
+    BitSet srcTerms;
+    BitSet dstTerms;
+    BitSet srcTermsDirect;
+    BitSet dstTermsDirect;
+    BitSet loads;  // arrayRef ids
+    BitSet stores; // arrayRef ids
     // std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
-    SmallSet srcTermBundles; // termBundles
-    SmallSet dstTermBundles; // termBundles
+    BitSet srcTermBundles; // termBundles
+    BitSet dstTermBundles; // termBundles
     std::unordered_set<size_t> RTWs;
     std::unordered_set<size_t> WTRs;
     CostSummary costSummary;
     TermBundle(size_t maxTerms, size_t maxArrayRefs, size_t maxTermBundles)
-        : termIds(SmallSet(maxTerms)), srcTerms(SmallSet(maxTerms)),
-          dstTerms(SmallSet(maxTerms)), srcTermsDirect(SmallSet(maxTerms)),
-          dstTermsDirect(SmallSet(maxTerms)), loads(SmallSet(maxArrayRefs)),
-          stores(SmallSet(maxArrayRefs)),
-          srcTermBundles(SmallSet(maxTermBundles)),
-          dstTermBundles(SmallSet(maxTermBundles)) {}
+        : termIds(BitSet(maxTerms)), srcTerms(BitSet(maxTerms)),
+          dstTerms(BitSet(maxTerms)), srcTermsDirect(BitSet(maxTerms)),
+          dstTermsDirect(BitSet(maxTerms)), loads(BitSet(maxArrayRefs)),
+          stores(BitSet(maxArrayRefs)),
+          srcTermBundles(BitSet(maxTermBundles)),
+          dstTermBundles(BitSet(maxTermBundles)) {}
 };
 
 // inline uint32_t lowerQuarter(uint32_t x) { return x & 0x000000ff; }
@@ -691,7 +691,7 @@ inline uint64_t lowerHalf(uint64_t x) { return x & 0x00000000ffffffff; }
 
 void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
           size_t idx, size_t tbId) {
-    termToTermBundle.push_back(tbId);
+    termToTermBundle[idx] = tbId;
     Term t = fun.terms[idx];
     push(tb.termIds, idx);
     // MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW
@@ -746,8 +746,10 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     tb.costSummary += t.costSummary;
 }
 
-SmallSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
-SmallSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
+void fillDependencies(TermBundle &tb, std::vector<size_t> &termToTermBundle) {}
+
+BitSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
+BitSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
 
 // for `match` to work well, calls should try to roughly follow topological
 // order as best as they can. This is because we rely on inclusion of `Term t`
@@ -774,9 +776,10 @@ bool match(Function &fun, TermBundle &tb, size_t tid) {
 struct TermBundleGraph {
     std::vector<TermBundle> tbs;
     std::vector<size_t> termToTermBundle; // mapping of `Term` to `TermBundle`.
-    std::vector<std::vector<bool>> visited;
+    // std::vector<std::vector<bool>> visited;
 
-    TermBundleGraph(Function &fun, std::vector<Int> &wcc) {
+    TermBundleGraph(Function &fun, std::vector<Int> &wcc)
+        : termToTermBundle(std::vector<size_t>(length(fun.terms))) {
         // iterate over the weakly connected component wcc
         // it should be roughly topologically sorted,
         // so just iterate over terms, greedily checking whether each matches
@@ -784,21 +787,25 @@ struct TermBundleGraph {
         // not, allocate a new one and add them to it. Upon finishing, construct
         // the TermBundleGraph from this collection of `TermBundle`s, using a
         // `termToTermBundle` map.
-        /*
-        size_t i = 0;
-        size_t j = 0;
-        TermBundle tb;
-        do {
-            if (i)
-
-                ++i;
-        } while (i < wcc.size());
+        size_t maxTerms = length(fun.terms);
+        size_t maxArrayRefs = length(fun.arrayRefs);
+        size_t maxTermBundles = length(wcc);
         for (size_t i = 0; i < wcc.size(); ++i) {
-            if (i)
-                if (mismatch(fun, tbs[j], fun.terms[wcc[i]]))
-                    TermBundle tb;
+            bool doesmatch = i > 0;
+            size_t idx = wcc[i];
+            if (doesmatch)
+                doesmatch = match(fun, last(tbs), idx);
+            if (!doesmatch)
+                tbs.emplace_back(
+                    TermBundle(maxTerms, maxArrayRefs, maxTermBundles));
+            push(last(tbs), termToTermBundle, fun, idx, tbs.size() - 1);
         }
-        */
+        // Now, all members of the wcc have been added.
+        // Thus, `termToTerBmundle` should be full, and we can now fill out the
+        // `srcTermBundles` and `dstTermBundles`.
+        for (size_t i = 0; i < tbs.size(); ++i) {
+            fillDependencies(tbs[i], termToTermBundle);
+        }
     }
 };
 
@@ -811,15 +818,16 @@ struct WeaklyConnectedComponentOptimizer {
                                      // weakly connected component
 };
 
-SmallSet &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
+BitSet &outNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return outNeighbors(tb);
 }
-SmallSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
+BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return inNeighbors(tb);
 }
 
+/*
 void clearVisited(TermBundleGraph &tbg, size_t level) {
     std::vector<bool> &visited = tbg.visited[level];
     for (size_t i = 0; i < visited.size(); ++i) {
@@ -867,8 +875,8 @@ std::vector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node,
 
 SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
     TermBundle &dst = tbg.tbs[dstId];
-    std::vector<size_t> &srcV = inNeighbors(dst);
-    for (size_t i = 0; i < srcV.size(); ++i) {
+    BitSet& srcV = inNeighbors(dst);
+    for (size_t i = 0; i < length(srcV); ++i) {
         if (srcV[i] == srcId) {
             return dst.srcTyp[i];
         }
@@ -876,6 +884,9 @@ SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
     assert("source not found");
     return TERM;
 }
+*/
+
+
 
 // Will probably handle this differently, i.e. check source type, and then
 // only call given .
@@ -896,7 +907,7 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
 */
 
 uint32_t getLoopDeps(Function fun, TermBundle tb) {
-    Term t = getTerm(fun, tb.termIDs[0]);
+    Term t = getTerm(fun, tb.termIds[0]);
     return t.loopDeps;
 }
 

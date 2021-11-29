@@ -19,6 +19,16 @@ template <typename V> // generic function working with many stl containers, e.g.
     return v.size();
 }
 
+
+template <typename T> T& last(std::vector<T> &x){ return x[x.size() - 1]; }
+template <typename T>
+void show(std::vector<T> &x){
+    std::cout << "[";
+    for (size_t i = 0; i < x.size() - 1; ++i){
+        std::cout << x[i] << ", ";
+    }
+    std::cout << last(x) << "]";
+}
 // `show` doesn't print a new line by convention.
 template <typename T> void showln(T x) {
     show(x);
@@ -246,6 +256,10 @@ template <typename T, size_t M>
 Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
     return Vector<T, 0>(x.ptr + i0, i1 - i0);
 }
+
+
+template <typename T, size_t M> T& last(Vector<T,M> x){ return x[length(x) - 1]; }
+
 
 template <typename T> struct Tensor3 {
     T *ptr;
@@ -638,3 +652,4 @@ template <typename T, typename S>
 bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
 }
+

@@ -25,6 +25,10 @@ add_executable(
   ir_test
   ir_test.cpp
 )
+add_executable(
+  bitset_test
+  bitset_test.cpp
+)
 target_link_libraries(
   compat_test
   gtest_main
@@ -37,8 +41,13 @@ target_link_libraries(
   ir_test
   gtest_main
 )
+target_link_libraries(
+  bitset_test
+  gtest_main
+)
 
 include(GoogleTest)
 gtest_discover_tests(compat_test)
 gtest_discover_tests(perm_test)
 gtest_discover_tests(ir_test)
+gtest_discover_tests(bitset_test)
