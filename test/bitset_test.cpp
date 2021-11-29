@@ -1,0 +1,25 @@
+#include "../include/bitsets.hpp"
+#include "../include/math.hpp"
+#include <cstdio>
+#include <gtest/gtest.h>
+
+TEST(BitSetTest, BasicAssertions) {
+    BitSet bs(1000);
+    push(bs, 4);
+    push(bs, 10);
+    push(bs, 200);
+    push(bs, 117);
+    push(bs, 87);
+    push(bs, 991);
+    showln(bs.data);
+    std::vector<size_t> bsc{4, 10, 87, 117, 200, 991};
+    size_t j = 0;
+    for (auto I = bs.begin(); I != bs.end(); ++I) {
+        EXPECT_EQ(*I, bsc[j]);
+        EXPECT_EQ(contains(bs, *I) != 0, true);
+        printf("We get: %zu\n", *I);
+        ++j;
+    }
+    EXPECT_EQ(j, length(bsc));
+    EXPECT_EQ(j, length(bs));
+}
