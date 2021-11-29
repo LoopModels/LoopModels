@@ -284,7 +284,7 @@ end
 // The third index on the first axis of `mlt_off_ids` yields index into the
 // appropriate `ind_typ` container.
 // ind_typ indicates the type of the index.
-// loopnest_to_array_map has length equal to loopnest depth, matches original
+// loopnest_to_array_map has length equal to loopnest depth, shouldPrefusees original
 //   order. Each value is a bitmask indicating which loops depend on it.
 
 template <typename T> struct VoV {
@@ -751,16 +751,16 @@ void fillDependencies(TermBundle &tb, std::vector<size_t> &termToTermBundle) {}
 BitSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
 BitSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
 
-// for `match` to work well, calls should try to roughly follow topological
+// for `shouldPrefuse` to work well, calls should try to roughly follow topological
 // order as best as they can. This is because we rely on inclusion of `Term t`
 // in either the `srcTermsDirect` or `dstTermsDirect. Depending on the order we
 // iterate over the graph, it may be that even though we ultimately append `t`
 // into `srcTermsDirect` or `dstTermsDirect`, it is not yet included at the time
-// we call `mismatch`.
+// we call `shouldPrefuse`.
 //
-// Note that `match` is used in `prefuse` as an optimization meant to speed up
+// Note that `shouldPrefuse` is used in `prefuse` as an optimization meant to speed up
 // this library by reducing the search space; correctness does not depend on it.
-bool match(Function &fun, TermBundle &tb, size_t tid) {
+bool shouldPrefuse(Function &fun, TermBundle &tb, size_t tid) {
     Term &t = fun.terms[tid];
     size_t members = length(tb.termIds);
     if (members) {
@@ -782,7 +782,7 @@ struct TermBundleGraph {
         : termToTermBundle(std::vector<size_t>(length(fun.terms))) {
         // iterate over the weakly connected component wcc
         // it should be roughly topologically sorted,
-        // so just iterate over terms, greedily checking whether each matches
+        // so just iterate over terms, greedily checking whether each shouldPrefusees
         // the most recent `TermBundle`. If so, add them to the previous. If
         // not, allocate a new one and add them to it. Upon finishing, construct
         // the TermBundleGraph from this collection of `TermBundle`s, using a
@@ -791,11 +791,11 @@ struct TermBundleGraph {
         size_t maxArrayRefs = length(fun.arrayRefs);
         size_t maxTermBundles = length(wcc);
         for (size_t i = 0; i < wcc.size(); ++i) {
-            bool doesmatch = i > 0;
+            bool doPrefuse = i > 0;
             size_t idx = wcc[i];
-            if (doesmatch)
-                doesmatch = match(fun, last(tbs), idx);
-            if (!doesmatch)
+            if (doPrefuse)
+                doPrefuse = shouldPrefuse(fun, last(tbs), idx);
+            if (!doPrefuse)
                 tbs.emplace_back(
                     TermBundle(maxTerms, maxArrayRefs, maxTermBundles));
             push(last(tbs), termToTermBundle, fun, idx, tbs.size() - 1);
