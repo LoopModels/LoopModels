@@ -11,7 +11,7 @@
 // template <typename A>
 // cycles marks write leading to cycle, and outnum of the write.
 
-void fillfastmemcostsum(Function fun) { return; }
+// void fillfastmemcostsum(Function fun) { return; }
 
 //
 // x = foo(...)
@@ -36,11 +36,19 @@ void fillfastmemcostsum(Function fun) { return; }
 // fusion(level) -> order(level) -> cost(level) ->
 // fusion(level+1) -> ...
 //
-// For each level, allocate a (triangular) matrix of schedules and costs; upper
-// triangular, col represents fused len, row fused num This can store/cache all
-// possible fused combinations. We can create views as appropriate so that we
-// can still fill correctly through the recursion. On entry  (updateCost =
-// true), this is when we use the temp at that level to update bestcost.
+
+// An idea:
+// Create vector, initialized to length(inNeighbors(tb)) per TermBundle
+//   Each time a TermBundle is scheduled, decrement all descendents's values
+//   Once a value is 0, this means it can be scheduled/queued.
+// But then, what about cycles?
+// Given an empty queue, search for SCCs?
+// Or, should the graph be of strongly connected components?
+//
+// Latter sounds easier to work with.
+//
+// Once an SCC can be scheduled, we can then worry about TermBundles within.
+
 
 template <typename I>
 void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,
