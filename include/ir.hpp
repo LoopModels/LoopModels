@@ -746,7 +746,16 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     tb.costSummary += t.costSummary;
 }
 
-void fillDependencies(TermBundle &tb, std::vector<size_t> &termToTermBundle) {}
+void fillDependencies(TermBundle &tb, size_t tbId, std::vector<size_t> &termToTermBundle) {
+    for (auto I = tb.srcTerms.begin(); I != tb.srcTerms.end(); ++I) {
+	size_t srcId = termToTermBundle[*I];
+	if (srcId != tbId) push(tb.srcTermBundles, srcId);
+    }
+    for (auto I = tb.dstTerms.begin(); I != tb.dstTerms.end(); ++I) {
+	size_t dstId = termToTermBundle[*I];
+	if (dstId != tbId) push(tb.dstTermBundles, dstId);
+    }
+}
 
 BitSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
 BitSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
@@ -804,7 +813,7 @@ struct TermBundleGraph {
         // Thus, `termToTerBmundle` should be full, and we can now fill out the
         // `srcTermBundles` and `dstTermBundles`.
         for (size_t i = 0; i < tbs.size(); ++i) {
-            fillDependencies(tbs[i], termToTermBundle);
+            fillDependencies(tbs[i], i, termToTermBundle);
         }
     }
 };
@@ -826,6 +835,8 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
     TermBundle &tb = tbg.tbs[tbId];
     return inNeighbors(tb);
 }
+
+// should now be able to WCC |> prefuse |> SCC.
 
 /*
 void clearVisited(TermBundleGraph &tbg, size_t level) {
