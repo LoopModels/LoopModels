@@ -32,9 +32,8 @@ std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
     assert(t.depth > 0);
 #endif
     size_t base = t.offsets[i];
-    T *ptr = t.ptr + base;
     size_t len = t.offsets[i + 1] - base;
-    Vector<T, 0> v = Vector<T, 0>(ptr, len);
+    Vector<T, 0> v = Vector<T, 0>(t.ptr + base, len);
     Tree<T> ts = Tree{
         .ptr = t.ptr + t.stride,
         .offsets = t.offsets + base + t.stride + 1,
