@@ -1,8 +1,8 @@
 #pragma once
 
+#include "./bitsets.hpp"
 #include "./graphs.hpp"
 #include "./math.hpp"
-#include "./bitsets.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -11,6 +11,73 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+template <typename T> struct Tree {
+    T *ptr;          // stride is `stride`
+    size_t *offsets; // stride is `stride + 1`
+    size_t depth;    // number of loops
+    size_t stride;
+    size_t breadth; // number of terms
+
+    struct Iterator;
+    Iterator begin();
+    size_t end() { return breadth; };
+};
+
+template <typename T>
+std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
+#ifndef DONOTBOUNDSCHECK
+    assert((0 <= i) & (i < t.breadth));
+    // assert((0 <= i) & (i < t.branches));
+    assert(t.depth > 0);
+#endif
+    size_t base = t.offsets[i];
+    T *ptr = t.ptr + base;
+    size_t len = t.offsets[i + 1] - base;
+    Vector<T, 0> v = Vector<T, 0>(ptr, len);
+    Tree<T> ts = Tree{
+        .ptr = t.ptr + t.stride,
+        .offsets = t.offsets + base + t.stride + 1,
+        .depth = t.depth - 1,
+        .stride = t.stride,
+        .breadth = len
+        // .breadth = t.breadth, .branches = t.branches
+    };
+    return std::make_pair(v, ts);
+}
+
+template <typename T> struct Tree<T>::Iterator {
+    Tree<T> tree;
+    size_t position;
+    bool dobreak;
+
+    std::pair<Vector<T, 0>, Tree<T>> operator*() {
+        auto [v, t] = subTree(tree, position);
+        dobreak = length(v) == 0;
+        return std::make_pair(v, t);
+    }
+    Tree<T>::Iterator operator++() {
+        ++position;
+        return *this;
+    }
+
+    bool operator!=(size_t x) {
+        return ((!dobreak) & (x != position));
+    } // false means stop
+    bool operator==(size_t x) {
+        return (dobreak | (x == position));
+    } // true means stop
+    bool operator!=(Tree<T>::Iterator x) {
+        return (!dobreak) & (x.position != position);
+    }
+    bool operator==(Tree<T>::Iterator x) {
+        return dobreak | (x.position == position);
+    }
+};
+
+template <typename T> typename Tree<T>::Iterator Tree<T>::begin() {
+    return Tree<T>::Iterator(*this, 0, false);
+}
 
 typedef Int Operation;
 /*
@@ -284,7 +351,8 @@ end
 // The third index on the first axis of `mlt_off_ids` yields index into the
 // appropriate `ind_typ` container.
 // ind_typ indicates the type of the index.
-// loopnest_to_array_map has length equal to loopnest depth, shouldPrefusees original
+// loopnest_to_array_map has length equal to loopnest depth, shouldPrefusees
+// original
 //   order. Each value is a bitmask indicating which loops depend on it.
 
 template <typename T> struct VoV {
@@ -665,8 +733,7 @@ struct TermBundle {
         : termIds(BitSet(maxTerms)), srcTerms(BitSet(maxTerms)),
           dstTerms(BitSet(maxTerms)), srcTermsDirect(BitSet(maxTerms)),
           dstTermsDirect(BitSet(maxTerms)), loads(BitSet(maxArrayRefs)),
-          stores(BitSet(maxArrayRefs)),
-          srcTermBundles(BitSet(maxTermBundles)),
+          stores(BitSet(maxArrayRefs)), srcTermBundles(BitSet(maxTermBundles)),
           dstTermBundles(BitSet(maxTermBundles)) {}
 };
 
@@ -746,29 +813,33 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     tb.costSummary += t.costSummary;
 }
 
-void fillDependencies(TermBundle &tb, size_t tbId, std::vector<size_t> &termToTermBundle) {
+void fillDependencies(TermBundle &tb, size_t tbId,
+                      std::vector<size_t> &termToTermBundle) {
     for (auto I = tb.srcTerms.begin(); I != tb.srcTerms.end(); ++I) {
-	size_t srcId = termToTermBundle[*I];
-	if (srcId != tbId) push(tb.srcTermBundles, srcId);
+        size_t srcId = termToTermBundle[*I];
+        if (srcId != tbId)
+            push(tb.srcTermBundles, srcId);
     }
     for (auto I = tb.dstTerms.begin(); I != tb.dstTerms.end(); ++I) {
-	size_t dstId = termToTermBundle[*I];
-	if (dstId != tbId) push(tb.dstTermBundles, dstId);
+        size_t dstId = termToTermBundle[*I];
+        if (dstId != tbId)
+            push(tb.dstTermBundles, dstId);
     }
 }
 
 BitSet &outNeighbors(TermBundle &tb) { return tb.dstTermBundles; }
 BitSet &inNeighbors(TermBundle &tb) { return tb.srcTermBundles; }
 
-// for `shouldPrefuse` to work well, calls should try to roughly follow topological
-// order as best as they can. This is because we rely on inclusion of `Term t`
-// in either the `srcTermsDirect` or `dstTermsDirect. Depending on the order we
-// iterate over the graph, it may be that even though we ultimately append `t`
-// into `srcTermsDirect` or `dstTermsDirect`, it is not yet included at the time
-// we call `shouldPrefuse`.
+// for `shouldPrefuse` to work well, calls should try to roughly follow
+// topological order as best as they can. This is because we rely on inclusion
+// of `Term t` in either the `srcTermsDirect` or `dstTermsDirect. Depending on
+// the order we iterate over the graph, it may be that even though we ultimately
+// append `t` into `srcTermsDirect` or `dstTermsDirect`, it is not yet included
+// at the time we call `shouldPrefuse`.
 //
-// Note that `shouldPrefuse` is used in `prefuse` as an optimization meant to speed up
-// this library by reducing the search space; correctness does not depend on it.
+// Note that `shouldPrefuse` is used in `prefuse` as an optimization meant to
+// speed up this library by reducing the search space; correctness does not
+// depend on it.
 bool shouldPrefuse(Function &fun, TermBundle &tb, size_t tid) {
     Term &t = fun.terms[tid];
     size_t members = length(tb.termIds);
@@ -791,11 +862,11 @@ struct TermBundleGraph {
         : termToTermBundle(std::vector<size_t>(length(fun.terms))) {
         // iterate over the weakly connected component wcc
         // it should be roughly topologically sorted,
-        // so just iterate over terms, greedily checking whether each shouldPrefusees
-        // the most recent `TermBundle`. If so, add them to the previous. If
-        // not, allocate a new one and add them to it. Upon finishing, construct
-        // the TermBundleGraph from this collection of `TermBundle`s, using a
-        // `termToTermBundle` map.
+        // so just iterate over terms, greedily checking whether each
+        // shouldPrefusees the most recent `TermBundle`. If so, add them to the
+        // previous. If not, allocate a new one and add them to it. Upon
+        // finishing, construct the TermBundleGraph from this collection of
+        // `TermBundle`s, using a `termToTermBundle` map.
         size_t maxTerms = length(fun.terms);
         size_t maxArrayRefs = length(fun.arrayRefs);
         size_t maxTermBundles = length(wcc);
@@ -896,8 +967,6 @@ SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
     return TERM;
 }
 */
-
-
 
 // Will probably handle this differently, i.e. check source type, and then
 // only call given .

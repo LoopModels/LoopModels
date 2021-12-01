@@ -39,7 +39,8 @@ struct BitSet::Iterator {
         ++count;
         while (state == 0) {
             ++didx;
-            if (didx >= set.size()) return *this;
+            if (didx >= set.size())
+                return *this;
             state = set[didx];
             offset = std::numeric_limits<uint64_t>::max();
             // offset = 0xffffffffffffffff;
@@ -57,7 +58,8 @@ struct BitSet::Iterator {
 // BitSet::Iterator(std::vector<std::uint64_t> &seta)
 //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
 BitSet::Iterator construct(std::vector<std::uint64_t> &seta) {
-    return BitSet::Iterator{seta, 0, std::numeric_limits<uint64_t>::max(), seta[0], std::numeric_limits<uint64_t>::max()};
+    return BitSet::Iterator{seta, 0, std::numeric_limits<uint64_t>::max(),
+                            seta[0], std::numeric_limits<uint64_t>::max()};
 }
 
 BitSet::Iterator BitSet::begin() { return ++construct(this->data); }
