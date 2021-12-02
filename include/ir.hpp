@@ -597,6 +597,7 @@ bool isadditive(Term t) {
 // [ 0 0 0 0
 //   1 0 0 0
 //   2 0 0 0 ]
+/*
 struct FusionTree {
     Matrix<Int, 0, 0> tree;
 };
@@ -622,6 +623,7 @@ Permutation getPermutation(Schedule s, size_t i) {
 };
 
 Int schedule_size(Schedule s) { return s.numTermGs * (3 * s.numLoops + 1); };
+*/
 
 /* // commented out because this is broken
 size_t countScheduled(Schedule s, Int segment, Int level) {
@@ -656,11 +658,14 @@ struct Function {
     Vector<ArrayRef, 0> arrayRefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
-    Vector<Schedule, 0> bestschedules;
-    Matrix<Schedule, 0, 0> tempschedules;
+    Tree<size_t> initialLoopTree;
+    // Vector<Schedule, 0> bestschedules;
+    // Matrix<Schedule, 0, 0> tempschedules;
     Matrix<double, 0, 0> tempcosts;
     FastCostSummaries fastcostsum;
     Vector<Vector<Int, 0>, 0> triloopcache;
+    std::vector<std::vector<std::pair<size_t,size_t>>> arrayReadsToTermMap;
+    std::vector<std::vector<std::pair<size_t,size_t>>> arrayWritesToTermMap;
     size_t ne;
     // char *data;
 
@@ -668,15 +673,20 @@ struct Function {
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
              Vector<ArrayRefStrides, 0> arrayRefStrides,
              Vector<ArrayRef, 0> arrayRefs, Vector<Const, 0> constants,
-             Vector<bool, 0> visited, Vector<Schedule, 0> bestschedules,
-             Matrix<Schedule, 0, 0> tempschedules,
+             Vector<bool, 0> visited,
+	     Tree<size_t> initialLoopTree,
+             // Vector<Schedule, 0> bestschedules,
+             // Matrix<Schedule, 0, 0> tempschedules,
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
-             Vector<Vector<Int, 0>, 0> triloopcache) // FIXME: triloopcache type
+             Vector<Vector<Int, 0>, 0> triloopcache, size_t numArrays) // FIXME: triloopcache type
         : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
           arrayRefStrides(arrayRefStrides), arrayRefs(arrayRefs),
-          constants(constants), visited(visited), bestschedules(bestschedules),
-          tempschedules(tempschedules), tempcosts(tempcosts),
-          fastcostsum(fastcostsum), triloopcache(triloopcache) {
+          constants(constants), visited(visited),
+	  initialLoopTree(initialLoopTree),
+          // bestschedules(bestschedules),
+          // tempschedules(tempschedules),
+          tempcosts(tempcosts), fastcostsum(fastcostsum),
+          triloopcache(triloopcache) {
         size_t edge_count = 0;
         for (size_t j = 0; j < length(terms); ++j)
             edge_count += length(terms(j).dsts);
@@ -687,6 +697,8 @@ struct Function {
                 trlc(k) = UNSET_COST;
             }
         }
+	arrayReadsToTermMap.resize(numArrays);
+	arrayWritesToTermMap.resize(numArrays);
     }
 };
 
@@ -890,8 +902,8 @@ struct TermBundleGraph {
 
 struct WeaklyConnectedComponentOptimizer {
     TermBundleGraph tbg;
-    Schedule bestSchedule;
-    Schedule tempSchedule;
+    // Schedule bestSchedule;
+    // Schedule tempSchedule;
     std::vector<std::vector<Int>>
         stronglyConnectedComponents; // strongly connected components within the
                                      // weakly connected component
