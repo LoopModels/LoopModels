@@ -799,23 +799,23 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
         }
     }
     for (size_t i = 0; i < length(t.dsts); ++i) {
-        auto [srcId, srcTyp] = t.dsts[i];
-        switch (srcTyp) {
+        auto [dstId, dstTyp] = t.dsts[i];
+        switch (dstTyp) {
         case MEMORY:
-            push(tb.stores, srcId);
+            push(tb.stores, dstId);
             break;
         case TERM:
-            push(tb.dstTerms, srcId);
-            push(tb.dstTermsDirect, srcId);
+            push(tb.dstTerms, dstId);
+            push(tb.dstTermsDirect, dstId);
             break;
         case WTR: // this is the write, so read is dst
-            push(tb.dstTerms, lowerHalf(srcId));
-            push(tb.stores, firstQuarter(srcId));
+            push(tb.dstTerms, lowerHalf(dstId));
+            push(tb.stores, firstQuarter(dstId));
             break;
         case RTW: // this is the write, so read is src
-            push(tb.srcTerms, lowerHalf(srcId));
-            push(tb.stores, secondQuarter(srcId));
-            tb.RTWs.insert(srcId);
+            push(tb.srcTerms, lowerHalf(dstId));
+            push(tb.stores, secondQuarter(dstId));
+            tb.RTWs.insert(dstId);
             break;
         default:
             break;
