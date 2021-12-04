@@ -128,9 +128,9 @@ std::string toString(SourceType s) {
         return "Write then read";
     case RTW: // dummy SourceType for indicating a relationship; not lowered
         return "Read then write";
-    default:
-        assert("Unreachable reached; invalid SourceType.");
-        return "";
+    // default:
+    //     assert("Unreachable reached; invalid SourceType.");
+    //     return "";
     }
 }
 
