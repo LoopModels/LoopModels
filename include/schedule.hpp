@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <vector>
 
+
 // struct BaselineModelCost {};
 
 // template <typename A>

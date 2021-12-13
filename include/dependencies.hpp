@@ -7,14 +7,53 @@
 #include <utility>
 #include <vector>
 
-bool precedes(Function fun, size_t xId, size_t yId){
-    
+// Check array id reference inds vs span
+// for m in 1:M, n in 1:N
+//   A[m,n] = A[m,n] / U[n,n]
+//   for k in n+1:N
+//     A[m,k] = A[m,k] - A[m,n]*U[n,k]
+//   end
+// end
+//
+// Lets consider all the loads and stores to `A` above.
+// 1. A[m,n] = /(A[m,n], U[n,n])
+// 2. tmp = *(A[m,n], U[n,k])
+// 3. A[m,k] = -(A[m,k], tmp)
+//
+// We must consider loop bounds for ordering.
+//
+template <typename PX, typename PY>
+bool precedes(Function fun, size_t xId, size_t yId, InvTree it, PX permx, PY permy){
+    // iterate over loops
+    Vector<size_t,0> x = it(xId);
+    Vector<size_t,0> y = it(yId);
+    auto [arx, arsx] = getArrayRef(fun, xId);
+    auto [ary, arsy] = getArrayRef(fun, yId);
+    for (size_t i = 0; i < length(x); ++i){
+	if(x(i) < y(i)){
+	    return true;
+	} else if (x(i) > y(i)) {
+	    return false;
+	}
+	// else x(i) == y(i)
+	// this loop occurs at the same time, 
+	// TODO:
+	
+    }
     return true;
+}
+// definition with respect to a schedule
+bool precedes(Function fun, size_t xId, size_t yId, Schedule s){
+    return precedes(fun, xId, yId, InvTree(s.tree), s.perms(xId), s.perms(yId));
+}
+// definition with respect to orginal order; original permutations are all `UnitRange`s, so we don't bother materializing
+bool precedes(Function fun, size_t xId, size_t yId){
+    return precedes(fun, xId, yId, InvTree(fun.initialLoopTree), UnitRange<size_t>(), UnitRange<size_t>());
 }
 
 void discoverMemDeps(Function fun, Tree<size_t>::Iterator I){
     
-    for (; I != fun.initialLoopTree.end(); ++I){
+    for (; I != Tree<size_t>(fun.initialLoopTree).end(); ++I){
 	auto [v, t] = *I;
 	// `v` gives terms at this level, in order.
 	// But, if this isn't the final level, not really the most useful iteration scheme, is it?

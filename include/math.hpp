@@ -292,7 +292,6 @@ template <typename T> size_t getNLoops(T x) { return size(x.data, 0); }
 // Permutations
 //
 typedef Matrix<Int, 0, 2> PermutationData;
-typedef Vector<Int, 0> PermutationVector;
 struct Permutation {
     PermutationData data;
 
@@ -305,7 +304,7 @@ struct Permutation {
 
 size_t length(Permutation perm) { return length(perm.data); }
 
-PermutationVector inv(Permutation p) { return getCol(p.data, 1); }
+Vector<Int, 0> inv(Permutation p) { return getCol(p.data, 1); }
 
 Int &inv(Permutation p, size_t j) { return p.data(j, 1); }
 
@@ -325,6 +324,23 @@ void show(Permutation perm) {
         std::printf("%ld ", perm(j));
     std::printf("%ld>", perm(numloop - 1));
 }
+
+template <typename T> struct UnitRange{
+    T operator()(size_t i){ return T(i); }
+};
+template <typename T> UnitRange<T> inv(UnitRange<T> r){ return r; }
+
+struct PermutationVector{
+    Int *ptr;
+    size_t nloops;
+    size_t nterms;
+    Permutation operator()(size_t i){
+#ifndef DONOTBOUNDSCHECK
+	assert((0 <= i) & (i < nterms));
+#endif
+	return Permutation(ptr + i*2*nloops, nloops);
+    }
+};
 
 void swap(Permutation p, Int i, Int j) {
     Int xi = p(i);
@@ -499,6 +515,8 @@ bool zeroInnerIterationsAtMaximum(TrictM A, Upperbound ub,
     return false;
 }
 
+// _i* are indices for the considered order
+// perms map these to i*, indices in the original order.
 bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
                 Permutation perm1, Permutation perm2, Int _i1, Int _i2) {
     auto A = getTrit(l1);

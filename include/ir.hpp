@@ -3,6 +3,8 @@
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
 #include "./math.hpp"
+#include "./affine.hpp"
+#include "./tree.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -12,71 +14,7 @@
 #include <utility>
 #include <vector>
 
-template <typename T> struct Tree {
-    T *ptr;          // stride is `stride`
-    size_t *offsets; // stride is `stride + 1`
-    size_t depth;    // number of loops
-    size_t stride;
-    size_t breadth; // number of terms
 
-    struct Iterator;
-    Iterator begin();
-    size_t end() { return breadth; };
-};
-
-template <typename T>
-std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
-#ifndef DONOTBOUNDSCHECK
-    assert((0 <= i) & (i < t.breadth));
-    // assert((0 <= i) & (i < t.branches));
-    assert(t.depth > 0);
-#endif
-    size_t base = t.offsets[i];
-    size_t len = t.offsets[i + 1] - base;
-    Vector<T, 0> v = Vector<T, 0>(t.ptr + base, len);
-    Tree<T> ts = Tree{
-        .ptr = t.ptr + t.stride,
-        .offsets = t.offsets + base + t.stride + 1,
-        .depth = t.depth - 1,
-        .stride = t.stride,
-        .breadth = len
-        // .breadth = t.breadth, .branches = t.branches
-    };
-    return std::make_pair(v, ts);
-}
-
-template <typename T> struct Tree<T>::Iterator {
-    Tree<T> tree;
-    size_t position;
-    bool dobreak;
-
-    std::pair<Vector<T, 0>, Tree<T>> operator*() {
-        auto [v, t] = subTree(tree, position);
-        dobreak = length(v) == 0;
-        return std::make_pair(v, t);
-    }
-    Tree<T>::Iterator operator++() {
-        ++position;
-        return *this;
-    }
-
-    bool operator!=(size_t x) {
-        return ((!dobreak) & (x != position));
-    } // false means stop
-    bool operator==(size_t x) {
-        return (dobreak | (x == position));
-    } // true means stop
-    bool operator!=(Tree<T>::Iterator x) {
-        return (!dobreak) & (x.position != position);
-    }
-    bool operator==(Tree<T>::Iterator x) {
-        return dobreak | (x.position == position);
-    }
-};
-
-template <typename T> typename Tree<T>::Iterator Tree<T>::begin() {
-    return Tree<T>::Iterator(*this, 0, false);
-}
 
 typedef Int Operation;
 /*
@@ -108,31 +46,6 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-// SourceType: RTW/WTR
-// size_t 32 bits: src_arrayref_id 8 bits / dst_arrayref_id 8 bits / src_term 16
-// bits size_t 64 bits: src_arrayref_id 16 bits / dst_arrayref_id 16 bits /
-// src_term 32 bits
-enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
-
-std::string toString(SourceType s) {
-    switch (s) {
-    case MEMORY:
-        return "Memory";
-    case TERM:
-        return "Term";
-    case CONSTANT:
-        return "Constant";
-    case LOOPINDUCTVAR:
-        return "Induction Variable";
-    case WTR:
-        return "Write then read";
-    case RTW: // dummy SourceType for indicating a relationship; not lowered
-        return "Read then write";
-    // default:
-    //     assert("Unreachable reached; invalid SourceType.");
-    //     return "";
-    }
-}
 
 enum NumType {
     Float64,
@@ -148,6 +61,7 @@ enum NumType {
     UInt16,
     UInt8
 };
+
 
 struct Const {
     NumType type;
@@ -449,7 +363,6 @@ template <typename T> size_t length(VoVoV<T> x) {
 // Gives the part of an ArrayRef that is a function of the induction variables.
 struct ArrayRefStrides {
     size_t arrayId;
-    Vector<std::pair<size_t, SourceType>, 0> inds; // layer0;
     VoVoV<size_t> programVariableCombinations;     // layer1
     VoV<Int> coef; // length(coef) == length(pvc)
                    // map(length, coef) == map(length \circ length, pvc)
@@ -463,7 +376,9 @@ struct ArrayRefStrides {
 struct ArrayRef {
     // size_t offsetId;
     size_t strideId;
-    Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
+    // Vector<std::pair<size_t, SourceType>, 0> inds; // layer0;
+    Vector<AffineSource,0> inds; // layer0;
+    // Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset, constant part referring ti [[]]
 };
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
@@ -474,9 +389,9 @@ void show(ArrayRefStrides ar) {
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
         Vector<Int, 0> coefs = ar.coef(i);
-        auto [indId, indTyp] = ar.inds(i);
-        std::string indStr =
-            "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
+        // auto [indId, indTyp] = ar.inds(i);
+        std::string indStr = "i_" + std::to_string(i);
+            // "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
         // printf();
@@ -634,6 +549,10 @@ size_t countScheduled(Schedule s, Int segment, Int level) {
     return c;
 }
 */
+struct Schedule{
+    IndexTree tree;
+    PermutationVector perms;
+};
 
 // Assumption: Does not support more than 32 loops.
 struct FastCostSummary {
@@ -658,7 +577,7 @@ struct Function {
     Vector<ArrayRef, 0> arrayRefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
-    Tree<size_t> initialLoopTree;
+    IndexTree initialLoopTree;
     // Vector<Schedule, 0> bestschedules;
     // Matrix<Schedule, 0, 0> tempschedules;
     Matrix<double, 0, 0> tempcosts;
@@ -700,6 +619,12 @@ struct Function {
 	arrayReadsToTermMap.resize(numArrays);
 	arrayWritesToTermMap.resize(numArrays);
     }
+};
+
+std::pair<ArrayRef,ArrayRefStrides> getArrayRef(Function fun, size_t id){
+    ArrayRef ar = fun.arrayRefs[id];
+    ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
+    return std::make_pair(ar, ars);
 };
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
