@@ -21,7 +21,24 @@
 // 3. A[m,k] = -(A[m,k], tmp)
 //
 // We must consider loop bounds for ordering.
+// Note that this example translates to
+// for (m=0; m<M; ++m){ for (n=0; n<N; ++n){
+//   A(m,n) = A(m,n) / U(n,n);
+//   for (k=0; k<N-n-1; ++k){
+//     kk = k + n + 1
+//     A(m,kk) = A(m,kk) - A(m,n)*U(n,kk);
+//   }
+// }}
 //
+//
+// for (m=0; m<M; ++m){ for (n=0; n<N; ++n){
+//   for (k=0; k<n; ++k){
+//     A(m,n) = A(m,n) - A(m,k)*U(k,n);
+//   }
+//   A(m,n) = A(m,n) / U(n,n);
+// }}
+//
+// So for ordering, we must build up minimum and maximum vectors for comparison.
 template <typename PX, typename PY>
 bool precedes(Function fun, size_t xId, size_t yId, InvTree it, PX permx, PY permy){
     // iterate over loops
