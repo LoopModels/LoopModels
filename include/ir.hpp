@@ -482,9 +482,19 @@ struct Term {
     Vector<std::pair<size_t, SourceType>, 0> srcs; // type of source
     Vector<std::pair<size_t, SourceType>, 0> dsts; // destination id
     // Vector<size_t, 0> srcs;       // source id
-    uint32_t loopDeps; // minimal loopdeps based on source's
-    Int loopNestId;    // id of loopnest
+    size_t loopNestId;  // id of loopnest
+    uint32_t loopDeps;  // minimal loopdeps based on source's
 };
+
+inline uint32_t zero_upper(uint32_t x){ return x & 0x0000ffff; }
+inline uint32_t zero_lower(uint32_t x){ return x & 0xffff0000; }
+inline uint64_t zero_upper(uint64_t x){ return x & 0x00000000ffffffff; }
+inline uint64_t zero_lower(uint64_t x){ return x & 0xffffffff00000000; }
+
+std::pair<size_t,size_t> getLoopId(Term t){
+    size_t loopNestId = t.loopNestId;
+    return std::make_pair(zero_upper(loopNestId), zero_lower(loopNestId));
+}
 
 /*
 bool isadditive(Term t) {
