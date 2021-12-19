@@ -76,8 +76,12 @@ std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,Sourc
 	auto [srcIdy, srcTypy] = arx.inds(i);
 	for (size_t j = 0; j < length(arx.inds); ++j){
 	    auto [srcIdx, srcTypx] = arx.inds(j);
+	    
 	    if ((srcIdx == srcIdy) & (srcTypx == srcTypy)){
-		differences.emplace_back(std::make_tuple(difference(stridex, permx(j), stridey, permy(i)), srcIdy, srcTypy));
+		std::vector<std::pair<Vector<size_t,0>,Int>> diff = difference(stridex, permx(j), stridey, permy(i));
+		if (length(diff)){ // may be empty if all coefs cancel
+		    differences.emplace_back(std::make_tuple(diff, srcIdy, srcTypy));
+		}
 		matchedx[j] = true;
 		matchFound = true;
 		break; // we found our match
@@ -135,6 +139,10 @@ bool precedes(Function fun, Term &tx, size_t xId, Term &ty, size_t yId,
     Vector<size_t, 0> y = it(yId);
     auto [arx, arsx] = getArrayRef(fun, xId);
     auto [ary, arsy] = getArrayRef(fun, yId);
+
+    // { src {                  aff terms of src { ids mulled }, coef }, srcId,  type  }
+    std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> diff = strideDifference(arsx, arx, permx, arsy, ary, permy);
+
     for (size_t i = 0; i < length(x); ++i) {
         if (x(i) < y(i)) {
             return true;
@@ -212,8 +220,6 @@ bool precedes(Function fun, Term &tx, size_t xId, Term &ty, size_t yId,
         // or ( 1 ) and ( N - 1 ). Both bounds exceed 0, thus
         // A(m, n + k + 1) is in the future.
 
-	// { src {                  aff terms of src { ids mulled }, coef }, srcId,  type  }
-	std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> diff = strideDifference(arsx, arx, permx, arsy, ary, permy);
 	
     }
     return true;
@@ -314,5 +320,5 @@ void discoverMemDeps(Function fun, Tree<size_t>::Iterator I) {
     }
 }
 void discoverMemDeps(Function fun) {
-    return discoverMemDeps(fun, fun.initialLoopTree.begin());
+    return discoverMemDeps(fun, Tree<size_t>(fun.initialLoopTree).begin());
 }
