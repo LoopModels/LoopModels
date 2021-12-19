@@ -3,10 +3,98 @@
 #include "./graphs.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
+#include "affine.hpp"
 #include <cstddef>
 #include <utility>
 #include <vector>
+#include <bitset>
 
+std::vector<std::pair<Vector<size_t,0>,Int>> difference(ArrayRefStrides x, size_t idx, ArrayRefStrides y, size_t idy){
+    VoV<size_t> pvcx = x.programVariableCombinations(idx);
+    Vector<Int,0> coefx = x.coef(idx);
+    VoV<size_t> pvcy = y.programVariableCombinations(idy);
+    Vector<Int,0> coefy = y.coef(idy);
+    std::bitset<64> matchedx; // zero initialized by default constructor
+    std::vector<std::pair<Vector<size_t,0>,Int>> diffs;
+    for (size_t i = 0; i < length(pvcy); ++i){
+	bool matchFound = false;
+	Int coefi = coefy(i);
+	Vector<size_t,0> argy = pvcy(i);
+	for (size_t j = 0; j < length(pvcx); ++j){
+	    Vector<size_t,0> argx = pvcx(j);
+	    if (argx == argy){
+		Int deltaCoef = coefx(j) - coefi;
+		if (deltaCoef){// only need to push if not 0
+		    diffs.emplace_back(std::make_pair(argy, deltaCoef));
+		}
+		matchedx[j] = true;
+		matchFound = true;
+		break;
+	    }
+	}
+	if (!matchFound){
+	    diffs.emplace_back(std::make_pair(argy, -coefi));
+	}
+    }
+    for (size_t j = 0; j < length(pvcx); ++j){
+	if (!matchedx[j]) { 
+	    diffs.emplace_back(std::make_pair(pvcx(j), coefx(j)));
+	}
+    }
+    return diffs;
+}
+
+std::vector<std::pair<Vector<size_t,0>,Int>> mulCoefs(ArrayRefStrides x, size_t idx, Int factor){
+    VoV<size_t> pvcx = x.programVariableCombinations(idx);
+    Vector<Int,0> coefx = x.coef(idx);
+    std::vector<std::pair<Vector<size_t,0>,Int>> diffs;
+    for (size_t j = 0; j < length(pvcx); ++j){
+	diffs.emplace_back(std::make_pair(pvcx(j), factor * coefx(j)));
+    }
+    return diffs;
+}
+
+
+
+// template <typename TX, typename TY>
+// auto strideDifference(ArrayRefStrides strides, ArrayRef arx, TX permx, ArrayRef ary, TY permy){ 
+//     std::vector<std::vector<std::vector<size_t>>> differences;
+//     // iterate over all sources
+//     // this is an optimized special case for the situation where `stridex === stridey`.
+// };
+
+template <typename TX, typename TY>
+std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> strideDifference(ArrayRefStrides stridex, ArrayRef arx, TX permx, ArrayRefStrides stridey, ArrayRef ary, TY permy){ 
+    std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> differences;
+    // iterate over all sources
+    // do we really need sources to be in different objects from strides?
+    // do we really want to match multiple different source objects to the same strides object?
+    // if (arx.strideId == ary.strideId){ return strideDifference(stridex, arx, permx, ary, permy); }
+    std::bitset<64> matchedx; // zero initialized by default constructor
+    for (size_t i = 0; i < length(ary.inds); ++i){
+	bool matchFound = false;
+	auto [srcIdy, srcTypy] = arx.inds(i);
+	for (size_t j = 0; j < length(arx.inds); ++j){
+	    auto [srcIdx, srcTypx] = arx.inds(j);
+	    if ((srcIdx == srcIdy) & (srcTypx == srcTypy)){
+		differences.emplace_back(std::make_tuple(difference(stridex, permx(j), stridey, permy(i)), srcIdy, srcTypy));
+		matchedx[j] = true;
+		matchFound = true;
+		break; // we found our match
+	    }
+	}
+	if (!matchFound){ // then this source type is only used by `y`
+	    differences.emplace_back(std::make_tuple(mulCoefs(stridey, permy(i), -1), srcIdy, srcTypy));
+	}
+    }
+    for (size_t j = 0; j < length(arx.inds); ++j){
+	if (!matchedx[j]){ // then this source type is only used by `x`
+	    auto [srcIdx, srcTypx] = arx.inds(j);
+	    differences.emplace_back(std::make_tuple(mulCoefs(stridex, permx(j), 1), srcIdx, srcTypx));
+	}
+    }
+    return differences;
+};
 // Check array id reference inds vs span
 // for m in 1:M, n in 1:N
 //   A[m,n] = A[m,n] / U[n,n]
@@ -123,6 +211,10 @@ bool precedes(Function fun, Term &tx, size_t xId, Term &ty, size_t yId,
         // ( 1 + N - lower_bound(n) - 2 )
         // or ( 1 ) and ( N - 1 ). Both bounds exceed 0, thus
         // A(m, n + k + 1) is in the future.
+
+	// { src {                  aff terms of src { ids mulled }, coef }, srcId,  type  }
+	std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> diff = strideDifference(arsx, arx, permx, arsy, ary, permy);
+	
     }
     return true;
 }

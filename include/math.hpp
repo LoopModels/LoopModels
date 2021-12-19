@@ -35,6 +35,17 @@ template <typename T> void showln(T x) {
     std::printf("\n");
 }
 
+template <typename T0, typename T1>
+bool allMatch(T0 x0, T1 x1){
+    size_t N = length(x0);
+    if (N != length(x1)) { return false; }
+    bool m = true;
+    for (size_t n = 0; n < N; ++n){
+	m &= (x0[n] == x1[n]);
+    }
+    return m;
+}
+
 //
 // Vectors
 //
@@ -51,6 +62,7 @@ template <typename T, size_t M> struct Vector {
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
+    bool operator==(Vector<T, M> x0) { return allMatch(*this, x0); }
 };
 template <typename T> struct Vector<T, 0> {
     T *ptr;
@@ -65,6 +77,7 @@ template <typename T> struct Vector<T, 0> {
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
+    bool operator==(Vector<T, 0> x0) { return allMatch(*this, x0); }
 };
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
@@ -300,6 +313,11 @@ struct Permutation {
     };
 
     Int &operator()(size_t i) { return data(i, 0); }
+    bool operator==(Permutation y){
+	Vector<Int,0> x0 = getCol(data, 0);
+	Vector<Int,0> y0 = getCol(y.data, 0);
+	return x0 == y0;
+    }
 };
 
 size_t length(Permutation perm) { return length(perm.data); }
@@ -327,6 +345,7 @@ void show(Permutation perm) {
 
 template <typename T> struct UnitRange{
     T operator()(size_t i){ return T(i); }
+    bool operator==(UnitRange<T>) { return true; }
 };
 template <typename T> UnitRange<T> inv(UnitRange<T> r){ return r; }
 
