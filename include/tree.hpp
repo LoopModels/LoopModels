@@ -6,7 +6,7 @@ template <typename T> struct Tree {
     T *ptr;          // stride is `stride`
     size_t *offsets; // stride is `stride + 1`
     size_t breadth; // number of terms
-    size_t depth;   // number of loops
+    size_t depth;   // number of loops + 1 (last indicates order w/in final loop nest)
     size_t stride;
     
     struct Iterator;
@@ -72,7 +72,7 @@ template <typename T> typename Tree<T>::Iterator Tree<T>::begin() {
 struct InvTree{ // basically, a depth x breadth matrix
     size_t *ptr;
     size_t breadth; // number of terms
-    size_t depth;   // number of loops
+    size_t depth;   // number of loops + 1
     size_t &operator()(size_t i, size_t j){
 #ifndef DONOTBOUNDSCHECK
 	assert((0 <= i) & (i < depth));
@@ -92,7 +92,7 @@ struct InvTree{ // basically, a depth x breadth matrix
 struct IndexTree{
     size_t *ptr;
     size_t breadth; // number of terms
-    size_t depth;   // number of loops
+    size_t depth;   // number of loops + 1
 
     operator Tree<size_t>(){
 	size_t *ptrOffsets = ptr + breadth * depth;
