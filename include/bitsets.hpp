@@ -5,6 +5,11 @@
 #include <cstdint>
 #include <limits>
 #include <vector>
+
+inline uint64_t trailing_zeros(uint64_t x){ return __builtin_ctz(x); }
+inline uint64_t leading_zeros(uint64_t x) { return __builtin_clz(x); }
+inline uint64_t count_ones(uint64_t x){ return __builtin_popcount(x); }
+
 // A set of `size_t` elements.
 // Initially constructed
 struct BitSet {
@@ -45,7 +50,7 @@ struct BitSet::Iterator {
             offset = std::numeric_limits<uint64_t>::max();
             // offset = 0xffffffffffffffff;
         }
-        size_t tzp1 = __builtin_ctz(state) + 1;
+        size_t tzp1 = trailing_zeros(state) + 1;
         offset += tzp1;
         state >>= tzp1;
         return *this;

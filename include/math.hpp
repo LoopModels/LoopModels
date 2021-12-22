@@ -54,6 +54,7 @@ template <typename T, size_t M> struct Vector {
     T *ptr;
 
     Vector(T *ptr) : ptr(ptr){};
+    Vector(Vector<T,M> &a) : ptr(a.ptr){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
@@ -66,9 +67,15 @@ template <typename T, size_t M> struct Vector {
 };
 template <typename T> struct Vector<T, 0> {
     T *ptr;
-    const size_t len;
-    Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
-    Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
+    size_t len;
+    inline Vector<T,0>& operator=(const Vector<T,0>& a){
+	ptr = a.ptr;
+	len = a.len;
+    }
+    inline Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
+    inline Vector(const Vector<T,0> &a) : ptr(a.ptr), len(a.len){};
+    inline Vector(Vector<T,0> &a) : ptr(a.ptr), len(a.len){};
+    inline Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK

@@ -5,41 +5,79 @@
 #include "./math.hpp"
 #include "affine.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 #include <vector>
 #include <bitset>
+#include <algorithm>
+
+struct ShorterCoef {
+    bool operator()(std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>> &x, std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>> &y){
+	return length(x.first) < length(y.first);
+    }
+};
 
 struct IndexDelta{
     // { src {                  aff terms of src { ids mulled }, coef }, srcId,  type  }
     std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> diffsBySource;
-    std::vector<std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>>> diffsByStride;
+    std::vector<std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>>> diffsByStride; // sorted by length
     bool isStrided;
-    void checkStrided(){
-	// TODO: check if it is strided, and set `isStrided` accordingly;
-	
+    bool isLinear;
+    void checkStrided(){ // O(N^2) check, but `N` should generally be small.
+	// Assumes that `diffsByStride` is sorted by length of the `Vector<size_t,0>`s.
+	// Assumes that the contents of the `Vector<size_t,0>`s are sorted.
+	isStrided = true;
+	for (size_t i = 1; i < length(diffsByStride); ++i){
+	    Vector<size_t,0> stride0 = diffsByStride[i-1].first;
+	    Vector<size_t,0> stride1 = diffsByStride[i].first;
+	    size_t j = 0;
+	    for (size_t k = 0; k < length(stride0); ++k){
+		if (j == length(stride1)){
+		    isStrided = false; return;
+		}
+		// stride1 must be a super set of stride0, so we keep incrementing `j` while trying to find a match.
+		while (stride0[k] != stride1[j]) {
+		    ++j;
+		    if (j == length(stride1)){ // if we reach the end, that means there was an element in `stride0` absent in `stride1`.
+			isStrided = false; return;
+		    }
+		}
+		++j;
+	    }
+	}
+    }
+    void checkLinear(){
+	isLinear = true;
+	for (size_t i = 0; i < length(diffsBySource); ++i){
+	    SourceType srcTyp = std::get<2>(diffsBySource[i]);
+	    if (!((srcTyp == CONSTANT) | (srcTyp == LOOPINDUCTVAR))){
+		isLinear = false; return;
+	    }
+	}
     }
     void fillStrides(){
 	for (size_t i = 0; i < length(diffsBySource); ++i){
 	    auto [coefpairs, srcId, srcTyp] = diffsBySource[i];
 	    for (size_t j = 0; j < length(coefpairs); ++j){
-		auto [coefs, mul] = coefpairs[j];
+		auto [stride, mul] = coefpairs[j];
 		std::tuple<Int,size_t,SourceType> newSource = std::make_tuple(mul, srcId, srcTyp);
 		bool found = false;
 		for (size_t k = 0; k < length(diffsByStride); ++k){
-		    auto [coefk, terms] = diffsByStride[k];
-		    if (coefk == coefs){
+		    auto [stridek, terms] = diffsByStride[k];
+		    if (stridek == stride){
 			terms.emplace_back(newSource);
-			found = true;
-			break;
+			found = true; break;
 		    }
 		}
 		if (!found){
 		    std::vector<std::tuple<Int,size_t,SourceType>> newSources { newSource };
-		    diffsByStride.emplace_back(std::make_pair(coefs, newSources));
+		    diffsByStride.emplace_back(std::make_pair(stride, newSources));
 		}
 	    }
 	}
+	std::sort(diffsByStride.begin(), diffsByStride.end(), ShorterCoef());
 	checkStrided();
+	checkLinear();
     }
     void emplace_back(std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType> &&x){ diffsBySource.emplace_back(x); return; }
     // std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>& operator[](size_t i){ return diffs[i]; }
@@ -119,9 +157,7 @@ IndexDelta strideDifference(ArrayRefStrides stridex, ArrayRef arx, TX permx, Arr
 		if (length(diff)){ // may be empty if all coefs cancel
 		    differences.emplace_back(std::make_tuple(diff, srcIdy, srcTypy));
 		}
-		matchedx[j] = true;
-		matchFound = true;
-		break; // we found our match
+		matchedx[j] = true; matchFound = true; break; // we found our match
 	    }
 	}
 	if (!matchFound){ // then this source type is only used by `y`
@@ -137,6 +173,20 @@ IndexDelta strideDifference(ArrayRefStrides stridex, ArrayRef arx, TX permx, Arr
     differences.fillStrides();
     return differences;
 };
+
+#if __WORDSIZE == 64
+inline uint64_t to_uint64_t(std::bitset<64> &x){ return x.to_ulong(); }
+#else
+inline uint64_t to_uint64_t(std::bitset<64> &x){ return x.to_ullong(); }
+#endif
+
+std::bitset<64> inductionVariables(std::vector<std::tuple<Int,size_t,SourceType>> &x){
+    std::bitset<64> m;
+    for (size_t i = 0; i < length(x); ++i){
+	m[i] = std::get<2>(x[i]) == LOOPINDUCTVAR;
+    }
+    return m;
+}
 
 // checks if `diff` can equal `0`, if it cannot, then the results are independent
 // motivating example: loop that copies elements from below diagonal to above diagonal:
@@ -155,15 +205,21 @@ IndexDelta strideDifference(ArrayRefStrides stridex, ArrayRef arx, TX permx, Arr
 // Any examples that consider strides?
 // 
 // Inputs: fun, diff, x loop index, y loop index.
-bool accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx, size_t lidy){
+std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx, size_t lidy){
     // std::bitset<64> matchedx; // zero initialized
-    if (!diff.isStrided){ return false; }// give up
+    std::bitset<64> independent;
+    if (!(diff.isStrided & diff.isLinear)){ return independent; }// give up
+    // array is strided, and accesses are linear.
     for (size_t i = 0; i < length(diff.diffsByStride); ++i){
 	// check if we can get `0`, if we cannot, return `true`.
 	// sources can be arbitrarilly long
 	std::vector<std::tuple<Int,size_t,SourceType>> sources = diff.diffsByStride[i].second;
-	switch (length(sources)){
-	case 1:
+	std::bitset<64> m = inductionVariables(sources);
+	switch (m.count()){
+	case 0: // ZIV
+	    
+	    break;
+	case 1: // SIV
 	    // check if it can be zero.
 	    // then check to confirm that it is indeed a "valid" stride.
 	    break;
@@ -181,7 +237,7 @@ bool accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx, size_t li
 	// std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>
     }
     // we managed to get `0` on every index.
-    return false;
+    return independent;
 }
 // TODO: implement
 // getStride
