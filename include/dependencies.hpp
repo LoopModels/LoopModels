@@ -4,193 +4,639 @@
 #include "./ir.hpp"
 #include "./math.hpp"
 #include "affine.hpp"
+#include <algorithm>
+#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
-#include <bitset>
-#include <algorithm>
 
 struct ShorterCoef {
-    bool operator()(std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>> &x, std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>> &y){
-	return length(x.first) < length(y.first);
+    bool
+    operator()(std::pair<Vector<size_t, 0>,
+                         std::vector<std::tuple<Int, size_t, SourceType>>> &x,
+               std::pair<Vector<size_t, 0>,
+                         std::vector<std::tuple<Int, size_t, SourceType>>> &y) {
+        return length(x.first) < length(y.first);
     }
 };
 
-struct IndexDelta{
-    // { src {                  aff terms of src { ids mulled }, coef }, srcId,  type  }
-    std::vector<std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>> diffsBySource;
-    std::vector<std::pair<Vector<size_t,0>,std::vector<std::tuple<Int,size_t,SourceType>>>> diffsByStride; // sorted by length
+template <typename T> struct Stride {
+    std::vector<std::pair<Vector<size_t, 0>, T>> strides;
+
+    T &operator[](size_t i) { return strides[i]; }
+};
+
+/// gives stridesX - stridesY;
+struct IndexDelta {
+    std::vector<std::pair<Stride<Int>,
+                          std::vector<std::tuple<Stride<std::pair<Int, Int>>,
+                                                 size_t, SourceType>>>>
+        strides; // strides of `X` and `Y`
+    // { src {                  aff terms of src { ids mulled }, coef }, srcId,
+    // type  }
+    std::vector<std::tuple<std::vector<std::pair<Vector<size_t, 0>, Int>>,
+                           size_t, SourceType>>
+        diffsBySource;
+    std::vector<std::pair<Vector<size_t, 0>,
+                          std::vector<std::tuple<Int, size_t, SourceType>>>>
+        diffsByStride; // sorted by length
     bool isStrided;
     bool isLinear;
-    void checkStrided(){ // O(N^2) check, but `N` should generally be small.
-	// Assumes that `diffsByStride` is sorted by length of the `Vector<size_t,0>`s.
-	// Assumes that the contents of the `Vector<size_t,0>`s are sorted.
-	isStrided = true;
-	for (size_t i = 1; i < length(diffsByStride); ++i){
-	    Vector<size_t,0> stride0 = diffsByStride[i-1].first;
-	    Vector<size_t,0> stride1 = diffsByStride[i].first;
-	    size_t j = 0;
-	    for (size_t k = 0; k < length(stride0); ++k){
-		if (j == length(stride1)){
-		    isStrided = false; return;
-		}
-		// stride1 must be a super set of stride0, so we keep incrementing `j` while trying to find a match.
-		while (stride0[k] != stride1[j]) {
-		    ++j;
-		    if (j == length(stride1)){ // if we reach the end, that means there was an element in `stride0` absent in `stride1`.
-			isStrided = false; return;
-		    }
-		}
-		++j;
-	    }
-	}
+
+    void checkStrided() { // O(N^2) check, but `N` should generally be small.
+        // Assumes that `diffsByStride` is sorted by length of the
+        // `Vector<size_t,0>`s. Assumes that the contents of the
+        // `Vector<size_t,0>`s are sorted.
+        isStrided = true;
+        for (size_t i = 1; i < length(diffsByStride); ++i) {
+            Vector<size_t, 0> stride0 = diffsByStride[i - 1].first;
+            Vector<size_t, 0> stride1 = diffsByStride[i].first;
+            size_t j = 0;
+            for (size_t k = 0; k < length(stride0); ++k) {
+                if (j == length(stride1)) {
+                    isStrided = false;
+                    return;
+                }
+                // stride1 must be a super set of stride0, so we keep
+                // incrementing `j` while trying to find a match.
+                while (stride0[k] != stride1[j]) {
+                    ++j;
+                    if (j ==
+                        length(stride1)) { // if we reach the end, that means
+                                           // there was an element in `stride0`
+                                           // absent in `stride1`.
+                        isStrided = false;
+                        return;
+                    }
+                }
+                ++j;
+            }
+        }
     }
-    void checkLinear(){
-	isLinear = true;
-	for (size_t i = 0; i < length(diffsBySource); ++i){
-	    SourceType srcTyp = std::get<2>(diffsBySource[i]);
-	    if (!((srcTyp == CONSTANT) | (srcTyp == LOOPINDUCTVAR))){
-		isLinear = false; return;
-	    }
-	}
+    void checkLinear() {
+        isLinear = true;
+        for (size_t i = 0; i < length(diffsBySource); ++i) {
+            SourceType srcTyp = std::get<2>(diffsBySource[i]);
+            if (!((srcTyp == CONSTANT) | (srcTyp == LOOPINDUCTVAR))) {
+                isLinear = false;
+                return;
+            }
+        }
     }
-    void fillStrides(){
-	for (size_t i = 0; i < length(diffsBySource); ++i){
-	    auto [coefpairs, srcId, srcTyp] = diffsBySource[i];
-	    for (size_t j = 0; j < length(coefpairs); ++j){
-		auto [stride, mul] = coefpairs[j];
-		std::tuple<Int,size_t,SourceType> newSource = std::make_tuple(mul, srcId, srcTyp);
-		bool found = false;
-		for (size_t k = 0; k < length(diffsByStride); ++k){
-		    auto [stridek, terms] = diffsByStride[k];
-		    if (stridek == stride){
-			terms.emplace_back(newSource);
-			found = true; break;
-		    }
-		}
-		if (!found){
-		    std::vector<std::tuple<Int,size_t,SourceType>> newSources { newSource };
-		    diffsByStride.emplace_back(std::make_pair(stride, newSources));
-		}
-	    }
-	}
-	std::sort(diffsByStride.begin(), diffsByStride.end(), ShorterCoef());
-	checkStrided();
-	checkLinear();
+    void fillStrides() {
+        for (size_t i = 0; i < length(diffsBySource); ++i) {
+            auto [coefpairs, srcId, srcTyp] = diffsBySource[i];
+            for (size_t j = 0; j < length(coefpairs); ++j) {
+                auto [stride, mul] = coefpairs[j];
+                std::tuple<Int, size_t, SourceType> newSource =
+                    std::make_tuple(mul, srcId, srcTyp);
+                bool found = false;
+                for (size_t k = 0; k < length(diffsByStride); ++k) {
+                    auto [stridek, terms] = diffsByStride[k];
+                    if (stridek == stride) {
+                        terms.emplace_back(newSource);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    std::vector<std::tuple<Int, size_t, SourceType>> newSources{
+                        newSource};
+                    diffsByStride.emplace_back(
+                        std::make_pair(stride, newSources));
+                }
+            }
+        }
+        std::sort(diffsByStride.begin(), diffsByStride.end(), ShorterCoef());
+        checkStrided();
+        checkLinear();
     }
-    void emplace_back(std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType> &&x){ diffsBySource.emplace_back(x); return; }
-    // std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>& operator[](size_t i){ return diffs[i]; }
+    void emplace_back(std::tuple<std::vector<std::pair<Vector<size_t, 0>, Int>>,
+                                 size_t, SourceType> &&x) {
+        diffsBySource.emplace_back(x);
+        return;
+    }
+    // std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>&
+    // operator[](size_t i){ return diffs[i]; }
 };
 // size_t length(IndexDelta &d){ return d.diffs.size(); }
 
-std::vector<std::pair<Vector<size_t,0>,Int>> difference(ArrayRefStrides x, size_t idx, ArrayRefStrides y, size_t idy){
+std::vector<std::pair<Vector<size_t, 0>, Int>>
+difference(ArrayRef x, size_t idx, ArrayRef y, size_t idy) {
     VoV<size_t> pvcx = x.programVariableCombinations(idx);
-    Vector<Int,0> coefx = x.coef(idx);
+    Vector<Int, 0> coefx = x.coef(idx);
     VoV<size_t> pvcy = y.programVariableCombinations(idy);
-    Vector<Int,0> coefy = y.coef(idy);
+    Vector<Int, 0> coefy = y.coef(idy);
     std::bitset<64> matchedx; // zero initialized by default constructor
-    std::vector<std::pair<Vector<size_t,0>,Int>> diffs;
-    for (size_t i = 0; i < length(pvcy); ++i){
-	bool matchFound = false;
-	Int coefi = coefy(i);
-	Vector<size_t,0> argy = pvcy(i);
-	for (size_t j = 0; j < length(pvcx); ++j){
-	    Vector<size_t,0> argx = pvcx(j);
-	    if (argx == argy){
-		Int deltaCoef = coefx(j) - coefi;
-		if (deltaCoef){// only need to push if not 0
-		    diffs.emplace_back(std::make_pair(argy, deltaCoef));
-		}
-		matchedx[j] = true;
-		matchFound = true;
-		break;
-	    }
-	}
-	if (!matchFound){
-	    diffs.emplace_back(std::make_pair(argy, -coefi));
-	}
+    std::vector<std::pair<Vector<size_t, 0>, Int>> diffs;
+    for (size_t i = 0; i < length(pvcy); ++i) {
+        bool matchFound = false;
+        Int coefi = coefy(i);
+        Vector<size_t, 0> argy = pvcy(i);
+        for (size_t j = 0; j < length(pvcx); ++j) {
+            Vector<size_t, 0> argx = pvcx(j);
+            if (argx == argy) {
+                Int deltaCoef = coefx(j) - coefi;
+                if (deltaCoef) { // only need to push if not 0
+                    diffs.emplace_back(std::make_pair(argy, deltaCoef));
+                }
+                matchedx[j] = true;
+                matchFound = true;
+                break;
+            }
+        }
+        if (!matchFound) {
+            diffs.emplace_back(std::make_pair(argy, -coefi));
+        }
     }
-    for (size_t j = 0; j < length(pvcx); ++j){
-	if (!matchedx[j]) { 
-	    diffs.emplace_back(std::make_pair(pvcx(j), coefx(j)));
-	}
+    for (size_t j = 0; j < length(pvcx); ++j) {
+        if (!matchedx[j]) {
+            diffs.emplace_back(std::make_pair(pvcx(j), coefx(j)));
+        }
     }
     return diffs;
 }
 
-std::vector<std::pair<Vector<size_t,0>,Int>> mulCoefs(ArrayRefStrides x, size_t idx, Int factor){
+std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
+                                                        Int factor) {
     VoV<size_t> pvcx = x.programVariableCombinations(idx);
-    Vector<Int,0> coefx = x.coef(idx);
-    std::vector<std::pair<Vector<size_t,0>,Int>> diffs;
-    for (size_t j = 0; j < length(pvcx); ++j){
-	diffs.emplace_back(std::make_pair(pvcx(j), factor * coefx(j)));
+    Vector<Int, 0> coefx = x.coef(idx);
+    std::vector<std::pair<Vector<size_t, 0>, Int>> diffs;
+    for (size_t j = 0; j < length(pvcx); ++j) {
+        diffs.emplace_back(std::make_pair(pvcx(j), factor * coefx(j)));
     }
     return diffs;
 }
 
+// for (m = 0; m < M; ++m){
+//   for (n = 0; n < N; ++n){
+//     A(m,n) /= U(n,n);
+//     for (k = 0; k < N - n - 1; ++k){
+//       A(m, k + n + 1) -= A(m,n) * U(n, k + n + 1);
+//     }
+//   }
+// }
+//
+//
+// for (m = 0; m < M; ++m){
+//   for (k = 0; k < N; ++k){
+//     for (n = 0; n < N - k - 1; ++n){
+//       A(m, k + n + 1) -= A(m,n) * U(n, k + n + 1);
+//     }
+//   }
+// }
+// k* = k + n + 1
+//
+// for (m = 0; m < M; ++m){
+//   for (k = 0; k < N; ++k){
+//     for (n = 0; n < N - k - 1; ++n){
+//       A(m, k + n + 1) -= A(m, n) * U(n, k + n + 1);
+//     }
+//   }
+// }
+//
+// k* = n
+// n* = k + n + 1
+// bounds on n*:
+// 0 <= k < N - n - 1 => n < N - k - 1
+// 0 <= n < N
+// k + n + 1
+//
+// 0 <= n < N
+// 0 <= k < N - n - 1
+// k + n + 1
+//
+// n + 1 <= n + k + 1 < N
+// k* + 1 <= n* < N
+// k* <= n* - 1 => k* < n* # nsw
+// # also need k* lower bound
+// 0 <= n => 0 <= k*
+// 0 <= k* < n*
+//
+// n + 1 <= k* => 1 <= k* < N => 0 <= k* < N
+//
+//   for (n* = 0; n* < N; ++n*){
+//     for (n = 0; n < N - k - 1; ++n){
+//       A(m, n*) -= A(m,k*) * U(k*, n*);
+//     }
+//   }
+//
+// we want to change the visiting pattern, so we swap symbols
+//   for (n = 0; n < N; ++n){
+//     for (k = 0; k < N - n - 1; ++k){
+//       A(m, k + n + 1) -= A(m, k) * U(k, n + k + 1);
+//     }
+//   }
+//
+// k + n + 1 -> k*, n*
+// 1) k + n + 1 -> k*
+// [1 1 1] [k       [1 0 0] [k*
+//          n     ~          n*
+//          1]               0]
+// 0 <= n < N - k - 1
+//
+// 0 <= k < N
+// k < N - n - 1 => 0 <= k < N - n - 1
+// k + n + 1
+//
+// k* = k + n + 1; k = k* - n - 1
+// k < N => k* < N + n + 1;
+// k < N - n - 1 => k* < N; intersect, tighter bound wins
+// conveniently, tighter bound excludes `n`
+// bound would be:
+// for (k* = n + 1; k* < N; ++k*)
+// because `n` is inside, we have to set `n` to minimum value
+// for (k* = 1; k* < N; ++k*) // maybe we can safely set k=0 if inner loop
+// doesn't iterate on that condition?
+//
+// k < N => k* - n - 1 < N => n > k* - 1 - N
+//
+//
+// for (n = 0; n < N - 1 - (k* - n - 1); ++n)
+//
+// 0 <= k < N
+// 0 <= n < N - k - 1
+// 0 <= k < N - k - 1
+// n* = k + n + 1; k = n* - k* - 1
+// k* = n        ; n = k*
+//
+// for (n* = k* + 1; n* < N + k* + 1; ++n){ // intersect should fix upper bound
+//   for (k* = 0; k* < N - 1 - (n* - k* - 1); ++k*){ // oof
+//
+//   }
+// }
+// we have
+// n* < N + k* + 1
+// k* < N - 1 - n* + k* + 1 => n* < N
+// k* < N
+//
+// n* - k* - 1 < N
+// n* < N + k* + 1
+//
+//
+//
+// 0 <= n < N - k - 1
+// 0 <= k < N
+// k + n + 1
+//
+// 0 <= n < N
+// 0 <= k < N - n - 1
+// k + n + 1
+//
+// n + 1 <= n + k + 1 < N
+// n + 1 <= k* < N
+// 0 <= n < k*
+//
+// n + 1 <= k* => 1 <= k* < N => 0 <= k* < N
+//
+//
+//
+//
+// Looking for register tiling, we see we have
+// m
+// n
+// k + n + 1
+// if we want three independent loops, so that we can hoist and have
+// one reduce costs of others, we need to diagonalize these somehow
+// [ 1 0 0   [ 0
+//   0 1 0     0
+//   0 1 1 ]   1 ]
+//
+// [ 1 0 0 0  [ m
+//   0 1 0 0    n
+//   0 1 1 1    k
+//   ]          1 ]
+//
+// [ 1 0 0 0  [ m*      [ 1 0 0 0  [ m
+//   0 1 0 0    n*    =   0 1 0 0    n
+//   0 0 1 0    k*        0 1 1 1    k
+//   ]          1 ]      ]          1 ]
+//   m* = m
+//   n* = n
+//   k* = n + k + 1
+// Then
+// 1) rotate as necessary to get register tiling
+// 2) check to make sure that deps are still satisfied
+//
+// first, the substitution:
+// for (m = 0; m < M; ++m){
+//   for (n = 0; n < N; ++n){
+//     A(m,n) /= U(n,n); // let k* = k + n + 1; k = k* - n - 1
+//     for (k* = n + 1; k < N; ++k){
+//       A(m, k*) -= A(m,n) * U(n, k*);
+//     }
+//   }
+// }
+// now, the loop swap to move the reduction to the middle:
+// for (m = 0; m < M; ++m){
+//   for (k* = 0; k* < N; ++k*){
+//     A(m,k*) /= U(k*,k*);// renamed to focus on other loop
+//     for (n = 0; n < k*; ++n){
+//       A(m, k*) -= A(m,n) * U(n, k*);
+//     }
+//   }
+// }
+// lets consider trying to do loop swap at same time as redefinition
+//
+//  [ 1 0 0 0   [m*
+//    0 0 1 0    n*
+//    0 1 0 0 ]  k*
+//               1]
 
+// Partitions array accesses into non-overlapping strides
+// two array refs of:
+// A(i,j,k); // []*i + [M]*j + [M*N]*k;
+// A(i,j,i); // []*i + [M]*j + [M*N]*i;
+// a0 - b0 = a1x - b1x + a2x - b2x + ...
+// Two ways to prove independence:
+// 1. no integer solution: independent A(2i) & A(2i + 1)
+// 2. integer solution is out of loop's iteration space
+// 
+// cmp:
+// A(i, j, k) 
+// A(i, j, i)
+// A(i+1, j, i) // won't overlap with above
+// 1, M, M*N = strides(A);
+// stride of `i` == (1 + M*N)
+// `A` is basically a matrix, j * M + (1 + M*N) * i
+// do we want to represent as the matrix, or flatten to affine indexed vector?
+// [] :  []*i + [M,N]*k
+//       [[], [M,N]]*i
+// [] : [ ... ]
+// [M] : j
+//       j
+// 
+// A(1, foo(j))
+// A(2, bar(j))
+// A(i*i, ...)
+//
+// We should go ahead and implement loop splitting to break up dependencies / 
+// handle changing dep direction by breaking it up along that change.
+//
+// After failing to rule out a dependency (and thus adding a dep to the graph)
+// what we need to do later on is...
+// 1) symbolic distance vectors
+// 2) Check direction of the dependency
+// 3) Recheck that our transforms don't violate the dep, but maybe don't bother
+// caching for this*
+//
+// Focusing on the symbolic distance vectors,
+// for each loop, we have a symbolic expression giving dependency distance
+// These can be used to...
+// 1) answer questions about order
+// 2) yield all the dependencies, with their levels
+//    - gives guidelines to legal optimizations/strategy
+//
+// for (iter = 0; iter < I; ++iter){
+//    S0: update!(A)
+//    S1: lu!(A)
+//    S2: ldiv!(A, Y) 
+// }
+// iter loop adds dependencies:
+// RTW S1 -> S1 0 < iter < I
+// WTR S1 -> S1
+//
+// The symbolic distance vectors are to be indexed by loop,
+// but, they should include everything relevent
+// Which is another example where the stride partitioning can be helpful
+// for reducing what is relevant
+//
+// A(i + 1, j) = A(i, j) + B
+// i: i + 1 - i = 1
+// j: j - j     = 0
+// []  :  i + 1, i
+// [M] :   j,    j
+// 
+// 
+//
+// should produce two strides:
+// [] :  []*i + [M*N]*k;
+//       [[] + [M*N]] * i; == []*i + [M*N]*i;
+// [M]:  j;
+//       j;
+//
+// so, we want to partition arrays in sets, as the partitioning
+// A1: A(i,j,k)
+// may be different when compared to
+// A2: A(i,j,i)
+// vs when compared to
+// A3: A(i,j,k+K)
+// 
+// M, N, L = size(A);
+// 1, M, M*N = strides(A);
+// For A1 vs A3
+// []    : i v i
+// [M]   : j v j
+// [M,N] : k v k+K
+// 
+// assert(2K <= L);
+// assert(K > 0);
+//
+// for (m = 0; m < M; ++m){
+//   for (n = 0; n < N1; ++n){
+//     for (k = 0; k < K; ++k){
+//        
+//     }
+//   }
+// }
+// (0 <= m < M);
+// (0 <= n < N1) * M;
+// (0 <= k < K) * M*N;
+// 
+// if N1 > N, then
+// M*(N1-1) might cause overlap with M*N
+// so, we need N1 <= N; scalar evolution analysis?
+//
+// for A1 vs A2
+// []   : []*i + [M*N]*k v [[],[M,N]]*i
+// [M]  : j v j
+// 
+//
+// A(i,j,i)
+template <typename L>
+void partitionStrides(ArrayRef ar, L loopnest){
+    // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
+    std::vector<std::vector<std::pair<Vector<size_t,0>,Int>>> &strides = ar.strides;
+    for (size_t i = 0; i < length(ar.programVariableCombinations); ++i){
+        VoV<size_t> affine = ar.programVariableCombinations(i);
+        Vector<Int,0> coefs = ar.coef(i);
+        bool overlaps = false;
+        for (size_t j = 0; j < length(strides); ++j){
+            // check if strides[j] is guaranteed not to overlap with affine .* coefs
+            // if it might, we combine strides, and then keep iterating
+            // if it might, and overlaps already set to true, keep collapsing
+            // but...what about A(i,foo(j),k) // we can tell foo(j) doesn't
+            // alias `i`, but we give up on `k`
+        }
+        if (!overlaps){
+            strides.push_back(); // add strides...
+        }
+    }
+}
 
+template <typename PX, typename PY, typename LX, typename LY>
+void partitionStrides(IndexDelta &differences, Function &fun, Term &tx,
+                      ArrayRef &arx, PX &permx, LX &loopnestx, Term &ty,
+                      ArrayRef &ary, PY &permy, LY &loopnesty) {
+    // The approach is to just iterate over sources, checking all already added
+    // sources to check
+    // 1. if the stride is the same as an existing one
+    // 2. if it does not match an existing one, but can overlap with an existing
+    // one (means we must fuse them and find the greatest common divisor) 3.
+    size_t numSourcesX = length(arx.programVariableCombinations); // VoVoV sources[ +[*[]] ] = Sources[i * +[ *[] + *[M*N]], j * +[ 
+    size_t numSourcesY = length(ary.programVariableCombinations); // ar(x/y).coef VoV constant coefficients multiplying the +[*[]]
+    // Stride is std::vector<std::pair<Vector<size_t,0>,T>>
+    // differences.strides is:
+    // std::vector<std::pair<Stride<Int>,std::vector<std::tuple<Stride<std::pair<Int,Int>>,size_t,SourceType>>>>
+    // strides; // strides of `X` and `Y`
+    for (size_t i = 0; i < std::min(numSourcesX, numSourcesY); ++i) {
+        size_t idx = permx(i);
+        size_t idy = permy(i);
+        VoV<size_t> argsX = arx.programVariableCombinations(idx);
+        Vector<Int,0> coefsX = arx.coef(idx);
+
+        VoV<size_t> argsY = ary.programVariableCombinations(idy);
+        Vector<Int,0> coefsY = ary.coef(idy);
+        for (size_t j = 0; j < length(differences.strides); ++j) {
+            if () {
+            }
+        }
+    }
+    // if numSourcesX is larger
+    for (size_t i = numSourcesY; i < numSourcesX; ++i) {
+    }
+    // if numSourcesY is larger
+    for (size_t i = numSourcesX; i < numSourcesY; ++i) {
+    }
+    if (numSourcesX > numSourcesY) {
+
+    } else if (numSourcesX < numSourcesY) {
+    }
+
+    auto [maxIndx, maxLenx] = findMaxLength(arx.programVariableCombinations);
+    auto [maxIndy, maxLeny] = findMaxLength(ary.programVariableCombinations);
+    std::bitset<64> includedx;
+    std::bitset<64> includedy;
+    // the approach is to initialize it to the longest
+    //
+    if (maxLenx > maxLeny) {
+        includedx[maxIndx] = true;
+    } else if (maxLenx < maxLeny) {
+        includedy[maxIndy] = true;
+    } else { // they're equal
+        includedx[maxIndx] = true;
+    }
+
+    // Stride is std::vector<std::pair<Vector<size_t,0>,T>>
+    // differences.strides is:
+    std::vector<std::pair<Stride<Int>,
+                          std::vector<std::tuple<Stride<std::pair<Int, Int>>,
+                                                 size_t, SourceType>>>>
+        strides; // strides of `X` and `Y`
+
+    differences.strides
+
+        return;
+}
+
+template <typename PX, typename PY, typename LX, typename LY>
+std::pair<IndexDelta, bool>
+analyzeDependencies(Function &fun, Term &tx, size_t arxId, Term &ty,
+                    size_t aryId, InvTree &it, PX permx, PY permy, LX loopnestx,
+                    LY loopnesty) {
+
+    IndexDelta differences; // default constructor, now we fill
+    if ((arxId == aryId) & (permx == permy)) {
+        // TODO: make sure this simple special case is handled.
+    }
+
+    ArrayRef arx = getArrayRef(fun, arxId);
+    ArrayRef ary = getArrayRef(fun, aryId);
+
+    partitionStrides(differences, fun, tx, arx, permx, loopnestx, ty, ary,
+                     permy, loopnesty);
+
+    Vector<size_t, 0> x = it(arxId);
+    Vector<size_t, 0> y = it(aryId);
+    for (size_t i = 0; i < length(x); ++i) {
+        if (x(i) < y(i)) {
+            // return 0;
+        } else if (x(i) > y(i)) {
+            // return 1;
+        }
+    }
+}
 // template <typename TX, typename TY>
-// auto strideDifference(ArrayRefStrides strides, ArrayRef arx, TX permx, ArrayRef ary, TY permy){ 
+// auto strideDifference(ArrayRefStrides strides, ArrayRef arx, TX permx,
+// ArrayRef ary, TY permy){
 //     std::vector<std::vector<std::vector<size_t>>> differences;
 //     // iterate over all sources
-//     // this is an optimized special case for the situation where `stridex === stridey`.
+//     // this is an optimized special case for the situation where `stridex ===
+//     stridey`.
 // };
 
 template <typename TX, typename TY>
-IndexDelta strideDifference(ArrayRefStrides stridex, ArrayRef arx, TX permx, ArrayRefStrides stridey, ArrayRef ary, TY permy){ 
+IndexDelta strideDifference(ArrayRef arx, TX permx, ArrayRef ary, TY permy) {
     IndexDelta differences;
     // iterate over all sources
     // do we really need sources to be in different objects from strides?
-    // do we really want to match multiple different source objects to the same strides object?
-    // if (arx.strideId == ary.strideId){ return strideDifference(stridex, arx, permx, ary, permy); }
+    // do we really want to match multiple different source objects to the same
+    // strides object? if (arx.strideId == ary.strideId){ return
+    // strideDifference(stridex, arx, permx, ary, permy); }
     std::bitset<64> matchedx; // zero initialized by default constructor
-    for (size_t i = 0; i < length(ary.inds); ++i){
-	bool matchFound = false;
-	auto [srcIdy, srcTypy] = arx.inds(i);
-	for (size_t j = 0; j < length(arx.inds); ++j){
-	    auto [srcIdx, srcTypx] = arx.inds(j);
-	    
-	    if ((srcIdx == srcIdy) & (srcTypx == srcTypy)){
-		std::vector<std::pair<Vector<size_t,0>,Int>> diff = difference(stridex, permx(j), stridey, permy(i));
-		if (length(diff)){ // may be empty if all coefs cancel
-		    differences.emplace_back(std::make_tuple(diff, srcIdy, srcTypy));
-		}
-		matchedx[j] = true; matchFound = true; break; // we found our match
-	    }
-	}
-	if (!matchFound){ // then this source type is only used by `y`
-	    differences.emplace_back(std::make_tuple(mulCoefs(stridey, permy(i), -1), srcIdy, srcTypy));
-	}
+    for (size_t i = 0; i < length(ary.inds); ++i) {
+        bool matchFound = false;
+        auto [srcIdy, srcTypy] = arx.inds(i);
+        for (size_t j = 0; j < length(arx.inds); ++j) {
+            auto [srcIdx, srcTypx] = arx.inds(j);
+
+            if ((srcIdx == srcIdy) & (srcTypx == srcTypy)) {
+                std::vector<std::pair<Vector<size_t, 0>, Int>> diff =
+                    difference(arx, permx(j), ary, permy(i));
+                if (length(diff)) { // may be empty if all coefs cancel
+                    differences.emplace_back(
+                        std::make_tuple(diff, srcIdy, srcTypy));
+                }
+                matchedx[j] = true;
+                matchFound = true;
+                break; // we found our match
+            }
+        }
+        if (!matchFound) { // then this source type is only used by `y`
+            differences.emplace_back(
+                std::make_tuple(mulCoefs(ary, permy(i), -1), srcIdy, srcTypy));
+        }
     }
-    for (size_t j = 0; j < length(arx.inds); ++j){
-	if (!matchedx[j]){ // then this source type is only used by `x`
-	    auto [srcIdx, srcTypx] = arx.inds(j);
-	    differences.emplace_back(std::make_tuple(mulCoefs(stridex, permx(j), 1), srcIdx, srcTypx));
-	}
+    for (size_t j = 0; j < length(arx.inds); ++j) {
+        if (!matchedx[j]) { // then this source type is only used by `x`
+            auto [srcIdx, srcTypx] = arx.inds(j);
+            differences.emplace_back(
+                std::make_tuple(mulCoefs(arx, permx(j), 1), srcIdx, srcTypx));
+        }
     }
     differences.fillStrides();
     return differences;
 };
 
 #if __WORDSIZE == 64
-inline uint64_t to_uint64_t(std::bitset<64> &x){ return x.to_ulong(); }
+inline uint64_t to_uint64_t(std::bitset<64> &x) { return x.to_ulong(); }
 #else
-inline uint64_t to_uint64_t(std::bitset<64> &x){ return x.to_ullong(); }
+inline uint64_t to_uint64_t(std::bitset<64> &x) { return x.to_ullong(); }
 #endif
 
-std::bitset<64> inductionVariables(std::vector<std::tuple<Int,size_t,SourceType>> &x){
+std::bitset<64>
+inductionVariables(std::vector<std::tuple<Int, size_t, SourceType>> &x) {
     std::bitset<64> m;
-    for (size_t i = 0; i < length(x); ++i){
-	m[i] = std::get<2>(x[i]) == LOOPINDUCTVAR;
+    for (size_t i = 0; i < length(x); ++i) {
+        m[i] = std::get<2>(x[i]) == LOOPINDUCTVAR;
     }
     return m;
 }
 
-// checks if `diff` can equal `0`, if it cannot, then the results are independent
-// motivating example: loop that copies elements from below diagonal to above diagonal:
-// for (size_t i = 0; i < N; ++i){
+// checks if `diff` can equal `0`, if it cannot, then the results are
+// independent motivating example: loop that copies elements from below diagonal
+// to above diagonal: for (size_t i = 0; i < N; ++i){
 //   for (size_t j = 0; j < i; ++j){
 //     A(i,j) = A(j,i);
 //   }
@@ -203,38 +649,42 @@ std::bitset<64> inductionVariables(std::vector<std::tuple<Int,size_t,SourceType>
 //   }
 // }
 // Any examples that consider strides?
-// 
+//
 // Inputs: fun, diff, x loop index, y loop index.
-std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx, size_t lidy){
+std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff,
+                                    size_t lidx, size_t lidy) {
     // std::bitset<64> matchedx; // zero initialized
     std::bitset<64> independent;
-    if (!(diff.isStrided & diff.isLinear)){ return independent; }// give up
+    if (!(diff.isStrided & diff.isLinear)) {
+        return independent;
+    } // give up
     // array is strided, and accesses are linear.
-    for (size_t i = 0; i < length(diff.diffsByStride); ++i){
-	// check if we can get `0`, if we cannot, return `true`.
-	// sources can be arbitrarilly long
-	std::vector<std::tuple<Int,size_t,SourceType>> sources = diff.diffsByStride[i].second;
-	std::bitset<64> m = inductionVariables(sources);
-	switch (m.count()){
-	case 0: // ZIV
-	    
-	    break;
-	case 1: // SIV
-	    // check if it can be zero.
-	    // then check to confirm that it is indeed a "valid" stride.
-	    break;
-	case 2: // check if combination excludes 0
-	    
-	    break;
-	default: // don't bother checking >= 3
-	    break;
-	};
-	// for (size_t j = 0; j < length(sources); ++j){
-	    
-	// }
-	// matchedx.reset();
-	
-	// std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>
+    for (size_t i = 0; i < length(diff.diffsByStride); ++i) {
+        // check if we can get `0`, if we cannot, return `true`.
+        // sources can be arbitrarilly long
+        std::vector<std::tuple<Int, size_t, SourceType>> sources =
+            diff.diffsByStride[i].second;
+        std::bitset<64> m = inductionVariables(sources);
+        switch (m.count()) {
+        case 0: // ZIV
+
+            break;
+        case 1: // SIV
+            // check if it can be zero.
+            // then check to confirm that it is indeed a "valid" stride.
+            break;
+        case 2: // check if combination excludes 0
+
+            break;
+        default: // don't bother checking >= 3
+            break;
+        };
+        // for (size_t j = 0; j < length(sources); ++j){
+
+        // }
+        // matchedx.reset();
+
+        // std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>
     }
     // we managed to get `0` on every index.
     return independent;
@@ -242,7 +692,6 @@ std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx
 // TODO: implement
 // getStride
 // divrem(IndexDelta, stride);
-
 
 // Check array id reference inds vs span
 // for m in 1:M, n in 1:N
@@ -283,17 +732,19 @@ std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff, size_t lidx
 //  1: y executes first
 template <typename PX, typename PY, typename LX, typename LY>
 int8_t precedes(Function &fun, Term &tx, size_t xId, Term &ty, size_t yId,
-              InvTree &it, PX permx, PY permy, LX loopnestx, LY loopnesty) {
+                InvTree &it, PX permx, PY permy, LX loopnestx, LY loopnesty) {
     // iterate over loops
-    Vector<size_t, 0> x = it(xId);
-    Vector<size_t, 0> y = it(yId);
-    auto [arx, arsx] = getArrayRef(fun, xId);
-    auto [ary, arsy] = getArrayRef(fun, yId);
+    Vector<size_t, 0> x = it(tx.id);
+    Vector<size_t, 0> y = it(ty.id);
+    ArrayRef arx = getArrayRef(fun, xId);
+    ArrayRef ary = getArrayRef(fun, yId);
 
-    IndexDelta diff = strideDifference(arsx, arx, permx, arsy, ary, permy);
+    IndexDelta diff = strideDifference(arx, permx, ary, permy);
 
-    if (accessesIndependent(fun, diff, tx.loopNestId, ty.loopNestId)){ return -1; }
-    
+    if (accessesIndependent(fun, diff, tx.loopNestId, ty.loopNestId)) {
+        return -1;
+    }
+
     for (size_t i = 0; i < length(x); ++i) {
         if (x(i) < y(i)) {
             return 0;
@@ -301,11 +752,11 @@ int8_t precedes(Function &fun, Term &tx, size_t xId, Term &ty, size_t yId,
             return 1;
         }
         // else x(i) == y(i)
-	// we cannot reach here if `i == length(x) - 1`, as this last index
-	// corresponds to order of statements w/in their inner most loop.
-	// Two statements can have the same position. Thus, we do not need
-	// any additional checks to break here.
-	// 
+        // we cannot reach here if `i == length(x) - 1`, as this last index
+        // corresponds to order of statements w/in their inner most loop.
+        // Two statements can have the same position. Thus, we do not need
+        // any additional checks to break here.
+        //
         // this loop occurs at the same time
         // TODO: finish...
         // basic plan is to look at the array refs, gathering all terms
@@ -371,13 +822,12 @@ int8_t precedes(Function &fun, Term &tx, size_t xId, Term &ty, size_t yId,
         // approach.
         //
         // (n + k + 1 ) * [ M ] - (n) * [ M ] == ( k + 1 ) * [ M ]
-        // Here, the lower and upper bounds are ( 1 ) and 
+        // Here, the lower and upper bounds are ( 1 ) and
         // ( 1 + N - lower_bound(n) - 2 )
         // or ( 1 ) and ( N - 1 ). Both bounds exceed 0, thus
         // A(m, n + k + 1) is in the future.
-	auto stride = getStride();
-	auto [d, r] = divrem(diff, stride);
-	
+        auto stride = getStride();
+        auto [d, r] = divrem(diff, stride);
     }
     return 0;
 }

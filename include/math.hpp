@@ -110,6 +110,8 @@ template <typename T> bool allzero(T a, size_t len) {
     return true;
 }
 
+template <typename T> inline Vector<T,0> emptyVector(){ return Vector<T,0>(NULL, 0); }
+
 //
 // Matrix
 //

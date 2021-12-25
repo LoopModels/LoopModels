@@ -357,42 +357,60 @@ template <typename T> size_t length(VoVoV<T> x) {
 // offset: [0,0]
 
 // Gives the part of an ArrayRef that is a function of the induction variables.
-struct ArrayRefStrides {
+struct ArrayRef {
     size_t arrayId;
     VoVoV<size_t> programVariableCombinations; // layer1
     VoV<Int> coef;                             // length(coef) == length(pvc)
+    Vector<std::pair<size_t, SourceType>, 0>   // length(inds) == length(pvc)
+        inds; // layer0; id of source, and SourceType
                    // map(length, coef) == map(length \circ length, pvc)
+    std::vector<std::vector<std::pair<Vector<size_t,0>,Int>>> strides;
 };
+
+template <typename T>
+std::pair<size_t,size_t> findMaxLength(VoVoV<T> x){
+    size_t j = 0;
+    size_t v = 0;
+    for (size_t i = 0; i < length(x); ++i){
+	size_t l = length(x(i));
+	if (l > v){
+	    j = i;
+	    v = l;
+	}
+    }
+    return std::make_pair(j, v);
+}
+
 // Gives a constant offsets.
 // struct ArrayRefOffsets {
 //     Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
 // };
 // struct ArrayIndexPermutation {
 // };
-struct ArrayRef {
-    // size_t offsetId;
-    size_t strideId;
-    Vector<std::pair<size_t, SourceType>, 0>
-        inds; // layer0; id of source, and SourceType
-    // TODO: add vector of vectors indicating all inds dependent on loops
-    // so, `for i in I, j in J; A[i,foo(x[i])]; end` would have `[[0,1],[]]`
-    //
-    // Vector<AffineSource,0> inds; // layer0;
-    // Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset,
-    // constant part referring ti [[]]
-};
+// struct ArrayRef {
+//     // size_t offsetId;
+//     size_t strideId;
+//     Vector<std::pair<size_t, SourceType>, 0>
+//         inds; // layer0; id of source, and SourceType
+//     // TODO: add vector of vectors indicating all inds dependent on loops
+//     // so, `for i in I, j in J; A[i,foo(x[i])]; end` would have `[[0,1],[]]`
+//     //
+//     // Vector<AffineSource,0> inds; // layer0;
+//     // Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset,
+//     // constant part referring ti [[]]
+// };
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
-void show(ArrayRefStrides ar) {
+void show(ArrayRef ar) {
     printf("ArrayRef %zu:\n", ar.arrayId);
 
     for (size_t i = 0; i < length(ar.coef); ++i) {
         VoV<size_t> pvc = ar.programVariableCombinations(i);
         Vector<Int, 0> coefs = ar.coef(i);
-        // auto [indId, indTyp] = ar.inds(i);
-        std::string indStr = "i_" + std::to_string(i);
-        // "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
+        auto [indId, indTyp] = ar.inds(i);
+        // std::string indStr = "i_" + std::to_string(i);
+        std::string indStr = "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
         // [1 (const)]       , coef: 1
         // [i_1 (Induct Var)], coef: 1
         // printf();
@@ -479,6 +497,7 @@ struct CostSummary {
 // - Indicate
 struct Term {
     Operation op; // Operation id
+    size_t id;
     CostSummary costSummary;
     Vector<std::pair<size_t, SourceType>, 0> srcs; // type of source
     Vector<std::pair<size_t, SourceType>, 0> dsts; // destination id
@@ -584,7 +603,7 @@ struct Function {
     Vector<TriangularLoopNest, 0> triln;
     Vector<RectangularLoopNest, 0> rectln;
     // Vector<Array, 0> arrays;
-    Vector<ArrayRefStrides, 0> arrayRefStrides;
+    // Vector<ArrayRefStrides, 0> arrayRefStrides;
     Vector<ArrayRef, 0> arrayRefs;
     Vector<Const, 0> constants;
     Vector<bool, 0> visited;
@@ -601,16 +620,17 @@ struct Function {
 
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
-             Vector<ArrayRefStrides, 0> arrayRefStrides,
+             // Vector<ArrayRefStrides, 0> arrayRefStrides,
              Vector<ArrayRef, 0> arrayRefs, Vector<Const, 0> constants,
-             Vector<bool, 0> visited, Tree<size_t> initialLoopTree,
+             Vector<bool, 0> visited, IndexTree initialLoopTree,
              // Vector<Schedule, 0> bestschedules,
              // Matrix<Schedule, 0, 0> tempschedules,
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
              Vector<Vector<Int, 0>, 0> triloopcache,
              size_t numArrays) // FIXME: triloopcache type
         : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
-          arrayRefStrides(arrayRefStrides), arrayRefs(arrayRefs),
+          // arrayRefStrides(arrayRefStrides),
+	  arrayRefs(arrayRefs),
           constants(constants), visited(visited),
           initialLoopTree(initialLoopTree),
           // bestschedules(bestschedules),
@@ -632,10 +652,13 @@ struct Function {
     }
 };
 
-std::pair<ArrayRef, ArrayRefStrides> getArrayRef(Function fun, size_t id) {
-    ArrayRef ar = fun.arrayRefs[id];
-    ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
-    return std::make_pair(ar, ars);
+// std::pair<ArrayRef, ArrayRefStrides> getArrayRef(Function fun, size_t id) {
+//     ArrayRef ar = fun.arrayRefs[id];
+//     ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
+//     return std::make_pair(ar, ars);
+// };
+inline ArrayRef& getArrayRef(Function fun, size_t id) {
+    return fun.arrayRefs[id];
 };
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
