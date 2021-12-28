@@ -24,12 +24,13 @@ struct ShorterCoef {
     }
 };
 
+/*
 template <typename T> struct Stride {
     std::vector<std::pair<Vector<size_t, 0>, T>> strides;
 
     T &operator[](size_t i) { return strides[i]; }
 };
-
+*/
 /// gives stridesX - stridesY;
 struct IndexDelta {
     std::vector<std::pair<Stride<Int>,
@@ -646,8 +647,8 @@ Symbol::Affine upperBound(std::pair<size_t,SourceType> inds, RektM loopvars){
 // F F T
 // only returns true if guaranteed
 
-bool greaterOrEqual(Function &fun, Symbol::Affine &diff){
-    if (isZero(diff)){ return true; }
+bool maybeLess(Function &fun, Symbol::Affine &diff){
+    if (isZero(diff)){ return false; }
     bool positive = diff.gcd.coef > 0;
     // here we check if all terms summed in the `diff` are positive.
     for (auto it = diff.terms.begin(); it != diff.terms.end(); ++it){
@@ -655,38 +656,45 @@ bool greaterOrEqual(Function &fun, Symbol::Affine &diff){
 	bool itpos = positive == (rit.coef > 0);
 	for (auto s = rit.prodIDs.begin(); s != rit.prodIDs.end(); ++s){
 	    Sign sign = fun.signMap[*s];
-	    if (sign == UNKNOWNSIGN){ return false; }
+	    if (sign == UNKNOWNSIGN){ return true; }
 	    itpos = (itpos == ((sign == POSITIVE) | (sign == NONNEGATIVE)));
 	}
-	if (!itpos){ return false; }
+	if (!itpos){ return true; }
     }
-    return true;
+    return false;
 }
-bool greaterOrEqual(Function &fun, Symbol::Affine &x, Symbol::Affine &y){
+bool maybeLess(Function &fun, Symbol::Affine &x, Symbol::Affine &y){
     Symbol::Affine diff = x - y;
-    return greaterOrEqual(fun, diff);
+    return maybeLess(fun, diff);
 }
-bool greaterOrEqual(Function &fun, Symbol::Affine &&x, Symbol::Affine &y){
+bool maybeLess(Function &fun, Symbol::Affine &&x, Symbol::Affine &y){
     x -= y;
-    return greaterOrEqual(fun, x);
+    return maybeLess(fun, x);
 }
-bool greaterOrEqual(Function &fun, Stride &x, Symbol::Affine &y){
+bool maybeLess(Function &fun, Stride &x, Symbol::Affine &y){
     for (auto it = x.stride.begin(); it != x.stride.end(); ++it){
-	if (!(greaterOrEqual(fun, (*it) * x.gcd, y))){ return false; }
+	if (maybeLess(fun, std::get<0>(*it) * x.gcd, y)){ return true; }
     }
-    return true;
+    return false;
 }
 void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
+    size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.strides;
+    strides.reserve(Ninds);
     std::vector<Symbol::Affine> upperBounds;
-    std::vector<Symbol::Affine> strideSums;
-    for (size_t i = 0; i < length(ar.inds); ++i) {
+    upperBounds.reserve(Ninds);
+    // std::vector<Symbol::Affine> strideSums;
+    // strideSums.reserve(Ninds);
+    std::vector<std::bitset<64>> recheck;
+    recheck.reserve(Ninds);
+    for (size_t i = 0; i < Ninds; ++i) {
 	Symbol::Affine &affine = ar.inds[i];
 	Symbol::Affine ubi = upperBound(ar.indTyps[i], loopnest);
         // auto [srcId, srcTyp] = ar.indTyps[i];
 	Symbol::Affine &a = ar.inds[i];
 	bool overlaps = false;
+	std::bitset<64> upperBoundGreaterOrEqualToStride;
         for (size_t j = 0; j < length(strides); ++j) {
             // check if strides[j] is guaranteed not to overlap with affine .*
             // coefs if it might, we combine strides, and then keep iterating if
@@ -695,29 +703,82 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
             // alias `i`, but we give up on `k`
             // we can check with a simplified form of the SIV Diophantine test,
             // because constant offsets for the same array ref are...the same.
-            Stride &b = ar.strides[j];
+            Stride &b = strides[j];
 	    // actually, instead, we'll be super lazy here.
-	    if (greaterOrEqual(fun, b, ubi)){
-		
-
-	    } else if (greaterOrEqual(fun, a, upperBounds[j])) {
-		
-	    }
-
+	    // splitting into strides is an optimization, making future analysis
+	    // easier. Failing to split doesn't cause incorrect answers
+	    // (but splitting when not legal might). Thus it's okay if we
+	    // miss some cases that would've been legal.
+	    //
+	    // We require every stride to be larger than the upper bound
+	    if (ar.indTyps[i].second != LOOPINDUCTVAR){
+		if (maybeLess(fun, b, ubi)){ // if !, then `b` definitely >= than `ubi`
+		    // we require the stride to be larger than the sum of the upper bounds
+		    if (maybeLess(fun, a, upperBounds[j])) {
+			b.add_term(a, ar.indTyps[i]);
+			upperBounds[j] += ubi;
+			// now we need to revalidate, possibly collapsing strides.
+			std::vector<size_t> eraseInds; // record strides we're removing
+			for (size_t k = 0; k < length(strides); ++k){
+			    if (k == j){ continue; }
+			    if (recheck[k][j]){
+				// means that stride of the `k`th was previously >= than `j`th upper bound.
+				// We must now check if that is still true
+				if (maybeLess(fun, strides[k], upperBounds[j])){
+				    // so it may now be less, that means we must combine `k` with `j`, and then remove `k`.
+				    b += strides[k];
+				    upperBounds[j] += upperBounds[k];
+				    eraseInds.push_back(k);
+				}
+			    }
+			}
+			for (size_t k = 0; k < length(eraseInds); ++k){
+			    size_t del = eraseInds[length(eraseInds) - 1 - k];
+			    strides.erase(strides.begin() + del);
+			    upperBounds.erase(upperBounds.begin() + del);
+			    recheck.erase(recheck.begin() + del);
+			}
+			overlaps = true;
+			break;
+		    } else {
+			// need to recheck because `i`th stride is definitely larger than upperBound[j].
+			// recheck[j][j] = true;
+			upperBoundGreaterOrEqualToStride[j] = true;
+		    }
+		}
+	    } 
 	    // auto [g, ai, bi] = gcd(a, b.gcd);
             // Thus, we have
             // g = gcd(a, b);
             // i = k * b / g;
             // j = k * a / g;
-            auto [adg, bdg] = intersectionDifference(a, b);
+            // auto [adg, bdg] = intersectionDifference(a, b);
             //
             // auto g = symbolicGCD(a, b);
         }
         if (!overlaps) {
             strides.emplace_back(affine, ar.indTyps[i]);
-	    upperBounds.push_back(std::move(ubi));
+	    upperBounds.emplace_back(std::move(ubi));
+	    recheck.push_back(std::move(upperBoundGreaterOrEqualToStride));
+	    // recheck.push_back(std::bitset<64>());
         }
     }
+    // now that strides should be settled, we'll fill the `indToStridemap`
+    for (size_t i = 0; i < Ninds; ++i){
+	std::bitset<32> m;
+	auto [srcId, srcTyp] = ar.indTyps[i];
+	for (size_t j = 0; j < strides.size(); ++j){
+	    Stride &s = strides[j];
+	    for (auto it = s.stride.begin(); it != s.stride.end(); ++it){
+		if ((srcId == std::get<1>(*it)) & (srcTyp == std::get<2>(*it))){
+		    m[j] = true;
+		    break;
+		}
+	    }
+	}
+	ar.indToStrideMap.push_back(std::move(m));
+    }
+    return;
 }
 template <typename L> void partitionStrides(ArrayRef ar, L loopnest) {
     partitionStrides(ar, getUpperbound(loopnest));

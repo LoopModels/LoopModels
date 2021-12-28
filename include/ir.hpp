@@ -362,12 +362,25 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 struct Stride {
     Symbol gcd;
-    std::vector<Symbol::Affine> stride;
-    size_t srcId;
-    SourceType srcTyp;
+    std::vector<std::tuple<Symbol::Affine,size_t,SourceType>> stride;
     Stride() = default;
-    Stride(Symbol::Affine x, std::pair<size_t,SourceType> &&ind) : gcd(x.gcd), stride({Symbol::Affine(Symbol(1), x.terms)}), srcId(ind.first), srcTyp(ind.second) {};
+    Stride(Symbol::Affine x, std::pair<size_t,SourceType> &&ind) : gcd(x.gcd), stride({std::make_tuple(Symbol::Affine(Symbol(1), x.terms), ind.first, ind.second)}) {};
 
+    void add_term(Symbol::Affine x, std::pair<size_t,SourceType> ind){
+	stride.push_back(std::make_tuple(x, ind.first, ind.second));
+	return;
+    }
+
+    Stride& operator+=(Stride x){
+	auto [g, a, b] = gcdm(gcd, x.gcd);
+	for (size_t i = 0; i < stride.size(); ++i){
+	    std::get<0>(stride[i]) *= a;
+	}
+	for (size_t i = 0; i < x.stride.size(); ++i){
+	    add_term(std::get<0>(x.stride[i]) * b, std::make_pair(std::get<1>(x.stride[i]), std::get<2>(x.stride[i])));
+	}
+	return *this;
+    }
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;
@@ -400,7 +413,7 @@ struct ArrayRef {
     std::vector<Symbol::Affine> inds;
     std::vector<std::pair<size_t, SourceType>> indTyps;
     std::vector<Stride> strides;
-    std::vector<std::bitset<32>> indToStrideMap;
+    std::vector<std::bitset<32>> indToStrideMap; // length(indTostridemap) == length(inds)
 };
 
 template <typename T>

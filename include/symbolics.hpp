@@ -244,6 +244,10 @@ struct Symbol::Affine {
 	}
 	return *this;
     }
+    Affine& operator*=(Symbol x){
+	gcd *= x;
+	return *this;
+    }
     // bool operator>=(Affine x){
 	
     // 	return false;
