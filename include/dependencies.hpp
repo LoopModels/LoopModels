@@ -8,6 +8,9 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
+#include <numeric>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -352,9 +355,9 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // Two ways to prove independence:
 // 1. no integer solution: independent A(2i) & A(2i + 1)
 // 2. integer solution is out of loop's iteration space
-// 
+//
 // cmp:
-// A(i, j, k) 
+// A(i, j, k)
 // A(i, j, i)
 // A(i+1, j, i) // won't overlap with above
 // 1, M, M*N = strides(A);
@@ -366,12 +369,12 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // [] : [ ... ]
 // [M] : j
 //       j
-// 
+//
 // A(1, foo(j))
 // A(2, bar(j))
 // A(i*i, ...)
 //
-// We should go ahead and implement loop splitting to break up dependencies / 
+// We should go ahead and implement loop splitting to break up dependencies /
 // handle changing dep direction by breaking it up along that change.
 //
 // After failing to rule out a dependency (and thus adding a dep to the graph)
@@ -391,7 +394,7 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // for (iter = 0; iter < I; ++iter){
 //    S0: update!(A)
 //    S1: lu!(A)
-//    S2: ldiv!(A, Y) 
+//    S2: ldiv!(A, Y)
 // }
 // iter loop adds dependencies:
 // RTW S1 -> S1 0 < iter < I
@@ -407,8 +410,8 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // j: j - j     = 0
 // []  :  i + 1, i
 // [M] :   j,    j
-// 
-// 
+//
+//
 //
 // should produce two strides:
 // [] :  []*i + [M*N]*k;
@@ -422,28 +425,28 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // A2: A(i,j,i)
 // vs when compared to
 // A3: A(i,j,k+K)
-// 
+//
 // M, N, L = size(A);
 // 1, M, M*N = strides(A);
 // For A1 vs A3
 // []    : i v i
 // [M]   : j v j
 // [M,N] : k v k+K
-// 
+//
 // assert(2K <= L);
 // assert(K > 0);
 //
 // for (m = 0; m < M; ++m){
 //   for (n = 0; n < N1; ++n){
 //     for (k = 0; k < K; ++k){
-//        
+//
 //     }
 //   }
 // }
 // (0 <= m < M);
 // (0 <= n < N1) * M;
 // (0 <= k < K) * M*N;
-// 
+//
 // if N1 > N, then
 // M*(N1-1) might cause overlap with M*N
 // so, we need N1 <= N; scalar evolution analysis?
@@ -451,30 +454,274 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // for A1 vs A2
 // []   : []*i + [M*N]*k v [[],[M,N]]*i
 // [M]  : j v j
-// 
+//
 //
 // A(i,j,i)
-template <typename L>
-void partitionStrides(ArrayRef ar, L loopnest){
+
+// should be O(N), passing through both arrays just once;
+template <typename T>
+std::vector<T> intersectSortedVectors(Vector<T, 0> x, Vector<T, 0> y) {
+    std::vector<T> z;
+    size_t i = 0;
+    size_t j = 0;
+    while (i < length(x)) {
+        T a = x(i);
+        size_t ca = 1;
+        ++i;
+        while (i < length(x)) {
+            if (x(i) == a) {
+                ++ca;
+                ++i;
+            } else {
+                break;
+            }
+        }
+        // ca is the count of `a` in `x`
+        size_t cb = 0;
+        while (j < length(y)) {
+            T b = y(j);
+            if (b <= a) {
+                if (b == a) {
+                    ++cb;
+                }
+                // if (a == b){ z.push_back(a); }
+                ++j;
+            } else {
+                break;
+            }
+        }
+        size_t c = std::min(ca, cb);
+        for (size_t k = 0; k < c; ++k) {
+            z.push_back(a);
+        }
+    }
+    return z;
+}
+
+template <typename T>
+std::vector<T> intersectSortedVectors(std::vector<T> &z, std::vector<T> &x,
+                                      Vector<T, 0> y) {
+    size_t i = 0;
+    size_t j = 0;
+    while (i < length(x)) {
+        T a = x[i];
+        size_t ca = 1;
+        ++i;
+        while (i < length(x)) {
+            if (x[i] == a) {
+                ++ca;
+                ++i;
+            } else {
+                break;
+            }
+        }
+        // ca is the count of `a` in `x`
+        size_t cb = 0;
+        while (j < length(y)) {
+            T b = y(j);
+            if (b <= a) {
+                if (b == a) {
+                    ++cb;
+                }
+                // if (a == b){ z.push_back(a); }
+                ++j;
+            } else {
+                break;
+            }
+        }
+        size_t c = std::min(ca, cb);
+        for (size_t k = 0; k < c; ++k) {
+            z.push_back(a);
+        }
+    }
+    return z;
+}
+
+template <typename T>
+std::pair<std::vector<T>, std::vector<T>>
+excludeIntersectSortedVectors(Vector<T, 0> x, Vector<T, 0> y) {
+    std::vector<T> zx;
+    std::vector<T> zy;
+    size_t i = 0;
+    size_t j = 0;
+    while (i < length(x)) {
+        T a = x(i);
+        size_t ca = 1;
+        ++i;
+        while (i < length(x)) {
+            if (x(i) == a) {
+                ++ca;
+                ++i;
+            } else {
+                break;
+            }
+        }
+        // ca is the count of `a` in `x`
+        size_t cb = 0;
+        while (j < length(y)) {
+            T b = y(j);
+            if (b < a) {
+                zy.push_back(b); // b not in `x`
+                ++j;
+            } else if (b == a) {
+                ++j;
+                ++cb;
+            } else {
+                break;
+            }
+        }
+        size_t c = std::min(ca, cb);
+        for (size_t k = c; k < ca; ++k) {
+            zx.push_back(a);
+        }
+        for (size_t k = c; k < cb; ++k) {
+            zy.push_back(a);
+        }
+    }
+    return std::make_pair(zx, zy);
+}
+
+std::pair<std::vector<size_t>, Int>
+symbolicGCD(std::vector<std::pair<Vector<size_t, 0>, Int>> a,
+            std::vector<std::pair<Vector<size_t, 0>, Int>> b) {
+    size_t na = length(a);
+    size_t nb = length(b);
+    if ((na == 1) & (nb == 1)) {
+        auto [da, ca] = a[0];
+        auto [db, cb] = b[0];
+        return std::make_pair(intersectSortedVectors(da, db), std::gcd(ca, cb));
+    } else if ((na == 0) | (nb == 0)) {
+        return std::make_pair(std::vector<size_t>(), 1);
+    } else {
+        auto [da, ca] = a[0];
+        auto [db, cb] = b[0];
+        std::vector<size_t> dg = intersectSortedVectors(da, db);
+        std::vector<size_t> temp;
+        Int cg = std::gcd(ca, cb);
+        for (size_t i = 1; i < length(a); ++i) {
+            auto [da, ca] = a[i];
+            intersectSortedVectors(temp, dg, da);
+            std::swap(dg, temp);
+            temp.clear();
+            cg = std::gcd(cg, ca);
+        }
+        return std::make_pair(dg, cg);
+    }
+}
+std::pair<std::vector<std::pair<std::vector<size_t>, Int>>,
+          std::vector<std::pair<std::vector<size_t>, Int>>>
+divByGCD(std::vector<std::pair<Vector<size_t, 0>, Int>> a,
+         std::vector<std::pair<Vector<size_t, 0>, Int>> b) {
+    std::vector<std::pair<std::vector<size_t>, Int>> ga;
+    std::vector<std::pair<std::vector<size_t>, Int>> gb;
+    size_t na = length(a);
+    size_t nb = length(b);
+    if ((na == 1) & (nb == 1)) {
+        auto [da, ca] = a[0];
+        auto [db, cb] = b[0];
+        auto [dadg, dbdg] = excludeIntersectSortedVectors(da, db);
+        Int g = std::gcd(ca, cb);
+        Int cadg = ca / g;
+        Int cbdg = cb / g;
+        ga.emplace_back(std::make_pair(dadg, cadg));
+        gb.emplace_back(std::make_pair(dbdg, cbdg));
+    } else {
+    }
+    return std::make_pair(ga, gb);
+}
+
+Symbol::Affine upperBound(std::pair<size_t,SourceType> inds, RektM loopvars){
+    auto [srcId, srcTyp] = inds;
+    // std::numeric_limits<Int>::max(): not making assumptions on returned value.
+    if (srcTyp == LOOPINDUCTVAR){
+	return loopToAffineUpperBound(getCol(loopvars, srcId));
+    } else {
+	return Symbol::Affine(Symbol(std::numeric_limits<Int>::max()));
+    }
+}
+// x y
+// T T T
+// T F F
+// F T F
+// F F T
+// only returns true if guaranteed
+
+bool greaterOrEqual(Function &fun, Symbol::Affine &diff){
+    if (isZero(diff)){ return true; }
+    bool positive = diff.gcd.coef > 0;
+    // here we check if all terms summed in the `diff` are positive.
+    for (auto it = diff.terms.begin(); it != diff.terms.end(); ++it){
+	Symbol &rit = *it;
+	bool itpos = positive == (rit.coef > 0);
+	for (auto s = rit.prodIDs.begin(); s != rit.prodIDs.end(); ++s){
+	    Sign sign = fun.signMap[*s];
+	    if (sign == UNKNOWNSIGN){ return false; }
+	    itpos = (itpos == ((sign == POSITIVE) | (sign == NONNEGATIVE)));
+	}
+	if (!itpos){ return false; }
+    }
+    return true;
+}
+bool greaterOrEqual(Function &fun, Symbol::Affine &x, Symbol::Affine &y){
+    Symbol::Affine diff = x - y;
+    return greaterOrEqual(fun, diff);
+}
+bool greaterOrEqual(Function &fun, Symbol::Affine &&x, Symbol::Affine &y){
+    x -= y;
+    return greaterOrEqual(fun, x);
+}
+bool greaterOrEqual(Function &fun, Stride &x, Symbol::Affine &y){
+    for (auto it = x.stride.begin(); it != x.stride.end(); ++it){
+	if (!(greaterOrEqual(fun, (*it) * x.gcd, y))){ return false; }
+    }
+    return true;
+}
+void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
-    std::vector<std::vector<std::pair<Vector<size_t,0>,Int>>> &strides = ar.strides;
-    for (size_t i = 0; i < length(ar.programVariableCombinations); ++i){
-        VoV<size_t> affine = ar.programVariableCombinations(i);
-        Vector<Int,0> coefs = ar.coef(i);
-        bool overlaps = false;
-        for (size_t j = 0; j < length(strides); ++j){
-            // check if strides[j] is guaranteed not to overlap with affine .* coefs
-            // if it might, we combine strides, and then keep iterating
-            // if it might, and overlaps already set to true, keep collapsing
+    std::vector<Stride> &strides = ar.strides;
+    std::vector<Symbol::Affine> upperBounds;
+    std::vector<Symbol::Affine> strideSums;
+    for (size_t i = 0; i < length(ar.inds); ++i) {
+	Symbol::Affine &affine = ar.inds[i];
+	Symbol::Affine ubi = upperBound(ar.indTyps[i], loopnest);
+        // auto [srcId, srcTyp] = ar.indTyps[i];
+	Symbol::Affine &a = ar.inds[i];
+	bool overlaps = false;
+        for (size_t j = 0; j < length(strides); ++j) {
+            // check if strides[j] is guaranteed not to overlap with affine .*
+            // coefs if it might, we combine strides, and then keep iterating if
+            // it might, and overlaps already set to true, keep collapsing
             // but...what about A(i,foo(j),k) // we can tell foo(j) doesn't
             // alias `i`, but we give up on `k`
+            // we can check with a simplified form of the SIV Diophantine test,
+            // because constant offsets for the same array ref are...the same.
+            Stride &b = ar.strides[j];
+	    // actually, instead, we'll be super lazy here.
+	    if (greaterOrEqual(fun, b, ubi)){
+		
+
+	    } else if (greaterOrEqual(fun, a, upperBounds[j])) {
+		
+	    }
+
+	    // auto [g, ai, bi] = gcd(a, b.gcd);
+            // Thus, we have
+            // g = gcd(a, b);
+            // i = k * b / g;
+            // j = k * a / g;
+            auto [adg, bdg] = intersectionDifference(a, b);
+            //
+            // auto g = symbolicGCD(a, b);
         }
-        if (!overlaps){
-            strides.push_back(); // add strides...
+        if (!overlaps) {
+            strides.emplace_back(affine, ar.indTyps[i]);
+	    upperBounds.push_back(std::move(ubi));
         }
     }
 }
-
+template <typename L> void partitionStrides(ArrayRef ar, L loopnest) {
+    partitionStrides(ar, getUpperbound(loopnest));
+}
 template <typename PX, typename PY, typename LX, typename LY>
 void partitionStrides(IndexDelta &differences, Function &fun, Term &tx,
                       ArrayRef &arx, PX &permx, LX &loopnestx, Term &ty,
@@ -484,8 +731,12 @@ void partitionStrides(IndexDelta &differences, Function &fun, Term &tx,
     // 1. if the stride is the same as an existing one
     // 2. if it does not match an existing one, but can overlap with an existing
     // one (means we must fuse them and find the greatest common divisor) 3.
-    size_t numSourcesX = length(arx.programVariableCombinations); // VoVoV sources[ +[*[]] ] = Sources[i * +[ *[] + *[M*N]], j * +[ 
-    size_t numSourcesY = length(ary.programVariableCombinations); // ar(x/y).coef VoV constant coefficients multiplying the +[*[]]
+    size_t numSourcesX = length(
+        arx.programVariableCombinations); // VoVoV sources[ +[*[]] ] = Sources[i
+                                          // * +[ *[] + *[M*N]], j * +[
+    size_t numSourcesY = length(
+        ary.programVariableCombinations); // ar(x/y).coef VoV constant
+                                          // coefficients multiplying the +[*[]]
     // Stride is std::vector<std::pair<Vector<size_t,0>,T>>
     // differences.strides is:
     // std::vector<std::pair<Stride<Int>,std::vector<std::tuple<Stride<std::pair<Int,Int>>,size_t,SourceType>>>>
@@ -494,10 +745,10 @@ void partitionStrides(IndexDelta &differences, Function &fun, Term &tx,
         size_t idx = permx(i);
         size_t idy = permy(i);
         VoV<size_t> argsX = arx.programVariableCombinations(idx);
-        Vector<Int,0> coefsX = arx.coef(idx);
+        Vector<Int, 0> coefsX = arx.coef(idx);
 
         VoV<size_t> argsY = ary.programVariableCombinations(idy);
-        Vector<Int,0> coefsY = ary.coef(idy);
+        Vector<Int, 0> coefsY = ary.coef(idy);
         for (size_t j = 0; j < length(differences.strides); ++j) {
             if () {
             }

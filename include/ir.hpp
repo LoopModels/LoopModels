@@ -4,8 +4,10 @@
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
 #include "./math.hpp"
+#include "./symbolics.hpp"
 #include "./tree.hpp"
 #include <bit>
+#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -357,14 +359,48 @@ template <typename T> size_t length(VoVoV<T> x) {
 // offset: [0,0]
 
 // Gives the part of an ArrayRef that is a function of the induction variables.
+
+struct Stride {
+    Symbol gcd;
+    std::vector<Symbol::Affine> stride;
+    size_t srcId;
+    SourceType srcTyp;
+    Stride() = default;
+    Stride(Symbol::Affine x, std::pair<size_t,SourceType> &&ind) : gcd(x.gcd), stride({Symbol::Affine(Symbol(1), x.terms)}), srcId(ind.first), srcTyp(ind.second) {};
+
+    // bool operator>=(Symbol::Affine x){
+
+    // 	return false;
+    // }
+};
+
+/*Symbol::Affine sum(Stride x){
+    Symbol::Affine s = x.stride[0];
+    for (size_t i = 1; i < x.stride.size(); ++i){
+	s += x.stride[i];
+    }
+    return s;
+}*/
+
+/*
+std::pair<Stride,Stride> intersectionDifference(Stride x, Stride y){
+    Stride a;
+    Stride b;
+    for (size_t i = 0; i < x.stride.size(); ++i){
+	std::tuple<Symbol::Affine,Symbol::Affine,Symbol::Affine> g = gcd(x.stride[i], y.stride[i]);
+	a.stride.emplace_back(std::get<1>(g));
+	b.stride.emplace_back(std::get<2>(g));
+    }
+    return std::make_pair(std::move(a), std::move(b));
+};
+*/
+
 struct ArrayRef {
     size_t arrayId;
-    VoVoV<size_t> programVariableCombinations; // layer1
-    VoV<Int> coef;                             // length(coef) == length(pvc)
-    Vector<std::pair<size_t, SourceType>, 0>   // length(inds) == length(pvc)
-        inds; // layer0; id of source, and SourceType
-                   // map(length, coef) == map(length \circ length, pvc)
-    std::vector<std::vector<std::pair<Vector<size_t,0>,Int>>> strides;
+    std::vector<Symbol::Affine> inds;
+    std::vector<std::pair<size_t, SourceType>> indTyps;
+    std::vector<Stride> strides;
+    std::vector<std::bitset<32>> indToStrideMap;
 };
 
 template <typename T>
@@ -381,85 +417,15 @@ std::pair<size_t,size_t> findMaxLength(VoVoV<T> x){
     return std::make_pair(j, v);
 }
 
-// Gives a constant offsets.
-// struct ArrayRefOffsets {
-//     Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset
-// };
-// struct ArrayIndexPermutation {
-// };
-// struct ArrayRef {
-//     // size_t offsetId;
-//     size_t strideId;
-//     Vector<std::pair<size_t, SourceType>, 0>
-//         inds; // layer0; id of source, and SourceType
-//     // TODO: add vector of vectors indicating all inds dependent on loops
-//     // so, `for i in I, j in J; A[i,foo(x[i])]; end` would have `[[0,1],[]]`
-//     //
-//     // Vector<AffineSource,0> inds; // layer0;
-//     // Vector<std::pair<size_t, Int>, 0> offsets; // pairs offId => offset,
-//     // constant part referring ti [[]]
-// };
-
-static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
 void show(ArrayRef ar) {
     printf("ArrayRef %zu:\n", ar.arrayId);
-
-    for (size_t i = 0; i < length(ar.coef); ++i) {
-        VoV<size_t> pvc = ar.programVariableCombinations(i);
-        Vector<Int, 0> coefs = ar.coef(i);
-        auto [indId, indTyp] = ar.inds(i);
-        // std::string indStr = "i_" + std::to_string(i);
+    for (size_t i = 0; i < length(ar.inds); ++i) {
+        auto [indId, indTyp] = ar.indTyps[i];
         std::string indStr = "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
-        // [1 (const)]       , coef: 1
-        // [i_1 (Induct Var)], coef: 1
-        // printf();
-        // coefs = [1, 2, 1]
-        // pvc = [[], [0], [0,1] ]
-        // (1 + 2 M_0 + (M_0 M_1)) * i_0 (Induction Variable)
-        //
-        std::string poly = "";
-        for (size_t j = 0; j < length(pvc); ++j) {
-            if (j) {
-                poly += " + ";
-            }
-            Vector<size_t, 0> index = pvc(j);
-            size_t numIndex = length(index);
-            Int coef = coefs(j);
-            if (numIndex) {
-                if (numIndex != 1) { // not 0 by prev `if`
-                    if (coef != 1) {
-                        poly += std::to_string(coef) + " (";
-                    }
-                    for (size_t k = 0; k < numIndex; ++k) {
-                        poly += programVarName(index(k));
-                        if (k + 1 != numIndex)
-                            poly += " ";
-                    }
-                    if (coef != 1) {
-                        poly += ")";
-                    }
-                } else { // numIndex == 1
-                    if (coef != 1) {
-                        poly += std::to_string(coef) + " ";
-                    }
-                    poly += programVarName(index(0));
-                }
-            } else {
-                poly += std::to_string(coef);
-            }
-        }
-        if (length(pvc) == 1) {
-            if (coefs(0) != 1) {
-                poly += " " + indStr;
-            } else {
-                poly = indStr;
-            }
-        } else {
-            poly = "(" + poly + ") " + indStr;
-        }
+	std::string poly = "(" + toString(ar.inds[i]) + ") " + indStr;
         printf("    %s", poly.c_str());
-        if (i + 1 < length(ar.coef)) {
+        if (i + 1 < length(ar.inds)) {
             printf(" +\n");
         } else {
             printf("\n");
@@ -597,6 +563,7 @@ struct FastCostSummary {
 typedef Vector<FastCostSummary, 0> FastCostSummaries;
 
 constexpr Int UNSET_COST = -1;
+enum Sign { NEGATIVE, POSITIVE, NONNEGATIVE, NONPOSITIVE, UNKNOWNSIGN };
 
 struct Function {
     Vector<Term, 0> terms;
@@ -615,6 +582,7 @@ struct Function {
     Vector<Vector<Int, 0>, 0> triloopcache;
     std::vector<std::vector<std::pair<size_t, size_t>>> arrayReadsToTermMap;
     std::vector<std::vector<std::pair<size_t, size_t>>> arrayWritesToTermMap;
+    std::vector<Sign> signMap; // vector of length num_program_variables
     size_t ne;
     // char *data;
 

@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -15,16 +16,14 @@ typedef intptr_t Int;
 
 template <typename V> // generic function working with many stl containers, e.g.
                       // std::vector
-                      inline size_t length(V &v) {
+inline size_t length(V &v) {
     return v.size();
 }
 
-
-template <typename T> T& last(std::vector<T> &x){ return x[x.size() - 1]; }
-template <typename T>
-void show(std::vector<T> &x){
+template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
+template <typename T> void show(std::vector<T> &x) {
     std::cout << "[";
-    for (size_t i = 0; i < x.size() - 1; ++i){
+    for (size_t i = 0; i < x.size() - 1; ++i) {
         std::cout << x[i] << ", ";
     }
     std::cout << last(x) << "]";
@@ -35,13 +34,14 @@ template <typename T> void showln(T x) {
     std::printf("\n");
 }
 
-template <typename T0, typename T1>
-bool allMatch(T0 x0, T1 x1){
+template <typename T0, typename T1> bool allMatch(T0 x0, T1 x1) {
     size_t N = length(x0);
-    if (N != length(x1)) { return false; }
+    if (N != length(x1)) {
+        return false;
+    }
     bool m = true;
-    for (size_t n = 0; n < N; ++n){
-	m &= (x0[n] == x1[n]);
+    for (size_t n = 0; n < N; ++n) {
+        m &= (x0[n] == x1[n]);
     }
     return m;
 }
@@ -54,7 +54,7 @@ template <typename T, size_t M> struct Vector {
     T *ptr;
 
     Vector(T *ptr) : ptr(ptr){};
-    Vector(Vector<T,M> &a) : ptr(a.ptr){};
+    Vector(Vector<T, M> &a) : ptr(a.ptr){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
@@ -68,13 +68,13 @@ template <typename T, size_t M> struct Vector {
 template <typename T> struct Vector<T, 0> {
     T *ptr;
     size_t len;
-    inline Vector<T,0>& operator=(const Vector<T,0>& a){
-	ptr = a.ptr;
-	len = a.len;
+    inline Vector<T, 0> &operator=(const Vector<T, 0> &a) {
+        ptr = a.ptr;
+        len = a.len;
     }
     inline Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
-    inline Vector(const Vector<T,0> &a) : ptr(a.ptr), len(a.len){};
-    inline Vector(Vector<T,0> &a) : ptr(a.ptr), len(a.len){};
+    inline Vector(const Vector<T, 0> &a) : ptr(a.ptr), len(a.len){};
+    inline Vector(Vector<T, 0> &a) : ptr(a.ptr), len(a.len){};
     inline Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
 
     T &operator()(size_t i) {
@@ -110,7 +110,9 @@ template <typename T> bool allzero(T a, size_t len) {
     return true;
 }
 
-template <typename T> inline Vector<T,0> emptyVector(){ return Vector<T,0>(NULL, 0); }
+template <typename T> inline Vector<T, 0> emptyVector() {
+    return Vector<T, 0>(NULL, 0);
+}
 
 //
 // Matrix
@@ -279,9 +281,9 @@ Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
     return Vector<T, 0>(x.ptr + i0, i1 - i0);
 }
 
-
-template <typename T, size_t M> T& last(Vector<T,M> x){ return x[length(x) - 1]; }
-
+template <typename T, size_t M> T &last(Vector<T, M> x) {
+    return x[length(x) - 1];
+}
 
 template <typename T> struct Tensor3 {
     T *ptr;
@@ -322,10 +324,10 @@ struct Permutation {
     };
 
     Int &operator()(size_t i) { return data(i, 0); }
-    bool operator==(Permutation y){
-	Vector<Int,0> x0 = getCol(data, 0);
-	Vector<Int,0> y0 = getCol(y.data, 0);
-	return x0 == y0;
+    bool operator==(Permutation y) {
+        Vector<Int, 0> x0 = getCol(data, 0);
+        Vector<Int, 0> y0 = getCol(y.data, 0);
+        return x0 == y0;
     }
 };
 
@@ -352,21 +354,21 @@ void show(Permutation perm) {
     std::printf("%ld>", perm(numloop - 1));
 }
 
-template <typename T> struct UnitRange{
-    T operator()(size_t i){ return T(i); }
+template <typename T> struct UnitRange {
+    T operator()(size_t i) { return T(i); }
     bool operator==(UnitRange<T>) { return true; }
 };
-template <typename T> UnitRange<T> inv(UnitRange<T> r){ return r; }
+template <typename T> UnitRange<T> inv(UnitRange<T> r) { return r; }
 
-struct PermutationVector{
+struct PermutationVector {
     Int *ptr;
     size_t nloops;
     size_t nterms;
-    Permutation operator()(size_t i){
+    Permutation operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
-	assert((0 <= i) & (i < nterms));
+        assert((0 <= i) & (i < nterms));
 #endif
-	return Permutation(ptr + i*2*nloops, nloops);
+        return Permutation(ptr + i * 2 * nloops, nloops);
     }
 };
 
@@ -465,7 +467,7 @@ bool compatible(RectangularLoopNest l1, RectangularLoopNest l2,
 }
 
 typedef Matrix<Int, 0, 0> TrictM;
-
+// A*i < r
 struct TriangularLoopNest {
     Int *raw;
     size_t nloops;
@@ -485,7 +487,31 @@ TrictM getTrit(TriangularLoopNest tri) {
 }
 
 size_t length(TriangularLoopNest tri) {
-    return length(getTrit(tri)) + length(getRekt(tri));
+    return length(getTrit(tri)) + 2 * length(getRekt(tri));
+}
+
+RektM getUpperbound(RectangularLoopNest r) { return r.data; }
+RektM getUpperbound(TriangularLoopNest tri) {
+    Int *ptr = tri.raw + length(getTrit(tri)) + length(getRekt(tri));
+    return Matrix<Int, MAX_PROGRAM_VARIABLES, 0>(ptr, tri.nloops);
+}
+
+void fillUpperBounds(TriangularLoopNest tri) {
+    size_t nloops = tri.nloops;
+    RektM r = getRekt(tri).data;
+    TrictM A = getTrit(tri);
+    RektM upperBounds = getUpperbound(tri);
+    for (size_t i = 0; i < length(r); ++i) {
+        upperBounds[i] = r[i];
+    }
+    for (size_t i = 1; i < nloops; ++i) {
+        for (size_t j = 0; j < i; ++j) {
+            Int Aij = A(j, i);
+            for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; ++k) {
+                upperBounds(k, i) -= Aij * upperBounds(k, j);
+            }
+        }
+    }
 }
 
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
@@ -563,7 +589,7 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
         auto Aij = A(j, i); // symmetric
         if (Aij == 0)
             continue;
-        auto _j1 = iperm(j);
+        Int _j1 = iperm(j);
         // j1 < _i1 means it is included in the permutation, but rectangular
         // `l2` definitely does not depend on `j` loop!
         if (_j1 < _i1)
@@ -574,7 +600,7 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
             // TODO: relax restriction
             if (!otherwiseIndependent(A, j, i))
                 return false;
-            auto ub_temp = getUpperbound(r, j);
+            Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp = getUpperbound(r, j);
             for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
                 delta_b[k] -= Aij * ub_temp(k);
             delta_b[0] += Aij;
@@ -699,3 +725,86 @@ bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
 }
 
+// a_1 * i + b_1 * j = b_0 - a_0
+// to find all solutions where
+// a_1 * i + a_0 == b_1 * j + b_0
+// which is generally useful, whenever we have
+// A[a_1 * i + a_0]
+// A[b_1 * j + b_0]
+// and we want to know, are the
+//
+// let b0 and a0 = 0, because if we're asking about a single intersection,
+// then the constant part of where it occurs doesn't really matter?
+// Well, constant parts are the same because it's the same array.
+// e.g. A(i, j) -> a_1 * i + b_1 * j + c
+//
+// g, na, nb = extended_gcd(a, b)
+// g == gcd(a, b)
+// na * a + nb * b == g
+//
+// xi = na * ((b0 - a0) / g) + k * b1 / g
+// xj = nb * ((b0 - a0) / g) + k * a1 / g
+// they intersect for all integer values of `k`
+//
+//
+// a_1 = M
+// b_1 = M*N
+// g = M
+// xi = k * N
+// xj = k * 1
+//
+// for (i = 0; i < N; ++i){
+//   for (j = 0; j < i; ++j){
+//     A(i, j) = A(j, i); // noalias: copying upper to lower triangle
+//   }
+// }
+// here, let
+// M, N = size(A);
+// a: ... = A( M*i + j)
+// b: A( i + M*j) = ...
+//
+// because M != N, we need to know that M >= N to prove non-aliasing
+// TODO: how do we find/represent the relative values of these sym ids???
+// I think in many cases, we can get the information. E.g., if there were
+// bounds checks...
+//
+// What would be great is if we can prove the non-aliasing symbolically.
+//
+// a_0 = 0
+// a_1 = M
+// a_2 = 1
+// b_0 = 0
+// b_1 = 1
+// b_2 = M
+//
+// solutions:
+// M == 1 // if M >= N => N <= 1; if N <= 1 => 0 inner loop iterations
+// or
+// i == j == c0 // can tell from loop bounds this is impossible
+
+// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+std::tuple<size_t, size_t, size_t> extended_gcd(size_t a, size_t b) {
+    size_t old_r = a;
+    size_t r = b;
+    size_t old_s = 1;
+    size_t s = 0;
+    size_t old_t = 0;
+    size_t t = 1;
+    while (r != 0) {
+        size_t quotient = old_r / r;
+        size_t r_temp = r;
+        size_t s_temp = s;
+        size_t t_temp = t;
+        r = old_r - quotient * r;
+        s = old_s - quotient * s;
+        t = old_t - quotient * t;
+        old_r = r_temp;
+        old_s = s_temp;
+        old_t = t_temp;
+    }
+    // Solving for `t` at the end has 1 extra division, but lets us remove
+    // the `t` updates in the loop:
+    // size_t t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
+    // For now, I'll favor forgoing the division.
+    return std::make_tuple(old_r, old_s, old_t);
+}
