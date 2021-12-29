@@ -10,6 +10,35 @@
 #include <utility>
 #include <vector>
 
+enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
+
+std::string toString(SourceType s) {
+    switch (s) {
+    case MEMORY:
+        return "Memory";
+    case TERM:
+        return "Term";
+    case CONSTANT:
+        return "Constant";
+    case LOOPINDUCTVAR:
+        return "Induction Variable";
+    case WTR:
+        return "Write then read";
+    case RTW: // dummy SourceType for indicating a relationship; not lowered
+        return "Read then write";
+        // default:
+        //     assert("Unreachable reached; invalid SourceType.");
+        //     return "";
+    }
+}
+
+struct Source {
+    size_t id;
+    SourceType typ;
+    Source(size_t srcId, SourceType srcTyp) : id(srcId), typ(srcTyp) {}
+    bool operator==(Source x) { return (id == x.id) & (typ == x.typ); }
+};
+
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef intptr_t Int;

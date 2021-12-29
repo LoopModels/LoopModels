@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./affine.hpp"
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
 #include "./math.hpp"
@@ -17,6 +16,7 @@
 #include <vector>
 
 typedef Int Operation;
+
 /*
 // Associative operations should always be binary.
 struct OperationCharacteristics {
@@ -362,24 +362,35 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 struct Stride {
     Symbol gcd;
-    std::vector<std::tuple<Symbol::Affine,size_t,SourceType>> stride;
+    std::vector<std::pair<Symbol::Affine, Source>> stride;
     Stride() = default;
-    Stride(Symbol::Affine x, std::pair<size_t,SourceType> &&ind) : gcd(x.gcd), stride({std::make_tuple(Symbol::Affine(Symbol(1), x.terms), ind.first, ind.second)}) {};
+    Stride(Symbol::Affine x, Source &&ind)
+        : gcd(x.gcd),
+          stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms), ind)}){};
+    Stride(Symbol::Affine x, size_t indId, SourceType indTyp)
+        : gcd(x.gcd), stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms),
+                                             Source(indId, indTyp))}){};
 
-    void add_term(Symbol::Affine x, std::pair<size_t,SourceType> ind){
-	stride.push_back(std::make_tuple(x, ind.first, ind.second));
-	return;
+    void add_term(Symbol::Affine x, Source ind) {
+        stride.push_back(std::make_pair(x, ind));
+        return;
     }
 
-    Stride& operator+=(Stride x){
-	auto [g, a, b] = gcdm(gcd, x.gcd);
-	for (size_t i = 0; i < stride.size(); ++i){
-	    std::get<0>(stride[i]) *= a;
-	}
-	for (size_t i = 0; i < x.stride.size(); ++i){
-	    add_term(std::get<0>(x.stride[i]) * b, std::make_pair(std::get<1>(x.stride[i]), std::get<2>(x.stride[i])));
-	}
-	return *this;
+    Stride &operator+=(Stride x) {
+        auto [g, a, b] = gcdm(gcd, x.gcd);
+        for (size_t i = 0; i < stride.size(); ++i) {
+            std::get<0>(stride[i]) *= a;
+        }
+        for (size_t i = 0; i < x.stride.size(); ++i) {
+            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
+        }
+        return *this;
+    }
+
+    bool operator==(Stride x) {
+        if (gcd != x.gcd) {
+            return false;
+        }
     }
     // bool operator>=(Symbol::Affine x){
 
@@ -387,56 +398,43 @@ struct Stride {
     // }
 };
 
-/*Symbol::Affine sum(Stride x){
-    Symbol::Affine s = x.stride[0];
-    for (size_t i = 1; i < x.stride.size(); ++i){
-	s += x.stride[i];
-    }
-    return s;
-}*/
-
-/*
-std::pair<Stride,Stride> intersectionDifference(Stride x, Stride y){
-    Stride a;
-    Stride b;
-    for (size_t i = 0; i < x.stride.size(); ++i){
-	std::tuple<Symbol::Affine,Symbol::Affine,Symbol::Affine> g = gcd(x.stride[i], y.stride[i]);
-	a.stride.emplace_back(std::get<1>(g));
-	b.stride.emplace_back(std::get<2>(g));
-    }
-    return std::make_pair(std::move(a), std::move(b));
-};
-*/
-
 struct ArrayRef {
     size_t arrayId;
-    std::vector<Symbol::Affine> inds;
-    std::vector<std::pair<size_t, SourceType>> indTyps;
+    std::vector<std::pair<Symbol::Affine, Source>> inds;
     std::vector<Stride> strides;
-    std::vector<std::bitset<32>> indToStrideMap; // length(indTostridemap) == length(inds)
+    std::vector<size_t>
+        indToStrideMap; // length(indTostridemap) == length(inds)
 };
 
-template <typename T>
-std::pair<size_t,size_t> findMaxLength(VoVoV<T> x){
+template <typename T0, typename T1, typename T2>
+std::pair<T1, T2> tail(std::tuple<T0, T1, T2> &x) {
+    return std::make_pair(std::get<1>(x), std::get<2>(x));
+}
+template <typename T0, typename T1, typename T2>
+std::pair<T1, T2> tail(std::tuple<T0, T1, T2> &&x) {
+    return std::make_pair(std::get<1>(x), std::get<2>(x));
+}
+
+template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
     size_t j = 0;
     size_t v = 0;
-    for (size_t i = 0; i < length(x); ++i){
-	size_t l = length(x(i));
-	if (l > v){
-	    j = i;
-	    v = l;
-	}
+    for (size_t i = 0; i < length(x); ++i) {
+        size_t l = length(x(i));
+        if (l > v) {
+            j = i;
+            v = l;
+        }
     }
     return std::make_pair(j, v);
 }
 
-
 void show(ArrayRef ar) {
     printf("ArrayRef %zu:\n", ar.arrayId);
     for (size_t i = 0; i < length(ar.inds); ++i) {
-        auto [indId, indTyp] = ar.indTyps[i];
-        std::string indStr = "i_" + std::to_string(indId) + " (" + toString(indTyp) + ")";
-	std::string poly = "(" + toString(ar.inds[i]) + ") " + indStr;
+        auto [ind, src] = ar.inds[i];
+        std::string indStr =
+            "i_" + std::to_string(src.id) + " (" + toString(src.typ) + ")";
+        std::string poly = "(" + toString(ind) + ") " + indStr;
         printf("    %s", poly.c_str());
         if (i + 1 < length(ar.inds)) {
             printf(" +\n");
@@ -609,10 +607,10 @@ struct Function {
              Matrix<double, 0, 0> tempcosts, FastCostSummaries fastcostsum,
              Vector<Vector<Int, 0>, 0> triloopcache,
              size_t numArrays) // FIXME: triloopcache type
-        : terms(terms), triln(triln), rectln(rectln), // arrays(arrays),
-          // arrayRefStrides(arrayRefStrides),
-	  arrayRefs(arrayRefs),
-          constants(constants), visited(visited),
+        : terms(terms), triln(triln),
+          rectln(rectln), // arrays(arrays),
+                          // arrayRefStrides(arrayRefStrides),
+          arrayRefs(arrayRefs), constants(constants), visited(visited),
           initialLoopTree(initialLoopTree),
           // bestschedules(bestschedules),
           // tempschedules(tempschedules),
@@ -638,7 +636,7 @@ struct Function {
 //     ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
 //     return std::make_pair(ar, ars);
 // };
-inline ArrayRef& getArrayRef(Function fun, size_t id) {
+inline ArrayRef &getArrayRef(Function fun, size_t id) {
     return fun.arrayRefs[id];
 };
 
