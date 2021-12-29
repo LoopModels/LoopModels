@@ -178,6 +178,8 @@ struct Symbol::Affine {
         terms.push_back(std::forward<S>(x));
         return;
     }
+    bool operator==(Affine x){ return (gcd == x.gcd) && (terms == x.terms); }
+    bool operator!=(Affine x){ return (gcd != x.gcd) || (terms != x.terms); }
     Affine operator*(Symbol x) { return Affine(gcd * x, terms); }
     Affine operator+(Symbol x) {
         auto [g, a, b] = gcdm(gcd, x);

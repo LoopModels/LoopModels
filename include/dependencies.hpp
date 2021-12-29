@@ -702,10 +702,12 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.strides;
     strides.reserve(Ninds);
-    std::vector<Symbol::Affine> upperBounds;
+    std::vector<Symbol::Affine> &upperBounds = ar.upperBounds;
     upperBounds.reserve(Ninds);
     // std::vector<Symbol::Affine> strideSums;
     // strideSums.reserve(Ninds);
+    // TODO: factor out rechecking for stride combining.
+    // std::vector<std::bitset<64>> recheck(Ninds);
     std::vector<std::bitset<64>> recheck;
     recheck.reserve(Ninds);
     for (size_t i = 0; i < Ninds; ++i) {

@@ -5,6 +5,7 @@
 #include "./math.hpp"
 #include "./symbolics.hpp"
 #include "./tree.hpp"
+#include "dependencies.hpp"
 #include <bit>
 #include <bitset>
 #include <cstddef>
@@ -387,11 +388,8 @@ struct Stride {
         return *this;
     }
 
-    bool operator==(Stride x) {
-        if (gcd != x.gcd) {
-            return false;
-        }
-    }
+    bool operator==(Stride x) {	return (gcd == x.gcd) && (stride == x.stride); }
+    bool operator!=(Stride x) {	return (gcd != x.gcd) || (stride != x.stride); }
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;
@@ -404,6 +402,7 @@ struct ArrayRef {
     std::vector<Stride> strides;
     std::vector<size_t>
         indToStrideMap; // length(indTostridemap) == length(inds)
+    std::vector<Symbol::Affine> upperBounds;
 };
 
 template <typename T0, typename T1, typename T2>
