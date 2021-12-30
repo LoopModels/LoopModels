@@ -18,7 +18,7 @@ struct Symbol {
     std::vector<size_t> prodIDs; // sorted symbolic terms being multiplied
     intptr_t coef;               // constant coef
     // constructors
-    Symbol() = default;
+    Symbol() : prodIDs(std::vector<size_t>()), coef(0){};
     Symbol(intptr_t coef) : prodIDs(std::vector<size_t>()), coef(coef){};
 
     Symbol operator*(Symbol x) {
@@ -178,8 +178,8 @@ struct Symbol::Affine {
         terms.push_back(std::forward<S>(x));
         return;
     }
-    bool operator==(Affine x){ return (gcd == x.gcd) && (terms == x.terms); }
-    bool operator!=(Affine x){ return (gcd != x.gcd) || (terms != x.terms); }
+    bool operator==(Affine x) { return (gcd == x.gcd) && (terms == x.terms); }
+    bool operator!=(Affine x) { return (gcd != x.gcd) || (terms != x.terms); }
     Affine operator*(Symbol x) { return Affine(gcd * x, terms); }
     Affine operator+(Symbol x) {
         auto [g, a, b] = gcdm(gcd, x);

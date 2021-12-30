@@ -1,11 +1,10 @@
 #pragma once
 
+#include "./graphs.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
-#include "./graphs.hpp"
 #include <algorithm>
 #include <vector>
-
 
 // struct BaselineModelCost {};
 
@@ -49,7 +48,6 @@
 // Latter sounds easier to work with.
 //
 // Once an SCC can be scheduled, we can then worry about TermBundles within.
-
 
 template <typename I>
 void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,

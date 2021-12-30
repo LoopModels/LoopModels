@@ -387,8 +387,8 @@ struct Stride {
         return *this;
     }
 
-    bool operator==(Stride x) {	return (gcd == x.gcd) && (stride == x.stride); }
-    bool operator!=(Stride x) {	return (gcd != x.gcd) || (stride != x.stride); }
+    bool operator==(Stride x) { return (gcd == x.gcd) && (stride == x.stride); }
+    bool operator!=(Stride x) { return (gcd != x.gcd) || (stride != x.stride); }
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;

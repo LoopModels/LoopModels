@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./math.hpp"
-#include <vector>
 #include <tuple>
+#include <vector>
 
 template <typename G>
 void visit(std::vector<Int> sorted, G &graph, size_t idx) {
@@ -102,7 +102,6 @@ std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
     return components;
 }
 
-
 // Naive algorithm that looks like it may work to identify cycles:
 // 0 -> 1 -> 3 -> 5
 //  \            /
@@ -132,8 +131,3 @@ std::vector<std::vector<Int>> stronglyConnectedComponents(G &graph) {
 // 2. Prefuse these weakly connected components.
 // 3. Group these into strongly connected components.
 // 4. Iterate over schedules by strongly connected components.
-
-
-
-
-
