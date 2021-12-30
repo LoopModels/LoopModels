@@ -3,9 +3,8 @@
 #include "./graphs.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
-#include "bitsets.hpp"
+#include "./bitsets.hpp"
 #include <algorithm>
-#include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -132,7 +131,7 @@ difference(ArrayRef x, size_t idx, ArrayRef y, size_t idy) {
     Vector<Int, 0> coefx = x.coef(idx);
     VoV<size_t> pvcy = y.programVariableCombinations(idy);
     Vector<Int, 0> coefy = y.coef(idy);
-    std::bitset<64> matchedx; // zero initialized by default constructor
+    BitSet64 matchedx; // zero initialized by default constructor
     std::vector<std::pair<Vector<size_t, 0>, Int>> diffs;
     for (size_t i = 0; i < length(pvcy); ++i) {
         bool matchFound = false;
@@ -145,7 +144,7 @@ difference(ArrayRef x, size_t idx, ArrayRef y, size_t idy) {
                 if (deltaCoef) { // only need to push if not 0
                     diffs.emplace_back(std::make_pair(argy, deltaCoef));
                 }
-                matchedx[j] = true;
+                matchedx.set(j);
                 matchFound = true;
                 break;
             }
@@ -685,6 +684,8 @@ bool maybeLess(Function &fun, Stride &x, Symbol::Affine &y) {
     }
     return false;
 }
+
+
 void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, size_t i) {
     Source src = std::get<1>(ar.inds[i]);
     for (size_t j = 0; j < strides.size(); ++j) {
@@ -697,6 +698,56 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, size_t i) {
         }
     }
 }
+/*
+  void erase(std::vector<BitSet64> &x, size_t i){
+    x.erase(x.begin() + i);
+    for (size_t j = 0; j < x.size(); ++j){
+        x[j].erase(i);
+    }
+    return;
+}
+*/
+
+bool mayOverlap(Function &fun, std::vector<Stride> &strides, std::vector<Symbol::Affine> &upperBounds, size_t j, size_t k){
+    return maybeLess(fun, strides[k], upperBounds[j]) && maybeLess(fun, strides[j], upperBounds[k]);
+}
+
+void recheckStrides(Function &fun, std::vector<Stride> &strides, std::vector<Symbol::Affine> &upperBounds, size_t j){
+    size_t eraseInds[64];
+    size_t eraseCount;
+    size_t jDec;
+    while (true) {
+	eraseCount = 0;
+	jDec = 0;
+	for (size_t k = 0; k < strides.size(); ++k) {
+	    if (k == j) {
+		continue;
+	    }
+	    // if (recheck[k][j]) {
+	    // means that stride of the `k`th was previously
+	    // >= than `j`th upper bound. We must now check
+	    // if that is still true
+	    if (mayOverlap(fun, strides, upperBounds, j, k)) {
+		// so it may now be less, that means we must
+		// combine `k` with `j`, and then remove
+		// `k`.
+		strides[j] += strides[k];
+		upperBounds[j] += upperBounds[k];
+		eraseInds[++eraseCount] = k;
+		jDec += k < j;
+	    }
+	    // }
+	}
+	for (size_t k = 0; k < eraseCount; ++k) {
+	    size_t del = eraseInds[eraseCount - 1 - k];
+	    strides.erase(strides.begin() + del);
+	    upperBounds.erase(upperBounds.begin() + del);
+	}
+	if ((eraseCount == 0) | (strides.size() <= 1)){ return; }
+	j -= jDec;
+    }
+}
+
 void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
     size_t Ninds = length(ar.inds);
@@ -707,9 +758,9 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<Symbol::Affine> strideSums;
     // strideSums.reserve(Ninds);
     // TODO: factor out rechecking for stride combining.
-    // std::vector<std::bitset<64>> recheck(Ninds);
-    std::vector<std::bitset<64>> recheck;
-    recheck.reserve(Ninds);
+    // std::vector<BitSet64> recheck(Ninds);
+    // std::vector<BitSet64> recheck; recheck.reserve(Ninds);
+    // std::vector<size_t> recheck;
     for (size_t i = 0; i < Ninds; ++i) {
         std::pair<Symbol::Affine, Source> ind = ar.inds[i];
         Symbol::Affine &a = std::get<0>(ind);
@@ -718,7 +769,7 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
         Symbol::Affine ubi = upperBound(indSrc, loopnest);
         // auto [srcId, srcTyp] = ar.indTyps[i];
         bool overlaps = false;
-        std::bitset<64> upperBoundGreaterOrEqualToStride;
+        // BitSet64 upperBoundGreaterOrEqualToStride;
         for (size_t j = 0; j < length(strides); ++j) {
             // check if strides[j] is guaranteed not to overlap with affine .*
             // coefs if it might, we combine strides, and then keep iterating if
@@ -736,8 +787,8 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
             //
             // We require every stride to be larger than the upper bound
             if (indSrc.typ != LOOPINDUCTVAR) {
-                if (maybeLess(fun, b,
-                              ubi)) { // if !, then `b` definitely >= than `ubi`
+                if (maybeLess(fun, b, ubi)) {
+		    // if !, then `b` definitely >= than `ubi`
                     // we require the stride to be larger than the sum of the
                     // upper bounds
                     if (maybeLess(fun, a, upperBounds[j])) {
@@ -745,39 +796,9 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
                         upperBounds[j] += ubi;
                         // now we need to revalidate, possibly collapsing
                         // strides.
-                        std::vector<size_t>
-                            eraseInds; // record strides we're removing
-                        for (size_t k = 0; k < length(strides); ++k) {
-                            if (k == j) {
-                                continue;
-                            }
-                            if (recheck[k][j]) {
-                                // means that stride of the `k`th was previously
-                                // >= than `j`th upper bound. We must now check
-                                // if that is still true
-                                if (maybeLess(fun, strides[k],
-                                              upperBounds[j])) {
-                                    // so it may now be less, that means we must
-                                    // combine `k` with `j`, and then remove
-                                    // `k`.
-                                    b += strides[k];
-                                    upperBounds[j] += upperBounds[k];
-                                    eraseInds.push_back(k);
-                                }
-                            }
-                        }
-                        for (size_t k = 0; k < length(eraseInds); ++k) {
-                            size_t del = eraseInds[length(eraseInds) - 1 - k];
-                            strides.erase(strides.begin() + del);
-                            upperBounds.erase(upperBounds.begin() + del);
-                            recheck.erase(recheck.begin() + del);
-                        }
+			recheckStrides(fun, strides, upperBounds, j);
                         overlaps = true;
                         break;
-                    } else {
-                        // need to recheck because `i`th stride is definitely
-                        // larger than upperBound[j]. recheck[j][j] = true;
-                        upperBoundGreaterOrEqualToStride[j] = true;
                     }
                 }
             }
@@ -793,8 +814,6 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
         if (!overlaps) {
             strides.emplace_back(a, indSrc);
             upperBounds.emplace_back(std::move(ubi));
-            recheck.push_back(std::move(upperBoundGreaterOrEqualToStride));
-            // recheck.push_back(std::bitset<64>());
         }
     }
     // now that strides should be settled, we'll fill the `indToStridemap`
@@ -808,9 +827,53 @@ template <typename L> void partitionStrides(ArrayRef ar, L loopnest) {
     partitionStrides(ar, getUpperbound(loopnest));
 }
 
+bool mayOverlap(Function &fun, ArrayRef &x, ArrayRef &y, size_t i, size_t j){
+    return maybeLess(fun, x.strides[j], y.upperBounds[i]) && maybeLess(fun, y.strides[i], x.upperBounds[j]);
+}
+
+void recheckStrides(Function &fun, std::vector<std::pair<Stride,Stride>> &strides, std::vector<std::pair<Symbol::Affine,Symbol::Affine>> &upperBounds, size_t j){
+    // index `j` has been updated, so check `j` vs all others
+    size_t eraseInds[64];
+    size_t eraseCount;
+    size_t jDec;
+    while (true) {
+	eraseCount = 0;
+	jDec = 0;
+	for (size_t k = 0; k < strides.size(); ++k) {
+	    if (k == j) {
+		continue;
+	    }
+	    // if (recheck[k][j]) {
+	    // means that stride of the `k`th was previously
+	    // >= than `j`th upper bound. We must now check
+	    // if that is still true
+	    if (maybeLess(fun) && maybeLess(fun, )) {
+	    // if (mayOverlap(fun, strides, upperBounds, j, k)) {
+		// so it may now be less, that means we must
+		// combine `k` with `j`, and then remove
+		// `k`.
+		strides[j]     += strides[k];
+		upperBounds[j] += upperBounds[k];
+		eraseInds[++eraseCount] = k;
+		jDec += k < j;
+	    }
+	}
+	for (size_t k = 0; k < eraseCount; ++k) {
+	    size_t del = eraseInds[eraseCount - 1 - k];
+	    strides.erase(strides.begin() + del);
+	    upperBounds.erase(upperBounds.begin() + del);
+	}
+	if ((eraseCount == 0) | (strides.size() <= 1)){ return; }
+	j -= jDec;
+    }
+}
+
+
 template <typename LX, typename LY>
 bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopnestx,
                       Term &ty, ArrayRef &ary, LY &loopnesty) {
+    // If we're here, then the array ref ids were not equal.
+    //
     // What if `tx.loopNestId != ty.loopNestId` ??
     // bool sameLoopNest = tx.loopNestId == ty.loopNestId;
     // If not the same loop nest,
@@ -838,25 +901,92 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopnestx,
     // What matters for checking dependence is what can be reached,
     // NOT what is actually doing the reaching.
     // Hence, we care about strides and their upper bounds.
-
+    
     // First step: match strides
     // for example: x: A(i,j,k), y: A(i,j,j)
     // x strides: [[]*i, [M]*j, [M*N]*k] // 3 strides
     // y strides: [[]*i, [[M] + [M*N]]*j] // 2 strides
     // For comparison, we should get 2 strides:
-    // 1. []:  i       vs i
-    // 2. [M]: j + N*k vs [[] + [N]]*j
+    // 1. []:  i        vs  i
+    // 2. [M]: j + N*k  vs  [[] + [N]]*j
     //
     // Another example to consider:
     // x: A(i,j), y: A(j,i)
-    // 1. i + M*j vs j + M*i // 1 stride
+    // 1. []:  i vs j
+    // 2. [M]: j vs i
     //
-    // Another example:
+    // A simple example (we shouldn't reach here in this case):
     // x: A(i,j), y: A(i,j)
-    // 1. i   vs  i
-    // 2. M*j vs M*j
-    /*
+    // 1. []:  i vs i
+    // 2. [M]: j vs j
     std::vector<std::pair<Stride, Stride>> strideCmp;
+    std::vector<std::pair<Symbol::Affine, Symbol::Affine>> upperBoundCmp;
+    /*
+    std::pair<intptr_t,size_t> foundX[64];
+    std::pair<intptr_t,size_t> foundY[64];
+    for (size_t i = 0; i < 64; ++i){
+	foundX[i] = std::make_pair(-1, std::numeric_limits<size_t>::max());
+	foundY[i] = std::make_pair(-1, std::numeric_limits<size_t>::max());
+    }
+    */
+    intptr_t foundX[64];
+    intptr_t foundY[64];
+    for (size_t i = 0; i < 64; ++i){
+	foundX[i] = -1;
+	foundY[i] = -1;
+    }
+    for (size_t i = 0; i < arx.strides.size(); ++i){
+	for (size_t j = 0; j < ary.strides.size(); ++j){
+	    if (arx.strides[i] == ary.strides[j]){
+		intptr_t pidX = foundX[i];
+		intptr_t pidY = foundY[j];
+		if ((pidX == -1) & (pidY == -1)){
+		    // foundX[i] = std::make_pair(intptr_t(j), strideCmp.size());
+		    // foundY[j] = std::make_pair(intptr_t(i), strideCmp.size());
+		    foundX[i] = strideCmp.size();
+		    foundY[j] = strideCmp.size();
+		    strideCmp.push_back(std::make_pair(arx.strides[i], ary.strides[j]));
+		} else if (pidX == -1){
+		    // pidY gives ind of `X` it previously matched with
+		    foundX[i] = pidY;
+		    strideCmp[pidY].first  += arx.strides[i];
+		    strideCmp[pidY].second += ary.strides[j];
+		    // need to check pidY for conflicts
+		} else if (pidY == -1){
+		    // pidX gives ind of `Y` it previously matched with
+		    foundY[j] = pidX;
+		    strideCmp[pidX].first  += arx.strides[i];
+		    strideCmp[pidX].second += ary.strides[j];
+		    // need to check pidX for conflicts
+		} else if (pidX == pidY){
+		    strideCmp[pidX].first  += arx.strides[i];
+		    strideCmp[pidX].second += ary.strides[j];
+		    // need to check pidX for conflicts
+		} else {
+		    strideCmp[pidX].first  += arx.strides[i];
+		    strideCmp[pidX].second += ary.strides[j];
+		    strideCmp[pidX].first  += strideCmp[pidY].first;
+                    strideCmp[pidX].second += strideCmp[pidY].second;
+                    // need to remove pidY
+		    strideCmp.erase(strideCmp.begin() + pidY);
+		    // need to check pidX for conflicts
+		    
+		}
+		// break;
+	    } else if (mayOverlap(fun, arx, ary, i, j)){
+		// this means that it is not an exact match, and we may need to recondense?
+		intptr_t pidX = foundX[i];
+		intptr_t pidY = foundY[j];
+		foundX[i] = intptr_t(j);
+		foundY[j] = intptr_t(i);
+		
+	    }
+	}
+	if (foundX[i] == -1){
+	    
+	}
+    }
+    /*
     //std::bitset<64> xMatched;
     //std::bitset<64> yMatched;
     std::vector<Int> xMatched(arx.strides.size(), -1);
@@ -964,8 +1094,8 @@ void partitionStrides(IndexDelta &differences, Function &fun, Term &tx,
 
     auto [maxIndx, maxLenx] = findMaxLength(arx.programVariableCombinations);
     auto [maxIndy, maxLeny] = findMaxLength(ary.programVariableCombinations);
-    std::bitset<64> includedx;
-    std::bitset<64> includedy;
+    BitSet64 includedx;
+    BitSet64 includedy;
     // the approach is to initialize it to the longest
     //
     if (maxLenx > maxLeny) {
@@ -1032,7 +1162,7 @@ IndexDelta strideDifference(ArrayRef arx, TX permx, ArrayRef ary, TY permy) {
     // do we really want to match multiple different source objects to the same
     // strides object? if (arx.strideId == ary.strideId){ return
     // strideDifference(stridex, arx, permx, ary, permy); }
-    std::bitset<64> matchedx; // zero initialized by default constructor
+    BitSet64 matchedx; // zero initialized by default constructor
     for (size_t i = 0; i < length(ary.inds); ++i) {
         bool matchFound = false;
         auto [srcIdy, srcTypy] = arx.inds(i);
@@ -1067,15 +1197,10 @@ IndexDelta strideDifference(ArrayRef arx, TX permx, ArrayRef ary, TY permy) {
     return differences;
 };
 
-#if __WORDSIZE == 64
-inline uint64_t to_uint64_t(std::bitset<64> &x) { return x.to_ulong(); }
-#else
-inline uint64_t to_uint64_t(std::bitset<64> &x) { return x.to_ullong(); }
-#endif
 
-std::bitset<64>
+BitSet64
 inductionVariables(std::vector<std::tuple<Int, size_t, SourceType>> &x) {
-    std::bitset<64> m;
+    BitSet64 m;
     for (size_t i = 0; i < length(x); ++i) {
         m[i] = std::get<2>(x[i]) == LOOPINDUCTVAR;
     }
@@ -1099,10 +1224,9 @@ inductionVariables(std::vector<std::tuple<Int, size_t, SourceType>> &x) {
 // Any examples that consider strides?
 //
 // Inputs: fun, diff, x loop index, y loop index.
-std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff,
+BitSet64 accessesIndependent(Function &fun, IndexDelta &diff,
                                     size_t lidx, size_t lidy) {
-    // std::bitset<64> matchedx; // zero initialized
-    std::bitset<64> independent;
+    BitSet64 independent;
     if (!(diff.isStrided & diff.isLinear)) {
         return independent;
     } // give up
@@ -1112,7 +1236,7 @@ std::bitset<64> accessesIndependent(Function &fun, IndexDelta &diff,
         // sources can be arbitrarilly long
         std::vector<std::tuple<Int, size_t, SourceType>> sources =
             diff.diffsByStride[i].second;
-        std::bitset<64> m = inductionVariables(sources);
+        BitSet64 m = inductionVariables(sources);
         switch (m.count()) {
         case 0: // ZIV
 

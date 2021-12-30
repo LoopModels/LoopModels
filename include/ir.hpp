@@ -5,7 +5,6 @@
 #include "./math.hpp"
 #include "./symbolics.hpp"
 #include "./tree.hpp"
-#include "dependencies.hpp"
 #include <bit>
 #include <bitset>
 #include <cstddef>
@@ -1028,7 +1027,7 @@ bool isContiguousReference(Function fun, ArrayRef ar, Array a, size_t level) {
         // contiguous requires:
         // stride mlt of 1, first dim dense
         return (ar.mlt_off_ids(0, 0) == 1) & (a.dense_knownStride(0, 0));
-    case MEMORY:
+    Case MEMORY:
         return false;
     case TERM:
         // Here, we need to parse terms

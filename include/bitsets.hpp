@@ -101,3 +101,22 @@ bool remove(BitSet &s, size_t x) {
     }
     return contained;
 }
+
+// BitSet with length 64
+struct BitSet64{
+    uint64_t u;
+    BitSet64() : u(0) {}
+    BitSet64(uint64_t u) : u(u) {}
+    bool operator[](size_t i){ return (u >> i) != 0; }
+    void set(size_t i){
+	u |= (uint64_t(1) << i);
+	return;
+    }
+    void erase(size_t i){ // erase `i` (0-indexed) and shift all remaining
+	// `i = 5`, then `mLower = 31` (`000...011111`)
+	uint64_t mLower = (uint64_t(1) << i) - 1;
+	uint64_t mUpper = ~mLower; // (`111...100000`)
+	u = (u & mLower) | ((u + mUpper)>>1);
+    }
+};
+
