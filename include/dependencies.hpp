@@ -5,6 +5,7 @@
 #include "./ir.hpp"
 #include "./math.hpp"
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -31,6 +32,7 @@ template <typename T> struct Stride {
 };
 */
 /// gives stridesX - stridesY;
+/*
 struct IndexDelta {
     std::vector<std::pair<Stride<Int>,
                           std::vector<std::tuple<Stride<std::pair<Int, Int>>,
@@ -120,7 +122,8 @@ struct IndexDelta {
         diffsBySource.emplace_back(x);
         return;
     }
-    // std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>&
+    //
+std::tuple<std::vector<std::pair<Vector<size_t,0>,Int>>,size_t,SourceType>&
     // operator[](size_t i){ return diffs[i]; }
 };
 // size_t length(IndexDelta &d){ return d.diffs.size(); }
@@ -171,6 +174,7 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
     }
     return diffs;
 }
+*/
 
 // for (m = 0; m < M; ++m){
 //   for (n = 0; n < N; ++n){
@@ -459,181 +463,10 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // A(i,j,i)
 
 // should be O(N), passing through both arrays just once;
-template <typename T>
-std::vector<T> intersectSortedVectors(Vector<T, 0> x, Vector<T, 0> y) {
-    std::vector<T> z;
-    size_t i = 0;
-    size_t j = 0;
-    while (i < length(x)) {
-        T a = x(i);
-        size_t ca = 1;
-        ++i;
-        while (i < length(x)) {
-            if (x(i) == a) {
-                ++ca;
-                ++i;
-            } else {
-                break;
-            }
-        }
-        // ca is the count of `a` in `x`
-        size_t cb = 0;
-        while (j < length(y)) {
-            T b = y(j);
-            if (b <= a) {
-                if (b == a) {
-                    ++cb;
-                }
-                // if (a == b){ z.push_back(a); }
-                ++j;
-            } else {
-                break;
-            }
-        }
-        size_t c = std::min(ca, cb);
-        for (size_t k = 0; k < c; ++k) {
-            z.push_back(a);
-        }
-    }
-    return z;
-}
-
-template <typename T>
-std::vector<T> intersectSortedVectors(std::vector<T> &z, std::vector<T> &x,
-                                      Vector<T, 0> y) {
-    size_t i = 0;
-    size_t j = 0;
-    while (i < length(x)) {
-        T a = x[i];
-        size_t ca = 1;
-        ++i;
-        while (i < length(x)) {
-            if (x[i] == a) {
-                ++ca;
-                ++i;
-            } else {
-                break;
-            }
-        }
-        // ca is the count of `a` in `x`
-        size_t cb = 0;
-        while (j < length(y)) {
-            T b = y(j);
-            if (b <= a) {
-                if (b == a) {
-                    ++cb;
-                }
-                // if (a == b){ z.push_back(a); }
-                ++j;
-            } else {
-                break;
-            }
-        }
-        size_t c = std::min(ca, cb);
-        for (size_t k = 0; k < c; ++k) {
-            z.push_back(a);
-        }
-    }
-    return z;
-}
-
-template <typename T>
-std::pair<std::vector<T>, std::vector<T>>
-excludeIntersectSortedVectors(Vector<T, 0> x, Vector<T, 0> y) {
-    std::vector<T> zx;
-    std::vector<T> zy;
-    size_t i = 0;
-    size_t j = 0;
-    while (i < length(x)) {
-        T a = x(i);
-        size_t ca = 1;
-        ++i;
-        while (i < length(x)) {
-            if (x(i) == a) {
-                ++ca;
-                ++i;
-            } else {
-                break;
-            }
-        }
-        // ca is the count of `a` in `x`
-        size_t cb = 0;
-        while (j < length(y)) {
-            T b = y(j);
-            if (b < a) {
-                zy.push_back(b); // b not in `x`
-                ++j;
-            } else if (b == a) {
-                ++j;
-                ++cb;
-            } else {
-                break;
-            }
-        }
-        size_t c = std::min(ca, cb);
-        for (size_t k = c; k < ca; ++k) {
-            zx.push_back(a);
-        }
-        for (size_t k = c; k < cb; ++k) {
-            zy.push_back(a);
-        }
-    }
-    return std::make_pair(zx, zy);
-}
-
-std::pair<std::vector<size_t>, Int>
-symbolicGCD(std::vector<std::pair<Vector<size_t, 0>, Int>> a,
-            std::vector<std::pair<Vector<size_t, 0>, Int>> b) {
-    size_t na = length(a);
-    size_t nb = length(b);
-    if ((na == 1) & (nb == 1)) {
-        auto [da, ca] = a[0];
-        auto [db, cb] = b[0];
-        return std::make_pair(intersectSortedVectors(da, db), std::gcd(ca, cb));
-    } else if ((na == 0) | (nb == 0)) {
-        return std::make_pair(std::vector<size_t>(), 1);
-    } else {
-        auto [da, ca] = a[0];
-        auto [db, cb] = b[0];
-        std::vector<size_t> dg = intersectSortedVectors(da, db);
-        std::vector<size_t> temp;
-        Int cg = std::gcd(ca, cb);
-        for (size_t i = 1; i < length(a); ++i) {
-            auto [da, ca] = a[i];
-            intersectSortedVectors(temp, dg, da);
-            std::swap(dg, temp);
-            temp.clear();
-            cg = std::gcd(cg, ca);
-        }
-        return std::make_pair(dg, cg);
-    }
-}
-std::pair<std::vector<std::pair<std::vector<size_t>, Int>>,
-          std::vector<std::pair<std::vector<size_t>, Int>>>
-divByGCD(std::vector<std::pair<Vector<size_t, 0>, Int>> a,
-         std::vector<std::pair<Vector<size_t, 0>, Int>> b) {
-    std::vector<std::pair<std::vector<size_t>, Int>> ga;
-    std::vector<std::pair<std::vector<size_t>, Int>> gb;
-    size_t na = length(a);
-    size_t nb = length(b);
-    if ((na == 1) & (nb == 1)) {
-        auto [da, ca] = a[0];
-        auto [db, cb] = b[0];
-        auto [dadg, dbdg] = excludeIntersectSortedVectors(da, db);
-        Int g = std::gcd(ca, cb);
-        Int cadg = ca / g;
-        Int cbdg = cb / g;
-        ga.emplace_back(std::make_pair(dadg, cadg));
-        gb.emplace_back(std::make_pair(dbdg, cbdg));
-    } else {
-    }
-    return std::make_pair(ga, gb);
-}
-
 Symbol::Affine upperBound(Source indSrc, RektM loopvars) {
     // std::numeric_limits<Int>::max(): not making assumptions on returned
     // value.
-    if (indSrc.typ == LOOPINDUCTVAR) {
+    if (indSrc.typ == LoopInductionVariable) {
         return loopToAffineUpperBound(getCol(loopvars, indSrc.id));
     } else {
         return Symbol::Affine(Symbol(std::numeric_limits<Int>::max()));
@@ -647,46 +480,77 @@ Symbol::Affine upperBound(Source indSrc, RektM loopvars) {
 // only returns true if guaranteed
 
 bool maybeLess(Function &fun, Symbol::Affine &diff) {
-    if (isZero(diff)) {
+    if (diff.isZero()) {
         return false;
     }
-    bool positive = diff.gcd.coef > 0;
-    // here we check if all terms summed in the `diff` are positive.
+    ValueRange r(0);
     for (auto it = diff.terms.begin(); it != diff.terms.end(); ++it) {
-        Symbol &rit = *it;
-        bool itpos = positive == (rit.coef > 0);
-        for (auto s = rit.prodIDs.begin(); s != rit.prodIDs.end(); ++s) {
-            Sign sign = fun.signMap[*s];
-            if (sign == UNKNOWNSIGN) {
-                return true;
+        r += valueRange(fun, *it);
+    }
+    return r.lowerBound < 0;
+}
+bool maybeLess(std::vector<ValueRange> x) {
+    intptr_t lowerBound = 0;
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        lowerBound += it->lowerBound;
+    }
+    return lowerBound < 0;
+}
+
+bool maybeLess(Function &fun, Symbol::Affine &x, Symbol::Affine &y) {
+    /*
+    std::vector<ValueRange> diff;
+    auto itx = x.begin(); auto itxe = x.end();
+    auto ity = y.begin(); auto itye = y.end();
+    while ((itx != itxe) & (ity != itye)) {
+        if ((itx -> prodIDs) == (ity -> prodIDs)){
+            if ((itx -> coef) != (ity -> coef)){
+                intptr_t coefOld = itx -> coef;
+                (itx -> coef) = coefOld - (ity -> coef);
+                diff.push_back(valueRange(fun, *itx));
+                (itx -> coef) = coefOld;
             }
-            itpos = (itpos == ((sign == POSITIVE) | (sign == NONNEGATIVE)));
-        }
-        if (!itpos) {
-            return true;
+            ++itx;
+            ++ity;
+        } else if (lexicographicalLess(*itx, *ity)){
+
+            ++itx;
+        } else {
+
+            ++ity;
         }
     }
-    return false;
-}
-bool maybeLess(Function &fun, Symbol::Affine &x, Symbol::Affine &y) {
+    // clean up x
+    for (; itx != itxe; ++itx){
+
+    }
+    // clean up y
+    for (; ity != itye; ++ity){
+
+    }
+    */
+    // TODO: improve on this, by taking advantage of the cached difference info
     Symbol::Affine diff = x - y;
     return maybeLess(fun, diff);
 }
+/*
 bool maybeLess(Function &fun, Symbol::Affine &&x, Symbol::Affine &y) {
     x -= y;
     return maybeLess(fun, x);
 }
+*/
 bool maybeLess(Function &fun, Stride &x, Symbol::Affine &y) {
     for (auto it = x.stride.begin(); it != x.stride.end(); ++it) {
-        if (maybeLess(fun, std::get<0>(*it) * x.gcd, y)) {
+        if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
         }
     }
     return false;
 }
 
-void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, size_t i) {
-    Source src = std::get<1>(ar.inds[i]);
+template <typename I>
+void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, I itsrc) {
+    Source src = std::get<1>(*itsrc);
     for (size_t j = 0; j < strides.size(); ++j) {
         Stride &s = strides[j];
         for (auto it = s.stride.begin(); it != s.stride.end(); ++it) {
@@ -765,8 +629,9 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<BitSet64> recheck(Ninds);
     // std::vector<BitSet64> recheck; recheck.reserve(Ninds);
     // std::vector<size_t> recheck;
-    for (size_t i = 0; i < Ninds; ++i) {
-        std::pair<Symbol::Affine, Source> ind = ar.inds[i];
+    auto ite = ar.inds.end();
+    for (auto it = ar.inds.begin(); it != ite; ++it) {
+        std::pair<Symbol::Affine, Source> ind = *it;
         Symbol::Affine &a = std::get<0>(ind);
         Source indSrc = std::get<1>(ind);
 
@@ -790,7 +655,7 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
             // miss some cases that would've been legal.
             //
             // We require every stride to be larger than the upper bound
-            if (indSrc.typ != LOOPINDUCTVAR) {
+            if (indSrc.typ != LoopInductionVariable) {
                 if (maybeLess(fun, b, ubi)) {
                     // if !, then `b` definitely >= than `ubi`
                     // we require the stride to be larger than the sum of the
@@ -821,8 +686,8 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
         }
     }
     // now that strides should be settled, we'll fill the `indToStridemap`
-    for (size_t i = 0; i < Ninds; ++i) {
-        pushMatchingStride(ar, strides, i);
+    for (auto it = ar.inds.begin(); it != ite; ++it) {
+        pushMatchingStride(ar, strides, it);
     }
     return;
 }
@@ -897,8 +762,8 @@ void recheckStrides(
     }
 }
 
-std::vector<std::pair<Stride, Stride>>
-strideComparison(Function &fun, ArrayRef &arx, ArrayRef &ary) {
+std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
+                                                   ArrayRef &ary) {
     // If we're here, then the array ref ids were not equal.
     //
     // What if `tx.loopNestId != ty.loopNestId` ??
@@ -1032,30 +897,90 @@ strideComparison(Function &fun, ArrayRef &arx, ArrayRef &ary) {
     return strideCmp;
 }
 
+enum DependenceType { Independent, LoopIndependent, LoopCarried };
+
+ValueRange differenceRange(Function &fun, Symbol::Affine &&x) {
+    ValueRange r(0);
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        r += valueRange(fun, *it);
+    }
+    return r;
+}
+ValueRange differenceRange(Function &fun, Symbol::Affine &x,
+                           Symbol::Affine &y) {
+    return differenceRange(fun, x - y);
+}
+
+DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
+    if ((x.stride == y.stride)) {
+        // both same constant
+        return LoopIndependent;
+    }
+    Stride d = x - y;
+    ValueRange r(0);
+    for (auto it = d.begin(); it != d.end(); ++it) {
+        r += differenceRange(fun, Symbol::Affine & x, Symbol::Affine & y)
+    }
+    if ((r.lowerBound == 0) & (r.upperBound == 0)) {
+        return LoopIndependent;
+    }
+    if ((r.lowerBound <= 0) & (r.upperBound >= 0)) {
+        return LoopCarried;
+    } else {
+        return Independent;
+    }
+}
 template <typename LX, typename LY>
-bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopnestx,
-                      Term &ty, ArrayRef &ary, LY &loopnesty) {
+DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
+                                           LX loopNestX, LY loopNestY) {
+    return LoopCarried;
+}
+template <typename LX, typename LY>
+DependenceType multipleInductionVariableTest(Function &fun, Stride &x,
+                                             Stride &y, LX loopNestX,
+                                             LY loopNestY) {
+    return LoopCarried;
+}
 
-    std::vector<std::pair<Stride, Stride>> strideCmp =
-        strideComparison(fun, arx, ary);
+template <typename LX, typename LY>
+bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
+                      Term &ty, ArrayRef &ary, LY &loopNestY) {
 
-    for (size_t i = 0; i < strideCmp.size(); ++i) {
-        auto [sx, sy] = strideCmp[i];
-        SourceCount scx = sourceCount(sx);
-        SourceCount scy = sourceCount(sy);
-        size_t numLoopInductVar =
-            std::max(scx.loopInductVar, scy.loopInductVar);
-        if (scx.isAffine() & scy.isAffine()) {
+    std::vector<std::pair<Stride, Stride>> stridePairs =
+        pairStrides(fun, arx, ary);
+
+    for (size_t i = 0; i < stridePairs.size(); ++i) {
+        auto [sx, sy] = stridePairs[i];
+        // SourceCount scx = sourceCount(sx);
+        // SourceCount scy = sourceCount(sy);
+        size_t numLoopInductVar = std::max(sx.getCount(LoopInductionVariable),
+                                           sy.getCount(LoopInductionVariable));
+        // std::max(scx.loopInductVar, scy.loopInductVar);
+        if (sx.isAffine() & sy.isAffine()) {
             switch (numLoopInductVar) {
-            case 0: // SIV
+            case 0: // ZIV
+                zeroInductionVariableTest(fun, sx, sy);
                 break;
-            case 1: // ZIV
+            case 1: // SIV
+                singleInductionVariableTest(fun, sx, sy, loopNestX, loopNestY);
                 break;
             default: // MIV
+                multipleInductionVariableTest(fun, sx, sy, loopNestX,
+                                              loopNestY);
                 break;
             }
+        } else {
+            // we check if they're equal?
+            // but if they are equal, what does that tell us?
+            // that on any particular iteration, the values are identical.
+            // This is useful -- shows us that they're the same on a particular
+            // iteration and thus should be noted. But it is not enough, as it
+            // won't rule out loop carried dependencies.
+
+            ;
         }
     }
+
     /*
     //std::bitset<64> xMatched;
     //std::bitset<64> yMatched;

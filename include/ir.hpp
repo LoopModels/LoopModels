@@ -364,47 +364,90 @@ template <typename T> size_t length(VoVoV<T> x) {
 struct Stride {
     std::vector<std::pair<Symbol::Affine, Source>>
         stride; // sources must be ordered
-    Stride() = default;
+    size_t counts[5];
+    // size_t constCount;
+    // size_t indCount;
+    // size_t memCount;
+    // size_t termCount;
+    Stride()
+        : stride(std::vector<std::pair<Symbol::Affine, Source>>()), counts{
+                                                                        0, 0, 0,
+                                                                        0,
+                                                                        0} {};
     Stride(Symbol::Affine &x, Source &&ind)
-        : stride({std::make_pair(x, std::move(ind))}){};
+        : stride({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
     Stride(Symbol::Affine &x, size_t indId, SourceType indTyp)
-        : stride({std::make_pair(x, Source(indId, indTyp))}){};
+        : stride({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
+                                                                     0} {};
 
+    size_t getCount(SourceType i) { return counts[i + 1] - counts[i]; }
+    size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return stride.begin(); }
     inline auto end() { return stride.end(); }
+    inline auto begin(SourceType i) { return stride.begin() + counts[i]; }
+    inline auto end(SourceType i) { return stride.begin() + counts[i + 1]; }
+    inline auto begin(Source i) { return begin(i.typ); }
+    inline auto end(Source i) { return end(i.typ); }
+    inline size_t size() { return stride.size(); }
+
+    void addTyp(SourceType t) {
+        // Clang goes extremely overboard vectorizing loops with dynamic length
+        // even if it should be statically inferrable that num iterations <= 4
+        // thus, static length + masking is preferable.
+        // GCC also seems to prefer this.
+        // https://godbolt.org/z/Pcxd6jre7
+        for (size_t i = 0; i < 4; ++i) {
+            counts[i + 1] += (t <= i);
+        }
+    }
+    void remTyp(SourceType t) {
+        for (size_t i = 0; i < 4; ++i) {
+            counts[i + 1] -= (t <= i);
+        }
+    }
+    void addTyp(Source t) { addTyp(t.typ); }
+    void remTyp(Source t) { remTyp(t.typ); }
 
     template <typename A, typename I> void add_term(A &&x, I &&ind) {
-        for (auto it = stride.begin(); it != stride.end(); ++it) {
+        auto ite = end();
+        for (auto it = begin(ind); it != ite; ++it) {
             if (ind == (*it).second) {
-                (*it).first += x;
-                if ((*it).first.isZero()) {
+                (it->first) += x;
+                if ((it->first).isZero()) {
+                    remTyp(ind);
                     stride.erase(it);
                 }
                 return;
-            } else if (ind < (*it).second) {
+            } else if (ind < (it->second)) {
+                addTyp(ind);
                 stride.insert(it, std::make_pair(std::forward<A>(x),
                                                  std::forward<I>(ind)));
                 return;
             }
         }
+        addTyp(ind);
         stride.push_back(
             std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
         return;
     }
     template <typename A, typename I> void sub_term(A &&x, I &&ind) {
-        for (auto it = stride.begin(); it != stride.end(); ++it) {
-            if (ind == (*it).second) {
-                (*it).first -= x;
-                if ((*it).first.isZero()) {
+        auto ite = end();
+        for (auto it = begin(ind); it != ite; ++it) {
+            if (ind == (it->second)) {
+                (it->first) -= x;
+                if ((it->first).isZero()) {
+                    remTyp(ind);
                     stride.erase(it);
                 }
                 return;
-            } else if (ind < (*it).second) {
+            } else if (ind < (it->second)) {
+                addTyp(ind);
                 stride.insert(it, std::make_pair(negate(std::forward<A>(x)),
                                                  std::forward<I>(ind)));
                 return;
             }
         }
+        addTyp(ind);
         stride.push_back(
             std::make_pair(negate(std::forward<A>(x)), std::forward<I>(ind)));
         return;
@@ -428,6 +471,9 @@ struct Stride {
         for (auto it = begin(); it != end(); ++it) {
             s.stride.push_back(*it); // copy initial batch
         }
+        for (size_t i = 1; i < 5; ++i) {
+            s.counts[i] = counts[i];
+        }
         return s;
     }
 
@@ -448,25 +494,20 @@ struct Stride {
     bool isConstant() {
         size_t n0 = stride.size();
         if (n0) {
-            return stride[n0 - 1].second.typ == CONSTANT;
+            return stride[n0 - 1].second.typ == ConstantSource;
         } else {
             return true;
         }
     }
     // takes advantage of sorting
-    bool isAffine() {
-        size_t n0 = stride.size();
-        if (n0) {
-            return stride[n0 - 1].second.typ <= LOOPINDUCTVAR;
-        } else {
-            return true;
-        }
-    }
+    bool isAffine() { return counts[2] == counts[4]; }
+
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;
     // }
 };
+/*
 SourceCount sourceCount(Stride s) {
     SourceCount x;
     for (auto it = s.stride.begin(); it != s.stride.end(); ++it) {
@@ -474,6 +515,7 @@ SourceCount sourceCount(Stride s) {
     }
     return x;
 }
+*/
 
 struct ArrayRef {
     size_t arrayId;
@@ -652,7 +694,15 @@ struct FastCostSummary {
 typedef Vector<FastCostSummary, 0> FastCostSummaries;
 
 constexpr Int UNSET_COST = -1;
-enum Sign { NEGATIVE, POSITIVE, NONNEGATIVE, NONPOSITIVE, UNKNOWNSIGN };
+// Bits: UnknownSign(000), NoSign(001), Positive(010), NonNegative(011),
+// Negative(100), NonPositive(101) enum Sign { UnknownSign, NoSign, Positive,
+// NonNegative, Negative, NonPositive };
+
+// Bits: InvalidOrder(000), EqualTo(001), LessThan(010), LessOrEqual(011),
+// GreaterThan(100), GreaterOrEqual(101), NotEqual(110), UnknownOrder(111) Bits:
+// EqualTo(000), LessThan(001), Greater, LessOrEqual(00), LessOrEqual(011),
+// GreaterThan(100), GreaterOrEqual(101) enum Order { UnknownOrder, EqualTo,
+// LessThan, LessOrEqual, GreaterThan, GreaterOrEqual };
 
 struct Function {
     Vector<Term, 0> terms;
@@ -671,7 +721,11 @@ struct Function {
     Vector<Vector<Int, 0>, 0> triloopcache;
     std::vector<std::vector<std::pair<size_t, size_t>>> arrayReadsToTermMap;
     std::vector<std::vector<std::pair<size_t, size_t>>> arrayWritesToTermMap;
-    std::vector<Sign> signMap; // vector of length num_program_variables
+    std::vector<ValueRange> rangeMap; // vector of length num_program_variables
+    std::vector<std::vector<ValueRange>>
+        diffMap; // comparisons, e.g. x - y via orderMap[x][y]; maybe we don't
+                 // know anything about `x` or `y` individually, but do know `x
+                 // - y > 0`.
     size_t ne;
     // char *data;
 
@@ -707,6 +761,32 @@ struct Function {
         arrayReadsToTermMap.resize(numArrays);
         arrayWritesToTermMap.resize(numArrays);
     }
+};
+
+ValueRange valueRange(Function &fun, size_t id) { return fun.rangeMap[id]; }
+ValueRange valueRange(Function &fun, Symbol &x) {
+    ValueRange p = ValueRange(x.coef);
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        p *= fun.rangeMap[*it];
+    }
+    return p;
+}
+ValueRange valueRange(Function &fun, Symbol::Affine &x) {
+    ValueRange a(0);
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        a += valueRange(fun, *it);
+    }
+    return a;
+}
+
+Order cmpZero(intptr_t x) {
+    return x ? (x > 0 ? GreaterThan : LessThan) : EqualTo;
+}
+Order cmpZero(Function &fun, size_t id) {
+    return valueRange(fun, id).compare(0);
+}
+Order cmpZero(Function &fun, Symbol &x) {
+    return valueRange(fun, x).compare(0);
 };
 
 // std::pair<ArrayRef, ArrayRefStrides> getArrayRef(Function fun, size_t id) {
@@ -794,10 +874,10 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     for (size_t i = 0; i < length(t.srcs); ++i) {
         auto [srcId, srcTyp] = t.srcs[i];
         switch (srcTyp) {
-        case MEMORY:
+        case MemorySource:
             push(tb.loads, srcId);
             break;
-        case TERM:
+        case TermSource:
             push(tb.srcTerms, srcId);
             push(tb.srcTermsDirect, srcId);
             break;
@@ -817,10 +897,10 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     for (size_t i = 0; i < length(t.dsts); ++i) {
         auto [dstId, dstTyp] = t.dsts[i];
         switch (dstTyp) {
-        case MEMORY:
+        case MemorySource:
             push(tb.stores, dstId);
             break;
-        case TERM:
+        case TermSource:
             push(tb.dstTerms, dstId);
             push(tb.dstTermsDirect, dstId);
             break;

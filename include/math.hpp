@@ -11,22 +11,29 @@
 #include <vector>
 
 // enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
-enum SourceType { CONSTANT, LOOPINDUCTVAR, MEMORY, TERM };
+//   Bits:            00               01                   10            11
+enum SourceType {
+    ConstantSource,
+    LoopInductionVariable,
+    MemorySource,
+    TermSource
+};
 
 std::string toString(SourceType s) {
     switch (s) {
-    case MEMORY:
-        return "Memory";
-    case TERM:
-        return "Term";
-    case CONSTANT:
+    case ConstantSource:
         return "Constant";
-    case LOOPINDUCTVAR:
+    case LoopInductionVariable:
         return "Induction Variable";
-    // case WTR:
-    //     return "Write then read";
-    // case RTW: // dummy SourceType for indicating a relationship; not lowered
-    //     return "Read then write";
+    case MemorySource:
+        return "Memory";
+    case TermSource:
+        return "Term";
+        // case WTR:
+        //     return "Write then read";
+        // case RTW: // dummy SourceType for indicating a relationship; not
+        // lowered
+        //     return "Read then write";
         // default:
         //     assert("Unreachable reached; invalid SourceType.");
         //     return "";
@@ -38,42 +45,43 @@ struct Source {
     SourceType typ;
     Source(size_t srcId, SourceType srcTyp) : id(srcId), typ(srcTyp) {}
     bool operator==(Source x) { return (id == x.id) & (typ == x.typ); }
-    bool operator<(Source x){ return (typ < x.typ) | ((typ == x.typ) & (id < x.id)); }
+    bool operator<(Source x) {
+        return (typ < x.typ) | ((typ == x.typ) & (id < x.id));
+    }
 };
 
+/*
 struct SourceCount{
     size_t memory;
     size_t term;
     size_t constant;
     size_t loopInductVar;
     size_t total;
-    SourceCount() : memory(0), term(0), constant(0), loopInductVar(0), total(0) {}
-    SourceCount& operator+=(SourceType s){
-	switch (s) {
-	case MEMORY:
-	    memory += 1;
-	    break;
-	case TERM:
-	    term += 1;
-	    break;
-	case CONSTANT:
-	    constant += 1;
-	    break;
-	case LOOPINDUCTVAR:
-	    loopInductVar += 1;
-	    break;
-	}
-	total += 1;
-	return *this;
+    SourceCount() : memory(0), term(0), constant(0), loopInductVar(0), total(0)
+{} SourceCount& operator+=(SourceType s){ switch (s) { case ConstantSource:
+            constant += 1;
+            break;
+        case LoopInductionVariable:
+            loopInductVar += 1;
+            break;
+        case MemorySource:
+            memory += 1;
+            break;
+        case TermSource:
+            term += 1;
+            break;
+        }
+        total += 1;
+        return *this;
     }
     SourceCount& operator+=(Source &s){
-	return *this += s.typ;
+        return *this += s.typ;
     }
     bool isAffine(){
-	return (memory == 0) & (term == 0);
+        return (memory == 0) & (term == 0);
     }
 };
-
+*/
 
 const size_t MAX_NUM_LOOPS = 16;
 const size_t MAX_PROGRAM_VARIABLES = 32;

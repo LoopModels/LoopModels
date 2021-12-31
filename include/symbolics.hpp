@@ -1,5 +1,6 @@
 #include "math.hpp"
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -154,6 +155,10 @@ struct Symbol {
 bool lexicographicalLess(Symbol &x, Symbol &y) {
     return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
 }
+std::strong_ordering lexicographicalCmp(Symbol &x, Symbol &y) {
+    return std::lexicographical_compare_three_way(x.begin(), x.end(), y.begin(),
+                                                  y.end());
+}
 
 std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol &x, Symbol &y) {
     Symbol g, a, b;
@@ -231,9 +236,9 @@ struct Symbol::Affine {
 
     template <typename S> void add_term(S &&x) {
         for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if ((*it).prodIDs == x.prodIDs) {
-                (*it).coef += x.coef;
-                if ((*it).coef == 0) {
+            if ((it->prodIDs) == x.prodIDs) {
+                (it->coef) += x.coef;
+                if ((it->coef) == 0) {
                     terms.erase(it);
                 }
                 return;
@@ -247,9 +252,9 @@ struct Symbol::Affine {
     }
     template <typename S> void sub_term(S &&x) {
         for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if ((*it).prodIDs == x.prodIDs) {
-                (*it).coef -= x.coef;
-                if ((*it).coef == 0) {
+            if ((it->prodIDs) == x.prodIDs) {
+                (it->coef) -= x.coef;
+                if ((it->coef) == 0) {
                     terms.erase(it);
                 }
                 return;
@@ -503,3 +508,103 @@ struct Strides {
     std::vector<size_t> loopInductVars;
 };
 */
+
+std::intptr_t addWithOverflow(intptr_t x, intptr_t y) {
+    intptr_t z;
+    if (__builtin_add_overflow(x, y, &z)) {
+        z = std::numeric_limits<intptr_t>::max();
+    }
+    return z;
+}
+std::intptr_t subWithOverflow(intptr_t x, intptr_t y) {
+    intptr_t z;
+    if (__builtin_sub_overflow(x, y, &z)) {
+        z = std::numeric_limits<intptr_t>::min();
+    }
+    return z;
+}
+std::intptr_t mulWithOverflow(intptr_t x, intptr_t y) {
+    intptr_t z;
+    if (__builtin_mul_overflow(x, y, &z)) {
+        if ((x > 0) ^ (y > 0)) { // wouldn't overflow if `x` or `y` were `0`
+            z = std::numeric_limits<intptr_t>::min(); // opposite sign
+        } else {
+            z = std::numeric_limits<intptr_t>::max(); // same sign
+        }
+    }
+    return z;
+}
+
+enum Order {
+    InvalidOrder,
+    EqualTo,
+    LessThan,
+    LessOrEqual,
+    GreaterThan,
+    GreaterOrEqual,
+    NotEqual,
+    UnknownOrder
+};
+auto maybeEqual(Order o) { return o & 1; }
+auto maybeLess(Order o) { return o & 2; }
+auto maybeGreater(Order o) { return o & 4; }
+struct ValueRange {
+    intptr_t lowerBound;
+    intptr_t upperBound;
+    ValueRange(intptr_t x) : lowerBound(x), upperBound(x) {}
+    ValueRange(intptr_t l, intptr_t u) : lowerBound(l), upperBound(u) {}
+    ValueRange(const ValueRange &x)
+        : lowerBound(x.lowerBound), upperBound(x.upperBound) {}
+    ValueRange &operator=(const ValueRange &x) = default;
+    bool isKnown() { return lowerBound == upperBound; }
+    bool operator<(ValueRange x) { return upperBound < x.lowerBound; }
+    Order compare(ValueRange x) {
+        // return upperBound < x.lowerBound;
+        if (isKnown() & x.isKnown()) {
+            return upperBound == x.upperBound ? EqualTo : NotEqual;
+        }
+        if (upperBound < x.lowerBound) {
+            return LessThan;
+        } else if (upperBound == x.lowerBound) {
+            return LessOrEqual;
+        } else if (lowerBound > x.upperBound) {
+            return GreaterThan;
+        } else if (lowerBound == x.upperBound) {
+            return GreaterOrEqual;
+        } else {
+            return UnknownOrder;
+        }
+    }
+    Order compare(intptr_t x) { return compare(ValueRange{x, x}); }
+    ValueRange &operator+=(ValueRange x) {
+        lowerBound = addWithOverflow(lowerBound, x.lowerBound);
+        upperBound = addWithOverflow(upperBound, x.upperBound);
+        return *this;
+    }
+    ValueRange &operator-=(ValueRange x) {
+        lowerBound = subWithOverflow(lowerBound, x.upperBound);
+        upperBound = subWithOverflow(upperBound, x.lowerBound);
+        return *this;
+    }
+    ValueRange &operator*=(ValueRange x) {
+        intptr_t a = mulWithOverflow(lowerBound, x.lowerBound);
+        intptr_t b = mulWithOverflow(lowerBound, x.upperBound);
+        intptr_t c = mulWithOverflow(upperBound, x.lowerBound);
+        intptr_t d = mulWithOverflow(upperBound, x.upperBound);
+        lowerBound = std::min(std::min(a, b), std::min(c, d));
+        upperBound = std::max(std::max(a, b), std::max(c, d));
+        return *this;
+    }
+    ValueRange operator+(ValueRange x) {
+        ValueRange y(*this);
+        return y += x;
+    }
+    ValueRange operator-(ValueRange x) {
+        ValueRange y(*this);
+        return y -= x;
+    }
+    ValueRange operator*(ValueRange x) {
+        ValueRange y(*this);
+        return y *= x;
+    }
+};
