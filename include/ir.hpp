@@ -360,88 +360,120 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 // Gives the part of an ArrayRef that is a function of the induction variables.
 
+// Stride terms are sorted based on Source
 struct Stride {
-    Symbol gcd;
-    std::vector<std::pair<Symbol::Affine, Source>> stride; // sources must be ordered
+    std::vector<std::pair<Symbol::Affine, Source>>
+        stride; // sources must be ordered
     Stride() = default;
-    Stride(Symbol gcd) : gcd(gcd), stride(std::vector<std::pair<Symbol::Affine, Source>>()) {}
-    Stride(Symbol::Affine x, Source &&ind)
-        : gcd(x.gcd),
-          stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms), ind)}){};
-    Stride(Symbol::Affine x, size_t indId, SourceType indTyp)
-        : gcd(x.gcd), stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms),
-                                             Source(indId, indTyp))}){};
+    Stride(Symbol::Affine &x, Source &&ind)
+        : stride({std::make_pair(x, std::move(ind))}){};
+    Stride(Symbol::Affine &x, size_t indId, SourceType indTyp)
+        : stride({std::make_pair(x, Source(indId, indTyp))}){};
 
-    template<typename A, typename I>
-    void add_term(A&& x, I&& ind) {
-	for (auto it = stride.begin(); it != stride.end(); ++it) {
-	    if (ind == (*it).second){
-		(*it).first += x;
-		if ((*it).first.gcd.coef == 0){
-		    stride.erase(it); // FIXME: gcd may now need updating ???
-		}
-		return;
-	    } else if (ind < (*it).second){
-		stride.insert(it, std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
-		return;
-	    }
-	}
-        stride.push_back(std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
+    inline auto begin() { return stride.begin(); }
+    inline auto end() { return stride.end(); }
+
+    template <typename A, typename I> void add_term(A &&x, I &&ind) {
+        for (auto it = stride.begin(); it != stride.end(); ++it) {
+            if (ind == (*it).second) {
+                (*it).first += x;
+                if ((*it).first.isZero()) {
+                    stride.erase(it);
+                }
+                return;
+            } else if (ind < (*it).second) {
+                stride.insert(it, std::make_pair(std::forward<A>(x),
+                                                 std::forward<I>(ind)));
+                return;
+            }
+        }
+        stride.push_back(
+            std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
+        return;
+    }
+    template <typename A, typename I> void sub_term(A &&x, I &&ind) {
+        for (auto it = stride.begin(); it != stride.end(); ++it) {
+            if (ind == (*it).second) {
+                (*it).first -= x;
+                if ((*it).first.isZero()) {
+                    stride.erase(it);
+                }
+                return;
+            } else if (ind < (*it).second) {
+                stride.insert(it, std::make_pair(negate(std::forward<A>(x)),
+                                                 std::forward<I>(ind)));
+                return;
+            }
+        }
+        stride.push_back(
+            std::make_pair(negate(std::forward<A>(x)), std::forward<I>(ind)));
         return;
     }
 
     Stride &operator+=(Stride x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        for (size_t i = 0; i < stride.size(); ++i) {
-            std::get<0>(stride[i]) *= a;
-        }
-        for (size_t i = 0; i < x.stride.size(); ++i) {
-            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            add_term(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
     Stride &operator-=(Stride x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        for (size_t i = 0; i < stride.size(); ++i) {
-            std::get<0>(stride[i]) *= a;
-        }
-	b.coef *= -1;
-        for (size_t i = 0; i < x.stride.size(); ++i) {
-            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            sub_term(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
-    
-    Stride operator-(Stride x){
-	auto [g, a, b] = gcdm(gcd, x.gcd);
-	Stride y(g);
-	y.stride.reserve(std::max(stride.size(), x.stride.size()));
-
-	for (size_t i = 0; i < stride.size(); ++i) {
-            std::get<0>(stride[i]) *= a;
+    Stride largerCapacityCopy(size_t i) {
+        Stride s;
+        s.stride.reserve(i + stride.size()); // reserve full size
+        for (auto it = begin(); it != end(); ++it) {
+            s.stride.push_back(*it); // copy initial batch
         }
-        for (size_t i = 0; i < x.stride.size(); ++i) {
-            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
-        }
-	
-	return y;
+        return s;
     }
 
-    bool operator==(Stride x) { return (gcd == x.gcd) && (stride == x.stride); }
-    bool operator!=(Stride x) { return (gcd != x.gcd) || (stride != x.stride); }
+    Stride operator+(Stride x) {
+        Stride y = largerCapacityCopy(x.stride.size());
+        y += x;
+        return y;
+    }
+    Stride operator-(Stride x) {
+        Stride y = largerCapacityCopy(x.stride.size());
+        y -= x;
+        return y;
+    }
+
+    bool operator==(Stride x) { return (stride == x.stride); }
+    bool operator!=(Stride x) { return (stride != x.stride); }
+
+    bool isConstant() {
+        size_t n0 = stride.size();
+        if (n0) {
+            return stride[n0 - 1].second.typ == CONSTANT;
+        } else {
+            return true;
+        }
+    }
+    // takes advantage of sorting
+    bool isAffine() {
+        size_t n0 = stride.size();
+        if (n0) {
+            return stride[n0 - 1].second.typ <= LOOPINDUCTVAR;
+        } else {
+            return true;
+        }
+    }
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;
     // }
 };
-SourceCount sourceCount(Stride s){
+SourceCount sourceCount(Stride s) {
     SourceCount x;
-    for (auto it = s.stride.begin(); it != s.stride.end(); ++it){
-	x += (*it).second;
+    for (auto it = s.stride.begin(); it != s.stride.end(); ++it) {
+        x += (*it).second;
     }
     return x;
 }
-
 
 struct ArrayRef {
     size_t arrayId;
@@ -769,15 +801,15 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
             push(tb.srcTerms, srcId);
             push(tb.srcTermsDirect, srcId);
             break;
-        case WTR: // this is the read, so write is src
-            push(tb.srcTerms, lowerHalf(srcId));
-            push(tb.loads, secondQuarter(srcId));
-            tb.WTRs.insert(srcId);
-            break;
-        case RTW: // this is the read, so write is dst
-            push(tb.dstTerms, lowerHalf(srcId));
-            push(tb.loads, firstQuarter(srcId));
-            // tb.RTWs.insert(srcId);
+        // case WTR: // this is the read, so write is src
+        //     push(tb.srcTerms, lowerHalf(srcId));
+        //     push(tb.loads, secondQuarter(srcId));
+        //     tb.WTRs.insert(srcId);
+        //     break;
+        // case RTW: // this is the read, so write is dst
+        //     push(tb.dstTerms, lowerHalf(srcId));
+        //     push(tb.loads, firstQuarter(srcId));
+        //     // tb.RTWs.insert(srcId);
         default:
             break;
         }
@@ -792,15 +824,15 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
             push(tb.dstTerms, dstId);
             push(tb.dstTermsDirect, dstId);
             break;
-        case WTR: // this is the write, so read is dst
-            push(tb.dstTerms, lowerHalf(dstId));
-            push(tb.stores, firstQuarter(dstId));
-            break;
-        case RTW: // this is the write, so read is src
-            push(tb.srcTerms, lowerHalf(dstId));
-            push(tb.stores, secondQuarter(dstId));
-            tb.RTWs.insert(dstId);
-            break;
+        // case WTR: // this is the write, so read is dst
+        //     push(tb.dstTerms, lowerHalf(dstId));
+        //     push(tb.stores, firstQuarter(dstId));
+        //     break;
+        // case RTW: // this is the write, so read is src
+        //     push(tb.srcTerms, lowerHalf(dstId));
+        //     push(tb.stores, secondQuarter(dstId));
+        //     tb.RTWs.insert(dstId);
+        //     break;
         default:
             break;
         }

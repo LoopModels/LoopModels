@@ -1,4 +1,5 @@
 #include "math.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -21,7 +22,9 @@ struct Symbol {
     Symbol() : prodIDs(std::vector<size_t>()), coef(0){};
     Symbol(intptr_t coef) : prodIDs(std::vector<size_t>()), coef(coef){};
 
-    Symbol operator*(Symbol x) {
+    inline auto begin() { return prodIDs.begin(); }
+    inline auto end() { return prodIDs.end(); }
+    Symbol operator*(Symbol &x) {
         Symbol r;
         r.coef = coef * x.coef;
         // prodIDs are sorted, so we can create sorted product in O(N)
@@ -41,14 +44,14 @@ struct Symbol {
         }
         return r;
     }
-    Symbol &operator*=(Symbol x) {
+    Symbol &operator*=(Symbol &x) {
         coef *= x.coef;
         // optimize the length 0 and 1 cases.
-        if (length(x.prodIDs) == 0) {
+        if (x.prodIDs.size() == 0) {
             return *this;
-        } else if (length(x.prodIDs) == 1) {
+        } else if (x.prodIDs.size() == 1) {
             size_t y = x.prodIDs[0];
-            for (auto it = prodIDs.begin(); it != prodIDs.end(); ++it) {
+            for (auto it = begin(); it != end(); ++it) {
                 if (y < *it) {
                     prodIDs.insert(it, y);
                     return *this;
@@ -57,9 +60,34 @@ struct Symbol {
             prodIDs.push_back(y);
             return *this;
         }
-        // lazy implementation for length > 1. TODO: optimize this.
-        prodIDs = ((*this) * x).prodIDs;
+        size_t n0 = prodIDs.size();
+        size_t n1 = x.prodIDs.size();
+        prodIDs.reserve(n0 + n1); // reserve capacity, to prevent invalidation
+        auto ix = x.begin();
+        auto ixe = x.end();
+        if (n0) {
+            auto it = begin();
+            while (ix != ixe) {
+                if (*ix < *it) {
+                    prodIDs.insert(it, *ix); // increments `end()`
+                    ++it;
+                    ++ix;
+                } else {
+                    ++it;
+                    if (it == end()) {
+                        break;
+                    }
+                }
+            }
+        }
+        for (; ix != ixe; ++ix) {
+            prodIDs.push_back(*ix);
+        }
         return *this;
+    }
+    Symbol operator*(Symbol &&x) {
+        x *= (*this);
+        return x;
     }
     bool operator==(Symbol x) {
         if (coef != x.coef) {
@@ -73,9 +101,10 @@ struct Symbol {
         }
         return prodIDs != x.prodIDs;
     }
+
     struct Affine;
-    Affine operator+(Symbol x);
-    Affine operator-(Symbol x);
+    template <typename S> Affine operator+(S &&x);
+    template <typename S> Affine operator-(S &&x);
     /*
     std::pair<Symbol, Symbol> operator/(Symbol x) {
         Symbol d;
@@ -114,11 +143,19 @@ struct Symbol {
         return std::make_pair(d, r);
         }
     */
+    bool isZero() { return coef == 0; }
+    bool isOne() { return (coef == 0) & (prodIDs.size() == 0); }
+    Symbol &negate() {
+        coef *= -1;
+        return *this;
+    }
 };
 
-// bool sameSym(Symbol x, Symbol y){ return x.prodIDs == y.prodIDs; }
+bool lexicographicalLess(Symbol &x, Symbol &y) {
+    return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
+}
 
-std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol x, Symbol y) {
+std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol &x, Symbol &y) {
     Symbol g, a, b;
     intptr_t c = std::gcd(x.coef, y.coef);
     g.coef = c;
@@ -149,177 +186,242 @@ std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol x, Symbol y) {
     return std::make_tuple(g, a, b);
 }
 
+std::tuple<Symbol, std::vector<Symbol>> gcdm(std::vector<Symbol> &x) {
+    switch (x.size()) {
+    case 0:
+        return std::tuple<Symbol, std::vector<Symbol>>(Symbol(0), x);
+    case 1:
+        return std::tuple<Symbol, std::vector<Symbol>>(x[0], {Symbol(1)});
+    default:
+        auto [g, a, b] = gcdm(x[0], x[1]);
+        std::vector<Symbol> f;
+        f.reserve(x.size());
+        f.push_back(std::move(a));
+        f.push_back(std::move(b));
+        for (size_t i = 2; i < x.size(); ++i) {
+            auto [gt, a, b] = gcdm(g, x[i]);
+            std::swap(g, gt);
+            if (!a.isOne()) {
+                for (auto it = f.begin(); it != f.end(); ++it) {
+                    (*it) *= a;
+                }
+            }
+            f.push_back(std::move(b));
+        }
+        return std::make_tuple(g, x);
+    }
+}
+
+// Affine terms are sorted by symbols lexicographically
 struct Symbol::Affine {
-    Symbol gcd;
     std::vector<Symbol> terms;
     Affine() = default;
-    // Affine(Symbol &x) : terms(std::vector<Symbol>(1, x)) {}
-    // Affine(Symbol &&x) : terms(std::vector<Symbol>(1, std::move(x))) {}
-    // Affine(Symbol &gcd) : gcd(gcd), terms(std::vector<Symbol>()) {}
-    Affine(Symbol &&gcd) : gcd(std::move(gcd)), terms(std::vector<Symbol>()) {}
-    Affine(Symbol &gcd, Symbol &t0) : gcd(gcd), terms({t0}) {}
-    Affine(Symbol &&gcd, Symbol &&t0)
-        : gcd(std::move(gcd)), terms({std::move(t0)}) {}
-    Affine(Symbol &&gcd, Symbol &&t0, Symbol &&t1)
-        : gcd(std::move(gcd)), terms({std::move(t0), std::move(t1)}) {}
-    Affine(Symbol &&gcd, std::vector<Symbol> &t)
-        : gcd(std::move(gcd)), terms(t) {}
-    Affine(Symbol &&gcd, std::vector<Symbol> &&t)
-        : gcd(std::move(gcd)), terms(std::move(t)) {}
+    Affine(Symbol &x) : terms({x}){};
+    Affine(Symbol &&x) : terms({std::move(x)}){};
+    // Affine(Symbol &t0, Symbol &t1) : terms({t0, t1}) {};
+    // Affine(Symbol &&t0, Symbol &&t1) : terms({std::move(t0), std::move(t1)})
+    // {};
+    Affine(std::vector<Symbol> &t) : terms(t){};
+    Affine(std::vector<Symbol> &&t) : terms(std::move(t)){};
 
-    Affine(std::tuple<Symbol, Symbol, Symbol> &&x)
-        : gcd(std::get<0>(x)), terms({std::get<1>(x), std::get<2>(x)}) {}
+    inline auto begin() { return terms.begin(); }
+    inline auto end() { return terms.end(); }
+    // Affine(std::tuple<Symbol, Symbol> &&x) : terms({std::get<0>(x),
+    // std::get<1>(x)}) {}
 
-    template <typename S> void push_term(S &&x) {
-        for (size_t i = 0; i < terms.size(); ++i) {
-            if (terms[i].prodIDs == x.prodIDs) {
-                terms[i].coef += x.coef;
+    template <typename S> void add_term(S &&x) {
+        for (auto it = terms.begin(); it != terms.end(); ++it) {
+            if ((*it).prodIDs == x.prodIDs) {
+                (*it).coef += x.coef;
+                if ((*it).coef == 0) {
+                    terms.erase(it);
+                }
+                return;
+            } else if (lexicographicalLess(x, *it)) {
+                terms.insert(it, std::forward<S>(x));
                 return;
             }
         }
         terms.push_back(std::forward<S>(x));
         return;
     }
-    bool operator==(Affine x) { return (gcd == x.gcd) && (terms == x.terms); }
-    bool operator!=(Affine x) { return (gcd != x.gcd) || (terms != x.terms); }
-    Affine operator*(Symbol x) { return Affine(gcd * x, terms); }
-    Affine operator+(Symbol x) {
-        auto [g, a, b] = gcdm(gcd, x);
-        Affine y(g);
-        for (size_t i = 0; i < terms.size(); ++i) {
-            y.terms.push_back(terms[i] * a); // skip equality check
+    template <typename S> void sub_term(S &&x) {
+        for (auto it = terms.begin(); it != terms.end(); ++it) {
+            if ((*it).prodIDs == x.prodIDs) {
+                (*it).coef -= x.coef;
+                if ((*it).coef == 0) {
+                    terms.erase(it);
+                }
+                return;
+            } else if (lexicographicalLess(x, *it)) {
+                Symbol y(x);
+                y.coef *= -1;
+                terms.insert(it, std::move(y));
+                return;
+            }
         }
-        y.push_term(std::move(b));
+        Symbol y(x);
+        y.coef *= -1;
+        terms.push_back(std::move(y));
+        return;
+    }
+    Affine &operator+=(Symbol &x) {
+        add_term(x);
+        return *this;
+    }
+    Affine &operator+=(Symbol &&x) {
+        add_term(std::move(x));
+        return *this;
+    }
+    Affine &operator-=(Symbol &x) {
+        sub_term(x);
+        return *this;
+    }
+    Affine &operator-=(Symbol &&x) {
+        sub_term(std::move(x));
+        return *this;
+    }
+
+    bool operator==(Affine &x) { return (terms == x.terms); }
+    bool operator!=(Affine &x) { return (terms != x.terms); }
+    Affine operator*(Symbol &x) {
+        Affine p(terms);
+        for (auto it = p.begin(); it != p.end(); ++it) {
+            (*it) *= x;
+        }
+        return p;
+    }
+    Affine operator+(Symbol &x) {
+        Affine y(terms);
+        y.add_term(x);
         return y;
     }
     Affine operator-(Symbol x) {
-        auto [g, a, b] = gcdm(gcd, x);
-        Affine y(g);
-        for (size_t i = 0; i < terms.size(); ++i) {
-            y.terms.push_back(terms[i] * a);
-        }
-        b.coef *= -1;
-        y.push_term(std::move(b));
+        Affine y(terms);
+        y.sub_term(x);
         return y;
     }
-    Affine &operator+=(Symbol x) {
-        auto [g, a, b] = gcdm(gcd, x);
-        gcd = g;
-        for (size_t i = 0; i < terms.size(); ++i) {
-            terms[i] *= a;
+    Affine largerCapacityCopy(size_t i) {
+        Affine s;
+        s.terms.reserve(i + terms.size()); // reserve full size
+        for (auto it = begin(); it != end(); ++it) {
+            s.terms.push_back(*it); // copy initial batch
         }
-        push_term(std::move(b));
-        return *this;
+        return s;
     }
     Affine operator+(Affine x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        Affine s(g);
-        s.terms.reserve(terms.size() + x.terms.size());
-        for (size_t i = 0; i < terms.size(); ++i) {
-            s.terms.push_back(a * terms[i]);
-        }
-        for (size_t i = 0; i < x.terms.size(); ++i) {
-            s.push_term(b * x.terms[i]);
+        Affine s = largerCapacityCopy(x.terms.size());
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            s.add_term(*it); // add term for remainder
         }
         return s;
     }
     Affine operator-(Affine x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        Affine s(g);
-        s.terms.reserve(terms.size() + x.terms.size());
-        for (size_t i = 0; i < terms.size(); ++i) {
-            s.terms.push_back(a * terms[i]);
-        }
-        for (size_t i = 0; i < x.terms.size(); ++i) {
-            b.coef *= -1;
-            s.push_term(b * x.terms[i]);
+        Affine s = largerCapacityCopy(x.terms.size());
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            s.sub_term(*it);
         }
         return s;
     }
     Affine &operator+=(Affine x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        gcd = g;
         terms.reserve(terms.size() + x.terms.size());
-        for (size_t i = 0; i < terms.size(); ++i) {
-            terms[i] *= a;
-        }
-        for (size_t i = 0; i < x.terms.size(); ++i) {
-            push_term(b * x.terms[i]);
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            add_term(*it); // add term for remainder
         }
         return *this;
     }
     Affine &operator-=(Affine x) {
-        auto [g, a, b] = gcdm(gcd, x.gcd);
-        gcd = g;
         terms.reserve(terms.size() + x.terms.size());
-        for (size_t i = 0; i < terms.size(); ++i) {
-            terms[i] *= a;
-        }
-        for (size_t i = 0; i < x.terms.size(); ++i) {
-            b.coef *= -1;
-            push_term(b * x.terms[i]);
+        for (auto it = x.begin(); it != x.end(); ++it) {
+            sub_term(*it); // add term for remainder
         }
         return *this;
     }
     Affine &operator*=(Symbol x) {
-        gcd *= x;
+        if (x.coef == 0) {
+            terms.clear();
+            return *this;
+        }
+        for (auto it = begin(); it != end(); ++it) {
+            (*it) *= x; // add term for remainder
+        }
         return *this;
     }
     // bool operator>=(Affine x){
 
     // 	return false;
     // }
+    bool isZero() { return (terms.size() == 0); }
+    bool isOne() { return (terms.size() == 1) & terms[0].isOne(); }
+
+    Affine &negate() {
+        for (auto it = begin(); it != end(); ++it) {
+            (*it).negate();
+        }
+        return *this;
+    }
 };
-bool isZero(Symbol &x) { return x.coef == 0; }
-bool isZero(Symbol::Affine &x) { return isZero(x.gcd) | (x.terms.size() == 0); }
 
-Symbol::Affine Symbol::operator+(Symbol y) {
+template <typename T> T negate(T &&x) { return std::forward<T>(x.negate()); }
 
-    // return Symbol::Affine(gcd(*this, y));
-    auto [g, c, d] = gcdm(*this, y);
-    if ((c.prodIDs.size() == 0) & (d.prodIDs.size() == 0)) {
-        if (c.coef == -d.coef) {
+template <typename S> Symbol::Affine Symbol::operator+(S &&y) {
+    if (prodIDs == y.prodIDs) {
+        if (coef == -y.coef) {
             return Symbol::Affine(Symbol(0));
         } else {
-            c.coef += d.coef;
-            return Symbol::Affine(std::move(g), std::move(c));
+            Symbol s(std::forward<S>(y));
+            s.coef += coef;
+            return Symbol::Affine(std::move(s));
         }
-    } else {
-        return Symbol::Affine(std::move(g), std::move(c), std::move(d));
     }
-    // return Symbol::Affine(g, c, d);
-    /*
-    Symbol::Affine aff;
-    aff.gcd = std::move(g);
-    aff.terms.push_back(std::move(c));
-    aff.terms.push_back(std::move(d));
-    return aff;
-    */
+    Symbol::Affine s;
+    s.terms.reserve(2);
+    if (lexicographicalLess(*this, y)) {
+        s.terms.push_back(*this);
+    } else {
+        s.terms.push_back(std::forward<S>(y));
+    }
+    return s;
 }
-Symbol::Affine Symbol::operator-(Symbol y) {
-
-    auto [g, c, d] = gcdm(*this, y);
-    if ((c.prodIDs.size() == 0) & (d.prodIDs.size() == 0)) {
-        if (c.coef == d.coef) {
+template <typename S> Symbol::Affine Symbol::operator-(S &&y) {
+    if (prodIDs == y.prodIDs) {
+        if (coef == -y.coef) {
             return Symbol::Affine(Symbol(0));
         } else {
-            c.coef -= d.coef;
-            return Symbol::Affine(std::move(g), std::move(c));
+            Symbol s(std::forward<S>(y));
+            s.coef = coef - s.coef;
+            return Symbol::Affine(std::move(s));
         }
-    } else {
-        d.coef *= -1;
-        return Symbol::Affine(std::move(g), std::move(c), std::move(d));
     }
+    Symbol::Affine s;
+    s.terms.reserve(2);
+    if (lexicographicalLess(*this, y)) {
+        s.terms.push_back(*this);
+    } else {
+        s.terms.push_back(std::forward<S>(y));
+    }
+    return s;
 }
 
-std::tuple<Symbol::Affine, Symbol::Affine, Symbol::Affine>
-gcdm(Symbol::Affine x, Symbol::Affine y) {
-    auto [gs, as, bs] = gcdm(x.gcd, y.gcd);
-    Symbol::Affine g = Symbol::Affine(std::move(gs));
-    Symbol::Affine a = Symbol::Affine(std::move(as), x.terms);
-    // Symbol::Affine a = Symbol::Affine(std::move(as), x.terms);
-    Symbol::Affine b = Symbol::Affine(std::move(bs), y.terms);
-    return std::make_tuple(g, a, b);
+std::tuple<Symbol, Symbol::Affine, Symbol::Affine> gcdm(Symbol::Affine &x,
+                                                        Symbol::Affine &y) {
+    auto [gx, gxt] = gcdm(x.terms);
+    auto [gy, gyt] = gcdm(y.terms);
+    auto [gs, as, bs] = gcdm(gx, gy);
+    if (gs.isOne()) {
+        return std::make_tuple(std::move(gs), x, y);
+    }
+    if (!as.isOne()) {
+        for (auto it = gxt.begin(); it != gxt.end(); ++it) {
+            (*it) *= as;
+        }
+    }
+    if (!bs.isOne()) {
+        for (auto it = gyt.begin(); it != gyt.end(); ++it) {
+            (*it) *= bs;
+        }
+    }
+    return std::make_tuple(std::move(gs), std::move(gxt), std::move(gyt));
 }
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
@@ -353,7 +455,7 @@ std::string toString(Symbol x) {
 }
 
 std::string toString(Symbol::Affine x) {
-    std::string poly = toString(x.gcd) + " * ( ";
+    std::string poly = " ( ";
     for (size_t j = 0; j < length(x.terms); ++j) {
         if (j) {
             poly += " + ";

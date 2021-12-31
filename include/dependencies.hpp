@@ -1032,8 +1032,6 @@ strideComparison(Function &fun, ArrayRef &arx, ArrayRef &ary) {
     return strideCmp;
 }
 
-
-
 template <typename LX, typename LY>
 bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopnestx,
                       Term &ty, ArrayRef &ary, LY &loopnesty) {
@@ -1041,22 +1039,22 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopnestx,
     std::vector<std::pair<Stride, Stride>> strideCmp =
         strideComparison(fun, arx, ary);
 
-    for (size_t i = 0; i < strideCmp.size(); ++i){
-	auto [sx, sy] = strideCmp[i];
-	SourceCount scx = sourceCount(sx);
-	SourceCount scy = sourceCount(sy);
-	size_t numLoopInductVar = std::max(scx.loopInductVar, scy.loopInductVar);
-	if (scx.isAffine() & scy.isAffine()){
-	    switch (numLoopInductVar) {
-	    case 0: // SIV
-		break;
-	    case 1: // ZIV
-		break;
-	    default: // MIV
-		break;
-	    }
-
-	}
+    for (size_t i = 0; i < strideCmp.size(); ++i) {
+        auto [sx, sy] = strideCmp[i];
+        SourceCount scx = sourceCount(sx);
+        SourceCount scy = sourceCount(sy);
+        size_t numLoopInductVar =
+            std::max(scx.loopInductVar, scy.loopInductVar);
+        if (scx.isAffine() & scy.isAffine()) {
+            switch (numLoopInductVar) {
+            case 0: // SIV
+                break;
+            case 1: // ZIV
+                break;
+            default: // MIV
+                break;
+            }
+        }
     }
     /*
     //std::bitset<64> xMatched;
