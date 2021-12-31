@@ -362,8 +362,9 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 struct Stride {
     Symbol gcd;
-    std::vector<std::pair<Symbol::Affine, Source>> stride;
+    std::vector<std::pair<Symbol::Affine, Source>> stride; // sources must be ordered
     Stride() = default;
+    Stride(Symbol gcd) : gcd(gcd), stride(std::vector<std::pair<Symbol::Affine, Source>>()) {}
     Stride(Symbol::Affine x, Source &&ind)
         : gcd(x.gcd),
           stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms), ind)}){};
@@ -371,8 +372,21 @@ struct Stride {
         : gcd(x.gcd), stride({std::make_pair(Symbol::Affine(Symbol(1), x.terms),
                                              Source(indId, indTyp))}){};
 
-    void add_term(Symbol::Affine x, Source ind) {
-        stride.push_back(std::make_pair(x, ind));
+    template<typename A, typename I>
+    void add_term(A&& x, I&& ind) {
+	for (auto it = stride.begin(); it != stride.end(); ++it) {
+	    if (ind == (*it).second){
+		(*it).first += x;
+		if ((*it).first.gcd.coef == 0){
+		    stride.erase(it); // FIXME: gcd may now need updating ???
+		}
+		return;
+	    } else if (ind < (*it).second){
+		stride.insert(it, std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
+		return;
+	    }
+	}
+        stride.push_back(std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
         return;
     }
 
@@ -386,6 +400,32 @@ struct Stride {
         }
         return *this;
     }
+    Stride &operator-=(Stride x) {
+        auto [g, a, b] = gcdm(gcd, x.gcd);
+        for (size_t i = 0; i < stride.size(); ++i) {
+            std::get<0>(stride[i]) *= a;
+        }
+	b.coef *= -1;
+        for (size_t i = 0; i < x.stride.size(); ++i) {
+            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
+        }
+        return *this;
+    }
+    
+    Stride operator-(Stride x){
+	auto [g, a, b] = gcdm(gcd, x.gcd);
+	Stride y(g);
+	y.stride.reserve(std::max(stride.size(), x.stride.size()));
+
+	for (size_t i = 0; i < stride.size(); ++i) {
+            std::get<0>(stride[i]) *= a;
+        }
+        for (size_t i = 0; i < x.stride.size(); ++i) {
+            add_term(std::get<0>(x.stride[i]) * b, x.stride[i].second);
+        }
+	
+	return y;
+    }
 
     bool operator==(Stride x) { return (gcd == x.gcd) && (stride == x.stride); }
     bool operator!=(Stride x) { return (gcd != x.gcd) || (stride != x.stride); }
@@ -394,6 +434,14 @@ struct Stride {
     // 	return false;
     // }
 };
+SourceCount sourceCount(Stride s){
+    SourceCount x;
+    for (auto it = s.stride.begin(); it != s.stride.end(); ++it){
+	x += (*it).second;
+    }
+    return x;
+}
+
 
 struct ArrayRef {
     size_t arrayId;

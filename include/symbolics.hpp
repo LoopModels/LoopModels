@@ -153,7 +153,9 @@ struct Symbol::Affine {
     Symbol gcd;
     std::vector<Symbol> terms;
     Affine() = default;
-    Affine(Symbol &gcd) : gcd(gcd), terms(std::vector<Symbol>()) {}
+    // Affine(Symbol &x) : terms(std::vector<Symbol>(1, x)) {}
+    // Affine(Symbol &&x) : terms(std::vector<Symbol>(1, std::move(x))) {}
+    // Affine(Symbol &gcd) : gcd(gcd), terms(std::vector<Symbol>()) {}
     Affine(Symbol &&gcd) : gcd(std::move(gcd)), terms(std::vector<Symbol>()) {}
     Affine(Symbol &gcd, Symbol &t0) : gcd(gcd), terms({t0}) {}
     Affine(Symbol &&gcd, Symbol &&t0)
