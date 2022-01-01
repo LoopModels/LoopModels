@@ -918,6 +918,7 @@ ValueRange differenceRange(Function &fun, Symbol::Affine &x,
 // }
 
 DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
+    // strides are equal => LoopIndependent
     if ((x.stride == y.stride)) {
         // both same constant
         return LoopIndependent;
@@ -929,17 +930,45 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
         r += differenceRange(fun, a.begin(), a.end()) * valueRange(fun, s.id);
     }
     if ((r.lowerBound == 0) & (r.upperBound == 0)) {
-        return LoopIndependent;
+        return LoopIndependent; // strides are equal
     }
     if ((r.lowerBound <= 0) & (r.upperBound >= 0)) {
-        return LoopCarried;
+        return LoopCarried; // bounds encompass zero, failed to prove
+                            // independence
     } else {
-        return Independent;
+        return Independent; // there is a difference => independent
     }
 }
+Symbol::Affine getFirstLoopStride(Stride &x) {
+    auto it = x.begin();
+    for (; it != x.end(); ++it) {
+        if ((it->second).typ == LoopInductionVariable) {
+            return it->first;
+        }
+    }
+#ifndef DONOTBOUNDSCHECK
+    assert(it != x.end());
+#endif
+    // return it -> first;
+    return x.stride[0].first;
+}
+
 template <typename LX, typename LY>
 DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                                            LX loopNestX, LY loopNestY) {
+    // need to solve diophantine equations
+    Stride delta = x - y;
+    if (delta.size()) {
+        if (delta.isConstant()) {
+            // strong
+            Symbol::Affine a = getFirstLoopStride(x);
+            auto [d, success] = tryDiv(delta, a);
+        } else {
+            // weak
+        }
+    } else {
+        return LoopIndependent;
+    }
     return LoopCarried;
 }
 template <typename LX, typename LY>

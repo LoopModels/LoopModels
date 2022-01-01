@@ -502,6 +502,11 @@ struct Stride {
     // takes advantage of sorting
     bool isAffine() { return counts[2] == counts[4]; }
 
+    // std::pair<Symbol::Affine,DivRemainder> tryDiv(Symbol::Affine &a){
+    // 	auto [s, v] = gcdm(a.terms);
+
+    // }
+
     // bool operator>=(Symbol::Affine x){
 
     // 	return false;

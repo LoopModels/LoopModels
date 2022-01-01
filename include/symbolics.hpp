@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+enum DivRemainder { Indeterminate, NoRemainder, HasRemainder };
+
 // The basic symbol type represents a symbol as a product of some number of
 // known IDs as well as with a constant term.
 // `5` would thus be an empty `prodIDs` vector and `coef = 5`.
@@ -38,7 +40,7 @@ struct Symbol {
             size_t a =
                 (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
             size_t b =
-                (j < n1) ? prodIDs[j] : std::numeric_limits<size_t>::max();
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
             bool aSmaller = a < b;
             aSmaller ? ++i : ++j;
             r.prodIDs.push_back(aSmaller ? a : b);
@@ -106,44 +108,74 @@ struct Symbol {
     struct Affine;
     template <typename S> Affine operator+(S &&x);
     template <typename S> Affine operator-(S &&x);
-    /*
-    std::pair<Symbol, Symbol> operator/(Symbol x) {
-        Symbol d;
-        Symbol r;
-        d.coef = coef / x.coef;
-        r.coef = coef - d.coef * x.coef;
-        size_t i = 0;
-        size_t n = x.prodIDs.size();
-        for (size_t k = 0; k < prodIDs.size(); ++k){
-            size_t a = prodIDs[k];
-            while ((i < n)) {
-                size_t b = x.prodIDs[i];
-                if (b < a){
-                    ++i;
-                } else if (b == a) {
-                    d.prodIDs.push_back();
-                    ++i;
-                }
-            }
-            size_t b = i == n ? std::numeric_limits<size_t>::max() :
-    x.prodIDs[i]; if (a == b){ d.prodIDs.push_back(a);
-                ++i;
-            }
+    // numerator, denominator rational
+    std::pair<Symbol, Symbol> rational(Symbol &x) {
+        intptr_t g = std::gcd(coef, x.coef);
+        Symbol n(coef / g);
+        Symbol d(x.coef / g);
+        if (d.coef < 0) {
+            // guarantee the denominator coef is positive
+            // assumption used in affine divRem, to avoid
+            // checking for -1.
+            n.coef *= -1;
+            d.coef *= -1;
         }
+        size_t i = 0;
+        size_t j = 0;
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
-        for (size_t k = 0; k < (n0 + n1); ++k) {
+        while ((i + j) < (n0 + n1)) {
             size_t a =
                 (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
             size_t b =
-                (j < n1) ? prodIDs[j] : std::numeric_limits<size_t>::max();
-            bool aSmaller = a < b;
-            aSmaller ? ++i : ++j;
-            r.prodIDs.push_back(aSmaller ? a : b);
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
+            if (a < b) {
+                n.prodIDs.push_back(a);
+                ++i;
+            } else if (a == b) {
+                ++i;
+                ++j;
+            } else {
+                d.prodIDs.push_back(b);
+                ++j;
+            }
         }
-        return std::make_pair(d, r);
+        return std::make_pair(n, d);
+    }
+    // returns a 3-tuple, containing:
+    // 0: Symbol(coef / gcd(coef, x.coef), setDiff(prodIDs, x.prodIDs))
+    // 1: x.coef / gcd(coef, x.coef)
+    // 2: whether the division failed (i.e., true if prodIDs was not a superset
+    // of x.prodIDs)
+    std::tuple<Symbol, intptr_t, bool> operator/(Symbol &x) {
+        intptr_t g = std::gcd(coef, x.coef);
+        Symbol n(coef / g);
+        intptr_t d = coef / x.coef;
+        if (d < 0) {
+            d *= -1;
+            n.coef *= -1;
         }
-    */
+        size_t i = 0;
+        size_t j = 0;
+        size_t n0 = prodIDs.size();
+        size_t n1 = x.prodIDs.size();
+        while ((i + j) < (n0 + n1)) {
+            size_t a =
+                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
+            size_t b =
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
+            if (a < b) {
+                n.prodIDs.push_back(a);
+                ++i;
+            } else if (a == b) {
+                ++i;
+                ++j;
+            } else {
+                return std::make_tuple(n, d, true);
+            }
+        }
+        return std::make_tuple(n, d, false);
+    }
     bool isZero() { return coef == 0; }
     bool isOne() { return (coef == 0) & (prodIDs.size() == 0); }
     Symbol &negate() {
@@ -364,6 +396,59 @@ struct Symbol::Affine {
             (*it).negate();
         }
         return *this;
+    }
+    // returns a tuple with three elements:
+    // 0: div
+    // 1: rem
+    // 2: exit status, `true` if failed, `false` otherwise
+    void divRem(Symbol::Affine &d, Symbol::Affine &r, Symbol &x) {
+        for (auto it = begin(); it != end(); ++it) {
+            auto [nx, dx, fail] = *it / x;
+            if (fail) {
+                r.terms.push_back(*it);
+            } else {
+                if (dx == 1) {
+                    // perfectly divided
+                    d.terms.push_back(nx);
+                } else {
+                    intptr_t div = nx.coef / dx;
+                    intptr_t rem = nx.coef - dx * div;
+                    if (div) {
+                        nx.coef = div;
+                        d.terms.push_back(nx);
+                    }
+                    if (rem) {
+                        nx.coef = rem;
+                        r.terms.push_back(nx);
+                    }
+                }
+            }
+        }
+    }
+    std::pair<Symbol::Affine, Symbol::Affine> divRem(Symbol &x) {
+        Symbol::Affine d;
+        Symbol::Affine r;
+        divRem(d, r, x);
+        return std::make_pair(d, r);
+    }
+    std::pair<Symbol::Affine, Symbol::Affine> divRem(Symbol::Affine &x) {
+        Symbol::Affine d;
+        Symbol::Affine r;
+        Symbol::Affine y(terms); // copy
+        auto it = x.begin();
+        auto ite = x.end();
+        if (it != ite) {
+            while (true) {
+                y.divRem(d, r, *it);
+                ++it;
+                if (it == ite) {
+                    break;
+                }
+                std::swap(y, r);
+                r.terms.clear();
+            }
+        }
+        return std::make_pair(d, r);
     }
 };
 
