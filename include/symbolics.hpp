@@ -182,6 +182,7 @@ struct Symbol {
         coef *= -1;
         return *this;
     }
+    bool isCompileTimeConstant() { return prodIDs.size() == 0; }
 };
 
 bool lexicographicalLess(Symbol &x, Symbol &y) {
@@ -192,7 +193,7 @@ std::strong_ordering lexicographicalCmp(Symbol &x, Symbol &y) {
                                                   y.end());
 }
 
-std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol &x, Symbol &y) {
+std::tuple<Symbol, Symbol, Symbol> gcd(Symbol &x, Symbol &y) {
     Symbol g, a, b;
     intptr_t c = std::gcd(x.coef, y.coef);
     g.coef = c;
@@ -223,20 +224,20 @@ std::tuple<Symbol, Symbol, Symbol> gcdm(Symbol &x, Symbol &y) {
     return std::make_tuple(g, a, b);
 }
 
-std::tuple<Symbol, std::vector<Symbol>> gcdm(std::vector<Symbol> &x) {
+std::pair<Symbol, std::vector<Symbol>> gcd(std::vector<Symbol> &x) {
     switch (x.size()) {
     case 0:
-        return std::tuple<Symbol, std::vector<Symbol>>(Symbol(0), x);
+        return std::make_pair(Symbol(0), x);
     case 1:
-        return std::tuple<Symbol, std::vector<Symbol>>(x[0], {Symbol(1)});
+        return std::make_pair(x[0], std::vector<Symbol>{Symbol(1)});
     default:
-        auto [g, a, b] = gcdm(x[0], x[1]);
+        auto [g, a, b] = gcd(x[0], x[1]);
         std::vector<Symbol> f;
         f.reserve(x.size());
         f.push_back(std::move(a));
         f.push_back(std::move(b));
         for (size_t i = 2; i < x.size(); ++i) {
-            auto [gt, a, b] = gcdm(g, x[i]);
+            auto [gt, a, b] = gcd(g, x[i]);
             std::swap(g, gt);
             if (!a.isOne()) {
                 for (auto it = f.begin(); it != f.end(); ++it) {
@@ -245,7 +246,7 @@ std::tuple<Symbol, std::vector<Symbol>> gcdm(std::vector<Symbol> &x) {
             }
             f.push_back(std::move(b));
         }
-        return std::make_tuple(g, x);
+        return std::make_pair(g, x);
     }
 }
 
@@ -267,39 +268,43 @@ struct Symbol::Affine {
     // std::get<1>(x)}) {}
 
     template <typename S> void add_term(S &&x) {
-        for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if ((it->prodIDs) == x.prodIDs) {
-                (it->coef) += x.coef;
-                if ((it->coef) == 0) {
-                    terms.erase(it);
+        if (x.coef) {
+            for (auto it = terms.begin(); it != terms.end(); ++it) {
+                if ((it->prodIDs) == x.prodIDs) {
+                    (it->coef) += x.coef;
+                    if ((it->coef) == 0) {
+                        terms.erase(it);
+                    }
+                    return;
+                } else if (lexicographicalLess(x, *it)) {
+                    terms.insert(it, std::forward<S>(x));
+                    return;
                 }
-                return;
-            } else if (lexicographicalLess(x, *it)) {
-                terms.insert(it, std::forward<S>(x));
-                return;
             }
+            terms.push_back(std::forward<S>(x));
         }
-        terms.push_back(std::forward<S>(x));
         return;
     }
     template <typename S> void sub_term(S &&x) {
-        for (auto it = terms.begin(); it != terms.end(); ++it) {
-            if ((it->prodIDs) == x.prodIDs) {
-                (it->coef) -= x.coef;
-                if ((it->coef) == 0) {
-                    terms.erase(it);
+        if (x.coef) {
+            for (auto it = terms.begin(); it != terms.end(); ++it) {
+                if ((it->prodIDs) == x.prodIDs) {
+                    (it->coef) -= x.coef;
+                    if ((it->coef) == 0) {
+                        terms.erase(it);
+                    }
+                    return;
+                } else if (lexicographicalLess(x, *it)) {
+                    Symbol y(x);
+                    y.coef *= -1;
+                    terms.insert(it, std::move(y));
+                    return;
                 }
-                return;
-            } else if (lexicographicalLess(x, *it)) {
-                Symbol y(x);
-                y.coef *= -1;
-                terms.insert(it, std::move(y));
-                return;
             }
+            Symbol y(x);
+            y.coef *= -1;
+            terms.push_back(std::move(y));
         }
-        Symbol y(x);
-        y.coef *= -1;
-        terms.push_back(std::move(y));
         return;
     }
     Affine &operator+=(Symbol &x) {
@@ -325,6 +330,16 @@ struct Symbol::Affine {
         Affine p(terms);
         for (auto it = p.begin(); it != p.end(); ++it) {
             (*it) *= x;
+        }
+        return p;
+    }
+    Affine operator*(Affine &x) {
+        Affine p;
+        p.terms.reserve(terms.size() * x.terms.size());
+        for (auto it = begin(); it != end(); ++it) {
+            for (auto itx = x.begin(); itx != x.end(); ++itx) {
+                p.add_term((*it) * (*itx));
+            }
         }
         return p;
     }
@@ -378,6 +393,8 @@ struct Symbol::Affine {
         if (x.coef == 0) {
             terms.clear();
             return *this;
+        } else if (x.isOne()) {
+            return *this;
         }
         for (auto it = begin(); it != end(); ++it) {
             (*it) *= x; // add term for remainder
@@ -391,47 +408,50 @@ struct Symbol::Affine {
     bool isZero() { return (terms.size() == 0); }
     bool isOne() { return (terms.size() == 1) & terms[0].isOne(); }
 
+    bool isCompileTimeConstant() {
+        return (terms.size() == 1) && (terms.begin()->isCompileTimeConstant());
+    }
+
     Affine &negate() {
         for (auto it = begin(); it != end(); ++it) {
             (*it).negate();
         }
         return *this;
     }
-    // returns a tuple with three elements:
-    // 0: div
-    // 1: rem
-    // 2: exit status, `true` if failed, `false` otherwise
     void divRem(Symbol::Affine &d, Symbol::Affine &r, Symbol &x) {
         for (auto it = begin(); it != end(); ++it) {
             auto [nx, dx, fail] = *it / x;
             if (fail) {
-                r.terms.push_back(*it);
+                r.add_term(*it);
             } else {
                 if (dx == 1) {
                     // perfectly divided
-                    d.terms.push_back(nx);
+                    d.add_term(nx);
                 } else {
                     intptr_t div = nx.coef / dx;
                     intptr_t rem = nx.coef - dx * div;
                     if (div) {
                         nx.coef = div;
-                        d.terms.push_back(nx);
+                        d.add_term(nx);
                     }
                     if (rem) {
                         nx.coef = rem;
-                        r.terms.push_back(nx);
+                        r.add_term(nx);
                     }
                 }
             }
         }
     }
+    // returns a <div, rem> pair
     std::pair<Symbol::Affine, Symbol::Affine> divRem(Symbol &x) {
         Symbol::Affine d;
         Symbol::Affine r;
         divRem(d, r, x);
         return std::make_pair(d, r);
     }
+    // returns a <div, rem> pair
     std::pair<Symbol::Affine, Symbol::Affine> divRem(Symbol::Affine &x) {
+        // TODO: algorithm needs to be fixed
         Symbol::Affine d;
         Symbol::Affine r;
         Symbol::Affine y(terms); // copy
@@ -448,9 +468,47 @@ struct Symbol::Affine {
                 r.terms.clear();
             }
         }
-        return std::make_pair(d, r);
+        return std::make_pair(std::move(d), std::move(r));
     }
+    Symbol::Affine operator/(Symbol::Affine &x) { return divRem(x).first; }
+    Symbol::Affine operator%(Symbol::Affine &x) { return divRem(x).second; }
 };
+
+std::pair<Symbol, Symbol::Affine> gcd(Symbol::Affine &x) {
+    std::pair<Symbol, std::vector<Symbol>> st = gcd(x.terms);
+    return std::make_pair(std::move(st.first),
+                          Symbol::Affine(std::move(st.second)));
+}
+std::tuple<Symbol::Affine, Symbol::Affine, Symbol::Affine>
+gcd(Symbol::Affine &a, Symbol::Affine &b) {
+    Symbol::Affine x(a);
+    Symbol::Affine y(b);
+    while (!y.isZero()) { // TODO: add tests and/or proof to make sure this
+                          // terminates with symbolics
+        x = x % y;
+        std::swap(x, y);
+    }
+    return std::make_tuple(x, a / x, b / x);
+}
+std::tuple<Symbol::Affine, Symbol::Affine, Symbol::Affine>
+extended_gcd(Symbol::Affine &a, Symbol::Affine &b) {
+    Symbol::Affine x(a);
+    Symbol::Affine y(b);
+    Symbol::Affine oldS(1);
+    Symbol::Affine s(0);
+    Symbol::Affine oldT(0);
+    Symbol::Affine t(1);
+    while (!y.isZero()) {
+        auto [q, r] = x.divRem(y);
+        oldS -= q * s;
+        oldT -= q * t;
+        x = y;
+        y = r;
+        std::swap(oldS, s);
+        std::swap(oldT, t);
+    }
+    return std::make_tuple(x, a / x, b / x);
+}
 
 template <typename T> T negate(T &&x) { return std::forward<T>(x.negate()); }
 
@@ -491,27 +549,6 @@ template <typename S> Symbol::Affine Symbol::operator-(S &&y) {
         s.terms.push_back(std::forward<S>(y));
     }
     return s;
-}
-
-std::tuple<Symbol, Symbol::Affine, Symbol::Affine> gcdm(Symbol::Affine &x,
-                                                        Symbol::Affine &y) {
-    auto [gx, gxt] = gcdm(x.terms);
-    auto [gy, gyt] = gcdm(y.terms);
-    auto [gs, as, bs] = gcdm(gx, gy);
-    if (gs.isOne()) {
-        return std::make_tuple(std::move(gs), x, y);
-    }
-    if (!as.isOne()) {
-        for (auto it = gxt.begin(); it != gxt.end(); ++it) {
-            (*it) *= as;
-        }
-    }
-    if (!bs.isOne()) {
-        for (auto it = gyt.begin(); it != gyt.end(); ++it) {
-            (*it) *= bs;
-        }
-    }
-    return std::make_tuple(std::move(gs), std::move(gxt), std::move(gyt));
 }
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }

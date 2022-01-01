@@ -939,7 +939,7 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
         return Independent; // there is a difference => independent
     }
 }
-Symbol::Affine getFirstLoopStride(Stride &x) {
+Symbol::Affine &getFirstLoopStride(Stride &x) {
     auto it = x.begin();
     for (; it != x.end(); ++it) {
         if ((it->second).typ == LoopInductionVariable) {
@@ -949,8 +949,8 @@ Symbol::Affine getFirstLoopStride(Stride &x) {
 #ifndef DONOTBOUNDSCHECK
     assert(it != x.end());
 #endif
-    // return it -> first;
-    return x.stride[0].first;
+    return it->first;
+    // return x.stride[0].first;
 }
 
 template <typename LX, typename LY>
@@ -959,12 +959,57 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
     // need to solve diophantine equations
     Stride delta = x - y;
     if (delta.size()) {
-        if (delta.isConstant()) {
-            // strong
-            Symbol::Affine a = getFirstLoopStride(x);
-            auto [d, success] = tryDiv(delta, a);
+        if (delta.isConstant()) { // 1 constant term (# of affine const terms is
+                                  // 0 or 1)
+                                  // strong
+            Symbol::Affine &a = getFirstLoopStride(x);
+            // auto [g, xf, yf] = gcd(delta.stride.begin() -> first, a);
+            // auto [d, r] = xf.divRem(yf);
+            auto [d, r] = (delta.stride.begin()->first).divRem(a);
+            if (r.isZero()) {
+                // must check loop bounds
+
+            } else {
+                // no solution we could determine
+                // but is that because of missing information?
+                // we check if remainder divides
+                // loop stride into a constant.
+                // If so, then the remainder is fine.
+                if ((a % r).isCompileTimeConstant()) {
+                    return Independent;
+                } else {
+                    return LoopCarried;
+                }
+                // if (r.isCompileTimeConstant()){ // not 0
+                //     return Independent;
+                // } else {
+                //     return LoopCarried;
+                // }
+            }
         } else {
             // weak
+            auto [g, na, nb] =
+                extended_gcd(getFirstLoopStride(x), getFirstLoopStride(y));
+            // solve a1 * x + a0 = b1 * y + b0;
+            if (delta.getCount(ConstantSource)) {
+                // c = a0 - b0;
+                Symbol::Affine c = delta.begin()->first;
+                // x(k) = -na * (c / g) + k * b1 / g;
+                // y(k) =  nb * (c / g) + k * a1 / g;
+                // we must therefore check if any solutions are within the loop
+                // bounds i.e., is there any `k` that gives us an answer such
+                // that x(k) in loopNestX && y(k) in loopNestY
+            } else {
+                // no constant term
+                // solutions are
+                // xk = k * b1 / g;
+                // yk = k * a1 / g;
+                // Question: do we have any solutions within the loop domain?
+                // k = 0 => xk = 0, yk = 0
+                // given we've set all loops to start at 0, this suggests
+                // trivially that
+                return LoopCarried;
+            }
         }
     } else {
         return LoopIndependent;

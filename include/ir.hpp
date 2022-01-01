@@ -361,6 +361,9 @@ template <typename T> size_t length(VoVoV<T> x) {
 // Gives the part of an ArrayRef that is a function of the induction variables.
 
 // Stride terms are sorted based on Source
+// NOTE: we require all Const sources be folded into the Affine, and their ids
+// set identically. thus, `getCount(ConstantSource)` must always return either
+// `0` or `1`.
 struct Stride {
     std::vector<std::pair<Symbol::Affine, Source>>
         stride; // sources must be ordered
@@ -503,7 +506,7 @@ struct Stride {
     bool isAffine() { return counts[2] == counts[4]; }
 
     // std::pair<Symbol::Affine,DivRemainder> tryDiv(Symbol::Affine &a){
-    // 	auto [s, v] = gcdm(a.terms);
+    // 	auto [s, v] = gcd(a.terms);
 
     // }
 
