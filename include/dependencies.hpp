@@ -899,17 +899,23 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
 
 enum DependenceType { Independent, LoopIndependent, LoopCarried };
 
-ValueRange differenceRange(Function &fun, Symbol::Affine &&x) {
+template <typename T> ValueRange differenceRange(Function &fun, T it, T ite) {
     ValueRange r(0);
-    for (auto it = x.begin(); it != x.end(); ++it) {
+    for (; it != ite; ++it) {
         r += valueRange(fun, *it);
     }
     return r;
 }
 ValueRange differenceRange(Function &fun, Symbol::Affine &x,
                            Symbol::Affine &y) {
-    return differenceRange(fun, x - y);
+    Symbol::Affine diff = x - y;
+    return differenceRange(fun, diff.begin(), diff.end());
 }
+// ValueRange differenceRangeConst(Function &fun,
+// std::pair<Symbol::Affine,Source> &x) {
+//     return differenceRange(fun, x.first.begin(), x.first.end()) *
+//     valueRange(fun, x.second.id);
+// }
 
 DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
     if ((x.stride == y.stride)) {
@@ -919,7 +925,8 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
     Stride d = x - y;
     ValueRange r(0);
     for (auto it = d.begin(); it != d.end(); ++it) {
-        r += differenceRange(fun, Symbol::Affine & x, Symbol::Affine & y)
+        auto [a, s] = *it;
+        r += differenceRange(fun, a.begin(), a.end()) * valueRange(fun, s.id);
     }
     if ((r.lowerBound == 0) & (r.upperBound == 0)) {
         return LoopIndependent;
