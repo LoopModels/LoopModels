@@ -229,12 +229,12 @@ struct Polynomial {
         }
         bool isOne() { return (prodIDs.size() == 0); }
         bool isCompileTimeConstant() { return prodIDs.size() == 0; }
-	size_t degree() { return prodIDs.size(); }
+        size_t degree() { return prodIDs.size(); }
         bool lexLess(Monomial &x) {
             // return `true` if `*this.degree() > x.degree()`
-	    if (degree() > x.degree()){
-		return true;
-	    }
+            if (degree() > x.degree()) {
+                return true;
+            }
             auto it = begin();
             auto ite = end();
             auto ix = x.begin();
@@ -249,14 +249,17 @@ struct Polynomial {
                 ++ixe;
             }
             // return it != ite; // returns true if `*this` is longer
-	    return false;
+            return false;
         }
     };
 
     struct Term {
         Rational coefficient;
         Monomial monomial;
-
+        Term() = default;
+        template <typename T> Term(T coef) : coefficient(coef) {}
+        Term(Rational coef, Monomial monomial)
+            : coefficient(coef), monomial(monomial) {}
         Term &negate() {
             coefficient.numerator *= -1;
             return *this;
@@ -313,8 +316,6 @@ struct Polynomial {
                         terms.erase(it);
                     }
                     return;
-                    // } else if (lexicographicalLess(x, *it)) {
-                    // } else if (it -> lexLess(x)) {
                 } else if (x.lexLess(*it)) {
                     terms.insert(it, std::forward<S>(x));
                     return;
@@ -582,8 +583,9 @@ gcd(std::vector<Polynomial::Term> &x) {
     }
 }
 
-std::pair<Symbol, Polynomial> gcd(Polynomial &x) {
-    std::pair<Symbol, std::vector<Symbol>> st = gcd(x.terms);
+std::pair<Polynomial::Term, Polynomial> gcd(Polynomial &x) {
+    std::pair<Polynomial::Term, std::vector<Polynomial::Term>> st =
+        gcd(x.terms);
     return std::make_pair(std::move(st.first),
                           Polynomial(std::move(st.second)));
 }
