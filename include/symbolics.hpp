@@ -3,6 +3,7 @@
 #include <compare>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <tuple>
@@ -63,6 +64,29 @@ struct Rational {
     }
     Rational operator/(Rational y) { return (*this) * y.inv(); }
     Rational operator/=(Rational y) { return (*this) *= y.inv(); }
+    bool operator==(Rational y) {
+        return (numerator == y.numerator) & (denominator == y.denominator);
+    }
+    bool operator!=(Rational y) {
+        return (numerator != y.numerator) | (denominator != y.denominator);
+    }
+    bool operator<(Rational y) {
+        return (numerator * y.denominator) < (y.numerator * denominator);
+    }
+    bool operator<=(Rational y) {
+        return (numerator * y.denominator) <= (y.numerator * denominator);
+    }
+    bool operator>(Rational y) {
+        return (numerator * y.denominator) > (y.numerator * denominator);
+    }
+    bool operator>=(Rational y) {
+        return (numerator * y.denominator) >= (y.numerator * denominator);
+    }
+
+    operator double() { return numerator / denominator; }
+    bool isZero() { return numerator == 0; }
+    bool isOne() { return (numerator == denominator); }
+    bool isInteger() { return denominator == 1; }
 };
 
 // The basic symbol type represents a symbol as a product of some number of
@@ -75,17 +99,15 @@ struct Rational {
 struct Polynomial {
     struct Monomial {
         std::vector<size_t> prodIDs; // sorted symbolic terms being multiplied
-        Rational coef;               // constant coef
 
         // constructors
-        Monomial() : prodIDs(std::vector<size_t>()), coef(0){};
-        Monomial(intptr_t coef) : prodIDs(std::vector<size_t>()), coef(coef){};
+        Monomial() : prodIDs(std::vector<size_t>()){};
+        Monomial(std::vector<size_t> &x) : prodIDs(x){};
 
         inline auto begin() { return prodIDs.begin(); }
         inline auto end() { return prodIDs.end(); }
         Monomial operator*(Monomial &x) {
             Monomial r;
-            r.coef = coef * x.coef;
             // prodIDs are sorted, so we can create sorted product in O(N)
             size_t i = 0;
             size_t j = 0;
@@ -104,7 +126,6 @@ struct Polynomial {
             return r;
         }
         Monomial &operator*=(Monomial &x) {
-            coef *= x.coef;
             // optimize the length 0 and 1 cases.
             if (x.prodIDs.size() == 0) {
                 return *this;
@@ -149,34 +170,13 @@ struct Polynomial {
             x *= (*this);
             return x;
         }
-        bool operator==(Monomial x) {
-            if (coef != x.coef) {
-                return false;
-            }
-            return prodIDs == x.prodIDs;
-        }
-        bool operator!=(Monomial x) {
-            if (coef == x.coef) {
-                return false;
-            }
-            return prodIDs != x.prodIDs;
-        }
+        bool operator==(Monomial x) { return prodIDs == x.prodIDs; }
+        bool operator!=(Monomial x) { return prodIDs != x.prodIDs; }
 
-        struct Affine;
-        template <typename S> Affine operator+(S &&x);
-        template <typename S> Affine operator-(S &&x);
         // numerator, denominator rational
         std::pair<Monomial, Monomial> rational(Monomial &x) {
-            intptr_t g = std::gcd(coef, x.coef);
-            Monomial n(coef / g);
-            Monomial d(x.coef / g);
-            if (d.coef < 0) {
-                // guarantee the denominator coef is positive
-                // assumption used in affine divRem, to avoid
-                // checking for -1.
-                n.coef *= -1;
-                d.coef *= -1;
-            }
+            Monomial n;
+            Monomial d;
             size_t i = 0;
             size_t j = 0;
             size_t n0 = prodIDs.size();
@@ -204,14 +204,8 @@ struct Polynomial {
         // 1: x.coef / gcd(coef, x.coef)
         // 2: whether the division failed (i.e., true if prodIDs was not a
         // superset of x.prodIDs)
-        std::tuple<Monomial, intptr_t, bool> operator/(Monomial &x) {
-            intptr_t g = std::gcd(coef, x.coef);
-            Monomial n(coef / g);
-            intptr_t d = coef / x.coef;
-            if (d < 0) {
-                d *= -1;
-                n.coef *= -1;
-            }
+        std::pair<Monomial, bool> operator/(Monomial &x) {
+            Monomial n;
             size_t i = 0;
             size_t j = 0;
             size_t n0 = prodIDs.size();
@@ -228,46 +222,98 @@ struct Polynomial {
                     ++i;
                     ++j;
                 } else {
-                    return std::make_tuple(n, d, true);
+                    return std::make_pair(n, true);
                 }
             }
-            return std::make_tuple(n, d, false);
+            return std::make_pair(n, false);
         }
-        bool isZero() { return coef == 0; }
-        bool isOne() { return (coef == 0) & (prodIDs.size() == 0); }
-        Monomial &negate() {
-            coef *= -1;
-            return *this;
-        }
+        bool isOne() { return (prodIDs.size() == 0); }
         bool isCompileTimeConstant() { return prodIDs.size() == 0; }
+
+        bool lexLess(Monomial &x) {
+            auto it = begin();
+            auto ite = end();
+            auto ix = x.begin();
+            auto ixe = x.end();
+            while ((it != ite) && (ix != ixe)) {
+                if ((*it) > (*ix)) {
+                    // require syms in `x` be smaller, i.e. leading ones have
+                    // higher exponents
+                    return false;
+                }
+                ++it;
+                ++ixe;
+            }
+            // return `true` if `x` is longer, so that we insert
+            // longer (higher degree) monomials early.
+            // if `x` is longer, then `ix != ixe`.
+            return ix != ixe;
+        }
     };
 
-    std::vector<Monomial> terms;
+    struct Term {
+        Rational coefficient;
+        Monomial monomial;
+
+        Term &negate() {
+            coefficient.numerator *= -1;
+            return *this;
+        }
+        bool termsMatch(Term &x) {
+            return monomial.prodIDs == x.monomial.prodIDs;
+        }
+        bool addCoef(Rational coef) { return (coefficient += coef).isZero(); }
+        bool subCoef(Rational coef) { return (coefficient -= coef).isZero(); }
+        bool addCoef(Term &t) { return addCoef(t.coefficient); }
+        bool subCoef(Term &t) { return subCoef(t.coefficient); }
+
+        bool lexLess(Term &t) { return monomial.lexLess(t.monomial); }
+        bool isZero() { return coefficient.isZero(); }
+        bool isOne() { return coefficient.isOne() & monomial.isOne(); }
+
+        Term &operator*=(Term &x) {
+            coefficient *= x.coefficient;
+            monomial *= x.monomial;
+            return *this;
+        }
+        Term operator*(Term &x) {
+            Term y(*this);
+            return std::move(y *= x);
+        }
+        std::pair<Term, intptr_t> operator/(Term &x) {
+            auto [m, s] = monomial / x.monomial;
+            return std::make_pair(Term{coefficient / x.coefficient, m}, s);
+        }
+        bool isInteger() { return coefficient.isInteger(); }
+    };
+
+    std::vector<Term> terms;
     Polynomial() = default;
-    Polynomial(Monomial &x) : terms({x}){};
-    Polynomial(Monomial &&x) : terms({std::move(x)}){};
-    // Polynomial(Monomial &t0, Monomial &t1) : terms({t0, t1}) {};
-    // Polynomial(Monomial &&t0, Monomial &&t1) : terms({std::move(t0),
+    Polynomial(Term &x) : terms({x}){};
+    Polynomial(Term &&x) : terms({std::move(x)}){};
+    // Polynomial(Term &t0, Term &t1) : terms({t0, t1}) {};
+    // Polynomial(Term &&t0, Term &&t1) : terms({std::move(t0),
     // std::move(t1)})
     // {};
-    Polynomial(std::vector<Monomial> &t) : terms(t){};
-    Polynomial(std::vector<Monomial> &&t) : terms(std::move(t)){};
+    Polynomial(std::vector<Term> &t) : terms(t){};
+    Polynomial(std::vector<Term> &&t) : terms(std::move(t)){};
 
     inline auto begin() { return terms.begin(); }
     inline auto end() { return terms.end(); }
-    // Polynomial(std::tuple<Monomial, Monomial> &&x) : terms({std::get<0>(x),
+    // Polynomial(std::tuple<Term, Term> &&x) : terms({std::get<0>(x),
     // std::get<1>(x)}) {}
 
     template <typename S> void add_term(S &&x) {
         if (x.coef) {
             for (auto it = terms.begin(); it != terms.end(); ++it) {
-                if ((it->prodIDs) == x.prodIDs) {
-                    (it->coef) += x.coef;
-                    if ((it->coef) == 0) {
+                if ((it->termsMatch(x))) {
+                    if (it->addCoef(x)) {
                         terms.erase(it);
                     }
                     return;
-                } else if (lexicographicalLess(x, *it)) {
+                    // } else if (lexicographicalLess(x, *it)) {
+                    // } else if (it -> lexLess(x)) {
+                } else if (x.lexLess(*it)) {
                     terms.insert(it, std::forward<S>(x));
                     return;
                 }
@@ -279,45 +325,42 @@ struct Polynomial {
     template <typename S> void sub_term(S &&x) {
         if (x.coef) {
             for (auto it = terms.begin(); it != terms.end(); ++it) {
-                if ((it->prodIDs) == x.prodIDs) {
-                    (it->coef) -= x.coef;
-                    if ((it->coef) == 0) {
+                if ((it->termsMatch(x))) {
+                    if (it->subCoef(x)) {
                         terms.erase(it);
                     }
                     return;
                 } else if (lexicographicalLess(x, *it)) {
-                    Monomial y(x);
-                    y.coef *= -1;
-                    terms.insert(it, std::move(y));
+                    Term y(x);
+                    terms.insert(it, std::move(y.negate()));
                     return;
                 }
             }
-            Monomial y(x);
-            y.coef *= -1;
-            terms.push_back(std::move(y));
+            Term y(x);
+            terms.push_back(std::move(y.negate()));
         }
         return;
     }
-    Polynomial &operator+=(Monomial &x) {
+    Polynomial &operator+=(Term &x) {
         add_term(x);
         return *this;
     }
-    Polynomial &operator+=(Monomial &&x) {
+    Polynomial &operator+=(Term &&x) {
         add_term(std::move(x));
         return *this;
     }
-    Polynomial &operator-=(Monomial &x) {
+    Polynomial &operator-=(Term &x) {
         sub_term(x);
         return *this;
     }
-    Polynomial &operator-=(Monomial &&x) {
+    Polynomial &operator-=(Term &&x) {
         sub_term(std::move(x));
         return *this;
     }
 
     bool operator==(Polynomial &x) { return (terms == x.terms); }
     bool operator!=(Polynomial &x) { return (terms != x.terms); }
-    Polynomial operator*(Monomial &x) {
+    Polynomial operator*(Term &x) {
         Polynomial p(terms);
         for (auto it = p.begin(); it != p.end(); ++it) {
             (*it) *= x;
@@ -334,12 +377,12 @@ struct Polynomial {
         }
         return p;
     }
-    Polynomial operator+(Monomial &x) {
+    Polynomial operator+(Term &x) {
         Polynomial y(terms);
         y.add_term(x);
         return y;
     }
-    Polynomial operator-(Monomial x) {
+    Polynomial operator-(Term x) {
         Polynomial y(terms);
         y.sub_term(x);
         return y;
@@ -380,8 +423,8 @@ struct Polynomial {
         }
         return *this;
     }
-    Polynomial &operator*=(Monomial x) {
-        if (x.coef == 0) {
+    Polynomial &operator*=(Term x) {
+        if (x.isZero()) {
             terms.clear();
             return *this;
         } else if (x.isOne()) {
@@ -400,7 +443,8 @@ struct Polynomial {
     bool isOne() { return (terms.size() == 1) & terms[0].isOne(); }
 
     bool isCompileTimeConstant() {
-        return (terms.size() == 1) && (terms.begin()->isCompileTimeConstant());
+        return (terms.size() == 1) &&
+               (terms.begin()->monomial.isCompileTimeConstant());
     }
 
     Polynomial &negate() {
@@ -409,16 +453,18 @@ struct Polynomial {
         }
         return *this;
     }
-    void divRem(Polynomial &d, Polynomial &r, Monomial &x) {
+    // returns a <div, rem> pair
+    /*
+    std::pair<Polynomial, Polynomial> divRem(Term &x) {
+        Polynomial d;
+        Polynomial r;
         for (auto it = begin(); it != end(); ++it) {
-            auto [nx, dx, fail] = *it / x;
+            auto [nx, fail] = *it / x;
             if (fail) {
                 r.add_term(*it);
             } else {
-                if (dx == 1) {
+                if (nx.isInteger()) {
                     // perfectly divided
-                    d.add_term(nx);
-                } else {
                     intptr_t div = nx.coef / dx;
                     intptr_t rem = nx.coef - dx * div;
                     if (div) {
@@ -429,42 +475,41 @@ struct Polynomial {
                         nx.coef = rem;
                         r.add_term(nx);
                     }
+                } else {
+                    d.add_term(nx);
                 }
             }
         }
-    }
-    // returns a <div, rem> pair
-    std::pair<Polynomial, Polynomial> divRem(Monomial &x) {
-        Polynomial d;
-        Polynomial r;
-        divRem(d, r, x);
         return std::make_pair(d, r);
     }
+    */
     // returns a <div, rem> pair
-    std::pair<Polynomial, Polynomial> divRem(Polynomial &x) {
-        // TODO: algorithm needs to be fixed
-        Polynomial d;
+    Term &leadingTerm() { return terms[0]; }
+    void removeLeadingTerm() { terms.erase(terms.begin()); }
+    void takeLeadingTerm(Polynomial &x) {
+        add_term(std::move(x.leadingTerm()));
+        x.removeLeadingTerm();
+    }
+    std::pair<Polynomial, Polynomial> divRem(Polynomial &d) {
+        Polynomial q;
         Polynomial r;
-        Polynomial y(terms); // copy
-        auto it = x.begin();
-        auto ite = x.end();
-        if (it != ite) {
-            while (true) {
-                y.divRem(d, r, *it);
-                ++it;
-                if (it == ite) {
-                    break;
-                }
-                std::swap(y, r);
-                r.terms.clear();
+        Polynomial p(*this);
+        while (!p.terms.empty()) {
+            auto [nx, fail] = p.leadingTerm() / d.leadingTerm();
+            if (fail) {
+                r.takeLeadingTerm(p);
+            } else {
+                p -= d * nx;
+                q += std::move(nx);
             }
         }
-        return std::make_pair(std::move(d), std::move(r));
+        return std::make_pair(std::move(q), std::move(r));
     }
     Polynomial operator/(Polynomial &x) { return divRem(x).first; }
     Polynomial operator%(Polynomial &x) { return divRem(x).second; }
 };
 
+/*
 bool lexicographicalLess(Polynomial::Monomial &x, Polynomial::Monomial &y) {
     return std::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
 }
@@ -473,10 +518,11 @@ std::strong_ordering lexicographicalCmp(Polynomial::Monomial &x,
     return std::lexicographical_compare_three_way(x.begin(), x.end(), y.begin(),
                                                   y.end());
 }
+*/
 
-std::tuple<Polynomial::Monomial, Polynomial::Monomial, Polynomial::Monomial>
-gcd(Polynomial::Monomial &x, Polynomial::Monomial &y) {
-    Polynomial::Monomial g, a, b;
+std::tuple<Polynomial::Term, Polynomial::Term, Polynomial::Term>
+gcd(Polynomial::Term &x, Polynomial::Term &y) {
+    Polynomial::Term g, a, b;
     intptr_t c = std::gcd(x.coef, y.coef);
     g.coef = c;
     a.coef = x.coef / c;
@@ -506,17 +552,17 @@ gcd(Polynomial::Monomial &x, Polynomial::Monomial &y) {
     return std::make_tuple(g, a, b);
 }
 
-std::pair<Polynomial::Monomial, std::vector<Polynomial::Monomial>>
-gcd(std::vector<Polynomial::Monomial> &x) {
+std::pair<Polynomial::Term, std::vector<Polynomial::Term>>
+gcd(std::vector<Polynomial::Term> &x) {
     switch (x.size()) {
     case 0:
-        return std::make_pair(Polynomial::Monomial(0), x);
+        return std::make_pair(Polynomial::Term(0), x);
     case 1:
         return std::make_pair(
-            x[0], std::vector<Polynomial::Monomial>{Polynomial::Monomial(1)});
+            x[0], std::vector<Polynomial::Term>{Polynomial::Term(1)});
     default:
         auto [g, a, b] = gcd(x[0], x[1]);
-        std::vector<Polynomial::Monomial> f;
+        std::vector<Polynomial::Term> f;
         f.reserve(x.size());
         f.push_back(std::move(a));
         f.push_back(std::move(b));
