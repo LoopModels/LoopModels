@@ -229,8 +229,12 @@ struct Polynomial {
         }
         bool isOne() { return (prodIDs.size() == 0); }
         bool isCompileTimeConstant() { return prodIDs.size() == 0; }
-
+	size_t degree() { return prodIDs.size(); }
         bool lexLess(Monomial &x) {
+            // return `true` if `*this.degree() > x.degree()`
+	    if (degree() > x.degree()){
+		return true;
+	    }
             auto it = begin();
             auto ite = end();
             auto ix = x.begin();
@@ -244,10 +248,8 @@ struct Polynomial {
                 ++it;
                 ++ixe;
             }
-            // return `true` if `x` is longer, so that we insert
-            // longer (higher degree) monomials early.
-            // if `x` is longer, then `ix != ixe`.
-            return ix != ixe;
+            // return it != ite; // returns true if `*this` is longer
+	    return false;
         }
     };
 
@@ -330,7 +332,7 @@ struct Polynomial {
                         terms.erase(it);
                     }
                     return;
-                } else if (lexicographicalLess(x, *it)) {
+                } else if (x.lexLess(*it)) {
                     Term y(x);
                     terms.insert(it, std::move(y.negate()));
                     return;
