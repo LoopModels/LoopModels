@@ -219,8 +219,8 @@ struct Polynomial {
             return std::make_pair(n, d);
         }
         // returns a 3-tuple, containing:
-        // 0: Monomial(coef / gcd(coef, x.coef), setDiff(prodIDs, x.prodIDs))
-        // 1: x.coef / gcd(coef, x.coef)
+        // 0: Monomial(coef / gcd(coef, x.coefficient), setDiff(prodIDs, x.prodIDs))
+        // 1: x.coef / gcd(coef, x.coefficient)
         // 2: whether the division failed (i.e., true if prodIDs was not a
         // superset of x.prodIDs)
         std::pair<Monomial, bool> operator/(Monomial &x) {

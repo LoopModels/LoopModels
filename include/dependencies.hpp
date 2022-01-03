@@ -504,11 +504,11 @@ bool maybeLess(Function &fun, Polynomial &x, Polynomial &y) {
     auto ity = y.begin(); auto itye = y.end();
     while ((itx != itxe) & (ity != itye)) {
         if ((itx -> prodIDs) == (ity -> prodIDs)){
-            if ((itx -> coef) != (ity -> coef)){
-                intptr_t coefOld = itx -> coef;
-                (itx -> coef) = coefOld - (ity -> coef);
+            if ((itx -> coefficient) != (ity -> coefficient)){
+                intptr_t coefOld = itx -> coefficient;
+                (itx -> coefficient) = coefOld - (ity -> coefficient);
                 diff.push_back(valueRange(fun, *itx));
-                (itx -> coef) = coefOld;
+                (itx -> coefficient) = coefOld;
             }
             ++itx;
             ++ity;

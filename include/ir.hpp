@@ -771,7 +771,7 @@ struct Function {
 
 ValueRange valueRange(Function &fun, size_t id) { return fun.rangeMap[id]; }
 ValueRange valueRange(Function &fun, Polynomial::Term &x) {
-    ValueRange p = ValueRange(x.coef);
+    ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.begin(); it != x.end(); ++it) {
         p *= fun.rangeMap[*it];
     }
