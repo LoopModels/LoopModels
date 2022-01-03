@@ -463,13 +463,13 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // A(i,j,i)
 
 // should be O(N), passing through both arrays just once;
-Symbol::Affine upperBound(Source indSrc, RektM loopvars) {
+Polynomial upperBound(Source indSrc, RektM loopvars) {
     // std::numeric_limits<Int>::max(): not making assumptions on returned
     // value.
     if (indSrc.typ == LoopInductionVariable) {
         return loopToAffineUpperBound(getCol(loopvars, indSrc.id));
     } else {
-        return Symbol::Affine(Symbol(std::numeric_limits<Int>::max()));
+        return Polynomial(Polynomial::Term(std::numeric_limits<Int>::max()));
     }
 }
 // x y
@@ -479,7 +479,7 @@ Symbol::Affine upperBound(Source indSrc, RektM loopvars) {
 // F F T
 // only returns true if guaranteed
 
-bool maybeLess(Function &fun, Symbol::Affine &diff) {
+bool maybeLess(Function &fun, Polynomial &diff) {
     if (diff.isZero()) {
         return false;
     }
@@ -497,7 +497,7 @@ bool maybeLess(std::vector<ValueRange> x) {
     return lowerBound < 0;
 }
 
-bool maybeLess(Function &fun, Symbol::Affine &x, Symbol::Affine &y) {
+bool maybeLess(Function &fun, Polynomial &x, Polynomial &y) {
     /*
     std::vector<ValueRange> diff;
     auto itx = x.begin(); auto itxe = x.end();
@@ -530,16 +530,16 @@ bool maybeLess(Function &fun, Symbol::Affine &x, Symbol::Affine &y) {
     }
     */
     // TODO: improve on this, by taking advantage of the cached difference info
-    Symbol::Affine diff = x - y;
+    Polynomial diff = x - y;
     return maybeLess(fun, diff);
 }
 /*
-bool maybeLess(Function &fun, Symbol::Affine &&x, Symbol::Affine &y) {
+bool maybeLess(Function &fun, Polynomial &&x, Polynomial &y) {
     x -= y;
     return maybeLess(fun, x);
 }
 */
-bool maybeLess(Function &fun, Stride &x, Symbol::Affine &y) {
+bool maybeLess(Function &fun, Stride &x, Polynomial &y) {
     for (auto it = x.stride.begin(); it != x.stride.end(); ++it) {
         if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
@@ -572,13 +572,13 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, I itsrc) {
 */
 
 bool mayOverlap(Function &fun, std::vector<Stride> &strides,
-                std::vector<Symbol::Affine> &upperBounds, size_t j, size_t k) {
+                std::vector<Polynomial> &upperBounds, size_t j, size_t k) {
     return maybeLess(fun, strides[k], upperBounds[j]) &&
            maybeLess(fun, strides[j], upperBounds[k]);
 }
 
 void recheckStrides(Function &fun, std::vector<Stride> &strides,
-                    std::vector<Symbol::Affine> &upperBounds, size_t j) {
+                    std::vector<Polynomial> &upperBounds, size_t j) {
     size_t eraseInds[64];
     size_t eraseCount;
     size_t jDec;
@@ -621,9 +621,9 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.strides;
     strides.reserve(Ninds);
-    std::vector<Symbol::Affine> &upperBounds = ar.upperBounds;
+    std::vector<Polynomial> &upperBounds = ar.upperBounds;
     upperBounds.reserve(Ninds);
-    // std::vector<Symbol::Affine> strideSums;
+    // std::vector<Polynomial> strideSums;
     // strideSums.reserve(Ninds);
     // TODO: factor out rechecking for stride combining.
     // std::vector<BitSet64> recheck(Ninds);
@@ -631,11 +631,11 @@ void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<size_t> recheck;
     auto ite = ar.inds.end();
     for (auto it = ar.inds.begin(); it != ite; ++it) {
-        std::pair<Symbol::Affine, Source> ind = *it;
-        Symbol::Affine &a = std::get<0>(ind);
+        std::pair<Polynomial, Source> ind = *it;
+        Polynomial &a = std::get<0>(ind);
         Source indSrc = std::get<1>(ind);
 
-        Symbol::Affine ubi = upperBound(indSrc, loopnest);
+        Polynomial ubi = upperBound(indSrc, loopnest);
         // auto [srcId, srcTyp] = ar.indTyps[i];
         bool overlaps = false;
         // BitSet64 upperBoundGreaterOrEqualToStride;
@@ -700,10 +700,9 @@ bool mayOverlap(Function &fun, ArrayRef &x, ArrayRef &y, size_t i, size_t j) {
     return maybeLess(fun, x.strides[j], y.upperBounds[i]) &&
            maybeLess(fun, y.strides[i], x.upperBounds[j]);
 }
-bool mayOverlap(
-    Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
-    std::vector<std::pair<Symbol::Affine, Symbol::Affine>> &upperBounds,
-    size_t i, size_t j) {
+bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
+                std::vector<std::pair<Polynomial, Polynomial>> &upperBounds,
+                size_t i, size_t j) {
     return (maybeLess(fun, strides[j].first, upperBounds[i].first) &&
             maybeLess(fun, strides[i].first,
                       upperBounds[j].first)) // does first overlap?
@@ -718,10 +717,10 @@ bool mayOverlap(
                          upperBounds[j].second)); // with second?
 }
 
-void recheckStrides(
-    Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
-    std::vector<std::pair<Symbol::Affine, Symbol::Affine>> &upperBounds,
-    size_t j) {
+void recheckStrides(Function &fun,
+                    std::vector<std::pair<Stride, Stride>> &strides,
+                    std::vector<std::pair<Polynomial, Polynomial>> &upperBounds,
+                    size_t j) {
     // index `j` has been updated, so check `j` vs all others
     size_t eraseInds[64];
     size_t eraseCount;
@@ -812,7 +811,7 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
     // 1. []:  i vs i
     // 2. [M]: j vs j
     std::vector<std::pair<Stride, Stride>> strideCmp;
-    std::vector<std::pair<Symbol::Affine, Symbol::Affine>> upperBoundCmp;
+    std::vector<std::pair<Polynomial, Polynomial>> upperBoundCmp;
     /*
     std::pair<intptr_t,size_t> foundX[64];
     std::pair<intptr_t,size_t> foundY[64];
@@ -906,13 +905,12 @@ template <typename T> ValueRange differenceRange(Function &fun, T it, T ite) {
     }
     return r;
 }
-ValueRange differenceRange(Function &fun, Symbol::Affine &x,
-                           Symbol::Affine &y) {
-    Symbol::Affine diff = x - y;
+ValueRange differenceRange(Function &fun, Polynomial &x, Polynomial &y) {
+    Polynomial diff = x - y;
     return differenceRange(fun, diff.begin(), diff.end());
 }
 // ValueRange differenceRangeConst(Function &fun,
-// std::pair<Symbol::Affine,Source> &x) {
+// std::pair<Polynomial,Source> &x) {
 //     return differenceRange(fun, x.first.begin(), x.first.end()) *
 //     valueRange(fun, x.second.id);
 // }
@@ -939,7 +937,7 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
         return Independent; // there is a difference => independent
     }
 }
-Symbol::Affine &getFirstLoopStride(Stride &x) {
+Polynomial &getFirstLoopStride(Stride &x) {
     auto it = x.begin();
     for (; it != x.end(); ++it) {
         if ((it->second).typ == LoopInductionVariable) {
@@ -962,7 +960,7 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
         if (delta.isConstant()) { // 1 constant term (# of affine const terms is
                                   // 0 or 1)
                                   // strong
-            Symbol::Affine &a = getFirstLoopStride(x);
+            Polynomial &a = getFirstLoopStride(x);
             // auto [g, xf, yf] = gcd(delta.stride.begin() -> first, a);
             // auto [d, r] = xf.divRem(yf);
             auto [d, r] = (delta.stride.begin()->first).divRem(a);
@@ -993,7 +991,7 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
             // solve a1 * x + a0 = b1 * y + b0;
             if (delta.getCount(ConstantSource)) {
                 // c = a0 - b0;
-                Symbol::Affine c = delta.begin()->first;
+                Polynomial c = delta.begin()->first;
                 // x(k) = -na * (c / g) + k * b1 / g;
                 // y(k) =  nb * (c / g) + k * a1 / g;
                 // we must therefore check if any solutions are within the loop

@@ -365,7 +365,7 @@ template <typename T> size_t length(VoVoV<T> x) {
 // set identically. thus, `getCount(ConstantSource)` must always return either
 // `0` or `1`.
 struct Stride {
-    std::vector<std::pair<Symbol::Affine, Source>>
+    std::vector<std::pair<Polynomial, Source>>
         stride; // sources must be ordered
     size_t counts[5];
     // size_t constCount;
@@ -373,13 +373,11 @@ struct Stride {
     // size_t memCount;
     // size_t termCount;
     Stride()
-        : stride(std::vector<std::pair<Symbol::Affine, Source>>()), counts{
-                                                                        0, 0, 0,
-                                                                        0,
-                                                                        0} {};
-    Stride(Symbol::Affine &x, Source &&ind)
+        : stride(std::vector<std::pair<Polynomial, Source>>()), counts{0, 0, 0,
+                                                                       0, 0} {};
+    Stride(Polynomial &x, Source &&ind)
         : stride({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
-    Stride(Symbol::Affine &x, size_t indId, SourceType indTyp)
+    Stride(Polynomial &x, size_t indId, SourceType indTyp)
         : stride({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
                                                                      0} {};
 
@@ -505,12 +503,12 @@ struct Stride {
     // takes advantage of sorting
     bool isAffine() { return counts[2] == counts[4]; }
 
-    // std::pair<Symbol::Affine,DivRemainder> tryDiv(Symbol::Affine &a){
+    // std::pair<Polynomial,DivRemainder> tryDiv(Polynomial &a){
     // 	auto [s, v] = gcd(a.terms);
 
     // }
 
-    // bool operator>=(Symbol::Affine x){
+    // bool operator>=(Polynomial x){
 
     // 	return false;
     // }
@@ -527,11 +525,11 @@ SourceCount sourceCount(Stride s) {
 
 struct ArrayRef {
     size_t arrayId;
-    std::vector<std::pair<Symbol::Affine, Source>> inds;
+    std::vector<std::pair<Polynomial, Source>> inds;
     std::vector<Stride> strides;
     std::vector<size_t>
         indToStrideMap; // length(indTostridemap) == length(inds)
-    std::vector<Symbol::Affine> upperBounds;
+    std::vector<Polynomial> upperBounds;
 };
 
 template <typename T0, typename T1, typename T2>
@@ -772,14 +770,14 @@ struct Function {
 };
 
 ValueRange valueRange(Function &fun, size_t id) { return fun.rangeMap[id]; }
-ValueRange valueRange(Function &fun, Symbol &x) {
+ValueRange valueRange(Function &fun, Polynomial::Term &x) {
     ValueRange p = ValueRange(x.coef);
     for (auto it = x.begin(); it != x.end(); ++it) {
         p *= fun.rangeMap[*it];
     }
     return p;
 }
-ValueRange valueRange(Function &fun, Symbol::Affine &x) {
+ValueRange valueRange(Function &fun, Polynomial &x) {
     ValueRange a(0);
     for (auto it = x.begin(); it != x.end(); ++it) {
         a += valueRange(fun, *it);
@@ -793,7 +791,7 @@ Order cmpZero(intptr_t x) {
 Order cmpZero(Function &fun, size_t id) {
     return valueRange(fun, id).compare(0);
 }
-Order cmpZero(Function &fun, Symbol &x) {
+Order cmpZero(Function &fun, Polynomial::Term &x) {
     return valueRange(fun, x).compare(0);
 };
 

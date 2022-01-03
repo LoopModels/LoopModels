@@ -6,6 +6,7 @@
 #include <iterator>
 #include <limits>
 #include <numeric>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -89,6 +90,19 @@ struct Rational {
     bool isInteger() { return denominator == 1; }
 };
 
+Rational gcd(Rational x, Rational y) {
+    intptr_t a = x.numerator * y.denominator;
+    intptr_t b = x.denominator * y.numerator;
+    intptr_t n = std::gcd(a, b);
+    intptr_t d = x.denominator * y.denominator;
+    if ((d != 1) & (n != 0)) {
+        intptr_t g = std::gcd(n, d);
+        n /= g;
+        d /= g;
+    }
+    return n ? Rational{n, d} : Rational{1, 0};
+}
+
 // The basic symbol type represents a symbol as a product of some number of
 // known IDs as well as with a constant term.
 // `5` would thus be an empty `prodIDs` vector and `coef = 5`.
@@ -98,7 +112,8 @@ struct Rational {
 // Can we assume `prodIDs` are greater than 0?
 struct Polynomial {
     struct Monomial {
-        std::vector<size_t> prodIDs; // sorted symbolic terms being multiplied
+        std::vector<uint_fast32_t>
+            prodIDs; // sorted symbolic terms being multiplied
 
         // constructors
         Monomial() : prodIDs(std::vector<size_t>()){};
@@ -115,10 +130,12 @@ struct Polynomial {
             size_t n1 = x.prodIDs.size();
             r.prodIDs.reserve(n0 + n1);
             for (size_t k = 0; k < (n0 + n1); ++k) {
-                size_t a =
-                    (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
-                size_t b = (j < n1) ? x.prodIDs[j]
-                                    : std::numeric_limits<size_t>::max();
+                uint_fast32_t a =
+                    (i < n0) ? prodIDs[i]
+                             : std::numeric_limits<uint_fast32_t>::max();
+                uint_fast32_t b =
+                    (j < n1) ? x.prodIDs[j]
+                             : std::numeric_limits<uint_fast32_t>::max();
                 bool aSmaller = a < b;
                 aSmaller ? ++i : ++j;
                 r.prodIDs.push_back(aSmaller ? a : b);
@@ -130,7 +147,7 @@ struct Polynomial {
             if (x.prodIDs.size() == 0) {
                 return *this;
             } else if (x.prodIDs.size() == 1) {
-                size_t y = x.prodIDs[0];
+                uint_fast32_t y = x.prodIDs[0];
                 for (auto it = begin(); it != end(); ++it) {
                     if (y < *it) {
                         prodIDs.insert(it, y);
@@ -182,10 +199,12 @@ struct Polynomial {
             size_t n0 = prodIDs.size();
             size_t n1 = x.prodIDs.size();
             while ((i + j) < (n0 + n1)) {
-                size_t a =
-                    (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
-                size_t b = (j < n1) ? x.prodIDs[j]
-                                    : std::numeric_limits<size_t>::max();
+                uint_fast32_t a =
+                    (i < n0) ? prodIDs[i]
+                             : std::numeric_limits<uint_fast32_t>::max();
+                uint_fast32_t b =
+                    (j < n1) ? x.prodIDs[j]
+                             : std::numeric_limits<uint_fast32_t>::max();
                 if (a < b) {
                     n.prodIDs.push_back(a);
                     ++i;
@@ -211,10 +230,12 @@ struct Polynomial {
             size_t n0 = prodIDs.size();
             size_t n1 = x.prodIDs.size();
             while ((i + j) < (n0 + n1)) {
-                size_t a =
-                    (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
-                size_t b = (j < n1) ? x.prodIDs[j]
-                                    : std::numeric_limits<size_t>::max();
+                uint_fast32_t a =
+                    (i < n0) ? prodIDs[i]
+                             : std::numeric_limits<uint_fast32_t>::max();
+                uint_fast32_t b =
+                    (j < n1) ? x.prodIDs[j]
+                             : std::numeric_limits<uint_fast32_t>::max();
                 if (a < b) {
                     n.prodIDs.push_back(a);
                     ++i;
@@ -290,13 +311,54 @@ struct Polynomial {
             return std::make_pair(Term{coefficient / x.coefficient, m}, s);
         }
         bool isInteger() { return coefficient.isInteger(); }
+
+        template <typename T> Polynomial operator+(T &&y) {
+            if (termsMatch(y)) {
+                if (coefficient == y.coefficient.negate()) {
+                    return Polynomial(Term(0));
+                } else {
+                    Term t(std::forward<T>(y));
+                    t.coefficient += coefficient;
+                    return Polynomial(std::move(t));
+                }
+            }
+            // x.lexLess(*it)
+            if (this->lexLess(y)) {
+                return Polynomial(*this, std::forward<T>(y));
+            } else {
+                return Polynomial(std::forward<T>(y), *this);
+            }
+        }
+        template <typename T> Polynomial operator-(T &&y) {
+            if (termsMatch(y)) {
+                if (coefficient == y.coefficient) {
+                    return Polynomial(Term(0));
+                } else {
+                    Term t(std::forward<T>(y));
+                    t.coefficient = coefficient - t.coefficient;
+                    return Polynomial(std::move(t));
+                }
+            }
+            Term t(std::forward<T>(y));
+            t.negate();
+            if (this->lexLess(y)) {
+                return Polynomial(*this, std::forward<T>(t));
+            } else {
+                return Polynomial(std::forward<T>(t), *this);
+            }
+        }
+        bool isCompileTimeConstant() {
+            return monomial.isCompileTimeConstant();
+        }
+        auto begin() { return monomial.begin(); }
+        auto end() { return monomial.end(); }
     };
 
     std::vector<Term> terms;
     Polynomial() = default;
     Polynomial(Term &x) : terms({x}){};
     Polynomial(Term &&x) : terms({std::move(x)}){};
-    // Polynomial(Term &t0, Term &t1) : terms({t0, t1}) {};
+    Polynomial(Term &t0, Term &t1) : terms({t0, t1}){};
     // Polynomial(Term &&t0, Term &&t1) : terms({std::move(t0),
     // std::move(t1)})
     // {};
@@ -309,7 +371,7 @@ struct Polynomial {
     // std::get<1>(x)}) {}
 
     template <typename S> void add_term(S &&x) {
-        if (x.coef) {
+        if (!x.isZero()) {
             for (auto it = terms.begin(); it != terms.end(); ++it) {
                 if ((it->termsMatch(x))) {
                     if (it->addCoef(x)) {
@@ -326,7 +388,7 @@ struct Polynomial {
         return;
     }
     template <typename S> void sub_term(S &&x) {
-        if (x.coef) {
+        if (!x.isZero()) {
             for (auto it = terms.begin(); it != terms.end(); ++it) {
                 if ((it->termsMatch(x))) {
                     if (it->subCoef(x)) {
@@ -523,22 +585,18 @@ std::strong_ordering lexicographicalCmp(Polynomial::Monomial &x,
 }
 */
 
-std::tuple<Polynomial::Term, Polynomial::Term, Polynomial::Term>
-gcd(Polynomial::Term &x, Polynomial::Term &y) {
-    Polynomial::Term g, a, b;
-    intptr_t c = std::gcd(x.coef, y.coef);
-    g.coef = c;
-    a.coef = x.coef / c;
-    b.coef = y.coef / c;
+std::tuple<Polynomial::Monomial, Polynomial::Monomial, Polynomial::Monomial>
+gcd(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+    Polynomial::Monomial g, a, b;
     size_t i = 0;
     size_t j = 0;
     size_t n0 = x.prodIDs.size();
     size_t n1 = y.prodIDs.size();
     for (size_t k = 0; k < (n0 + n1); ++k) {
-        size_t xk =
-            (i < n0) ? x.prodIDs[i] : std::numeric_limits<size_t>::max();
-        size_t yk =
-            (j < n1) ? y.prodIDs[j] : std::numeric_limits<size_t>::max();
+        uint_fast32_t xk =
+            (i < n0) ? x.prodIDs[i] : std::numeric_limits<uint_fast32_t>::max();
+        uint_fast32_t yk =
+            (j < n1) ? y.prodIDs[j] : std::numeric_limits<uint_fast32_t>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
             ++i;
@@ -553,6 +611,14 @@ gcd(Polynomial::Term &x, Polynomial::Term &y) {
         }
     }
     return std::make_tuple(g, a, b);
+}
+std::tuple<Polynomial::Term, Polynomial::Term, Polynomial::Term>
+gcd(Polynomial::Term &x, Polynomial::Term &y) {
+    auto [g, a, b] = gcd(x.monomial, y.monomial);
+    Rational gr = gcd(x.coefficient, y.coefficient);
+    return std::make_tuple(Polynomial::Term{gr, g},
+                           Polynomial::Term{x.coefficient / gr, a},
+                           Polynomial::Term{y.coefficient / gr, b});
 }
 
 std::pair<Polynomial::Term, std::vector<Polynomial::Term>>
@@ -622,73 +688,41 @@ std::tuple<Polynomial, Polynomial, Polynomial> extended_gcd(Polynomial &a,
 
 template <typename T> T negate(T &&x) { return std::forward<T>(x.negate()); }
 
-template <typename S> Polynomial Symbol::operator+(S &&y) {
-    if (prodIDs == y.prodIDs) {
-        if (coef == -y.coef) {
-            return Polynomial(Symbol(0));
-        } else {
-            Symbol s(std::forward<S>(y));
-            s.coef += coef;
-            return Polynomial(std::move(s));
-        }
-    }
-    Polynomial s;
-    s.terms.reserve(2);
-    if (lexicographicalLess(*this, y)) {
-        s.terms.push_back(*this);
-    } else {
-        s.terms.push_back(std::forward<S>(y));
-    }
-    return s;
-}
-template <typename S> Polynomial Symbol::operator-(S &&y) {
-    if (prodIDs == y.prodIDs) {
-        if (coef == -y.coef) {
-            return Polynomial(Symbol(0));
-        } else {
-            Symbol s(std::forward<S>(y));
-            s.coef = coef - s.coef;
-            return Polynomial(std::move(s));
-        }
-    }
-    Polynomial s;
-    s.terms.reserve(2);
-    if (lexicographicalLess(*this, y)) {
-        s.terms.push_back(*this);
-    } else {
-        s.terms.push_back(std::forward<S>(y));
-    }
-    return s;
-}
-
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
-std::string toString(Symbol x) {
-    std::string poly = "";
+std::string toString(Rational x) {
+    if (x.denominator == 1) {
+        return std::to_string(x.numerator);
+    } else {
+        return std::to_string(x.numerator) + " / " +
+               std::to_string(x.denominator);
+    }
+}
+std::string toString(Polynomial::Monomial x) {
     size_t numIndex = x.prodIDs.size();
-    Int coef = x.coef;
     if (numIndex) {
         if (numIndex != 1) { // not 0 by prev `if`
-            if (coef != 1) {
-                poly += std::to_string(coef) + " (";
-            }
+            std::string poly = "";
             for (size_t k = 0; k < numIndex; ++k) {
                 poly += programVarName(x.prodIDs[k]);
                 if (k + 1 != numIndex)
                     poly += " ";
             }
-            if (coef != 1) {
-                poly += ")";
-            }
+            return poly;
         } else { // numIndex == 1
-            if (coef != 1) {
-                poly += std::to_string(coef) + " ";
-            }
-            poly += programVarName(x.prodIDs[0]);
+            return programVarName(x.prodIDs[0]);
         }
     } else {
-        poly += std::to_string(coef);
+        return "1";
     }
-    return poly;
+}
+std::string toString(Polynomial::Term x) {
+    if (x.coefficient.isOne()) {
+        return toString(x.monomial);
+    } else if (x.isCompileTimeConstant()) {
+        return toString(x.coefficient);
+    } else {
+        return toString(x.coefficient) + " ( " + toString(x.monomial) + " ) ";
+    }
 }
 
 std::string toString(Polynomial x) {
@@ -701,18 +735,21 @@ std::string toString(Polynomial x) {
     }
     return poly + " ) ";
 }
-void show(Symbol x) { printf("%s", toString(x).c_str()); }
+void show(Polynomial::Term x) { printf("%s", toString(x).c_str()); }
 void show(Polynomial x) { printf("%s", toString(x).c_str()); }
 Polynomial loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
-    Symbol firstSym = Symbol(0); // split to avoid vexing parse
-    Polynomial aff(std::move(firstSym));
+    // Polynomial::Term firstSym = Polynomial::Term(0); // split to avoid vexing
+    // parse Polynomial aff(std::move(firstSym));
+    Polynomial aff; //{Polynomial::Term(0)};
     for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
         if (loopvars[i]) {
-            Symbol sym = Symbol(loopvars[i]);
+            Polynomial::Term sym = Polynomial::Term(loopvars[i]);
             if (i) {
-                sym.prodIDs.push_back(i);
+                sym.monomial.prodIDs.push_back(i);
             } // i == 0 => constant
-            aff += sym;
+            // guaranteed no collision and lex ordering
+            // so we push_back directly.
+            aff.terms.push_back(std::move(sym));
         }
     }
     return aff;
@@ -733,13 +770,81 @@ Polynomial loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
 // [ 0 ], k1 + 1;
 //
 
-/*
-struct Strides {
-    Affine affine;
-    std::vector<size_t> loopInductVars;
+enum Order {
+    InvalidOrder,
+    EqualTo,
+    LessThan,
+    LessOrEqual,
+    GreaterThan,
+    GreaterOrEqual,
+    NotEqual,
+    UnknownOrder
 };
-*/
+auto maybeEqual(Order o) { return o & 1; }
+auto maybeLess(Order o) { return o & 2; }
+auto maybeGreater(Order o) { return o & 4; }
 
+struct ValueRange {
+    double lowerBound;
+    double upperBound;
+    template <typename T> ValueRange(T x) : lowerBound(x), upperBound(x) {}
+    template <typename T> ValueRange(T l, T u) : lowerBound(l), upperBound(u) {}
+    ValueRange(const ValueRange &x)
+        : lowerBound(x.lowerBound), upperBound(x.upperBound) {}
+    ValueRange &operator=(const ValueRange &x) = default;
+    bool isKnown() { return lowerBound == upperBound; }
+    bool operator<(ValueRange x) { return upperBound < x.lowerBound; }
+    Order compare(ValueRange x) {
+        // return upperBound < x.lowerBound;
+        if (isKnown() & x.isKnown()) {
+            return upperBound == x.upperBound ? EqualTo : NotEqual;
+        }
+        if (upperBound < x.lowerBound) {
+            return LessThan;
+        } else if (upperBound == x.lowerBound) {
+            return LessOrEqual;
+        } else if (lowerBound > x.upperBound) {
+            return GreaterThan;
+        } else if (lowerBound == x.upperBound) {
+            return GreaterOrEqual;
+        } else {
+            return UnknownOrder;
+        }
+    }
+    Order compare(intptr_t x) { return compare(ValueRange{x, x}); }
+    ValueRange &operator+=(ValueRange x) {
+        lowerBound += x.lowerBound;
+        upperBound += x.upperBound;
+        return *this;
+    }
+    ValueRange &operator-=(ValueRange x) {
+        lowerBound -= x.upperBound;
+        upperBound -= x.lowerBound;
+        return *this;
+    }
+    ValueRange &operator*=(ValueRange x) {
+        intptr_t a = lowerBound * x.lowerBound;
+        intptr_t b = lowerBound * x.upperBound;
+        intptr_t c = upperBound * x.lowerBound;
+        intptr_t d = upperBound * x.upperBound;
+        lowerBound = std::min(std::min(a, b), std::min(c, d));
+        upperBound = std::max(std::max(a, b), std::max(c, d));
+        return *this;
+    }
+    ValueRange operator+(ValueRange x) {
+        ValueRange y(*this);
+        return y += x;
+    }
+    ValueRange operator-(ValueRange x) {
+        ValueRange y(*this);
+        return y -= x;
+    }
+    ValueRange operator*(ValueRange x) {
+        ValueRange y(*this);
+        return y *= x;
+    }
+};
+/*
 std::intptr_t addWithOverflow(intptr_t x, intptr_t y) {
     intptr_t z;
     if (__builtin_add_overflow(x, y, &z)) {
@@ -766,19 +871,6 @@ std::intptr_t mulWithOverflow(intptr_t x, intptr_t y) {
     return z;
 }
 
-enum Order {
-    InvalidOrder,
-    EqualTo,
-    LessThan,
-    LessOrEqual,
-    GreaterThan,
-    GreaterOrEqual,
-    NotEqual,
-    UnknownOrder
-};
-auto maybeEqual(Order o) { return o & 1; }
-auto maybeLess(Order o) { return o & 2; }
-auto maybeGreater(Order o) { return o & 4; }
 struct ValueRange {
     intptr_t lowerBound;
     intptr_t upperBound;
@@ -839,3 +931,5 @@ struct ValueRange {
         return y *= x;
     }
 };
+
+*/
