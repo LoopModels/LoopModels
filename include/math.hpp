@@ -44,8 +44,8 @@ struct Source {
     size_t id;
     SourceType typ;
     Source(size_t srcId, SourceType srcTyp) : id(srcId), typ(srcTyp) {}
-    bool operator==(Source x) { return (id == x.id) & (typ == x.typ); }
-    bool operator<(Source x) {
+    bool operator==(Source x) const { return (id == x.id) & (typ == x.typ); }
+    bool operator<(Source x) const {
         return (typ < x.typ) | ((typ == x.typ) & (id < x.id));
     }
 };
@@ -93,8 +93,10 @@ inline size_t length(V &v) {
     return v.size();
 }
 
-template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
-template <typename T> void show(std::vector<T> &x) {
+template <typename T> T &last(std::vector<T> const &x) {
+    return x[x.size() - 1];
+}
+template <typename T> void show(std::vector<T> const &x) {
     std::cout << "[";
     for (size_t i = 0; i < x.size() - 1; ++i) {
         std::cout << x[i] << ", ";
@@ -102,12 +104,12 @@ template <typename T> void show(std::vector<T> &x) {
     std::cout << last(x) << "]";
 }
 // `show` doesn't print a new line by convention.
-template <typename T> void showln(T x) {
+template <typename T> void showln(T const &&x) {
     show(x);
     std::printf("\n");
 }
 
-template <typename T0, typename T1> bool allMatch(T0 x0, T1 x1) {
+template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     size_t N = length(x0);
     if (N != length(x1)) {
         return false;
@@ -150,14 +152,14 @@ template <typename T> struct Vector<T, 0> {
     inline Vector(Vector<T, 0> &a) : ptr(a.ptr), len(a.len){};
     inline Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
 
-    T &operator()(size_t i) {
+    T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
         assert((0 <= i) & (i < len));
 #endif
         return ptr[i];
     }
-    T &operator[](size_t i) { return ptr[i]; }
-    bool operator==(Vector<T, 0> x0) { return allMatch(*this, x0); }
+    T &operator[](size_t i) const { return ptr[i]; }
+    bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
 };
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
@@ -172,7 +174,7 @@ template <typename T, size_t M> void show(Vector<T, M> v) {
     }
 }
 
-template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
+template <typename T> Vector<T, 0> toVector(std::vector<T> const &x) {
     return Vector<T, 0>(x);
 }
 
@@ -811,7 +813,7 @@ bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
 // Well, constant parts are the same because it's the same array.
 // e.g. A(i, j) -> a_1 * i + b_1 * j + c
 //
-// g, na, nb = extended_gcd(a, b)
+// g, na, nb = gcdx(a, b)
 // g == gcd(a, b)
 // na * a + nb * b == g
 //
@@ -856,7 +858,7 @@ bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
 // i == j == c0 // can tell from loop bounds this is impossible
 
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-std::tuple<size_t, size_t, size_t> extended_gcd(size_t a, size_t b) {
+std::tuple<size_t, size_t, size_t> gcdx(size_t a, size_t b) {
     size_t old_r = a;
     size_t r = b;
     size_t old_s = 1;

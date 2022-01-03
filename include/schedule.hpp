@@ -3,6 +3,7 @@
 #include "./graphs.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
+#include "bitsets.hpp"
 #include <algorithm>
 #include <vector>
 
@@ -49,8 +50,9 @@
 //
 // Once an SCC can be scheduled, we can then worry about TermBundles within.
 
+/*
 template <typename I>
-void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,
+void scheduleBundleFusion(Function &fun, I tidx_begin, I tidx_end, size_t level,
                           bool updateCost) {
     for (auto it = tidx_begin; it != tidx_end; ++it) {
         auto [c0, isvalid] =
@@ -63,16 +65,19 @@ void scheduleBundleFusion(Function fun, I tidx_begin, I tidx_end, size_t level,
         } else {
             c1 = getbestcost(fun, it + 1, tidx_end, level);
         }
+
         if (((c0 + c1) < best_cost)) {
 
             if (updateCost) {
                 updateBestCost();
             }
         }
+
     }
 }
 // Evaluates [`tidx_begin`, `tidx_end`) as a bundle together, fused at level
 // `level`
+
 template <typename I>
 void schedule_bundle_order(Function fun, I tidx_begin, I tidx_end,
                            size_t level) {}
@@ -90,8 +95,9 @@ TermBundleGraph &prefuse(Function fun, std::vector<Int> wcc) {
 void scheduleBundleFusion(Function fun, std::vector<TermBundle> tbs,
                           size_t i = 0) {
     TermBundle tb = tbs[i];
-    std::vector<size_t> dsts = outNeighbors(tb);
-    for (size_t j = 0; j < dsts.size(); ++j) {
+    BitSet dsts = outNeighbors(tb);
+    for (auto it = dsts.begin(); it != dsts.end(); ++it){
+
     }
 }
 
@@ -134,3 +140,4 @@ void schedule(Function fun) {
     }
     return;
 }
+*/

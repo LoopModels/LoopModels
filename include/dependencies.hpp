@@ -479,7 +479,7 @@ Polynomial upperBound(Source indSrc, RektM loopvars) {
 // F F T
 // only returns true if guaranteed
 
-bool maybeLess(Function &fun, Polynomial &diff) {
+bool maybeLess(Function const &fun, Polynomial const &diff) {
     if (diff.isZero()) {
         return false;
     }
@@ -489,7 +489,7 @@ bool maybeLess(Function &fun, Polynomial &diff) {
     }
     return r.lowerBound < 0;
 }
-bool maybeLess(std::vector<ValueRange> x) {
+bool maybeLess(std::vector<ValueRange> const &x) {
     intptr_t lowerBound = 0;
     for (auto it = x.begin(); it != x.end(); ++it) {
         lowerBound += it->lowerBound;
@@ -497,7 +497,7 @@ bool maybeLess(std::vector<ValueRange> x) {
     return lowerBound < 0;
 }
 
-bool maybeLess(Function &fun, Polynomial &x, Polynomial &y) {
+bool maybeLess(Function const &fun, Polynomial const &x, Polynomial const &y) {
     /*
     std::vector<ValueRange> diff;
     auto itx = x.begin(); auto itxe = x.end();
@@ -539,7 +539,7 @@ bool maybeLess(Function &fun, Polynomial &&x, Polynomial &y) {
     return maybeLess(fun, x);
 }
 */
-bool maybeLess(Function &fun, Stride &x, Polynomial &y) {
+bool maybeLess(Function const &fun, Stride const &x, Polynomial const &y) {
     for (auto it = x.stride.begin(); it != x.stride.end(); ++it) {
         if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
@@ -549,10 +549,11 @@ bool maybeLess(Function &fun, Stride &x, Polynomial &y) {
 }
 
 template <typename I>
-void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, I itsrc) {
+void pushMatchingStride(ArrayRef &ar, std::vector<Stride> const &strides,
+                        I itsrc) {
     Source src = std::get<1>(*itsrc);
     for (size_t j = 0; j < strides.size(); ++j) {
-        Stride &s = strides[j];
+        const Stride &s = strides[j];
         for (auto it = s.stride.begin(); it != s.stride.end(); ++it) {
             if (src == std::get<1>(*it)) {
                 ar.indToStrideMap.push_back(j);
@@ -571,13 +572,14 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> &strides, I itsrc) {
 }
 */
 
-bool mayOverlap(Function &fun, std::vector<Stride> &strides,
-                std::vector<Polynomial> &upperBounds, size_t j, size_t k) {
+bool mayOverlap(Function const &fun, std::vector<Stride> const &strides,
+                std::vector<Polynomial> const &upperBounds, size_t j,
+                size_t k) {
     return maybeLess(fun, strides[k], upperBounds[j]) &&
            maybeLess(fun, strides[j], upperBounds[k]);
 }
 
-void recheckStrides(Function &fun, std::vector<Stride> &strides,
+void recheckStrides(Function const &fun, std::vector<Stride> &strides,
                     std::vector<Polynomial> &upperBounds, size_t j) {
     size_t eraseInds[64];
     size_t eraseCount;
@@ -616,7 +618,7 @@ void recheckStrides(Function &fun, std::vector<Stride> &strides,
     }
 }
 
-void partitionStrides(Function &fun, ArrayRef ar, RektM loopnest) {
+void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
     size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.strides;
@@ -937,17 +939,17 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
         return Independent; // there is a difference => independent
     }
 }
-Polynomial &getFirstLoopStride(Stride &x) {
+auto getFirstLoopStride(Stride &x) {
     auto it = x.begin();
     for (; it != x.end(); ++it) {
         if ((it->second).typ == LoopInductionVariable) {
-            return it->first;
+            return it;
         }
     }
 #ifndef DONOTBOUNDSCHECK
     assert(it != x.end());
 #endif
-    return it->first;
+    return it;
     // return x.stride[0].first;
 }
 
@@ -960,37 +962,35 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
         if (delta.isConstant()) { // 1 constant term (# of affine const terms is
                                   // 0 or 1)
                                   // strong
-            Polynomial &a = getFirstLoopStride(x);
+            auto a = getFirstLoopStride(x);
             // auto [g, xf, yf] = gcd(delta.stride.begin() -> first, a);
             // auto [d, r] = xf.divRem(yf);
-            auto [d, r] = (delta.stride.begin()->first).divRem(a);
+            auto [d, r] = (delta.stride.begin()->first).divRem(a->first);
             if (r.isZero()) {
-                // must check loop bounds
-
-            } else {
-                // no solution we could determine
-                // but is that because of missing information?
-                // we check if remainder divides
-                // loop stride into a constant.
-                // If so, then the remainder is fine.
-                if ((a % r).isCompileTimeConstant()) {
+                if (absLess(fun, d, upperBound(a->second, loopNestX)) &&
+                    absLess(
+                        fun, d,
+                        upperBound(getFirstLoopStride(y)->second, loopNestY))) {
                     return Independent;
-                } else {
-                    return LoopCarried;
                 }
-                // if (r.isCompileTimeConstant()){ // not 0
-                //     return Independent;
-                // } else {
-                //     return LoopCarried;
-                // }
+                // must check loop bounds
+                return LoopCarried;
+            } else if (((a->first) % r).isCompileTimeConstant()) {
+                // r is not zero, but a % r is a constant, indicating
+                // that we have a constant offset.
+                return Independent;
+            } else {
+                // TODO: check loop bounds
+                return LoopCarried;
             }
         } else {
             // weak
             auto [g, na, nb] =
-                extended_gcd(getFirstLoopStride(x), getFirstLoopStride(y));
+                gcdx(getFirstLoopStride(x), getFirstLoopStride(y));
             // solve a1 * x + a0 = b1 * y + b0;
             if (delta.getCount(ConstantSource)) {
                 // c = a0 - b0;
+                // g, na, nb = gcdx(a1, b1);
                 Polynomial c = delta.begin()->first;
                 // x(k) = -na * (c / g) + k * b1 / g;
                 // y(k) =  nb * (c / g) + k * a1 / g;

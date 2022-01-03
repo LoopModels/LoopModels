@@ -15,7 +15,7 @@ inline uint64_t count_ones(uint64_t x) { return __builtin_popcount(x); }
 struct BitSet {
     std::vector<std::uint64_t> data;
     size_t length;
-    size_t operator[](size_t i) {
+    size_t operator[](size_t i) const {
         return data[i];
     } // allow `getindex` but not `setindex`
 
@@ -28,8 +28,8 @@ struct BitSet {
         // data = std::vector<std::uint64_t>(0, (N + 63) >> 6);
     }
     struct Iterator;
-    Iterator begin();
-    size_t end() { return length; };
+    Iterator begin() const;
+    size_t end() const { return length; };
 };
 
 struct BitSet::Iterator {
@@ -62,12 +62,12 @@ struct BitSet::Iterator {
 };
 // BitSet::Iterator(std::vector<std::uint64_t> &seta)
 //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-BitSet::Iterator construct(std::vector<std::uint64_t> &seta) {
+BitSet::Iterator construct(std::vector<std::uint64_t> const &seta) {
     return BitSet::Iterator{seta, 0, std::numeric_limits<uint64_t>::max(),
                             seta[0], std::numeric_limits<uint64_t>::max()};
 }
 
-BitSet::Iterator BitSet::begin() { return ++construct(this->data); }
+BitSet::Iterator BitSet::begin() const { return ++construct(this->data); }
 
 uint64_t contains(BitSet &s, size_t x) {
     size_t d = x >> size_t(6);

@@ -26,7 +26,7 @@ struct Rational {
     Rational(intptr_t coef) : numerator(coef), denominator(1){};
     Rational(intptr_t n, intptr_t d) : numerator(n), denominator(d){};
 
-    Rational operator+(Rational y) {
+    Rational operator+(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         return Rational{numerator * yd + y.numerator * xd, denominator * yd};
     }
@@ -36,7 +36,7 @@ struct Rational {
         denominator = denominator * yd;
         return *this;
     }
-    Rational operator-(Rational y) {
+    Rational operator-(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         return Rational{numerator * yd - y.numerator * xd, denominator * yd};
     }
@@ -46,7 +46,7 @@ struct Rational {
         denominator = denominator * yd;
         return *this;
     }
-    Rational operator*(Rational y) {
+    Rational operator*(Rational y) const {
         auto [xn, yd] = divgcd(numerator, y.denominator);
         auto [xd, yn] = divgcd(denominator, y.numerator);
         return Rational{xn * yn, xd * yd};
@@ -58,36 +58,36 @@ struct Rational {
         denominator = xd * yd;
         return *this;
     }
-    Rational inv() {
+    Rational inv() const {
         bool positive = numerator > 0;
         return Rational{positive ? denominator : -denominator,
                         positive ? numerator : -numerator};
     }
-    Rational operator/(Rational y) { return (*this) * y.inv(); }
+    Rational operator/(Rational y) const { return (*this) * y.inv(); }
     Rational operator/=(Rational y) { return (*this) *= y.inv(); }
-    bool operator==(Rational y) {
+    bool operator==(Rational y) const {
         return (numerator == y.numerator) & (denominator == y.denominator);
     }
-    bool operator!=(Rational y) {
+    bool operator!=(Rational y) const {
         return (numerator != y.numerator) | (denominator != y.denominator);
     }
-    bool operator<(Rational y) {
+    bool operator<(Rational y) const {
         return (numerator * y.denominator) < (y.numerator * denominator);
     }
-    bool operator<=(Rational y) {
+    bool operator<=(Rational y) const {
         return (numerator * y.denominator) <= (y.numerator * denominator);
     }
-    bool operator>(Rational y) {
+    bool operator>(Rational y) const {
         return (numerator * y.denominator) > (y.numerator * denominator);
     }
-    bool operator>=(Rational y) {
+    bool operator>=(Rational y) const {
         return (numerator * y.denominator) >= (y.numerator * denominator);
     }
 
     operator double() { return numerator / denominator; }
-    bool isZero() { return numerator == 0; }
-    bool isOne() { return (numerator == denominator); }
-    bool isInteger() { return denominator == 1; }
+    bool isZero() const { return numerator == 0; }
+    bool isOne() const { return (numerator == denominator); }
+    bool isInteger() const { return denominator == 1; }
 };
 
 Rational gcd(Rational x, Rational y) {
@@ -121,7 +121,9 @@ struct Polynomial {
 
         inline auto begin() { return prodIDs.begin(); }
         inline auto end() { return prodIDs.end(); }
-        Monomial operator*(Monomial &x) {
+        inline auto cbegin() const { return prodIDs.cbegin(); }
+        inline auto cend() const { return prodIDs.cend(); }
+        Monomial operator*(Monomial const &x) const {
             Monomial r;
             // prodIDs are sorted, so we can create sorted product in O(N)
             size_t i = 0;
@@ -142,7 +144,7 @@ struct Polynomial {
             }
             return r;
         }
-        Monomial &operator*=(Monomial &x) {
+        Monomial &operator*=(Monomial const &x) {
             // optimize the length 0 and 1 cases.
             if (x.prodIDs.size() == 0) {
                 return *this;
@@ -161,8 +163,8 @@ struct Polynomial {
             size_t n1 = x.prodIDs.size();
             prodIDs.reserve(n0 +
                             n1); // reserve capacity, to prevent invalidation
-            auto ix = x.begin();
-            auto ixe = x.end();
+            auto ix = x.cbegin();
+            auto ixe = x.cend();
             if (n0) {
                 auto it = begin();
                 while (ix != ixe) {
@@ -183,15 +185,19 @@ struct Polynomial {
             }
             return *this;
         }
-        Monomial operator*(Monomial &&x) {
+        Monomial operator*(Monomial &&x) const {
             x *= (*this);
             return x;
         }
-        bool operator==(Monomial x) { return prodIDs == x.prodIDs; }
-        bool operator!=(Monomial x) { return prodIDs != x.prodIDs; }
+        bool operator==(Monomial const &x) const {
+            return prodIDs == x.prodIDs;
+        }
+        bool operator!=(Monomial const &x) const {
+            return prodIDs != x.prodIDs;
+        }
 
         // numerator, denominator rational
-        std::pair<Monomial, Monomial> rational(Monomial &x) {
+        std::pair<Monomial, Monomial> rational(Monomial const &x) const {
             Monomial n;
             Monomial d;
             size_t i = 0;
@@ -219,11 +225,11 @@ struct Polynomial {
             return std::make_pair(n, d);
         }
         // returns a 3-tuple, containing:
-        // 0: Monomial(coef / gcd(coef, x.coefficient), setDiff(prodIDs, x.prodIDs))
-        // 1: x.coef / gcd(coef, x.coefficient)
-        // 2: whether the division failed (i.e., true if prodIDs was not a
-        // superset of x.prodIDs)
-        std::pair<Monomial, bool> operator/(Monomial &x) {
+        // 0: Monomial(coef / gcd(coef, x.coefficient), setDiff(prodIDs,
+        // x.prodIDs)) 1: x.coef / gcd(coef, x.coefficient) 2: whether the
+        // division failed (i.e., true if prodIDs was not a superset of
+        // x.prodIDs)
+        std::pair<Monomial, bool> operator/(Monomial const &x) const {
             Monomial n;
             size_t i = 0;
             size_t j = 0;
@@ -248,18 +254,18 @@ struct Polynomial {
             }
             return std::make_pair(n, false);
         }
-        bool isOne() { return (prodIDs.size() == 0); }
-        bool isCompileTimeConstant() { return prodIDs.size() == 0; }
-        size_t degree() { return prodIDs.size(); }
-        bool lexLess(Monomial &x) {
+        bool isOne() const { return (prodIDs.size() == 0); }
+        bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
+        size_t degree() const { return prodIDs.size(); }
+        bool lexLess(Monomial const &x) const {
             // return `true` if `*this.degree() > x.degree()`
             if (degree() > x.degree()) {
                 return true;
             }
-            auto it = begin();
-            auto ite = end();
-            auto ix = x.begin();
-            auto ixe = x.end();
+            auto it = cbegin();
+            auto ite = cend();
+            auto ix = x.cbegin();
+            auto ixe = x.cend();
             while ((it != ite) && (ix != ixe)) {
                 if ((*it) > (*ix)) {
                     // require syms in `x` be smaller, i.e. leading ones have
@@ -278,41 +284,45 @@ struct Polynomial {
         Rational coefficient;
         Monomial monomial;
         Term() = default;
-        template <typename T> Term(T coef) : coefficient(coef) {}
+        // template <typename T> Term(T coef) : coefficient(coef) {}
+        Term(intptr_t coef) : coefficient(coef) {}
+        Term(Rational coef) : coefficient(coef) {}
         Term(Rational coef, Monomial monomial)
             : coefficient(coef), monomial(monomial) {}
         Term &negate() {
             coefficient.numerator *= -1;
             return *this;
         }
-        bool termsMatch(Term &x) {
+        bool termsMatch(Term const &x) const {
             return monomial.prodIDs == x.monomial.prodIDs;
         }
         bool addCoef(Rational coef) { return (coefficient += coef).isZero(); }
         bool subCoef(Rational coef) { return (coefficient -= coef).isZero(); }
-        bool addCoef(Term &t) { return addCoef(t.coefficient); }
-        bool subCoef(Term &t) { return subCoef(t.coefficient); }
+        bool addCoef(Term const &t) { return addCoef(t.coefficient); }
+        bool subCoef(Term const &t) { return subCoef(t.coefficient); }
 
-        bool lexLess(Term &t) { return monomial.lexLess(t.monomial); }
-        bool isZero() { return coefficient.isZero(); }
-        bool isOne() { return coefficient.isOne() & monomial.isOne(); }
+        bool lexLess(Term const &t) const {
+            return monomial.lexLess(t.monomial);
+        }
+        bool isZero() const { return coefficient.isZero(); }
+        bool isOne() const { return coefficient.isOne() & monomial.isOne(); }
 
-        Term &operator*=(Term &x) {
+        Term &operator*=(Term const &x) {
             coefficient *= x.coefficient;
             monomial *= x.monomial;
             return *this;
         }
-        Term operator*(Term &x) {
+        Term operator*(Term const &x) const {
             Term y(*this);
             return std::move(y *= x);
         }
-        std::pair<Term, intptr_t> operator/(Term &x) {
+        std::pair<Term, intptr_t> operator/(Term const &x) const {
             auto [m, s] = monomial / x.monomial;
             return std::make_pair(Term{coefficient / x.coefficient, m}, s);
         }
-        bool isInteger() { return coefficient.isInteger(); }
+        bool isInteger() const { return coefficient.isInteger(); }
 
-        template <typename T> Polynomial operator+(T &&y) {
+        template <typename T> Polynomial operator+(T &&y) const {
             if (termsMatch(y)) {
                 if (coefficient == y.coefficient.negate()) {
                     return Polynomial(Term(0));
@@ -329,7 +339,7 @@ struct Polynomial {
                 return Polynomial(std::forward<T>(y), *this);
             }
         }
-        template <typename T> Polynomial operator-(T &&y) {
+        template <typename T> Polynomial operator-(T &&y) const {
             if (termsMatch(y)) {
                 if (coefficient == y.coefficient) {
                     return Polynomial(Term(0));
@@ -347,11 +357,13 @@ struct Polynomial {
                 return Polynomial(std::forward<T>(t), *this);
             }
         }
-        bool isCompileTimeConstant() {
+        bool isCompileTimeConstant() const {
             return monomial.isCompileTimeConstant();
         }
         auto begin() { return monomial.begin(); }
         auto end() { return monomial.end(); }
+        auto cbegin() const { return monomial.cbegin(); }
+        auto cend() const { return monomial.cend(); }
     };
 
     std::vector<Term> terms;
@@ -362,11 +374,14 @@ struct Polynomial {
     // Polynomial(Term &&t0, Term &&t1) : terms({std::move(t0),
     // std::move(t1)})
     // {};
-    Polynomial(std::vector<Term> &t) : terms(t){};
+    // Polynomial(std::vector<Term> t) : terms(t){};
+    Polynomial(std::vector<Term> const &t) : terms(t){};
     Polynomial(std::vector<Term> &&t) : terms(std::move(t)){};
 
     inline auto begin() { return terms.begin(); }
     inline auto end() { return terms.end(); }
+    inline auto cbegin() const { return terms.cbegin(); }
+    inline auto cend() const { return terms.cend(); }
     // Polynomial(std::tuple<Term, Term> &&x) : terms({std::get<0>(x),
     // std::get<1>(x)}) {}
 
@@ -406,7 +421,7 @@ struct Polynomial {
         }
         return;
     }
-    Polynomial &operator+=(Term &x) {
+    Polynomial &operator+=(Term const &x) {
         add_term(x);
         return *this;
     }
@@ -414,7 +429,7 @@ struct Polynomial {
         add_term(std::move(x));
         return *this;
     }
-    Polynomial &operator-=(Term &x) {
+    Polynomial &operator-=(Term const &x) {
         sub_term(x);
         return *this;
     }
@@ -423,72 +438,72 @@ struct Polynomial {
         return *this;
     }
 
-    bool operator==(Polynomial &x) { return (terms == x.terms); }
-    bool operator!=(Polynomial &x) { return (terms != x.terms); }
-    Polynomial operator*(Term &x) {
+    bool operator==(Polynomial const &x) const { return (terms == x.terms); }
+    bool operator!=(Polynomial const &x) const { return (terms != x.terms); }
+    Polynomial operator*(Term const &x) const {
         Polynomial p(terms);
         for (auto it = p.begin(); it != p.end(); ++it) {
             (*it) *= x;
         }
         return p;
     }
-    Polynomial operator*(Polynomial &x) {
+    Polynomial operator*(Polynomial const &x) const {
         Polynomial p;
         p.terms.reserve(terms.size() * x.terms.size());
-        for (auto it = begin(); it != end(); ++it) {
-            for (auto itx = x.begin(); itx != x.end(); ++itx) {
+        for (auto it = cbegin(); it != cend(); ++it) {
+            for (auto itx = x.cbegin(); itx != x.cend(); ++itx) {
                 p.add_term((*it) * (*itx));
             }
         }
         return p;
     }
-    Polynomial operator+(Term &x) {
+    Polynomial operator+(Term const &x) const {
         Polynomial y(terms);
         y.add_term(x);
         return y;
     }
-    Polynomial operator-(Term x) {
+    Polynomial operator-(Term const &x) const {
         Polynomial y(terms);
         y.sub_term(x);
         return y;
     }
-    Polynomial largerCapacityCopy(size_t i) {
+    Polynomial largerCapacityCopy(size_t i) const {
         Polynomial s;
         s.terms.reserve(i + terms.size()); // reserve full size
-        for (auto it = begin(); it != end(); ++it) {
+        for (auto it = cbegin(); it != cend(); ++it) {
             s.terms.push_back(*it); // copy initial batch
         }
         return s;
     }
-    Polynomial operator+(Polynomial x) {
+    Polynomial operator+(Polynomial const &x) const {
         Polynomial s = largerCapacityCopy(x.terms.size());
-        for (auto it = x.begin(); it != x.end(); ++it) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             s.add_term(*it); // add term for remainder
         }
         return s;
     }
-    Polynomial operator-(Polynomial x) {
+    Polynomial operator-(Polynomial const &x) const {
         Polynomial s = largerCapacityCopy(x.terms.size());
-        for (auto it = x.begin(); it != x.end(); ++it) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             s.sub_term(*it);
         }
         return s;
     }
-    Polynomial &operator+=(Polynomial x) {
+    Polynomial &operator+=(Polynomial const &x) {
         terms.reserve(terms.size() + x.terms.size());
-        for (auto it = x.begin(); it != x.end(); ++it) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             add_term(*it); // add term for remainder
         }
         return *this;
     }
-    Polynomial &operator-=(Polynomial x) {
+    Polynomial &operator-=(Polynomial const &x) {
         terms.reserve(terms.size() + x.terms.size());
-        for (auto it = x.begin(); it != x.end(); ++it) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             sub_term(*it); // add term for remainder
         }
         return *this;
     }
-    Polynomial &operator*=(Term x) {
+    Polynomial &operator*=(Term const &x) {
         if (x.isZero()) {
             terms.clear();
             return *this;
@@ -504,10 +519,10 @@ struct Polynomial {
 
     // 	return false;
     // }
-    bool isZero() { return (terms.size() == 0); }
-    bool isOne() { return (terms.size() == 1) & terms[0].isOne(); }
+    bool isZero() const { return (terms.size() == 0); }
+    bool isOne() const { return (terms.size() == 1) & terms[0].isOne(); }
 
-    bool isCompileTimeConstant() {
+    bool isCompileTimeConstant() const {
         return (terms.size() == 1) &&
                (terms.begin()->monomial.isCompileTimeConstant());
     }
@@ -549,13 +564,13 @@ struct Polynomial {
     }
     */
     // returns a <div, rem> pair
-    Term &leadingTerm() { return terms[0]; }
+    Term const &leadingTerm() const { return terms[0]; }
     void removeLeadingTerm() { terms.erase(terms.begin()); }
     void takeLeadingTerm(Polynomial &x) {
         add_term(std::move(x.leadingTerm()));
         x.removeLeadingTerm();
     }
-    std::pair<Polynomial, Polynomial> divRem(Polynomial &d) {
+    std::pair<Polynomial, Polynomial> divRem(Polynomial const &d) const {
         Polynomial q;
         Polynomial r;
         Polynomial p(*this);
@@ -570,8 +585,8 @@ struct Polynomial {
         }
         return std::make_pair(std::move(q), std::move(r));
     }
-    Polynomial operator/(Polynomial &x) { return divRem(x).first; }
-    Polynomial operator%(Polynomial &x) { return divRem(x).second; }
+    Polynomial operator/(Polynomial const &x) const { return divRem(x).first; }
+    Polynomial operator%(Polynomial const &x) const { return divRem(x).second; }
 };
 
 /*
@@ -586,7 +601,7 @@ std::strong_ordering lexicographicalCmp(Polynomial::Monomial &x,
 */
 
 std::tuple<Polynomial::Monomial, Polynomial::Monomial, Polynomial::Monomial>
-gcd(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+gcd(Polynomial::Monomial const &x, Polynomial::Monomial const &y) {
     Polynomial::Monomial g, a, b;
     size_t i = 0;
     size_t j = 0;
@@ -613,7 +628,7 @@ gcd(Polynomial::Monomial &x, Polynomial::Monomial &y) {
     return std::make_tuple(g, a, b);
 }
 std::tuple<Polynomial::Term, Polynomial::Term, Polynomial::Term>
-gcd(Polynomial::Term &x, Polynomial::Term &y) {
+gcd(Polynomial::Term const &x, Polynomial::Term const &y) {
     auto [g, a, b] = gcd(x.monomial, y.monomial);
     Rational gr = gcd(x.coefficient, y.coefficient);
     return std::make_tuple(Polynomial::Term{gr, g},
@@ -622,7 +637,7 @@ gcd(Polynomial::Term &x, Polynomial::Term &y) {
 }
 
 std::pair<Polynomial::Term, std::vector<Polynomial::Term>>
-gcd(std::vector<Polynomial::Term> &x) {
+gcd(std::vector<Polynomial::Term> const &x) {
     switch (x.size()) {
     case 0:
         return std::make_pair(Polynomial::Term(0), x);
@@ -649,14 +664,14 @@ gcd(std::vector<Polynomial::Term> &x) {
     }
 }
 
-std::pair<Polynomial::Term, Polynomial> gcd(Polynomial &x) {
+std::pair<Polynomial::Term, Polynomial> gcd(Polynomial const &x) {
     std::pair<Polynomial::Term, std::vector<Polynomial::Term>> st =
         gcd(x.terms);
     return std::make_pair(std::move(st.first),
                           Polynomial(std::move(st.second)));
 }
-std::tuple<Polynomial, Polynomial, Polynomial> gcd(Polynomial &a,
-                                                   Polynomial &b) {
+std::tuple<Polynomial, Polynomial, Polynomial> gcd(Polynomial const &a,
+                                                   Polynomial const &b) {
     Polynomial x(a);
     Polynomial y(b);
     while (!y.isZero()) { // TODO: add tests and/or proof to make sure this
@@ -666,8 +681,8 @@ std::tuple<Polynomial, Polynomial, Polynomial> gcd(Polynomial &a,
     }
     return std::make_tuple(x, a / x, b / x);
 }
-std::tuple<Polynomial, Polynomial, Polynomial> extended_gcd(Polynomial &a,
-                                                            Polynomial &b) {
+std::tuple<Polynomial, Polynomial, Polynomial> gcdx(Polynomial const &a,
+                                                    Polynomial const &b) {
     Polynomial x(a);
     Polynomial y(b);
     Polynomial oldS(1);
@@ -697,7 +712,7 @@ std::string toString(Rational x) {
                std::to_string(x.denominator);
     }
 }
-std::string toString(Polynomial::Monomial x) {
+std::string toString(Polynomial::Monomial const &x) {
     size_t numIndex = x.prodIDs.size();
     if (numIndex) {
         if (numIndex != 1) { // not 0 by prev `if`
@@ -715,7 +730,7 @@ std::string toString(Polynomial::Monomial x) {
         return "1";
     }
 }
-std::string toString(Polynomial::Term x) {
+std::string toString(Polynomial::Term const &x) {
     if (x.coefficient.isOne()) {
         return toString(x.monomial);
     } else if (x.isCompileTimeConstant()) {
@@ -725,7 +740,7 @@ std::string toString(Polynomial::Term x) {
     }
 }
 
-std::string toString(Polynomial x) {
+std::string toString(Polynomial const &x) {
     std::string poly = " ( ";
     for (size_t j = 0; j < length(x.terms); ++j) {
         if (j) {
@@ -735,8 +750,8 @@ std::string toString(Polynomial x) {
     }
     return poly + " ) ";
 }
-void show(Polynomial::Term x) { printf("%s", toString(x).c_str()); }
-void show(Polynomial x) { printf("%s", toString(x).c_str()); }
+void show(Polynomial::Term const &x) { printf("%s", toString(x).c_str()); }
+void show(Polynomial const &x) { printf("%s", toString(x).c_str()); }
 Polynomial loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
     // Polynomial::Term firstSym = Polynomial::Term(0); // split to avoid vexing
     // parse Polynomial aff(std::move(firstSym));
@@ -792,9 +807,15 @@ struct ValueRange {
     ValueRange(const ValueRange &x)
         : lowerBound(x.lowerBound), upperBound(x.upperBound) {}
     ValueRange &operator=(const ValueRange &x) = default;
-    bool isKnown() { return lowerBound == upperBound; }
-    bool operator<(ValueRange x) { return upperBound < x.lowerBound; }
-    Order compare(ValueRange x) {
+    bool isKnown() const { return lowerBound == upperBound; }
+    bool operator>(ValueRange x) const { return lowerBound > x.upperBound; }
+    bool operator<(ValueRange x) const { return upperBound < x.lowerBound; }
+    bool operator>=(ValueRange x) const { return lowerBound >= x.upperBound; }
+    bool operator<=(ValueRange x) const { return upperBound <= x.lowerBound; }
+    bool operator==(ValueRange x) const {
+        return (isKnown() & x.isKnown()) & (lowerBound == x.lowerBound);
+    }
+    Order compare(ValueRange x) const {
         // return upperBound < x.lowerBound;
         if (isKnown() & x.isKnown()) {
             return upperBound == x.upperBound ? EqualTo : NotEqual;
@@ -811,7 +832,7 @@ struct ValueRange {
             return UnknownOrder;
         }
     }
-    Order compare(intptr_t x) { return compare(ValueRange{x, x}); }
+    Order compare(intptr_t x) const { return compare(ValueRange{x, x}); }
     ValueRange &operator+=(ValueRange x) {
         lowerBound += x.lowerBound;
         upperBound += x.upperBound;
@@ -831,18 +852,19 @@ struct ValueRange {
         upperBound = std::max(std::max(a, b), std::max(c, d));
         return *this;
     }
-    ValueRange operator+(ValueRange x) {
+    ValueRange operator+(ValueRange x) const {
         ValueRange y(*this);
         return y += x;
     }
-    ValueRange operator-(ValueRange x) {
+    ValueRange operator-(ValueRange x) const {
         ValueRange y(*this);
         return y -= x;
     }
-    ValueRange operator*(ValueRange x) {
+    ValueRange operator*(ValueRange x) const {
         ValueRange y(*this);
         return y *= x;
     }
+    ValueRange negate() const { return ValueRange{-upperBound, -lowerBound}; }
 };
 /*
 std::intptr_t addWithOverflow(intptr_t x, intptr_t y) {

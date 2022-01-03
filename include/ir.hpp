@@ -385,11 +385,13 @@ struct Stride {
     size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return stride.begin(); }
     inline auto end() { return stride.end(); }
+    inline auto cbegin() const { return stride.cbegin(); }
+    inline auto cend() const { return stride.cend(); }
     inline auto begin(SourceType i) { return stride.begin() + counts[i]; }
     inline auto end(SourceType i) { return stride.begin() + counts[i + 1]; }
     inline auto begin(Source i) { return begin(i.typ); }
     inline auto end(Source i) { return end(i.typ); }
-    inline size_t size() { return stride.size(); }
+    inline size_t size() const { return stride.size(); }
 
     void addTyp(SourceType t) {
         // Clang goes extremely overboard vectorizing loops with dynamic length
@@ -454,22 +456,22 @@ struct Stride {
         return;
     }
 
-    Stride &operator+=(Stride x) {
-        for (auto it = x.begin(); it != x.end(); ++it) {
+    Stride &operator+=(Stride const &x) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             add_term(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
-    Stride &operator-=(Stride x) {
-        for (auto it = x.begin(); it != x.end(); ++it) {
+    Stride &operator-=(Stride const &x) {
+        for (auto it = x.cbegin(); it != x.cend(); ++it) {
             sub_term(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
-    Stride largerCapacityCopy(size_t i) {
+    Stride largerCapacityCopy(size_t i) const {
         Stride s;
         s.stride.reserve(i + stride.size()); // reserve full size
-        for (auto it = begin(); it != end(); ++it) {
+        for (auto it = cbegin(); it != cend(); ++it) {
             s.stride.push_back(*it); // copy initial batch
         }
         for (size_t i = 1; i < 5; ++i) {
@@ -478,21 +480,22 @@ struct Stride {
         return s;
     }
 
-    Stride operator+(Stride x) {
+    Stride operator+(Stride const &x) const {
         Stride y = largerCapacityCopy(x.stride.size());
         y += x;
         return y;
     }
-    Stride operator-(Stride x) {
+    Stride operator+(Stride &&x) const { return x += *this; }
+    Stride operator-(Stride const &x) const {
         Stride y = largerCapacityCopy(x.stride.size());
         y -= x;
         return y;
     }
 
-    bool operator==(Stride x) { return (stride == x.stride); }
-    bool operator!=(Stride x) { return (stride != x.stride); }
+    bool operator==(Stride const &x) const { return (stride == x.stride); }
+    bool operator!=(Stride const &x) const { return (stride != x.stride); }
 
-    bool isConstant() {
+    bool isConstant() const {
         size_t n0 = stride.size();
         if (n0) {
             return stride[n0 - 1].second.typ == ConstantSource;
@@ -501,7 +504,7 @@ struct Stride {
         }
     }
     // takes advantage of sorting
-    bool isAffine() { return counts[2] == counts[4]; }
+    bool isAffine() const { return counts[2] == counts[4]; }
 
     // std::pair<Polynomial,DivRemainder> tryDiv(Polynomial &a){
     // 	auto [s, v] = gcd(a.terms);
@@ -769,17 +772,19 @@ struct Function {
     }
 };
 
-ValueRange valueRange(Function &fun, size_t id) { return fun.rangeMap[id]; }
-ValueRange valueRange(Function &fun, Polynomial::Term &x) {
+ValueRange valueRange(Function const &fun, size_t id) {
+    return fun.rangeMap[id];
+}
+ValueRange valueRange(Function const &fun, Polynomial::Term const &x) {
     ValueRange p = ValueRange(x.coefficient);
-    for (auto it = x.begin(); it != x.end(); ++it) {
+    for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
     }
     return p;
 }
-ValueRange valueRange(Function &fun, Polynomial &x) {
+ValueRange valueRange(Function const &fun, Polynomial const &x) {
     ValueRange a(0);
-    for (auto it = x.begin(); it != x.end(); ++it) {
+    for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
     }
     return a;
@@ -825,7 +830,7 @@ Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
     return inNeighbors(fun.terms(i));
 }
 
-Term &getTerm(Function &fun, size_t tidx) { return fun.terms(tidx); }
+Term &getTerm(Function const &fun, size_t tidx) { return fun.terms(tidx); }
 
 struct TermBundle {
     // std::vector<size_t> termIDs;
@@ -1020,6 +1025,18 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
     return inNeighbors(tb);
 }
 
+// returns true if `abs(x) < y`
+bool absLess(Function const &fun, Polynomial const &x, Polynomial const &y) {
+    ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
+    if (delta.lowerBound < 0.0) {
+        return false;
+    }
+    ValueRange sum = valueRange(fun, y + x); // if true, sum.lowerBound >= 0
+    // e.g. `x = [M]; y = [M]`
+    // `delta = 0`, `sum = 2M`
+    return sum.lowerBound >= 0.0;
+}
+
 // should now be able to WCC |> prefuse |> SCC.
 
 /*
@@ -1099,7 +1116,7 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
 }
 */
 
-uint32_t getLoopDeps(Function fun, TermBundle tb) {
+uint32_t getLoopDeps(Function const &fun, TermBundle const &tb) {
     Term t = getTerm(fun, tb.termIds[0]);
     return t.loopDeps;
 }
