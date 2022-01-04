@@ -607,26 +607,25 @@ std::strong_ordering lexicographicalCmp(Polynomial::Monomial &x,
 std::tuple<Polynomial::Monomial, Polynomial::Monomial, Polynomial::Monomial>
 gcd(Polynomial::Monomial const &x, Polynomial::Monomial const &y) {
     Polynomial::Monomial g, a, b;
-    size_t i = 0;
-    size_t j = 0;
-    size_t n0 = x.prodIDs.size();
-    size_t n1 = y.prodIDs.size();
-    for (size_t k = 0; k < (n0 + n1); ++k) {
-        uint_fast32_t xk =
-            (i < n0) ? x.prodIDs[i] : std::numeric_limits<uint_fast32_t>::max();
+    auto ix = x.cbegin();
+    auto ixe = x.cend();
+    auto iy = y.cbegin();
+    auto iye = y.cend();
+    while ((ix != ixe) | (iy != iye)) {
+	uint_fast32_t xk =
+            (ix != ixe) ? *ix : std::numeric_limits<uint_fast32_t>::max();
         uint_fast32_t yk =
-            (j < n1) ? y.prodIDs[j] : std::numeric_limits<uint_fast32_t>::max();
+            (iy != iye) ? *iy : std::numeric_limits<uint_fast32_t>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
-            ++i;
+            ++ix;
         } else if (xk > yk) {
             b.prodIDs.push_back(yk);
-            ++j;
+            ++iy;
         } else { // xk == yk
             g.prodIDs.push_back(xk);
-            ++i;
-            ++j;
-            ++k;
+            ++ix;
+            ++iy;
         }
     }
     return std::make_tuple(g, a, b);
