@@ -466,7 +466,7 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 Polynomial upperBound(Source indSrc, RektM loopvars) {
     // std::numeric_limits<Int>::max(): not making assumptions on returned
     // value.
-    if (indSrc.typ == LoopInductionVariable) {
+    if (indSrc.typ == SourceType::LoopInductionVariable) {
         return loopToAffineUpperBound(getCol(loopvars, indSrc.id));
     } else {
         return Polynomial(Polynomial::Term(std::numeric_limits<Int>::max()));
@@ -657,7 +657,7 @@ void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
             // miss some cases that would've been legal.
             //
             // We require every stride to be larger than the upper bound
-            if (indSrc.typ != LoopInductionVariable) {
+            if (indSrc.typ != SourceType::LoopInductionVariable) {
                 if (maybeLess(fun, b, ubi)) {
                     // if !, then `b` definitely >= than `ubi`
                     // we require the stride to be larger than the sum of the
@@ -942,7 +942,7 @@ DependenceType zeroInductionVariableTest(Function &fun, Stride &x, Stride &y) {
 auto getFirstLoopStride(Stride &x) {
     auto it = x.begin();
     for (; it != x.end(); ++it) {
-        if ((it->second).typ == LoopInductionVariable) {
+        if ((it->second).typ == SourceType::LoopInductionVariable) {
             return it;
         }
     }
@@ -988,7 +988,7 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
             auto [g, na, nb] =
                 gcdx(getFirstLoopStride(x), getFirstLoopStride(y));
             // solve a1 * x + a0 = b1 * y + b0;
-            if (delta.getCount(ConstantSource)) {
+            if (delta.getCount(SourceType::Constant)) {
                 // c = a0 - b0;
                 // g, na, nb = gcdx(a1, b1);
                 Polynomial c = delta.begin()->first;
@@ -1032,8 +1032,8 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
         auto [sx, sy] = stridePairs[i];
         // SourceCount scx = sourceCount(sx);
         // SourceCount scy = sourceCount(sy);
-        size_t numLoopInductVar = std::max(sx.getCount(LoopInductionVariable),
-                                           sy.getCount(LoopInductionVariable));
+        size_t numLoopInductVar = std::max(sx.getCount(SourceType::LoopInductionVariable),
+                                           sy.getCount(SourceType::LoopInductionVariable));
         // std::max(scx.loopInductVar, scy.loopInductVar);
         if (sx.isAffine() & sy.isAffine()) {
             switch (numLoopInductVar) {

@@ -12,22 +12,22 @@
 
 // enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
 //   Bits:            00               01                   10            11
-enum SourceType {
-    ConstantSource,
+enum class SourceType {
+    Constant,
     LoopInductionVariable,
-    MemorySource,
-    TermSource
+    Memory,
+    Term
 };
 
 std::string toString(SourceType s) {
     switch (s) {
-    case ConstantSource:
+    case SourceType::Constant:
         return "Constant";
-    case LoopInductionVariable:
+    case SourceType::LoopInductionVariable:
         return "Induction Variable";
-    case MemorySource:
+    case SourceType::Memory:
         return "Memory";
-    case TermSource:
+    case SourceType::Term:
         return "Term";
         // case WTR:
         //     return "Write then read";
@@ -58,16 +58,16 @@ struct SourceCount{
     size_t loopInductVar;
     size_t total;
     SourceCount() : memory(0), term(0), constant(0), loopInductVar(0), total(0)
-{} SourceCount& operator+=(SourceType s){ switch (s) { case ConstantSource:
+{} SourceCount& operator+=(SourceType s){ switch (s) { case SourceType::Constant:
             constant += 1;
             break;
-        case LoopInductionVariable:
+        case SourceType::LoopInductionVariable:
             loopInductVar += 1;
             break;
-        case MemorySource:
+        case SourceType::Memory:
             memory += 1;
             break;
-        case TermSource:
+        case SourceType::Term:
             term += 1;
             break;
         }
@@ -93,10 +93,10 @@ inline size_t length(V &v) {
     return v.size();
 }
 
-template <typename T> T &last(std::vector<T> const &x) {
+template <typename T> T &last(std::vector<T> &x) {
     return x[x.size() - 1];
 }
-template <typename T> void show(std::vector<T> const &x) {
+template <typename T> void show(std::vector<T> &x) {
     std::cout << "[";
     for (size_t i = 0; i < x.size() - 1; ++i) {
         std::cout << x[i] << ", ";
@@ -104,7 +104,7 @@ template <typename T> void show(std::vector<T> const &x) {
     std::cout << last(x) << "]";
 }
 // `show` doesn't print a new line by convention.
-template <typename T> void showln(T const &&x) {
+template <typename T> void showln(T &&x) {
     show(x);
     std::printf("\n");
 }
@@ -174,7 +174,7 @@ template <typename T, size_t M> void show(Vector<T, M> v) {
     }
 }
 
-template <typename T> Vector<T, 0> toVector(std::vector<T> const &x) {
+template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
     return Vector<T, 0>(x);
 }
 

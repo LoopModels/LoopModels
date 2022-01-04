@@ -362,7 +362,7 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 // Stride terms are sorted based on Source
 // NOTE: we require all Const sources be folded into the Affine, and their ids
-// set identically. thus, `getCount(ConstantSource)` must always return either
+// set identically. thus, `getCount(SourceType::Constant)` must always return either
 // `0` or `1`.
 struct Stride {
     std::vector<std::pair<Polynomial, Source>>
@@ -381,14 +381,14 @@ struct Stride {
         : stride({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
                                                                      0} {};
 
-    size_t getCount(SourceType i) { return counts[i + 1] - counts[i]; }
+    size_t getCount(SourceType i) { return counts[size_t(i) + 1] - counts[size_t(i)]; }
     size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return stride.begin(); }
     inline auto end() { return stride.end(); }
     inline auto cbegin() const { return stride.cbegin(); }
     inline auto cend() const { return stride.cend(); }
-    inline auto begin(SourceType i) { return stride.begin() + counts[i]; }
-    inline auto end(SourceType i) { return stride.begin() + counts[i + 1]; }
+    inline auto begin(SourceType i) { return stride.begin() + counts[size_t(i)]; }
+    inline auto end(SourceType i) { return stride.begin() + counts[size_t(i) + 1]; }
     inline auto begin(Source i) { return begin(i.typ); }
     inline auto end(Source i) { return end(i.typ); }
     inline size_t size() const { return stride.size(); }
@@ -400,12 +400,12 @@ struct Stride {
         // GCC also seems to prefer this.
         // https://godbolt.org/z/Pcxd6jre7
         for (size_t i = 0; i < 4; ++i) {
-            counts[i + 1] += (t <= i);
+            counts[i + 1] += (size_t(t) <= i);
         }
     }
     void remTyp(SourceType t) {
         for (size_t i = 0; i < 4; ++i) {
-            counts[i + 1] -= (t <= i);
+            counts[i + 1] -= (size_t(t) <= i);
         }
     }
     void addTyp(Source t) { addTyp(t.typ); }
@@ -498,7 +498,7 @@ struct Stride {
     bool isConstant() const {
         size_t n0 = stride.size();
         if (n0) {
-            return stride[n0 - 1].second.typ == ConstantSource;
+            return stride[n0 - 1].second.typ == SourceType::Constant;
         } else {
             return true;
         }
@@ -885,10 +885,10 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     for (size_t i = 0; i < length(t.srcs); ++i) {
         auto [srcId, srcTyp] = t.srcs[i];
         switch (srcTyp) {
-        case MemorySource:
+        case SourceType::Memory:
             push(tb.loads, srcId);
             break;
-        case TermSource:
+        case SourceType::Term:
             push(tb.srcTerms, srcId);
             push(tb.srcTermsDirect, srcId);
             break;
@@ -908,10 +908,10 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
     for (size_t i = 0; i < length(t.dsts); ++i) {
         auto [dstId, dstTyp] = t.dsts[i];
         switch (dstTyp) {
-        case MemorySource:
+        case SourceType::Memory:
             push(tb.stores, dstId);
             break;
-        case TermSource:
+        case SourceType::Term:
             push(tb.dstTerms, dstId);
             push(tb.dstTermsDirect, dstId);
             break;

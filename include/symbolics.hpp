@@ -112,12 +112,13 @@ Rational gcd(Rational x, Rational y) {
 // Can we assume `prodIDs` are greater than 0?
 struct Polynomial {
     struct Monomial {
-        std::vector<uint_fast32_t>
-            prodIDs; // sorted symbolic terms being multiplied
+        // sorted symbolic terms being multiplied
+        std::vector<uint_fast32_t> prodIDs;
 
         // constructors
         Monomial() : prodIDs(std::vector<size_t>()){};
         Monomial(std::vector<size_t> &x) : prodIDs(x){};
+        Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
 
         inline auto begin() { return prodIDs.begin(); }
         inline auto end() { return prodIDs.end(); }
@@ -364,6 +365,9 @@ struct Polynomial {
         auto end() { return monomial.end(); }
         auto cbegin() const { return monomial.cbegin(); }
         auto cend() const { return monomial.cend(); }
+
+	bool operator==(Term const &x) const { return (coefficient == x.coefficient) && (monomial == x.monomial); }
+	bool operator!=(Term const &x) const { return (coefficient != x.coefficient) || (monomial != x.monomial); }
     };
 
     std::vector<Term> terms;
@@ -701,7 +705,12 @@ std::tuple<Polynomial, Polynomial, Polynomial> gcdx(Polynomial const &a,
     return std::make_tuple(x, a / x, b / x);
 }
 
-template <typename T> T negate(T &&x) { return std::forward<T>(x.negate()); }
+// out of place/copy
+template <typename T> T negate(T x) { return x.negate(); }
+// template <typename T> T negate(T &&x) { return std::forward<T>(x.negate()); }
+// Polynomial::Term &negate(Polynomial::Term x) { return x.negate(); }
+
+// Polynomial::Term& negate(Polynomial::Term &&x){ return x.negate(); }
 
 static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 std::string toString(Rational x) {
@@ -752,15 +761,16 @@ std::string toString(Polynomial const &x) {
 }
 void show(Polynomial::Term const &x) { printf("%s", toString(x).c_str()); }
 void show(Polynomial const &x) { printf("%s", toString(x).c_str()); }
+
 Polynomial loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
-    // Polynomial::Term firstSym = Polynomial::Term(0); // split to avoid vexing
-    // parse Polynomial aff(std::move(firstSym));
-    Polynomial aff; //{Polynomial::Term(0)};
+    // loopvars is a vector, first index corresponds to constant, remaining
+    // indices are offset by 1 with respect to program indices.
+    Polynomial aff;
     for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
         if (loopvars[i]) {
             Polynomial::Term sym = Polynomial::Term(loopvars[i]);
             if (i) {
-                sym.monomial.prodIDs.push_back(i);
+                sym.monomial.prodIDs.push_back(i - 1);
             } // i == 0 => constant
             // guaranteed no collision and lex ordering
             // so we push_back directly.
