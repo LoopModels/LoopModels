@@ -259,24 +259,18 @@ struct Polynomial {
         bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
         size_t degree() const { return prodIDs.size(); }
         bool lexLess(Monomial const &x) const {
-            // return `true` if `*this.degree() > x.degree()`
-            if (degree() > x.degree()) {
-                return true;
+            // return `true` if `*this` should be sorted before `x`
+	    size_t d = degree();
+            if (d != x.degree()) {
+                return d > x.degree();
             }
-            auto it = cbegin();
-            auto ite = cend();
-            auto ix = x.cbegin();
-            auto ixe = x.cend();
-            while ((it != ite) && (ix != ixe)) {
-                if ((*it) > (*ix)) {
-                    // require syms in `x` be smaller, i.e. leading ones have
-                    // higher exponents
-                    return false;
-                }
-                ++it;
-                ++ixe;
-            }
-            // return it != ite; // returns true if `*this` is longer
+	    for (size_t i = 0; i < d; ++i){
+		uint_fast32_t a = prodIDs[i];
+		uint_fast32_t b = x.prodIDs[i];
+		if (a != b){
+		    return a < b;
+		}
+	    }
             return false;
         }
     };
