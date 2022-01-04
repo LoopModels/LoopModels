@@ -54,6 +54,7 @@ TEST(IRTest, BasicAssertions) {
     Polynomial p4(11);
     p4.add_term(Polynomial::Term(13, Polynomial::Monomial(std::vector<uint_fast32_t>{0,3})));
     p4.add_term(Polynomial::Term(17, Polynomial::Monomial(std::vector<uint_fast32_t>{0,1,2})));
+    p4.add_term(Polynomial::Term(11, Polynomial::Monomial(std::vector<uint_fast32_t>{0,0,2})));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};

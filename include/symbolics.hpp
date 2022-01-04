@@ -103,6 +103,41 @@ Rational gcd(Rational x, Rational y) {
     return n ? Rational{n, d} : Rational{1, 0};
 }
 
+template <typename T, typename S> void add_term(T &a, S &&x) {
+    if (!x.isZero()) {
+	for (auto it = a.begin(); it != a.end(); ++it) {
+	    if ((it->termsMatch(x))) {
+		if (it->addCoef(x)) {
+		    a.erase(it);
+		}
+		return;
+	    } else if (x.lexLess(*it)) {
+		a.insert(it, std::forward<S>(x));
+		return;
+	    }
+	}
+	a.push_back(std::forward<S>(x));
+    }
+    return;
+}
+template <typename T, typename S> void sub_term(T &a, S &&x) {
+    if (!x.isZero()) {
+	for (auto it = a.begin(); it != a.end(); ++it) {
+	    if ((it->termsMatch(x))) {
+		if (it->subCoef(x)) {
+		    a.erase(it);
+		}
+		return;
+	    } else if (x.lexLess(*it)) {
+		a.insert(it, negate(std::forward<S>(x)));
+		return;
+	    }
+	}
+	a.push_back(negate(std::forward<S>(x)));
+    }
+    return;
+}
+
 // The basic symbol type represents a symbol as a product of some number of
 // known IDs as well as with a constant term.
 // `5` would thus be an empty `prodIDs` vector and `coef = 5`.
@@ -122,6 +157,8 @@ struct Polynomial {
 
         inline auto begin() { return prodIDs.begin(); }
         inline auto end() { return prodIDs.end(); }
+        inline auto begin() const { return prodIDs.begin(); }
+        inline auto end() const { return prodIDs.end(); }
         inline auto cbegin() const { return prodIDs.cbegin(); }
         inline auto cend() const { return prodIDs.cend(); }
         Monomial operator*(Monomial const &x) const {
@@ -258,6 +295,13 @@ struct Polynomial {
         bool isOne() const { return (prodIDs.size() == 0); }
         bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
         size_t degree() const { return prodIDs.size(); }
+	uint_fast32_t degree(uint_fast32_t i) const {
+	    uint_fast32_t d = 0;
+	    for (auto it = cbegin(); it != cend(); ++it){
+		d += (*it) == i;
+	    }
+	    return d;
+	}
         bool lexLess(Monomial const &x) const {
             // return `true` if `*this` should be sorted before `x`
 	    size_t d = degree();
@@ -357,11 +401,16 @@ struct Polynomial {
         }
         auto begin() { return monomial.begin(); }
         auto end() { return monomial.end(); }
+        auto begin() const { return monomial.begin(); }
+        auto end() const { return monomial.end(); }
         auto cbegin() const { return monomial.cbegin(); }
         auto cend() const { return monomial.cend(); }
 
 	bool operator==(Term const &x) const { return (coefficient == x.coefficient) && (monomial == x.monomial); }
 	bool operator!=(Term const &x) const { return (coefficient != x.coefficient) || (monomial != x.monomial); }
+
+	uint_fast32_t degree() const { return monomial.degree(); }
+	uint_fast32_t degree(uint_fast32_t u) const { return monomial.degree(u); }
     };
 
     std::vector<Term> terms;
@@ -378,46 +427,21 @@ struct Polynomial {
 
     inline auto begin() { return terms.begin(); }
     inline auto end() { return terms.end(); }
+    inline auto begin() const { return terms.begin(); }
+    inline auto end() const { return terms.end(); }
     inline auto cbegin() const { return terms.cbegin(); }
     inline auto cend() const { return terms.cend(); }
     // Polynomial(std::tuple<Term, Term> &&x) : terms({std::get<0>(x),
     // std::get<1>(x)}) {}
-
+    template<typename I> void erase(I it){ terms.erase(it); }
+    template<typename I, typename T> void insert(I it, T &&x){ terms.insert(it, std::forward<T>(x)); }
+    template<typename T> void push_back(T &&x){ terms.push_back(std::forward<T>(x)); }
+    
     template <typename S> void add_term(S &&x) {
-        if (!x.isZero()) {
-            for (auto it = terms.begin(); it != terms.end(); ++it) {
-                if ((it->termsMatch(x))) {
-                    if (it->addCoef(x)) {
-                        terms.erase(it);
-                    }
-                    return;
-                } else if (x.lexLess(*it)) {
-                    terms.insert(it, std::forward<S>(x));
-                    return;
-                }
-            }
-            terms.push_back(std::forward<S>(x));
-        }
-        return;
+	::add_term(*this, std::forward<S>(x));
     }
     template <typename S> void sub_term(S &&x) {
-        if (!x.isZero()) {
-            for (auto it = terms.begin(); it != terms.end(); ++it) {
-                if ((it->termsMatch(x))) {
-                    if (it->subCoef(x)) {
-                        terms.erase(it);
-                    }
-                    return;
-                } else if (x.lexLess(*it)) {
-                    Term y(x);
-                    terms.insert(it, std::move(y.negate()));
-                    return;
-                }
-            }
-            Term y(x);
-            terms.push_back(std::move(y.negate()));
-        }
-        return;
+	::sub_term(*this, std::forward<S>(x));
     }
     Polynomial &operator+=(Term const &x) {
         add_term(x);
@@ -956,5 +980,41 @@ struct ValueRange {
         return y *= x;
     }
 };
+*/
 
+
+// Univariate Polynomial for multivariate gcd
+/*
+struct UniPoly{
+    struct Monomial{
+	uint_fast32_t power;
+    };
+    struct Term{
+	Polynomial coefficient;
+	Monomial monomial;
+    };
+    std::vector<Term> terms;
+    inline auto begin() { return terms.begin(); }
+    inline auto end() { return terms.end(); }
+    inline auto begin() const { return terms.begin(); }
+    inline auto end() const { return terms.end(); }
+    inline auto cbegin() const { return terms.cbegin(); }
+    inline auto cend() const { return terms.cend(); }
+    // Polynomial(std::tuple<Term, Term> &&x) : terms({std::get<0>(x),
+    // std::get<1>(x)}) {}
+    template<typename I> void erase(I it){ terms.erase(it); }
+    template<typename I, typename T> void insert(I it, T &&x){ terms.insert(it, std::forward<T>(x)); }
+    
+    template <typename S> void add_term(S &&x) {
+	::add_term(*this, std::forward<S>(x));
+    }
+    template <typename S> void sub_term(S &&x) {
+	::sub_term(*this, std::forward<S>(x));
+    }
+    UniPoly(Polynomial const &x, uint_fast32_t u) {
+	for (auto it = x.cbegin(); it != x.cend(); ++it){
+	    it -> degree(u);
+	}
+    }
+};
 */

@@ -385,6 +385,8 @@ struct Stride {
     size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return stride.begin(); }
     inline auto end() { return stride.end(); }
+    inline auto begin() const { return stride.begin(); }
+    inline auto end() const { return stride.end(); }
     inline auto cbegin() const { return stride.cbegin(); }
     inline auto cend() const { return stride.cend(); }
     inline auto begin(SourceType i) { return stride.begin() + counts[size_t(i)]; }
