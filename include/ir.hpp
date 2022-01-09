@@ -365,35 +365,36 @@ template <typename T> size_t length(VoVoV<T> x) {
 // set identically. thus, `getCount(SourceType::Constant)` must always return either
 // `0` or `1`.
 struct Stride {
-    std::vector<std::pair<Polynomial, Source>>
-        stride; // sources must be ordered
+    Polynomial stride;
+    // sources must be ordered
+    std::vector<std::pair<Polynomial, Source>> indices;
     size_t counts[5];
     // size_t constCount;
     // size_t indCount;
     // size_t memCount;
     // size_t termCount;
     Stride()
-        : stride(std::vector<std::pair<Polynomial, Source>>()), counts{0, 0, 0,
+        : indices(std::vector<std::pair<Polynomial, Source>>()), counts{0, 0, 0,
                                                                        0, 0} {};
     Stride(Polynomial &x, Source &&ind)
-        : stride({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
+        : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
     Stride(Polynomial &x, size_t indId, SourceType indTyp)
-        : stride({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
+        : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
                                                                      0} {};
 
     size_t getCount(SourceType i) { return counts[size_t(i) + 1] - counts[size_t(i)]; }
     size_t getCount(Source i) { return getCount(i.typ); }
-    inline auto begin() { return stride.begin(); }
-    inline auto end() { return stride.end(); }
-    inline auto begin() const { return stride.begin(); }
-    inline auto end() const { return stride.end(); }
-    inline auto cbegin() const { return stride.cbegin(); }
-    inline auto cend() const { return stride.cend(); }
-    inline auto begin(SourceType i) { return stride.begin() + counts[size_t(i)]; }
-    inline auto end(SourceType i) { return stride.begin() + counts[size_t(i) + 1]; }
+    inline auto begin() { return indices.begin(); }
+    inline auto end() { return indices.end(); }
+    inline auto begin() const { return indices.begin(); }
+    inline auto end() const { return indices.end(); }
+    inline auto cbegin() const { return indices.cbegin(); }
+    inline auto cend() const { return indices.cend(); }
+    inline auto begin(SourceType i) { return indices.begin() + counts[size_t(i)]; }
+    inline auto end(SourceType i) { return indices.begin() + counts[size_t(i) + 1]; }
     inline auto begin(Source i) { return begin(i.typ); }
     inline auto end(Source i) { return end(i.typ); }
-    inline size_t size() const { return stride.size(); }
+    inline size_t numIndices() const { return indices.size(); }
 
     void addTyp(SourceType t) {
         // Clang goes extremely overboard vectorizing loops with dynamic length
@@ -531,7 +532,7 @@ SourceCount sourceCount(Stride s) {
 struct ArrayRef {
     size_t arrayId;
     std::vector<std::pair<Polynomial, Source>> inds;
-    std::vector<Stride> strides;
+    std::vector<Stride> axes;
     std::vector<size_t>
         indToStrideMap; // length(indTostridemap) == length(inds)
     std::vector<Polynomial> upperBounds;

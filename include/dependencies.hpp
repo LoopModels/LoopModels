@@ -2,6 +2,7 @@
 
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
+#include "./loops.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
 #include <algorithm>
@@ -472,6 +473,145 @@ Polynomial upperBound(Source indSrc, RektM loopvars) {
         return Polynomial(Polynomial::Term(std::numeric_limits<Int>::max()));
     }
 }
+Polynomial upperBound(Source indSrc, RectangularLoopNest loop){
+    return upperBound(indSrc, getUpperbound(loop));
+}
+std::pair<Int,Polynomial> getBounds(Source indSrc, RectangularLoopNest loop){
+    return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
+}
+std::pair<Int,Polynomial> getBounds(Source indSrc, RectangularLoopNest loop, std::vector<Stride>&){
+    return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
+}
+
+/*
+std::pair<Int,Polynomial> getBounds(RectangularLoopNest &loop,
+std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial>> bounds;
+    bounds.reserve(axes.size());
+    // for (auto it = axes.begin();
+    return std::make_pair(0,upperBound(indSrc, loop));
+}
+*/
+
+// get as function of strides
+Polynomial getAsStrideFun(){
+    
+}
+
+// we want to return upper bounds as a function of indices
+// previous loop ids are (1 << 16 + i), for stride id 0, ..., nloops-1
+// previous stride ids are (1 << 24 + i), for stride id 0, ..., nstrides-1
+std::pair<Polynomial,Polynomial> getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes){
+    // TODO: implement me
+    Polynomial L(0);
+    Polynomial U = upperBound(indSrc, getRekt(tri));
+    TrictM A = getTrit(tri);
+    size_t l = indSrc.id;
+
+    // As this function is used for checking dependencies, we aggressively try and define
+    // bounds as a function of the values along other axes.
+    // 
+    // For example, if we have a case such as
+    // for (i = 0; i < M; ++i){
+    //   for (j = 0; j < i; ++j){
+    //     B(i,j) = B(j,i)
+    //   }
+    // }
+    // where `stride(A,2) == M`, such that we have
+    // source: B[j + M*i]
+    // target: B[i + M*j]
+    // Additionall, `A`, the matrix defining loop bounds is:
+    // [  1 0   [ i   < [ M
+    //   -1 1 ]   j ]     0 ]
+    // Note that for relating loop values to strides, the relationships are trivially invertible here,
+    // as they are merely the identity function. Thus, for the srouce we can easily go from `j` to `x0`
+    // and `i` to `x1`. Similarly, for the target, we can go from `i` to `x0` and `j` to `x1`.
+    // 
+    // for the source, we have:
+    // when `indSrc == i`:
+    // lowerBound_s_i = [j] = [x0]
+    // upperBound_s_i = [M - 1]
+    // 
+    //
+    // when `indSrc == j`:
+    // lowerBound_s_j = [0]
+    // upperBound_s_j = [i - 1] = [x1 - 1]
+    //
+    // Meanwhile, for the target, we have
+    // when `indSrc == i`:
+    // lowerBound_t_i = [j] = [x1]
+    // upperBound_t_i = [M - 1]
+    //
+    // when `indSrc == j`:
+    // lowerBound_t_j = [0]
+    // upperBound_t_j = [i - 1] = [x0 - 1]
+    //
+    // Thus, were we to compare `i` for the source with `j` for the target, we see
+    // lowerBound_s_i = [x0] > [x0 - 1] = upperBound_t_j
+    // meaning no overlap, and we reject dependence.
+    // Alternatively, were we to compare `j` for the source with `i` for the target:
+    // upperbound_s_j = [x1 - 1] < [x1] = lowerBound_t_i
+    // meaning, again, no overlap and we reject dependence.
+    // 
+    // if not invertible, we set to extreme bound instead.
+    // visit all previous inds
+    // 
+    // We take the approach of first calculating bounds in terms of loop variables
+    // then, we try to translate the loop variables into strides.
+    // 
+    // for (size_t i = 0; i < size(A,1); ++i){
+    for (size_t i = 0; i < l; ++i){
+	Int Ail = A(i,l); // coefficient on other loop
+	// if ((Ail == 0) | (i == l)){ continue; }
+	if (Ail == 0){
+	    continue;
+	} else if (Ail > 0){
+	    // Aij * i + l < M
+	    // Upper bound:
+	    // l < M - Aij * i
+	    // 
+	    // 
+	    // 
+	    //
+	} else { // Ail < 0
+	    // Aij * i + l < M
+	    // Upper bound:
+	    // l < M - Aij * i
+	    // 
+	    // 
+	}
+	// first, define as function of outer loop
+	// then...
+	//
+	
+    }
+    // second loop, these each define separate equations
+    for (size_t i = l+1; i < size(A,1); ++i){
+	Int Ail = A(i,l); // coefficient on this loop
+	if (Ail == 0){
+	    continue;
+	} else if (Ail > 0){
+	    // i + Aij * l < M
+	    // Upper bound:
+	    // l < (M - i) / Aij
+	    // must check entire strip A(0:i-1, i)
+	    // 
+	    // 
+	    // 
+	    // 
+	    // 
+	} else { // if Ail < 0
+	    // i + Aij * l < M
+	    // Lower bound:
+	    // (M - i) / Aij < l
+	    // must check entire strip A(0:i-1, i)
+	    // 
+	    // 
+	    // 
+	    // 
+	}
+    }
+    return std::make_pair(std::move(L), std::move(U));
+}
 // x y
 // T T T
 // T F F
@@ -540,7 +680,7 @@ bool maybeLess(Function &fun, Polynomial &&x, Polynomial &y) {
 }
 */
 bool maybeLess(Function const &fun, Stride const &x, Polynomial const &y) {
-    for (auto it = x.stride.begin(); it != x.stride.end(); ++it) {
+    for (auto it = x.begin(); it != x.end(); ++it) {
         if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
         }
@@ -554,7 +694,7 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> const &strides,
     Source src = std::get<1>(*itsrc);
     for (size_t j = 0; j < strides.size(); ++j) {
         const Stride &s = strides[j];
-        for (auto it = s.stride.begin(); it != s.stride.end(); ++it) {
+        for (auto it = s.begin(); it != s.end(); ++it) {
             if (src == std::get<1>(*it)) {
                 ar.indToStrideMap.push_back(j);
                 return;
@@ -621,7 +761,7 @@ void recheckStrides(Function const &fun, std::vector<Stride> &strides,
 void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
     size_t Ninds = length(ar.inds);
-    std::vector<Stride> &strides = ar.strides;
+    std::vector<Stride> &strides = ar.axes;
     strides.reserve(Ninds);
     std::vector<Polynomial> &upperBounds = ar.upperBounds;
     upperBounds.reserve(Ninds);
@@ -699,8 +839,8 @@ template <typename L> void partitionStrides(ArrayRef ar, L loopnest) {
 }
 
 bool mayOverlap(Function &fun, ArrayRef &x, ArrayRef &y, size_t i, size_t j) {
-    return maybeLess(fun, x.strides[j], y.upperBounds[i]) &&
-           maybeLess(fun, y.strides[i], x.upperBounds[j]);
+    return maybeLess(fun, x.axes[j], y.upperBounds[i]) &&
+           maybeLess(fun, y.axes[i], x.upperBounds[j]);
 }
 bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
                 std::vector<std::pair<Polynomial, Polynomial>> &upperBounds,
@@ -828,8 +968,8 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
         foundX[i] = -1;
         foundY[i] = -1;
     }
-    for (size_t i = 0; i < arx.strides.size(); ++i) {
-        for (size_t j = 0; j < ary.strides.size(); ++j) {
+    for (size_t i = 0; i < arx.axes.size(); ++i) {
+        for (size_t j = 0; j < ary.axes.size(); ++j) {
             if (mayOverlap(fun, arx, ary, i, j)) {
                 intptr_t pidX = foundX[i];
                 intptr_t pidY = foundY[j];
@@ -840,24 +980,24 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
                     foundX[i] = strideCmp.size();
                     foundY[j] = strideCmp.size();
                     strideCmp.push_back(
-                        std::make_pair(arx.strides[i], ary.strides[j]));
+                        std::make_pair(arx.axes[i], ary.axes[j]));
                 } else if (pidX == -1) {
                     // pidY gives ind of `X` it previously matched with
                     foundX[i] = pidY;
-                    strideCmp[pidY].first += arx.strides[i];
-                    strideCmp[pidY].second += ary.strides[j];
+                    strideCmp[pidY].first += arx.axes[i];
+                    strideCmp[pidY].second += ary.axes[j];
                     // need to check pidY for conflicts
                     recheckStrides(fun, strideCmp, upperBoundCmp, pidY);
                 } else if (pidY == -1) {
                     // pidX gives ind of `Y` it previously matched with
                     foundY[j] = pidX;
-                    strideCmp[pidX].first += arx.strides[i];
-                    strideCmp[pidX].second += ary.strides[j];
+                    strideCmp[pidX].first += arx.axes[i];
+                    strideCmp[pidX].second += ary.axes[j];
                     // need to check pidX for conflicts
                     recheckStrides(fun, strideCmp, upperBoundCmp, pidX);
                 } else if (pidX == pidY) {
-                    strideCmp[pidX].first += arx.strides[i];
-                    strideCmp[pidX].second += ary.strides[j];
+                    strideCmp[pidX].first += arx.axes[i];
+                    strideCmp[pidX].second += ary.axes[j];
                     // need to check pidX for conflicts
                     recheckStrides(fun, strideCmp, upperBoundCmp, pidX);
                 } else {
@@ -868,8 +1008,8 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
                     // be shifted.
                     intptr_t s = std::min(pidX, pidY);
                     intptr_t l = std::max(pidX, pidY);
-                    strideCmp[s].first += arx.strides[i];
-                    strideCmp[s].second += ary.strides[j];
+                    strideCmp[s].first += arx.axes[i];
+                    strideCmp[s].second += ary.axes[j];
                     strideCmp[s].first += strideCmp[l].first;
                     strideCmp[s].second += strideCmp[l].second;
                     // need to remove pidY
@@ -885,14 +1025,14 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
             // did not find a match with `j`
             // thus, we append it by itself with a 0 stride for `j`.
             foundX[i] = strideCmp.size();
-            strideCmp.push_back(std::make_pair(arx.strides[i], Stride()));
+            strideCmp.push_back(std::make_pair(arx.axes[i], Stride()));
         }
     }
     for (size_t j = 0; j < ary.strides.size(); ++j) {
         if (foundY[j] == -1) {
             // we're done, so no need to update `foundY`.
             // foundY[j] = strideCmp.size();
-            strideCmp.push_back(std::make_pair(Stride(), ary.strides[j]));
+            strideCmp.push_back(std::make_pair(Stride(), ary.axes[j]));
         }
     }
     return strideCmp;
@@ -953,6 +1093,18 @@ auto getFirstLoopStride(Stride &x) {
     // return x.stride[0].first;
 }
 
+// for the case of
+// for (i = 0; i < M; ++i){
+//   for (j = 0; j < i; ++j){
+//     A(i,j) = A(j,i)
+//   }
+// }
+// Dependency checks will look at...
+// stride 0: 0:M-1 vs 0:M-2 -- alias
+// stride 1: 0:l0-1 vs l0+1:M-1
+// So, in we need to add symbols associated with the LoopInductionVariables to
+// the polynomials Perhaps indicated by values >= 2^16 (we're using uint32_fast
+// for var ids).
 template <typename LX, typename LY>
 DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                                            LX loopNestX, LY loopNestY) {
@@ -972,9 +1124,10 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                         fun, d,
                         upperBound(getFirstLoopStride(y)->second, loopNestY))) {
                     return Independent;
-                }
-                // must check loop bounds
-                return LoopCarried;
+                } else {
+		    // must check loop bounds
+		    return LoopCarried;
+		}
             } else if (((a->first) % r).isCompileTimeConstant()) {
                 // r is not zero, but a % r is a constant, indicating
                 // that we have a constant offset.
@@ -1014,6 +1167,52 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
     }
     return LoopCarried;
 }
+
+// the basic idea from Banerjee is just to ask whether there is a solution
+// A(f(...))
+// A(g(...))
+// does this ever hold?
+// f(...) == g(...)
+// We assume linear, so these are linear diophantine
+// a0 + a1 * i1 + a2 * i2 + ... = b0 + b1 * j1 + b2 * j2 + ...
+// max_Rf f >= min_Rg g 
+// Rf is the range of inputs for f, so
+// L_i_k <= i_k < U_i_k
+//
+// Lets hypothetically break things down, before backpedalling later
+// h_k(i, j) = a_k*i - b_k*j
+// \sum_{k=1}^K h_k(i_k, j_k) = b_0 - a_0
+// 
+// p(x) = max(x, 0)
+// m(x) = min(x, 0)
+// x == p(x) + m(x)
+// say 0 <= x <= s
+// then
+// m(t)*s <= t*x <= p(t)*s
+// let y := (u - l) * x + l
+// let s := 1
+// then
+// l <= y <= u
+// x = (y - l) / (u - l)
+// m(t) <= t*(y - l) / (y - l) <= p(t)
+// (y - l)*m(t) <= t*y - t*l <= (y - l)*p(t)
+// y*m(t) - l*m(t) + t*l <= t*y <= y*p(t) - l*p(t) + t*l
+// y*m(t) - l*m(t) + (p(t) + m(t))*l <= t*y <= y*p(t) - l*p(t) + (p(t) + m(t)))*l
+// y*m(t) + l*p(t) <= t*y <= y*p(t) + l*m(t)
+// u*m(t) + l*p(t) <= t*y <= u*p(t) + l*m(t)
+// imagine `y` is actually `i`, a loop induction variable
+// and `t` is `a`, the slope/rate `f` changes w/ respect to `i`, that is
+// `a * i`
+// then, this is saying that `a * i` is bounded by...
+// if a > 0: a*l <= a*i <= a*u
+// if a < 0: a*u <= a*i <= a*l
+//
+// if the lower bound on sum of differences > 0, no intersection
+// if the upper bound on sum of differences < 0, no intersection
+// h_k_m(...) = u_k*m(a_k) + l_k*p(a_k) - (u_k*p(b_k) + l_k*m(b_k))
+// h_k_p(...) = u_k*p(a_k) + l_k*m(a_k) - (u_k*m(b_k) + l_k*p(b_k))
+// \sum_{k=1}^K h_k_m(...) <= 0 <= h_k_p(...)
+// if the above is violated => no dependency
 template <typename LX, typename LY>
 DependenceType multipleInductionVariableTest(Function &fun, Stride &x,
                                              Stride &y, LX loopNestX,
@@ -1032,8 +1231,9 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
         auto [sx, sy] = stridePairs[i];
         // SourceCount scx = sourceCount(sx);
         // SourceCount scy = sourceCount(sy);
-        size_t numLoopInductVar = std::max(sx.getCount(SourceType::LoopInductionVariable),
-                                           sy.getCount(SourceType::LoopInductionVariable));
+        size_t numLoopInductVar =
+            std::max(sx.getCount(SourceType::LoopInductionVariable),
+                     sy.getCount(SourceType::LoopInductionVariable));
         // std::max(scx.loopInductVar, scy.loopInductVar);
         if (sx.isAffine() & sy.isAffine()) {
             switch (numLoopInductVar) {
@@ -1084,18 +1284,18 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
                         if (xId >= 0){ continue; } // don't need to do anything
                         // they're both `-1`, therefore neither have been added.
                         // now, we check if strides are equal
-                        Stride &strideX = arx.strides[strdi];
-                        Stride &strideY = ary.strides[strdj];
+                        Stride &strideX = arx.axes[strdi];
+                        Stride &strideY = ary.axes[strdj];
 
                     } else if (xId == -1) {
                         // `xId` not added yet, but `yId` already added. So we
     add missing `xId`. Stride &strideX = strideCmp[yId].first; strideX +=
-    arx.strides[strdi];
+    arx.axes[strdi];
                         // is `strideX` still valid as a separate stride?
                     } else if (yId == -1) {
                         // fuse with `xId`
                         Stride &strideY = strideCmp[xId].second;
-                        strideY += ary.strides[strdj];
+                        strideY += ary.axes[strdj];
                         // is `strideY` still valid as a separate stride?
                     } else {
                         // they're pointing to two separate strides
@@ -1103,8 +1303,8 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
                     }
                 }
 
-                Stride &si = arx.strides[strdi];
-                Stride &sj = ary.strides[strdj];
+                Stride &si = arx.axes[strdi];
+                Stride &sj = ary.axes[strdj];
                 strideCmp.push_back(std::make_pair(si, sj));
             }
         }
@@ -1112,10 +1312,10 @@ bool checkIndependent(Function &fun, Term &tx, ArrayRef &arx, LX &loopNestX,
     */
     /*
     for (size_t i = 0; i < arx.strides.size(); ++i){
-        Stride &stride_i = arx.strides[i];
+        Stride &stride_i = arx.axes[i];
         for (size_t j = 0; j < ary.strides.size(); ++j){
             if (yMatched[j]){ continue; } // TODO: confirm it doesn't also match
-            Stride &stride_j = ary.strides[j];
+            Stride &stride_j = ary.axes[j];
 
         }
     }
