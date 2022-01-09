@@ -88,6 +88,7 @@ struct Rational {
     bool isZero() const { return numerator == 0; }
     bool isOne() const { return (numerator == denominator); }
     bool isInteger() const { return denominator == 1; }
+
 };
 
 Rational gcd(Rational x, Rational y) {
@@ -136,6 +137,52 @@ template <typename T, typename S> void sub_term(T &a, S &&x) {
 	a.push_back(negate(std::forward<S>(x)));
     }
     return;
+}
+
+template <typename T> struct Univariate{
+    struct Term{
+        T coefficient;
+        std::uint_fast32_t exponent;
+
+        Univariate operator+(Term &y){
+	    if (exponent == y.exponent){
+		return Univariate(Term{coefficient + y.coefficient, exponent});
+	    } else if (exponent < y.exponent) {
+		return Univariate(y, *this);
+	    } else { // exponent > y.exponent
+		return Univariate(*this, y);
+	    }
+        }
+	Univariate operator-(Term &y){
+	    if (exponent == y.exponent){
+		return Univariate(Term{coefficient - y.coeff, exponent});
+	    } else if (exponent < y.exponent) {
+		return Univariate(negate(y), *this);
+	    } else { // exponent > y.exponent
+		return Univariate(*this, negate(y));
+	    }
+        }
+	Term operator*(Term &y){
+	    return Term{coefficient * y.coeff, exponent + y.exponent};
+	}
+	Term &negate(){
+	    coefficient.negate();
+	    return *this;
+	}
+    };
+
+    std::vector<Term> terms;
+    Univariate(Term &x) : terms({x}) {};
+    Univariate(Term &x, Term &y) : terms({x, y}) {};
+    
+};
+template<> Univariate<intptr_t>::Term& Univariate<intptr_t>::Term::negate(){
+    coefficient *= -1;
+    return *this;
+}
+template<> Univariate<Rational>::Term& Univariate<Rational>::Term::negate(){
+    coefficient.numerator *= -1;
+    return *this;
 }
 
 // The basic symbol type represents a symbol as a product of some number of
