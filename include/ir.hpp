@@ -3,6 +3,7 @@
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
 #include "./math.hpp"
+#include "./loops.hpp"
 #include "./symbolics.hpp"
 #include "./tree.hpp"
 #include <bit>
@@ -365,20 +366,20 @@ template <typename T> size_t length(VoVoV<T> x) {
 // set identically. thus, `getCount(SourceType::Constant)` must always return either
 // `0` or `1`.
 struct Stride {
-    Polynomial stride;
+    Polynomial<intptr_t> stride;
     // sources must be ordered
-    std::vector<std::pair<Polynomial, Source>> indices;
+    std::vector<std::pair<Polynomial<intptr_t>, Source>> indices;
     size_t counts[5];
     // size_t constCount;
     // size_t indCount;
     // size_t memCount;
     // size_t termCount;
     Stride()
-        : indices(std::vector<std::pair<Polynomial, Source>>()), counts{0, 0, 0,
+        : indices(std::vector<std::pair<Polynomial<intptr_t>, Source>>()), counts{0, 0, 0,
                                                                        0, 0} {};
-    Stride(Polynomial &x, Source &&ind)
+    Stride(Polynomial<intptr_t> &x, Source &&ind)
         : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial &x, size_t indId, SourceType indTyp)
+    Stride(Polynomial<intptr_t> &x, size_t indId, SourceType indTyp)
         : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
                                                                      0} {};
 
@@ -421,18 +422,18 @@ struct Stride {
                 (it->first) += x;
                 if ((it->first).isZero()) {
                     remTyp(ind);
-                    stride.erase(it);
+                    indices.erase(it);
                 }
                 return;
             } else if (ind < (it->second)) {
                 addTyp(ind);
-                stride.insert(it, std::make_pair(std::forward<A>(x),
+                indices.insert(it, std::make_pair(std::forward<A>(x),
                                                  std::forward<I>(ind)));
                 return;
             }
         }
         addTyp(ind);
-        stride.push_back(
+        indices.push_back(
             std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
         return;
     }
@@ -443,18 +444,18 @@ struct Stride {
                 (it->first) -= x;
                 if ((it->first).isZero()) {
                     remTyp(ind);
-                    stride.erase(it);
+                    indices.erase(it);
                 }
                 return;
             } else if (ind < (it->second)) {
                 addTyp(ind);
-                stride.insert(it, std::make_pair(negate(std::forward<A>(x)),
+                indices.insert(it, std::make_pair(negate(std::forward<A>(x)),
                                                  std::forward<I>(ind)));
                 return;
             }
         }
         addTyp(ind);
-        stride.push_back(
+        indices.push_back(
             std::make_pair(negate(std::forward<A>(x)), std::forward<I>(ind)));
         return;
     }
@@ -473,9 +474,9 @@ struct Stride {
     }
     Stride largerCapacityCopy(size_t i) const {
         Stride s;
-        s.stride.reserve(i + stride.size()); // reserve full size
+        s.indices.reserve(i + indices.size()); // reserve full size
         for (auto it = cbegin(); it != cend(); ++it) {
-            s.stride.push_back(*it); // copy initial batch
+            s.indices.push_back(*it); // copy initial batch
         }
         for (size_t i = 1; i < 5; ++i) {
             s.counts[i] = counts[i];
@@ -484,24 +485,24 @@ struct Stride {
     }
 
     Stride operator+(Stride const &x) const {
-        Stride y = largerCapacityCopy(x.stride.size());
+        Stride y = largerCapacityCopy(x.indices.size());
         y += x;
         return y;
     }
     Stride operator+(Stride &&x) const { return x += *this; }
     Stride operator-(Stride const &x) const {
-        Stride y = largerCapacityCopy(x.stride.size());
+        Stride y = largerCapacityCopy(x.indices.size());
         y -= x;
         return y;
     }
 
-    bool operator==(Stride const &x) const { return (stride == x.stride); }
-    bool operator!=(Stride const &x) const { return (stride != x.stride); }
+    bool operator==(Stride const &x) const { return (stride == x.stride) && (indices == x.indices); }
+    bool operator!=(Stride const &x) const { return (stride != x.stride) || (indices != x.indices); }
 
     bool isConstant() const {
-        size_t n0 = stride.size();
+        size_t n0 = indices.size();
         if (n0) {
-            return stride[n0 - 1].second.typ == SourceType::Constant;
+            return indices[n0 - 1].second.typ == SourceType::Constant;
         } else {
             return true;
         }
@@ -531,11 +532,11 @@ SourceCount sourceCount(Stride s) {
 
 struct ArrayRef {
     size_t arrayId;
-    std::vector<std::pair<Polynomial, Source>> inds;
+    std::vector<std::pair<Polynomial<intptr_t>, Source>> inds;
     std::vector<Stride> axes;
     std::vector<size_t>
         indToStrideMap; // length(indTostridemap) == length(inds)
-    std::vector<Polynomial> upperBounds;
+    std::vector<Polynomial<intptr_t>> upperBounds;
 };
 
 template <typename T0, typename T1, typename T2>
@@ -778,14 +779,16 @@ struct Function {
 ValueRange valueRange(Function const &fun, size_t id) {
     return fun.rangeMap[id];
 }
-ValueRange valueRange(Function const &fun, Polynomial::Term const &x) {
+template <typename C>
+ValueRange valueRange(Function const &fun, typename Polynomial<C>::Term const &x) {
     ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
     }
     return p;
 }
-ValueRange valueRange(Function const &fun, Polynomial const &x) {
+template <typename C>
+ValueRange valueRange(Function const &fun, Polynomial<C> const &x) {
     ValueRange a(0);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
@@ -799,7 +802,8 @@ Order cmpZero(intptr_t x) {
 Order cmpZero(Function &fun, size_t id) {
     return valueRange(fun, id).compare(0);
 }
-Order cmpZero(Function &fun, Polynomial::Term &x) {
+template <typename C>
+Order cmpZero(Function &fun, typename Polynomial<C>::Term &x) {
     return valueRange(fun, x).compare(0);
 };
 
@@ -1029,7 +1033,8 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
 }
 
 // returns true if `abs(x) < y`
-bool absLess(Function const &fun, Polynomial const &x, Polynomial const &y) {
+template <typename C>
+bool absLess(Function const &fun, Polynomial<C> const &x, Polynomial<C> const &y) {
     ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
     if (delta.lowerBound < 0.0) {
         return false;

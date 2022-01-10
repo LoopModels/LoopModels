@@ -44,17 +44,17 @@ TEST(IRTest, BasicAssertions) {
         VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
                       toVector(outerOffsets), memBuffer);
 
-    std::vector<std::pair<Polynomial, Source>> inds;
-    inds.emplace_back(Polynomial(1), Source(2, SourceType::LoopInductionVariable));
-    inds.emplace_back(Polynomial::Term(2, Polynomial::Monomial(std::vector<uint_fast32_t>{0})), Source(8, SourceType::Memory));
-    inds.emplace_back(Polynomial::Term(3, Polynomial::Monomial(std::vector<uint_fast32_t>{0, 1})), Source(18, SourceType::Term));
-    Polynomial p3(5);
-    p3.add_term(Polynomial::Term(7, Polynomial::Monomial(std::vector<uint_fast32_t>{0})));
+    std::vector<std::pair<Polynomial<intptr_t>, Source>> inds;
+    inds.emplace_back(Polynomial<intptr_t>(1), Source(2, SourceType::LoopInductionVariable));
+    inds.emplace_back(Polynomial<intptr_t>::Term(2, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0})), Source(8, SourceType::Memory));
+    inds.emplace_back(Polynomial<intptr_t>::Term(3, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0, 1})), Source(18, SourceType::Term));
+    Polynomial<intptr_t> p3(5);
+    p3.add_term(Polynomial<intptr_t>::Term(7, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0})));
     inds.emplace_back(p3, Source(3, SourceType::LoopInductionVariable));
-    Polynomial p4(11);
-    p4.add_term(Polynomial::Term(13, Polynomial::Monomial(std::vector<uint_fast32_t>{0,3})));
-    p4.add_term(Polynomial::Term(17, Polynomial::Monomial(std::vector<uint_fast32_t>{0,1,2})));
-    p4.add_term(Polynomial::Term(11, Polynomial::Monomial(std::vector<uint_fast32_t>{0,0,2})));
+    Polynomial<intptr_t> p4(11);
+    p4.add_term(Polynomial<intptr_t>::Term(13, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0,3})));
+    p4.add_term(Polynomial<intptr_t>::Term(17, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0,1,2})));
+    p4.add_term(Polynomial<intptr_t>::Term(11, Polynomial<intptr_t>::Monomial(std::vector<uint_fast32_t>{0,0,2})));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};

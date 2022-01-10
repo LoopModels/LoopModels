@@ -1,4 +1,5 @@
 #include "../include/math.hpp"
+#include "../include/loops.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
 

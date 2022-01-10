@@ -29,6 +29,10 @@ add_executable(
   bitset_test
   bitset_test.cpp
 )
+add_executable(
+  symbolics_test
+  symbolics_test.cpp
+)
 target_link_libraries(
   compat_test
   gtest_main
@@ -43,6 +47,10 @@ target_link_libraries(
 )
 target_link_libraries(
   bitset_test
+  gtest_main
+)
+target_link_libraries(
+  symbolics_test
   gtest_main
 )
 

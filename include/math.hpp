@@ -6,18 +6,63 @@
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
+#include <numeric>
 #include <tuple>
 #include <utility>
 #include <vector>
 
+inline uint64_t trailingZeros(uint64_t x) { return __builtin_ctz(x); }
+inline uint64_t leadingZeros(uint64_t x) { return __builtin_clz(x); }
+inline uint64_t countOnes(uint64_t x) { return __builtin_popcount(x); }
+std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
+    intptr_t g = std::gcd(x, y);
+    return std::make_pair(x / g, y / g);
+}
+
+template <typename T> T powBySquare(T &&x, size_t i) {
+    switch (i) {
+    case 0:
+        return T(1);
+    case 1:
+        return x;
+    case 2:
+        return x * x;
+    case 3:
+        return x * x * x;
+    default:
+        break;
+    }
+    intptr_t t = trailingZeros(i) + 1;
+    i >>= t;
+    T z(std::forward<T>(x));
+    T b;
+    while (--t) {
+        b = z;
+        z *= b;
+    }
+    if (i == 0){ return z; }
+    T y(z);
+    while (i) {
+        t = trailingZeros(i) + 1;
+        i >>= t;
+        while ((--t) >= 0) {
+            b = z;
+            z *= b;
+        }
+        y *= z;
+    }
+    return y;
+}
+
+template <typename T, typename S> void divExact(T &x, S const &y){
+    auto d = x / y;
+    assert(d * y == x);
+    x = d;
+}
+
 // enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
 //   Bits:            00               01                   10            11
-enum class SourceType {
-    Constant,
-    LoopInductionVariable,
-    Memory,
-    Term
-};
+enum class SourceType { Constant, LoopInductionVariable, Memory, Term };
 
 std::string toString(SourceType s) {
     switch (s) {
@@ -58,18 +103,10 @@ struct SourceCount{
     size_t loopInductVar;
     size_t total;
     SourceCount() : memory(0), term(0), constant(0), loopInductVar(0), total(0)
-{} SourceCount& operator+=(SourceType s){ switch (s) { case SourceType::Constant:
-            constant += 1;
-            break;
-        case SourceType::LoopInductionVariable:
-            loopInductVar += 1;
-            break;
-        case SourceType::Memory:
-            memory += 1;
-            break;
-        case SourceType::Term:
-            term += 1;
-            break;
+{} SourceCount& operator+=(SourceType s){ switch (s) { case
+SourceType::Constant: constant += 1; break; case
+SourceType::LoopInductionVariable: loopInductVar += 1; break; case
+SourceType::Memory: memory += 1; break; case SourceType::Term: term += 1; break;
         }
         total += 1;
         return *this;
@@ -93,9 +130,7 @@ inline size_t length(V &v) {
     return v.size();
 }
 
-template <typename T> T &last(std::vector<T> &x) {
-    return x[x.size() - 1];
-}
+template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
 template <typename T> void show(std::vector<T> &x) {
     std::cout << "[";
     for (size_t i = 0; i < x.size() - 1; ++i) {
@@ -505,7 +540,6 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
         return std::make_pair(ps, (i + 1) < p.level);
     }
 }
-
 
 // a_1 * i + b_1 * j = b_0 - a_0
 // to find all solutions where
