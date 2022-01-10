@@ -5,6 +5,7 @@
 #include "./loops.hpp"
 #include "./ir.hpp"
 #include "./math.hpp"
+#include "symbolics.hpp"
 #include <algorithm>
 #include <compare>
 #include <cstddef>
@@ -464,28 +465,28 @@ std::vector<std::pair<Vector<size_t, 0>, Int>> mulCoefs(ArrayRef x, size_t idx,
 // A(i,j,i)
 
 // should be O(N), passing through both arrays just once;
-Polynomial upperBound(Source indSrc, RektM loopvars) {
+Polynomial::Multivariate<intptr_t> upperBound(Source indSrc, RektM loopvars) {
     // std::numeric_limits<Int>::max(): not making assumptions on returned
     // value.
     if (indSrc.typ == SourceType::LoopInductionVariable) {
-        return loopToAffineUpperBound(getCol(loopvars, indSrc.id));
+        return Polynomial::loopToAffineUpperBound(getCol(loopvars, indSrc.id));
     } else {
-        return Polynomial(Polynomial::Term(std::numeric_limits<Int>::max()));
+        return Polynomial::Multivariate<intptr_t>(Polynomial::MultivariateTerm<intptr_t>(std::numeric_limits<Int>::max()));
     }
 }
-Polynomial upperBound(Source indSrc, RectangularLoopNest loop){
+Polynomial::Multivariate<intptr_t> upperBound(Source indSrc, RectangularLoopNest loop){
     return upperBound(indSrc, getUpperbound(loop));
 }
-std::pair<Int,Polynomial> getBounds(Source indSrc, RectangularLoopNest loop){
+std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, RectangularLoopNest loop){
     return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
 }
-std::pair<Int,Polynomial> getBounds(Source indSrc, RectangularLoopNest loop, std::vector<Stride>&){
+std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, RectangularLoopNest loop, std::vector<Stride>&){
     return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
 }
 
 /*
-std::pair<Int,Polynomial> getBounds(RectangularLoopNest &loop,
-std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial>> bounds;
+std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(RectangularLoopNest &loop,
+std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial::Multivariate<intptr_t>>> bounds;
     bounds.reserve(axes.size());
     // for (auto it = axes.begin();
     return std::make_pair(0,upperBound(indSrc, loop));
@@ -493,17 +494,17 @@ std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial>> bounds;
 */
 
 // get as function of strides
-Polynomial getAsStrideFun(){
+Polynomial::Multivariate<intptr_t> getAsStrideFun(){
     
 }
 
 // we want to return upper bounds as a function of indices
 // previous loop ids are (1 << 16 + i), for stride id 0, ..., nloops-1
 // previous stride ids are (1 << 24 + i), for stride id 0, ..., nstrides-1
-std::pair<Polynomial,Polynomial> getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes){
+std::pair<Polynomial::Multivariate<intptr_t>,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes){
     // TODO: implement me
-    Polynomial L(0);
-    Polynomial U = upperBound(indSrc, getRekt(tri));
+    Polynomial::Multivariate<intptr_t> L(0);
+    Polynomial::Multivariate<intptr_t> U = upperBound(indSrc, getRekt(tri));
     TrictM A = getTrit(tri);
     size_t l = indSrc.id;
 
@@ -619,7 +620,7 @@ std::pair<Polynomial,Polynomial> getBounds(Source indSrc, TriangularLoopNest tri
 // F F T
 // only returns true if guaranteed
 
-bool maybeLess(Function const &fun, Polynomial const &diff) {
+bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &diff) {
     if (diff.isZero()) {
         return false;
     }
@@ -637,7 +638,7 @@ bool maybeLess(std::vector<ValueRange> const &x) {
     return lowerBound < 0;
 }
 
-bool maybeLess(Function const &fun, Polynomial const &x, Polynomial const &y) {
+bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &x, Polynomial::Multivariate<intptr_t> const &y) {
     /*
     std::vector<ValueRange> diff;
     auto itx = x.begin(); auto itxe = x.end();
@@ -670,16 +671,16 @@ bool maybeLess(Function const &fun, Polynomial const &x, Polynomial const &y) {
     }
     */
     // TODO: improve on this, by taking advantage of the cached difference info
-    Polynomial diff = x - y;
+    Polynomial::Multivariate<intptr_t> diff = x - y;
     return maybeLess(fun, diff);
 }
 /*
-bool maybeLess(Function &fun, Polynomial &&x, Polynomial &y) {
+bool maybeLess(Function &fun, Polynomial::Multivariate<intptr_t> &&x, Polynomial::Multivariate<intptr_t> &y) {
     x -= y;
     return maybeLess(fun, x);
 }
 */
-bool maybeLess(Function const &fun, Stride const &x, Polynomial const &y) {
+bool maybeLess(Function const &fun, Stride const &x, Polynomial::Multivariate<intptr_t> const &y) {
     for (auto it = x.begin(); it != x.end(); ++it) {
         if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
@@ -713,14 +714,14 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> const &strides,
 */
 
 bool mayOverlap(Function const &fun, std::vector<Stride> const &strides,
-                std::vector<Polynomial> const &upperBounds, size_t j,
+                std::vector<Polynomial::Multivariate<intptr_t>> const &upperBounds, size_t j,
                 size_t k) {
     return maybeLess(fun, strides[k], upperBounds[j]) &&
            maybeLess(fun, strides[j], upperBounds[k]);
 }
 
 void recheckStrides(Function const &fun, std::vector<Stride> &strides,
-                    std::vector<Polynomial> &upperBounds, size_t j) {
+                    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds, size_t j) {
     size_t eraseInds[64];
     size_t eraseCount;
     size_t jDec;
@@ -763,9 +764,9 @@ void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.axes;
     strides.reserve(Ninds);
-    std::vector<Polynomial> &upperBounds = ar.upperBounds;
+    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds = ar.upperBounds;
     upperBounds.reserve(Ninds);
-    // std::vector<Polynomial> strideSums;
+    // std::vector<Polynomial::Multivariate<intptr_t>> strideSums;
     // strideSums.reserve(Ninds);
     // TODO: factor out rechecking for stride combining.
     // std::vector<BitSet64> recheck(Ninds);
@@ -773,11 +774,11 @@ void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<size_t> recheck;
     auto ite = ar.inds.end();
     for (auto it = ar.inds.begin(); it != ite; ++it) {
-        std::pair<Polynomial, Source> ind = *it;
-        Polynomial &a = std::get<0>(ind);
+        std::pair<Polynomial::Multivariate<intptr_t>, Source> ind = *it;
+        Polynomial::Multivariate<intptr_t> &a = std::get<0>(ind);
         Source indSrc = std::get<1>(ind);
 
-        Polynomial ubi = upperBound(indSrc, loopnest);
+        Polynomial::Multivariate<intptr_t> ubi = upperBound(indSrc, loopnest);
         // auto [srcId, srcTyp] = ar.indTyps[i];
         bool overlaps = false;
         // BitSet64 upperBoundGreaterOrEqualToStride;
@@ -843,7 +844,7 @@ bool mayOverlap(Function &fun, ArrayRef &x, ArrayRef &y, size_t i, size_t j) {
            maybeLess(fun, y.axes[i], x.upperBounds[j]);
 }
 bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
-                std::vector<std::pair<Polynomial, Polynomial>> &upperBounds,
+                std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> &upperBounds,
                 size_t i, size_t j) {
     return (maybeLess(fun, strides[j].first, upperBounds[i].first) &&
             maybeLess(fun, strides[i].first,
@@ -861,7 +862,7 @@ bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
 
 void recheckStrides(Function &fun,
                     std::vector<std::pair<Stride, Stride>> &strides,
-                    std::vector<std::pair<Polynomial, Polynomial>> &upperBounds,
+                    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> &upperBounds,
                     size_t j) {
     // index `j` has been updated, so check `j` vs all others
     size_t eraseInds[64];
@@ -953,7 +954,7 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
     // 1. []:  i vs i
     // 2. [M]: j vs j
     std::vector<std::pair<Stride, Stride>> strideCmp;
-    std::vector<std::pair<Polynomial, Polynomial>> upperBoundCmp;
+    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> upperBoundCmp;
     /*
     std::pair<intptr_t,size_t> foundX[64];
     std::pair<intptr_t,size_t> foundY[64];
@@ -1047,12 +1048,12 @@ template <typename T> ValueRange differenceRange(Function &fun, T it, T ite) {
     }
     return r;
 }
-ValueRange differenceRange(Function &fun, Polynomial &x, Polynomial &y) {
-    Polynomial diff = x - y;
+ValueRange differenceRange(Function &fun, Polynomial::Multivariate<intptr_t> &x, Polynomial::Multivariate<intptr_t> &y) {
+    Polynomial::Multivariate<intptr_t> diff = x - y;
     return differenceRange(fun, diff.begin(), diff.end());
 }
 // ValueRange differenceRangeConst(Function &fun,
-// std::pair<Polynomial,Source> &x) {
+// std::pair<Polynomial::Multivariate<intptr_t>,Source> &x) {
 //     return differenceRange(fun, x.first.begin(), x.first.end()) *
 //     valueRange(fun, x.second.id);
 // }
@@ -1103,7 +1104,7 @@ auto getFirstLoopStride(Stride &x) {
 // stride 0: 0:M-1 vs 0:M-2 -- alias
 // stride 1: 0:l0-1 vs l0+1:M-1
 // So, in we need to add symbols associated with the LoopInductionVariables to
-// the polynomials Perhaps indicated by values >= 2^16 (we're using uint32_fast
+// the Polynomial::Multivariate<intptr_t>s Perhaps indicated by values >= 2^16 (we're using uint32_fast
 // for var ids).
 template <typename LX, typename LY>
 DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
@@ -1144,7 +1145,7 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
             if (delta.getCount(SourceType::Constant)) {
                 // c = a0 - b0;
                 // g, na, nb = gcdx(a1, b1);
-                Polynomial c = delta.begin()->first;
+                Polynomial::Multivariate<intptr_t> c = delta.begin()->first;
                 // x(k) = -na * (c / g) + k * b1 / g;
                 // y(k) =  nb * (c / g) + k * a1 / g;
                 // we must therefore check if any solutions are within the loop
