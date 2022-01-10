@@ -1,3 +1,4 @@
+#pragma once
 #include "math.hpp"
 #include <algorithm>
 #include <compare>
@@ -160,18 +161,7 @@ template <typename T, typename S> void sub_term(T &a, S &&x) {
     }
     return;
 }
-static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
 
-std::string toString(intptr_t i) { return std::to_string(i); }
-
-std::string toString(Rational x) {
-    if (x.denominator == 1) {
-        return std::to_string(x.numerator);
-    } else {
-        return std::to_string(x.numerator) + " / " +
-               std::to_string(x.denominator);
-    }
-}
 
 namespace Polynomial {
     struct Uninomial {
@@ -1664,59 +1654,6 @@ template <typename C> Multivariate<C> gcd(Multivariate<C> &x, Multivariate<C> &y
         return univariateToMultivariate(gcd(p1, p2));
     }
 }
-
-    std::string toString(Uninomial const &x){
-	return "x^" + std::to_string(x.exponent);
-    }
-
-std::string toString(Monomial const &x) {
-    size_t numIndex = x.prodIDs.size();
-    if (numIndex) {
-        if (numIndex != 1) { // not 0 by prev `if`
-            std::string poly = "";
-            for (size_t k = 0; k < numIndex; ++k) {
-                poly += programVarName(x.prodIDs[k]);
-                if (k + 1 != numIndex)
-                    poly += " ";
-            }
-            return poly;
-        } else { // numIndex == 1
-            return programVarName(x.prodIDs[0]);
-        }
-    } else {
-        return "1";
-    }
-}
-template <typename C, typename M>
-std::string toString(const Term<C,M> &x) {
-    if (isOne(x.coefficient)) {
-        return toString(x.exponent);
-    } else if (x.isCompileTimeConstant()) {
-        return toString(x.coefficient);
-    } else {
-        return toString(x.coefficient) + " ( " + toString(x.exponent) + " ) ";
-    }
-}
-
-template <typename C, typename M> std::string toString(Terms<C,M> const &x) {
-    std::string poly = " ( ";
-    for (size_t j = 0; j < length(x.terms); ++j) {
-        if (j) {
-            poly += " + ";
-        }
-        poly += toString(x.terms[j]);
-    }
-    return poly + " ) ";
-}
-
-    
-template <typename C, typename M> void show(Term<C,M> const &x) {
-    printf("%s", toString(x).c_str());
-}
-template <typename C, typename M> void show(Terms<C,M> const &x) {
-    printf("%s", toString(x).c_str());
-}
-
 
 
 Multivariate<intptr_t>

@@ -1,5 +1,6 @@
 #include "../include/ir.hpp"
 #include "../include/math.hpp"
+#include "../include/show.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>

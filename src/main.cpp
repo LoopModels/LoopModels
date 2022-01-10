@@ -3,6 +3,7 @@
 #include <array>
 #include <fmt/format.h>
 #include "../include/math.hpp"
+#include "../include/show.hpp"
 
 int main() {
     int f[4];

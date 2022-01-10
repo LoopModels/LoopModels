@@ -1,5 +1,6 @@
 #include "../include/bitsets.hpp"
 #include "../include/math.hpp"
+#include "../include/show.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
 

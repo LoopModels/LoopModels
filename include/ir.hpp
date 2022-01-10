@@ -67,49 +67,6 @@ struct Const {
     uint64_t bits;
 };
 
-void show(Const c) {
-    auto b = c.bits;
-    switch (c.type) {
-    case Float64:
-        std::printf("Float64(%f)", std::bit_cast<double>(b));
-        break;
-    case Float32:
-        std::printf("Float32(%f)", std::bit_cast<float>((uint32_t)b));
-        break;
-    case Float16:
-        std::printf("Float16(%x)", uint16_t(b));
-        break;
-    case BFloat16:
-        std::printf("BFloat16(%x)", uint16_t(b));
-        break;
-    case Int64:
-        std::printf("Int64(%zu)", int64_t(b));
-        break;
-    case Int32:
-        std::printf("Int32(%d)", int32_t(b));
-        break;
-    case Int16:
-        std::printf("Int16(%d)", int16_t(b));
-        break;
-    case Int8:
-        std::printf("Int8(%d)", int8_t(b));
-        break;
-    case UInt64:
-        std::printf("UInt64(%lu)", uint64_t(b));
-        break;
-    case UInt32:
-        std::printf("UInt32(%x)", uint32_t(b));
-        break;
-    case UInt16:
-        std::printf("UInt16(%x)", uint16_t(b));
-        break;
-    case UInt8:
-        std::printf("UInt8(%x)", uint8_t(b));
-        break;
-    default:
-        assert("unreachable");
-    }
-}
 
 // struct Pointer { }
 
@@ -563,22 +520,6 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
         }
     }
     return std::make_pair(j, v);
-}
-
-void show(ArrayRef ar) {
-    printf("ArrayRef %zu:\n", ar.arrayId);
-    for (size_t i = 0; i < length(ar.inds); ++i) {
-        auto [ind, src] = ar.inds[i];
-        std::string indStr =
-            "i_" + std::to_string(src.id) + " (" + toString(src.typ) + ")";
-        std::string poly = "(" + toString(ind) + ") " + indStr;
-        printf("    %s", poly.c_str());
-        if (i + 1 < length(ar.inds)) {
-            printf(" +\n");
-        } else {
-            printf("\n");
-        }
-    }
 }
 
 struct CostSummary {

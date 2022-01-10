@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <iostream>
 #include <numeric>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -75,26 +76,6 @@ template <typename T, typename S> void divExact(T &x, S const &y){
 //   Bits:            00               01                   10            11
 enum class SourceType { Constant, LoopInductionVariable, Memory, Term };
 
-std::string toString(SourceType s) {
-    switch (s) {
-    case SourceType::Constant:
-        return "Constant";
-    case SourceType::LoopInductionVariable:
-        return "Induction Variable";
-    case SourceType::Memory:
-        return "Memory";
-    case SourceType::Term:
-        return "Term";
-        // case WTR:
-        //     return "Write then read";
-        // case RTW: // dummy SourceType for indicating a relationship; not
-        // lowered
-        //     return "Read then write";
-        // default:
-        //     assert("Unreachable reached; invalid SourceType.");
-        //     return "";
-    }
-}
 
 struct Source {
     size_t id;
@@ -141,19 +122,8 @@ inline size_t length(V &v) {
     return v.size();
 }
 
+
 template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
-template <typename T> void show(std::vector<T> &x) {
-    std::cout << "[";
-    for (size_t i = 0; i < x.size() - 1; ++i) {
-        std::cout << x[i] << ", ";
-    }
-    std::cout << last(x) << "]";
-}
-// `show` doesn't print a new line by convention.
-template <typename T> void showln(T &&x) {
-    show(x);
-    std::printf("\n");
-}
 
 template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     size_t N = length(x0);
@@ -210,15 +180,6 @@ template <typename T> struct Vector<T, 0> {
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.len; }
-
-template <typename T, size_t M> void show(Vector<T, M> v) {
-    for (size_t i = 0; i < length(v); i++) {
-        std::cout << v(i) << ", ";
-    }
-    if (length(v)) {
-        std::cout << v(length(v) - 1);
-    }
-}
 
 template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
     return Vector<T, 0>(x);
@@ -330,13 +291,6 @@ Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
     return Vector<T, 0>(A.ptr + i * s1, s1);
 }
 
-template <typename T, size_t M, size_t N> void show(Matrix<T, M, N> A) {
-    for (size_t i = 0; i < size(A, 0); i++) {
-        for (size_t j = 0; j < size(A, 1); j++) {
-            std::printf("%17d", A(i, j));
-        }
-    }
-}
 
 template <typename T> struct StrideMatrix {
     T *ptr;
@@ -360,13 +314,6 @@ template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
 }
 template <typename T> size_t length(StrideMatrix<T> A) {
     return size(A, 0) * size(A, 1);
-}
-template <typename T> void show(StrideMatrix<T> A) {
-    for (size_t i = 0; i < size(A, 0); i++) {
-        for (size_t j = 0; j < size(A, 1); j++) {
-            std::printf("%17d", A(i, j));
-        }
-    }
 }
 // template <typename T> size_t getstride1(Matrix<T> A) {return size(A, 0);}
 // template <typename T> size_t getstride1(StrideMatrix<T> A) {return A.S;}
@@ -467,13 +414,6 @@ Permutation init(Permutation p) {
     return p;
 }
 
-void show(Permutation perm) {
-    auto numloop = getNLoops(perm);
-    std::printf("perm: <");
-    for (size_t j = 0; j < numloop - 1; j++)
-        std::printf("%ld ", perm(j));
-    std::printf("%ld>", perm(numloop - 1));
-}
 
 template <typename T> struct UnitRange {
     T operator()(size_t i) { return T(i); }
