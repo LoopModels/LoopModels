@@ -19,22 +19,33 @@ std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
     return std::make_pair(x / g, y / g);
 }
 
-template <typename T> T powBySquare(T &&x, size_t i) {
+// template<typename T> T one(const T) { return T(1); }
+struct One {
+    operator intptr_t(){ return 1; };
+    operator size_t(){ return 1; };
+};
+
+template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
+    // typedef typename std::remove_const<TRC>::type TR;
+    // typedef typename std::remove_reference<TR>::type T;
+    typedef typename std::remove_reference<TRC>::type TR;
+    typedef typename std::remove_const<TR>::type T;
     switch (i) {
     case 0:
-        return T(1);
+        return T(One());
     case 1:
-        return x;
+        return T(x);
     case 2:
-        return x * x;
+        return T(x * x);
     case 3:
-        return x * x * x;
+        return T(x * x * x);
     default:
         break;
     }
     intptr_t t = trailingZeros(i) + 1;
     i >>= t;
-    T z(std::forward<T>(x));
+    // T z(std::move(x));
+    T z(std::forward<TRC>(x));
     T b;
     while (--t) {
         b = z;

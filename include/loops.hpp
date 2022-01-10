@@ -1,4 +1,4 @@
-#include "./math.hpp"
+#include "math.hpp"
 
 //
 // Loop nests
