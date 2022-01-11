@@ -25,7 +25,9 @@ struct One {
     operator intptr_t() { return 1; };
     operator size_t() { return 1; };
 };
-/*
+bool isOne(intptr_t x) { return x == 1; }
+bool isOne(size_t x) { return x == 1; }
+
 template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     // typedef typename std::remove_const<TRC>::type TR;
     // typedef typename std::remove_reference<TR>::type T;
@@ -67,27 +69,6 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
             z *= b;
         }
         y *= z;
-    }
-    return y;
-}
-*/
-template <typename T>
-T powBySquare(T x, size_t i){
-    switch (i) {
-    case 0:
-        return T(One());
-    case 1:
-        return T(x);
-    case 2:
-        return T(x * x);
-    case 3:
-        return T(x * x * x);
-    default:
-        break;
-    }
-    auto y(x);
-    for (size_t j = 1; j < i; ++j){
-        y = y * x;
     }
     return y;
 }

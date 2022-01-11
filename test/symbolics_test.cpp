@@ -7,7 +7,6 @@
 #include <utility>
 #include <vector>
 
-/*
 TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem
     Polynomial::Uninomial x{1};
@@ -92,7 +91,7 @@ TEST(pseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::pseudorem(p, q2) == (-46*(x^4) + 7*(x^2) - 18*x));
 
 }    
-*/
+
 TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Monomial x = Polynomial::Monomial(0);
     Polynomial::Monomial y = Polynomial::Monomial(1);
@@ -162,7 +161,6 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_EQ(ppy.terms[3].exponent.exponent, e0);
 
 
-    /*
     Polynomial::Multivariate<intptr_t> a = x * y + y;
     Polynomial::Multivariate<intptr_t> b = y * z + y;
     printf("gcd(a,b) == M:\n");
@@ -171,11 +169,10 @@ TEST(PseudoRemTests, BasicAssertions) {
     showln(gcd(a, b)); // we have N + 2? aka z + 1???
     printf("y:  "); showln(y);
     printf("Multivariate(y):  "); showln(Polynomial::Multivariate<intptr_t>(y));
-    */
 
     //Polynomial::Multivariate<intptr_t> q = p * (p + 1);
-    // Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
-    Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2); //* (p + 3);
+    Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
+    // Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2); //* (p + 3);
     printf("q:\n");
     std::cout << q << std::endl;
     printf("p:\n");
@@ -201,6 +198,6 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(p  , q) == p  );
     EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
     EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
-    // EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
+    EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
 }
 

@@ -120,9 +120,6 @@ struct Rational {
 bool isZero(intptr_t x) { return x == 0; }
 bool isZero(size_t x) { return x == 0; }
 
-// template <typename T> bool isOne(T x) { return x.isOne(); }
-bool isOne(intptr_t x) { return x == 1; }
-bool isOne(size_t x) { return x == 1; }
 
 Rational gcd(Rational x, Rational y) {
     intptr_t a = x.numerator * y.denominator;
@@ -1554,7 +1551,9 @@ template <typename C> C content(Univariate<C> const &a) {
     for (size_t i = 2; i < a.terms.size(); ++i) {
         g = gcd(g, a.terms[i].coefficient);
     }
-    return std::move(g);
+    return g;
+    // TODO: this is probably safe
+    // return std::move(g);
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
@@ -1597,7 +1596,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         divExact(r, g * (h ^ d)); // defines new y
         std::swap(xx, yy);
         std::swap(yy, r);
-        g = x.leadingCoefficient();
+        g = xx.leadingCoefficient();
         if (d > 1) {
             C htemp = h ^ (d - 1);
             h = g ^ d;
@@ -1610,7 +1609,12 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
 }
 
 Monomial gcd(Monomial const &x, Monomial const &y) {
-    Monomial g, a, b;
+    if (isOne(x)){
+	return x;
+    } else if (isOne(y)){
+	return y;
+    }
+    Monomial g;
     auto ix = x.cbegin();
     auto ixe = x.cend();
     auto iy = y.cbegin();
@@ -1621,10 +1625,8 @@ Monomial gcd(Monomial const &x, Monomial const &y) {
         uint_fast32_t yk =
             (iy != iye) ? *iy : std::numeric_limits<uint_fast32_t>::max();
         if (xk < yk) {
-            a.prodIDs.push_back(xk);
             ++ix;
         } else if (xk > yk) {
-            b.prodIDs.push_back(yk);
             ++iy;
         } else { // xk == yk
             g.prodIDs.push_back(xk);
@@ -1642,6 +1644,17 @@ Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
     M g = gcd(x.exponent, y.exponent);
     C gr = gcd(x.coefficient, y.coefficient);
     return Term<C, M>(gr, g);
+}
+template <typename C>
+Term<C, Monomial> gcd(Term<C, Monomial> const &x, Term<C, Monomial> const &y) {
+    C gr = gcd(x.coefficient, y.coefficient);
+    if (isOne(x.exponent)){
+	return Term<C, Monomial>(gr, x.exponent);
+    } else if (isOne(y.exponent)){
+	return Term<C, Monomial>(gr, y.exponent);
+    } else {
+	return Term<C, Monomial>(gr, gcd(x.exponent, y.exponent));
+    }
 }
 
 std::tuple<Monomial, Monomial, Monomial> gcdd(Monomial const &x,
