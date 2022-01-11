@@ -225,10 +225,13 @@ struct Uninomial {
 	switch (x.exponent) {
 	case 0:
 	    os << '1';
+	    break;
 	case 1:
 	    os << 'x';
+	    break;
 	default:
 	    os << "x^" << x.exponent;
+	    break;
 	}
 	return os;
     }
@@ -1551,9 +1554,7 @@ template <typename C> C content(Univariate<C> const &a) {
     for (size_t i = 2; i < a.terms.size(); ++i) {
         g = gcd(g, a.terms[i].coefficient);
     }
-    return g;
-    // TODO: this is probably safe
-    // return std::move(g);
+    return std::move(g);
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
@@ -1605,7 +1606,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
             h = (h ^ (1 - d)) * (g ^ d);
         }
     }
-    return c * primPart(y);
+    return c * primPart(yy);
 }
 
 Monomial gcd(Monomial const &x, Monomial const &y) {
@@ -1783,16 +1784,6 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
             coef += p.terms[pows[i].second];
         }
     }
-    // std::cout << "oldDegree: " << oldDegree << std::endl;
-    // std::cout << "coef (degree, numTerms): (" << coef.degree() << "," <<
-    // coef.terms.size() << " )\n"; if (coef.terms.size()){
-    //     std::cout << "prodIDs: ";// << coef.terms[0].exponent.prodIDs <<
-    //     std::endl; for (auto it = coef.terms[0].exponent.prodIDs.begin(); it
-    //     != coef.terms[0].exponent.prodIDs.end(); ++it){
-    //         std::cout << *it << ", ";
-    //     }
-    //     std::cout << "\n";
-    // }
     u.terms.emplace_back(coef, oldDegree);
 }
 
@@ -1835,7 +1826,6 @@ Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
     for (auto it = g.begin(); it != g.end(); ++it) {
         Multivariate<C> coef = it->coefficient;
         size_t exponent = (it->exponent).exponent;
-        // std::cout << "Exponent: " << exponent << "; v: " << v << std::endl;
         if (exponent) {
             for (auto ic = coef.begin(); ic != coef.end(); ++ic) {
                 (ic->exponent).add_term(v, exponent);
@@ -1868,12 +1858,11 @@ Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
     } else if ((isZero(y) || isOne(x)) || (x == y)) {
         return x;
     }
-
     size_t v1 = pickVar(x);
     size_t v2 = pickVar(y);
     if (v1 < v2) {
         return gcd(y, content(multivariateToUnivariate(x, v1)));
-    } else if (v2 < v1) {
+    } else if (v1 > v2) {
         return gcd(x, content(multivariateToUnivariate(y, v2)));
     } else if (v1 == NOT_A_VAR) {
         return Multivariate<C>(gcd(x.leadingTerm(), y.leadingTerm()));

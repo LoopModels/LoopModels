@@ -174,7 +174,7 @@ TEST(PseudoRemTests, BasicAssertions) {
     */
 
     //Polynomial::Multivariate<intptr_t> q = p * (p + 1);
-    //Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
+    // Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
     Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2); //* (p + 3);
     printf("q:\n");
     std::cout << q << std::endl;
@@ -199,8 +199,8 @@ TEST(PseudoRemTests, BasicAssertions) {
     */
 
     EXPECT_TRUE(Polynomial::gcd(p  , q) == p  );
-    //EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
-    //EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
-    //EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
+    EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
+    EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
+    // EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
 }
 
