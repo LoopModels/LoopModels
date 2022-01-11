@@ -61,7 +61,6 @@ std::string toString(Polynomial::Uninomial const &x) {
     }
 }
 
-
 std::string toString(Rational x) {
     if (x.denominator == 1) {
         return std::to_string(x.numerator);

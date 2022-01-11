@@ -2,8 +2,8 @@
 
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
-#include "./loops.hpp"
 #include "./ir.hpp"
+#include "./loops.hpp"
 #include "./math.hpp"
 #include "symbolics.hpp"
 #include <algorithm>
@@ -471,22 +471,28 @@ Polynomial::Multivariate<intptr_t> upperBound(Source indSrc, RektM loopvars) {
     if (indSrc.typ == SourceType::LoopInductionVariable) {
         return Polynomial::loopToAffineUpperBound(getCol(loopvars, indSrc.id));
     } else {
-        return Polynomial::Multivariate<intptr_t>(Polynomial::MultivariateTerm<intptr_t>(std::numeric_limits<Int>::max()));
+        return Polynomial::Multivariate<intptr_t>(
+            Polynomial::MultivariateTerm<intptr_t>(
+                std::numeric_limits<Int>::max()));
     }
 }
-Polynomial::Multivariate<intptr_t> upperBound(Source indSrc, RectangularLoopNest loop){
+Polynomial::Multivariate<intptr_t> upperBound(Source indSrc,
+                                              RectangularLoopNest loop) {
     return upperBound(indSrc, getUpperbound(loop));
 }
-std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, RectangularLoopNest loop){
-    return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
+std::pair<Int, Polynomial::Multivariate<intptr_t>>
+getBounds(Source indSrc, RectangularLoopNest loop) {
+    return std::make_pair(0, upperBound(indSrc, getUpperbound(loop)));
 }
-std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, RectangularLoopNest loop, std::vector<Stride>&){
-    return std::make_pair(0,upperBound(indSrc, getUpperbound(loop)));
+std::pair<Int, Polynomial::Multivariate<intptr_t>>
+getBounds(Source indSrc, RectangularLoopNest loop, std::vector<Stride> &) {
+    return std::make_pair(0, upperBound(indSrc, getUpperbound(loop)));
 }
 
 /*
-std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(RectangularLoopNest &loop,
-std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial::Multivariate<intptr_t>>> bounds;
+std::pair<Int,Polynomial::Multivariate<intptr_t>> getBounds(RectangularLoopNest
+&loop, std::vector<Stride> &axes){
+std::vector<std::pair<Int,Polynomial::Multivariate<intptr_t>>> bounds;
     bounds.reserve(axes.size());
     // for (auto it = axes.begin();
     return std::make_pair(0,upperBound(indSrc, loop));
@@ -494,23 +500,23 @@ std::vector<Stride> &axes){ std::vector<std::pair<Int,Polynomial::Multivariate<i
 */
 
 // get as function of strides
-Polynomial::Multivariate<intptr_t> getAsStrideFun(){
-    
-}
+Polynomial::Multivariate<intptr_t> getAsStrideFun() {}
 
 // we want to return upper bounds as a function of indices
 // previous loop ids are (1 << 16 + i), for stride id 0, ..., nloops-1
 // previous stride ids are (1 << 24 + i), for stride id 0, ..., nstrides-1
-std::pair<Polynomial::Multivariate<intptr_t>,Polynomial::Multivariate<intptr_t>> getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes){
+std::pair<Polynomial::Multivariate<intptr_t>,
+          Polynomial::Multivariate<intptr_t>>
+getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes) {
     // TODO: implement me
     Polynomial::Multivariate<intptr_t> L(0);
     Polynomial::Multivariate<intptr_t> U = upperBound(indSrc, getRekt(tri));
     TrictM A = getTrit(tri);
     size_t l = indSrc.id;
 
-    // As this function is used for checking dependencies, we aggressively try and define
-    // bounds as a function of the values along other axes.
-    // 
+    // As this function is used for checking dependencies, we aggressively try
+    // and define bounds as a function of the values along other axes.
+    //
     // For example, if we have a case such as
     // for (i = 0; i < M; ++i){
     //   for (j = 0; j < i; ++j){
@@ -523,15 +529,16 @@ std::pair<Polynomial::Multivariate<intptr_t>,Polynomial::Multivariate<intptr_t>>
     // Additionall, `A`, the matrix defining loop bounds is:
     // [  1 0   [ i   < [ M
     //   -1 1 ]   j ]     0 ]
-    // Note that for relating loop values to strides, the relationships are trivially invertible here,
-    // as they are merely the identity function. Thus, for the srouce we can easily go from `j` to `x0`
-    // and `i` to `x1`. Similarly, for the target, we can go from `i` to `x0` and `j` to `x1`.
-    // 
+    // Note that for relating loop values to strides, the relationships are
+    // trivially invertible here, as they are merely the identity function.
+    // Thus, for the srouce we can easily go from `j` to `x0` and `i` to `x1`.
+    // Similarly, for the target, we can go from `i` to `x0` and `j` to `x1`.
+    //
     // for the source, we have:
     // when `indSrc == i`:
     // lowerBound_s_i = [j] = [x0]
     // upperBound_s_i = [M - 1]
-    // 
+    //
     //
     // when `indSrc == j`:
     // lowerBound_s_j = [0]
@@ -546,70 +553,68 @@ std::pair<Polynomial::Multivariate<intptr_t>,Polynomial::Multivariate<intptr_t>>
     // lowerBound_t_j = [0]
     // upperBound_t_j = [i - 1] = [x0 - 1]
     //
-    // Thus, were we to compare `i` for the source with `j` for the target, we see
-    // lowerBound_s_i = [x0] > [x0 - 1] = upperBound_t_j
-    // meaning no overlap, and we reject dependence.
-    // Alternatively, were we to compare `j` for the source with `i` for the target:
-    // upperbound_s_j = [x1 - 1] < [x1] = lowerBound_t_i
-    // meaning, again, no overlap and we reject dependence.
-    // 
+    // Thus, were we to compare `i` for the source with `j` for the target, we
+    // see lowerBound_s_i = [x0] > [x0 - 1] = upperBound_t_j meaning no overlap,
+    // and we reject dependence. Alternatively, were we to compare `j` for the
+    // source with `i` for the target: upperbound_s_j = [x1 - 1] < [x1] =
+    // lowerBound_t_i meaning, again, no overlap and we reject dependence.
+    //
     // if not invertible, we set to extreme bound instead.
     // visit all previous inds
-    // 
-    // We take the approach of first calculating bounds in terms of loop variables
-    // then, we try to translate the loop variables into strides.
-    // 
+    //
+    // We take the approach of first calculating bounds in terms of loop
+    // variables then, we try to translate the loop variables into strides.
+    //
     // for (size_t i = 0; i < size(A,1); ++i){
-    for (size_t i = 0; i < l; ++i){
-	Int Ail = A(i,l); // coefficient on other loop
-	// if ((Ail == 0) | (i == l)){ continue; }
-	if (Ail == 0){
-	    continue;
-	} else if (Ail > 0){
-	    // Aij * i + l < M
-	    // Upper bound:
-	    // l < M - Aij * i
-	    // 
-	    // 
-	    // 
-	    //
-	} else { // Ail < 0
-	    // Aij * i + l < M
-	    // Upper bound:
-	    // l < M - Aij * i
-	    // 
-	    // 
-	}
-	// first, define as function of outer loop
-	// then...
-	//
-	
+    for (size_t i = 0; i < l; ++i) {
+        Int Ail = A(i, l); // coefficient on other loop
+        // if ((Ail == 0) | (i == l)){ continue; }
+        if (Ail == 0) {
+            continue;
+        } else if (Ail > 0) {
+            // Aij * i + l < M
+            // Upper bound:
+            // l < M - Aij * i
+            //
+            //
+            //
+            //
+        } else { // Ail < 0
+            // Aij * i + l < M
+            // Upper bound:
+            // l < M - Aij * i
+            //
+            //
+        }
+        // first, define as function of outer loop
+        // then...
+        //
     }
     // second loop, these each define separate equations
-    for (size_t i = l+1; i < size(A,1); ++i){
-	Int Ail = A(i,l); // coefficient on this loop
-	if (Ail == 0){
-	    continue;
-	} else if (Ail > 0){
-	    // i + Aij * l < M
-	    // Upper bound:
-	    // l < (M - i) / Aij
-	    // must check entire strip A(0:i-1, i)
-	    // 
-	    // 
-	    // 
-	    // 
-	    // 
-	} else { // if Ail < 0
-	    // i + Aij * l < M
-	    // Lower bound:
-	    // (M - i) / Aij < l
-	    // must check entire strip A(0:i-1, i)
-	    // 
-	    // 
-	    // 
-	    // 
-	}
+    for (size_t i = l + 1; i < size(A, 1); ++i) {
+        Int Ail = A(i, l); // coefficient on this loop
+        if (Ail == 0) {
+            continue;
+        } else if (Ail > 0) {
+            // i + Aij * l < M
+            // Upper bound:
+            // l < (M - i) / Aij
+            // must check entire strip A(0:i-1, i)
+            //
+            //
+            //
+            //
+            //
+        } else { // if Ail < 0
+            // i + Aij * l < M
+            // Lower bound:
+            // (M - i) / Aij < l
+            // must check entire strip A(0:i-1, i)
+            //
+            //
+            //
+            //
+        }
     }
     return std::make_pair(std::move(L), std::move(U));
 }
@@ -620,7 +625,8 @@ std::pair<Polynomial::Multivariate<intptr_t>,Polynomial::Multivariate<intptr_t>>
 // F F T
 // only returns true if guaranteed
 
-bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &diff) {
+bool maybeLess(Function const &fun,
+               Polynomial::Multivariate<intptr_t> const &diff) {
     if (diff.isZero()) {
         return false;
     }
@@ -638,7 +644,8 @@ bool maybeLess(std::vector<ValueRange> const &x) {
     return lowerBound < 0;
 }
 
-bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &x, Polynomial::Multivariate<intptr_t> const &y) {
+bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &x,
+               Polynomial::Multivariate<intptr_t> const &y) {
     /*
     std::vector<ValueRange> diff;
     auto itx = x.begin(); auto itxe = x.end();
@@ -675,12 +682,12 @@ bool maybeLess(Function const &fun, Polynomial::Multivariate<intptr_t> const &x,
     return maybeLess(fun, diff);
 }
 /*
-bool maybeLess(Function &fun, Polynomial::Multivariate<intptr_t> &&x, Polynomial::Multivariate<intptr_t> &y) {
-    x -= y;
-    return maybeLess(fun, x);
+bool maybeLess(Function &fun, Polynomial::Multivariate<intptr_t> &&x,
+Polynomial::Multivariate<intptr_t> &y) { x -= y; return maybeLess(fun, x);
 }
 */
-bool maybeLess(Function const &fun, Stride const &x, Polynomial::Multivariate<intptr_t> const &y) {
+bool maybeLess(Function const &fun, Stride const &x,
+               Polynomial::Multivariate<intptr_t> const &y) {
     for (auto it = x.begin(); it != x.end(); ++it) {
         if (maybeLess(fun, std::get<0>(*it), y)) {
             return true;
@@ -713,15 +720,17 @@ void pushMatchingStride(ArrayRef &ar, std::vector<Stride> const &strides,
 }
 */
 
-bool mayOverlap(Function const &fun, std::vector<Stride> const &strides,
-                std::vector<Polynomial::Multivariate<intptr_t>> const &upperBounds, size_t j,
-                size_t k) {
+bool mayOverlap(
+    Function const &fun, std::vector<Stride> const &strides,
+    std::vector<Polynomial::Multivariate<intptr_t>> const &upperBounds,
+    size_t j, size_t k) {
     return maybeLess(fun, strides[k], upperBounds[j]) &&
            maybeLess(fun, strides[j], upperBounds[k]);
 }
 
-void recheckStrides(Function const &fun, std::vector<Stride> &strides,
-                    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds, size_t j) {
+void recheckStrides(
+    Function const &fun, std::vector<Stride> &strides,
+    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds, size_t j) {
     size_t eraseInds[64];
     size_t eraseCount;
     size_t jDec;
@@ -764,7 +773,8 @@ void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     size_t Ninds = length(ar.inds);
     std::vector<Stride> &strides = ar.axes;
     strides.reserve(Ninds);
-    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds = ar.upperBounds;
+    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds =
+        ar.upperBounds;
     upperBounds.reserve(Ninds);
     // std::vector<Polynomial::Multivariate<intptr_t>> strideSums;
     // strideSums.reserve(Ninds);
@@ -843,9 +853,11 @@ bool mayOverlap(Function &fun, ArrayRef &x, ArrayRef &y, size_t i, size_t j) {
     return maybeLess(fun, x.axes[j], y.upperBounds[i]) &&
            maybeLess(fun, y.axes[i], x.upperBounds[j]);
 }
-bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
-                std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> &upperBounds,
-                size_t i, size_t j) {
+bool mayOverlap(
+    Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
+    std::vector<std::pair<Polynomial::Multivariate<intptr_t>,
+                          Polynomial::Multivariate<intptr_t>>> &upperBounds,
+    size_t i, size_t j) {
     return (maybeLess(fun, strides[j].first, upperBounds[i].first) &&
             maybeLess(fun, strides[i].first,
                       upperBounds[j].first)) // does first overlap?
@@ -860,10 +872,11 @@ bool mayOverlap(Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
                          upperBounds[j].second)); // with second?
 }
 
-void recheckStrides(Function &fun,
-                    std::vector<std::pair<Stride, Stride>> &strides,
-                    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> &upperBounds,
-                    size_t j) {
+void recheckStrides(
+    Function &fun, std::vector<std::pair<Stride, Stride>> &strides,
+    std::vector<std::pair<Polynomial::Multivariate<intptr_t>,
+                          Polynomial::Multivariate<intptr_t>>> &upperBounds,
+    size_t j) {
     // index `j` has been updated, so check `j` vs all others
     size_t eraseInds[64];
     size_t eraseCount;
@@ -954,7 +967,9 @@ std::vector<std::pair<Stride, Stride>> pairStrides(Function &fun, ArrayRef &arx,
     // 1. []:  i vs i
     // 2. [M]: j vs j
     std::vector<std::pair<Stride, Stride>> strideCmp;
-    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Polynomial::Multivariate<intptr_t>>> upperBoundCmp;
+    std::vector<std::pair<Polynomial::Multivariate<intptr_t>,
+                          Polynomial::Multivariate<intptr_t>>>
+        upperBoundCmp;
     /*
     std::pair<intptr_t,size_t> foundX[64];
     std::pair<intptr_t,size_t> foundY[64];
@@ -1048,7 +1063,8 @@ template <typename T> ValueRange differenceRange(Function &fun, T it, T ite) {
     }
     return r;
 }
-ValueRange differenceRange(Function &fun, Polynomial::Multivariate<intptr_t> &x, Polynomial::Multivariate<intptr_t> &y) {
+ValueRange differenceRange(Function &fun, Polynomial::Multivariate<intptr_t> &x,
+                           Polynomial::Multivariate<intptr_t> &y) {
     Polynomial::Multivariate<intptr_t> diff = x - y;
     return differenceRange(fun, diff.begin(), diff.end());
 }
@@ -1104,8 +1120,8 @@ auto getFirstLoopStride(Stride &x) {
 // stride 0: 0:M-1 vs 0:M-2 -- alias
 // stride 1: 0:l0-1 vs l0+1:M-1
 // So, in we need to add symbols associated with the LoopInductionVariables to
-// the Polynomial::Multivariate<intptr_t>s Perhaps indicated by values >= 2^16 (we're using uint32_fast
-// for var ids).
+// the Polynomial::Multivariate<intptr_t>s Perhaps indicated by values >= 2^16
+// (we're using uint32_fast for var ids).
 template <typename LX, typename LY>
 DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                                            LX loopNestX, LY loopNestY) {
@@ -1126,9 +1142,9 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                         upperBound(getFirstLoopStride(y)->second, loopNestY))) {
                     return Independent;
                 } else {
-		    // must check loop bounds
-		    return LoopCarried;
-		}
+                    // must check loop bounds
+                    return LoopCarried;
+                }
             } else if (((a->first) % r).isCompileTimeConstant()) {
                 // r is not zero, but a % r is a constant, indicating
                 // that we have a constant offset.
@@ -1176,14 +1192,14 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
 // f(...) == g(...)
 // We assume linear, so these are linear diophantine
 // a0 + a1 * i1 + a2 * i2 + ... = b0 + b1 * j1 + b2 * j2 + ...
-// max_Rf f >= min_Rg g 
+// max_Rf f >= min_Rg g
 // Rf is the range of inputs for f, so
 // L_i_k <= i_k < U_i_k
 //
 // Lets hypothetically break things down, before backpedalling later
 // h_k(i, j) = a_k*i - b_k*j
 // \sum_{k=1}^K h_k(i_k, j_k) = b_0 - a_0
-// 
+//
 // p(x) = max(x, 0)
 // m(x) = min(x, 0)
 // x == p(x) + m(x)
@@ -1198,12 +1214,10 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
 // m(t) <= t*(y - l) / (y - l) <= p(t)
 // (y - l)*m(t) <= t*y - t*l <= (y - l)*p(t)
 // y*m(t) - l*m(t) + t*l <= t*y <= y*p(t) - l*p(t) + t*l
-// y*m(t) - l*m(t) + (p(t) + m(t))*l <= t*y <= y*p(t) - l*p(t) + (p(t) + m(t)))*l
-// y*m(t) + l*p(t) <= t*y <= y*p(t) + l*m(t)
-// u*m(t) + l*p(t) <= t*y <= u*p(t) + l*m(t)
-// imagine `y` is actually `i`, a loop induction variable
-// and `t` is `a`, the slope/rate `f` changes w/ respect to `i`, that is
-// `a * i`
+// y*m(t) - l*m(t) + (p(t) + m(t))*l <= t*y <= y*p(t) - l*p(t) + (p(t) +
+// m(t)))*l y*m(t) + l*p(t) <= t*y <= y*p(t) + l*m(t) u*m(t) + l*p(t) <= t*y <=
+// u*p(t) + l*m(t) imagine `y` is actually `i`, a loop induction variable and
+// `t` is `a`, the slope/rate `f` changes w/ respect to `i`, that is `a * i`
 // then, this is saying that `a * i` is bounded by...
 // if a > 0: a*l <= a*i <= a*u
 // if a < 0: a*u <= a*i <= a*l

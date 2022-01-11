@@ -2,8 +2,8 @@
 
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
-#include "./math.hpp"
 #include "./loops.hpp"
+#include "./math.hpp"
 #include "./symbolics.hpp"
 #include "./tree.hpp"
 #include <bit>
@@ -66,7 +66,6 @@ struct Const {
     NumType type;
     uint64_t bits;
 };
-
 
 // struct Pointer { }
 
@@ -320,8 +319,8 @@ template <typename T> size_t length(VoVoV<T> x) {
 
 // Stride terms are sorted based on Source
 // NOTE: we require all Const sources be folded into the Affine, and their ids
-// set identically. thus, `getCount(SourceType::Constant)` must always return either
-// `0` or `1`.
+// set identically. thus, `getCount(SourceType::Constant)` must always return
+// either `0` or `1`.
 struct Stride {
     Polynomial::Multivariate<intptr_t> stride;
     // sources must be ordered
@@ -332,15 +331,20 @@ struct Stride {
     // size_t memCount;
     // size_t termCount;
     Stride()
-        : indices(std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Source>>()), counts{0, 0, 0,
-                                                                       0, 0} {};
+        : indices(std::vector<
+                  std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
+          counts{0, 0, 0, 0, 0} {};
     Stride(Polynomial::Multivariate<intptr_t> &x, Source &&ind)
-        : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &x, size_t indId, SourceType indTyp)
-        : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0, 0,
-                                                                     0} {};
+        : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
+                                                               0} {};
+    Stride(Polynomial::Multivariate<intptr_t> &x, size_t indId,
+           SourceType indTyp)
+        : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0,
+                                                                      0, 0} {};
 
-    size_t getCount(SourceType i) { return counts[size_t(i) + 1] - counts[size_t(i)]; }
+    size_t getCount(SourceType i) {
+        return counts[size_t(i) + 1] - counts[size_t(i)];
+    }
     size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return indices.begin(); }
     inline auto end() { return indices.end(); }
@@ -348,12 +352,20 @@ struct Stride {
     // inline auto end() const { return indices.end(); }
     inline auto cbegin() const { return indices.cbegin(); }
     inline auto cend() const { return indices.cend(); }
-    inline auto begin(SourceType i) { return indices.begin() + counts[size_t(i)]; }
-    inline auto end(SourceType i) { return indices.begin() + counts[size_t(i) + 1]; }
+    inline auto begin(SourceType i) {
+        return indices.begin() + counts[size_t(i)];
+    }
+    inline auto end(SourceType i) {
+        return indices.begin() + counts[size_t(i) + 1];
+    }
     inline auto begin(Source i) { return begin(i.typ); }
     inline auto end(Source i) { return end(i.typ); }
-    inline auto begin(SourceType i) const { return indices.begin() + counts[size_t(i)]; }
-    inline auto end(SourceType i) const { return indices.begin() + counts[size_t(i) + 1]; }
+    inline auto begin(SourceType i) const {
+        return indices.begin() + counts[size_t(i)];
+    }
+    inline auto end(SourceType i) const {
+        return indices.begin() + counts[size_t(i) + 1];
+    }
     inline auto begin(Source i) const { return begin(i.typ); }
     inline auto end(Source i) const { return end(i.typ); }
     inline size_t numIndices() const { return indices.size(); }
@@ -389,7 +401,7 @@ struct Stride {
             } else if (ind < (it->second)) {
                 addTyp(ind);
                 indices.insert(it, std::make_pair(std::forward<A>(x),
-                                                 std::forward<I>(ind)));
+                                                  std::forward<I>(ind)));
                 return;
             }
         }
@@ -411,7 +423,7 @@ struct Stride {
             } else if (ind < (it->second)) {
                 addTyp(ind);
                 indices.insert(it, std::make_pair(cnegate(std::forward<A>(x)),
-                                                 std::forward<I>(ind)));
+                                                  std::forward<I>(ind)));
                 return;
             }
         }
@@ -457,8 +469,12 @@ struct Stride {
         return y;
     }
 
-    bool operator==(Stride const &x) const { return (stride == x.stride) && (indices == x.indices); }
-    bool operator!=(Stride const &x) const { return (stride != x.stride) || (indices != x.indices); }
+    bool operator==(Stride const &x) const {
+        return (stride == x.stride) && (indices == x.indices);
+    }
+    bool operator!=(Stride const &x) const {
+        return (stride != x.stride) || (indices != x.indices);
+    }
 
     bool isConstant() const {
         size_t n0 = indices.size();
@@ -725,7 +741,8 @@ ValueRange valueRange(Function const &fun, size_t id) {
     return fun.rangeMap[id];
 }
 template <typename C>
-ValueRange valueRange(Function const &fun, Polynomial::MultivariateTerm<C> const &x) {
+ValueRange valueRange(Function const &fun,
+                      Polynomial::MultivariateTerm<C> const &x) {
     ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
@@ -733,7 +750,8 @@ ValueRange valueRange(Function const &fun, Polynomial::MultivariateTerm<C> const
     return p;
 }
 template <typename C>
-ValueRange valueRange(Function const &fun, Polynomial::Multivariate<C> const &x) {
+ValueRange valueRange(Function const &fun,
+                      Polynomial::Multivariate<C> const &x) {
     ValueRange a(0);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
@@ -979,7 +997,8 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
 
 // returns true if `abs(x) < y`
 template <typename C>
-bool absLess(Function const &fun, Polynomial::Multivariate<C> const &x, Polynomial::Multivariate<C> const &y) {
+bool absLess(Function const &fun, Polynomial::Multivariate<C> const &x,
+             Polynomial::Multivariate<C> const &y) {
     ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
     if (delta.lowerBound < 0.0) {
         return false;

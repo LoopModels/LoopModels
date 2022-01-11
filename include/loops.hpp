@@ -294,4 +294,3 @@ template <typename T, typename S>
 bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
 }
-
