@@ -381,7 +381,7 @@ struct Stride {
         for (auto it = begin(ind); it != ite; ++it) {
             if (ind == (*it).second) {
                 (it->first) += x;
-                if ((it->first).isZero()) {
+                if (isZero((it->first))) {
                     remTyp(ind);
                     indices.erase(it);
                 }
@@ -403,7 +403,7 @@ struct Stride {
         for (auto it = begin(ind); it != ite; ++it) {
             if (ind == (it->second)) {
                 (it->first) -= x;
-                if ((it->first).isZero()) {
+                if (isZero((it->first))) {
                     remTyp(ind);
                     indices.erase(it);
                 }

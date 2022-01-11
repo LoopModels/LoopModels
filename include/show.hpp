@@ -61,10 +61,6 @@ std::string toString(Polynomial::Uninomial const &x) {
     }
 }
 
-static std::string programVarName(size_t i) {
-    std::string s(1, 'L' + i);
-    return s;
-}
 
 std::string toString(Rational x) {
     if (x.denominator == 1) {
@@ -72,18 +68,6 @@ std::string toString(Rational x) {
     } else {
         return std::to_string(x.numerator) + " / " +
                std::to_string(x.denominator);
-    }
-}
-
-std::string monomialTermStr(size_t id, size_t exponent) {
-    if (exponent) {
-        if (exponent > 1) {
-            return programVarName(id) + "^" + std::to_string(exponent);
-        } else {
-            return programVarName(id);
-        }
-    } else {
-        return "";
     }
 }
 

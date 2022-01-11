@@ -4,10 +4,10 @@
 #include <compare>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <limits>
 #include <math.h>
-#include <ostream>
 #include <string>
 #include <tuple>
 #include <unistd.h>
@@ -102,17 +102,25 @@ struct Rational {
     }
 
     operator double() { return numerator / denominator; }
-    bool isZero() const { return numerator == 0; }
-    bool isOne() const { return (numerator == denominator); }
+    friend bool isZero(Rational x) { return x.numerator == 0; }
+    friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
     bool isInteger() const { return denominator == 1; }
     void negate() { ::negate(numerator); }
+
+    friend std::ostream& operator<<(std::ostream &os, const Rational &x) {
+	os << x.numerator;
+	if (x.denominator != 1){
+	    os << " // " << x.denominator;
+	}
+	return os;
+    }
 };
 
-template <typename T> bool isZero(T x) { return x.isZero(); }
+// template <typename T> bool isZero(T x) { return x.isZero(); }
 bool isZero(intptr_t x) { return x == 0; }
 bool isZero(size_t x) { return x == 0; }
 
-template <typename T> bool isOne(T x) { return x.isOne(); }
+// template <typename T> bool isOne(T x) { return x.isOne(); }
 bool isOne(intptr_t x) { return x == 1; }
 bool isOne(size_t x) { return x == 1; }
 
@@ -163,6 +171,21 @@ template <typename T, typename S> void sub_term(T &a, S &&x) {
     }
     return;
 }
+static std::string programVarName(size_t i) {
+    std::string s(1, 'L' + i);
+    return s;
+}
+std::string monomialTermStr(size_t id, size_t exponent) {
+    if (exponent) {
+        if (exponent > 1) {
+            return programVarName(id) + "^" + std::to_string(exponent);
+        } else {
+            return programVarName(id);
+        }
+    } else {
+        return "";
+    }
+}
 
 namespace Polynomial {
 struct Uninomial {
@@ -186,8 +209,8 @@ struct Uninomial {
     }
     Uninomial operator^(size_t i) { return Uninomial{exponent * i}; }
 
-    bool isOne() const { return exponent == 0; }
-    bool isZero() const { return false; }
+    friend bool isOne(Uninomial x) { return x.exponent == 0; }
+    friend bool isZero(Uninomial) { return false; }
 
     bool operator==(Uninomial x) const { return x.exponent == exponent; }
     Uninomial operator*(Uninomial x) const {
@@ -196,6 +219,18 @@ struct Uninomial {
     Uninomial &operator*=(Uninomial x) {
         exponent += x.exponent;
         return *this;
+    }
+
+    friend std::ostream& operator<<(std::ostream &os, const Uninomial& x){
+	switch (x.exponent) {
+	case 0:
+	    os << '1';
+	case 1:
+	    os << 'x';
+	default:
+	    os << "x^" << x.exponent;
+	}
+	return os;
     }
     // Uninomial& operator=(Uninomial x) {
     //     exponent = x.exponent;
@@ -372,8 +407,8 @@ struct Monomial {
         }
         return std::make_pair(n, false);
     }
-    bool isOne() const { return (prodIDs.size() == 0); }
-    bool isZero() const { return false; }
+    friend bool isOne(Monomial const &x) { return (x.prodIDs.size() == 0); }
+    friend bool isZero(Monomial const &) { return false; }
     bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
     size_t degree() const { return prodIDs.size(); }
     uint_fast32_t degree(uint_fast32_t i) const {
@@ -403,6 +438,32 @@ struct Monomial {
     }
     Monomial operator^(size_t i) { return powBySquare(*this, i); }
     Monomial operator^(size_t i) const { return powBySquare(*this, i); }
+
+    friend std::ostream& operator<<(std::ostream& os, const Monomial &x){
+	size_t numIndex = x.prodIDs.size();
+	if (numIndex) {
+	    if (numIndex != 1) { // not 0 by prev `if`
+		size_t count = 0;
+		size_t v = x.prodIDs[0];
+		for (auto it = x.begin(); it != x.end(); ++it) {
+		    if (*it == v) {
+			++count;
+		    } else {
+			os << monomialTermStr(v, count);
+			v = *it;
+			count = 1;
+		    }
+		}
+		os << monomialTermStr(v, count);
+	    } else { // numIndex == 1
+		os << programVarName(x.prodIDs[0]);
+	    }
+	} else {
+	    os << '1';
+	}
+	return os;
+    }
+
 };
 
 template <typename C, typename M> struct Term {
@@ -429,18 +490,18 @@ template <typename C, typename M> struct Term {
     uint_fast32_t degree() const { return exponent.degree(); }
     M &monomial() { return exponent; }
     const M &monomial() const { return exponent; }
-    bool addCoef(C const &coef) { return ::isZero((coefficient += coef)); }
-    bool subCoef(C const &coef) { return ::isZero((coefficient -= coef)); }
+    bool addCoef(C const &coef) { return isZero((coefficient += coef)); }
+    bool subCoef(C const &coef) { return isZero((coefficient -= coef)); }
     bool addCoef(C &&coef) {
-        return ::isZero((coefficient += std::move(coef)));
+        return isZero((coefficient += std::move(coef)));
     }
     bool subCoef(C &&coef) {
-        return ::isZero((coefficient -= std::move(coef)));
+        return isZero((coefficient -= std::move(coef)));
     }
     bool addCoef(Term const &t) { return addCoef(t.coefficient); }
     bool subCoef(Term const &t) { return subCoef(t.coefficient); }
-    bool addCoef(M const &) { return ::isZero((coefficient += 1)); }
-    bool subCoef(M const &) { return ::isZero((coefficient -= 1)); }
+    bool addCoef(M const &) { return isZero((coefficient += 1)); }
+    bool subCoef(M const &) { return isZero((coefficient -= 1)); }
     Term &operator*=(intptr_t x) {
         coefficient *= x;
         return *this;
@@ -460,19 +521,30 @@ template <typename C, typename M> struct Term {
     }
 
     void negate() { ::negate(coefficient); }
-    bool isZero() const { return ::isZero(coefficient); }
-    bool isOne() const { return ::isOne(coefficient) & ::isOne(exponent); }
+    friend bool isZero(Term const &x) { return isZero(x.coefficient); }
+    friend bool isOne(Term const &x) { return isOne(x.coefficient) & isOne(x.exponent); }
 
     template <typename CC> operator Term<CC, M>() {
         return Term<CC, M>(CC(coefficient), exponent);
     }
 
-    bool isCompileTimeConstant() const { return ::isOne(exponent); }
+    bool isCompileTimeConstant() const { return isOne(exponent); }
     bool operator==(Term<C, M> const &y) const {
         return (exponent == y.exponent) && (coefficient == y.coefficient);
     }
     bool operator!=(Term<C, M> const &y) const {
         return (exponent != y.exponent) || (coefficient != y.coefficient);
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Term &t){
+	if (isOne(t.coefficient)) {
+	    os << t.exponent;
+	} else if (t.isCompileTimeConstant()) {
+	    os << t.coefficient;
+	} else {
+	    os << t.coefficient << " ( " << t.exponent << " ) ";
+	}
+	return os;
     }
 };
 // template <typename C,typename M>
@@ -558,10 +630,10 @@ template <typename C, typename M> struct Terms {
         return *this;
     }
     Terms<C, M> &operator*=(Term<C, M> const &x) {
-        if (x.isZero()) {
+        if (isZero(x)) {
             terms.clear();
             return *this;
-        } else if (x.isOne()) {
+        } else if (isOne(x)) {
             return *this;
         }
         for (auto it = begin(); it != end(); ++it) {
@@ -570,7 +642,7 @@ template <typename C, typename M> struct Terms {
         return *this;
     }
     Terms<C, M> &operator*=(M const &x) {
-        if (x.isOne()) {
+        if (isOne(x)) {
             return *this;
         }
         for (auto it = begin(); it != end(); ++it) {
@@ -616,7 +688,7 @@ template <typename C, typename M> struct Terms {
     Terms<C, M> &operator*=(Terms<C, M> const &x) {
         // terms = ((*this) * x).terms;
         // return *this;
-        if (x.isZero()) {
+        if (isZero(x)) {
             terms.clear();
             return *this;
         }
@@ -683,8 +755,8 @@ template <typename C, typename M> struct Terms {
     //     x.removeLeadingTerm();
     // }
 
-    bool isZero() const { return terms.size() == 0; }
-    bool isOne() const { return (terms.size() == 1) && terms[0].isOne(); }
+    friend bool isZero(Terms const &x) { return x.terms.size() == 0; }
+    friend bool isOne(Terms const &x) { return (x.terms.size() == 1) && isOne(x.terms[0]); }
 
     Terms<C, M> operator^(size_t i) const { return powBySquare(*this, i); }
 
@@ -694,6 +766,18 @@ template <typename C, typename M> struct Terms {
         } else {
             return 0;
         }
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, Terms const &x){
+	os << " ( ";
+	for (size_t j = 0; j < length(x.terms); ++j) {
+	    if (j) {
+		os << " + ";
+	    }
+	    os << x.terms[j];
+	}
+	os << " ) ";
+	return os;
     }
 };
 
@@ -1437,16 +1521,17 @@ void mulPow(Univariate<C> &dest, Univariate<C> const &p,
         dest.terms[i] = p.terms[i] * a;
     }
 }
+    
 template <typename C>
-Univariate<C> pseudorem(Univariate<C> &p, Univariate<C> &d) {
+Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
     if (p.degree() < d.degree()) {
         return p;
     }
-    uint_fast32_t k = 1 + p.degree() - d.degree();
+    uint_fast32_t k = (1 + p.degree()) - d.degree();
     C l = d.leadingCoefficient();
     Univariate<C> dd(d);
     Univariate<C> pp(p);
-    while ((!p.isZero()) && (pp.degree() >= d.degree())) {
+    while ((!isZero(p)) && (pp.degree() >= d.degree())) {
         mulPow(dd, d,
                Term<C, Uninomial>(pp.leadingCoefficient(),
                                   pp.degree() - d.degree()));
@@ -1459,19 +1544,16 @@ Univariate<C> pseudorem(Univariate<C> &p, Univariate<C> &d) {
 }
 
 template <typename C> C content(Univariate<C> const &a) {
-    switch (a.terms.size()) {
-    case 0:
-        return C(1);
-    case 1:
+    if (a.terms.size() == 1) {
         return a.terms[0].coefficient;
-    default:
-        break;
     }
     C g = gcd(a.terms[0].coefficient, a.terms[1].coefficient);
     for (size_t i = 2; i < a.terms.size(); ++i) {
         g = gcd(g, a.terms[i].coefficient);
     }
-    return std::move(g);
+    return g;
+    // TODO: this is probably safe
+    // return std::move(g);
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
@@ -1937,7 +2019,7 @@ contentd(std::vector<Term<C, M>> const &x) {
         for (size_t i = 2; i < x.size(); ++i) {
             auto [gt, a, b] = gcd(g, x[i]);
             std::swap(g, gt);
-            if (!a.isOne()) {
+            if (!isOne(a)) {
                 for (auto it = f.begin(); it != f.end(); ++it) {
                     (*it) *= a;
                 }
@@ -2105,9 +2187,9 @@ template <typename C> size_t pickVar(Multivariate<C> const &x) {
 
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
-    if (x.isZero() || y.isOne()) {
+    if (isZero(x) || isOne(y)) {
         return y;
-    } else if ((y.isZero() || x.isOne()) || (x == y)) {
+    } else if ((isZero(y) || isOne(x)) || (x == y)) {
         return x;
     }
 
