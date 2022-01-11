@@ -1,8 +1,8 @@
 #pragma once
+#include "ir.hpp"
 #include "math.hpp"
 #include "symbolics.hpp"
-#include "ir.hpp"
-
+#include <string>
 
 template <typename T, size_t M> void show(Vector<T, M> v) {
     for (size_t i = 0; i < length(v); i++) {
@@ -34,9 +34,9 @@ void show(Permutation perm) {
     std::printf("%ld>", perm(numloop - 1));
 }
 
-
-
-template <typename T> std::string toString(T const &x){ return std::to_string(x); }
+template <typename T> std::string toString(T const &x) {
+    return std::to_string(x);
+}
 std::string toString(intptr_t i) { return std::to_string(i); }
 
 template <typename T> void show(std::vector<T> &x) {
@@ -46,27 +46,26 @@ template <typename T> void show(std::vector<T> &x) {
     }
     std::cout << last(x) << "]";
 }
-void show(intptr_t x){
-    std::cout << x;
-}
-void show(size_t x){
-    std::cout << x;
-}
+void show(intptr_t x) { std::cout << x; }
+void show(size_t x) { std::cout << x; }
 
-
-std::string toString(Polynomial::Uninomial const &x){
-    switch (x.exponent){
+std::string toString(Polynomial::Uninomial const &x) {
+    switch (x.exponent) {
     case 0:
-	return "1";
+        return "1";
     case 1:
-	return "x";
+        return "x";
     default:
-	// std::cout << "x exponent: " << x.exponent << std::endl;
-	return "x^" + std::to_string(x.exponent);
+        // std::cout << "x exponent: " << x.exponent << std::endl;
+        return "x^" + std::to_string(x.exponent);
     }
 }
 
-static std::string programVarName(size_t i) { return "M_" + std::to_string(i); }
+static std::string programVarName(size_t i) {
+    std::string s(1, 'L' + i);
+    return s;
+}
+
 std::string toString(Rational x) {
     if (x.denominator == 1) {
         return std::to_string(x.numerator);
@@ -76,17 +75,35 @@ std::string toString(Rational x) {
     }
 }
 
+std::string monomialTermStr(size_t id, size_t exponent) {
+    if (exponent) {
+        if (exponent > 1) {
+            return programVarName(id) + "^" + std::to_string(exponent);
+        } else {
+            return programVarName(id);
+        }
+    } else {
+        return "";
+    }
+}
 
 std::string toString(Polynomial::Monomial const &x) {
     size_t numIndex = x.prodIDs.size();
     if (numIndex) {
         if (numIndex != 1) { // not 0 by prev `if`
             std::string poly = "";
-            for (size_t k = 0; k < numIndex; ++k) {
-                poly += programVarName(x.prodIDs[k]);
-                if (k + 1 != numIndex)
-                    poly += " ";
+            size_t count = 0;
+            size_t v = x.prodIDs[0];
+            for (auto it = x.begin(); it != x.end(); ++it) {
+                if (*it == v) {
+                    ++count;
+                } else {
+                    poly += monomialTermStr(v, count);
+                    v = *it;
+                    count = 1;
+                }
             }
+            poly += monomialTermStr(v, count);
             return poly;
         } else { // numIndex == 1
             return programVarName(x.prodIDs[0]);
@@ -96,7 +113,7 @@ std::string toString(Polynomial::Monomial const &x) {
     }
 }
 template <typename C, typename M>
-std::string toString(const Polynomial::Term<C,M> &x) {
+std::string toString(const Polynomial::Term<C, M> &x) {
     // std::cout << "x.coeficient: " << toString(x.coefficient) << std::endl;
     // std::cout << "x.exponent: " << toString(x.exponent) << std::endl;
     if (isOne(x.coefficient)) {
@@ -108,7 +125,8 @@ std::string toString(const Polynomial::Term<C,M> &x) {
     }
 }
 
-template <typename C, typename M> std::string toString(Polynomial::Terms<C,M> const &x) {
+template <typename C, typename M>
+std::string toString(Polynomial::Terms<C, M> const &x) {
     std::string poly = " ( ";
     for (size_t j = 0; j < length(x.terms); ++j) {
         if (j) {
@@ -119,17 +137,12 @@ template <typename C, typename M> std::string toString(Polynomial::Terms<C,M> co
     return poly + " ) ";
 }
 
-    
-void show(Polynomial::Uninomial const &x) {
-    printf("%s", toString(x).c_str());
-}   
-void show(Polynomial::Monomial const &x) {
+void show(Polynomial::Uninomial const &x) { printf("%s", toString(x).c_str()); }
+void show(Polynomial::Monomial const &x) { printf("%s", toString(x).c_str()); }
+template <typename C, typename M> void show(Polynomial::Term<C, M> const &x) {
     printf("%s", toString(x).c_str());
 }
-template <typename C, typename M> void show(Polynomial::Term<C,M> const &x) {
-    printf("%s", toString(x).c_str());
-}
-template <typename C, typename M> void show(Polynomial::Terms<C,M> const &x) {
+template <typename C, typename M> void show(Polynomial::Terms<C, M> const &x) {
     printf("%s", toString(x).c_str());
 }
 
@@ -153,7 +166,6 @@ std::string toString(SourceType s) {
         //     return "";
     }
 }
-
 
 void show(Const c) {
     auto b = c.bits;
@@ -199,7 +211,6 @@ void show(Const c) {
     }
 }
 
-
 void show(ArrayRef ar) {
     printf("ArrayRef %zu:\n", ar.arrayId);
     for (size_t i = 0; i < length(ar.inds); ++i) {
@@ -221,5 +232,3 @@ template <typename T> void showln(T &&x) {
     show(x);
     std::printf("\n");
 }
-
-

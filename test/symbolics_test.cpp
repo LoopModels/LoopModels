@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-TEST(SymbolicsTest, BasicAssertions) {
+TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem
     Polynomial::Uninomial x{1};
     
@@ -89,5 +89,107 @@ TEST(SymbolicsTest, BasicAssertions) {
     printf("r, should be -46*(x^4) + 7*(x^2) - 18*x:\n");
     showln(r);
     EXPECT_TRUE(Polynomial::pseudorem(p, q2) == (-46*(x^4) + 7*(x^2) - 18*x));
+
+}    
+TEST(PseudoRemTests, BasicAssertions) {
+    Polynomial::Monomial x = Polynomial::Monomial(0);
+    Polynomial::Monomial y = Polynomial::Monomial(1);
+    Polynomial::Monomial z = Polynomial::Monomial(2);
+    Polynomial::Multivariate<intptr_t> xp1z = x*z + z;
+    Polynomial::Multivariate<intptr_t> c0v2 = 10 * xp1z;
+
+    
+    Polynomial::Multivariate<intptr_t> c0 = 10*(x*z + z);
+    Polynomial::Multivariate<intptr_t> c1 = 2*((x^2) + z);
+    Polynomial::Multivariate<intptr_t> c2 = 2*(2 - z);
+    Polynomial::Multivariate<intptr_t> c3 = 20*(x*(z^2));
+
+    intptr_t e0 = 0;
+    intptr_t e1 = 5;
+    intptr_t e2 = 7;
+    intptr_t e3 = 10;
+
+    showln(x);
+    showln(y);
+    showln(z);
+    Polynomial::Multivariate<intptr_t> p = c0 * (y^e0) + c1 * (y^e1) + c2 * (y^e2) + c3 * (y^e3);
+    printf("Polynomial p:\n");
+    showln(p);
+    for (auto it = p.begin(); it != p.end(); ++it){
+	printf("prodIDs:\n");
+	showln((it -> monomial()).prodIDs);
+    }
+    printf("\n");
+    
+    
+    Polynomial::Univariate<Polynomial::Multivariate<intptr_t>> ppy = Polynomial::multivariateToUnivariate(p, 1);
+    printf("Number of terms in p: %d \n", int(ppy.terms.size()));
+    printf("c3:\n");
+    showln(c3);
+    printf("coef 0:\n");
+    showln(ppy.terms[0].coefficient);
+    
+    printf("c2:\n");
+    showln(c2);
+    printf("coef 1:\n");
+    showln(ppy.terms[1].coefficient);
+
+    printf("c1:\n");
+    showln(c1);
+    printf("coef 2:\n");
+    showln(ppy.terms[2].coefficient);
+
+    printf("c0:\n");
+    showln(c0);
+    printf("coef 3:\n");
+    showln(ppy.terms[3].coefficient);
+
+
+
+    EXPECT_TRUE(ppy.terms[0].coefficient == c3);
+    EXPECT_TRUE(ppy.terms[1].coefficient == c2);
+    EXPECT_TRUE(ppy.terms[2].coefficient == c1);
+    EXPECT_TRUE(ppy.terms[3].coefficient == c0);
+
+    EXPECT_EQ(ppy.terms[0].exponent.exponent, e3);
+    EXPECT_EQ(ppy.terms[1].exponent.exponent, e2);
+    EXPECT_EQ(ppy.terms[2].exponent.exponent, e1);
+    EXPECT_EQ(ppy.terms[3].exponent.exponent, e0);
+
+
+    Polynomial::Multivariate<intptr_t> a = x * y + y;
+    Polynomial::Multivariate<intptr_t> b = y * z + y;
+    printf("gcd(a,b) == M:\n");
+    showln(gcd(a, b)); // we have N + 1? aka z + 1???
+    printf("y:  "); showln(y);
+
+    /*
+    Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
+    printf("q:\n");
+    showln(q);
+    printf("p:\n");
+    showln(p);
+    printf("gcd(p, q):\n");
+    showln(gcd(p, q));
+    printf("p+1:\n");
+    showln(p+1);
+    printf("gcd(p+1, q):\n");
+    showln(gcd(p+1, q));
+    printf("p+2:\n");
+    showln(p+2);
+    printf("gcd(p+2, q):\n");
+    showln(gcd(p+2, q));
+    printf("p+3:\n");
+    showln(p+3);
+    printf("gcd(p+3, q):\n");
+    showln(gcd(p+3, q));
+    EXPECT_TRUE(Polynomial::gcd(p  , q) == p  );
+    EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
+    EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
+    EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
+
+    */
+
+
 }
 
