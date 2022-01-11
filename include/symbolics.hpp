@@ -729,7 +729,6 @@ template <typename C, typename M> struct Terms {
     bool operator==(C const &x) const {
         return isCompileTimeConstant() && leadingCoefficient() == x;
     }
-
     Terms<C, M> largerCapacityCopy(size_t i) const {
         Terms<C, M> s;
         s.terms.reserve(i + terms.size()); // reserve full size
@@ -754,6 +753,9 @@ template <typename C, typename M> struct Terms {
     //     add_term(std::move(x.leadingTerm()));
     //     x.removeLeadingTerm();
     // }
+    bool operator==(Monomial const &x) const {
+	return (terms.size() == 1) && (leadingTerm() == x);
+    }
 
     friend bool isZero(Terms const &x) { return x.terms.size() == 0; }
     friend bool isOne(Terms const &x) { return (x.terms.size() == 1) && isOne(x.terms[0]); }
@@ -941,6 +943,36 @@ template <typename C, typename M>
 Term<C, M> operator*(Term<C, M> &&x, Term<C, M> &&y) {
     return std::move(x *= std::move(y));
 }
+
+    template <typename C>
+    Term<C,Monomial> &operator*=(Term<C,Monomial> &x, Monomial const &y){
+	x.exponent *= y;
+	return x;
+    }
+    template <typename C>
+    Term<C,Monomial> operator*(Term<C,Monomial> const &x, Monomial const &y){
+	Term<C,Monomial> z(x);
+	z.exponent *= y;
+	return std::move(z);
+    }
+    template <typename C>
+    Term<C,Monomial> operator*(Monomial const &y, Term<C,Monomial> const &x){
+	Term<C,Monomial> z(x);
+	z.exponent *= y;
+	return std::move(z);
+    }
+
+    template <typename C>
+    Term<C,Monomial> operator*(Term<C,Monomial> &&x, Monomial const &y){
+	x.exponent *= y;
+	return std::move(x);
+    }
+    template <typename C>
+    Term<C,Monomial> operator*(Monomial const &y, Term<C,Monomial> &&x){
+	x.exponent *= y;
+	return std::move(x);
+    }
+    
 
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, intptr_t y) {
@@ -1884,6 +1916,14 @@ Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
                                             multivariateToUnivariate(y, v2)),
                                         v1);
     }
+}
+template <typename C>
+Multivariate<C> gcd(Multivariate<C> const &x, MultivariateTerm<C> const &y) {
+    return gcd(x, Multivariate<C>(y));
+}
+template <typename C>
+Multivariate<C> gcd(MultivariateTerm<C> const &x, Multivariate<C> const &y) {
+    return gcd(Multivariate<C>(x), y);
 }
 
 Multivariate<intptr_t>

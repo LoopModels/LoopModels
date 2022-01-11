@@ -199,5 +199,23 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
     EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
     EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
+
+    Polynomial::Multivariate<intptr_t> k = (y^2) + 1;
+    EXPECT_TRUE(Polynomial::gcd(x*k, z*k) == k);
+    EXPECT_TRUE(Polynomial::gcd(z*k, x*k) == k);
+    EXPECT_TRUE(Polynomial::gcd(x*k, (z+1)*k) == k);
+    EXPECT_TRUE(Polynomial::gcd((z+1)*k, x*k) == k);
+    EXPECT_TRUE(Polynomial::gcd(x*k, p*k) == k);
+    EXPECT_TRUE(Polynomial::gcd(p*k, x*k) == k);
+
+    Polynomial::Term<intptr_t,Polynomial::Monomial> twoxy = 2*(x*y);
+    Polynomial::Multivariate<intptr_t> twoxyplusx = (2*x)*y + x;
+    EXPECT_TRUE(Polynomial::gcd(twoxy, twoxyplusx) == x);
+    EXPECT_TRUE(Polynomial::gcd(twoxyplusx, twoxy) == x);
+    
+    Polynomial::Multivariate<intptr_t> c = x*y + y;
+    Polynomial::Multivariate<intptr_t> d = -1*c;
+    EXPECT_TRUE(Polynomial::gcd(c, d) == c);
+    EXPECT_TRUE(Polynomial::gcd(d, c) == c);
 }
 
