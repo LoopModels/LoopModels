@@ -128,22 +128,24 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Univariate<Polynomial::Multivariate<intptr_t>> ppy = Polynomial::multivariateToUnivariate(p, 1);
     printf("Number of terms in p: %d \n", int(ppy.terms.size()));
     printf("c3:\n");
-    showln(c3);
+    std::cout << c3 << std::endl;
     printf("coef 0:\n");
     showln(ppy.terms[0].coefficient);
     
     printf("c2:\n");
-    showln(c2);
+    std::cout << c2 << std::endl;
     printf("coef 1:\n");
     showln(ppy.terms[1].coefficient);
 
     printf("c1:\n");
-    showln(c1);
+    // showln(c1);
+    std::cout << c1 << std::endl;
     printf("coef 2:\n");
     showln(ppy.terms[2].coefficient);
 
     printf("c0:\n");
-    showln(c0);
+    std::cout << c0 << std::endl;
+    // showln(c0);
     printf("coef 3:\n");
     showln(ppy.terms[3].coefficient);
 
@@ -175,11 +177,12 @@ TEST(PseudoRemTests, BasicAssertions) {
     //Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
     Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2); //* (p + 3);
     printf("q:\n");
-    showln(q);
+    std::cout << q << std::endl;
     printf("p:\n");
-    showln(p);
+    std::cout << p << std::endl;
     printf("gcd(p, q):\n");
-    showln(gcd(p, q));
+    std::cout << gcd(p, q) << std::endl;
+    // showln(gcd(p, q));
     /*
     printf("p+1:\n");
     showln(p+1);
