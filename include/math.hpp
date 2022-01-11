@@ -22,10 +22,10 @@ std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
 
 // template<typename T> T one(const T) { return T(1); }
 struct One {
-    operator intptr_t(){ return 1; };
-    operator size_t(){ return 1; };
+    operator intptr_t() { return 1; };
+    operator size_t() { return 1; };
 };
-
+/*
 template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     // typedef typename std::remove_const<TRC>::type TR;
     // typedef typename std::remove_reference<TR>::type T;
@@ -43,6 +43,9 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
+    if (isOne(x)) {
+        return T(One());
+    }
     intptr_t t = trailingZeros(i) + 1;
     i >>= t;
     // T z(std::move(x));
@@ -52,7 +55,9 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
         b = z;
         z *= b;
     }
-    if (i == 0){ return z; }
+    if (i == 0) {
+        return z;
+    }
     T y(z);
     while (i) {
         t = trailingZeros(i) + 1;
@@ -65,8 +70,29 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     }
     return y;
 }
+*/
+template <typename T>
+T powBySquare(T x, size_t i){
+    switch (i) {
+    case 0:
+        return T(One());
+    case 1:
+        return T(x);
+    case 2:
+        return T(x * x);
+    case 3:
+        return T(x * x * x);
+    default:
+        break;
+    }
+    auto y(x);
+    for (size_t j = 1; j < i; ++j){
+        y = y * x;
+    }
+    return y;
+}
 
-template <typename T, typename S> void divExact(T &x, S const &y){
+template <typename T, typename S> void divExact(T &x, S const &y) {
     auto d = x / y;
     assert(d * y == x);
     x = d;
@@ -75,7 +101,6 @@ template <typename T, typename S> void divExact(T &x, S const &y){
 // enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
 //   Bits:            00               01                   10            11
 enum class SourceType { Constant, LoopInductionVariable, Memory, Term };
-
 
 struct Source {
     size_t id;
@@ -121,7 +146,6 @@ template <typename V> // generic function working with many stl containers, e.g.
 inline size_t length(V &v) {
     return v.size();
 }
-
 
 template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
 
@@ -291,7 +315,6 @@ Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
     return Vector<T, 0>(A.ptr + i * s1, s1);
 }
 
-
 template <typename T> struct StrideMatrix {
     T *ptr;
     size_t M;
@@ -413,7 +436,6 @@ Permutation init(Permutation p) {
     }
     return p;
 }
-
 
 template <typename T> struct UnitRange {
     T operator()(size_t i) { return T(i); }

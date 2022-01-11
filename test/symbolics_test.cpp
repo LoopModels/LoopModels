@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+/*
 TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem
     Polynomial::Uninomial x{1};
@@ -91,6 +92,7 @@ TEST(pseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::pseudorem(p, q2) == (-46*(x^4) + 7*(x^2) - 18*x));
 
 }    
+*/
 TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Monomial x = Polynomial::Monomial(0);
     Polynomial::Monomial y = Polynomial::Monomial(1);
@@ -99,15 +101,19 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Multivariate<intptr_t> c0v2 = 10 * xp1z;
 
     
-    Polynomial::Multivariate<intptr_t> c0 = 10*(x*z + z);
+    //Polynomial::Multivariate<intptr_t> c0 = 10*(x*z + z);
+    Polynomial::Multivariate<intptr_t> c0 = 10*(x*z + x);
     Polynomial::Multivariate<intptr_t> c1 = 2*((x^2) + z);
     Polynomial::Multivariate<intptr_t> c2 = 2*(2 - z);
     Polynomial::Multivariate<intptr_t> c3 = 20*(x*(z^2));
 
     intptr_t e0 = 0;
-    intptr_t e1 = 5;
-    intptr_t e2 = 7;
-    intptr_t e3 = 10;
+    //intptr_t e1 = 5;
+    //intptr_t e2 = 7;
+    //intptr_t e3 = 10;
+    intptr_t e1 = 2;
+    intptr_t e2 = 3;
+    intptr_t e3 = 6;
 
     showln(x);
     showln(y);
@@ -160,11 +166,14 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Multivariate<intptr_t> a = x * y + y;
     Polynomial::Multivariate<intptr_t> b = y * z + y;
     printf("gcd(a,b) == M:\n");
-    showln(gcd(a, b)); // we have N + 1? aka z + 1???
+    EXPECT_TRUE(Polynomial::gcd(a, b) == Polynomial::Multivariate<intptr_t>(y)  );
+    printf("GCD: ");
+    showln(gcd(a, b)); // we have N + 2? aka z + 1???
     printf("y:  "); showln(y);
+    printf("Multivariate(y):  "); showln(Polynomial::Multivariate<intptr_t>(y));
 
-    /*
-    Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
+    //Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
+    Polynomial::Multivariate<intptr_t> q = p * (p + 1);
     printf("q:\n");
     showln(q);
     printf("p:\n");
@@ -183,13 +192,10 @@ TEST(PseudoRemTests, BasicAssertions) {
     showln(p+3);
     printf("gcd(p+3, q):\n");
     showln(gcd(p+3, q));
+
     EXPECT_TRUE(Polynomial::gcd(p  , q) == p  );
     EXPECT_TRUE(Polynomial::gcd(p+1, q) == p+1);
     EXPECT_TRUE(Polynomial::gcd(p+2, q) == p+2);
     EXPECT_TRUE(Polynomial::gcd(p+3, q) == p+3);
-
-    */
-
-
 }
 

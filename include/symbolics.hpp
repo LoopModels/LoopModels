@@ -7,6 +7,7 @@
 #include <iterator>
 #include <limits>
 #include <math.h>
+#include <ostream>
 #include <string>
 #include <tuple>
 #include <unistd.h>
@@ -225,20 +226,24 @@ struct Monomial {
 
     void add_term(uint_fast32_t x) {
         for (auto it = begin(); it != end(); ++it) {
-            if (x >= *it) {
+            if (x <= *it) {
                 prodIDs.insert(it, x);
                 return;
             }
         }
+        prodIDs.push_back(x);
     }
     void add_term(uint_fast32_t x, size_t count) {
         // prodIDs.reserve(prodIDs.size() + rep);
-        for (auto it = begin(); it != end(); ++it) {
-            if (x >= *it) {
-                prodIDs.insert(it, count, x);
-                return;
+        auto it = begin();
+        // prodIDs [0, 1, 3]
+        // x = 2
+        for (; it != end(); ++it) {
+            if (x <= *it) {
+                break;
             }
         }
+        prodIDs.insert(it, count, x);
     }
     Monomial operator*(Monomial const &x) const {
         Monomial r;
@@ -2020,6 +2025,16 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
             coef += p.terms[pows[i].second];
         }
     }
+    // std::cout << "oldDegree: " << oldDegree << std::endl;
+    // std::cout << "coef (degree, numTerms): (" << coef.degree() << "," <<
+    // coef.terms.size() << " )\n"; if (coef.terms.size()){
+    //     std::cout << "prodIDs: ";// << coef.terms[0].exponent.prodIDs <<
+    //     std::endl; for (auto it = coef.terms[0].exponent.prodIDs.begin(); it
+    //     != coef.terms[0].exponent.prodIDs.end(); ++it){
+    //         std::cout << *it << ", ";
+    //     }
+    //     std::cout << "\n";
+    // }
     u.terms.emplace_back(coef, oldDegree);
 }
 
@@ -2034,6 +2049,9 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
     std::sort(pows.begin(), pows.end(), FirstGreater());
 
     Univariate<Multivariate<C>> u;
+    if (pows.size() == 0) {
+        return u;
+    }
     uint_fast32_t oldDegree = pows[0].first;
     uint_fast32_t chunkStartIdx = 0;
     uint_fast32_t idx = 0;
@@ -2046,13 +2064,9 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
         }
         idx += 1;
     }
-    if (chunkStartIdx + 1 != idx) {
-        emplace_back(u, p, pows, oldDegree, chunkStartIdx, idx, v);
-    }
-    std::printf("p, v, u\n");
-    showln(p);
-    std::printf("v = %d\n", v);
-    showln(u);
+    // if (chunkStartIdx + 1 != idx) {
+    emplace_back(u, p, pows, oldDegree, chunkStartIdx, idx, v);
+    //}
     return u;
 }
 
@@ -2063,7 +2077,7 @@ Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
     for (auto it = g.begin(); it != g.end(); ++it) {
         Multivariate<C> coef = it->coefficient;
         size_t exponent = (it->exponent).exponent;
-        std::cout << "Exponent: " << exponent << "; v: " << v << std::endl;
+        // std::cout << "Exponent: " << exponent << "; v: " << v << std::endl;
         if (exponent) {
             for (auto ic = coef.begin(); ic != coef.end(); ++ic) {
                 (ic->exponent).add_term(v, exponent);
