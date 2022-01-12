@@ -1,7 +1,6 @@
 #include "../include/bitsets.hpp"
 #include "../include/math.hpp"
-#include "../include/show.hpp"
-#include <cstdio>
+#include <iostream>
 #include <gtest/gtest.h>
 
 TEST(BitSetTest, BasicAssertions) {
@@ -12,7 +11,7 @@ TEST(BitSetTest, BasicAssertions) {
     push(bs, 117);
     push(bs, 87);
     push(bs, 991);
-    showln(bs.data);
+    std::cout << bs << std::endl;
     std::vector<size_t> bsc{4, 10, 87, 117, 200, 991};
     size_t j = 0;
     for (auto I = bs.begin(); I != bs.end(); ++I) {

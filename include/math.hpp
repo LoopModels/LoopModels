@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -82,6 +81,15 @@ template <typename T, typename S> void divExact(T &x, S const &y) {
 // enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
 //   Bits:            00               01                   10            11
 enum class SourceType { Constant, LoopInductionVariable, Memory, Term };
+std::ostream &operator<<(std::ostream &os, SourceType s){
+    switch (s) {
+    case SourceType::Constant: os << "Constant"; break;
+    case SourceType::LoopInductionVariable: os << "Induction Variable"; break;
+    case SourceType::Memory: os << "Memory"; break;
+    case SourceType::Term: os << "Term"; break;
+    }
+    return os;
+}
 
 struct Source {
     size_t id;
@@ -152,7 +160,7 @@ template <typename T, size_t M> struct Vector {
     Vector(T *ptr) : ptr(ptr){};
     Vector(Vector<T, M> &a) : ptr(a.ptr){};
 
-    T &operator()(size_t i) {
+    T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
         assert((0 <= i) & (i < M));
 #endif
@@ -183,8 +191,25 @@ template <typename T> struct Vector<T, 0> {
     bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
 };
 
+
+
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.len; }
+
+template <typename T, size_t M>
+std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
+// std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
+    os << "[ ";
+    for (size_t i = 0; i < length(v)-1; i++) {
+	os << v(i) << ", ";
+    }
+    if (length(v)) {
+        os << v(length(v) - 1);
+    }
+    os << " ]";
+    return os;
+}
+
 
 template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
     return Vector<T, 0>(x);
@@ -268,6 +293,7 @@ template <typename T> struct Matrix<T, 0, 0> {
     T &operator[](size_t i) { return ptr[i]; }
 };
 
+
 template <typename T, size_t M, size_t N>
 size_t size(Matrix<T, M, N>, size_t i) {
     return i == 0 ? M : N;
@@ -280,6 +306,10 @@ template <typename T, size_t N> size_t size(Matrix<T, 0, N> A, size_t i) {
 }
 template <typename T> size_t size(Matrix<T, 0, 0> A, size_t i) {
     return i == 0 ? A.M : A.N;
+}
+template <typename T, size_t M, size_t N>
+std::pair<size_t,size_t> size(Matrix<T, M, N> const &A) {
+    return std::make_pair(size(A,0), size(A,1));
 }
 
 template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> A) {
@@ -315,6 +345,9 @@ template <typename T> struct StrideMatrix {
 };
 template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
     return i == 0 ? A.M : A.N;
+}
+template <typename T> std::pair<size_t, size_t> size(StrideMatrix<T> A){
+    return std::make_pair(A.M, A.N);
 }
 template <typename T> size_t length(StrideMatrix<T> A) {
     return size(A, 0) * size(A, 1);
@@ -356,6 +389,44 @@ Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
 template <typename T, size_t M> T &last(Vector<T, M> x) {
     return x[length(x) - 1];
 }
+
+template <typename T>
+std::ostream &printMatrix(std::ostream &os, T &A) {
+// std::ostream &printMatrix(std::ostream &os, T const &A) {
+    os << "[ ";
+    auto [m, n] = size(A);
+    for (size_t i = 0; i < m-1; i++) {
+	for (size_t j = 0; j < n-1; j++) {
+	    os << A(i,j) << ", ";
+	}
+	if (n) {
+	    os << A(i, n - 1);
+	}
+	os << std::endl;
+    }
+    if (m){
+	for (size_t j = 0; j < n-1; j++) {
+	    os << A(m-1, j) << ", ";
+	}
+	if (n) {
+	    os << A(m-1, n - 1);
+	}
+    }
+    os << " ]";
+    return os;
+}
+template <typename T, size_t M, size_t N>
+std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> &A) {
+// std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
+    return printMatrix(os, A);    
+}
+template <typename T>
+std::ostream &operator<<(std::ostream &os, StrideMatrix<T> &A) {
+// std::ostream &operator<<(std::ostream &os, StrideMatrix<T> const &A) {
+    return printMatrix(os, A);
+}
+
+
 
 template <typename T> struct Tensor3 {
     T *ptr;
@@ -444,6 +515,17 @@ void swap(Permutation p, Int i, Int j) {
     inv(p, xj) = i;
     inv(p, xi) = j;
 }
+
+std::ostream &operator<<(std::ostream &os, Permutation &perm){
+    auto numloop = getNLoops(perm);
+    os << "perm: <";
+    for (size_t j = 0; j < numloop - 1; j++){
+	os << perm(j) << " ";
+    }
+    os << ">" << perm(numloop - 1);
+    return os;
+}
+
 
 struct PermutationSubset {
     Permutation p;
@@ -578,3 +660,4 @@ std::tuple<size_t, size_t, size_t> gcdx(size_t a, size_t b) {
     // For now, I'll favor forgoing the division.
     return std::make_tuple(old_r, old_s, old_t);
 }
+

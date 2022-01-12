@@ -3,7 +3,13 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <ios>
+#include <iostream>
+#include <istream>
+#include <iterator>
 #include <limits>
+#include <ostream>
+#include <string>
 #include <vector>
 
 // A set of `size_t` elements.
@@ -96,6 +102,20 @@ bool remove(BitSet &s, size_t x) {
         --(s.length);
     }
     return contained;
+}
+
+std::ostream &operator<<(std::ostream &os, BitSet const &x){
+    os << "BitSet[";
+    if (x.length){
+	auto it = x.begin();
+	os << std::to_string(*it);
+	++it;
+	for (; it != x.end(); ++it){
+	    os << ", " << *it;
+	}
+    }
+    os << "]";
+    return os;
 }
 
 // BitSet with length 64

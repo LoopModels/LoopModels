@@ -1,6 +1,5 @@
 #include "../include/ir.hpp"
 #include "../include/math.hpp"
-#include "../include/show.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -9,14 +8,13 @@
 
 TEST(IRTest, BasicAssertions) {
     EXPECT_EQ(3, 3);
-    Const a = Const{.type = Int64, .bits = 0};
-    showln(a);
-    a = Const{.type = Float64, .bits = 0x4002666666666666};
-    showln(a);
-    a = Const{.type = Float32, .bits = 0x0000000040133333};
-    showln(a);
+    Const a = Const{.NumType = Const::Int64, .i64 = 0};
+    std::cout << a << std::endl;
+    a = Const{.NumType = Const::Float64, .d = 2.3};
+    std::cout << a << std::endl;
+    a = Const{.NumType = Const::Float32, .f = 3.4f};
+    std::cout << a << std::endl;
     // pretty print
-    // showln(ArrayRef ar);
     // We'll build an ArrayRef
     // i_2 (Induction Variable) +
     // 2 M_0 i_8 (Memory) +
@@ -37,7 +35,7 @@ TEST(IRTest, BasicAssertions) {
     std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
     // printf("innOff len: %d\n", innerOffsets.size());
     std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
-    showln(toVector(innerOffsets));
+    std::cout << toVector(innerOffsets) << std::endl;
     size_t raw[16];
     Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // std::vector<size_t> memBuffer().resize(outerOffsets.size());
@@ -59,5 +57,5 @@ TEST(IRTest, BasicAssertions) {
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};
-    showln(ar);
+    std::cout << ar << std::endl;
 }

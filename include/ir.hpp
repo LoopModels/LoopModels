@@ -10,7 +10,9 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <string>
+#include <sys/types.h>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
@@ -47,25 +49,55 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-enum NumType {
-    Float64,
-    Float32,
-    Float16,
-    BFloat16,
-    Int64,
-    Int32,
-    Int16,
-    Int8,
-    UInt64,
-    UInt32,
-    UInt16,
-    UInt8
-};
+
+
+
 
 struct Const {
-    NumType type;
-    uint64_t bits;
+    enum {
+	Float64,
+	Float32,
+	// Float16,
+	// BFloat16,
+	Int64,
+	Int32,
+	Int16,
+	Int8,
+	UInt64,
+	UInt32,
+	UInt16,
+	UInt8
+    } NumType;
+    union{
+	double d;
+	float f;
+	int64_t i64;
+	int32_t i32;
+	int16_t i16;
+	int8_t i8;
+	u_int64_t u64;
+	u_int32_t u32;
+	u_int16_t u16;
+	u_int8_t u8;
+    };
 };
+
+std::ostream& operator<<(std::ostream &os, Const &c){
+    switch (c.NumType){
+    case Const::Float64: os << c.d; break;
+    case Const::Float32: os << c.f; break;
+    case Const::Int64: os << c.i64; break;
+    case Const::Int32: os << c.i32; break;
+    case Const::Int16: os << c.i16; break;
+    case Const::Int8: os << c.i8; break;
+    case Const::UInt64: os << c.u64; break;
+    case Const::UInt32: os << c.u32; break;
+    case Const::UInt16: os << c.u16; break;
+    case Const::UInt8: os << c.u8; break;
+    }
+    return os;
+}
+
 
 // struct Pointer { }
 
@@ -537,6 +569,21 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
     }
     return std::make_pair(j, v);
 }
+
+std::ostream& operator<<(std::ostream &os, ArrayRef const &ar){
+    os << "ArrayRef " << ar.arrayId << ":" << std::endl;
+    for (size_t i = 0; i < length(ar.inds); ++i) {
+        auto [ind, src] = ar.inds[i];
+	os << "(" << ind << ") " << "i_" << src.id << " (" << src.typ << ")";
+        if (i + 1 < length(ar.inds)) {
+	    os << " +";
+        }
+	os << std::endl;
+    }
+    return os;
+}
+
+
 
 struct CostSummary {
     double vCost;
