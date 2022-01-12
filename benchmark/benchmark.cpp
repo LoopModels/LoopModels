@@ -1,6 +1,7 @@
 #include "../include/math.hpp"
 #include "../include/symbolics.hpp"
 #include <benchmark/benchmark.h>
+#include <cstdint>
 
 static void BM_GCD_Big(benchmark::State &state) {
 
@@ -57,6 +58,44 @@ static void BM_GCD_Simp(benchmark::State &state) {
 }
 // Register the function as a benchmark
 BENCHMARK(BM_GCD_Simp);
+
+static void BM_GCD_EqualMonomial(benchmark::State &state) {
+
+    Polynomial::Monomial x = Polynomial::MonomialID(0);
+
+    Polynomial::Multivariate<intptr_t> p = Polynomial::Term<intptr_t,Polynomial::Monomial>(1, x);
+    Polynomial::Multivariate<intptr_t> q = Polynomial::Term<intptr_t,Polynomial::Monomial>(1, x);
+
+    for (auto _ : state)
+        gcd(p, q);
+}
+// Register the function as a benchmark
+BENCHMARK(BM_GCD_EqualMonomial);
+static void BM_GCD_EqualConstants1(benchmark::State &state) {
+
+    Polynomial::Monomial x;
+
+    Polynomial::Multivariate<intptr_t> p = Polynomial::Term<intptr_t,Polynomial::Monomial>(1, x);
+    Polynomial::Multivariate<intptr_t> q = Polynomial::Term<intptr_t,Polynomial::Monomial>(1, x);
+
+    for (auto _ : state)
+        gcd(p, q);
+}
+// Register the function as a benchmark
+BENCHMARK(BM_GCD_EqualConstants1);
+static void BM_GCD_EqualConstants2(benchmark::State &state) {
+
+    Polynomial::Monomial x;
+
+    Polynomial::Multivariate<intptr_t> p = Polynomial::Term<intptr_t,Polynomial::Monomial>(2, x);
+    Polynomial::Multivariate<intptr_t> q = Polynomial::Term<intptr_t,Polynomial::Monomial>(2, x);
+
+    for (auto _ : state)
+        gcd(p, q);
+}
+// Register the function as a benchmark
+BENCHMARK(BM_GCD_EqualConstants2);
+
 
 /*
 // Define another benchmark

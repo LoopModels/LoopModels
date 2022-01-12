@@ -30,8 +30,9 @@ bool isOne(size_t x) { return x == 1; }
 template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     // typedef typename std::remove_const<TRC>::type TR;
     // typedef typename std::remove_reference<TR>::type T;
-    typedef typename std::remove_reference<TRC>::type TR;
-    typedef typename std::remove_const<TR>::type T;
+    // typedef typename std::remove_reference<TRC>::type TR;
+    // typedef typename std::remove_const<TR>::type T;
+    typedef typename std::remove_cvref<TRC>::type T;
     switch (i) {
     case 0:
         return T(One());

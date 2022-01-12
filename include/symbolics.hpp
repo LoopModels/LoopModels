@@ -459,7 +459,10 @@ struct Monomial {
 
 Monomial MonomialID(size_t id) { return Monomial({id}); }
 
-template <typename C, typename M> struct Term {
+template<typename M>
+concept IsMonomial = std::same_as<M,Monomial> || std::same_as<M,Uninomial>;
+
+template <typename C, IsMonomial M> struct Term {
     C coefficient;
     M exponent;
     // Term() = default;
