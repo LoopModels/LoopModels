@@ -577,10 +577,16 @@ struct Term {
     uint32_t loopDeps; // minimal loopdeps based on source's
 };
 
-inline uint32_t zero_upper(uint32_t x) { return x & 0x0000ffff; }
-inline uint32_t zero_lower(uint32_t x) { return x & 0xffff0000; }
-inline uint64_t zero_upper(uint64_t x) { return x & 0x00000000ffffffff; }
-inline uint64_t zero_lower(uint64_t x) { return x & 0xffffffff00000000; }
+
+template<int Bits, class T>
+constexpr bool is_uint_v =
+    sizeof(T)==(Bits/8) && std::is_integral_v<T> && !std::is_signed_v<T>;
+
+template<class T> inline uint32_t zero_upper(T x) requires is_uint_v<32, T> { return x & 0x0000ffff;; }
+template<class T> inline uint64_t zero_upper(T x) requires is_uint_v<64, T> { return x & 0xffff0000; }
+template<class T> inline uint32_t zero_lower(T x) requires is_uint_v<32, T> { return x & 0x00000000ffffffff; }
+template<class T> inline uint64_t zero_lower(T x) requires is_uint_v<64, T> { return x & 0xffffffff00000000; }
+
 
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
