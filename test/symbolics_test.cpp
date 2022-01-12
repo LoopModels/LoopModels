@@ -95,9 +95,9 @@ TEST(pseudoRemTests, BasicAssertions) {
 }
 
 TEST(PseudoRemTests, BasicAssertions) {
-    Polynomial::Monomial x = Polynomial::Monomial(0);
-    Polynomial::Monomial y = Polynomial::Monomial(1);
-    Polynomial::Monomial z = Polynomial::Monomial(2);
+    Polynomial::Monomial x = Polynomial::MonomialID(0);
+    Polynomial::Monomial y = Polynomial::MonomialID(1);
+    Polynomial::Monomial z = Polynomial::MonomialID(2);
     Polynomial::Multivariate<intptr_t> xp1z = x * z + z;
     Polynomial::Multivariate<intptr_t> c0v2 = 10 * xp1z;
 

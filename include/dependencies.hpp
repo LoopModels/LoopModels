@@ -1134,7 +1134,7 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
             auto a = getFirstLoopStride(x);
             // auto [g, xf, yf] = gcd(delta.stride.begin() -> first, a);
             // auto [d, r] = xf.divRem(yf);
-            auto [d, r] = (delta.stride.begin()->first).divRem(a->first);
+            auto [d, r] = (delta.axes.begin()->first).divRem(a->first);
             if (r.isZero()) {
                 if (absLess(fun, d, upperBound(a->second, loopNestX)) &&
                     absLess(
@@ -1162,6 +1162,8 @@ DependenceType singleInductionVariableTest(Function &fun, Stride &x, Stride &y,
                 // c = a0 - b0;
                 // g, na, nb = gcdx(a1, b1);
                 Polynomial::Multivariate<intptr_t> c = delta.begin()->first;
+                // https://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity
+                // Bézout's identity
                 // x(k) = -na * (c / g) + k * b1 / g;
                 // y(k) =  nb * (c / g) + k * a1 / g;
                 // we must therefore check if any solutions are within the loop

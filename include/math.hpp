@@ -37,7 +37,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     case 0:
         return T(One());
     case 1:
-        return T(x);
+        return T(std::forward<TRC>(x));
     case 2:
         return T(x * x);
     case 3:

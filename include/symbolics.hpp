@@ -185,11 +185,11 @@ std::string monomialTermStr(size_t id, size_t exponent) {
 
 namespace Polynomial {
 struct Uninomial {
-    uint_fast32_t exponent;
+    size_t exponent;
     Uninomial(One) : exponent(0){};
     Uninomial() = default;
-    Uninomial(uint_fast32_t e) : exponent(e){};
-    uint_fast32_t degree() const { return exponent; }
+    Uninomial(size_t e) : exponent(e){};
+    size_t degree() const { return exponent; }
     bool termsMatch(Uninomial const &y) const { return exponent == y.exponent; }
     bool lexGreater(Uninomial const &y) const { return exponent > y.exponent; }
     template <typename T> bool lexGreater(T const &x) const {
@@ -238,7 +238,7 @@ struct Uninomial {
 };
 struct Monomial {
     // sorted symbolic terms being multiplied
-    std::vector<uint_fast32_t> prodIDs;
+    std::vector<size_t> prodIDs;
     // Monomial& operator=(Monomial const &x){
     //     prodIDs = x.prodIDs;
     //     return *this;
@@ -249,7 +249,6 @@ struct Monomial {
     Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
     // Monomial(Monomial const &x) : prodIDs(x.prodIDs) {};
     Monomial(One) : prodIDs(std::vector<size_t>()){};
-    Monomial(size_t x) : prodIDs(std::vector<size_t>{x}){};
 
     inline auto begin() { return prodIDs.begin(); }
     inline auto end() { return prodIDs.end(); }
@@ -258,7 +257,7 @@ struct Monomial {
     inline auto cbegin() const { return prodIDs.cbegin(); }
     inline auto cend() const { return prodIDs.cend(); }
 
-    void add_term(uint_fast32_t x) {
+    void add_term(size_t x) {
         for (auto it = begin(); it != end(); ++it) {
             if (x <= *it) {
                 prodIDs.insert(it, x);
@@ -267,7 +266,7 @@ struct Monomial {
         }
         prodIDs.push_back(x);
     }
-    void add_term(uint_fast32_t x, size_t count) {
+    void add_term(size_t x, size_t count) {
         // prodIDs.reserve(prodIDs.size() + rep);
         auto it = begin();
         // prodIDs [0, 1, 3]
@@ -288,12 +287,12 @@ struct Monomial {
         size_t n1 = x.prodIDs.size();
         r.prodIDs.reserve(n0 + n1);
         for (size_t k = 0; k < (n0 + n1); ++k) {
-            uint_fast32_t a = (i < n0)
+            size_t a = (i < n0)
                                   ? prodIDs[i]
-                                  : std::numeric_limits<uint_fast32_t>::max();
-            uint_fast32_t b = (j < n1)
+                                  : std::numeric_limits<size_t>::max();
+            size_t b = (j < n1)
                                   ? x.prodIDs[j]
-                                  : std::numeric_limits<uint_fast32_t>::max();
+                                  : std::numeric_limits<size_t>::max();
             bool aSmaller = a < b;
             aSmaller ? ++i : ++j;
             r.prodIDs.push_back(aSmaller ? a : b);
@@ -305,7 +304,7 @@ struct Monomial {
         if (x.prodIDs.size() == 0) {
             return *this;
         } else if (x.prodIDs.size() == 1) {
-            uint_fast32_t y = x.prodIDs[0];
+            size_t y = x.prodIDs[0];
             for (auto it = begin(); it != end(); ++it) {
                 if (y < *it) {
                     prodIDs.insert(it, y);
@@ -357,12 +356,12 @@ struct Monomial {
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
-            uint_fast32_t a = (i < n0)
+            size_t a = (i < n0)
                                   ? prodIDs[i]
-                                  : std::numeric_limits<uint_fast32_t>::max();
-            uint_fast32_t b = (j < n1)
+                                  : std::numeric_limits<size_t>::max();
+            size_t b = (j < n1)
                                   ? x.prodIDs[j]
-                                  : std::numeric_limits<uint_fast32_t>::max();
+                                  : std::numeric_limits<size_t>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -388,12 +387,12 @@ struct Monomial {
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
-            uint_fast32_t a = (i < n0)
+            size_t a = (i < n0)
                                   ? prodIDs[i]
-                                  : std::numeric_limits<uint_fast32_t>::max();
-            uint_fast32_t b = (j < n1)
+                                  : std::numeric_limits<size_t>::max();
+            size_t b = (j < n1)
                                   ? x.prodIDs[j]
-                                  : std::numeric_limits<uint_fast32_t>::max();
+                                  : std::numeric_limits<size_t>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -410,8 +409,8 @@ struct Monomial {
     friend bool isZero(Monomial const &) { return false; }
     bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
     size_t degree() const { return prodIDs.size(); }
-    uint_fast32_t degree(uint_fast32_t i) const {
-        uint_fast32_t d = 0;
+    size_t degree(size_t i) const {
+        size_t d = 0;
         for (auto it = cbegin(); it != cend(); ++it) {
             d += (*it) == i;
         }
@@ -424,8 +423,8 @@ struct Monomial {
             return d > x.degree();
         }
         for (size_t i = 0; i < d; ++i) {
-            uint_fast32_t a = prodIDs[i];
-            uint_fast32_t b = x.prodIDs[i];
+            size_t a = prodIDs[i];
+            size_t b = x.prodIDs[i];
             if (a != b) {
                 return a < b;
             }
@@ -464,6 +463,8 @@ struct Monomial {
     }
 };
 
+Monomial MonomialID(size_t id) { return Monomial({id}); }
+
 template <typename C, typename M> struct Term {
     C coefficient;
     M exponent;
@@ -485,7 +486,7 @@ template <typename C, typename M> struct Term {
     bool lexGreater(Term const &y) const {
         return exponent.lexGreater(y.exponent);
     }
-    uint_fast32_t degree() const { return exponent.degree(); }
+    size_t degree() const { return exponent.degree(); }
     M &monomial() { return exponent; }
     const M &monomial() const { return exponent; }
     bool addCoef(C const &coef) { return isZero((coefficient += coef)); }
@@ -749,9 +750,7 @@ template <typename C, typename M> struct Terms {
     //     add_term(std::move(x.leadingTerm()));
     //     x.removeLeadingTerm();
     // }
-    bool operator==(Monomial const &x) const {
-        return (terms.size() == 1) && (leadingTerm() == x);
-    }
+    
 
     friend bool isZero(Terms const &x) { return x.terms.size() == 0; }
     friend bool isOne(Terms const &x) {
@@ -786,6 +785,11 @@ template <typename C> using MultivariateTerm = Term<C, Monomial>;
 template <typename C> using Univariate = Terms<C, Uninomial>;
 template <typename C> using Multivariate = Terms<C, Monomial>;
 
+template<typename C>
+bool operator==(Multivariate<C> const &x, Monomial const &y) {
+    return (x.terms.size() == 1) && (x.leadingTerm() == y);
+}
+    
 Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
     if (x.termsMatch(y)) {
         return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>(2, x));
@@ -815,10 +819,23 @@ Terms<intptr_t, Monomial> operator+(Monomial &&x, Monomial &&y) {
 }
 
 template <typename C> Terms<C, Uninomial> operator+(Uninomial x, C y) {
-    return Term<C, Uninomial>{C(One()), x} + Term<C, Uninomial>{y};
+    return Terms<C,Uninomial>(Term<C,Uninomial>(x), Term<C,Uninomial>(y));
 }
 template <typename C> Terms<C, Uninomial> operator+(C y, Uninomial x) {
-    return Term<C, Uninomial>{C(One()), x} + Term<C, Uninomial>{y};
+    return Terms<C,Uninomial>(Term<C,Uninomial>(x), Term<C,Uninomial>(y));
+}
+
+template <typename C> Terms<C, Monomial> operator+(Monomial x, C y) {
+    return Terms<C,Monomial>(Term<C,Monomial>(x), Term<C,Monomial>(y));
+}
+template <typename C> Terms<C, Monomial> operator+(C y, Monomial x) {
+    return Terms<C,Monomial>(Term<C,Monomial>(x), Term<C,Monomial>(y));
+}
+Terms<intptr_t, Monomial> operator+(Monomial x, int y) {
+    return Terms<intptr_t,Monomial>(Term<intptr_t,Monomial>(x), Term<intptr_t,Monomial>(y));
+}
+Terms<intptr_t, Monomial> operator+(int y, Monomial x) {
+    return Terms<intptr_t,Monomial>(Term<intptr_t,Monomial>(x), Term<intptr_t,Monomial>(y));
 }
 
 template <typename C>
@@ -1556,7 +1573,7 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
     if (p.degree() < d.degree()) {
         return p;
     }
-    uint_fast32_t k = (1 + p.degree()) - d.degree();
+    size_t k = (1 + p.degree()) - d.degree();
     C l = d.leadingCoefficient();
     Univariate<C> dd(d);
     Univariate<C> pp(p);
@@ -1621,7 +1638,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         if (r.degree() == 0) {
             return Univariate<C>(c);
         }
-        uint_fast32_t d = xx.degree() - yy.degree();
+        size_t d = xx.degree() - yy.degree();
         divExact(r, g * (h ^ d)); // defines new y
         std::swap(xx, yy);
         std::swap(yy, r);
@@ -1649,10 +1666,10 @@ Monomial gcd(Monomial const &x, Monomial const &y) {
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        uint_fast32_t xk =
-            (ix != ixe) ? *ix : std::numeric_limits<uint_fast32_t>::max();
-        uint_fast32_t yk =
-            (iy != iye) ? *iy : std::numeric_limits<uint_fast32_t>::max();
+        size_t xk =
+            (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
+        size_t yk =
+            (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
         if (xk < yk) {
             ++ix;
         } else if (xk > yk) {
@@ -1694,10 +1711,10 @@ std::tuple<Monomial, Monomial, Monomial> gcdd(Monomial const &x,
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        uint_fast32_t xk =
-            (ix != ixe) ? *ix : std::numeric_limits<uint_fast32_t>::max();
-        uint_fast32_t yk =
-            (iy != iye) ? *iy : std::numeric_limits<uint_fast32_t>::max();
+        size_t xk =
+            (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
+        size_t yk =
+            (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
             ++ix;
@@ -1757,7 +1774,7 @@ std::pair<Term<C, M>, Terms<C, M>> contentd(Terms<C, M> const &x) {
 }
 
 template <typename C>
-Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, uint_fast32_t i) {
+Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, size_t i) {
     Term<C, Monomial> a(t.coefficient);
     for (auto it = t.exponent.cbegin(); it != t.exponent.cend(); ++it) {
         if ((*it) != i) {
@@ -1767,7 +1784,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, uint_fast32_t i) {
     return a;
 }
 template <typename C>
-Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, uint_fast32_t i) {
+Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
     auto start = t.end();
     auto stop = t.begin();
     auto it = t.begin();
@@ -1789,8 +1806,8 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, uint_fast32_t i) {
     return t;
 }
 
-uint_fast32_t count(std::vector<uint_fast32_t> const &x, uint_fast32_t v) {
-    uint_fast32_t s = 0;
+size_t count(std::vector<size_t> const &x, size_t v) {
+    size_t s = 0;
     for (auto it = x.begin(); it != x.end(); ++it) {
         s += ((*it) == v);
     }
@@ -1798,7 +1815,7 @@ uint_fast32_t count(std::vector<uint_fast32_t> const &x, uint_fast32_t v) {
 }
 
 template <typename C>
-uint_fast32_t count(Term<C, Monomial> const &p, uint_fast32_t v) {
+size_t count(Term<C, Monomial> const &p, size_t v) {
     return count(p.exponent.prodIDs, v);
 }
 
@@ -1811,9 +1828,9 @@ struct FirstGreater {
 
 template <typename C>
 void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
-                  std::vector<std::pair<uint_fast32_t, size_t>> const &pows,
-                  uint_fast32_t oldDegree, uint_fast32_t chunkStartIdx,
-                  uint_fast32_t idx, uint_fast32_t v) {
+                  std::vector<std::pair<size_t, size_t>> const &pows,
+                  size_t oldDegree, size_t chunkStartIdx,
+                  size_t idx, size_t v) {
     Multivariate<C> coef;
     if (oldDegree) {
         coef = termToPolyCoeff(p.terms[pows[chunkStartIdx].second], v);
@@ -1831,8 +1848,8 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
 
 template <typename C>
 Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
-                                                     uint_fast32_t v) {
-    std::vector<std::pair<uint_fast32_t, size_t>> pows;
+                                                     size_t v) {
+    std::vector<std::pair<size_t, size_t>> pows;
     pows.reserve(p.terms.size());
     for (size_t i = 0; i < p.terms.size(); ++i) {
         pows.emplace_back(count(p.terms[i], v), i);
@@ -1843,11 +1860,11 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
     if (pows.size() == 0) {
         return u;
     }
-    uint_fast32_t oldDegree = pows[0].first;
-    uint_fast32_t chunkStartIdx = 0;
-    uint_fast32_t idx = 0;
+    size_t oldDegree = pows[0].first;
+    size_t chunkStartIdx = 0;
+    size_t idx = 0;
     while (idx < pows.size()) {
-        uint_fast32_t degree = pows[idx].first;
+        size_t degree = pows[idx].first;
         if (oldDegree != degree) {
             emplace_back(u, p, pows, oldDegree, chunkStartIdx, idx, v);
             chunkStartIdx = idx;
@@ -1863,7 +1880,7 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
 
 template <typename C>
 Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
-                                         uint_fast32_t v) {
+                                         size_t v) {
     Multivariate<C> p;
     for (auto it = g.begin(); it != g.end(); ++it) {
         Multivariate<C> coef = it->coefficient;
@@ -2137,7 +2154,7 @@ struct ValueRange {
 /*
 struct UniPoly{
     struct Monomial{
-        uint_fast32_t power;
+        size_t power;
     };
     struct Term{
         Polynomial coefficient;
@@ -2162,7 +2179,7 @@ std::forward<T>(x)); }
     template <typename S> void sub_term(S &&x) {
         ::sub_term(*this, std::forward<S>(x));
     }
-    UniPoly(Polynomial const &x, uint_fast32_t u) {
+    UniPoly(Polynomial const &x, size_t u) {
         for (auto it = x.cbegin(); it != x.cend(); ++it){
             it -> degree(u);
         }
