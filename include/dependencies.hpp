@@ -523,6 +523,21 @@ getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes) {
     //     B(i,j) = B(j,i)
     //   }
     // }
+    // TODO: what if? (M, N, K are constants, i & j are induction variables)
+    // for (i = 0; i < A; ++i){; for (j = 0; j < B; ++j){
+    //     A(..., M0*i + N0*j + K0, ...)
+    // };};
+    //
+    // x1 = M*i + N*j + K1 // [M/N/K]1 = [M/N/K]0 * stride
+    // We have multiple induction variables, so we're unlikely to be able
+    // to do a simple substituition and replace indices with stride positions.
+    // Strategies to explore:
+    // 1. Do symbolic simplification.
+    // 2. See how restrictive each interval is on the reduction variables,
+    // eliminate appropriately if compromises must be made and only some can be
+    // dropped before switching to interval arithmetic for comparisons.
+    //
+    //
     // where `stride(A,2) == M`, such that we have
     // source: B[j + M*i]
     // target: B[i + M*j]
@@ -536,28 +551,29 @@ getBounds(Source indSrc, TriangularLoopNest tri, std::vector<Stride> &axes) {
     //
     // for the source, we have:
     // when `indSrc == i`:
-    // lowerBound_s_i = [j] = [x0]
-    // upperBound_s_i = [M - 1]
+    // lowerBound_s_i = [j] = [x0] # lower bounds are inclusive
+    // upperBound_s_i = [M]        # upper bounds are exclusive
     //
     //
     // when `indSrc == j`:
-    // lowerBound_s_j = [0]
-    // upperBound_s_j = [i - 1] = [x1 - 1]
+    // lowerBound_s_j = [0]          # inclusive
+    // upperBound_s_j = [i] = [x1]   # exclusive
     //
     // Meanwhile, for the target, we have
     // when `indSrc == i`:
-    // lowerBound_t_i = [j] = [x1]
-    // upperBound_t_i = [M - 1]
+    // lowerBound_t_i = [j] = [x1]   # inclusive
+    // upperBound_t_i = [M]          # exclusive
     //
     // when `indSrc == j`:
-    // lowerBound_t_j = [0]
-    // upperBound_t_j = [i - 1] = [x0 - 1]
+    // lowerBound_t_j = [0]          # inclusive
+    // upperBound_t_j = [i] = [x0]   # exclusive
     //
     // Thus, were we to compare `i` for the source with `j` for the target, we
-    // see lowerBound_s_i = [x0] > [x0 - 1] = upperBound_t_j meaning no overlap,
-    // and we reject dependence. Alternatively, were we to compare `j` for the
-    // source with `i` for the target: upperbound_s_j = [x1 - 1] < [x1] =
-    // lowerBound_t_i meaning, again, no overlap and we reject dependence.
+    // see (inclusive) lowerBound_s_i = [x0] >= [x0] = upperBound_t_j
+    // (exclusive) meaning no overlap, and we reject dependence. Alternatively,
+    // were we to compare `j` for the source with `i` for the target:
+    // upperbound_s_j = [x1 - 1] < [x1] = lowerBound_t_i meaning, again, no
+    // overlap and we reject dependence.
     //
     // if not invertible, we set to extreme bound instead.
     // visit all previous inds

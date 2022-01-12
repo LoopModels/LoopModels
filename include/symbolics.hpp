@@ -287,12 +287,10 @@ struct Monomial {
         size_t n1 = x.prodIDs.size();
         r.prodIDs.reserve(n0 + n1);
         for (size_t k = 0; k < (n0 + n1); ++k) {
-            size_t a = (i < n0)
-                                  ? prodIDs[i]
-                                  : std::numeric_limits<size_t>::max();
-            size_t b = (j < n1)
-                                  ? x.prodIDs[j]
-                                  : std::numeric_limits<size_t>::max();
+            size_t a =
+                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
+            size_t b =
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
             bool aSmaller = a < b;
             aSmaller ? ++i : ++j;
             r.prodIDs.push_back(aSmaller ? a : b);
@@ -356,12 +354,10 @@ struct Monomial {
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
-            size_t a = (i < n0)
-                                  ? prodIDs[i]
-                                  : std::numeric_limits<size_t>::max();
-            size_t b = (j < n1)
-                                  ? x.prodIDs[j]
-                                  : std::numeric_limits<size_t>::max();
+            size_t a =
+                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
+            size_t b =
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -387,12 +383,10 @@ struct Monomial {
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
-            size_t a = (i < n0)
-                                  ? prodIDs[i]
-                                  : std::numeric_limits<size_t>::max();
-            size_t b = (j < n1)
-                                  ? x.prodIDs[j]
-                                  : std::numeric_limits<size_t>::max();
+            size_t a =
+                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
+            size_t b =
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -750,7 +744,6 @@ template <typename C, typename M> struct Terms {
     //     add_term(std::move(x.leadingTerm()));
     //     x.removeLeadingTerm();
     // }
-    
 
     friend bool isZero(Terms const &x) { return x.terms.size() == 0; }
     friend bool isOne(Terms const &x) {
@@ -785,11 +778,11 @@ template <typename C> using MultivariateTerm = Term<C, Monomial>;
 template <typename C> using Univariate = Terms<C, Uninomial>;
 template <typename C> using Multivariate = Terms<C, Monomial>;
 
-template<typename C>
+template <typename C>
 bool operator==(Multivariate<C> const &x, Monomial const &y) {
     return (x.terms.size() == 1) && (x.leadingTerm() == y);
 }
-    
+
 Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
     if (x.termsMatch(y)) {
         return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>(2, x));
@@ -798,8 +791,8 @@ Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
     } else {
         return Terms<intptr_t, Uninomial>(y, x);
     }
-    Terms<intptr_t, Uninomial> z(x);
-    return z += y;
+    // Terms<intptr_t, Uninomial> z(x);
+    // return z += y;
 }
 Terms<intptr_t, Monomial> operator+(Monomial const &x, Monomial const &y) {
     Terms<intptr_t, Monomial> z(x);
@@ -818,24 +811,54 @@ Terms<intptr_t, Monomial> operator+(Monomial &&x, Monomial &&y) {
     return z += std::move(y);
 }
 
+Terms<intptr_t, Uninomial> operator-(Uninomial x, Uninomial y) {
+    if (x.termsMatch(y)) {
+        return Terms<intptr_t, Uninomial>();
+    } else if (x.lexGreater(y)) {
+        return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>{1, x},
+                                          Term<intptr_t, Uninomial>{-1, y});
+    } else {
+        return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>{-1, y},
+                                          Term<intptr_t, Uninomial>{1, x});
+    }
+}
+Terms<intptr_t, Monomial> operator-(Monomial const &x, Monomial const &y) {
+    Terms<intptr_t, Monomial> z(x);
+    return std::move(z += Term<intptr_t, Monomial>{-1, y});
+}
+Terms<intptr_t, Monomial> operator-(Monomial const &x, Monomial &&y) {
+    Terms<intptr_t, Monomial> z(Term<intptr_t, Monomial>{-1, std::move(y)});
+    return std::move(z += x);
+}
+Terms<intptr_t, Monomial> operator-(Monomial &&x, Monomial const &y) {
+    Terms<intptr_t, Monomial> z(std::move(x));
+    return std::move(z += Term<intptr_t, Monomial>{-1, y});
+}
+Terms<intptr_t, Monomial> operator-(Monomial &&x, Monomial &&y) {
+    Terms<intptr_t, Monomial> z(std::move(x));
+    return std::move(z += Term<intptr_t, Monomial>{-1, std::move(y)});
+}
+
 template <typename C> Terms<C, Uninomial> operator+(Uninomial x, C y) {
-    return Terms<C,Uninomial>(Term<C,Uninomial>(x), Term<C,Uninomial>(y));
+    return Terms<C, Uninomial>(Term<C, Uninomial>(x), Term<C, Uninomial>(y));
 }
 template <typename C> Terms<C, Uninomial> operator+(C y, Uninomial x) {
-    return Terms<C,Uninomial>(Term<C,Uninomial>(x), Term<C,Uninomial>(y));
+    return Terms<C, Uninomial>(Term<C, Uninomial>(x), Term<C, Uninomial>(y));
 }
 
 template <typename C> Terms<C, Monomial> operator+(Monomial x, C y) {
-    return Terms<C,Monomial>(Term<C,Monomial>(x), Term<C,Monomial>(y));
+    return Terms<C, Monomial>(Term<C, Monomial>(x), Term<C, Monomial>(y));
 }
 template <typename C> Terms<C, Monomial> operator+(C y, Monomial x) {
-    return Terms<C,Monomial>(Term<C,Monomial>(x), Term<C,Monomial>(y));
+    return Terms<C, Monomial>(Term<C, Monomial>(x), Term<C, Monomial>(y));
 }
 Terms<intptr_t, Monomial> operator+(Monomial x, int y) {
-    return Terms<intptr_t,Monomial>(Term<intptr_t,Monomial>(x), Term<intptr_t,Monomial>(y));
+    return Terms<intptr_t, Monomial>(Term<intptr_t, Monomial>(x),
+                                     Term<intptr_t, Monomial>(y));
 }
 Terms<intptr_t, Monomial> operator+(int y, Monomial x) {
-    return Terms<intptr_t,Monomial>(Term<intptr_t,Monomial>(x), Term<intptr_t,Monomial>(y));
+    return Terms<intptr_t, Monomial>(Term<intptr_t, Monomial>(x),
+                                     Term<intptr_t, Monomial>(y));
 }
 
 template <typename C>
@@ -1666,10 +1689,8 @@ Monomial gcd(Monomial const &x, Monomial const &y) {
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        size_t xk =
-            (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
-        size_t yk =
-            (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
+        size_t xk = (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
+        size_t yk = (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
         if (xk < yk) {
             ++ix;
         } else if (xk > yk) {
@@ -1711,10 +1732,8 @@ std::tuple<Monomial, Monomial, Monomial> gcdd(Monomial const &x,
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        size_t xk =
-            (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
-        size_t yk =
-            (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
+        size_t xk = (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
+        size_t yk = (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
             ++ix;
@@ -1814,8 +1833,7 @@ size_t count(std::vector<size_t> const &x, size_t v) {
     return s;
 }
 
-template <typename C>
-size_t count(Term<C, Monomial> const &p, size_t v) {
+template <typename C> size_t count(Term<C, Monomial> const &p, size_t v) {
     return count(p.exponent.prodIDs, v);
 }
 
@@ -1829,8 +1847,8 @@ struct FirstGreater {
 template <typename C>
 void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
                   std::vector<std::pair<size_t, size_t>> const &pows,
-                  size_t oldDegree, size_t chunkStartIdx,
-                  size_t idx, size_t v) {
+                  size_t oldDegree, size_t chunkStartIdx, size_t idx,
+                  size_t v) {
     Multivariate<C> coef;
     if (oldDegree) {
         coef = termToPolyCoeff(p.terms[pows[chunkStartIdx].second], v);
