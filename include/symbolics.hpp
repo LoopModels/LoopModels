@@ -188,7 +188,7 @@ struct Uninomial {
     size_t exponent;
     Uninomial(One) : exponent(0){};
     Uninomial() = default;
-    Uninomial(size_t e) : exponent(e){};
+    explicit Uninomial(size_t e) : exponent(e){};
     size_t degree() const { return exponent; }
     bool termsMatch(Uninomial const &y) const { return exponent == y.exponent; }
     bool lexGreater(Uninomial const &y) const { return exponent > y.exponent; }
@@ -909,6 +909,22 @@ Terms<intptr_t, Uninomial> operator-(Uninomial x, int y) {
 Terms<intptr_t, Uninomial> operator-(int y, Uninomial x) {
     return Term<intptr_t, Uninomial>{y} - x;
 }
+template <typename C>
+Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &x, int y) {
+    return Term<intptr_t, Uninomial>{-y} + x;
+}
+template <typename C>
+Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &x) {
+    return Term<intptr_t, Uninomial>{y} - x;
+}
+template <typename C>
+Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &&x, int y) {
+    return Term<intptr_t, Uninomial>{-y} + std::move(x);
+}
+template <typename C>
+Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &&x) {
+    return Term<intptr_t, Uninomial>{y} - std::move(x);
+}
 
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> const &x, Term<C, M> const &y) {
@@ -1437,7 +1453,7 @@ template <typename C>
 Term<C, Uninomial> operator*(Term<C, Uninomial> const &x,
                              Term<C, Uninomial> const &y) {
     return Term<C, Uninomial>{x.coefficient * y.coefficient,
-                              x.degree() + y.degree()};
+                              Uninomial(x.degree() + y.degree())};
 }
 template <typename C>
 Term<C, Uninomial> &operator*=(Term<C, Uninomial> &x,
@@ -1603,7 +1619,7 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
     while ((!isZero(p)) && (pp.degree() >= d.degree())) {
         mulPow(dd, d,
                Term<C, Uninomial>(pp.leadingCoefficient(),
-                                  pp.degree() - d.degree()));
+                                  Uninomial(pp.degree() - d.degree())));
         pp *= l;
         pp -= dd;
         // pp = pp * l - dd;
@@ -1861,7 +1877,7 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
             coef += p.terms[pows[i].second];
         }
     }
-    u.terms.emplace_back(coef, oldDegree);
+    u.terms.emplace_back(coef, Uninomial(oldDegree));
 }
 
 template <typename C>
