@@ -1,6 +1,7 @@
 #include "../include/math.hpp"
 #include "../include/show.hpp"
 #include "../include/symbolics.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -219,4 +220,5 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Multivariate<intptr_t> d = -1 * c;
     EXPECT_TRUE(Polynomial::gcd(c, d) == c);
     EXPECT_TRUE(Polynomial::gcd(d, c) == c);
+
 }

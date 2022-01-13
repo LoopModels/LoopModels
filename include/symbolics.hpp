@@ -10,6 +10,7 @@
 #include <math.h>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <unistd.h>
 #include <utility>
 #include <vector>
@@ -459,8 +460,8 @@ struct Monomial {
 
 Monomial MonomialID(size_t id) { return Monomial({id}); }
 
-template<typename M>
-concept IsMonomial = std::same_as<M,Monomial> || std::same_as<M,Uninomial>;
+template <typename M>
+concept IsMonomial = std::same_as<M, Monomial> || std::same_as<M, Uninomial>;
 
 template <typename C, IsMonomial M> struct Term {
     C coefficient;
@@ -781,6 +782,8 @@ template <typename C> using MultivariateTerm = Term<C, Monomial>;
 template <typename C> using Univariate = Terms<C, Uninomial>;
 template <typename C> using Multivariate = Terms<C, Monomial>;
 
+// template <typename T>
+
 template <typename C>
 bool operator==(Multivariate<C> const &x, Monomial const &y) {
     return (x.terms.size() == 1) && (x.leadingTerm() == y);
@@ -799,19 +802,19 @@ Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
 }
 Terms<intptr_t, Monomial> operator+(Monomial const &x, Monomial const &y) {
     Terms<intptr_t, Monomial> z(x);
-    return z += y;
+    return std::move(z += y);
 }
 Terms<intptr_t, Monomial> operator+(Monomial const &x, Monomial &&y) {
     Terms<intptr_t, Monomial> z(std::move(y));
-    return z += x;
+    return std::move(z += x);
 }
 Terms<intptr_t, Monomial> operator+(Monomial &&x, Monomial const &y) {
     Terms<intptr_t, Monomial> z(std::move(x));
-    return z += y;
+    return std::move(z += y);
 }
 Terms<intptr_t, Monomial> operator+(Monomial &&x, Monomial &&y) {
     Terms<intptr_t, Monomial> z(std::move(x));
-    return z += std::move(y);
+    return std::move(z += std::move(y));
 }
 
 Terms<intptr_t, Uninomial> operator-(Uninomial x, Uninomial y) {
@@ -867,12 +870,12 @@ Terms<intptr_t, Monomial> operator+(int y, Monomial x) {
 template <typename C>
 Terms<C, Uninomial> operator+(Term<C, Uninomial> const &x, Uninomial y) {
     Terms<C, Uninomial> z(x);
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C>
 Terms<C, Uninomial> operator+(Term<C, Uninomial> &&x, Uninomial y) {
     Terms<C, Uninomial> z(std::move(x));
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C>
 Terms<C, Uninomial> operator-(Term<C, Uninomial> &&x, Uninomial y) {
@@ -882,22 +885,22 @@ Terms<C, Uninomial> operator-(Term<C, Uninomial> &&x, Uninomial y) {
 template <typename C>
 Terms<C, Monomial> operator+(Term<C, Monomial> const &x, Monomial const &y) {
     Terms<C, Monomial> z(x);
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C>
 Terms<intptr_t, Monomial> operator+(Term<C, Monomial> const &x, Monomial &&y) {
     Terms<C, Monomial> z(std::move(y));
-    return z += x;
+    return std::move(z += x);
 }
 template <typename C>
 Terms<intptr_t, Monomial> operator+(Term<C, Monomial> &&x, Monomial const &y) {
     Terms<C, Monomial> z(std::move(x));
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C>
 Terms<intptr_t, Monomial> operator+(Term<C, Monomial> &&x, Monomial &&y) {
     Terms<C, Monomial> z(std::move(x));
-    return z += std::move(y);
+    return std::move(z += std::move(y));
 }
 
 Terms<intptr_t, Uninomial> operator+(Uninomial x, int y) {
@@ -954,17 +957,17 @@ Terms<C, M> operator-(Term<C, M> const &x, Term<C, M> const &y) {
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> const &x, Term<C, M> &&y) {
     Terms<C, M> z(std::move(y));
-    return z += x;
+    return std::move(z += x);
 }
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> &&x, Term<C, M> const &y) {
     Terms<C, M> z(std::move(x));
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> &&x, Term<C, M> &&y) {
     Terms<C, M> z(std::move(x));
-    return z += std::move(y);
+    return std::move(z += std::move(y));
 }
 
 template <typename C, typename M>
@@ -986,7 +989,7 @@ Terms<C, M> operator-(Term<C, M> &&x, Term<C, M> &&y) {
 template <typename C, typename M>
 Term<C, M> operator*(Term<C, M> const &x, Term<C, M> const &y) {
     Term<C, M> z(x);
-    return z *= y;
+    return std::move(z *= y);
 }
 template <typename C, typename M>
 Term<C, M> operator*(Term<C, M> const &x, Term<C, M> &&y) {
@@ -1079,7 +1082,7 @@ Terms<C, M> operator-(intptr_t x, Terms<C, M> &&y) {
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, C const &y) {
     Terms<C, M> z = x.largerCapacityCopy(1);
-    return z += y;
+    return std::move(z += y);
 }
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, C &&y) {
@@ -1123,7 +1126,7 @@ Terms<intptr_t, Monomial> operator-(size_t x, Monomial &y) {
 
 template <typename C, typename M>
 Terms<C, M> operator+(C const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     return std::move(z += x);
 }
 template <typename C, typename M>
@@ -1207,7 +1210,7 @@ Terms<C, M> operator-(Terms<C, M> &&x, M &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator+(M const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     return std::move(z += x);
 }
 template <typename C, typename M>
@@ -1216,7 +1219,7 @@ Terms<C, M> operator+(M const &x, Terms<C, M> &&y) {
 }
 template <typename C, typename M>
 Terms<C, M> operator+(M &&x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     return std::move(z += std::move(x));
 }
 template <typename C, typename M>
@@ -1226,7 +1229,7 @@ Terms<C, M> operator+(M &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator-(M const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     z -= x;
     z.negate();
     return std::move(z);
@@ -1239,7 +1242,7 @@ Terms<C, M> operator-(M const &x, Terms<C, M> &&y) {
 }
 template <typename C, typename M>
 Terms<C, M> operator-(M &&x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     z -= std::move(x);
     z.negate();
     return std::move(z);
@@ -1253,12 +1256,12 @@ Terms<C, M> operator-(M &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, Term<C, M> const &y) {
-    Terms<C, M> z = x.largerCapacityCopy(1);
+    Terms<C, M> z(x.largerCapacityCopy(1));
     return std::move(z += y);
 }
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, Term<C, M> &&y) {
-    Terms<C, M> z = x.largerCapacityCopy(1);
+    Terms<C, M> z(x.largerCapacityCopy(1));
     return std::move(z += std::move(y));
 }
 template <typename C, typename M>
@@ -1272,12 +1275,12 @@ Terms<C, M> operator+(Terms<C, M> &&x, Term<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator-(Terms<C, M> const &x, Term<C, M> const &y) {
-    Terms<C, M> z = x.largerCapacityCopy(1);
+    Terms<C, M> z(x.largerCapacityCopy(1));
     return std::move(z -= y);
 }
 template <typename C, typename M>
 Terms<C, M> operator-(Terms<C, M> const &x, Term<C, M> &&y) {
-    Terms<C, M> z = x.largerCapacityCopy(1);
+    Terms<C, M> z(x.largerCapacityCopy(1));
     return std::move(z -= std::move(y));
 }
 template <typename C, typename M>
@@ -1291,7 +1294,7 @@ Terms<C, M> operator-(Terms<C, M> &&x, Term<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     return std::move(z += x);
 }
 template <typename C, typename M>
@@ -1300,7 +1303,7 @@ Terms<C, M> operator+(Term<C, M> const &x, Terms<C, M> &&y) {
 }
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> &&x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     return std::move(z += std::move(x));
 }
 template <typename C, typename M>
@@ -1310,7 +1313,7 @@ Terms<C, M> operator+(Term<C, M> &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator-(Term<C, M> const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     z -= x;
     z.negate();
     return std::move(z);
@@ -1323,7 +1326,7 @@ Terms<C, M> operator-(Term<C, M> const &x, Terms<C, M> &&y) {
 }
 template <typename C, typename M>
 Terms<C, M> operator-(Term<C, M> &&x, Terms<C, M> const &y) {
-    Terms<C, M> z = y.largerCapacityCopy(1);
+    Terms<C, M> z(y.largerCapacityCopy(1));
     z -= std::move(x);
     z.negate();
     return std::move(z);
@@ -1340,7 +1343,7 @@ Terms<C, M> operator-(Term<C, M> &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator+(Terms<C, M> const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = x.largerCapacityCopy(y.size());
+    Terms<C, M> z(x.largerCapacityCopy(y.size()));
     return std::move(z += y);
 }
 template <typename C, typename M>
@@ -1358,7 +1361,7 @@ Terms<C, M> operator+(Terms<C, M> &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator-(Terms<C, M> const &x, Terms<C, M> const &y) {
-    Terms<C, M> z = x.largerCapacityCopy(y.size());
+    Terms<C, M> z(x.largerCapacityCopy(y.size()));
     return std::move(z -= y);
 }
 template <typename C, typename M>
@@ -1386,11 +1389,6 @@ Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> const &y) {
 }
 template <typename C, typename M>
 Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> &&y) {
-    // return x * y;
-    // Terms<C,M> z(x);
-    // Terms<C,M> a(y);
-    // z *= a;
-    // return z;
     return std::move(x *= std::move(y));
 }
 template <typename C, typename M>
@@ -1492,7 +1490,7 @@ Term<C, Monomial> &operator^=(Term<C, Uninomial> &x, size_t i) {
 template <typename C, typename M>
 Term<C, Uninomial> operator^(Term<C, M> &x, size_t i) {
     Term t(x);
-    return t ^= i;
+    return std::move(t ^= i);
 }
 
 // template <typename C>
@@ -1639,9 +1637,7 @@ template <typename C> C content(Univariate<C> const &a) {
     for (size_t i = 2; i < a.terms.size(); ++i) {
         g = gcd(g, a.terms[i].coefficient);
     }
-    return g;
-    // TODO: this is probably safe
-    // return std::move(g);
+    return std::move(g);
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
@@ -1665,6 +1661,8 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         return x;
     } else if (isOne(y)) {
         return y;
+        // } else if (x == y){
+        // return x;
     }
     auto [c1, xx] = contPrim(x);
     auto [c2, yy] = contPrim(y);
@@ -1699,7 +1697,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
 Monomial gcd(Monomial const &x, Monomial const &y) {
     if (isOne(x)) {
         return x;
-    } else if (isOne(y)) {
+    } else if (isOne(y) || (x == y)) {
         return y;
     }
     Monomial g;
@@ -1722,14 +1720,51 @@ Monomial gcd(Monomial const &x, Monomial const &y) {
     }
     return g;
 }
-
+/*
+Monomial gcd(Monomial const &x, Monomial const &y) {
+    if (isOne(x)) {
+        return x;
+    } else if (isOne(y) || (x == y)) {
+        return y;
+    } else {
+        return gcdimpl(x, y);
+    }
+}
+Monomial gcd(Monomial &&x, Monomial const &y) {
+    if (isOne(x) || (x == y)) {
+        return std::move(x);
+    } else if (isOne(y)) {
+        return y;
+    } else {
+        return gcdimpl(x, y);
+    }
+}
+Monomial gcd(Monomial const &x, Monomial &&y) {
+    if (isOne(y) || (x == y)) {
+        return std::move(y);
+    } else if (isOne(x)) {
+        return x;
+    } else {
+        return gcdimpl(x, y);
+    }
+}
+Monomial gcd(Monomial &&x, Monomial &&y) {
+    if (isOne(x)) {
+        return std::move(x);
+    } else if (isOne(y) || (x == y)) {
+        return std::move(y);
+    } else {
+        return gcdimpl(x, y);
+    }
+}
+*/
 size_t gcd(intptr_t x, intptr_t y) { return std::gcd(x, y); }
 
 template <typename C, typename M>
 Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
     M g = gcd(x.exponent, y.exponent);
     C gr = gcd(x.coefficient, y.coefficient);
-    return Term<C, M>(gr, g);
+    return Term<C, M>(std::move(gr), std::move(g));
 }
 template <typename C>
 Term<C, Monomial> gcd(Term<C, Monomial> const &x, Term<C, Monomial> const &y) {
@@ -1765,7 +1800,7 @@ std::tuple<Monomial, Monomial, Monomial> gcdd(Monomial const &x,
             ++iy;
         }
     }
-    return std::make_tuple(g, a, b);
+    return std::make_tuple(std::move(g), std::move(a), std::move(b));
 }
 template <typename C, typename M>
 std::tuple<Term<C, M>, Term<C, M>, Term<C, M>> gcdd(Term<C, M> const &x,
@@ -1819,7 +1854,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, size_t i) {
             a.exponent.prodIDs.push_back(*it);
         }
     }
-    return a;
+    return std::move(a);
 }
 template <typename C>
 Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
@@ -1832,7 +1867,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
         }
     }
     if (it == t.end()) {
-        return t;
+        return std::move(t);
     }
     auto ite = it;
     for (; ite != t.end(); ++ite) {
@@ -1841,7 +1876,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
         }
     }
     t.erase(it, ite);
-    return t;
+    return std::move(t);
 }
 
 size_t count(std::vector<size_t> const &x, size_t v) {
@@ -1880,7 +1915,7 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
             coef += p.terms[pows[i].second];
         }
     }
-    u.terms.emplace_back(coef, Uninomial(oldDegree));
+    u.terms.emplace_back(std::move(coef), Uninomial(oldDegree));
 }
 
 template <typename C>
@@ -1912,7 +1947,7 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
     // if (chunkStartIdx + 1 != idx) {
     emplace_back(u, p, pows, oldDegree, chunkStartIdx, idx, v);
     //}
-    return u;
+    return std::move(u);
 }
 
 template <typename C>
@@ -1929,7 +1964,7 @@ Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
         }
         p += coef;
     }
-    return p;
+    return std::move(p);
 }
 
 const size_t NOT_A_VAR = std::numeric_limits<size_t>::max();
@@ -1968,6 +2003,48 @@ Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
                                         v1);
     }
 }
+    /*
+template <typename C>
+Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
+    if (isZero(x) || isOne(y)) {
+        return y;
+    } else if ((isZero(y) || isOne(x)) || (x == y)) {
+        return x;
+    } else {
+	return gcdimpl(x, y);
+    }
+}
+template <typename C>
+Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> &&y) {
+    if (isZero(x) || isOne(y) || (x == y)) {
+        return std::move(y);
+    } else if ((isZero(y) || isOne(x))) {
+        return x;
+    } else {
+	return gcdimpl(x, std::move(y));
+    }
+}
+template <typename C>
+Multivariate<C> gcd(Multivariate<C> &&x, Multivariate<C> const &y) {
+    if (isZero(x) || isOne(y)) {
+        return y;
+    } else if ((isZero(y) || isOne(x)) || (x == y)) {
+        return std::move(x);
+    } else {
+	return gcdimpl(x, y);
+    }
+}
+template <typename C>
+Multivariate<C> gcd(Multivariate<C> &&x, Multivariate<C> &&y) {
+    if (isZero(x) || isOne(y)) {
+        return std::move(y);
+    } else if ((isZero(y) || isOne(x)) || (x == y)) {
+        return std::move(x);
+    } else {
+	return gcdimpl(std::move(x), std::move(y));
+    }
+}
+    */
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, MultivariateTerm<C> const &y) {
     return gcd(x, Multivariate<C>(y));
