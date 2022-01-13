@@ -1,5 +1,6 @@
 #pragma once
 #include "math.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <compare>
 #include <cstddef>
@@ -168,6 +169,23 @@ template <typename T, typename S> void sub_term(T &a, S &&x) {
     }
     return;
 }
+template <typename T, typename S> void sub_term(T &a, S &&x, size_t offset) {
+    if (!isZero(x)) {
+        for (auto it = a.begin() + offset; it != a.end(); ++it) {
+            if ((it->termsMatch(x))) {
+                if (it->subCoef(x)) {
+                    a.erase(it);
+                }
+                return;
+            } else if (x.lexGreater(*it)) {
+                a.insert(it, cnegate(std::forward<S>(x)));
+                return;
+            }
+        }
+        a.push_back(cnegate(std::forward<S>(x)));
+    }
+    return;
+}
 static std::string programVarName(size_t i) {
     std::string s(1, 'L' + i);
     return s;
@@ -239,24 +257,28 @@ struct Uninomial {
 };
 struct Monomial {
     // sorted symbolic terms being multiplied
-    std::vector<size_t> prodIDs;
+    // std::vector<size_t> prodIDs;
+    llvm::SmallVector<size_t> prodIDs;
     // Monomial& operator=(Monomial const &x){
     //     prodIDs = x.prodIDs;
     //     return *this;
     // }
     // constructors
-    Monomial() : prodIDs(std::vector<size_t>()){};
-    Monomial(std::vector<size_t> &x) : prodIDs(x){};
-    Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
+    Monomial() = default;
+    // Monomial() : prodIDs(std::vector<size_t>()){};
+    Monomial(llvm::SmallVector<size_t> &x) : prodIDs(x){};
+    Monomial(llvm::SmallVector<size_t> &&x) : prodIDs(std::move(x)){};
+    // Monomial(std::vector<size_t> &x) : prodIDs(x){};
+    // Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
     // Monomial(Monomial const &x) : prodIDs(x.prodIDs) {};
-    Monomial(One) : prodIDs(std::vector<size_t>()){};
+    Monomial(One) : prodIDs(llvm::SmallVector<size_t>()){};
 
     inline auto begin() { return prodIDs.begin(); }
     inline auto end() { return prodIDs.end(); }
     inline auto begin() const { return prodIDs.begin(); }
     inline auto end() const { return prodIDs.end(); }
-    inline auto cbegin() const { return prodIDs.cbegin(); }
-    inline auto cend() const { return prodIDs.cend(); }
+    inline auto cbegin() const { return prodIDs.begin(); }
+    inline auto cend() const { return prodIDs.end(); }
 
     void add_term(size_t x) {
         for (auto it = begin(); it != end(); ++it) {
@@ -459,6 +481,10 @@ struct Monomial {
 };
 
 Monomial MonomialID(size_t id) { return Monomial({id}); }
+Monomial MonomialID(size_t idx, size_t idy) { return Monomial({idx, idy}); }
+Monomial MonomialID(size_t idx, size_t idy, size_t idz) {
+    return Monomial({idx, idy, idz});
+}
 
 template <typename M>
 concept IsMonomial = std::same_as<M, Monomial> || std::same_as<M, Uninomial>;
@@ -547,8 +573,8 @@ template <typename C, IsMonomial M> struct Term {
 // ::isOne(exponent); }
 
 template <typename C, typename M> struct Terms {
-
-    std::vector<Term<C, M>> terms;
+    llvm::SmallVector<Term<C, M>> terms;
+    // std::vector<Term<C, M>> terms;
     Terms() = default;
     Terms(Term<C, M> const &x) : terms({x}){};
     Terms(Term<C, M> &&x) : terms({std::move(x)}){};
@@ -561,8 +587,8 @@ template <typename C, typename M> struct Terms {
     auto end() { return terms.end(); }
     auto begin() const { return terms.begin(); }
     auto end() const { return terms.end(); }
-    auto cbegin() const { return terms.cbegin(); }
-    auto cend() const { return terms.cend(); }
+    auto cbegin() const { return terms.begin(); }
+    auto cend() const { return terms.end(); }
 
     template <typename S> void add_term(S &&x) {
         ::add_term(*this, std::forward<S>(x));
@@ -669,16 +695,21 @@ template <typename C, typename M> struct Terms {
         }
         return *this;
     }
-
+    void mul(Terms<C, M> const &x, Terms<C, M> const &y){
+	terms.reserve(x.terms.size() * y.terms.size());
+	auto itys = y.cbegin();
+	auto itxe = x.cend();
+	auto itye = y.cend();
+	for (auto itx = x.cbegin(); itx != itxe; ++itx){
+	    for (auto ity = itys; ity != itye; ++ity){
+		add_term((*itx) * (*ity));
+	    }
+	}
+    }
     Terms<C, M> operator*(Terms<C, M> const &x) const {
         Terms<C, M> p;
-        p.terms.reserve(x.terms.size() * terms.size());
-        for (auto it = cbegin(); it != cend(); ++it) {
-            for (auto itx = x.cbegin(); itx != x.cend(); ++itx) {
-                p.add_term((*it) * (*itx));
-            }
-        }
-        return p;
+	p.mul(*this, x);
+	return p;
     }
     Terms<C, M> &operator*=(Terms<C, M> const &x) {
         // terms = ((*this) * x).terms;
@@ -1379,18 +1410,18 @@ Terms<C, M> operator-(Terms<C, M> &&x, Terms<C, M> &&y) {
     return std::move(x -= std::move(y));
 }
 
-template <typename C, typename M>
-Terms<C, M> operator*(Terms<C, M> const &x, Terms<C, M> &&y) {
-    return std::move(y *= x);
-}
-template <typename C, typename M>
-Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> const &y) {
-    return std::move(x *= y);
-}
-template <typename C, typename M>
-Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> &&y) {
-    return std::move(x *= std::move(y));
-}
+// template <typename C, typename M>
+// Terms<C, M> operator*(Terms<C, M> const &x, Terms<C, M> &&y) {
+//     return std::move(y *= x);
+// }
+// template <typename C, typename M>
+// Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> const &y) {
+//     return std::move(x *= y);
+// }
+// template <typename C, typename M>
+// Terms<C, M> operator*(Terms<C, M> &&x, Terms<C, M> &&y) {
+//     return std::move(x *= std::move(y));
+// }
 template <typename C, typename M>
 Terms<C, M> operator*(Terms<C, M> &x, M const &y) {
     Terms<C, M> z(x);
@@ -1416,20 +1447,37 @@ template <typename C> Univariate<C> &divExact(Univariate<C> &d, C const &x) {
     }
     return d;
 }
-
+    template <typename C, typename M>
+    Terms<C, M> &fnmadd(Terms<C,M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
+        for (auto it = y.cbegin(); it != y.cend(); ++it) {
+            x.sub_term(*it * z);
+        }
+        return x;
+    }
+    template <typename C, typename M>
+    Terms<C, M> &fnmadd(Terms<C,M> &x, Terms<C, M> const &y, Term<C, M> const &z, size_t offset) {
+        for (auto it = y.cbegin(); it != y.cend(); ++it) {
+            sub_term(x, *it * z, offset);
+        }
+        return x;
+    }
+    
 template <typename C>
 std::pair<Multivariate<C>, Multivariate<C>>
 divRemBang(Multivariate<C> &p, Multivariate<C> const &d) {
     Multivariate<C> q;
     Multivariate<C> r;
-    while (!p.terms.empty()) {
-        auto [nx, fail] = p.leadingTerm() / d.leadingTerm();
+    size_t offset = 0;
+    while (offset != p.terms.size()) {
+	auto [nx, fail] = p.leadingTerm() / d.leadingTerm();
         if (fail) {
-            r.add_term(std::move(p.leadingTerm()));
-            p.removeLeadingTerm();
-            // r.takeLeadingTerm(p);
+            r.add_term(std::move(p.terms[offset]));
+	    ++offset;
+            // r.add_term(std::move(p.leadingTerm()));
+            // p.removeLeadingTerm();
         } else {
-            p -= d * nx;
+	    fnmadd(p, d, nx, offset);
+            // p -= d * nx;
             q += std::move(nx);
         }
     }
@@ -1623,7 +1671,6 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
                                   Uninomial(pp.degree() - d.degree())));
         pp *= l;
         pp -= dd;
-        // pp = pp * l - dd;
         k -= 1;
     }
     return powBySquare(l, k) * std::move(pp);
@@ -1879,16 +1926,17 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
     return std::move(t);
 }
 
-size_t count(std::vector<size_t> const &x, size_t v) {
+template <typename I>
+size_t count(I it, I ite, size_t v) {
     size_t s = 0;
-    for (auto it = x.begin(); it != x.end(); ++it) {
+    for (; it != ite; ++it) {
         s += ((*it) == v);
     }
     return s;
 }
 
 template <typename C> size_t count(Term<C, Monomial> const &p, size_t v) {
-    return count(p.exponent.prodIDs, v);
+    return count(p.exponent.prodIDs.begin(), p.exponent.prodIDs.end(), v);
 }
 
 struct FirstGreater {
@@ -1900,7 +1948,7 @@ struct FirstGreater {
 
 template <typename C>
 void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
-                  std::vector<std::pair<size_t, size_t>> const &pows,
+                  llvm::SmallVector<std::pair<size_t, size_t>> const &pows,
                   size_t oldDegree, size_t chunkStartIdx, size_t idx,
                   size_t v) {
     Multivariate<C> coef;
@@ -1921,7 +1969,7 @@ void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
 template <typename C>
 Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
                                                      size_t v) {
-    std::vector<std::pair<size_t, size_t>> pows;
+    llvm::SmallVector<std::pair<size_t, size_t>> pows;
     pows.reserve(p.terms.size());
     for (size_t i = 0; i < p.terms.size(); ++i) {
         pows.emplace_back(count(p.terms[i], v), i);
@@ -2003,48 +2051,48 @@ Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
                                         v1);
     }
 }
-    /*
+/*
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
-    if (isZero(x) || isOne(y)) {
-        return y;
-    } else if ((isZero(y) || isOne(x)) || (x == y)) {
-        return x;
-    } else {
-	return gcdimpl(x, y);
-    }
+if (isZero(x) || isOne(y)) {
+    return y;
+} else if ((isZero(y) || isOne(x)) || (x == y)) {
+    return x;
+} else {
+    return gcdimpl(x, y);
+}
 }
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> &&y) {
-    if (isZero(x) || isOne(y) || (x == y)) {
-        return std::move(y);
-    } else if ((isZero(y) || isOne(x))) {
-        return x;
-    } else {
-	return gcdimpl(x, std::move(y));
-    }
+if (isZero(x) || isOne(y) || (x == y)) {
+    return std::move(y);
+} else if ((isZero(y) || isOne(x))) {
+    return x;
+} else {
+    return gcdimpl(x, std::move(y));
+}
 }
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> &&x, Multivariate<C> const &y) {
-    if (isZero(x) || isOne(y)) {
-        return y;
-    } else if ((isZero(y) || isOne(x)) || (x == y)) {
-        return std::move(x);
-    } else {
-	return gcdimpl(x, y);
-    }
+if (isZero(x) || isOne(y)) {
+    return y;
+} else if ((isZero(y) || isOne(x)) || (x == y)) {
+    return std::move(x);
+} else {
+    return gcdimpl(x, y);
+}
 }
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> &&x, Multivariate<C> &&y) {
-    if (isZero(x) || isOne(y)) {
-        return std::move(y);
-    } else if ((isZero(y) || isOne(x)) || (x == y)) {
-        return std::move(x);
-    } else {
-	return gcdimpl(std::move(x), std::move(y));
-    }
+if (isZero(x) || isOne(y)) {
+    return std::move(y);
+} else if ((isZero(y) || isOne(x)) || (x == y)) {
+    return std::move(x);
+} else {
+    return gcdimpl(std::move(x), std::move(y));
 }
-    */
+}
+*/
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, MultivariateTerm<C> const &y) {
     return gcd(x, Multivariate<C>(y));

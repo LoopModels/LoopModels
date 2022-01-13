@@ -36,22 +36,27 @@ add_executable(
 target_link_libraries(
   compat_test
   gtest_main
+  LLVM
 )
 target_link_libraries(
   perm_test
   gtest_main
+  LLVM
 )
 target_link_libraries(
   ir_test
   gtest_main
+  LLVM
 )
 target_link_libraries(
   bitset_test
   gtest_main
+  LLVM
 )
 target_link_libraries(
   symbolics_test
   gtest_main
+  LLVM
 )
 
 include(GoogleTest)

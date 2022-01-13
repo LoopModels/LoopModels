@@ -45,15 +45,15 @@ TEST(IRTest, BasicAssertions) {
 
     std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> inds;
     inds.emplace_back(Polynomial::Multivariate<intptr_t>(1), Source(2, SourceType::LoopInductionVariable));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(2, Polynomial::Monomial(std::vector<size_t>{0})), Source(8, SourceType::Memory));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(3, Polynomial::Monomial(std::vector<size_t>{0, 1})), Source(18, SourceType::Term));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(2, Polynomial::MonomialID(0)), Source(8, SourceType::Memory));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(3, Polynomial::MonomialID(0, 1)), Source(18, SourceType::Term));
     Polynomial::Multivariate<intptr_t> p3(5);
-    p3.add_term(Polynomial::MultivariateTerm<intptr_t>(7, Polynomial::Monomial(std::vector<size_t>{0})));
+    p3.add_term(Polynomial::MultivariateTerm<intptr_t>(7, Polynomial::MonomialID(0)));
     inds.emplace_back(p3, Source(3, SourceType::LoopInductionVariable));
     Polynomial::Multivariate<intptr_t> p4(11);
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(13, Polynomial::Monomial(std::vector<size_t>{0,3})));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(17, Polynomial::Monomial(std::vector<size_t>{0,1,2})));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(11, Polynomial::Monomial(std::vector<size_t>{0,0,2})));
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(13, Polynomial::MonomialID(0,3)));
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(17, Polynomial::MonomialID(0,1,2)));
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(11, Polynomial::MonomialID(0,0,2)));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};

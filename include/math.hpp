@@ -73,6 +73,58 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     return y;
 }
 
+template <typename T>
+concept HasMul = requires(T t) {
+    t.mul(t, t);
+};
+
+template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
+    // typedef typename std::remove_const<TRC>::type TR;
+    // typedef typename std::remove_reference<TR>::type T;
+    // typedef typename std::remove_reference<TRC>::type TR;
+    // typedef typename std::remove_const<TR>::type T;
+    typedef typename std::remove_cvref<TRC>::type T;
+    switch (i) {
+    case 0:
+        return T(One());
+    case 1:
+        return T(std::forward<TRC>(x));
+    case 2:
+        return T(x * x);
+    case 3:
+        return T(x * x * x);
+    default:
+        break;
+    }
+    if (isOne(x)) {
+        return T(One());
+    }
+    intptr_t t = trailingZeros(i) + 1;
+    i >>= t;
+    // T z(std::move(x));
+    T z(std::forward<TRC>(x));
+    T b;
+    while (--t) {
+	b.mul(z, z);
+	std::swap(b, z);
+    }
+    if (i == 0) {
+        return z;
+    }
+    T y(z);
+    while (i) {
+        t = trailingZeros(i) + 1;
+        i >>= t;
+        while ((--t) >= 0) {
+	    b.mul(z, z);
+	    std::swap(b, z);
+        }
+	b.mul(y, z);
+	std::swap(b, y);
+    }
+    return y;
+}
+
 template <typename T, typename S> void divExact(T &x, S const &y) {
     auto d = x / y;
     assert(d * y == x);
