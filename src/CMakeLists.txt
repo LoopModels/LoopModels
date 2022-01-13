@@ -1,5 +1,1 @@
 add_executable(main main.cpp)
-target_compile_features(main PRIVATE cxx_std_20)
-target_link_libraries(main PRIVATE fmt::fmt)
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -Wall -Wextra -Wpedantic -glldb -g3")
-set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address -Wall -Wextra -Wpedantic -glldb -g3")
