@@ -1,0 +1,3 @@
+#/usr/bin/bash
+
+CFLAGS="" CXXFLAGS="" CXX=clang++ cmake -S . -B release_build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
