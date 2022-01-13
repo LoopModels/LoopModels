@@ -11,6 +11,9 @@
 #include <utility>
 #include <vector>
 
+template<class T>
+concept Integral = std::is_integral<T>::value;
+
 inline uint64_t trailingZeros(uint64_t x) { return __builtin_ctz(x); }
 inline uint64_t leadingZeros(uint64_t x) { return __builtin_clz(x); }
 inline uint64_t countOnes(uint64_t x) { return __builtin_popcount(x); }

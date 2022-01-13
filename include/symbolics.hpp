@@ -203,6 +203,13 @@ std::string monomialTermStr(size_t id, size_t exponent) {
 }
 
 namespace Polynomial {
+
+template <Integral I> bool tryDiv(I &z, I x, I y) {
+    I a(x);
+    z = x / y;
+    return (z * y) != a;
+}
+
 struct Uninomial {
     size_t exponent;
     Uninomial(One) : exponent(0){};
@@ -214,10 +221,7 @@ struct Uninomial {
     template <typename T> bool lexGreater(T const &x) const {
         return lexGreater(x.monomial());
     }
-    std::pair<Uninomial, bool> operator/(Uninomial const &y) {
-        return std::make_pair(Uninomial{degree() - y.degree()},
-                              degree() < y.degree());
-    }
+
     Uninomial &operator^=(size_t i) {
         exponent *= i;
         return *this;
@@ -255,6 +259,12 @@ struct Uninomial {
     //     return *this;
     // }
 };
+
+bool tryDiv(Uninomial &z, Uninomial x, Uninomial y) {
+    z.exponent = x.exponent - y.exponent;
+    return x.exponent < y.exponent;
+}
+
 struct Monomial {
     // sorted symbolic terms being multiplied
     // std::vector<size_t> prodIDs;
@@ -399,29 +409,7 @@ struct Monomial {
     // x.prodIDs)) 1: x.coef / gcd(coef, x.coefficient) 2: whether the
     // division failed (i.e., true if prodIDs was not a superset of
     // x.prodIDs)
-    std::pair<Monomial, bool> operator/(Monomial const &x) const {
-        Monomial n;
-        size_t i = 0;
-        size_t j = 0;
-        size_t n0 = prodIDs.size();
-        size_t n1 = x.prodIDs.size();
-        while ((i + j) < (n0 + n1)) {
-            size_t a =
-                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
-            size_t b =
-                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
-            if (a < b) {
-                n.prodIDs.push_back(a);
-                ++i;
-            } else if (a == b) {
-                ++i;
-                ++j;
-            } else {
-                return std::make_pair(n, true);
-            }
-        }
-        return std::make_pair(n, false);
-    }
+
     friend bool isOne(Monomial const &x) { return (x.prodIDs.size() == 0); }
     friend bool isZero(Monomial const &) { return false; }
     bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
@@ -486,13 +474,41 @@ Monomial MonomialID(size_t idx, size_t idy, size_t idz) {
     return Monomial({idx, idy, idz});
 }
 
+bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
+    z.prodIDs.clear();
+    auto i = x.cbegin();
+    auto j = y.cbegin();
+    auto n0 = x.cend();
+    auto n1 = y.cend();
+    while ((i != n0) | (j != n1)) {
+        size_t a = (i != n0) ? *i : std::numeric_limits<size_t>::max();
+        size_t b = (j != n1) ? *j : std::numeric_limits<size_t>::max();
+        if (a < b) {
+            z.prodIDs.push_back(a);
+            ++i;
+        } else if (a == b) {
+            ++i;
+            ++j;
+        } else {
+            return true;
+        }
+    }
+    return false;
+}
+
 template <typename M>
 concept IsMonomial = std::same_as<M, Monomial> || std::same_as<M, Uninomial>;
+
+template <IsMonomial M> std::pair<M, bool> operator/(M const &x, M const &y) {
+    M z;
+    bool fail = tryDiv(z, x, y);
+    return std::make_pair(std::move(z), fail);
+}
 
 template <typename C, IsMonomial M> struct Term {
     C coefficient;
     M exponent;
-    // Term() = default;
+    Term() = default;
     // Term(Uninomial u) : coefficient(1), exponent(u){};
     // Term(Term const &x) = default;//: coefficient(x.coefficient), u(x.u){};
     // Term(C coef, Uninomial u) : coefficient(coef), u(u){};
@@ -556,6 +572,10 @@ template <typename C, IsMonomial M> struct Term {
     bool operator!=(Term<C, M> const &y) const {
         return (exponent != y.exponent) || (coefficient != y.coefficient);
     }
+    // bool tryDiv(Term<C, M> const &x, Term<C, M> const &y) {
+    //     coefficient = x.coefficient / y.coefficient;
+    //     return exponent.tryDiv(x.exponent, y.exponent);
+    // }
 
     friend std::ostream &operator<<(std::ostream &os, const Term &t) {
         if (isOne(t.coefficient)) {
@@ -695,21 +715,22 @@ template <typename C, typename M> struct Terms {
         }
         return *this;
     }
-    void mul(Terms<C, M> const &x, Terms<C, M> const &y){
-	terms.reserve(x.terms.size() * y.terms.size());
-	auto itys = y.cbegin();
-	auto itxe = x.cend();
-	auto itye = y.cend();
-	for (auto itx = x.cbegin(); itx != itxe; ++itx){
-	    for (auto ity = itys; ity != itye; ++ity){
-		add_term((*itx) * (*ity));
-	    }
-	}
+    void mul(Terms<C, M> const &x, Terms<C, M> const &y) {
+        terms.clear();
+        terms.reserve(x.terms.size() * y.terms.size());
+        auto itys = y.cbegin();
+        auto itxe = x.cend();
+        auto itye = y.cend();
+        for (auto itx = x.cbegin(); itx != itxe; ++itx) {
+            for (auto ity = itys; ity != itye; ++ity) {
+                add_term((*itx) * (*ity));
+            }
+        }
     }
     Terms<C, M> operator*(Terms<C, M> const &x) const {
         Terms<C, M> p;
-	p.mul(*this, x);
-	return p;
+        p.mul(*this, x);
+        return p;
     }
     Terms<C, M> &operator*=(Terms<C, M> const &x) {
         // terms = ((*this) * x).terms;
@@ -1447,38 +1468,39 @@ template <typename C> Univariate<C> &divExact(Univariate<C> &d, C const &x) {
     }
     return d;
 }
-    template <typename C, typename M>
-    Terms<C, M> &fnmadd(Terms<C,M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
-        for (auto it = y.cbegin(); it != y.cend(); ++it) {
-            x.sub_term(*it * z);
-        }
-        return x;
+template <typename C, typename M>
+Terms<C, M> &fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
+    for (auto it = y.cbegin(); it != y.cend(); ++it) {
+        x.sub_term(*it * z);
     }
-    template <typename C, typename M>
-    Terms<C, M> &fnmadd(Terms<C,M> &x, Terms<C, M> const &y, Term<C, M> const &z, size_t offset) {
-        for (auto it = y.cbegin(); it != y.cend(); ++it) {
-            sub_term(x, *it * z, offset);
-        }
-        return x;
+    return x;
+}
+template <typename C, typename M>
+Terms<C, M> &fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
+                    size_t offset) {
+    for (auto it = y.cbegin(); it != y.cend(); ++it) {
+        sub_term(x, *it * z, offset);
     }
-    
+    return x;
+}
+
 template <typename C>
 std::pair<Multivariate<C>, Multivariate<C>>
 divRemBang(Multivariate<C> &p, Multivariate<C> const &d) {
+    if (isZero(p)){ return std::make_pair(p, p); }
     Multivariate<C> q;
     Multivariate<C> r;
+    Term<C,Monomial> nx;
     size_t offset = 0;
     while (offset != p.terms.size()) {
-	auto [nx, fail] = p.leadingTerm() / d.leadingTerm();
+	bool fail = tryDiv(nx, p.terms[offset], d.leadingTerm());
         if (fail) {
             r.add_term(std::move(p.terms[offset]));
-	    ++offset;
-            // r.add_term(std::move(p.leadingTerm()));
-            // p.removeLeadingTerm();
+            ++offset;
         } else {
-	    fnmadd(p, d, nx, offset);
+            fnmadd(p, d, nx, offset);
             // p -= d * nx;
-            q += std::move(nx);
+            q += nx;
         }
     }
     std::swap(q, p);
@@ -1492,10 +1514,20 @@ std::pair<Multivariate<C>, Multivariate<C>> divRem(Multivariate<C> const &n,
 }
 
 template <typename C>
-Multivariate<C> &divExact(Multivariate<C> &x, Multivariate<C> const &y) {
-    auto [d, r] = divRemBang(x, y);
-    assert(isZero(r));
-    return d;
+Multivariate<C> &divExact(Multivariate<C> &p, Multivariate<C> const &d) {
+    if (isZero(p)) {
+        return p;
+    }
+    Multivariate<C> q;
+    Term<C,Monomial> nx;
+    while (p.terms.size()) {
+	bool fail = tryDiv(nx, p.leadingTerm(), d.leadingTerm());
+        assert(!fail);
+        fnmadd(p, d, nx);
+        q += nx;
+    }
+    std::swap(q, p);
+    return p;
 }
 
 template <typename C>
@@ -1518,9 +1550,15 @@ Term<C, Uninomial> &operator*=(Term<C, Uninomial> &x,
 // f);
 // }
 template <typename C, typename M>
+bool tryDiv(Term<C, M> &z, Term<C, M> &x, Term<C, M> const &y) {
+    return tryDiv(z.coefficient, x.coefficient, y.coefficient) ||
+           tryDiv(z.exponent, x.exponent, y.exponent);
+}
+template <typename C, typename M>
 std::pair<Term<C, M>, bool> operator/(Term<C, M> &x, Term<C, M> const &y) {
-    auto [u, f] = x.exponent / y.exponent;
-    return std::make_pair(Term{x.coefficient / y.coefficient, u}, f);
+    Term<C, M> z;
+    bool fail = tryDiv(z, x, y);
+    return std::make_pair(std::move(z), fail);
 }
 template <typename C>
 Term<C, Uninomial> &operator^=(Term<C, Uninomial> &x, size_t i) {
@@ -1926,8 +1964,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
     return std::move(t);
 }
 
-template <typename I>
-size_t count(I it, I ite, size_t v) {
+template <typename I> size_t count(I it, I ite, size_t v) {
     size_t s = 0;
     for (; it != ite; ++it) {
         s += ((*it) == v);
