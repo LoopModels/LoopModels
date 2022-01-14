@@ -57,8 +57,8 @@ struct Const {
     enum {
 	Float64,
 	Float32,
-	// Float16,
-	// BFloat16,
+	Float16,
+	BFloat16,
 	Int64,
 	Int32,
 	Int16,
@@ -94,6 +94,8 @@ std::ostream& operator<<(std::ostream &os, Const &c){
     case Const::UInt32: os << c.u32; break;
     case Const::UInt16: os << c.u16; break;
     case Const::UInt8: os << c.u8; break;
+    case Const::Float16: os << c.u16; break;
+    case Const::BFloat16: os << c.u16; break;
     }
     return os;
 }

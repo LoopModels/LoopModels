@@ -221,4 +221,8 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(c, d) == c);
     EXPECT_TRUE(Polynomial::gcd(d, c) == c);
 
+    Polynomial::Multivariate<intptr_t> ps = (x^2) - (y^2);
+    Polynomial::Multivariate<intptr_t> qs = x + y;
+
+    EXPECT_TRUE(Polynomial::divExact(ps, gcd(ps, qs)) == (x - y));
 }
