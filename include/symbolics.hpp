@@ -416,8 +416,8 @@ struct Monomial {
     size_t degree() const { return prodIDs.size(); }
     size_t degree(size_t i) const {
         size_t d = 0;
-        for (auto it = cbegin(); it != cend(); ++it) {
-            d += (*it) == i;
+        for (auto it : prodIDs) {
+            d += (it == i);
         }
         return d;
     }
@@ -448,12 +448,12 @@ struct Monomial {
             if (numIndex != 1) { // not 0 by prev `if`
                 size_t count = 0;
                 size_t v = x.prodIDs[0];
-                for (auto it = x.begin(); it != x.end(); ++it) {
-                    if (*it == v) {
+                for (auto it : x) {
+                    if (it == v) {
                         ++count;
                     } else {
                         os << monomialTermStr(v, count);
-                        v = *it;
+                        v = it;
                         count = 1;
                     }
                 }
@@ -678,8 +678,8 @@ template <typename C, typename M> struct Terms {
         } else if (isOne(x)) {
             return *this;
         }
-        for (auto it = begin(); it != end(); ++it) {
-            (*it) *= x; // add term for remainder
+        for (auto &term : terms) {
+            term *= x;
         }
         return *this;
     }
@@ -687,44 +687,41 @@ template <typename C, typename M> struct Terms {
         if (isOne(x)) {
             return *this;
         }
-        for (auto it = begin(); it != end(); ++it) {
-            (*it) *= x; // add term for remainder
+        for (auto &term : terms) {
+            term *= x;
         }
         return *this;
     }
     Terms<C, M> &operator+=(Terms<C, M> const &x) {
-        for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            add_term(*it);
+        for (auto &term : x) {
+            add_term(term);
         }
         return *this;
     }
     Terms<C, M> &operator+=(Terms<C, M> &&x) {
-        for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            add_term(std::move(*it));
+        for (auto &&term : x) {
+            add_term(std::move(term));
         }
         return *this;
     }
     Terms<C, M> &operator-=(Terms<C, M> const &x) {
-        for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            sub_term(*it);
+        for (auto &term : x) {
+            sub_term(term);
         }
         return *this;
     }
     Terms<C, M> &operator-=(Terms<C, M> &&x) {
-        for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            sub_term(std::move(*it));
+        for (auto &&term : x) {
+            sub_term(std::move(term));
         }
         return *this;
     }
     void mul(Terms<C, M> const &x, Terms<C, M> const &y) {
         terms.clear();
         terms.reserve(x.terms.size() * y.terms.size());
-        auto itys = y.cbegin();
-        auto itxe = x.cend();
-        auto itye = y.cend();
-        for (auto itx = x.cbegin(); itx != itxe; ++itx) {
-            for (auto ity = itys; ity != itye; ++ity) {
-                add_term((*itx) * (*ity));
+        for (auto &termx : x) {
+            for (auto &termy : y) {
+                add_term(termx * termy);
             }
         }
     }
@@ -780,15 +777,15 @@ template <typename C, typename M> struct Terms {
     Terms<C, M> largerCapacityCopy(size_t i) const {
         Terms<C, M> s;
         s.terms.reserve(i + terms.size()); // reserve full size
-        for (auto it = cbegin(); it != cend(); ++it) {
-            s.terms.push_back(*it); // copy initial batch
+        for (auto &term : terms) {
+            s.terms.push_back(term);
         }
         return s;
     }
 
     void negate() {
-        for (auto it = begin(); it != end(); ++it) {
-            it->negate();
+        for (auto &&term : terms) {
+            term.negate();
         }
     }
 
@@ -1464,23 +1461,23 @@ Terms<C, M> operator*(M const &y, Terms<C, M> &&x) {
 }
 
 template <typename C> Univariate<C> &divExact(Univariate<C> &d, C const &x) {
-    for (auto it = d.begin(); it != d.end(); ++it) {
-        divExact(it->coefficient, x);
+    for (auto &&term : d) {
+        divExact(term.coefficient, x);
     }
     return d;
 }
 template <typename C, typename M>
 Terms<C, M> &fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
-    for (auto it = y.cbegin(); it != y.cend(); ++it) {
-        x.sub_term(*it * z);
+    for (auto &term : y) {
+        x.sub_term(term * z);
     }
     return x;
 }
 template <typename C, typename M>
 Terms<C, M> &fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
                     size_t offset) {
-    for (auto it = y.cbegin(); it != y.cend(); ++it) {
-        sub_term(x, *it * z, offset);
+    for (auto &term : y) {
+        sub_term(x, term * z, offset);
     }
     return x;
 }
@@ -1673,8 +1670,8 @@ Term<Rational, Monomial> operator*(Rational c, Monomial &&x) {
 
 template <typename C, typename M>
 Terms<C, M> operator*=(Terms<C, M> &x, C const &y) {
-    for (auto it = x.begin(); it != x.end(); ++it) {
-        (*it) *= y;
+    for (auto &&term : x) {
+        term *= y;
     }
     return x;
 }
@@ -1942,8 +1939,8 @@ contentd(std::vector<Term<C, M>> const &x) {
             auto [gt, a, b] = gcd(g, x[i]);
             std::swap(g, gt);
             if (!isOne(a)) {
-                for (auto it = f.begin(); it != f.end(); ++it) {
-                    (*it) *= a;
+                for (auto &&it : f) {
+                    it *= a;
                 }
             }
             f.push_back(std::move(b));
@@ -1962,36 +1959,37 @@ std::pair<Term<C, M>, Terms<C, M>> contentd(Terms<C, M> const &x) {
 template <typename C>
 Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, size_t i) {
     Term<C, Monomial> a(t.coefficient);
-    for (auto it = t.exponent.cbegin(); it != t.exponent.cend(); ++it) {
-        if ((*it) != i) {
-            a.exponent.prodIDs.push_back(*it);
+    for (auto e : t.exponent) {
+        if (e != i) {
+            a.exponent.prodIDs.push_back(e);
         }
     }
     return std::move(a);
 }
+/* commented out, because probably broken
 template <typename C>
 Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> &&t, size_t i) {
-    auto start = t.end();
-    auto stop = t.begin();
-    auto it = t.begin();
-    for (auto it = t.begin(); it != t.end(); ++it) {
-        if ((*it) == i) {
-            break;
-        }
+auto start = t.end();
+auto stop = t.begin();
+auto it = t.begin();
+for (; it != t.end(); ++it) {
+    if ((*it) == i) {
+        break;
     }
-    if (it == t.end()) {
-        return std::move(t);
-    }
-    auto ite = it;
-    for (; ite != t.end(); ++ite) {
-        if ((*it) != i) {
-            break;
-        }
-    }
-    t.erase(it, ite);
+}
+if (it == t.end()) {
     return std::move(t);
 }
-
+auto ite = it;
+for (; ite != t.end(); ++ite) {
+    if ((*it) != i) {
+        break;
+    }
+}
+t.erase(it, ite);
+return std::move(t);
+}
+*/
 template <typename I> size_t count(I it, I ite, size_t v) {
     size_t s = 0;
     for (; it != ite; ++it) {
@@ -2067,12 +2065,12 @@ template <typename C>
 Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
                                          size_t v) {
     Multivariate<C> p;
-    for (auto it = g.begin(); it != g.end(); ++it) {
-        Multivariate<C> coef = it->coefficient;
-        size_t exponent = (it->exponent).exponent;
+    for (auto &&it : g) {
+        Multivariate<C> coef = it.coefficient;
+        size_t exponent = (it.exponent).exponent;
         if (exponent) {
-            for (auto ic = coef.begin(); ic != coef.end(); ++ic) {
-                (ic->exponent).add_term(v, exponent);
+            for (auto &&ic : coef) {
+                ic.exponent.add_term(v, exponent);
             }
         }
         p += coef;
@@ -2084,12 +2082,9 @@ const size_t NOT_A_VAR = std::numeric_limits<size_t>::max();
 
 template <typename C> size_t pickVar(Multivariate<C> const &x) {
     size_t v = NOT_A_VAR;
-    for (auto it = x.begin(); it != x.end(); ++it) {
-        if (it->degree()) {
-            size_t vv = *((it->exponent).begin());
-            if (vv < v) {
-                v = vv;
-            }
+    for (auto &it : x) {
+        if (it.degree()) {
+            v = std::min(v, *(it.exponent.begin()));
         }
     }
     return v;
