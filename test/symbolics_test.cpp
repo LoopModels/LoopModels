@@ -225,4 +225,43 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Multivariate<intptr_t> qs = x + y;
 
     EXPECT_TRUE(Polynomial::divExact(ps, gcd(ps, qs)) == (x - y));
+
+    
+    std::cout << "sizeof(uint8_t): " << sizeof(uint8_t) << std::endl;
+    std::cout << "sizeof(uint16_t): " << sizeof(uint16_t) << std::endl;
+    std::cout << "sizeof(uint32_t): " << sizeof(uint32_t) << std::endl;
+    std::cout << "sizeof(uint64_t): " << sizeof(uint64_t) << std::endl;
+
+    std::cout << "sizeof(SmallVector<uint8_t,0>): " << sizeof(llvm::SmallVector<uint8_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,0>): " << sizeof(llvm::SmallVector<uint16_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,0>): " << sizeof(llvm::SmallVector<uint32_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,0>): " << sizeof(llvm::SmallVector<uint64_t,0>) << std::endl;
+
+    std::cout << "sizeof(SmallVector<uint8_t,1>): " << sizeof(llvm::SmallVector<uint8_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,1>): " << sizeof(llvm::SmallVector<uint16_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,1>): " << sizeof(llvm::SmallVector<uint32_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,1>): " << sizeof(llvm::SmallVector<uint64_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,2>): " << sizeof(llvm::SmallVector<uint8_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,2>): " << sizeof(llvm::SmallVector<uint16_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,2>): " << sizeof(llvm::SmallVector<uint32_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,2>): " << sizeof(llvm::SmallVector<uint64_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,2>): " << sizeof(llvm::SmallVector<uint8_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,2>): " << sizeof(llvm::SmallVector<uint16_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,2>): " << sizeof(llvm::SmallVector<uint32_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,2>): " << sizeof(llvm::SmallVector<uint64_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,4>): " << sizeof(llvm::SmallVector<uint8_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,4>): " << sizeof(llvm::SmallVector<uint16_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,4>): " << sizeof(llvm::SmallVector<uint32_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,4>): " << sizeof(llvm::SmallVector<uint64_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,8>): " << sizeof(llvm::SmallVector<uint8_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,8>): " << sizeof(llvm::SmallVector<uint16_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,8>): " << sizeof(llvm::SmallVector<uint32_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,8>): " << sizeof(llvm::SmallVector<uint64_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,16>): " << sizeof(llvm::SmallVector<uint8_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,16>): " << sizeof(llvm::SmallVector<uint16_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,16>): " << sizeof(llvm::SmallVector<uint32_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,16>): " << sizeof(llvm::SmallVector<uint64_t,16>) << std::endl;
+
+    std::cout << "sizeof(Polynomial::Monomial): " << sizeof(Polynomial::Monomial) << std::endl;
+    std::cout << "sizeof(Polynomial::Multivariate<size_t>): " << sizeof(Polynomial::Multivariate<size_t>) << std::endl;
 }

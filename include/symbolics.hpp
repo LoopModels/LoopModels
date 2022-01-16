@@ -265,11 +265,20 @@ bool tryDiv(Uninomial &z, Uninomial x, Uninomial y) {
     z.exponent = x.exponent - y.exponent;
     return x.exponent < y.exponent;
 }
+// // 24 bytes
+// static constexpr unsigned MonomialSmallVectorSize = 2;
+// typedef uint32_t MonomialIDType;
+// 32 bytes
+static constexpr unsigned MonomialSmallVectorSize = 4;
+typedef uint32_t MonomialIDType;
+// // 32 bytes
+// static constexpr unsigned MonomialSmallVectorSize = 8;
+// typedef uint8_t MonomialIDType;
 
 struct Monomial {
     // sorted symbolic terms being multiplied
     // std::vector<size_t> prodIDs;
-    llvm::SmallVector<size_t> prodIDs;
+    llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> prodIDs;
     // Monomial& operator=(Monomial const &x){
     //     prodIDs = x.prodIDs;
     //     return *this;
@@ -277,12 +286,15 @@ struct Monomial {
     // constructors
     Monomial() = default;
     // Monomial() : prodIDs(std::vector<size_t>()){};
-    Monomial(llvm::SmallVector<size_t> &x) : prodIDs(x){};
-    Monomial(llvm::SmallVector<size_t> &&x) : prodIDs(std::move(x)){};
+    Monomial(llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> &x)
+        : prodIDs(x){};
+    Monomial(llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> &&x)
+        : prodIDs(std::move(x)){};
     // Monomial(std::vector<size_t> &x) : prodIDs(x){};
     // Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
     // Monomial(Monomial const &x) : prodIDs(x.prodIDs) {};
-    Monomial(One) : prodIDs(llvm::SmallVector<size_t>()){};
+    Monomial(One)
+        : prodIDs(llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize>()){};
 
     inline auto begin() { return prodIDs.begin(); }
     inline auto end() { return prodIDs.end(); }
@@ -469,9 +481,9 @@ struct Monomial {
     }
 };
 
-Monomial MonomialID(size_t id) { return Monomial({id}); }
-Monomial MonomialID(size_t idx, size_t idy) { return Monomial({idx, idy}); }
-Monomial MonomialID(size_t idx, size_t idy, size_t idz) {
+Monomial MonomialID(MonomialIDType id) { return Monomial({id}); }
+Monomial MonomialID(MonomialIDType idx, MonomialIDType idy) { return Monomial({idx, idy}); }
+Monomial MonomialID(MonomialIDType idx, MonomialIDType idy, MonomialIDType idz) {
     return Monomial({idx, idy, idz});
 }
 
@@ -594,7 +606,7 @@ template <typename C, IsMonomial M> struct Term {
 // ::isOne(exponent); }
 
 template <typename C, typename M> struct Terms {
-    llvm::SmallVector<Term<C, M>> terms;
+    llvm::SmallVector<Term<C, M>,1> terms;
     // std::vector<Term<C, M>> terms;
     Terms() = default;
     Terms(Term<C, M> const &x) : terms({x}){};
@@ -2079,10 +2091,10 @@ Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
     return std::move(p);
 }
 
-const size_t NOT_A_VAR = std::numeric_limits<size_t>::max();
+static constexpr MonomialIDType NOT_A_VAR = std::numeric_limits<MonomialIDType>::max();
 
-template <typename C> size_t pickVar(Multivariate<C> const &x) {
-    size_t v = NOT_A_VAR;
+template <typename C> MonomialIDType pickVar(Multivariate<C> const &x) {
+    MonomialIDType v = NOT_A_VAR;
     for (auto &it : x) {
         if (it.degree()) {
             v = std::min(v, *(it.exponent.begin()));

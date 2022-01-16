@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm/ADT/SmallVector.h>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -787,10 +788,9 @@ void recheckStrides(
 void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
     // std::vector<std::pair<Vector<size_t, 0>, T>> strides;
     size_t Ninds = length(ar.inds);
-    std::vector<Stride> &strides = ar.axes;
+    llvm::SmallVector<Stride,ArrayRefPreAllocSize> &strides = ar.axes;
     strides.reserve(Ninds);
-    std::vector<Polynomial::Multivariate<intptr_t>> &upperBounds =
-        ar.upperBounds;
+    auto &upperBounds = ar.upperBounds;
     upperBounds.reserve(Ninds);
     // std::vector<Polynomial::Multivariate<intptr_t>> strideSums;
     // strideSums.reserve(Ninds);

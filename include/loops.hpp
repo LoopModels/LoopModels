@@ -57,11 +57,11 @@ TrictM getTrit(TriangularLoopNest tri) {
 }
 
 size_t length(TriangularLoopNest tri) {
-    return length(getTrit(tri)) + length(getRekt(tri));
-    // return length(getTrit(tri)) + 2 * length(getRekt(tri));
+    // return length(getTrit(tri)) + length(getRekt(tri));
+    return length(getTrit(tri)) + 2 * length(getRekt(tri));
 }
 
-/*
+
 RektM getUpperbound(RectangularLoopNest r) { return r.data; }
 RektM getUpperbound(TriangularLoopNest tri) {
     Int *ptr = tri.raw + length(getTrit(tri)) + length(getRekt(tri));
@@ -85,7 +85,7 @@ void fillUpperBounds(TriangularLoopNest tri) {
         }
     }
 }
-*/
+
 bool otherwiseIndependent(TrictM A, Int j, Int i) {
     for (Int k = 0; k < j; k++)
         if (A(k, j))

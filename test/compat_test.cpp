@@ -5,7 +5,7 @@
 
 TEST(CompatTest, BasicAssertions) {
     constexpr size_t int_size =
-        ((MAX_PROGRAM_VARIABLES * 5) + 3 * 3) + 6 * 2 + 4;
+        ((MAX_PROGRAM_VARIABLES * 8) + 3 * 3) + 6 * 2 + 4;
     Int memory[int_size] = {0};
     Int *mem = memory;
     auto rectl = RectangularLoopNest(mem, 2);
@@ -25,7 +25,7 @@ TEST(CompatTest, BasicAssertions) {
     EXPECT_EQ(length(rectl) + length(trial) + length(perm_rec) +
                   length(perm_tri) + length(perm_tr2),
               int_size);
-    EXPECT_EQ(allzero(memory, int_size), true);
+    EXPECT_TRUE(allzero(memory, int_size));
 
     auto gd = rectl.data;
     gd(1, 0) = 1;

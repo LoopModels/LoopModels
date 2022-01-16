@@ -381,9 +381,9 @@ template <typename T> size_t length(VoVoV<T> x) {
 struct Stride {
     Polynomial::Multivariate<intptr_t> stride;
     // sources must be ordered
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>>
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,1>
         indices;
-    size_t counts[5];
+    uint32_t counts[5];
     // size_t constCount;
     // size_t indCount;
     // size_t memCount;
@@ -565,14 +565,16 @@ SourceCount sourceCount(Stride s) {
 }
 */
 
+static constexpr unsigned ArrayRefPreAllocSize = 2;
+
 struct ArrayRef {
     size_t arrayId;
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>>
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize>
         inds;
-    llvm::SmallVector<Stride> axes;
-    llvm::SmallVector<size_t>
+    llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
+    llvm::SmallVector<size_t,ArrayRefPreAllocSize>
         indToStrideMap; // length(indTostridemap) == length(inds)
-    llvm::SmallVector<Polynomial::Multivariate<intptr_t>> upperBounds;
+    llvm::SmallVector<Polynomial::Multivariate<intptr_t>,ArrayRefPreAllocSize> upperBounds;
 };
 
 template <typename T0, typename T1, typename T2>
