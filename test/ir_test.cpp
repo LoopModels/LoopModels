@@ -1,10 +1,10 @@
 #include "../include/ir.hpp"
 #include "../include/math.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <utility>
-#include <vector>
 
 TEST(IRTest, BasicAssertions) {
     EXPECT_EQ(3, 3);
@@ -21,7 +21,7 @@ TEST(IRTest, BasicAssertions) {
     // (3 M_0 M_1) i_18 (Term) +
     // (5 + 7 M_0) i_3 (Induction Variable) +
     // (11 + 13 (M_0 M_2) + 17 (M_0 M_1 M_2)) i_0 (Induction Variable)
-    // std::vector<std::pair<size_t, SourceType>> inds(
+    // llvm::SmallVector<std::pair<size_t, SourceType>> inds(
     //     {std::make_pair(2, SourceType::LoopInductionVariable),
     //      std::make_pair(8, SourceType::Memory), std::make_pair(18, SourceType::LoopInductionVariable),
     //      std::make_pair(3, SourceType::LoopInductionVariable),
@@ -31,19 +31,19 @@ TEST(IRTest, BasicAssertions) {
     std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
     std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
     VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
-    std::vector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
+    llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
     std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
     // printf("innOff len: %d\n", innerOffsets.size());
     std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
     std::cout << toVector(innerOffsets) << std::endl;
     size_t raw[16];
     Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
-    // std::vector<size_t> memBuffer().resize(outerOffsets.size());
+    // llvm::SmallVector<size_t> memBuffer().resize(outerOffsets.size());
     VoVoV<size_t> pvc =
         VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
                       toVector(outerOffsets), memBuffer);
 
-    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> inds;
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> inds;
     inds.emplace_back(Polynomial::Multivariate<intptr_t>(1), Source(2, SourceType::LoopInductionVariable));
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(2, Polynomial::MonomialID(0)), Source(8, SourceType::Memory));
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(3, Polynomial::MonomialID(0, 1)), Source(18, SourceType::Term));

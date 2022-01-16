@@ -1,5 +1,6 @@
 #pragma once
 #include "math.hpp"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <compare>
@@ -2011,7 +2012,7 @@ struct FirstGreater {
 
 template <typename C>
 void emplace_back(Univariate<Multivariate<C>> &u, Multivariate<C> const &p,
-                  llvm::SmallVector<std::pair<size_t, size_t>> const &pows,
+                  llvm::ArrayRef<std::pair<size_t, size_t>> const &pows,
                   size_t oldDegree, size_t chunkStartIdx, size_t idx,
                   size_t v) {
     Multivariate<C> coef;

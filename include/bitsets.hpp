@@ -1,5 +1,7 @@
 #pragma once
 #include "math.hpp"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -10,12 +12,11 @@
 #include <limits>
 #include <ostream>
 #include <string>
-#include <vector>
 
 // A set of `size_t` elements.
 // Initially constructed
 struct BitSet {
-    std::vector<std::uint64_t> data;
+    llvm::SmallVector<std::uint64_t> data;
     size_t length;
     size_t operator[](size_t i) const {
         return data[i];
@@ -35,7 +36,8 @@ struct BitSet {
 };
 
 struct BitSet::Iterator {
-    std::vector<std::uint64_t> set;
+    // TODO: is this safe?
+    llvm::ArrayRef<std::uint64_t> set;
     size_t didx;
     uint64_t offset; // offset with 64 bit block
     uint64_t state;
@@ -64,7 +66,7 @@ struct BitSet::Iterator {
 };
 // BitSet::Iterator(std::vector<std::uint64_t> &seta)
 //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-BitSet::Iterator construct(std::vector<std::uint64_t> const &seta) {
+BitSet::Iterator construct(llvm::ArrayRef<std::uint64_t> const &seta) {
     return BitSet::Iterator{seta, 0, std::numeric_limits<uint64_t>::max(),
                             seta[0], std::numeric_limits<uint64_t>::max()};
 }

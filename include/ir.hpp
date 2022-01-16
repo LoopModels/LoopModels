@@ -6,10 +6,14 @@
 #include "./math.hpp"
 #include "./symbolics.hpp"
 #include "./tree.hpp"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include <bit>
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/SmallVector.h>
 #include <ostream>
 #include <string>
 #include <sys/types.h>
@@ -49,57 +53,76 @@ OperationCharacteristics opchars[OPERATION_LENGTH] = {
 };
 */
 
-
-
-
-
 struct Const {
     enum {
-	Float64,
-	Float32,
-	Float16,
-	BFloat16,
-	Int64,
-	Int32,
-	Int16,
-	Int8,
-	UInt64,
-	UInt32,
-	UInt16,
-	UInt8
+        Float64,
+        Float32,
+        Float16,
+        BFloat16,
+        Int64,
+        Int32,
+        Int16,
+        Int8,
+        UInt64,
+        UInt32,
+        UInt16,
+        UInt8
     } NumType;
-    union{
-	double d;
-	float f;
-	int64_t i64;
-	int32_t i32;
-	int16_t i16;
-	int8_t i8;
-	u_int64_t u64;
-	u_int32_t u32;
-	u_int16_t u16;
-	u_int8_t u8;
+    union {
+        double d;
+        float f;
+        int64_t i64;
+        int32_t i32;
+        int16_t i16;
+        int8_t i8;
+        u_int64_t u64;
+        u_int32_t u32;
+        u_int16_t u16;
+        u_int8_t u8;
     };
 };
 
-std::ostream& operator<<(std::ostream &os, Const &c){
-    switch (c.NumType){
-    case Const::Float64: os << c.d; break;
-    case Const::Float32: os << c.f; break;
-    case Const::Int64: os << c.i64; break;
-    case Const::Int32: os << c.i32; break;
-    case Const::Int16: os << c.i16; break;
-    case Const::Int8: os << c.i8; break;
-    case Const::UInt64: os << c.u64; break;
-    case Const::UInt32: os << c.u32; break;
-    case Const::UInt16: os << c.u16; break;
-    case Const::UInt8: os << c.u8; break;
-    case Const::Float16: os << c.u16; break;
-    case Const::BFloat16: os << c.u16; break;
+std::ostream &operator<<(std::ostream &os, Const &c) {
+    switch (c.NumType) {
+    case Const::Float64:
+        os << c.d;
+        break;
+    case Const::Float32:
+        os << c.f;
+        break;
+    case Const::Int64:
+        os << c.i64;
+        break;
+    case Const::Int32:
+        os << c.i32;
+        break;
+    case Const::Int16:
+        os << c.i16;
+        break;
+    case Const::Int8:
+        os << c.i8;
+        break;
+    case Const::UInt64:
+        os << c.u64;
+        break;
+    case Const::UInt32:
+        os << c.u32;
+        break;
+    case Const::UInt16:
+        os << c.u16;
+        break;
+    case Const::UInt8:
+        os << c.u8;
+        break;
+    case Const::Float16:
+        os << c.u16;
+        break;
+    case Const::BFloat16:
+        os << c.u16;
+        break;
     }
     return os;
 }
-
 
 // struct Pointer { }
 
@@ -358,15 +381,16 @@ template <typename T> size_t length(VoVoV<T> x) {
 struct Stride {
     Polynomial::Multivariate<intptr_t> stride;
     // sources must be ordered
-    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> indices;
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>>
+        indices;
     size_t counts[5];
     // size_t constCount;
     // size_t indCount;
     // size_t memCount;
     // size_t termCount;
     Stride()
-        : indices(std::vector<
-                  std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
+        : // : indices(llvm:n:SmallVector<
+          // std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
           counts{0, 0, 0, 0, 0} {};
     Stride(Polynomial::Multivariate<intptr_t> &x, Source &&ind)
         : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
@@ -382,10 +406,10 @@ struct Stride {
     size_t getCount(Source i) { return getCount(i.typ); }
     inline auto begin() { return indices.begin(); }
     inline auto end() { return indices.end(); }
-    // inline auto begin() const { return indices.begin(); }
-    // inline auto end() const { return indices.end(); }
-    inline auto cbegin() const { return indices.cbegin(); }
-    inline auto cend() const { return indices.cend(); }
+    inline auto begin() const { return indices.begin(); }
+    inline auto end() const { return indices.end(); }
+    inline auto cbegin() const { return indices.begin(); }
+    inline auto cend() const { return indices.end(); }
     inline auto begin(SourceType i) {
         return indices.begin() + counts[size_t(i)];
     }
@@ -543,11 +567,12 @@ SourceCount sourceCount(Stride s) {
 
 struct ArrayRef {
     size_t arrayId;
-    std::vector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> inds;
-    std::vector<Stride> axes;
-    std::vector<size_t>
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>>
+        inds;
+    llvm::SmallVector<Stride> axes;
+    llvm::SmallVector<size_t>
         indToStrideMap; // length(indTostridemap) == length(inds)
-    std::vector<Polynomial::Multivariate<intptr_t>> upperBounds;
+    llvm::SmallVector<Polynomial::Multivariate<intptr_t>> upperBounds;
 };
 
 template <typename T0, typename T1, typename T2>
@@ -572,20 +597,19 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
     return std::make_pair(j, v);
 }
 
-std::ostream& operator<<(std::ostream &os, ArrayRef const &ar){
+std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
     os << "ArrayRef " << ar.arrayId << ":" << std::endl;
     for (size_t i = 0; i < length(ar.inds); ++i) {
         auto [ind, src] = ar.inds[i];
-	os << "(" << ind << ") " << "i_" << src.id << " (" << src.typ << ")";
+        os << "(" << ind << ") "
+           << "i_" << src.id << " (" << src.typ << ")";
         if (i + 1 < length(ar.inds)) {
-	    os << " +";
+            os << " +";
         }
-	os << std::endl;
+        os << std::endl;
     }
     return os;
 }
-
-
 
 struct CostSummary {
     double vCost;
@@ -626,16 +650,23 @@ struct Term {
     uint32_t loopDeps; // minimal loopdeps based on source's
 };
 
+template <int Bits, class T>
+constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
+                           !std::is_signed_v<T>;
 
-template<int Bits, class T>
-constexpr bool is_uint_v =
-    sizeof(T)==(Bits/8) && std::is_integral_v<T> && !std::is_signed_v<T>;
-
-template<class T> inline uint32_t zero_upper(T x) requires is_uint_v<32, T> { return x & 0x0000ffff;; }
-template<class T> inline uint64_t zero_upper(T x) requires is_uint_v<64, T> { return x & 0xffff0000; }
-template<class T> inline uint32_t zero_lower(T x) requires is_uint_v<32, T> { return x & 0x00000000ffffffff; }
-template<class T> inline uint64_t zero_lower(T x) requires is_uint_v<64, T> { return x & 0xffffffff00000000; }
-
+template <class T> inline uint32_t zero_upper(T x) requires is_uint_v<32, T> {
+    return x & 0x0000ffff;
+    ;
+}
+template <class T> inline uint64_t zero_upper(T x) requires is_uint_v<64, T> {
+    return x & 0xffff0000;
+}
+template <class T> inline uint32_t zero_lower(T x) requires is_uint_v<32, T> {
+    return x & 0x00000000ffffffff;
+}
+template <class T> inline uint64_t zero_lower(T x) requires is_uint_v<64, T> {
+    return x & 0xffffffff00000000;
+}
 
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
@@ -748,10 +779,13 @@ struct Function {
     Matrix<double, 0, 0> tempcosts;
     FastCostSummaries fastcostsum;
     Vector<Vector<Int, 0>, 0> triloopcache;
-    std::vector<std::vector<std::pair<size_t, size_t>>> arrayReadsToTermMap;
-    std::vector<std::vector<std::pair<size_t, size_t>>> arrayWritesToTermMap;
-    std::vector<ValueRange> rangeMap; // vector of length num_program_variables
-    std::vector<std::vector<ValueRange>>
+    llvm::SmallVector<llvm::SmallVector<std::pair<size_t, size_t>>>
+        arrayReadsToTermMap;
+    llvm::SmallVector<llvm::SmallVector<std::pair<size_t, size_t>>>
+        arrayWritesToTermMap;
+    llvm::SmallVector<ValueRange>
+        rangeMap; // vector of length num_program_variables
+    llvm::SmallVector<llvm::SmallVector<ValueRange>>
         diffMap; // comparisons, e.g. x - y via orderMap[x][y]; maybe we don't
                  // know anything about `x` or `y` individually, but do know `x
                  // - y > 0`.
@@ -858,7 +892,7 @@ Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
 Term &getTerm(Function const &fun, size_t tidx) { return fun.terms(tidx); }
 
 struct TermBundle {
-    // std::vector<size_t> termIDs;
+    // llvm::SmallVector<size_t> termIDs;
     BitSet termIds;
     BitSet srcTerms;
     BitSet dstTerms;
@@ -866,11 +900,13 @@ struct TermBundle {
     BitSet dstTermsDirect;
     BitSet loads;  // arrayRef ids
     BitSet stores; // arrayRef ids
-    // std::vector<CostSummary> costSummary; // vector of length(numLoopDeps);
+    // llvm::SmallVector<CostSummary> costSummary; // vector of
+    // length(numLoopDeps);
     BitSet srcTermBundles; // termBundles
     BitSet dstTermBundles; // termBundles
-    std::unordered_set<size_t> RTWs;
-    std::unordered_set<size_t> WTRs;
+
+    llvm::SmallSet<size_t, 4> RTWs;
+    llvm::SmallSet<size_t, 4> WTRs;
     CostSummary costSummary;
     TermBundle(size_t maxTerms, size_t maxArrayRefs, size_t maxTermBundles)
         : termIds(BitSet(maxTerms)), srcTerms(BitSet(maxTerms)),
@@ -899,8 +935,8 @@ inline uint16_t lowerHalf(uint16_t x) { return x & 0x00ff; }
 inline uint32_t lowerHalf(uint32_t x) { return x & 0x0000ffff; }
 inline uint64_t lowerHalf(uint64_t x) { return x & 0x00000000ffffffff; }
 
-void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
-          size_t idx, size_t tbId) {
+void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
+          Function &fun, size_t idx, size_t tbId) {
     termToTermBundle[idx] = tbId;
     Term t = fun.terms[idx];
     push(tb.termIds, idx);
@@ -957,7 +993,7 @@ void push(TermBundle &tb, std::vector<size_t> &termToTermBundle, Function &fun,
 }
 
 void fillDependencies(TermBundle &tb, size_t tbId,
-                      std::vector<size_t> &termToTermBundle) {
+                      llvm::SmallVector<size_t> &termToTermBundle) {
     for (auto I = tb.srcTerms.begin(); I != tb.srcTerms.end(); ++I) {
         size_t srcId = termToTermBundle[*I];
         if (srcId != tbId)
@@ -997,12 +1033,13 @@ bool shouldPrefuse(Function &fun, TermBundle &tb, size_t tid) {
 }
 
 struct TermBundleGraph {
-    std::vector<TermBundle> tbs;
-    std::vector<size_t> termToTermBundle; // mapping of `Term` to `TermBundle`.
-    // std::vector<std::vector<bool>> visited;
+    llvm::SmallVector<TermBundle, 0> tbs;
+    llvm::SmallVector<size_t>
+        termToTermBundle; // mapping of `Term` to `TermBundle`.
+    // llvm::SmallVector<llvm::SmallVector<bool>> visited;
 
-    TermBundleGraph(Function &fun, std::vector<Int> &wcc)
-        : termToTermBundle(std::vector<size_t>(length(fun.terms))) {
+    TermBundleGraph(Function &fun, llvm::SmallVector<Int> &wcc)
+        : termToTermBundle(llvm::SmallVector<size_t>(length(fun.terms))) {
         // iterate over the weakly connected component wcc
         // it should be roughly topologically sorted,
         // so just iterate over terms, greedily checking whether each
@@ -1036,7 +1073,7 @@ struct WeaklyConnectedComponentOptimizer {
     TermBundleGraph tbg;
     // Schedule bestSchedule;
     // Schedule tempSchedule;
-    std::vector<std::vector<Int>>
+    llvm::SmallVector<llvm::SmallVector<Int>>
         stronglyConnectedComponents; // strongly connected components within the
                                      // weakly connected component
 };
@@ -1068,7 +1105,7 @@ bool absLess(Function const &fun, Polynomial::Multivariate<C> const &x,
 
 /*
 void clearVisited(TermBundleGraph &tbg, size_t level) {
-    std::vector<bool> &visited = tbg.visited[level];
+    llvm::SmallVector<bool> &visited = tbg.visited[level];
     for (size_t i = 0; i < visited.size(); ++i) {
         visited[i] = false;
     }
@@ -1076,21 +1113,21 @@ void clearVisited(TermBundleGraph &tbg, size_t level) {
 }
 void clearVisited(TermBundleGraph &tbg) { clearVisited(tbg, 0); }
 bool visited(TermBundleGraph &tbg, size_t i, size_t level) {
-    std::vector<bool> &visited = tbg.visited[level];
+    llvm::SmallVector<bool> &visited = tbg.visited[level];
     return visited[i];
 }
 bool visited(TermBundleGraph &tbg, size_t i) { return visited(tbg, i, 0); }
 
 void markVisited(TermBundleGraph &tbg, size_t tb, size_t level) {
-    std::vector<bool> &visited = tbg.visited[level];
+    llvm::SmallVector<bool> &visited = tbg.visited[level];
     visited[tb] = true;
     return;
 }
 
 bool allSourcesVisited(TermBundleGraph &tbg, size_t tbId, size_t level) {
-    std::vector<bool> &visited = tbg.visited[level];
+    llvm::SmallVector<bool> &visited = tbg.visited[level];
     // TermBundle &tb = tbg.tbs[tbId];
-    std::vector<size_t> &srcs = inNeighbors(tbg, tbId);
+    llvm::SmallVector<size_t> &srcs = inNeighbors(tbg, tbId);
     bool allVisited = true;
     for (size_t i = 0; i < srcs.size(); ++i) {
         allVisited &= visited[srcs[i]];
@@ -1099,10 +1136,10 @@ bool allSourcesVisited(TermBundleGraph &tbg, size_t tbId, size_t level) {
 }
 
 // returns set of all outNeighbors that are covered
-std::vector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node,
+llvm::SmallVector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node,
                                 size_t level) {
-    std::vector<size_t> &dsts = outNeighbors(tbg, node);
-    std::vector<size_t> indexSet; // = tbg.indexSets[level];
+    llvm::SmallVector<size_t> &dsts = outNeighbors(tbg, node);
+    llvm::SmallVector<size_t> indexSet; // = tbg.indexSets[level];
     // indexSet.clear();
     for (size_t i = 0; i < dsts.size(); ++i) {
         size_t dstId = dsts[i];

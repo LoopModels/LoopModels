@@ -9,14 +9,19 @@ TEST(CompatTest, BasicAssertions) {
     Int memory[int_size] = {0};
     Int *mem = memory;
     auto rectl = RectangularLoopNest(mem, 2);
+    std::cout << "length(rectl) = " << length(rectl) << "\n";
     mem += length(rectl);
     auto trial = TriangularLoopNest(mem, 3);
+    std::cout << "length(trial) = " << length(trial) << "\n";
     mem += length(trial);
     auto perm_rec = Permutation(mem, 2);
+    std::cout << "length(perm_rec) = " << length(perm_rec) << "\n";
     mem += length(perm_rec);
     auto perm_tri = Permutation(mem, 3);
+    std::cout << "length(perm_tri) = " << length(perm_tri) << "\n";
     mem += length(perm_tri);
     auto perm_tr2 = Permutation(mem, 3);
+    std::cout << "length(perm_tr2) = " << length(perm_tr2) << "\n";
     EXPECT_EQ(length(rectl) + length(trial) + length(perm_rec) +
                   length(perm_tri) + length(perm_tr2),
               int_size);

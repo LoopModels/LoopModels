@@ -246,7 +246,13 @@ inline size_t length(V &v) {
     return v.size();
 }
 
-template <typename T> T &last(std::vector<T> &x) { return x[x.size() - 1]; }
+template <typename T>
+concept HasEnd = requires(T t) {
+    t.end();
+};
+
+template <HasEnd T> auto &last(T &x) { return *(x.end() - 1); }
+template <HasEnd T> auto &last(T const &x) { return *(x.end() - 1); }
 
 template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     size_t N = length(x0);
