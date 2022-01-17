@@ -278,7 +278,7 @@ template <typename T, size_t M> struct Vector {
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
+        assert(i < M);
 #endif
         return ptr[i];
     }
@@ -299,7 +299,7 @@ template <typename T> struct Vector<T, 0> {
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < len));
+        assert(i < len);
 #endif
         return ptr[i];
     }
@@ -349,8 +349,8 @@ template <typename T, size_t M, size_t N> struct Matrix {
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
-        assert((0 <= j) & (j < N));
+        assert(i < M);
+        assert(j < N);
 #endif
         return ptr[i + j * M];
     }
@@ -365,8 +365,8 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
-        assert((0 <= j) & (j < N));
+        assert(i < M);
+        assert(j < N);
 #endif
         return ptr[i + j * M];
     }
@@ -381,8 +381,8 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
-        assert((0 <= j) & (j < N));
+        assert(i < M);
+        assert(j < N);
 #endif
         return ptr[i + j * M];
     }
@@ -398,8 +398,8 @@ template <typename T> struct Matrix<T, 0, 0> {
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
-        assert((0 <= j) & (j < N));
+        assert(i < M);
+        assert(j < N);
 #endif
         return ptr[i + j * M];
     }
@@ -449,8 +449,8 @@ template <typename T> struct StrideMatrix {
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < M));
-        assert((0 <= j) & (j < N));
+        assert(i < M);
+        assert(j < N);
 #endif
         return ptr[i + j * S];
     }
@@ -547,9 +547,9 @@ template <typename T> struct Tensor3 {
 
     T &operator()(size_t m, size_t n, size_t o) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= m) & (m < M));
-        assert((0 <= n) & (n < N));
-        assert((0 <= o) & (o < O));
+        assert(m < M);
+        assert(n < N);
+        assert(o < O);
 #endif
         return ptr[m + M * (n + N * o)];
     }
@@ -610,7 +610,7 @@ struct PermutationVector {
     size_t nterms;
     Permutation operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < nterms));
+        assert(i < nterms);
 #endif
         return Permutation(ptr + i * 2 * nloops, nloops);
     }

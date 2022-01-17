@@ -30,7 +30,7 @@ TEST(IRTest, BasicAssertions) {
     
     std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
     std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
-    VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
+    // VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
     llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
     std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
     // printf("innOff len: %d\n", innerOffsets.size());
@@ -39,11 +39,11 @@ TEST(IRTest, BasicAssertions) {
     size_t raw[16];
     Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // llvm::SmallVector<size_t> memBuffer().resize(outerOffsets.size());
-    VoVoV<size_t> pvc =
-        VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
-                      toVector(outerOffsets), memBuffer);
-
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>> inds;
+    // VoVoV<size_t> pvc =
+    //     VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
+    //                   toVector(outerOffsets), memBuffer);
+    
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,2> inds;
     inds.emplace_back(Polynomial::Multivariate<intptr_t>(1), Source(2, SourceType::LoopInductionVariable));
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(2, Polynomial::MonomialID(0)), Source(8, SourceType::Memory));
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(3, Polynomial::MonomialID(0, 1)), Source(18, SourceType::Term));

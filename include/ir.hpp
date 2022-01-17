@@ -383,22 +383,26 @@ struct Stride {
     // sources must be ordered
     llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,1>
         indices;
-    uint32_t counts[5];
+    uint8_t counts[5];
     // size_t constCount;
     // size_t indCount;
     // size_t memCount;
     // size_t termCount;
-    Stride()
+    Stride() //= default;
         : // : indices(llvm:n:SmallVector<
           // std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
           counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &x, Source &&ind)
+    Stride(Polynomial::Multivariate<intptr_t> const &x)
+	: stride(x), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t> &&x)
+	: stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t> const &x, Source &&ind)
         : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
-                                                               0} {};
+      0} {};
     Stride(Polynomial::Multivariate<intptr_t> &x, size_t indId,
            SourceType indTyp)
         : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0,
-                                                                      0, 0} {};
+      0, 0} {};
 
     size_t getCount(SourceType i) {
         return counts[size_t(i) + 1] - counts[size_t(i)];
@@ -445,7 +449,7 @@ struct Stride {
     }
     void addTyp(Source t) { addTyp(t.typ); }
     void remTyp(Source t) { remTyp(t.typ); }
-
+    
     template <typename A, typename I> void add_term(A &&x, I &&ind) {
         auto ite = end();
         for (auto it = begin(ind); it != ite; ++it) {
@@ -504,14 +508,14 @@ struct Stride {
         return *this;
     }
     Stride largerCapacityCopy(size_t i) const {
-        Stride s;
+        Stride s(stride);
         s.indices.reserve(i + indices.size()); // reserve full size
-        for (auto it = cbegin(); it != cend(); ++it) {
-            s.indices.push_back(*it); // copy initial batch
+	for (auto &ind : indices){
+            s.indices.push_back(ind); // copy initial batch
         }
-        for (size_t i = 1; i < 5; ++i) {
-            s.counts[i] = counts[i];
-        }
+        // for (size_t i = 1; i < 5; ++i) {
+        //     s.counts[i] = counts[i];
+        // }
         return s;
     }
 
@@ -542,8 +546,8 @@ struct Stride {
             return true;
         }
     }
-    // takes advantage of sorting
-    bool isAffine() const { return counts[2] == counts[4]; }
+    // // takes advantage of sorting
+    // bool isAffine() const { return counts[2] == counts[4]; }
 
     // std::pair<Polynomial,DivRemainder> tryDiv(Polynomial &a){
     // 	auto [s, v] = gcd(a.terms);

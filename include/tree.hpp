@@ -18,7 +18,7 @@ template <typename T> struct Tree {
 template <typename T>
 std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
 #ifndef DONOTBOUNDSCHECK
-    assert((0 <= i) & (i < t.breadth));
+    assert(i < t.breadth);
     // assert((0 <= i) & (i < t.branches));
     assert(t.depth > 0);
 #endif
@@ -76,14 +76,14 @@ struct InvTree { // basically, a depth x breadth matrix
     size_t depth;   // number of loops + 1
     size_t &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= i) & (i < depth));
-        assert((0 <= j) & (j < breadth));
+        assert(i < depth);
+        assert(j < breadth);
 #endif
         return ptr[i + j * depth];
     }
     Vector<size_t, 0> operator()(size_t j) {
 #ifndef DONOTBOUNDSCHECK
-        assert((0 <= j) & (j < breadth));
+        assert(j < breadth);
 #endif
         return Vector<size_t, 0>(ptr + j * depth, depth);
     }

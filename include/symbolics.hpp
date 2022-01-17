@@ -30,7 +30,7 @@ template <typename TRC> auto cnegate(TRC &&x) {
     typedef typename std::remove_const<TR>::type T;
     T y(std::forward<TRC>(x));
     negate(y);
-    return std::move(y);
+    return y;
 }
 // template <typename T> T cnegate(T &x){ return negate(x); }
 // template <typename T> T cnegate(T const &x){ return negate(x); }
@@ -1543,6 +1543,8 @@ Multivariate<C> &divExact(Multivariate<C> &p, Multivariate<C> const &d) {
     return p;
 }
 
+    
+
 template <typename C>
 Term<C, Uninomial> operator*(Term<C, Uninomial> const &x,
                              Term<C, Uninomial> const &y) {
@@ -1615,7 +1617,7 @@ template <typename C>
 Multivariate<C> operator*(intptr_t x, Multivariate<C> &c) {
     Multivariate<C> p(c);
     p *= x;
-    return std::move(p);
+    return p; // copy elision
 }
 template <typename C>
 Multivariate<C> operator*(Multivariate<C> &c, intptr_t x) {
@@ -1747,12 +1749,12 @@ template <typename C> C content(Univariate<C> const &a) {
     for (size_t i = 2; i < a.terms.size(); ++i) {
         g = gcd(g, a.terms[i].coefficient);
     }
-    return std::move(g);
+    return g;
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
     divExact(d, content(p));
-    return std::move(d);
+    return d;
 }
 template <typename C>
 std::pair<C, Univariate<C>> contPrim(Univariate<C> const &p) {
@@ -1977,7 +1979,7 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, size_t i) {
             a.exponent.prodIDs.push_back(e);
         }
     }
-    return std::move(a);
+    return a;
 }
 /* commented out, because probably broken
 template <typename C>
@@ -2071,7 +2073,7 @@ Univariate<Multivariate<C>> multivariateToUnivariate(Multivariate<C> const &p,
     // if (chunkStartIdx + 1 != idx) {
     emplace_back(u, p, pows, oldDegree, chunkStartIdx, idx, v);
     //}
-    return std::move(u);
+    return u;
 }
 
 template <typename C>
@@ -2088,7 +2090,7 @@ Multivariate<C> univariateToMultivariate(Univariate<Multivariate<C>> &&g,
         }
         p += coef;
     }
-    return std::move(p);
+    return p;
 }
 
 static constexpr MonomialIDType NOT_A_VAR = std::numeric_limits<MonomialIDType>::max();
