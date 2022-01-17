@@ -1523,6 +1523,14 @@ template <typename C> void divExact(Univariate<C> &d, C const &x) {
         divExact(term.coefficient, x);
     }
 }
+template <typename C> void divExact(Univariate<C> &q, Univariate<C> &d, C const &x) {
+    size_t N = d.terms.size();
+    q.terms.resize(N);
+    for (size_t n = 0; n < N; ++n){
+        divExact(q.terms[n].coefficient, d.terms[n].coefficient, x);
+	q.terms[n].exponent = d.terms[n].exponent;
+    }
+}
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     for (auto &term : y) {
@@ -1582,6 +1590,22 @@ void divExact(Multivariate<C> &p, Multivariate<C> const &d) {
         q += nx;
     }
     std::swap(q, p);
+}
+
+// destroys `p`, writes answer in `q`
+template <typename C>
+void divExact(Multivariate<C> &q, Multivariate<C> &p, Multivariate<C> const &d) {
+    q.terms.clear();
+    if (isZero(p)) {
+        return;
+    }
+    Term<C, Monomial> nx;
+    while (p.terms.size()) {
+        bool fail = tryDiv(nx, p.leadingTerm(), d.leadingTerm());
+        assert(!fail);
+        fnmadd(p, d, nx);
+        q += nx;
+    }
 }
 
     
@@ -1779,9 +1803,28 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
         pp -= dd;
         k -= 1;
     }
-    return powBySquare(l, k) * std::move(pp);
+    pp *= powBySquare(l, k);
+    return pp;
 }
-
+template <typename C>
+void pseudorem(Univariate<C> &pp, Univariate<C> const &p, Univariate<C> const &d) {
+    pp = p;
+    if (p.degree() < d.degree()) {
+        return;
+    }
+    size_t k = (1 + p.degree()) - d.degree();
+    C l = d.leadingCoefficient();
+    Univariate<C> dd(d);
+    while ((!isZero(p)) && (pp.degree() >= d.degree())) {
+        mulPow(dd, d,
+               Term<C, Uninomial>(pp.leadingCoefficient(),
+                                  Uninomial(pp.degree() - d.degree())));
+        pp *= l;
+        pp -= dd;
+        k -= 1;
+    }
+    pp *= powBySquare(l, k);
+}
 template <typename C> C content(Univariate<C> const &a) {
     if (a.terms.size() == 1) {
         return a.terms[0].coefficient;
@@ -1791,6 +1834,35 @@ template <typename C> C content(Univariate<C> const &a) {
         g = gcd(g, a.terms[i].coefficient);
     }
     return g;
+}
+template <typename C> C content(C& g, Univariate<C> const &a) {
+    if (a.terms.size() == 1) {
+        return a.terms[0].coefficient;
+    }
+    g = gcd(a.terms[0].coefficient, a.terms[1].coefficient);
+    if (a.terms.size() == 2){ return g; }
+    C t;
+    for (size_t i = 2; i < a.terms.size(); ++i) {
+        t = gcd(g, a.terms[i].coefficient);
+	std::swap(t, g);
+    }
+    return g;
+}
+/*
+template <typename C> void content(C &g, C &t, Univariate<C> const &a) {
+    if (a.terms.size() == 1) {
+	g = a.terms[0].coefficient;
+        return;
+    }
+    gcd(g, a.terms[0].coefficient, a.terms[1].coefficient);
+    for (size_t i = 2; i < a.terms.size(); ++i) {
+        gcd(t, g, a.terms[i].coefficient);
+	std::swap(t, g);
+    }
+    return;
+}*/
+template <typename C> void primPart(Univariate<C> &d, Univariate<C> &p) {
+    divExact(d, p, content(p));
 }
 template <typename C> Univariate<C> primPart(Univariate<C> const &p) {
     Univariate<C> d(p);
@@ -1802,6 +1874,21 @@ std::pair<C, Univariate<C>> contPrim(Univariate<C> const &p) {
     C c = content(p);
     Univariate<C> d(p);
     divExact(d, c);
+    return std::make_pair(std::move(c), std::move(d));
+}
+template <typename C>
+std::pair<C, Univariate<C>> contPrim(C &c, Univariate<C> const &p) {
+    content(c, p);
+    Univariate<C> d(p);
+    divExact(d, c);
+    return std::make_pair(std::move(c), std::move(d));
+}
+template <typename C>
+std::pair<C, Univariate<C>> contPrim(Univariate<C> &t, Univariate<C> const &p) {
+    C c = content(p);
+    Univariate<C> d;
+    t = p;
+    divExact(d, t, c);
     return std::make_pair(std::move(c), std::move(d));
 }
 
@@ -1817,17 +1904,16 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         // } else if (x == y){
         // return x;
     }
-    auto [c1, xx] = contPrim(x);
-    auto [c2, yy] = contPrim(y);
-    C c = gcd(c1, c2);
-    C g(1);
-    C h(1);
-    C t0;
-    C t1;
+    Univariate<C> r;
+    auto [t0, xx] = contPrim(r, x);
+    auto [t1, yy] = contPrim(r, y);
+    C c = gcd(t0, t1);
+    C g{One()};
+    C h{One()};
     C t2;
     // TODO: allocate less memory; can you avoid the copies?
     while (true) {
-        Univariate<C> r = pseudorem(xx, yy);
+        pseudorem(r, xx, yy);
         if (isZero(r)) {
             break;
         }
@@ -1838,27 +1924,30 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         powBySquare(t0, t1, t2, h, d);
         // t0 = h^d
         t1.mul(t0, g);
-        divExact(r, t1);
+	// xx = r;
+        divExact(xx, r, t1);
         // divExact(r, g * (h ^ d)); // defines new y
         std::swap(xx, yy);
-        std::swap(yy, r);
+        // std::swap(yy, r);
         g = xx.leadingCoefficient();
         if (d > 1) {
             powBySquare(t0, t1, t2, h, d - 1);
             // t0 = h ^ (d - 1);
-            powBySquare(h, t1, t2, g, d);
+            powBySquare(t1, h, t2, g, d);
             // h = g ^ d;
-            divExact(h, t0);
+            divExact(h, t1, t0);
         } else {
             powBySquare(t0, t1, t2, h, 1 - d);
-            powBySquare(h, t1, t2, g, d);
-            t1.mul(t0, h);
-            std::swap(h, t1);
+            powBySquare(t1, h, t2, g, d);
+            h.mul(t0, t1);
             // h = (h ^ (1 - d)) * (g ^ d);
         }
     }
-    return c * primPart(yy);
+    primPart(xx, yy);
+    xx *= std::move(c);
+    return xx;
 }
+
 
 Monomial gcd(Monomial const &x, Monomial const &y) {
     if (isOne(x)) {
@@ -2145,6 +2234,7 @@ template <typename C> MonomialIDType pickVar(Multivariate<C> const &x) {
     }
     return v;
 }
+
 
 template <typename C>
 Multivariate<C> gcd(Multivariate<C> const &x, Multivariate<C> const &y) {
