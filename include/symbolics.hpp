@@ -1518,11 +1518,10 @@ Terms<C, M> operator*(M const &y, Terms<C, M> &&x) {
     return std::move(x *= y);
 }
 
-template <typename C> Univariate<C> &divExact(Univariate<C> &d, C const &x) {
+template <typename C> void divExact(Univariate<C> &d, C const &x) {
     for (auto &&term : d) {
         divExact(term.coefficient, x);
     }
-    return d;
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
@@ -1570,9 +1569,9 @@ std::pair<Multivariate<C>, Multivariate<C>> divRem(Multivariate<C> const &n,
 }
 
 template <typename C>
-Multivariate<C> &divExact(Multivariate<C> &p, Multivariate<C> const &d) {
+void divExact(Multivariate<C> &p, Multivariate<C> const &d) {
     if (isZero(p)) {
-        return p;
+        return;
     }
     Multivariate<C> q;
     Term<C, Monomial> nx;
@@ -1583,7 +1582,6 @@ Multivariate<C> &divExact(Multivariate<C> &p, Multivariate<C> const &d) {
         q += nx;
     }
     std::swap(q, p);
-    return p;
 }
 
     
