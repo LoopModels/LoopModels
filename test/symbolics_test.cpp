@@ -224,7 +224,8 @@ TEST(PseudoRemTests, BasicAssertions) {
     Polynomial::Multivariate<intptr_t> ps = (x^2) - (y^2);
     Polynomial::Multivariate<intptr_t> qs = x + y;
 
-    EXPECT_TRUE(Polynomial::divExact(ps, gcd(ps, qs)) == (x - y));
+    Polynomial::divExact(ps, gcd(ps, qs));
+    EXPECT_TRUE(ps == (x - y));
 
     
     std::cout << "sizeof(uint8_t): " << sizeof(uint8_t) << std::endl;
