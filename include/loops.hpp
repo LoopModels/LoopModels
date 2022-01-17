@@ -1,92 +1,96 @@
 #pragma once
 #include "math.hpp"
+#include "symbolics.hpp"
+#include <llvm/ADT/SmallVector.h>
 
 //
 // Loop nests
 //
-typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
-typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
+// typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
+// typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
+
+typedef Polynomial::Multivariate<intptr_t> UpperBound;
+typedef llvm::SmallVector<UpperBound, 3> UpperBounds;
+// NOTE: UpperBounds assumes symbols in the monomial products are >= 0.
+//       If a number is known to be negative, then it should receive a negative
+//       coefficient.
+//       This will be known for RectangularLoopNests, as the loop would
+//          not iterate if this were false; thus our optimizations can rely on
+//          it being true.
+//
+//       If it is not known for a triangular loop, this must be handled somehow.
+//          Perhaps we can still confirm that the loop would not execute for
+//          negative values. Otherwise, we require loop splitting.
+
 
 struct RectangularLoopNest {
-    RektM data;
+    UpperBounds data;
 
-    RectangularLoopNest(Int *ptr, size_t nloops) : data(RektM(ptr, nloops)) {
-        assert(nloops <= MAX_NUM_LOOPS);
-    };
+    // RectangularLoopNest(Int *ptr, size_t nloops) : data(RektM(ptr, nloops)) {
+    //     assert(nloops <= MAX_NUM_LOOPS);
+    // };
 };
+size_t getNumLoops(RectangularLoopNest const &data){ return data.data.size(); }
+// size_t length(RectangularLoopNest rekt) { return length(rekt.data); }
 
-size_t length(RectangularLoopNest rekt) { return length(rekt.data); }
-
-Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
-    return getCol(r.data, j);
+// Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
+//     return getCol(r.data, j);
+// }
+UpperBound &getUpperbound(RectangularLoopNest &r, size_t j) {
+    return r.data[j];
 }
 
 //  perm: og -> transform
 // iperm: transform -> og
-bool compatible(RectangularLoopNest l1, RectangularLoopNest l2,
-                Permutation perm1, Permutation perm2, Int _i1, Int _i2) {
-    auto i1 = perm1(_i1);
-    auto i2 = perm2(_i2);
-    auto u1 = getUpperbound(l1, i1);
-    auto u2 = getUpperbound(l2, i2);
-    for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; i++) {
-        if (u1(i) != u2(i))
-            return false;
-    }
-    return true;
+bool compatible(RectangularLoopNest &l1, RectangularLoopNest &l2,
+                Permutation &perm1, Permutation &perm2, size_t _i1, size_t _i2) {
+    return getUpperbound(l1, perm1(_i1)) == getUpperbound(l2, perm2(_i2));
 }
 
-typedef Matrix<Int, 0, 0> TrictM;
+typedef SquareMatrix<Int> TrictM;
+// typedef Matrix<Int, 0, 0> TrictM;
 // A*i < r
 struct TriangularLoopNest {
-    Int *raw;
-    size_t nloops;
-
-    TriangularLoopNest(Int *ptr, size_t nloops) : raw(ptr), nloops(nloops) {
-        assert(nloops <= MAX_NUM_LOOPS);
-    };
+    SquareMatrix<Int> A;
+    RectangularLoopNest r;
+    RectangularLoopNest u;
 };
 
-RectangularLoopNest getRekt(TriangularLoopNest tri) {
-    return RectangularLoopNest(tri.raw, tri.nloops);
+size_t getNumLoops(const TriangularLoopNest &t){ return getNumLoops(t.r); }
+RectangularLoopNest &getRekt(TriangularLoopNest &tri) {
+    return tri.r;
+    // return RectangularLoopNest(tri.raw, tri.nloops);
 }
 
-TrictM getTrit(TriangularLoopNest tri) {
-    TrictM A(tri.raw + length(getRekt(tri)), tri.nloops, tri.nloops);
-    return A;
-}
-
-size_t length(TriangularLoopNest tri) {
-    // return length(getTrit(tri)) + length(getRekt(tri));
-    return length(getTrit(tri)) + 2 * length(getRekt(tri));
+TrictM &getTrit(TriangularLoopNest &tri) {
+    return tri.A;
+    // TrictM A(tri.raw + length(getRekt(tri)), tri.nloops, tri.nloops);
+    // return A;
 }
 
 
-RektM getUpperbound(RectangularLoopNest r) { return r.data; }
-RektM getUpperbound(TriangularLoopNest tri) {
-    Int *ptr = tri.raw + length(getTrit(tri)) + length(getRekt(tri));
-    return Matrix<Int, MAX_PROGRAM_VARIABLES, 0>(ptr, tri.nloops);
+
+UpperBounds &getUpperbounds(RectangularLoopNest &r) { return r.data; }
+UpperBounds &getUpperbounds(TriangularLoopNest &tri) {
+    return tri.u.data;
 }
 
-void fillUpperBounds(TriangularLoopNest tri) {
-    size_t nloops = tri.nloops;
-    RektM r = getRekt(tri).data;
-    TrictM A = getTrit(tri);
-    RektM upperBounds = getUpperbound(tri);
-    for (size_t i = 0; i < length(r); ++i) {
-        upperBounds[i] = r[i];
-    }
+void fillUpperBounds(TriangularLoopNest &tri) {
+    size_t nloops = getNumLoops(tri);
+    TrictM &A = getTrit(tri);
+    UpperBounds &upperBounds = getUpperbounds(getRekt(tri));
     for (size_t i = 1; i < nloops; ++i) {
         for (size_t j = 0; j < i; ++j) {
             Int Aij = A(j, i);
-            for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; ++k) {
-                upperBounds(k, i) -= Aij * upperBounds(k, j);
-            }
+	    if (Aij){
+		upperBounds[i] -= Aij * upperBounds[j];
+	    }
         }
     }
 }
 
-bool otherwiseIndependent(TrictM A, Int j, Int i) {
+
+bool otherwiseIndependent(TrictM &A, Int j, Int i) {
     for (Int k = 0; k < j; k++)
         if (A(k, j))
             return false; // A is symmetric
@@ -96,10 +100,10 @@ bool otherwiseIndependent(TrictM A, Int j, Int i) {
     return true;
 }
 
-bool zeroMinimum(TrictM A, Int j, Int _j, Permutation perm) {
+bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
     for (size_t k = j + 1; k < size(A, 0); k++) {
-        auto j_lower_bounded_by_k = A(k, j) < 0;
-        if (!j_lower_bounded_by_k)
+	// if A(k, j) >= 0, then j is not lower bounded by k
+        if (A(k, j) >= 0)
             continue;
         auto _k = inv(perm, k);
         // A[k,j] < 0 means that `k < C + j`, i.e. `j` has a lower bound of `k`
@@ -113,17 +117,19 @@ bool zeroMinimum(TrictM A, Int j, Int _j, Permutation perm) {
     }
     return true;
 }
-
-bool upperboundDominates(Upperbound ubi, Upperbound ubj) {
-    bool all_le = true;
-    for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++) {
-        all_le &= (ubi(k) >= ubj(k));
+bool upperboundDominates(UpperBound &ubi, UpperBound &ubj) {
+    UpperBound delta = ubi - ubj;
+    for (auto &term : delta){
+	if (term.coefficient < 0){
+	    return false;
+	}
     }
-    return all_le;
+    return true;
 }
 
-bool zeroInnerIterationsAtMaximum(TrictM A, Upperbound ub,
-                                  RectangularLoopNest r, Int i) {
+
+bool zeroInnerIterationsAtMaximum(TrictM &A, UpperBound &ub,
+                                  RectangularLoopNest &r, Int i) {
     for (auto j = 0; j < i; j++) {
         auto Aij = A(i, j);
         if (Aij >= 0)
@@ -143,17 +149,15 @@ bool zeroInnerIterationsAtMaximum(TrictM A, Upperbound ub,
 
 // _i* are indices for the considered order
 // perms map these to i*, indices in the original order.
-bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
-                Permutation perm1, Permutation perm2, Int _i1, Int _i2) {
-    auto A = getTrit(l1);
-    auto r = getRekt(l1);
+bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
+                Permutation &perm1, Permutation &perm2, Int _i1, Int _i2) {
+    SquareMatrix<Int>& A = getTrit(l1);
+    RectangularLoopNest& r = getRekt(l1);
     auto i = perm1(_i1);
 
-    auto ub1 = getUpperbound(r, i);
-    auto ub2 = getUpperbound(l2, perm2(_i2));
-    Int delta_b[MAX_PROGRAM_VARIABLES];
-    for (size_t j = 0; j < MAX_PROGRAM_VARIABLES; j++)
-        delta_b[j] = ub1(j) - ub2(j);
+    UpperBound& ub1 = getUpperbound(r, i);
+    UpperBound& ub2 = getUpperbound(l2, perm2(_i2));
+    auto delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
     auto iperm = inv(perm1);
     // the first loop adds variables that adjust `i`'s bounds
@@ -161,7 +165,7 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
         auto Aij = A(j, i); // symmetric
         if (Aij == 0)
             continue;
-        Int _j1 = iperm(j);
+        Int _j1 = iperm[j];
         // j1 < _i1 means it is included in the permutation, but rectangular
         // `l2` definitely does not depend on `j` loop!
         if (_j1 < _i1)
@@ -172,10 +176,14 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
             // TODO: relax restriction
             if (!otherwiseIndependent(A, j, i))
                 return false;
-            Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp = getUpperbound(r, j);
-            for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
-                delta_b[k] -= Aij * ub_temp(k);
-            delta_b[0] += Aij;
+	    
+	    fnmadd(delta_b, getUpperbound(r, j), Aij);
+	    delta_b += Aij;
+	    // UpperBound &ub_temp = ;
+            // Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp = 
+            // for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
+            //     delta_b[k] -= Aij * ub_temp(k);
+            // delta_b[0] += Aij;
         } else { // if Aij > 0 i < C - j abs(Aij)
             // Aij > 0 means that `j_lower_bounded_by_k` will be false when
             // `k=i`.
@@ -193,24 +201,26 @@ bool compatible(TriangularLoopNest l1, RectangularLoopNest l2,
             continue;
         // j1 < _i1 means it is included in the permutation, but rectangular
         // `l2` definitely does not depend on `j` loop!
-        if (iperm(j) < _i1)
+        if (iperm[j] < _i1)
             return false;
     }
-    if (delta_b[0] == 0)
-        return allzero(delta_b, MAX_PROGRAM_VARIABLES);
-    if ((delta_b[0] == -1) && allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1))
-        return zeroInnerIterationsAtMaximum(A, ub2, r, i);
-    return false;
+    if (isZero(delta_b)){
+	return true;
+    } else if ((delta_b.terms.size() == 1) && (delta_b.leadingCoefficient() == -1)){
+	return zeroInnerIterationsAtMaximum(A, ub2, r, i);
+    } else {
+	return false;
+    }
 }
 
-bool compatible(RectangularLoopNest r, TriangularLoopNest t, Permutation perm2,
-                Permutation perm1, Int _i2, Int _i1) {
+bool compatible(RectangularLoopNest &r, TriangularLoopNest &t, Permutation &perm2,
+                Permutation &perm1, Int _i2, Int _i1) {
     return compatible(t, r, perm1, perm2, _i1, _i2);
 }
 
-bool updateBoundDifference(Int delta_b[MAX_PROGRAM_VARIABLES],
-                           TriangularLoopNest l1, TrictM A2, Permutation perm1,
-                           Permutation perm2, Int _i1, Int i2, bool flip) {
+bool updateBoundDifference(UpperBound &delta_b,
+                           TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
+                           Permutation &perm2, Int _i1, Int i2, bool flip) {
     auto A1 = getTrit(l1);
     auto r1 = getRekt(l1);
     auto i1 = perm1(_i1);
@@ -220,17 +230,15 @@ bool updateBoundDifference(Int delta_b[MAX_PROGRAM_VARIABLES],
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
-        Int _j1 = iperm(j);
+        Int _j1 = iperm[j];
         if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
             return false;
         if (Aij < 0) {
             if (!otherwiseIndependent(A1, j, i1))
                 return false;
-            auto ub_temp = getUpperbound(r1, j);
             Aij = flip ? -Aij : Aij;
-            for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
-                delta_b[k] -= Aij * ub_temp(k);
-            delta_b[0] += Aij;
+	    fnmadd(delta_b, getUpperbound(r1, j), Aij);
+            delta_b += Aij;
         } else {
             if (!zeroMinimum(A1, j, _j1, perm1))
                 return false;
@@ -248,7 +256,7 @@ bool checkRemainingBound(TriangularLoopNest l1, TrictM A2, Permutation perm1,
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
-        Int j1 = iperm(j);
+        Int j1 = iperm[j];
         if ((j1 < _i1) & (A2(perm2(j1), i2) != Aij))
             return false;
     }
@@ -257,17 +265,15 @@ bool checkRemainingBound(TriangularLoopNest l1, TrictM A2, Permutation perm1,
 
 bool compatible(TriangularLoopNest l1, TriangularLoopNest l2, Permutation perm1,
                 Permutation perm2, Int _i1, Int _i2) {
-    auto A1 = getTrit(l1);
-    auto r1 = getRekt(l1);
-    auto A2 = getTrit(l2);
-    auto r2 = getRekt(l2);
-    auto i1 = perm1(_i1);
-    auto i2 = perm2(_i2);
-    auto ub1 = getUpperbound(r1, i1);
-    auto ub2 = getUpperbound(r2, i2);
-    Int delta_b[MAX_PROGRAM_VARIABLES];
-    for (size_t j = 0; j < MAX_PROGRAM_VARIABLES; j++)
-        delta_b[j] = ub1(j) - ub2(j);
+    SquareMatrix<Int> &A1 = getTrit(l1);
+    RectangularLoopNest &r1 = getRekt(l1);
+    SquareMatrix<Int> &A2 = getTrit(l2);
+    RectangularLoopNest &r2 = getRekt(l2);
+    Int i1 = perm1(_i1);
+    Int i2 = perm2(_i2);
+    UpperBound &ub1 = getUpperbound(r1, i1);
+    UpperBound &ub2 = getUpperbound(r2, i2);
+    UpperBound delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
     if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false))
         return false;
@@ -278,21 +284,25 @@ bool compatible(TriangularLoopNest l1, TriangularLoopNest l2, Permutation perm1,
         return false;
     if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1))
         return false;
-
-    auto delta_b_0 = delta_b[0];
-    if (delta_b_0 == 0)
-        return allzero(delta_b, MAX_PROGRAM_VARIABLES);
-    else if (delta_b_0 == -1)
-        return allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1) &&
-               zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
-    else if (delta_b_0 == 1)
-        return allzero(delta_b + 1, MAX_PROGRAM_VARIABLES - 1) &&
-               zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
-    else
-        return false;
+    if (isZero(delta_b)){
+	return true;
+    } else if (delta_b.terms.size() == 1){
+	Polynomial::Term<Int,Polynomial::Monomial> &lt = delta_b.leadingTerm();
+	if (lt.degree()){
+	    return false;
+	} else if (lt.coefficient == -1){
+	    return zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
+	} else if (lt.coefficient == 1){
+	    return zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
+	} else {
+	    return false;
+	}
+    } else {
+	return false;
+    }
 }
 
-template <typename T, typename S>
-bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
-    return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
-}
+// template <typename T, typename S>
+// bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
+//     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
+// }

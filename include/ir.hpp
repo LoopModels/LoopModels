@@ -571,14 +571,25 @@ SourceCount sourceCount(Stride s) {
 
 static constexpr unsigned ArrayRefPreAllocSize = 2;
 
+
 struct ArrayRef {
-    size_t arrayId;
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize>
-        inds;
+    size_t arrayID;
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize> inds;
     llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
-    llvm::SmallVector<size_t,ArrayRefPreAllocSize>
-        indToStrideMap; // length(indTostridemap) == length(inds)
-    llvm::SmallVector<Polynomial::Multivariate<intptr_t>,ArrayRefPreAllocSize> upperBounds;
+    llvm::SmallVector<uint32_t,ArrayRefPreAllocSize> indToStrideMap;
+    // llvm::SmallVector<Polynomial::Multivariate<intptr_t>,ArrayRefPreAllocSize> upperBounds;
+
+    // ArrayRef(size_t arrayID, llvm::ArrayRef<std::pair<Polynomial::Multivariate<intptr_t>, Source>> linearInds) : arrayID(arrayID) {
+    // 	for (auto &&ind : linearInds){
+	    
+    // 	}
+	
+    // 	llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>, 4> tmp;
+
+	
+	
+    // }
+
 };
 
 template <typename T0, typename T1, typename T2>
@@ -604,7 +615,7 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
 }
 
 std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
-    os << "ArrayRef " << ar.arrayId << ":" << std::endl;
+    os << "ArrayRef " << ar.arrayID << ":" << std::endl;
     for (size_t i = 0; i < length(ar.inds); ++i) {
         auto [ind, src] = ar.inds[i];
         os << "(" << ind << ") "
@@ -656,27 +667,10 @@ struct Term {
     uint32_t loopDeps; // minimal loopdeps based on source's
 };
 
-template <int Bits, class T>
-constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
-                           !std::is_signed_v<T>;
-
-template <class T> inline uint32_t zero_upper(T x) requires is_uint_v<32, T> {
-    return x & 0x0000ffff;
-    ;
-}
-template <class T> inline uint64_t zero_upper(T x) requires is_uint_v<64, T> {
-    return x & 0xffff0000;
-}
-template <class T> inline uint32_t zero_lower(T x) requires is_uint_v<32, T> {
-    return x & 0x00000000ffffffff;
-}
-template <class T> inline uint64_t zero_lower(T x) requires is_uint_v<64, T> {
-    return x & 0xffffffff00000000;
-}
 
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
-    return std::make_pair(zero_upper(loopNestId), zero_lower(loopNestId));
+    return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
 }
 
 /*
@@ -927,19 +921,6 @@ struct TermBundle {
 // inline uint32_t upperHalf(uint32_t x) { return x & 0xffff0000; }
 // inline uint64_t upperHalf(uint64_t x) { return x & 0xffffffff00000000; }
 
-inline uint16_t firstQuarter(uint16_t x) { return (x & 0xf000) >> 12; }
-inline uint32_t firstQuarter(uint32_t x) { return (x & 0xff000000) >> 24; }
-inline uint64_t firstQuarter(uint64_t x) {
-    return (x & 0xffff000000000000) >> 48;
-}
-inline uint16_t secondQuarter(uint16_t x) { return (x & 0x0f00) >> 8; }
-inline uint32_t secondQuarter(uint32_t x) { return (x & 0x00ff0000) >> 16; }
-inline uint64_t secondQuarter(uint64_t x) {
-    return (x & 0x0000ffff00000000) >> 32;
-}
-inline uint16_t lowerHalf(uint16_t x) { return x & 0x00ff; }
-inline uint32_t lowerHalf(uint32_t x) { return x & 0x0000ffff; }
-inline uint64_t lowerHalf(uint64_t x) { return x & 0x00000000ffffffff; }
 
 void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
           Function &fun, size_t idx, size_t tbId) {

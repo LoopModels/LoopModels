@@ -627,6 +627,23 @@ template <typename C, typename M> struct Terms {
     template <typename S> void add_term(S &&x) {
         ::add_term(*this, std::forward<S>(x));
     }
+    template <typename S> void add_term_scale(S &&x, C const &c) {
+	if (!isZero(x)) {
+	    for (auto it = begin(); it != end(); ++it) {
+		if ((it->coefficient == x*c)) {
+		    if (it->addCoef(x)) {
+			erase(it);
+		    }
+		    return;
+		} else if (x.lexGreater(*it)) {
+		    insert(it, std::forward<S>(x)*c);
+		    return;
+		}
+	    }
+	    push_back(std::forward<S>(x)*c);
+	}
+	return;
+    }
     template <typename S> void sub_term(S &&x) {
         ::sub_term(*this, std::forward<S>(x));
     }
@@ -737,6 +754,22 @@ template <typename C, typename M> struct Terms {
                 add_term(termx * termy);
             }
         }
+    }
+    
+    Terms<C, M> &operator+=(C const &x) {
+	size_t numTerms = terms.size();
+	if (numTerms){
+	    auto it = end() - 1;
+	    if (!(it -> degree())){
+		(it -> coefficient) += x;
+		if (isZero(it -> coefficient)){
+		    terms.erase(it);
+		}
+		return *this;
+	    }
+	}
+	terms.emplace_back(x);
+        return *this;
     }
     Terms<C, M> operator*(Terms<C, M> const &x) const {
         Terms<C, M> p;
@@ -1544,6 +1577,12 @@ void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
         sub_term(x, term * z, offset);
     }
 }
+template <typename C, typename M>
+void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, C &c) {
+    for (auto &term : y) {
+        x.add_term_scale(term, -c);
+    }
+}
 
 template <typename C>
 std::pair<Multivariate<C>, Multivariate<C>>
@@ -1792,7 +1831,7 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
         return p;
     }
     size_t k = (1 + p.degree()) - d.degree();
-    C l = d.leadingCoefficient();
+    C &l = d.leadingCoefficient();
     Univariate<C> dd(d);
     Univariate<C> pp(p);
     while ((!isZero(p)) && (pp.degree() >= d.degree())) {
@@ -1813,7 +1852,7 @@ void pseudorem(Univariate<C> &pp, Univariate<C> const &p, Univariate<C> const &d
         return;
     }
     size_t k = (1 + p.degree()) - d.degree();
-    C l = d.leadingCoefficient();
+    C &l = d.leadingCoefficient();
     Univariate<C> dd(d);
     while ((!isZero(p)) && (pp.degree() >= d.degree())) {
         mulPow(dd, d,
@@ -2308,24 +2347,26 @@ Multivariate<C> gcd(MultivariateTerm<C> const &x, Multivariate<C> const &y) {
     return gcd(Multivariate<C>(x), y);
 }
 
+/*
 Multivariate<intptr_t>
 loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
-    // loopvars is a vector, first index corresponds to constant, remaining
-    // indices are offset by 1 with respect to program indices.
-    Multivariate<intptr_t> aff;
-    for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
-        if (loopvars[i]) {
-            MultivariateTerm<intptr_t> sym(loopvars[i]);
-            if (i) {
-                sym.exponent.prodIDs.push_back(i - 1);
-            } // i == 0 => constant
-            // guaranteed no collision and lex ordering
-            // so we push_back directly.
-            aff.terms.push_back(std::move(sym));
-        }
+// loopvars is a vector, first index corresponds to constant, remaining
+// indices are offset by 1 with respect to program indices.
+Multivariate<intptr_t> aff;
+for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
+    if (loopvars[i]) {
+        MultivariateTerm<intptr_t> sym(loopvars[i]);
+        if (i) {
+            sym.exponent.prodIDs.push_back(i - 1);
+        } // i == 0 => constant
+        // guaranteed no collision and lex ordering
+        // so we push_back directly.
+        aff.terms.push_back(std::move(sym));
     }
-    return aff;
 }
+return aff;
+}
+*/
 } // end namespace Polynomial
 
 // A(m, n + k + 1)

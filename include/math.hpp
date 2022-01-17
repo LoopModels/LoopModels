@@ -5,6 +5,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 #include <numeric>
 #include <string>
 #include <tuple>
@@ -237,7 +239,6 @@ SourceType::Memory: memory += 1; break; case SourceType::Term: term += 1; break;
 */
 
 const size_t MAX_NUM_LOOPS = 16;
-const size_t MAX_PROGRAM_VARIABLES = 32;
 typedef intptr_t Int;
 
 template <typename V> // generic function working with many stl containers, e.g.
@@ -259,22 +260,40 @@ template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     if (N != length(x1)) {
         return false;
     }
-    bool m = true;
     for (size_t n = 0; n < N; ++n) {
-        m &= (x0[n] == x1[n]);
+        if (x0[n] != x1[n])
+	    return false;
     }
-    return m;
+    return true;
 }
 
 //
 // Vectors
 //
 template <typename T, size_t M> struct Vector {
+    T data[M];
 
-    T *ptr;
+    // Vector(T *ptr) : ptr(ptr){};
+    // Vector(Vector<T, M> &a) : data(a.data){};
 
-    Vector(T *ptr) : ptr(ptr){};
-    Vector(Vector<T, M> &a) : ptr(a.ptr){};
+    T &operator()(size_t i) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+#endif
+        return data[i];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    const T &operator[](size_t i) const { return data[i]; }
+    T* begin() { return data; }
+    T* end() { return begin() + M; }
+    const T* begin() const { return data; }
+    const T* end() const { return begin() + M; }
+};
+template <typename T, size_t M> struct PtrVector {
+    T* ptr;
+
+    PtrVector(T *ptr) : ptr(ptr){};
+    // Vector(Vector<T, M> &a) : ptr(a.ptr){};
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
@@ -283,32 +302,37 @@ template <typename T, size_t M> struct Vector {
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
-    bool operator==(Vector<T, M> x0) { return allMatch(*this, x0); }
+    const T &operator[](size_t i) const { return ptr[i]; }
+    T* begin() { return ptr; }
+    T* end() { return ptr + M; }
+    const T* begin() const { return ptr; }
+    const T* end() const { return ptr + M; }
 };
+
+
 template <typename T> struct Vector<T, 0> {
-    T *ptr;
-    size_t len;
-    inline Vector<T, 0> &operator=(const Vector<T, 0> &a) {
-        ptr = a.ptr;
-        len = a.len;
-    }
-    inline Vector(T *ptr, size_t m) : ptr(ptr), len(m){};
-    inline Vector(const Vector<T, 0> &a) : ptr(a.ptr), len(a.len){};
-    inline Vector(Vector<T, 0> &a) : ptr(a.ptr), len(a.len){};
-    inline Vector(std::vector<T> &x) : ptr(&x.front()), len(x.size()){};
+    llvm::SmallVector<T> data;
+    Vector<T>(size_t N) : data(llvm::SmallVector<T>(N)) {};
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
-        assert(i < len);
+        assert(i < data.size());
 #endif
-        return ptr[i];
+        return data[i];
     }
-    T &operator[](size_t i) const { return ptr[i]; }
-    bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
+    T &operator[](size_t i) { return data[i]; }
+    const T &operator[](size_t i) const { return data[i]; }
+    // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
 };
+template <typename T, size_t M>
+bool operator==(Vector<T, M> const & x0, Vector<T, M> const &x1) { return allMatch(x0, x1); }
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
-template <typename T> size_t length(Vector<T, 0> v) { return v.len; }
+template <typename T> size_t length(Vector<T, 0> v) { return v.data.size(); }
 
 template <typename T, size_t M>
 std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
@@ -324,14 +348,19 @@ std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
     return os;
 }
 
-template <typename T> Vector<T, 0> toVector(std::vector<T> &x) {
-    return Vector<T, 0>(x);
+template <typename T> Vector<T, 0> toVector(llvm::ArrayRef<T> &x) {
+    Vector<T, 0> y;
+    y.data.reserve(x.size());
+    for (auto &i : x){
+	y.push_back(i);
+    }
+    return y;
 }
 
-template <typename T> bool allzero(T a, size_t len) {
-    for (size_t j = 0; j < len; j++)
-        if (a[j] != 0)
-            return false;
+template <typename T> bool allZero(llvm::ArrayRef<T> x) {
+    for (auto &a : x)
+	if (a != 0)
+	    return false;
     return true;
 }
 
@@ -343,80 +372,118 @@ template <typename T> inline Vector<T, 0> emptyVector() {
 // Matrix
 //
 template <typename T, size_t M, size_t N> struct Matrix {
-    T *ptr;
-
-    Matrix(T *ptr) : ptr(ptr){};
-
+    // static_assert(M*N != L, "if specifying non-zero M and N, we should have M*N == L");
+    T data[M*N];
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < N);
 #endif
-        return ptr[i + j * M];
+        return data[i + j * M];
     }
-    T &operator[](size_t i) { return ptr[i]; }
+    T operator()(size_t i, size_t j) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < N);
+#endif
+        return data[i + j * M];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
+    T* begin() { return data; }
+    T* end() { return begin() + M; }
+    const T* begin() const { return data; }
+    const T* end() const { return begin() + M; }
 };
-template <typename T, size_t M> struct Matrix<T, M, 0> {
-    T *ptr;
 
+template <typename T, size_t M> struct Matrix<T, M, 0> {
+    llvm::SmallVector<T> data;
     size_t N;
 
-    Matrix(T *ptr, size_t n) : ptr(ptr), N(n){};
+    Matrix(size_t n) : data(llvm::SmallVector<T>(M*n)), N(n){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < N);
 #endif
-        return ptr[i + j * M];
+        return data[i + j * M];
     }
-    T &operator[](size_t i) { return ptr[i]; }
+    T &operator[](size_t i) { return data[i]; }
+    const T &operator[](size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
-    T *ptr;
-
+    llvm::SmallVector<T> data;
     size_t M;
 
-    Matrix(T *ptr, size_t m) : ptr(ptr), M(m){};
+    Matrix(size_t m) : data(llvm::SmallVector<T>(m*N)), M(m){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < N);
 #endif
-        return ptr[i + j * M];
+        return data[i + j * M];
     }
-    T &operator[](size_t i) { return ptr[i]; }
+    T operator()(size_t i, size_t j) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < N);
+#endif
+        return data[i + j * M];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
 };
 template <typename T> struct Matrix<T, 0, 0> {
-    T *ptr;
+    llvm::SmallVector<T> data;
 
     size_t M;
     size_t N;
 
-    Matrix(T *ptr, size_t m, size_t n) : ptr(ptr), M(m), N(n){};
+    Matrix(size_t m, size_t n) : data(llvm::SmallVector<T>(m*n)), M(m), N(n){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < N);
 #endif
-        return ptr[i + j * M];
+        return data[i + j * M];
     }
-    T &operator[](size_t i) { return ptr[i]; }
+    T operator()(size_t i, size_t j) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < N);
+#endif
+        return data[i + j * M];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
 };
 
 template <typename T, size_t M, size_t N>
-size_t size(Matrix<T, M, N>, size_t i) {
+size_t size(Matrix<T, M, N> const&, size_t i) {
     return i == 0 ? M : N;
 }
-template <typename T, size_t M> size_t size(Matrix<T, M, 0> A, size_t i) {
+template <typename T, size_t M> size_t size(Matrix<T, M, 0> const &A, size_t i) {
     return i == 0 ? M : A.N;
 }
-template <typename T, size_t N> size_t size(Matrix<T, 0, N> A, size_t i) {
+template <typename T, size_t N> size_t size(Matrix<T, 0, N> const &A, size_t i) {
     return i == 0 ? A.M : N;
 }
-template <typename T> size_t size(Matrix<T, 0, 0> A, size_t i) {
+template <typename T> size_t size(Matrix<T, 0, 0> const &A, size_t i) {
     return i == 0 ? A.M : A.N;
 }
 template <typename T, size_t M, size_t N>
@@ -424,85 +491,138 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
     return std::make_pair(size(A, 0), size(A, 1));
 }
 
-template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> A) {
+template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> const &A) {
     return size(A, 0) * size(A, 1);
 }
-
-template <typename T, size_t M, size_t N>
-Vector<T, M> getCol(Matrix<T, M, N> A, size_t i) {
-    return Vector<T, M>(A.ptr + i * size(A, 0));
+template <typename T, size_t M> size_t length(Matrix<T, M, 0> const &A) {
+    return A.data.size();
 }
-template <typename T, size_t N>
-Vector<T, 0> getCol(Matrix<T, 0, N> A, size_t i) {
-    auto s1 = size(A, 0);
-    return Vector<T, 0>(A.ptr + i * s1, s1);
+template <typename T, size_t N> size_t length(Matrix<T, 0, N> const &A) {
+    return A.data.size();
+}
+template <typename T> size_t length(Matrix<T, 0, 0> const &A) {
+    return A.data.size();
 }
 
-template <typename T> struct StrideMatrix {
-    T *ptr;
+
+template <typename T> struct SquareMatrix {
+    llvm::SmallVector<T> data;
     size_t M;
-    size_t N;
-    size_t S;
-
-    StrideMatrix(T *ptr, size_t M, size_t N, size_t S)
-        : ptr(ptr), M(M), N(N), S(S){};
+    
+    SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m*m)), M(m){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
-        assert(j < N);
+        assert(j < M);
 #endif
-        return ptr[i + j * S];
+        return data[i + j * M];
     }
+    T operator()(size_t i, size_t j) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < M);
+#endif
+        return data[i + j * M];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
 };
-template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
-    return i == 0 ? A.M : A.N;
-}
-template <typename T> std::pair<size_t, size_t> size(StrideMatrix<T> A) {
-    return std::make_pair(A.M, A.N);
-}
-template <typename T> size_t length(StrideMatrix<T> A) {
-    return size(A, 0) * size(A, 1);
-}
-// template <typename T> size_t getstride1(Matrix<T> A) {return size(A, 0);}
-// template <typename T> size_t getstride1(StrideMatrix<T> A) {return A.S;}
-template <typename T>
-StrideMatrix<T> subsetRows(StrideMatrix<T> A, size_t r0, size_t r1) {
-    return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.S);
-}
-template <typename T>
-StrideMatrix<T> subsetCols(StrideMatrix<T> A, size_t c0, size_t c1) {
-    return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.S);
-}
-template <typename T>
-StrideMatrix<T> subset(StrideMatrix<T> A, size_t r0, size_t r1, size_t c0,
-                       size_t c1) {
-    return subsetRows(subsetCols(A, c0, c1), r0, r1);
-}
+template<typename T>
+std::pair<size_t,size_t> size(SquareMatrix<T> const &A){ return std::make_pair<A.M,A.M>; }
+template<typename T>
+size_t size(SquareMatrix<T> const &A, size_t){ return A.M; }
+template<typename T>
+size_t length(SquareMatrix<T> const &A) { return A.data.size(); }
+
 template <typename T, size_t M, size_t N>
-StrideMatrix<T> subsetRows(Matrix<T, M, N> A, size_t r0, size_t r1) {
-    return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.M);
+PtrVector<T, M> getCol(Matrix<T, M, N> &A, size_t i) {
+    return PtrVector<T, M>(A.data + i * M);
 }
-template <typename T, size_t M, size_t N>
-StrideMatrix<T> subsetCols(Matrix<T, M, N> A, size_t c0, size_t c1) {
-    return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.M);
+template <typename T, size_t N>
+llvm::ArrayRef<T> getCol(Matrix<T, 0, N> &A, size_t i) {
+    size_t s1 = size(A, 0);
+    T* data = A.data.data() + i * s1;
+    return llvm::ArrayRef<T>(data, s1);
+    // return Vector<T, 0>(A.ptr + i * s1, s1);
 }
-template <typename T, size_t M, size_t N>
-StrideMatrix<T> subset(Matrix<T, M, N> A, size_t r0, size_t r1, size_t c0,
-                       size_t c1) {
-    return subsetRows(subsetCols(A, c0, c1), r0, r1);
+template <typename T, size_t N>
+llvm::ArrayRef<T> getCol(SquareMatrix<T> &A, size_t i) {
+    size_t s1 = size(A, 0);
+    T* data = A.data.data() + i * s1;
+    return llvm::ArrayRef<T>(data, s1);
+    // return Vector<T, 0>(A.ptr + i * s1, s1);
 }
 
-template <typename T, size_t M>
-Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
-    return Vector<T, 0>(x.ptr + i0, i1 - i0);
-}
+// template <typename T> struct StrideMatrix {
+//     T *ptr;
+//     size_t M;
+//     size_t N;
+//     size_t S;
 
-template <typename T, size_t M> T &last(Vector<T, M> x) {
-    return x[length(x) - 1];
-}
+//     StrideMatrix(T *ptr, size_t M, size_t N, size_t S)
+//         : ptr(ptr), M(M), N(N), S(S){};
 
-template <typename T> std::ostream &printMatrix(std::ostream &os, T &A) {
+//     T &operator()(size_t i, size_t j) {
+// #ifndef DONOTBOUNDSCHECK
+//         assert(i < M);
+//         assert(j < N);
+// #endif
+//         return ptr[i + j * S];
+//     }
+// };
+// template <typename T> size_t size(StrideMatrix<T> A, size_t i) {
+//     return i == 0 ? A.M : A.N;
+// }
+// template <typename T> std::pair<size_t, size_t> size(StrideMatrix<T> A) {
+//     return std::make_pair(A.M, A.N);
+// }
+// template <typename T> size_t length(StrideMatrix<T> A) {
+//     return size(A, 0) * size(A, 1);
+// }
+// // template <typename T> size_t getstride1(Matrix<T> A) {return size(A, 0);}
+// // template <typename T> size_t getstride1(StrideMatrix<T> A) {return A.S;}
+// template <typename T>
+// StrideMatrix<T> subsetRows(StrideMatrix<T> A, size_t r0, size_t r1) {
+//     return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.S);
+// }
+// template <typename T>
+// StrideMatrix<T> subsetCols(StrideMatrix<T> A, size_t c0, size_t c1) {
+//     return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.S);
+// }
+// template <typename T>
+// StrideMatrix<T> subset(StrideMatrix<T> A, size_t r0, size_t r1, size_t c0,
+//                        size_t c1) {
+//     return subsetRows(subsetCols(A, c0, c1), r0, r1);
+// }
+// template <typename T, size_t M, size_t N>
+// StrideMatrix<T> subsetRows(Matrix<T, M, N> A, size_t r0, size_t r1) {
+//     return StrideMatrix<T>(A.ptr + r0, r1 - r0, A.N, A.M);
+// }
+// template <typename T, size_t M, size_t N>
+// StrideMatrix<T> subsetCols(Matrix<T, M, N> A, size_t c0, size_t c1) {
+//     return StrideMatrix<T>(A.ptr + c0 * A.S, A.M, c1 - c0, A.M);
+// }
+// template <typename T, size_t M, size_t N>
+// StrideMatrix<T> subset(Matrix<T, M, N> A, size_t r0, size_t r1, size_t c0,
+//                        size_t c1) {
+//     return subsetRows(subsetCols(A, c0, c1), r0, r1);
+// }
+
+// template <typename T, size_t M>
+// Vector<T, 0> subset(Vector<T, M> x, size_t i0, size_t i1) {
+//     return Vector<T, 0>(x.ptr + i0, i1 - i0);
+// }
+
+// template <typename T, size_t M> T &last(Vector<T, M> x) {
+//     return x[length(x) - 1];
+// }
+
+template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     os << "[ ";
     auto [m, n] = size(A);
@@ -527,43 +647,42 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T &A) {
     return os;
 }
 template <typename T, size_t M, size_t N>
-std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> &A) {
+std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
     return printMatrix(os, A);
 }
-template <typename T>
-std::ostream &operator<<(std::ostream &os, StrideMatrix<T> &A) {
-    // std::ostream &operator<<(std::ostream &os, StrideMatrix<T> const &A) {
-    return printMatrix(os, A);
-}
+// template <typename T>
+// std::ostream &operator<<(std::ostream &os, StrideMatrix<T> &A) {
+//     // std::ostream &operator<<(std::ostream &os, StrideMatrix<T> const &A) {
+//     return printMatrix(os, A);
+// }
 
-template <typename T> struct Tensor3 {
-    T *ptr;
-    size_t M;
-    size_t N;
-    size_t O;
-    Tensor3(T *ptr, size_t M, size_t N, size_t O)
-        : ptr(ptr), M(M), N(N), O(O){};
+// template <typename T> struct Tensor3 {
+//     T *ptr;
+//     size_t M;
+//     size_t N;
+//     size_t O;
+//     Tensor3(T *ptr, size_t M, size_t N, size_t O)
+//         : ptr(ptr), M(M), N(N), O(O){};
 
-    T &operator()(size_t m, size_t n, size_t o) {
-#ifndef DONOTBOUNDSCHECK
-        assert(m < M);
-        assert(n < N);
-        assert(o < O);
-#endif
-        return ptr[m + M * (n + N * o)];
-    }
-};
-template <typename T> size_t size(Tensor3<T> A, size_t i) {
-    return i == 0 ? A.M : (i == 1 ? A.N : A.O);
-}
-template <typename T> size_t length(Tensor3<T> A) { return A.M * A.N * A.O; }
-template <typename T, size_t M, size_t N>
-Matrix<T, M, N> subsetDim3(Tensor3<T> A, size_t d) {
-    return Matrix<T, M, N>(A.ptr + A.M * A.N * d, A.M, A.N);
-}
+//     T &operator()(size_t m, size_t n, size_t o) {
+// #ifndef DONOTBOUNDSCHECK
+//         assert(m < M);
+//         assert(n < N);
+//         assert(o < O);
+// #endif
+//         return ptr[m + M * (n + N * o)];
+//     }
+// };
+// template <typename T> size_t size(Tensor3<T> A, size_t i) {
+//     return i == 0 ? A.M : (i == 1 ? A.N : A.O);
+// }
+// template <typename T> size_t length(Tensor3<T> A) { return A.M * A.N * A.O; }
+// template <typename T, size_t M, size_t N>
+// Matrix<T, M, N> subsetDim3(Tensor3<T> A, size_t d) {
+//     return Matrix<T, M, N>(A.ptr + A.M * A.N * d, A.M, A.N);
+// }
 
-template <typename T> size_t getNLoops(T x) { return size(x.data, 0); }
 //
 // Permutations
 //
@@ -571,31 +690,30 @@ typedef Matrix<Int, 0, 2> PermutationData;
 struct Permutation {
     PermutationData data;
 
-    Permutation(Int *ptr, size_t nloops) : data(PermutationData(ptr, nloops)) {
+    Permutation(size_t nloops) : data(PermutationData(nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
     Int &operator()(size_t i) { return data(i, 0); }
+    Int operator()(size_t i) const { return data(i, 0); }
     bool operator==(Permutation y) {
-        Vector<Int, 0> x0 = getCol(data, 0);
-        Vector<Int, 0> y0 = getCol(y.data, 0);
-        return x0 == y0;
+	return getCol(data, 0) == getCol(y.data, 0);
     }
 };
 
-size_t length(Permutation perm) { return length(perm.data); }
+size_t getNumLoops(Permutation const &x) { return size(x.data, 0); }
+size_t length(Permutation const &perm) { return length(perm.data); }
 
-Vector<Int, 0> inv(Permutation p) { return getCol(p.data, 1); }
+llvm::ArrayRef<Int> inv(Permutation &p) { return getCol(p.data, 1); }
 
-Int &inv(Permutation p, size_t j) { return p.data(j, 1); }
+Int &inv(Permutation &p, size_t j) { return p.data(j, 1); }
 
-Permutation init(Permutation p) {
-    Int numloops = getNLoops(p);
+void init(Permutation p) {
+    Int numloops = getNumLoops(p);
     for (Int n = 0; n < numloops; n++) {
         p(n) = n;
         inv(p, n) = n;
     }
-    return p;
 }
 
 template <typename T> struct UnitRange {
@@ -604,6 +722,7 @@ template <typename T> struct UnitRange {
 };
 template <typename T> UnitRange<T> inv(UnitRange<T> r) { return r; }
 
+/*
 struct PermutationVector {
     Int *ptr;
     size_t nloops;
@@ -615,8 +734,9 @@ struct PermutationVector {
         return Permutation(ptr + i * 2 * nloops, nloops);
     }
 };
+*/
 
-void swap(Permutation p, Int i, Int j) {
+void swap(Permutation &p, Int i, Int j) {
     Int xi = p(i);
     Int xj = p(j);
     p(i) = xj;
@@ -625,8 +745,8 @@ void swap(Permutation p, Int i, Int j) {
     inv(p, xi) = j;
 }
 
-std::ostream &operator<<(std::ostream &os, Permutation &perm) {
-    auto numloop = getNLoops(perm);
+std::ostream &operator<<(std::ostream &os, Permutation const &perm) {
+    auto numloop = getNumLoops(perm);
     os << "perm: <";
     for (size_t j = 0; j < numloop - 1; j++) {
         os << perm(j) << " ";
@@ -634,7 +754,7 @@ std::ostream &operator<<(std::ostream &os, Permutation &perm) {
     os << ">" << perm(numloop - 1);
     return os;
 }
-
+/*
 struct PermutationSubset {
     Permutation p;
     Int subset_size;
@@ -648,22 +768,22 @@ struct PermutationLevelIterator {
 
     PermutationLevelIterator(Permutation permobj, Int lv, Int num_interior)
         : permobj(permobj) {
-        Int nloops = getNLoops(permobj);
+        Int nloops = getNumLoops(permobj);
         level = nloops - num_interior - lv;
         offset = nloops - num_interior;
     };
 
     PermutationLevelIterator(PermutationSubset ps) : permobj(ps.p) {
         auto lv = ps.subset_size + 1;
-        Int num_exterior = getNLoops(ps.p) - ps.num_interior;
+        Int num_exterior = getNumLoops(ps.p) - ps.num_interior;
         Int num_interior = (lv >= num_exterior) ? 0 : ps.num_interior;
-        level = getNLoops(ps.p) - num_interior - lv;
-        offset = getNLoops(ps.p) - num_interior;
+        level = getNumLoops(ps.p) - num_interior - lv;
+        offset = getNumLoops(ps.p) - num_interior;
     }
 };
 
 PermutationSubset initialize_state(PermutationLevelIterator p) {
-    Int num_interior = getNLoops(p.permobj) - p.offset;
+    Int num_interior = getNumLoops(p.permobj) - p.offset;
     return PermutationSubset{.p = p.permobj,
                              .subset_size = p.offset - p.level,
                              .num_interior = num_interior};
@@ -677,13 +797,14 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
     } else {
         Int k = p.offset - (((p.level & 1) != 0) ? 1 : i);
         swap(p.permobj, p.offset - p.level, k);
-        Int num_interior = getNLoops(p.permobj) - p.offset;
+        Int num_interior = getNumLoops(p.permobj) - p.offset;
         auto ps = PermutationSubset{.p = p.permobj,
                                     .subset_size = p.offset - p.level,
                                     .num_interior = num_interior};
         return std::make_pair(ps, (i + 1) < p.level);
     }
 }
+*/
 
 // a_1 * i + b_1 * j = b_0 - a_0
 // to find all solutions where
@@ -768,3 +889,39 @@ std::tuple<size_t, size_t, size_t> gcdx(size_t a, size_t b) {
     // For now, I'll favor forgoing the division.
     return std::make_tuple(old_r, old_s, old_t);
 }
+
+template <int Bits, class T>
+constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
+                           !std::is_signed_v<T>;
+
+template <class T> inline T zeroUpper(T x) requires is_uint_v<16, T> {
+    return x & 0x00ff;
+}
+template <class T> inline T zeroLower(T x) requires is_uint_v<16, T> {
+    return x & 0xff00;
+}
+template <class T> inline T upperHalf(T x) requires is_uint_v<16, T> {
+    return x >> 8;
+}
+
+template <class T> inline T zeroUpper(T x) requires is_uint_v<32, T> {
+    return x & 0x0000ffff;
+}
+template <class T> inline T zeroLower(T x) requires is_uint_v<32, T> {
+    return x & 0xffff0000;
+}
+template <class T> inline T upperHalf(T x) requires is_uint_v<32, T> {
+    return x >> 16;
+}
+template <class T> inline T zeroUpper(T x) requires is_uint_v<64, T> {
+    return x & 0x00000000ffffffff;
+}
+template <class T> inline T zeroLower(T x) requires is_uint_v<64, T> {
+    return x & 0xffffffff00000000;
+}
+template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
+    return x >> 32;
+}
+
+
+
