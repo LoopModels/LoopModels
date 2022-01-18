@@ -1,10 +1,12 @@
 #pragma once
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <numeric>
@@ -16,9 +18,6 @@
 template <class T>
 concept Integral = std::is_integral<T>::value;
 
-inline uint64_t trailingZeros(uint64_t x) { return __builtin_ctz(x); }
-inline uint64_t leadingZeros(uint64_t x) { return __builtin_clz(x); }
-inline uint64_t countOnes(uint64_t x) { return __builtin_popcount(x); }
 std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
     intptr_t g = std::gcd(x, y);
     return std::make_pair(x / g, y / g);
@@ -53,7 +52,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     if (isOne(x)) {
         return T(One());
     }
-    intptr_t t = trailingZeros(i) + 1;
+    intptr_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
     T z(std::forward<TRC>(x));
@@ -67,7 +66,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     }
     T y(z);
     while (i) {
-        t = trailingZeros(i) + 1;
+        t = std::countr_zero(i) + 1;
         i >>= t;
         while ((--t) >= 0) {
             b = z;
@@ -106,7 +105,7 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
         z = x;
         return;
     }
-    intptr_t t = trailingZeros(i) + 1;
+    intptr_t t = std::countr_zero(i) + 1;
     i >>= t;
     z = x;
     while (--t) {
@@ -118,7 +117,7 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
     }
     a = z;
     while (i) {
-        t = trailingZeros(i) + 1;
+        t = std::countr_zero(i) + 1;
         i >>= t;
         while ((--t) >= 0) {
             b.mul(a, a);
@@ -150,7 +149,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     if (isOne(x)) {
         return T(One());
     }
-    intptr_t t = trailingZeros(i) + 1;
+    intptr_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
     T z(std::forward<TRC>(x));
@@ -164,7 +163,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     }
     T y(z);
     while (i) {
-        t = trailingZeros(i) + 1;
+        t = std::countr_zero(i) + 1;
         i >>= t;
         while ((--t) >= 0) {
             b.mul(z, z);
@@ -312,7 +311,7 @@ template <typename T, size_t M> struct PtrVector {
 
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
-    Vector<T>(size_t N) : data(llvm::SmallVector<T>(N)) {};
+    Vector(size_t N) : data(llvm::SmallVector<T>(N)) {};
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
@@ -708,7 +707,7 @@ llvm::ArrayRef<Int> inv(Permutation &p) { return getCol(p.data, 1); }
 
 Int &inv(Permutation &p, size_t j) { return p.data(j, 1); }
 
-void init(Permutation p) {
+void init(Permutation &p) {
     Int numloops = getNumLoops(p);
     for (Int n = 0; n < numloops; n++) {
         p(n) = n;
@@ -923,5 +922,17 @@ template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
     return x >> 32;
 }
 
-
+template <typename T>
+std::pair<size_t,T> findMax(llvm::ArrayRef<T> x){
+    size_t i = 0;
+    T max = std::numeric_limits<T>::min();
+    for (size_t j = 0; j < x.size(); ++j){
+	T xj = x[j];
+	if (max < xj){
+	    max = xj;
+	    i = j;
+	}
+    }
+    return std::make_pair(i, max);
+}
 

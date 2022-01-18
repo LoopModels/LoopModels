@@ -294,11 +294,14 @@ template <typename T> struct VoV {
 
 template <typename T> size_t length(VoV<T> x) { return length(x.offsets) - 1; }
 
-template <typename T> struct VoVoV {
-    T *memory;
-    Vector<size_t, 0> innerOffsets;
-    Vector<size_t, 0> outerOffsets;
-    Vector<size_t, 0> memOffsets;
+template <typename T, unsigned N = llvm::CalculateSmallVectorDefaultInlinedElements<T>::value> struct VoVoV {
+    llvm::SmallVector<T, N> memory;
+    llvm::SmallVector<uint32_t, N> innerOffsets;
+    llvm::SmallVector<uint32_t, N> outerOffsets;
+    llvm::SmallVector<uint32_t, N> memOffsets;
+    // Vector<size_t, 0> innerOffsets;
+    // Vector<size_t, 0> outerOffsets;
+    // Vector<size_t, 0> memOffsets;
 
     // memOffsets is preallocated but uninitialized memory
     // length(memOffsets) = length(outerOffsets)
@@ -316,7 +319,7 @@ template <typename T> struct VoVoV {
             }
         }
     }
-
+    
     VoV<T> operator()(size_t i) {
         size_t base = memOffsets(i);
         Vector<T, 0> newMem(memory + base, memOffsets(i + 1) - base);
@@ -577,18 +580,6 @@ struct ArrayRef {
     llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize> inds;
     llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t,ArrayRefPreAllocSize> indToStrideMap;
-    // llvm::SmallVector<Polynomial::Multivariate<intptr_t>,ArrayRefPreAllocSize> upperBounds;
-
-    // ArrayRef(size_t arrayID, llvm::ArrayRef<std::pair<Polynomial::Multivariate<intptr_t>, Source>> linearInds) : arrayID(arrayID) {
-    // 	for (auto &&ind : linearInds){
-	    
-    // 	}
-	
-    // 	llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>, 4> tmp;
-
-	
-	
-    // }
 
 };
 
@@ -738,7 +729,7 @@ size_t countScheduled(Schedule s, Int segment, Int level) {
 */
 struct Schedule {
     IndexTree tree;
-    PermutationVector perms;
+    llvm::SmallVector<Permutation> perms;
 };
 
 // Assumption: Does not support more than 32 loops.
@@ -765,14 +756,14 @@ constexpr Int UNSET_COST = -1;
 // LessThan, LessOrEqual, GreaterThan, GreaterOrEqual };
 
 struct Function {
-    Vector<Term, 0> terms;
-    Vector<TriangularLoopNest, 0> triln;
-    Vector<RectangularLoopNest, 0> rectln;
+    llvm::SmallVector<Term> terms;
+    llvm::SmallVector<TriangularLoopNest,0> triln;
+    llvm::SmallVector<RectangularLoopNest> rectln;
     // Vector<Array, 0> arrays;
     // Vector<ArrayRefStrides, 0> arrayRefStrides;
-    Vector<ArrayRef, 0> arrayRefs;
-    Vector<Const, 0> constants;
-    Vector<bool, 0> visited;
+    llvm::SmallVector<ArrayRef,0> arrayRefs;
+    llvm::SmallVector<Const> constants;
+    llvm::SmallVector<bool> visited;
     IndexTree initialLoopTree;
     // Vector<Schedule, 0> bestschedules;
     // Matrix<Schedule, 0, 0> tempschedules;
@@ -792,6 +783,8 @@ struct Function {
     size_t ne;
     // char *data;
 
+    /*
+      // Makes more sense to initialize empty and take builder approach.
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
              // Vector<ArrayRefStrides, 0> arrayRefStrides,
@@ -824,6 +817,7 @@ struct Function {
         arrayReadsToTermMap.resize(numArrays);
         arrayWritesToTermMap.resize(numArrays);
     }
+    */
 };
 
 ValueRange valueRange(Function const &fun, size_t id) {
@@ -864,32 +858,77 @@ Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C> &x) {
 //     ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
 //     return std::make_pair(ar, ars);
 // };
-inline ArrayRef &getArrayRef(Function fun, size_t id) {
+inline ArrayRef &getArrayRef(Function &fun, size_t id) {
     return fun.arrayRefs[id];
 };
+
+
+UpperBounds &getUpperBounds(Function &fun, ArrayRef &ar){
+    size_t triID = upperHalf(ar.arrayID);
+    if (triID){
+	return getUpperbounds(fun.triln[triID]);
+    } else {
+	return getUpperbounds(fun.rectln[ar.arrayID]);
+    }
+}
+UpperBounds &fillUpperBounds(Function &fun, ArrayRef &ar){
+    size_t triID = upperHalf(ar.arrayID);
+    if (triID){
+	TriangularLoopNest &tri = fun.triln[triID];
+	fillUpperBounds(tri);
+	return getUpperbounds(tri);
+    } else {
+	return getUpperbounds(fun.rectln[ar.arrayID]);
+    }
+}
+
+void partitionArrayStrides(Function &fun, ArrayRef &ar){
+    // NOTE: this will be the firstg call, so we fill ehre.
+    UpperBounds &upperBounds = fillUpperBounds(fun, ar);
+    size_t numInds = ar.inds.size();
+    /*
+    llvm::SmallVector<uint32_t> indDegrees(numInds, uint32_t(0));
+    
+    for (size_t i = 0; i < numInds; ++i){
+	indDegrees[i] = std::get<0>(ar.inds[i]).degree();
+    }
+    */
+    size_t maxDegreeInd = 0;
+    size_t maxDegree = 0;
+    for (size_t i = 0; i < numInds; ++i){
+	size_t d = std::get<0>(ar.inds[i]).degree();
+	if (d > maxDegree){
+	    maxDegree = d;
+	    maxDegreeInd = i;
+	}
+    }
+    
+}
+
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
 void clearVisited(Function &fun) {
     for (size_t j = 0; j < length(fun.visited); ++j) {
-        fun.visited(j) = false;
+        fun.visited[j] = false;
     }
 }
-bool visited(Function fun, size_t i) { return fun.visited(i); }
+bool visited(Function &fun, size_t i) { return fun.visited[i]; }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
 Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Term &t) {
     return t.dsts;
 }
 Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Function &fun, size_t i) {
-    return outNeighbors(fun.terms(i));
+    return outNeighbors(fun.terms[i]);
 }
 Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
 Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
-    return inNeighbors(fun.terms(i));
+    return inNeighbors(fun.terms[i]);
 }
 
-Term &getTerm(Function const &fun, size_t tidx) { return fun.terms(tidx); }
+Term &getTerm(Function &fun, size_t tidx) { return fun.terms[tidx]; }
+
 
 struct TermBundle {
     // llvm::SmallVector<size_t> termIDs;
@@ -1167,7 +1206,7 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
 }
 */
 
-uint32_t getLoopDeps(Function const &fun, TermBundle const &tb) {
+uint32_t getLoopDeps(Function &fun, TermBundle &tb) {
     Term t = getTerm(fun, tb.termIds[0]);
     return t.loopDeps;
 }

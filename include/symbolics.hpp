@@ -233,6 +233,15 @@ struct Uninomial {
     friend bool isZero(Uninomial) { return false; }
 
     bool operator==(Uninomial x) const { return x.exponent == exponent; }
+    std::strong_ordering operator<=>(Uninomial x) const {
+	if (exponent < x.exponent){
+	    return std::strong_ordering::less;
+	} else if (exponent == x.exponent) {
+	    return std::strong_ordering::equal;
+	} else {
+	    return std::strong_ordering::greater;
+	}
+    }
     Uninomial operator*(Uninomial x) const {
         return Uninomial{exponent + x.exponent};
     }
@@ -452,6 +461,15 @@ struct Monomial {
     template <typename T> bool lexGreater(T const &x) const {
         return lexGreater(x.monomial());
     }
+    std::strong_ordering operator<=>(Monomial &x) const {
+	if (*this == x){
+	    return std::strong_ordering::equal;
+	} else if (lexGreater(x)){
+	    return std::strong_ordering::greater;
+	} else {
+	    return std::strong_ordering::less;
+	}
+    }
     Monomial operator^(size_t i) { return powBySquare(*this, i); }
     Monomial operator^(size_t i) const { return powBySquare(*this, i); }
 
@@ -550,6 +568,7 @@ template <typename C, IsMonomial M> struct Term {
     bool subCoef(Term const &t) { return subCoef(t.coefficient); }
     bool addCoef(M const &) { return isZero((coefficient += 1)); }
     bool subCoef(M const &) { return isZero((coefficient -= 1)); }
+    bool addCoef(Term const &t, C const &c) { return addCoef(t.coefficient * c); }
     Term &operator*=(intptr_t x) {
         coefficient *= x;
         return *this;
@@ -584,6 +603,9 @@ template <typename C, IsMonomial M> struct Term {
     }
     bool operator!=(Term<C, M> const &y) const {
         return (exponent != y.exponent) || (coefficient != y.coefficient);
+    }
+    std::strong_ordering operator<=>(Term<C,M> &x) const {
+	return exponent <=> x.exponent;
     }
     // bool tryDiv(Term<C, M> const &x, Term<C, M> const &y) {
     //     coefficient = x.coefficient / y.coefficient;
@@ -630,8 +652,8 @@ template <typename C, typename M> struct Terms {
     template <typename S> void add_term_scale(S &&x, C const &c) {
 	if (!isZero(x)) {
 	    for (auto it = begin(); it != end(); ++it) {
-		if ((it->coefficient == x*c)) {
-		    if (it->addCoef(x)) {
+		if ((it->termsMatch(x))) {
+		    if (it->addCoef(x, c)) {
 			erase(it);
 		    }
 		    return;
@@ -878,6 +900,7 @@ template <typename C> using MultivariateTerm = Term<C, Monomial>;
 template <typename C> using Univariate = Terms<C, Uninomial>;
 template <typename C> using Multivariate = Terms<C, Monomial>;
 
+    
 // template <typename T>
 
 template <typename C>
@@ -1500,7 +1523,7 @@ Terms<C, M> operator+(Terms<C, M> &&x, Terms<C, M> &&y) {
 
 template <typename C, typename M>
 Terms<C, M> operator-(Terms<C, M> const &x, Terms<C, M> const &y) {
-    Terms<C, M> z(x.largerCapacityCopy(y.size()));
+    Terms<C, M> z(x.largerCapacityCopy(y.terms.size()));
     z -= y;
     return z;
 }
@@ -1550,7 +1573,13 @@ template <typename C, typename M>
 Terms<C, M> operator*(M const &y, Terms<C, M> &&x) {
     return std::move(x *= y);
 }
+template <T> void foo(T&& d){
+    auto s = {1, 2, 3}; // int *
+    auto&& as = {1, 2, 3}; // int[3]
+     for(auto&& x : d){
 
+     }
+}
 template <typename C> void divExact(Univariate<C> &d, C const &x) {
     for (auto &&term : d) {
         divExact(term.coefficient, x);
@@ -1831,7 +1860,7 @@ Univariate<C> pseudorem(Univariate<C> const &p, Univariate<C> const &d) {
         return p;
     }
     size_t k = (1 + p.degree()) - d.degree();
-    C &l = d.leadingCoefficient();
+    const C &l = d.leadingCoefficient();
     Univariate<C> dd(d);
     Univariate<C> pp(p);
     while ((!isZero(p)) && (pp.degree() >= d.degree())) {
@@ -1852,7 +1881,7 @@ void pseudorem(Univariate<C> &pp, Univariate<C> const &p, Univariate<C> const &d
         return;
     }
     size_t k = (1 + p.degree()) - d.degree();
-    C &l = d.leadingCoefficient();
+    const C &l = d.leadingCoefficient();
     Univariate<C> dd(d);
     while ((!isZero(p)) && (pp.degree() >= d.degree())) {
         mulPow(dd, d,

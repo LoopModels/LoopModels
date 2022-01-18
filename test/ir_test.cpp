@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <llvm/ADT/ArrayRef.h>
 #include <utility>
 
 TEST(IRTest, BasicAssertions) {
@@ -28,16 +29,16 @@ TEST(IRTest, BasicAssertions) {
     //      std::make_pair(0, SourceType::LoopInductionVariable)});
 
     
-    std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
-    std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
+    // std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
+    // std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
     // VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
-    llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
-    std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
+    // llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
+    // std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
     // printf("innOff len: %d\n", innerOffsets.size());
-    std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
-    std::cout << toVector(innerOffsets) << std::endl;
-    size_t raw[16];
-    Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
+    // std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
+    // std::cout << toVector(llvm::ArrayRef<size_t>(innerOffsets)) << std::endl;
+    // size_t raw[16];
+    // Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // llvm::SmallVector<size_t> memBuffer().resize(outerOffsets.size());
     // VoVoV<size_t> pvc =
     //     VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
@@ -56,7 +57,7 @@ TEST(IRTest, BasicAssertions) {
     p4.add_term(Polynomial::MultivariateTerm<intptr_t>(11, Polynomial::MonomialID(0,0,2)));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
-    ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};
+    ArrayRef ar = ArrayRef{.arrayID = 10, .inds = inds};
     std::cout << ar << std::endl;
     std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
 }

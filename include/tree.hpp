@@ -1,8 +1,10 @@
 #pragma once
 #include "./math.hpp"
+#include <llvm/ADT/ArrayRef.h>
 #include <tuple>
 
 template <typename T> struct Tree {
+    
     T *ptr;          // stride is `stride`
     size_t *offsets; // stride is `stride + 1`
     size_t breadth;  // number of terms
@@ -16,7 +18,7 @@ template <typename T> struct Tree {
 };
 
 template <typename T>
-std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
+std::pair<llvm::ArrayRef<T>, Tree<T>> subTree(Tree<T> t, size_t i) {
 #ifndef DONOTBOUNDSCHECK
     assert(i < t.breadth);
     // assert((0 <= i) & (i < t.branches));
@@ -24,7 +26,8 @@ std::pair<Vector<T, 0>, Tree<T>> subTree(Tree<T> t, size_t i) {
 #endif
     size_t base = t.offsets[i];
     size_t len = t.offsets[i + 1] - base;
-    Vector<T, 0> v = Vector<T, 0>(t.ptr + base, len);
+    
+    llvm::ArrayRef<T> v = llvm::ArrayRef<T>(t.ptr + base, len);
     Tree<T> ts = Tree<T>{
         .ptr = t.ptr + t.stride,
         .offsets = t.offsets + base + t.stride + 1,
@@ -41,7 +44,7 @@ template <typename T> struct Tree<T>::Iterator {
     size_t position;
     bool dobreak;
 
-    std::tuple<size_t, Vector<T, 0>, Tree<T>> operator*() {
+    std::tuple<size_t, llvm::ArrayRef<T>, Tree<T>> operator*() {
         auto [v, t] = subTree(tree, position);
         dobreak = length(v) == 0;
         return std::make_tuple(position, v, t);
@@ -81,11 +84,11 @@ struct InvTree { // basically, a depth x breadth matrix
 #endif
         return ptr[i + j * depth];
     }
-    Vector<size_t, 0> operator()(size_t j) {
+    llvm::ArrayRef<size_t> operator()(size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(j < breadth);
 #endif
-        return Vector<size_t, 0>(ptr + j * depth, depth);
+        return llvm::ArrayRef<size_t>(ptr + j * depth, depth);
     }
 };
 
@@ -109,7 +112,7 @@ void fillInvTree(Tree<size_t> t, InvTree it, size_t depth = 0) {
     for (Tree<size_t>::Iterator I = t.begin(); I != t.end(); ++I) {
         auto [p, v, t] = *I;
         for (size_t j = 0; j < length(v); ++j) {
-            it(depth, v(j)) = p;
+            it(depth, v[j]) = p;
         }
         if (nextDepth < it.depth) {
             fillInvTree(t, it, nextDepth);

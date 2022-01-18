@@ -8,10 +8,11 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
-add_executable(
-  perm_test
-  perm_test.cpp
-)
+# add_executable(
+#  perm_test
+#  perm_test.cpp
+#  )
+
 add_executable(
   compat_test
   compat_test.cpp
@@ -33,11 +34,11 @@ target_link_libraries(
   gtest_main
   LLVM
 )
-target_link_libraries(
-  perm_test
-  gtest_main
-  LLVM
-)
+# target_link_libraries(
+#   perm_test
+#   gtest_main
+#   LLVM
+# )
 target_link_libraries(
   ir_test
   gtest_main
@@ -56,6 +57,6 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(compat_test)
-gtest_discover_tests(perm_test)
+# gtest_discover_tests(perm_test)
 gtest_discover_tests(ir_test)
 gtest_discover_tests(bitset_test)

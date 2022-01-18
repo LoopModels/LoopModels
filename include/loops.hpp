@@ -26,9 +26,7 @@ typedef llvm::SmallVector<UpperBound, 3> UpperBounds;
 struct RectangularLoopNest {
     UpperBounds data;
 
-    // RectangularLoopNest(Int *ptr, size_t nloops) : data(RektM(ptr, nloops)) {
-    //     assert(nloops <= MAX_NUM_LOOPS);
-    // };
+    RectangularLoopNest(size_t nloops) : data(UpperBounds(nloops)) {};
 };
 size_t getNumLoops(RectangularLoopNest const &data){ return data.data.size(); }
 // size_t length(RectangularLoopNest rekt) { return length(rekt.data); }
@@ -54,6 +52,7 @@ struct TriangularLoopNest {
     SquareMatrix<Int> A;
     RectangularLoopNest r;
     RectangularLoopNest u;
+    TriangularLoopNest(size_t nloops) : A(SquareMatrix<Int>(nloops)), r(RectangularLoopNest(nloops)), u(RectangularLoopNest(nloops)) {};
 };
 
 size_t getNumLoops(const TriangularLoopNest &t){ return getNumLoops(t.r); }
@@ -62,7 +61,7 @@ RectangularLoopNest &getRekt(TriangularLoopNest &tri) {
     // return RectangularLoopNest(tri.raw, tri.nloops);
 }
 
-TrictM &getTrit(TriangularLoopNest &tri) {
+SquareMatrix<Int> &getTrit(TriangularLoopNest &tri) {
     return tri.A;
     // TrictM A(tri.raw + length(getRekt(tri)), tri.nloops, tri.nloops);
     // return A;
@@ -154,7 +153,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     SquareMatrix<Int>& A = getTrit(l1);
     RectangularLoopNest& r = getRekt(l1);
     auto i = perm1(_i1);
-
+    
     UpperBound& ub1 = getUpperbound(r, i);
     UpperBound& ub2 = getUpperbound(l2, perm2(_i2));
     auto delta_b = ub1 - ub2;
@@ -221,8 +220,8 @@ bool compatible(RectangularLoopNest &r, TriangularLoopNest &t, Permutation &perm
 bool updateBoundDifference(UpperBound &delta_b,
                            TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                            Permutation &perm2, Int _i1, Int i2, bool flip) {
-    auto A1 = getTrit(l1);
-    auto r1 = getRekt(l1);
+    SquareMatrix<Int>& A1 = getTrit(l1);
+    RectangularLoopNest& r1 = getRekt(l1);
     auto i1 = perm1(_i1);
     auto iperm = inv(perm1);
     // the first loop adds variables that adjust `i`'s bounds
@@ -247,8 +246,8 @@ bool updateBoundDifference(UpperBound &delta_b,
     return true;
 }
 
-bool checkRemainingBound(TriangularLoopNest l1, TrictM A2, Permutation perm1,
-                         Permutation perm2, Int _i1, Int i2) {
+bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
+                         Permutation &perm2, Int _i1, Int i2) {
     auto A1 = getTrit(l1);
     auto i1 = perm1(_i1);
     auto iperm = inv(perm1);
@@ -263,8 +262,8 @@ bool checkRemainingBound(TriangularLoopNest l1, TrictM A2, Permutation perm1,
     return true;
 }
 
-bool compatible(TriangularLoopNest l1, TriangularLoopNest l2, Permutation perm1,
-                Permutation perm2, Int _i1, Int _i2) {
+bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2, Permutation &perm1,
+                Permutation &perm2, Int _i1, Int _i2) {
     SquareMatrix<Int> &A1 = getTrit(l1);
     RectangularLoopNest &r1 = getRekt(l1);
     SquareMatrix<Int> &A2 = getTrit(l2);
@@ -275,15 +274,18 @@ bool compatible(TriangularLoopNest l1, TriangularLoopNest l2, Permutation perm1,
     UpperBound &ub2 = getUpperbound(r2, i2);
     UpperBound delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false))
+    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)){
         return false;
-    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true))
+    }
+    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true)){
         return false;
-
-    if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2))
+    }
+    if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2)){
         return false;
-    if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1))
+    }
+    if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1)){
         return false;
+    }
     if (isZero(delta_b)){
 	return true;
     } else if (delta_b.terms.size() == 1){
