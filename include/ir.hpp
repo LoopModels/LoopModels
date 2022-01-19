@@ -382,9 +382,9 @@ template <typename T> size_t length(VoVoV<T> x) {
 // set identically. thus, `getCount(SourceType::Constant)` must always return
 // either `0` or `1`.
 struct Stride {
-    Polynomial::Multivariate<intptr_t> stride;
+    Polynomial::Multivariate<intptr_t,Polynomial::Monomial> stride;
     // sources must be ordered
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,1>
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,1>
         indices;
     uint8_t counts[5];
     // size_t constCount;
@@ -395,14 +395,14 @@ struct Stride {
         : // : indices(llvm:n:SmallVector<
           // std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
           counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> const &x)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x)
 	: stride(x), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &&x)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &&x)
 	: stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> const &x, Source &&ind)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x, Source &&ind)
         : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
       0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &x, size_t indId,
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &x, size_t indId,
            SourceType indTyp)
         : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0,
       0, 0} {};
@@ -574,10 +574,23 @@ SourceCount sourceCount(Stride s) {
 
 static constexpr unsigned ArrayRefPreAllocSize = 2;
 
+// M*N*i + M*j + i
+// [M*N + 1]*i, [M]*j
+// M*N
+//
+// x = i1 * (M*N) + j1 * M + i1 * 1 = i2 * (M*N) + j2 * M + i2 * 1
+//
+// MN * [ i1 ] = MN * [ i2 ]
+// M  * [ j1 ] = M  * [ j2 ]
+// 1  * [ i1 ] = M  * [ i2 ]
+//
+// divrem(x, MN) = (i1, j1 * M + i1) == (i2, j2 * M + i2)
+// i1 == i2
+// j1 * M + ...
 
 struct ArrayRef {
     size_t arrayID;
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize> inds;
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,ArrayRefPreAllocSize> inds;
     llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t,ArrayRefPreAllocSize> indToStrideMap;
 
@@ -825,7 +838,7 @@ ValueRange valueRange(Function const &fun, size_t id) {
 }
 template <typename C>
 ValueRange valueRange(Function const &fun,
-                      Polynomial::MultivariateTerm<C> const &x) {
+                      Polynomial::MultivariateTerm<C,Polynomial::Monomial> const &x) {
     ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
@@ -834,7 +847,7 @@ ValueRange valueRange(Function const &fun,
 }
 template <typename C>
 ValueRange valueRange(Function const &fun,
-                      Polynomial::Multivariate<C> const &x) {
+                      Polynomial::Multivariate<C,Polynomial::Monomial> const &x) {
     ValueRange a(0);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
@@ -849,7 +862,7 @@ Order cmpZero(Function &fun, size_t id) {
     return valueRange(fun, id).compare(0);
 }
 template <typename C>
-Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C> &x) {
+Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C,Polynomial::Monomial> &x) {
     return valueRange(fun, x).compare(0);
 };
 
@@ -1115,8 +1128,8 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
 
 // returns true if `abs(x) < y`
 template <typename C>
-bool absLess(Function const &fun, Polynomial::Multivariate<C> const &x,
-             Polynomial::Multivariate<C> const &y) {
+bool absLess(Function const &fun, Polynomial::Multivariate<C,Polynomial::Monomial> const &x,
+             Polynomial::Multivariate<C,Polynomial::Monomial> const &y) {
     ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
     if (delta.lowerBound < 0.0) {
         return false;

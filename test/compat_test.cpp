@@ -12,12 +12,12 @@ TEST(CompatTest, BasicAssertions) {
     auto perm_tr2 = Permutation(3);
 
     UpperBounds& gd = rectl.data;
-    gd[0] += Polynomial::MonomialID(0);
-    gd[1] += Polynomial::MonomialID(1);
+    gd[0] += Polynomial::Monomial(Polynomial::ID{0});
+    gd[1] += Polynomial::Monomial(Polynomial::ID{1});
     UpperBounds& gd1 = getRekt(trial).data;
     SquareMatrix<Int>& A = getTrit(trial);
-    gd1[0] += Polynomial::MonomialID(0);
-    gd1[1] += Polynomial::MonomialID(1);
+    gd1[0] += Polynomial::Monomial(Polynomial::ID{0});
+    gd1[1] += Polynomial::Monomial(Polynomial::ID{1});
     A(0, 0) = 1;
     A(0, 1) = 0;
     A(0, 2) = 0;
@@ -199,5 +199,5 @@ TEST(CompatTest, BasicAssertions) {
 
     EXPECT_TRUE(compatible(trial, trial, perm_tr2, perm_tri, 0, 0));
     EXPECT_FALSE(compatible(trial, trial, perm_tr2, perm_tri, 1, 1));
-    
 }
+

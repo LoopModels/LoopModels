@@ -9,7 +9,7 @@
 // typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
 // typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
 
-typedef Polynomial::Multivariate<intptr_t> UpperBound;
+typedef Polynomial::Multivariate<intptr_t,Polynomial::Monomial> UpperBound;
 typedef llvm::SmallVector<UpperBound, 3> UpperBounds;
 // NOTE: UpperBounds assumes symbols in the monomial products are >= 0.
 //       If a number is known to be negative, then it should receive a negative
