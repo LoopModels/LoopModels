@@ -3,7 +3,7 @@
 #include <benchmark/benchmark.h>
 #include <cstdint>
 
-static void BM_GCD_Big(benchmark::State &state) {
+static void BM_GCD_Big_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
     Polynomial::Monomial y = Polynomial::Monomial(Polynomial::ID{1});
@@ -29,9 +29,9 @@ static void BM_GCD_Big(benchmark::State &state) {
         gcd(p, q);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_Big);
+BENCHMARK(BM_GCD_Big_Sparse);
 
-static void BM_GCD_Small(benchmark::State &state) {
+static void BM_GCD_Small_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
     Polynomial::Monomial y = Polynomial::Monomial(Polynomial::ID{1});
@@ -43,9 +43,9 @@ static void BM_GCD_Small(benchmark::State &state) {
         gcd(p, q);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_Small);
+BENCHMARK(BM_GCD_Small_Sparse);
 
-static void BM_GCD_Simp(benchmark::State &state) {
+static void BM_GCD_Simp_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
     Polynomial::Monomial y = Polynomial::Monomial(Polynomial::ID{1});
@@ -57,9 +57,9 @@ static void BM_GCD_Simp(benchmark::State &state) {
         Polynomial::divExact(p, gcd(p, q));
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_Simp);
+BENCHMARK(BM_GCD_Simp_Sparse);
 
-static void BM_GCD_EqualMonomial(benchmark::State &state) {
+static void BM_GCD_EqualMonomial_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
 
@@ -72,8 +72,8 @@ static void BM_GCD_EqualMonomial(benchmark::State &state) {
         gcd(p, q);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_EqualMonomial);
-static void BM_GCD_EqualConstants1(benchmark::State &state) {
+BENCHMARK(BM_GCD_EqualMonomial_Sparse);
+static void BM_GCD_EqualConstants1_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x;
 
@@ -86,8 +86,8 @@ static void BM_GCD_EqualConstants1(benchmark::State &state) {
         gcd(p, q);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_EqualConstants1);
-static void BM_GCD_EqualConstants2(benchmark::State &state) {
+BENCHMARK(BM_GCD_EqualConstants1_Sparse);
+static void BM_GCD_EqualConstants2_Sparse(benchmark::State &state) {
 
     Polynomial::Monomial x;
 
@@ -100,7 +100,7 @@ static void BM_GCD_EqualConstants2(benchmark::State &state) {
         gcd(p, q);
 }
 // Register the function as a benchmark
-BENCHMARK(BM_GCD_EqualConstants2);
+BENCHMARK(BM_GCD_EqualConstants2_Sparse);
 
 
 static void BM_GCD_Big_Packed(benchmark::State &state) {
