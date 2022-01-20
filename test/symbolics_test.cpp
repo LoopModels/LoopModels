@@ -219,7 +219,8 @@ TEST(MultivariateMonomialTests, BasicAssertions) {
 
     MultivariatePolynomial c = x * y + y;
     MultivariatePolynomial d = -1 * c;
-    EXPECT_TRUE(Polynomial::gcd(c, d) == c);
+    std::cout << "gcd(c,d): " << gcd(c,d) << "\ngcd(d,c): " << gcd(d,c) << "\n; c: " << c << std::endl;
+    EXPECT_TRUE(Polynomial::gcd(c, d) == (-1*c));
     EXPECT_TRUE(Polynomial::gcd(d, c) == c);
 
     MultivariatePolynomial ps = (x^2) - (y^2);
@@ -397,7 +398,7 @@ TEST(PackedMultivariateMonomialTests, BasicAssertions) {
 
     MultivariatePolynomial c = x * y + y;
     MultivariatePolynomial d = -1 * c;
-    EXPECT_TRUE(Polynomial::gcd(c, d) == c);
+    EXPECT_TRUE(Polynomial::gcd(c, d) == (-1*c));
     EXPECT_TRUE(Polynomial::gcd(d, c) == c);
 
     MultivariatePolynomial ps = (x^2) - (y^2);

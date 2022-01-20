@@ -890,6 +890,10 @@ concept IsMultivariateMonomial = requires(M a) {
 template <typename M>
 concept IsMonomial = std::same_as<M, Uninomial> || IsMultivariateMonomial<M>;
 // std::same_as<M, Monomial> || std::same_as<M, PackedMonomial<>>;
+//template <typename U>
+//concept IsUnivariateWithPolyCoefs = requires(U a){
+//    { a.terms[0].terms[0].monomial };
+//};
 
 template <IsMonomial M> std::pair<M, bool> operator/(M const &x, M const &y) {
     M z;
@@ -1257,6 +1261,7 @@ template <typename C, IsMonomial M> struct Terms {
         os << " ) ";
         return os;
     }
+    constexpr One isPoly() {return One();}
 };
 
 template <typename C> using UnivariateTerm = Term<C, Uninomial>;
@@ -1277,6 +1282,12 @@ using Multivariate = Terms<C, M>;
 // template <typename C, Mu M>
 // concept Multi =
 // template <typename T>
+
+// P is Multivariate<C,M> for any C
+template <typename P>
+concept IsMPoly = requires(P p){
+    {p.isPoly()} -> std::same_as<One>;
+};
 
 template <typename C, IsMultivariateMonomial M>
 bool operator==(Multivariate<C, M> const &x, M const &y) {
@@ -2261,6 +2272,43 @@ void pseudorem(Univariate<C> &pp, Univariate<C> const &p,
     }
     pp *= powBySquare(l, k);
 }
+// template <typename C, IsMultivariateMonomial M> C termwiseContent(llvm::ArrayRef<Term<C,M>> a){
+//template <typename C, IsMultivariateMonomial M, unsigned L> C termwiseContent(llvm::SmallVector<Term<C,M>,L> const &a){
+template <typename K> auto termwiseContent(K const &a){
+    if (a.size() == 1){ return a[0]; }
+    auto g = gcd(a[0], a[1]);
+    for (size_t i = 2; i < a.size(); ++i){
+        if (isOne(g)){ break; }
+        g = gcd(g, a[i]);
+    }
+    return g;
+}
+
+// IsMPoly<M> C === IsMPoly<C,M>
+template <IsMPoly C> auto content(Univariate<C> const &a) {
+    if (a.terms.size() == 1) {
+        return a.terms[0].coefficient;
+    }
+    for (auto &term : a){
+        // term is Term<C,Unimonial>, where C is a multivariate polynomial.
+        // access the multivariate polynomial via `term.coefficient`.
+        // The multivariate polynomials 
+        if (term.coefficient.terms.size() == 1){
+            // term.coefficient is a single {term}
+            auto g = gcd(termwiseContent(a.terms[0].coefficient.terms), termwiseContent(a.terms[1].coefficient.terms));
+            for (size_t i = 2; i < a.terms.size(); ++i){
+                if(isOne(g)) { break; }
+                g = gcd(g, termwiseContent(a.terms[i].coefficient.terms));
+            }
+            return C(g);
+        }
+    }
+    auto g = gcd(a.terms[0].coefficient, a.terms[1].coefficient);
+    for (size_t i = 2; i < a.terms.size(); ++i) {
+        g = gcd(g, a.terms[i].coefficient);
+    }
+    return g;
+}
 template <typename C> C content(Univariate<C> const &a) {
     if (a.terms.size() == 1) {
         return a.terms[0].coefficient;
@@ -2358,7 +2406,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         if (r.degree() == 0) {
             return Univariate<C>(c);
         }
-        size_t d = xx.degree() - yy.degree();
+        size_t d = xx.degree() - yy.degree(); 
         powBySquare(t0, t1, t2, h, d);
         // t0 = h^d
         t1.mul(t0, g);

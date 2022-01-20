@@ -771,7 +771,7 @@ constexpr Int UNSET_COST = -1;
 struct Function {
     llvm::SmallVector<Term> terms;
     llvm::SmallVector<TriangularLoopNest,0> triln;
-    llvm::SmallVector<RectangularLoopNest> rectln;
+    llvm::SmallVector<RectangularLoopNest,0> rectln;
     // Vector<Array, 0> arrays;
     // Vector<ArrayRefStrides, 0> arrayRefStrides;
     llvm::SmallVector<ArrayRef,0> arrayRefs;
