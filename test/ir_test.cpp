@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <llvm/ADT/ArrayRef.h>
 #include <utility>
 
 TEST(IRTest, BasicAssertions) {
@@ -28,35 +29,36 @@ TEST(IRTest, BasicAssertions) {
     //      std::make_pair(0, SourceType::LoopInductionVariable)});
 
     
-    std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
-    std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
+    // std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
+    // std::vector<size_t> coef_offsets({0, 1, 2, 3, 5, 8});
     // VoV<Int> coef = VoV<Int>(toVector(coef_memory), toVector(coef_offsets));
-    llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
-    std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
+    // llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
+    // std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2, 5});
     // printf("innOff len: %d\n", innerOffsets.size());
-    std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
-    std::cout << toVector(innerOffsets) << std::endl;
-    size_t raw[16];
-    Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
+    // std::vector<size_t> outerOffsets({0, 2, 4, 6, 9, 13});
+    // std::cout << toVector(llvm::ArrayRef<size_t>(innerOffsets)) << std::endl;
+    // size_t raw[16];
+    // Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // llvm::SmallVector<size_t> memBuffer().resize(outerOffsets.size());
     // VoVoV<size_t> pvc =
     //     VoVoV<size_t>(&pvc_memory.front(), toVector(innerOffsets),
     //                   toVector(outerOffsets), memBuffer);
+
     
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,2> inds;
-    inds.emplace_back(Polynomial::Multivariate<intptr_t>(1), Source(2, SourceType::LoopInductionVariable));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(2, Polynomial::MonomialID(0)), Source(8, SourceType::Memory));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t>(3, Polynomial::MonomialID(0, 1)), Source(18, SourceType::Term));
-    Polynomial::Multivariate<intptr_t> p3(5);
-    p3.add_term(Polynomial::MultivariateTerm<intptr_t>(7, Polynomial::MonomialID(0)));
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,2> inds;
+    inds.emplace_back(Polynomial::Multivariate<intptr_t,Polynomial::Monomial>(1), Source(2, SourceType::LoopInductionVariable));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(2, Polynomial::Monomial(Polynomial::ID{0})), Source(8, SourceType::Memory));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(3, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{1})), Source(18, SourceType::Term));
+    Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p3(5);
+    p3.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(7, Polynomial::Monomial(Polynomial::ID{0})));
     inds.emplace_back(p3, Source(3, SourceType::LoopInductionVariable));
-    Polynomial::Multivariate<intptr_t> p4(11);
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(13, Polynomial::MonomialID(0,3)));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(17, Polynomial::MonomialID(0,1,2)));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t>(11, Polynomial::MonomialID(0,0,2)));
+    Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p4(11);
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(13, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{3})));
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(17, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{1},Polynomial::ID{2})));
+    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(11, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{0},Polynomial::ID{2})));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
-    ArrayRef ar = ArrayRef{.arrayId = 10, .inds = inds};
+    ArrayRef ar = ArrayRef{.arrayID = 10, .inds = inds};
     std::cout << ar << std::endl;
     std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
 }

@@ -95,18 +95,19 @@ TEST(pseudoRemTests, BasicAssertions) {
                 (-46 * (x ^ 4) + 7 * (x ^ 2) - 18 * x));
 }
 
-TEST(PseudoRemTests, BasicAssertions) {
-    Polynomial::Monomial x = Polynomial::MonomialID(0);
-    Polynomial::Monomial y = Polynomial::MonomialID(1);
-    Polynomial::Monomial z = Polynomial::MonomialID(2);
-    Polynomial::Multivariate<intptr_t> xp1z = x * z + z;
-    Polynomial::Multivariate<intptr_t> c0v2 = 10 * xp1z;
+TEST(MultivariateMonomialTests, BasicAssertions) {
+    Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
+    Polynomial::Monomial y = Polynomial::Monomial(Polynomial::ID{1});
+    Polynomial::Monomial z = Polynomial::Monomial(Polynomial::ID{2});
+    typedef Polynomial::Multivariate<intptr_t,Polynomial::Monomial> MultivariatePolynomial;
+    MultivariatePolynomial xp1z = x * z + z;
+    MultivariatePolynomial c0v2 = 10 * xp1z;
 
-    // Polynomial::Multivariate<intptr_t> c0 = 10*(x*z + z);
-    Polynomial::Multivariate<intptr_t> c0 = 10 * (x * z + x);
-    Polynomial::Multivariate<intptr_t> c1 = 2 * ((x ^ 2) + z);
-    Polynomial::Multivariate<intptr_t> c2 = 2 * (2 - z);
-    Polynomial::Multivariate<intptr_t> c3 = 20 * (x * (z ^ 2));
+    // MultivariatePolynomial c0 = 10*(x*z + z);
+    MultivariatePolynomial c0 = 10 * (x * z + x);
+    MultivariatePolynomial c1 = 2 * ((x ^ 2) + z);
+    MultivariatePolynomial c2 = 2 * (2 - z);
+    MultivariatePolynomial c3 = 20 * (x * (z ^ 2));
 
     intptr_t e0 = 0;
     intptr_t e1 = 5;
@@ -116,7 +117,7 @@ TEST(PseudoRemTests, BasicAssertions) {
     showln(x);
     showln(y);
     showln(z);
-    Polynomial::Multivariate<intptr_t> p =
+    MultivariatePolynomial p =
         c0 * (y ^ e0) + c1 * (y ^ e1) + c2 * (y ^ e2) + c3 * (y ^ e3);
     printf("Polynomial p:\n");
     showln(p);
@@ -126,7 +127,7 @@ TEST(PseudoRemTests, BasicAssertions) {
     }
     printf("\n");
 
-    Polynomial::Univariate<Polynomial::Multivariate<intptr_t>> ppy =
+    Polynomial::Univariate<MultivariatePolynomial> ppy =
         Polynomial::multivariateToUnivariate(p, 1);
     printf("Number of terms in p: %d \n", int(ppy.terms.size()));
     printf("c3:\n");
@@ -161,20 +162,20 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_EQ(ppy.terms[2].exponent.exponent, e1);
     EXPECT_EQ(ppy.terms[3].exponent.exponent, e0);
 
-    Polynomial::Multivariate<intptr_t> a = x * y + y;
-    Polynomial::Multivariate<intptr_t> b = y * z + y;
+    MultivariatePolynomial a = x * y + y;
+    MultivariatePolynomial b = y * z + y;
     printf("gcd(a,b) == M:\n");
-    EXPECT_TRUE(Polynomial::gcd(a, b) == Polynomial::Multivariate<intptr_t>(y));
+    EXPECT_TRUE(Polynomial::gcd(a, b) == MultivariatePolynomial(y));
     printf("GCD: ");
     showln(gcd(a, b)); // we have N + 2? aka z + 1???
     printf("y:  ");
     showln(y);
     printf("Multivariate(y):  ");
-    showln(Polynomial::Multivariate<intptr_t>(y));
+    showln(MultivariatePolynomial(y));
 
-    // Polynomial::Multivariate<intptr_t> q = p * (p + 1);
-    Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2) * (p + 3);
-    // Polynomial::Multivariate<intptr_t> q = p * (p + 1) * (p + 2); //* (p +
+    // MultivariatePolynomial q = p * (p + 1);
+    MultivariatePolynomial q = p * (p + 1) * (p + 2) * (p + 3);
+    // MultivariatePolynomial q = p * (p + 1) * (p + 2); //* (p +
     // 3);
     printf("q:\n");
     std::cout << q << std::endl;
@@ -203,7 +204,7 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(p + 2, q) == p + 2);
     EXPECT_TRUE(Polynomial::gcd(p + 3, q) == p + 3);
 
-    Polynomial::Multivariate<intptr_t> k = (y ^ 2) + 1;
+    MultivariatePolynomial k = (y ^ 2) + 1;
     EXPECT_TRUE(Polynomial::gcd(x * k, z * k) == k);
     EXPECT_TRUE(Polynomial::gcd(z * k, x * k) == k);
     EXPECT_TRUE(Polynomial::gcd(x * k, (z + 1) * k) == k);
@@ -212,17 +213,18 @@ TEST(PseudoRemTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(p * k, x * k) == k);
 
     Polynomial::Term<intptr_t, Polynomial::Monomial> twoxy = 2 * (x * y);
-    Polynomial::Multivariate<intptr_t> twoxyplusx = (2 * x) * y + x;
+    MultivariatePolynomial twoxyplusx = (2 * x) * y + x;
     EXPECT_TRUE(Polynomial::gcd(twoxy, twoxyplusx) == x);
     EXPECT_TRUE(Polynomial::gcd(twoxyplusx, twoxy) == x);
 
-    Polynomial::Multivariate<intptr_t> c = x * y + y;
-    Polynomial::Multivariate<intptr_t> d = -1 * c;
-    EXPECT_TRUE(Polynomial::gcd(c, d) == c);
+    MultivariatePolynomial c = x * y + y;
+    MultivariatePolynomial d = -1 * c;
+    std::cout << "gcd(c,d): " << gcd(c,d) << "\ngcd(d,c): " << gcd(d,c) << "\n; c: " << c << std::endl;
+    EXPECT_TRUE(Polynomial::gcd(c, d) == (-1*c));
     EXPECT_TRUE(Polynomial::gcd(d, c) == c);
 
-    Polynomial::Multivariate<intptr_t> ps = (x^2) - (y^2);
-    Polynomial::Multivariate<intptr_t> qs = x + y;
+    MultivariatePolynomial ps = (x^2) - (y^2);
+    MultivariatePolynomial qs = x + y;
 
     Polynomial::divExact(ps, gcd(ps, qs));
     EXPECT_TRUE(ps == (x - y));
@@ -264,5 +266,184 @@ TEST(PseudoRemTests, BasicAssertions) {
     std::cout << "sizeof(SmallVector<uint64_t,16>): " << sizeof(llvm::SmallVector<uint64_t,16>) << std::endl;
 
     std::cout << "sizeof(Polynomial::Monomial): " << sizeof(Polynomial::Monomial) << std::endl;
-    std::cout << "sizeof(Polynomial::Multivariate<size_t>): " << sizeof(Polynomial::Multivariate<size_t>) << std::endl;
+    std::cout << "sizeof(Polynomial::Multivariate<size_t,Polynomial::Monomoial>): " << sizeof(MultivariatePolynomial) << std::endl;
 }
+
+TEST(PackedMultivariateMonomialTests, BasicAssertions) {
+    Polynomial::PackedMonomial x = Polynomial::PackedMonomial(Polynomial::ID{0});
+    showln(x);
+    Polynomial::PackedMonomial y = Polynomial::PackedMonomial(Polynomial::ID{1});
+    showln(y);
+    Polynomial::PackedMonomial z = Polynomial::PackedMonomial(Polynomial::ID{2});
+    showln(z);
+    EXPECT_EQ(x.degree(), 1);
+    EXPECT_EQ(y.degree(), 1);
+    EXPECT_EQ(z.degree(), 1);
+    x.calcDegree();
+    EXPECT_EQ(x.degree(), 1);
+    y.calcDegree();
+    EXPECT_EQ(y.degree(), 1);
+    z.calcDegree();
+    EXPECT_EQ(z.degree(), 1);
+    typedef Polynomial::Multivariate<intptr_t, Polynomial::PackedMonomial<15,7>> MultivariatePolynomial;
+    MultivariatePolynomial xp1z = x * z + z;
+    MultivariatePolynomial c0v2 = 10 * xp1z;
+
+    // MultivariatePolynomial c0 = 10*(x*z + z);
+    MultivariatePolynomial c0 = 10 * (x * z + x);
+    MultivariatePolynomial c1 = 2 * ((x ^ 2) + z);
+    MultivariatePolynomial c2 = 2 * (2 - z);
+    MultivariatePolynomial c3 = 20 * (x * (z ^ 2));
+
+    intptr_t e0 = 0;
+    intptr_t e1 = 5;
+    intptr_t e2 = 7;
+    intptr_t e3 = 10;
+
+    MultivariatePolynomial p =
+        c0 * (y ^ e0) + c1 * (y ^ e1) + c2 * (y ^ e2) + c3 * (y ^ e3);
+    printf("Polynomial p:\n");
+    showln(p);
+    printf("\n");
+
+    Polynomial::Univariate<MultivariatePolynomial> ppy =
+        Polynomial::multivariateToUnivariate(p, 1);
+    printf("Number of terms in p: %d \n", int(ppy.terms.size()));
+    printf("c3:\n");
+    std::cout << c3 << std::endl;
+    printf("coef 0:\n");
+    showln(ppy.terms[0].coefficient);
+
+    printf("c2:\n");
+    std::cout << c2 << std::endl;
+    printf("coef 1:\n");
+    showln(ppy.terms[1].coefficient);
+
+    printf("c1:\n");
+    // showln(c1);
+    std::cout << c1 << std::endl;
+    printf("coef 2:\n");
+    showln(ppy.terms[2].coefficient);
+
+    printf("c0:\n");
+    std::cout << c0 << std::endl;
+    // showln(c0);
+    printf("coef 3:\n");
+    showln(ppy.terms[3].coefficient);
+
+    EXPECT_TRUE(ppy.terms[0].coefficient == c3);
+    EXPECT_TRUE(ppy.terms[1].coefficient == c2);
+    EXPECT_TRUE(ppy.terms[2].coefficient == c1);
+    EXPECT_TRUE(ppy.terms[3].coefficient == c0);
+
+    EXPECT_EQ(ppy.terms[0].exponent.exponent, e3);
+    EXPECT_EQ(ppy.terms[1].exponent.exponent, e2);
+    EXPECT_EQ(ppy.terms[2].exponent.exponent, e1);
+    EXPECT_EQ(ppy.terms[3].exponent.exponent, e0);
+
+    MultivariatePolynomial a = x * y + y;
+    MultivariatePolynomial b = y * z + y;
+    printf("gcd(a,b) == M:\n");
+    EXPECT_TRUE(Polynomial::gcd(a, b) == MultivariatePolynomial(y));
+    printf("GCD: ");
+    showln(gcd(a, b)); // we have N + 2? aka z + 1???
+    printf("y:  ");
+    showln(y);
+    printf("Multivariate(y):  ");
+    showln(MultivariatePolynomial(y));
+
+    // MultivariatePolynomial q = p * (p + 1);
+    MultivariatePolynomial q = p * (p + 1) * (p + 2) * (p + 3);
+    // MultivariatePolynomial q = p * (p + 1) * (p + 2); //* (p +
+    // 3);
+    printf("q:\n");
+    std::cout << q << std::endl;
+    printf("p:\n");
+    std::cout << p << std::endl;
+    printf("gcd(p, q):\n");
+    std::cout << gcd(p, q) << std::endl;
+    // showln(gcd(p, q));
+    /*
+    printf("p+1:\n");
+    showln(p+1);
+    printf("gcd(p+1, q):\n");
+    showln(gcd(p+1, q));
+    printf("p+2:\n");
+    showln(p+2);
+    printf("gcd(p+2, q):\n");
+    showln(gcd(p+2, q));
+    printf("p+3:\n");
+    showln(p+3);
+    printf("gcd(p+3, q):\n");
+    showln(gcd(p+3, q));
+    */
+
+    EXPECT_TRUE(Polynomial::gcd(p, q) == p);
+    EXPECT_TRUE(Polynomial::gcd(p + 1, q) == p + 1);
+    EXPECT_TRUE(Polynomial::gcd(p + 2, q) == p + 2);
+    EXPECT_TRUE(Polynomial::gcd(p + 3, q) == p + 3);
+
+    MultivariatePolynomial k = (y ^ 2) + 1;
+    EXPECT_TRUE(Polynomial::gcd(x * k, z * k) == k);
+    EXPECT_TRUE(Polynomial::gcd(z * k, x * k) == k);
+    EXPECT_TRUE(Polynomial::gcd(x * k, (z + 1) * k) == k);
+    EXPECT_TRUE(Polynomial::gcd((z + 1) * k, x * k) == k);
+    EXPECT_TRUE(Polynomial::gcd(x * k, p * k) == k);
+    EXPECT_TRUE(Polynomial::gcd(p * k, x * k) == k);
+
+    Polynomial::Term<intptr_t, Polynomial::PackedMonomial<15,7>> twoxy = 2 * (x * y);
+    MultivariatePolynomial twoxyplusx = (2 * x) * y + x;
+    EXPECT_TRUE(Polynomial::gcd(twoxy, twoxyplusx) == x);
+    EXPECT_TRUE(Polynomial::gcd(twoxyplusx, twoxy) == x);
+
+    MultivariatePolynomial c = x * y + y;
+    MultivariatePolynomial d = -1 * c;
+    EXPECT_TRUE(Polynomial::gcd(c, d) == (-1*c));
+    EXPECT_TRUE(Polynomial::gcd(d, c) == c);
+
+    MultivariatePolynomial ps = (x^2) - (y^2);
+    MultivariatePolynomial qs = x + y;
+
+    Polynomial::divExact(ps, gcd(ps, qs));
+    EXPECT_TRUE(ps == (x - y));
+
+    
+    std::cout << "sizeof(uint8_t): " << sizeof(uint8_t) << std::endl;
+    std::cout << "sizeof(uint16_t): " << sizeof(uint16_t) << std::endl;
+    std::cout << "sizeof(uint32_t): " << sizeof(uint32_t) << std::endl;
+    std::cout << "sizeof(uint64_t): " << sizeof(uint64_t) << std::endl;
+
+    std::cout << "sizeof(SmallVector<uint8_t,0>): " << sizeof(llvm::SmallVector<uint8_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,0>): " << sizeof(llvm::SmallVector<uint16_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,0>): " << sizeof(llvm::SmallVector<uint32_t,0>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,0>): " << sizeof(llvm::SmallVector<uint64_t,0>) << std::endl;
+
+    std::cout << "sizeof(SmallVector<uint8_t,1>): " << sizeof(llvm::SmallVector<uint8_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,1>): " << sizeof(llvm::SmallVector<uint16_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,1>): " << sizeof(llvm::SmallVector<uint32_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,1>): " << sizeof(llvm::SmallVector<uint64_t,1>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,2>): " << sizeof(llvm::SmallVector<uint8_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,2>): " << sizeof(llvm::SmallVector<uint16_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,2>): " << sizeof(llvm::SmallVector<uint32_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,2>): " << sizeof(llvm::SmallVector<uint64_t,2>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,2>): " << sizeof(llvm::SmallVector<uint8_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,2>): " << sizeof(llvm::SmallVector<uint16_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,2>): " << sizeof(llvm::SmallVector<uint32_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,2>): " << sizeof(llvm::SmallVector<uint64_t,3>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,4>): " << sizeof(llvm::SmallVector<uint8_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,4>): " << sizeof(llvm::SmallVector<uint16_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,4>): " << sizeof(llvm::SmallVector<uint32_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,4>): " << sizeof(llvm::SmallVector<uint64_t,4>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,8>): " << sizeof(llvm::SmallVector<uint8_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,8>): " << sizeof(llvm::SmallVector<uint16_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,8>): " << sizeof(llvm::SmallVector<uint32_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,8>): " << sizeof(llvm::SmallVector<uint64_t,8>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint8_t,16>): " << sizeof(llvm::SmallVector<uint8_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint16_t,16>): " << sizeof(llvm::SmallVector<uint16_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint32_t,16>): " << sizeof(llvm::SmallVector<uint32_t,16>) << std::endl;
+    std::cout << "sizeof(SmallVector<uint64_t,16>): " << sizeof(llvm::SmallVector<uint64_t,16>) << std::endl;
+
+    std::cout << "sizeof(Polynomial::Monomial): " << sizeof(Polynomial::Monomial) << std::endl;
+    std::cout << "sizeof(Polynomial::Multivariate<size_t,Polynomial::PackedMonomial<15,7>>): " << sizeof(MultivariatePolynomial) << std::endl;
+}
+

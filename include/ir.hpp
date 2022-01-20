@@ -294,11 +294,14 @@ template <typename T> struct VoV {
 
 template <typename T> size_t length(VoV<T> x) { return length(x.offsets) - 1; }
 
-template <typename T> struct VoVoV {
-    T *memory;
-    Vector<size_t, 0> innerOffsets;
-    Vector<size_t, 0> outerOffsets;
-    Vector<size_t, 0> memOffsets;
+template <typename T, unsigned N = llvm::CalculateSmallVectorDefaultInlinedElements<T>::value> struct VoVoV {
+    llvm::SmallVector<T, N> memory;
+    llvm::SmallVector<uint32_t, N> innerOffsets;
+    llvm::SmallVector<uint32_t, N> outerOffsets;
+    llvm::SmallVector<uint32_t, N> memOffsets;
+    // Vector<size_t, 0> innerOffsets;
+    // Vector<size_t, 0> outerOffsets;
+    // Vector<size_t, 0> memOffsets;
 
     // memOffsets is preallocated but uninitialized memory
     // length(memOffsets) = length(outerOffsets)
@@ -316,7 +319,7 @@ template <typename T> struct VoVoV {
             }
         }
     }
-
+    
     VoV<T> operator()(size_t i) {
         size_t base = memOffsets(i);
         Vector<T, 0> newMem(memory + base, memOffsets(i + 1) - base);
@@ -379,9 +382,9 @@ template <typename T> size_t length(VoVoV<T> x) {
 // set identically. thus, `getCount(SourceType::Constant)` must always return
 // either `0` or `1`.
 struct Stride {
-    Polynomial::Multivariate<intptr_t> stride;
+    Polynomial::Multivariate<intptr_t,Polynomial::Monomial> stride;
     // sources must be ordered
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,1>
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,1>
         indices;
     uint8_t counts[5];
     // size_t constCount;
@@ -392,14 +395,14 @@ struct Stride {
         : // : indices(llvm:n:SmallVector<
           // std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
           counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> const &x)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x)
 	: stride(x), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &&x)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &&x)
 	: stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t> const &x, Source &&ind)
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x, Source &&ind)
         : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
       0} {};
-    Stride(Polynomial::Multivariate<intptr_t> &x, size_t indId,
+    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &x, size_t indId,
            SourceType indTyp)
         : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0,
       0, 0} {};
@@ -571,14 +574,26 @@ SourceCount sourceCount(Stride s) {
 
 static constexpr unsigned ArrayRefPreAllocSize = 2;
 
+// M*N*i + M*j + i
+// [M*N + 1]*i, [M]*j
+// M*N
+//
+// x = i1 * (M*N) + j1 * M + i1 * 1 = i2 * (M*N) + j2 * M + i2 * 1
+//
+// MN * [ i1 ] = MN * [ i2 ]
+// M  * [ j1 ] = M  * [ j2 ]
+// 1  * [ i1 ] = M  * [ i2 ]
+//
+// divrem(x, MN) = (i1, j1 * M + i1) == (i2, j2 * M + i2)
+// i1 == i2
+// j1 * M + ...
+
 struct ArrayRef {
-    size_t arrayId;
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t>, Source>,ArrayRefPreAllocSize>
-        inds;
+    size_t arrayID;
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,ArrayRefPreAllocSize> inds;
     llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
-    llvm::SmallVector<size_t,ArrayRefPreAllocSize>
-        indToStrideMap; // length(indTostridemap) == length(inds)
-    llvm::SmallVector<Polynomial::Multivariate<intptr_t>,ArrayRefPreAllocSize> upperBounds;
+    llvm::SmallVector<uint32_t,ArrayRefPreAllocSize> indToStrideMap;
+
 };
 
 template <typename T0, typename T1, typename T2>
@@ -604,7 +619,7 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
 }
 
 std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
-    os << "ArrayRef " << ar.arrayId << ":" << std::endl;
+    os << "ArrayRef " << ar.arrayID << ":" << std::endl;
     for (size_t i = 0; i < length(ar.inds); ++i) {
         auto [ind, src] = ar.inds[i];
         os << "(" << ind << ") "
@@ -656,27 +671,10 @@ struct Term {
     uint32_t loopDeps; // minimal loopdeps based on source's
 };
 
-template <int Bits, class T>
-constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
-                           !std::is_signed_v<T>;
-
-template <class T> inline uint32_t zero_upper(T x) requires is_uint_v<32, T> {
-    return x & 0x0000ffff;
-    ;
-}
-template <class T> inline uint64_t zero_upper(T x) requires is_uint_v<64, T> {
-    return x & 0xffff0000;
-}
-template <class T> inline uint32_t zero_lower(T x) requires is_uint_v<32, T> {
-    return x & 0x00000000ffffffff;
-}
-template <class T> inline uint64_t zero_lower(T x) requires is_uint_v<64, T> {
-    return x & 0xffffffff00000000;
-}
 
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
-    return std::make_pair(zero_upper(loopNestId), zero_lower(loopNestId));
+    return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
 }
 
 /*
@@ -744,7 +742,7 @@ size_t countScheduled(Schedule s, Int segment, Int level) {
 */
 struct Schedule {
     IndexTree tree;
-    PermutationVector perms;
+    llvm::SmallVector<Permutation> perms;
 };
 
 // Assumption: Does not support more than 32 loops.
@@ -771,14 +769,14 @@ constexpr Int UNSET_COST = -1;
 // LessThan, LessOrEqual, GreaterThan, GreaterOrEqual };
 
 struct Function {
-    Vector<Term, 0> terms;
-    Vector<TriangularLoopNest, 0> triln;
-    Vector<RectangularLoopNest, 0> rectln;
+    llvm::SmallVector<Term> terms;
+    llvm::SmallVector<TriangularLoopNest,0> triln;
+    llvm::SmallVector<RectangularLoopNest,0> rectln;
     // Vector<Array, 0> arrays;
     // Vector<ArrayRefStrides, 0> arrayRefStrides;
-    Vector<ArrayRef, 0> arrayRefs;
-    Vector<Const, 0> constants;
-    Vector<bool, 0> visited;
+    llvm::SmallVector<ArrayRef,0> arrayRefs;
+    llvm::SmallVector<Const> constants;
+    llvm::SmallVector<bool> visited;
     IndexTree initialLoopTree;
     // Vector<Schedule, 0> bestschedules;
     // Matrix<Schedule, 0, 0> tempschedules;
@@ -798,6 +796,8 @@ struct Function {
     size_t ne;
     // char *data;
 
+    /*
+      // Makes more sense to initialize empty and take builder approach.
     Function(Vector<Term, 0> terms, Vector<TriangularLoopNest, 0> triln,
              Vector<RectangularLoopNest, 0> rectln, // Vector<Array, 0> arrays,
              // Vector<ArrayRefStrides, 0> arrayRefStrides,
@@ -830,6 +830,7 @@ struct Function {
         arrayReadsToTermMap.resize(numArrays);
         arrayWritesToTermMap.resize(numArrays);
     }
+    */
 };
 
 ValueRange valueRange(Function const &fun, size_t id) {
@@ -837,7 +838,7 @@ ValueRange valueRange(Function const &fun, size_t id) {
 }
 template <typename C>
 ValueRange valueRange(Function const &fun,
-                      Polynomial::MultivariateTerm<C> const &x) {
+                      Polynomial::MultivariateTerm<C,Polynomial::Monomial> const &x) {
     ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
@@ -846,7 +847,7 @@ ValueRange valueRange(Function const &fun,
 }
 template <typename C>
 ValueRange valueRange(Function const &fun,
-                      Polynomial::Multivariate<C> const &x) {
+                      Polynomial::Multivariate<C,Polynomial::Monomial> const &x) {
     ValueRange a(0);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
@@ -861,7 +862,7 @@ Order cmpZero(Function &fun, size_t id) {
     return valueRange(fun, id).compare(0);
 }
 template <typename C>
-Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C> &x) {
+Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C,Polynomial::Monomial> &x) {
     return valueRange(fun, x).compare(0);
 };
 
@@ -870,32 +871,77 @@ Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C> &x) {
 //     ArrayRefStrides ars = fun.arrayRefStrides[ar.strideId];
 //     return std::make_pair(ar, ars);
 // };
-inline ArrayRef &getArrayRef(Function fun, size_t id) {
+inline ArrayRef &getArrayRef(Function &fun, size_t id) {
     return fun.arrayRefs[id];
 };
+
+
+UpperBounds &getUpperBounds(Function &fun, ArrayRef &ar){
+    size_t triID = upperHalf(ar.arrayID);
+    if (triID){
+	return getUpperbounds(fun.triln[triID]);
+    } else {
+	return getUpperbounds(fun.rectln[ar.arrayID]);
+    }
+}
+UpperBounds &fillUpperBounds(Function &fun, ArrayRef &ar){
+    size_t triID = upperHalf(ar.arrayID);
+    if (triID){
+	TriangularLoopNest &tri = fun.triln[triID];
+	fillUpperBounds(tri);
+	return getUpperbounds(tri);
+    } else {
+	return getUpperbounds(fun.rectln[ar.arrayID]);
+    }
+}
+
+void partitionArrayStrides(Function &fun, ArrayRef &ar){
+    // NOTE: this will be the firstg call, so we fill ehre.
+    UpperBounds &upperBounds = fillUpperBounds(fun, ar);
+    size_t numInds = ar.inds.size();
+    /*
+    llvm::SmallVector<uint32_t> indDegrees(numInds, uint32_t(0));
+    
+    for (size_t i = 0; i < numInds; ++i){
+	indDegrees[i] = std::get<0>(ar.inds[i]).degree();
+    }
+    */
+    size_t maxDegreeInd = 0;
+    size_t maxDegree = 0;
+    for (size_t i = 0; i < numInds; ++i){
+	size_t d = std::get<0>(ar.inds[i]).degree();
+	if (d > maxDegree){
+	    maxDegree = d;
+	    maxDegreeInd = i;
+	}
+    }
+    
+}
+
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
 void clearVisited(Function &fun) {
     for (size_t j = 0; j < length(fun.visited); ++j) {
-        fun.visited(j) = false;
+        fun.visited[j] = false;
     }
 }
-bool visited(Function fun, size_t i) { return fun.visited(i); }
+bool visited(Function &fun, size_t i) { return fun.visited[i]; }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
 Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Term &t) {
     return t.dsts;
 }
 Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Function &fun, size_t i) {
-    return outNeighbors(fun.terms(i));
+    return outNeighbors(fun.terms[i]);
 }
 Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
 Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
-    return inNeighbors(fun.terms(i));
+    return inNeighbors(fun.terms[i]);
 }
 
-Term &getTerm(Function const &fun, size_t tidx) { return fun.terms(tidx); }
+Term &getTerm(Function &fun, size_t tidx) { return fun.terms[tidx]; }
+
 
 struct TermBundle {
     // llvm::SmallVector<size_t> termIDs;
@@ -927,19 +973,6 @@ struct TermBundle {
 // inline uint32_t upperHalf(uint32_t x) { return x & 0xffff0000; }
 // inline uint64_t upperHalf(uint64_t x) { return x & 0xffffffff00000000; }
 
-inline uint16_t firstQuarter(uint16_t x) { return (x & 0xf000) >> 12; }
-inline uint32_t firstQuarter(uint32_t x) { return (x & 0xff000000) >> 24; }
-inline uint64_t firstQuarter(uint64_t x) {
-    return (x & 0xffff000000000000) >> 48;
-}
-inline uint16_t secondQuarter(uint16_t x) { return (x & 0x0f00) >> 8; }
-inline uint32_t secondQuarter(uint32_t x) { return (x & 0x00ff0000) >> 16; }
-inline uint64_t secondQuarter(uint64_t x) {
-    return (x & 0x0000ffff00000000) >> 32;
-}
-inline uint16_t lowerHalf(uint16_t x) { return x & 0x00ff; }
-inline uint32_t lowerHalf(uint32_t x) { return x & 0x0000ffff; }
-inline uint64_t lowerHalf(uint64_t x) { return x & 0x00000000ffffffff; }
 
 void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
           Function &fun, size_t idx, size_t tbId) {
@@ -1095,8 +1128,8 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
 
 // returns true if `abs(x) < y`
 template <typename C>
-bool absLess(Function const &fun, Polynomial::Multivariate<C> const &x,
-             Polynomial::Multivariate<C> const &y) {
+bool absLess(Function const &fun, Polynomial::Multivariate<C,Polynomial::Monomial> const &x,
+             Polynomial::Multivariate<C,Polynomial::Monomial> const &y) {
     ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
     if (delta.lowerBound < 0.0) {
         return false;
@@ -1186,7 +1219,7 @@ size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
 }
 */
 
-uint32_t getLoopDeps(Function const &fun, TermBundle const &tb) {
+uint32_t getLoopDeps(Function &fun, TermBundle &tb) {
     Term t = getTerm(fun, tb.termIds[0]);
     return t.loopDeps;
 }

@@ -54,7 +54,7 @@ struct BitSet::Iterator {
             offset = std::numeric_limits<uint64_t>::max();
             // offset = 0xffffffffffffffff;
         }
-        size_t tzp1 = trailingZeros(state) + 1;
+        size_t tzp1 = std::countr_zero(state) + 1;
         offset += tzp1;
         state >>= tzp1;
         return *this;

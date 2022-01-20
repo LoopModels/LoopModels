@@ -6,8 +6,6 @@
 #include <vector>
 
 const size_t numloop = 5;
-Int x[2 * numloop + 2];
-auto p = init(Permutation(x, numloop));
 std::set<std::vector<Int>> s;
 std::vector<Int> tperm(numloop);
 
@@ -21,7 +19,7 @@ void check_partition(Permutation p, Int num_exterior) {
 }
 
 void recursive_iterator(Permutation p, Int lv = 0, Int num_exterior = 0) {
-    Int nloops = getNLoops(p);
+    Int nloops = getNumLoops(p);
     assert(lv < nloops);
     if ((lv + 1) == num_exterior) check_partition(p, num_exterior);
     if ((lv + 1) == nloops) {
@@ -91,6 +89,9 @@ void recursive_iterator_2(PermutationLevelIterator pli, Int lv = 0, Int num_exte
 }
 
 TEST(PermTest, BasicAssertions) {
+    auto p = Permutation(numloop);
+    init(p);
+    
     s.clear();
     init(p);
     recursive_iterator(p);
