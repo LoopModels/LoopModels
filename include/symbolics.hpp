@@ -234,6 +234,8 @@ struct Uninomial {
     friend bool isZero(Uninomial) { return false; }
 
     bool operator==(Uninomial x) const { return x.exponent == exponent; }
+    /*
+    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Uninomial x) const {
         if (exponent < x.exponent) {
             return std::strong_ordering::less;
@@ -243,6 +245,7 @@ struct Uninomial {
             return std::strong_ordering::greater;
         }
     }
+    */
     Uninomial operator*(Uninomial x) const {
         return Uninomial{exponent + x.exponent};
     }
@@ -475,6 +478,8 @@ struct Monomial {
     template <typename T> bool lexGreater(T const &x) const {
         return lexGreater(x.monomial());
     }
+    /*
+    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Monomial &x) const {
         if (*this == x) {
             return std::strong_ordering::equal;
@@ -484,6 +489,7 @@ struct Monomial {
             return std::strong_ordering::less;
         }
     }
+    */
     Monomial operator^(size_t i) { return powBySquare(*this, i); }
     Monomial operator^(size_t i) const { return powBySquare(*this, i); }
     MonomialIDType firstTermID() const { return prodIDs[0]; }
@@ -718,11 +724,14 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         }
         return false;
     }
+    /*
+    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(PackedMonomial const &y) const {
         uint64_t *xp = this->bits;
         uint64_t *yp = y.bits;
         return std::lexicographical_compare_three_way(xp, xp + K, yp, yp + K);
     }
+    */
     friend bool isOne(PackedMonomial const &x) { return (x.degree() == 0); }
     friend bool isZero(PackedMonomial const &) { return false; }
 
@@ -971,9 +980,12 @@ template <typename C, IsMonomial M> struct Term {
     bool operator!=(Term<C, M> const &y) const {
         return (exponent != y.exponent) || (coefficient != y.coefficient);
     }
+    /*
+    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Term<C, M> &x) const {
         return exponent <=> x.exponent;
     }
+    */
     // bool tryDiv(Term<C, M> const &x, Term<C, M> const &y) {
     //     coefficient = x.coefficient / y.coefficient;
     //     return exponent.tryDiv(x.exponent, y.exponent);
