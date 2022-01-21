@@ -137,7 +137,7 @@ Rational gcd(Rational x, Rational y) {
     return n ? Rational{n, d} : Rational{1, 0};
 }
 
-template <typename T, typename S> void add_term(T &a, S &&x) {
+template <typename T, typename S> void addTerm(T &a, S &&x) {
     if (!isZero(x)) {
         for (auto it = a.begin(); it != a.end(); ++it) {
             if ((it->termsMatch(x))) {
@@ -154,7 +154,42 @@ template <typename T, typename S> void add_term(T &a, S &&x) {
     }
     return;
 }
-template <typename T, typename S> void sub_term(T &a, S &&x) {
+template <typename T, typename S> size_t addTerm(T &a, S &&x, size_t offset) {
+    if (!isZero(x)) {
+        for (auto itb = a.begin(); offset != a.size(); ++offset) {
+            auto it = itb + offset;
+            if ((it->termsMatch(x))) {
+                if (it->addCoef(x)) {
+                    a.erase(it);
+                }
+                return offset;
+            } else if (x.lexGreater(*it)) {
+                a.insert(it, std::forward<S>(x));
+                return offset;
+            }
+        }
+        a.push_back(std::forward<S>(x));
+    }
+    return offset;
+}
+template <typename T, typename S, typename I> I addTerm(T &a, S &&x, I it) {
+    if (!isZero(x)) {
+        for (; it != a.end(); ++it) {
+            if ((it->termsMatch(x))) {
+                if (it->addCoef(x)) {
+                    a.erase(it);
+                }
+                return it;
+            } else if (x.lexGreater(*it)) {
+                a.insert(it, std::forward<S>(x));
+                return it;
+            }
+        }
+        a.push_back(std::forward<S>(x));
+    }
+    return it;
+}
+template <typename T, typename S> void subTerm(T &a, S &&x) {
     if (!isZero(x)) {
         for (auto it = a.begin(); it != a.end(); ++it) {
             if ((it->termsMatch(x))) {
@@ -171,22 +206,44 @@ template <typename T, typename S> void sub_term(T &a, S &&x) {
     }
     return;
 }
-template <typename T, typename S> void sub_term(T &a, S &&x, size_t offset) {
+template <typename T, typename S> size_t subTerm(T &a, S &&x, size_t offset) {
     if (!isZero(x)) {
-        for (auto it = a.begin() + offset; it != a.end(); ++it) {
+        // for (auto it = a.begin() + offset; it != a.end(); ++it) {
+        for (auto itb = a.begin(); offset != a.size(); ++offset) {
+            auto it = itb + offset;
             if ((it->termsMatch(x))) {
                 if (it->subCoef(x)) {
                     a.erase(it);
                 }
-                return;
+                return offset;
             } else if (x.lexGreater(*it)) {
                 a.insert(it, cnegate(std::forward<S>(x)));
-                return;
+                return offset;
             }
         }
         a.push_back(cnegate(std::forward<S>(x)));
     }
-    return;
+    return offset;
+}
+template <typename T, typename S>
+inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
+    if (!isZero(x)) {
+        auto it = a.begin();
+        while (offset != 0) {
+            --offset;
+            auto ito = it + offset;
+            if ((ito->termsMatch(x))) {
+                if (ito->subCoef(x)) {
+                    a.erase(ito);
+                }
+                return offset;
+            } else if ((offset == 0) || ((ito - 1)->lexGreater(x))) {
+                a.insert(ito, cnegate(std::forward<S>(x)));
+                return ++offset;
+            }
+        }
+    }
+    return offset;
 }
 static std::string programVarName(size_t i) {
     std::string s(1, 'L' + i);
@@ -324,8 +381,12 @@ struct Monomial {
     inline auto end() const { return prodIDs.end(); }
     inline auto cbegin() const { return prodIDs.begin(); }
     inline auto cend() const { return prodIDs.end(); }
+    inline auto rbegin() { return prodIDs.rbegin(); }
+    inline auto rend() { return prodIDs.rend(); }
+    inline auto rbegin() const { return prodIDs.rbegin(); }
+    inline auto rend() const { return prodIDs.rend(); }
 
-    void add_term(size_t x) {
+    void addTerm(size_t x) {
         for (auto it = begin(); it != end(); ++it) {
             if (x <= *it) {
                 prodIDs.insert(it, x);
@@ -334,7 +395,7 @@ struct Monomial {
         }
         prodIDs.push_back(x);
     }
-    void add_term(size_t x, size_t count) {
+    void addTerm(size_t x, size_t count) {
         // prodIDs.reserve(prodIDs.size() + rep);
         auto it = begin();
         // prodIDs [0, 1, 3]
@@ -605,7 +666,7 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         }
     }
     PackedMonomial() {
-	for (size_t k = 0; k < K; ++k) {
+        for (size_t k = 0; k < K; ++k) {
             bits[k] = 0;
         }
     }
@@ -613,28 +674,28 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         for (size_t k = 0; k < K; ++k) {
             bits[k] = 0;
         }
-        add_term(id.id);
+        addTerm(id.id);
     }
     PackedMonomial(ID idx, ID idy) {
         for (size_t k = 0; k < K; ++k) {
             bits[k] = 0;
         }
-        add_term(idx.id);
-        add_term(idy.id);
+        addTerm(idx.id);
+        addTerm(idy.id);
     }
     PackedMonomial(ID idx, ID idy, ID idz) {
         for (size_t k = 0; k < K; ++k) {
             bits[k] = 0;
         }
-        add_term(idx.id);
-        add_term(idy.id);
-        add_term(idz.id);
+        addTerm(idx.id);
+        addTerm(idy.id);
+        addTerm(idz.id);
     }
-    void add_term(uint64_t id, uint64_t count = 1) {
+    void addTerm(uint64_t id, uint64_t count = 1) {
         constexpr uint64_t varPerUInt = CalculateStorage<L, E>::varPerUInt;
         uint64_t d = K == 1 ? 0 : (id + 1) / varPerUInt;
         uint64_t r = (id + 1) - (d * varPerUInt);
-	uint64_t o = count << ((E + 1) * (varPerUInt - 1));
+        uint64_t o = count << ((E + 1) * (varPerUInt - 1));
         uint64_t b = o >> (r * (E + 1));
         if (d) {
             bits[0] += o;
@@ -687,18 +748,18 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         constexpr uint64_t varPerUInt = CalculateStorage<L, E>::varPerUInt;
         uint64_t d = K == 1 ? 0 : (id + 1) / varPerUInt;
         uint64_t r = (id + 1) - (d * varPerUInt);
-	uint64_t m = zeroNonDegreeMask(Val<E>()) >> (r*(E+1));
-	uint64_t oldBits = bits[d];
-	uint64_t b = oldBits & (~m);
-	uint64_t remDegree = (oldBits & m) >> ((E+1)*(varPerUInt-1-r));
-	
+        uint64_t m = zeroNonDegreeMask(Val<E>()) >> (r * (E + 1));
+        uint64_t oldBits = bits[d];
+        uint64_t b = oldBits & (~m);
+        uint64_t remDegree = (oldBits & m) >> ((E + 1) * (varPerUInt - 1 - r));
+
         uint64_t o = remDegree << ((E + 1) * (varPerUInt - 1));
-	if (d){
-	    bits[d] = b;
-	    bits[0] -= o;
-	} else {
-	    bits[0] = b - o;
-	}
+        if (d) {
+            bits[d] = b;
+            bits[0] -= o;
+        } else {
+            bits[0] = b - o;
+        }
     }
     void calcDegree() {
         uint64_t oldBit = bits[0];
@@ -736,22 +797,22 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
     friend bool isZero(PackedMonomial const &) { return false; }
 
     uint64_t firstTermID() const {
-	uint64_t b = bits[0] & (~zeroNonDegreeMask(Val<E>()));
-	if (b){
-	    return (std::countl_zero(b) / (E+1)) - 1;
-	}
-	b = CalculateStorage<L, E>::varPerUInt - 1;
-	for (size_t k = 1; k < K; ++k){
-	    uint64_t bk = bits[k];
-	    if (bk){
-		return (std::countl_zero(bk) / (E+1)) + b;
-	    }
-	    b += CalculateStorage<L, E>::varPerUInt;
-	}
-	assert("firstTermID should only be called if degree > 0.");
-	return 0;
+        uint64_t b = bits[0] & (~zeroNonDegreeMask(Val<E>()));
+        if (b) {
+            return (std::countl_zero(b) / (E + 1)) - 1;
+        }
+        b = CalculateStorage<L, E>::varPerUInt - 1;
+        for (size_t k = 1; k < K; ++k) {
+            uint64_t bk = bits[k];
+            if (bk) {
+                return (std::countl_zero(bk) / (E + 1)) + b;
+            }
+            b += CalculateStorage<L, E>::varPerUInt;
+        }
+        assert("firstTermID should only be called if degree > 0.");
+        return 0;
     }
-    
+
     friend std::ostream &operator<<(std::ostream &os, const PackedMonomial &m) {
         size_t d = m.degree();
         size_t i = 0;
@@ -759,7 +820,7 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         if (d) {
             for (size_t k = 0; k < m.K; ++k) {
                 uint64_t b = m.bits[k] << ((k) ? 0 : (E + 1));
-		// os << "b bits: " << b << std::endl;
+                // os << "b bits: " << b << std::endl;
                 for (size_t j = 0; j < varPerUInt - (k == 0); ++j) {
                     uint64_t exponent = b >> ((E + 1) * (varPerUInt - 1));
                     if (exponent) {
@@ -769,11 +830,11 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
                         }
                         // os << std::endl;
                     }
-		    ++i;
-		    b <<= (E + 1);
-		    if (L == i) {
-			return os;
-		    }
+                    ++i;
+                    b <<= (E + 1);
+                    if (L == i) {
+                        return os;
+                    }
                 }
             }
         } else {
@@ -893,14 +954,14 @@ PackedMonomial<L, E> operator^(PackedMonomial<L, E> &&x, uint64_t y) {
 template <typename M>
 concept IsMultivariateMonomial = requires(M a) {
     { a.degree(0) } -> std::convertible_to<size_t>;
-    // { a.add_term(0, 0) } -> std::same_as<void>;
+    // { a.addTerm(0, 0) } -> std::same_as<void>;
 }
 &&std::same_as<M, typename std::remove_cvref<M>::type>;
 template <typename M>
 concept IsMonomial = std::same_as<M, Uninomial> || IsMultivariateMonomial<M>;
 // std::same_as<M, Monomial> || std::same_as<M, PackedMonomial<>>;
-//template <typename U>
-//concept IsUnivariateWithPolyCoefs = requires(U a){
+// template <typename U>
+// concept IsUnivariateWithPolyCoefs = requires(U a){
 //    { a.terms[0].terms[0].monomial };
 //};
 
@@ -1025,11 +1086,18 @@ template <typename C, IsMonomial M> struct Terms {
     auto end() const { return terms.end(); }
     auto cbegin() const { return terms.begin(); }
     auto cend() const { return terms.end(); }
-
-    template <typename S> void add_term(S &&x) {
-        ::add_term(*this, std::forward<S>(x));
+    auto rbegin() { return terms.rbegin(); }
+    auto rend() { return terms.rend(); }
+    auto rbegin() const { return terms.rbegin(); }
+    auto rend() const { return terms.rend(); }
+    size_t size() const { return terms.size(); }
+    template <typename S> void addTerm(S &&x) {
+        ::addTerm(*this, std::forward<S>(x));
     }
-    template <typename S> void add_term_scale(S &&x, C const &c) {
+    template <typename S, typename I> I addTerm(S &&x, I it) {
+        return ::addTerm(*this, std::forward<S>(x), it);
+    }
+    template <typename S> void addTermScale(S &&x, C const &c) {
         if (!isZero(x)) {
             for (auto it = begin(); it != end(); ++it) {
                 if ((it->termsMatch(x))) {
@@ -1046,8 +1114,31 @@ template <typename C, IsMonomial M> struct Terms {
         }
         return;
     }
-    template <typename S> void sub_term(S &&x) {
-        ::sub_term(*this, std::forward<S>(x));
+    template <typename S>
+    size_t addTermScale(S &&x, C const &c, size_t offset) {
+        if (!isZero(x)) {
+            // for (auto it = begin(); it != end(); ++it) {
+            for (auto itb = begin(); offset != terms.size(); ++offset) {
+                auto it = itb + offset;
+                if ((it->termsMatch(x))) {
+                    if (it->addCoef(x, c)) {
+                        erase(it);
+                    }
+                    return offset;
+                } else if (x.lexGreater(*it)) {
+                    insert(it, std::forward<S>(x) * c);
+                    return offset;
+                }
+            }
+            push_back(std::forward<S>(x) * c);
+        }
+        return offset;
+    }
+    template <typename S> void subTerm(S &&x) {
+        ::subTerm(*this, std::forward<S>(x));
+    }
+    template <typename S, typename I> I subTerm(S &&x, I it) {
+        return ::subTerm(*this, std::forward<S>(x), it);
     }
 
     template <typename I> void erase(I it) { terms.erase(it); }
@@ -1068,39 +1159,39 @@ template <typename C, IsMonomial M> struct Terms {
     void push_back(M &&c) { terms.emplace_back(1, std::move(c)); }
 
     Terms<C, M> &operator+=(Term<C, M> const &x) {
-        add_term(x);
+        addTerm(x);
         return *this;
     }
     Terms<C, M> &operator+=(Term<C, M> &&x) {
-        add_term(std::move(x));
+        addTerm(std::move(x));
         return *this;
     }
     Terms<C, M> &operator-=(Term<C, M> const &x) {
-        sub_term(x);
+        subTerm(x);
         return *this;
     }
     Terms<C, M> &operator-=(Term<C, M> &&x) {
-        sub_term(std::move(x));
+        subTerm(std::move(x));
         return *this;
     }
     Terms<C, M> &operator-=(C const &x) {
-        sub_term(Term<C, M>{x});
+        subTerm(Term<C, M>{x});
         return *this;
     }
     // Terms<C, M> &operator+=(M const &x) {
-    //     add_term(x);
+    //     addTerm(x);
     //     return *this;
     // }
     Terms<C, M> &operator+=(M &&x) {
-        add_term(std::forward<M>(x));
+        addTerm(std::forward<M>(x));
         return *this;
     }
     // Terms<C, M> &operator-=(M const &x) {
-    //     sub_term(x);
+    //     subTerm(x);
     //     return *this;
     // }
     Terms<C, M> &operator-=(M &&x) {
-        sub_term(std::forward<M>(x));
+        subTerm(std::forward<M>(x));
         return *this;
     }
     Terms<C, M> &operator*=(Term<C, M> const &x) {
@@ -1125,35 +1216,45 @@ template <typename C, IsMonomial M> struct Terms {
         return *this;
     }
     Terms<C, M> &operator+=(Terms<C, M> const &x) {
-        for (auto &term : x) {
-            add_term(term);
-        }
+        // for (auto &term : x) {
+        //     addTerm(term);
+        // }
+        // terms.reserve(terms.size() + x.size());
+        // auto it = begin();
+        // for (auto &term : x) {
+        //     it = addTerm(term, it);
+        // }
+        size_t offset = 0;
+        for (auto &term : x)
+            offset = addTerm(term, offset);
         return *this;
     }
     Terms<C, M> &operator+=(Terms<C, M> &&x) {
-        for (auto &&term : x) {
-            add_term(std::move(term));
-        }
+        size_t offset = 0;
+        for (auto &&term : x)
+            offset = addTerm(std::move(term), offset);
         return *this;
     }
     Terms<C, M> &operator-=(Terms<C, M> const &x) {
-        for (auto &term : x) {
-            sub_term(term);
-        }
+        size_t offset = 0;
+        for (auto &term : x)
+            offset = subTerm(term, offset);
         return *this;
     }
     Terms<C, M> &operator-=(Terms<C, M> &&x) {
-        for (auto &&term : x) {
-            sub_term(std::move(term));
-        }
+        size_t offset = 0;
+        for (auto &&term : x)
+            offset = subTerm(std::move(term), offset);
         return *this;
     }
     void mul(Terms<C, M> const &x, Terms<C, M> const &y) {
         terms.clear();
+        // if (isZero(x) | isZero(y)){ return; }
         terms.reserve(x.terms.size() * y.terms.size());
         for (auto &termx : x) {
+            auto it = begin();
             for (auto &termy : y) {
-                add_term(termx * termy);
+                it = addTerm(termx * termy, it);
             }
         }
     }
@@ -1186,11 +1287,12 @@ template <typename C, IsMonomial M> struct Terms {
             return *this;
         }
         Terms<C, M> z = x * (*this);
-        terms = z.terms;
+        terms = std::move(z.terms);
+	// std::swap(terms, z.terms);
         return *this;
 
         // this commented out code is incorrect, because it relies
-        // on the order being maintained, but of course `add_term` sorts
+        // on the order being maintained, but of course `addTerm` sorts
         // We could use `push_back` and then `std::sort` at the end instead.
         // terms.reserve(terms.size() * x.terms.size());
         // auto itx = x.cbegin();
@@ -1198,7 +1300,7 @@ template <typename C, IsMonomial M> struct Terms {
         // auto ite = end();
         // for (; itx != x.cend() - 1; ++itx) {
         //     for (auto it = iti; it != ite; ++it) {
-        //         add_term((*it) * (*itx));
+        //         addTerm((*it) * (*itx));
         //     }
         // }
         // for (; iti != ite; ++iti) {
@@ -1225,9 +1327,7 @@ template <typename C, IsMonomial M> struct Terms {
     Terms<C, M> largerCapacityCopy(size_t i) const {
         Terms<C, M> s;
         s.terms.reserve(i + terms.size()); // reserve full size
-        for (auto &term : terms) {
-            s.terms.push_back(term);
-        }
+        s = *this;
         return s;
     }
 
@@ -1243,7 +1343,7 @@ template <typename C, IsMonomial M> struct Terms {
     const C &leadingCoefficient() const { return begin()->coefficient; }
     void removeLeadingTerm() { terms.erase(terms.begin()); }
     // void takeLeadingTerm(Term<C,M> &x) {
-    //     add_term(std::move(x.leadingTerm()));
+    //     addTerm(std::move(x.leadingTerm()));
     //     x.removeLeadingTerm();
     // }
 
@@ -1273,7 +1373,7 @@ template <typename C, IsMonomial M> struct Terms {
         os << " ) ";
         return os;
     }
-    constexpr One isPoly() {return One();}
+    constexpr One isPoly() { return One(); }
 };
 
 template <typename C> using UnivariateTerm = Term<C, Uninomial>;
@@ -1297,8 +1397,8 @@ using Multivariate = Terms<C, M>;
 
 // P is Multivariate<C,M> for any C
 template <typename P>
-concept IsMPoly = requires(P p){
-    {p.isPoly()} -> std::same_as<One>;
+concept IsMPoly = requires(P p) {
+    { p.isPoly() } -> std::same_as<One>;
 };
 
 template <typename C, IsMultivariateMonomial M>
@@ -1988,21 +2088,32 @@ void divExact(Univariate<C> &q, Univariate<C> &d, C const &x) {
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
+    // size_t offset = x.size();
+    // for (auto it = y.rbegin(); it != y.rend(); ++it){
+    // 	offset = subTermReverseScan(x, (*it) * z, offset);
+    // }
+    size_t offset = 0;
     for (auto &term : y) {
-        x.sub_term(term * z);
+        offset = subTerm(x, term * z, offset);
     }
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
             size_t offset) {
+    // NOTE: to support reverse order updateing offset,
+    // it'd have to take steps / update offset in the correct direction.
+    // for (auto it = y.rbegin(); it != y.rend(); ++it){
+    //     offset = subTerm(x, (*it) * z, offset);
+    // }
     for (auto &term : y) {
-        sub_term(x, term * z, offset);
+        offset = subTerm(x, term * z, offset);
     }
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, C &c) {
+    size_t offset = 0;
     for (auto &term : y) {
-        x.add_term_scale(term, -c);
+        offset = x.addTermScale(term, -c, offset);
     }
 }
 
@@ -2019,7 +2130,7 @@ divRemBang(Multivariate<C, M> &p, Multivariate<C, M> const &d) {
     while (offset != p.terms.size()) {
         bool fail = tryDiv(nx, p.terms[offset], d.leadingTerm());
         if (fail) {
-            r.add_term(std::move(p.terms[offset]));
+            r.addTerm(std::move(p.terms[offset]));
             ++offset;
         } else {
             fnmadd(p, d, nx, offset);
@@ -2284,13 +2395,19 @@ void pseudorem(Univariate<C> &pp, Univariate<C> const &p,
     }
     pp *= powBySquare(l, k);
 }
-// template <typename C, IsMultivariateMonomial M> C termwiseContent(llvm::ArrayRef<Term<C,M>> a){
-//template <typename C, IsMultivariateMonomial M, unsigned L> C termwiseContent(llvm::SmallVector<Term<C,M>,L> const &a){
-template <typename K> auto termwiseContent(K const &a){
-    if (a.size() == 1){ return a[0]; }
+// template <typename C, IsMultivariateMonomial M> C
+// termwiseContent(llvm::ArrayRef<Term<C,M>> a){
+// template <typename C, IsMultivariateMonomial M, unsigned L> C
+// termwiseContent(llvm::SmallVector<Term<C,M>,L> const &a){
+template <typename K> auto termwiseContent(K const &a) {
+    if (a.size() == 1) {
+        return a[0];
+    }
     auto g = gcd(a[0], a[1]);
-    for (size_t i = 2; i < a.size(); ++i){
-        if (isOne(g)){ break; }
+    for (size_t i = 2; i < a.size(); ++i) {
+        if (isOne(g)) {
+            break;
+        }
         g = gcd(g, a[i]);
     }
     return g;
@@ -2301,15 +2418,18 @@ template <IsMPoly C> auto content(Univariate<C> const &a) {
     if (a.terms.size() == 1) {
         return a.terms[0].coefficient;
     }
-    for (auto &term : a){
+    for (auto &term : a) {
         // term is Term<C,Unimonial>, where C is a multivariate polynomial.
         // access the multivariate polynomial via `term.coefficient`.
-        // The multivariate polynomials 
-        if (term.coefficient.terms.size() == 1){
+        // The multivariate polynomials
+        if (term.coefficient.terms.size() == 1) {
             // term.coefficient is a single {term}
-            auto g = gcd(termwiseContent(a.terms[0].coefficient.terms), termwiseContent(a.terms[1].coefficient.terms));
-            for (size_t i = 2; i < a.terms.size(); ++i){
-                if(isOne(g)) { break; }
+            auto g = gcd(termwiseContent(a.terms[0].coefficient.terms),
+                         termwiseContent(a.terms[1].coefficient.terms));
+            for (size_t i = 2; i < a.terms.size(); ++i) {
+                if (isOne(g)) {
+                    break;
+                }
                 g = gcd(g, termwiseContent(a.terms[i].coefficient.terms));
             }
             return C(g);
@@ -2418,7 +2538,7 @@ Univariate<C> gcd(Univariate<C> const &x, Univariate<C> const &y) {
         if (r.degree() == 0) {
             return Univariate<C>(c);
         }
-        size_t d = xx.degree() - yy.degree(); 
+        size_t d = xx.degree() - yy.degree();
         powBySquare(t0, t1, t2, h, d);
         // t0 = h^d
         t1.mul(t0, g);
@@ -2609,8 +2729,9 @@ Term<C, Monomial> termToPolyCoeff(Term<C, Monomial> const &t, size_t i) {
     return a;
 }
 template <typename C, size_t L, size_t E>
-Term<C, PackedMonomial<L,E>> termToPolyCoeff(Term<C, PackedMonomial<L,E>> const &t, size_t i) {
-    Term<C, PackedMonomial<L,E>> a(t);
+Term<C, PackedMonomial<L, E>>
+termToPolyCoeff(Term<C, PackedMonomial<L, E>> const &t, size_t i) {
+    Term<C, PackedMonomial<L, E>> a(t);
     a.exponent.removeTerm(i);
     return a;
 }
@@ -2638,19 +2759,19 @@ t.erase(it, ite);
 return std::move(t);
 }
 */
-    /*
+/*
 template <typename I> size_t count(I it, I ite, size_t v) {
-    size_t s = 0;
-    for (; it != ite; ++it) {
-        s += ((*it) == v);
-    }
-    return s;
+size_t s = 0;
+for (; it != ite; ++it) {
+    s += ((*it) == v);
+}
+return s;
 }
 
 template <typename C> size_t count(Term<C, Monomial> const &p, size_t v) {
-    return count(p.exponent.prodIDs.begin(), p.exponent.prodIDs.end(), v);
+return count(p.exponent.prodIDs.begin(), p.exponent.prodIDs.end(), v);
 }
-    */
+*/
 struct FirstGreater {
     template <typename T, typename S>
     bool operator()(std::pair<T, S> const &x, std::pair<T, S> const &y) {
@@ -2721,7 +2842,7 @@ Multivariate<C, M> univariateToMultivariate(Univariate<Multivariate<C, M>> &&g,
         size_t exponent = (it.exponent).exponent;
         if (exponent) {
             for (auto &&ic : coef) {
-                ic.exponent.add_term(v, exponent);
+                ic.exponent.addTerm(v, exponent);
             }
         }
         p += coef;
@@ -3054,11 +3175,11 @@ struct UniPoly{
     template<typename I, typename T> void insert(I it, T &&x){ terms.insert(it,
 std::forward<T>(x)); }
 
-    template <typename S> void add_term(S &&x) {
-        ::add_term(*this, std::forward<S>(x));
+    template <typename S> void addTerm(S &&x) {
+        ::addTerm(*this, std::forward<S>(x));
     }
-    template <typename S> void sub_term(S &&x) {
-        ::sub_term(*this, std::forward<S>(x));
+    template <typename S> void subTerm(S &&x) {
+        ::subTerm(*this, std::forward<S>(x));
     }
     UniPoly(Polynomial const &x, size_t u) {
         for (auto it = x.cbegin(); it != x.cend(); ++it){

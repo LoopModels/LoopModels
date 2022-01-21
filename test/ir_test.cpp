@@ -50,12 +50,12 @@ TEST(IRTest, BasicAssertions) {
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(2, Polynomial::Monomial(Polynomial::ID{0})), Source(8, SourceType::Memory));
     inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(3, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{1})), Source(18, SourceType::Term));
     Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p3(5);
-    p3.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(7, Polynomial::Monomial(Polynomial::ID{0})));
+    p3.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(7, Polynomial::Monomial(Polynomial::ID{0})));
     inds.emplace_back(p3, Source(3, SourceType::LoopInductionVariable));
     Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p4(11);
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(13, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{3})));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(17, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{1},Polynomial::ID{2})));
-    p4.add_term(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(11, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{0},Polynomial::ID{2})));
+    p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(13, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{3})));
+    p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(17, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{1},Polynomial::ID{2})));
+    p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(11, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{0},Polynomial::ID{2})));
     inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayID = 10, .inds = inds};

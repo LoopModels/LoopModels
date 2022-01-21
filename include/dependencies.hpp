@@ -830,7 +830,7 @@ void partitionStrides(Function const &fun, ArrayRef ar, RektM loopnest) {
                     // we require the stride to be larger than the sum of the
                     // upper bounds
                     if (maybeLess(fun, a, upperBounds[j])) {
-                        b.add_term(a, indSrc);
+                        b.addTerm(a, indSrc);
                         upperBounds[j] += ubi;
                         // now we need to revalidate, possibly collapsing
                         // strides.

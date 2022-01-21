@@ -453,7 +453,7 @@ struct Stride {
     void addTyp(Source t) { addTyp(t.typ); }
     void remTyp(Source t) { remTyp(t.typ); }
     
-    template <typename A, typename I> void add_term(A &&x, I &&ind) {
+    template <typename A, typename I> void addTerm(A &&x, I &&ind) {
         auto ite = end();
         for (auto it = begin(ind); it != ite; ++it) {
             if (ind == (*it).second) {
@@ -475,7 +475,7 @@ struct Stride {
             std::make_pair(std::forward<A>(x), std::forward<I>(ind)));
         return;
     }
-    template <typename A, typename I> void sub_term(A &&x, I &&ind) {
+    template <typename A, typename I> void subTerm(A &&x, I &&ind) {
         auto ite = end();
         for (auto it = begin(ind); it != ite; ++it) {
             if (ind == (it->second)) {
@@ -500,13 +500,13 @@ struct Stride {
 
     Stride &operator+=(Stride const &x) {
         for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            add_term(std::get<0>(*it), std::get<1>(*it));
+            addTerm(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
     Stride &operator-=(Stride const &x) {
         for (auto it = x.cbegin(); it != x.cend(); ++it) {
-            sub_term(std::get<0>(*it), std::get<1>(*it));
+            subTerm(std::get<0>(*it), std::get<1>(*it));
         }
         return *this;
     }
