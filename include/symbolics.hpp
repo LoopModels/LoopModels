@@ -291,8 +291,6 @@ struct Uninomial {
     friend bool isZero(Uninomial) { return false; }
 
     bool operator==(Uninomial x) const { return x.exponent == exponent; }
-    /*
-    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Uninomial x) const {
         if (exponent < x.exponent) {
             return std::strong_ordering::less;
@@ -302,7 +300,6 @@ struct Uninomial {
             return std::strong_ordering::greater;
         }
     }
-    */
     Uninomial operator*(Uninomial x) const {
         return Uninomial{exponent + x.exponent};
     }
@@ -539,8 +536,6 @@ struct Monomial {
     template <typename T> bool lexGreater(T const &x) const {
         return lexGreater(x.monomial());
     }
-    /*
-    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Monomial &x) const {
         if (*this == x) {
             return std::strong_ordering::equal;
@@ -550,7 +545,6 @@ struct Monomial {
             return std::strong_ordering::less;
         }
     }
-    */
     Monomial operator^(size_t i) { return powBySquare(*this, i); }
     Monomial operator^(size_t i) const { return powBySquare(*this, i); }
     MonomialIDType firstTermID() const { return prodIDs[0]; }
@@ -785,14 +779,14 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         }
         return false;
     }
-    /*
-    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(PackedMonomial const &y) const {
-        uint64_t *xp = this->bits;
-        uint64_t *yp = y.bits;
+        if (K == 1) {
+            return bits[0] <=> y.bits[0];
+        }
+        const uint64_t *xp = this->bits;
+        const uint64_t *yp = y.bits;
         return std::lexicographical_compare_three_way(xp, xp + K, yp, yp + K);
     }
-    */
     friend bool isOne(PackedMonomial const &x) { return (x.degree() == 0); }
     friend bool isZero(PackedMonomial const &) { return false; }
 
@@ -1041,12 +1035,9 @@ template <typename C, IsMonomial M> struct Term {
     bool operator!=(Term<C, M> const &y) const {
         return (exponent != y.exponent) || (coefficient != y.coefficient);
     }
-    /*
-    // TODO: add me when mac clang supports it
     std::strong_ordering operator<=>(Term<C, M> &x) const {
         return exponent <=> x.exponent;
     }
-    */
     // bool tryDiv(Term<C, M> const &x, Term<C, M> const &y) {
     //     coefficient = x.coefficient / y.coefficient;
     //     return exponent.tryDiv(x.exponent, y.exponent);
@@ -1247,16 +1238,103 @@ template <typename C, IsMonomial M> struct Terms {
             offset = subTerm(std::move(term), offset);
         return *this;
     }
+    struct Greater {
+        bool operator()(Term<C, M> const &x, Term<C, M> const &y) {
+            return x.lexGreater(y);
+        }
+    };
     void mul(Terms<C, M> const &x, Terms<C, M> const &y) {
         terms.clear();
         // if (isZero(x) | isZero(y)){ return; }
-        terms.reserve(x.terms.size() * y.terms.size());
-        for (auto &termx : x) {
-            auto it = begin();
+        size_t Nx = x.terms.size();
+        size_t Ny = y.terms.size();
+        terms.reserve(Nx * Ny);
+        if (Nx == 1) {
+            const Term<C, M> &termx = x.terms[0];
             for (auto &termy : y) {
-                it = addTerm(termx * termy, it);
+                push_back(termx * termy);
+            }
+        } else if (Ny == 1) {
+            const Term<C, M> &termy = y.terms[0];
+            for (auto &termx : x) {
+                push_back(termx * termy);
+            }
+        } else if (Nx < Ny) {
+            for (auto &termx : x) {
+                auto it = begin();
+                for (auto &termy : y) {
+                    it = addTerm(termx * termy, it);
+                }
+            }
+        } else {
+            for (auto &termy : y) {
+                auto it = begin();
+                for (auto &termx : x) {
+                    it = addTerm(termx * termy, it);
+                }
             }
         }
+        /*
+        for (auto &termx : x) {
+            for (auto &termy : y) {
+                push_back(termx * termy);
+            }
+        }
+        // length must be >= 4 for reordering to be required
+        if (terms.size() < 3){ return; }
+        std::sort(begin(), end(), Greater());
+        size_t i = 1; // first term should be unique
+        for (size_t j = 2; j < terms.size(); ++j){
+            if (terms[j].termsMatch(terms[i])){
+                terms[i].coefficient += terms[j].coefficient;
+                if (terms[i].coefficient == 0){
+                    --i; // drop term
+                }
+            } else {
+                ++i;
+                terms[i] = terms[j];
+            }
+        }
+        terms.resize(i+1);
+        */
+
+        // The commented out code tries to add terms in a pattern
+        // that reduces the amount of `insert`-caused reallocations.
+        // It does not appear to help.
+        // size_t Nx = x.size();
+        // size_t Ny = y.size();
+        // size_t N = std::min(Nx, Ny);
+        // size_t offset = 0;
+        // for (size_t i = 0; i < N; ++i){
+        //     const Term<C,M> &tx = x.terms[i];
+        //     const Term<C,M> &ty = y.terms[i];
+        //     offset = addTerm(tx * ty, offset);
+        //     size_t offsetj = offset;
+        //     for (size_t j = i+1; j < N; ++j){
+        // 	Term<C,M> txyj = tx * y.terms[j];
+        // 	Term<C,M> txjy = x.terms[j] * ty;
+        // 	std::strong_ordering cmp = txyj <=> txjy;
+        // 	if (cmp == std::strong_ordering::equal){
+        // 	    txyj.coefficient += txjy.coefficient;
+        // 	    offsetj = addTerm(std::move(txyj), offsetj);
+        // 	} else if (cmp == std::strong_ordering::less){
+        // 	    // add txjy first
+        // 	    offsetj = addTerm(std::move(txjy), offsetj);
+        // 	    addTerm(std::move(txyj), offsetj);
+        // 	} else {// cmp == std::strong_ordering::greater
+        // 	    offsetj = addTerm(std::move(txyj), offsetj);
+        // 	    addTerm(std::move(txjy), offsetj);
+        // 	}
+        //     }
+        //     size_t offsetX = offsetj;
+        //     for (size_t j = N; j < Nx; ++j){
+        // 	offsetX = addTerm(ty * x.terms[j], offsetX);
+        //     }
+        //     size_t offsetY = offsetj;
+        //     for (size_t j = N; j < Ny; ++j){
+        // 	offsetY = addTerm(tx * y.terms[j], offsetY);
+        //     }
+        // }
     }
 
     Terms<C, M> &operator+=(C const &x) {
@@ -1288,7 +1366,7 @@ template <typename C, IsMonomial M> struct Terms {
         }
         Terms<C, M> z = x * (*this);
         terms = std::move(z.terms);
-	// std::swap(terms, z.terms);
+        // std::swap(terms, z.terms);
         return *this;
 
         // this commented out code is incorrect, because it relies
@@ -1323,6 +1401,9 @@ template <typename C, IsMonomial M> struct Terms {
     bool operator!=(Terms<C, M> const &x) const { return (terms != x.terms); }
     bool operator==(C const &x) const {
         return isCompileTimeConstant() && leadingCoefficient() == x;
+    }
+    std::strong_ordering operator<=>(Terms<C, M> const &x) const {
+        return terms <=> x.terms;
     }
     Terms<C, M> largerCapacityCopy(size_t i) const {
         Terms<C, M> s;

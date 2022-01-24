@@ -73,6 +73,7 @@ TEST(pseudoRemTests, BasicAssertions) {
     Polynomial::Univariate<intptr_t> q0 = (p + 1) * (p + 2) * (p + 3);
     printf("q0, (p + 1) * (p + 2) * (p + 3):\n");
     showln(q0);
+    std::cout << "pseudorem(q0, p) = " << Polynomial::pseudorem(q0, p) << " == 12582912" << std::endl;
     EXPECT_TRUE(Polynomial::pseudorem(q0, p) == 12582912);
     Polynomial::Univariate<intptr_t> q1 = (x ^ 7) + 20;
     EXPECT_TRUE(Polynomial::pseudorem(q1, p) == q1);
