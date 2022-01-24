@@ -869,6 +869,23 @@ void gcd(PackedMonomial<L, E> &g, PackedMonomial<L, E> const &x,
     }
     g.calcDegree(); // degree was invalidated.
 }
+    /*
+template <size_t L>
+void gcd(PackedMonomial<L, 7> &g, PackedMonomial<L, 7> const &x,
+         PackedMonomial<L, 7> const &y) {
+    constexpr size_t V = CalculateStorage<L, 7>::K * 8;
+    uint8_t *pg = reinterpret_cast<uint8_t *>(g.bits);
+    const uint8_t *px = reinterpret_cast<const uint8_t *>(x.bits);
+    const uint8_t *py = reinterpret_cast<const uint8_t *>(y.bits);
+    uint8_t s = 0;
+    for (size_t v = 0; v < V; ++v) {
+        uint8_t gv = std::min(px[v], py[v]);
+        pg[v] = gv;
+        s += gv;
+    }
+    pg[7] = s - pg[7];
+}
+    */
 template <size_t L, size_t E>
 PackedMonomial<L, E> gcd(PackedMonomial<L, E> const &x,
                          PackedMonomial<L, E> const &y) {
