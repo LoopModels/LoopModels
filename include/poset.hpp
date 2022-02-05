@@ -5,7 +5,7 @@
 #include <limits>
 #include <tuple>
 
-intptr_t saturated_add(intptr_t a, intptr_t b) {
+intptr_t saturatedAdd(intptr_t a, intptr_t b) {
     intptr_t c;
     if (__builtin_add_overflow(a, b, &c)) {
         c = ((a > 0) & (b > 0)) ? std::numeric_limits<intptr_t>::max()
@@ -13,7 +13,7 @@ intptr_t saturated_add(intptr_t a, intptr_t b) {
     }
     return c;
 }
-intptr_t saturated_sub(intptr_t a, intptr_t b) {
+intptr_t saturatedSub(intptr_t a, intptr_t b) {
     intptr_t c;
     if (__builtin_sub_overflow(a, b, &c)) {
         c = ((a > 0) & (b < 0)) ? std::numeric_limits<intptr_t>::max()
@@ -21,7 +21,7 @@ intptr_t saturated_sub(intptr_t a, intptr_t b) {
     }
     return c;
 }
-intptr_t saturated_mul(intptr_t a, intptr_t b) {
+intptr_t saturatedMul(intptr_t a, intptr_t b) {
     intptr_t c;
     if (__builtin_mul_overflow(a, b, &c)) {
         c = ((a > 0) ^ (b > 0)) ? std::numeric_limits<intptr_t>::min()
@@ -29,7 +29,12 @@ intptr_t saturated_mul(intptr_t a, intptr_t b) {
     }
     return c;
 }
-
+intptr_t saturatingAbs(intptr_t a) {
+    if (a == std::numeric_limits<intptr_t>::min()) {
+        return std::numeric_limits<intptr_t>::max();
+    }
+    return std::abs(a);
+}
 struct Interval {
     intptr_t lowerBound, upperBound;
     Interval intersect(Interval b) const {
@@ -38,19 +43,19 @@ struct Interval {
     }
     bool isEmpty() const { return lowerBound > upperBound; }
     Interval operator+(Interval b) const {
-        return Interval{saturated_add(lowerBound, b.lowerBound),
-                        saturated_add(upperBound, b.upperBound)};
+        return Interval{saturatedAdd(lowerBound, b.lowerBound),
+                        saturatedAdd(upperBound, b.upperBound)};
     }
     Interval operator-(Interval b) const {
-        return Interval{saturated_sub(lowerBound, b.upperBound),
-                        saturated_add(upperBound, b.lowerBound)};
+        return Interval{saturatedSub(lowerBound, b.upperBound),
+                        saturatedSub(upperBound, b.lowerBound)};
     }
 
     Interval operator*(Interval b) const {
-        intptr_t ll = saturated_mul(lowerBound, b.lowerBound);
-        intptr_t lu = saturated_mul(lowerBound, b.upperBound);
-        intptr_t ul = saturated_mul(upperBound, b.lowerBound);
-        intptr_t uu = saturated_mul(upperBound, b.upperBound);
+        intptr_t ll = saturatedMul(lowerBound, b.lowerBound);
+        intptr_t lu = saturatedMul(lowerBound, b.upperBound);
+        intptr_t ul = saturatedMul(upperBound, b.lowerBound);
+        intptr_t uu = saturatedMul(upperBound, b.upperBound);
         return Interval{std::min(std::min(ll, lu), std::min(ul, uu)),
                         std::max(std::max(ll, lu), std::max(ul, uu))};
     }
@@ -83,6 +88,20 @@ struct Interval {
                         lowerBound == typeMin ? typeMax : -lowerBound};
     }
     bool isConstant() const { return lowerBound == upperBound; }
+
+    // to be different in a significant way, we require them to be different,
+    // but only for values smaller than half of type max. Values so large
+    // are unlikely to effect results, so we don't continue propogating.
+    bool significantlyDifferent(Interval b) const {
+        return ((lowerBound != b.lowerBound) &&
+                (std::min(saturatingAbs(lowerBound),
+                          saturatingAbs(b.lowerBound)) <
+                 std::numeric_limits<intptr_t>::max() >> 1)) ||
+               ((upperBound != b.upperBound) &&
+                (std::min(saturatingAbs(upperBound),
+                          saturatingAbs(b.upperBound)) <
+                 std::numeric_limits<intptr_t>::max() >> 1));
+    }
 };
 
 Interval negativeInterval() {
