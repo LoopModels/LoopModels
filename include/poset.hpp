@@ -134,7 +134,7 @@ Interval positiveInterval() {
 }
 
 std::ostream &operator<<(std::ostream &os, Interval a) {
-    return os << a.lowerBound << " : " << a.upperBound << std::endl;
+    return os << a.lowerBound << " : " << a.upperBound;
 }
 
 struct PartiallyOrderedSet {
