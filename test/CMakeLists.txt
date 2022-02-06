@@ -14,6 +14,10 @@ enable_testing()
 #  )
 
 add_executable(
+  poset_test
+  poset_test.cpp
+)
+add_executable(
   compat_test
   compat_test.cpp
 )
@@ -28,6 +32,11 @@ add_executable(
 add_executable(
   symbolics_test
   symbolics_test.cpp
+)
+target_link_libraries(
+  poset_test
+  gtest_main
+  LLVM
 )
 target_link_libraries(
   compat_test

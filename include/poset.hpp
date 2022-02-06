@@ -1,3 +1,4 @@
+#include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -37,6 +38,8 @@ intptr_t saturatingAbs(intptr_t a) {
 }
 struct Interval {
     intptr_t lowerBound, upperBound;
+    Interval(intptr_t x) : lowerBound(x), upperBound(x){};
+    Interval(intptr_t lb, intptr_t ub) : lowerBound(lb), upperBound(ub){};
     Interval intersect(Interval b) const {
         return Interval{std::max(lowerBound, b.lowerBound),
                         std::min(upperBound, b.upperBound)};
@@ -60,25 +63,27 @@ struct Interval {
                         std::max(std::max(ll, lu), std::max(ul, uu))};
     }
 
-    std::tuple<Interval, Interval, Interval> restrictAdd(Interval a,
-                                                         Interval b) const {
-        Interval cNew = this->intersect(a - b);
+    std::pair<Interval, Interval> restrictAdd(Interval a, Interval b) {
+        Interval cNew = this->intersect(a + b);
         Interval aNew = a.intersect(*this - b);
         Interval bNew = b.intersect(*this - a);
         assert(!cNew.isEmpty());
         assert(!aNew.isEmpty());
         assert(!bNew.isEmpty());
-        return std::make_tuple(cNew, aNew, bNew);
+        lowerBound = cNew.lowerBound;
+        upperBound = cNew.upperBound;
+        return std::make_pair(aNew, bNew);
     }
-    std::tuple<Interval, Interval, Interval> restrictSub(Interval a,
-                                                         Interval b) const {
+    std::pair<Interval, Interval> restrictSub(Interval a, Interval b) {
         Interval cNew = this->intersect(a - b);
         Interval aNew = a.intersect(*this + b);
         Interval bNew = b.intersect(a - *this);
         assert(!cNew.isEmpty());
         assert(!aNew.isEmpty());
         assert(!bNew.isEmpty());
-        return std::make_tuple(cNew, aNew, bNew);
+        lowerBound = cNew.lowerBound;
+        upperBound = cNew.upperBound;
+        return std::make_pair(aNew, bNew);
     };
 
     Interval operator-() const {
@@ -102,6 +107,23 @@ struct Interval {
                           saturatingAbs(b.upperBound)) <
                  std::numeric_limits<intptr_t>::max() >> 1));
     }
+
+    static Interval negative() {
+        return Interval{std::numeric_limits<intptr_t>::min(), -1};
+    }
+    static Interval positive() {
+        return Interval{1, std::numeric_limits<intptr_t>::max()};
+    }
+    static Interval nonPositive() {
+        return Interval{std::numeric_limits<intptr_t>::min(), 0};
+    }
+    static Interval nonNegative() {
+        return Interval{0, std::numeric_limits<intptr_t>::max()};
+    }
+    static Interval unconstrained() {
+        return Interval{std::numeric_limits<intptr_t>::min(),
+                        std::numeric_limits<intptr_t>::max()};
+    }
 };
 
 Interval negativeInterval() {
@@ -114,3 +136,104 @@ Interval positiveInterval() {
 std::ostream &operator<<(std::ostream &os, Interval a) {
     return os << a.lowerBound << " : " << a.upperBound << std::endl;
 }
+
+struct PartiallyOrderedSet {
+    llvm::SmallVector<Interval, 0> delta;
+    uintptr_t nVar;
+
+    PartiallyOrderedSet() : nVar(0){};
+
+    inline static uintptr_t bin2(uintptr_t i) { return (i * (i - 1)) >> 1; }
+    inline static uintptr_t uncheckedLinearIndex(uintptr_t i, uintptr_t j) {
+        return i + bin2(j);
+    }
+    inline static std::pair<uintptr_t, bool> checkedLinearIndex(uintptr_t ii,
+                                                                uintptr_t jj) {
+        uintptr_t i = std::min(ii, jj);
+        uintptr_t j = std::max(ii, jj);
+        return std::make_pair(i + bin2(j), jj < ii);
+    }
+
+    Interval update(uintptr_t i, uintptr_t j, Interval ji) {
+        uintptr_t iOff = bin2(i);
+        uintptr_t jOff = bin2(j);
+
+        for (uintptr_t k = 0; k < i; ++k) {
+            Interval ik = delta[k + iOff];
+            Interval jk = delta[k + jOff];
+
+            auto [jkt, ikt] = ji.restrictSub(jk, ik);
+            delta[k + iOff] = ikt;
+            delta[k + jOff] = jkt;
+            if (ikt.significantlyDifferent(ik)) {
+                delta[i + jOff] = ji;
+                delta[k + iOff] = update(k, i, ikt);
+                ji = delta[i + jOff];
+            }
+            if (jkt.significantlyDifferent(jk)) {
+                delta[i + jOff] = ji;
+                delta[k + jOff] = update(k, j, jkt);
+                ji = delta[i + jOff];
+            }
+        }
+        uintptr_t kOff = iOff;
+        for (uintptr_t k = i + 1; k < j; ++k) {
+            kOff += (k-1);
+	    Interval ki = delta[i + kOff];
+            Interval jk = delta[k + jOff];
+            auto [kit, jkt] = ji.restrictAdd(ki, jk);
+            delta[i + kOff] = kit;
+            delta[k + jOff] = jkt;
+            if (kit.significantlyDifferent(ki)) {
+                delta[i + jOff] = ji;
+                delta[i + kOff] = update(i, k, kit);
+                ji = delta[i + jOff];
+            }
+            if (jkt.significantlyDifferent(jk)) {
+                delta[i + jOff] = ji;
+                delta[k + jOff] = update(k, j, jkt);
+                ji = delta[i + jOff];
+            }
+        }
+        kOff = jOff;
+        for (uintptr_t k = j + 1; k < nVar; ++k) {
+            kOff += (k-1);
+            Interval ki = delta[i + kOff];
+            Interval kj = delta[j + kOff];
+            auto [kit, kjt] = ji.restrictSub(ki, kj);
+            delta[i + kOff] = kit;
+            delta[j + kOff] = kjt;
+            if (kit.significantlyDifferent(ki)) {
+                delta[i + jOff] = ji;
+                delta[i + kOff] = update(i, k, kit);
+                ji = delta[i + jOff];
+            }
+            if (kjt.significantlyDifferent(kj)) {
+                delta[i + jOff] = ji;
+                delta[j + kOff] = update(j, k, kjt);
+                ji = delta[i + jOff];
+            }
+        }
+        return ji;
+    }
+    void push(uintptr_t i, uintptr_t j, Interval itv) {
+        if (i > j) {
+            return push(j, i, -itv);
+        }
+        assert(j > i); // i != j
+        uintptr_t jOff = bin2(j);
+        uintptr_t l = jOff + i;
+        if (j >= nVar) {
+            nVar = j+1;
+            delta.resize((j*nVar)>>1, Interval::unconstrained());
+        } else {
+            itv = itv.intersect(delta[l]);
+        }
+        delta[l] = update(i, j, itv);
+    }
+    Interval operator()(uintptr_t i, uintptr_t j) {
+        auto [l, f] = checkedLinearIndex(i, j);
+        Interval d = delta[l];
+        return f ? -d : d;
+    }
+};
