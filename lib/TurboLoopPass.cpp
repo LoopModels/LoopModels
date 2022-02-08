@@ -34,7 +34,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // to `none()` or find a correct minimal list of analyses to invalidate.
     return llvm::PreservedAnalyses::all();
 }
-#define STRICT_OPT_USE_PIPELINE_PARSER
+// #define STRICT_OPT_USE_PIPELINE_PARSER
 extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
 llvmGetPassPluginInfo() {
     return {LLVM_PLUGIN_API_VERSION, "StrictOpt", "v0.1",

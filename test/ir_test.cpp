@@ -22,11 +22,11 @@ TEST(IRTest, BasicAssertions) {
     // (3 M_0 M_1) i_18 (Term) +
     // (5 + 7 M_0) i_3 (Induction Variable) +
     // (11 + 13 (M_0 M_2) + 17 (M_0 M_1 M_2)) i_0 (Induction Variable)
-    // llvm::SmallVector<std::pair<size_t, SourceType>> inds(
-    //     {std::make_pair(2, SourceType::LoopInductionVariable),
-    //      std::make_pair(8, SourceType::Memory), std::make_pair(18, SourceType::LoopInductionVariable),
-    //      std::make_pair(3, SourceType::LoopInductionVariable),
-    //      std::make_pair(0, SourceType::LoopInductionVariable)});
+    // llvm::SmallVector<std::pair<size_t, VarType>> inds(
+    //     {std::make_pair(2, VarType::LoopInductionVariable),
+    //      std::make_pair(8, VarType::Memory), std::make_pair(18, VarType::LoopInductionVariable),
+    //      std::make_pair(3, VarType::LoopInductionVariable),
+    //      std::make_pair(0, VarType::LoopInductionVariable)});
 
     
     // std::vector<Int> coef_memory({1, 2, 3, 5, 7, 11, 13, 17});
@@ -45,18 +45,18 @@ TEST(IRTest, BasicAssertions) {
     //                   toVector(outerOffsets), memBuffer);
 
     
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,2> inds;
-    inds.emplace_back(Polynomial::Multivariate<intptr_t,Polynomial::Monomial>(1), Source(2, SourceType::LoopInductionVariable));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(2, Polynomial::Monomial(Polynomial::ID{0})), Source(8, SourceType::Memory));
-    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(3, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{1})), Source(18, SourceType::Term));
+    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, VarID>,2> inds;
+    inds.emplace_back(Polynomial::Multivariate<intptr_t,Polynomial::Monomial>(1), VarID(2, VarType::LoopInductionVariable));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(2, Polynomial::Monomial(Polynomial::ID{0})), VarID(8, VarType::Memory));
+    inds.emplace_back(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(3, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{1})), VarID(18, VarType::Term));
     Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p3(5);
     p3.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(7, Polynomial::Monomial(Polynomial::ID{0})));
-    inds.emplace_back(p3, Source(3, SourceType::LoopInductionVariable));
+    inds.emplace_back(p3, VarID(3, VarType::LoopInductionVariable));
     Polynomial::Multivariate<intptr_t,Polynomial::Monomial> p4(11);
     p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(13, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{3})));
     p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(17, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{1},Polynomial::ID{2})));
     p4.addTerm(Polynomial::MultivariateTerm<intptr_t,Polynomial::Monomial>(11, Polynomial::Monomial(Polynomial::ID{0},Polynomial::ID{0},Polynomial::ID{2})));
-    inds.emplace_back(p4, Source(0, SourceType::LoopInductionVariable));
+    inds.emplace_back(p4, VarID(0, VarType::LoopInductionVariable));
         
     ArrayRef ar = ArrayRef{.arrayID = 10, .inds = inds};
     std::cout << ar << std::endl;

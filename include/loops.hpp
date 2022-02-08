@@ -76,8 +76,6 @@ struct TriangularLoopNest {
     }
 };
 
-
-
 bool otherwiseIndependent(TrictM &A, Int j, Int i) {
     for (Int k = 0; k < Int(A.size(0)); k++)
         if (!((k == i) | (k == j) | (A(k, j) == 0)))
@@ -90,7 +88,7 @@ bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
         // if A(k, j) >= 0, then j is not lower bounded by k
         if (A(k, j) >= 0)
             continue;
-        auto _k = inv(perm, k);
+        auto _k = perm.inv(k);
         // A[k,j] < 0 means that `k < C + j`, i.e. `j` has a lower bound of `k`
         auto k_in_perm = _k < _j;
         if (k_in_perm)
@@ -143,7 +141,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     MPoly &ub2 = l2.getUpperbound(perm2(_i2));
     auto delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    auto iperm = inv(perm1);
+    auto iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     for (size_t j = 0; j < size_t(i); j++) {
         auto Aij = A(j, i); // symmetric
@@ -209,7 +207,7 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
     SquareMatrix<Int> &A1 = l1.getTrit();
     RectangularLoopNest &r1 = l1.getRekt();
     auto i1 = perm1(_i1);
-    auto iperm = inv(perm1);
+    auto iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     // `j` and `i1` are in original domain.
     for (Int j = 0; j < i1; j++) {
@@ -217,7 +215,7 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
         if (Aij == 0)
             continue;
         Int _j1 = iperm[j];
-	// if we're dependent on `j` (_j1 < _i1), we need terms to match
+        // if we're dependent on `j` (_j1 < _i1), we need terms to match
         if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
             return false;
         if (Aij < 0) {
@@ -238,23 +236,23 @@ bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                          Permutation &perm2, Int _i1, Int i2) {
     auto A1 = l1.getTrit();
     auto i1 = perm1(_i1);
-    auto iperm = inv(perm1);
+    auto iperm = perm1.inv();
     for (size_t j = i1 + 1; j < A1.size(0); j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
         Int _j1 = iperm[j];
-	// if we're dependent on `j1`, we require the same coefficient.
-	// if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
-            // return false;
-	if (_j1 < _i1){
-	    if (A2(perm2(_j1), i2) != Aij)
-		return false;
-	} else {
-	    // we're not dependent on this loop.
-	    // thus, it provides an additional upper bound.
-	    return false;
-	}
+        // if we're dependent on `j1`, we require the same coefficient.
+        // if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
+        // return false;
+        if (_j1 < _i1) {
+            if (A2(perm2(_j1), i2) != Aij)
+                return false;
+        } else {
+            // we're not dependent on this loop.
+            // thus, it provides an additional upper bound.
+            return false;
+        }
     }
     return true;
 }
@@ -311,19 +309,20 @@ struct AffineLoopNest {
     RectangularLoopNest l;
     RectangularLoopNest u;
 
-    std::pair<llvm::SmallVector<MPoly, 4>,llvm::SmallVector<MPoly, 4>> getBounds(size_t i){
-	auto [M,N] = A.size();
-	llvm::SmallVector<MPoly, 4> lowerBounds;
-	llvm::SmallVector<MPoly, 4> upperBounds;
-	for (size_t j = 0; j < M; ++j){
-	    if (Int Aji = A(j,i)){
-		
-	    }
-	}
-	return std::make_pair(lowerBounds, upperBounds);
+    std::pair<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>>
+    getBounds(size_t i) {
+        auto [M, N] = A.size();
+        llvm::SmallVector<MPoly, 4> lowerBounds;
+        llvm::SmallVector<MPoly, 4> upperBounds;
+        for (size_t j = 0; j < M; ++j) {
+            if (Int Aji = A(j, i)) {
+            }
+        }
+        return std::make_pair(lowerBounds, upperBounds);
     }
 };
 
+/*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {
     Matrix<Int,0,0> &A1 = l1.A;
@@ -365,7 +364,7 @@ bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
         return false;
     }
 }
-
+*/
 // Not necessarily convertible to `TriangularLoopNest`, e.g.
 // [-1  0 ] [ m   < [ 1
 //   1  0     n       M

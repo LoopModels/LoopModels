@@ -215,8 +215,9 @@ struct VarID {
     bool operator==(VarID x) const { return id == x.id; }
     bool operator>(VarID x) const { return id > x.id; }
     bool operator>=(VarID x) const { return id >= x.id; }
-    // IDType getID() const { return id & 0x3fffffff; }
-    IDType getID() const { return id & 0x3fff; }
+    std::strong_ordering operator<=>(VarID x){ return id <=> x.id; }
+    IDType getID() const { return id & 0x3fffffff; }
+    // IDType getID() const { return id & 0x3fff; }
     VarType getType() const { return static_cast<VarType>(id >> 30); }
 };
 std::ostream &operator<<(std::ostream &os, VarID s) {
@@ -408,8 +409,10 @@ template <typename T, size_t M, size_t N> struct Matrix {
     const T *end() const { return begin() + M; }
 
     size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { std::make_pair(M, N); }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return M * N; }
+
+    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
@@ -433,8 +436,10 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
     auto end() const { return data.end(); }
 
     size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { std::make_pair(M, N); }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
+
+    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
     llvm::SmallVector<T> data;
@@ -464,8 +469,13 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
     auto end() const { return data.end(); }
 
     size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { std::make_pair(M, N); }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
+
+    llvm::ArrayRef<T> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return llvm::ArrayRef<T>(p, M);
+    }
 };
 template <typename T> struct Matrix<T, 0, 0> {
     llvm::SmallVector<T> data;
@@ -497,8 +507,12 @@ template <typename T> struct Matrix<T, 0, 0> {
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
     size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { std::make_pair(M, N); }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
+    llvm::ArrayRef<T> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return llvm::ArrayRef<T>(p, M);
+    }
 };
 
 template <typename T, size_t M, size_t N>
@@ -535,26 +549,12 @@ template <typename T> struct SquareMatrix {
     std::pair<size_t, size_t> size() const { return std::make_pair<M, M>; }
     size_t size(size_t) const { return M; }
     size_t length() const { return data.size(); }
-};
 
-template <typename T, size_t M, size_t N>
-PtrVector<T, M> getCol(Matrix<T, M, N> &A, size_t i) {
-    return PtrVector<T, M>(A.data + i * M);
-}
-template <typename T, size_t N>
-llvm::ArrayRef<T> getCol(Matrix<T, 0, N> &A, size_t i) {
-    size_t s1 = A.size(0);
-    T *data = A.data.data() + i * s1;
-    return llvm::ArrayRef<T>(data, s1);
-    // return Vector<T, 0>(A.ptr + i * s1, s1);
-}
-template <typename T, size_t N>
-llvm::ArrayRef<T> getCol(SquareMatrix<T> &A, size_t i) {
-    size_t s1 = A.size(0);
-    T *data = A.data.data() + i * s1;
-    return llvm::ArrayRef<T>(data, s1);
-    // return Vector<T, 0>(A.ptr + i * s1, s1);
-}
+    llvm::ArrayRef<T> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return llvm::ArrayRef<T>(p, M);
+    }
+};
 
 // template <typename T> struct StrideMatrix {
 //     T *ptr;
@@ -623,7 +623,7 @@ llvm::ArrayRef<T> getCol(SquareMatrix<T> &A, size_t i) {
 template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     os << "[ ";
-    auto [m, n] = size(A);
+    auto [m, n] = A.size();
     for (size_t i = 0; i < m - 1; i++) {
         for (size_t j = 0; j < n - 1; j++) {
             os << A(i, j) << ", ";
@@ -695,22 +695,21 @@ struct Permutation {
     Int &operator()(size_t i) { return data(i, 0); }
     Int operator()(size_t i) const { return data(i, 0); }
     bool operator==(Permutation y) {
-        return getCol(data, 0) == getCol(y.data, 0);
+        return data.getCol(0) == y.data.getCol(0);
     }
+    size_t getNumLoops() const { return data.size(0); }
+    size_t length() const { return data.length(); }
+
+    llvm::ArrayRef<Int> inv() { return data.getCol(1); }
+
+    Int &inv(size_t j) { return data(j, 1); }
 };
 
-size_t getNumLoops(Permutation const &x) { return size(x.data, 0); }
-size_t length(Permutation const &perm) { return length(perm.data); }
-
-llvm::ArrayRef<Int> inv(Permutation &p) { return getCol(p.data, 1); }
-
-Int &inv(Permutation &p, size_t j) { return p.data(j, 1); }
-
 void init(Permutation &p) {
-    Int numloops = getNumLoops(p);
+    Int numloops = p.getNumLoops();
     for (Int n = 0; n < numloops; n++) {
         p(n) = n;
-        inv(p, n) = n;
+        p.inv(n) = n;
     }
 }
 
@@ -739,12 +738,12 @@ void swap(Permutation &p, Int i, Int j) {
     Int xj = p(j);
     p(i) = xj;
     p(j) = xi;
-    inv(p, xj) = i;
-    inv(p, xi) = j;
+    p.inv(xj) = i;
+    p.inv(xi) = j;
 }
 
 std::ostream &operator<<(std::ostream &os, Permutation const &perm) {
-    auto numloop = getNumLoops(perm);
+    auto numloop = perm.getNumLoops();
     os << "perm: <";
     for (size_t j = 0; j < numloop - 1; j++) {
         os << perm(j) << " ";

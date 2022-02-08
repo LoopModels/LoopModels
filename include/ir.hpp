@@ -294,7 +294,10 @@ template <typename T> struct VoV {
 
 template <typename T> size_t length(VoV<T> x) { return length(x.offsets) - 1; }
 
-template <typename T, unsigned N = llvm::CalculateSmallVectorDefaultInlinedElements<T>::value> struct VoVoV {
+template <typename T,
+          unsigned N =
+              llvm::CalculateSmallVectorDefaultInlinedElements<T>::value>
+struct VoVoV {
     llvm::SmallVector<T, N> memory;
     llvm::SmallVector<uint32_t, N> innerOffsets;
     llvm::SmallVector<uint32_t, N> outerOffsets;
@@ -319,7 +322,7 @@ template <typename T, unsigned N = llvm::CalculateSmallVectorDefaultInlinedEleme
             }
         }
     }
-    
+
     VoV<T> operator()(size_t i) {
         size_t base = memOffsets(i);
         Vector<T, 0> newMem(memory + base, memOffsets(i + 1) - base);
@@ -365,26 +368,29 @@ template <typename T> size_t length(VoVoV<T> x) {
 // Constant 1:
 // memory: []
 // offset: []
-// i_1, SourceType: Induction Variable
+// i_1, VarType: Induction Variable
 // memory: [1]
 // offset: [0,0,1]
-// i_2, SourceType: Induction Variable
+// i_2, VarType: Induction Variable
 // memory: []
 // offset: []
-// i_3, SourceType: Induction Variable
+// i_3, VarType: Induction Variable
 // memory: []
 // offset: [0,0]
 
 // Gives the part of an ArrayRef that is a function of the induction variables.
 
-// Stride terms are sorted based on Source
+// Stride terms are sorted based on VarID
 // NOTE: we require all Const sources be folded into the Affine, and their ids
-// set identically. thus, `getCount(SourceType::Constant)` must always return
+// set identically. thus, `getCount(VarType::Constant)` must always return
 // either `0` or `1`.
 struct Stride {
-    Polynomial::Multivariate<intptr_t,Polynomial::Monomial> stride;
+    Polynomial::Multivariate<intptr_t, Polynomial::Monomial> stride;
     // sources must be ordered
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,1>
+    llvm::SmallVector<
+        std::pair<Polynomial::Multivariate<intptr_t, Polynomial::Monomial>,
+                  VarID>,
+        1>
         indices;
     uint8_t counts[5];
     // size_t constCount;
@@ -392,50 +398,48 @@ struct Stride {
     // size_t memCount;
     // size_t termCount;
     Stride() //= default;
-        : // : indices(llvm:n:SmallVector<
-          // std::pair<Polynomial::Multivariate<intptr_t>, Source>>()),
+        :    // : indices(llvm:n:SmallVector<
+          // std::pair<Polynomial::Multivariate<intptr_t>, VarID>>()),
           counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x)
-	: stride(x), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &&x)
-	: stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> const &x, Source &&ind)
-        : indices({std::make_pair(x, std::move(ind))}), counts{0, 0, 0, 0,
-      0} {};
-    Stride(Polynomial::Multivariate<intptr_t,Polynomial::Monomial> &x, size_t indId,
-           SourceType indTyp)
-        : indices({std::make_pair(x, Source(indId, indTyp))}), counts{0, 0, 0,
-      0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> const &x)
+        : stride(x), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> &&x)
+        : stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> const &x,
+           VarID ind)
+        : indices({std::make_pair(x, ind)}), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> &x,
+           uint32_t indId, VarType indTyp)
+        : indices({std::make_pair(x, VarID(indId, indTyp))}), counts{0, 0, 0, 0,
+                                                                     0} {};
 
-    size_t getCount(SourceType i) {
+    size_t getCount(VarType i) {
         return counts[size_t(i) + 1] - counts[size_t(i)];
     }
-    size_t getCount(Source i) { return getCount(i.typ); }
+    size_t getCount(VarID i) { return getCount(i.getType()); }
     inline auto begin() { return indices.begin(); }
     inline auto end() { return indices.end(); }
     inline auto begin() const { return indices.begin(); }
     inline auto end() const { return indices.end(); }
     inline auto cbegin() const { return indices.begin(); }
     inline auto cend() const { return indices.end(); }
-    inline auto begin(SourceType i) {
-        return indices.begin() + counts[size_t(i)];
-    }
-    inline auto end(SourceType i) {
+    inline auto begin(VarType i) { return indices.begin() + counts[size_t(i)]; }
+    inline auto end(VarType i) {
         return indices.begin() + counts[size_t(i) + 1];
     }
-    inline auto begin(Source i) { return begin(i.typ); }
-    inline auto end(Source i) { return end(i.typ); }
-    inline auto begin(SourceType i) const {
+    inline auto begin(VarID i) { return begin(i.getType()); }
+    inline auto end(VarID i) { return end(i.getType()); }
+    inline auto begin(VarType i) const {
         return indices.begin() + counts[size_t(i)];
     }
-    inline auto end(SourceType i) const {
+    inline auto end(VarType i) const {
         return indices.begin() + counts[size_t(i) + 1];
     }
-    inline auto begin(Source i) const { return begin(i.typ); }
-    inline auto end(Source i) const { return end(i.typ); }
+    inline auto begin(VarID i) const { return begin(i.getType()); }
+    inline auto end(VarID i) const { return end(i.getType()); }
     inline size_t numIndices() const { return indices.size(); }
 
-    void addTyp(SourceType t) {
+    void addTyp(VarType t) {
         // Clang goes extremely overboard vectorizing loops with dynamic length
         // even if it should be statically inferrable that num iterations <= 4
         // thus, static length + masking is preferable.
@@ -445,14 +449,14 @@ struct Stride {
             counts[i + 1] += (size_t(t) <= i);
         }
     }
-    void remTyp(SourceType t) {
+    void remTyp(VarType t) {
         for (size_t i = 0; i < 4; ++i) {
             counts[i + 1] -= (size_t(t) <= i);
         }
     }
-    void addTyp(Source t) { addTyp(t.typ); }
-    void remTyp(Source t) { remTyp(t.typ); }
-    
+    void addTyp(VarID t) { addTyp(t.getType()); }
+    void remTyp(VarID t) { remTyp(t.getType()); }
+
     template <typename A, typename I> void addTerm(A &&x, I &&ind) {
         auto ite = end();
         for (auto it = begin(ind); it != ite; ++it) {
@@ -513,7 +517,7 @@ struct Stride {
     Stride largerCapacityCopy(size_t i) const {
         Stride s(stride);
         s.indices.reserve(i + indices.size()); // reserve full size
-	for (auto &ind : indices){
+        for (auto &ind : indices) {
             s.indices.push_back(ind); // copy initial batch
         }
         // for (size_t i = 1; i < 5; ++i) {
@@ -544,7 +548,7 @@ struct Stride {
     bool isConstant() const {
         size_t n0 = indices.size();
         if (n0) {
-            return indices[n0 - 1].second.typ == SourceType::Constant;
+            return indices[n0 - 1].second.getType() == VarType::Constant;
         } else {
             return true;
         }
@@ -590,10 +594,13 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 
 struct ArrayRef {
     size_t arrayID;
-    llvm::SmallVector<std::pair<Polynomial::Multivariate<intptr_t,Polynomial::Monomial>, Source>,ArrayRefPreAllocSize> inds;
-    llvm::SmallVector<Stride,ArrayRefPreAllocSize> axes;
-    llvm::SmallVector<uint32_t,ArrayRefPreAllocSize> indToStrideMap;
-
+    llvm::SmallVector<
+        std::pair<Polynomial::Multivariate<intptr_t, Polynomial::Monomial>,
+                  VarID>,
+        ArrayRefPreAllocSize>
+        inds;
+    llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
+    llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
 };
 
 template <typename T0, typename T1, typename T2>
@@ -623,7 +630,7 @@ std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
     for (size_t i = 0; i < length(ar.inds); ++i) {
         auto [ind, src] = ar.inds[i];
         os << "(" << ind << ") "
-           << "i_" << src.id << " (" << src.typ << ")";
+           << "i_" << src.id << " (" << src.getType() << ")";
         if (i + 1 < length(ar.inds)) {
             os << " +";
         }
@@ -664,13 +671,12 @@ struct Term {
     Operation op; // Operation id
     size_t id;
     CostSummary costSummary;
-    Vector<std::pair<size_t, SourceType>, 0> srcs; // type of source
-    Vector<std::pair<size_t, SourceType>, 0> dsts; // destination id
+    Vector<std::pair<size_t, VarType>, 0> srcs; // type of source
+    Vector<std::pair<size_t, VarType>, 0> dsts; // destination id
     // Vector<size_t, 0> srcs;       // source id
     size_t loopNestId; // id of loopnest
     uint32_t loopDeps; // minimal loopdeps based on source's
 };
-
 
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
@@ -770,11 +776,11 @@ constexpr Int UNSET_COST = -1;
 
 struct Function {
     llvm::SmallVector<Term> terms;
-    llvm::SmallVector<TriangularLoopNest,0> triln;
-    llvm::SmallVector<RectangularLoopNest,0> rectln;
+    llvm::SmallVector<TriangularLoopNest, 0> triln;
+    llvm::SmallVector<RectangularLoopNest, 0> rectln;
     // Vector<Array, 0> arrays;
     // Vector<ArrayRefStrides, 0> arrayRefStrides;
-    llvm::SmallVector<ArrayRef,0> arrayRefs;
+    llvm::SmallVector<ArrayRef, 0> arrayRefs;
     llvm::SmallVector<Const> constants;
     llvm::SmallVector<bool> visited;
     IndexTree initialLoopTree;
@@ -837,8 +843,9 @@ ValueRange valueRange(Function const &fun, size_t id) {
     return fun.rangeMap[id];
 }
 template <typename C>
-ValueRange valueRange(Function const &fun,
-                      Polynomial::MultivariateTerm<C,Polynomial::Monomial> const &x) {
+ValueRange
+valueRange(Function const &fun,
+           Polynomial::MultivariateTerm<C, Polynomial::Monomial> const &x) {
     ValueRange p = ValueRange(x.coefficient);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         p *= fun.rangeMap[*it];
@@ -846,8 +853,9 @@ ValueRange valueRange(Function const &fun,
     return p;
 }
 template <typename C>
-ValueRange valueRange(Function const &fun,
-                      Polynomial::Multivariate<C,Polynomial::Monomial> const &x) {
+ValueRange
+valueRange(Function const &fun,
+           Polynomial::Multivariate<C, Polynomial::Monomial> const &x) {
     ValueRange a(0);
     for (auto it = x.cbegin(); it != x.cend(); ++it) {
         a += valueRange(fun, *it);
@@ -862,7 +870,8 @@ Order cmpZero(Function &fun, size_t id) {
     return valueRange(fun, id).compare(0);
 }
 template <typename C>
-Order cmpZero(Function &fun, Polynomial::MultivariateTerm<C,Polynomial::Monomial> &x) {
+Order cmpZero(Function &fun,
+              Polynomial::MultivariateTerm<C, Polynomial::Monomial> &x) {
     return valueRange(fun, x).compare(0);
 };
 
@@ -875,49 +884,46 @@ inline ArrayRef &getArrayRef(Function &fun, size_t id) {
     return fun.arrayRefs[id];
 };
 
-
-UpperBounds &getUpperBounds(Function &fun, ArrayRef &ar){
+UpperBounds &getUpperBounds(Function &fun, ArrayRef &ar) {
     size_t triID = upperHalf(ar.arrayID);
-    if (triID){
-	return getUpperbounds(fun.triln[triID]);
+    if (triID) {
+        return fun.triln[triID].getUpperbounds();
     } else {
-	return getUpperbounds(fun.rectln[ar.arrayID]);
+        return fun.rectln[ar.arrayID].getUpperbounds();
     }
 }
-UpperBounds &fillUpperBounds(Function &fun, ArrayRef &ar){
+UpperBounds &fillUpperBounds(Function &fun, ArrayRef &ar) {
     size_t triID = upperHalf(ar.arrayID);
-    if (triID){
-	TriangularLoopNest &tri = fun.triln[triID];
-	fillUpperBounds(tri);
-	return getUpperbounds(tri);
+    if (triID) {
+        TriangularLoopNest &tri = fun.triln[triID];
+        tri.fillUpperBounds();
+        return tri.getUpperbounds();
     } else {
-	return getUpperbounds(fun.rectln[ar.arrayID]);
+        return fun.rectln[ar.arrayID].getUpperbounds();
     }
 }
 
-void partitionArrayStrides(Function &fun, ArrayRef &ar){
+void partitionArrayStrides(Function &fun, ArrayRef &ar) {
     // NOTE: this will be the firstg call, so we fill ehre.
     UpperBounds &upperBounds = fillUpperBounds(fun, ar);
     size_t numInds = ar.inds.size();
     /*
     llvm::SmallVector<uint32_t> indDegrees(numInds, uint32_t(0));
-    
+
     for (size_t i = 0; i < numInds; ++i){
-	indDegrees[i] = std::get<0>(ar.inds[i]).degree();
+        indDegrees[i] = std::get<0>(ar.inds[i]).degree();
     }
     */
     size_t maxDegreeInd = 0;
     size_t maxDegree = 0;
-    for (size_t i = 0; i < numInds; ++i){
-	size_t d = std::get<0>(ar.inds[i]).degree();
-	if (d > maxDegree){
-	    maxDegree = d;
-	    maxDegreeInd = i;
-	}
+    for (size_t i = 0; i < numInds; ++i) {
+        size_t d = std::get<0>(ar.inds[i]).degree();
+        if (d > maxDegree) {
+            maxDegree = d;
+            maxDegreeInd = i;
+        }
     }
-    
 }
-
 
 // Array getArray(Function fun, ArrayRef ar) { return fun.arrays(ar.arrayid); }
 
@@ -929,19 +935,18 @@ void clearVisited(Function &fun) {
 bool visited(Function &fun, size_t i) { return fun.visited[i]; }
 size_t nv(Function &fun) { return length(fun.terms); }
 size_t ne(Function &fun) { return fun.ne; }
-Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Term &t) {
+Vector<std::pair<size_t, VarType>, 0> outNeighbors(Term &t) {
     return t.dsts;
 }
-Vector<std::pair<size_t, SourceType>, 0> outNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t, VarType>, 0> outNeighbors(Function &fun, size_t i) {
     return outNeighbors(fun.terms[i]);
 }
-Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Term &t) { return t.srcs; }
-Vector<std::pair<size_t, SourceType>, 0> inNeighbors(Function &fun, size_t i) {
+Vector<std::pair<size_t, VarType>, 0> inNeighbors(Term &t) { return t.srcs; }
+Vector<std::pair<size_t, VarType>, 0> inNeighbors(Function &fun, size_t i) {
     return inNeighbors(fun.terms[i]);
 }
 
 Term &getTerm(Function &fun, size_t tidx) { return fun.terms[tidx]; }
-
 
 struct TermBundle {
     // llvm::SmallVector<size_t> termIDs;
@@ -973,7 +978,6 @@ struct TermBundle {
 // inline uint32_t upperHalf(uint32_t x) { return x & 0xffff0000; }
 // inline uint64_t upperHalf(uint64_t x) { return x & 0xffffffff00000000; }
 
-
 void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
           Function &fun, size_t idx, size_t tbId) {
     termToTermBundle[idx] = tbId;
@@ -985,10 +989,10 @@ void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
     for (size_t i = 0; i < length(t.srcs); ++i) {
         auto [srcId, srcTyp] = t.srcs[i];
         switch (srcTyp) {
-        case SourceType::Memory:
+        case VarType::Memory:
             push(tb.loads, srcId);
             break;
-        case SourceType::Term:
+        case VarType::Term:
             push(tb.srcTerms, srcId);
             push(tb.srcTermsDirect, srcId);
             break;
@@ -1008,10 +1012,10 @@ void push(TermBundle &tb, llvm::SmallVector<size_t> &termToTermBundle,
     for (size_t i = 0; i < length(t.dsts); ++i) {
         auto [dstId, dstTyp] = t.dsts[i];
         switch (dstTyp) {
-        case SourceType::Memory:
+        case VarType::Memory:
             push(tb.stores, dstId);
             break;
-        case SourceType::Term:
+        case VarType::Term:
             push(tb.dstTerms, dstId);
             push(tb.dstTermsDirect, dstId);
             break;
@@ -1128,8 +1132,9 @@ BitSet &inNeighbors(TermBundleGraph &tbg, size_t tbId) {
 
 // returns true if `abs(x) < y`
 template <typename C>
-bool absLess(Function const &fun, Polynomial::Multivariate<C,Polynomial::Monomial> const &x,
-             Polynomial::Multivariate<C,Polynomial::Monomial> const &y) {
+bool absLess(Function const &fun,
+             Polynomial::Multivariate<C, Polynomial::Monomial> const &x,
+             Polynomial::Multivariate<C, Polynomial::Monomial> const &y) {
     ValueRange delta = valueRange(fun, y - x); // if true, delta.lowerBound >= 0
     if (delta.lowerBound < 0.0) {
         return false;
@@ -1188,7 +1193,7 @@ llvm::SmallVector<size_t> getIndexSet(TermBundleGraph &tbg, size_t node,
     return indexSet;
 }
 
-SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
+VarType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
     TermBundle &dst = tbg.tbs[dstId];
     BitSet& srcV = inNeighbors(dst);
     for (size_t i = 0; i < length(srcV); ++i) {
@@ -1205,7 +1210,7 @@ SourceType sourceType(TermBundleGraph &tbg, size_t srcId, size_t dstId) {
 // only call given .
 /*
 uint32_t compatibleLoops(Function &fun, TermBundleGraph &tbg, size_t srcId,
-size_t dstId, size_t level){ SourceType srcTyp = sourceType(tbg, srcId, dstId);
+size_t dstId, size_t level){ VarType srcTyp = sourceType(tbg, srcId, dstId);
     switch (srcTyp) {
     case TERM:
         // return same loop as srcId
@@ -1266,7 +1271,7 @@ ArrayRef getArrayRef(Function fun, TermBundle tb) {
 
 /*
 bool isContiguousTermIndex(Function fun, Term t, Int mlt, size_t level) {
-    // SourceType srct0, srct1;
+    // VarType srct0, srct1;
     while (true) {
         switch (t.op) {
         case ADD:

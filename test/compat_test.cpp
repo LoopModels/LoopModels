@@ -14,8 +14,8 @@ TEST(CompatTest, BasicAssertions) {
     UpperBounds& gd = rectl.data;
     gd[0] += Polynomial::Monomial(Polynomial::ID{0});
     gd[1] += Polynomial::Monomial(Polynomial::ID{1});
-    UpperBounds& gd1 = getRekt(trial).data;
-    SquareMatrix<Int>& A = getTrit(trial);
+    UpperBounds& gd1 = trial.getRekt().data;
+    SquareMatrix<Int>& A = trial.getTrit();
     gd1[0] += Polynomial::Monomial(Polynomial::ID{0});
     gd1[1] += Polynomial::Monomial(Polynomial::ID{1});
     A(0, 0) = 1;

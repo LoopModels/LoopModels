@@ -243,9 +243,7 @@ inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
     }
     return offset;
 }
-static std::string programVarName(size_t i) {
-    return std::string(1, 'L' + i);
-}
+static std::string programVarName(size_t i) { return std::string(1, 'L' + i); }
 std::string monomialTermStr(size_t id, size_t exponent) {
     if (exponent) {
         if (exponent > 1) {
@@ -338,7 +336,8 @@ static constexpr unsigned MonomialSmallVectorSize = 4;
 // static constexpr unsigned MonomialSmallVectorSize = 8;
 // typedef uint8_t VarID;
 struct ID {
-    VarID id;
+    IDType id;
+    operator VarID() { return VarID(id); }
 };
 
 struct Monomial {
@@ -362,10 +361,14 @@ struct Monomial {
     Monomial(One)
         : prodIDs(llvm::SmallVector<VarID, MonomialSmallVectorSize>()){};
 
-    explicit Monomial(ID id) : prodIDs({id.id}){};
-    explicit Monomial(ID idx, ID idy) : prodIDs({idx.id, idy.id}){};
+    explicit Monomial(ID id) : prodIDs({(VarID(id))}){};
+    explicit Monomial(ID idx, ID idy) : prodIDs({VarID(idx), VarID(idy)}){};
     explicit Monomial(ID idx, ID idy, ID idz)
-        : prodIDs({idx.id, idy.id, idz.id}){};
+        : prodIDs({VarID(idx), VarID(idy), VarID(idz)}){};
+    explicit Monomial(VarID id) : prodIDs({id}){};
+    explicit Monomial(VarID idx, VarID idy) : prodIDs({idx, idy}){};
+    explicit Monomial(VarID idx, VarID idy, VarID idz)
+        : prodIDs({idx, idy, idz}){};
 
     inline auto begin() { return prodIDs.begin(); }
     inline auto end() { return prodIDs.end(); }
@@ -463,8 +466,18 @@ struct Monomial {
         x *= (*this);
         return std::move(x);
     }
-    bool operator==(Monomial const &x) const { return prodIDs == x.prodIDs; }
+    bool operator==(Monomial const &x) const {
+	// size_t N = prodIDs.size();
+	// if (N != x.prodIDs.size()){ return false; }
+	// for (size_t n = 0; n < N; ++n){
+	//     if (prodIDs[n] != x.prodIDs[n])
+	// 	return false;
+	// }
+	// return true;
+	return prodIDs == x.prodIDs;
+    }
     bool operator!=(Monomial const &x) const { return prodIDs != x.prodIDs; }
+    // bool operator!=(Monomial const &x) const { return !(prodIDs == x.prodIDs); }
     bool termsMatch(Monomial const &x) const { return *this == x; }
 
     // numerator, denominator rational
@@ -503,10 +516,10 @@ struct Monomial {
     friend bool isZero(Monomial const &) { return false; }
     bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
     size_t degree() const { return prodIDs.size(); }
-    size_t degree(size_t i) const {
+    size_t degree(IDType i) const {
         size_t d = 0;
         for (auto it : prodIDs) {
-            d += (it == i);
+            d += (it == VarID(i));
         }
         return d;
     }
@@ -576,11 +589,10 @@ bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
     while ((i != n0) | (j != n1)) {
         VarID a = (i != n0) ? *i : std::numeric_limits<IDType>::max();
         VarID b = (j != n1) ? *j : std::numeric_limits<IDType>::max();
+	++i;
         if (a < b) {
             z.prodIDs.push_back(a);
-            ++i;
         } else if (a == b) {
-            ++i;
             ++j;
         } else {
             return true;
@@ -2668,17 +2680,12 @@ Monomial gcd(Monomial const &x, Monomial const &y) {
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        size_t xk = (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
-        size_t yk = (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
-        if (xk < yk) {
-            ++ix;
-        } else if (xk > yk) {
-            ++iy;
-        } else { // xk == yk
+        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<IDType>::max();
+        VarID yk = (iy != iye) ? *iy : std::numeric_limits<IDType>::max();
+        if (xk == yk)
             g.prodIDs.push_back(xk);
-            ++ix;
-            ++iy;
-        }
+        ix += (xk <= yk);
+        iy += (xk >= yk);
     }
     return g;
 }
@@ -2748,8 +2755,8 @@ std::tuple<Monomial, Monomial, Monomial> gcdd(Monomial const &x,
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        size_t xk = (ix != ixe) ? *ix : std::numeric_limits<size_t>::max();
-        size_t yk = (iy != iye) ? *iy : std::numeric_limits<size_t>::max();
+        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<IDType>::max();
+        VarID yk = (iy != iye) ? *iy : std::numeric_limits<IDType>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
             ++ix;
@@ -2940,15 +2947,25 @@ Multivariate<C, M> univariateToMultivariate(Univariate<Multivariate<C, M>> &&g,
     return p;
 }
 
-static constexpr IDType NOT_A_VAR = std::numeric_limits<IDType>::max();
+template <typename T> static bool NOT_A_VAR(T x) {
+    return x == std::numeric_limits<T>::max();
+}
 
-template <typename C, IsMonomial M>
-IDType pickVar(Multivariate<C, M> const &x) {
-    IDType v = NOT_A_VAR;
+template <typename C> IDType pickVar(Multivariate<C, Monomial> const &x) {
+    IDType v = std::numeric_limits<IDType>::max();
     for (auto &it : x) {
         if (it.degree()) {
-            // v = std::min(v, *(it.exponent.begin()));
-            v = std::min(v, IDType(it.exponent.firstTermID()));
+            v = std::min(v, it.exponent.firstTermID().id);
+        }
+    }
+    return v;
+}
+template <typename C, IsMonomial M>
+uint64_t pickVar(Multivariate<C, M> const &x) {
+    uint64_t v = std::numeric_limits<uint64_t>::max();
+    for (auto &it : x) {
+        if (it.degree()) {
+            v = std::min(v, it.exponent.firstTermID());
         }
     }
     return v;
@@ -2962,13 +2979,13 @@ Multivariate<C, M> gcd(Multivariate<C, M> const &x,
     } else if ((isZero(y) || isOne(x)) || (x == y)) {
         return x;
     }
-    size_t v1 = pickVar(x);
-    size_t v2 = pickVar(y);
+    auto v1 = pickVar(x);
+    auto v2 = pickVar(y);
     if (v1 < v2) {
         return gcd(y, content(multivariateToUnivariate(x, v1)));
     } else if (v1 > v2) {
         return gcd(x, content(multivariateToUnivariate(y, v2)));
-    } else if (v1 == NOT_A_VAR) {
+    } else if (NOT_A_VAR(v1)) {
         return Multivariate<C, M>(gcd(x.leadingTerm(), y.leadingTerm()));
     } else { // v1 == v2, and neither == NOT_A_VAR
         return univariateToMultivariate(gcd(multivariateToUnivariate(x, v1),
