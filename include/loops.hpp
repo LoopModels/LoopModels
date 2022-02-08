@@ -9,8 +9,8 @@
 // typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
 // typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
 
-typedef Polynomial::Multivariate<intptr_t,Polynomial::Monomial> UpperBound;
-typedef llvm::SmallVector<UpperBound, 3> UpperBounds;
+typedef Polynomial::Multivariate<intptr_t,Polynomial::Monomial> MPoly;
+typedef llvm::SmallVector<MPoly, 3> UpperBounds;
 // NOTE: UpperBounds assumes symbols in the monomial products are >= 0.
 //       If a number is known to be negative, then it should receive a negative
 //       coefficient.
@@ -34,7 +34,7 @@ size_t getNumLoops(RectangularLoopNest const &data){ return data.data.size(); }
 // Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
 //     return getCol(r.data, j);
 // }
-UpperBound &getUpperbound(RectangularLoopNest &r, size_t j) {
+MPoly &getUpperbound(RectangularLoopNest &r, size_t j) {
     return r.data[j];
 }
 
@@ -116,8 +116,8 @@ bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
     }
     return true;
 }
-bool upperboundDominates(UpperBound &ubi, UpperBound &ubj) {
-    UpperBound delta = ubi - ubj;
+bool upperboundDominates(MPoly &ubi, MPoly &ubj) {
+    MPoly delta = ubi - ubj;
     for (auto &term : delta){
 	if (term.coefficient < 0){
 	    return false;
@@ -127,7 +127,7 @@ bool upperboundDominates(UpperBound &ubi, UpperBound &ubj) {
 }
 
 
-bool zeroInnerIterationsAtMaximum(TrictM &A, UpperBound &ub,
+bool zeroInnerIterationsAtMaximum(TrictM &A, MPoly &ub,
                                   RectangularLoopNest &r, Int i) {
     for (auto j = 0; j < i; j++) {
         auto Aij = A(i, j);
@@ -154,8 +154,8 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     RectangularLoopNest& r = getRekt(l1);
     auto i = perm1(_i1);
     
-    UpperBound& ub1 = getUpperbound(r, i);
-    UpperBound& ub2 = getUpperbound(l2, perm2(_i2));
+    MPoly& ub1 = getUpperbound(r, i);
+    MPoly& ub2 = getUpperbound(l2, perm2(_i2));
     auto delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
     auto iperm = inv(perm1);
@@ -178,7 +178,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
 	    
 	    fnmadd(delta_b, getUpperbound(r, j), Aij);
 	    delta_b += Aij;
-	    // UpperBound &ub_temp = ;
+	    // MPoly &ub_temp = ;
             // Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp = 
             // for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
             //     delta_b[k] -= Aij * ub_temp(k);
@@ -217,7 +217,7 @@ bool compatible(RectangularLoopNest &r, TriangularLoopNest &t, Permutation &perm
     return compatible(t, r, perm1, perm2, _i1, _i2);
 }
 
-bool updateBoundDifference(UpperBound &delta_b,
+bool updateBoundDifference(MPoly &delta_b,
                            TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                            Permutation &perm2, Int _i1, Int i2, bool flip) {
     SquareMatrix<Int>& A1 = getTrit(l1);
@@ -270,9 +270,9 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2, Permutation &per
     RectangularLoopNest &r2 = getRekt(l2);
     Int i1 = perm1(_i1);
     Int i2 = perm2(_i2);
-    UpperBound &ub1 = getUpperbound(r1, i1);
-    UpperBound &ub2 = getUpperbound(r2, i2);
-    UpperBound delta_b = ub1 - ub2;
+    MPoly &ub1 = getUpperbound(r1, i1);
+    MPoly &ub2 = getUpperbound(r2, i2);
+    MPoly delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
     if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)){
         return false;
@@ -304,11 +304,29 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2, Permutation &per
     }
 }
 
+// A * i < r
+// l are the lower bounds
+// u are the upper bounds
 struct AffineLoopNest {
-    
+    Matrix<Int,0,0> A;
+    RectangularLoopNest r;
+    RectangularLoopNest l;
+    RectangularLoopNest u;
 };
+// Not necessarily convertible to `TriangularLoopNest`, e.g.
+// [-1  0 ] [ m   < [ 1
+//   1  0     n       M
+//   0 -1             1
+//   0  1             N ]
+//   0  1             N ]
 
+// struct GenericLoopNest{
+//     llvm::SmallVector<MPoly, 4> l;
+//     llvm::SmallVector<MPoly, 4> u;
+    
+// };
 
+// 
 // template <typename T, typename S>
 // bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
 //     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);

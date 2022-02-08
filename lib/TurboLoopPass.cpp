@@ -5,9 +5,9 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 #include "llvm/Passes/PassPlugin.h"
-#include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Scalar/LoopRotation.h"
 #include <llvm/Transforms/Utils/LCSSA.h>
 
@@ -21,15 +21,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
 
     llvm::LoopInfo &LI = FAM.getResult<llvm::LoopAnalysis>(F);
-    for (llvm::Loop *LP : LI){
+    for (llvm::Loop *LP : LI) {
 	
     }
     //
     // FunctionAnalysisManager &FAM =
     // FAM.getResult<LoopAnalysisManagerFunctionProxy>(InitialC, CG)
     // .getManager();
-    
-    
+
     // TODO: what analysis are preserved?
     // For now, this pass is a no-op, so we preserve `all()`. Eventually, switch
     // to `none()` or find a correct minimal list of analyses to invalidate.
@@ -43,14 +42,18 @@ llvmGetPassPluginInfo() {
 #ifdef STRICT_OPT_USE_PIPELINE_PARSER
                 // Use opt's `--passes` textual pipeline description to trigger
                 // StrictOpt
-                using PipelineElement = typename llvm::PassBuilder::PipelineElement;
+                using PipelineElement =
+                    typename llvm::PassBuilder::PipelineElement;
                 PB.registerPipelineParsingCallback(
                     [](llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                        llvm::ArrayRef<PipelineElement>) {
                         if (Name == "strict-opt") {
-			    FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
-			    FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LCSSAPass()));
-			    FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopRotatePass()));
+                            FPM.addPass(llvm::createFunctionToLoopPassAdaptor(
+                                llvm::LoopSimplifyPass()));
+                            FPM.addPass(llvm::createFunctionToLoopPassAdaptor(
+                                llvm::LCSSAPass()));
+                            FPM.addPass(llvm::createFunctionToLoopPassAdaptor(
+                                llvm::LoopRotatePass()));
                             FPM.addPass(TurboLoopPass());
                             return true;
                         }

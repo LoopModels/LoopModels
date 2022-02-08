@@ -37,8 +37,6 @@ template <typename TRC> auto cnegate(TRC &&x) {
 // template <typename T> T cnegate(T const &x){ return negate(x); }
 // template <typename T> T cnegate(T &&x){ return negate(x); }
 
-enum DivRemainder { Indeterminate, NoRemainder, HasRemainder };
-
 struct Rational {
     intptr_t numerator;
     intptr_t denominator;
@@ -337,18 +335,17 @@ bool tryDiv(Uninomial &z, Uninomial x, Uninomial y) {
 // typedef uint32_t MonomialIDType;
 // 32 bytes
 static constexpr unsigned MonomialSmallVectorSize = 4;
-typedef uint32_t MonomialIDType;
 // // 32 bytes
 // static constexpr unsigned MonomialSmallVectorSize = 8;
-// typedef uint8_t MonomialIDType;
+// typedef uint8_t VarID;
 struct ID {
-    MonomialIDType id;
+    VarID id;
 };
 
 struct Monomial {
     // sorted symbolic terms being multiplied
     // std::vector<size_t> prodIDs;
-    llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> prodIDs;
+    llvm::SmallVector<VarID, MonomialSmallVectorSize> prodIDs;
     // Monomial& operator=(Monomial const &x){
     //     prodIDs = x.prodIDs;
     //     return *this;
@@ -356,16 +353,15 @@ struct Monomial {
     // constructors
     Monomial() = default;
     // Monomial() : prodIDs(std::vector<size_t>()){};
-    Monomial(llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> &x)
+    Monomial(llvm::SmallVector<VarID, MonomialSmallVectorSize> &x)
         : prodIDs(x){};
-    Monomial(llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize> &&x)
+    Monomial(llvm::SmallVector<VarID, MonomialSmallVectorSize> &&x)
         : prodIDs(std::move(x)){};
     // Monomial(std::vector<size_t> &x) : prodIDs(x){};
     // Monomial(std::vector<size_t> &&x) : prodIDs(std::move(x)){};
     // Monomial(Monomial const &x) : prodIDs(x.prodIDs) {};
     Monomial(One)
-        : prodIDs(
-              llvm::SmallVector<MonomialIDType, MonomialSmallVectorSize>()){};
+        : prodIDs(llvm::SmallVector<VarID, MonomialSmallVectorSize>()){};
 
     explicit Monomial(ID id) : prodIDs({id.id}){};
     explicit Monomial(ID idx, ID idy) : prodIDs({idx.id, idy.id}){};
@@ -547,7 +543,7 @@ struct Monomial {
     }
     Monomial operator^(size_t i) { return powBySquare(*this, i); }
     Monomial operator^(size_t i) const { return powBySquare(*this, i); }
-    MonomialIDType firstTermID() const { return prodIDs[0]; }
+    VarID firstTermID() const { return prodIDs[0]; }
 
     friend std::ostream &operator<<(std::ostream &os, const Monomial &x) {
         size_t numIndex = x.prodIDs.size();
@@ -869,23 +865,23 @@ void gcd(PackedMonomial<L, E> &g, PackedMonomial<L, E> const &x,
     }
     g.calcDegree(); // degree was invalidated.
 }
-    /*
+/*
 template <size_t L>
 void gcd(PackedMonomial<L, 7> &g, PackedMonomial<L, 7> const &x,
-         PackedMonomial<L, 7> const &y) {
-    constexpr size_t V = CalculateStorage<L, 7>::K * 8;
-    uint8_t *pg = reinterpret_cast<uint8_t *>(g.bits);
-    const uint8_t *px = reinterpret_cast<const uint8_t *>(x.bits);
-    const uint8_t *py = reinterpret_cast<const uint8_t *>(y.bits);
-    uint8_t s = 0;
-    for (size_t v = 0; v < V; ++v) {
-        uint8_t gv = std::min(px[v], py[v]);
-        pg[v] = gv;
-        s += gv;
-    }
-    pg[7] = s - pg[7];
+     PackedMonomial<L, 7> const &y) {
+constexpr size_t V = CalculateStorage<L, 7>::K * 8;
+uint8_t *pg = reinterpret_cast<uint8_t *>(g.bits);
+const uint8_t *px = reinterpret_cast<const uint8_t *>(x.bits);
+const uint8_t *py = reinterpret_cast<const uint8_t *>(y.bits);
+uint8_t s = 0;
+for (size_t v = 0; v < V; ++v) {
+    uint8_t gv = std::min(px[v], py[v]);
+    pg[v] = gv;
+    s += gv;
 }
-    */
+pg[7] = s - pg[7];
+}
+*/
 template <size_t L, size_t E>
 PackedMonomial<L, E> gcd(PackedMonomial<L, E> const &x,
                          PackedMonomial<L, E> const &y) {
@@ -2948,16 +2944,15 @@ Multivariate<C, M> univariateToMultivariate(Univariate<Multivariate<C, M>> &&g,
     return p;
 }
 
-static constexpr MonomialIDType NOT_A_VAR =
-    std::numeric_limits<MonomialIDType>::max();
+static constexpr uint32_t NOT_A_VAR = std::numeric_limits<uint32_t>::max();
 
 template <typename C, IsMonomial M>
-MonomialIDType pickVar(Multivariate<C, M> const &x) {
-    MonomialIDType v = NOT_A_VAR;
+uint32_t pickVar(Multivariate<C, M> const &x) {
+    uint32_t v = NOT_A_VAR;
     for (auto &it : x) {
         if (it.degree()) {
             // v = std::min(v, *(it.exponent.begin()));
-            v = std::min(v, MonomialIDType(it.exponent.firstTermID()));
+            v = std::min(v, uint32_t(it.exponent.firstTermID()));
         }
     }
     return v;

@@ -181,35 +181,38 @@ template <typename T, typename S> void divExact(T &x, S const &y) {
     x = d;
 }
 
-// enum SourceType { MEMORY, TERM, CONSTANT, LOOPINDUCTVAR, WTR, RTW };
-//   Bits:            00               01                   10            11
-enum class SourceType { Constant, LoopInductionVariable, Memory, Term };
-std::ostream &operator<<(std::ostream &os, SourceType s) {
+enum class VarType : uint32_t {
+    Constant = 0x0,
+    LoopInductionVariable = 0x1,
+    Memory = 0x2,
+    Term = 0x3
+};
+std::ostream &operator<<(std::ostream &os, VarType s) {
     switch (s) {
-    case SourceType::Constant:
+    case VarType::Constant:
         os << "Constant";
         break;
-    case SourceType::LoopInductionVariable:
+    case VarType::LoopInductionVariable:
         os << "Induction Variable";
         break;
-    case SourceType::Memory:
+    case VarType::Memory:
         os << "Memory";
         break;
-    case SourceType::Term:
+    case VarType::Term:
         os << "Term";
         break;
     }
     return os;
 }
 
-struct Source {
-    size_t id;
-    SourceType typ;
-    Source(size_t srcId, SourceType srcTyp) : id(srcId), typ(srcTyp) {}
-    bool operator==(Source x) const { return (id == x.id) & (typ == x.typ); }
-    bool operator<(Source x) const {
-        return (typ < x.typ) | ((typ == x.typ) & (id < x.id));
-    }
+struct VarID {
+    uint32_t id;
+    VarID(uint32_t i, VarType typ)
+        : id((static_cast<uint32_t>(typ) << 30) | i) {}
+    bool operator<(VarID x) const { return id < x.id; }
+    bool operator==(VarID x) const { return id == x.id; }
+    bool operator>(VarID x) const { return id > x.id; }
+    VarType getType() const { return static_cast<VarType>(id >> 30); }
 };
 
 /*
@@ -261,7 +264,7 @@ template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     }
     for (size_t n = 0; n < N; ++n) {
         if (x0[n] != x1[n])
-	    return false;
+            return false;
     }
     return true;
 }
@@ -283,13 +286,13 @@ template <typename T, size_t M> struct Vector {
     }
     T &operator[](size_t i) { return data[i]; }
     const T &operator[](size_t i) const { return data[i]; }
-    T* begin() { return data; }
-    T* end() { return begin() + M; }
-    const T* begin() const { return data; }
-    const T* end() const { return begin() + M; }
+    T *begin() { return data; }
+    T *end() { return begin() + M; }
+    const T *begin() const { return data; }
+    const T *end() const { return begin() + M; }
 };
 template <typename T, size_t M> struct PtrVector {
-    T* ptr;
+    T *ptr;
 
     PtrVector(T *ptr) : ptr(ptr){};
     // Vector(Vector<T, M> &a) : ptr(a.ptr){};
@@ -302,16 +305,15 @@ template <typename T, size_t M> struct PtrVector {
     }
     T &operator[](size_t i) { return ptr[i]; }
     const T &operator[](size_t i) const { return ptr[i]; }
-    T* begin() { return ptr; }
-    T* end() { return ptr + M; }
-    const T* begin() const { return ptr; }
-    const T* end() const { return ptr + M; }
+    T *begin() { return ptr; }
+    T *end() { return ptr + M; }
+    const T *begin() const { return ptr; }
+    const T *end() const { return ptr + M; }
 };
-
 
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
-    Vector(size_t N) : data(llvm::SmallVector<T>(N)) {};
+    Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
 
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
@@ -328,7 +330,9 @@ template <typename T> struct Vector<T, 0> {
     auto end() const { return data.end(); }
 };
 template <typename T, size_t M>
-bool operator==(Vector<T, M> const & x0, Vector<T, M> const &x1) { return allMatch(x0, x1); }
+bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
+    return allMatch(x0, x1);
+}
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.data.size(); }
@@ -350,16 +354,16 @@ std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
 template <typename T> Vector<T, 0> toVector(llvm::ArrayRef<T> &x) {
     Vector<T, 0> y;
     y.data.reserve(x.size());
-    for (auto &i : x){
-	y.push_back(i);
+    for (auto &i : x) {
+        y.push_back(i);
     }
     return y;
 }
 
 template <typename T> bool allZero(llvm::ArrayRef<T> x) {
     for (auto &a : x)
-	if (a != 0)
-	    return false;
+        if (a != 0)
+            return false;
     return true;
 }
 
@@ -371,8 +375,9 @@ template <typename T> inline Vector<T, 0> emptyVector() {
 // Matrix
 //
 template <typename T, size_t M, size_t N> struct Matrix {
-    // static_assert(M*N != L, "if specifying non-zero M and N, we should have M*N == L");
-    T data[M*N];
+    // static_assert(M*N != L, "if specifying non-zero M and N, we should have
+    // M*N == L");
+    T data[M * N];
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
@@ -389,17 +394,17 @@ template <typename T, size_t M, size_t N> struct Matrix {
     }
     T &operator[](size_t i) { return data[i]; }
     T operator[](size_t i) const { return data[i]; }
-    T* begin() { return data; }
-    T* end() { return begin() + M; }
-    const T* begin() const { return data; }
-    const T* end() const { return begin() + M; }
+    T *begin() { return data; }
+    T *end() { return begin() + M; }
+    const T *begin() const { return data; }
+    const T *end() const { return begin() + M; }
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
     llvm::SmallVector<T> data;
     size_t N;
 
-    Matrix(size_t n) : data(llvm::SmallVector<T>(M*n)), N(n){};
+    Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
@@ -419,7 +424,7 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
     llvm::SmallVector<T> data;
     size_t M;
 
-    Matrix(size_t m) : data(llvm::SmallVector<T>(m*N)), M(m){};
+    Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
@@ -448,7 +453,8 @@ template <typename T> struct Matrix<T, 0, 0> {
     size_t M;
     size_t N;
 
-    Matrix(size_t m, size_t n) : data(llvm::SmallVector<T>(m*n)), M(m), N(n){};
+    Matrix(size_t m, size_t n)
+        : data(llvm::SmallVector<T>(m * n)), M(m), N(n){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
@@ -473,13 +479,15 @@ template <typename T> struct Matrix<T, 0, 0> {
 };
 
 template <typename T, size_t M, size_t N>
-size_t size(Matrix<T, M, N> const&, size_t i) {
+size_t size(Matrix<T, M, N> const &, size_t i) {
     return i == 0 ? M : N;
 }
-template <typename T, size_t M> size_t size(Matrix<T, M, 0> const &A, size_t i) {
+template <typename T, size_t M>
+size_t size(Matrix<T, M, 0> const &A, size_t i) {
     return i == 0 ? M : A.N;
 }
-template <typename T, size_t N> size_t size(Matrix<T, 0, N> const &A, size_t i) {
+template <typename T, size_t N>
+size_t size(Matrix<T, 0, N> const &A, size_t i) {
     return i == 0 ? A.M : N;
 }
 template <typename T> size_t size(Matrix<T, 0, 0> const &A, size_t i) {
@@ -490,7 +498,8 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
     return std::make_pair(size(A, 0), size(A, 1));
 }
 
-template <typename T, size_t M, size_t N> size_t length(Matrix<T, M, N> const &A) {
+template <typename T, size_t M, size_t N>
+size_t length(Matrix<T, M, N> const &A) {
     return size(A, 0) * size(A, 1);
 }
 template <typename T, size_t M> size_t length(Matrix<T, M, 0> const &A) {
@@ -503,12 +512,11 @@ template <typename T> size_t length(Matrix<T, 0, 0> const &A) {
     return A.data.size();
 }
 
-
 template <typename T> struct SquareMatrix {
     llvm::SmallVector<T> data;
     size_t M;
-    
-    SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m*m)), M(m){};
+
+    SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};
 
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
@@ -531,12 +539,15 @@ template <typename T> struct SquareMatrix {
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
 };
-template<typename T>
-std::pair<size_t,size_t> size(SquareMatrix<T> const &A){ return std::make_pair<A.M,A.M>; }
-template<typename T>
-size_t size(SquareMatrix<T> const &A, size_t){ return A.M; }
-template<typename T>
-size_t length(SquareMatrix<T> const &A) { return A.data.size(); }
+template <typename T> std::pair<size_t, size_t> size(SquareMatrix<T> const &A) {
+    return std::make_pair<A.M, A.M>;
+}
+template <typename T> size_t size(SquareMatrix<T> const &A, size_t) {
+    return A.M;
+}
+template <typename T> size_t length(SquareMatrix<T> const &A) {
+    return A.data.size();
+}
 
 template <typename T, size_t M, size_t N>
 PtrVector<T, M> getCol(Matrix<T, M, N> &A, size_t i) {
@@ -545,14 +556,14 @@ PtrVector<T, M> getCol(Matrix<T, M, N> &A, size_t i) {
 template <typename T, size_t N>
 llvm::ArrayRef<T> getCol(Matrix<T, 0, N> &A, size_t i) {
     size_t s1 = size(A, 0);
-    T* data = A.data.data() + i * s1;
+    T *data = A.data.data() + i * s1;
     return llvm::ArrayRef<T>(data, s1);
     // return Vector<T, 0>(A.ptr + i * s1, s1);
 }
 template <typename T, size_t N>
 llvm::ArrayRef<T> getCol(SquareMatrix<T> &A, size_t i) {
     size_t s1 = size(A, 0);
-    T* data = A.data.data() + i * s1;
+    T *data = A.data.data() + i * s1;
     return llvm::ArrayRef<T>(data, s1);
     // return Vector<T, 0>(A.ptr + i * s1, s1);
 }
@@ -696,7 +707,7 @@ struct Permutation {
     Int &operator()(size_t i) { return data(i, 0); }
     Int operator()(size_t i) const { return data(i, 0); }
     bool operator==(Permutation y) {
-	return getCol(data, 0) == getCol(y.data, 0);
+        return getCol(data, 0) == getCol(y.data, 0);
     }
 };
 
@@ -922,17 +933,15 @@ template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
     return x >> 32;
 }
 
-template <typename T>
-std::pair<size_t,T> findMax(llvm::ArrayRef<T> x){
+template <typename T> std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
     size_t i = 0;
     T max = std::numeric_limits<T>::min();
-    for (size_t j = 0; j < x.size(); ++j){
-	T xj = x[j];
-	if (max < xj){
-	    max = xj;
-	    i = j;
-	}
+    for (size_t j = 0; j < x.size(); ++j) {
+        T xj = x[j];
+        if (max < xj) {
+            max = xj;
+            i = j;
+        }
     }
     return std::make_pair(i, max);
 }
-
