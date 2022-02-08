@@ -1,6 +1,7 @@
 #pragma once
 #include "math.hpp"
 #include "symbolics.hpp"
+#include <cstddef>
 #include <llvm/ADT/SmallVector.h>
 
 //
@@ -9,7 +10,7 @@
 // typedef Matrix<Int, MAX_PROGRAM_VARIABLES, 0> RektM;
 // typedef Vector<Int, MAX_PROGRAM_VARIABLES> Upperbound;
 
-typedef Polynomial::Multivariate<intptr_t,Polynomial::Monomial> MPoly;
+typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial> MPoly;
 typedef llvm::SmallVector<MPoly, 3> UpperBounds;
 // NOTE: UpperBounds assumes symbols in the monomial products are >= 0.
 //       If a number is known to be negative, then it should receive a negative
@@ -22,27 +23,26 @@ typedef llvm::SmallVector<MPoly, 3> UpperBounds;
 //          Perhaps we can still confirm that the loop would not execute for
 //          negative values. Otherwise, we require loop splitting.
 
-
 struct RectangularLoopNest {
     UpperBounds data;
 
-    RectangularLoopNest(size_t nloops) : data(UpperBounds(nloops)) {};
+    RectangularLoopNest(size_t nloops) : data(UpperBounds(nloops)){};
+    size_t getNumLoops() const { return data.size(); }
+    MPoly &getUpperbound(size_t j) { return data[j]; }
+    UpperBounds &getUpperbounds() { return data; }
 };
-size_t getNumLoops(RectangularLoopNest const &data){ return data.data.size(); }
 // size_t length(RectangularLoopNest rekt) { return length(rekt.data); }
 
 // Upperbound getUpperbound(RectangularLoopNest r, size_t j) {
 //     return getCol(r.data, j);
 // }
-MPoly &getUpperbound(RectangularLoopNest &r, size_t j) {
-    return r.data[j];
-}
 
 //  perm: og -> transform
 // iperm: transform -> og
 bool compatible(RectangularLoopNest &l1, RectangularLoopNest &l2,
-                Permutation &perm1, Permutation &perm2, size_t _i1, size_t _i2) {
-    return getUpperbound(l1, perm1(_i1)) == getUpperbound(l2, perm2(_i2));
+                Permutation &perm1, Permutation &perm2, size_t _i1,
+                size_t _i2) {
+    return l1.getUpperbound(perm1(_i1)) == l2.getUpperbound(perm2(_i2));
 }
 
 typedef SquareMatrix<Int> TrictM;
@@ -52,56 +52,42 @@ struct TriangularLoopNest {
     SquareMatrix<Int> A;
     RectangularLoopNest r;
     RectangularLoopNest u;
-    TriangularLoopNest(size_t nloops) : A(SquareMatrix<Int>(nloops)), r(RectangularLoopNest(nloops)), u(RectangularLoopNest(nloops)) {};
-};
+    TriangularLoopNest(size_t nloops)
+        : A(SquareMatrix<Int>(nloops)), r(RectangularLoopNest(nloops)),
+          u(RectangularLoopNest(nloops)){};
 
-size_t getNumLoops(const TriangularLoopNest &t){ return getNumLoops(t.r); }
-RectangularLoopNest &getRekt(TriangularLoopNest &tri) {
-    return tri.r;
-    // return RectangularLoopNest(tri.raw, tri.nloops);
-}
+    size_t getNumLoops() const { return r.getNumLoops(); }
+    RectangularLoopNest &getRekt() { return r; }
+    SquareMatrix<Int> &getTrit() { return A; }
+    UpperBounds &getUpperbounds() { return u.data; }
 
-SquareMatrix<Int> &getTrit(TriangularLoopNest &tri) {
-    return tri.A;
-    // TrictM A(tri.raw + length(getRekt(tri)), tri.nloops, tri.nloops);
-    // return A;
-}
-
-
-
-UpperBounds &getUpperbounds(RectangularLoopNest &r) { return r.data; }
-UpperBounds &getUpperbounds(TriangularLoopNest &tri) {
-    return tri.u.data;
-}
-
-void fillUpperBounds(TriangularLoopNest &tri) {
-    size_t nloops = getNumLoops(tri);
-    TrictM &A = getTrit(tri);
-    UpperBounds &upperBounds = getUpperbounds(getRekt(tri));
-    for (size_t i = 1; i < nloops; ++i) {
-        for (size_t j = 0; j < i; ++j) {
-            Int Aij = A(j, i);
-	    if (Aij){
-		upperBounds[i] -= Aij * upperBounds[j];
-	    }
+    void fillUpperBounds() {
+        size_t nloops = getNumLoops();
+        TrictM &A = getTrit();
+        UpperBounds &upperBounds = getRekt().getUpperbounds();
+        for (size_t i = 1; i < nloops; ++i) {
+            for (size_t j = 0; j < i; ++j) {
+                Int Aij = A(j, i);
+                if (Aij) {
+                    upperBounds[i] -= Aij * upperBounds[j];
+                }
+            }
         }
     }
-}
+};
+
 
 
 bool otherwiseIndependent(TrictM &A, Int j, Int i) {
-    for (Int k = 0; k < j; k++)
-        if (A(k, j))
-            return false; // A is symmetric
-    for (size_t k = j + 1; k < size(A, 0); k++)
-        if (!((k == size_t(i)) | (A(k, j) == 0)))
+    for (Int k = 0; k < Int(A.size(0)); k++)
+        if (!((k == i) | (k == j) | (A(k, j) == 0)))
             return false;
     return true;
 }
 
 bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
-    for (size_t k = j + 1; k < size(A, 0); k++) {
-	// if A(k, j) >= 0, then j is not lower bounded by k
+    for (size_t k = j + 1; k < A.size(0); k++) {
+        // if A(k, j) >= 0, then j is not lower bounded by k
         if (A(k, j) >= 0)
             continue;
         auto _k = inv(perm, k);
@@ -118,29 +104,28 @@ bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
 }
 bool upperboundDominates(MPoly &ubi, MPoly &ubj) {
     MPoly delta = ubi - ubj;
-    for (auto &term : delta){
-	if (term.coefficient < 0){
-	    return false;
-	}
+    for (auto &term : delta) {
+        if (term.coefficient < 0) {
+            return false;
+        }
     }
     return true;
 }
 
-
-bool zeroInnerIterationsAtMaximum(TrictM &A, MPoly &ub,
-                                  RectangularLoopNest &r, Int i) {
+bool zeroInnerIterationsAtMaximum(TrictM &A, MPoly &ub, RectangularLoopNest &r,
+                                  Int i) {
     for (auto j = 0; j < i; j++) {
         auto Aij = A(i, j);
         if (Aij >= 0)
             continue;
-        if (upperboundDominates(ub, getUpperbound(r, j)))
+        if (upperboundDominates(ub, r.getUpperbound(j)))
             return true;
     }
-    for (size_t j = i + 1; j < size(A, 0); j++) {
+    for (size_t j = i + 1; j < A.size(0); j++) {
         auto Aij = A(i, j);
         if (Aij <= 0)
             continue;
-        if (upperboundDominates(ub, getUpperbound(r, j)))
+        if (upperboundDominates(ub, r.getUpperbound(j)))
             return true;
     }
     return false;
@@ -150,12 +135,12 @@ bool zeroInnerIterationsAtMaximum(TrictM &A, MPoly &ub,
 // perms map these to i*, indices in the original order.
 bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
                 Permutation &perm1, Permutation &perm2, Int _i1, Int _i2) {
-    SquareMatrix<Int>& A = getTrit(l1);
-    RectangularLoopNest& r = getRekt(l1);
+    SquareMatrix<Int> &A = l1.getTrit();
+    RectangularLoopNest &r = l1.getRekt();
     auto i = perm1(_i1);
-    
-    MPoly& ub1 = getUpperbound(r, i);
-    MPoly& ub2 = getUpperbound(l2, perm2(_i2));
+
+    MPoly &ub1 = r.getUpperbound(i);
+    MPoly &ub2 = l2.getUpperbound(perm2(_i2));
     auto delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
     auto iperm = inv(perm1);
@@ -175,15 +160,15 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
             // TODO: relax restriction
             if (!otherwiseIndependent(A, j, i))
                 return false;
-	    
-	    fnmadd(delta_b, getUpperbound(r, j), Aij);
-	    delta_b += Aij;
-	    // MPoly &ub_temp = ;
-            // Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp = 
+
+            fnmadd(delta_b, r.getUpperbound(j), Aij);
+            delta_b += Aij;
+            // MPoly &ub_temp = ;
+            // Vector<Int, MAX_PROGRAM_VARIABLES> ub_temp =
             // for (size_t k = 0; k < MAX_PROGRAM_VARIABLES; k++)
             //     delta_b[k] -= Aij * ub_temp(k);
             // delta_b[0] += Aij;
-        } else { // if Aij > 0 i < C - j abs(Aij)
+        } else { // if Aij > 0, i < C - j abs(Aij)
             // Aij > 0 means that `j_lower_bounded_by_k` will be false when
             // `k=i`.
             if (!zeroMinimum(A, j, _j1, perm1))
@@ -194,7 +179,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     // the permutation, we can rule out compatibility with rectangular `l2`
     // loop. If it is not in the permutation, then the bound defined by the
     // first loop holds, so no checks/adjustments needed here.
-    for (size_t j = i + 1; j < size(A, 0); j++) {
+    for (size_t j = i + 1; j < A.size(0); j++) {
         auto Aij = A(j, i);
         if (Aij == 0)
             continue;
@@ -203,40 +188,43 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
         if (iperm[j] < _i1)
             return false;
     }
-    if (isZero(delta_b)){
-	return true;
-    } else if ((delta_b.terms.size() == 1) && (delta_b.leadingCoefficient() == -1)){
-	return zeroInnerIterationsAtMaximum(A, ub2, r, i);
+    if (isZero(delta_b)) {
+        return true;
+    } else if ((delta_b.terms.size() == 1) &&
+               (delta_b.leadingCoefficient() == -1)) {
+        return zeroInnerIterationsAtMaximum(A, ub2, r, i);
     } else {
-	return false;
+        return false;
     }
 }
 
-bool compatible(RectangularLoopNest &r, TriangularLoopNest &t, Permutation &perm2,
-                Permutation &perm1, Int _i2, Int _i1) {
+bool compatible(RectangularLoopNest &r, TriangularLoopNest &t,
+                Permutation &perm2, Permutation &perm1, Int _i2, Int _i1) {
     return compatible(t, r, perm1, perm2, _i1, _i2);
 }
 
-bool updateBoundDifference(MPoly &delta_b,
-                           TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
-                           Permutation &perm2, Int _i1, Int i2, bool flip) {
-    SquareMatrix<Int>& A1 = getTrit(l1);
-    RectangularLoopNest& r1 = getRekt(l1);
+bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
+                           Permutation &perm1, Permutation &perm2, Int _i1,
+                           Int i2, bool flip) {
+    SquareMatrix<Int> &A1 = l1.getTrit();
+    RectangularLoopNest &r1 = l1.getRekt();
     auto i1 = perm1(_i1);
     auto iperm = inv(perm1);
     // the first loop adds variables that adjust `i`'s bounds
+    // `j` and `i1` are in original domain.
     for (Int j = 0; j < i1; j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
         Int _j1 = iperm[j];
+	// if we're dependent on `j` (_j1 < _i1), we need terms to match
         if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
             return false;
         if (Aij < 0) {
             if (!otherwiseIndependent(A1, j, i1))
                 return false;
             Aij = flip ? -Aij : Aij;
-	    fnmadd(delta_b, getUpperbound(r1, j), Aij);
+            fnmadd(delta_b, r1.getUpperbound(j), Aij);
             delta_b += Aij;
         } else {
             if (!zeroMinimum(A1, j, _j1, perm1))
@@ -248,59 +236,69 @@ bool updateBoundDifference(MPoly &delta_b,
 
 bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                          Permutation &perm2, Int _i1, Int i2) {
-    auto A1 = getTrit(l1);
+    auto A1 = l1.getTrit();
     auto i1 = perm1(_i1);
     auto iperm = inv(perm1);
-    for (size_t j = i1 + 1; j < size(A1, 0); j++) {
+    for (size_t j = i1 + 1; j < A1.size(0); j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
-        Int j1 = iperm[j];
-        if ((j1 < _i1) & (A2(perm2(j1), i2) != Aij))
-            return false;
+        Int _j1 = iperm[j];
+	// if we're dependent on `j1`, we require the same coefficient.
+	// if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
+            // return false;
+	if (_j1 < _i1){
+	    if (A2(perm2(_j1), i2) != Aij)
+		return false;
+	} else {
+	    // we're not dependent on this loop.
+	    // thus, it provides an additional upper bound.
+	    return false;
+	}
     }
     return true;
 }
 
-bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2, Permutation &perm1,
-                Permutation &perm2, Int _i1, Int _i2) {
-    SquareMatrix<Int> &A1 = getTrit(l1);
-    RectangularLoopNest &r1 = getRekt(l1);
-    SquareMatrix<Int> &A2 = getTrit(l2);
-    RectangularLoopNest &r2 = getRekt(l2);
+bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
+                Permutation &perm1, Permutation &perm2, Int _i1, Int _i2) {
+    SquareMatrix<Int> &A1 = l1.getTrit();
+    RectangularLoopNest &r1 = l1.getRekt();
+    SquareMatrix<Int> &A2 = l2.getTrit();
+    RectangularLoopNest &r2 = l2.getRekt();
     Int i1 = perm1(_i1);
     Int i2 = perm2(_i2);
-    MPoly &ub1 = getUpperbound(r1, i1);
-    MPoly &ub2 = getUpperbound(r2, i2);
+    MPoly &ub1 = r1.getUpperbound(i1);
+    MPoly &ub2 = r2.getUpperbound(i2);
     MPoly delta_b = ub1 - ub2;
+    // quick check if invalid
+    if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2)) {
+        return false;
+    }
+    if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1)) {
+        return false;
+    }
     // now need to add `A`'s contribution
-    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)){
+    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)) {
         return false;
     }
-    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true)){
+    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true)) {
         return false;
     }
-    if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2)){
-        return false;
-    }
-    if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1)){
-        return false;
-    }
-    if (isZero(delta_b)){
-	return true;
-    } else if (delta_b.terms.size() == 1){
-	Polynomial::Term<Int,Polynomial::Monomial> &lt = delta_b.leadingTerm();
-	if (lt.degree()){
-	    return false;
-	} else if (lt.coefficient == -1){
-	    return zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
-	} else if (lt.coefficient == 1){
-	    return zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
-	} else {
-	    return false;
-	}
+    if (isZero(delta_b)) {
+        return true;
+    } else if (delta_b.terms.size() == 1) {
+        Polynomial::Term<Int, Polynomial::Monomial> &lt = delta_b.leadingTerm();
+        if (lt.degree()) {
+            return false;
+        } else if (lt.coefficient == -1) {
+            return zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
+        } else if (lt.coefficient == 1) {
+            return zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
+        } else {
+            return false;
+        }
     } else {
-	return false;
+        return false;
     }
 }
 
@@ -308,11 +306,66 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2, Permutation &per
 // l are the lower bounds
 // u are the upper bounds
 struct AffineLoopNest {
-    Matrix<Int,0,0> A;
+    Matrix<Int, 0, 0> A;
     RectangularLoopNest r;
     RectangularLoopNest l;
     RectangularLoopNest u;
+
+    std::pair<llvm::SmallVector<MPoly, 4>,llvm::SmallVector<MPoly, 4>> getBounds(size_t i){
+	auto [M,N] = A.size();
+	llvm::SmallVector<MPoly, 4> lowerBounds;
+	llvm::SmallVector<MPoly, 4> upperBounds;
+	for (size_t j = 0; j < M; ++j){
+	    if (Int Aji = A(j,i)){
+		
+	    }
+	}
+	return std::make_pair(lowerBounds, upperBounds);
+    }
 };
+
+bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
+                Permutation &perm2, Int _i1, Int _i2) {
+    Matrix<Int,0,0> &A1 = l1.A;
+    RectangularLoopNest &r1 = l1.r;
+    Matrix<Int,0,0> &A2 = l2.A;
+    RectangularLoopNest &r2 = l2.r;
+    Int i1 = perm1(_i1);
+    Int i2 = perm2(_i2);
+    MPoly &ub1 = r1.getUpperbound(i1);
+    MPoly &ub2 = r2.getUpperbound(i2);
+    MPoly delta_b = ub1 - ub2;
+    // now need to add `A`'s contribution
+    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)) {
+        return false;
+    }
+    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true)) {
+        return false;
+    }
+    if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2)) {
+        return false;
+    }
+    if (!checkRemainingBound(l2, A1, perm2, perm1, _i2, i1)) {
+        return false;
+    }
+    if (isZero(delta_b)) {
+        return true;
+    } else if (delta_b.terms.size() == 1) {
+        Polynomial::Term<Int, Polynomial::Monomial> &lt = delta_b.leadingTerm();
+        if (lt.degree()) {
+            return false;
+        } else if (lt.coefficient == -1) {
+            return zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
+        } else if (lt.coefficient == 1) {
+            return zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
 // Not necessarily convertible to `TriangularLoopNest`, e.g.
 // [-1  0 ] [ m   < [ 1
 //   1  0     n       M
@@ -323,10 +376,10 @@ struct AffineLoopNest {
 // struct GenericLoopNest{
 //     llvm::SmallVector<MPoly, 4> l;
 //     llvm::SmallVector<MPoly, 4> u;
-    
+
 // };
 
-// 
+//
 // template <typename T, typename S>
 // bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
 //     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);

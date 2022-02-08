@@ -244,8 +244,7 @@ inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
     return offset;
 }
 static std::string programVarName(size_t i) {
-    std::string s(1, 'L' + i);
-    return s;
+    return std::string(1, 'L' + i);
 }
 std::string monomialTermStr(size_t id, size_t exponent) {
     if (exponent) {
@@ -379,26 +378,23 @@ struct Monomial {
     inline auto rbegin() const { return prodIDs.rbegin(); }
     inline auto rend() const { return prodIDs.rend(); }
 
-    void addTerm(size_t x) {
+    void addTerm(VarID v) {
         for (auto it = begin(); it != end(); ++it) {
-            if (x <= *it) {
-                prodIDs.insert(it, x);
+            if (v <= *it) {
+                prodIDs.insert(it, v);
                 return;
             }
         }
-        prodIDs.push_back(x);
+        prodIDs.push_back(v);
     }
-    void addTerm(size_t x, size_t count) {
-        // prodIDs.reserve(prodIDs.size() + rep);
+    void addTerm(VarID v, size_t count) {
         auto it = begin();
-        // prodIDs [0, 1, 3]
-        // x = 2
         for (; it != end(); ++it) {
-            if (x <= *it) {
+            if (v <= *it) {
                 break;
             }
         }
-        prodIDs.insert(it, count, x);
+        prodIDs.insert(it, count, v);
     }
     void mul(Monomial const &x, Monomial const &y) {
         prodIDs.clear();
@@ -409,10 +405,10 @@ struct Monomial {
         size_t j = 0;
         // prodIDs are sorted, so we can create sorted product in O(N)
         for (size_t k = 0; k < (n0 + n1); ++k) {
-            size_t a =
-                (i < n0) ? x.prodIDs[i] : std::numeric_limits<size_t>::max();
-            size_t b =
-                (j < n1) ? y.prodIDs[j] : std::numeric_limits<size_t>::max();
+            VarID a =
+                (i < n0) ? x.prodIDs[i] : std::numeric_limits<IDType>::max();
+            VarID b =
+                (j < n1) ? y.prodIDs[j] : std::numeric_limits<IDType>::max();
             bool aSmaller = a < b;
             aSmaller ? ++i : ++j;
             prodIDs.push_back(aSmaller ? a : b);
@@ -428,7 +424,7 @@ struct Monomial {
         if (x.prodIDs.size() == 0) {
             return *this;
         } else if (x.prodIDs.size() == 1) {
-            size_t y = x.prodIDs[0];
+            VarID y = x.prodIDs[0];
             for (auto it = begin(); it != end(); ++it) {
                 if (y < *it) {
                     prodIDs.insert(it, y);
@@ -480,10 +476,10 @@ struct Monomial {
         size_t n0 = prodIDs.size();
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
-            size_t a =
-                (i < n0) ? prodIDs[i] : std::numeric_limits<size_t>::max();
-            size_t b =
-                (j < n1) ? x.prodIDs[j] : std::numeric_limits<size_t>::max();
+            VarID a =
+                (i < n0) ? prodIDs[i] : std::numeric_limits<IDType>::max();
+            VarID b =
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<IDType>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -521,8 +517,8 @@ struct Monomial {
             return d > x.degree();
         }
         for (size_t i = 0; i < d; ++i) {
-            size_t a = prodIDs[i];
-            size_t b = x.prodIDs[i];
+            VarID a = prodIDs[i];
+            VarID b = x.prodIDs[i];
             if (a != b) {
                 return a < b;
             }
@@ -550,19 +546,19 @@ struct Monomial {
         if (numIndex) {
             if (numIndex != 1) { // not 0 by prev `if`
                 size_t count = 0;
-                size_t v = x.prodIDs[0];
+                VarID v = x.prodIDs[0];
                 for (auto it : x) {
                     if (it == v) {
                         ++count;
                     } else {
-                        os << monomialTermStr(v, count);
+                        os << monomialTermStr(v.id, count);
                         v = it;
                         count = 1;
                     }
                 }
-                os << monomialTermStr(v, count);
+                os << monomialTermStr(v.id, count);
             } else { // numIndex == 1
-                os << programVarName(x.prodIDs[0]);
+                os << programVarName(x.prodIDs[0].id);
             }
         } else {
             os << '1';
@@ -578,8 +574,8 @@ bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
     auto n0 = x.cend();
     auto n1 = y.cend();
     while ((i != n0) | (j != n1)) {
-        size_t a = (i != n0) ? *i : std::numeric_limits<size_t>::max();
-        size_t b = (j != n1) ? *j : std::numeric_limits<size_t>::max();
+        VarID a = (i != n0) ? *i : std::numeric_limits<IDType>::max();
+        VarID b = (j != n1) ? *j : std::numeric_limits<IDType>::max();
         if (a < b) {
             z.prodIDs.push_back(a);
             ++i;
@@ -2944,15 +2940,15 @@ Multivariate<C, M> univariateToMultivariate(Univariate<Multivariate<C, M>> &&g,
     return p;
 }
 
-static constexpr uint32_t NOT_A_VAR = std::numeric_limits<uint32_t>::max();
+static constexpr IDType NOT_A_VAR = std::numeric_limits<IDType>::max();
 
 template <typename C, IsMonomial M>
-uint32_t pickVar(Multivariate<C, M> const &x) {
-    uint32_t v = NOT_A_VAR;
+IDType pickVar(Multivariate<C, M> const &x) {
+    IDType v = NOT_A_VAR;
     for (auto &it : x) {
         if (it.degree()) {
             // v = std::min(v, *(it.exponent.begin()));
-            v = std::min(v, uint32_t(it.exponent.firstTermID()));
+            v = std::min(v, IDType(it.exponent.firstTermID()));
         }
     }
     return v;
