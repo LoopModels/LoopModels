@@ -62,7 +62,9 @@ struct Interval {
         return Interval{std::min(std::min(ll, lu), std::min(ul, uu)),
                         std::max(std::max(ll, lu), std::max(ul, uu))};
     }
-
+    // *this = a + b;
+    // update `*this` based on `a + b` and return new `a` and new `b`
+    // corresponding to those constraints.
     std::pair<Interval, Interval> restrictAdd(Interval a, Interval b) {
         Interval cNew = this->intersect(a + b);
         Interval aNew = a.intersect(*this - b);
@@ -74,6 +76,7 @@ struct Interval {
         upperBound = cNew.upperBound;
         return std::make_pair(aNew, bNew);
     }
+    // *this = a - b; similar to `restrictAdd`
     std::pair<Interval, Interval> restrictSub(Interval a, Interval b) {
         Interval cNew = this->intersect(a - b);
         Interval aNew = a.intersect(*this + b);
@@ -155,13 +158,14 @@ struct PartiallyOrderedSet {
     }
 
     Interval update(uintptr_t i, uintptr_t j, Interval ji) {
+        // bin2s here are for indexing columns
         uintptr_t iOff = bin2(i);
         uintptr_t jOff = bin2(j);
-
+        // we require that i < j
         for (uintptr_t k = 0; k < i; ++k) {
             Interval ik = delta[k + iOff];
             Interval jk = delta[k + jOff];
-
+            // j - i = (j - k) - (i - k)
             auto [jkt, ikt] = ji.restrictSub(jk, ik);
             delta[k + iOff] = ikt;
             delta[k + jOff] = jkt;
@@ -179,7 +183,7 @@ struct PartiallyOrderedSet {
         uintptr_t kOff = iOff;
         for (uintptr_t k = i + 1; k < j; ++k) {
             kOff += (k-1);
-	    Interval ki = delta[i + kOff];
+            Interval ki = delta[i + kOff];
             Interval jk = delta[k + jOff];
             auto [kit, jkt] = ji.restrictAdd(ki, jk);
             delta[i + kOff] = kit;
