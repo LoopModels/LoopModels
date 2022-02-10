@@ -2,6 +2,7 @@
 #include "math.hpp"
 #include "symbolics.hpp"
 #include <cstddef>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
 //
@@ -88,9 +89,9 @@ bool zeroMinimum(TrictM &A, Int j, Int _j, Permutation &perm) {
         // if A(k, j) >= 0, then j is not lower bounded by k
         if (A(k, j) >= 0)
             continue;
-        auto _k = perm.inv(k);
+        Int _k = perm.inv(k);
         // A[k,j] < 0 means that `k < C + j`, i.e. `j` has a lower bound of `k`
-        auto k_in_perm = _k < _j;
+        bool k_in_perm = _k < _j;
         if (k_in_perm)
             return false;
         // if `k` not in perm, then if `k` has a zero minimum
@@ -112,15 +113,15 @@ bool upperboundDominates(MPoly &ubi, MPoly &ubj) {
 
 bool zeroInnerIterationsAtMaximum(TrictM &A, MPoly &ub, RectangularLoopNest &r,
                                   Int i) {
-    for (auto j = 0; j < i; j++) {
-        auto Aij = A(i, j);
+    for (Int j = 0; j < i; j++) {
+        Int Aij = A(i, j);
         if (Aij >= 0)
             continue;
         if (upperboundDominates(ub, r.getUpperbound(j)))
             return true;
     }
     for (size_t j = i + 1; j < A.size(0); j++) {
-        auto Aij = A(i, j);
+        Int Aij = A(i, j);
         if (Aij <= 0)
             continue;
         if (upperboundDominates(ub, r.getUpperbound(j)))
@@ -135,16 +136,16 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
                 Permutation &perm1, Permutation &perm2, Int _i1, Int _i2) {
     SquareMatrix<Int> &A = l1.getTrit();
     RectangularLoopNest &r = l1.getRekt();
-    auto i = perm1(_i1);
+    Int i = perm1(_i1);
 
     MPoly &ub1 = r.getUpperbound(i);
     MPoly &ub2 = l2.getUpperbound(perm2(_i2));
-    auto delta_b = ub1 - ub2;
+    MPoly delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    auto iperm = perm1.inv();
+    llvm::ArrayRef<Int> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     for (size_t j = 0; j < size_t(i); j++) {
-        auto Aij = A(j, i); // symmetric
+        Int Aij = A(j, i); // symmetric
         if (Aij == 0)
             continue;
         Int _j1 = iperm[j];
@@ -178,7 +179,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     // loop. If it is not in the permutation, then the bound defined by the
     // first loop holds, so no checks/adjustments needed here.
     for (size_t j = i + 1; j < A.size(0); j++) {
-        auto Aij = A(j, i);
+        Int Aij = A(j, i);
         if (Aij == 0)
             continue;
         // j1 < _i1 means it is included in the permutation, but rectangular
@@ -206,8 +207,8 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
                            Int i2, bool flip) {
     SquareMatrix<Int> &A1 = l1.getTrit();
     RectangularLoopNest &r1 = l1.getRekt();
-    auto i1 = perm1(_i1);
-    auto iperm = perm1.inv();
+    Int i1 = perm1(_i1);
+    llvm::ArrayRef<Int> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     // `j` and `i1` are in original domain.
     for (Int j = 0; j < i1; j++) {
@@ -234,25 +235,17 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
 
 bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                          Permutation &perm2, Int _i1, Int i2) {
-    auto A1 = l1.getTrit();
-    auto i1 = perm1(_i1);
-    auto iperm = perm1.inv();
+    SquareMatrix<Int> &A1 = l1.getTrit();
+    Int i1 = perm1(_i1);
+    llvm::ArrayRef<Int> iperm = perm1.inv();
     for (size_t j = i1 + 1; j < A1.size(0); j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
             continue;
         Int _j1 = iperm[j];
         // if we're dependent on `j1`, we require the same coefficient.
-        // if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
-        // return false;
-        if (_j1 < _i1) {
-            if (A2(perm2(_j1), i2) != Aij)
-                return false;
-        } else {
-            // we're not dependent on this loop.
-            // thus, it provides an additional upper bound.
+        if ((_j1 < _i1) & (A2(perm2(_j1), i2) != Aij))
             return false;
-        }
     }
     return true;
 }
@@ -316,6 +309,7 @@ struct AffineLoopNest {
         llvm::SmallVector<MPoly, 4> upperBounds;
         for (size_t j = 0; j < M; ++j) {
             if (Int Aji = A(j, i)) {
+		
             }
         }
         return std::make_pair(lowerBounds, upperBounds);

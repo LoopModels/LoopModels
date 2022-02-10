@@ -416,7 +416,8 @@ template <typename T, size_t M, size_t N> struct Matrix {
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
-    llvm::SmallVector<T> data;
+    static constexpr size_t M3 = M*3;
+    llvm::SmallVector<T,M3> data;
     size_t N;
 
     Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
@@ -442,7 +443,8 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
-    llvm::SmallVector<T> data;
+    static constexpr size_t N3 = N*3;
+    llvm::SmallVector<T,N3> data;
     size_t M;
 
     Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
@@ -521,7 +523,7 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
 }
 
 template <typename T> struct SquareMatrix {
-    llvm::SmallVector<T> data;
+    llvm::SmallVector<T,9> data;
     size_t M;
 
     SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};

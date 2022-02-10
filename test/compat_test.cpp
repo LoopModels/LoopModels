@@ -37,6 +37,7 @@ TEST(CompatTest, BasicAssertions) {
     EXPECT_TRUE(compatible(trial, rectl, perm_tri, perm_rec, 1, 1));
     EXPECT_TRUE(compatible(trial, trial, perm_tri, perm_tr2, 0, 0));
     EXPECT_TRUE(compatible(trial, trial, perm_tri, perm_tr2, 1, 1));
+    
     EXPECT_TRUE(compatible(trial, trial, perm_tri, perm_tr2, 2, 2));
     EXPECT_TRUE(compatible(trial, trial, perm_tr2, perm_tri, 0, 0));
     EXPECT_TRUE(compatible(trial, trial, perm_tr2, perm_tri, 1, 1));

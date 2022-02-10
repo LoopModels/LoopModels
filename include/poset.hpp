@@ -1,6 +1,10 @@
+#include "loops.hpp"
+#include "math.hpp"
+#include "symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <limits>
@@ -62,6 +66,18 @@ struct Interval {
         return Interval{std::min(std::min(ll, lu), std::min(ul, uu)),
                         std::max(std::max(ll, lu), std::max(ul, uu))};
     }
+    Interval &operator+=(Interval b) {
+        *this = (*this) + b;
+        return *this;
+    }
+    Interval &operator-=(Interval b) {
+        *this = (*this) - b;
+        return *this;
+    }
+    Interval &operator*=(Interval b) {
+        *this = (*this) * b;
+        return *this;
+    }
     // *this = a + b;
     // update `*this` based on `a + b` and return new `a` and new `b`
     // corresponding to those constraints.
@@ -97,6 +113,11 @@ struct Interval {
     }
     bool isConstant() const { return lowerBound == upperBound; }
 
+    bool knownLess(Interval a) { return lowerBound < a.upperBound; }
+    bool knownLessEqual(Interval a) { return lowerBound <= a.upperBound; }
+    bool knownGreater(Interval a) { return lowerBound > a.upperBound; }
+    bool knownGreaterEqual(Interval a) { return lowerBound >= a.upperBound; }
+
     // to be different in a significant way, we require them to be different,
     // but only for values smaller than half of type max. Values so large
     // are unlikely to effect results, so we don't continue propogating.
@@ -110,6 +131,7 @@ struct Interval {
                           saturatingAbs(b.upperBound)) <
                  std::numeric_limits<intptr_t>::max() >> 1));
     }
+    bool signUnknown() const { return (lowerBound < 0) & (upperBound > 0); }
 
     static Interval negative() {
         return Interval{std::numeric_limits<intptr_t>::min(), -1};
@@ -127,6 +149,7 @@ struct Interval {
         return Interval{std::numeric_limits<intptr_t>::min(),
                         std::numeric_limits<intptr_t>::max()};
     }
+    static Interval zero() { return Interval{0, 0}; }
 };
 
 Interval negativeInterval() {
@@ -142,27 +165,28 @@ std::ostream &operator<<(std::ostream &os, Interval a) {
 
 struct PartiallyOrderedSet {
     llvm::SmallVector<Interval, 0> delta;
-    uintptr_t nVar;
+    size_t nVar;
 
     PartiallyOrderedSet() : nVar(0){};
 
-    inline static uintptr_t bin2(uintptr_t i) { return (i * (i - 1)) >> 1; }
-    inline static uintptr_t uncheckedLinearIndex(uintptr_t i, uintptr_t j) {
+    inline static size_t bin2(size_t i) { return (i * (i - 1)) >> 1; }
+    inline static size_t uncheckedLinearIndex(size_t i, size_t j) {
         return i + bin2(j);
     }
-    inline static std::pair<uintptr_t, bool> checkedLinearIndex(uintptr_t ii,
-                                                                uintptr_t jj) {
-        uintptr_t i = std::min(ii, jj);
-        uintptr_t j = std::max(ii, jj);
+    inline static std::pair<size_t, bool> checkedLinearIndex(size_t ii,
+                                                             size_t jj) {
+        size_t i = std::min(ii, jj);
+        size_t j = std::max(ii, jj);
         return std::make_pair(i + bin2(j), jj < ii);
     }
 
-    Interval update(uintptr_t i, uintptr_t j, Interval ji) {
+    // transitive closure of a graph
+    Interval update(size_t i, size_t j, Interval ji) {
         // bin2s here are for indexing columns
-        uintptr_t iOff = bin2(i);
-        uintptr_t jOff = bin2(j);
+        size_t iOff = bin2(i);
+        size_t jOff = bin2(j);
         // we require that i < j
-        for (uintptr_t k = 0; k < i; ++k) {
+        for (size_t k = 0; k < i; ++k) {
             Interval ik = delta[k + iOff];
             Interval jk = delta[k + jOff];
             // j - i = (j - k) - (i - k)
@@ -180,9 +204,9 @@ struct PartiallyOrderedSet {
                 ji = delta[i + jOff];
             }
         }
-        uintptr_t kOff = iOff;
-        for (uintptr_t k = i + 1; k < j; ++k) {
-            kOff += (k-1);
+        size_t kOff = iOff;
+        for (size_t k = i + 1; k < j; ++k) {
+            kOff += (k - 1);
             Interval ki = delta[i + kOff];
             Interval jk = delta[k + jOff];
             auto [kit, jkt] = ji.restrictAdd(ki, jk);
@@ -200,8 +224,8 @@ struct PartiallyOrderedSet {
             }
         }
         kOff = jOff;
-        for (uintptr_t k = j + 1; k < nVar; ++k) {
-            kOff += (k-1);
+        for (size_t k = j + 1; k < nVar; ++k) {
+            kOff += (k - 1);
             Interval ki = delta[i + kOff];
             Interval kj = delta[j + kOff];
             auto [kit, kjt] = ji.restrictSub(ki, kj);
@@ -220,24 +244,325 @@ struct PartiallyOrderedSet {
         }
         return ji;
     }
-    void push(uintptr_t i, uintptr_t j, Interval itv) {
+    void push(size_t i, size_t j, Interval itv) {
         if (i > j) {
             return push(j, i, -itv);
         }
         assert(j > i); // i != j
-        uintptr_t jOff = bin2(j);
-        uintptr_t l = jOff + i;
+        size_t jOff = bin2(j);
+        size_t l = jOff + i;
         if (j >= nVar) {
-            nVar = j+1;
-            delta.resize((j*nVar)>>1, Interval::unconstrained());
+            nVar = j + 1;
+            delta.resize((j * nVar) >> 1, Interval::unconstrained());
         } else {
             itv = itv.intersect(delta[l]);
         }
         delta[l] = update(i, j, itv);
     }
-    Interval operator()(uintptr_t i, uintptr_t j) {
+    Interval operator()(size_t i, size_t j) {
+        if (i == j) {
+            return Interval::zero();
+        }
         auto [l, f] = checkedLinearIndex(i, j);
+        if (l > delta.size()) {
+            return Interval::unconstrained();
+        }
         Interval d = delta[l];
         return f ? -d : d;
     }
+    Interval operator()(size_t i) { return (*this)(0, i); }
+    Interval asInterval(Polynomial::Monomial &m) {
+        if (isOne(m)) {
+            return Interval{1, 1};
+        }
+        assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarType::Constant);
+        Interval itv = delta[bin2(m.prodIDs[0].getID())];
+        for (size_t i = 1; i < m.prodIDs.size(); ++i) {
+            itv *= delta[bin2(m.prodIDs[i].getID())];
+        }
+        return itv;
+    }
+    Interval asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) {
+        return asInterval(t.exponent) * t.coefficient;
+    }
+    // https://www.geeksforgeeks.org/maximum-bipartite-matching/
+    static bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
+                               llvm::SmallVectorImpl<bool> &seen,
+                               llvm::SmallVectorImpl<int> &matchR) {
+        // Try every job one by one
+        size_t N = bpGraph.size(0);
+        for (size_t v = 0; v < N; v++) {
+            // If applicant u is interested in
+            // job v and v is not visited
+            if (bpGraph(v, u) && !seen[v]) {
+                // Mark v as visited
+                seen[v] = true;
+
+                // If job 'v' is not assigned to an
+                // applicant OR previously assigned
+                // applicant for job v (which is matchR[v])
+                // has an alternate job available.
+                // Since v is marked as visited in
+                // the above line, matchR[v] in the following
+                // recursive call will not get job 'v' again
+                if (matchR[v] < 0 ||
+                    bipartiteMatch(bpGraph, matchR[v], seen, matchR)) {
+                    matchR[v] = u;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    // Returns maximum number
+    // of matching from M to N
+    static std::pair<size_t, llvm::SmallVector<int>>
+    maxBPM(Matrix<bool, 0, 0> &bpGraph) {
+        // An array to keep track of the
+        // applicants assigned to jobs.
+        // The value of matchR[i] is the
+        // applicant number assigned to job i,
+        // the value -1 indicates nobody is
+        // assigned.
+        auto [M, N] = bpGraph.size();
+        llvm::SmallVector<int> matchR(N, -1);
+        llvm::SmallVector<bool> seen(N);
+        // Count of jobs assigned to applicants
+        size_t result = 0;
+        for (size_t u = 0; u < M; u++) {
+            // Mark all jobs as not seen
+            // for next applicant.
+            std::fill(seen.begin(), seen.end(), 0);
+
+            // Find if the applicant 'u' can get a job
+            if (bipartiteMatch(bpGraph, u, seen, matchR))
+                result++;
+        }
+        return std::make_pair(result, matchR);
+    }
+
+    bool knownGreaterEqual(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+        size_t M = x.prodIDs.size();
+        size_t N = y.prodIDs.size();
+        Matrix<bool, 0, 0> bpGraph(N, M);
+        for (size_t m = 0; m < M; ++m) {
+            for (size_t n = 0; n < N; ++n) {
+                bpGraph(n, m) =
+                    (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
+                        .lowerBound >= 0;
+            }
+        }
+        auto [matches, matchR] = maxBPM(bpGraph);
+        // matchR maps ys to xs
+        if (matches < M) {
+            if (matches < N) {
+                return false;
+            } else {
+                // all N matched; need to make sure remaining `X` are positive
+                llvm::SmallVector<bool> mMatched(M, false);
+                for (auto m : matchR) {
+                    mMatched[m] = true;
+                }
+                bool cond = true;
+                for (size_t m = 0; m < M; ++m) {
+                    if (mMatched[m]) {
+                        continue;
+                    }
+                    Interval itvm = (*this)(x.prodIDs[m].getID());
+                    if (itvm.upperBound < 0) {
+                        cond ^= true; // flip sign
+                    } else if ((itvm.lowerBound < 0) & (itvm.upperBound > 0)) {
+                        return false;
+                    }
+                }
+                return cond;
+            }
+        } else if (matches < N) {
+            // all M matched; need to make sure remaining `Y` are negative.
+            bool cond = false;
+            for (size_t n = 0; n < N; ++n) {
+                if (matchR[n] != -1) {
+                    continue;
+                }
+                Interval itvn = (*this)(y.prodIDs[n].getID());
+                if (itvn.upperBound < 0) {
+                    cond ^= true; // flip sign
+                } else if ((itvn.lowerBound < 0) & (itvn.upperBound > 0)) {
+                    return false;
+                }
+            }
+            return cond;
+        } else {
+            // all matched
+            return true;
+        }
+    }
+    bool atLeastOnePositive(Polynomial::Monomial &x, Polynomial::Monomial &y,
+                            llvm::SmallVectorImpl<int> &matchR) {
+        for (size_t n = 0; n < matchR.size(); ++n) {
+            size_t m = matchR[n];
+            intptr_t lowerBound =
+                (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID()).lowerBound;
+            if (lowerBound > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    bool knownGreater(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+        size_t M = x.prodIDs.size();
+        size_t N = y.prodIDs.size();
+        Matrix<bool, 0, 0> bpGraph(N, M);
+        for (size_t m = 0; m < M; ++m) {
+            for (size_t n = 0; n < N; ++n) {
+                intptr_t lowerBound =
+                    (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
+                        .lowerBound;
+                bpGraph(n, m) = lowerBound >= 0;
+            }
+        }
+        auto [matches, matchR] = maxBPM(bpGraph);
+        if (!atLeastOnePositive(x, y, matchR)) {
+            return false;
+        }
+        // matchR maps ys to xs
+        if (matches < M) {
+            if (matches < N) {
+                return false;
+            } else {
+                // all N matched; need to make sure remaining `X` are positive
+                llvm::SmallVector<bool> mMatched(M, false);
+                for (auto m : matchR) {
+                    mMatched[m] = true;
+                }
+                bool cond = true;
+                for (size_t m = 0; m < M; ++m) {
+                    if (mMatched[m]) {
+                        continue;
+                    }
+                    Interval itvm = (*this)(x.prodIDs[m].getID());
+                    if (itvm.upperBound < 0) {
+                        cond ^= true; // flip sign
+                    } else if ((itvm.lowerBound < 0) & (itvm.upperBound > 0)) {
+                        return false;
+                    }
+                }
+                return cond;
+            }
+        } else if (matches < N) {
+            // all M matched; need to make sure remaining `Y` are negative.
+            bool cond = false;
+            for (size_t n = 0; n < N; ++n) {
+                if (matchR[n] != -1) {
+                    continue;
+                }
+                Interval itvn = (*this)(y.prodIDs[n].getID());
+                if (itvn.upperBound < 0) {
+                    cond ^= true; // flip sign
+                } else if ((itvn.lowerBound < 0) & (itvn.upperBound > 0)) {
+                    return false;
+                }
+            }
+            return cond;
+        } else {
+            // all matched
+            return true;
+        }
+    }
+    // Interval asInterval(MPoly &x){
+    // }
+    bool signUnknown(Polynomial::Monomial &m) {
+        for (auto &v : m) {
+            if ((*this)(v.getID()).signUnknown()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    bool knownFlipSign(Polynomial::Monomial &m, bool pos) {
+        for (auto &v : m) {
+            Interval itv = (*this)(v.getID());
+            if (itv.upperBound < 0) {
+                pos ^= true;
+            } else if ((itv.lowerBound < 0) & (itv.upperBound > 0)) {
+                return false;
+            }
+        }
+        return pos;
+    }
+    bool knownPositive(Polynomial::Monomial &m) {
+        return knownFlipSign(m, true);
+    }
+    bool knownNegative(Polynomial::Monomial &m) {
+        return knownFlipSign(m, false);
+    }
+    bool knownGreaterEqualZero(MPoly &x, intptr_t offset = 0) {
+        // TODO: implement carrying between differences
+        if (isZero(x)) {
+            return true;
+        }
+        size_t N = x.size();
+        // Interval carriedInterval = Interval::zero();
+        for (size_t n = 0; n < N - 1; n += 2) {
+            auto &tm = x.terms[n];
+            if (signUnknown(tm.exponent)) {
+                return false;
+            }
+
+            // if (!tmi.notZero()){ return false; }
+            auto &tn = x.terms[n + 1];
+            if (signUnknown(tn.exponent)) {
+                return false;
+            }
+            Interval termSum = asInterval(tm) + asInterval(tn);
+            // carriedInterval += termSum;
+            if (termSum.lowerBound >= 0) {
+                continue;
+            } // else if (termSum.upperBound < 0)
+            //    return false;
+            //}
+            bool mPos = (tm.coefficient > 0) & (knownPositive(tm.exponent));
+            bool nPos = (tn.coefficient > 0) & (knownPositive(tn.exponent));
+            if (mPos) {
+                if (nPos) {
+                    // tm + tn
+                    continue;
+                } else if (tn.coefficient < 0) {
+                    // tm - tn; monomial positive
+                    if ((tm.coefficient + tn.coefficient >= 0) &&
+                        knownGreaterEqual(tm.exponent, tn.exponent)) {
+                        continue;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    // tm - tn; monomial negative; TODO: something
+                    return false;
+                }
+            } else if (nPos) {
+                if (tm.coefficient < 0) {
+                    // tn - tm; monomial positive
+                    if ((tm.coefficient + tn.coefficient >= 0) &&
+                        knownGreaterEqual(tn.exponent, tm.exponent)) {
+                        continue;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    // tn - tm; monomial negative; TODO: something
+                    return false;
+                }
+            } else {
+                return false;
+                // -tm - tn
+            }
+        }
+        if (N & 1) {
+            return asInterval(x.terms[N - 1]).lowerBound >= 0;
+        }
+        return true;
+    }
+    // bool knownOffsetLessEqual(MPoly &x, MPoly &y, intptr_t offset = 0) {
+    // return knownOffsetGreaterEqual(y, x, -offset);
+    // }
 };
