@@ -1,3 +1,5 @@
+#pragma once
+#include "bipartite.hpp"
 #include "loops.hpp"
 #include "math.hpp"
 #include "symbolics.hpp"
@@ -317,7 +319,7 @@ struct PartiallyOrderedSet {
     // Returns maximum number
     // of matching from M to N
     static std::pair<size_t, llvm::SmallVector<int>>
-    maxBPM(Matrix<bool, 0, 0> &bpGraph) {
+    maxBipar(Matrix<bool, 0, 0> &bpGraph) {
         // An array to keep track of the
         // applicants assigned to jobs.
         // The value of matchR[i] is the
@@ -352,7 +354,7 @@ struct PartiallyOrderedSet {
                         .lowerBound >= 0;
             }
         }
-        auto [matches, matchR] = maxBPM(bpGraph);
+        auto [matches, matchR] = maxBipartiteMatch(bpGraph);
         // matchR maps ys to xs
         if (matches < M) {
             if (matches < N) {
@@ -421,7 +423,7 @@ struct PartiallyOrderedSet {
                 bpGraph(n, m) = lowerBound >= 0;
             }
         }
-        auto [matches, matchR] = maxBPM(bpGraph);
+        auto [matches, matchR] = maxBipartiteMatch(bpGraph);
         if (!atLeastOnePositive(x, y, matchR)) {
             return false;
         }
@@ -496,7 +498,7 @@ struct PartiallyOrderedSet {
     bool knownNegative(Polynomial::Monomial &m) {
         return knownFlipSign(m, false);
     }
-    bool knownGreaterEqualZero(MPoly &x, intptr_t offset = 0) {
+    bool knownGreaterEqualZero(MPoly &x) {
         // TODO: implement carrying between differences
         if (isZero(x)) {
             return true;

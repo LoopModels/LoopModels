@@ -253,8 +253,8 @@ bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
 bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
                 Permutation &perm1, Permutation &perm2, Int _i1, Int _i2) {
     SquareMatrix<Int> &A1 = l1.getTrit();
-    RectangularLoopNest &r1 = l1.getRekt();
     SquareMatrix<Int> &A2 = l2.getTrit();
+    RectangularLoopNest &r1 = l1.getRekt();
     RectangularLoopNest &r2 = l2.getRekt();
     Int i1 = perm1(_i1);
     Int i2 = perm2(_i2);
@@ -293,35 +293,61 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
     }
 }
 
-// A * i < r
+// A' * i < r
 // l are the lower bounds
 // u are the upper bounds
 struct AffineLoopNest {
-    Matrix<Int, 0, 0> A;
+    Matrix<Int, 0, 0> A; // somewhat triangular
     RectangularLoopNest r;
     RectangularLoopNest l;
     RectangularLoopNest u;
 
-    std::pair<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>>
+    size_t getNumLoops() const { return A.size(0); }
+    std::tuple<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>,bool>
     getBounds(size_t i) {
-        auto [M, N] = A.size();
+        auto [numLoops, numEquations] = A.size();
         llvm::SmallVector<MPoly, 4> lowerBounds;
         llvm::SmallVector<MPoly, 4> upperBounds;
-        for (size_t j = 0; j < M; ++j) {
-            if (Int Aji = A(j, i)) {
-		
+	bool fail = false;
+        for (size_t j = 0; j < numEquations; ++j) {
+            if (Int Aij = A(i, j)) {
+		if (Aij > 0){
+		    // upper bound
+                    // Aij*i < delta - the rest
+		    if (Aij != 1){
+			// TODO: support other values
+			fail = true;
+			break;
+		    }
+		    MPoly ub = upperBounds[j]; // copy
+		    for (size_t k = 0; k < numLoops; ++k){
+			if (k == i){ continue; }
+			if (Int Akj = A(k, j)){
+			    // ub -= Akj * 
+			}
+		    }
+		} else { // Aij < 0
+		    // lower bound
+		    // the rest - delta < abs(Aij)*i
+		    if (Aij != -1){
+			// TODO: support other values
+			fail = true;
+			break;
+		    }
+		}
             }
         }
-        return std::make_pair(lowerBounds, upperBounds);
+        return std::make_tuple(lowerBounds, upperBounds, fail);
     }
 };
+
 
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {
     Matrix<Int,0,0> &A1 = l1.A;
-    RectangularLoopNest &r1 = l1.r;
     Matrix<Int,0,0> &A2 = l2.A;
+    RectangularLoopNest &r1 = l1.r;
     RectangularLoopNest &r2 = l2.r;
     Int i1 = perm1(_i1);
     Int i2 = perm2(_i2);
