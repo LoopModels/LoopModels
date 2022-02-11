@@ -215,7 +215,7 @@ struct VarID {
     bool operator==(VarID x) const { return id == x.id; }
     bool operator>(VarID x) const { return id > x.id; }
     bool operator>=(VarID x) const { return id >= x.id; }
-    std::strong_ordering operator<=>(VarID x){ return id <=> x.id; }
+    std::strong_ordering operator<=>(VarID x) { return id <=> x.id; }
     IDType getID() const { return id & 0x3fffffff; }
     // IDType getID() const { return id & 0x3fff; }
     VarType getType() const { return static_cast<VarType>(id >> 30); }
@@ -416,8 +416,8 @@ template <typename T, size_t M, size_t N> struct Matrix {
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
-    static constexpr size_t M3 = M*3;
-    llvm::SmallVector<T,M3> data;
+    static constexpr size_t M3 = M * 3;
+    llvm::SmallVector<T, M3> data;
     size_t N;
 
     Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
@@ -443,8 +443,8 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
-    static constexpr size_t N3 = N*3;
-    llvm::SmallVector<T,N3> data;
+    static constexpr size_t N3 = N * 3;
+    llvm::SmallVector<T, N3> data;
     size_t M;
 
     Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
@@ -523,7 +523,7 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
 }
 
 template <typename T> struct SquareMatrix {
-    llvm::SmallVector<T,9> data;
+    llvm::SmallVector<T, 9> data;
     size_t M;
 
     SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};
@@ -686,7 +686,7 @@ std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
 //
 // Permutations
 //
-typedef Matrix<Int, 0, 2> PermutationData;
+typedef Matrix<unsigned, 0, 2> PermutationData;
 struct Permutation {
     PermutationData data;
 
@@ -694,27 +694,34 @@ struct Permutation {
         assert(nloops <= MAX_NUM_LOOPS);
     };
 
-    Int &operator()(size_t i) { return data(i, 0); }
-    Int operator()(size_t i) const { return data(i, 0); }
+    unsigned &operator()(size_t i) { return data(i, 0); }
+    unsigned operator()(size_t i) const { return data(i, 0); }
     bool operator==(Permutation y) {
         return data.getCol(0) == y.data.getCol(0);
     }
     size_t getNumLoops() const { return data.size(0); }
     size_t length() const { return data.length(); }
 
-    llvm::ArrayRef<Int> inv() { return data.getCol(1); }
+    llvm::ArrayRef<unsigned> inv() { return data.getCol(1); }
 
-    Int &inv(size_t j) { return data(j, 1); }
-};
+    unsigned &inv(size_t j) { return data(j, 1); }
 
-void init(Permutation &p) {
-    Int numloops = p.getNumLoops();
-    for (Int n = 0; n < numloops; n++) {
-        p(n) = n;
-        p.inv(n) = n;
+    void init() {
+        size_t numloops = getNumLoops();
+        for (size_t n = 0; n < numloops; n++) {
+            data(n, 0) = n;
+            data(n, 1) = n;
+        }
     }
-}
-
+    void swap(size_t i, size_t j) {
+        size_t xi = data(i, 0);
+        size_t xj = data(j, 0);
+        data(i, 0) = xj;
+        data(j, 0) = xi;
+        data(xj, 1) = i;
+        data(xi, 1) = j;
+    }
+};
 template <typename T> struct UnitRange {
     T operator()(size_t i) { return T(i); }
     bool operator==(UnitRange<T>) { return true; }
@@ -734,15 +741,6 @@ struct PermutationVector {
     }
 };
 */
-
-void swap(Permutation &p, Int i, Int j) {
-    Int xi = p(i);
-    Int xj = p(j);
-    p(i) = xj;
-    p(j) = xi;
-    p.inv(xj) = i;
-    p.inv(xi) = j;
-}
 
 std::ostream &operator<<(std::ostream &os, Permutation const &perm) {
     auto numloop = perm.getNumLoops();

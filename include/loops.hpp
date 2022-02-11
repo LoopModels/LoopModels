@@ -142,7 +142,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     MPoly &ub2 = l2.getUpperbound(perm2(_i2));
     MPoly delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    llvm::ArrayRef<Int> iperm = perm1.inv();
+    llvm::ArrayRef<unsigned> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     for (size_t j = 0; j < size_t(i); j++) {
         Int Aij = A(j, i); // symmetric
@@ -208,7 +208,7 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
     SquareMatrix<Int> &A1 = l1.getTrit();
     RectangularLoopNest &r1 = l1.getRekt();
     Int i1 = perm1(_i1);
-    llvm::ArrayRef<Int> iperm = perm1.inv();
+    llvm::ArrayRef<unsigned> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     // `j` and `i1` are in original domain.
     for (Int j = 0; j < i1; j++) {
@@ -237,7 +237,7 @@ bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                          Permutation &perm2, Int _i1, Int i2) {
     SquareMatrix<Int> &A1 = l1.getTrit();
     Int i1 = perm1(_i1);
-    llvm::ArrayRef<Int> iperm = perm1.inv();
+    llvm::ArrayRef<unsigned> iperm = perm1.inv();
     for (size_t j = i1 + 1; j < A1.size(0); j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
@@ -303,44 +303,66 @@ struct AffineLoopNest {
     RectangularLoopNest u;
 
     size_t getNumLoops() const { return A.size(0); }
-    std::tuple<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>,bool>
-    getBounds(size_t i) {
+    std::tuple<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>, bool>
+    getBounds(Permutation &perm, size_t i) {
         auto [numLoops, numEquations] = A.size();
         llvm::SmallVector<MPoly, 4> lowerBounds;
         llvm::SmallVector<MPoly, 4> upperBounds;
-	bool fail = false;
+        bool fail = false;
+        size_t _i = perm(i);
         for (size_t j = 0; j < numEquations; ++j) {
-            if (Int Aij = A(i, j)) {
-		if (Aij > 0){
-		    // upper bound
+            if (Int Aij = A(_i, j)) {
+                // we have found a bound
+                if (Aij > 0) {
+                    // upper bound
                     // Aij*i < delta - the rest
-		    if (Aij != 1){
-			// TODO: support other values
-			fail = true;
-			break;
-		    }
-		    MPoly ub = upperBounds[j]; // copy
-		    for (size_t k = 0; k < numLoops; ++k){
-			if (k == i){ continue; }
-			if (Int Akj = A(k, j)){
-			    // ub -= Akj * 
-			}
-		    }
-		} else { // Aij < 0
-		    // lower bound
-		    // the rest - delta < abs(Aij)*i
-		    if (Aij != -1){
-			// TODO: support other values
-			fail = true;
-			break;
-		    }
-		}
+                    if (Aij != 1) {
+                        // TODO: support other values
+                        fail = true;
+                        break;
+                    }
+                    MPoly ub = upperBounds[j]; // copy
+                    for (size_t _k = 0; _k < numLoops; ++_k) {
+                        if (_k == _i) {
+                            continue;
+                        }
+                        if (Int Akj = A(_k, j)) {
+                            size_t k = perm.inv(_k);
+                            if (k < i) {
+                                // is k internal to i
+                                if (_k < _i) {
+                                    // is k originally internal to i
+
+                                } else {
+                                    // is k originally external to i
+                                }
+                            } else {
+                                // is k external to i
+                                if (_k < _i) {
+                                    // is k originally internal to i
+
+                                } else {
+                                    // is k originally external to i
+                                }
+                            }
+                            // ub -= Akj *
+                        }
+                    }
+                } else { // Aij < 0
+                    // lower bound
+                    // the rest - delta < abs(Aij)*i
+                    if (Aij != -1) {
+                        // TODO: support other values
+                        fail = true;
+                        break;
+                    }
+                }
             }
         }
-        return std::make_tuple(lowerBounds, upperBounds, fail);
+        return std::make_tuple(std::move(lowerBounds), std::move(upperBounds),
+                               fail);
     }
 };
-
 
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
