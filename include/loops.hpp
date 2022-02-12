@@ -2,8 +2,10 @@
 #include "math.hpp"
 #include "symbolics.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <utility>
 
 //
 // Loop nests
@@ -293,7 +295,7 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
     }
 }
 
-// A' * i < r
+// A' * i <= r
 // l are the lower bounds
 // u are the upper bounds
 struct AffineLoopNest {
@@ -301,67 +303,102 @@ struct AffineLoopNest {
     RectangularLoopNest r;
     RectangularLoopNest l;
     RectangularLoopNest u;
+    RectangularLoopNest lc;
+    RectangularLoopNest uc;
 
     size_t getNumLoops() const { return A.size(0); }
-    std::tuple<llvm::SmallVector<MPoly, 4>, llvm::SmallVector<MPoly, 4>, bool>
-    getBounds(Permutation &perm, size_t i) {
-        auto [numLoops, numEquations] = A.size();
-        llvm::SmallVector<MPoly, 4> lowerBounds;
-        llvm::SmallVector<MPoly, 4> upperBounds;
-        bool fail = false;
-        size_t _i = perm(i);
-        for (size_t j = 0; j < numEquations; ++j) {
-            if (Int Aij = A(_i, j)) {
+    bool checkMatch(Matrix<Int, 0, 0> &B, Permutation &perm0,
+                    Permutation &perm1, size_t i) {
+        size_t _i0 = perm0(i);
+        size_t _i1 = perm1(i);
+        auto [numLoops0, numEquations0] = A.size();
+        for (size_t j = 0; j < numEquations0; ++j) {
+            if (Int Aij = A(_i0, j)) {
                 // we have found a bound
-                MPoly bound = r.getUpperbound(j); // copy
                 if (Aij > 0) {
-                    // upper bound
-                    // Aij*i < delta - the rest
-                    if (Aij != 1) {
-                        // TODO: support other values
-                        fail = true;
-                        break;
+                } else {
+                }
+                for (size_t _k = 0; _k < numLoops0; ++_k) {
+                    if (_k == _i0) {
+                        continue;
                     }
-                    for (size_t _k = 0; _k < numLoops; ++_k) {
-                        if (_k == _i) {
-                            continue;
+                    if (Int Akj = A(_k, j)) {
+                        size_t k = perm0.inv(_k);
+                        if (k < i) {
+                            // k internal to `i`
                         }
-                        if (Int Akj = A(_k, j)) {
-                            size_t k = perm.inv(_k);
-                            if (k < i) {
-                                // k internal to i
-                                if (_k < _i) {
-                                    // k originally internal to i
-
-                                } else {
-                                    // k originally external to i
-                                }
-                            } else {
-                                // k external to i
-                                if (_k < _i) {
-                                    // k originally internal to i
-
-                                } else {
-                                    // k originally external to i
-                                    // do nothing
-                                }
-                            }
-                            // ub -= Akj *
-                        }
-                    }
-                } else { // Aij < 0
-                    // lower bound
-                    // the rest - delta < abs(Aij)*i
-                    if (Aij != -1) {
-                        // TODO: support other values
-                        fail = true;
-                        break;
                     }
                 }
             }
         }
-        return std::make_tuple(std::move(lowerBounds), std::move(upperBounds),
-                               fail);
+        return true;
+    }
+    llvm::SmallVector<std::pair<MPoly, Int>, 4>
+    getLowerBounds(Permutation &perm, size_t i) {
+        return getBounds(perm, i, 0x01).first;
+    }
+    llvm::SmallVector<std::pair<MPoly, Int>, 4>
+    getUpperBounds(Permutation &perm, size_t i) {
+        return getBounds(perm, i, 0x02).second;
+    }
+    std::pair<llvm::SmallVector<std::pair<MPoly, Int>, 4>,
+              llvm::SmallVector<std::pair<MPoly, Int>, 4>>
+    getBounds(Permutation &perm, size_t i, uint8_t skipflag = 0x00) {
+        auto [numLoops, numEquations] = A.size();
+        llvm::SmallVector<std::pair<MPoly, Int>, 4> lowerBounds;
+        llvm::SmallVector<std::pair<MPoly, Int>, 4> upperBounds;
+        size_t _i = perm(i);
+        for (size_t j = 0; j < numEquations; ++j) {
+            if (Int Aij = A(_i, j)) {
+                // we have found a bound
+                llvm::SmallVector<std::pair<MPoly, Int>, 4> *bounds;
+                if (Aij > 0) {
+                    if (skipflag & 0x01) {
+                        continue;
+                    }
+                    bounds = &upperBounds;
+                } else {
+                    if (skipflag & 0x02) {
+                        continue;
+                    }
+                    bounds = &lowerBounds;
+                }
+                size_t init = bounds->size();
+                bounds->emplace_back(r.getUpperbound(j), Aij);
+                for (size_t _k = 0; _k < numLoops; ++_k) {
+                    if (_k == _i) {
+                        continue;
+                    }
+                    if (Int Akj = A(_k, j)) {
+                        size_t k = perm.inv(_k);
+                        if (k > i) {
+                            // k external to i
+                            llvm::SmallVector<std::pair<MPoly, Int>, 4> kBounds;
+                            if (Akj > 0) {
+                                kBounds = getLowerBounds(perm, k);
+                            } else {
+                                kBounds = getUpperBounds(perm, k);
+                            }
+                            assert(kBounds.size() > 0);
+                            size_t S = bounds->size();
+                            for (size_t id = init; id < S; ++id) {
+                                MPoly bound = std::move((*bounds)[id].first);
+                                for (size_t idk = 0; idk < kBounds.size() - 1;
+                                     ++idk) {
+                                    auto [kb, Ak] = kBounds[idk];
+                                    bounds->emplace_back(Ak * bound - Akj * kb,
+                                                         Aij * Ak);
+                                }
+                                auto [kb, Ak] = kBounds[kBounds.size() - 1];
+                                (*bounds)[id] = std::make_pair(
+                                    Ak * bound - Akj * kb, Aij * Ak);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return std::make_pair(std::move(lowerBounds), std::move(upperBounds));
     }
 };
 
