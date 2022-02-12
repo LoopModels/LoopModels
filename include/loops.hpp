@@ -313,6 +313,7 @@ struct AffineLoopNest {
         for (size_t j = 0; j < numEquations; ++j) {
             if (Int Aij = A(_i, j)) {
                 // we have found a bound
+                MPoly bound = r.getUpperbound(j); // copy
                 if (Aij > 0) {
                     // upper bound
                     // Aij*i < delta - the rest
@@ -321,7 +322,6 @@ struct AffineLoopNest {
                         fail = true;
                         break;
                     }
-                    MPoly ub = upperBounds[j]; // copy
                     for (size_t _k = 0; _k < numLoops; ++_k) {
                         if (_k == _i) {
                             continue;
@@ -329,20 +329,21 @@ struct AffineLoopNest {
                         if (Int Akj = A(_k, j)) {
                             size_t k = perm.inv(_k);
                             if (k < i) {
-                                // is k internal to i
+                                // k internal to i
                                 if (_k < _i) {
-                                    // is k originally internal to i
+                                    // k originally internal to i
 
                                 } else {
-                                    // is k originally external to i
+                                    // k originally external to i
                                 }
                             } else {
-                                // is k external to i
+                                // k external to i
                                 if (_k < _i) {
-                                    // is k originally internal to i
+                                    // k originally internal to i
 
                                 } else {
-                                    // is k originally external to i
+                                    // k originally external to i
+                                    // do nothing
                                 }
                             }
                             // ub -= Akj *
