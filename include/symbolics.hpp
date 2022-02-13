@@ -467,17 +467,18 @@ struct Monomial {
         return std::move(x);
     }
     bool operator==(Monomial const &x) const {
-	// size_t N = prodIDs.size();
-	// if (N != x.prodIDs.size()){ return false; }
-	// for (size_t n = 0; n < N; ++n){
-	//     if (prodIDs[n] != x.prodIDs[n])
-	// 	return false;
-	// }
-	// return true;
-	return prodIDs == x.prodIDs;
+        // size_t N = prodIDs.size();
+        // if (N != x.prodIDs.size()){ return false; }
+        // for (size_t n = 0; n < N; ++n){
+        //     if (prodIDs[n] != x.prodIDs[n])
+        // 	return false;
+        // }
+        // return true;
+        return prodIDs == x.prodIDs;
     }
     bool operator!=(Monomial const &x) const { return prodIDs != x.prodIDs; }
-    // bool operator!=(Monomial const &x) const { return !(prodIDs == x.prodIDs); }
+    // bool operator!=(Monomial const &x) const { return !(prodIDs ==
+    // x.prodIDs); }
     bool termsMatch(Monomial const &x) const { return *this == x; }
 
     // numerator, denominator rational
@@ -589,7 +590,7 @@ bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
     while ((i != n0) | (j != n1)) {
         VarID a = (i != n0) ? *i : std::numeric_limits<IDType>::max();
         VarID b = (j != n1) ? *j : std::numeric_limits<IDType>::max();
-	++i;
+        ++i;
         if (a < b) {
             z.prodIDs.push_back(a);
         } else if (a == b) {
@@ -1467,17 +1468,17 @@ template <typename C, IsMonomial M> struct Terms {
     friend std::ostream &operator<<(std::ostream &os, Terms const &x) {
         os << " ( ";
         for (size_t j = 0; j < length(x.terms); ++j) {
-	    if (std::is_same_v<C,intptr_t>){
-		Term<C,M> t = x.terms[j];
-		if (j) {
-		    if (t.coefficient >= 0){
-			os << " + ";
-		    } else {
-			os << " - ";
-			t.coefficient *= -1;
-		    }
+            if (std::is_same_v<C, intptr_t>) {
+                Term<C, M> t = x.terms[j];
+                if (j) {
+                    if (t.coefficient >= 0) {
+                        os << " + ";
+                    } else {
+                        os << " - ";
+                        t.coefficient *= -1;
+                    }
                 }
-		os << t;
+                os << t;
             } else {
                 if (j) {
                     os << " + ";
