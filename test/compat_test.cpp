@@ -1,5 +1,6 @@
 #include "../include/loops.hpp"
 #include "../include/math.hpp"
+#include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 
@@ -202,3 +203,77 @@ TEST(CompatTest, BasicAssertions) {
     EXPECT_TRUE(compatible(trial, trial, perm_tr2, perm_tri, 0, 0));
     EXPECT_FALSE(compatible(trial, trial, perm_tr2, perm_tri, 1, 1));
 }
+
+TEST(AffineTest, BasicAssertions) {
+    std::cout << "Starting affine tests" << std::endl;
+    llvm::SmallVector<MPoly, 8> r;
+    Matrix<Int, 0, 0> A = Matrix<Int, 0, 0>(3, 6);
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    auto N = Polynomial::Monomial(Polynomial::ID{2});
+    auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
+
+    // m <= M - 1;
+    r.push_back(Polynomial::Term{intptr_t(1), M} - One);
+    A(0, 0) = 1;
+    A(1, 0) = 0;
+    A(2, 0) = 0;
+    // 0 <= m;
+    r.push_back(Zero);
+    A(0, 1) = -1;
+    A(1, 1) = 0;
+    A(2, 1) = 0;
+    // n <= N - 1;
+    r.push_back(Polynomial::Term{intptr_t(1), N} - One);
+    A(0, 2) = 0;
+    A(1, 2) = 1;
+    A(2, 2) = 0;
+    // 0 <= n;
+    r.push_back(Zero);
+    A(0, 3) = 0;
+    A(1, 3) = -1;
+    A(2, 3) = 0;
+    // k <= N - 1
+    r.push_back(Polynomial::Term{intptr_t(1), N} - One);
+    A(0, 4) = 0;
+    A(1, 4) = 0;
+    A(2, 4) = 1;
+    // n - k <= -1  ->  n + 1 <= k
+    r.push_back(Polynomial::Term{intptr_t(-1), Polynomial::Monomial()});
+    A(0, 5) = 0;
+    A(1, 5) = 1;
+    A(2, 5) = -1;
+
+    std::cout << "About to construct affine obj" << std::endl;
+    AffineLoopNest aff(A, r);
+    std::cout << "Constructed affine obj" << std::endl;
+
+    for (size_t i = 0; i < 3; ++i){
+	auto lbs = aff.lc[i];
+	auto ubs = aff.uc[i];
+        std::cout << "Loop " << i << " lower bounds: " << std::endl;
+	for (auto &b : lbs){
+	    std::cout << b << std::endl;
+	}
+        std::cout << "Loop " << i << " upper bounds: " << std::endl;
+	for (auto &b : ubs){
+	    std::cout << b << std::endl;
+	}
+    }
+    std::cout << "\nPermuting loops 1 and 2" << std::endl;
+    aff.swap(1, 2);
+    for (size_t i = 0; i < 3; ++i){
+	auto lbs = aff.lc[i];
+	auto ubs = aff.uc[i];
+        std::cout << "Loop " << i << " lower bounds: " << std::endl;
+	for (auto &b : lbs){
+	    std::cout << b << std::endl;
+	}
+        std::cout << "Loop " << i << " upper bounds: " << std::endl;
+	for (auto &b : ubs){
+	    std::cout << b << std::endl;
+	}
+    }
+    
+}
+

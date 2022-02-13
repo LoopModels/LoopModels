@@ -1,4 +1,5 @@
 #pragma once
+#include "bitsets.hpp"
 #include "math.hpp"
 #include "symbolics.hpp"
 #include <cstddef>
@@ -295,76 +296,147 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
     }
 }
 
+// c*j <= b - a * i
+struct Affine {
+    llvm::SmallVector<intptr_t, 4> a;
+    MPoly b;
+    intptr_t c;
+    Affine(MPoly m, intptr_t c) : b(m), c(c){};
+    Affine(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c) : a(std::move(a)), b(std::move(b)), c(c) {}
+    Affine(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b, intptr_t c) : a(a), b(b), c(c) {}
+    bool operator==(Affine const &x) const {
+        return c == x.c && a == x.a && b == x.b;
+    }
+    void subUpdate(Affine const &x, intptr_t a1) {
+        intptr_t xc;
+        if (x.c < 0) {
+            xc = -x.c;
+            a1 = -a1;
+        } else {
+            xc = x.c;
+        }
+        b *= xc;
+        fnmadd(b, x.b, a1); // y.b -= x.b * a1;
+        c *= xc;
+        for (size_t i = 0; i < a.size(); ++i) {
+            a[i] = a[i] * xc - a1 * x.a[i];
+        }
+    }
+
+    Affine sub(Affine const &x, intptr_t a1) const {
+        Affine y = *this;
+        y.subUpdate(x, a1);
+        return y;
+    }
+};
+std::ostream &operator<<(std::ostream &os, const Affine &x) {
+    intptr_t sign = 1;
+    if (x.c > 0){
+	if (x.c == 1){
+	    os << "j <= ";
+	} else {
+	    os << x.c << "j <= ";
+	}
+	os << x.b;
+    } else {
+        if (x.c == -1) {
+            os << "j >= ";
+        } else {
+            os << -x.c << "j >= ";
+        }
+	auto xbn = x.b;
+	xbn *= -1;
+	os << xbn;
+	sign = -1;
+    }
+    for (size_t i = 0; i < x.a.size(); ++i) {
+	if (intptr_t ai = x.a[i]*sign){
+	    if (ai > 0){
+		if (ai == 1){
+		    os << " - i_" << i;
+		} else {
+		    os << " - " << ai << " * i_" << i;
+		}
+	    } else if (ai == -1){
+		os << " + i_" << i;
+	    } else {
+		os << " + " << ai*-1 << " * i_" << i;
+	    }
+	}
+    }
+    return os;
+}
+
 // A' * i <= r
 // l are the lower bounds
 // u are the upper bounds
 struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
-    RectangularLoopNest r;
-    RectangularLoopNest l;
-    RectangularLoopNest u;
-    RectangularLoopNest lc;
-    RectangularLoopNest uc;
+    llvm::SmallVector<MPoly, 8> r;
+    llvm::SmallVector<unsigned, 8> origLoop;
+    llvm::SmallVector<llvm::SmallVector<Affine, 4>, 4> lc;
+    llvm::SmallVector<llvm::SmallVector<Affine, 4>, 4> uc;
+    Permutation perm;
+
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
+        : A(A), r(r), perm(A.size(0)) {
+	assert(A.size(0)*2 == A.size(1));
+	origLoop.reserve(A.size(0)*2);
+	for (unsigned i = 0; i < A.size(0); ++i){
+	    origLoop.push_back(i);
+	    origLoop.push_back(i);
+	}
+        perm.init();
+	lc.resize(A.size(0));
+	uc.resize(A.size(0));
+        for (size_t i = getNumLoops(); i > 0; --i) {
+            cacheBounds(perm, i - 1);
+        }
+    }
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r, llvm::SmallVector<unsigned, 8> origLoop)
+        : A(A), r(r), origLoop(origLoop), perm(A.size(0)) {
+        perm.init();
+	lc.resize(A.size(0));
+	uc.resize(A.size(0));
+        for (size_t i = getNumLoops(); i > 0; --i) {
+            cacheBounds(perm, i - 1);
+        }
+    }
+    void swap(intptr_t i, intptr_t j) {
+        perm.swap(i, j);
+        for (intptr_t k = std::max(i, j); k >= std::min(i, j); --k) {
+            lc[k].clear();
+            uc[k].clear();
+            cacheBounds(perm, k);
+        }
+    }
 
     size_t getNumLoops() const { return A.size(0); }
-    bool checkMatch(Matrix<Int, 0, 0> &B, Permutation &perm0,
-                    Permutation &perm1, size_t i) {
-        size_t _i0 = perm0(i);
-        size_t _i1 = perm1(i);
-        auto [numLoops0, numEquations0] = A.size();
-        for (size_t j = 0; j < numEquations0; ++j) {
-            if (Int Aij = A(_i0, j)) {
-                // we have found a bound
-                if (Aij > 0) {
-                } else {
-                }
-                for (size_t _k = 0; _k < numLoops0; ++_k) {
-                    if (_k == _i0) {
-                        continue;
-                    }
-                    if (Int Akj = A(_k, j)) {
-                        size_t k = perm0.inv(_k);
-                        if (k < i) {
-                            // k internal to `i`
-                        }
-                    }
-                }
-            }
-        }
-        return true;
-    }
-    llvm::SmallVector<std::pair<MPoly, Int>, 4>
-    getLowerBounds(Permutation &perm, size_t i) {
-        return getBounds(perm, i, 0x01).first;
-    }
-    llvm::SmallVector<std::pair<MPoly, Int>, 4>
-    getUpperBounds(Permutation &perm, size_t i) {
-        return getBounds(perm, i, 0x02).second;
-    }
-    std::pair<llvm::SmallVector<std::pair<MPoly, Int>, 4>,
-              llvm::SmallVector<std::pair<MPoly, Int>, 4>>
-    getBounds(Permutation &perm, size_t i, uint8_t skipflag = 0x00) {
+    void cacheBounds(Permutation &perm, size_t i) {
         auto [numLoops, numEquations] = A.size();
-        llvm::SmallVector<std::pair<MPoly, Int>, 4> lowerBounds;
-        llvm::SmallVector<std::pair<MPoly, Int>, 4> upperBounds;
+        llvm::SmallVector<Affine, 4> &lowerBoundsAff = lc[i];
+        llvm::SmallVector<Affine, 4> &upperBoundsAff = uc[i];
         size_t _i = perm(i);
         for (size_t j = 0; j < numEquations; ++j) {
+	    // if original loop equation `j` was bound to was external
+	    // and it is still external under this permutation, we
+	    // can ignore this equation(?)
+	    // NOTE: need to ensure that an operation occuring at some partial level
+	    // of a nest is executed the correct number of times after reordering.
+	    if (perm.inv(origLoop[j]) > i){ continue; }
+	    
             if (Int Aij = A(_i, j)) {
                 // we have found a bound
-                llvm::SmallVector<std::pair<MPoly, Int>, 4> *bounds;
+                llvm::SmallVector<Affine, 4> *bounds;
                 if (Aij > 0) {
-                    if (skipflag & 0x01) {
-                        continue;
-                    }
-                    bounds = &upperBounds;
+                    bounds = &upperBoundsAff;
                 } else {
-                    if (skipflag & 0x02) {
-                        continue;
-                    }
-                    bounds = &lowerBounds;
+                    bounds = &lowerBoundsAff;
                 }
                 size_t init = bounds->size();
-                bounds->emplace_back(r.getUpperbound(j), Aij);
+                bounds->emplace_back(
+                    llvm::SmallVector<intptr_t, 4>(numLoops, intptr_t(0)), r[j],
+                    Aij);
                 for (size_t _k = 0; _k < numLoops; ++_k) {
                     if (_k == _i) {
                         continue;
@@ -373,32 +445,52 @@ struct AffineLoopNest {
                         size_t k = perm.inv(_k);
                         if (k > i) {
                             // k external to i
-                            llvm::SmallVector<std::pair<MPoly, Int>, 4> kBounds;
+                            llvm::SmallVector<Affine, 4> *kAff;
+                            // NOTE: this means we have to cache innermost loops
+                            // first.
                             if (Akj > 0) {
-                                kBounds = getLowerBounds(perm, k);
+                                kAff = &lc[k];
                             } else {
-                                kBounds = getUpperBounds(perm, k);
+                                kAff = &uc[k];
                             }
-                            assert(kBounds.size() > 0);
+                            size_t nkb = kAff->size();
+                            assert(nkb > 0);
                             size_t S = bounds->size();
+                            bounds->reserve(S + (S - init) * nkb);
                             for (size_t id = init; id < S; ++id) {
-                                MPoly bound = std::move((*bounds)[id].first);
-                                for (size_t idk = 0; idk < kBounds.size() - 1;
-                                     ++idk) {
-                                    auto [kb, Ak] = kBounds[idk];
-                                    bounds->emplace_back(Ak * bound - Akj * kb,
-                                                         Aij * Ak);
+                                Affine &b0 = (*bounds)[id];
+                                for (size_t idk = 0; idk < nkb - 1; ++idk) {
+                                    bounds->push_back(
+                                        b0.sub((*kAff)[idk], Akj));
                                 }
-                                auto [kb, Ak] = kBounds[kBounds.size() - 1];
-                                (*bounds)[id] = std::make_pair(
-                                    Ak * bound - Akj * kb, Aij * Ak);
+                                b0.subUpdate((*kAff)[nkb - 1], Akj);
+                            }
+                        } else {
+                            // k internal to i
+                            for (size_t e = init; e < bounds->size(); ++e) {
+                                (*bounds)[e].a[_k] = Akj;
                             }
                         }
                     }
                 }
             }
         }
-        return std::make_pair(std::move(lowerBounds), std::move(upperBounds));
+        for (auto &b : lowerBoundsAff) {
+            for (size_t _j = 0; _j < b.a.size(); ++_j) {
+                if (perm.inv(_j) >= i) {
+                    b.a[_j] = 0;
+                }
+            }
+        }
+        for (auto &b : upperBoundsAff) {
+            for (size_t _j = 0; _j < b.a.size(); ++_j) {
+                if (perm.inv(_j) >= i) {
+                    b.a[_j] = 0;
+                }
+            }
+        }
+        // return std::make_pair(std::move(lowerBounds),
+        // std::move(upperBounds));
     }
 };
 
