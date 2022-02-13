@@ -572,8 +572,7 @@ struct AffineLoopNest {
                 }
             }
         }
-        // return std::make_pair(std::move(lowerBounds),
-        // std::move(upperBounds));
+	// TODO: prune dominated bounds. Need to check that the pruned bounds are always dominated.
     }
 };
 
