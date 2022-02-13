@@ -471,7 +471,7 @@ struct Monomial {
         // if (N != x.prodIDs.size()){ return false; }
         // for (size_t n = 0; n < N; ++n){
         //     if (prodIDs[n] != x.prodIDs[n])
-        // 	return false;
+        //	return false;
         // }
         // return true;
         return prodIDs == x.prodIDs;
@@ -1333,28 +1333,28 @@ template <typename C, IsMonomial M> struct Terms {
         //     offset = addTerm(tx * ty, offset);
         //     size_t offsetj = offset;
         //     for (size_t j = i+1; j < N; ++j){
-        // 	Term<C,M> txyj = tx * y.terms[j];
-        // 	Term<C,M> txjy = x.terms[j] * ty;
-        // 	std::strong_ordering cmp = txyj <=> txjy;
-        // 	if (cmp == std::strong_ordering::equal){
-        // 	    txyj.coefficient += txjy.coefficient;
-        // 	    offsetj = addTerm(std::move(txyj), offsetj);
-        // 	} else if (cmp == std::strong_ordering::less){
-        // 	    // add txjy first
-        // 	    offsetj = addTerm(std::move(txjy), offsetj);
-        // 	    addTerm(std::move(txyj), offsetj);
-        // 	} else {// cmp == std::strong_ordering::greater
-        // 	    offsetj = addTerm(std::move(txyj), offsetj);
-        // 	    addTerm(std::move(txjy), offsetj);
-        // 	}
+        //	Term<C,M> txyj = tx * y.terms[j];
+        //	Term<C,M> txjy = x.terms[j] * ty;
+        //	std::strong_ordering cmp = txyj <=> txjy;
+        //	if (cmp == std::strong_ordering::equal){
+        //	    txyj.coefficient += txjy.coefficient;
+        //	    offsetj = addTerm(std::move(txyj), offsetj);
+        //	} else if (cmp == std::strong_ordering::less){
+        //	    // add txjy first
+        //	    offsetj = addTerm(std::move(txjy), offsetj);
+        //	    addTerm(std::move(txyj), offsetj);
+        //	} else {// cmp == std::strong_ordering::greater
+        //	    offsetj = addTerm(std::move(txyj), offsetj);
+        //	    addTerm(std::move(txjy), offsetj);
+        //	}
         //     }
         //     size_t offsetX = offsetj;
         //     for (size_t j = N; j < Nx; ++j){
-        // 	offsetX = addTerm(ty * x.terms[j], offsetX);
+        //	offsetX = addTerm(ty * x.terms[j], offsetX);
         //     }
         //     size_t offsetY = offsetj;
         //     for (size_t j = N; j < Ny; ++j){
-        // 	offsetY = addTerm(tx * y.terms[j], offsetY);
+        //	offsetY = addTerm(tx * y.terms[j], offsetY);
         //     }
         // }
     }
@@ -1673,10 +1673,10 @@ template <typename C>
 Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &x) {
     return Term<intptr_t, Uninomial>{y} - x;
 }
-template <typename C>
-Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &&x, int y) {
-    return Term<intptr_t, Uninomial>{-y} + std::move(x);
-}
+// template <typename C>
+// Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &&x, int y) {
+//     return Term<intptr_t, Uninomial>{-y} + std::move(x);
+// }
 template <typename C>
 Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &&x) {
     return Term<intptr_t, Uninomial>{y} - std::move(x);
@@ -1884,6 +1884,78 @@ template <IsMonomial M> Terms<intptr_t, M> operator-(size_t x, M &y) {
     z.terms.reserve(2);
     z.terms.emplace_back(-1, y);
     z.terms.push_back(x);
+    return z; // no std::move because of copy elision
+}
+
+template <typename C, typename M>
+Terms<C, M> operator-(Term<C, M> const &x, C const &y) {
+    Terms<C, M> z;
+    if (x.degree()) {
+        z.terms.push_back(x);
+        z.terms.push_back(Term{-1 * y, M(One())});
+    } else {
+        x.coefficient -= y;
+        z.terms.push_back(x);
+    }
+    return z;
+}
+template <typename C, typename M>
+Terms<C, M> operator-(Term<C, M> const &x, C &&y) {
+    Terms<C, M> z;
+    if (x.degree()) {
+        z.terms.push_back(x);
+        z.terms.push_back(Term{-1 * std::move(y), M(One())});
+    } else {
+        x.coefficient -= std::move(y);
+        z.terms.push_back(x);
+    }
+    return z;
+}
+template <typename C, typename M>
+Terms<C, M> operator-(Term<C, M> &&x, C const &y) {
+    Terms<C, M> z;
+    if (x.degree()) {
+        z.terms.reserve(2);
+        z.terms.push_back(std::move(x));
+        z.terms.push_back(Term{-1 * y, M(One())});
+    } else {
+        x.coefficient -= y;
+        z.terms.push_back(std::move(x));
+    }
+    return z;
+}
+template <typename C, typename M> Terms<C, M> operator-(Term<C, M> &&x, C &&y) {
+    Terms<C, M> z;
+    if (x.degree()) {
+        z.terms.reserve(2);
+        z.terms.push_back(std::move(x));
+        z.terms.push_back(Term{-1 * std::move(y), M(One())});
+    } else {
+        x.coefficient -= std::move(y);
+        z.terms.push_back(std::move(x));
+    }
+    return z;
+}
+template <typename M>
+Terms<intptr_t, M> operator-(Term<intptr_t, M> const &x, int y) {
+    return x - intptr_t(y);
+}
+template <typename M>
+Terms<intptr_t, M> operator-(Term<intptr_t, M> &&x, int y) {
+    return std::move(x) - intptr_t(y);
+}
+template <IsMonomial M> Terms<intptr_t, M> operator-(size_t x, M const &y) {
+    Terms<intptr_t, M> z;
+    z.terms.reserve(2);
+    z.terms.emplace_back(-1, y);
+    z.terms.push_back(x);
+    return z; // no std::move because of copy elision
+}
+template <IsMonomial M> Terms<intptr_t, M> operator-(M const &y, int x) {
+    Terms<intptr_t, M> z;
+    z.terms.reserve(2);
+    z.terms.emplace_back(1, y);
+    z.terms.push_back(-x);
     return z; // no std::move because of copy elision
 }
 
@@ -2156,7 +2228,6 @@ template <typename C, typename M>
 Terms<C, M> operator-(Terms<C, M> &&x, Terms<C, M> &&y) {
     return std::move(x -= std::move(y));
 }
-
 // template <typename C, typename M>
 // Terms<C, M> operator*(Terms<C, M> const &x, Terms<C, M> &&y) {
 //     return std::move(y *= x);
@@ -2206,7 +2277,7 @@ template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     // size_t offset = x.size();
     // for (auto it = y.rbegin(); it != y.rend(); ++it){
-    // 	offset = subTermReverseScan(x, (*it) * z, offset);
+    //	offset = subTermReverseScan(x, (*it) * z, offset);
     // }
     size_t offset = 0;
     for (auto &term : y) {
@@ -2312,7 +2383,7 @@ Term<C, Uninomial> &operator*=(Term<C, Uninomial> &x,
 }
 // template <typename C>
 // std::pair<Term<C,Uninomial>, bool> operator/(Term<C,Uninomial> &x,
-// Term<C,Uninomial> const &y) { 	auto [u, f] = x.exponent / y.exponent;
+// Term<C,Uninomial> const &y) {	auto [u, f] = x.exponent / y.exponent;
 // return std::make_pair(Term{x.coefficient / y.coefficient, u},
 // f);
 // }
@@ -2348,7 +2419,7 @@ Term<C, Uninomial> operator^(Term<C, M> &x, size_t i) {
 
 // template <typename C>
 // std::pair<Term<C,M>, bool> operator/(Term<C,M> &x,
-// Term<C,M> const &y) { 	auto [u, f] = x.exponent / y.exponent;
+// Term<C,M> const &y) {	auto [u, f] = x.exponent / y.exponent;
 // return std::make_pair(Term{x.coefficient / y.coefficient, u}, f);
 // }
 
@@ -2449,6 +2520,18 @@ template <typename C, typename M>
 Terms<C, M> operator*(C const &y, Terms<C, M> &&x) {
     // x *= y;
     return std::move(x *= y);
+}
+template <typename C, typename M>
+Terms<C, M> operator*(Terms<C, M> const &x, C const &y) {
+    Terms<C, M> z = x;
+    x *= y;
+    return x;
+}
+template <typename C, typename M>
+Terms<C, M> operator*(C const &y, Terms<C, M> const &x) {
+    Terms<C, M> z = x;
+    z *= y;
+    return z;
 }
 
 template <typename C>

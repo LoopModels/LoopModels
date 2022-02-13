@@ -309,6 +309,11 @@ struct Affine {
     bool operator==(Affine const &x) const {
         return c == x.c && a == x.a && b == x.b;
     }
+    bool operator==(MPoly x) const { return allZero(a) && c * b == x; }
+    bool operator==(int x) const {
+        return (b.degree() == 0) && (b.leadingCoefficient() == x) && allZero(a);
+    }
+
     void subUpdate(Affine const &x, intptr_t a1) {
         intptr_t xc;
         if (x.c < 0) {

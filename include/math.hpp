@@ -360,7 +360,7 @@ std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
     return os;
 }
 
-template <typename T> Vector<T, 0> toVector(llvm::ArrayRef<T> &x) {
+template <typename T> Vector<T, 0> toVector(llvm::SmallVectorImpl<T> const &x) {
     Vector<T, 0> y;
     y.data.reserve(x.size());
     for (auto &i : x) {
@@ -369,7 +369,7 @@ template <typename T> Vector<T, 0> toVector(llvm::ArrayRef<T> &x) {
     return y;
 }
 
-template <typename T> bool allZero(llvm::ArrayRef<T> x) {
+template <typename T> bool allZero(llvm::SmallVectorImpl<T> const &x) {
     for (auto &a : x)
         if (a != 0)
             return false;
