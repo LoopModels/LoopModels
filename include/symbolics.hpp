@@ -1467,10 +1467,23 @@ template <typename C, IsMonomial M> struct Terms {
     friend std::ostream &operator<<(std::ostream &os, Terms const &x) {
         os << " ( ";
         for (size_t j = 0; j < length(x.terms); ++j) {
-            if (j) {
-                os << " + ";
+	    if (std::is_same_v<C,intptr_t>){
+		Term<C,M> t = x.terms[j];
+		if (j) {
+		    if (t.coefficient >= 0){
+			os << " + ";
+		    } else {
+			os << " - ";
+			t.coefficient *= -1;
+		    }
+                }
+		os << t;
+            } else {
+                if (j) {
+                    os << " + ";
+                }
+                os << x.terms[j];
             }
-            os << x.terms[j];
         }
         os << " ) ";
         return os;
