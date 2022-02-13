@@ -302,8 +302,10 @@ struct Affine {
     MPoly b;
     intptr_t c;
     Affine(MPoly m, intptr_t c) : b(m), c(c){};
-    Affine(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c) : a(std::move(a)), b(std::move(b)), c(c) {}
-    Affine(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b, intptr_t c) : a(a), b(b), c(c) {}
+    Affine(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c)
+        : a(std::move(a)), b(std::move(b)), c(c) {}
+    Affine(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b, intptr_t c)
+        : a(a), b(b), c(c) {}
     bool operator==(Affine const &x) const {
         return c == x.c && a == x.a && b == x.b;
     }
@@ -331,38 +333,38 @@ struct Affine {
 };
 std::ostream &operator<<(std::ostream &os, const Affine &x) {
     intptr_t sign = 1;
-    if (x.c > 0){
-	if (x.c == 1){
-	    os << "j <= ";
-	} else {
-	    os << x.c << "j <= ";
-	}
-	os << x.b;
+    if (x.c > 0) {
+        if (x.c == 1) {
+            os << "j <= ";
+        } else {
+            os << x.c << "j <= ";
+        }
+        os << x.b;
     } else {
         if (x.c == -1) {
             os << "j >= ";
         } else {
             os << -x.c << "j >= ";
         }
-	auto xbn = x.b;
-	xbn *= -1;
-	os << xbn;
-	sign = -1;
+        auto xbn = x.b;
+        xbn *= -1;
+        os << xbn;
+        sign = -1;
     }
     for (size_t i = 0; i < x.a.size(); ++i) {
-	if (intptr_t ai = x.a[i]*sign){
-	    if (ai > 0){
-		if (ai == 1){
-		    os << " - i_" << i;
-		} else {
-		    os << " - " << ai << " * i_" << i;
-		}
-	    } else if (ai == -1){
-		os << " + i_" << i;
-	    } else {
-		os << " + " << ai*-1 << " * i_" << i;
-	    }
-	}
+        if (intptr_t ai = x.a[i] * sign) {
+            if (ai > 0) {
+                if (ai == 1) {
+                    os << " - i_" << i;
+                } else {
+                    os << " - " << ai << " * i_" << i;
+                }
+            } else if (ai == -1) {
+                os << " + i_" << i;
+            } else {
+                os << " + " << ai * -1 << " * i_" << i;
+            }
+        }
     }
     return os;
 }
@@ -374,60 +376,62 @@ struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> r;
     llvm::SmallVector<unsigned, 8> origLoop;
-    llvm::SmallVector<llvm::SmallVector<Affine, 4>, 4> lc;
-    llvm::SmallVector<llvm::SmallVector<Affine, 4>, 4> uc;
+    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
+    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
     Permutation perm;
 
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
-        : A(A), r(r), perm(A.size(0)) {
-	assert(A.size(0)*2 == A.size(1));
-	origLoop.reserve(A.size(0)*2);
-	for (unsigned i = 0; i < A.size(0); ++i){
-	    origLoop.push_back(i);
-	    origLoop.push_back(i);
-	}
+    void init() {
         perm.init();
-	lc.resize(A.size(0));
-	uc.resize(A.size(0));
+        lc.resize(A.size(0));
+        uc.resize(A.size(0));
         for (size_t i = getNumLoops(); i > 0; --i) {
-            cacheBounds(perm, i - 1);
+            cacheBounds(i - 1);
         }
     }
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r, llvm::SmallVector<unsigned, 8> origLoop)
-        : A(A), r(r), origLoop(origLoop), perm(A.size(0)) {
-        perm.init();
-	lc.resize(A.size(0));
-	uc.resize(A.size(0));
-        for (size_t i = getNumLoops(); i > 0; --i) {
-            cacheBounds(perm, i - 1);
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
+        : A(A), r(r), perm(A.size(0)) {
+        assert(A.size(0) * 2 == A.size(1));
+        origLoop.reserve(A.size(0) * 2);
+        for (unsigned i = 0; i < A.size(0); ++i) {
+            origLoop.push_back(i);
+            origLoop.push_back(i);
         }
+        init();
+    }
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
+                   llvm::SmallVector<unsigned, 8> origLoop)
+        : A(A), r(r), origLoop(origLoop), perm(A.size(0)) {
+        init();
     }
     void swap(intptr_t i, intptr_t j) {
         perm.swap(i, j);
         for (intptr_t k = std::max(i, j); k >= std::min(i, j); --k) {
             lc[k].clear();
             uc[k].clear();
-            cacheBounds(perm, k);
+            cacheBounds(k);
         }
     }
 
     size_t getNumLoops() const { return A.size(0); }
-    void cacheBounds(Permutation &perm, size_t i) {
+    void cacheBounds(size_t i) {
         auto [numLoops, numEquations] = A.size();
-        llvm::SmallVector<Affine, 4> &lowerBoundsAff = lc[i];
-        llvm::SmallVector<Affine, 4> &upperBoundsAff = uc[i];
+        llvm::SmallVector<Affine, 2> &lowerBoundsAff = lc[i];
+        llvm::SmallVector<Affine, 2> &upperBoundsAff = uc[i];
         size_t _i = perm(i);
         for (size_t j = 0; j < numEquations; ++j) {
-	    // if original loop equation `j` was bound to was external
-	    // and it is still external under this permutation, we
-	    // can ignore this equation(?)
-	    // NOTE: need to ensure that an operation occuring at some partial level
-	    // of a nest is executed the correct number of times after reordering.
-	    if (perm.inv(origLoop[j]) > i){ continue; }
-	    
+            // if original loop equation `j` was bound to was external
+            // and it is still external under this permutation, we
+            // can ignore this equation(?)
+            // NOTE: need to ensure that an operation occuring at some partial
+            // level of a nest is executed the correct number of times after
+            // reordering.
+            if (perm.inv(origLoop[j]) > i) {
+                continue;
+            }
+
             if (Int Aij = A(_i, j)) {
                 // we have found a bound
-                llvm::SmallVector<Affine, 4> *bounds;
+                llvm::SmallVector<Affine, 2> *bounds;
                 if (Aij > 0) {
                     bounds = &upperBoundsAff;
                 } else {
@@ -445,7 +449,7 @@ struct AffineLoopNest {
                         size_t k = perm.inv(_k);
                         if (k > i) {
                             // k external to i
-                            llvm::SmallVector<Affine, 4> *kAff;
+                            llvm::SmallVector<Affine, 2> *kAff;
                             // NOTE: this means we have to cache innermost loops
                             // first.
                             if (Akj > 0) {
