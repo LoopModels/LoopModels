@@ -376,21 +376,27 @@ std::ostream &operator<<(std::ostream &os, const Affine &x) {
 // Affine structs `a` are w/ respect match original `A`;
 // inds will need to go through `perm.inv(...)`.
 //
+// stores loops under current perm
 struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> r;
     llvm::SmallVector<unsigned, 8> origLoop;
-    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4>
-        lc; // stores loops under current perm
+    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
     Permutation perm; // maps current to orig
 
     void init() {
         perm.init();
-        lc.resize(A.size(0));
-        uc.resize(A.size(0));
+        lc.resize(getNumLoops());
+        uc.resize(getNumLoops());
         for (size_t i = getNumLoops(); i > 0; --i) {
             cacheBounds(i - 1);
+        }
+        for (size_t i = 0; i < getNumLoops(); ++i) {
+            calcLowerExtrema(i);
+            calcUpperExtrema(i);
         }
     }
     AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
@@ -414,36 +420,6 @@ struct AffineLoopNest {
             lc[k].clear();
             uc[k].clear();
             cacheBounds(k);
-        }
-    }
-    static void extremaUpdate(llvm::SmallVector<MPoly, 2> &bv,
-                              llvm::SmallVector<MPoly, 2> const &jBounds,
-                              intptr_t aba, size_t bvStart) {
-        size_t bvStop = bv.size();
-        for (size_t k = bvStart; k < bvStop; ++k) {
-            for (size_t l = 0; l < jBounds.size() - 1; ++l) {
-                MPoly bvk = bv[k]; // copy
-                fnmadd(bvk, jBounds[k], aba);
-                bv.push_back(std::move(bvk));
-            }
-            // modify original
-            fnmadd(bv[k], jBounds[jBounds.size() - 1], aba);
-        }
-    }
-    void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab) {
-        size_t bvStart = bv.size();
-        bv.push_back(ab.b);
-        for (size_t _j = 0; _j < ab.a.size(); ++_j) {
-            if (intptr_t aba = ab.a[_j]) {
-                // need the largest (a*i - b) [ c is negative ]
-                if (aba > 0) {
-                    extremaUpdate(bv, calcUpperExtrema(perm.inv(_j)), aba,
-                                  bvStart);
-                } else {
-                    extremaUpdate(bv, calcLowerExtrema(perm.inv(_j)), aba,
-                                  bvStart);
-                }
-            }
         }
     }
     static bool pruneDiffs(llvm::SmallVector<MPoly, 2> &bv, intptr_t sign) {
@@ -471,7 +447,42 @@ struct AffineLoopNest {
     static bool pruneMax(llvm::SmallVector<MPoly, 2> &bv) {
         return pruneDiffs(bv, -1);
     }
-    llvm::SmallVector<MPoly, 2> calcLowerExtrema(size_t i) {
+    static void extremaUpdate(llvm::SmallVector<MPoly, 2> &bv,
+                              llvm::SmallVector<MPoly, 2> const &jBounds,
+                              intptr_t aba, size_t bvStart) {
+        size_t bvStop = bv.size();
+        for (size_t k = bvStart; k < bvStop; ++k) {
+            for (size_t l = 0; l < jBounds.size() - 1; ++l) {
+                MPoly bvk = bv[k]; // copy
+                fnmadd(bvk, jBounds[k], aba);
+                bv.push_back(std::move(bvk));
+            }
+            // modify original
+            fnmadd(bv[k], jBounds[jBounds.size() - 1], aba);
+        }
+    }
+    void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab) {
+        size_t bvStart = bv.size();
+        bv.push_back(ab.b);
+        for (size_t _j = 0; _j < ab.a.size(); ++_j) {
+            if (intptr_t aba = -ab.a[_j]) {
+                // need the largest (a*i - b) [ c is negative ]
+                if (aba > 0) {
+                    extremaUpdate(bv, uExtrema[perm.inv(_j)], aba, bvStart);
+                } else {
+                    extremaUpdate(bv, lExtrema[perm.inv(_j)], aba, bvStart);
+                }
+                // if (aba > 0) {
+                //     extremaUpdate(bv, calcUpperExtrema(perm.inv(_j)), aba,
+                //                   bvStart);
+                // } else {
+                //     extremaUpdate(bv, calcLowerExtrema(perm.inv(_j)), aba,
+                //                   bvStart);
+                // }
+            }
+        }
+    }
+    void calcLowerExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
         // c*j <= b - a'i
         for (auto &ab : lc[i]) {
@@ -479,9 +490,9 @@ struct AffineLoopNest {
         }
         while (pruneMax(bv)) {
         }
-        return bv;
+        lExtrema.push_back(std::move(bv));
     }
-    llvm::SmallVector<MPoly, 2> calcUpperExtrema(size_t i) {
+    void calcUpperExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
         // c*j <= b - a'i
         for (auto &ab : uc[i]) {
@@ -489,7 +500,7 @@ struct AffineLoopNest {
         }
         while (pruneMin(bv)) {
         }
-        return bv;
+        uExtrema.push_back(std::move(bv));
     }
     size_t getNumLoops() const { return A.size(0); }
     void cacheBounds(size_t i) {
@@ -572,10 +583,25 @@ struct AffineLoopNest {
                 }
             }
         }
-	// TODO: prune dominated bounds. Need to check that the pruned bounds are always dominated.
+        // TODO: prune dominated bounds. Need to check that the pruned bounds
+        // are always dominated.
     }
 };
-
+std::ostream &operator<<(std::ostream &os, const AffineLoopNest &aln) {
+    for (size_t i = 0; i < aln.getNumLoops(); ++i) {
+        auto lbs = aln.lc[i];
+        auto ubs = aln.uc[i];
+        os << "Loop " << i << " lower bounds: " << std::endl;
+        for (auto &b : lbs) {
+            os << b << std::endl;
+        }
+        os << "Loop " << i << " upper bounds: " << std::endl;
+        for (auto &b : ubs) {
+            os << b << std::endl;
+        }
+    }
+    return os;
+}
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {

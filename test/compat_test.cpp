@@ -248,32 +248,24 @@ TEST(AffineTest, BasicAssertions) {
     AffineLoopNest aff(A, r);
     std::cout << "Constructed affine obj" << std::endl;
 
-    for (size_t i = 0; i < 3; ++i){
-	auto lbs = aff.lc[i];
-	auto ubs = aff.uc[i];
-        std::cout << "Loop " << i << " lower bounds: " << std::endl;
-	for (auto &b : lbs){
-	    std::cout << b << std::endl;
-	}
-        std::cout << "Loop " << i << " upper bounds: " << std::endl;
-	for (auto &b : ubs){
-	    std::cout << b << std::endl;
-	}
-    }
+    std::cout << aff << std::endl;
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
     aff.swap(1, 2);
-    for (size_t i = 0; i < 3; ++i){
-	auto lbs = aff.lc[i];
-	auto ubs = aff.uc[i];
-        std::cout << "Loop " << i << " lower bounds: " << std::endl;
-	for (auto &b : lbs){
-	    std::cout << b << std::endl;
-	}
-        std::cout << "Loop " << i << " upper bounds: " << std::endl;
-	for (auto &b : ubs){
-	    std::cout << b << std::endl;
-	}
-    }
-    
-}
+    std::cout << aff << std::endl;
 
+    std::cout << "\nExtrema of loops:" << std::endl;
+    for (size_t i = 0; i < 3; ++i) {
+        auto lbs = aff.lExtrema[i];
+        auto ubs = aff.uExtrema[i];
+        std::cout << "Loop " << i << " lower bounds: " << std::endl;
+        for (auto &b : lbs) {
+            auto lb = b;
+            lb *= -1;
+            std::cout << lb << std::endl;
+        }
+        std::cout << "Loop " << i << " upper bounds: " << std::endl;
+        for (auto &b : ubs) {
+            std::cout << b << std::endl;
+        }
+    }
+}
