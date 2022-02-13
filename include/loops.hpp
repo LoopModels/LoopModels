@@ -372,13 +372,18 @@ std::ostream &operator<<(std::ostream &os, const Affine &x) {
 // A' * i <= r
 // l are the lower bounds
 // u are the upper bounds
+//
+// Affine structs `a` are w/ respect match original `A`;
+// inds will need to go through `perm.inv(...)`.
+//
 struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> r;
     llvm::SmallVector<unsigned, 8> origLoop;
-    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
+    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4>
+        lc; // stores loops under current perm
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
-    Permutation perm;
+    Permutation perm; // maps current to orig
 
     void init() {
         perm.init();
@@ -411,7 +416,52 @@ struct AffineLoopNest {
             cacheBounds(k);
         }
     }
-
+    static void extremaUpdate(llvm::SmallVector<MPoly, 2> &bv,
+                              llvm::SmallVector<MPoly, 2> const &jBounds,
+                              intptr_t aba, size_t bvStart) {
+        size_t bvStop = bv.size();
+        for (size_t k = bvStart; k < bvStop; ++k) {
+            for (size_t l = 0; l < jBounds.size() - 1; ++l) {
+                MPoly bvk = bv[k]; // copy
+                fnmadd(bvk, jBounds[k], aba);
+                bv.push_back(std::move(bvk));
+            }
+            // modify original
+            fnmadd(bv[k], jBounds[jBounds.size() - 1], aba);
+        }
+    }
+    void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab) {
+        size_t bvStart = bv.size();
+        bv.push_back(ab.b);
+        for (size_t _j = 0; _j < ab.a.size(); ++_j) {
+            if (intptr_t aba = ab.a[_j]) {
+                // need the largest (a*i - b) [ c is negative ]
+                if (aba > 0) {
+                    extremaUpdate(bv, calcUpperExtrema(perm.inv(_j)), aba,
+                                  bvStart);
+                } else {
+                    extremaUpdate(bv, calcLowerExtrema(perm.inv(_j)), aba,
+                                  bvStart);
+                }
+            }
+        }
+    }
+    llvm::SmallVector<MPoly, 2> calcLowerExtrema(size_t i) {
+        llvm::SmallVector<MPoly, 2> bv;
+        // c*j <= b - a'i
+        for (auto &ab : lc[i]) {
+            calcExtrema(bv, ab);
+        }
+        return bv;
+    }
+    llvm::SmallVector<MPoly, 2> calcUpperExtrema(size_t i) {
+        llvm::SmallVector<MPoly, 2> bv;
+        // c*j <= b - a'i
+        for (auto &ab : uc[i]) {
+            calcExtrema(bv, ab);
+        }
+        return bv;
+    }
     size_t getNumLoops() const { return A.size(0); }
     void cacheBounds(size_t i) {
         auto [numLoops, numEquations] = A.size();
