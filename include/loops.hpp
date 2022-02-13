@@ -446,11 +446,38 @@ struct AffineLoopNest {
             }
         }
     }
+    static bool pruneDiffs(llvm::SmallVector<MPoly, 2> &bv, intptr_t sign) {
+        for (auto it = bv.begin(); it != bv.end() - 1; ++it) {
+            for (auto ii = it + 1; ii != bv.end(); ++ii) {
+                auto delta = *it - *ii;
+                if (isZero(delta)) {
+                    bv.erase(ii);
+                    return true;
+                } else if (delta.degree() == 0) {
+                    if (delta.leadingTerm().coefficient * sign > 0) {
+                        bv.erase(it);
+                    } else {
+                        bv.erase(ii);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    static bool pruneMin(llvm::SmallVector<MPoly, 2> &bv) {
+        return pruneDiffs(bv, 1);
+    }
+    static bool pruneMax(llvm::SmallVector<MPoly, 2> &bv) {
+        return pruneDiffs(bv, -1);
+    }
     llvm::SmallVector<MPoly, 2> calcLowerExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
         // c*j <= b - a'i
         for (auto &ab : lc[i]) {
             calcExtrema(bv, ab);
+        }
+        while (pruneMax(bv)) {
         }
         return bv;
     }
@@ -459,6 +486,8 @@ struct AffineLoopNest {
         // c*j <= b - a'i
         for (auto &ab : uc[i]) {
             calcExtrema(bv, ab);
+        }
+        while (pruneMin(bv)) {
         }
         return bv;
     }
