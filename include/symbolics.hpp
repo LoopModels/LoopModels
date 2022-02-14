@@ -3164,6 +3164,7 @@ return aff;
 }
 */
 } // end namespace Polynomial
+typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial> MPoly;
 
 // A(m, n + k + 1)
 // A( 1*m1 + M*(n1 + k1 + 1) )

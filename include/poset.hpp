@@ -1,6 +1,5 @@
 #pragma once
 #include "bipartite.hpp"
-#include "loops.hpp"
 #include "math.hpp"
 #include "symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"
@@ -261,7 +260,7 @@ struct PartiallyOrderedSet {
         }
         delta[l] = update(i, j, itv);
     }
-    Interval operator()(size_t i, size_t j) {
+    Interval operator()(size_t i, size_t j) const {
         if (i == j) {
             return Interval::zero();
         }
@@ -272,8 +271,8 @@ struct PartiallyOrderedSet {
         Interval d = delta[l];
         return f ? -d : d;
     }
-    Interval operator()(size_t i) { return (*this)(0, i); }
-    Interval asInterval(Polynomial::Monomial &m) {
+    Interval operator()(size_t i) const { return (*this)(0, i); }
+    Interval asInterval(Polynomial::Monomial &m) const {
         if (isOne(m)) {
             return Interval{1, 1};
         }
@@ -284,66 +283,11 @@ struct PartiallyOrderedSet {
         }
         return itv;
     }
-    Interval asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) {
+    Interval asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
         return asInterval(t.exponent) * t.coefficient;
     }
-    // https://www.geeksforgeeks.org/maximum-bipartite-matching/
-    static bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
-                               llvm::SmallVectorImpl<bool> &seen,
-                               llvm::SmallVectorImpl<int> &matchR) {
-        // Try every job one by one
-        size_t N = bpGraph.size(0);
-        for (size_t v = 0; v < N; v++) {
-            // If applicant u is interested in
-            // job v and v is not visited
-            if (bpGraph(v, u) && !seen[v]) {
-                // Mark v as visited
-                seen[v] = true;
 
-                // If job 'v' is not assigned to an
-                // applicant OR previously assigned
-                // applicant for job v (which is matchR[v])
-                // has an alternate job available.
-                // Since v is marked as visited in
-                // the above line, matchR[v] in the following
-                // recursive call will not get job 'v' again
-                if (matchR[v] < 0 ||
-                    bipartiteMatch(bpGraph, matchR[v], seen, matchR)) {
-                    matchR[v] = u;
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-    // Returns maximum number
-    // of matching from M to N
-    static std::pair<size_t, llvm::SmallVector<int>>
-    maxBipar(Matrix<bool, 0, 0> &bpGraph) {
-        // An array to keep track of the
-        // applicants assigned to jobs.
-        // The value of matchR[i] is the
-        // applicant number assigned to job i,
-        // the value -1 indicates nobody is
-        // assigned.
-        auto [M, N] = bpGraph.size();
-        llvm::SmallVector<int> matchR(N, -1);
-        llvm::SmallVector<bool> seen(N);
-        // Count of jobs assigned to applicants
-        size_t result = 0;
-        for (size_t u = 0; u < M; u++) {
-            // Mark all jobs as not seen
-            // for next applicant.
-            std::fill(seen.begin(), seen.end(), 0);
-
-            // Find if the applicant 'u' can get a job
-            if (bipartiteMatch(bpGraph, u, seen, matchR))
-                result++;
-        }
-        return std::make_pair(result, matchR);
-    }
-
-    bool knownGreaterEqual(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+    bool knownGreaterEqual(Polynomial::Monomial &x, Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
         Matrix<bool, 0, 0> bpGraph(N, M);
@@ -400,7 +344,7 @@ struct PartiallyOrderedSet {
         }
     }
     bool atLeastOnePositive(Polynomial::Monomial &x, Polynomial::Monomial &y,
-                            llvm::SmallVectorImpl<int> &matchR) {
+                            llvm::SmallVectorImpl<int> &matchR) const {
         for (size_t n = 0; n < matchR.size(); ++n) {
             size_t m = matchR[n];
             intptr_t lowerBound =
@@ -411,7 +355,7 @@ struct PartiallyOrderedSet {
         }
         return false;
     }
-    bool knownGreater(Polynomial::Monomial &x, Polynomial::Monomial &y) {
+    bool knownGreater(Polynomial::Monomial &x, Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
         Matrix<bool, 0, 0> bpGraph(N, M);
@@ -473,7 +417,7 @@ struct PartiallyOrderedSet {
     }
     // Interval asInterval(MPoly &x){
     // }
-    bool signUnknown(Polynomial::Monomial &m) {
+    bool signUnknown(Polynomial::Monomial &m) const {
         for (auto &v : m) {
             if ((*this)(v.getID()).signUnknown()) {
                 return true;
@@ -481,7 +425,7 @@ struct PartiallyOrderedSet {
         }
         return false;
     }
-    bool knownFlipSign(Polynomial::Monomial &m, bool pos) {
+    bool knownFlipSign(Polynomial::Monomial &m, bool pos) const {
         for (auto &v : m) {
             Interval itv = (*this)(v.getID());
             if (itv.upperBound < 0) {
@@ -492,13 +436,13 @@ struct PartiallyOrderedSet {
         }
         return pos;
     }
-    bool knownPositive(Polynomial::Monomial &m) {
+    bool knownPositive(Polynomial::Monomial &m) const {
         return knownFlipSign(m, true);
     }
-    bool knownNegative(Polynomial::Monomial &m) {
+    bool knownNegative(Polynomial::Monomial &m) const {
         return knownFlipSign(m, false);
     }
-    bool knownGreaterEqualZero(MPoly &x) {
+    bool knownGreaterEqualZero(MPoly &x) const {
         // TODO: implement carrying between differences
         if (isZero(x)) {
             return true;

@@ -211,7 +211,10 @@ TEST(AffineTest, BasicAssertions) {
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
-
+    PartiallyOrderedSet poset;
+    // ids 1 and 2 are >= 0;
+    poset.push(0, 1, Interval::nonNegative());
+    poset.push(0, 2, Interval::nonNegative());
     // m <= M - 1;
     // r.push_back(Polynomial::Term{intptr_t(1), M} - 1);
     r.push_back(M - 1);
@@ -273,7 +276,7 @@ TEST(AffineTest, BasicAssertions) {
     }
     std::cout << aff << std::endl;
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
-    aff.swap(1, 2);
+    aff.swap(poset, 1, 2);
     std::cout << aff << std::endl;
     { // lower bound tests
         EXPECT_EQ(aff.lc.size(), 3);
