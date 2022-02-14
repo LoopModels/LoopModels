@@ -1,7 +1,7 @@
 #pragma once
 #include "bitsets.hpp"
-#include "poset.hpp"
 #include "math.hpp"
+#include "poset.hpp"
 #include "symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -373,44 +373,45 @@ struct Affine {
         return supSub;
     }
     */
-};
-std::ostream &operator<<(std::ostream &os, const Affine &x) {
-    intptr_t sign = 1;
-    if (x.c > 0) {
-        if (x.c == 1) {
-            os << "j <= ";
-        } else {
-            os << x.c << "j <= ";
-        }
-        os << x.b;
-    } else {
-        if (x.c == -1) {
-            os << "j >= ";
-        } else {
-            os << -x.c << "j >= ";
-        }
-        auto xbn = x.b;
-        xbn *= -1;
-        os << xbn;
-        sign = -1;
-    }
-    for (size_t i = 0; i < x.a.size(); ++i) {
-        if (intptr_t ai = x.a[i] * sign) {
-            if (ai > 0) {
-                if (ai == 1) {
-                    os << " - i_" << i;
-                } else {
-                    os << " - " << ai << " * i_" << i;
-                }
-            } else if (ai == -1) {
-                os << " + i_" << i;
+    friend std::ostream &operator<<(std::ostream &os, const Affine &x) {
+        intptr_t sign = 1;
+        if (x.c > 0) {
+            if (x.c == 1) {
+                os << "j <= ";
             } else {
-                os << " + " << ai * -1 << " * i_" << i;
+                os << x.c << "j <= ";
+            }
+            os << x.b;
+        } else {
+            if (x.c == -1) {
+                os << "j >= ";
+            } else {
+                os << -x.c << "j >= ";
+            }
+            auto xbn = x.b;
+            xbn *= -1;
+            os << xbn;
+            sign = -1;
+        }
+        for (size_t i = 0; i < x.a.size(); ++i) {
+            if (intptr_t ai = x.a[i] * sign) {
+                if (ai > 0) {
+                    if (ai == 1) {
+                        os << " - i_" << i;
+                    } else {
+                        os << " - " << ai << " * i_" << i;
+                    }
+                } else if (ai == -1) {
+                    os << " + i_" << i;
+                } else {
+                    os << " + " << ai * -1 << " * i_" << i;
+                }
             }
         }
+        return os;
     }
-    return os;
-}
+    void dump() const { std::cout << *this << std::endl; }
+};
 
 // A' * i <= r
 // l are the lower bounds
@@ -466,7 +467,8 @@ struct AffineLoopNest {
             pruneBounds(k, poset);
         }
     }
-    intptr_t pruneBound(llvm::SmallVectorImpl<Affine> &a, PartiallyOrderedSet const &poset, intptr_t o) {
+    intptr_t pruneBound(llvm::SmallVectorImpl<Affine> &a,
+                        PartiallyOrderedSet const &poset, intptr_t o) {
         for (size_t i = o; i < a.size() - 1; ++i) {
             for (size_t j = i + 1; j < a.size(); ++j) {
                 llvm::SmallVector<MPoly, 2> bounds;
@@ -477,10 +479,10 @@ struct AffineLoopNest {
                 for (size_t k = 0; k < delta.a.size(); ++k) {
                     if (intptr_t ak = delta.a[k]) {
                         size_t added = bounds.size();
-			llvm::SmallVector<MPoly, 2> &lExt = lExtrema[k];
-			llvm::SmallVector<MPoly, 2> &uExt = uExtrema[k];
+                        llvm::SmallVector<MPoly, 2> &lExt = lExtrema[k];
+                        llvm::SmallVector<MPoly, 2> &uExt = uExtrema[k];
                         bounds.reserve(added * (lExt.size() + uExt.size()));
-			
+
                         for (size_t l = 0; l < added; ++l) {
                             MPoly &bl = bounds[l];
                             // add all extrema
@@ -498,14 +500,14 @@ struct AffineLoopNest {
                         }
                     }
                 }
-		std::cout << "Trying to prune; bounds:\n";
-		for (auto &bb : bounds){
-		    std::cout << bb << std::endl;
-		}
+                std::cout << "Trying to prune; bounds:\n";
+                for (auto &bb : bounds) {
+                    std::cout << bb << std::endl;
+                }
                 uint8_t mask = 3;
                 for (auto &b : bounds) {
-		    if (!isZero(b)){
-			if (poset.knownGreaterEqualZero(b)){
+                    if (!isZero(b)) {
+                        if (poset.knownGreaterEqualZero(b)) {
                             mask &= 1;
                         } else {
                             // TODO: write knownCmpZero to do both known >= 0
@@ -514,25 +516,27 @@ struct AffineLoopNest {
                             if (poset.knownGreaterEqualZero(b)) {
                                 mask &= 2;
                             } else {
-				mask = 0;
-				break;
-			    }
+                                mask = 0;
+                                break;
+                            }
                         }
-			if (mask == 0){ break; }
-		    } else {
-			mask = 0;
-			break;
-		    }
+                        if (mask == 0) {
+                            break;
+                        }
+                    } else {
+                        mask = 0;
+                        break;
+                    }
                 }
-		if (mask & 1){
-		    // positive (or equal)
-		    a.erase(a.begin() + i);
-		    return i;
-		} else if (mask & 2){
-		    // negative
-		    a.erase(a.begin() + j);
-		    return i;
-		}
+                if (mask & 1) {
+                    // positive (or equal)
+                    a.erase(a.begin() + i);
+                    return i;
+                } else if (mask & 2) {
+                    // negative
+                    a.erase(a.begin() + j);
+                    return i;
+                }
                 // if lower bounds, then the intersection is the largest, so
                 // prune `j` if delta >= 0 at both extrema `i` if delta <= 0 at
                 // both extrema if upper bounds, then the intersection is the
@@ -542,7 +546,8 @@ struct AffineLoopNest {
         }
         return -1;
     }
-    void pruneABound(llvm::SmallVectorImpl<Affine> &a, PartiallyOrderedSet const &poset) {
+    void pruneABound(llvm::SmallVectorImpl<Affine> &a,
+                     PartiallyOrderedSet const &poset) {
         intptr_t o = 0;
         if (a.size() > 1) {
             std::cout << "Trying to prune:\n";
@@ -736,22 +741,25 @@ struct AffineLoopNest {
             b0.subtractUpdate((*kAff)[nkb - 1], Akj);
         }
     }
-};
-std::ostream &operator<<(std::ostream &os, const AffineLoopNest &aln) {
-    for (size_t i = 0; i < aln.getNumLoops(); ++i) {
-        auto lbs = aln.lc[i];
-        auto ubs = aln.uc[i];
-        os << "Loop " << i << " lower bounds: " << std::endl;
-        for (auto &b : lbs) {
-            os << b << std::endl;
+
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const AffineLoopNest &aln) {
+        for (size_t i = 0; i < aln.getNumLoops(); ++i) {
+            auto lbs = aln.lc[i];
+            auto ubs = aln.uc[i];
+            os << "Loop " << i << " lower bounds: " << std::endl;
+            for (auto &b : lbs) {
+                os << b << std::endl;
+            }
+            os << "Loop " << i << " upper bounds: " << std::endl;
+            for (auto &b : ubs) {
+                os << b << std::endl;
+            }
         }
-        os << "Loop " << i << " upper bounds: " << std::endl;
-        for (auto &b : ubs) {
-            os << b << std::endl;
-        }
+        return os;
     }
-    return os;
-}
+    void dump() const { std::cout << *this; }
+};
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {

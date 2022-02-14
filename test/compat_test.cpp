@@ -277,7 +277,10 @@ TEST(AffineTest, BasicAssertions) {
     std::cout << aff << std::endl;
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
     aff.swap(poset, 1, 2);
-    std::cout << aff << std::endl;
+    // std::cout << aff << std::endl;
+    aff.dump();
+    std::cout << "First lc: \n";
+    aff.lc[0][0].dump();
     { // lower bound tests
         EXPECT_EQ(aff.lc.size(), 3);
         EXPECT_EQ(aff.lc[0].size(), 1);
@@ -291,17 +294,17 @@ TEST(AffineTest, BasicAssertions) {
         EXPECT_EQ(aff.uc.size(), 3);
         EXPECT_EQ(aff.uc[0].size(), 1);
         EXPECT_EQ(aff.uc[1].size(), 1);
-        EXPECT_EQ(aff.uc[2].size(), 2); // FIXME: prune to 1
+        EXPECT_EQ(aff.uc[2].size(), 1);
         EXPECT_TRUE(aff.uc[0][0] == M - 1);
         EXPECT_TRUE(aff.uc[1][0] == N - 1);
-        EXPECT_TRUE(aff.uc[2][0] == N - 1);
+        // EXPECT_TRUE(aff.uc[2][0] == N - 1);
         llvm::SmallVector<intptr_t, 4> a;
         a.push_back(0);
         a.push_back(0);
         a.push_back(-1);
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(aff.uc[2][1] == Affine(a, b, 1));
+        EXPECT_TRUE(aff.uc[2][0] == Affine(a, b, 1));
     }
 
     std::cout << "\nExtrema of loops:" << std::endl;
