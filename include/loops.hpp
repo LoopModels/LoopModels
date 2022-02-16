@@ -26,6 +26,7 @@ typedef llvm::SmallVector<MPoly, 3> UpperBounds;
 //          Perhaps we can still confirm that the loop would not execute for
 //          negative values. Otherwise, we require loop splitting.
 
+
 struct RectangularLoopNest {
     UpperBounds data;
 
@@ -757,6 +758,13 @@ struct AffineLoopNest {
     void dump() const { std::cout << *this; }
 };
 
+// returns unsigned integer as bitfield.
+// `1` indicates loop does iterate, `0` does not.
+// uint32_t zeroInnerIterationsAtMaximum(AffineLoopNest &aln, size_t i){
+    
+//     return 0;
+// }
+
 // TODO: it would be most useful if `compatible` could return some indicator of
 // to what degree the loops are compatible. For example, perhaps it is worth
 // masking one loop off?
@@ -779,21 +787,27 @@ bool compatible(PartiallyOrderedSet &poset, AffineLoopNest &aln1,
     // How to proceed here? Match all permutations of the former with all
     // permutations of the latter?
     // Perhaps only consider lengths?
-    llvm::SmallVector<Affine,1> delta1;
-    for (auto &al1 : l1){
-	for (auto &au1 : u1){
-	    delta1.push_back(au1 - al1);
-	}
-    }
+    // llvm::SmallVector<Affine,1> delta1;
+    // for (auto &al1 : l1){
+    // 	for (auto &au1 : u1){
+    // 	    delta1.push_back(au1 - al1);
+    // 	}
+    // }
     llvm::SmallVector<Affine,1> delta2;
     for (auto &al2 : l2){
 	for (auto &au2 : u2){
 	    delta2.push_back(au2 - al2);
 	}
     }
-    for (auto &d1 : delta1){
-	for (auto &d2 : delta2){
-	    auto dd = d2-d1;
+    llvm::SmallVector<Affine,1> deltadelta;
+    // for (auto &d1 : delta1){
+    for (auto &al1 : l1){
+	for (auto &au1 : u1){
+	    auto d1 = au1 - al1;
+	    for (auto &d2 : delta2){
+		auto dd = d2-d1;
+		
+	    }
 	}
     }
     return false;
