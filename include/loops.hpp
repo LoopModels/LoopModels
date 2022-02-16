@@ -312,7 +312,9 @@ struct Affine {
     bool operator==(int x) const {
         return (b.degree() == 0) && (b.leadingCoefficient() == x) && allZero(a);
     }
-
+    bool isConstant() const {
+	return (b.degree() == 0) && allZero(a);
+    }
     void subtractUpdateAB(Affine const &x, intptr_t c0, intptr_t c1) {
         b *= c0;
         fnmadd(b, x.b, c1); // y.b -= x.b * c1;
@@ -417,10 +419,12 @@ struct Affine {
 // l are the lower bounds
 // u are the upper bounds
 //
-// Affine structs `a` are w/ respect match original `A`;
+// Affine structs `a` are w/ respect original `A`;
 // inds will need to go through `perm.inv(...)`.
 //
-// stores loops under current perm
+// stores loops under current perm, so lc/uc are
+// under the current permutation
+// extrema are original
 struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> r;
@@ -500,10 +504,6 @@ struct AffineLoopNest {
                         }
                     }
                 }
-                std::cout << "Trying to prune; bounds:\n";
-                for (auto &bb : bounds) {
-                    std::cout << bb << std::endl;
-                }
                 uint8_t mask = 3;
                 for (auto &b : bounds) {
                     if (!isZero(b)) {
@@ -550,10 +550,6 @@ struct AffineLoopNest {
                      PartiallyOrderedSet const &poset) {
         intptr_t o = 0;
         if (a.size() > 1) {
-            std::cout << "Trying to prune:\n";
-            for (auto &aa : a) {
-                std::cout << aa << std::endl;
-            }
             do {
                 o = pruneBound(a, poset, o);
             } while (o >= 0);
@@ -760,6 +756,49 @@ struct AffineLoopNest {
     }
     void dump() const { std::cout << *this; }
 };
+
+// TODO: it would be most useful if `compatible` could return some indicator of
+// to what degree the loops are compatible. For example, perhaps it is worth
+// masking one loop off?
+// Perhaps simple an indicator of if the difference in iterations is statically
+// known, and then additionally whether masking inner levels of the nest is
+// needed (if those inner levels have zero iterations for the added iterations
+// of an outer loop, they don't need to be masked off).
+bool compatible(PartiallyOrderedSet &poset, AffineLoopNest &aln1,
+                AffineLoopNest &aln2, Int _i1, Int _i2) {
+    auto &l1 = aln1.lc[_i1];
+    auto &u1 = aln1.uc[_i1];
+    auto &l2 = aln2.lc[_i2];
+    auto &u2 = aln2.uc[_i2];
+    // these bounds have already been pruned, so if lengths > 1...
+    // we don't necessarily want bipartite matching, as it is possible for one
+    // loop to match multiple. E.g., if inner loops iterate zero times for
+    // certain values of the iteration variable, we may be able to extend the
+    // loop. Or we could mask a loop off for a small number of iterations.
+
+    // How to proceed here? Match all permutations of the former with all
+    // permutations of the latter?
+    // Perhaps only consider lengths?
+    llvm::SmallVector<Affine,1> delta1;
+    for (auto &al1 : l1){
+	for (auto &au1 : u1){
+	    delta1.push_back(au1 - al1);
+	}
+    }
+    llvm::SmallVector<Affine,1> delta2;
+    for (auto &al2 : l2){
+	for (auto &au2 : u2){
+	    delta2.push_back(au2 - al2);
+	}
+    }
+    for (auto &d1 : delta1){
+	for (auto &d2 : delta2){
+	    auto dd = d2-d1;
+	}
+    }
+    return false;
+}
+
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {
