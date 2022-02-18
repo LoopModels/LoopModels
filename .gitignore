@@ -1,5 +1,5 @@
 build/
-release_build/
+release_build*/
 *#*
 *~
 .cache
