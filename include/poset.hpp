@@ -191,6 +191,12 @@ struct PartiallyOrderedSet {
             Interval ik = delta[k + iOff];
             Interval jk = delta[k + jOff];
             // j - i = (j - k) - (i - k)
+	    /*
+	    std::cout << "i: " << i << "; j: " << j << "; k: " << k << std::endl;
+	    std::cout << "ji: " << ji << std::endl;
+	    std::cout << "jk: " << jk << std::endl;
+	    std::cout << "ik: " << ik << std::endl;
+	    */
             auto [jkt, ikt] = ji.restrictSub(jk, ik);
             delta[k + iOff] = ikt;
             delta[k + jOff] = jkt;
