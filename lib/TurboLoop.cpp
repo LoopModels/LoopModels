@@ -4,6 +4,7 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/Analysis/LoopNestAnalysis.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/InstrTypes.h"
@@ -31,7 +32,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     std::cout << "Assumptions:" << std::endl;
     for (auto &a : AC.assumptions()) {
         llvm::errs() << *a << "\n";
-        llvm::CallInst *Call = cast<llvm::CallInst>(a);
+        llvm::CallInst *Call = llvm::cast<llvm::CallInst>(a);
         llvm::Value *val = (Call->arg_begin()->get());
         llvm::errs() << *val << "\n";
         llvm::errs() << "Value id: " << val->getValueID() << "\n";
@@ -96,12 +97,16 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
         llvm::errs() << *Call << "\n";
     }
-
     llvm::TargetLibraryInfoImpl TLII;
     llvm::TargetLibraryInfo TLI(TLII);
     llvm::DominatorTree DT(F);
     llvm::LoopInfo &LI = FAM.getResult<llvm::LoopAnalysis>(F);
     llvm::ScalarEvolution SE(F, TLI, AC, DT, LI);
+    for (llvm::Loop *LP : LI) {
+        llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
+        
+    }
+
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : LI) {
         auto *inductOuter = LP->getInductionVariable(SE);

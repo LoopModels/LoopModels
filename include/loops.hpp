@@ -26,7 +26,6 @@ typedef llvm::SmallVector<MPoly, 3> UpperBounds;
 //          Perhaps we can still confirm that the loop would not execute for
 //          negative values. Otherwise, we require loop splitting.
 
-
 struct RectangularLoopNest {
     UpperBounds data;
 
@@ -313,9 +312,7 @@ struct Affine {
     bool operator==(int x) const {
         return (b.degree() == 0) && (b.leadingCoefficient() == x) && allZero(a);
     }
-    bool isConstant() const {
-	return (b.degree() == 0) && allZero(a);
-    }
+    bool isConstant() const { return (b.degree() == 0) && allZero(a); }
     void subtractUpdateAB(Affine const &x, intptr_t c0, intptr_t c1) {
         b *= c0;
         fnmadd(b, x.b, c1); // y.b -= x.b * c1;
@@ -635,6 +632,14 @@ struct AffineLoopNest {
         uExtrema.push_back(std::move(bv));
     }
     size_t getNumLoops() const { return A.size(0); }
+    // zeroIterationsUponExtending(size_t i, bool lower);
+    // i is the loop we're trying to pad with extra iterations below the
+    // minimum (if lower = true) or above the maximum (upper = true) for the
+    // sake of making it compatible with other loops. It returns `true` if upon
+    // adding extra iterations, the inner most loop does not iterate. This would
+    // be because, for any of the loops interior to `i`, the lower bound exceeds
+    // the upper bound.
+    bool zeroIterationsUponExtending(size_t i, bool lower) { return false; }
     void cacheBounds(size_t i) {
         auto [numLoops, numEquations] = A.size();
         llvm::SmallVector<Affine, 2> &lowerBoundsAff = lc[i];
@@ -761,7 +766,7 @@ struct AffineLoopNest {
 // returns unsigned integer as bitfield.
 // `1` indicates loop does iterate, `0` does not.
 // uint32_t zeroInnerIterationsAtMaximum(AffineLoopNest &aln, size_t i){
-    
+
 //     return 0;
 // }
 
@@ -793,22 +798,21 @@ bool compatible(PartiallyOrderedSet &poset, AffineLoopNest &aln1,
     // 	    delta1.push_back(au1 - al1);
     // 	}
     // }
-    llvm::SmallVector<Affine,1> delta2;
-    for (auto &al2 : l2){
-	for (auto &au2 : u2){
-	    delta2.push_back(au2 - al2);
-	}
+    llvm::SmallVector<Affine, 1> delta2;
+    for (auto &al2 : l2) {
+        for (auto &au2 : u2) {
+            delta2.push_back(au2 - al2);
+        }
     }
-    llvm::SmallVector<Affine,1> deltadelta;
+    llvm::SmallVector<Affine, 1> deltadelta;
     // for (auto &d1 : delta1){
-    for (auto &al1 : l1){
-	for (auto &au1 : u1){
-	    auto d1 = au1 - al1;
-	    for (auto &d2 : delta2){
-		auto dd = d2-d1;
-		
-	    }
-	}
+    for (auto &al1 : l1) {
+        for (auto &au1 : u1) {
+            auto d1 = au1 - al1;
+            for (auto &d2 : delta2) {
+                auto dd = d2 - d1;
+            }
+        }
     }
     return false;
 }
