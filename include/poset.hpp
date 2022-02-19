@@ -41,6 +41,8 @@ intptr_t saturatingAbs(intptr_t a) {
     }
     return std::abs(a);
 }
+// struct Interval
+// Provides saturating interval arithmetic.
 struct Interval {
     intptr_t lowerBound, upperBound;
     Interval(intptr_t x) : lowerBound(x), upperBound(x){};
@@ -163,7 +165,9 @@ Interval positiveInterval() {
 std::ostream &operator<<(std::ostream &os, Interval a) {
     return os << a.lowerBound << " : " << a.upperBound;
 }
-
+// struct PartiallyOrderedSet
+// Gives partial ordering between variables, using intervals to indicate the
+// range of differences in possible values.
 struct PartiallyOrderedSet {
     llvm::SmallVector<Interval, 0> delta;
     size_t nVar;
