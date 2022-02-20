@@ -421,6 +421,7 @@ struct Affine {
 // A' * i <= r
 // l are the lower bounds
 // u are the upper bounds
+// extrema are the extremes, in orig order
 struct AffineLoopNest {
     Matrix<Int, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> r;
@@ -632,10 +633,28 @@ struct AffineLoopNestPerm {
                               llvm::SmallVector<MPoly, 2> const &jBounds,
                               intptr_t aba, size_t bvStart) {
         size_t bvStop = bv.size();
+        // in case of multiple extrema, calc/compare all of them
         for (size_t k = bvStart; k < bvStop; ++k) {
             for (size_t l = 0; l < jBounds.size() - 1; ++l) {
                 MPoly bvk = bv[k]; // copy
                 fnmadd(bvk, jBounds[k], aba);
+                bv.push_back(std::move(bvk));
+            }
+            // modify original
+            fnmadd(bv[k], jBounds[jBounds.size() - 1], aba);
+        }
+    }
+    static void extremaUpdate(llvm::SmallVector<MPoly, 2> &bv,
+                              llvm::SmallVector<MPoly, 2> const &jBounds,
+                              intptr_t aba, size_t bvStart, MPoly &offset) {
+        size_t bvStop = bv.size();
+        // in case of multiple extrema, calc/compare all of them
+        for (size_t k = bvStart; k < bvStop; ++k) {
+            for (size_t l = 0; l < jBounds.size() - 1; ++l) {
+                MPoly bvk = bv[k]; // copy
+                Polynomial::Terms<long, Polynomial::Monomial> jBound =
+                    jBounds[k] + offset;
+                fnmadd(bvk, jBound, aba);
                 bv.push_back(std::move(bvk));
             }
             // modify original
@@ -652,9 +671,50 @@ struct AffineLoopNestPerm {
             if (intptr_t aba = -ab.a[_j]) {
                 // need the largest (a*i - b) [ c is negative ]
                 if (aba > 0) {
-                    extremaUpdate(bv, uExtrema[perm.inv(_j)], aba, bvStart);
+                    extremaUpdate(bv, uExtrema[_j], aba, bvStart);
                 } else {
-                    extremaUpdate(bv, lExtrema[perm.inv(_j)], aba, bvStart);
+                    extremaUpdate(bv, lExtrema[_j], aba, bvStart);
+                }
+            }
+        }
+    }
+    void calcExtremaMin(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab,
+                        MPoly &extend, size_t extendInd, bool extendLower) {
+        size_t bvStart = bv.size();
+        bv.push_back(ab.b);
+        auto &lExtrema = aln->lExtrema;
+        auto &uExtrema = aln->uExtrema;
+        for (size_t _j = 0; _j < ab.a.size(); ++_j) {
+            if (_j == extendInd) {
+                // this means we're extending in `ex
+                if (intptr_t aba = -ab.a[_j]) {
+                    // need the largest (a*i - b) [ c is negative ]
+                    if (aba < 0) {
+                        // uExtrema is most problematic; extending lower
+                        // is thus irrelvant.
+                        if (extendLower) {
+                            extremaUpdate(bv, uExtrema[_j], aba, bvStart);
+                        } else {
+                            extremaUpdate(bv, uExtrema[_j], aba, bvStart,
+                                          extend);
+                        }
+                    } else {
+                        if (extendLower) {
+                            extremaUpdate(bv, lExtrema[_j], aba, bvStart,
+                                          extend);
+                        } else {
+                            extremaUpdate(bv, lExtrema[_j], aba, bvStart);
+                        }
+                    }
+                }
+            } else {
+                if (intptr_t aba = -ab.a[_j]) {
+                    // need the largest (a*i - b) [ c is negative ]
+                    if (aba < 0) {
+                        extremaUpdate(bv, uExtrema[_j], aba, bvStart);
+                    } else {
+                        extremaUpdate(bv, lExtrema[_j], aba, bvStart);
+                    }
                 }
             }
         }
@@ -686,40 +746,50 @@ struct AffineLoopNestPerm {
     // adding extra iterations, the inner most loop does not iterate. This would
     // be because, for any of the loops interior to `i`, the lower bound exceeds
     // the upper bound.
-    static bool zeroIterations(Affine &upper, Affine &lower) {
-	Affine delta = upper - lower;
-	delta.b += 1;
-	return false;
-    }
-    bool zeroExtraIterationsUponExtending(size_t i, bool lower) {
-        // if `i` is the inner most loop, then padding it must add loops
-        // TODO: remove this branch; should be handled by plan of returning
-        // true once we find a loop interior to `i` that iterates 0 times
-        if (i == getNumLoops() - 1) {
-            return false;
+    bool zeroIterations(PartiallyOrderedSet &poset, Affine &upper,
+                        Affine &lower, MPoly &extend, size_t extendInd,
+                        bool extendLower) {
+        Affine delta = upper;
+        delta.subtractUpdateAB(lower, lower.c, upper.c);
+        delta.b -= 1;
+        llvm::SmallVector<MPoly, 2> bv;
+        // must minimize subtracted `i`s.
+        calcExtremaMin(bv, delta, extend, extendInd, extendLower);
+        for (auto &b : bv) {
+            if (!poset.knownGreaterEqualZero(b)) {
+                return false;
+            }
         }
+        return true;
+    }
+    bool zeroExtraIterationsUponExtending(PartiallyOrderedSet &poset,
+                                          MPoly &extend, bool lower, size_t _i,
+                                          size_t j) {
+
+        llvm::SmallVector<Affine, 2> &ucj = uc[j];
+        llvm::SmallVector<Affine, 2> &lcj = lc[j];
+        for (auto &ucjk : ucj) {
+            for (auto &lcjk : lcj) {
+                if (!zeroIterations(poset, ucjk, lcjk, extend, _i, lower)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    // `i` is the current loop
+    bool zeroExtraIterationsUponExtending(PartiallyOrderedSet &poset, size_t i,
+                                          MPoly &extend, bool lower) {
+        // if `i` is the inner most loop, then padding it must add loops
+        size_t _i = perm(i);
         for (size_t j = i + 1; j < getNumLoops(); ++j) {
-            // TODO: consider all bounds
-	    bool all = true;
-            llvm::SmallVector<Affine, 2> &ucj = uc[j];
-            llvm::SmallVector<Affine, 2> &lcj = lc[j];
-            for (auto &ucjk : ucj){
-		for (auto &lcjk : lcj){
-		    if (!zeroIterations(ucjk, lcjk)){
-			all = false;
-			break;
-		    }
-		}
-		if (!all){
-		    break;
-		}
-	    }
-	    if (all){
-		return true;
-	    }
+            if (zeroExtraIterationsUponExtending(poset, extend, lower, _i, j)) {
+                return true;
+            }
         }
         return false;
     }
+    // i is current order
     void cacheBounds(size_t i) {
         const auto &A = aln->A;
         const auto &r = aln->r;
