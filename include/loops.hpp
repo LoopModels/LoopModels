@@ -338,7 +338,12 @@ struct Affine {
         return y;
     }
     // assumes `j0 === j1`
-    // yields 0 <= b - a*i
+    // aff1 -= aff0
+    // yields c*j <= b - a*i
+    // where
+    // c = abs(c0) * c1
+    // b = b1*abs(c0) - c1 * b0
+    // a = a1*c0 - a0*c1
     Affine &operator-=(Affine const &x) {
         subtractUpdateAB(x, std::abs(x.c), std::abs(c));
         return *this;
@@ -416,23 +421,46 @@ struct Affine {
 // A' * i <= r
 // l are the lower bounds
 // u are the upper bounds
-//
+struct AffineLoopNest {
+    Matrix<Int, 0, 0> A; // somewhat triangular
+    llvm::SmallVector<MPoly, 8> r;
+    llvm::SmallVector<unsigned, 8> origLoop;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
+
+    size_t getNumLoops() const { return A.size(0); }
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
+        : A(A), r(r) {
+        assert(A.size(0) * 2 == A.size(1));
+        origLoop.reserve(A.size(0) * 2);
+        for (unsigned i = 0; i < A.size(0); ++i) {
+            origLoop.push_back(i);
+            origLoop.push_back(i);
+        }
+    }
+    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
+                   llvm::SmallVector<unsigned, 8> origLoop)
+        : A(A), r(r), origLoop(origLoop) {}
+};
+
 // Affine structs `a` are w/ respect original `A`;
 // inds will need to go through `perm.inv(...)`.
 //
 // stores loops under current perm, so lc/uc are
 // under the current permutation
 // extrema are original
-struct AffineLoopNest {
-    Matrix<Int, 0, 0> A; // somewhat triangular
-    llvm::SmallVector<MPoly, 8> r;
-    llvm::SmallVector<unsigned, 8> origLoop;
+struct AffineLoopNestPerm {
+    std::shared_ptr<AffineLoopNest> aln;
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
+    // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> maxIters;
     Permutation perm; // maps current to orig
 
+    size_t getNumLoops() const { return aln->getNumLoops(); }
+    AffineLoopNestPerm(std::shared_ptr<AffineLoopNest> a)
+        : aln(a), perm(a->getNumLoops()) {
+        init();
+    }
     void init() {
         perm.init();
         lc.resize(getNumLoops());
@@ -440,25 +468,12 @@ struct AffineLoopNest {
         for (size_t i = getNumLoops(); i > 0; --i) {
             cacheBounds(i - 1);
         }
-        for (size_t i = 0; i < getNumLoops(); ++i) {
-            calcLowerExtrema(i);
-            calcUpperExtrema(i);
+        if (aln->lExtrema.size() == 0) {
+            for (size_t i = 0; i < getNumLoops(); ++i) {
+                calcLowerExtrema(i);
+                calcUpperExtrema(i);
+            }
         }
-    }
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
-        : A(A), r(r), perm(A.size(0)) {
-        assert(A.size(0) * 2 == A.size(1));
-        origLoop.reserve(A.size(0) * 2);
-        for (unsigned i = 0; i < A.size(0); ++i) {
-            origLoop.push_back(i);
-            origLoop.push_back(i);
-        }
-        init();
-    }
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
-                   llvm::SmallVector<unsigned, 8> origLoop)
-        : A(A), r(r), origLoop(origLoop), perm(A.size(0)) {
-        init();
     }
     void swap(PartiallyOrderedSet const &poset, intptr_t i, intptr_t j) {
         perm.swap(i, j);
@@ -469,6 +484,35 @@ struct AffineLoopNest {
             pruneBounds(k, poset);
         }
     }
+    // Comments on pruning legality...
+    // for m in 0:M-1 {
+    //   for n in m+1:M-1 {
+    //      // m != M-1
+    //   }
+    // }
+    // 0 <= m <= M-1
+    // m+1 <= n <= M-1
+    // permute
+    // 1 <= m+1 <= n <= M-1 // when we depend on an inner loop, take extreme
+    // 0 <= m <= M-1
+    //      m <= n-1
+    // prune first upper bound on `M`, because n-1<=M-2, yielding
+    // 1 <= n <= M-1
+    // 0 <= m <= n-1
+    // and now we never have `m = M-1`, but we did before...
+    // if we had
+    // for m in 0:M-1 {
+    //   x[m] = 1
+    //   for n in m+1:M-1 {
+    //     A[m,n] = 1
+    //   }
+    // }
+    // for n in 0:M-1 {
+    //   x[n] = 1
+    //   for m in 0:n-1 {
+    //      A[m,n] = 1
+    //   }
+    // }
     intptr_t pruneBound(llvm::SmallVectorImpl<Affine> &a,
                         PartiallyOrderedSet const &poset, intptr_t o) {
         for (size_t i = o; i < a.size() - 1; ++i) {
@@ -478,6 +522,8 @@ struct AffineLoopNest {
                 bounds.push_back(std::move(delta.b));
                 // 0 <= b - a'i;
                 // a'i <= b;
+                auto &lExtrema = aln->lExtrema;
+                auto &uExtrema = aln->uExtrema;
                 for (size_t k = 0; k < delta.a.size(); ++k) {
                     if (intptr_t ak = delta.a[k]) {
                         size_t added = bounds.size();
@@ -600,6 +646,8 @@ struct AffineLoopNest {
     void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab) {
         size_t bvStart = bv.size();
         bv.push_back(ab.b);
+        auto &lExtrema = aln->lExtrema;
+        auto &uExtrema = aln->uExtrema;
         for (size_t _j = 0; _j < ab.a.size(); ++_j) {
             if (intptr_t aba = -ab.a[_j]) {
                 // need the largest (a*i - b) [ c is negative ]
@@ -619,7 +667,7 @@ struct AffineLoopNest {
         }
         while (pruneMax(bv)) {
         }
-        lExtrema.push_back(std::move(bv));
+        aln->lExtrema.push_back(std::move(bv));
     }
     void calcUpperExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
@@ -629,9 +677,8 @@ struct AffineLoopNest {
         }
         while (pruneMin(bv)) {
         }
-        uExtrema.push_back(std::move(bv));
+        aln->uExtrema.push_back(std::move(bv));
     }
-    size_t getNumLoops() const { return A.size(0); }
     // zeroIterationsUponExtending(size_t i, bool lower);
     // i is the loop we're trying to pad with extra iterations below the
     // minimum (if lower = true) or above the maximum (upper = true) for the
@@ -639,8 +686,25 @@ struct AffineLoopNest {
     // adding extra iterations, the inner most loop does not iterate. This would
     // be because, for any of the loops interior to `i`, the lower bound exceeds
     // the upper bound.
-    bool zeroIterationsUponExtending(size_t i, bool lower) { return false; }
+    static bool zeroIterations(Affine &upper, Affine &lower) {}
+    bool zeroExtraIterationsUponExtending(size_t i, bool lower) {
+        // if `i` is the inner most loop, then padding it must add loops
+        // TODO: remove this branch; should be handled by plan of returning
+        // true once we find a loop interior to `i` that iterates 0 times
+        if (i == getNumLoops() - 1) {
+            return false;
+        }
+        for (size_t j = i + 1; j < getNumLoops(); ++j) {
+            // TODO: consider all bounds
+            Affine delta = uc[j][0] - lc[j][0];
+            delta.b += 1;
+        }
+        return false;
+    }
     void cacheBounds(size_t i) {
+        const auto &A = aln->A;
+        const auto &r = aln->r;
+        const auto &origLoop = aln->origLoop;
         auto [numLoops, numEquations] = A.size();
         llvm::SmallVector<Affine, 2> &lowerBoundsAff = lc[i];
         llvm::SmallVector<Affine, 2> &upperBoundsAff = uc[i];
@@ -745,10 +809,10 @@ struct AffineLoopNest {
     }
 
     friend std::ostream &operator<<(std::ostream &os,
-                                    const AffineLoopNest &aln) {
-        for (size_t i = 0; i < aln.getNumLoops(); ++i) {
-            auto lbs = aln.lc[i];
-            auto ubs = aln.uc[i];
+                                    const AffineLoopNestPerm &alnp) {
+        for (size_t i = 0; i < alnp.getNumLoops(); ++i) {
+            auto lbs = alnp.lc[i];
+            auto ubs = alnp.uc[i];
             os << "Loop " << i << " lower bounds: " << std::endl;
             for (auto &b : lbs) {
                 os << b << std::endl;

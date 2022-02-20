@@ -2,15 +2,14 @@
 
 #include "integerMap.hpp"
 #include "poset.hpp"
+#include "tree.hpp"
 #include "llvm/IR/PassManager.h"
 
-class TurboLoopPass
-    : public llvm::PassInfoMixin<TurboLoopPass> {
-public:
-  llvm::PreservedAnalyses
-  run(llvm::Function &F,
-      llvm::FunctionAnalysisManager &AM);
+class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
+  public:
+    llvm::PreservedAnalyses run(llvm::Function &F,
+                                llvm::FunctionAnalysisManager &AM);
     ValueToPosetMap valueToPosetMap;
     PartiallyOrderedSet poset;
+    Tree tree;
 };
-

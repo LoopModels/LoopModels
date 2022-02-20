@@ -69,7 +69,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                 break;
             case llvm::CmpInst::ICMP_EQ:
                 poset.push(op0posID, op1posID, Interval::zero());
-		break;
+                break;
             case llvm::CmpInst::ICMP_UGT:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
@@ -103,8 +103,19 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     llvm::LoopInfo &LI = FAM.getResult<llvm::LoopAnalysis>(F);
     llvm::ScalarEvolution SE(F, TLI, AC, DT, LI);
     for (llvm::Loop *LP : LI) {
+        auto boundsRoot = LP->getBounds(SE);
+        if (boundsRoot.hasValue()) {
+            auto bounds = boundsRoot.getValue();
+
+        } else {
+            // TODO: insert unoptimizable op representing skipped loop?
+            continue;
+        }
         llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
+        size_t nestDepth = LN.getNestDepth();
+
         
+
     }
 
     llvm::InductionDescriptor ID;
