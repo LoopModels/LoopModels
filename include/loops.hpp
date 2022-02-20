@@ -686,7 +686,11 @@ struct AffineLoopNestPerm {
     // adding extra iterations, the inner most loop does not iterate. This would
     // be because, for any of the loops interior to `i`, the lower bound exceeds
     // the upper bound.
-    static bool zeroIterations(Affine &upper, Affine &lower) {}
+    static bool zeroIterations(Affine &upper, Affine &lower) {
+	Affine delta = upper - lower;
+	delta.b += 1;
+	return false;
+    }
     bool zeroExtraIterationsUponExtending(size_t i, bool lower) {
         // if `i` is the inner most loop, then padding it must add loops
         // TODO: remove this branch; should be handled by plan of returning
@@ -696,8 +700,23 @@ struct AffineLoopNestPerm {
         }
         for (size_t j = i + 1; j < getNumLoops(); ++j) {
             // TODO: consider all bounds
-            Affine delta = uc[j][0] - lc[j][0];
-            delta.b += 1;
+	    bool all = true;
+            llvm::SmallVector<Affine, 2> &ucj = uc[j];
+            llvm::SmallVector<Affine, 2> &lcj = lc[j];
+            for (auto &ucjk : ucj){
+		for (auto &lcjk : lcj){
+		    if (!zeroIterations(ucjk, lcjk)){
+			all = false;
+			break;
+		    }
+		}
+		if (!all){
+		    break;
+		}
+	    }
+	    if (all){
+		return true;
+	    }
         }
         return false;
     }
@@ -841,8 +860,8 @@ struct AffineLoopNestPerm {
 // known, and then additionally whether masking inner levels of the nest is
 // needed (if those inner levels have zero iterations for the added iterations
 // of an outer loop, they don't need to be masked off).
-bool compatible(PartiallyOrderedSet &poset, AffineLoopNest &aln1,
-                AffineLoopNest &aln2, Int _i1, Int _i2) {
+bool compatible(PartiallyOrderedSet &poset, AffineLoopNestPerm &aln1,
+                AffineLoopNestPerm &aln2, Int _i1, Int _i2) {
     auto &l1 = aln1.lc[_i1];
     auto &u1 = aln1.uc[_i1];
     auto &l2 = aln2.lc[_i2];
