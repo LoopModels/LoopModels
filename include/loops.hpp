@@ -652,8 +652,26 @@ struct AffineLoopNestPerm {
         for (size_t k = bvStart; k < bvStop; ++k) {
             for (size_t l = 0; l < jBounds.size() - 1; ++l) {
                 MPoly bvk = bv[k]; // copy
-                Polynomial::Terms<long, Polynomial::Monomial> jBound =
+                Polynomial::Terms<intptr_t, Polynomial::Monomial> jBound =
                     jBounds[k] + offset;
+                fnmadd(bvk, jBound, aba);
+                bv.push_back(std::move(bvk));
+            }
+            // modify original
+            fnmadd(bv[k], jBounds[jBounds.size() - 1], aba);
+        }
+    }
+    static void extremaUpdate(llvm::SmallVector<MPoly, 2> &bv,
+                              llvm::SmallVector<MPoly, 2> const &jBounds,
+                              intptr_t aba, size_t bvStart, intptr_t offset) {
+        size_t bvStop = bv.size();
+        // in case of multiple extrema, calc/compare all of them
+        for (size_t k = bvStart; k < bvStop; ++k) {
+            for (size_t l = 0; l < jBounds.size() - 1; ++l) {
+                MPoly bvk = bv[k]; // copy
+                Polynomial::Terms<intptr_t, Polynomial::Monomial> jBound =
+                    jBounds[k];
+		jBound += offset;
                 fnmadd(bvk, jBound, aba);
                 bv.push_back(std::move(bvk));
             }
@@ -690,20 +708,22 @@ struct AffineLoopNestPerm {
                 if (intptr_t aba = -ab.a[_j]) {
                     // need the largest (a*i - b) [ c is negative ]
                     if (aba < 0) {
-                        // uExtrema is most problematic; extending lower
-                        // is thus irrelvant.
+                        // uExtrema is most problematic, therefore if
+			// extending lower we extend by minimum amount (-1)
                         if (extendLower) {
-                            extremaUpdate(bv, uExtrema[_j], aba, bvStart);
+                            extremaUpdate(bv, lExtrema[_j], aba, bvStart, -1);
                         } else {
                             extremaUpdate(bv, uExtrema[_j], aba, bvStart,
                                           extend);
                         }
                     } else {
+			// lExtrema is most problematic, therefore if
+			// extending upper we extend by minimum amount (1)
                         if (extendLower) {
                             extremaUpdate(bv, lExtrema[_j], aba, bvStart,
                                           extend);
                         } else {
-                            extremaUpdate(bv, lExtrema[_j], aba, bvStart);
+                            extremaUpdate(bv, uExtrema[_j], aba, bvStart, 1);
                         }
                     }
                 }
@@ -930,6 +950,7 @@ struct AffineLoopNestPerm {
 // known, and then additionally whether masking inner levels of the nest is
 // needed (if those inner levels have zero iterations for the added iterations
 // of an outer loop, they don't need to be masked off).
+/*
 bool compatible(PartiallyOrderedSet &poset, AffineLoopNestPerm &aln1,
                 AffineLoopNestPerm &aln2, Int _i1, Int _i2) {
     auto &l1 = aln1.lc[_i1];
@@ -969,7 +990,7 @@ bool compatible(PartiallyOrderedSet &poset, AffineLoopNestPerm &aln1,
     }
     return false;
 }
-
+*/
 /*
 bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
                 Permutation &perm2, Int _i1, Int _i2) {
