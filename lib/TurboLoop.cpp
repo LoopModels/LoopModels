@@ -106,20 +106,33 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         auto boundsRoot = LP->getBounds(SE);
         if (boundsRoot.hasValue()) {
             auto bounds = boundsRoot.getValue();
-
+            llvm::errs() << "\nloop bounds: " << bounds.getInitialIVValue()
+                         << " : " << *bounds.getStepValue() << " : "
+                         << bounds.getFinalIVValue() << "\n";
+            // TODO: move this to descend function, and build AffineLoopNest
+            
         } else {
+            // TODO: check if reachable; if not we can safely ignore
             // TODO: insert unoptimizable op representing skipped loop?
+            // The concern is we want some understanding of the dependencies
+            // between the unoptimized block and optimized block, in case
+            // we want to move loops around. Otherwise, this is basically
+            // a volatile barrier.
             continue;
+            // Alt TODO: insert a remark
+            // return llvm::PreservedAnalyses::all();
         }
         llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
         size_t nestDepth = LN.getNestDepth();
 
         for (auto *B : LP->getBlocks()){
             std::cout << "Basic block:\n";
-            B->dump();
+            for (auto &I : *B){
+                llvm::errs() << I << "\n";
+            }
         }
     }
-
+    /*
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : LI) {
         auto *inductOuter = LP->getInductionVariable(SE);
@@ -240,10 +253,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             std::cout << "\n";
         }
     }
-
+    */
     return llvm::PreservedAnalyses::all();
 }
-
 bool PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                        llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) {
     if (Name == "turbo-loop") {
