@@ -76,5 +76,5 @@ TEST(IRTest, BasicAssertions) {
 
     ArrayRef ar = ArrayRef{.arrayID = 10, .inds = inds};
     std::cout << ar << std::endl;
-    std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
+    // std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
 }

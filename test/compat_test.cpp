@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <memory>
 
 TEST(CompatTest, BasicAssertions) {
 
@@ -204,17 +205,24 @@ TEST(CompatTest, BasicAssertions) {
     EXPECT_FALSE(compatible(trial, trial, perm_tr2, perm_tri, 1, 1));
 }
 
-TEST(AffineTest, BasicAssertions) {
-    std::cout << "Starting affine tests" << std::endl;
+TEST(AffineTest0, BasicAssertions) {
+    std::cout << "Starting affine test 0" << std::endl;
     llvm::SmallVector<MPoly, 8> r;
     Matrix<Int, 0, 0> A = Matrix<Int, 0, 0>(3, 6);
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
+    auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    auto nOne = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    One.dump();
     PartiallyOrderedSet poset;
     // ids 1 and 2 are >= 0;
     poset.push(0, 1, Interval::nonNegative());
     poset.push(0, 2, Interval::nonNegative());
+    // the loop is
+    // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
+    //
+    // Bounds:
     // m <= M - 1;
     // r.push_back(Polynomial::Term{intptr_t(1), M} - 1);
     r.push_back(M - 1);
@@ -246,80 +254,103 @@ TEST(AffineTest, BasicAssertions) {
     A(0, 5) = 0;
     A(1, 5) = 1;
     A(2, 5) = -1;
-
+    
     std::cout << "About to construct affine obj" << std::endl;
-    AffineLoopNest aff(A, r);
+    std::shared_ptr<AffineLoopNest> aff =
+        std::make_shared<AffineLoopNest>(AffineLoopNest(A, r));
+    AffineLoopNestPerm affp(aff);
     std::cout << "Constructed affine obj" << std::endl;
+    std::cout << "About to run first compat test" << std::endl;
+    EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(poset, 1, Polynomial::Terms(One), false));
+    std::cout << "About to run second compat test" << std::endl;
+    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(poset, 1, Polynomial::Terms(nOne), true));
+    std::cout << "About to run first set of bounds tests" << std::endl;
     { // lower bound tests
-        EXPECT_EQ(aff.lc.size(), 3);
-        EXPECT_EQ(aff.lc[0].size(), 1);
-        EXPECT_EQ(aff.lc[1].size(), 1);
-        EXPECT_EQ(aff.lc[2].size(), 1);
-        EXPECT_TRUE(aff.lc[0][0] == 0);
-        EXPECT_TRUE(aff.lc[1][0] == 0);
+        EXPECT_EQ(affp.lc.size(), 3);
+        EXPECT_EQ(affp.lc[0].size(), 1);
+        EXPECT_EQ(affp.lc[1].size(), 1);
+        EXPECT_EQ(affp.lc[2].size(), 1);
+        EXPECT_TRUE(affp.lc[0][0] == 0);
+        EXPECT_TRUE(affp.lc[1][0] == 0);
         llvm::SmallVector<intptr_t, 4> a;
         a.push_back(0);
         a.push_back(1);
         a.push_back(0);
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(aff.lc[2][0] == Affine(a, b, -1));
+        EXPECT_TRUE(affp.lc[2][0] == Affine(a, b, -1));
     }
     { // upper bound tests
-        EXPECT_EQ(aff.uc.size(), 3);
-        EXPECT_EQ(aff.uc[0].size(), 1);
-        EXPECT_EQ(aff.uc[1].size(), 1);
-        EXPECT_EQ(aff.uc[2].size(), 1);
-        EXPECT_TRUE(aff.uc[0][0] == M - 1);
-        EXPECT_TRUE(aff.uc[1][0] == N - 1);
-        EXPECT_TRUE(aff.uc[2][0] == N - 1);
+        EXPECT_EQ(affp.uc.size(), 3);
+        EXPECT_EQ(affp.uc[0].size(), 1);
+        EXPECT_EQ(affp.uc[1].size(), 1);
+        EXPECT_EQ(affp.uc[2].size(), 1);
+        EXPECT_TRUE(affp.uc[0][0] == M - 1);
+        EXPECT_TRUE(affp.uc[1][0] == N - 1);
+        EXPECT_TRUE(affp.uc[2][0] == N - 1);
     }
-    std::cout << aff << std::endl;
+    std::cout << affp << std::endl;
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
-    aff.swap(poset, 1, 2);
-    // std::cout << aff << std::endl;
-    aff.dump();
+    affp.swap(poset, 1, 2);
+    // Now that we've swapped loops 1 and 2, we should have
+    // for m in 0:M-1, k in 1:N-1, n in 0:k-1
+    affp.dump();
     std::cout << "First lc: \n";
-    aff.lc[0][0].dump();
+    affp.lc[0][0].dump();
     { // lower bound tests
-        EXPECT_EQ(aff.lc.size(), 3);
-        EXPECT_EQ(aff.lc[0].size(), 1);
-        EXPECT_EQ(aff.lc[1].size(), 1);
-        EXPECT_EQ(aff.lc[2].size(), 1);
-        EXPECT_TRUE(aff.lc[0][0] == 0);
-        EXPECT_TRUE(aff.lc[1][0] == -1); // -j <= -1
-        EXPECT_TRUE(aff.lc[2][0] == 0);
+        EXPECT_EQ(affp.lc.size(), 3);
+        EXPECT_EQ(affp.lc[0].size(), 1);
+        EXPECT_EQ(affp.lc[1].size(), 1);
+        EXPECT_EQ(affp.lc[2].size(), 1);
+        EXPECT_TRUE(affp.lc[0][0] == 0);
+        EXPECT_TRUE(affp.lc[1][0] == -1); // -j <= -1
+        EXPECT_TRUE(affp.lc[2][0] == 0);
     }
     { // upper bound tests
-        EXPECT_EQ(aff.uc.size(), 3);
-        EXPECT_EQ(aff.uc[0].size(), 1);
-        EXPECT_EQ(aff.uc[1].size(), 1);
-        EXPECT_EQ(aff.uc[2].size(), 1);
-        EXPECT_TRUE(aff.uc[0][0] == M - 1);
-        EXPECT_TRUE(aff.uc[1][0] == N - 1);
-        // EXPECT_TRUE(aff.uc[2][0] == N - 1);
+        EXPECT_EQ(affp.uc.size(), 3);
+        EXPECT_EQ(affp.uc[0].size(), 1);
+        EXPECT_EQ(affp.uc[1].size(), 1);
+        EXPECT_EQ(affp.uc[2].size(), 1);
+        EXPECT_TRUE(affp.uc[0][0] == M - 1);
+        EXPECT_TRUE(affp.uc[1][0] == N - 1);
+        // EXPECT_TRUE(affp.uc[2][0] == N - 1);
         llvm::SmallVector<intptr_t, 4> a;
         a.push_back(0);
         a.push_back(0);
         a.push_back(-1);
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(aff.uc[2][0] == Affine(a, b, 1));
+        EXPECT_TRUE(affp.uc[2][0] == Affine(a, b, 1));
     }
 
     std::cout << "\nExtrema of loops:" << std::endl;
-    for (size_t i = 0; i < aff.getNumLoops(); ++i) {
-        auto lbs = aff.lExtrema[i];
-        auto ubs = aff.uExtrema[i];
+    for (size_t i = 0; i < affp.getNumLoops(); ++i) {
+        auto lbs = aff->lExtrema[i];
+        auto ubs = aff->uExtrema[i];
         std::cout << "Loop " << i << " lower bounds: " << std::endl;
         for (auto &b : lbs) {
             auto lb = b;
             lb *= -1;
-            std::cout << lb << std::endl;
+	    lb.dump();
         }
         std::cout << "Loop " << i << " upper bounds: " << std::endl;
         for (auto &b : ubs) {
-            std::cout << b << std::endl;
+	    b.dump();
         }
     }
+
+    // For reference, the permuted loop bounds are:
+    // for m in 0:M-1, k in 1:N-1, n in 0:k-1
+    std::cout << "Checking if the inner most loop iterates when adjusting "
+                 "outer loops:"
+              << std::endl;
+    std::cout << "Constructed affine obj" << std::endl;
+    std::cout << "About to run first compat test" << std::endl;
+    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(
+        poset, 1, Polynomial::Terms(One), false));
+    std::cout << "About to run second compat test" << std::endl;
+    EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(
+        poset, 1, Polynomial::Terms(nOne), true));
+
+    // affp.zeroExtraIterationsUponExtending(poset, 1, )
 }

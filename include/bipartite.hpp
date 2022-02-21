@@ -41,17 +41,19 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
     // assigned.
     auto [M, N] = bpGraph.size();
     llvm::SmallVector<int> matchR(N, -1);
-    llvm::SmallVector<bool> seen(N);
-    // Count of jobs assigned to applicants
     size_t result = 0;
-    for (size_t u = 0; u < M; u++) {
-        // Mark all jobs as not seen
-        // for next applicant.
-        std::fill(seen.begin(), seen.end(), false);
+    if (N){
+        llvm::SmallVector<bool> seen(N);
+        // Count of jobs assigned to applicants
+        for (size_t u = 0; u < M; u++) {
+            // Mark all jobs as not seen
+            // for next applicant.
+            std::fill(seen.begin(), seen.end(), false);
 
-        // Find if the applicant 'u' can get a job
-        if (bipartiteMatch(bpGraph, u, seen, matchR))
-            result++;
+            // Find if the applicant 'u' can get a job
+            if (bipartiteMatch(bpGraph, u, seen, matchR))
+                result++;
+        }
     }
     return std::make_pair(result, matchR);
 }

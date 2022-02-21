@@ -116,6 +116,7 @@ struct Rational {
         }
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
 };
 
 // template <typename T> bool isZero(T x) { return x.isZero(); }
@@ -317,6 +318,7 @@ struct Uninomial {
         }
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
     // Uninomial& operator=(Uninomial x) {
     //     exponent = x.exponent;
     //     return *this;
@@ -579,6 +581,7 @@ struct Monomial {
         }
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
 }; // Monomial
 
 bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
@@ -841,6 +844,7 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         }
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
 }; // PackedMonomial
 
 template <size_t L, size_t E>
@@ -1075,6 +1079,7 @@ template <typename C, IsMonomial M> struct Term {
         }
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
 };
 // template <typename C,typename M>
 // bool Term<C,M>::isOne() const { return ::isOne(coefficient) &
@@ -1489,6 +1494,7 @@ template <typename C, IsMonomial M> struct Terms {
         os << " ) ";
         return os;
     }
+    void dump() const { std::cout << *this << std::endl; }
     constexpr One isPoly() { return One(); }
 };
 

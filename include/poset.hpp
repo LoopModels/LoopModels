@@ -300,15 +300,16 @@ struct PartiallyOrderedSet {
     bool knownGreaterEqual(Polynomial::Monomial &x, Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
-        Matrix<bool, 0, 0> bpGraph(N, M);
-        for (size_t m = 0; m < M; ++m) {
-            for (size_t n = 0; n < N; ++n) {
-                bpGraph(n, m) =
+        Matrix<bool, 0, 0> bpGraph(M, N);
+	for (size_t n = 0; n < N; ++n) {
+	    for (size_t m = 0; m < M; ++m) {
+                bpGraph(m, n) =
                     (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
                         .lowerBound >= 0;
             }
         }
         auto [matches, matchR] = maxBipartiteMatch(bpGraph);
+	// matchR.size() == N
         // matchR maps ys to xs
         if (matches < M) {
             if (matches < N) {
