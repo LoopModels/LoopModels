@@ -114,8 +114,10 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
         size_t nestDepth = LN.getNestDepth();
 
-        
-
+        for (auto *B : LP->getBlocks()){
+            std::cout << "Basic block:\n";
+            B->dump();
+        }
     }
 
     llvm::InductionDescriptor ID;
