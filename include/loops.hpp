@@ -449,7 +449,7 @@ struct AffineLoopNest {
     llvm::SmallVector<unsigned, 8> origLoop;
     llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
     llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
-
+    uint32_t notAffine; // bitmask indicating non-affine loops
     size_t getNumLoops() const { return A.size(0); }
     AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
         : A(A), r(r) {
@@ -477,8 +477,9 @@ struct AffineLoopNestPerm {
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
     // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> maxIters;
     Permutation perm; // maps current to orig
-
-    size_t getNumLoops() const { return aln->getNumLoops(); }
+    uint32_t notAffine; // bitmask indicating non-affine loops
+    // may be smaller than aln->getNumLoops();
+    size_t getNumLoops() const { return perm.getNumLoops(); }
     AffineLoopNestPerm(std::shared_ptr<AffineLoopNest> a)
         : aln(a), perm(a->getNumLoops()) {
         init();

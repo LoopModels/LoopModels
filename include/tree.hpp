@@ -3,6 +3,7 @@
 #include "./ir.hpp"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/LoopInfo.h>
 #include <memory>
 #include <tuple>
 #include <variant>
@@ -15,6 +16,9 @@ struct Tree {
     auto end() { return branches.end(); }
     auto begin() const { return branches.begin(); }
     auto end() const { return branches.end(); }
+    void push_back(llvm::Loop *LP){
+	branches.emplace_back(Term(LP));
+    }
 };
 
 // // Underlying data represents the tree as a matrix

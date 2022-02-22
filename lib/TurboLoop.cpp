@@ -17,6 +17,9 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar/LoopRotation.h"
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/TargetLibraryInfo.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/Dominators.h>
 #include <llvm/Transforms/Utils/LCSSA.h>
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
@@ -28,7 +31,7 @@
 
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
-    llvm::AssumptionCache AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
+    llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
     std::cout << "Assumptions:" << std::endl;
     for (auto &a : AC.assumptions()) {
         llvm::errs() << *a << "\n";
@@ -97,40 +100,21 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
         llvm::errs() << *Call << "\n";
     }
-    llvm::TargetLibraryInfoImpl TLII;
-    llvm::TargetLibraryInfo TLI(TLII);
-    llvm::DominatorTree DT(F);
-    llvm::LoopInfo &LI = FAM.getResult<llvm::LoopAnalysis>(F);
-    llvm::ScalarEvolution SE(F, TLI, AC, DT, LI);
-    for (llvm::Loop *LP : LI) {
-        auto boundsRoot = LP->getBounds(SE);
-        if (boundsRoot.hasValue()) {
-            auto bounds = boundsRoot.getValue();
-            llvm::errs() << "\nloop bounds: " << bounds.getInitialIVValue()
-                         << " : " << *bounds.getStepValue() << " : "
-                         << bounds.getFinalIVValue() << "\n";
-            // TODO: move this to descend function, and build AffineLoopNest
-            
-        } else {
-            // TODO: check if reachable; if not we can safely ignore
-            // TODO: insert unoptimizable op representing skipped loop?
-            // The concern is we want some understanding of the dependencies
-            // between the unoptimized block and optimized block, in case
-            // we want to move loops around. Otherwise, this is basically
-            // a volatile barrier.
-            continue;
-            // Alt TODO: insert a remark
-            // return llvm::PreservedAnalyses::all();
-        }
-        llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
-        size_t nestDepth = LN.getNestDepth();
-
-        for (auto *B : LP->getBlocks()){
-            std::cout << "Basic block:\n";
-            for (auto &I : *B){
-                llvm::errs() << I << "\n";
-            }
-        }
+    // llvm::TargetLibraryInfo &TLI = FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+    // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+    TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
+    
+    // llvm::TargetTransformInfo &TTI = llvm::FunctionPass.getAnalysis<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfo>(F);
+    LI = &FAM.getResult<llvm::LoopAnalysis>(F);
+    SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+    llvm::SmallVector<llvm::Loop*, 4> outerLoops;
+    for (llvm::Loop *LP : *LI) {
+	descend(tree, outerLoops, LP);
+	outerLoops.clear();
     }
     /*
     llvm::InductionDescriptor ID;

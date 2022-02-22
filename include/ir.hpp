@@ -12,16 +12,20 @@
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/LoopInfo.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/Support/InstructionCost.h>
 #include <ostream>
 #include <string>
 #include <sys/types.h>
 #include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <variant>
 #include <vector>
-
-typedef Int Operation;
 
 /*
 // Associative operations should always be binary.
@@ -638,22 +642,6 @@ std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
     return os;
 }
 
-struct CostSummary {
-    double vCost;
-    double sCost;
-    // double vLoadCost;
-    // double sLoadCost;
-    // double vStoreCost;
-    // double sStoreCost;
-
-    CostSummary()
-        : vCost(0.0), sCost(0.0){}; //, vLoadCost(0.0), sLoadCost(0.0),
-                                    // vStoreCost(0.0), sStoreCost(0.0) {};
-    void operator+=(CostSummary cs) {
-        vCost += cs.vCost;
-        sCost += cs.sCost;
-    }
-};
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
 // These will typically map to a single CPU instruction.
@@ -667,14 +655,24 @@ struct CostSummary {
 // - (For convenience) destination operations.
 // - Indicate
 struct Term {
-    Operation op; // Operation id
+    std::variant<llvm::BasicBlock *, llvm::Loop *, llvm::Intrinsic::ID,
+                 llvm::Instruction *, llvm::Function *>
+        op;
     size_t id;
-    CostSummary costSummary;
-    Vector<std::pair<size_t, VarType>, 0> srcs; // type of source
-    Vector<std::pair<size_t, VarType>, 0> dsts; // destination id
+    llvm::InstructionCost latency;
+    llvm::InstructionCost recipThroughput;
+    llvm::SmallVector<std::pair<size_t, VarType>, 3> srcs; // type of source
+    llvm::SmallVector<std::pair<size_t, VarType>, 3> dsts; // destination id
     // Vector<size_t, 0> srcs;       // source id
     size_t loopNestId; // id of loopnest
     uint32_t loopDeps; // minimal loopdeps based on source's
+
+    Term(llvm::Loop *LP, size_t loopNestId)
+        : op(LP), loopNestId(loopNestId),
+          loopDeps(std::numeric_limits<uint32_t>::max()) {
+	// TODO: walk to add all srcs and dsts to the sources and destinations
+	
+    }
 };
 
 std::pair<size_t, size_t> getLoopId(Term t) {
