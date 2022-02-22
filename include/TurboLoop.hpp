@@ -1,9 +1,15 @@
 #pragma once
 
 #include "integerMap.hpp"
+#include "loops.hpp"
 #include "poset.hpp"
 #include "tree.hpp"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/IR/Constant.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/Support/Casting.h"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -27,34 +33,86 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::ScalarEvolution *SE;
     unsigned registerCount;
 
-    static bool invariant(const llvm::Value *V, llvm::ArrayRef<llvm::Loop*> LPS){
-	for (auto *LP : LPS){
-	    if (!(LP -> isLoopInvariant(V))){
-		return false;
-	    }
-	}
-	return true;
+    static bool invariant(
+        const llvm::Value *V,
+        llvm::SmallVector<
+            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
+            4> const &LPS) {
+        for (auto LP : LPS) {
+            if (!(LP.first->isLoopInvariant(V))) {
+                return false;
+            }
+        }
+        return true;
     }
-    
-    void descend(Tree &tree, llvm::SmallVector<llvm::Loop *, 4> outerLoops,
-                 llvm::Loop *LP) {
-        auto boundsRoot = LP->getBounds(*SE);
-	size_t numOuter = outerLoops.size();
+    void pushAffine(
+        llvm::SmallVector<Affine, 8> &affs, const llvm::Value &initV,
+        llvm::Value &stepV, const llvm::Value &finalV,
+        llvm::SmallVector<
+            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
+            4> const &outerLoops) {
+        llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
+        llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
+        MPoly bL;
+        MPoly bU;
+        if (isa<llvm::ConstantInt>(stepV)) {
+            llvm::ConstantInt &stepConst = llvm::cast<llvm::ConstantInt>(stepV);
+            if (!(stepConst.isOne())) {
+                // divide by step
+                // TODO: do we want to actually set lower bound to 0?
+                //       Not doing so may be able to preserve affine structure
+                //       in some situations. For example,
+                // for i in 1:2:N, j in i:2:M
+                // we have a lower bound of `i`, which (given step of `2`) would
+                // itself be a linear funct of the canonical induction variable.
+            }
+        } else {
+        }
+        // if (llvm::ConstantInt *const &stepConst =
+        //         llvm::dyn_cast<llvm::ConstantInt *>(stepV)) {
+        //     if (!(stepConst->isOne())){
+        // 	// llvm::IRBuilder<> Builder;
+        // 	// Builder.CreateSDiv
+        //     }
+        // } else {
+
+        // }
+        // if (llvm::ConstantInt *const &initConst =
+        //         llvm::dyn_cast<llvm::ConstantInt *>(initV)) {
+
+        // } else {
+
+        // }
+        // if (llvm::ConstantInt *const &finalConst =
+        //         llvm::dyn_cast<llvm::ConstantInt *>(finalV)) {
+
+        // } else {
+
+        // }
+    }
+    void descend(
+        Tree &tree,
+        llvm::SmallVector<
+            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
+            &outerLoops,
+        llvm::SmallVector<Affine, 8> &affs, llvm::Loop *LP) {
+        llvm::Optional<llvm::Loop::LoopBounds> boundsRoot = LP->getBounds(*SE);
+        size_t numOuter = outerLoops.size();
         if (boundsRoot.hasValue()) {
-            auto bounds = boundsRoot.getValue();
-	    auto step = bounds.getStepValue();
-	    if (!invariant(step, outerLoops)){
-		tree.push_back(LP);
-		return;
-	    }
-	    auto &start = bounds.getInitialIVValue();
-	    auto &stop = bounds.getFinalIVValue();
-	    
-            llvm::errs() << "\nloop bounds: " << start
-                         << " : " << *step << " : "
-                         << stop << "\n";
-            
-	    
+            llvm::Loop::LoopBounds &bounds = boundsRoot.getValue();
+            pushAffine(affs, bounds.getInitialIVValue(), *bounds.getStepValue(),
+                       bounds.getFinalIVValue(), outerLoops);
+            llvm::Value *step = bounds.getStepValue();
+            if (!invariant(step, outerLoops)) {
+                tree.emplace_back(LP, numOuter);
+                return;
+            }
+            auto &start = bounds.getInitialIVValue();
+            auto &stop = bounds.getFinalIVValue();
+
+            llvm::errs() << "\nloop bounds: " << start << " : " << *step
+                         << " : " << stop << "\n";
+
         } else {
             // TODO: check if reachable; if not we can safely ignore
             // TODO: insert unoptimizable op representing skipped loop?
@@ -62,7 +120,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             // between the unoptimized block and optimized block, in case
             // we want to move loops around. Otherwise, this is basically
             // a volatile barrier.
-            tree.push_back(LP);
+            tree.emplace_back(LP, numOuter);
             return;
             // continue;
             // Alt TODO: insert a remark

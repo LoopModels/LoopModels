@@ -314,6 +314,7 @@ struct Affine {
         : a(std::move(a)), b(std::move(b)), c(c) {}
     Affine(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b, intptr_t c)
         : a(a), b(b), c(c) {}
+
     bool operator==(Affine const &x) const {
         return c == x.c && a == x.a && b == x.b;
     }
@@ -476,7 +477,7 @@ struct AffineLoopNestPerm {
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
     llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
     // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> maxIters;
-    Permutation perm; // maps current to orig
+    Permutation perm;   // maps current to orig
     uint32_t notAffine; // bitmask indicating non-affine loops
     // may be smaller than aln->getNumLoops();
     size_t getNumLoops() const { return perm.getNumLoops(); }

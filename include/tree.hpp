@@ -16,8 +16,10 @@ struct Tree {
     auto end() { return branches.end(); }
     auto begin() const { return branches.begin(); }
     auto end() const { return branches.end(); }
-    void push_back(llvm::Loop *LP){
-	branches.emplace_back(Term(LP));
+    void emplace_back(llvm::Loop *LP, size_t numOuter){
+	std::unique_ptr<std::variant<Tree,Term>> p = std::make_unique<std::variant<Tree,Term>>();
+	*p = Term(LP, numOuter);
+	branches.push_back(std::move(p));
     }
 };
 

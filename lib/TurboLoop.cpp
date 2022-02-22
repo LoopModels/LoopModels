@@ -16,10 +16,12 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar/LoopRotation.h"
+#include "llvm/Transforms/Utils/LoopSimplify.h"
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Dominators.h>
+#include <llvm/Transforms/Scalar/IndVarSimplify.h>
 #include <llvm/Transforms/Utils/LCSSA.h>
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
@@ -100,21 +102,29 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
         llvm::errs() << *Call << "\n";
     }
-    // llvm::TargetLibraryInfo &TLI = FAM.getResult<llvm::TargetLibraryAnalysis>(F);
-    // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
-    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
-    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    // llvm::TargetLibraryInfo &TLI =
+    // FAM.getResult<llvm::TargetLibraryAnalysis>(F); llvm::DominatorTree &DT =
+    // FAM.getResult<llvm::DominatorTreeAnalysis>(F); llvm::TargetTransformInfo
+    // &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    // llvm::TargetTransformInfo &TTI =
+    // FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
     TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-    
-    // llvm::TargetTransformInfo &TTI = llvm::FunctionPass.getAnalysis<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
-    // llvm::TargetTransformInfo &TTI = FAM.getResult<llvm::TargetTransformInfo>(F);
+
+    // llvm::TargetTransformInfo &TTI =
+    // llvm::FunctionPass.getAnalysis<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
+    // llvm::TargetTransformInfo &TTI =
+    // FAM.getResult<llvm::TargetTransformInfo>(F);
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-    llvm::SmallVector<llvm::Loop*, 4> outerLoops;
+    llvm::SmallVector<
+        std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
+        outerLoops;
+    llvm::SmallVector<Affine, 8> affs;
     for (llvm::Loop *LP : *LI) {
-	descend(tree, outerLoops, LP);
-	outerLoops.clear();
+        descend(tree, outerLoops, affs, LP);
+        outerLoops.clear();
+        affs.clear();
     }
     /*
     llvm::InductionDescriptor ID;
@@ -243,6 +253,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 bool PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                        llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) {
     if (Name == "turbo-loop") {
+        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
+        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
         FPM.addPass(TurboLoopPass());
         return true;
     }
