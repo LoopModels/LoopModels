@@ -34,23 +34,28 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     unsigned registerCount;
 
     static bool invariant(
-        const llvm::Value *V,
+        llvm::Value *V,
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
             4> const &LPS) {
-        for (auto LP : LPS) {
-            if (!(LP.first->isLoopInvariant(V))) {
+        for (auto LP = LPS.rbegin(); LP != LPS.rend(); ++LP) {
+            bool changed = false;
+            bool invariant = LP->first->makeLoopInvariant(V, changed);
+            if (!(changed | invariant)) {
                 return false;
             }
         }
         return true;
     }
     void pushAffine(
-        llvm::SmallVector<Affine, 8> &affs, const llvm::Value &initV,
-        llvm::Value &stepV, const llvm::Value &finalV,
+        llvm::SmallVector<Affine, 8> &affs, llvm::Value &initV,
+        llvm::Value &stepV, llvm::Value &finalV,
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
             4> const &outerLoops) {
+	bool startInvariant = invariant(&initV, outerLoops);
+	bool stepInvariant = invariant(&stepV, outerLoops);
+	bool stopInvariant = invariant(&finalV, outerLoops);
         llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
         llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
         MPoly bL;
@@ -103,16 +108,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             pushAffine(affs, bounds.getInitialIVValue(), *bounds.getStepValue(),
                        bounds.getFinalIVValue(), outerLoops);
             llvm::Value *step = bounds.getStepValue();
+            llvm::Value *start = &bounds.getInitialIVValue();
+	    llvm::Value *stop = &bounds.getFinalIVValue();
+
             if (!invariant(step, outerLoops)) {
                 tree.emplace_back(LP, numOuter);
                 return;
             }
-            auto &start = bounds.getInitialIVValue();
-            auto &stop = bounds.getFinalIVValue();
-
+            
             llvm::errs() << "\nloop bounds: " << start << " : " << *step
                          << " : " << stop << "\n";
-
+	    
         } else {
             // TODO: check if reachable; if not we can safely ignore
             // TODO: insert unoptimizable op representing skipped loop?
@@ -122,7 +128,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             // a volatile barrier.
             tree.emplace_back(LP, numOuter);
             return;
-            // continue;
             // Alt TODO: insert a remark
             // return llvm::PreservedAnalyses::all();
         }
