@@ -2,13 +2,13 @@
 #include "bipartite.hpp"
 #include "math.hpp"
 #include "symbolics.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <limits>
+#include <llvm/ADT/SmallVector.h>
 #include <tuple>
 
 intptr_t saturatedAdd(intptr_t a, intptr_t b) {
@@ -195,12 +195,11 @@ struct PartiallyOrderedSet {
             Interval ik = delta[k + iOff];
             Interval jk = delta[k + jOff];
             // j - i = (j - k) - (i - k)
-	    /*
-	    std::cout << "i: " << i << "; j: " << j << "; k: " << k << std::endl;
-	    std::cout << "ji: " << ji << std::endl;
-	    std::cout << "jk: " << jk << std::endl;
-	    std::cout << "ik: " << ik << std::endl;
-	    */
+            /*
+            std::cout << "i: " << i << "; j: " << j << "; k: " << k <<
+            std::endl; std::cout << "ji: " << ji << std::endl; std::cout << "jk:
+            " << jk << std::endl; std::cout << "ik: " << ik << std::endl;
+            */
             auto [jkt, ikt] = ji.restrictSub(jk, ik);
             delta[k + iOff] = ikt;
             delta[k + jOff] = jkt;
@@ -293,23 +292,25 @@ struct PartiallyOrderedSet {
         }
         return itv;
     }
-    Interval asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
+    Interval
+    asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
         return asInterval(t.exponent) * t.coefficient;
     }
 
-    bool knownGreaterEqual(Polynomial::Monomial &x, Polynomial::Monomial &y) const {
+    bool knownGreaterEqual(Polynomial::Monomial &x,
+                           Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
         Matrix<bool, 0, 0> bpGraph(M, N);
-	for (size_t n = 0; n < N; ++n) {
-	    for (size_t m = 0; m < M; ++m) {
+        for (size_t n = 0; n < N; ++n) {
+            for (size_t m = 0; m < M; ++m) {
                 bpGraph(m, n) =
                     (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
                         .lowerBound >= 0;
             }
         }
         auto [matches, matchR] = maxBipartiteMatch(bpGraph);
-	// matchR.size() == N
+        // matchR.size() == N
         // matchR maps ys to xs
         if (matches < M) {
             if (matches < N) {

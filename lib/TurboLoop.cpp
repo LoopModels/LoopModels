@@ -1,31 +1,30 @@
 #include "../include/TurboLoop.hpp"
-#include "llvm/ADT/APInt.h"
-#include "llvm/ADT/DepthFirstIterator.h"
-#include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/Analysis/LoopInfo.h"
-#include "llvm/Analysis/LoopNestAnalysis.h"
-#include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/InstrTypes.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/IntrinsicInst.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/Passes/PassBuilder.h"
-#include "llvm/Passes/PassPlugin.h"
-#include "llvm/Support/Casting.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/Scalar/LoopRotation.h"
-#include "llvm/Transforms/Utils/LoopSimplify.h"
-#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
+#include <llvm/ADT/APInt.h>
+#include <llvm/ADT/DepthFirstIterator.h>
+#include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/LoopInfo.h>
+#include <llvm/Analysis/LoopNestAnalysis.h>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/IntrinsicInst.h>
+#include <llvm/IR/PassManager.h>
+#include <llvm/Passes/PassBuilder.h>
+#include <llvm/Passes/PassPlugin.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Scalar/IndVarSimplify.h>
+#include <llvm/Transforms/Scalar/LoopRotation.h>
 #include <llvm/Transforms/Utils/LCSSA.h>
+#include <llvm/Transforms/Utils/LoopSimplify.h>
 #include <llvm/Transforms/Utils/LoopUtils.h>
+#include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
 // representation, suitable for more aggressive analysis. However, the remaining
@@ -125,14 +124,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // DL = &llvm::DataLayout(F.getParent());
     // DL = &F.getParent()->getDataLayout();
 
-    llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
-                                "index_canonicalization");
+    // llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
+    //                             "index_canonicalization");
     llvm::SmallVector<
         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
         outerLoops;
     llvm::SmallVector<Affine, 8> affs;
     for (llvm::Loop *LP : *LI) {
-        descend(tree, outerLoops, affs, LP, DT, rewriter);
+        descend(tree, outerLoops, affs, LP, DT);
         outerLoops.clear();
         affs.clear();
     }
@@ -258,7 +257,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
     }
     */
-    return llvm::PreservedAnalyses::all();
+    return llvm::PreservedAnalyses::none();
+    // return llvm::PreservedAnalyses::all();
 }
 bool PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                        llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) {

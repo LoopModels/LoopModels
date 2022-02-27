@@ -1,7 +1,5 @@
 #pragma once
 #include "math.hpp"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -10,6 +8,8 @@
 #include <istream>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 #include <ostream>
 #include <string>
 
@@ -106,15 +106,15 @@ bool remove(BitSet &s, size_t x) {
     return contained;
 }
 
-std::ostream &operator<<(std::ostream &os, BitSet const &x){
+std::ostream &operator<<(std::ostream &os, BitSet const &x) {
     os << "BitSet[";
-    if (x.length){
-	auto it = x.begin();
-	os << std::to_string(*it);
-	++it;
-	for (; it != x.end(); ++it){
-	    os << ", " << *it;
-	}
+    if (x.length) {
+        auto it = x.begin();
+        os << std::to_string(*it);
+        ++it;
+        for (; it != x.end(); ++it) {
+            os << ", " << *it;
+        }
     }
     os << "]";
     return os;

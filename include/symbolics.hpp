@@ -1,7 +1,5 @@
 #pragma once
 #include "math.hpp"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <bit>
 #include <compare>
@@ -10,6 +8,8 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 #include <math.h>
 #include <string>
 #include <tuple>
@@ -36,7 +36,6 @@ template <typename TRC> auto cnegate(TRC &&x) {
 // template <typename T> T cnegate(T &x){ return negate(x); }
 // template <typename T> T cnegate(T const &x){ return negate(x); }
 // template <typename T> T cnegate(T &&x){ return negate(x); }
-
 
 // template <typename T> bool isZero(T x) { return x.isZero(); }
 bool isZero(intptr_t x) { return x == 0; }

@@ -1,6 +1,6 @@
 #pragma once
-#include "llvm/ADT/SmallVector.h"
 #include <iostream>
+#include <llvm/ADT/SmallVector.h>
 #include <vector>
 
 template <typename T> void show_vector(T const &x) {
@@ -21,7 +21,7 @@ template <typename T> void show(std::vector<T> const &x) { show_vector(x); }
 template <typename T> void show(llvm::SmallVector<T> const &x) {
     show_vector(x);
 }
-template <typename T, unsigned N> void show(llvm::SmallVector<T,N> const &x) {
+template <typename T, unsigned N> void show(llvm::SmallVector<T, N> const &x) {
     show_vector(x);
 }
 void show(auto x) { std::cout << x; }

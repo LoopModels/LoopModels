@@ -5,14 +5,13 @@
 #include "./loops.hpp"
 #include "./math.hpp"
 #include "./symbolics.hpp"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/SmallSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include <bit>
 #include <bitset>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/IR/BasicBlock.h>
@@ -670,8 +669,7 @@ struct Term {
     Term(llvm::Loop *LP, size_t loopNestId)
         : op(LP), loopNestId(loopNestId),
           loopDeps(std::numeric_limits<uint32_t>::max()) {
-	// TODO: walk to add all srcs and dsts to the sources and destinations
-	
+        // TODO: walk to add all srcs and dsts to the sources and destinations
     }
 };
 

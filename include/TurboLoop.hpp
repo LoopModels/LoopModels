@@ -4,22 +4,32 @@
 #include "loops.hpp"
 #include "poset.hpp"
 #include "tree.hpp"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/IR/Constant.h"
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/PassManager.h"
-#include "llvm/Support/Casting.h"
+#include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/Constant.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/PassManager.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Casting.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+
+static bool isKnownOne(llvm::Value *x) {
+    if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
+        return constInt->isOne();
+    } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x)) {
+        return constVal->isOneValue();
+    }
+    return false;
+}
 
 // requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
@@ -41,14 +51,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // if it equals depth, then we must place it into the inner most loop
     // header..
     static size_t invariant(
-        llvm::Value *V,
+        llvm::Value &V,
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
             4> const &LPS) {
         size_t depth = LPS.size();
         for (auto LP = LPS.rbegin(); LP != LPS.rend(); ++LP) {
             bool changed = false;
-            bool invariant = LP->first->makeLoopInvariant(V, changed);
+            bool invariant = LP->first->makeLoopInvariant(&V, changed);
             if (!(changed | invariant)) {
                 return depth;
             }
@@ -56,31 +66,38 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return 0;
     }
-    // we need unit step size
-    void canonicalizeStep() {}
+
+    // // we need unit step size
+    // void canonicalizeStep(llvm::Value *initV,
+    //     llvm::Value *stepV, llvm::Value *finalV) {
+
+    // 	return;
+    // }
     // this can result in unfavorable rotations in canonicalizing the starting
     // index to 0 so we rely on orthogonalizing indices later. Supporting
     // orthogonalization is needed anyway, as loops may have originally been
     // written in an unfavorable way.
+    // returns `true` if it failed.
     void pushAffine(
-        llvm::SmallVector<Affine, 8> &affs, llvm::Value *initV,
-        llvm::Value *stepV, llvm::Value *finalV,
+        llvm::SmallVector<Affine, 8> &affs, llvm::Value &initV,
+        llvm::Value &finalV,
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
             4> const &outerLoops,
-        llvm::Loop *LP, llvm::SCEVExpander &rewriter) {
+        llvm::Loop *LP) {
 
         size_t startInvariant = invariant(initV, outerLoops);
-        size_t stepInvariant = invariant(stepV, outerLoops);
         size_t stopInvariant = invariant(finalV, outerLoops);
 
         llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
         llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
         MPoly bL;
         MPoly bU;
+
         if (llvm::ConstantInt *stepConst =
                 llvm::dyn_cast<llvm::ConstantInt>(stepV)) {
             if (!(stepConst->isOne())) {
+                // stepConst->getValue();
                 // divide by const
                 size_t defLevel = std::max(startInvariant, stopInvariant);
                 llvm::BasicBlock *startStopPre;
@@ -90,44 +107,40 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     startStopPre =
                         outerLoops[defLevel].first->getLoopPreheader();
                 }
-                auto stopSCEV = SE->getSCEV(finalV);
-		llvm::Value* len = rewriter.expandCodeFor(
-                    SE->getAddExpr(
-                        SE->getUDivExpr(SE->getMinusSCEV(stopSCEV,
-                                                         SE->getSCEV(initV),
-                                                         llvm::SCEV::FlagNUW),
-                                        SE->getSCEV(stepV)),
-                        SE->getOne(stopSCEV->getType())),
-                    stopSCEV->getType(), startStopPre->getTerminator());
-		
-                // llvm::IRBuilder<> Builder(startStopPre);
-                // auto len = Builder.CreateSDiv(Builder.CreateSub(finalV,
+                // auto stopSCEV = SE->getSCEV(finalV);
+                // llvm::Value *len = rewriter.expandCodeFor(
+                //     SE->getAddExpr(
+                //         SE->getUDivExpr(SE->getMinusSCEV(stopSCEV,
+                //                                          SE->getSCEV(initV),
+                //                                          llvm::SCEV::FlagNUW),
+                //                         SE->getSCEV(stepV)),
+                //         SE->getOne(stopSCEV->getType())),
+                //     stopSCEV->getType(), startStopPre->getTerminator());
+
+                llvm::IRBuilder<> Builder(startStopPre);
+                llvm::Value *len = Builder.CreateNSWAdd(
+                    Builder.CreateSDiv(Builder.CreateNSWSub(finalV, initV),
+                                       stepV),
+                    llvm::ConstantInt::get(finalV->getType(), 1));
+                // Now that we have the length
+                // we must create a new phi initialized at 0
+                // then insert a new break/latch, replacing old
+                // then replace all uses of old phi with mul/step
+
                 // initV),
-                //                               stepConst);
             }
         } else {
         }
-        // if (llvm::ConstantInt *const &stepConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(stepV)) {
-        //     if (!(stepConst->isOne())){
-        // 	// llvm::IRBuilder<> Builder;
-        // 	// Builder.CreateSDiv
-        //     }
-        // } else {
+	if (llvm::ConstantInt *initConst = llvm::dyn_cast<llvm::ConstantInt>(&initV)){
+	    
+	} else {
 
-        // }
-        // if (llvm::ConstantInt *const &initConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(initV)) {
+	}
+	if (llvm::ConstantInt *finalConst = llvm::dyn_cast<llvm::ConstantInt>(&finalV)){
+	    
+	} else {
 
-        // } else {
-
-        // }
-        // if (llvm::ConstantInt *const &finalConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(finalV)) {
-
-        // } else {
-
-        // }
+	}
     }
     void descend(
         Tree &tree,
@@ -135,7 +148,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
             &outerLoops,
         llvm::SmallVector<Affine, 8> &affs, llvm::Loop *LP,
-        llvm::DominatorTree &DT, llvm::SCEVExpander &rewriter) {
+        llvm::DominatorTree &DT) {
         size_t numOuter = outerLoops.size();
         if (LP->isLCSSAForm(DT)) {
             // we check for LCSSA form as we'd like to assume it
@@ -143,20 +156,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 LP->getBounds(*SE);
             if (boundsRoot.hasValue()) {
                 llvm::Loop::LoopBounds &bounds = boundsRoot.getValue();
-                pushAffine(affs, &bounds.getInitialIVValue(),
-                           bounds.getStepValue(), &bounds.getFinalIVValue(),
-                           outerLoops, LP, rewriter);
-                llvm::Value *step = bounds.getStepValue();
-                llvm::Value *start = &bounds.getInitialIVValue();
-                llvm::Value *stop = &bounds.getFinalIVValue();
+                // TODO: write separate pass for canonicalizing steps to 1
+                if (isKnownOne(bounds.getStepValue())) {
+                    pushAffine(affs, bounds.getInitialIVValue(),
+                               bounds.getFinalIVValue(),
+                               outerLoops, LP);
+                    llvm::Value *start = &bounds.getInitialIVValue();
+                    llvm::Value *stop = &bounds.getFinalIVValue();
 
-                if (!invariant(step, outerLoops)) {
-                    tree.emplace_back(LP, numOuter);
-                    return;
+                    llvm::errs()
+                        << "\nloop bounds: " << start << " : " << stop << "\n";
                 }
-
-                llvm::errs() << "\nloop bounds: " << start << " : " << *step
-                             << " : " << stop << "\n";
             }
         }
         // TODO: check if reachable; if not we can safely ignore
