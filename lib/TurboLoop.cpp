@@ -17,12 +17,15 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar/LoopRotation.h"
 #include "llvm/Transforms/Utils/LoopSimplify.h"
+#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/Transforms/Scalar/IndVarSimplify.h>
 #include <llvm/Transforms/Utils/LCSSA.h>
+#include <llvm/Transforms/Utils/LoopUtils.h>
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
 // representation, suitable for more aggressive analysis. However, the remaining
@@ -103,8 +106,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         llvm::errs() << *Call << "\n";
     }
     // llvm::TargetLibraryInfo &TLI =
-    // FAM.getResult<llvm::TargetLibraryAnalysis>(F); llvm::DominatorTree &DT =
-    // FAM.getResult<llvm::DominatorTreeAnalysis>(F); llvm::TargetTransformInfo
+    // FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+    llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+    // llvm::TargetTransformInfo
     // &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
     // llvm::TargetTransformInfo &TTI =
     // FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
@@ -117,12 +121,18 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // FAM.getResult<llvm::TargetTransformInfo>(F);
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+    // DL = &FAM.getResult<llvm::DataLayout>(F);
+    // DL = &llvm::DataLayout(F.getParent());
+    // DL = &F.getParent()->getDataLayout();
+
+    llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
+                                "index_canonicalization");
     llvm::SmallVector<
         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
         outerLoops;
     llvm::SmallVector<Affine, 8> affs;
     for (llvm::Loop *LP : *LI) {
-        descend(tree, outerLoops, affs, LP);
+        descend(tree, outerLoops, affs, LP, DT, rewriter);
         outerLoops.clear();
         affs.clear();
     }
