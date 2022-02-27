@@ -1,5 +1,6 @@
 #pragma once
 #include "bitsets.hpp"
+#include "ir.hpp"
 #include "math.hpp"
 #include "poset.hpp"
 #include "symbolics.hpp"
@@ -960,7 +961,23 @@ struct AffineLoopNestPerm {
             b0.subtractUpdate((*kAff)[nkb - 1], Akj);
         }
     }
-
+    // returns `true` if orthogonalization succeeded.
+    bool orthogonalize(ArrayRef& ai, size_t loop0, size_t loop1){
+	// need to construct matrix `A` of relationship
+	// B*L = I
+	// where L are the loop induct variables, and I are the array indices
+	// e.g., if we have `C[i + j, j]`, then
+	// B = [1 1; 0 1]
+	// additionally, the loop is defined by the bounds
+	// A*L = A*(B\^-1 * I) <= r
+	// assuming that `B` is an invertible integer matrix,
+	// which we can check via `lufact(B)`, and confirming that
+	// the determinant == 1 or determinant == -1.
+	// If so, we can then use the lufactorizationm for computing
+	// A/B, to get loop bounds in terms of the indexes.
+	return false;
+    }
+    
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNestPerm &alnp) {
         for (size_t i = 0; i < alnp.getNumLoops(); ++i) {

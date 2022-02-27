@@ -37,104 +37,10 @@ template <typename TRC> auto cnegate(TRC &&x) {
 // template <typename T> T cnegate(T const &x){ return negate(x); }
 // template <typename T> T cnegate(T &&x){ return negate(x); }
 
-struct Rational {
-    intptr_t numerator;
-    intptr_t denominator;
-
-    Rational() = default;
-    Rational(intptr_t coef) : numerator(coef), denominator(1){};
-    Rational(intptr_t n, intptr_t d) : numerator(n), denominator(d){};
-
-    Rational operator+(Rational y) const {
-        auto [xd, yd] = divgcd(denominator, y.denominator);
-        return Rational{numerator * yd + y.numerator * xd, denominator * yd};
-    }
-    Rational &operator+=(Rational y) {
-        auto [xd, yd] = divgcd(denominator, y.denominator);
-        numerator = numerator * yd + y.numerator * xd;
-        denominator = denominator * yd;
-        return *this;
-    }
-    Rational operator-(Rational y) const {
-        auto [xd, yd] = divgcd(denominator, y.denominator);
-        return Rational{numerator * yd - y.numerator * xd, denominator * yd};
-    }
-    Rational &operator-=(Rational y) {
-        auto [xd, yd] = divgcd(denominator, y.denominator);
-        numerator = numerator * yd - y.numerator * xd;
-        denominator = denominator * yd;
-        return *this;
-    }
-    Rational operator*(Rational y) const {
-        auto [xn, yd] = divgcd(numerator, y.denominator);
-        auto [xd, yn] = divgcd(denominator, y.numerator);
-        return Rational{xn * yn, xd * yd};
-    }
-    Rational &operator*=(Rational y) {
-        auto [xn, yd] = divgcd(numerator, y.denominator);
-        auto [xd, yn] = divgcd(denominator, y.numerator);
-        numerator = xn * yn;
-        denominator = xd * yd;
-        return *this;
-    }
-    Rational inv() const {
-        bool positive = numerator > 0;
-        return Rational{positive ? denominator : -denominator,
-                        positive ? numerator : -numerator};
-    }
-    Rational operator/(Rational y) const { return (*this) * y.inv(); }
-    Rational operator/=(Rational y) { return (*this) *= y.inv(); }
-    bool operator==(Rational y) const {
-        return (numerator == y.numerator) & (denominator == y.denominator);
-    }
-    bool operator!=(Rational y) const {
-        return (numerator != y.numerator) | (denominator != y.denominator);
-    }
-    bool operator<(Rational y) const {
-        return (numerator * y.denominator) < (y.numerator * denominator);
-    }
-    bool operator<=(Rational y) const {
-        return (numerator * y.denominator) <= (y.numerator * denominator);
-    }
-    bool operator>(Rational y) const {
-        return (numerator * y.denominator) > (y.numerator * denominator);
-    }
-    bool operator>=(Rational y) const {
-        return (numerator * y.denominator) >= (y.numerator * denominator);
-    }
-
-    operator double() { return numerator / denominator; }
-    friend bool isZero(Rational x) { return x.numerator == 0; }
-    friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
-    bool isInteger() const { return denominator == 1; }
-    void negate() { ::negate(numerator); }
-
-    friend std::ostream &operator<<(std::ostream &os, const Rational &x) {
-        os << x.numerator;
-        if (x.denominator != 1) {
-            os << " // " << x.denominator;
-        }
-        return os;
-    }
-    void dump() const { std::cout << *this << std::endl; }
-};
 
 // template <typename T> bool isZero(T x) { return x.isZero(); }
 bool isZero(intptr_t x) { return x == 0; }
 bool isZero(size_t x) { return x == 0; }
-
-Rational gcd(Rational x, Rational y) {
-    intptr_t a = x.numerator * y.denominator;
-    intptr_t b = x.denominator * y.numerator;
-    intptr_t n = std::gcd(a, b);
-    intptr_t d = x.denominator * y.denominator;
-    if ((d != 1) & (n != 0)) {
-        intptr_t g = std::gcd(n, d);
-        n /= g;
-        d /= g;
-    }
-    return n ? Rational{n, d} : Rational{1, 0};
-}
 
 template <typename T, typename S> void addTerm(T &a, S &&x) {
     if (!isZero(x)) {

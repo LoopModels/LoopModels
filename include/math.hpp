@@ -8,6 +8,7 @@
 #include <iostream>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <numeric>
 #include <string>
@@ -556,8 +557,20 @@ template <typename T> struct SquareMatrix {
         T *p = data.data() + i * M;
         return llvm::ArrayRef<T>(p, M);
     }
+    // returns the inverse, followed by bool where true means failure
 };
 
+std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
+    size_t M = A.M;
+    SquareMatrix<intptr_t> B = SquareMatrix<intptr_t>(M);
+    for (size_t n = 0; n < M; ++n) {
+        for (size_t m = 0; m < M; ++m) {
+            B(m, n) = m == n;
+        }
+    }
+
+    return std::make_pair(B, false);
+}
 // template <typename T> struct StrideMatrix {
 //     T *ptr;
 //     size_t M;
@@ -931,4 +944,176 @@ template <typename T> std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
         }
     }
     return std::make_pair(i, max);
+}
+
+template <int Bits, class T>
+constexpr bool is_int_v =
+    sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&std::is_signed_v<T>;
+
+template <class T> inline __int128_t widen(T x) requires is_int_v<64, T> {
+    return x;
+}
+template <class T> inline int64_t splitInt(T x) requires is_int_v<32, T> {
+    return x;
+}
+
+struct Rational {
+    intptr_t numerator;
+    intptr_t denominator;
+
+    Rational() = default;
+    Rational(intptr_t coef) : numerator(coef), denominator(1){};
+    Rational(intptr_t n, intptr_t d) : numerator(n), denominator(d){};
+
+    llvm::Optional<Rational> operator+(Rational y) const {
+        auto [xd, yd] = divgcd(denominator, y.denominator);
+        intptr_t a, b, n, d;
+        bool o1 = __builtin_mul_overflow(numerator, yd, &a);
+        bool o2 = __builtin_mul_overflow(y.numerator, xd, &b);
+        bool o3 = __builtin_mul_overflow(denominator, yd, &d);
+        bool o4 = __builtin_add_overflow(a, b, &n);
+        if ((o1 | o2) | (o3 | o4)) {
+            return llvm::Optional<Rational>();
+        } else {
+            return Rational{n, d};
+        }
+    }
+    /*
+    Rational &operator+=(Rational y) {
+        llvm::Optional<Rational> a = *this + y;
+        assert(a.hasValue());
+        *this = a.getValue();
+        return *this;
+    }
+    */
+    llvm::Optional<Rational> operator-(Rational y) const {
+        auto [xd, yd] = divgcd(denominator, y.denominator);
+        intptr_t a, b, n, d;
+        bool o1 = __builtin_mul_overflow(numerator, yd, &a);
+        bool o2 = __builtin_mul_overflow(y.numerator, xd, &b);
+        bool o3 = __builtin_mul_overflow(denominator, yd, &d);
+        bool o4 = __builtin_sub_overflow(a, b, &n);
+        if ((o1 | o2) | (o3 | o4)) {
+            return llvm::Optional<Rational>();
+        } else {
+            return Rational{n, d};
+        }
+    }
+    /*
+    Rational &operator-=(Rational y) {
+        llvm::Optional<Rational> a = *this - y;
+        assert(a.hasValue());
+        *this = a.getValue();
+        return *this;
+    }
+    */
+    llvm::Optional<Rational> operator*(Rational y) const {
+        auto [xn, yd] = divgcd(numerator, y.denominator);
+        auto [xd, yn] = divgcd(denominator, y.numerator);
+        intptr_t n, d;
+        bool o1 = __builtin_mul_overflow(xn, yn, &n);
+        bool o2 = __builtin_mul_overflow(xd, yd, &d);
+        if (o1 | o2) {
+            return llvm::Optional<Rational>();
+        } else {
+            return Rational{n, d};
+        }
+    }
+    /*
+    Rational &operator*=(Rational y) {
+        auto [xn, yd] = divgcd(numerator, y.denominator);
+        auto [xd, yn] = divgcd(denominator, y.numerator);
+        numerator = xn * yn;
+        denominator = xd * yd;
+        return *this;
+    }
+    */
+    Rational inv() const {
+        return Rational{denominator, numerator};
+        // bool positive = numerator > 0;
+        // return Rational{positive ? denominator : -denominator,
+        //                 positive ? numerator : -numerator};
+    }
+    llvm::Optional<Rational> operator/(Rational y) const {
+        return (*this) * y.inv();
+    }
+    // Rational operator/=(Rational y) { return (*this) *= y.inv(); }
+    operator double() { return numerator / denominator; }
+
+    bool operator==(Rational y) const {
+        return (numerator == y.numerator) & (denominator == y.denominator);
+    }
+    bool operator!=(Rational y) const {
+        return (numerator != y.numerator) | (denominator != y.denominator);
+    }
+    bool operator<(Rational y) const {
+        return (widen(numerator) * widen(y.denominator)) <
+               (widen(y.numerator) * widen(denominator));
+    }
+    bool operator<=(Rational y) const {
+        return (widen(numerator) * widen(y.denominator)) <=
+               (widen(y.numerator) * widen(denominator));
+    }
+    bool operator>(Rational y) const {
+        return (widen(numerator) * widen(y.denominator)) >
+               (widen(y.numerator) * widen(denominator));
+    }
+    bool operator>=(Rational y) const {
+        return (widen(numerator) * widen(y.denominator)) >=
+               (widen(y.numerator) * widen(denominator));
+    }
+
+    friend bool isZero(Rational x) { return x.numerator == 0; }
+    friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
+    bool isInteger() const { return denominator == 1; }
+    void negate() { numerator = -numerator; }
+
+    friend std::ostream &operator<<(std::ostream &os, const Rational &x) {
+        os << x.numerator;
+        if (x.denominator != 1) {
+            os << " // " << x.denominator;
+        }
+        return os;
+    }
+    void dump() const { std::cout << *this << std::endl; }
+};
+
+
+llvm::Optional<Rational> gcd(Rational x, Rational y) {
+    return Rational{
+	std::gcd(x.numerator, y.numerator),
+	std::lcm(x.denominator, y.denominator)
+    };
+}
+
+// returns the lu factorization of `intptr_t` matrix B if it can be computed
+// without overflow.
+llvm::Optional<SquareMatrix<Rational>> lufact(SquareMatrix<intptr_t> &B){
+    size_t M = B.M;
+    SquareMatrix<Rational> A  = SquareMatrix<Rational>(M);
+    for (size_t m = 0; m < M*M; ++m){
+	A[m] = B[m];
+    }
+    for (size_t k = 0; k < M; ++k){
+	Rational Akkinv = A(k,k).inv();
+	for (size_t i = k+1; i < M; ++i){
+	    if (llvm::Optional<Rational> Aik = A(i,k) * Akkinv){
+		A(i,k) = Aik.getValue();
+	    } else {
+		return llvm::Optional<SquareMatrix<Rational>>();
+	    }
+	}
+	for (size_t j = k+1; j < M; ++j){
+	    for (size_t i = k+1; i < M; ++i){
+		if (llvm::Optional<Rational> Aikj = A(i,k)*A(k,j)){
+		    if (llvm::Optional<Rational> Aij = A(i,j) - Aikj.getValue()){
+			A(i,j) = Aij.getValue();
+			continue;
+		    }
+		}
+		return llvm::Optional<SquareMatrix<Rational>>();
+	    }
+	}
+    }
+    return A;
 }
