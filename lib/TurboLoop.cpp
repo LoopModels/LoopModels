@@ -265,6 +265,7 @@ bool PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
     if (Name == "turbo-loop") {
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
+        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(UnitStepPass()));
         FPM.addPass(TurboLoopPass());
         return true;
     }

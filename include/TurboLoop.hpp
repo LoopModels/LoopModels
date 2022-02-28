@@ -93,7 +93,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
         MPoly bL;
         MPoly bU;
-
+        /*
         if (llvm::ConstantInt *stepConst =
                 llvm::dyn_cast<llvm::ConstantInt>(stepV)) {
             if (!(stepConst->isOne())) {
@@ -131,6 +131,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             }
         } else {
         }
+        */
 	if (llvm::ConstantInt *initConst = llvm::dyn_cast<llvm::ConstantInt>(&initV)){
 	    
 	} else {

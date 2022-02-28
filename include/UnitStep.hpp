@@ -4,11 +4,14 @@
 #include "loops.hpp"
 #include "poset.hpp"
 #include "tree.hpp"
+#include "llvm/IR/BasicBlock.h"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/Analysis/LoopInfo.h>
+#include <llvm/Analysis/MemorySSA.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -20,181 +23,123 @@
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Transforms/Scalar/LoopPassManager.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
-// requires `isRecursivelyLCSSAForm`
-class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
+// requires `isLCSSAForm`
+// UnitStepPass is a LoopPass
+class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
   public:
-    llvm::PreservedAnalyses run(llvm::Function &F,
-                                llvm::FunctionAnalysisManager &AM);
-    ValueToPosetMap valueToPosetMap;
-    PartiallyOrderedSet poset;
-    Tree tree;
-    // llvm::AssumptionCache *AC;
-    const llvm::TargetLibraryInfo *TLI;
-    const llvm::TargetTransformInfo *TTI;
-    llvm::LoopInfo *LI;
-    llvm::ScalarEvolution *SE;
-    // const llvm::DataLayout *DL;
-    unsigned registerCount;
+    llvm::PreservedAnalyses run(llvm::Loop &L, llvm::LoopAnalysisManager &,
+                                llvm::LoopStandardAnalysisResults &AR,
+                                llvm::LPMUpdater &) {
 
-    // returns index to the loop whose preheader we place it in.
-    // if it equals depth, then we must place it into the inner most loop
-    // header..
-    static size_t invariant(
-        llvm::Value *V,
-        llvm::SmallVector<
-            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
-            4> const &LPS) {
-        size_t depth = LPS.size();
-        for (auto LP = LPS.rbegin(); LP != LPS.rend(); ++LP) {
-            bool changed = false;
-            bool invariant = LP->first->makeLoopInvariant(V, changed);
-            if (!(changed | invariant)) {
-                return depth;
-            }
-            depth--;
-        }
-        return 0;
-    }
-    // // we need unit step size
-    // void canonicalizeStep(llvm::Value *initV,
-    //     llvm::Value *stepV, llvm::Value *finalV) {
-	
-    // 	return;
-    // }
-    // this can result in unfavorable rotations in canonicalizing the starting
-    // index to 0 so we rely on orthogonalizing indices later. Supporting
-    // orthogonalization is needed anyway, as loops may have originally been
-    // written in an unfavorable way.
-    // returns `true` if it failed.
-    bool pushAffine(
-        llvm::SmallVector<Affine, 8> &affs, llvm::Value *initV,
-        llvm::Value *stepV, llvm::Value *finalV,
-        llvm::SmallVector<
-            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
-            4> const &outerLoops,
-        llvm::Loop *LP, llvm::SCEVExpander &rewriter) {
-
-        size_t startInvariant = invariant(initV, outerLoops);
-        size_t stepInvariant = invariant(stepV, outerLoops);
-        size_t stopInvariant = invariant(finalV, outerLoops);
-
-        llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
-        llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
-        MPoly bL;
-        MPoly bU;
-        if (llvm::ConstantInt *stepConst =
-                llvm::dyn_cast<llvm::ConstantInt>(stepV)) {
-            if (!(stepConst->isOne())) {
-		return true;
-		// stepConst->getValue();
-                // divide by const
-                size_t defLevel = std::max(startInvariant, stopInvariant);
-                llvm::BasicBlock *startStopPre;
-                if (defLevel == outerLoops.size()) {
-                    startStopPre = LP->getLoopPreheader();
-                } else {
-                    startStopPre =
-                        outerLoops[defLevel].first->getLoopPreheader();
-                }
-                // auto stopSCEV = SE->getSCEV(finalV);
-                // llvm::Value *len = rewriter.expandCodeFor(
-                //     SE->getAddExpr(
-                //         SE->getUDivExpr(SE->getMinusSCEV(stopSCEV,
-                //                                          SE->getSCEV(initV),
-                //                                          llvm::SCEV::FlagNUW),
-                //                         SE->getSCEV(stepV)),
-                //         SE->getOne(stopSCEV->getType())),
-                //     stopSCEV->getType(), startStopPre->getTerminator());
-
-                llvm::IRBuilder<> Builder(startStopPre);
-                llvm::Value *len = Builder.CreateNSWAdd(
-                    Builder.CreateSDiv(Builder.CreateNSWSub(finalV, initV),
-                                       stepV),
-                    llvm::ConstantInt::get(finalV->getType(), 1));
-		// Now that we have the length
-		// we must create a new phi initialized at 0
-		// then insert a new break/latch, replacing old
-		// then replace all uses of old phi with mul/step
-		
-                // initV),
-            }
+        if (toUnitStep(L, AR)) {
+            // taken from llvm/Transforms/Scalar/IndVarsimplify.h
+            auto PA = llvm::getLoopPassPreservedAnalyses();
+            PA.preserveSet<llvm::CFGAnalyses>();
+            if (AR.MSSA)
+                PA.preserve<llvm::MemorySSAAnalysis>();
+            return PA;
         } else {
-	    return true;
+            return llvm::PreservedAnalyses::all();
         }
-        // if (llvm::ConstantInt *const &stepConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(stepV)) {
-        //     if (!(stepConst->isOne())){
-        // 	// llvm::IRBuilder<> Builder;
-        // 	// Builder.CreateSDiv
-        //     }
-        // } else {
-
-        // }
-        // if (llvm::ConstantInt *const &initConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(initV)) {
-
-        // } else {
-
-        // }
-        // if (llvm::ConstantInt *const &finalConst =
-        //         llvm::dyn_cast<llvm::ConstantInt *>(finalV)) {
-
-        // } else {
-
-        // }
-	return false;
     }
-    void descend(
-        Tree &tree,
-        llvm::SmallVector<
-            std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
-            &outerLoops,
-        llvm::SmallVector<Affine, 8> &affs, llvm::Loop *LP,
-        llvm::DominatorTree &DT, llvm::SCEVExpander &rewriter) {
-        size_t numOuter = outerLoops.size();
-        if (LP->isLCSSAForm(DT)) {
-            // we check for LCSSA form as we'd like to assume it
-            llvm::Optional<llvm::Loop::LoopBounds> boundsRoot =
-                LP->getBounds(*SE);
-            if (boundsRoot.hasValue()) {
-                llvm::Loop::LoopBounds &bounds = boundsRoot.getValue();
-		if (bounds.getStepValue()
-                pushAffine(affs, &bounds.getInitialIVValue(),
-                           bounds.getStepValue(), &bounds.getFinalIVValue(),
-                           outerLoops, LP, rewriter);
-                llvm::Value *step = bounds.getStepValue();
-                llvm::Value *start = &bounds.getInitialIVValue();
-                llvm::Value *stop = &bounds.getFinalIVValue();
 
-                if (!invariant(step, outerLoops)) {
-                    tree.emplace_back(LP, numOuter);
-                    return;
+  private:
+    static bool isConstantIntZero(llvm::Value *x) {
+        if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(x)) {
+            return c->isZero();
+        }
+        return false;
+    }
+    bool toUnitStep(llvm::Loop &L, llvm::LoopStandardAnalysisResults &AR) {
+        if (!L.isLoopSimplifyForm()) {
+            return false;
+        }
+        llvm::errs() << "Before replacement:\n"
+                     << L << "\nPreHeader:\n" << *L.getLoopPreheader() << "\nHeader:" << *L.getHeader() << "\n\n";
+        // llvm::Function *F = L.getHeader()->getParent();
+        // const llvm::DataLayout &DL = F->getParent()->getDataLayout();
+
+        auto oldIV = L.getInductionVariable(AR.SE);
+        // auto oldCmp = L.getLatchCmpInst();
+        // we check isLoopSimplifyForm, so there is only one latch
+        llvm::BasicBlock *latch = L.getLoopLatch();
+        llvm::BranchInst *oldBI =
+            llvm::cast<llvm::BranchInst>(latch->getTerminator());
+        llvm::Optional<llvm::Loop::LoopBounds> boundsRoot =
+            llvm::Loop::LoopBounds::getBounds(L, *oldIV, AR.SE);
+        if (boundsRoot.hasValue()) {
+            llvm::Loop::LoopBounds &bounds = boundsRoot.getValue();
+            // auto pred
+            llvm::Value *step = bounds.getStepValue();
+            if (llvm::ConstantInt *stepConst =
+                    llvm::dyn_cast<llvm::ConstantInt>(step)) {
+                if (stepConst->isOne()) {
+                    return false;
                 }
-
-                llvm::errs() << "\nloop bounds: " << start << " : " << *step
-                             << " : " << stop << "\n";
             }
-        }
-        // TODO: check if reachable; if not we can safely ignore
-        // TODO: insert unoptimizable op representing skipped loop?
-        // The concern is we want some understanding of the dependencies
-        // between the unoptimized block and optimized block, in case
-        // we want to move loops around. Otherwise, this is basically
-        // a volatile barrier.
-        tree.emplace_back(LP, numOuter);
-        return;
-        // Alt TODO: insert a remark
-        // return llvm::PreservedAnalyses::all();
-        // llvm::LoopNest LN = llvm::LoopNest(*LP, SE);
-        // size_t nestDepth = LN.getNestDepth();
-
-        for (auto *B : LP->getBlocks()) {
-            std::cout << "Basic block:\n";
-            for (auto &I : *B) {
-                llvm::errs() << I << "\n";
+            // If we're here, then we have non-unit step.
+            llvm::Value *init = &bounds.getInitialIVValue();
+            llvm::Value *finl = &bounds.getFinalIVValue();
+            llvm::BasicBlock *preHeader = L.getLoopPreheader();
+            llvm::IRBuilder<> preHeaderBuilder(preHeader->getTerminator());
+            // we now want to transform the loop to
+            // init = 0;
+            // step = 1;
+            // final = (oldFinal - oldInit) / oldStep + 1
+            // oldIV = newIV * oldStep + oldInit
+            llvm::Value *exitCount = preHeaderBuilder.CreateSDiv(
+                preHeaderBuilder.CreateNSWSub(finl, init), step);
+            //llvm::Value *tripCount = preHeaderBuilder.CreateNSWAdd(
+            //    exitCount, llvm::ConstantInt::get(exitCount->getType(), 1));
+            // our new loop will be
+            // for (auto newIV = 0; newIV != tripCount; ++newIV){
+            //   oldIV = newIV*oldStep + oldInit;
+            //   ...
+            // }
+            // llvm::BasicBlock *header = L.getHeader();
+            llvm::IRBuilder<> headerBuilder(oldIV);
+            auto *newIV =
+                headerBuilder.CreatePHI(exitCount->getType(), 2, "newIndVar");
+            // newIV->setIncomingValue(
+            //     0, llvm::ConstantInt::get(exitCount->getType(), 0));
+            // newIV->setIncomingBlock(0, preHeader);
+            newIV->addIncoming(llvm::ConstantInt::get(exitCount->getType(), 0),
+                               preHeader);
+            // 3 + x - 3
+            // 3 - 3 + x
+            llvm::Value *replacementIV;
+            if (isConstantIntZero(init)) {
+                replacementIV = headerBuilder.CreateNSWMul(newIV, step);
+            } else {
+                replacementIV = headerBuilder.CreateNSWAdd(
+                    headerBuilder.CreateNSWMul(newIV, step), init);
             }
+            // from IndVarSimplify.cpp
+            llvm::ICmpInst::Predicate P;
+            if (L.contains(oldBI->getSuccessor(0)))
+                P = llvm::ICmpInst::ICMP_NE;
+            else
+                P = llvm::ICmpInst::ICMP_EQ;
+            llvm::IRBuilder<> latchBuilder(oldBI);
+            auto toCmp = latchBuilder.CreateNSWAdd(
+                newIV, llvm::ConstantInt::get(newIV->getType(), 1),
+                "incIndVar");
+            newIV->addIncoming(toCmp, latch);
+            auto newCmp = latchBuilder.CreateICmp(P, newIV, exitCount);
+            // Now, we must delete clean up some old cold.
+            // 1. Remove the old branch instruction.
+            // 2. Remove the old compare instruction, if it has no remaining
+            // uses.
+            // 3. replace all uses of oldIV with replacementIV
+            oldBI->setCondition(newCmp);
+            oldIV->replaceAllUsesWith(replacementIV);
+            oldIV->eraseFromParent();
+            llvm::errs() << "After replacement PreHeader:\n" << *preHeader << "\nHeader:\n" << *L.getHeader();
+            // oldCmp->replaceAllUsesWith(newCmp);
         }
+        return false;
     }
 };
