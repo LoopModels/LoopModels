@@ -1,9 +1,9 @@
 #pragma once
 
-#include "integerMap.hpp"
-#include "loops.hpp"
-#include "poset.hpp"
-#include "tree.hpp"
+#include "IntegerMap.hpp"
+#include "Loops.hpp"
+#include "POSet.hpp"
+#include "Tree.hpp"
 #include "llvm/IR/BasicBlock.h"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>

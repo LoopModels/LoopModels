@@ -1,7 +1,8 @@
 #pragma once
-#include "bipartite.hpp"
-#include "math.hpp"
-#include "symbolics.hpp"
+
+#include "./Bipartite.hpp"
+#include "./Math.hpp"
+#include "./Symbolics.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>

@@ -1,5 +1,5 @@
 #pragma once
-#include "math.hpp"
+#include "./Math.hpp"
 #include <algorithm>
 #include <bit>
 #include <compare>

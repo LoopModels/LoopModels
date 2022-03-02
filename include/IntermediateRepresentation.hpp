@@ -1,11 +1,11 @@
 #pragma once
 
-#include "./arrayreference.hpp"
-#include "./bitsets.hpp"
-#include "./graphs.hpp"
-#include "./loops.hpp"
-#include "./math.hpp"
-#include "./symbolics.hpp"
+#include "./ArrayReference.hpp"
+#include "./BitSets.hpp"
+#include "./Graphs.hpp"
+#include "./Loops.hpp"
+#include "./Math.hpp"
+#include "./Symbolics.hpp"
 #include <bit>
 #include <bitset>
 #include <cstddef>

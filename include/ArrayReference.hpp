@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./math.hpp"
-#include "./symbolics.hpp"
+#include "./Math.hpp"
+#include "./Symbolics.hpp"
 
 // Stride terms are sorted based on VarID
 // NOTE: we require all Const sources be folded into the Affine, and their ids
