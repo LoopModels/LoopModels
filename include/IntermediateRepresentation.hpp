@@ -406,20 +406,6 @@ template <typename T> std::pair<size_t, size_t> findMaxLength(VoVoV<T> x) {
     return std::make_pair(j, v);
 }
 
-std::ostream &operator<<(std::ostream &os, ArrayRef const &ar) {
-    os << "ArrayRef " << ar.arrayID << ":" << std::endl;
-    for (size_t i = 0; i < length(ar.inds); ++i) {
-        auto [ind, src] = ar.inds[i];
-        os << "(" << ind << ") "
-           << "i_" << src.id << " (" << src.getType() << ")";
-        if (i + 1 < length(ar.inds)) {
-            os << " +";
-        }
-        os << std::endl;
-    }
-    return os;
-}
-
 //
 // An instriction is a compute operation like '+', '*', '/', '<<', '&', ...
 // These will typically map to a single CPU instruction.
@@ -455,6 +441,24 @@ struct Term {
 std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
     return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
+}
+
+llvm::Optional<AffineLoopNestPerm>
+orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &ai) {
+    // need to construct matrix `A` of relationship
+    // B*L = I
+    // where L are the loop induct variables, and I are the array indices
+    // e.g., if we have `C[i + j, j]`, then
+    // B = [1 1; 0 1]
+    // additionally, the loop is defined by the bounds
+    // A*L = A*(B\^-1 * I) <= r
+    // assuming that `B` is an invertible integer matrix,
+    // which we can check via `lufact(B)`, and confirming that
+    // the determinant == 1 or determinant == -1.
+    // If so, we can then use the lufactorizationm for computing
+    // A/B, to get loop bounds in terms of the indexes.
+
+    return llvm::Optional<AffineLoopNestPerm>();
 }
 
 /*

@@ -215,7 +215,7 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 // i1 == i2
 // j1 * M + ...
 
-struct ArrayRef {
+struct ArrayReference {
     size_t arrayID;
     llvm::SmallVector<
         std::pair<Polynomial::Multivariate<intptr_t, Polynomial::Monomial>,
@@ -225,3 +225,18 @@ struct ArrayRef {
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
 };
+
+std::ostream &operator<<(std::ostream &os, ArrayReference const &ar) {
+    os << "ArrayReference " << ar.arrayID << ":" << std::endl;
+    for (size_t i = 0; i < length(ar.inds); ++i) {
+        auto [ind, src] = ar.inds[i];
+        os << "(" << ind << ") "
+           << "i_" << src.id << " (" << src.getType() << ")";
+        if (i + 1 < length(ar.inds)) {
+            os << " +";
+        }
+        os << std::endl;
+    }
+    return os;
+}
+
