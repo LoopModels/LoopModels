@@ -1,9 +1,10 @@
 #pragma once
-#include "bitsets.hpp"
-#include "ir.hpp"
-#include "math.hpp"
-#include "poset.hpp"
-#include "symbolics.hpp"
+#include "./arrayreference.hpp"
+#include "./bitsets.hpp"
+#include "./ir.hpp"
+#include "./math.hpp"
+#include "./poset.hpp"
+#include "./symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>

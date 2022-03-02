@@ -1,6 +1,6 @@
 #pragma once
-#include "./math.hpp"
 #include "./ir.hpp"
+#include "./math.hpp"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -8,18 +8,21 @@
 #include <tuple>
 #include <variant>
 
-
 struct Tree {
-    llvm::SmallVector<std::unique_ptr<std::variant<Tree,Term>>> branches;
+    llvm::SmallVector<
+        std::unique_ptr<std::variant<std::pair<Tree, llvm::Loop *>, Term>>>
+        branches;
 
     auto begin() { return branches.begin(); }
     auto end() { return branches.end(); }
     auto begin() const { return branches.begin(); }
     auto end() const { return branches.end(); }
-    void emplace_back(llvm::Loop *LP, size_t numOuter){
-	std::unique_ptr<std::variant<Tree,Term>> p = std::make_unique<std::variant<Tree,Term>>();
-	*p = Term(LP, numOuter);
-	branches.push_back(std::move(p));
+    void emplace_back(llvm::Loop *LP, size_t numOuter) {
+        std::unique_ptr<std::variant<std::pair<Tree, llvm::Loop *>, Term>> p =
+            std::make_unique<
+                std::variant<std::pair<Tree, llvm::Loop *>, Term>>();
+        *p = Term(LP, numOuter);
+        branches.push_back(std::move(p));
     }
 };
 
@@ -63,7 +66,7 @@ struct Tree {
 // //   8 0 9 7 1 2 3 4 5 6 ] // op num
 // // offsets:
 // // [ 0 3 9 10 10
-// //   0 1 2  2  3  
+// //   0 1 2  2  3
 // // offets[0, 0] : offsets[0, 1]
 // // [0 : 3)
 // // offsets[0,2] : offsets[0,3]
@@ -74,7 +77,7 @@ struct Tree {
 //     size_t depth;
 //     size_t numLeaves;
 //     size_t stride;
-// 
+//
 //     struct Iterator;
 //     Iterator begin();
 //     size_t end() { return breadth; };
@@ -84,9 +87,9 @@ struct Tree {
 //     llvm::SmallVector<T,0> data;
 //     Tree<T> tree;
 // };
-// 
+//
 // // index with `i`, returning the sub-tree...
-// // 
+// //
 // template <typename T>
 // std::pair<llvm::ArrayRef<T>, Tree<T>> subTree(Tree<T> t, size_t i) {
 // #ifndef DONOTBOUNDSCHECK
@@ -96,7 +99,7 @@ struct Tree {
 // #endif
 //     size_t base = t.offsets[i];
 //     size_t len = t.offsets[i + 1] - base;
-//     
+//
 //     llvm::ArrayRef<T> v = llvm::ArrayRef<T>(t.ptr + base, len);
 //     Tree<T> ts = Tree<T>{
 //         .ptr = t.ptr + t.stride,
@@ -108,12 +111,12 @@ struct Tree {
 //     };
 //     return std::make_pair(v, ts);
 // }
-// 
+//
 // template <typename T> struct Tree<T>::Iterator {
 //     Tree<T> tree;
 //     size_t position;
 //     bool dobreak;
-// 
+//
 //     std::tuple<size_t, llvm::ArrayRef<T>, Tree<T>> operator*() {
 //         auto [v, t] = subTree(tree, position);
 //         dobreak = length(v) == 0;
@@ -123,7 +126,7 @@ struct Tree {
 //         ++position;
 //         return *this;
 //     }
-// 
+//
 //     bool operator!=(size_t x) {
 //         return ((!dobreak) & (x != position));
 //     } // false means stop
@@ -137,11 +140,11 @@ struct Tree {
 //         return dobreak | (x.position == position);
 //     }
 // };
-// 
+//
 // template <typename T> typename Tree<T>::Iterator Tree<T>::begin() {
 //     return Tree<T>::Iterator{*this, 0, false};
 // }
-// 
+//
 // // Look up the position of an element in a tree.
 // struct InvTree { // basically, a depth x breadth matrix
 //     size_t *ptr;
@@ -161,12 +164,12 @@ struct Tree {
 //         return llvm::ArrayRef<size_t>(ptr + j * depth, depth);
 //     }
 // };
-// 
+//
 // struct IndexTree {
 //     size_t *ptr;
 //     size_t breadth; // number of terms
 //     size_t depth;   // number of loops + 1
-// 
+//
 //     operator Tree<size_t>() {
 //         size_t *ptrOffsets = ptr + breadth * depth;
 //         return Tree<size_t>{ptr, ptrOffsets, breadth, depth, breadth};
@@ -176,7 +179,7 @@ struct Tree {
 //         return InvTree{ptrInvTree, breadth, depth};
 //     }
 // };
-// 
+//
 // void fillInvTree(Tree<size_t> t, InvTree it, size_t depth = 0) {
 //     size_t nextDepth = depth + 1;
 //     for (Tree<size_t>::Iterator I = t.begin(); I != t.end(); ++I) {

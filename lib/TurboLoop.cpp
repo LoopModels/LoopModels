@@ -120,12 +120,36 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // FAM.getResult<llvm::TargetTransformInfo>(F);
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-    // DL = &FAM.getResult<llvm::DataLayout>(F);
-    // DL = &llvm::DataLayout(F.getParent());
     // DL = &F.getParent()->getDataLayout();
 
     // llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
     //                             "index_canonicalization");
+
+    // Semantically, we will allow hoisting "noreturn" branches to be earlier.
+    // We build a model that allows for multiple loops at the root level, so we
+    // can consider fusing them. Obviously, branches pose a problem. If control
+    // flow from one isn't guaranteed to reach another, there's no sense trying
+    // to fuse. On the other hand, loop guards themselves are branches, but we
+    // do not consider them to pose a problem for fusion in general.
+    //
+    // So, the plan here is to walk the function by basic blocks.
+    // For each basic block, we check if it is in a loop. If so, we add that
+    // loop to the internal representation.
+    // If now, we continue parsing and adding until we get to branches.
+    // Then, we need to classify them as either as acceptable loop guards, or
+    // as indeterminate control flow that'd make fusion non-viable.
+    // In case of the latter, we can generate code, clear our internal representation,
+    // and then continue walking. We could also consider splitting.
+    //
+    // Or, perhaps, have/use a graphical representation.
+    // Or, perhaps our tree type should include guard information, and we consider
+    // dominance between (guards present) ? loop guards : loop preheaders
+    //
+    // I think for now, stick with the tree structure. No real reason to not add
+    // all loops at once.
+    // You can make more decisions here when it comes time to start considering fusion.
+    // Just store the original Loop* within the tree.
+    // Then, we can use the basic blocks and DT for relevant CFG info.
     llvm::SmallVector<
         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
         outerLoops;
