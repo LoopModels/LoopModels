@@ -443,6 +443,15 @@ std::pair<size_t, size_t> getLoopId(Term t) {
     return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
 }
 
+size_t addUniqueIndRow(SquareMatrix<intptr_t> &A, const Stride &axis, size_t j){
+    for (auto &a : axis){
+        const MPoly &m = a.first;
+        VarID v = a.second;
+	
+    }
+    return j;
+}
+
 llvm::Optional<AffineLoopNestPerm>
 orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &ai) {
     // need to construct matrix `A` of relationship
@@ -457,7 +466,18 @@ orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &
     // the determinant == 1 or determinant == -1.
     // If so, we can then use the lufactorizationm for computing
     // A/B, to get loop bounds in terms of the indexes.
-
+    //
+    size_t numLoops = aln.getNumLoops();
+    SquareMatrix<intptr_t> A(numLoops);
+    for (size_t i = 0; i < numLoops*numLoops; ++i){
+	A[i] = 0;
+    }
+    size_t j = 0;
+    for (auto a : ai){
+	for (auto &ind : (*a)){
+            j = addUniqueIndRow(A, ind, j);
+	}
+    }
     return llvm::Optional<AffineLoopNestPerm>();
 }
 

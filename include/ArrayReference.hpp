@@ -8,13 +8,9 @@
 // set identically. thus, `getCount(VarType::Constant)` must always return
 // either `0` or `1`.
 struct Stride {
-    Polynomial::Multivariate<intptr_t, Polynomial::Monomial> stride;
+    MPoly stride;
     // sources must be ordered
-    llvm::SmallVector<
-        std::pair<Polynomial::Multivariate<intptr_t, Polynomial::Monomial>,
-                  VarID>,
-        1>
-        indices;
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> indices;
     uint8_t counts[5];
     // size_t constCount;
     // size_t indCount;
@@ -217,13 +213,13 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 
 struct ArrayReference {
     size_t arrayID;
-    llvm::SmallVector<
-        std::pair<Polynomial::Multivariate<intptr_t, Polynomial::Monomial>,
-                  VarID>,
-        ArrayRefPreAllocSize>
-        inds;
+    llvm::SmallVector<std::pair<MPoly, VarID>, ArrayRefPreAllocSize> inds;
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
+    auto begin() { return axes.begin(); }
+    auto end() { return axes.end(); }
+    auto begin() const { return axes.begin(); }
+    auto end() const { return axes.end(); }
 };
 
 std::ostream &operator<<(std::ostream &os, ArrayReference const &ar) {
@@ -239,4 +235,3 @@ std::ostream &operator<<(std::ostream &os, ArrayReference const &ar) {
     }
     return os;
 }
-
