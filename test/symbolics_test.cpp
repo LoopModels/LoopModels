@@ -1,6 +1,6 @@
-#include "../include/math.hpp"
-#include "../include/show.hpp"
-#include "../include/symbolics.hpp"
+#include "../include/Math.hpp"
+#include "../include/Show.hpp"
+#include "../include/Symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>

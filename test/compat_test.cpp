@@ -1,5 +1,5 @@
-#include "../include/loops.hpp"
-#include "../include/math.hpp"
+#include "../include/Loops.hpp"
+#include "../include/Math.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>

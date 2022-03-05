@@ -4,7 +4,7 @@
 #include "./graphs.hpp"
 #include "./ir.hpp"
 #include "./loops.hpp"
-#include "./math.hpp"
+#include "./Math.hpp"
 #include "symbolics.hpp"
 #include <algorithm>
 #include <compare>

@@ -1,5 +1,5 @@
-#include "../include/ir.hpp"
-#include "../include/math.hpp"
+#include "../include/IntermediateRepresentation.hpp"
+#include "../include/Math.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
 #include <cstdio>

@@ -1,6 +1,6 @@
 #pragma once
 #include "./ir.hpp"
-#include "./math.hpp"
+#include "./Math.hpp"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>

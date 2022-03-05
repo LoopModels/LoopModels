@@ -2,7 +2,7 @@
 
 #include "./graphs.hpp"
 #include "./ir.hpp"
-#include "./math.hpp"
+#include "./Math.hpp"
 #include "bitsets.hpp"
 #include <algorithm>
 #include <vector>

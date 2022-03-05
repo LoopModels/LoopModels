@@ -1,4 +1,4 @@
-#include "../include/poset.hpp"
+#include "../include/POSet.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
 

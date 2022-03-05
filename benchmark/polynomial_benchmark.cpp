@@ -1,4 +1,4 @@
-#include "../include/math.hpp"
+#include "../include/Math.hpp"
 #include "../include/symbolics.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>

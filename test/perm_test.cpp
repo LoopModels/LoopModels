@@ -1,4 +1,4 @@
-#include "../include/math.hpp"
+#include "../include/Math.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <gtest/gtest.h>

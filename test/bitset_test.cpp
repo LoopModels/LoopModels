@@ -1,5 +1,5 @@
-#include "../include/bitsets.hpp"
-#include "../include/math.hpp"
+#include "../include/BitSets.hpp"
+#include "../include/Math.hpp"
 #include <iostream>
 #include <gtest/gtest.h>
 
