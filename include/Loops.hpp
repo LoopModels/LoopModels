@@ -2,7 +2,6 @@
 
 #include "./ArrayReference.hpp"
 #include "./BitSets.hpp"
-#include "./IntermediateRepresentation.hpp"
 #include "./Math.hpp"
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"

@@ -2,10 +2,10 @@
 
 #include "./bitsets.hpp"
 #include "./graphs.hpp"
-#include "./ir.hpp"
+#include "./IntermediateRepresentation.hpp"
 #include "./loops.hpp"
 #include "./Math.hpp"
-#include "symbolics.hpp"
+#include "Symbolics.hpp"
 #include <algorithm>
 #include <compare>
 #include <cstddef>

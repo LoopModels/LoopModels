@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./graphs.hpp"
-#include "./ir.hpp"
+#include "./IntermediateRepresentation.hpp"
 #include "./Math.hpp"
 #include "bitsets.hpp"
 #include <algorithm>

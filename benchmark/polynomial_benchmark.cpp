@@ -1,5 +1,5 @@
 #include "../include/Math.hpp"
-#include "../include/symbolics.hpp"
+#include "../include/Symbolics.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <cstdint>

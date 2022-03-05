@@ -545,7 +545,7 @@ template <typename T> struct SquareMatrix {
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
-    std::pair<size_t, size_t> size() const { return std::make_pair<M, M>; }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, M); }
     size_t size(size_t) const { return M; }
     size_t length() const { return data.size(); }
 
@@ -637,7 +637,7 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     auto [m, n] = A.size();
     for (size_t i = 0; i < m - 1; i++) {
         for (size_t j = 0; j < n - 1; j++) {
-            os << A(i, j) << ", ";
+            os << A(i, j) << " ";
         }
         if (n) {
             os << A(i, n - 1);
@@ -646,7 +646,7 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     }
     if (m) {
         for (size_t j = 0; j < n - 1; j++) {
-            os << A(m - 1, j) << ", ";
+            os << A(m - 1, j) << " ";
         }
         if (n) {
             os << A(m - 1, n - 1);
@@ -706,6 +706,7 @@ struct Permutation {
 
     Permutation(size_t nloops) : data(PermutationData(nloops)) {
         assert(nloops <= MAX_NUM_LOOPS);
+        init();
     };
 
     unsigned &operator()(size_t i) { return data(i, 0); }
@@ -758,11 +759,11 @@ struct PermutationVector {
 
 std::ostream &operator<<(std::ostream &os, Permutation const &perm) {
     auto numloop = perm.getNumLoops();
-    os << "perm: <";
+    os << "perm: {";
     for (size_t j = 0; j < numloop - 1; j++) {
         os << perm(j) << " ";
     }
-    os << ">" << perm(numloop - 1);
+    os << perm(numloop - 1) << "}";
     return os;
 }
 /*
@@ -1128,8 +1129,8 @@ searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
     }
     return llvm::Optional<std::pair<size_t, size_t>>();
 }
-void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k, size_t i, size_t j,
-                size_t originalRows) {
+void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k,
+                size_t i, size_t j, size_t originalRows) {
     size_t N = A.size(0);
     if (k != j) {
         for (size_t r = k; r < originalRows; ++r) {
@@ -1143,8 +1144,8 @@ void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k, size_
         }
     }
 }
-std::pair<SquareMatrix<intptr_t>,Permutation> unimodularization(SquareMatrix<intptr_t> A,
-                                         size_t originalRows) {
+std::pair<SquareMatrix<intptr_t>, Permutation>
+unimodularization(SquareMatrix<intptr_t> A, size_t originalRows) {
     size_t N = A.size(0);
     // [1 x x x x]
     // [0 1 x x x]
@@ -1160,16 +1161,21 @@ std::pair<SquareMatrix<intptr_t>,Permutation> unimodularization(SquareMatrix<int
     // Plan A: permute rows and columns to get leading ones (which then zero
     // out the rest of the row before we search for the next 1).
     // for (size_t r = 0; r < originalRows; ++r){
-    for (size_t k = 0; k < originalRows; ++k) {
+    size_t k = 0;
+    for (; k < originalRows; ++k) {
         auto maybePivot = searchPivot(A, k, originalRows);
-        if (maybePivot) {
+        std::cout << "k: " << k << "; pivot: " << maybePivot.hasValue()
+                  << std::endl;
+        if (maybePivot.hasValue()) {
             auto [i, j] = maybePivot.getValue();
+            std::cout << "pivot: (" << i << ", " << j << ")\n";
             swapRowCol(A, permCol, k, i, j, originalRows);
+            std::cout << "A:\n" << A << std::endl;
         } else {
             // TODO: gcdx backup plan to find combination that produces 0
             // Then, given that fails, all hope is not lost, as we could add a
             // row that solves our problems.
-            assert(false && "No implemented");
+            break; // assert(false && "Not implemented");
         }
         // now reduce
         intptr_t Akk = A(k, k); // 1 or -1
@@ -1186,10 +1192,10 @@ std::pair<SquareMatrix<intptr_t>,Permutation> unimodularization(SquareMatrix<int
             A(i, j) = i == j;
         }
     }
-    if (originalRows < N - 1){
-    // second last row: 0 0 1 0
-    // means we need:   0 0 0 1
-        A(N-1,N-1) = 1;
+    if (originalRows < N - 1) {
+        // second last row: 0 0 1 0
+        // means we need:   0 0 0 1
+        A(N - 1, N - 1) = 1;
     } else if (originalRows == N) {
         // we confirmed it is unimodular...perhaps not the cheapest means
     } else {
@@ -1197,9 +1203,12 @@ std::pair<SquareMatrix<intptr_t>,Permutation> unimodularization(SquareMatrix<int
         // second last row: 0 0 1 x
         //                      a b
         // Must solve for a, b
-        A(N-1,N-1) = 1;
+        // loop from k+1 to N, solving 2x2 diagonal blocks for
+        // abs(det(...)) == 1.
+        // If remainder is odd, 1 at last position
+        A(N - 1, N - 1) = 1;
     }
-    return std::make_pair(A,permCol);
+    return std::make_pair(A, permCol);
 }
 
 // returns the lu factorization of `intptr_t` matrix B if it can be computed
