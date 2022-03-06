@@ -1,6 +1,6 @@
 #pragma once
-#include "./Math.hpp"
 #include "./LinearDiophantine.hpp"
+#include "./Math.hpp"
 
 llvm::Optional<std::pair<size_t, size_t>>
 searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
@@ -46,15 +46,152 @@ unimodularize2x3(intptr_t A00, intptr_t A01, intptr_t A02, intptr_t A10,
     intptr_t a = A01 * A12 - A02 * A11;
     return linearDiophantine(1, std::make_tuple(a, b, c));
 }
+
+llvm::Optional<std::pair<std::tuple<intptr_t, intptr_t, intptr_t>,
+                         std::tuple<intptr_t, intptr_t, intptr_t>>>
+unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
+    // we need to find a second row, we let x = 1
+    // we need
+    // 1 == gcd(b - a*y, c - a*z)
+    //intptr_t args[3];
+    if (std::gcd(b, c) == 1) {
+        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), intptr_t(0));
+        auto t2 = unimodularize2x3(a, b, c, 1, 0, 0);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    if (std::gcd(a, c) == 1) {
+        auto t1 = std::make_tuple(intptr_t(0), intptr_t(1), intptr_t(0));
+        auto t2 = unimodularize2x3(a, b, c, 0, 1, 0);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    if (std::gcd(a, b) == 1) {
+        auto t1 = std::make_tuple(intptr_t(0), intptr_t(0), intptr_t(1));
+        auto t2 = unimodularize2x3(a, b, c, 0, 0, 1);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    // just try [1, 0, 1], [1, 1, 0], and [0, 1, 1] as solutions
+    for (size_t i = 0; i < 3; ++i) {
+        auto t1 = std::make_tuple(intptr_t(i != 0), intptr_t(i != 1),
+                                  intptr_t(i != 2));
+        auto t2 = unimodularize2x3(a, b, c, i != 0, i != 1, i != 2);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    // can we solve b - a*y == 1?
+    auto opt0 = linearDiophantine(b - 1, std::make_tuple(a));
+    if (opt0.hasValue()) {
+        intptr_t y = std::get<0>(opt0.getValue());
+        auto t1 = std::make_tuple(intptr_t(1), y, intptr_t(0));
+        auto t2 = unimodularize2x3(a, b, c, 1, y, 0);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    // can we solve c - a*z == 1?
+    auto opt1 = linearDiophantine(c - 1, std::make_tuple(a));
+    if (opt1.hasValue()) {
+        intptr_t z = std::get<0>(opt1.getValue());
+        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), z);
+        auto t2 = unimodularize2x3(a, b, c, 1, 0, z);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    // can we solve (b - a*y) - (c - a*z) == 1?
+    //              c - b + 1 == a*(z-y)
+    auto opt2 = linearDiophantine(c - b + 1, std::make_tuple(a));
+    if (opt2.hasValue()) {
+        intptr_t z = std::get<0>(opt2.getValue()); // let y = 0, so z-y == z
+        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), z);
+        auto t2 = unimodularize2x3(a, b, c, 1, 0, z);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    // can we solve (c - a*z) - (b - a*y) == 1?
+    //              b - c + 1 == a*(y-z)
+    auto opt3 = linearDiophantine(c - b + 1, std::make_tuple(a));
+    if (opt3.hasValue()) {
+        intptr_t y = std::get<0>(opt3.getValue()); // let z = 0, so y-z == y
+        auto t1 = std::make_tuple(intptr_t(1), y, intptr_t(0));
+        auto t2 = unimodularize2x3(a, b, c, 1, y, 0);
+        if (t2.hasValue()) {
+            return std::make_pair(t1, t2.getValue());
+        }
+    }
+    return {};
+}
+
 llvm::Optional<std::tuple<intptr_t, intptr_t>> unimodularize1x2(intptr_t A00,
                                                                 intptr_t A01) {
     return linearDiophantine(1, A00, A01);
 }
 
-SquareMatrix<intptr_t> unimodularization(const SquareMatrix<intptr_t> &Aorig,
-                                         size_t originalRows) {
+llvm::Optional<SquareMatrix<intptr_t>>
+unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
+
+    size_t N = Aorig.size(0);
+    // special cases
+    if (N == originalRows) {
+        return Aorig;
+    } else if (originalRows == 0) {
+        SquareMatrix<intptr_t> A(N);
+        for (size_t r = 0; r < N; ++r) {
+            for (size_t c = 0; c < N; ++c) {
+                A(c, r) = r == c;
+            }
+        }
+    } else if (N == 2) {
+        // originalRows == 1
+        auto cd = unimodularize1x2(Aorig(0, 0), Aorig(0, 1));
+        if (cd.hasValue()) {
+            SquareMatrix<intptr_t> A = Aorig;
+            auto [c, d] = cd.getValue();
+            A(1, 0) = c;
+            A(1, 1) = d;
+        } else {
+            return {};
+        }
+    } else if (N == 3) {
+        if (originalRows == 1) {
+            auto r1r2 = unimodularize1x3(Aorig(0, 0), Aorig(0, 1), Aorig(0, 2));
+            if (r1r2.hasValue()) {
+                SquareMatrix<intptr_t> A = Aorig;
+                auto [r1, r2] = r1r2.getValue();
+                auto [x1, y1, z1] = r1;
+                A(1, 0) = x1;
+                A(1, 1) = y1;
+                A(1, 2) = z1;
+                auto [x2, y2, z2] = r2;
+                A(2, 0) = x2;
+                A(2, 1) = y2;
+                A(2, 2) = z2;
+            } else {
+                return {};
+            }
+        } else {
+            // originalRows == 2
+            auto r2 = unimodularize2x3(Aorig(0, 0), Aorig(0, 1), Aorig(0, 2),
+                                       Aorig(1, 0), Aorig(1, 1), Aorig(1, 2));
+            if (r2.hasValue()) {
+                SquareMatrix<intptr_t> A = Aorig;
+                auto [x, y, z] = r2.getValue();
+                A(2, 0) = x;
+                A(2, 1) = y;
+                A(2, 2) = z;
+            } else {
+                return {};
+            }
+        }
+    }
     SquareMatrix<intptr_t> A = Aorig;
-    size_t N = A.size(0);
     // [1 x x x x]
     // [0 1 x x x]
     // [0 0 1 x x]
@@ -132,5 +269,3 @@ SquareMatrix<intptr_t> unimodularization(const SquareMatrix<intptr_t> &Aorig,
     }
     return A;
 }
-
-

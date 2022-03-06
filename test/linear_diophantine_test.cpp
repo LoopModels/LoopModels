@@ -6,7 +6,7 @@
 #include <iostream>
 #include <random>
 
-TEST(UnimodularizationTest, BasicAssertions) {
+TEST(LinearDiophantineTest, BasicAssertions) {
     {
         std::vector perm{2, 3, 4};
         do {
