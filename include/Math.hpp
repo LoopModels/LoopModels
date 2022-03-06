@@ -79,7 +79,9 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
 }
 
 template <typename T>
-concept HasMul = requires(T t) { t.mul(t, t); };
+concept HasMul = requires(T t) {
+    t.mul(t, t);
+};
 
 // a and b are temporary, z stores the final results.
 template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
@@ -258,7 +260,9 @@ inline size_t length(V &v) {
 }
 
 template <typename T>
-concept HasEnd = requires(T t) { t.end(); };
+concept HasEnd = requires(T t) {
+    t.end();
+};
 
 template <HasEnd T> auto &last(T &x) { return *(x.end() - 1); }
 template <HasEnd T> auto &last(T const &x) { return *(x.end() - 1); }
@@ -720,6 +724,10 @@ struct Permutation {
     llvm::ArrayRef<unsigned> inv() { return data.getCol(1); }
 
     unsigned &inv(size_t j) { return data(j, 1); }
+    auto begin() { return data.begin(); }
+    auto end() { return data.begin() + data.size(0); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.begin() + data.size(0); }
 
     void init() {
         size_t numloops = getNumLoops();
@@ -876,18 +884,18 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
 // i == j == c0 // can tell from loop bounds this is impossible
 
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-std::tuple<size_t, size_t, size_t> gcdx(size_t a, size_t b) {
-    size_t old_r = a;
-    size_t r = b;
-    size_t old_s = 1;
-    size_t s = 0;
-    size_t old_t = 0;
-    size_t t = 1;
+template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
+    T old_r = a;
+    T r = b;
+    T old_s = 1;
+    T s = 0;
+    T old_t = 0;
+    T t = 1;
     while (r != 0) {
-        size_t quotient = old_r / r;
-        size_t r_temp = r;
-        size_t s_temp = s;
-        size_t t_temp = t;
+        T quotient = old_r / r;
+        T r_temp = r;
+        T s_temp = s;
+        T t_temp = t;
         r = old_r - quotient * r;
         s = old_s - quotient * s;
         t = old_t - quotient * t;
@@ -897,7 +905,7 @@ std::tuple<size_t, size_t, size_t> gcdx(size_t a, size_t b) {
     }
     // Solving for `t` at the end has 1 extra division, but lets us remove
     // the `t` updates in the loop:
-    // size_t t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
+    // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
     // For now, I'll favor forgoing the division.
     return std::make_tuple(old_r, old_s, old_t);
 }
@@ -906,59 +914,32 @@ template <int Bits, class T>
 constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
                            !std::is_signed_v<T>;
 
-template <class T>
-inline T zeroUpper(T x)
-requires is_uint_v<16, T>
-{
+template <class T> inline T zeroUpper(T x) requires is_uint_v<16, T> {
     return x & 0x00ff;
 }
-template <class T>
-inline T zeroLower(T x)
-requires is_uint_v<16, T>
-{
+template <class T> inline T zeroLower(T x) requires is_uint_v<16, T> {
     return x & 0xff00;
 }
-template <class T>
-inline T upperHalf(T x)
-requires is_uint_v<16, T>
-{
+template <class T> inline T upperHalf(T x) requires is_uint_v<16, T> {
     return x >> 8;
 }
 
-template <class T>
-inline T zeroUpper(T x)
-requires is_uint_v<32, T>
-{
+template <class T> inline T zeroUpper(T x) requires is_uint_v<32, T> {
     return x & 0x0000ffff;
 }
-template <class T>
-inline T zeroLower(T x)
-requires is_uint_v<32, T>
-{
+template <class T> inline T zeroLower(T x) requires is_uint_v<32, T> {
     return x & 0xffff0000;
 }
-template <class T>
-inline T upperHalf(T x)
-requires is_uint_v<32, T>
-{
+template <class T> inline T upperHalf(T x) requires is_uint_v<32, T> {
     return x >> 16;
 }
-template <class T>
-inline T zeroUpper(T x)
-requires is_uint_v<64, T>
-{
+template <class T> inline T zeroUpper(T x) requires is_uint_v<64, T> {
     return x & 0x00000000ffffffff;
 }
-template <class T>
-inline T zeroLower(T x)
-requires is_uint_v<64, T>
-{
+template <class T> inline T zeroLower(T x) requires is_uint_v<64, T> {
     return x & 0xffffffff00000000;
 }
-template <class T>
-inline T upperHalf(T x)
-requires is_uint_v<64, T>
-{
+template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
     return x >> 32;
 }
 
@@ -979,16 +960,10 @@ template <int Bits, class T>
 constexpr bool is_int_v =
     sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&std::is_signed_v<T>;
 
-template <class T>
-inline __int128_t widen(T x)
-requires is_int_v<64, T>
-{
+template <class T> inline __int128_t widen(T x) requires is_int_v<64, T> {
     return x;
 }
-template <class T>
-inline int64_t splitInt(T x)
-requires is_int_v<32, T>
-{
+template <class T> inline int64_t splitInt(T x) requires is_int_v<32, T> {
     return x;
 }
 
@@ -1116,99 +1091,6 @@ struct Rational {
 llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{std::gcd(x.numerator, y.numerator),
                     std::lcm(x.denominator, y.denominator)};
-}
-llvm::Optional<std::pair<size_t, size_t>>
-searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
-    size_t N = A.size(0);
-    for (size_t r = k; r < originalRows; ++r) {
-        for (size_t c = k; c < N; ++c) {
-            if (std::abs(A(r, c)) == 1) {
-                return std::make_pair(r, c);
-            }
-        }
-    }
-    return llvm::Optional<std::pair<size_t, size_t>>();
-}
-void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k,
-                size_t i, size_t j, size_t originalRows) {
-    size_t N = A.size(0);
-    if (k != j) {
-        for (size_t r = k; r < originalRows; ++r) {
-            std::swap(A(r, j), A(r, k));
-        }
-        permCol.swap(k, j);
-    }
-    if (k != i) {
-        for (size_t c = k; c < N; ++c) {
-            std::swap(A(i, c), A(k, c));
-        }
-    }
-}
-std::pair<SquareMatrix<intptr_t>, Permutation>
-unimodularization(SquareMatrix<intptr_t> A, size_t originalRows) {
-    size_t N = A.size(0);
-    // [1 x x x x]
-    // [0 1 x x x]
-    // [0 0 1 x x]
-    // [0 0 0 x x] the last originalRow
-    // [0 0 0 a b] solve the diophantine equation for `a` and `b`
-    // all but last row
-    Permutation permCol(N);
-    // Permutation permRow(N);
-    // We don't need to keep track of row permutations, as we only permute the
-    // original rows. Same goes for columns, but this means unpermuting would
-    // permute the added rows.
-    // Plan A: permute rows and columns to get leading ones (which then zero
-    // out the rest of the row before we search for the next 1).
-    // for (size_t r = 0; r < originalRows; ++r){
-    size_t k = 0;
-    for (; k < originalRows; ++k) {
-        auto maybePivot = searchPivot(A, k, originalRows);
-        std::cout << "k: " << k << "; pivot: " << maybePivot.hasValue()
-                  << std::endl;
-        if (maybePivot.hasValue()) {
-            auto [i, j] = maybePivot.getValue();
-            std::cout << "pivot: (" << i << ", " << j << ")\n";
-            swapRowCol(A, permCol, k, i, j, originalRows);
-            std::cout << "A:\n" << A << std::endl;
-        } else {
-            // TODO: gcdx backup plan to find combination that produces 0
-            // Then, given that fails, all hope is not lost, as we could add a
-            // row that solves our problems.
-            break; // assert(false && "Not implemented");
-        }
-        // now reduce
-        intptr_t Akk = A(k, k); // 1 or -1
-        for (size_t i = k + 1; i < originalRows; ++i) {
-            intptr_t scale = A(i, k) * Akk;
-            A(i, k) = 0;
-            for (size_t j = k + 1; j < N; ++j) {
-                A(i, j) -= scale * A(k, j);
-            }
-        }
-    }
-    for (size_t i = originalRows; i < N; ++i) {
-        for (size_t j = 0; j < N; ++j) {
-            A(i, j) = i == j;
-        }
-    }
-    if (originalRows < N - 1) {
-        // second last row: 0 0 1 0
-        // means we need:   0 0 0 1
-        A(N - 1, N - 1) = 1;
-    } else if (originalRows == N) {
-        // we confirmed it is unimodular...perhaps not the cheapest means
-    } else {
-        // solve linear diophantine for last row
-        // second last row: 0 0 1 x
-        //                      a b
-        // Must solve for a, b
-        // loop from k+1 to N, solving 2x2 diagonal blocks for
-        // abs(det(...)) == 1.
-        // If remainder is odd, 1 at last position
-        A(N - 1, N - 1) = 1;
-    }
-    return std::make_pair(A, permCol);
 }
 
 // returns the lu factorization of `intptr_t` matrix B if it can be computed
