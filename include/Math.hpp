@@ -13,6 +13,7 @@
 #include <numeric>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -558,6 +559,16 @@ template <typename T> struct SquareMatrix {
         return llvm::ArrayRef<T>(p, M);
     }
     // returns the inverse, followed by bool where true means failure
+
+    static SquareMatrix<T> identity(size_t N){
+	SquareMatrix<T> A(N);
+	for (size_t c = 0; c < N; ++c){
+	    for (size_t r = 0; r < N; ++r){
+		A(r,c) = (r == c);
+	    }
+	}
+	return A;
+    }
 };
 
 std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
@@ -667,6 +678,46 @@ std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
 template <typename T>
 std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
     return printMatrix(os, A);
+}
+
+template <typename A>
+concept IntMatrix = requires(A a) {
+    { a(size_t(0), size_t(0)) } -> std::same_as<intptr_t&>;
+
+    { a.size() } -> std::same_as<std::pair<size_t,size_t>>;
+    { a.size(0) } -> std::same_as<size_t>;
+};
+
+template <IntMatrix AM>
+void swapRows(AM &A, size_t i, size_t j) {
+    auto [M,N] = A.size();
+    if (i == j) {
+        return;
+    }
+    assert((i < M) & (j < M));
+    for (size_t n = 0; n < N; ++n) {
+        std::swap(A(i,n),A(j,n));
+    }
+}
+template <IntMatrix AM>
+void swapCols(AM &A, size_t i, size_t j) {
+    auto [M,N] = A.size();
+    if (i == j) {
+        return;
+    }
+    assert((i < N) & (j < N));
+    for (size_t m = 0; m < M; ++m) {
+        std::swap(A(m, i), A(m, j));
+    }
+}
+
+template <Integral T>
+T sign(T i){
+    if (i){
+	return i > 0 ? 1 : -1;
+    } else {
+	return 0;
+    }
 }
 
 // template <typename T>
