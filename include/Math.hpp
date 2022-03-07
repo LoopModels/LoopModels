@@ -415,6 +415,14 @@ template <typename T, size_t M, size_t N> struct Matrix {
     size_t length() const { return M * N; }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
+    bool operator==(const Matrix<T, M, N> &A) const {
+        for (size_t i = 0; i < M * N; ++i) {
+            if (data[i] != A[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
@@ -517,6 +525,14 @@ template <typename T> struct Matrix<T, 0, 0> {
         T *p = data.data() + i * M;
         return llvm::ArrayRef<T>(p, M);
     }
+    bool operator==(const Matrix<T, 0, 0> &A) const {
+        for (size_t i = 0; i < M * N; ++i) {
+            if (data[i] != A[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
 template <typename T, size_t M, size_t N>
@@ -525,6 +541,7 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
 }
 
 template <typename T> struct SquareMatrix {
+    typedef T eltype;
     llvm::SmallVector<T, 9> data;
     size_t M;
 
@@ -560,14 +577,14 @@ template <typename T> struct SquareMatrix {
     }
     // returns the inverse, followed by bool where true means failure
 
-    static SquareMatrix<T> identity(size_t N){
-	SquareMatrix<T> A(N);
-	for (size_t c = 0; c < N; ++c){
-	    for (size_t r = 0; r < N; ++r){
-		A(r,c) = (r == c);
-	    }
-	}
-	return A;
+    static SquareMatrix<T> identity(size_t N) {
+        SquareMatrix<T> A(N);
+        for (size_t c = 0; c < N; ++c) {
+            for (size_t r = 0; r < N; ++r) {
+                A(r, c) = (r == c);
+            }
+        }
+        return A;
     }
 };
 
@@ -681,27 +698,52 @@ std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
 }
 
 template <typename A>
-concept IntMatrix = requires(A a) {
-    { a(size_t(0), size_t(0)) } -> std::same_as<intptr_t&>;
+concept AbstractMatrix = requires(A a) {
+    {a(size_t(0), size_t(0))};
 
-    { a.size() } -> std::same_as<std::pair<size_t,size_t>>;
+    { a.size() } -> std::same_as<std::pair<size_t, size_t>>;
     { a.size(0) } -> std::same_as<size_t>;
 };
 
-template <IntMatrix AM>
-void swapRows(AM &A, size_t i, size_t j) {
-    auto [M,N] = A.size();
+template <typename A>
+concept IntMatrix = requires(A a) {
+    { a(size_t(0), size_t(0)) } -> std::same_as<intptr_t &>;
+
+    { a.size() } -> std::same_as<std::pair<size_t, size_t>>;
+    { a.size(0) } -> std::same_as<size_t>;
+};
+/*
+template<typename T, AbstractMatrix<T> A>
+constexpr bool isIntMatrix() { return std::is_same_v<intptr_t,T>(); }
+*/
+
+template <AbstractMatrix TA, AbstractMatrix TB> auto matmul(TA &A, TB &B) {
+    auto [M, K] = A.size();
+    auto [K2, N] = B.size();
+    assert(K == K2);
+    Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
+    for (size_t n = 0; n < N; ++n) {
+        for (size_t k = 0; k < K; ++k) {
+            for (size_t m = 0; m < M; ++m) {
+                C(m, n) += A(m, k) * B(k, n);
+            }
+        }
+    }
+    return C;
+}
+
+template <IntMatrix AM> void swapRows(AM &A, size_t i, size_t j) {
+    auto [M, N] = A.size();
     if (i == j) {
         return;
     }
     assert((i < M) & (j < M));
     for (size_t n = 0; n < N; ++n) {
-        std::swap(A(i,n),A(j,n));
+        std::swap(A(i, n), A(j, n));
     }
 }
-template <IntMatrix AM>
-void swapCols(AM &A, size_t i, size_t j) {
-    auto [M,N] = A.size();
+template <IntMatrix AM> void swapCols(AM &A, size_t i, size_t j) {
+    auto [M, N] = A.size();
     if (i == j) {
         return;
     }
@@ -711,12 +753,11 @@ void swapCols(AM &A, size_t i, size_t j) {
     }
 }
 
-template <Integral T>
-T sign(T i){
-    if (i){
-	return i > 0 ? 1 : -1;
+template <Integral T> T sign(T i) {
+    if (i) {
+        return i > 0 ? 1 : -1;
     } else {
-	return 0;
+        return 0;
     }
 }
 
@@ -1024,8 +1065,8 @@ struct Rational {
 
     Rational() = default;
     Rational(intptr_t coef) : numerator(coef), denominator(1){};
+    Rational(int coef) : numerator(coef), denominator(1){};
     Rational(intptr_t n, intptr_t d) : numerator(n), denominator(d){};
-
     llvm::Optional<Rational> operator+(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         intptr_t a, b, n, d;
@@ -1039,14 +1080,12 @@ struct Rational {
             return Rational{n, d};
         }
     }
-    /*
     Rational &operator+=(Rational y) {
         llvm::Optional<Rational> a = *this + y;
         assert(a.hasValue());
         *this = a.getValue();
         return *this;
     }
-    */
     llvm::Optional<Rational> operator-(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         intptr_t a, b, n, d;
@@ -1060,14 +1099,12 @@ struct Rational {
             return Rational{n, d};
         }
     }
-    /*
     Rational &operator-=(Rational y) {
         llvm::Optional<Rational> a = *this - y;
         assert(a.hasValue());
         *this = a.getValue();
         return *this;
     }
-    */
     llvm::Optional<Rational> operator*(Rational y) const {
         auto [xn, yd] = divgcd(numerator, y.denominator);
         auto [xd, yn] = divgcd(denominator, y.numerator);
@@ -1080,7 +1117,6 @@ struct Rational {
             return Rational{n, d};
         }
     }
-    /*
     Rational &operator*=(Rational y) {
         auto [xn, yd] = divgcd(numerator, y.denominator);
         auto [xd, yn] = divgcd(denominator, y.numerator);
@@ -1088,7 +1124,6 @@ struct Rational {
         denominator = xd * yd;
         return *this;
     }
-    */
     Rational inv() const {
         return Rational{denominator, numerator};
         // bool positive = numerator > 0;
@@ -1107,6 +1142,18 @@ struct Rational {
     bool operator!=(Rational y) const {
         return (numerator != y.numerator) | (denominator != y.denominator);
     }
+    bool isEqual(intptr_t y) const {
+        if (denominator == 1)
+            return (numerator == y);
+        else if (denominator == -1)
+            return (numerator == -y);
+        else
+            return false;
+    }
+    bool operator==(int y) const { return isEqual(y); }
+    bool operator==(intptr_t y) const { return isEqual(y); }
+    bool operator!=(int y) const { return !isEqual(y); }
+    bool operator!=(intptr_t y) const { return !isEqual(y); }
     bool operator<(Rational y) const {
         return (widen(numerator) * widen(y.denominator)) <
                (widen(y.numerator) * widen(denominator));
@@ -1144,38 +1191,4 @@ llvm::Optional<Rational> gcd(Rational x, Rational y) {
                     std::lcm(x.denominator, y.denominator)};
 }
 
-// returns the lu factorization of `intptr_t` matrix B if it can be computed
-// without overflow.
-// TODO: need pivoting!!!
-// llvm::Optional<std::pair<SquareMatrix<Rational>,llvm::SmallVector<size_t>>
-// lufact(SquareMatrix<intptr_t> &B) {
-llvm::Optional<SquareMatrix<Rational>> lufact(SquareMatrix<intptr_t> &B) {
-    size_t M = B.M;
-    SquareMatrix<Rational> A(M);
-    for (size_t m = 0; m < M * M; ++m) {
-        A[m] = B[m];
-    }
-    for (size_t k = 0; k < M; ++k) {
-        Rational Akkinv = A(k, k).inv();
-        for (size_t i = k + 1; i < M; ++i) {
-            if (llvm::Optional<Rational> Aik = A(i, k) * Akkinv) {
-                A(i, k) = Aik.getValue();
-            } else {
-                return llvm::Optional<SquareMatrix<Rational>>();
-            }
-        }
-        for (size_t j = k + 1; j < M; ++j) {
-            for (size_t i = k + 1; i < M; ++i) {
-                if (llvm::Optional<Rational> Aikj = A(i, k) * A(k, j)) {
-                    if (llvm::Optional<Rational> Aij =
-                            A(i, j) - Aikj.getValue()) {
-                        A(i, j) = Aij.getValue();
-                        continue;
-                    }
-                }
-                return llvm::Optional<SquareMatrix<Rational>>();
-            }
-        }
-    }
-    return A;
-}
+// template <IntMatrix AM>
