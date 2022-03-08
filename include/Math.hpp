@@ -326,7 +326,16 @@ template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
     Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
 
-    T &operator()(size_t i) const {
+    Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()) {};
+    Vector(llvm::SmallVector<T> &&A) : data(std::move(A)) {};
+    
+    T &operator()(size_t i) {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < data.size());
+#endif
+        return data[i];
+    }
+    const T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
         assert(i < data.size());
 #endif
@@ -489,56 +498,6 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
         return llvm::ArrayRef<T>(p, M);
     }
 };
-template <typename T> struct Matrix<T, 0, 0> {
-    llvm::SmallVector<T> data;
-
-    size_t M;
-    size_t N;
-
-    Matrix(size_t m, size_t n)
-        : data(llvm::SmallVector<T>(m * n)), M(m), N(n){};
-
-    T &operator()(size_t i, size_t j) {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T operator()(size_t i, size_t j) const {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
-    size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
-    size_t length() const { return data.size(); }
-    llvm::ArrayRef<T> getCol(size_t i) {
-        T *p = data.data() + i * M;
-        return llvm::ArrayRef<T>(p, M);
-    }
-    bool operator==(const Matrix<T, 0, 0> &A) const {
-        for (size_t i = 0; i < M * N; ++i) {
-            if (data[i] != A[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-};
-
-template <typename T, size_t M, size_t N>
-std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
-    return std::make_pair(size(A, 0), size(A, 1));
-}
 
 template <typename T> struct SquareMatrix {
     typedef T eltype;
@@ -599,6 +558,62 @@ std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
 
     return std::make_pair(B, false);
 }
+
+template <typename T> struct Matrix<T, 0, 0> {
+    llvm::SmallVector<T> data;
+
+    size_t M;
+    size_t N;
+
+    Matrix(size_t m, size_t n)
+        : data(llvm::SmallVector<T>(m * n)), M(m), N(n){};
+
+    Matrix(SquareMatrix<T> &&A) : data(std::move(A.data)), M(A.M), N(A.M){};
+    Matrix(const SquareMatrix<T> &A)
+        : data(A.data.begin(), A.data.end()), M(A.M), N(A.M){};
+
+    T &operator()(size_t i, size_t j) {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < N);
+#endif
+        return data[i + j * M];
+    }
+    T operator()(size_t i, size_t j) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+        assert(j < N);
+#endif
+        return data[i + j * M];
+    }
+    T &operator[](size_t i) { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
+    size_t size(size_t i) const { return i == 0 ? M : N; }
+    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
+    size_t length() const { return data.size(); }
+    llvm::ArrayRef<T> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return llvm::ArrayRef<T>(p, M);
+    }
+    bool operator==(const Matrix<T, 0, 0> &A) const {
+        for (size_t i = 0; i < M * N; ++i) {
+            if (data[i] != A[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+};
+
+template <typename T, size_t M, size_t N>
+std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
+    return std::make_pair(size(A, 0), size(A, 1));
+}
+
 // template <typename T> struct StrideMatrix {
 //     T *ptr;
 //     size_t M;
@@ -1066,7 +1081,7 @@ struct Rational {
     Rational() = default;
     Rational(intptr_t coef) : numerator(coef), denominator(1){};
     Rational(int coef) : numerator(coef), denominator(1){};
-    Rational(intptr_t n, intptr_t d) : numerator(n), denominator(d){};
+    Rational(intptr_t n, intptr_t d) : numerator(n), denominator(n ? d : 1){};
     llvm::Optional<Rational> operator+(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         intptr_t a, b, n, d;
@@ -1077,7 +1092,7 @@ struct Rational {
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
         } else {
-            return Rational{n, d};
+            return Rational{n, n ? d : 1};
         }
     }
     Rational &operator+=(Rational y) {
@@ -1096,7 +1111,7 @@ struct Rational {
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
         } else {
-            return Rational{n, d};
+            return Rational(n, d);
         }
     }
     Rational &operator-=(Rational y) {
@@ -1114,7 +1129,7 @@ struct Rational {
         if (o1 | o2) {
             return llvm::Optional<Rational>();
         } else {
-            return Rational{n, d};
+            return Rational(n, d);
         }
     }
     Rational &operator*=(Rational y) {
@@ -1125,7 +1140,14 @@ struct Rational {
         return *this;
     }
     Rational inv() const {
-        return Rational{denominator, numerator};
+	if (numerator < 0){
+	    // make sure we don't have overflow
+	    assert(denominator != std::numeric_limits<intptr_t>::min());
+	    return Rational{-denominator, -numerator};
+	} else {
+	    return Rational{denominator, numerator};
+	}
+        // return Rational{denominator, numerator};
         // bool positive = numerator > 0;
         // return Rational{positive ? denominator : -denominator,
         //                 positive ? numerator : -numerator};
