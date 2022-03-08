@@ -35,7 +35,6 @@ struct LUFact {
                 }
             }
         }
-	std::cout << "ldiv, after L \\ rhs:\n" << rhs << std::endl;
         // U x = y
 	for (size_t n = 0; n < N; ++n){
 	    for (intptr_t m = M-1; m >= 0; --m){
@@ -54,7 +53,6 @@ struct LUFact {
         //         }
         //     }
         // }
-	std::cout << "ldiv result:\n" << rhs << std::endl;
         return rhs;
     }
 
@@ -81,7 +79,6 @@ struct LUFact {
                 rhs(m, n) = (Ymn / F(n, n)).getValue();
             }
         }
-	std::cout << "rdiv, after rhs / U:\n" << rhs << std::endl;
         // x L = y
         for (intptr_t n = N-1; n >= 0; --n) {
         // for (size_t n = 0; n < N; ++n) {
@@ -102,7 +99,6 @@ struct LUFact {
             }
         }
 
-	std::cout << "rdiv result:\n" << rhs << std::endl;
         return rhs;
     }
 };
