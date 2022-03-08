@@ -46,14 +46,14 @@ namespace NormalForm {
 // 	return false;
 // }
 
-intptr_t searchRowPivot(const IntMatrix auto &A, size_t i) {
-    for (intptr_t k = i; k < intptr_t(A.size(0)); ++k) {
-        if (A(k, i)) {
-            return k;
-        }
-    }
-    return -1;
-}
+// intptr_t searchRowPivot(const IntMatrix auto &A, size_t i) {
+//     for (intptr_t k = i; k < intptr_t(A.size(0)); ++k) {
+//         if (A(k, i)) {
+//             return k;
+//         }
+//     }
+//     return -1;
+// }
 intptr_t searchColPivot(const IntMatrix auto &A, size_t i) {
     for (intptr_t k = i; k < intptr_t(A.size(1)); ++k) {
         if (A(i, k)) {
@@ -66,7 +66,7 @@ intptr_t searchColPivot(const IntMatrix auto &A, size_t i) {
 // permute the columns of A so that every principal minor of A is nonsingular;
 // do the corresponding row operations on K
 // returns true if rank deficient.
-bool permuteCols(Matrix<intptr_t, 0, 0> &A, SquareMatrix<intptr_t> &K) {
+bool permuteCols(IntMatrix auto &A, SquareMatrix<intptr_t> &K) {
     auto [M, N] = A.size();
     assert(N == K.size(0));
     const size_t minMN = std::min(M, N);
@@ -110,21 +110,37 @@ void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k) {
         }
     }
     for (size_t z = 0; z < k; ++z) {
+        // try to eliminate `A(k,z)`
         intptr_t Akz = A(k, z);
-        // std::cout << "Rem: " << Akz % Akk << std::endl;
-        intptr_t Akzkk = (Akz / Akk) + ((Akz % Akk) > 0);
+	intptr_t AkzOld = Akz;
+	// if Akk == 1, then this zeros out Akz
+	if (Akz){
+	    // we want positive but smaller subdiagonals
+	    // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we set
+	    // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+	    //        =   5 - 2*2 = 1
+	    // or if `Akz = -5, Akk = 2`, then in the loop below we get
+	    // A(k,z) = A(k,z) - ((A(k,z)/Akk)-1) * Akk
+	    //        =  -5 - (-3)*2 = = 6 - 5 = 1
+	    Akz /= Akk;
+	    if (Akz < 0){
+		Akz -= (AkzOld != (Akz * Akk));
+	    }
+	} else {
+	    continue;
+	}
         for (size_t i = 0; i < M; ++i) {
-            A(i, z) -= Akzkk * A(i, k);
-            K(i, z) -= Akzkk * K(i, k);
+            A(i, z) -= Akz * A(i, k);
+            K(i, z) -= Akz * K(i, k);
         }
         for (size_t i = M; i < N; ++i) {
-            K(i, z) -= Akzkk * K(i, k);
+            K(i, z) -= Akz * K(i, k);
         }
     }
 }
 
-llvm::Optional<std::pair<Matrix<intptr_t, 0, 0>, SquareMatrix<intptr_t>>>
-hermite(Matrix<intptr_t, 0, 0> A) {
+template <IntMatrix T>
+llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
     auto [M, N] = A.size();
     SquareMatrix<intptr_t> K = SquareMatrix<intptr_t>::identity(N);
     if (permuteCols(A, K)) {
