@@ -1,6 +1,33 @@
 #pragma once
 #include "./LinearDiophantine.hpp"
 #include "./Math.hpp"
+#include "./NormalForm.hpp"
+#include <cstddef>
+#include <cstdint>
+
+// function unimod_hnf(A)
+//     H, U = Matrix.(hnf_with_transform(MatrixSpace(ZZ, size(A')...)(A')))
+//     (isdiag(H) && all(isone, @views H[diagind(H)])) || return nothing
+//     [A; Int.(inv(U' .// 1))[size(A, 1)+1:end, :]]
+// end
+
+// if `A` can be unimodularized, returns the inverse of the unimodularized `A`
+llvm::Optional<SquareMatrix<intptr_t>>
+unimodularize(Matrix<intptr_t, 0, 0> A) {
+    auto OHNF = NormalForm::hermite(std::move(A));
+    if (!OHNF.hasValue()){
+	return {};
+    }
+    auto [H, U] = OHNF.getValue();
+    for (size_t m = 0; m < A.size(0); ++m){
+	if (A(m,m) != 1){
+	    // unimodularization was not succesful
+	    return {};
+	}
+    }
+    return U;
+}
+/*
 
 llvm::Optional<std::pair<size_t, size_t>>
 searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
@@ -53,7 +80,7 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     // we need to find a second row, we let x = 1
     // we need
     // 1 == gcd(b - a*y, c - a*z)
-    //intptr_t args[3];
+    // intptr_t args[3];
     if (std::gcd(b, c) == 1) {
         auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), intptr_t(0));
         auto t2 = unimodularize2x3(a, b, c, 1, 0, 0);
@@ -269,3 +296,5 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
     }
     return A;
 }
+*/
+

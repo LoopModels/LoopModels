@@ -46,7 +46,15 @@ namespace NormalForm {
 // 	return false;
 // }
 
-template <IntMatrix AM> intptr_t searchColPivot(const AM &A, size_t i) {
+intptr_t searchRowPivot(const IntMatrix auto &A, size_t i) {
+    for (intptr_t k = i; k < intptr_t(A.size(0)); ++k) {
+        if (A(k, i)) {
+            return k;
+        }
+    }
+    return -1;
+}
+intptr_t searchColPivot(const IntMatrix auto &A, size_t i) {
     for (intptr_t k = i; k < intptr_t(A.size(1)); ++k) {
         if (A(i, k)) {
             return k;
@@ -54,6 +62,7 @@ template <IntMatrix AM> intptr_t searchColPivot(const AM &A, size_t i) {
     }
     return -1;
 }
+
 // permute the columns of A so that every principal minor of A is nonsingular;
 // do the corresponding row operations on K
 // returns true if rank deficient.
@@ -87,8 +96,7 @@ bool permuteCols(Matrix<intptr_t, 0, 0> &A, SquareMatrix<intptr_t> &K) {
     return false;
 }
 
-template <IntMatrix T, IntMatrix S>
-void reduceOffDiagonal(T &A, S &K, size_t k) {
+void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k) {
     intptr_t Akk = A(k, k);
     auto [M, N] = A.size();
     if (Akk < 0) {

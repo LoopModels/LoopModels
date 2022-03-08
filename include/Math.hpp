@@ -326,9 +326,9 @@ template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
     Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
 
-    Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()) {};
-    Vector(llvm::SmallVector<T> &&A) : data(std::move(A)) {};
-    
+    Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
+    Vector(llvm::SmallVector<T> &&A) : data(std::move(A)){};
+
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < data.size());
@@ -499,9 +499,10 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
     }
 };
 
-template <typename T> struct SquareMatrix {
+template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
     typedef T eltype;
-    llvm::SmallVector<T, 9> data;
+    static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
+    llvm::SmallVector<T, TOTALSTORAGE> data;
     size_t M;
 
     SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};
@@ -533,6 +534,19 @@ template <typename T> struct SquareMatrix {
     llvm::ArrayRef<T> getCol(size_t i) {
         T *p = data.data() + i * M;
         return llvm::ArrayRef<T>(p, M);
+    }
+    void copyRow(llvm::ArrayRef<T> a, size_t j){
+	for (size_t m = 0; m < M; ++m){
+	    (*this)(j,m) = a[m];
+	}
+    }
+    void copyCol(llvm::ArrayRef<T> a, size_t j){
+	for (size_t m = 0; m < M; ++m){
+	    (*this)(m,j) = a[m];
+	}
+    }
+    void copyCol(const SquareMatrix<T> &A, size_t j){
+	copyCol(A.getCol(A, j), j);
     }
     // returns the inverse, followed by bool where true means failure
 
@@ -732,7 +746,8 @@ template<typename T, AbstractMatrix<T> A>
 constexpr bool isIntMatrix() { return std::is_same_v<intptr_t,T>(); }
 */
 
-template <AbstractMatrix TA, AbstractMatrix TB> auto matmul(TA &A, TB &B) {
+AbstractMatrix auto matmul(const AbstractMatrix auto &A,
+                           const AbstractMatrix auto &B) {
     auto [M, K] = A.size();
     auto [K2, N] = B.size();
     assert(K == K2);
@@ -747,7 +762,7 @@ template <AbstractMatrix TA, AbstractMatrix TB> auto matmul(TA &A, TB &B) {
     return C;
 }
 
-template <IntMatrix AM> void swapRows(AM &A, size_t i, size_t j) {
+void swapRows(IntMatrix auto &A, size_t i, size_t j) {
     auto [M, N] = A.size();
     if (i == j) {
         return;
@@ -757,7 +772,7 @@ template <IntMatrix AM> void swapRows(AM &A, size_t i, size_t j) {
         std::swap(A(i, n), A(j, n));
     }
 }
-template <IntMatrix AM> void swapCols(AM &A, size_t i, size_t j) {
+void swapCols(IntMatrix auto &A, size_t i, size_t j) {
     auto [M, N] = A.size();
     if (i == j) {
         return;
@@ -768,13 +783,14 @@ template <IntMatrix AM> void swapCols(AM &A, size_t i, size_t j) {
     }
 }
 
-template <Integral T> T sign(T i) {
-    if (i) {
-        return i > 0 ? 1 : -1;
-    } else {
-        return 0;
-    }
-}
+// // template <Integral T> T sign(T i) {
+// auto sign(Integral auto i) {
+//     if (i) {
+//         return i > 0 ? 1 : -1;
+//     } else {
+//         return 0;
+//     }
+// }
 
 // template <typename T>
 // std::ostream &operator<<(std::ostream &os, StrideMatrix<T> &A) {
@@ -998,17 +1014,14 @@ template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
     T s = 0;
     T old_t = 0;
     T t = 1;
-    while (r != 0) {
+    while (r) {
         T quotient = old_r / r;
-        T r_temp = r;
-        T s_temp = s;
-        T t_temp = t;
-        r = old_r - quotient * r;
-        s = old_s - quotient * s;
-        t = old_t - quotient * t;
-        old_r = r_temp;
-        old_s = s_temp;
-        old_t = t_temp;
+        old_r -= quotient * r;
+        old_s -= quotient * s;
+        old_t -= quotient * t;
+	std::swap(r, old_r);
+	std::swap(s, old_s);
+	std::swap(t, old_t);
     }
     // Solving for `t` at the end has 1 extra division, but lets us remove
     // the `t` updates in the loop:
@@ -1140,13 +1153,13 @@ struct Rational {
         return *this;
     }
     Rational inv() const {
-	if (numerator < 0){
-	    // make sure we don't have overflow
-	    assert(denominator != std::numeric_limits<intptr_t>::min());
-	    return Rational{-denominator, -numerator};
-	} else {
-	    return Rational{denominator, numerator};
-	}
+        if (numerator < 0) {
+            // make sure we don't have overflow
+            assert(denominator != std::numeric_limits<intptr_t>::min());
+            return Rational{-denominator, -numerator};
+        } else {
+            return Rational{denominator, numerator};
+        }
         // return Rational{denominator, numerator};
         // bool positive = numerator > 0;
         // return Rational{positive ? denominator : -denominator,
@@ -1207,10 +1220,15 @@ struct Rational {
     }
     void dump() const { std::cout << *this << std::endl; }
 };
-
 llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{std::gcd(x.numerator, y.numerator),
                     std::lcm(x.denominator, y.denominator)};
 }
+template <typename A>
+concept RationalMatrix = requires(A a) {
+    { a(size_t(0), size_t(0)) } -> std::same_as<Rational &>;
+    { a.size() } -> std::same_as<std::pair<size_t, size_t>>;
+    { a.size(0) } -> std::same_as<size_t>;
+};
 
 // template <IntMatrix AM>

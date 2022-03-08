@@ -443,11 +443,78 @@ std::pair<size_t, size_t> getLoopId(Term t) {
     return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
 }
 
-size_t addUniqueIndRow(SquareMatrix<intptr_t> &A, const Stride &axis, size_t j){
+// Assumes columns 0...j-1 are linearly independent
+// while column `j` has just been appended.
+// We check if it is dependent on the previous columns. 
+size_t addLinearlyIndependentCol(SquareMatrix<intptr_t> &A, size_t j){
+    size_t M = A.size(0);
+    if (j == 0){
+	// we confirm that at least one row is != 0
+	for (size_t m = 0; m < M; ++m){
+	    if (A(m,0)){
+		return 1;
+	    }
+	}
+	// if all zero, rank == 0 < 1
+	return 0;
+    }
+    // first `jxj` block is diagonal
+    // Step 1: zero out A(0:j-1,j)
+    for (size_t i = 0; i < j; ++i){
+	if (intptr_t Aij = A(i,j)){
+	    // we must zero it
+	    intptr_t Aii = A(i,i);
+	    // use gcd to control growth
+	    intptr_t g = std::gcd(Aii, Aij);
+	    Aii /= g;
+	    Aij /= g;
+	    // A(:,j) = A(:,j)*Aii - A(:,i)*Aij
+	    A(i,j) = 0;
+	    for (size_t m = j; m < M; ++m) {
+		A(m,j) = A(m,j)*Aii - A(m,i)*Aij;
+	    }
+	}
+    }
+    // Step 2: search for a row pivot
+    size_t pivot = j;
+    while (A(pivot,j) == 0){
+	++pivot;
+        if (pivot == M) {
+	    // linearly dependent
+            return j;
+        }
+    }
+    swapRows(A, pivot, j);
+    intptr_t Ajj = A(j,j);
+    // zero out A(j,0:j-1)
+    for (size_t i = 0; i < j; ++i) {
+	if (intptr_t Aji = A(j,i)){
+	    // we must zero it
+	    // use gcd to control growth
+	    intptr_t g = std::gcd(Ajj, Aji);
+	    intptr_t Ajjg = Ajj / g;
+	    intptr_t Ajig = Aji / g;
+	    // A(:,i) = A(:,i)*Ajj - A(:,j)*Aji
+	    A(j,i) = 0;
+	    for (size_t m = j+1; m < M; ++m){
+		A(m,i) = A(m,i)*Ajjg - A(m,j)*Ajig;
+	    }
+	}
+    }
+    return j+1;
+}
+// `B` is a transposed mirror in reduced form
+// it is used to check whether a new row is linearly independent.
+size_t addUniqueIndRow(SquareMatrix<intptr_t> &A, SquareMatrix<intptr_t> &B, const Stride &axis, size_t j){
     for (auto &a : axis){
         const MPoly &m = a.first;
         VarID v = a.second;
-	
+	if (v.getType() == VarType::LoopInductionVariable){
+            llvm::Optional<intptr_t> c = m.getCompileTimeConstant();
+            if (c.hasValue()){
+		
+	    }
+	}
     }
     return j;
 }
@@ -469,13 +536,14 @@ orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &
     //
     size_t numLoops = aln.getNumLoops();
     SquareMatrix<intptr_t> A(numLoops);
+    SquareMatrix<intptr_t> B(numLoops);
     for (size_t i = 0; i < numLoops*numLoops; ++i){
 	A[i] = 0;
     }
     size_t j = 0;
     for (auto a : ai){
-	for (auto &ind : (*a)){
-            j = addUniqueIndRow(A, ind, j);
+	for (auto &axis : (*a)){
+            j = addUniqueIndRow(A, axis, j);
 	}
     }
     return llvm::Optional<AffineLoopNestPerm>();

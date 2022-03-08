@@ -5,8 +5,7 @@ struct LUFact {
     SquareMatrix<Rational> F;
     llvm::SmallVector<unsigned> perm;
 
-    template <size_t MM, size_t NN>
-    Matrix<Rational, MM, NN> ldiv(Matrix<Rational, MM, NN> rhs) {
+    RationalMatrix auto ldiv(RationalMatrix auto rhs) const {
         auto [M, N] = rhs.size();
         auto FM = F.size(0);
         assert(FM == M);
@@ -45,19 +44,10 @@ struct LUFact {
 		rhs(m,n) = (Ymn / F(m,m)).getValue();
 	    }
 	}
-        // for (size_t k = 0; k < N; ++k) {
-	//     for (intptr_t j = M - 1; j >= 0; --j) {
-        //         Rational rhsj = (rhs(j, k) / F(j, j)).getValue();
-        //         for (intptr_t i = j - 1; i >= 0; --i) {
-        //             rhs(i, k) -= (F(i, j) * rhsj).getValue();
-        //         }
-        //     }
-        // }
         return rhs;
     }
 
-    template <size_t MM, size_t NN>
-    Matrix<Rational, MM, NN> rdiv(Matrix<Rational, MM, NN> rhs) {
+    RationalMatrix auto rdiv(RationalMatrix auto rhs) const {
         auto [M, N] = rhs.size();
         auto FN = F.size(0);
         assert(FN == N);
@@ -100,6 +90,17 @@ struct LUFact {
         }
 
         return rhs;
+    }
+
+    SquareMatrix<Rational> inv() const {
+	return ldiv(SquareMatrix<Rational>::identity(F.size(0)));
+    }
+    Rational det(){
+	Rational d = 1;
+	for (size_t i = 0; i < F.size(0); ++i){
+	    d *= F(i,i);
+	}
+	return d;
     }
 };
 

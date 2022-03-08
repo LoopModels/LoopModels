@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "llvm/ADT/Optional.h"
 #include <algorithm>
 #include <bit>
 #include <compare>
@@ -960,6 +961,13 @@ template <typename C, IsMonomial M> struct Term {
     }
 
     bool isCompileTimeConstant() const { return isOne(exponent); }
+    llvm::Optional<intptr_t> getCompileTimeConstant() const {
+	if (isCompileTimeConstant()){
+	    return coefficient;
+	} else {
+	    return {};
+	}
+    }
     bool operator==(Term<C, M> const &y) const {
         return (exponent == y.exponent) && (coefficient == y.coefficient);
     }
@@ -1327,6 +1335,16 @@ template <typename C, IsMonomial M> struct Terms {
         default:
             return false;
         }
+    }
+    llvm::Optional<intptr_t> getCompileTimeConstant() const {
+	switch (terms.size()) {
+	case 0:
+	    return 0;
+	case 1:
+	    return terms[0].getCompileTimeConstant();
+	default:
+	    return {};
+	}
     }
 
     bool operator==(Terms<C, M> const &x) const { return (terms == x.terms); }
