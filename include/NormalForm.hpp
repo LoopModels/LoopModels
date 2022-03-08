@@ -54,6 +54,7 @@ namespace NormalForm {
 //     }
 //     return -1;
 // }
+/*
 intptr_t searchColPivot(const IntMatrix auto &A, size_t i) {
     for (intptr_t k = i; k < intptr_t(A.size(1)); ++k) {
         if (A(i, k)) {
@@ -95,10 +96,11 @@ bool permuteCols(IntMatrix auto &A, SquareMatrix<intptr_t> &K) {
     }
     return false;
 }
+*/
 
 void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k) {
-    intptr_t Akk = A(k, k);
     auto [M, N] = A.size();
+    intptr_t Akk = A(k, k);
     if (Akk < 0) {
         Akk = -Akk;
         for (size_t i = 0; i < M; ++i) {
@@ -112,7 +114,6 @@ void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k) {
     for (size_t z = 0; z < k; ++z) {
         // try to eliminate `A(k,z)`
         intptr_t Akz = A(k, z);
-	intptr_t AkzOld = Akz;
 	// if Akk == 1, then this zeros out Akz
 	if (Akz){
 	    // we want positive but smaller subdiagonals
@@ -120,10 +121,17 @@ void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k) {
 	    // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
 	    //        =   5 - 2*2 = 1
 	    // or if `Akz = -5, Akk = 2`, then in the loop below we get
-	    // A(k,z) = A(k,z) - ((A(k,z)/Akk)-1) * Akk
-	    //        =  -5 - (-3)*2 = = 6 - 5 = 1
+	    // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+	    //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+	    // if `Akk = 1`, then
+	    // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+	    //        = A(k,z) - A(k,z) = 0
+	    // or if `Akz = -7, Akk = 39`, then in the loop below we get
+	    // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+	    //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+	    intptr_t AkzOld = Akz;
 	    Akz /= Akk;
-	    if (Akz < 0){
+	    if (AkzOld < 0){
 		Akz -= (AkzOld != (Akz * Akk));
 	    }
 	} else {
@@ -143,10 +151,11 @@ template <IntMatrix T>
 llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
     auto [M, N] = A.size();
     SquareMatrix<intptr_t> K = SquareMatrix<intptr_t>::identity(N);
-    if (permuteCols(A, K)) {
-        return {}; // rank deficient
-    }
-    for (size_t i = 1; i < N; ++i) {
+    // if (permuteCols(A, K)) {
+    //     return {}; // rank deficient
+    // }
+    intptr_t piv = -1;
+    for (size_t i = 1; i < N;) {
         // we put the A(0:i,0:i) block into HNF
         for (size_t j = 0; j < i; ++j) {
             intptr_t Ajj = A(j, j);
@@ -159,7 +168,9 @@ llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
                 intptr_t Aki = A(k, i);
                 intptr_t Kkj = K(k, j);
                 intptr_t Kki = K(k, i);
+		// when k == j, we set A(k,j) = r
                 A(k, j) = q * Aki + p * Akj;
+		// when k == j, we set A(k,i) = 0
                 A(k, i) = Ajj * Aki - Aji * Akj;
                 K(k, j) = q * Kki + p * Kkj;
                 K(k, i) = Ajj * Kki - Aji * Kkj;
@@ -181,8 +192,25 @@ llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
             }
         }
         if (i < M) {
+	    if (A(i,i) == 0){
+                if (piv < 0) {
+                    piv = N;
+                }
+                --piv;
+                if (piv == intptr_t(i)) {
+		    // rank deficient!!!
+		    return {};
+                }
+		swapCols(A, i, piv);
+		swapCols(K, i, piv);
+                // must permute
+                // don't increment `i`, we're trying again
+                continue;
+            }
+            piv = -1;
             reduceOffDiagonal(A, K, i);
         }
+	++i;
     }
     return std::make_pair(std::move(A), std::move(K));
 }
