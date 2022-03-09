@@ -353,6 +353,8 @@ template <typename T, size_t M>
 bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
     return allMatch(x0, x1);
 }
+static_assert(std::copyable<Vector<intptr_t,4>>);
+static_assert(std::copyable<Vector<intptr_t,0>>);
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.data.size(); }
@@ -622,6 +624,11 @@ template <typename T> struct Matrix<T, 0, 0> {
         return true;
     }
 };
+static_assert(std::copyable<Matrix<intptr_t,4,4>>);
+static_assert(std::copyable<Matrix<intptr_t,4,0>>);
+static_assert(std::copyable<Matrix<intptr_t,0,4>>);
+static_assert(std::copyable<Matrix<intptr_t,0,0>>);
+static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
 template <typename T, size_t M, size_t N>
 std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
@@ -1210,6 +1217,7 @@ struct Rational {
     friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
     bool isInteger() const { return denominator == 1; }
     void negate() { numerator = -numerator; }
+    operator bool() const { return numerator != 0; }
 
     friend std::ostream &operator<<(std::ostream &os, const Rational &x) {
         os << x.numerator;
