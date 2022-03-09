@@ -442,7 +442,7 @@ std::pair<size_t, size_t> getLoopId(Term t) {
     size_t loopNestId = t.loopNestId;
     return std::make_pair(zeroUpper(loopNestId), zeroLower(loopNestId));
 }
-
+/*
 // Assumes columns 0...j-1 are linearly independent
 // while column `j` has just been appended.
 // We check if it is dependent on the previous columns. 
@@ -518,7 +518,8 @@ size_t addUniqueIndRow(SquareMatrix<intptr_t> &A, SquareMatrix<intptr_t> &B, con
     }
     return j;
 }
-
+*/
+/*    
 llvm::Optional<AffineLoopNestPerm>
 orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &ai) {
     // need to construct matrix `A` of relationship
@@ -548,7 +549,7 @@ orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *> &
     }
     return llvm::Optional<AffineLoopNestPerm>();
 }
-
+*/
 /*
 bool isadditive(Term t) {
     Operation op = t.op;

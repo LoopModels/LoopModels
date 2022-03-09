@@ -107,17 +107,13 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // llvm::TargetLibraryInfo &TLI =
     // FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
-    // llvm::TargetTransformInfo
-    // &TTI = FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
-    // llvm::TargetTransformInfo &TTI =
-    // FAM.getResult<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
-    TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+    // ClassID 0: ScalarRC
+    // ClassID 1: RegisterRC
+    // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
+    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0) << std::endl;
+    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1) << std::endl;
 
-    // llvm::TargetTransformInfo &TTI =
-    // llvm::FunctionPass.getAnalysis<llvm::TargetTransformInfoWrapperPass>().getTTI(F);
-    // llvm::TargetTransformInfo &TTI =
-    // FAM.getResult<llvm::TargetTransformInfo>(F);
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
     // DL = &F.getParent()->getDataLayout();
