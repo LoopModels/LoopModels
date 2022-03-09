@@ -166,7 +166,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     llvm::Value *stop = &bounds.getFinalIVValue();
 
                     llvm::errs()
-                        << "\nloop bounds: " << start << " : " << stop << "\n";
+                        << "\nloop bounds: " << *start << " : " << *stop << "\n";
                 }
             }
         }
