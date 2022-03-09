@@ -194,6 +194,14 @@ llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
         if (i < M) {
 	    if (A(i,i) == 0){
                 if (piv < 0) {
+		    // Is there maybe a better strategy than blindly trying columns
+		    // until we find one that works?
+		    // Also, searching from N-1...i+1 means if we must pivot for more than
+		    // one `i`, we'll start going over discarded ones a second time.
+		    // These may be more likely than average to fail again.
+		    // Perhaps we could check their `A(i,i)` value to be a bit smarter about it;
+		    // given that many of the rows would've already been zerod by the previous
+		    // try, it might be less likely the `A(i,i)` will get an update than a random row.
                     piv = N;
                 }
                 --piv;

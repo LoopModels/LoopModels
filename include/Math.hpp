@@ -1230,5 +1230,10 @@ concept RationalMatrix = requires(A a) {
     { a.size() } -> std::same_as<std::pair<size_t, size_t>>;
     { a.size(0) } -> std::same_as<size_t>;
 };
+template <typename A>
+concept RationalVector = requires(A a) {
+    { a[size_t(0)] } -> std::same_as<Rational &>;
+    { a.size() } -> std::same_as<size_t>;
+};
 
 // template <IntMatrix AM>
