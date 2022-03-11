@@ -330,7 +330,7 @@ orthogonalize(IntMatrix auto A) {
     auto [M, N] = A.size();
     SquareMatrix<intptr_t> K = SquareMatrix<intptr_t>::identity(N);
     llvm::SmallVector<unsigned> included;
-    included.reserve(M);
+    included.reserve(std::min(M,N));
     unsigned j = 0;
     for (size_t i = 0; i < std::min(M, N);) {
         // zero ith row
