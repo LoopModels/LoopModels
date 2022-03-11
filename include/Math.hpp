@@ -1111,8 +1111,11 @@ struct Rational {
         bool o4 = __builtin_add_overflow(a, b, &n);
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
-        } else {
-            return Rational{n, n ? d : 1};
+        } else if (n) {
+	    auto [nn, nd] = divgcd(n, d);
+            return Rational{nn, nd};
+	} else {
+            return Rational{0, 1};
         }
     }
     Rational &operator+=(Rational y) {
@@ -1130,8 +1133,11 @@ struct Rational {
         bool o4 = __builtin_sub_overflow(a, b, &n);
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
-        } else {
-            return Rational(n, d);
+        } else if (n) {
+	    auto [nn, nd] = divgcd(n, d);
+            return Rational{nn, nd};
+	} else {
+	    return Rational{0, 1};
         }
     }
     Rational &operator-=(Rational y) {
