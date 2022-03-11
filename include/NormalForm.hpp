@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "IntermediateRepresentation.hpp"
 #include "llvm/ADT/APInt.h" // llvm::Optional
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
@@ -98,7 +99,7 @@ bool permuteCols(IntMatrix auto &A, SquareMatrix<intptr_t> &K) {
 }
 */
 
-void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k, size_t M,
+void reduceSubDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k, size_t M,
                        size_t N) {
     intptr_t Akk = A(k, k);
     if (Akk < 0) {
@@ -152,105 +153,56 @@ void reduceOffDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k, size_t M,
         }
     }
 }
-
-
-// extend HNF form from (0:i-1,0:N-1) block to the (0:i,0:N-1) block
-bool extendHNFRow(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
-               size_t N) {
-    size_t piv = i;
-    while (A(i, piv) == 0) {
-	if (++piv == N) {
-	    return true;
-	}
+void zeroSubDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t k, size_t M,
+                     size_t N) {
+    intptr_t Akk = A(k, k);
+    if (Akk == -1) {
+        for (size_t i = 0; i < std::min(M, N); ++i) {
+            A(i, k) *= -1;
+            K(i, k) *= -1;
+        }
+        for (size_t i = M; i < N; ++i) {
+            K(i, k) *= -1;
+        }
+        for (size_t i = N; i < M; ++i) {
+            A(i, k) *= -1;
+        }
+    } else {
+        assert(Akk == 1);
     }
-    if (i != piv) {
-	swapCols(A, i, piv);
-	swapCols(K, i, piv);
+    for (size_t z = 0; z < k; ++z) {
+        // eliminate `A(k,z)`
+        intptr_t Akz = A(k, z);
+        if (Akz == 0) {
+            continue;
+        }
+        // A(k, k) == 1, so A(k,z) -= Akz * 1;
+        for (size_t i = 0; i < std::min(M, N); ++i) {
+            A(i, z) -= Akz * A(i, k);
+            K(i, z) -= Akz * K(i, k);
+        }
+        for (size_t i = M; i < N; ++i) {
+            K(i, z) -= Akz * K(i, k);
+        }
+        for (size_t i = N; i < M; ++i) {
+            A(i, z) -= Akz * A(i, k);
+        }
     }
-    for (size_t j = i+1; j < N; ++j){
-	intptr_t Aii = A(i,i);
-	intptr_t Aij = A(i,j);
-	auto [r, p, q] = gcdx(Aii, Aij);
-	intptr_t Aiir = Aii / r;
-	intptr_t Aijr = Aij / r;
-	for (size_t k = 0; k < std::min(M,N); ++k){
-	    intptr_t Aki = A(k,i);
-	    intptr_t Akj = A(k,j);
-	    intptr_t Kki = K(k,i);
-	    intptr_t Kkj = K(k,j);
-	    // when k == i, then
-	    // p * Aii + q * Akj == r, so we set A(i,i) = r
-	    A(k, i) = p * Aki + q * Akj;
-	    // Aii/r * Akj - Aij/r * Aki = 0
-	    A(k, j) = Aiir * Akj - Aijr * Aki;
-	    // Mirror for K
-	    K(k, i) = p * Kki + q * Kkj;
-	    K(k, j) = Aiir * Kkj - Aijr * Kki;
- 	}
-	for (size_t k = M; k < N; ++k){
-	    intptr_t Kki = K(k,i);
-	    intptr_t Kkj = K(k,j);
-	    K(k, i) = p * Kki + q * Kkj;
-	    K(k, j) = Aiir * Kkj - Aijr * Kki;
-	}
-	for (size_t k = N; k < M; ++k){
-	    intptr_t Aki = A(k,i);
-	    intptr_t Akj = A(k,j);
-	    A(k, i) = p * Aki + q * Akj;
-	    A(k, j) = Aiir * Akj - Aijr * Aki;
-	}
-    }
-    if (i){
-	reduceOffDiagonal(A, K, i, M, N);
-    }
-    return false;
 }
-
 // extend HNF form from (0:i-1,0:i-1) block to the (0:i,0:i) block
 bool extendHNF(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
                size_t N) {
     size_t piv = N;
     while (true) {
-        for (size_t j = 0; j < std::min(i, M); ++j) {
-            // zero out A(j,i)
-            intptr_t Ajj = A(j, j);
-            intptr_t Aji = A(j, i);
-            auto [r, p, q] = gcdx(Ajj, Aji);
-            Ajj /= r;
-            Aji /= r;
-            for (size_t k = 0; k < std::min(M, N); ++k) {
-                intptr_t Akj = A(k, j);
-                intptr_t Aki = A(k, i);
-                intptr_t Kkj = K(k, j);
-                intptr_t Kki = K(k, i);
-                // when k == j, we set A(k,j) = r
-                A(k, j) = q * Aki + p * Akj;
-                // when k == j, we set A(k,i) = 0
-                A(k, i) = Ajj * Aki - Aji * Akj;
-                K(k, j) = q * Kki + p * Kkj;
-                K(k, i) = Ajj * Kki - Aji * Kkj;
-            }
-            for (size_t k = M; k < N; ++k) {
-                intptr_t Kkj = K(k, j);
-                intptr_t Kki = K(k, i);
-                K(k, j) = q * Kki + p * Kkj;
-                K(k, i) = Ajj * Kki - Aji * Kkj;
-            }
-            for (size_t k = N; k < M; ++k) {
-                intptr_t Akj = A(k, j);
-                intptr_t Aki = A(k, i);
-                A(k, j) = q * Aki + p * Akj;
-                A(k, i) = Ajj * Aki - Aji * Akj;
-            }
-            if (j) {
-                reduceOffDiagonal(A, K, j, M, N);
-            }
+        zeroSupDiagonal(A, K, i, M, N);
+        for (size_t j = 1; j < std::min(i, M); ++j) {
+            reduceSubDiagonal(A, K, j, M, N);
         }
         if (i >= M) {
             return false;
         } else if (A(i, i)) {
             // we've succesfully brought the block into HNF
-            reduceOffDiagonal(A, K, i, M, N);
+            reduceSubDiagonal(A, K, i, M, N);
             return false;
         }
         // We have not succesfully brought it into HNF form,
@@ -285,6 +237,69 @@ llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite2(T A) {
     }
     return std::make_pair(std::move(A), std::move(K));
 }
+
+void zeroSupDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
+                     size_t N) {
+    for (size_t j = i + 1; j < N; ++j) {
+        intptr_t Aii = A(i, i);
+        intptr_t Aij = A(i, j);
+        auto [r, p, q] = gcdx(Aii, Aij);
+        intptr_t Aiir = Aii / r;
+        intptr_t Aijr = Aij / r;
+        for (size_t k = 0; k < std::min(M, N); ++k) {
+            intptr_t Aki = A(k, i);
+            intptr_t Akj = A(k, j);
+            intptr_t Kki = K(k, i);
+            intptr_t Kkj = K(k, j);
+            // when k == i, then
+            // p * Aii + q * Akj == r, so we set A(i,i) = r
+            A(k, i) = p * Aki + q * Akj;
+            // Aii/r * Akj - Aij/r * Aki = 0
+            A(k, j) = Aiir * Akj - Aijr * Aki;
+            // Mirror for K
+            K(k, i) = p * Kki + q * Kkj;
+            K(k, j) = Aiir * Kkj - Aijr * Kki;
+        }
+        for (size_t k = M; k < N; ++k) {
+            intptr_t Kki = K(k, i);
+            intptr_t Kkj = K(k, j);
+            K(k, i) = p * Kki + q * Kkj;
+            K(k, j) = Aiir * Kkj - Aijr * Kki;
+        }
+        for (size_t k = N; k < M; ++k) {
+            intptr_t Aki = A(k, i);
+            intptr_t Akj = A(k, j);
+            A(k, i) = p * Aki + q * Akj;
+            A(k, j) = Aiir * Akj - Aijr * Aki;
+        }
+    }
+}
+
+bool pivotCols(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t N) {
+    size_t piv = i;
+    while (A(i, piv) == 0) {
+        if (++piv == N) {
+            return true;
+        }
+    }
+    if (i != piv) {
+        swapCols(A, i, piv);
+        swapCols(K, i, piv);
+    }
+    return false;
+}
+
+// extend HNF form from (0:i-1,0:N-1) block to the (0:i,0:N-1) block
+bool extendHNFRow(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
+                  size_t N) {
+    if (pivotCols(A, K, i, N)) {
+        return true;
+    }
+    zeroSupDiagonal(A, K, i, M, N);
+    reduceSubDiagonal(A, K, i, M, N);
+    return false;
+}
+
 template <IntMatrix T>
 llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
     auto [M, N] = A.size();
@@ -297,83 +312,52 @@ llvm::Optional<std::pair<T, SquareMatrix<intptr_t>>> hermite(T A) {
     return std::make_pair(std::move(A), std::move(K));
 }
 
-template <IntMatrix T>
-llvm::Optional<std::tuple<T, SquareMatrix<intptr_t>, llvm::SmallVector<bool>>>
-softHermite(T A) {
+void dropRow(IntMatrix auto &A, size_t i, size_t M, size_t N) {
+    // if any rows are left, we shift them up to replace it
+    if (i < M) {
+        for (size_t n = 0; n < N; ++n) {
+            for (size_t m = i; m < M; ++m) {
+                A(m, n) = A(m + 1, n);
+            }
+        }
+    }
+}
+
+std::pair<SquareMatrix<intptr_t>, llvm::SmallVector<unsigned>>
+orthogonalize(IntMatrix auto A) {
+    // we try to orthogonalize with respect to as many rows of `A` as we can
+    // prioritizing earlier rows.
     auto [M, N] = A.size();
     SquareMatrix<intptr_t> K = SquareMatrix<intptr_t>::identity(N);
-    llvm::SmallVector<bool> excluded;
-    excluded.reserve(M);
-    if (A(0, 0) == 0) {
-        while (true) {
-            bool found = false;
-            for (size_t n = 1; n < N; ++n) {
-                if (A(0, n)) {
-                    swapCols(A, 0, n);
-                    swapCols(K, 0, n);
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                break;
-            } else {
-                excluded.push_back(true);
-                if (--M) {
-                    for (size_t n = 0; n < N; ++n) {
-                        for (size_t m = 0; m < M; ++m) {
-                            A(m, n) = A(m + 1, n);
-                        }
-                    }
-                } else {
-                    return {};
-                }
-            }
+    llvm::SmallVector<unsigned> included;
+    included.reserve(M);
+    unsigned j = 0;
+    for (size_t i = 0; i < std::min(M,N); ) {
+        // zero ith row
+        if (pivotCols(A, K, i, N)) {
+            // cannot pivot, this is a linear combination of previous
+            // therefore, we drop the row
+            dropRow(A, i, --M, N);
+	    ++j;
+            continue;
         }
+        zeroSupDiagonal(A, K, i, M, N);
+	intptr_t Aii = A(i, i);
+	if (std::abs(Aii) != 1) {
+	    // including this row renders the matrix not unimodular!
+	    // therefore, we drop the row.
+	    dropRow(A, i, --M, N);
+	    ++j;
+	    continue;
+	} else {
+	    // we zero the sub diagonal
+	    zeroSubDiagonal(A, K, i, M, N);
+	}
+	included.push_back(j);
+	++j;
+        ++i;
     }
-    if (A(0, 0) == 0) {
-        for (size_t n = 1; n < N; ++n) {
-            if (A(0, n)) {
-                swapCols(A, 0, n);
-                swapCols(K, 0, n);
-                break;
-            }
-        }
-        // TODO: handle case of all-0 first row
-        assert(A(0, 0));
-    }
-    // backups
-    T A2 = A;
-    SquareMatrix<intptr_t> K2 = K;
-    for (size_t i = 1; i < N;) {
-        if (extendHNF(A, K, i, M, N)) {
-            excluded.push_back(true);
-            // failed
-            if (i >= --M) {
-                return {};
-            }
-            for (size_t n = 0; n < N; ++n) {
-                for (size_t m = i; m < M; ++m) {
-                    A2(m, n) = A2(m + 1, n);
-                }
-            }
-            A = A2;
-            K = K2;
-        } else {
-            excluded.push_back(false);
-            A2 = A;
-            K2 = K;
-            ++i;
-        }
-    }
-    // now, `A` may not be the identity.
-    // hnf just requires triangular, positive diagonals, and subdiagonals are non-negative
-    // and smaller than the diag element in their row.
-    // We require unimodular, thus we must get the identity matrix as a result.
-    // 
-    // this is valid hnf, but not useful for us, as we require the constructed `A`
-    // be unimodular.
-    return std::make_tuple(std::move(A), std::move(K), std::move(excluded));
+    return std::make_pair(std::move(K), std::move(included));
 }
 
 } // namespace NormalForm
