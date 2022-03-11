@@ -332,29 +332,29 @@ orthogonalize(IntMatrix auto A) {
     llvm::SmallVector<unsigned> included;
     included.reserve(M);
     unsigned j = 0;
-    for (size_t i = 0; i < std::min(M,N); ) {
+    for (size_t i = 0; i < std::min(M, N);) {
         // zero ith row
         if (pivotCols(A, K, i, N)) {
             // cannot pivot, this is a linear combination of previous
             // therefore, we drop the row
             dropRow(A, i, --M, N);
-	    ++j;
+            ++j;
             continue;
         }
         zeroSupDiagonal(A, K, i, M, N);
-	intptr_t Aii = A(i, i);
-	if (std::abs(Aii) != 1) {
-	    // including this row renders the matrix not unimodular!
-	    // therefore, we drop the row.
-	    dropRow(A, i, --M, N);
-	    ++j;
-	    continue;
-	} else {
-	    // we zero the sub diagonal
-	    zeroSubDiagonal(A, K, i, M, N);
-	}
-	included.push_back(j);
-	++j;
+        intptr_t Aii = A(i, i);
+        if (std::abs(Aii) != 1) {
+            // including this row renders the matrix not unimodular!
+            // therefore, we drop the row.
+            dropRow(A, i, --M, N);
+            ++j;
+            continue;
+        } else {
+            // we zero the sub diagonal
+            zeroSubDiagonal(A, K, i, M, N);
+        }
+        included.push_back(j);
+        ++j;
         ++i;
     }
     return std::make_pair(std::move(K), std::move(included));

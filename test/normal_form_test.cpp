@@ -129,36 +129,37 @@ TEST(NormalFormTest, BasicAssertions) {
               << "\nInv fact failed count: " << invFailedCount << " / "
               << numIters << std::endl;
 
-    B(0,0) = 1;
-    B(0,1) = 0;
-    B(0,2) = 1;
-    B(0,3) = 0;
-    B(1,0) = 0;
-    B(1,1) = 1;
-    B(1,2) = 0;
-    B(1,3) = 1;
-    B(2,0) = 1;
-    B(2,1) = 0;
-    B(2,2) = 0;
-    B(2,3) = 0;
-    B(3,0) = 0;
-    B(3,1) = 1;
-    B(3,2) = 0;
-    B(3,3) = 0;
-    B(4,0) = 0;
-    B(4,1) = 0;
-    B(4,2) = 1;
-    B(4,3) = 0;
-    B(5,0) = 0;
-    B(5,1) = 0;
-    B(5,2) = 0;
-    B(5,3) = 1;
+    B(0, 0) = 1;
+    B(0, 1) = 0;
+    B(0, 2) = 1;
+    B(0, 3) = 0;
+    B(1, 0) = 0;
+    B(1, 1) = 1;
+    B(1, 2) = 0;
+    B(1, 3) = 1;
+    B(2, 0) = 1;
+    B(2, 1) = 0;
+    B(2, 2) = 0;
+    B(2, 3) = 0;
+    B(3, 0) = 0;
+    B(3, 1) = 1;
+    B(3, 2) = 0;
+    B(3, 3) = 0;
+    B(4, 0) = 0;
+    B(4, 1) = 0;
+    B(4, 2) = 1;
+    B(4, 3) = 0;
+    B(5, 0) = 0;
+    B(5, 1) = 0;
+    B(5, 2) = 0;
+    B(5, 3) = 1;
     std::cout << "B_orth_motivating_example = " << B << std::endl;
     auto [K, included] = NormalForm::orthogonalize(B);
-    std::cout << "K = " << K << "\nincluded = " << Vector<unsigned,0>(included) << std::endl;
+    std::cout << "K = " << K << "\nincluded = " << Vector<unsigned, 0>(included)
+              << std::endl;
     EXPECT_EQ(included.size(), 4);
-    for (size_t i = 0; i < 4; ++i){
-	EXPECT_EQ(included[i], i);
+    for (size_t i = 0; i < 4; ++i) {
+        EXPECT_EQ(included[i], i);
     }
     for (size_t n = 0; n < 4; ++n) {
         size_t m = 0;
