@@ -30,15 +30,9 @@ struct LUFact {
             for (size_t m = 0; m < M; ++m) {
                 Rational Ymn = rhs(m, n);
                 for (size_t k = 0; k < m; ++k) {
-                    if (auto FR = (F(m, k) * rhs(k, n))) {
-                        if (auto delta = Ymn - FR.getValue()) {
-                            Ymn = delta.getValue();
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+		    if (Ymn.fnmadd(F(m, k), rhs(k, n))){
+			return true;
+		    }
                 }
                 rhs(m, n) = Ymn;
             }
@@ -58,15 +52,9 @@ struct LUFact {
             for (intptr_t m = M - 1; m >= 0; --m) {
                 Rational Ymn = rhs(m, n);
                 for (size_t k = m + 1; k < M; ++k) {
-                    if (auto FR = F(m, k) * rhs(k, n)) {
-                        if (auto delta = Ymn - FR.getValue()) {
-                            Ymn = delta.getValue();
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+		    if (Ymn.fnmadd(F(m, k), rhs(k, n))){
+			return true;
+		    }
                 }
                 if (auto div = Ymn / F(m, m)) {
                     rhs(m, n) = div.getValue();
@@ -95,15 +83,9 @@ struct LUFact {
             for (size_t m = 0; m < M; ++m) {
                 Rational Ymn = rhs(m, n);
                 for (size_t k = 0; k < n; ++k) {
-                    if (auto RF = rhs(m, k) * F(k, n)) {
-                        if (auto delta = Ymn - RF.getValue()) {
-                            Ymn = delta.getValue();
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+		    if (Ymn.fnmadd(rhs(m, k), F(k, n))){
+			return true;
+		    }
                 }
                 if (auto div = Ymn / F(n, n)) {
                     rhs(m, n) = div.getValue();
@@ -118,15 +100,9 @@ struct LUFact {
             for (size_t m = 0; m < M; ++m) {
                 Rational Xmn = rhs(m, n);
                 for (size_t k = n + 1; k < N; ++k) {
-                    if (auto RF = rhs(m, k) * F(k, n)) {
-                        if (auto delta = Xmn - RF.getValue()) {
-                            Xmn = delta.getValue();
-                        } else {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
+		    if (Xmn.fnmadd(rhs(m, k), F(k, n))){
+			return true;
+		    }
                 }
                 rhs(m, n) = Xmn;
             }

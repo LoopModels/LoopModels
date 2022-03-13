@@ -221,6 +221,9 @@ struct VarID {
     IDType getID() const { return id & 0x3fffffff; }
     // IDType getID() const { return id & 0x3fff; }
     VarType getType() const { return static_cast<VarType>(id >> 30); }
+    bool isLoopInductionVariable() const {
+        return getType() == VarType::LoopInductionVariable;
+    }
 };
 std::ostream &operator<<(std::ostream &os, VarID s) {
     return os << s.getType() << ": " << s.getID();
@@ -353,8 +356,8 @@ template <typename T, size_t M>
 bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
     return allMatch(x0, x1);
 }
-static_assert(std::copyable<Vector<intptr_t,4>>);
-static_assert(std::copyable<Vector<intptr_t,0>>);
+static_assert(std::copyable<Vector<intptr_t, 4>>);
+static_assert(std::copyable<Vector<intptr_t, 0>>);
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
 template <typename T> size_t length(Vector<T, 0> v) { return v.data.size(); }
@@ -392,6 +395,37 @@ template <typename T> bool allZero(llvm::SmallVectorImpl<T> const &x) {
 template <typename T> inline Vector<T, 0> emptyVector() {
     return Vector<T, 0>(NULL, 0);
 }
+
+template <typename T> struct StridedVector {
+    T *d;
+    size_t N;
+    size_t x;
+    struct StridedIterator {
+        T *d;
+        size_t x;
+        auto operator++() {
+            d += x;
+            return *this;
+        }
+        auto operator--() {
+            d -= x;
+            return *this;
+        }
+	T& operator*(){
+	    return *d;
+	}
+	bool operator==(const StridedIterator y) const {
+	    return d == y.d;
+	}
+    };
+    auto begin() { return StridedIterator{d, x}; }
+    auto end() { return StridedIterator{d + N * x, x}; }
+    auto begin() const { return StridedIterator{d, x}; }
+    auto end() const { return StridedIterator{d + N * x, x}; }
+    T &operator[](size_t i) { return d[i * x]; }
+    const T &operator[](size_t i) const { return d[i * x]; }
+    size_t size() const { return N; }
+};
 
 //
 // Matrix
@@ -434,6 +468,9 @@ template <typename T, size_t M, size_t N> struct Matrix {
         }
         return true;
     }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector{begin() + m, N, M};
+    }
 };
 
 template <typename T, size_t M> struct Matrix<T, M, 0> {
@@ -462,6 +499,9 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
     size_t length() const { return data.size(); }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector{begin() + m, N, M};
+    }
 };
 template <typename T, size_t N> struct Matrix<T, 0, N> {
     static constexpr size_t N3 = N * 3;
@@ -498,6 +538,9 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
     llvm::ArrayRef<T> getCol(size_t i) {
         T *p = data.data() + i * M;
         return llvm::ArrayRef<T>(p, M);
+    }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector{begin() + m, N, M};
     }
 };
 
@@ -537,18 +580,18 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
         T *p = data.data() + i * M;
         return llvm::ArrayRef<T>(p, M);
     }
-    void copyRow(llvm::ArrayRef<T> a, size_t j){
-	for (size_t m = 0; m < M; ++m){
-	    (*this)(j,m) = a[m];
-	}
+    void copyRow(llvm::ArrayRef<T> a, size_t j) {
+        for (size_t m = 0; m < M; ++m) {
+            (*this)(j, m) = a[m];
+        }
     }
-    void copyCol(llvm::ArrayRef<T> a, size_t j){
-	for (size_t m = 0; m < M; ++m){
-	    (*this)(m,j) = a[m];
-	}
+    void copyCol(llvm::ArrayRef<T> a, size_t j) {
+        for (size_t m = 0; m < M; ++m) {
+            (*this)(m, j) = a[m];
+        }
     }
-    void copyCol(const SquareMatrix<T> &A, size_t j){
-	copyCol(A.getCol(A, j), j);
+    void copyCol(const SquareMatrix<T> &A, size_t j) {
+        copyCol(A.getCol(A, j), j);
     }
     // returns the inverse, followed by bool where true means failure
 
@@ -560,6 +603,9 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
             }
         }
         return A;
+    }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector{begin() + m, M, M};
     }
 };
 
@@ -623,11 +669,14 @@ template <typename T> struct Matrix<T, 0, 0> {
         }
         return true;
     }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector<T>{begin() + m, N, M};
+    }
 };
-static_assert(std::copyable<Matrix<intptr_t,4,4>>);
-static_assert(std::copyable<Matrix<intptr_t,4,0>>);
-static_assert(std::copyable<Matrix<intptr_t,0,4>>);
-static_assert(std::copyable<Matrix<intptr_t,0,0>>);
+static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
+static_assert(std::copyable<Matrix<intptr_t, 4, 0>>);
+static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
+static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
 template <typename T, size_t M, size_t N>
@@ -763,6 +812,21 @@ AbstractMatrix auto matmul(const AbstractMatrix auto &A,
         for (size_t k = 0; k < K; ++k) {
             for (size_t m = 0; m < M; ++m) {
                 C(m, n) += A(m, k) * B(k, n);
+            }
+        }
+    }
+    return C;
+}
+AbstractMatrix auto matmultn(const AbstractMatrix auto &A,
+                           const AbstractMatrix auto &B) {
+    auto [K,  M] = A.size();
+    auto [K2, N] = B.size();
+    assert(K == K2);
+    Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
+    for (size_t n = 0; n < N; ++n) {
+	for (size_t m = 0; m < M; ++m) {
+	    for (size_t k = 0; k < K; ++k) {
+                C(m, n) += A(k, m) * B(k, n);
             }
         }
     }
@@ -1026,9 +1090,9 @@ template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
         old_r -= quotient * r;
         old_s -= quotient * s;
         old_t -= quotient * t;
-	std::swap(r, old_r);
-	std::swap(s, old_s);
-	std::swap(t, old_t);
+        std::swap(r, old_r);
+        std::swap(s, old_s);
+        std::swap(t, old_t);
     }
     // Solving for `t` at the end has 1 extra division, but lets us remove
     // the `t` updates in the loop:
@@ -1112,9 +1176,9 @@ struct Rational {
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
         } else if (n) {
-	    auto [nn, nd] = divgcd(n, d);
+            auto [nn, nd] = divgcd(n, d);
             return Rational{nn, nd};
-	} else {
+        } else {
             return Rational{0, 1};
         }
     }
@@ -1134,10 +1198,10 @@ struct Rational {
         if ((o1 | o2) | (o3 | o4)) {
             return llvm::Optional<Rational>();
         } else if (n) {
-	    auto [nn, nd] = divgcd(n, d);
+            auto [nn, nd] = divgcd(n, d);
             return Rational{nn, nd};
-	} else {
-	    return Rational{0, 1};
+        } else {
+            return Rational{0, 1};
         }
     }
     Rational &operator-=(Rational y) {
@@ -1180,6 +1244,23 @@ struct Rational {
     }
     llvm::Optional<Rational> operator/(Rational y) const {
         return (*this) * y.inv();
+    }
+    // *this -= a*b
+    bool fnmadd(Rational a, Rational b) {
+        if (auto ab = a * b) {
+            if (auto c = *this - ab.getValue()) {
+                *this = c.getValue();
+                return false;
+            }
+        }
+        return true;
+    }
+    bool div(Rational a) {
+        if (auto d = *this / a) {
+            *this = d.getValue();
+            return false;
+        }
+        return true;
     }
     // Rational operator/=(Rational y) { return (*this) *= y.inv(); }
     operator double() { return numerator / denominator; }

@@ -2,6 +2,7 @@
 
 #include "./Math.hpp"
 #include "./Symbolics.hpp"
+#include <cstdint>
 
 // Stride terms are sorted based on VarID
 // NOTE: we require all Const sources be folded into the Affine, and their ids
@@ -20,18 +21,21 @@ struct Stride {
         :    // : indices(llvm:n:SmallVector<
           // std::pair<Polynomial::Multivariate<intptr_t>, VarID>>()),
           counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> const &x)
-        : stride(x), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> &&x)
-        : stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> const &x,
-           VarID ind)
+    Stride(MPoly const &x) : stride(x), counts{0, 0, 0, 0, 0} {};
+    Stride(MPoly &&x) : stride(std::move(x)), counts{0, 0, 0, 0, 0} {};
+    Stride(MPoly const &x, VarID ind)
         : indices({std::make_pair(x, ind)}), counts{0, 0, 0, 0, 0} {};
-    Stride(Polynomial::Multivariate<intptr_t, Polynomial::Monomial> &x,
-           uint32_t indId, VarType indTyp)
+    Stride(MPoly &x, uint32_t indId, VarType indTyp)
         : indices({std::make_pair(x, VarID(indId, indTyp))}), counts{0, 0, 0, 0,
                                                                      0} {};
-
+    Stride(MPoly stride, llvm::SmallVector<std::pair<MPoly, VarID>, 1> indices)
+        : stride(std::move(stride)),
+          indices(std::move(indices)), counts{0, 0, 0, 0, 0} {};
+    Stride(Polynomial::Monomial stride,
+           llvm::SmallVector<std::pair<MPoly, VarID>, 1> indices)
+        : stride(MPoly{intptr_t(1), std::move(stride)}),
+          indices(std::move(indices)), counts{0, 0, 0, 0, 0} {};
+    size_t size() const { return indices.size(); }
     size_t getCount(VarType i) {
         return counts[size_t(i) + 1] - counts[size_t(i)];
     }
@@ -57,6 +61,8 @@ struct Stride {
     inline auto begin(VarID i) const { return begin(i.getType()); }
     inline auto end(VarID i) const { return end(i.getType()); }
     inline size_t numIndices() const { return indices.size(); }
+    auto &operator[](size_t i) { return indices[i]; }
+    auto &operator[](size_t i) const { return indices[i]; }
 
     void addTyp(VarType t) {
         // Clang goes extremely overboard vectorizing loops with dynamic length
@@ -176,15 +182,53 @@ struct Stride {
     // bool isAffine() const { return counts[2] == counts[4]; }
 
     // std::pair<Polynomial,DivRemainder> tryDiv(Polynomial &a){
-    // 	auto [s, v] = gcd(a.terms);
+    //	auto [s, v] = gcd(a.terms);
 
     // }
 
     // bool operator>=(Polynomial x){
 
-    // 	return false;
+    //	return false;
     // }
 };
+
+std::ostream &operator<<(std::ostream &os, Stride const &axis) {
+    bool strideIsOne = isOne(axis.stride);
+    if (!strideIsOne) {
+        os << axis.stride << " * (";
+    }
+    bool printPlus = false;
+    for (auto &indvar : axis) {
+        auto& [mlt, var] = indvar;
+        if (auto optc = mlt.getCompileTimeConstant()) {
+            intptr_t c = optc.getValue();
+            if (printPlus) {
+                if (c < 0) {
+                    c *= -1;
+                    os << " - ";
+                } else {
+                    os << " + ";
+                }
+            }
+            if (c == 1) {
+                os << "{ " << var << " }";
+            } else {
+                os << c << "* { " << var << " }";
+            }
+        } else {
+            if (printPlus) {
+                os << " + ";
+            }
+            os << mlt << "* { " << var << " }";
+        }
+        printPlus = true;
+    }
+    if (!strideIsOne) {
+        os << ")\n";
+    }
+    return os;
+}
+
 /*
 SourceCount sourceCount(Stride s) {
     SourceCount x;
@@ -211,18 +255,55 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 // i1 == i2
 // j1 * M + ...
 
-struct ArrayReference {
+struct ArrayReferenceFlat {
     size_t arrayID;
     llvm::SmallVector<std::pair<MPoly, VarID>, ArrayRefPreAllocSize> inds;
+};
+struct ArrayReference {
+    size_t arrayID;
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
+    size_t dim() const { return axes.size(); }
+    ArrayReference(size_t arrayID) : arrayID(arrayID){};
+    ArrayReference(size_t arrayID,
+                   llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes)
+        : arrayID(arrayID), axes(axes) {
+        // TODO: fill indToStrideMap;
+    }
+    void pushAffineAxis(const MPoly &stride, const StridedVector<intptr_t> &s) {
+        // uint32_t m = 0;
+        if (s.size() >= indToStrideMap.size()) {
+            indToStrideMap.resize(s.size());
+        }
+        uint32_t m = uint32_t(1) << axes.size();
+        axes.emplace_back(stride);
+        llvm::SmallVector<std::pair<MPoly, VarID>, 1> &inds =
+            axes.back().indices;
+        for (IDType i = 0; i < s.size(); ++i) {
+            if (intptr_t c = s[i]) {
+                inds.emplace_back(c, VarID(i, VarType::LoopInductionVariable));
+                assert(inds.back().first.getCompileTimeConstant().getValue() ==
+                       c);
+                indToStrideMap[i] |= m;
+            }
+        }
+    }
     auto begin() { return axes.begin(); }
     auto end() { return axes.end(); }
     auto begin() const { return axes.begin(); }
     auto end() const { return axes.end(); }
+    friend std::ostream &operator<<(std::ostream &os,
+                                    ArrayReference const &ar) {
+        os << "ArrayReference " << ar.arrayID << " (dim = " << ar.axes.size()
+           << "):" << std::endl;
+        for (auto &ax : ar) {
+            std::cout << ax << std::endl;
+        }
+        return os;
+    }
 };
 
-std::ostream &operator<<(std::ostream &os, ArrayReference const &ar) {
+std::ostream &operator<<(std::ostream &os, ArrayReferenceFlat const &ar) {
     os << "ArrayReference " << ar.arrayID << ":" << std::endl;
     for (size_t i = 0; i < length(ar.inds); ++i) {
         auto [ind, src] = ar.inds[i];

@@ -5,6 +5,7 @@
 #include "./Graphs.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./NormalForm.hpp"
 #include "./Symbolics.hpp"
 #include <bit>
 #include <bitset>
@@ -502,25 +503,30 @@ size_t addLinearlyIndependentCol(SquareMatrix<intptr_t> &A, size_t j){
     }
     return j+1;
 }
+*/
+
 // `B` is a transposed mirror in reduced form
 // it is used to check whether a new row is linearly independent.
-size_t addUniqueIndRow(SquareMatrix<intptr_t> &A, SquareMatrix<intptr_t> &B,
-const Stride &axis, size_t j){ for (auto &a : axis){ const MPoly &m = a.first;
-        VarID v = a.second;
-        if (v.getType() == VarType::LoopInductionVariable){
-            llvm::Optional<intptr_t> c = m.getCompileTimeConstant();
-            if (c.hasValue()){
-
+bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
+    // std::ranges::fill(A.getRow(j), intptr_t(0));
+    for (size_t i = 0; i < axis.size(); ++i) {
+        VarID v = axis[i].second;
+        if (v.isLoopInductionVariable()) {
+            if (llvm::Optional<intptr_t> c =
+                    axis[i].first.getCompileTimeConstant()) {
+                A(j, v.getID()) = c.getValue();
+                continue;
             }
         }
+        return true;
     }
-    return j;
+    return false;
 }
-*/
-/*
-llvm::Optional<AffineLoopNestPerm>
-orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *>
-&ai) {
+
+// llvm::Optional<std::pair<AffineLoopNestPerm, llvm::ArrayRef<ArrayReference>>>
+llvm::Optional<std::pair<AffineLoopNestPerm, llvm::SmallVector<ArrayReference, 0>>>
+orthogonalize(AffineLoopNestPerm const &alnp,
+              llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I
     // where L are the loop induct variables, and I are the array indices
@@ -534,21 +540,53 @@ orthogonalize(AffineLoopNestPerm &aln, llvm::SmallVectorImpl<ArrayReference *>
     // If so, we can then use the lufactorizationm for computing
     // A/B, to get loop bounds in terms of the indexes.
     //
-    size_t numLoops = aln.getNumLoops();
-    SquareMatrix<intptr_t> A(numLoops);
-    SquareMatrix<intptr_t> B(numLoops);
-    for (size_t i = 0; i < numLoops*numLoops; ++i){
-        A[i] = 0;
+    size_t numLoops = alnp.getNumLoops();
+    size_t numRow = 0;
+    for (auto a : ai) {
+	numRow += a->dim();
     }
-    size_t j = 0;
-    for (auto a : ai){
-        for (auto &axis : (*a)){
-            j = addUniqueIndRow(A, axis, j);
+    Matrix<intptr_t, 0, 0> S(numRow, numLoops);
+    // std::ranges::fill(S, intptr_t(0));
+    size_t row = 0;
+    for (auto a : ai) {
+        for (auto &axis : (*a)) {
+            if (addIndRow(S, axis, row)) {
+                return {};
+            }
+            ++row;
         }
     }
-    return llvm::Optional<AffineLoopNestPerm>();
+    auto [K, included] = NormalForm::orthogonalize(S);
+    if (size_t I = included.size()) {
+        // We let
+        // L = K*J
+        // Originally, the loop bounds were
+        // A'*L <= b
+        // now, we have (A = alnp.aln->A, r = alnp.aln->r)
+        // (A'*K)*J <= r
+        AffineLoopNestPerm alnpNew(std::make_shared<AffineLoopNest>(
+            AffineLoopNest(matmultn(K, alnp.aln->A), alnp.aln->r)));
+        // Originally, the mapping from our loops to our indices was
+        // S*L = I
+        // now, we have
+        // (S*K)*J = I
+        auto SK = matmul(S, K);
+        // llvm::SmallVector<ArrayReference*> aiNew;
+	llvm::SmallVector<ArrayReference, 0> newArrayRefs;
+        newArrayRefs.reserve(numRow);
+        size_t i = 0;
+        for (auto a : ai) {
+            newArrayRefs.emplace_back(a->arrayID);
+            for (auto &axis : *a) {
+                newArrayRefs.back().pushAffineAxis(axis.stride, SK.getRow(i));
+                ++i;
+            }
+        }
+        return std::make_pair(std::move(alnpNew), newArrayRefs);
+    }
+    return {};
 }
-*/
+
 /*
 bool isadditive(Term t) {
     Operation op = t.op;

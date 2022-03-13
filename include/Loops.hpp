@@ -629,6 +629,12 @@ struct AffineLoopNestPerm {
         pruneABound(lc[k], poset);
         pruneABound(uc[k], poset);
     }
+    void pruneBounds(PartiallyOrderedSet const &poset) {
+	for (size_t k = 0; k < lc.size(); ++k){
+	    pruneABound(lc[k], poset);
+	    pruneABound(uc[k], poset);
+	}
+    }
     static bool pruneDiffs(llvm::SmallVector<MPoly, 2> &bv, intptr_t sign) {
         for (auto it = bv.begin(); it != bv.end() - 1; ++it) {
             for (auto ii = it + 1; ii != bv.end(); ++ii) {
@@ -648,9 +654,11 @@ struct AffineLoopNestPerm {
         }
         return false;
     }
+    // prunes larger values, leaves minimum
     static bool pruneMin(llvm::SmallVector<MPoly, 2> &bv) {
         return pruneDiffs(bv, 1);
     }
+    // prunes smaller values, leaves maximum
     static bool pruneMax(llvm::SmallVector<MPoly, 2> &bv) {
         return pruneDiffs(bv, -1);
     }
@@ -798,11 +806,18 @@ struct AffineLoopNestPerm {
     void calcUpperExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
         // c*j <= b - a'i
-        for (auto &ab : uc[i]) {
+	std::cout << "\n====\nStarting loop " << i << ":\n";
+	for (auto &ab : uc[i]) {
+	    std::cout << ab << std::endl;
             calcExtrema(bv, ab);
         }
         while (pruneMin(bv)) {
         }
+	std::cout << "bv: ";
+	for (auto &bvi : bv){
+	    std::cout << bvi << ", ";
+	}
+	std::cout << std::endl;
         aln->uExtrema.push_back(std::move(bv));
     }
     // zeroIterationsUponExtending(size_t i, bool lower);
@@ -967,14 +982,12 @@ struct AffineLoopNestPerm {
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNestPerm &alnp) {
         for (size_t i = 0; i < alnp.getNumLoops(); ++i) {
-            auto lbs = alnp.lc[i];
-            auto ubs = alnp.uc[i];
             os << "Loop " << i << " lower bounds: " << std::endl;
-            for (auto &b : lbs) {
+            for (auto &b : alnp.lc[i]) {
                 os << b << std::endl;
             }
             os << "Loop " << i << " upper bounds: " << std::endl;
-            for (auto &b : ubs) {
+            for (auto &b : alnp.uc[i]) {
                 os << b << std::endl;
             }
         }

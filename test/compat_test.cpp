@@ -208,7 +208,7 @@ TEST(CompatTest, BasicAssertions) {
 TEST(AffineTest0, BasicAssertions) {
     std::cout << "Starting affine test 0" << std::endl;
     llvm::SmallVector<MPoly, 8> r;
-    Matrix<Int, 0, 0> A = Matrix<Int, 0, 0>(3, 6);
+    Matrix<Int, 0, 0> A(3, 6);
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
