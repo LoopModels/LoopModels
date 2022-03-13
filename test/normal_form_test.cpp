@@ -74,11 +74,11 @@ TEST(NormalFormTest, BasicAssertions) {
     size_t luFailedCount = 0;
     size_t invFailedCount = 0;
     size_t numIters = 1000;
-    Matrix<intptr_t, 0, 0> B(6, 4);
+    Matrix<intptr_t, 0, 0> B(8, 4);
     SquareMatrix<intptr_t> I4 = SquareMatrix<intptr_t>::identity(4);
     for (size_t i = 0; i < numIters; ++i) {
         for (size_t n = 0; n < 4; ++n) {
-            for (size_t m = 0; m < 6; ++m) {
+            for (size_t m = 0; m < 8; ++m) {
                 B(m, n) = distrib(gen);
             }
         }
