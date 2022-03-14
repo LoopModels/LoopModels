@@ -391,6 +391,12 @@ template <typename T> bool allZero(llvm::SmallVectorImpl<T> const &x) {
             return false;
     return true;
 }
+template <typename T> bool allZero(llvm::ArrayRef<T> x) {
+    for (auto &a : x)
+        if (a != 0)
+            return false;
+    return true;
+}
 
 template <typename T> inline Vector<T, 0> emptyVector() {
     return Vector<T, 0>(NULL, 0);
@@ -781,6 +787,12 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
     return printMatrix(os, A);
 }
+
+template <typename A>
+concept IntVector = requires(A a) {
+    { a[size_t(0)] } -> std::same_as<intptr_t &>;
+    { a.size() } -> std::same_as<size_t>;
+};
 
 template <typename A>
 concept AbstractMatrix = requires(A a) {

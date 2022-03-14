@@ -1,6 +1,5 @@
 #pragma once
 #include "./Math.hpp"
-#include "IntermediateRepresentation.hpp"
 #include "llvm/ADT/APInt.h" // llvm::Optional
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
