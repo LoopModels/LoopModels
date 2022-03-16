@@ -4,6 +4,7 @@
 #include "./BitSets.hpp"
 #include "./Math.hpp"
 #include "./POSet.hpp"
+#include "./Permutation.hpp"
 #include "./Symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -559,6 +560,314 @@ struct AffineLoopNestBounds {
 
     void calcBounds(size_t i) {
         size_t numLoops = getNumLoops();
+        auto &Aold = remainingA[i];
+        auto &bold = remainingB[i];
+        size_t numNeg = 0;
+        size_t numPos = 0;
+        size_t numCol = Aold.size(1);
+        for (size_t j = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            numNeg += (Aij < 0);
+            numPos += (Aij > 0);
+        }
+        size_t numExclude = numCol - numNeg - numPos;
+        size_t numColA = numNeg * numPos + numExclude;
+
+        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
+        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
+        A.resizeForOverwrite(numLoops, numColA);
+        b.resize(numColA);
+        auto &lA = lowerA[i];
+        auto &uA = upperA[i];
+        auto &lB = lowerB[i];
+        auto &uB = upperB[i];
+
+        uint32_t remU = 0;
+        uint32_t remL = 0;
+        // fill A and b
+        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            if (Aij > 0) {
+                bool dependsOnInner = false;
+                for (size_t k = 0; k < numLoops; ++k) {
+                    intptr_t Akj = Aold(k, j);
+                    uA(k, u) = Akj;
+                    dependsOnInner |= ((Akj != 0) & (k != i));
+                }
+                remU |= dependsOnInner;
+                remU <<= 1;
+                uB[u++] = bold[j];
+            } else if (Aij < 0) {
+                bool dependsOnInner = false;
+                for (size_t k = 0; k < numLoops; ++k) {
+                    intptr_t Akj = Aold(k, j);
+                    lA(k, l) = Akj;
+                    dependsOnInner |= ((Akj != 0) & (k != i));
+                }
+                remL |= dependsOnInner;
+                remL <<= 1;
+                lB[l++] = bold[j];
+            } else if (i) {
+                // Aij == 0
+                for (size_t k = 0; k < numLoops; ++k) {
+                    A(k, c) = Aold(k, j);
+                }
+                b[c++] = bold[j];
+            }
+        }
+        if (i == 0) {
+            return;
+        }
+        // we've now set upper/lower bounds, and the remaining bounds that are
+        // indepednent.
+        size_t numNewEquations = numExclude;
+        for (size_t l = 0; l < numNeg; ++l) {
+            bool lDependsOnInner = (remL >> (numNeg - l)) & 0x00000001;
+            if ((!lDependsOnInner) & (remU == 0)) {
+                continue;
+            }
+            for (size_t u = 0; u < numPos; ++u) {
+                bool uDependsOnInner = (remU >> (numPos - u)) & 0x00000001;
+                if (!(lDependsOnInner | uDependsOnInner)) {
+                    continue;
+                }
+                setBounds(A.getCol(numNewEquations), b[numNewEquations],
+                          lA.getCol(l), lB[l], uA.getCol(u), uB[u], i);
+                ++numNewEquations;
+            }
+        }
+        A.resize(numLoops, numNewEquations);
+        b.resize(numNewEquations);
+    }
+    void swap(size_t _i, size_t _j) {
+        if (_i == _j) {
+            return;
+        }
+        perm.swap(_i, _j);
+        calcBounds(std::min(_i, _j), std::max(_i, _j));
+    }
+    static inline bool independentOfInner(PtrVector<intptr_t, 0> a, size_t i) {
+        for (size_t j = 0; j < a.size(); ++j) {
+            if ((a[j] != 0) & (i != j)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    void eliminateVariable(Matrix<intptr_t, 0, 0, 128> &A,
+                           llvm::SmallVectorImpl<MPoly> &b,
+                           llvm::SmallVector<uint64_t, 16> &labels,
+                           const Matrix<intptr_t, 0, 0, 128> &AOld,
+                           const llvm::SmallVectorImpl<MPoly> &bOld,
+                           const llvm::SmallVector<uint64_t, 16> &labelsOld,
+                           const size_t i) {
+        // eliminate variable `i` according to original order
+        const size_t numLoops = getNumLoops();
+        size_t numNeg = 0;
+        size_t numPos = 0;
+        const size_t numCol = AOld.size(1);
+        for (size_t j = 0; j < numCol; ++j) {
+            intptr_t Aij = AOld(i, j);
+            numNeg += (Aij < 0);
+            numPos += (Aij > 0);
+        }
+        const size_t numExclude = numCol - numNeg - numPos;
+        const size_t numColA = numNeg * numPos + numExclude;
+
+        A.resizeForOverwrite(numLoops, numColA);
+        b.resize(numColA);
+	labels.resize_for_overwrite(numColA);
+        // auto &lA = lowerA[i];
+        // auto &uA = upperA[i];
+        // auto &lB = lowerB[i];
+        // auto &uB = upperB[i];
+
+        // assign to `A = Aold[:,exlcuded]`
+        for (size_t j = 0, c = 0; c < numExclude; ++j) {
+            if (AOld(i, j)) {
+                continue;
+            }
+            for (size_t k = 0; k < numLoops; ++k) {
+                A(k, c) = AOld(k, j);
+            }
+            b[c] = bOld[j];
+            labels[c++] = labelsOld[j];
+        }
+        size_t c = numExclude;
+        for (size_t u = 0; u < numCol; ++u) {
+            if (intptr_t Aiu = AOld(i, u) > 0) {
+                bool independentOfInnerU =
+                    independentOfInner(AOld.getCol(u), i);
+                uint64_t labelu = labelsOld[u];
+                for (size_t l = 0; l < numCol; ++l) {
+                    if (intptr_t Ail = AOld(i, l) < 0) {
+                        if (independentOfInnerU &&
+                            independentOfInner(AOld.getCol(l), i)) {
+                            // if we've eliminated everything, then this bound
+                            // does not provide any useful information.
+                            continue;
+                        }
+                        setBounds(A.getCol(c), b[c], AOld.getCol(l), bOld[l],
+                                  AOld.getCol(u), bOld[u], i);
+
+                        labels[c++] = labelsOld[l] | labelu;
+                    }
+                }
+            }
+        }
+        A.resize(numLoops, c);
+        b.resize(c);
+	labels.resize(c);
+    }
+    // `_i` is w/ respect to current order, `i` for original order.
+    void calculateBounds(const size_t _i) {
+        const size_t i = perm(_i);
+        const size_t numLoops = getNumLoops();
+        auto &Aold = remainingA[i];
+        auto &bold = remainingB[i];
+        size_t numNeg = 0;
+        size_t numPos = 0;
+        size_t numCol = Aold.size(1);
+        for (size_t j = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            numNeg += (Aij < 0);
+            numPos += (Aij > 0);
+        }
+        size_t numExclude = numCol - numNeg - numPos;
+        size_t numColA = numNeg * numPos + numExclude;
+
+        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
+        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
+        A.resizeForOverwrite(numLoops, numColA);
+        b.resize(numColA);
+        auto &lA = lowerA[i];
+        auto &uA = upperA[i];
+        auto &lB = lowerB[i];
+        auto &uB = upperB[i];
+
+        uint32_t dependency = 0; // just has to be any dependency, if there is one
+        // fill A and b
+        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            if (Aij) {
+                for (size_t k = 0; k < numLoops; ++k) {
+                    intptr_t Akj = Aold(k, j);
+                    bool depends = ((Akj != 0) & (k != i));
+                    dependency = (depends ? k : dependency);
+                }
+                if (Aij > 0) {
+                    for (size_t k = 0; k < numLoops; ++k) {
+                        uA(k, u) = Aold(k, j);
+                    }
+                    uB[u++] = bold[j];
+                } else {
+                    for (size_t k = 0; k < numLoops; ++k) {
+                        lA(k, l) = Aold(k, j);
+                    }
+                    lB[l++] = bold[j];
+                }
+            } else if (i) {
+                // Aij == 0
+                for (size_t k = 0; k < numLoops; ++k) {
+                    A(k, c) = Aold(k, j);
+                }
+                b[c++] = bold[j];
+            }
+        }
+        if (_i == 0) {
+            return;
+        }
+        if ((numNeg > 1) | (numPos > 1)) {
+            // if we have multiple bounds, we try to prune
+            if (dependency) {
+		// hopefully stack allocate scratch space
+                Matrix<intptr_t, 0, 0, 128> AOld(numLoops, numCol);
+                Matrix<intptr_t, 0, 0, 128> ANew;
+                llvm::SmallVector<MPoly, 16> bOld(numCol);
+                llvm::SmallVector<MPoly, 16> bNew;
+                llvm::SmallVector<uint64_t, 16> labelsNew;
+                llvm::SmallVector<uint64_t, 16> labelsOld(numCol);
+		size_t ln = 0;
+		size_t lp = numNeg;
+		for (size_t j = 0; j < numCol; ++j){
+		    intptr_t Aij = Aold(i,j);
+		    if (Aij > 0){
+			labelsOld[j] = uint64_t(1) << (lp++);
+		    } else if (Aij < 0) {
+			labelsOld[j] = uint64_t(1) << (ln++);
+		    }
+		    bOld[j] = bold[j];
+		}
+		for (size_t j = 0; j < numCol*numLoops; ++j){
+		    AOld[j] = Aold[j];
+		}
+                do {
+                    // eliminate dependency `d` from the bounds we're trying to
+                    // compare.
+                    eliminateVariable(ANew, bNew, labelsNew, AOld, bOld,
+                                      labelsOld, dependency);
+		    std::swap(ANew, AOld);
+		    std::swap(bNew, bOld);
+		    std::swap(labelsNew, labelsOld);
+		    dependency = 0;
+		    for (size_t j = 0; j < AOld.size(1); ++j){
+			if (AOld(i,j)){
+			    for (size_t k = 0; k < numLoops; ++k){
+				if ((AOld(k,j) != 0) & (k != i)){
+				    dependency = k;
+				    break;
+				}
+			    }
+			    if (dependency){ break; }
+			}
+		    }
+                } while (dependency);
+		// Now bounds are given by `bOld`. Remaining steps:
+		// 1. check AOld for whether bounds are lower/upper
+		// 2. Prune bounds, removing `label`s as well.
+		// 3. Check remaining labels to see which original bounds are now absent.
+		// 4. Drop the associated missing original bounds.
+            }
+        }
+        // we've now set upper/lower bounds, and the remaining bounds that are
+        // indepednent.
+        size_t numNewEquations = numExclude;
+        for (size_t l = 0; l < numNeg; ++l) {
+            bool lDependsOnInner =
+                (dependsOnInnerL >> (numNeg - l)) & 0x00000001;
+            if ((!lDependsOnInner) & (dependsOnInnerU == 0)) {
+                continue;
+            }
+            for (size_t u = 0; u < numPos; ++u) {
+                bool uDependsOnInner =
+                    (dependsOnInnerU >> (numPos - u)) & 0x00000001;
+                if (!(lDependsOnInner | uDependsOnInner)) {
+                    continue;
+                }
+                setBounds(A.getCol(numNewEquations), b[numNewEquations],
+                          lA.getCol(l), lB[l], uA.getCol(u), uB[i], i);
+                ++numNewEquations;
+            }
+        }
+        A.resize(numLoops, numNewEquations);
+        b.resize(numNewEquations);
+    }
+    // calc bounds from _start..._stop w/ respect to current order
+    // convention: `_` means w/ respect to current order,
+    // no underscore means w/ respect to original order.
+    void calcBounds(size_t _start, size_t _stop) {
+        // get indices in original order
+        // const size_t start = perm(_start);
+        // const size_t stop = perm(_stop);
+        for (intptr_t _i = _stop; _i >= intptr_t(_start); --_i) {
+            size_t i = perm(_i);
+            // first, we get upper and lower bounds of `i`
+            // if we have multiple of any of these bounds, we try to reduce
+            // them.
+        }
+
+        const size_t numLoops = getNumLoops();
+
         auto &Aold = remainingA[i];
         auto &bold = remainingB[i];
         size_t numNeg = 0;
