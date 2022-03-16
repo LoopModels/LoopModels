@@ -341,6 +341,14 @@ template <typename T> struct PtrVector<T, 0> {
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
     size_t size() const { return M; }
+    bool operator==(const PtrVector<T, 0> x) const {
+	for (size_t i = 0; i < M; ++i){
+	    if (x[i] != ptr[i]){
+		return false;
+	    }
+	}
+	return true;
+    }
 };
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
@@ -481,6 +489,7 @@ struct Matrix {
     size_t length() const { return M * N; }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
+    PtrVector<const T, M> getCol(size_t i) const { return PtrVector<T, M>(data + i * M); }
     bool operator==(const Matrix<T, M, N> &A) const {
         for (size_t i = 0; i < M * N; ++i) {
             if (data[i] != A[i]) {
@@ -519,6 +528,7 @@ template <typename T, size_t M, size_t S> struct Matrix<T, M, 0, S> {
     size_t length() const { return data.size(); }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
+    PtrVector<const T, M> getCol(size_t i) const { return PtrVector<T, M>(data + i * M); }
     StridedVector<T> getRow(size_t m) {
         return StridedVector{begin() + m, N, M};
     }
@@ -556,6 +566,10 @@ template <typename T, size_t N, size_t S> struct Matrix<T, 0, N, S> {
 
     PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
+        return PtrVector<T, 0>{p, M};
+    }
+    PtrVector<const T, 0> getCol(size_t i) const {
+        const T *p = data.data() + i * M;
         return PtrVector<T, 0>{p, M};
     }
     StridedVector<T> getRow(size_t m) {
@@ -596,6 +610,10 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
     size_t length() const { return data.size(); }
 
     PtrVector<T, 0> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return PtrVector<T, 0>{p, M};
+    }
+    PtrVector<T, 0> getCol(size_t i) const {
         T *p = data.data() + i * M;
         return PtrVector<T, 0>{p, M};
     }
@@ -678,6 +696,10 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
     std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
     PtrVector<T, 0> getCol(size_t i) {
+        T *p = data.data() + i * M;
+        return PtrVector<T, 0>(p, M);
+    }
+    PtrVector<T, 0> getCol(size_t i) const {
         T *p = data.data() + i * M;
         return PtrVector<T, 0>(p, M);
     }
@@ -954,47 +976,6 @@ void swapCols(IntMatrix auto &A, size_t i, size_t j) {
 //
 // Permutations
 //
-typedef Matrix<unsigned, 0, 2> PermutationData;
-struct Permutation {
-    PermutationData data;
-
-    Permutation(size_t nloops) : data(PermutationData(nloops)) {
-        assert(nloops <= MAX_NUM_LOOPS);
-        init();
-    };
-
-    unsigned &operator()(size_t i) { return data(i, 0); }
-    unsigned operator()(size_t i) const { return data(i, 0); }
-    bool operator==(Permutation y) {
-        return data.getCol(0) == y.data.getCol(0);
-    }
-    size_t getNumLoops() const { return data.size(0); }
-    size_t length() const { return data.length(); }
-
-    llvm::ArrayRef<unsigned> inv() { return data.getCol(1); }
-
-    unsigned &inv(size_t j) { return data(j, 1); }
-    auto begin() { return data.begin(); }
-    auto end() { return data.begin() + data.size(0); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.begin() + data.size(0); }
-
-    void init() {
-        size_t numloops = getNumLoops();
-        for (size_t n = 0; n < numloops; n++) {
-            data(n, 0) = n;
-            data(n, 1) = n;
-        }
-    }
-    void swap(size_t i, size_t j) {
-        size_t xi = data(i, 0);
-        size_t xj = data(j, 0);
-        data(i, 0) = xj;
-        data(j, 0) = xi;
-        data(xj, 1) = i;
-        data(xi, 1) = j;
-    }
-};
 template <typename T> struct UnitRange {
     T operator()(size_t i) { return T(i); }
     bool operator==(UnitRange<T>) { return true; }
@@ -1015,15 +996,6 @@ struct PermutationVector {
 };
 */
 
-std::ostream &operator<<(std::ostream &os, Permutation const &perm) {
-    auto numloop = perm.getNumLoops();
-    os << "perm: {";
-    for (size_t j = 0; j < numloop - 1; j++) {
-        os << perm(j) << " ";
-    }
-    os << perm(numloop - 1) << "}";
-    return os;
-}
 /*
 struct PermutationSubset {
     Permutation p;
