@@ -323,8 +323,25 @@ template <typename T, size_t M> struct PtrVector {
     T *end() { return ptr + M; }
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
+    constexpr size_t size() const { return M; }
 };
-
+template <typename T> struct PtrVector<T, 0> {
+    T *ptr;
+    size_t M;
+    T &operator()(size_t i) const {
+#ifndef DONOTBOUNDSCHECK
+        assert(i < M);
+#endif
+        return ptr[i];
+    }
+    T &operator[](size_t i) { return ptr[i]; }
+    const T &operator[](size_t i) const { return ptr[i]; }
+    T *begin() { return ptr; }
+    T *end() { return ptr + M; }
+    const T *begin() const { return ptr; }
+    const T *end() const { return ptr + M; }
+    size_t size() const { return M; }
+};
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
     Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
@@ -417,12 +434,8 @@ template <typename T> struct StridedVector {
             d -= x;
             return *this;
         }
-	T& operator*(){
-	    return *d;
-	}
-	bool operator==(const StridedIterator y) const {
-	    return d == y.d;
-	}
+        T &operator*() { return *d; }
+        bool operator==(const StridedIterator y) const { return d == y.d; }
     };
     auto begin() { return StridedIterator{d, x}; }
     auto end() { return StridedIterator{d + N * x, x}; }
@@ -436,10 +449,12 @@ template <typename T> struct StridedVector {
 //
 // Matrix
 //
-template <typename T, size_t M, size_t N> struct Matrix {
-    // static_assert(M*N != L, "if specifying non-zero M and N, we should have
-    // M*N == L");
-    T data[M * N];
+template <typename T, size_t M, size_t N,
+          size_t S = std::max(M, size_t(3)) * std::max(N, size_t(3))>
+struct Matrix {
+    static_assert(M * N == S,
+                  "if specifying non-zero M and N, we should have M*N == S");
+    T data[S];
     T &operator()(size_t i, size_t j) {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
@@ -479,9 +494,8 @@ template <typename T, size_t M, size_t N> struct Matrix {
     }
 };
 
-template <typename T, size_t M> struct Matrix<T, M, 0> {
-    static constexpr size_t M3 = M * 3;
-    llvm::SmallVector<T, M3> data;
+template <typename T, size_t M, size_t S> struct Matrix<T, M, 0, S> {
+    llvm::SmallVector<T, S> data;
     size_t N;
 
     Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
@@ -509,9 +523,8 @@ template <typename T, size_t M> struct Matrix<T, M, 0> {
         return StridedVector{begin() + m, N, M};
     }
 };
-template <typename T, size_t N> struct Matrix<T, 0, N> {
-    static constexpr size_t N3 = N * 3;
-    llvm::SmallVector<T, N3> data;
+template <typename T, size_t N, size_t S> struct Matrix<T, 0, N, S> {
+    llvm::SmallVector<T, S> data;
     size_t M;
 
     Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
@@ -541,9 +554,9 @@ template <typename T, size_t N> struct Matrix<T, 0, N> {
     std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
 
-    llvm::ArrayRef<T> getCol(size_t i) {
+    PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
-        return llvm::ArrayRef<T>(p, M);
+        return PtrVector<T, 0>{p, M};
     }
     StridedVector<T> getRow(size_t m) {
         return StridedVector{begin() + m, N, M};
@@ -582,9 +595,9 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
     size_t size(size_t) const { return M; }
     size_t length() const { return data.size(); }
 
-    llvm::ArrayRef<T> getCol(size_t i) {
+    PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
-        return llvm::ArrayRef<T>(p, M);
+        return PtrVector<T, 0>{p, M};
     }
     void copyRow(llvm::ArrayRef<T> a, size_t j) {
         for (size_t m = 0; m < M; ++m) {
@@ -627,8 +640,8 @@ std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
     return std::make_pair(B, false);
 }
 
-template <typename T> struct Matrix<T, 0, 0> {
-    llvm::SmallVector<T> data;
+template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
+    llvm::SmallVector<T, S> data;
 
     size_t M;
     size_t N;
@@ -636,6 +649,7 @@ template <typename T> struct Matrix<T, 0, 0> {
     Matrix(size_t m, size_t n)
         : data(llvm::SmallVector<T>(m * n)), M(m), N(n){};
 
+    Matrix() : M(0), N(0){};
     Matrix(SquareMatrix<T> &&A) : data(std::move(A.data)), M(A.M), N(A.M){};
     Matrix(const SquareMatrix<T> &A)
         : data(A.data.begin(), A.data.end()), M(A.M), N(A.M){};
@@ -663,9 +677,9 @@ template <typename T> struct Matrix<T, 0, 0> {
     size_t size(size_t i) const { return i == 0 ? M : N; }
     std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
     size_t length() const { return data.size(); }
-    llvm::ArrayRef<T> getCol(size_t i) {
+    PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
-        return llvm::ArrayRef<T>(p, M);
+        return PtrVector<T, 0>(p, M);
     }
     bool operator==(const Matrix<T, 0, 0> &A) const {
         for (size_t i = 0; i < M * N; ++i) {
@@ -677,6 +691,36 @@ template <typename T> struct Matrix<T, 0, 0> {
     }
     StridedVector<T> getRow(size_t m) {
         return StridedVector<T>{begin() + m, N, M};
+    }
+    static Matrix<T, 0, 0> Uninitialized(size_t MM, size_t NN) {
+        Matrix<T, 0, 0> A(0, 0);
+        A.M = MM;
+        A.N = NN;
+        A.data.resize_for_overwrite(MM * NN);
+        return A;
+    }
+    void resize(size_t MM, size_t NN) {
+        M = MM;
+        N = NN;
+        data.resize(M * N);
+    }
+    void resizeForOverwrite(size_t MM, size_t NN) {
+        M = MM;
+        N = NN;
+        data.resize_for_overwrite(M * N);
+    }
+    void resizeRows(size_t NN) {
+        N = NN;
+        data.resize(M * N);
+    }
+    void resizeRowsForOverwrite(size_t NN) {
+        N = NN;
+        data.resize_for_overwrite(M * N);
+    }
+    void eraseRow(size_t i) {
+        auto it = data.begin() + i * M;
+        data.erase(it, it + M);
+        --N;
     }
 };
 static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
@@ -830,14 +874,14 @@ AbstractMatrix auto matmul(const AbstractMatrix auto &A,
     return C;
 }
 AbstractMatrix auto matmultn(const AbstractMatrix auto &A,
-                           const AbstractMatrix auto &B) {
-    auto [K,  M] = A.size();
+                             const AbstractMatrix auto &B) {
+    auto [K, M] = A.size();
     auto [K2, N] = B.size();
     assert(K == K2);
     Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
     for (size_t n = 0; n < N; ++n) {
-	for (size_t m = 0; m < M; ++m) {
-	    for (size_t k = 0; k < K; ++k) {
+        for (size_t m = 0; m < M; ++m) {
+            for (size_t k = 0; k < K; ++k) {
                 C(m, n) += A(k, m) * B(k, n);
             }
         }

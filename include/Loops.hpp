@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <memory>
 #include <utility>
 
 //
@@ -297,6 +298,27 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
     }
 }
 
+// a'i <= b
+struct AffineLE {
+    llvm::SmallVector<intptr_t, 4> a;
+    MPoly b;
+
+    // Factor out variable `i`, then set l <= u
+    AffineLE(const AffineLE &l, const AffineLE &u, size_t i) {
+        intptr_t cu = u.a[i];
+        intptr_t cl = l.a[i];
+        b = cu * l.b;
+        Polynomial::fnmadd(b, u.b, cl);
+        size_t N = l.a.size();
+        a.resize_for_overwrite(N);
+        for (size_t n = 0; n < N; ++n) {
+            a[n] = cu * l.a[n] - cl * u.a[n];
+        }
+        a[i] = 0;
+    }
+    bool operator==(const AffineLE &x) const { return a == x.a && b == x.b; }
+};
+
 // c*j <= b - a * i
 // For example, let
 // c = 1, b = N - 1, a = [1, 0, -2]
@@ -307,25 +329,31 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
 // Then we have a lower bound:
 // -j <= N - 1 - i_0 + 2*i_2
 // j >= 1 - N + i_0 - 2*i_2
-struct Affine {
+struct AffineCmp {
     llvm::SmallVector<intptr_t, 4> a;
     MPoly b;
     intptr_t c;
-    Affine(MPoly m, intptr_t c) : b(m), c(c){};
-    Affine(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c)
+    AffineCmp(MPoly m, intptr_t c) : b(m), c(c){};
+    AffineCmp(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c)
         : a(std::move(a)), b(std::move(b)), c(c) {}
-    Affine(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b, intptr_t c)
+    AffineCmp(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b,
+              intptr_t c)
         : a(a), b(b), c(c) {}
 
-    bool operator==(Affine const &x) const {
+    bool operator==(AffineCmp const &x) const {
         return c == x.c && a == x.a && b == x.b;
     }
     bool operator==(MPoly x) const { return allZero(a) && c * b == x; }
     bool operator==(int x) const {
-        return (b.degree() == 0) && (b.leadingCoefficient() == x) && allZero(a);
+        if (auto bc = b.getCompileTimeConstant()) {
+            return ((c * bc.getValue()) == x) && allZero(a);
+        } else {
+            return false;
+        }
     }
+
     bool isConstant() const { return (b.degree() == 0) && allZero(a); }
-    void subtractUpdateAB(Affine const &x, intptr_t c0, intptr_t c1) {
+    void subtractUpdateAB(AffineCmp const &x, intptr_t c0, intptr_t c1) {
         b *= c0;
         fnmadd(b, x.b, c1); // y.b -= x.b * c1;
         for (size_t i = 0; i < a.size(); ++i) {
@@ -333,7 +361,7 @@ struct Affine {
         }
         c *= c0;
     }
-    void subtractUpdate(Affine const &x, intptr_t a1) {
+    void subtractUpdate(AffineCmp const &x, intptr_t a1) {
         intptr_t xc;
         if (x.c < 0) {
             xc = -x.c;
@@ -344,8 +372,8 @@ struct Affine {
         subtractUpdateAB(x, xc, a1);
     }
     // assumes we're subtracting off one of the bounds
-    Affine subtract(Affine const &x, intptr_t a1) const {
-        Affine y = *this;
+    AffineCmp subtract(AffineCmp const &x, intptr_t a1) const {
+        AffineCmp y = *this;
         y.subtractUpdate(x, a1);
         return y;
     }
@@ -356,7 +384,7 @@ struct Affine {
     // c = abs(c0) * c1
     // b = b1*abs(c0) - c1 * b0
     // a = a1*c0 - a0*c1
-    Affine &operator-=(Affine const &x) {
+    AffineCmp &operator-=(AffineCmp const &x) {
         subtractUpdateAB(x, std::abs(x.c), std::abs(c));
         return *this;
     }
@@ -372,8 +400,8 @@ struct Affine {
     // The basic idea is that if we have
     // sign(c)*j <= (b - a*i)/abs(c)
     // if we want to subtract two of the RHS, then we need to scale the denoms
-    Affine operator-(Affine const &x) const {
-        Affine y = *this;
+    AffineCmp operator-(AffineCmp const &x) const {
+        AffineCmp y = *this;
         y -= x;
         return y;
     }
@@ -402,7 +430,7 @@ struct Affine {
         return supSub;
     }
     */
-    friend std::ostream &operator<<(std::ostream &os, const Affine &x) {
+    friend std::ostream &operator<<(std::ostream &os, const AffineCmp &x) {
         intptr_t sign = 1;
         if (x.c > 0) {
             if (x.c == 1) {
@@ -447,15 +475,15 @@ struct Affine {
 // u are the upper bounds
 // extrema are the extremes, in orig order
 struct AffineLoopNest {
-    Matrix<Int, 0, 0> A; // somewhat triangular
-    llvm::SmallVector<MPoly, 8> r;
+    Matrix<Int, 0, 0, 0> A; // somewhat triangular
+    llvm::SmallVector<MPoly, 8> b;
     llvm::SmallVector<unsigned, 8> origLoop;
     llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
     llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
     uint32_t notAffine; // bitmask indicating non-affine loops
     size_t getNumLoops() const { return A.size(0); }
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
-        : A(A), r(r) {
+    AffineLoopNest(Matrix<Int, 0, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
+        : A(A), b(r) {
         assert(A.size(0) * 2 == A.size(1));
         origLoop.reserve(A.size(0) * 2);
         for (unsigned i = 0; i < A.size(0); ++i) {
@@ -463,9 +491,185 @@ struct AffineLoopNest {
             origLoop.push_back(i);
         }
     }
-    AffineLoopNest(Matrix<Int, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
+    AffineLoopNest(Matrix<Int, 0, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
                    llvm::SmallVector<unsigned, 8> origLoop)
-        : A(A), r(r), origLoop(origLoop) {}
+        : A(A), b(r), origLoop(origLoop) {}
+};
+
+struct AffineLoopNestBounds {
+    // TODO: Can the lifetimes of the AffineLoopNest and Partiallyorderedset
+    // be guaranteed without resorting to shared_ptr?
+    std::shared_ptr<AffineLoopNest> aln;
+    std::shared_ptr<PartiallyOrderedSet> poset;
+    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
+    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> lowerB;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> upperB;
+    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> remainingA;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
+    Permutation perm; // maps current to orig
+
+    size_t getNumLoops() const { return perm.getNumLoops(); }
+    AffineLoopNestBounds(std::shared_ptr<AffineLoopNest> aln,
+                         std::shared_ptr<PartiallyOrderedSet> poset)
+        : aln(aln), poset(poset), lowerA(aln->getNumLoops()),
+          upperA(aln->getNumLoops()), lowerB(aln->getNumLoops()),
+          upperB(aln->getNumLoops()), remainingA(aln->getNumLoops()),
+          remainingB(aln->getNumLoops()), perm(aln->getNumLoops()) {
+        size_t numLoops = getNumLoops();
+        size_t i = numLoops;
+        remainingA[i - 1] = aln->A;
+        remainingB[i - 1] = aln->b;
+        do {
+            calcBounds(--i);
+        } while (i);
+        for (size_t i = 0; i < numLoops; ++i) {
+            pruneBounds(i);
+        }
+    }
+    // Matrix<intptr_t, 0, 0, 0> &getA(size_t i) {
+    //     if (i == getNumLoops()) {
+    //         return aln->A;
+    //     } else {
+    //         return As[i];
+    //     }
+    // }
+    // llvm::SmallVector<MPoly, 8> &getB(size_t i) {
+    //     if (i == getNumLoops()) {
+    //         return aln->b;
+    //     } else {
+    //         return bs[i];
+    //     }
+    // }
+
+    static void setBounds(PtrVector<intptr_t, 0> a, MPoly &b,
+                          PtrVector<intptr_t, 0> la, const MPoly &lb,
+                          PtrVector<intptr_t, 0> ua, const MPoly &ub,
+                          size_t i) {
+        intptr_t cu = ua[i];
+        intptr_t cl = la[i];
+        b = cu * lb;
+        Polynomial::fnmadd(b, ub, cl);
+        size_t N = la.size();
+        for (size_t n = 0; n < N; ++n) {
+            a[n] = cu * la[n] - cl * ua[n];
+        }
+        a[i] = 0;
+    }
+
+    void calcBounds(size_t i) {
+        size_t numLoops = getNumLoops();
+        auto &Aold = remainingA[i];
+        auto &bold = remainingB[i];
+        size_t numNeg = 0;
+        size_t numPos = 0;
+        size_t numCol = Aold.size(1);
+        for (size_t j = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            numNeg += (Aij < 0);
+            numPos += (Aij > 0);
+        }
+        size_t numExclude = numCol - numNeg - numPos;
+        size_t numColA = numNeg * numPos + numExclude;
+
+        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
+        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
+        A.resizeForOverwrite(numLoops, numColA);
+        b.resize(numColA);
+        auto &lA = lowerA[i];
+        auto &uA = upperA[i];
+        auto &lB = lowerB[i];
+        auto &uB = upperB[i];
+
+        uint32_t remU = 0;
+        uint32_t remL = 0;
+        // fill A and b
+        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
+            intptr_t Aij = Aold(i, j);
+            if (Aij > 0) {
+                bool dependsOnInner = false;
+                for (size_t k = 0; k < numLoops; ++k) {
+                    intptr_t Akj = Aold(k, j);
+                    uA(k, u) = Akj;
+                    dependsOnInner |= ((Akj != 0) & (k != i));
+                }
+                remU |= dependsOnInner;
+                remU <<= 1;
+                uB[u++] = bold[j];
+            } else if (Aij < 0) {
+                bool dependsOnInner = false;
+                for (size_t k = 0; k < numLoops; ++k) {
+                    intptr_t Akj = Aold(k, j);
+                    lA(k, l) = Akj;
+                    dependsOnInner |= ((Akj != 0) & (k != i));
+                }
+                remL |= dependsOnInner;
+                remL <<= 1;
+                lB[l++] = bold[j];
+            } else if (i) {
+                // Aij == 0
+                for (size_t k = 0; k < numLoops; ++k) {
+                    A(k, c) = Aold(k, j);
+                }
+                b[c++] = bold[j];
+            }
+        }
+        if (i == 0) {
+            return;
+        }
+        // we've now set upper/lower bounds, and the remaining bounds that are
+        // indepednent.
+        size_t numNewEquations = numExclude;
+        for (size_t l = 0; l < numNeg; ++l) {
+            bool lDependsOnInner = (remL >> (numNeg - l)) & 0x00000001;
+            if ((!lDependsOnInner) & (remU == 0)) {
+                continue;
+            }
+            for (size_t u = 0; u < numPos; ++u) {
+                bool uDependsOnInner = (remU >> (numPos - u)) & 0x00000001;
+                if (!(lDependsOnInner | uDependsOnInner)) {
+                    continue;
+                }
+                setBounds(A.getCol(numNewEquations), b[numNewEquations],
+                          lA.getCol(l), lB[l], uA.getCol(u), uB[i], i);
+                ++numNewEquations;
+            }
+        }
+        A.resize(numLoops, numNewEquations);
+        b.resize(numNewEquations);
+    }
+    void calcLowerExtrema(size_t i) {
+        // calculate minimum values
+    }
+    void calcUpperExtrema(size_t i) {}
+    void calcExtrema(size_t i) {
+        calcLowerExtrema(i);
+        calcUpperExtrema(i);
+    }
+    static void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A,
+                            llvm::SmallVector<MPoly, 1> &b, size_t i) {
+        size_t numEquations = b.size();
+        for (size_t j = numEquations - 1; j != 0; --j) {
+            for (size_t k = j; k != 0;) {
+                --k;
+            }
+        }
+    }
+    void pruneLowerBounds(size_t i) {
+        auto &lb = lowerB[i];
+        if (lb.size() <= 1) {
+            // no bounds to be pruned!
+            return;
+        }
+        //
+        auto &A = lowerA[i];
+        size_t numEquations = lb.size();
+    }
+    void pruneUpperBounds(size_t i) {}
+    void pruneBounds(size_t i) {
+        pruneLowerBounds(i);
+        pruneUpperBounds(i);
+    }
 };
 
 // Affine structs `a` are w/ respect original `A`;
@@ -476,8 +680,8 @@ struct AffineLoopNest {
 // extrema are original
 struct AffineLoopNestPerm {
     std::shared_ptr<AffineLoopNest> aln;
-    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> lc;
-    llvm::SmallVector<llvm::SmallVector<Affine, 2>, 4> uc;
+    llvm::SmallVector<llvm::SmallVector<AffineCmp, 2>, 4> lc;
+    llvm::SmallVector<llvm::SmallVector<AffineCmp, 2>, 4> uc;
     // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> maxIters;
     Permutation perm;   // maps current to orig
     uint32_t notAffine; // bitmask indicating non-affine loops
@@ -485,10 +689,7 @@ struct AffineLoopNestPerm {
     size_t getNumLoops() const { return perm.getNumLoops(); }
     AffineLoopNestPerm(std::shared_ptr<AffineLoopNest> a)
         : aln(a), perm(a->getNumLoops()) {
-        init();
-    }
-    void init() {
-        perm.init();
+        // perm.init();
         lc.resize(getNumLoops());
         uc.resize(getNumLoops());
         for (size_t i = getNumLoops(); i > 0; --i) {
@@ -539,12 +740,12 @@ struct AffineLoopNestPerm {
     //      A[m,n] = 1
     //   }
     // }
-    intptr_t pruneBound(llvm::SmallVectorImpl<Affine> &a,
+    intptr_t pruneBound(llvm::SmallVectorImpl<AffineCmp> &a,
                         PartiallyOrderedSet const &poset, intptr_t o) {
         for (size_t i = o; i < a.size() - 1; ++i) {
             for (size_t j = i + 1; j < a.size(); ++j) {
                 llvm::SmallVector<MPoly, 2> bounds;
-                Affine delta = a[i] - a[j];
+                AffineCmp delta = a[i] - a[j];
                 bounds.push_back(std::move(delta.b));
                 // 0 <= b - a'i;
                 // a'i <= b;
@@ -616,7 +817,7 @@ struct AffineLoopNestPerm {
         }
         return -1;
     }
-    void pruneABound(llvm::SmallVectorImpl<Affine> &a,
+    void pruneABound(llvm::SmallVectorImpl<AffineCmp> &a,
                      PartiallyOrderedSet const &poset) {
         intptr_t o = 0;
         if (a.size() > 1) {
@@ -630,10 +831,10 @@ struct AffineLoopNestPerm {
         pruneABound(uc[k], poset);
     }
     void pruneBounds(PartiallyOrderedSet const &poset) {
-	for (size_t k = 0; k < lc.size(); ++k){
-	    pruneABound(lc[k], poset);
-	    pruneABound(uc[k], poset);
-	}
+        for (size_t k = 0; k < lc.size(); ++k) {
+            pruneABound(lc[k], poset);
+            pruneABound(uc[k], poset);
+        }
     }
     static bool pruneDiffs(llvm::SmallVector<MPoly, 2> &bv, intptr_t sign) {
         for (auto it = bv.begin(); it != bv.end() - 1; ++it) {
@@ -724,7 +925,7 @@ struct AffineLoopNestPerm {
     // For example:
     // j <= N - i + k
     // for the extrema, you need the minimum value of `i` and the maximum of `k`
-    void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab) {
+    void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, AffineCmp const &ab) {
         size_t bvStart = bv.size();
         bv.push_back(ab.b);
         auto &lExtrema = aln->lExtrema;
@@ -750,7 +951,7 @@ struct AffineLoopNestPerm {
             }
         }
     }
-    void calcExtremaMin(llvm::SmallVector<MPoly, 2> &bv, Affine const &ab,
+    void calcExtremaMin(llvm::SmallVector<MPoly, 2> &bv, AffineCmp const &ab,
                         MPoly const &extend, size_t extendInd,
                         bool extendLower) {
         size_t bvStart = bv.size();
@@ -806,18 +1007,12 @@ struct AffineLoopNestPerm {
     void calcUpperExtrema(size_t i) {
         llvm::SmallVector<MPoly, 2> bv;
         // c*j <= b - a'i
-	std::cout << "\n====\nStarting loop " << i << ":\n";
-	for (auto &ab : uc[i]) {
-	    std::cout << ab << std::endl;
+        for (auto &ab : uc[i]) {
+            std::cout << ab << std::endl;
             calcExtrema(bv, ab);
         }
         while (pruneMin(bv)) {
         }
-	std::cout << "bv: ";
-	for (auto &bvi : bv){
-	    std::cout << bvi << ", ";
-	}
-	std::cout << std::endl;
         aln->uExtrema.push_back(std::move(bv));
     }
     // zeroIterationsUponExtending(size_t i, bool lower);
@@ -827,10 +1022,10 @@ struct AffineLoopNestPerm {
     // adding extra iterations, the inner most loop does not iterate. This would
     // be because, for any of the loops interior to `i`, the lower bound exceeds
     // the upper bound.
-    bool zeroIterations(PartiallyOrderedSet &poset, Affine &upper,
-                        Affine &lower, MPoly const &extend, size_t extendInd,
+    bool zeroIterations(PartiallyOrderedSet &poset, AffineCmp &upper,
+                        AffineCmp &lower, MPoly const &extend, size_t extendInd,
                         bool extendLower) {
-        Affine delta = upper;
+        AffineCmp delta = upper;
         delta.subtractUpdateAB(lower, lower.c, upper.c);
         delta.b -= 1;
         llvm::SmallVector<MPoly, 2> bv;
@@ -847,8 +1042,8 @@ struct AffineLoopNestPerm {
                                           MPoly const &extend, bool lower,
                                           size_t _i, size_t j) {
 
-        llvm::SmallVector<Affine, 2> &ucj = uc[j];
-        llvm::SmallVector<Affine, 2> &lcj = lc[j];
+        llvm::SmallVector<AffineCmp, 2> &ucj = uc[j];
+        llvm::SmallVector<AffineCmp, 2> &lcj = lc[j];
         for (auto &ucjk : ucj) {
             for (auto &lcjk : lcj) {
                 if (!zeroIterations(poset, ucjk, lcjk, extend, _i, lower)) {
@@ -876,8 +1071,8 @@ struct AffineLoopNestPerm {
         const auto &r = aln->r;
         const auto &origLoop = aln->origLoop;
         auto [numLoops, numEquations] = A.size();
-        llvm::SmallVector<Affine, 2> &lowerBoundsAff = lc[i];
-        llvm::SmallVector<Affine, 2> &upperBoundsAff = uc[i];
+        llvm::SmallVector<AffineCmp, 2> &lowerBoundsAff = lc[i];
+        llvm::SmallVector<AffineCmp, 2> &upperBoundsAff = uc[i];
         size_t _i = perm(i);
         for (size_t j = 0; j < numEquations; ++j) {
             // if original loop equation `j` was bound to was external
@@ -894,7 +1089,7 @@ struct AffineLoopNestPerm {
             }
             if (Int Aij = A(_i, j)) {
                 // we have found a bound
-                llvm::SmallVector<Affine, 2> *bounds;
+                llvm::SmallVector<AffineCmp, 2> *bounds;
                 if (Aij > 0) {
                     bounds = &upperBoundsAff;
                 } else {
@@ -912,7 +1107,7 @@ struct AffineLoopNestPerm {
                         size_t k = perm.inv(_k);
                         if (k > i) {
                             // k external to i
-                            llvm::SmallVector<Affine, 2> *kAff;
+                            llvm::SmallVector<AffineCmp, 2> *kAff;
                             // NOTE: this means we have to cache innermost loops
                             // first.
                             if (Akj > 0) {
@@ -961,15 +1156,15 @@ struct AffineLoopNestPerm {
         // TODO: prune dominated bounds. Need to check that the pruned bounds
         // are always dominated.
     }
-    void subtractGroup(llvm::SmallVector<Affine, 2> *bounds,
-                       llvm::SmallVector<Affine, 2> *kAff, intptr_t Akj,
+    void subtractGroup(llvm::SmallVector<AffineCmp, 2> *bounds,
+                       llvm::SmallVector<AffineCmp, 2> *kAff, intptr_t Akj,
                        size_t init) {
         size_t nkb = kAff->size();
         assert(nkb > 0);
         size_t S = bounds->size();
         bounds->reserve(S + (S - init) * nkb);
         for (size_t id = init; id < S; ++id) {
-            Affine &b0 = (*bounds)[id];
+            AffineCmp &b0 = (*bounds)[id];
             // TODO: what is Akj's relation here?
             for (size_t idk = 0; idk < nkb - 1; ++idk) {
                 bounds->push_back(b0.subtract((*kAff)[idk], Akj));
