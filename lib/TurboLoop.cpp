@@ -149,7 +149,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     llvm::SmallVector<
         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
         outerLoops;
-    llvm::SmallVector<Affine, 8> affs;
+    llvm::SmallVector<AffineCmp, 8> affs;
     for (llvm::Loop *LP : *LI) {
         descend(tree, outerLoops, affs, LP, DT);
         outerLoops.clear();

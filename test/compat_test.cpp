@@ -278,7 +278,7 @@ TEST(AffineTest0, BasicAssertions) {
         a.push_back(0);
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(affp.lc[2][0] == Affine(a, b, -1));
+        EXPECT_TRUE(affp.lc[2][0] == AffineCmp(a, b, -1));
     }
     { // upper bound tests
         EXPECT_EQ(affp.uc.size(), 3);
@@ -320,7 +320,7 @@ TEST(AffineTest0, BasicAssertions) {
         a.push_back(-1);
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(affp.uc[2][0] == Affine(a, b, 1));
+        EXPECT_TRUE(affp.uc[2][0] == AffineCmp(a, b, 1));
     }
 
     std::cout << "\nExtrema of loops:" << std::endl;
