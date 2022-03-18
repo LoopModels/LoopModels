@@ -148,7 +148,7 @@ bool compatible(TriangularLoopNest &l1, RectangularLoopNest &l2,
     MPoly &ub2 = l2.getUpperbound(perm2(_i2));
     MPoly delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    llvm::ArrayRef<unsigned> iperm = perm1.inv();
+    PtrVector<unsigned> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     for (size_t j = 0; j < size_t(i); j++) {
         Int Aij = A(j, i); // symmetric
@@ -214,7 +214,7 @@ bool updateBoundDifference(MPoly &delta_b, TriangularLoopNest &l1, TrictM &A2,
     SquareMatrix<Int> &A1 = l1.getTrit();
     RectangularLoopNest &r1 = l1.getRekt();
     Int i1 = perm1(_i1);
-    llvm::ArrayRef<unsigned> iperm = perm1.inv();
+    PtrVector<unsigned> iperm = perm1.inv();
     // the first loop adds variables that adjust `i`'s bounds
     // `j` and `i1` are in original domain.
     for (Int j = 0; j < i1; j++) {
@@ -243,7 +243,7 @@ bool checkRemainingBound(TriangularLoopNest &l1, TrictM &A2, Permutation &perm1,
                          Permutation &perm2, Int _i1, Int i2) {
     SquareMatrix<Int> &A1 = l1.getTrit();
     Int i1 = perm1(_i1);
-    llvm::ArrayRef<unsigned> iperm = perm1.inv();
+    PtrVector<unsigned> iperm = perm1.inv();
     for (size_t j = i1 + 1; j < A1.size(0); j++) {
         Int Aij = A1(j, i1);
         if (Aij == 0)
@@ -543,10 +543,9 @@ struct AffineLoopNestBounds {
     //     }
     // }
 
-    static void setBounds(PtrVector<intptr_t, 0> a, MPoly &b,
-                          PtrVector<intptr_t, 0> la, const MPoly &lb,
-                          PtrVector<intptr_t, 0> ua, const MPoly &ub,
-                          size_t i) {
+    static void setBounds(PtrVector<intptr_t> a, MPoly &b,
+                          PtrVector<intptr_t> la, const MPoly &lb,
+                          PtrVector<intptr_t> ua, const MPoly &ub, size_t i) {
         intptr_t cu = ua[i];
         intptr_t cl = la[i];
         b = cu * lb;
@@ -646,7 +645,7 @@ struct AffineLoopNestBounds {
         perm.swap(_i, _j);
         calcBounds(std::min(_i, _j), std::max(_i, _j));
     }
-    static inline bool independentOfInner(PtrVector<intptr_t, 0> a, size_t i) {
+    static inline bool independentOfInner(PtrVector<intptr_t> a, size_t i) {
         for (size_t j = 0; j < a.size(); ++j) {
             if ((a[j] != 0) & (i != j)) {
                 return false;
@@ -759,9 +758,8 @@ struct AffineLoopNestBounds {
         auto &uA = upperA[i];
         auto &lB = lowerB[i];
         auto &uB = upperB[i];
-
-        uint32_t dependency =
-            0; // just has to be any dependency, if there is one
+        // just has to be any dependency, if there is one
+        intptr_t dependencyToEliminate = -1;
         // fill A and b
         for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
             intptr_t Aij = Aold(i, j);
@@ -769,7 +767,8 @@ struct AffineLoopNestBounds {
                 for (size_t k = 0; k < numLoops; ++k) {
                     intptr_t Akj = Aold(k, j);
                     bool depends = ((Akj != 0) & (k != i));
-                    dependency = (depends ? k : dependency);
+                    dependencyToEliminate =
+                        (depends ? k : dependencyToEliminate);
                 }
                 if (Aij > 0) {
                     for (size_t k = 0; k < numLoops; ++k) {
@@ -795,51 +794,125 @@ struct AffineLoopNestBounds {
         }
         if ((numNeg > 1) | (numPos > 1)) {
             // if we have multiple bounds, we try to prune
-            if (dependency) {
+            if (dependencyToEliminate >= 0) {
                 // hopefully stack allocate scratch space
-                Matrix<intptr_t, 0, 0, 128> AOld(numLoops, numCol);
+                size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
+                size_t numVar = numLoops + numAuxiliaryVar;
+                size_t totalCol = numCol + 2 * numAuxiliaryVar;
+                Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
                 Matrix<intptr_t, 0, 0, 128> ANew;
-                llvm::SmallVector<MPoly, 16> bOld(numCol);
+                llvm::SmallVector<MPoly, 16> bOld(totalCol);
                 llvm::SmallVector<MPoly, 16> bNew;
-                llvm::SmallVector<uint64_t, 16> labelsNew;
-                llvm::SmallVector<uint64_t, 16> labelsOld(numCol);
                 size_t ln = 0;
                 size_t lp = numNeg;
+                size_t c = numCol;
                 for (size_t j = 0; j < numCol; ++j) {
-                    intptr_t Aij = Aold(i, j);
-                    if (Aij > 0) {
-                        labelsOld[j] = uint64_t(1) << (lp++);
-                    } else if (Aij < 0) {
-                        labelsOld[j] = uint64_t(1) << (ln++);
+                    bOld[j] = bold[j];
+                    for (size_t k = 0; k < numLoops; ++k) {
+                        AOld(k, j) = Aold(k, j);
                     }
                     bOld[j] = bold[j];
-                }
-                for (size_t j = 0; j < numCol * numLoops; ++j) {
-                    AOld[j] = Aold[j];
+                    if (intptr_t Aij = AOld(i, j)) {
+                        bool positive = Aij > 0;
+                        intptr_t absAij = std::abs(Aij);
+                        for (size_t d = j + 1; d < numCol; ++d) {
+                            // index Aold as we haven't yet copied d > j to AOld
+                            intptr_t Aid = Aold(i, d);
+                            if ((Aid != 0) & ((Aid > 0) == positive)) {
+                                intptr_t absAid = std::abs(Aid);
+                                // Aij * i <= b_j - a_j*k
+                                // Aid * i <= b_d - a_d*k
+                                // Aij*abs(Aid) * i <=
+                                //        abs(Aid)*b_j - abs(Aid)*a_j*k
+                                // abs(Aij)*Aid * i <=
+                                //        abs(Aij)*b_d - abs(Aij)*a_d*k
+                                //
+                                // So, we define bound difference:
+                                // bd_jd = (abs(Aid)*b_j - abs(Aid)*a_j*k)
+                                //       - (abs(Aij)*b_d - abs(Aij)*a_d*k)
+                                //
+                                // we now introduce bd_jd as a variable to our
+                                // inequalities, by defining both
+                                // (0) bd_jd <= (abs(Aid)*b_j - abs(Aid)*a_j*k)
+                                //            - (abs(Aij)*b_d - abs(Aij)*a_d*k)
+                                // (1) bd_jd >= (abs(Aid)*b_j - abs(Aid)*a_j*k)
+                                //            - (abs(Aij)*b_d - abs(Aij)*a_d*k)
+                                //
+                                // These can be rewritten as
+                                // (0) bd_jd + abs(Aid)*a_j*k - abs(Aij)*a_d*k
+                                //       <= abs(Aid)*b_j - abs(Aij)*b_d
+                                // (1) -bd_jd - abs(Aid)*a_j*k + abs(Aij)*a_d*k
+                                //       <= -abs(Aid)*b_j + abs(Aij)*b_d
+                                //
+                                // Then, we try to prove that either
+                                // bd_jd <= 0, or that bd_jd >= 0
+                                //
+                                // Note that for Aij>0 (i.e. they're upper
+                                // bounds), we want to keep the smaller bound,
+                                // as the other will never come into play. For
+                                // Aij<0 (i.e., they're lower bounds), we want
+                                // the larger bound for the same reason.
+                                // However, as solving for `i` means dividing by
+                                // a negative number, this means we're actually
+                                // looking for the smaller of `abs(Aid)*b_j -
+                                // abs(Aid)*a_j*k` and `abs(Aij)*b_d -
+                                // abs(Aij)*a_d*k`. This was the reason for
+                                // multiplying by `abs(...)` rather than raw
+                                // values, so that we could treat both paths the
+                                // same.
+                                //
+                                // Thus, if bd_jd <= 0, we keep the `j` bound
+                                // else if bd_jd >= 0, we keep the `d` bound
+                                // else, we must keep both.
+                                for (size_t l = 0; l < numLoops; ++l) {
+                                    intptr_t Alc = absAid * AOld(l, j) -
+                                                   absAij * Aold(l, d);
+                                    AOld(l, c) = Alc;
+                                    AOld(l, c + 1) = -Alc;
+                                }
+                                MPoly delta = absAij * bold[d];
+                                Polynomial::fnmadd(delta, bOld[j], absAid);
+                                bOld[c] = -delta;
+                                bOld[c + 1] = std::move(delta);
+                                c += 2;
+                            }
+                        }
+                    }
                 }
                 do {
                     // eliminate dependency `d` from the bounds we're trying to
                     // compare.
-                    eliminateVariable(ANew, bNew, labelsNew, AOld, bOld,
-                                      labelsOld, dependency);
+                    // TODO: check constraints to see if any that include
+                    // `bd_jd`s contain other constraints. If so, set
+                    // `dependencyToEliminate` to eliminate them.
+                    // If it doesn't, check if we can prove >= 0 or <= 0.
+                    // If we can, eliminate the bound. (TODO: what if
+                    // `dependecyToEliminate` was only used in equations with
+                    // this bound? Can we efficiently make sure to pick a
+                    // different one; perhaps just do two passes?). Remove that
+                    // particular equation either way.
+                    // break if we've eliminated all added constraints, or
+                    // pruned all excess bounds, or there are no more
+                    // dependencies we can eliminate.
+                    eliminateVariable(ANew, bNew, AOld, bOld,
+                                      size_t(dependencyToEliminate));
                     std::swap(ANew, AOld);
                     std::swap(bNew, bOld);
-                    std::swap(labelsNew, labelsOld);
-                    dependency = 0;
+                    dependencyToEliminate = -1;
                     for (size_t j = 0; j < AOld.size(1); ++j) {
                         if (AOld(i, j)) {
                             for (size_t k = 0; k < numLoops; ++k) {
                                 if ((AOld(k, j) != 0) & (k != i)) {
-                                    dependency = k;
+                                    dependencyToEliminate = k;
                                     break;
                                 }
                             }
-                            if (dependency) {
+                            if (dependencyToEliminate >= 0) {
                                 break;
                             }
                         }
                     }
-                } while (dependency);
+                } while (dependencyToEliminate >= 0);
                 // Now bounds are given by `bOld`. Remaining steps:
                 // 1. check AOld for whether bounds are lower/upper
                 // 2. Prune bounds, removing `label`s as well.

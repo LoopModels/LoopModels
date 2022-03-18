@@ -305,7 +305,7 @@ template <typename T, size_t M> struct Vector {
     const T *begin() const { return data; }
     const T *end() const { return begin() + M; }
 };
-template <typename T, size_t M> struct PtrVector {
+template <typename T, size_t M=0> struct PtrVector {
     T *ptr;
 
     PtrVector(T *ptr) : ptr(ptr){};
@@ -457,7 +457,7 @@ template <typename T> struct StridedVector {
 //
 // Matrix
 //
-template <typename T, size_t M, size_t N,
+template <typename T, size_t M=0, size_t N=0,
           size_t S = std::max(M, size_t(3)) * std::max(N, size_t(3))>
 struct Matrix {
     static_assert(M * N == S,
@@ -1189,6 +1189,8 @@ template <class T> inline __int128_t widen(T x) requires is_int_v<64, T> {
 template <class T> inline int64_t splitInt(T x) requires is_int_v<32, T> {
     return x;
 }
+
+inline auto bin2(Integral auto x){ return (x * (x - 1)) >> 1; }
 
 struct Rational {
     intptr_t numerator;

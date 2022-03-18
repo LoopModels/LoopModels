@@ -932,19 +932,22 @@ template <typename C, IsMonomial M> struct Term {
     bool addCoef(Term const &t, C const &c) {
         return addCoef(t.coefficient * c);
     }
-    Term &operator*=(intptr_t x) {
+    Term<C,M> operator-() const {
+	return Term{-coefficient, exponent};
+    }
+    Term<C,M> &operator*=(intptr_t x) {
         coefficient *= x;
         return *this;
     }
-    Term operator*(intptr_t x) const {
+    Term<C,M> operator*(intptr_t x) const {
         Term y(*this);
         return y *= x;
     }
-    Term &operator*=(M const &m) {
+    Term<C,M> &operator*=(M const &m) {
         exponent *= m;
         return *this;
     }
-    Term &operator*=(Term<C, M> const &t) {
+    Term<C,M> &operator*=(Term<C, M> const &t) {
         coefficient *= t.coefficient;
         exponent *= t.exponent;
         return *this;
@@ -1088,7 +1091,14 @@ template <typename C, IsMonomial M> struct Terms {
     }
     void push_back(M const &c) { terms.emplace_back(1, c); }
     void push_back(M &&c) { terms.emplace_back(1, std::move(c)); }
-
+    Terms<C, M> operator-() const {
+	Terms<C, M> neg;
+	neg.terms.reserve(terms.size());
+	for (auto &c : terms){
+	    neg.terms.push_back(-c);
+	}
+        return neg;
+    }
     Terms<C, M> &operator+=(Term<C, M> const &x) {
         addTerm(x);
         return *this;
