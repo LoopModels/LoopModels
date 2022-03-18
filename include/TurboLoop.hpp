@@ -79,7 +79,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // written in an unfavorable way.
     // returns `true` if it failed.
     void pushAffine(
-        llvm::SmallVector<Affine, 8> &affs, llvm::Value &initV,
+        llvm::SmallVector<AffineCmp, 8> &affs, llvm::Value &initV,
         llvm::Value &finalV,
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
@@ -148,7 +148,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<
             std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
             &outerLoops,
-        llvm::SmallVector<Affine, 8> &affs, llvm::Loop *LP,
+        llvm::SmallVector<AffineCmp, 8> &affs, llvm::Loop *LP,
         llvm::DominatorTree &DT) {
         size_t numOuter = outerLoops.size();
         if (LP->isLCSSAForm(DT)) {

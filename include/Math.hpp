@@ -342,12 +342,12 @@ template <typename T> struct PtrVector<T, 0> {
     const T *end() const { return ptr + M; }
     size_t size() const { return M; }
     bool operator==(const PtrVector<T, 0> x) const {
-	for (size_t i = 0; i < M; ++i){
-	    if (x[i] != ptr[i]){
-		return false;
-	    }
-	}
-	return true;
+        for (size_t i = 0; i < M; ++i) {
+            if (x[i] != ptr[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 template <typename T> struct Vector<T, 0> {
@@ -489,7 +489,9 @@ struct Matrix {
     size_t length() const { return M * N; }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
-    PtrVector<const T, M> getCol(size_t i) const { return PtrVector<T, M>(data + i * M); }
+    PtrVector<const T, M> getCol(size_t i) const {
+        return PtrVector<T, M>(data + i * M);
+    }
     bool operator==(const Matrix<T, M, N> &A) const {
         for (size_t i = 0; i < M * N; ++i) {
             if (data[i] != A[i]) {
@@ -528,7 +530,9 @@ template <typename T, size_t M, size_t S> struct Matrix<T, M, 0, S> {
     size_t length() const { return data.size(); }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
-    PtrVector<const T, M> getCol(size_t i) const { return PtrVector<T, M>(data + i * M); }
+    PtrVector<const T, M> getCol(size_t i) const {
+        return PtrVector<T, M>(data + i * M);
+    }
     StridedVector<T> getRow(size_t m) {
         return StridedVector{begin() + m, N, M};
     }

@@ -656,16 +656,14 @@ struct AffineLoopNestBounds {
     }
     void eliminateVariable(Matrix<intptr_t, 0, 0, 128> &A,
                            llvm::SmallVectorImpl<MPoly> &b,
-                           llvm::SmallVector<uint64_t, 16> &labels,
                            const Matrix<intptr_t, 0, 0, 128> &AOld,
                            const llvm::SmallVectorImpl<MPoly> &bOld,
-                           const llvm::SmallVector<uint64_t, 16> &labelsOld,
                            const size_t i) {
         // eliminate variable `i` according to original order
         const size_t numLoops = getNumLoops();
         size_t numNeg = 0;
         size_t numPos = 0;
-        const size_t numCol = AOld.size(1);
+        const auto [numVar, numCol] = AOld.size();
         for (size_t j = 0; j < numCol; ++j) {
             intptr_t Aij = AOld(i, j);
             numNeg += (Aij < 0);
@@ -674,9 +672,8 @@ struct AffineLoopNestBounds {
         const size_t numExclude = numCol - numNeg - numPos;
         const size_t numColA = numNeg * numPos + numExclude;
 
-        A.resizeForOverwrite(numLoops, numColA);
+        A.resizeForOverwrite(numVar, numColA);
         b.resize(numColA);
-	labels.resize_for_overwrite(numColA);
         // auto &lA = lowerA[i];
         // auto &uA = upperA[i];
         // auto &lB = lowerB[i];
@@ -687,37 +684,55 @@ struct AffineLoopNestBounds {
             if (AOld(i, j)) {
                 continue;
             }
-            for (size_t k = 0; k < numLoops; ++k) {
+            for (size_t k = 0; k < numVar; ++k) {
                 A(k, c) = AOld(k, j);
             }
-            b[c] = bOld[j];
-            labels[c++] = labelsOld[j];
+            b[c++] = bOld[j];
         }
         size_t c = numExclude;
         for (size_t u = 0; u < numCol; ++u) {
-            if (intptr_t Aiu = AOld(i, u) > 0) {
+            if (AOld(i, u) > 0) {
                 bool independentOfInnerU =
                     independentOfInner(AOld.getCol(u), i);
-                uint64_t labelu = labelsOld[u];
                 for (size_t l = 0; l < numCol; ++l) {
-                    if (intptr_t Ail = AOld(i, l) < 0) {
-                        if (independentOfInnerU &&
-                            independentOfInner(AOld.getCol(l), i)) {
+                    if (AOld(i, l) < 0) {
+                        if ((independentOfInnerU &&
+                             independentOfInner(AOld.getCol(l), i)) ||
+                            (differentAuxiliaries(A, l, u, numLoops))) {
                             // if we've eliminated everything, then this bound
                             // does not provide any useful information.
+                            //
+                            // We also check for differentAuxiliaries, as we
+                            // don't care about any bounds comparing them, we
+                            // only care about them in isolation.
                             continue;
                         }
                         setBounds(A.getCol(c), b[c], AOld.getCol(l), bOld[l],
                                   AOld.getCol(u), bOld[u], i);
-
-                        labels[c++] = labelsOld[l] | labelu;
+                        ++c;
                     }
                 }
             }
         }
         A.resize(numLoops, c);
         b.resize(c);
-	labels.resize(c);
+    }
+    static bool differentAuxiliaries(Matrix<intptr_t, 0, 0, 128> &A, size_t l,
+                                     size_t u, size_t start) {
+        size_t numVar = A.size(0);
+        size_t lFound = false, uFound = false;
+        for (size_t i = start; i < numVar; ++i) {
+            bool Ail = A(i, l) != 0;
+            bool Aiu = A(i, u) != 0;
+            // if the opposite was found on a previous iteration, then that must
+            // mean both have different auxiliary variables.
+            if ((Ail & uFound) | (Aiu & lFound)) {
+                return true;
+            }
+            uFound |= Aiu;
+            lFound |= Ail;
+        }
+        return false;
     }
     // `_i` is w/ respect to current order, `i` for original order.
     void calculateBounds(const size_t _i) {
@@ -745,7 +760,8 @@ struct AffineLoopNestBounds {
         auto &lB = lowerB[i];
         auto &uB = upperB[i];
 
-        uint32_t dependency = 0; // just has to be any dependency, if there is one
+        uint32_t dependency =
+            0; // just has to be any dependency, if there is one
         // fill A and b
         for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
             intptr_t Aij = Aold(i, j);
@@ -780,53 +796,56 @@ struct AffineLoopNestBounds {
         if ((numNeg > 1) | (numPos > 1)) {
             // if we have multiple bounds, we try to prune
             if (dependency) {
-		// hopefully stack allocate scratch space
+                // hopefully stack allocate scratch space
                 Matrix<intptr_t, 0, 0, 128> AOld(numLoops, numCol);
                 Matrix<intptr_t, 0, 0, 128> ANew;
                 llvm::SmallVector<MPoly, 16> bOld(numCol);
                 llvm::SmallVector<MPoly, 16> bNew;
                 llvm::SmallVector<uint64_t, 16> labelsNew;
                 llvm::SmallVector<uint64_t, 16> labelsOld(numCol);
-		size_t ln = 0;
-		size_t lp = numNeg;
-		for (size_t j = 0; j < numCol; ++j){
-		    intptr_t Aij = Aold(i,j);
-		    if (Aij > 0){
-			labelsOld[j] = uint64_t(1) << (lp++);
-		    } else if (Aij < 0) {
-			labelsOld[j] = uint64_t(1) << (ln++);
-		    }
-		    bOld[j] = bold[j];
-		}
-		for (size_t j = 0; j < numCol*numLoops; ++j){
-		    AOld[j] = Aold[j];
-		}
+                size_t ln = 0;
+                size_t lp = numNeg;
+                for (size_t j = 0; j < numCol; ++j) {
+                    intptr_t Aij = Aold(i, j);
+                    if (Aij > 0) {
+                        labelsOld[j] = uint64_t(1) << (lp++);
+                    } else if (Aij < 0) {
+                        labelsOld[j] = uint64_t(1) << (ln++);
+                    }
+                    bOld[j] = bold[j];
+                }
+                for (size_t j = 0; j < numCol * numLoops; ++j) {
+                    AOld[j] = Aold[j];
+                }
                 do {
                     // eliminate dependency `d` from the bounds we're trying to
                     // compare.
                     eliminateVariable(ANew, bNew, labelsNew, AOld, bOld,
                                       labelsOld, dependency);
-		    std::swap(ANew, AOld);
-		    std::swap(bNew, bOld);
-		    std::swap(labelsNew, labelsOld);
-		    dependency = 0;
-		    for (size_t j = 0; j < AOld.size(1); ++j){
-			if (AOld(i,j)){
-			    for (size_t k = 0; k < numLoops; ++k){
-				if ((AOld(k,j) != 0) & (k != i)){
-				    dependency = k;
-				    break;
-				}
-			    }
-			    if (dependency){ break; }
-			}
-		    }
+                    std::swap(ANew, AOld);
+                    std::swap(bNew, bOld);
+                    std::swap(labelsNew, labelsOld);
+                    dependency = 0;
+                    for (size_t j = 0; j < AOld.size(1); ++j) {
+                        if (AOld(i, j)) {
+                            for (size_t k = 0; k < numLoops; ++k) {
+                                if ((AOld(k, j) != 0) & (k != i)) {
+                                    dependency = k;
+                                    break;
+                                }
+                            }
+                            if (dependency) {
+                                break;
+                            }
+                        }
+                    }
                 } while (dependency);
-		// Now bounds are given by `bOld`. Remaining steps:
-		// 1. check AOld for whether bounds are lower/upper
-		// 2. Prune bounds, removing `label`s as well.
-		// 3. Check remaining labels to see which original bounds are now absent.
-		// 4. Drop the associated missing original bounds.
+                // Now bounds are given by `bOld`. Remaining steps:
+                // 1. check AOld for whether bounds are lower/upper
+                // 2. Prune bounds, removing `label`s as well.
+                // 3. Check remaining labels to see which original bounds are
+                // now absent.
+                // 4. Drop the associated missing original bounds.
             }
         }
         // we've now set upper/lower bounds, and the remaining bounds that are
