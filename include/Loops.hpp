@@ -478,23 +478,13 @@ struct AffineCmp {
 struct AffineLoopNest {
     Matrix<Int, 0, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> b;
-    llvm::SmallVector<unsigned, 8> origLoop;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
-    uint32_t notAffine; // bitmask indicating non-affine loops
+    // llvm::SmallVector<unsigned, 8> origLoop;
+    // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
+    // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
+    // uint32_t notAffine; // bitmask indicating non-affine loops
     size_t getNumLoops() const { return A.size(0); }
-    AffineLoopNest(Matrix<Int, 0, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
-        : A(A), b(r) {
-        assert(A.size(0) * 2 == A.size(1));
-        origLoop.reserve(A.size(0) * 2);
-        for (unsigned i = 0; i < A.size(0); ++i) {
-            origLoop.push_back(i);
-            origLoop.push_back(i);
-        }
-    }
-    AffineLoopNest(Matrix<Int, 0, 0, 0> A, llvm::SmallVector<MPoly, 8> r,
-                   llvm::SmallVector<unsigned, 8> origLoop)
-        : A(A), b(r), origLoop(origLoop) {}
+    // AffineLoopNest(Matrix<Int, 0, 0, 0> A, llvm::SmallVector<MPoly, 8> r)
+    //     : A(A), b(r) {}
 };
 
 struct AffineLoopNestBounds {
@@ -522,27 +512,12 @@ struct AffineLoopNestBounds {
         remainingA[i - 1] = aln->A;
         remainingB[i - 1] = aln->b;
         do {
-            calcBounds(--i);
+            calculateBounds(--i);
         } while (i);
-        for (size_t i = 0; i < numLoops; ++i) {
-            pruneBounds(i);
-        }
     }
-    // Matrix<intptr_t, 0, 0, 0> &getA(size_t i) {
-    //     if (i == getNumLoops()) {
-    //         return aln->A;
-    //     } else {
-    //         return As[i];
-    //     }
-    // }
-    // llvm::SmallVector<MPoly, 8> &getB(size_t i) {
-    //     if (i == getNumLoops()) {
-    //         return aln->b;
-    //     } else {
-    //         return bs[i];
-    //     }
-    // }
-
+    // setBounds(a, b, la, lb, ua, ub, i);
+    // set `i` to zero after setting boundsfor lower bounds la and lb,
+    // and upper bounds ua and ub.
     static void setBounds(PtrVector<intptr_t> a, MPoly &b,
                           PtrVector<intptr_t> la, const MPoly &lb,
                           PtrVector<intptr_t> ua, const MPoly &ub, size_t i) {
@@ -557,93 +532,15 @@ struct AffineLoopNestBounds {
         a[i] = 0;
     }
 
-    void calcBounds(size_t i) {
-        size_t numLoops = getNumLoops();
-        auto &Aold = remainingA[i];
-        auto &bold = remainingB[i];
-        size_t numNeg = 0;
-        size_t numPos = 0;
-        size_t numCol = Aold.size(1);
-        for (size_t j = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
-            numNeg += (Aij < 0);
-            numPos += (Aij > 0);
-        }
-        size_t numExclude = numCol - numNeg - numPos;
-        size_t numColA = numNeg * numPos + numExclude;
-
-        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
-        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
-        A.resizeForOverwrite(numLoops, numColA);
-        b.resize(numColA);
-        auto &lA = lowerA[i];
-        auto &uA = upperA[i];
-        auto &lB = lowerB[i];
-        auto &uB = upperB[i];
-
-        uint32_t remU = 0;
-        uint32_t remL = 0;
-        // fill A and b
-        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
-            if (Aij > 0) {
-                bool dependsOnInner = false;
-                for (size_t k = 0; k < numLoops; ++k) {
-                    intptr_t Akj = Aold(k, j);
-                    uA(k, u) = Akj;
-                    dependsOnInner |= ((Akj != 0) & (k != i));
-                }
-                remU |= dependsOnInner;
-                remU <<= 1;
-                uB[u++] = bold[j];
-            } else if (Aij < 0) {
-                bool dependsOnInner = false;
-                for (size_t k = 0; k < numLoops; ++k) {
-                    intptr_t Akj = Aold(k, j);
-                    lA(k, l) = Akj;
-                    dependsOnInner |= ((Akj != 0) & (k != i));
-                }
-                remL |= dependsOnInner;
-                remL <<= 1;
-                lB[l++] = bold[j];
-            } else if (i) {
-                // Aij == 0
-                for (size_t k = 0; k < numLoops; ++k) {
-                    A(k, c) = Aold(k, j);
-                }
-                b[c++] = bold[j];
-            }
-        }
-        if (i == 0) {
-            return;
-        }
-        // we've now set upper/lower bounds, and the remaining bounds that are
-        // indepednent.
-        size_t numNewEquations = numExclude;
-        for (size_t l = 0; l < numNeg; ++l) {
-            bool lDependsOnInner = (remL >> (numNeg - l)) & 0x00000001;
-            if ((!lDependsOnInner) & (remU == 0)) {
-                continue;
-            }
-            for (size_t u = 0; u < numPos; ++u) {
-                bool uDependsOnInner = (remU >> (numPos - u)) & 0x00000001;
-                if (!(lDependsOnInner | uDependsOnInner)) {
-                    continue;
-                }
-                setBounds(A.getCol(numNewEquations), b[numNewEquations],
-                          lA.getCol(l), lB[l], uA.getCol(u), uB[u], i);
-                ++numNewEquations;
-            }
-        }
-        A.resize(numLoops, numNewEquations);
-        b.resize(numNewEquations);
-    }
     void swap(size_t _i, size_t _j) {
         if (_i == _j) {
             return;
         }
         perm.swap(_i, _j);
-        calcBounds(std::min(_i, _j), std::max(_i, _j));
+        for (intptr_t i = std::max(_i, _j); i >= intptr_t(std::min(_i, _j));
+             --i) {
+            calculateBounds(i);
+        }
     }
     static inline bool independentOfInner(PtrVector<intptr_t> a, size_t i) {
         for (size_t j = 0; j < a.size(); ++j) {
@@ -657,7 +554,7 @@ struct AffineLoopNestBounds {
                            llvm::SmallVectorImpl<MPoly> &b,
                            const Matrix<intptr_t, 0, 0, 128> &AOld,
                            const llvm::SmallVectorImpl<MPoly> &bOld,
-                           const size_t i) {
+                           const size_t i) const {
         // eliminate variable `i` according to original order
         const size_t numLoops = getNumLoops();
         size_t numNeg = 0;
@@ -673,10 +570,6 @@ struct AffineLoopNestBounds {
 
         A.resizeForOverwrite(numVar, numColA);
         b.resize(numColA);
-        // auto &lA = lowerA[i];
-        // auto &uA = upperA[i];
-        // auto &lB = lowerB[i];
-        // auto &uB = upperB[i];
 
         // assign to `A = Aold[:,exlcuded]`
         for (size_t j = 0, c = 0; c < numExclude; ++j) {
@@ -733,35 +626,96 @@ struct AffineLoopNestBounds {
         }
         return false;
     }
-    // `_i` is w/ respect to current order, `i` for original order.
-    void calculateBounds(const size_t _i) {
-        const size_t i = perm(_i);
-        const size_t numLoops = getNumLoops();
-        auto &Aold = remainingA[i];
-        auto &bold = remainingB[i];
+    // returns std::make_pair(numNeg, numPos);
+    static std::pair<size_t, size_t>
+    countNonZeroSign(const Matrix<intptr_t, 0, 0, 0> &A, size_t i) {
         size_t numNeg = 0;
         size_t numPos = 0;
-        size_t numCol = Aold.size(1);
+        size_t numCol = A.size(1);
         for (size_t j = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
+            intptr_t Aij = A(i, j);
             numNeg += (Aij < 0);
             numPos += (Aij > 0);
         }
-        size_t numExclude = numCol - numNeg - numPos;
-        size_t numColA = numNeg * numPos + numExclude;
+        return std::make_pair(numNeg, numPos);
+    }
+    static void fillBounds(Matrix<intptr_t, 0, 0, 0> &lA,
+                           Matrix<intptr_t, 0, 0, 0> &uA,
+                           llvm::SmallVectorImpl<MPoly> &lB,
+                           llvm::SmallVectorImpl<MPoly> &uB,
+                           const Matrix<intptr_t, 0, 0, 0> &A,
+                           const llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+        auto [numLoops, numCol] = A.size();
+        const auto [numNeg, numPos] = countNonZeroSign(A, i);
+        lA.resize(numLoops, numNeg);
+        lB.resize(numNeg);
+        uA.resize(numLoops, numPos);
+        uB.resize(numPos);
+        // fill bounds
+        for (size_t j = 0, l = 0, u = 0; j < numCol; ++j) {
+            intptr_t Aij = A(i, j);
+            if (Aij > 0) {
+                for (size_t k = 0; k < numLoops; ++k) {
+                    uA(k, u) = A(k, j);
+                }
+                uB[u++] = b[j];
+            } else if (Aij < 0) {
+                for (size_t k = 0; k < numLoops; ++k) {
+                    lA(k, l) = A(k, j);
+                }
+                lB[l++] = b[j];
+            }
+        }
+    }
 
-        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
-        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
-        A.resizeForOverwrite(numLoops, numColA);
-        b.resize(numColA);
-        auto &lA = lowerA[i];
-        auto &uA = upperA[i];
-        auto &lB = lowerB[i];
-        auto &uB = upperB[i];
-        // just has to be any dependency, if there is one
+    void fillBounds(const Matrix<intptr_t, 0, 0, 0> &A,
+                    const llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+
+        fillBounds(lowerA[i], upperA[i], lowerB[i], upperB[i], A, b, i);
+    }
+    static void appendBounds(Matrix<intptr_t, 0, 0, 0> &lA,
+                             Matrix<intptr_t, 0, 0, 0> &uA,
+                             llvm::SmallVectorImpl<MPoly> &lB,
+                             llvm::SmallVectorImpl<MPoly> &uB,
+                             Matrix<intptr_t, 0, 0, 0> &A,
+                             llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+        const size_t numNeg = lB.size();
+        const size_t numPos = uB.size();
+        auto [numLoops, numCol] = A.size();
+        A.resize(numLoops, numCol + numNeg * numPos);
+        b.resize_for_overwrite(numCol + numNeg * numPos);
+        size_t c = numCol;
+        for (size_t l = 0; l < numNeg; ++l) {
+            for (size_t u = 0; u < numPos; ++u) {
+                setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l], uA.getCol(u),
+                          uB[u], i);
+                ++c;
+            }
+        }
+    }
+    void appendBounds(Matrix<intptr_t, 0, 0, 0> &A,
+                      llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+        appendBounds(lowerA[i], upperA[i], lowerB[i], upperB[i], A, b, i);
+    }
+    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A,
+                     llvm::SmallVector<MPoly, 8> &b, const size_t i) const {
+
+        const auto [numNeg, numPos] = countNonZeroSign(A, i);
+        if ((numNeg > 1) | (numPos > 1)) {
+            pruneBounds(A, b, i, numNeg, numPos);
+        }
+    }
+    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &Aold,
+                     llvm::SmallVector<MPoly, 8> &bold, const size_t i,
+                     const size_t numNeg, const size_t numPos) const {
+
+        const size_t numLoops = getNumLoops();
+        const size_t numCol = Aold.size(1);
+        // if we have multiple bounds, we try to prune
+        // First, do we have dependencies in these bounds that must be
+        // eliminated?
         intptr_t dependencyToEliminate = -1;
-        // fill A and b
-        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
+        for (size_t j = 0; j < numCol; ++j) {
             intptr_t Aij = Aold(i, j);
             if (Aij) {
                 for (size_t k = 0; k < numLoops; ++k) {
@@ -770,309 +724,379 @@ struct AffineLoopNestBounds {
                     dependencyToEliminate =
                         (depends ? k : dependencyToEliminate);
                 }
-                if (Aij > 0) {
-                    for (size_t k = 0; k < numLoops; ++k) {
-                        uA(k, u) = Aold(k, j);
-                    }
-                    uB[u++] = bold[j];
-                } else {
-                    for (size_t k = 0; k < numLoops; ++k) {
-                        lA(k, l) = Aold(k, j);
-                    }
-                    lB[l++] = bold[j];
+                if (dependencyToEliminate != -1) {
+                    break;
                 }
-            } else if (i) {
-                // Aij == 0
-                for (size_t k = 0; k < numLoops; ++k) {
-                    A(k, c) = Aold(k, j);
-                }
-                b[c++] = bold[j];
             }
         }
-        if (_i == 0) {
-            return;
-        }
-        if ((numNeg > 1) | (numPos > 1)) {
-            // if we have multiple bounds, we try to prune
-            if (dependencyToEliminate >= 0) {
-                // hopefully stack allocate scratch space
-                size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
-                size_t numVar = numLoops + numAuxiliaryVar;
-                size_t totalCol = numCol + 2 * numAuxiliaryVar;
-                Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
-                Matrix<intptr_t, 0, 0, 128> ANew;
-                llvm::SmallVector<MPoly, 16> bOld(totalCol);
-                llvm::SmallVector<MPoly, 16> bNew;
-                size_t ln = 0;
-                size_t lp = numNeg;
-                size_t c = numCol;
-                for (size_t j = 0; j < numCol; ++j) {
-                    bOld[j] = bold[j];
-                    for (size_t k = 0; k < numLoops; ++k) {
-                        AOld(k, j) = Aold(k, j);
-                    }
-                    bOld[j] = bold[j];
-                    if (intptr_t Aij = AOld(i, j)) {
-                        bool positive = Aij > 0;
-                        intptr_t absAij = std::abs(Aij);
-                        for (size_t d = j + 1; d < numCol; ++d) {
-                            // index Aold as we haven't yet copied d > j to AOld
-                            intptr_t Aid = Aold(i, d);
-                            if ((Aid != 0) & ((Aid > 0) == positive)) {
-                                intptr_t absAid = std::abs(Aid);
-                                // Aij * i <= b_j - a_j*k
-                                // Aid * i <= b_d - a_d*k
-                                // Aij*abs(Aid) * i <=
-                                //        abs(Aid)*b_j - abs(Aid)*a_j*k
-                                // abs(Aij)*Aid * i <=
-                                //        abs(Aij)*b_d - abs(Aij)*a_d*k
-                                //
-                                // So, we define bound difference:
-                                // bd_jd = (abs(Aid)*b_j - abs(Aid)*a_j*k)
-                                //       - (abs(Aij)*b_d - abs(Aij)*a_d*k)
-                                //
-                                // we now introduce bd_jd as a variable to our
-                                // inequalities, by defining both
-                                // (0) bd_jd <= (abs(Aid)*b_j - abs(Aid)*a_j*k)
-                                //            - (abs(Aij)*b_d - abs(Aij)*a_d*k)
-                                // (1) bd_jd >= (abs(Aid)*b_j - abs(Aid)*a_j*k)
-                                //            - (abs(Aij)*b_d - abs(Aij)*a_d*k)
-                                //
-                                // These can be rewritten as
-                                // (0) bd_jd + abs(Aid)*a_j*k - abs(Aij)*a_d*k
-                                //       <= abs(Aid)*b_j - abs(Aij)*b_d
-                                // (1) -bd_jd - abs(Aid)*a_j*k + abs(Aij)*a_d*k
-                                //       <= -abs(Aid)*b_j + abs(Aij)*b_d
-                                //
-                                // Then, we try to prove that either
-                                // bd_jd <= 0, or that bd_jd >= 0
-                                //
-                                // Note that for Aij>0 (i.e. they're upper
-                                // bounds), we want to keep the smaller bound,
-                                // as the other will never come into play. For
-                                // Aij<0 (i.e., they're lower bounds), we want
-                                // the larger bound for the same reason.
-                                // However, as solving for `i` means dividing by
-                                // a negative number, this means we're actually
-                                // looking for the smaller of `abs(Aid)*b_j -
-                                // abs(Aid)*a_j*k` and `abs(Aij)*b_d -
-                                // abs(Aij)*a_d*k`. This was the reason for
-                                // multiplying by `abs(...)` rather than raw
-                                // values, so that we could treat both paths the
-                                // same.
-                                //
-                                // Thus, if bd_jd <= 0, we keep the `j` bound
-                                // else if bd_jd >= 0, we keep the `d` bound
-                                // else, we must keep both.
-                                for (size_t l = 0; l < numLoops; ++l) {
-                                    intptr_t Alc = absAid * AOld(l, j) -
-                                                   absAij * Aold(l, d);
-                                    AOld(l, c) = Alc;
-                                    AOld(l, c + 1) = -Alc;
-                                }
-                                MPoly delta = absAij * bold[d];
-                                Polynomial::fnmadd(delta, bOld[j], absAid);
-                                bOld[c] = -delta;
-                                bOld[c + 1] = std::move(delta);
-                                c += 2;
+        if (dependencyToEliminate >= 0) {
+            // hopefully stack allocate scratch space
+            size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
+            size_t numVar = numLoops + numAuxiliaryVar;
+            size_t totalCol = numCol + 2 * numAuxiliaryVar;
+            Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
+            Matrix<intptr_t, 0, 0, 128> ANew;
+            llvm::SmallVector<MPoly, 16> bOld(totalCol);
+            llvm::SmallVector<MPoly, 16> bNew;
+            // simple mapping of `k` to particular bounds
+            llvm::SmallVector<std::pair<unsigned, unsigned>, 16> boundDiffPairs;
+            boundDiffPairs.reserve(numAuxiliaryVar);
+            size_t c = numCol;
+            for (size_t j = 0; j < numCol; ++j) {
+                bOld[j] = bold[j];
+                for (size_t k = 0; k < numLoops; ++k) {
+                    AOld(k, j) = Aold(k, j);
+                }
+                bOld[j] = bold[j];
+                if (intptr_t Aij = AOld(i, j)) {
+                    bool positive = Aij > 0;
+                    intptr_t absAij = std::abs(Aij);
+                    for (size_t d = j + 1; d < numCol; ++d) {
+                        // index Aold as we haven't yet copied d > j to
+                        // AOld
+                        intptr_t Aid = Aold(i, d);
+                        if ((Aid != 0) & ((Aid > 0) == positive)) {
+                            intptr_t absAid = std::abs(Aid);
+                            // Aij * i <= b_j - a_j*k
+                            // Aid * i <= b_d - a_d*k
+                            // Aij*abs(Aid) * i <=
+                            //        abs(Aid)*b_j - abs(Aid)*a_j*k
+                            // abs(Aij)*Aid * i <=
+                            //        abs(Aij)*b_d - abs(Aij)*a_d*k
+                            //
+                            // So, we define bound difference:
+                            // bd_jd = (abs(Aid)*b_j - abs(Aid)*a_j*k)
+                            //       - (abs(Aij)*b_d - abs(Aij)*a_d*k)
+                            //
+                            // we now introduce bd_jd as a variable to
+                            // our inequalities, by defining both (0)
+                            // bd_jd <= (abs(Aid)*b_j - abs(Aid)*a_j*k)
+                            //            - (abs(Aij)*b_d -
+                            //            abs(Aij)*a_d*k)
+                            // (1) bd_jd >= (abs(Aid)*b_j -
+                            // abs(Aid)*a_j*k)
+                            //            - (abs(Aij)*b_d -
+                            //            abs(Aij)*a_d*k)
+                            //
+                            // These can be rewritten as
+                            // (0) bd_jd + abs(Aid)*a_j*k -
+                            // abs(Aij)*a_d*k
+                            //       <= abs(Aid)*b_j - abs(Aij)*b_d
+                            // (1) -bd_jd - abs(Aid)*a_j*k +
+                            // abs(Aij)*a_d*k
+                            //       <= -abs(Aid)*b_j + abs(Aij)*b_d
+                            //
+                            // Then, we try to prove that either
+                            // bd_jd <= 0, or that bd_jd >= 0
+                            //
+                            // Note that for Aij>0 (i.e. they're upper
+                            // bounds), we want to keep the smaller
+                            // bound, as the other will never come into
+                            // play. For Aij<0 (i.e., they're lower
+                            // bounds), we want the larger bound for the
+                            // same reason. However, as solving for `i`
+                            // means dividing by a negative number, this
+                            // means we're actually looking for the
+                            // smaller of `abs(Aid)*b_j -
+                            // abs(Aid)*a_j*k` and `abs(Aij)*b_d -
+                            // abs(Aij)*a_d*k`. This was the reason for
+                            // multiplying by `abs(...)` rather than raw
+                            // values, so that we could treat both paths
+                            // the same.
+                            //
+                            // Thus, if bd_jd <= 0, we keep the `j`
+                            // bound else if bd_jd >= 0, we keep the `d`
+                            // bound else, we must keep both.
+                            for (size_t l = 0; l < numLoops; ++l) {
+                                intptr_t Alc =
+                                    absAid * AOld(l, j) - absAij * Aold(l, d);
+                                AOld(l, c) = Alc;
+                                AOld(l, c + 1) = -Alc;
                             }
+                            MPoly delta = absAij * bold[d];
+                            Polynomial::fnmadd(delta, bOld[j], absAid);
+                            bOld[c] = -delta;
+                            bOld[c + 1] = std::move(delta);
+                            size_t newVarId = numLoops + boundDiffPairs.size();
+                            AOld(newVarId, c++) = 1;
+                            AOld(newVarId, c++) = 1;
+                            boundDiffPairs.emplace_back(j, d);
                         }
                     }
                 }
-                do {
-                    // eliminate dependency `d` from the bounds we're trying to
-                    // compare.
-                    // TODO: check constraints to see if any that include
-                    // `bd_jd`s contain other constraints. If so, set
-                    // `dependencyToEliminate` to eliminate them.
-                    // If it doesn't, check if we can prove >= 0 or <= 0.
-                    // If we can, eliminate the bound. (TODO: what if
-                    // `dependecyToEliminate` was only used in equations with
-                    // this bound? Can we efficiently make sure to pick a
-                    // different one; perhaps just do two passes?). Remove that
-                    // particular equation either way.
-                    // break if we've eliminated all added constraints, or
-                    // pruned all excess bounds, or there are no more
-                    // dependencies we can eliminate.
-                    eliminateVariable(ANew, bNew, AOld, bOld,
-                                      size_t(dependencyToEliminate));
-                    std::swap(ANew, AOld);
-                    std::swap(bNew, bOld);
-                    dependencyToEliminate = -1;
-                    for (size_t j = 0; j < AOld.size(1); ++j) {
-                        if (AOld(i, j)) {
-                            for (size_t k = 0; k < numLoops; ++k) {
-                                if ((AOld(k, j) != 0) & (k != i)) {
-                                    dependencyToEliminate = k;
+            }
+            llvm::SmallVector<int8_t, 32> provenBoundsDeltas(numAuxiliaryVar,
+                                                             0);
+            llvm::SmallVector<unsigned, 32> rowsToErase;
+            do {
+                eliminateVariable(ANew, bNew, AOld, bOld,
+                                  size_t(dependencyToEliminate));
+                std::swap(ANew, AOld);
+                std::swap(bNew, bOld);
+                dependencyToEliminate = -1;
+                for (size_t j = 0; j < AOld.size(1); ++j) {
+                    for (size_t k = numLoops; k < numVar; ++k) {
+                        if (intptr_t Akj = AOld(k, j)) {
+                            bool dependsOnOthers = false;
+                            // note that we don't add equations for
+                            // comparing the different bounds diffs,
+                            // therefore `AOld(l, j) == 0` for all `l !=
+                            // k
+                            // && l >= numLoops`
+                            for (size_t l = 0; l < numLoops; ++l) {
+                                if (AOld(l, j) != (l != i)) {
+                                    dependencyToEliminate = l;
+                                    dependsOnOthers = true;
                                     break;
                                 }
                             }
-                            if (dependencyToEliminate >= 0) {
-                                break;
+                            if (!dependsOnOthers) {
+                                // we can eliminate this equation, but
+                                // check if we can eliminate the bound
+                                if (poset->knownGreaterEqualZero(bOld[j])) {
+                                    // Akj * k >= 0
+                                    provenBoundsDeltas[k] = 1;
+                                } else if (poset->knownLessEqualZero(bOld[j])) {
+                                    // Akj * k <= 0
+                                    provenBoundsDeltas[k] = -1;
+                                }
+                                rowsToErase.push_back(j);
                             }
                         }
                     }
-                } while (dependencyToEliminate >= 0);
-                // Now bounds are given by `bOld`. Remaining steps:
-                // 1. check AOld for whether bounds are lower/upper
-                // 2. Prune bounds, removing `label`s as well.
-                // 3. Check remaining labels to see which original bounds are
-                // now absent.
-                // 4. Drop the associated missing original bounds.
-            }
-        }
-        // we've now set upper/lower bounds, and the remaining bounds that are
-        // indepednent.
-        size_t numNewEquations = numExclude;
-        for (size_t l = 0; l < numNeg; ++l) {
-            bool lDependsOnInner =
-                (dependsOnInnerL >> (numNeg - l)) & 0x00000001;
-            if ((!lDependsOnInner) & (dependsOnInnerU == 0)) {
-                continue;
-            }
-            for (size_t u = 0; u < numPos; ++u) {
-                bool uDependsOnInner =
-                    (dependsOnInnerU >> (numPos - u)) & 0x00000001;
-                if (!(lDependsOnInner | uDependsOnInner)) {
-                    continue;
                 }
-                setBounds(A.getCol(numNewEquations), b[numNewEquations],
-                          lA.getCol(l), lB[l], uA.getCol(u), uB[i], i);
-                ++numNewEquations;
+                for (auto it = rowsToErase.rbegin(); it != rowsToErase.rend();
+                     ++it) {
+                    AOld.eraseRow(*it);
+                    bOld.erase(bOld.begin() + (*it));
+                }
+                rowsToErase.clear();
+            } while (dependencyToEliminate >= 0);
+            for (size_t l = 0; l < provenBoundsDeltas.size(); ++l) {
+                size_t k = provenBoundsDeltas[l];
+                // eliminate bound difference k
+                // bound difference is j - d
+                if (k) {
+                    auto [j, d] = boundDiffPairs[l];
+                    // if Akj * k >= 0, discard j, else discard d
+                    rowsToErase.push_back(k == 1 ? j : d);
+                }
             }
-        }
-        A.resize(numLoops, numNewEquations);
-        b.resize(numNewEquations);
-    }
-    // calc bounds from _start..._stop w/ respect to current order
-    // convention: `_` means w/ respect to current order,
-    // no underscore means w/ respect to original order.
-    void calcBounds(size_t _start, size_t _stop) {
-        // get indices in original order
-        // const size_t start = perm(_start);
-        // const size_t stop = perm(_stop);
-        for (intptr_t _i = _stop; _i >= intptr_t(_start); --_i) {
-            size_t i = perm(_i);
-            // first, we get upper and lower bounds of `i`
-            // if we have multiple of any of these bounds, we try to reduce
-            // them.
-        }
+            erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
 
+        } else {
+            // no dependencyToEliminate
+            llvm::SmallVector<unsigned, 32> rowsToErase;
+            rowsToErase.reserve(numNeg * numPos);
+            for (size_t j = 0; j < numCol - 1; ++j) {
+                if (intptr_t Aij = Aold(i, j)) {
+                    for (size_t k = j + 1; k < numCol; ++k) {
+                        intptr_t Aik = Aold(i, k);
+                        if ((Aik != 0) & ((Aik > 0) == (Aij > 0))) {
+                            MPoly delta = bold[k] * std::abs(Aij);
+                            Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
+                            // delta = k - j
+                            if (poset->knownGreaterEqualZero(delta)) {
+                                rowsToErase.push_back(k);
+                            } else if (poset->knownLessEqualZero(
+                                           std::move(delta))) {
+                                rowsToErase.push_back(j);
+                            }
+                        }
+                    }
+                }
+            }
+            erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
+        }
+    }
+    void calculateBounds0() {
+        const size_t i = perm(0);
+        const auto [numNeg, numPos] = countNonZeroSign(remainingA[0], i);
+        if ((numNeg > 1) | (numPos > 1)) {
+            Matrix<intptr_t, 0, 0, 0> Aold = remainingA[0];
+            llvm::SmallVector<MPoly, 8> bold = remainingB[0];
+            pruneBounds(Aold, bold, i, numNeg, numPos);
+            fillBounds(Aold, bold, i);
+        } else {
+            fillBounds(remainingA[0], remainingB[0], i);
+            return;
+        }
+    }
+    // `_i` is w/ respect to current order, `i` for original order.
+    void calculateBounds(const size_t _i) {
+        if (_i == 0) {
+            return calculateBounds0();
+        }
+        const size_t i = perm(_i);
+        // const size_t iNext = perm(_i - 1);
+        remainingA[_i - 1] = remainingA[_i];
+        auto &Aold = remainingA[_i - 1];
+        remainingB[_i - 1] = remainingB[_i];
+        auto &bold = remainingB[_i - 1];
+        pruneBounds(Aold, bold, i);
+        fillBounds(Aold, bold, i);
+        appendBounds(Aold, bold, i);
+    }
+    static void erasePossibleNonUniqueElements(
+        Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<MPoly> &b,
+        llvm::SmallVectorImpl<unsigned> &rowsToErase) {
+        std::ranges::sort(rowsToErase);
+        for (auto it = std::unique(rowsToErase.begin(), rowsToErase.end());
+             it != rowsToErase.begin();) {
+            --it;
+            A.eraseRow(*it);
+            b.erase(b.begin() + (*it));
+        }
+    }
+    // returns true if extending (extendLower ? lower : upper) bound of `_i`th
+    // loop by `extend` doesn't result in the innermost loop experiencing any
+    // extra iterations.
+    // if `extendLower`, `min(i) - extend`
+    // else `max(i) + extend`
+    bool zeroExtraIterationsUponExtending(size_t _i, const MPoly &extend,
+                                          bool extendLower) const {
+        size_t _j = _i + 1;
         const size_t numLoops = getNumLoops();
+        if (_j == numLoops) {
+            return false;
+        }
+        // eliminate variables 0..._j
+        auto A = remainingA.back();
+        auto b = remainingB.back();
+        Matrix<intptr_t, 0, 0, 0> lwrA;
+        Matrix<intptr_t, 0, 0, 0> uprA;
+        llvm::SmallVector<MPoly, 16> lwrB;
+        llvm::SmallVector<MPoly, 16> uprB;
+        for (size_t _k = 0; _k < _j; ++_k) {
+            if (_k != _i) {
+                size_t k = perm(_k);
+                pruneBounds(A, b, k);
+                fillBounds(lwrA, uprA, lwrB, uprB, A, b, k);
+                appendBounds(lwrA, uprA, lwrB, uprB, A, b, k);
+            }
+        }
+        Matrix<intptr_t, 0, 0, 0> Anew;
+        llvm::SmallVector<MPoly, 8> bnew;
+        size_t i = perm(_i);
+        while (true) {
+            // `A` and `b` contain representation independent of `0..._j`,
+            // except for `_i`
+            size_t j = perm(_j);
+            Anew = A;
+            bnew = b;
+            for (size_t _k = _i + 1; _k < numLoops; ++_k) {
+                if (_k != _j) {
+                    size_t k = perm(_k);
+                    // eliminate
+                    pruneBounds(Anew, bnew, k);
+                    fillBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
+                    appendBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
+                }
+            }
+            // now depends only on `j` and `i`
+            // check if we have zero iterations on loop `j`
+            pruneBounds(Anew, bnew, j);
+            fillBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, j);
+            // if any bounds are of length 0, we'd fail to iterate
+            for (size_t l = 0; l < lwrB.size(); ++l) {
+                auto &lb = lwrB[l];
+                intptr_t Ajl = A(j, l);
+                intptr_t Ail = A(i, l);
+                for (size_t u = 0; u < uprB.size(); ++u) {
+                    intptr_t Aju = A(j, u);
+                    intptr_t Aiu = A(i, u);
+                    // delta = Aju*lb + Ajl*ub + (Ajl*Aiu - Aju*Ail)*i
+                    auto delta = lb * Aju;
+                    Polynomial::fnmadd(delta, uprB[u], Ajl);
+                    // delta = Aju*lb + Ajl*ub + idelta*i
+                    // if delta >= 0, loop iterates
+                    intptr_t idelta = Ajl * Aiu - Aju * Ail;
+                    // extend lower means we're extending the range from
+                    // `imin..imax` to imin-extend..imin-1,imin...imax` extend
+                    // upper means we're extending the range to
+                    // imin..imax,imax+1..imax+extend
+                    if (idelta > 0) {
+                        // pick maximum `i`
+                        if (extendLower) {
+                            // try `imin - 1`, if this doesn't iterate, `imin -
+                            // 2` won't either
 
-        auto &Aold = remainingA[i];
-        auto &bold = remainingB[i];
-        size_t numNeg = 0;
-        size_t numPos = 0;
-        size_t numCol = Aold.size(1);
-        for (size_t j = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
-            numNeg += (Aij < 0);
-            numPos += (Aij > 0);
+                        } else {
+                            // we're extending upper bound, so we pick `imax +
+                            // extend` if that doesn't iterate, `imax + extend -
+                            // 1` won't either. this branch isn't very
+                            // likely, as it implies we don't get iterations
+                            // at all.
+                        }
+                    } else if (idelta < 0) {
+                        // pick minimum `i`
+                        if (extendLower) {
+                            // we're extending lower bound, so `imin - extend`
+			    // not likely, as it implies nothing iterates.
+                        } else {
+                            // Check `imax + 1`
+                        }
+                    } else {
+                    }
+                    //
+                    //
+                    if (poset->knownLessZero(delta)) {
+                    }
+                }
+            }
         }
-        size_t numExclude = numCol - numNeg - numPos;
-        size_t numColA = numNeg * numPos + numExclude;
+        do {
 
-        auto &A = remainingA[std::max(intptr_t(0), intptr_t(i) - 1)];
-        auto &b = remainingB[std::max(intptr_t(0), intptr_t(i) - 1)];
-        A.resizeForOverwrite(numLoops, numColA);
-        b.resize(numColA);
-        auto &lA = lowerA[i];
-        auto &uA = upperA[i];
-        auto &lB = lowerB[i];
-        auto &uB = upperB[i];
-
-        uint32_t remU = 0;
-        uint32_t remL = 0;
-        // fill A and b
-        for (size_t j = 0, c = 0, l = 0, u = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
-            if (Aij > 0) {
-                bool dependsOnInner = false;
-                for (size_t k = 0; k < numLoops; ++k) {
-                    intptr_t Akj = Aold(k, j);
-                    uA(k, u) = Akj;
-                    dependsOnInner |= ((Akj != 0) & (k != i));
-                }
-                remU |= dependsOnInner;
-                remU <<= 1;
-                uB[u++] = bold[j];
-            } else if (Aij < 0) {
-                bool dependsOnInner = false;
-                for (size_t k = 0; k < numLoops; ++k) {
-                    intptr_t Akj = Aold(k, j);
-                    lA(k, l) = Akj;
-                    dependsOnInner |= ((Akj != 0) & (k != i));
-                }
-                remL |= dependsOnInner;
-                remL <<= 1;
-                lB[l++] = bold[j];
-            } else if (i) {
-                // Aij == 0
-                for (size_t k = 0; k < numLoops; ++k) {
-                    A(k, c) = Aold(k, j);
-                }
-                b[c++] = bold[j];
-            }
-        }
-        if (i == 0) {
-            return;
-        }
-        // we've now set upper/lower bounds, and the remaining bounds that are
-        // indepednent.
-        size_t numNewEquations = numExclude;
-        for (size_t l = 0; l < numNeg; ++l) {
-            bool lDependsOnInner = (remL >> (numNeg - l)) & 0x00000001;
-            if ((!lDependsOnInner) & (remU == 0)) {
-                continue;
-            }
-            for (size_t u = 0; u < numPos; ++u) {
-                bool uDependsOnInner = (remU >> (numPos - u)) & 0x00000001;
-                if (!(lDependsOnInner | uDependsOnInner)) {
-                    continue;
-                }
-                setBounds(A.getCol(numNewEquations), b[numNewEquations],
-                          lA.getCol(l), lB[l], uA.getCol(u), uB[i], i);
-                ++numNewEquations;
-            }
-        }
-        A.resize(numLoops, numNewEquations);
-        b.resize(numNewEquations);
-    }
-    void calcLowerExtrema(size_t i) {
-        // calculate minimum values
-    }
-    void calcUpperExtrema(size_t i) {}
-    void calcExtrema(size_t i) {
-        calcLowerExtrema(i);
-        calcUpperExtrema(i);
-    }
-    static void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A,
-                            llvm::SmallVector<MPoly, 1> &b, size_t i) {
-        size_t numEquations = b.size();
-        for (size_t j = numEquations - 1; j != 0; --j) {
-            for (size_t k = j; k != 0;) {
-                --k;
-            }
-        }
-    }
-    void pruneLowerBounds(size_t i) {
-        auto &lb = lowerB[i];
-        if (lb.size() <= 1) {
-            // no bounds to be pruned!
-            return;
-        }
-        //
-        auto &A = lowerA[i];
-        size_t numEquations = lb.size();
-    }
-    void pruneUpperBounds(size_t i) {}
-    void pruneBounds(size_t i) {
-        pruneLowerBounds(i);
-        pruneUpperBounds(i);
+            ++_j;
+        } while (_j < getNumLoops());
+        return false;
     }
 };
+// lower bound exceeds the upper bound.
+bool zeroIterations(PartiallyOrderedSet &poset, AffineCmp &upper,
+                    AffineCmp &lower, MPoly const &extend, size_t extendInd,
+                    bool extendLower) {
+    AffineCmp delta = upper;
+    delta.subtractUpdateAB(lower, lower.c, upper.c);
+    delta.b -= 1;
+    llvm::SmallVector<MPoly, 2> bv;
+    // must minimize subtracted `i`s.
+    calcExtremaMin(bv, delta, extend, extendInd, extendLower);
+    for (auto &b : bv) {
+        if (!poset.knownGreaterEqualZero(b)) {
+            return false;
+        }
+    }
+    return true;
+}
+bool zeroExtraIterationsUponExtending(PartiallyOrderedSet &poset,
+                                      MPoly const &extend, bool lower,
+                                      size_t _i, size_t j) {
 
+    llvm::SmallVector<AffineCmp, 2> &ucj = uc[j];
+    llvm::SmallVector<AffineCmp, 2> &lcj = lc[j];
+    for (auto &ucjk : ucj) {
+        for (auto &lcjk : lcj) {
+            if (!zeroIterations(poset, ucjk, lcjk, extend, _i, lower)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+// `i` is the current loop
+bool zeroExtraIterationsUponExtending(PartiallyOrderedSet &poset, size_t i,
+                                      const MPoly &extend, bool lower) {
+    // if `i` is the inner most loop, then padding it must add loops
+    size_t _i = perm(i);
+    for (size_t j = i + 1; j < getNumLoops(); ++j) {
+        if (zeroExtraIterationsUponExtending(poset, extend, lower, _i, j)) {
+            return true;
+        }
+    }
+    return false;
+}
+/*
 // Affine structs `a` are w/ respect original `A`;
 // inds will need to go through `perm.inv(...)`.
 //
@@ -1182,8 +1206,9 @@ struct AffineLoopNestPerm {
                         if (poset.knownGreaterEqualZero(b)) {
                             mask &= 1;
                         } else {
-                            // TODO: write knownCmpZero to do both known >= 0
-                            // and <= 0 (as well as maybe == 0, < 0, and > 0
+                            // TODO: write knownCmpZero to do both known >=
+                            // 0 and <= 0 (as well as maybe == 0, < 0, and >
+                            // 0
                             b *= -1;
                             if (poset.knownGreaterEqualZero(b)) {
                                 mask &= 2;
@@ -1210,10 +1235,10 @@ struct AffineLoopNestPerm {
                     return i;
                 }
                 // if lower bounds, then the intersection is the largest, so
-                // prune `j` if delta >= 0 at both extrema `i` if delta <= 0 at
-                // both extrema if upper bounds, then the intersection is the
-                // smallest, so prune `j` if delta >= 0 at both extrema `i` if
-                // delta <= 0 at both extrema
+                // prune `j` if delta >= 0 at both extrema `i` if delta <= 0
+                // at both extrema if upper bounds, then the intersection is
+                // the smallest, so prune `j` if delta >= 0 at both extrema
+                // `i` if delta <= 0 at both extrema
             }
         }
         return -1;
@@ -1325,7 +1350,8 @@ struct AffineLoopNestPerm {
     }
     // For example:
     // j <= N - i + k
-    // for the extrema, you need the minimum value of `i` and the maximum of `k`
+    // for the extrema, you need the minimum value of `i` and the maximum of
+    // `k`
     void calcExtrema(llvm::SmallVector<MPoly, 2> &bv, AffineCmp const &ab) {
         size_t bvStart = bv.size();
         bv.push_back(ab.b);
@@ -1419,10 +1445,10 @@ struct AffineLoopNestPerm {
     // zeroIterationsUponExtending(size_t i, bool lower);
     // i is the loop we're trying to pad with extra iterations below the
     // minimum (if lower = true) or above the maximum (upper = true) for the
-    // sake of making it compatible with other loops. It returns `true` if upon
-    // adding extra iterations, the inner most loop does not iterate. This would
-    // be because, for any of the loops interior to `i`, the lower bound exceeds
-    // the upper bound.
+    // sake of making it compatible with other loops. It returns `true` if
+    // upon adding extra iterations, the inner most loop does not iterate.
+    // This would be because, for any of the loops interior to `i`, the
+    // lower bound exceeds the upper bound.
     bool zeroIterations(PartiallyOrderedSet &poset, AffineCmp &upper,
                         AffineCmp &lower, MPoly const &extend, size_t extendInd,
                         bool extendLower) {
@@ -1479,12 +1505,12 @@ struct AffineLoopNestPerm {
             // if original loop equation `j` was bound to was external
             // and it is still external under this permutation, we
             // can ignore this equation(?)
-            // NOTE: need to ensure that an operation occuring at some partial
-            // level of a nest is executed the correct number of times after
-            // reordering.
-            // Also, if nothing is occuring at this level, perhaps we can
-            // trim some iterations from this level, if those interior loops
-            // do not iterate for some values of this outer loop.
+            // NOTE: need to ensure that an operation occuring at some
+            // partial level of a nest is executed the correct number of
+            // times after reordering. Also, if nothing is occuring at this
+            // level, perhaps we can trim some iterations from this level,
+            // if those interior loops do not iterate for some values of
+            // this outer loop.
             if (perm.inv(origLoop[j]) > i) {
                 continue;
             }
@@ -1509,8 +1535,8 @@ struct AffineLoopNestPerm {
                         if (k > i) {
                             // k external to i
                             llvm::SmallVector<AffineCmp, 2> *kAff;
-                            // NOTE: this means we have to cache innermost loops
-                            // first.
+                            // NOTE: this means we have to cache innermost
+                            // loops first.
                             if (Akj > 0) {
                                 kAff = &lc[k];
                             } else {
@@ -1524,7 +1550,8 @@ struct AffineLoopNestPerm {
                             // for (size_t id = init; id < S; ++id) {
                             //     Affine &b0 = (*bounds)[id];
                             //     // TODO: what is Akj's relation here?
-                            //     for (size_t idk = 0; idk < nkb - 1; ++idk) {
+                            //     for (size_t idk = 0; idk < nkb - 1;
+                            //     ++idk) {
                             //         bounds->push_back(
                             //             b0.subtract((*kAff)[idk], Akj));
                             //     }
@@ -1554,8 +1581,8 @@ struct AffineLoopNestPerm {
                 }
             }
         }
-        // TODO: prune dominated bounds. Need to check that the pruned bounds
-        // are always dominated.
+        // TODO: prune dominated bounds. Need to check that the pruned
+        // bounds are always dominated.
     }
     void subtractGroup(llvm::SmallVector<AffineCmp, 2> *bounds,
                        llvm::SmallVector<AffineCmp, 2> *kAff, intptr_t Akj,
@@ -1573,7 +1600,8 @@ struct AffineLoopNestPerm {
             b0.subtractUpdate((*kAff)[nkb - 1], Akj);
         }
     }
-    // returns optional; contains orthogonalized if orthogonalization succeeded.
+    // returns optional; contains orthogonalized if orthogonalization
+    // succeeded.
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNestPerm &alnp) {
@@ -1591,7 +1619,7 @@ struct AffineLoopNestPerm {
     }
     void dump() const { std::cout << *this; }
 };
-
+*/
 // returns unsigned integer as bitfield.
 // `1` indicates loop does iterate, `0` does not.
 // uint32_t zeroInnerIterationsAtMaximum(AffineLoopNest &aln, size_t i){
@@ -1599,13 +1627,13 @@ struct AffineLoopNestPerm {
 //     return 0;
 // }
 
-// TODO: it would be most useful if `compatible` could return some indicator of
-// to what degree the loops are compatible. For example, perhaps it is worth
-// masking one loop off?
-// Perhaps simple an indicator of if the difference in iterations is statically
-// known, and then additionally whether masking inner levels of the nest is
-// needed (if those inner levels have zero iterations for the added iterations
-// of an outer loop, they don't need to be masked off).
+// TODO: it would be most useful if `compatible` could return some indicator
+// of to what degree the loops are compatible. For example, perhaps it is
+// worth masking one loop off? Perhaps simple an indicator of if the
+// difference in iterations is statically known, and then additionally
+// whether masking inner levels of the nest is needed (if those inner levels
+// have zero iterations for the added iterations of an outer loop, they
+// don't need to be masked off).
 /*
 bool compatible(PartiallyOrderedSet &poset, AffineLoopNestPerm &aln1,
                 AffineLoopNestPerm &aln2, Int _i1, Int _i2) {
@@ -1614,9 +1642,11 @@ bool compatible(PartiallyOrderedSet &poset, AffineLoopNestPerm &aln1,
     auto &l2 = aln2.lc[_i2];
     auto &u2 = aln2.uc[_i2];
     // these bounds have already been pruned, so if lengths > 1...
-    // we don't necessarily want bipartite matching, as it is possible for one
+    // we don't necessarily want bipartite matching, as it is possible for
+one
     // loop to match multiple. E.g., if inner loops iterate zero times for
-    // certain values of the iteration variable, we may be able to extend the
+    // certain values of the iteration variable, we may be able to extend
+the
     // loop. Or we could mask a loop off for a small number of iterations.
 
     // How to proceed here? Match all permutations of the former with all
@@ -1660,11 +1690,11 @@ bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
     MPoly &ub2 = r2.getUpperbound(i2);
     MPoly delta_b = ub1 - ub2;
     // now need to add `A`'s contribution
-    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2, false)) {
-        return false;
+    if (!updateBoundDifference(delta_b, l1, A2, perm1, perm2, _i1, i2,
+false)) { return false;
     }
-    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1, true)) {
-        return false;
+    if (!updateBoundDifference(delta_b, l2, A1, perm2, perm1, _i2, i1,
+true)) { return false;
     }
     if (!checkRemainingBound(l1, A2, perm1, perm2, _i1, i2)) {
         return false;
@@ -1675,15 +1705,11 @@ bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
     if (isZero(delta_b)) {
         return true;
     } else if (delta_b.terms.size() == 1) {
-        Polynomial::Term<Int, Polynomial::Monomial> &lt = delta_b.leadingTerm();
-        if (lt.degree()) {
-            return false;
-        } else if (lt.coefficient == -1) {
-            return zeroInnerIterationsAtMaximum(A1, ub2, r1, i1);
-        } else if (lt.coefficient == 1) {
-            return zeroInnerIterationsAtMaximum(A2, ub1, r2, i2);
-        } else {
-            return false;
+        Polynomial::Term<Int, Polynomial::Monomial> &lt =
+delta_b.leadingTerm(); if (lt.degree()) { return false; } else if
+(lt.coefficient == -1) { return zeroInnerIterationsAtMaximum(A1, ub2, r1,
+i1); } else if (lt.coefficient == 1) { return
+zeroInnerIterationsAtMaximum(A2, ub1, r2, i2); } else { return false;
         }
     } else {
         return false;
@@ -1706,5 +1732,6 @@ bool compatible(AffineLoopNest &l1, AffineLoopNest &l2, Permutation &perm1,
 //
 // template <typename T, typename S>
 // bool compatible(T l1, S l2, PermutationSubset p1, PermutationSubset p2) {
-//     return compatible(l1, l2, p1.p, p2.p, p1.subset_size, p2.subset_size);
+//     return compatible(l1, l2, p1.p, p2.p, p1.subset_size,
+//     p2.subset_size);
 // }

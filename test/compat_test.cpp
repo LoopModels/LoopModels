@@ -215,10 +215,10 @@ TEST(AffineTest0, BasicAssertions) {
     auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
     auto nOne = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
     One.dump();
-    PartiallyOrderedSet poset;
+    std::shared_ptr<PartiallyOrderedSet> poset;
     // ids 1 and 2 are >= 0;
-    poset.push(0, 1, Interval::nonNegative());
-    poset.push(0, 2, Interval::nonNegative());
+    poset->push(0, 1, Interval::nonNegative());
+    poset->push(0, 2, Interval::nonNegative());
     // the loop is
     // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
     //
@@ -257,8 +257,8 @@ TEST(AffineTest0, BasicAssertions) {
     
     std::cout << "About to construct affine obj" << std::endl;
     std::shared_ptr<AffineLoopNest> aff =
-        std::make_shared<AffineLoopNest>(AffineLoopNest(A, r));
-    AffineLoopNestPerm affp(aff);
+        std::make_shared<AffineLoopNest>(A, r);
+    AffineLoopNestBounds affp(aff, poset);
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(poset, 1, Polynomial::Terms(One), false));
@@ -266,19 +266,17 @@ TEST(AffineTest0, BasicAssertions) {
     EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(poset, 1, Polynomial::Terms(nOne), true));
     std::cout << "About to run first set of bounds tests" << std::endl;
     { // lower bound tests
-        EXPECT_EQ(affp.lc.size(), 3);
-        EXPECT_EQ(affp.lc[0].size(), 1);
-        EXPECT_EQ(affp.lc[1].size(), 1);
-        EXPECT_EQ(affp.lc[2].size(), 1);
-        EXPECT_TRUE(affp.lc[0][0] == 0);
-        EXPECT_TRUE(affp.lc[1][0] == 0);
-        llvm::SmallVector<intptr_t, 4> a;
-        a.push_back(0);
-        a.push_back(1);
-        a.push_back(0);
+        EXPECT_EQ(affp.lowerA.size(), 3);
+        EXPECT_EQ(affp.lowerB[0].size(), 1);
+        EXPECT_EQ(affp.lowerB[1].size(), 1);
+        EXPECT_EQ(affp.lowerB[2].size(), 1);
+        EXPECT_TRUE(affp.lowerB[0][0] == 0);
+        EXPECT_TRUE(affp.lowerB[1][0] == 0);
+        llvm::SmallVector<intptr_t, 4> a{0,1,0};
         MPoly b;
         b -= 1;
-        EXPECT_TRUE(affp.lc[2][0] == AffineCmp(a, b, -1));
+        EXPECT_TRUE(affp.lowerA[2].getCol(0) == a);
+	EXPECT_TRUE(affp.lowerB[2][0] == b);
     }
     { // upper bound tests
         EXPECT_EQ(affp.uc.size(), 3);

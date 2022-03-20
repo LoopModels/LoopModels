@@ -932,9 +932,6 @@ template <typename C, IsMonomial M> struct Term {
     bool addCoef(Term const &t, C const &c) {
         return addCoef(t.coefficient * c);
     }
-    Term<C,M> operator-() const {
-	return Term{-coefficient, exponent};
-    }
     Term<C,M> &operator*=(intptr_t x) {
         coefficient *= x;
         return *this;
@@ -997,6 +994,11 @@ template <typename C, IsMonomial M> struct Term {
     }
     void dump() const { std::cout << *this << std::endl; }
 };
+    template <typename C, typename M>
+    Term<C,M> operator-(Term<C,M> x) {
+	x.coefficient = -x.coefficient;
+	return x;
+    }
 // template <typename C,typename M>
 // bool Term<C,M>::isOne() const { return ::isOne(coefficient) &
 // ::isOne(exponent); }
@@ -1091,14 +1093,6 @@ template <typename C, IsMonomial M> struct Terms {
     }
     void push_back(M const &c) { terms.emplace_back(1, c); }
     void push_back(M &&c) { terms.emplace_back(1, std::move(c)); }
-    Terms<C, M> operator-() const {
-	Terms<C, M> neg;
-	neg.terms.reserve(terms.size());
-	for (auto &c : terms){
-	    neg.terms.push_back(-c);
-	}
-        return neg;
-    }
     Terms<C, M> &operator+=(Term<C, M> const &x) {
         addTerm(x);
         return *this;
@@ -1431,6 +1425,15 @@ template <typename C, IsMonomial M> struct Terms {
     constexpr One isPoly() { return One(); }
 };
 
+template <typename C, typename M>
+Terms<C, M> operator-(Terms<C, M> x) {
+    for (size_t i = 0; i < x.terms.size(); ++i){
+	x.terms[i] = -x.terms[i];
+    }
+    return x;
+}
+
+    
 template <typename C> using UnivariateTerm = Term<C, Uninomial>;
 template <typename C, IsMultivariateMonomial M> using MultiTerm = Term<C, M>;
 
@@ -2236,7 +2239,7 @@ void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
     }
 }
 template <typename C, typename M>
-void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, C &c) {
+void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, const C &c) {
     size_t offset = 0;
     for (auto &term : y) {
         offset = x.addTermScale(term, -c, offset);

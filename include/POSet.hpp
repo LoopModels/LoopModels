@@ -282,7 +282,7 @@ struct PartiallyOrderedSet {
         return f ? -d : d;
     }
     Interval operator()(size_t i) const { return (*this)(0, i); }
-    Interval asInterval(Polynomial::Monomial &m) const {
+    Interval asInterval(const Polynomial::Monomial &m) const {
         if (isOne(m)) {
             return Interval{1, 1};
         }
@@ -293,13 +293,13 @@ struct PartiallyOrderedSet {
         }
         return itv;
     }
-    Interval
-    asInterval(Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
+    Interval asInterval(
+        const Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
         return asInterval(t.exponent) * t.coefficient;
     }
 
-    bool knownGreaterEqual(Polynomial::Monomial &x,
-                           Polynomial::Monomial &y) const {
+    bool knownGreaterEqual(const Polynomial::Monomial &x,
+                           const Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
         Matrix<bool, 0, 0> bpGraph(M, N);
@@ -356,8 +356,9 @@ struct PartiallyOrderedSet {
             return true;
         }
     }
-    bool atLeastOnePositive(Polynomial::Monomial &x, Polynomial::Monomial &y,
-                            llvm::SmallVectorImpl<int> &matchR) const {
+    bool atLeastOnePositive(const Polynomial::Monomial &x,
+                            const Polynomial::Monomial &y,
+                            const llvm::SmallVectorImpl<int> &matchR) const {
         for (size_t n = 0; n < matchR.size(); ++n) {
             size_t m = matchR[n];
             intptr_t lowerBound =
@@ -368,7 +369,8 @@ struct PartiallyOrderedSet {
         }
         return false;
     }
-    bool knownGreater(Polynomial::Monomial &x, Polynomial::Monomial &y) const {
+    bool knownGreater(const Polynomial::Monomial &x,
+                      const Polynomial::Monomial &y) const {
         size_t M = x.prodIDs.size();
         size_t N = y.prodIDs.size();
         Matrix<bool, 0, 0> bpGraph(N, M);
@@ -430,7 +432,7 @@ struct PartiallyOrderedSet {
     }
     // Interval asInterval(MPoly &x){
     // }
-    bool signUnknown(Polynomial::Monomial &m) const {
+    bool signUnknown(const Polynomial::Monomial &m) const {
         for (auto &v : m) {
             if ((*this)(v.getID()).signUnknown()) {
                 return true;
@@ -438,7 +440,7 @@ struct PartiallyOrderedSet {
         }
         return false;
     }
-    bool knownFlipSign(Polynomial::Monomial &m, bool pos) const {
+    bool knownFlipSign(const Polynomial::Monomial &m, bool pos) const {
         for (auto &v : m) {
             Interval itv = (*this)(v.getID());
             if (itv.upperBound < 0) {
@@ -449,13 +451,13 @@ struct PartiallyOrderedSet {
         }
         return pos;
     }
-    bool knownPositive(Polynomial::Monomial &m) const {
+    bool knownPositive(const Polynomial::Monomial &m) const {
         return knownFlipSign(m, true);
     }
-    bool knownNegative(Polynomial::Monomial &m) const {
+    bool knownNegative(const Polynomial::Monomial &m) const {
         return knownFlipSign(m, false);
     }
-    bool knownGreaterEqualZero(MPoly &x) const {
+    bool knownGreaterEqualZero(const MPoly &x) const {
         // TODO: implement carrying between differences
         if (isZero(x)) {
             return true;
@@ -520,6 +522,10 @@ struct PartiallyOrderedSet {
             return asInterval(x.terms[N - 1]).lowerBound >= 0;
         }
         return true;
+    }
+    bool knownLessEqualZero(MPoly x) const {
+	// TODO: check if this avoids the copy on negation.
+	return knownGreaterEqualZero(-std::move(x));
     }
     // bool knownOffsetLessEqual(MPoly &x, MPoly &y, intptr_t offset = 0) {
     // return knownOffsetGreaterEqual(y, x, -offset);
