@@ -305,7 +305,7 @@ template <typename T, size_t M> struct Vector {
     const T *begin() const { return data; }
     const T *end() const { return begin() + M; }
 };
-template <typename T, size_t M=0> struct PtrVector {
+template <typename T, size_t M = 0> struct PtrVector {
     T *ptr;
 
     PtrVector(T *ptr) : ptr(ptr){};
@@ -341,13 +341,13 @@ template <typename T> struct PtrVector<T, 0> {
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
     size_t size() const { return M; }
+    operator llvm::ArrayRef<T>() { return llvm::ArrayRef<T>{ptr, M}; }
+    llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
     bool operator==(const PtrVector<T, 0> x) const {
-        for (size_t i = 0; i < M; ++i) {
-            if (x[i] != ptr[i]) {
-                return false;
-            }
-        }
-        return true;
+        return this->arrayref() == x.arrayref();
+    }
+    bool operator==(const llvm::ArrayRef<T> x) const {
+        return this->arrayref() == x;
     }
 };
 template <typename T> struct Vector<T, 0> {
@@ -457,7 +457,7 @@ template <typename T> struct StridedVector {
 //
 // Matrix
 //
-template <typename T, size_t M=0, size_t N=0,
+template <typename T, size_t M = 0, size_t N = 0,
           size_t S = std::max(M, size_t(3)) * std::max(N, size_t(3))>
 struct Matrix {
     static_assert(M * N == S,
@@ -701,12 +701,15 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
     size_t length() const { return data.size(); }
     PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
-        return PtrVector<T, 0>(p, M);
+        return PtrVector<T, 0>{p, M};
     }
-    PtrVector<T, 0> getCol(size_t i) const {
-        T *p = data.data() + i * M;
-        return PtrVector<T, 0>(p, M);
+    llvm::ArrayRef<T> getCol(size_t i) const {
+        return llvm::ArrayRef<T>(data.data() + i * M, M);
     }
+    // PtrVector<T, 0> getCol(size_t i) const {
+    // const T *p = data.data() + i * M;
+    // return PtrVector<T, 0>{p, M};
+    // }
     bool operator==(const Matrix<T, 0, 0> &A) const {
         for (size_t i = 0; i < M * N; ++i) {
             if (data[i] != A[i]) {
@@ -716,6 +719,9 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
         return true;
     }
     StridedVector<T> getRow(size_t m) {
+        return StridedVector<T>{begin() + m, N, M};
+    }
+    StridedVector<const T> getRow(size_t m) const {
         return StridedVector<T>{begin() + m, N, M};
     }
     static Matrix<T, 0, 0> Uninitialized(size_t MM, size_t NN) {
@@ -824,6 +830,24 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
 //     return x[length(x) - 1];
 // }
 
+template <typename T> std::ostream &printVector(std::ostream &os, T const &a) {
+    // std::ostream &printMatrix(std::ostream &os, T const &A) {
+    os << "[ ";
+    auto M = a.size();
+    for (size_t m = 0; m < M - 1; m++) {
+        os << a[m] << ", ";
+    }
+    if (M) {
+        os << a[M - 1];
+    }
+    os << " ]";
+    return os;
+}
+template <typename T, size_t L>
+std::ostream &operator<<(std::ostream &os, PtrVector<T, L> const &A) {
+    return printVector(os, A);
+}
+
 template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     os << "[ ";
@@ -848,8 +872,8 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     os << " ]";
     return os;
 }
-template <typename T, size_t M, size_t N>
-std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
+template <typename T, size_t M, size_t N, size_t L>
+std::ostream &operator<<(std::ostream &os, Matrix<T, M, N, L> const &A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
     return printMatrix(os, A);
 }
@@ -1190,7 +1214,7 @@ template <class T> inline int64_t splitInt(T x) requires is_int_v<32, T> {
     return x;
 }
 
-inline auto bin2(Integral auto x){ return (x * (x - 1)) >> 1; }
+inline auto bin2(Integral auto x) { return (x * (x - 1)) >> 1; }
 
 struct Rational {
     intptr_t numerator;

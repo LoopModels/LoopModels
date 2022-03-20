@@ -524,8 +524,14 @@ struct PartiallyOrderedSet {
         return true;
     }
     bool knownLessEqualZero(MPoly x) const {
-	// TODO: check if this avoids the copy on negation.
-	return knownGreaterEqualZero(-std::move(x));
+        // TODO: check if this avoids the copy on negation.
+        return knownGreaterEqualZero(-std::move(x));
+    }
+    bool knownLessThanZero(MPoly x) const {
+        // TODO: optimize this
+        x *= -1;
+        x -= 1;
+        return knownGreaterEqualZero(x);
     }
     // bool knownOffsetLessEqual(MPoly &x, MPoly &y, intptr_t offset = 0) {
     // return knownOffsetGreaterEqual(y, x, -offset);
