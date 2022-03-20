@@ -19,8 +19,8 @@ unimodularize(Matrix<intptr_t, 0, 0> A) {
 	return {};
     }
     auto [H, U] = OHNF.getValue();
-    for (size_t m = 0; m < A.size(0); ++m){
-	if (A(m,m) != 1){
+    for (size_t m = 0; m < H.size(0); ++m){
+	if (H(m,m) != 1){
 	    // unimodularization was not succesful
 	    return {};
 	}
