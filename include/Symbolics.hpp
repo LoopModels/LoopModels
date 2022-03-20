@@ -932,19 +932,19 @@ template <typename C, IsMonomial M> struct Term {
     bool addCoef(Term const &t, C const &c) {
         return addCoef(t.coefficient * c);
     }
-    Term<C,M> &operator*=(intptr_t x) {
+    Term<C, M> &operator*=(intptr_t x) {
         coefficient *= x;
         return *this;
     }
-    Term<C,M> operator*(intptr_t x) const {
+    Term<C, M> operator*(intptr_t x) const {
         Term y(*this);
         return y *= x;
     }
-    Term<C,M> &operator*=(M const &m) {
+    Term<C, M> &operator*=(M const &m) {
         exponent *= m;
         return *this;
     }
-    Term<C,M> &operator*=(Term<C, M> const &t) {
+    Term<C, M> &operator*=(Term<C, M> const &t) {
         coefficient *= t.coefficient;
         exponent *= t.exponent;
         return *this;
@@ -962,11 +962,11 @@ template <typename C, IsMonomial M> struct Term {
 
     bool isCompileTimeConstant() const { return isOne(exponent); }
     llvm::Optional<intptr_t> getCompileTimeConstant() const {
-	if (isCompileTimeConstant()){
-	    return coefficient;
-	} else {
-	    return {};
-	}
+        if (isCompileTimeConstant()) {
+            return coefficient;
+        } else {
+            return {};
+        }
     }
     bool operator==(Term<C, M> const &y) const {
         return (exponent == y.exponent) && (coefficient == y.coefficient);
@@ -994,11 +994,10 @@ template <typename C, IsMonomial M> struct Term {
     }
     void dump() const { std::cout << *this << std::endl; }
 };
-    template <typename C, typename M>
-    Term<C,M> operator-(Term<C,M> x) {
-	x.coefficient = -x.coefficient;
-	return x;
-    }
+template <typename C, typename M> Term<C, M> operator-(Term<C, M> x) {
+    x.coefficient = -x.coefficient;
+    return x;
+}
 // template <typename C,typename M>
 // bool Term<C,M>::isOne() const { return ::isOne(coefficient) &
 // ::isOne(exponent); }
@@ -1341,14 +1340,14 @@ template <typename C, IsMonomial M> struct Terms {
         }
     }
     llvm::Optional<intptr_t> getCompileTimeConstant() const {
-	switch (terms.size()) {
-	case 0:
-	    return 0;
-	case 1:
-	    return terms[0].getCompileTimeConstant();
-	default:
-	    return {};
-	}
+        switch (terms.size()) {
+        case 0:
+            return 0;
+        case 1:
+            return terms[0].getCompileTimeConstant();
+        default:
+            return {};
+        }
     }
 
     bool operator==(Terms<C, M> const &x) const { return (terms == x.terms); }
@@ -1398,6 +1397,9 @@ template <typename C, IsMonomial M> struct Terms {
     }
 
     friend std::ostream &operator<<(std::ostream &os, Terms const &x) {
+        if (auto c = x.getCompileTimeConstant()) {
+            return os << c.getValue();
+        }
         os << " ( ";
         for (size_t j = 0; j < length(x.terms); ++j) {
             if (std::is_same_v<C, intptr_t>) {
@@ -1425,15 +1427,13 @@ template <typename C, IsMonomial M> struct Terms {
     constexpr One isPoly() { return One(); }
 };
 
-template <typename C, typename M>
-Terms<C, M> operator-(Terms<C, M> x) {
-    for (size_t i = 0; i < x.terms.size(); ++i){
-	x.terms[i] = -x.terms[i];
+template <typename C, typename M> Terms<C, M> operator-(Terms<C, M> x) {
+    for (size_t i = 0; i < x.terms.size(); ++i) {
+        x.terms[i] = -x.terms[i];
     }
     return x;
 }
 
-    
 template <typename C> using UnivariateTerm = Term<C, Uninomial>;
 template <typename C, IsMultivariateMonomial M> using MultiTerm = Term<C, M>;
 

@@ -6,6 +6,8 @@
 #include "./POSet.hpp"
 #include "./Permutation.hpp"
 #include "./Symbolics.hpp"
+#include <algorithm>
+#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
@@ -520,7 +522,7 @@ struct AffineLoopNestBounds {
     // setBounds(a, b, la, lb, ua, ub, i);
     // set `i` to zero after setting boundsfor lower bounds la and lb,
     // and upper bounds ua and ub.
-    static void setBounds(PtrVector<intptr_t> a, MPoly &b,
+    static bool setBounds(PtrVector<intptr_t> a, MPoly &b,
                           llvm::ArrayRef<intptr_t> la, const MPoly &lb,
                           llvm::ArrayRef<intptr_t> ua, const MPoly &ub,
                           size_t i) {
@@ -533,6 +535,7 @@ struct AffineLoopNestBounds {
             a[n] = cu * la[n] - cl * ua[n];
         }
         a[i] = 0;
+        return std::ranges::any_of(a, [](intptr_t ai) { return ai != 0; });
     }
 
     void swap(size_t _i, size_t _j) {
@@ -571,7 +574,8 @@ struct AffineLoopNestBounds {
         }
         const size_t numExclude = numCol - numNeg - numPos;
         const size_t numColA = numNeg * numPos + numExclude;
-
+        std::cout << "numCol=" << numCol << "; numNeg=" << numNeg
+                  << "; numPos=" << numPos << std::endl;
         A.resizeForOverwrite(numVar, numColA);
         b.resize(numColA);
 
@@ -594,7 +598,7 @@ struct AffineLoopNestBounds {
                     if (AOld(i, l) < 0) {
                         if ((independentOfInnerU &&
                              independentOfInner(AOld.getCol(l), i)) ||
-                            (differentAuxiliaries(A, l, u, numLoops))) {
+                            (differentAuxiliaries(AOld, l, u, numLoops))) {
                             // if we've eliminated everything, then this bound
                             // does not provide any useful information.
                             //
@@ -603,9 +607,8 @@ struct AffineLoopNestBounds {
                             // only care about them in isolation.
                             continue;
                         }
-                        setBounds(A.getCol(c), b[c], AOld.getCol(l), bOld[l],
-                                  AOld.getCol(u), bOld[u], i);
-                        ++c;
+                        c += setBounds(A.getCol(c), b[c], AOld.getCol(l),
+                                       bOld[l], AOld.getCol(u), bOld[u], i);
                     }
                 }
             }
@@ -613,8 +616,8 @@ struct AffineLoopNestBounds {
         A.resize(numVar, c);
         b.resize(c);
     }
-    static bool differentAuxiliaries(Matrix<intptr_t, 0, 0, 128> &A, size_t l,
-                                     size_t u, size_t start) {
+    static bool differentAuxiliaries(const Matrix<intptr_t, 0, 0, 128> &A,
+                                     size_t l, size_t u, size_t start) {
         size_t numVar = A.size(0);
         size_t lFound = false, uFound = false;
         for (size_t i = start; i < numVar; ++i) {
@@ -677,10 +680,10 @@ struct AffineLoopNestBounds {
 
         fillBounds(lowerA[i], upperA[i], lowerB[i], upperB[i], A, b, i);
     }
-    static void appendBounds(Matrix<intptr_t, 0, 0, 0> &lA,
-                             Matrix<intptr_t, 0, 0, 0> &uA,
-                             llvm::SmallVectorImpl<MPoly> &lB,
-                             llvm::SmallVectorImpl<MPoly> &uB,
+    static void appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
+                             const Matrix<intptr_t, 0, 0, 0> &uA,
+                             const llvm::SmallVectorImpl<MPoly> &lB,
+                             const llvm::SmallVectorImpl<MPoly> &uB,
                              Matrix<intptr_t, 0, 0, 0> &A,
                              llvm::SmallVectorImpl<MPoly> &b, size_t i) {
         const size_t numNeg = lB.size();
@@ -691,11 +694,12 @@ struct AffineLoopNestBounds {
         size_t c = numCol;
         for (size_t l = 0; l < numNeg; ++l) {
             for (size_t u = 0; u < numPos; ++u) {
-                setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l], uA.getCol(u),
-                          uB[u], i);
-                ++c;
+                c += setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l],
+                               uA.getCol(u), uB[u], i);
             }
         }
+        A.resize(numLoops, c);
+        b.resize(c);
     }
     void appendBounds(Matrix<intptr_t, 0, 0, 0> &A,
                       llvm::SmallVectorImpl<MPoly> &b, size_t i) {
@@ -822,7 +826,10 @@ struct AffineLoopNestBounds {
                             bOld[c + 1] = std::move(delta);
                             size_t newVarId = numLoops + boundDiffPairs.size();
                             AOld(newVarId, c++) = 1;
-                            AOld(newVarId, c++) = 1;
+                            AOld(newVarId, c++) = -1;
+                            std::cout << "boundDiffPairs["
+                                      << boundDiffPairs.size() << "] = (" << j
+                                      << ", " << d << ")" << std::endl;
                             boundDiffPairs.emplace_back(j, d);
                         }
                     }
@@ -831,11 +838,19 @@ struct AffineLoopNestBounds {
             llvm::SmallVector<int8_t, 32> provenBoundsDeltas(numAuxiliaryVar,
                                                              0);
             llvm::SmallVector<unsigned, 32> rowsToErase;
+            std::cout << "A_pre_elim =\n" << AOld << std::endl;
+            std::cout << "b_pre_elim =\n";
+            printVector(std::cout, bOld) << std::endl;
             do {
+                std::cout << "dependencyToEliminate = " << dependencyToEliminate
+                          << std::endl;
                 eliminateVariable(ANew, bNew, AOld, bOld,
                                   size_t(dependencyToEliminate));
                 std::swap(ANew, AOld);
                 std::swap(bNew, bOld);
+                std::cout << "A_post_elim =\n" << AOld << std::endl;
+                std::cout << "b_post_elim =\n";
+                printVector(std::cout, bOld) << std::endl;
                 dependencyToEliminate = -1;
                 for (size_t j = 0; j < AOld.size(1); ++j) {
                     for (size_t k = numLoops; k < numVar; ++k) {
@@ -847,7 +862,8 @@ struct AffineLoopNestBounds {
                             // k
                             // && l >= numLoops`
                             for (size_t l = 0; l < numLoops; ++l) {
-                                if ((AOld(l, j) != 0) & (l != i)) {
+                                // if ((AOld(l, j) != 0) & (l != i)) {
+                                if (AOld(l, j)) {
                                     dependencyToEliminate = l;
                                     dependsOnOthers = true;
                                     break;
@@ -856,13 +872,21 @@ struct AffineLoopNestBounds {
                             if (!dependsOnOthers) {
                                 // we can eliminate this equation, but
                                 // check if we can eliminate the bound
+                                // if (AOld(i,j) == 0){
                                 if (poset->knownGreaterEqualZero(bOld[j])) {
                                     // Akj * k >= 0
+                                    std::cout << "bOld[j=" << j
+                                              << "] >= 0: " << bOld[j]
+                                              << std::endl;
                                     provenBoundsDeltas[k - numLoops] = 1;
                                 } else if (poset->knownLessEqualZero(bOld[j])) {
                                     // Akj * k <= 0
+                                    std::cout << "bOld[j=" << j
+                                              << "] <= 0: " << bOld[j]
+                                              << std::endl;
                                     provenBoundsDeltas[k - numLoops] = -1;
                                 }
+                                // }
                                 if ((rowsToErase.size() == 0) ||
                                     (rowsToErase.back() != j)) {
                                     rowsToErase.push_back(j);
@@ -888,6 +912,8 @@ struct AffineLoopNestBounds {
                     rowsToErase.push_back(k == 1 ? j : d);
                 }
             }
+            std::cout << "rowsToErase (dominated) = ";
+            printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
 
         } else {
@@ -912,6 +938,8 @@ struct AffineLoopNestBounds {
                     }
                 }
             }
+            std::cout << "rowsToErase (dominated) = ";
+            printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
@@ -939,16 +967,32 @@ struct AffineLoopNestBounds {
         auto &Aold = remainingA[_i - 1];
         remainingB[_i - 1] = remainingB[_i];
         auto &bold = remainingB[_i - 1];
+        std::cout << "init: A(" << i << ") =\n" << Aold << std::endl;
         pruneBounds(Aold, bold, i);
+        std::cout << "pruned: A(" << i << ") =\n" << Aold << std::endl;
         fillBounds(Aold, bold, i);
         deleteBounds(Aold, bold, i);
+        std::cout << "deleted: A(" << i << ") =\n" << Aold << std::endl;
         appendBounds(Aold, bold, i);
+        std::cout << "appended: A(" << i << ") =\n" << Aold << std::endl;
     }
     void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A,
                       llvm::SmallVectorImpl<MPoly> &b, size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
         for (size_t j = 0; j < b.size(); ++j) {
             if (A(i, j)) {
+                // bool doDelete = true;
+                // for (size_t k = 0; k < A.size(0); ++k){
+                //     if ((k != i) & (A(k,j) != 0)){
+                // 	doDelete = false;
+                // 	break;
+                //     }
+                // }
+                // if (doDelete){
+                //     deleteBounds.push_back(j);
+                // } else {
+                //     A(i,j) = 0;
+                // }
                 deleteBounds.push_back(j);
             }
         }
@@ -1017,19 +1061,19 @@ struct AffineLoopNestBounds {
             pruneBounds(Anew, bnew, j);
             size_t numCols = Anew.size(1);
             for (size_t l = 0; l < numCols; ++l) {
-                intptr_t Ajl = A(j, l);
+                intptr_t Ajl = Anew(j, l);
                 if (Ajl >= 0) {
                     // then it is not a lower bound
                     continue;
                 }
-                intptr_t Ail = A(i, l);
+                intptr_t Ail = Anew(i, l);
                 for (size_t u = 0; u < numCols; ++u) {
-                    intptr_t Aju = A(j, u);
+                    intptr_t Aju = Anew(j, u);
                     if (Aju <= 0) {
                         // then it is not an upper bound
                         continue;
                     }
-                    intptr_t Aiu = A(i, u);
+                    intptr_t Aiu = Anew(i, u);
                     intptr_t c = Ajl * Aiu - Aju * Ail;
                     auto delta = bnew[l] * Aju;
                     Polynomial::fnmadd(delta, bnew[u], Ajl);
@@ -1039,16 +1083,17 @@ struct AffineLoopNestBounds {
                             bool doesNotIterate = true;
                             // we're adding to the lower bound
                             for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = A(i, il);
-                                if ((ail >= 0) | (A(j, il) != 0)) {
+                                intptr_t ail = Anew(i, il);
+                                if ((ail >= 0) | (Anew(j, il) != 0)) {
                                     // (ail >= 0) means not a lower bound
-                                    // (A(j, il) != 0) means the lower bound is
-                                    // a function of `j` if we're adding beyond
-                                    // what `j` defines as the bound here, then
-                                    // `j` won't undergo extra iterations, due
-                                    // to being sandwiched between this bound,
-                                    // and whatever bound it was that defines
-                                    // the extrema we're adding to here.
+                                    // (Anew(j, il) != 0) means the lower bound
+                                    // is a function of `j` if we're adding
+                                    // beyond what `j` defines as the bound
+                                    // here, then `j` won't undergo extra
+                                    // iterations, due to being sandwiched
+                                    // between this bound, and whatever bound it
+                                    // was that defines the extrema we're adding
+                                    // to here.
                                     continue;
                                 }
                                 // recall: ail < 0
@@ -1107,8 +1152,8 @@ struct AffineLoopNestBounds {
                             bool doesNotIterate = true;
                             // does `imax + e` iterate at least once?
                             for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = A(i, il);
-                                if ((ail <= 0) | (A(j, il) != 0)) {
+                                intptr_t ail = Anew(i, il);
+                                if ((ail <= 0) | (Anew(j, il) != 0)) {
                                     // not an upper bound
                                     continue;
                                 }

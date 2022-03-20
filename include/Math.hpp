@@ -328,6 +328,7 @@ template <typename T, size_t M = 0> struct PtrVector {
 template <typename T> struct PtrVector<T, 0> {
     T *ptr;
     size_t M;
+    // PtrVector(llvm::ArrayRef<T> A) : ptr(A.data()), M(A.size()) {};
     T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
@@ -833,12 +834,11 @@ std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
 template <typename T> std::ostream &printVector(std::ostream &os, T const &a) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     os << "[ ";
-    auto M = a.size();
-    for (size_t m = 0; m < M - 1; m++) {
-        os << a[m] << ", ";
-    }
-    if (M) {
-        os << a[M - 1];
+    if (size_t M = a.size()) {
+        os << a[0];
+        for (size_t m = 1; m < M; m++) {
+            os << ", " << a[m];
+        }
     }
     os << " ]";
     return os;
@@ -929,6 +929,22 @@ AbstractMatrix auto matmultn(const AbstractMatrix auto &A,
     auto [K2, N] = B.size();
     assert(K == K2);
     Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
+    for (size_t n = 0; n < N; ++n) {
+        for (size_t m = 0; m < M; ++m) {
+            for (size_t k = 0; k < K; ++k) {
+                C(m, n) += A(k, m) * B(k, n);
+            }
+        }
+    }
+    return C;
+}
+AbstractMatrix auto matmultn(AbstractMatrix auto &C,
+                             const AbstractMatrix auto &A,
+                             const AbstractMatrix auto &B) {
+    auto [K, M] = A.size();
+    auto [K2, N] = B.size();
+    assert(K == K2);
+    C.resize(M, N);
     for (size_t n = 0; n < N; ++n) {
         for (size_t m = 0; m < M; ++m) {
             for (size_t k = 0; k < K; ++k) {

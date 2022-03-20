@@ -281,7 +281,9 @@ struct PartiallyOrderedSet {
         Interval d = delta[l];
         return f ? -d : d;
     }
-    Interval operator()(size_t i) const { return (*this)(0, i); }
+    Interval operator()(size_t i) const {
+        return i < nVar ? (*this)(0, i) : Interval::unconstrained();
+    }
     Interval asInterval(const Polynomial::Monomial &m) const {
         if (isOne(m)) {
             return Interval{1, 1};
