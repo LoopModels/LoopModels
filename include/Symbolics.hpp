@@ -987,6 +987,8 @@ template <typename C, IsMonomial M> struct Term {
             os << t.exponent;
         } else if (t.isCompileTimeConstant()) {
             os << t.coefficient;
+        } else if (t.coefficient == -1) {
+            os << "- " << t.exponent;
         } else {
             os << t.coefficient << " ( " << t.exponent << " ) ";
         }
@@ -1006,14 +1008,58 @@ template <typename C, IsMonomial M> struct Terms {
     llvm::SmallVector<Term<C, M>, 1> terms;
     // std::vector<Term<C, M>> terms;
     Terms() = default;
-    Terms(Term<C, M> const &x) : terms({x}){};
-    Terms(Term<C, M> &&x) : terms({std::move(x)}){};
-    Terms(Term<C, M> const &x, Term<C, M> const &y) : terms({x, y}){};
+    Terms(Term<C, M> const &x) {
+        if (!isZero(x)) {
+            terms.push_back(x);
+        }
+    };
+    Terms(Term<C, M> &&x) {
+        if (!isZero(x)) {
+            terms.push_back(std::move(x));
+        }
+    };
+    Terms(Term<C, M> const &x, Term<C, M> const &y) {
+        if (x.termsMatch(y)) {
+            C z = x.coefficient + y.coefficient;
+            if (!isZero(z)) {
+                terms.emplace_back(std::move(z), x.exponent);
+            }
+        } else if (x.lexGreater(y)) {
+            terms.push_back(x);
+            if (!isZero(y)) {
+                terms.push_back(y);
+            }
+        } else {
+            terms.push_back(y);
+            if (!isZero(x)) {
+                terms.push_back(x);
+            }
+        }
+    };
     // Terms(M &m0, M &m1) : terms({m0, m1}){};
-    Terms(M &&m0, M &&m1) : terms({std::move(m0), std::move(m1)}){};
-    Terms(M const &x, Term<C, M> const &y) : terms({x, y}){};
-    Terms(Term<C, M> const &x, M const &y) : terms({x, y}){};
-    Terms(M const &x, M const &y) : terms({x, y}){};
+    Terms(M &&m0, M &&m1) {
+        if (m0.termsMatch(m1)) {
+            terms.emplace_back(C(2), std::move(m0));
+        } else if (m0.lexGreater(m1)) {
+            terms.reserve(2);
+            terms.emplace_back(C(One()), std::move(m0));
+            terms.emplace_back(C(One()), std::move(m1));
+        } else {
+            terms.reserve(2);
+            terms.emplace_back(C(One()), std::move(m1));
+            terms.emplace_back(C(One()), std::move(m0));
+        }
+    };
+    Terms(C c) {
+        if (!isZero(c)) {
+            terms.emplace_back(c, One());
+        }
+    }
+    // Terms(M const &x, Term<C, M> const &y) : terms({x, y}){
+
+    // };
+    // Terms(Term<C, M> const &x, M const &y) : terms({x, y}){};
+    // Terms(M const &x, M const &y) : terms({x, y}){};
     Terms(One) : terms{Term<C, M>(One())} {};
     auto begin() { return terms.begin(); }
     auto end() { return terms.end(); }
@@ -1083,8 +1129,16 @@ template <typename C, IsMonomial M> struct Terms {
     template <typename I> void insert(I it, Term<C, M> &&c) {
         terms.insert(it, std::move(c));
     }
-    void push_back(Term<C, M> const &c) { terms.push_back(c); }
-    void push_back(Term<C, M> &&c) { terms.push_back(std::move(c)); }
+    void push_back(Term<C, M> const &c) {
+        if (!isZero(c)) {
+            terms.push_back(c);
+        }
+    }
+    void push_back(Term<C, M> &&c) {
+        if (!isZero(c)) {
+            terms.push_back(std::move(c));
+        }
+    }
 
     template <typename I> void insert(I it, M const &c) { terms.insert(it, c); }
     template <typename I> void insert(I it, M &&c) {
@@ -1128,15 +1182,23 @@ template <typename C, IsMonomial M> struct Terms {
         subTerm(std::forward<M>(x));
         return *this;
     }
+    Terms<C, M> &operator*=(C const &x) {
+        if (isZero(x)) {
+            terms.clear();
+        } else if (!isOne(x)) {
+            for (auto &&term : terms) {
+                term.coefficient *= x;
+            }
+        }
+        return *this;
+    }
     Terms<C, M> &operator*=(Term<C, M> const &x) {
         if (isZero(x)) {
             terms.clear();
-            return *this;
-        } else if (isOne(x)) {
-            return *this;
-        }
-        for (auto &term : terms) {
-            term *= x;
+        } else if (!isOne(x)) {
+            for (auto &&term : terms) {
+                term *= x;
+            }
         }
         return *this;
     }
@@ -1144,7 +1206,7 @@ template <typename C, IsMonomial M> struct Terms {
         if (isOne(x)) {
             return *this;
         }
-        for (auto &term : terms) {
+        for (auto &&term : terms) {
             term *= x;
         }
         return *this;
@@ -1627,8 +1689,12 @@ Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &&x) {
 template <typename C, typename M>
 Terms<C, M> operator+(Term<C, M> const &x, Term<C, M> const &y) {
     if (x.termsMatch(y)) {
-        return Terms<C, M>{
-            Term<C, M>(x.coefficient + y.coefficient, x.exponent)};
+        C coefSum = x.coefficient + y.coefficient;
+        if (isZero(coefSum)) {
+            return Terms<C, M>();
+        } else {
+            return Term<C, M>(std::move(coefSum), x.exponent);
+        }
     } else if (lexGreater(y)) {
         return Terms<C, M>(x, y);
     } else {
@@ -1638,8 +1704,11 @@ Terms<C, M> operator+(Term<C, M> const &x, Term<C, M> const &y) {
 template <typename C, typename M>
 Terms<C, M> operator-(Term<C, M> const &x, Term<C, M> const &y) {
     if (x.termsMatch(y)) {
-        return Terms<C, M>{
-            Term<C, M>(x.coefficient - y.coefficient, x.exponent)};
+        if (x.coefficient == y.coefficient) {
+            return Terms<C, M>();
+        } else {
+            return Term<C, M>(x.coefficient - y.coefficient, x.exponent);
+        }
     } else if (lexGreater(y)) {
         return Terms<C, M>(x, negate(y));
     } else {
@@ -1830,14 +1899,16 @@ template <IsMonomial M> Terms<intptr_t, M> operator-(size_t x, M &y) {
 }
 
 template <typename C, typename M>
-Terms<C, M> operator-(Term<C, M> const &x, C const &y) {
+Terms<C, M> operator-(const Term<C, M> &x, const C &y) {
     Terms<C, M> z;
     if (x.degree()) {
         z.terms.push_back(x);
         z.terms.push_back(Term{-1 * y, M(One())});
     } else {
-        x.coefficient -= y;
-        z.terms.push_back(x);
+        C coef = x.coefficient - y;
+        if (!isZero(coef)) {
+            z.terms.emplace_back(std::move(coef), x.exponent);
+        }
     }
     return z;
 }
@@ -1848,8 +1919,10 @@ Terms<C, M> operator-(Term<C, M> const &x, C &&y) {
         z.terms.push_back(x);
         z.terms.push_back(Term{-1 * std::move(y), M(One())});
     } else {
-        x.coefficient -= std::move(y);
-        z.terms.push_back(x);
+        C coef = x.coefficient - std::move(y);
+        if (!isZero(coef)) {
+            z.terms.emplace_back(std::move(coef), x.exponent);
+        }
     }
     return z;
 }
@@ -1862,7 +1935,9 @@ Terms<C, M> operator-(Term<C, M> &&x, C const &y) {
         z.terms.push_back(Term{-1 * y, M(One())});
     } else {
         x.coefficient -= y;
-        z.terms.push_back(std::move(x));
+        if (!isZero(x.coefficient)) {
+            z.terms.push_back(std::move(x));
+        }
     }
     return z;
 }
@@ -1874,7 +1949,9 @@ template <typename C, typename M> Terms<C, M> operator-(Term<C, M> &&x, C &&y) {
         z.terms.push_back(Term{-1 * std::move(y), M(One())});
     } else {
         x.coefficient -= std::move(y);
-        z.terms.push_back(std::move(x));
+        if (!isZero(x.coefficient)) {
+            z.terms.push_back(std::move(x));
+        }
     }
     return z;
 }
@@ -2221,10 +2298,20 @@ void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     // for (auto it = y.rbegin(); it != y.rend(); ++it){
     //	offset = subTermReverseScan(x, (*it) * z, offset);
     // }
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
     size_t offset = 0;
     for (auto &term : y) {
         offset = subTerm(x, term * z, offset);
     }
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
@@ -2234,16 +2321,36 @@ void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z,
     // for (auto it = y.rbegin(); it != y.rend(); ++it){
     //     offset = subTerm(x, (*it) * z, offset);
     // }
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
     for (auto &term : y) {
         offset = subTerm(x, term * z, offset);
     }
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
 }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, const C &c) {
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
     size_t offset = 0;
     for (auto &term : y) {
         offset = x.addTermScale(term, -c, offset);
     }
+#ifdef EXPENSIVEASSERTS
+    for (auto &t : x) {
+        assert(!isZero(t));
+    }
+#endif
 }
 
 template <typename C, IsMonomial M>

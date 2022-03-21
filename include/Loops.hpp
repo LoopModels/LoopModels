@@ -301,177 +301,177 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
     }
 }
 
-// a'i <= b
-struct AffineLE {
-    llvm::SmallVector<intptr_t, 4> a;
-    MPoly b;
+// // a'i <= b
+// struct AffineLE {
+//     llvm::SmallVector<intptr_t, 4> a;
+//     MPoly b;
 
-    // Factor out variable `i`, then set l <= u
-    AffineLE(const AffineLE &l, const AffineLE &u, size_t i) {
-        intptr_t cu = u.a[i];
-        intptr_t cl = l.a[i];
-        b = cu * l.b;
-        Polynomial::fnmadd(b, u.b, cl);
-        size_t N = l.a.size();
-        a.resize_for_overwrite(N);
-        for (size_t n = 0; n < N; ++n) {
-            a[n] = cu * l.a[n] - cl * u.a[n];
-        }
-        a[i] = 0;
-    }
-    bool operator==(const AffineLE &x) const { return a == x.a && b == x.b; }
-};
+//     // Factor out variable `i`, then set l <= u
+//     AffineLE(const AffineLE &l, const AffineLE &u, size_t i) {
+//         intptr_t cu = u.a[i];
+//         intptr_t cl = l.a[i];
+//         b = cu * l.b;
+//         Polynomial::fnmadd(b, u.b, cl);
+//         size_t N = l.a.size();
+//         a.resize_for_overwrite(N);
+//         for (size_t n = 0; n < N; ++n) {
+//             a[n] = cu * l.a[n] - cl * u.a[n];
+//         }
+//         a[i] = 0;
+//     }
+//     bool operator==(const AffineLE &x) const { return a == x.a && b == x.b; }
+// };
 
-// c*j <= b - a * i
-// For example, let
-// c = 1, b = N - 1, a = [1, 0, -2]
-// Then we have an upper bound:
-// j <= N - 1 - i_0 + 2*i_2
-// Or, say we have
-// c = -1, b = N - 1, a = [1, 0, -2]
-// Then we have a lower bound:
-// -j <= N - 1 - i_0 + 2*i_2
-// j >= 1 - N + i_0 - 2*i_2
-struct AffineCmp {
-    llvm::SmallVector<intptr_t, 4> a;
-    MPoly b;
-    intptr_t c;
-    AffineCmp(MPoly m, intptr_t c) : b(m), c(c){};
-    AffineCmp(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c)
-        : a(std::move(a)), b(std::move(b)), c(c) {}
-    AffineCmp(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b,
-              intptr_t c)
-        : a(a), b(b), c(c) {}
+// // c*j <= b - a * i
+// // For example, let
+// // c = 1, b = N - 1, a = [1, 0, -2]
+// // Then we have an upper bound:
+// // j <= N - 1 - i_0 + 2*i_2
+// // Or, say we have
+// // c = -1, b = N - 1, a = [1, 0, -2]
+// // Then we have a lower bound:
+// // -j <= N - 1 - i_0 + 2*i_2
+// // j >= 1 - N + i_0 - 2*i_2
+// struct AffineCmp {
+//     llvm::SmallVector<intptr_t, 4> a;
+//     MPoly b;
+//     intptr_t c;
+//     AffineCmp(MPoly m, intptr_t c) : b(m), c(c){};
+//     AffineCmp(llvm::SmallVector<intptr_t, 4> &&a, MPoly &&b, intptr_t c)
+//         : a(std::move(a)), b(std::move(b)), c(c) {}
+//     AffineCmp(llvm::SmallVector<intptr_t, 4> const &a, MPoly const &b,
+//               intptr_t c)
+//         : a(a), b(b), c(c) {}
 
-    bool operator==(AffineCmp const &x) const {
-        return c == x.c && a == x.a && b == x.b;
-    }
-    bool operator==(MPoly x) const { return allZero(a) && c * b == x; }
-    bool operator==(int x) const {
-        if (auto bc = b.getCompileTimeConstant()) {
-            return ((c * bc.getValue()) == x) && allZero(a);
-        } else {
-            return false;
-        }
-    }
+//     bool operator==(AffineCmp const &x) const {
+//         return c == x.c && a == x.a && b == x.b;
+//     }
+//     bool operator==(MPoly x) const { return allZero(a) && c * b == x; }
+//     bool operator==(int x) const {
+//         if (auto bc = b.getCompileTimeConstant()) {
+//             return ((c * bc.getValue()) == x) && allZero(a);
+//         } else {
+//             return false;
+//         }
+//     }
 
-    bool isConstant() const { return (b.degree() == 0) && allZero(a); }
-    void subtractUpdateAB(AffineCmp const &x, intptr_t c0, intptr_t c1) {
-        b *= c0;
-        fnmadd(b, x.b, c1); // y.b -= x.b * c1;
-        for (size_t i = 0; i < a.size(); ++i) {
-            a[i] = a[i] * c0 - c1 * x.a[i];
-        }
-        c *= c0;
-    }
-    void subtractUpdate(AffineCmp const &x, intptr_t a1) {
-        intptr_t xc;
-        if (x.c < 0) {
-            xc = -x.c;
-            a1 = -a1;
-        } else {
-            xc = x.c;
-        }
-        subtractUpdateAB(x, xc, a1);
-    }
-    // assumes we're subtracting off one of the bounds
-    AffineCmp subtract(AffineCmp const &x, intptr_t a1) const {
-        AffineCmp y = *this;
-        y.subtractUpdate(x, a1);
-        return y;
-    }
-    // assumes `j0 === j1`
-    // aff1 -= aff0
-    // yields c*j <= b - a*i
-    // where
-    // c = abs(c0) * c1
-    // b = b1*abs(c0) - c1 * b0
-    // a = a1*c0 - a0*c1
-    AffineCmp &operator-=(AffineCmp const &x) {
-        subtractUpdateAB(x, std::abs(x.c), std::abs(c));
-        return *this;
-    }
-    // Let's say we have
-    // aff_1 - aff_0
-    // where
-    // c_1 = 1, b_1 = U, a_1 = [1,0,-1]
-    // c_0 = 1, b_1 = L, a_0 = [1,0, 1]
-    // then we get
-    // c = c_0*c_1
-    // b = c_0*b_1 - c_1*b_0
-    // a = c_0*a_1 - c_1*a_0
-    // The basic idea is that if we have
-    // sign(c)*j <= (b - a*i)/abs(c)
-    // if we want to subtract two of the RHS, then we need to scale the denoms
-    AffineCmp operator-(AffineCmp const &x) const {
-        AffineCmp y = *this;
-        y -= x;
-        return y;
-    }
-    /*
-    uint8_t superSub(Affine const &x) const {
-        uint8_t supSub = 3; // 00000011
-        for (size_t i = 0; i < a.size(); ++i){
-            intptr_t ai = a[i];
-            intptr_t xi = x.a[i];
-            if (ai == xi){
-                continue;
-            } else {
+//     bool isConstant() const { return (b.degree() == 0) && allZero(a); }
+//     void subtractUpdateAB(AffineCmp const &x, intptr_t c0, intptr_t c1) {
+//         b *= c0;
+//         fnmadd(b, x.b, c1); // y.b -= x.b * c1;
+//         for (size_t i = 0; i < a.size(); ++i) {
+//             a[i] = a[i] * c0 - c1 * x.a[i];
+//         }
+//         c *= c0;
+//     }
+//     void subtractUpdate(AffineCmp const &x, intptr_t a1) {
+//         intptr_t xc;
+//         if (x.c < 0) {
+//             xc = -x.c;
+//             a1 = -a1;
+//         } else {
+//             xc = x.c;
+//         }
+//         subtractUpdateAB(x, xc, a1);
+//     }
+//     // assumes we're subtracting off one of the bounds
+//     AffineCmp subtract(AffineCmp const &x, intptr_t a1) const {
+//         AffineCmp y = *this;
+//         y.subtractUpdate(x, a1);
+//         return y;
+//     }
+//     // assumes `j0 === j1`
+//     // aff1 -= aff0
+//     // yields c*j <= b - a*i
+//     // where
+//     // c = abs(c0) * c1
+//     // b = b1*abs(c0) - c1 * b0
+//     // a = a1*c0 - a0*c1
+//     AffineCmp &operator-=(AffineCmp const &x) {
+//         subtractUpdateAB(x, std::abs(x.c), std::abs(c));
+//         return *this;
+//     }
+//     // Let's say we have
+//     // aff_1 - aff_0
+//     // where
+//     // c_1 = 1, b_1 = U, a_1 = [1,0,-1]
+//     // c_0 = 1, b_1 = L, a_0 = [1,0, 1]
+//     // then we get
+//     // c = c_0*c_1
+//     // b = c_0*b_1 - c_1*b_0
+//     // a = c_0*a_1 - c_1*a_0
+//     // The basic idea is that if we have
+//     // sign(c)*j <= (b - a*i)/abs(c)
+//     // if we want to subtract two of the RHS, then we need to scale the
+//     denoms AffineCmp operator-(AffineCmp const &x) const {
+//         AffineCmp y = *this;
+//         y -= x;
+//         return y;
+//     }
+//     /*
+//     uint8_t superSub(Affine const &x) const {
+//         uint8_t supSub = 3; // 00000011
+//         for (size_t i = 0; i < a.size(); ++i){
+//             intptr_t ai = a[i];
+//             intptr_t xi = x.a[i];
+//             if (ai == xi){
+//                 continue;
+//             } else {
 
-            }
-            if (ai | xi){
-                // at least one not zero
-                if (ai & xi){
-                    // both not zero
-                    continue;
-                } else if (ai){
+//             }
+//             if (ai | xi){
+//                 // at least one not zero
+//                 if (ai & xi){
+//                     // both not zero
+//                     continue;
+//                 } else if (ai){
 
-                } else {
-                }
-            }
-        }
-        return supSub;
-    }
-    */
-    friend std::ostream &operator<<(std::ostream &os, const AffineCmp &x) {
-        intptr_t sign = 1;
-        if (x.c > 0) {
-            if (x.c == 1) {
-                os << "j <= ";
-            } else {
-                os << x.c << "j <= ";
-            }
-            os << x.b;
-        } else {
-            if (x.c == -1) {
-                os << "j >= ";
-            } else {
-                os << -x.c << "j >= ";
-            }
-            auto xbn = x.b;
-            xbn *= -1;
-            os << xbn;
-            sign = -1;
-        }
-        for (size_t i = 0; i < x.a.size(); ++i) {
-            if (intptr_t ai = x.a[i] * sign) {
-                if (ai > 0) {
-                    if (ai == 1) {
-                        os << " - i_" << i;
-                    } else {
-                        os << " - " << ai << " * i_" << i;
-                    }
-                } else if (ai == -1) {
-                    os << " + i_" << i;
-                } else {
-                    os << " + " << ai * -1 << " * i_" << i;
-                }
-            }
-        }
-        return os;
-    }
-    void dump() const { std::cout << *this << std::endl; }
-};
+//                 } else {
+//                 }
+//             }
+//         }
+//         return supSub;
+//     }
+//     */
+//     friend std::ostream &operator<<(std::ostream &os, const AffineCmp &x) {
+//         intptr_t sign = 1;
+//         if (x.c > 0) {
+//             if (x.c == 1) {
+//                 os << "j <= ";
+//             } else {
+//                 os << x.c << "j <= ";
+//             }
+//             os << x.b;
+//         } else {
+//             if (x.c == -1) {
+//                 os << "j >= ";
+//             } else {
+//                 os << -x.c << "j >= ";
+//             }
+//             auto xbn = x.b;
+//             xbn *= -1;
+//             os << xbn;
+//             sign = -1;
+//         }
+//         for (size_t i = 0; i < x.a.size(); ++i) {
+//             if (intptr_t ai = x.a[i] * sign) {
+//                 if (ai > 0) {
+//                     if (ai == 1) {
+//                         os << " - i_" << i;
+//                     } else {
+//                         os << " - " << ai << " * i_" << i;
+//                     }
+//                 } else if (ai == -1) {
+//                     os << " + i_" << i;
+//                 } else {
+//                     os << " + " << ai * -1 << " * i_" << i;
+//                 }
+//             }
+//         }
+//         return os;
+//     }
+//     void dump() const { std::cout << *this << std::endl; }
+// };
 
 // A' * i <= r
 // l are the lower bounds
@@ -529,6 +529,9 @@ struct AffineLoopNestBounds {
         intptr_t cu = ua[i];
         intptr_t cl = la[i];
         b = cu * lb;
+        // std::cout << "cu="<<cu<<std::endl;
+        // std::cout << "lb=" << lb << "\nlb.terms.size() = " << lb.terms.size()
+        // << std::endl;
         Polynomial::fnmadd(b, ub, cl);
         size_t N = la.size();
         for (size_t n = 0; n < N; ++n) {
@@ -574,8 +577,8 @@ struct AffineLoopNestBounds {
         }
         const size_t numExclude = numCol - numNeg - numPos;
         const size_t numColA = numNeg * numPos + numExclude;
-        std::cout << "numCol=" << numCol << "; numNeg=" << numNeg
-                  << "; numPos=" << numPos << std::endl;
+        // std::cout << "numCol=" << numCol << "; numNeg=" << numNeg
+        //           << "; numPos=" << numPos << std::endl;
         A.resizeForOverwrite(numVar, numColA);
         b.resize(numColA);
 
@@ -688,6 +691,15 @@ struct AffineLoopNestBounds {
                              llvm::SmallVectorImpl<MPoly> &b, size_t i) {
         const size_t numNeg = lB.size();
         const size_t numPos = uB.size();
+#ifdef EXPENSIVEASSERTS
+        for (auto &lb : lB) {
+            if (auto c = lb.getCompileTimeConstant()) {
+                if (c.getValue() == 0) {
+                    assert(lb.terms.size() == 0);
+                }
+            }
+        }
+#endif
         auto [numLoops, numCol] = A.size();
         A.resize(numLoops, numCol + numNeg * numPos);
         b.resize_for_overwrite(numCol + numNeg * numPos);
@@ -827,9 +839,10 @@ struct AffineLoopNestBounds {
                             size_t newVarId = numLoops + boundDiffPairs.size();
                             AOld(newVarId, c++) = 1;
                             AOld(newVarId, c++) = -1;
-                            std::cout << "boundDiffPairs["
-                                      << boundDiffPairs.size() << "] = (" << j
-                                      << ", " << d << ")" << std::endl;
+                            // std::cout << "boundDiffPairs["
+                            //           << boundDiffPairs.size() << "] = (" <<
+                            //           j
+                            //           << ", " << d << ")" << std::endl;
                             boundDiffPairs.emplace_back(j, d);
                         }
                     }
@@ -838,19 +851,20 @@ struct AffineLoopNestBounds {
             llvm::SmallVector<int8_t, 32> provenBoundsDeltas(numAuxiliaryVar,
                                                              0);
             llvm::SmallVector<unsigned, 32> rowsToErase;
-            std::cout << "A_pre_elim =\n" << AOld << std::endl;
-            std::cout << "b_pre_elim =\n";
-            printVector(std::cout, bOld) << std::endl;
+            // std::cout << "A_pre_elim =\n" << AOld << std::endl;
+            // std::cout << "b_pre_elim =\n";
+            // printVector(std::cout, bOld) << std::endl;
             do {
-                std::cout << "dependencyToEliminate = " << dependencyToEliminate
-                          << std::endl;
+                // std::cout << "dependencyToEliminate = " <<
+                // dependencyToEliminate
+                //           << std::endl;
                 eliminateVariable(ANew, bNew, AOld, bOld,
                                   size_t(dependencyToEliminate));
                 std::swap(ANew, AOld);
                 std::swap(bNew, bOld);
-                std::cout << "A_post_elim =\n" << AOld << std::endl;
-                std::cout << "b_post_elim =\n";
-                printVector(std::cout, bOld) << std::endl;
+                // std::cout << "A_post_elim =\n" << AOld << std::endl;
+                // std::cout << "b_post_elim =\n";
+                // printVector(std::cout, bOld) << std::endl;
                 dependencyToEliminate = -1;
                 for (size_t j = 0; j < AOld.size(1); ++j) {
                     for (size_t k = numLoops; k < numVar; ++k) {
@@ -875,15 +889,15 @@ struct AffineLoopNestBounds {
                                 // if (AOld(i,j) == 0){
                                 if (poset->knownGreaterEqualZero(bOld[j])) {
                                     // Akj * k >= 0
-                                    std::cout << "bOld[j=" << j
-                                              << "] >= 0: " << bOld[j]
-                                              << std::endl;
+                                    // std::cout << "bOld[j=" << j
+                                    //           << "] >= 0: " << bOld[j]
+                                    //           << std::endl;
                                     provenBoundsDeltas[k - numLoops] = 1;
                                 } else if (poset->knownLessEqualZero(bOld[j])) {
                                     // Akj * k <= 0
-                                    std::cout << "bOld[j=" << j
-                                              << "] <= 0: " << bOld[j]
-                                              << std::endl;
+                                    // std::cout << "bOld[j=" << j
+                                    //           << "] <= 0: " << bOld[j]
+                                    //           << std::endl;
                                     provenBoundsDeltas[k - numLoops] = -1;
                                 }
                                 // }
@@ -912,8 +926,8 @@ struct AffineLoopNestBounds {
                     rowsToErase.push_back(k == 1 ? j : d);
                 }
             }
-            std::cout << "rowsToErase (dominated) = ";
-            printVector(std::cout, rowsToErase) << std::endl;
+            // std::cout << "rowsToErase (dominated) = ";
+            // printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
 
         } else {
@@ -938,8 +952,8 @@ struct AffineLoopNestBounds {
                     }
                 }
             }
-            std::cout << "rowsToErase (dominated) = ";
-            printVector(std::cout, rowsToErase) << std::endl;
+            // std::cout << "rowsToErase (dominated) = ";
+            // printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
@@ -967,14 +981,14 @@ struct AffineLoopNestBounds {
         auto &Aold = remainingA[_i - 1];
         remainingB[_i - 1] = remainingB[_i];
         auto &bold = remainingB[_i - 1];
-        std::cout << "init: A(" << i << ") =\n" << Aold << std::endl;
+        // std::cout << "init: A(" << i << ") =\n" << Aold << std::endl;
         pruneBounds(Aold, bold, i);
-        std::cout << "pruned: A(" << i << ") =\n" << Aold << std::endl;
+        // std::cout << "pruned: A(" << i << ") =\n" << Aold << std::endl;
         fillBounds(Aold, bold, i);
         deleteBounds(Aold, bold, i);
-        std::cout << "deleted: A(" << i << ") =\n" << Aold << std::endl;
+        // std::cout << "deleted: A(" << i << ") =\n" << Aold << std::endl;
         appendBounds(Aold, bold, i);
-        std::cout << "appended: A(" << i << ") =\n" << Aold << std::endl;
+        // std::cout << "appended: A(" << i << ") =\n" << Aold << std::endl;
     }
     void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A,
                       llvm::SmallVectorImpl<MPoly> &b, size_t i) {
@@ -1224,23 +1238,30 @@ struct AffineLoopNestBounds {
                 } else {
                     os << -lA(i, j) << "*i_" << i << " >= ";
                 }
-                os << -lb[j];
+                bool printed = !isZero(lb[j]);
+                if (printed) {
+                    os << -lb[j];
+                }
                 for (size_t k = 0; k < numLoops; ++k) {
                     if (k == i) {
                         continue;
                     }
                     if (intptr_t lakj = lA(k, j)) {
-                        if (lakj > 0) {
-                            os << " + ";
-                        } else {
+                        if (lakj < 0) {
                             os << " - ";
+                        } else if (printed) {
+                            os << " + ";
                         }
                         lakj = std::abs(lakj);
                         if (lakj != 1) {
                             os << lakj << "*";
                         }
                         os << "i_" << k;
+                        printed = true;
                     }
+                }
+                if (!printed) {
+                    os << 0;
                 }
                 os << std::endl;
             }
@@ -1253,7 +1274,10 @@ struct AffineLoopNestBounds {
                 } else {
                     os << uA(i, j) << "*i_" << i << " <= ";
                 }
-                os << ub[j];
+                bool printed = (!isZero(ub[j]));
+                if (printed) {
+                    os << ub[j];
+                }
                 for (size_t k = 0; k < numLoops; ++k) {
                     if (k == i) {
                         continue;
@@ -1261,7 +1285,7 @@ struct AffineLoopNestBounds {
                     if (intptr_t uakj = uA(k, j)) {
                         if (uakj > 0) {
                             os << " - ";
-                        } else {
+                        } else if (printed) {
                             os << " + ";
                         }
                         uakj = std::abs(uakj);
@@ -1269,7 +1293,11 @@ struct AffineLoopNestBounds {
                             os << uakj << "*";
                         }
                         os << "i_" << k;
+                        printed = true;
                     }
+                }
+                if (!printed) {
+                    os << 0;
                 }
                 os << std::endl;
             }

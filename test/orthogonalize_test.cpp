@@ -44,7 +44,13 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     // j >= 0;
     A(3, 7) = -1;
     r.push_back(Zero);
-
+    for (auto &b : r){
+        if (auto c = b.getCompileTimeConstant()) {
+            if (c.getValue() == 0) {
+                assert(b.terms.size() == 0);
+            }
+        }
+    }
     std::shared_ptr<PartiallyOrderedSet> poset =
         std::make_shared<PartiallyOrderedSet>();
     AffineLoopNestBounds alnp(
