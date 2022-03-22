@@ -1008,6 +1008,7 @@ template <typename C, IsMonomial M> struct Terms {
     llvm::SmallVector<Term<C, M>, 1> terms;
     // std::vector<Term<C, M>> terms;
     Terms() = default;
+    Terms(M x) : terms{Term<C,M>(C(One()), std::move(x))} {};
     Terms(Term<C, M> const &x) {
         if (!isZero(x)) {
             terms.push_back(x);
@@ -1146,6 +1147,10 @@ template <typename C, IsMonomial M> struct Terms {
     }
     void push_back(M const &c) { terms.emplace_back(1, c); }
     void push_back(M &&c) { terms.emplace_back(1, std::move(c)); }
+    Terms<C, M> &operator+=(M const &x) {
+        addTerm(x);
+        return *this;
+    }
     Terms<C, M> &operator+=(Term<C, M> const &x) {
         addTerm(x);
         return *this;
