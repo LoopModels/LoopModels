@@ -33,7 +33,7 @@ struct Stride {
           indices(std::move(indices)), counts{0, 0, 0, 0, 0} {};
     Stride(Polynomial::Monomial stride,
            llvm::SmallVector<std::pair<MPoly, VarID>, 1> indices)
-        : stride(MPoly{intptr_t(1), std::move(stride)}),
+        : stride(MPoly{Polynomial::Term{intptr_t(1), std::move(stride)}}),
           indices(std::move(indices)), counts{0, 0, 0, 0, 0} {};
     size_t size() const { return indices.size(); }
     size_t getCount(VarType i) {
