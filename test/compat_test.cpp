@@ -216,13 +216,12 @@ TEST(AffineTest0, BasicAssertions) {
     auto nOne = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
     One.dump();
     std::cout << "initializing poset." << std::endl;
-    std::shared_ptr<PartiallyOrderedSet> poset =
-        std::make_shared<PartiallyOrderedSet>();
+    PartiallyOrderedSet poset;
     std::cout << "initialized poset\n";
     // ids 1 and 2 are >= 0;
-    poset->push(0, 1, Interval::nonNegative());
+    poset.push(0, 1, Interval::nonNegative());
     std::cout << "first push into poset.";
-    poset->push(0, 2, Interval::nonNegative());
+    poset.push(0, 2, Interval::nonNegative());
     std::cout << "second push into poset.";
     // the loop is
     // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
@@ -264,8 +263,8 @@ TEST(AffineTest0, BasicAssertions) {
 
     std::cout << "About to construct affine obj" << std::endl;
     std::shared_ptr<AffineLoopNest> aff(
-        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r}));
-    AffineLoopNestBounds affp(aff, poset);
+        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
+    AffineLoopNestBounds affp(aff);
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, false));

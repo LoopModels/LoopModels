@@ -268,7 +268,11 @@ struct PartiallyOrderedSet {
             nVar = j + 1;
             delta.resize((j * nVar) >> 1, Interval::unconstrained());
         } else {
-            itv = itv.intersect(delta[l]);
+            Interval itvNew = itv.intersect(delta[l]);
+	    if (!itvNew.significantlyDifferent(itv)){
+		return;
+	    }
+	    itv = itvNew;
         }
         delta[l] = update(i, j, itv);
     }

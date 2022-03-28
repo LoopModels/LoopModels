@@ -480,6 +480,7 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
 struct AffineLoopNest {
     Matrix<Int, 0, 0, 0> A; // somewhat triangular
     llvm::SmallVector<MPoly, 8> b;
+    PartiallyOrderedSet poset;
     // llvm::SmallVector<unsigned, 8> origLoop;
     // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> lExtrema;
     // llvm::SmallVector<llvm::SmallVector<MPoly, 2>, 4> uExtrema;
@@ -495,7 +496,6 @@ struct AffineLoopNestBounds {
     // note: bounds (lowerA, upperA, lowerB, upperB) are w/ respect to original
     // order
     std::shared_ptr<AffineLoopNest> aln;
-    std::shared_ptr<PartiallyOrderedSet> poset;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> lowerB;
@@ -505,12 +505,11 @@ struct AffineLoopNestBounds {
     Permutation perm; // maps current to orig
 
     size_t getNumLoops() const { return perm.getNumLoops(); }
-    AffineLoopNestBounds(std::shared_ptr<AffineLoopNest> aln,
-                         std::shared_ptr<PartiallyOrderedSet> poset)
-        : aln(aln), poset(poset), lowerA(aln->getNumLoops()),
-          upperA(aln->getNumLoops()), lowerB(aln->getNumLoops()),
-          upperB(aln->getNumLoops()), remainingA(aln->getNumLoops()),
-          remainingB(aln->getNumLoops()), perm(aln->getNumLoops()) {
+    AffineLoopNestBounds(std::shared_ptr<AffineLoopNest> aln)
+        : aln(aln), lowerA(aln->getNumLoops()), upperA(aln->getNumLoops()),
+          lowerB(aln->getNumLoops()), upperB(aln->getNumLoops()),
+          remainingA(aln->getNumLoops()), remainingB(aln->getNumLoops()),
+          perm(aln->getNumLoops()) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
         remainingA[i - 1] = aln->A;
@@ -887,13 +886,14 @@ struct AffineLoopNestBounds {
                                 // we can eliminate this equation, but
                                 // check if we can eliminate the bound
                                 // if (AOld(i,j) == 0){
-                                if (poset->knownGreaterEqualZero(bOld[j])) {
+                                if (aln->poset.knownGreaterEqualZero(bOld[j])) {
                                     // Akj * k >= 0
                                     // std::cout << "bOld[j=" << j
                                     //           << "] >= 0: " << bOld[j]
                                     //           << std::endl;
                                     provenBoundsDeltas[k - numLoops] = 1;
-                                } else if (poset->knownLessEqualZero(bOld[j])) {
+                                } else if (aln->poset.knownLessEqualZero(
+                                               bOld[j])) {
                                     // Akj * k <= 0
                                     // std::cout << "bOld[j=" << j
                                     //           << "] <= 0: " << bOld[j]
@@ -942,9 +942,9 @@ struct AffineLoopNestBounds {
                             MPoly delta = bold[k] * std::abs(Aij);
                             Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
                             // delta = k - j
-                            if (poset->knownGreaterEqualZero(delta)) {
+                            if (aln->poset.knownGreaterEqualZero(delta)) {
                                 rowsToErase.push_back(k);
-                            } else if (poset->knownLessEqualZero(
+                            } else if (aln->poset.knownLessEqualZero(
                                            std::move(delta))) {
                                 rowsToErase.push_back(j);
                             }
@@ -1147,7 +1147,7 @@ struct AffineLoopNestBounds {
                                 Polynomial::fnmadd(idelta, bnew[il], -c);
                                 // let e = 1
                                 idelta -= c * ail + 1;
-                                if (poset->knownGreaterEqualZero(idelta)) {
+                                if (aln->poset.knownGreaterEqualZero(idelta)) {
                                     return true;
                                 } else {
                                     doesNotIterate = false;
@@ -1193,7 +1193,7 @@ struct AffineLoopNestBounds {
                                 auto idelta = (-ail) * delta;
                                 Polynomial::fnmadd(idelta, bnew[il], c);
                                 idelta -= c * ail - 1;
-                                if (poset->knownGreaterEqualZero(idelta)) {
+                                if (aln->poset.knownGreaterEqualZero(idelta)) {
                                     return true;
                                 } else {
                                     doesNotIterate = false;
@@ -1306,4 +1306,3 @@ struct AffineLoopNestBounds {
     }
     void dump() const { std::cout << *this; }
 };
-

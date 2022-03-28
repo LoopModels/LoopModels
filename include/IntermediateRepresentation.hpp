@@ -567,7 +567,8 @@ orthogonalize(AffineLoopNestBounds const &alnp,
         auto alnNew = std::make_shared<AffineLoopNest>();
         matmultn(alnNew->A, K, alnp.aln->A);
         alnNew->b = alnp.aln->b;
-        AffineLoopNestBounds alnpNew(alnNew, alnp.poset);
+        alnNew->poset = alnp.aln->poset;
+        AffineLoopNestBounds alnpNew(alnNew);
         // Originally, the mapping from our loops to our indices was
         // S*L = I
         // now, we have

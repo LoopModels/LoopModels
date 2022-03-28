@@ -58,10 +58,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
             }
         }
     }
-    std::shared_ptr<PartiallyOrderedSet> poset =
-        std::make_shared<PartiallyOrderedSet>();
+    PartiallyOrderedSet poset;
     AffineLoopNestBounds alnp(
-        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r}), poset);
+        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
 
     // we have three array refs
     // W[i+m, j+n]
@@ -195,10 +194,9 @@ TEST(BadMul, BasicAssertions) {
             }
         }
     }
-    std::shared_ptr<PartiallyOrderedSet> poset =
-        std::make_shared<PartiallyOrderedSet>();
+    PartiallyOrderedSet poset;
     AffineLoopNestBounds alnp(
-        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r}), poset);
+        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
 
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     // 0, 1, 2
