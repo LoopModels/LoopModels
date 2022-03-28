@@ -295,9 +295,11 @@ struct PartiallyOrderedSet {
             return Interval{1, 1};
         }
         assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarType::Constant);
-        Interval itv = delta[bin2(m.prodIDs[0].getID())];
+	size_t j = bin2(m.prodIDs[0].getID());
+        Interval itv = j < nVar ? delta[j] : Interval::unconstrained();
         for (size_t i = 1; i < m.prodIDs.size(); ++i) {
-            itv *= delta[bin2(m.prodIDs[i].getID())];
+	    size_t j = bin2(m.prodIDs[i].getID());
+            itv *= (j < nVar ? delta[j] : Interval::unconstrained());
         }
         return itv;
     }
