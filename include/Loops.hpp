@@ -748,6 +748,11 @@ struct AffineLoopNestBounds {
             }
         }
         if (dependencyToEliminate >= 0) {
+            // std::cout << "Aold =\n" << Aold << std::endl;
+            // std::cout << "bold =\n";
+            // printVector(std::cout, bold) << std::endl;
+            // std::cout << "dependencyToEliminate = " << dependencyToEliminate
+            //           << "; i = " << i << std::endl;
             // hopefully stack allocate scratch space
             const size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
             const size_t numVar = numLoops + numAuxiliaryVar;
@@ -839,9 +844,8 @@ struct AffineLoopNestBounds {
                             AOld(newVarId, c++) = 1;
                             AOld(newVarId, c++) = -1;
                             // std::cout << "boundDiffPairs["
-                            //           << boundDiffPairs.size() << "] = (" <<
-                            //           j
-                            //           << ", " << d << ")" << std::endl;
+                            //           << boundDiffPairs.size() << "] = (j=" << j
+                            //           << ", d=" << d << ")" << std::endl;
                             boundDiffPairs.emplace_back(j, d);
                         }
                     }
@@ -854,8 +858,7 @@ struct AffineLoopNestBounds {
             // std::cout << "b_pre_elim =\n";
             // printVector(std::cout, bOld) << std::endl;
             do {
-                // std::cout << "dependencyToEliminate = " <<
-                // dependencyToEliminate
+                // std::cout << "dependencyToEliminate = " << dependencyToEliminate
                 //           << std::endl;
                 eliminateVariable(ANew, bNew, AOld, bOld,
                                   size_t(dependencyToEliminate));
@@ -891,14 +894,14 @@ struct AffineLoopNestBounds {
                                     // std::cout << "bOld[j=" << j
                                     //           << "] >= 0: " << bOld[j]
                                     //           << std::endl;
-                                    provenBoundsDeltas[k - numLoops] = 1;
+                                    provenBoundsDeltas[k - numLoops] = Akj > 0 ? 1 : -1;
                                 } else if (aln->poset.knownLessEqualZero(
                                                bOld[j])) {
                                     // Akj * k <= 0
                                     // std::cout << "bOld[j=" << j
                                     //           << "] <= 0: " << bOld[j]
                                     //           << std::endl;
-                                    provenBoundsDeltas[k - numLoops] = -1;
+                                    provenBoundsDeltas[k - numLoops] = Akj > 0 ? -1 : 1;
                                 }
                                 // }
                                 if ((rowsToErase.size() == 0) ||
@@ -1223,6 +1226,7 @@ struct AffineLoopNestBounds {
         } while (_j != numLoops);
         return false;
     }
+    // prints in current permutation order.
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNestBounds &alnb) {
         const size_t numLoops = alnb.getNumLoops();
