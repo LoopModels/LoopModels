@@ -307,46 +307,45 @@ struct PartiallyOrderedSet {
         return knownGreaterEqual(x.exponent, y.exponent, x.coefficient,
                                  y.coefficient);
     }
-    std::pair<std::pair<size_t, llvm::SmallVector<int>>,bool>
-    matchMonomials(const Polynomial::Monomial &x,
-                   const Polynomial::Monomial &y,
-		   intptr_t cx, intptr_t cy) const {
+    std::pair<std::pair<size_t, llvm::SmallVector<int>>, bool>
+    matchMonomials(const Polynomial::Monomial &x, const Polynomial::Monomial &y,
+                   intptr_t cx, intptr_t cy) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
-	const intptr_t thresh = 0;
-        Matrix<bool, 0, 0> bpGraph(N+(cx>thresh), M+(cy>thresh));
-	bool positive = true;
+        const intptr_t thresh = 0;
+        Matrix<bool, 0, 0> bpGraph(N + (cx > thresh), M + (cy > thresh));
+        bool positive = true;
         for (size_t n = 0; n < N; ++n) {
             auto xid = x.prodIDs[n].getID();
             Interval xb = (*this)(xid);
-	    if ((xb.lowerBound < 0) & (xb.upperBound > 0)){
-		continue;
-	    }
-            for (size_t m = 0; m < M; ++m) {
-		// xid - yid
-                Interval xyb = (*this)(y.prodIDs[m].getID(), xid);
-		if (xb.lowerBound >= 0){
-		    bpGraph(n, m) = xyb.lowerBound >= 0;
-		} else {
-		    // x nonPositive
-		    positive = !positive;
-		    bpGraph(n, m) = xyb.upperBound <= 0;
-		}
+            if ((xb.lowerBound < 0) & (xb.upperBound > 0)) {
+                continue;
             }
-	    if (cy > thresh) {
-		bpGraph(n, M) = xb.lowerBound >= cy;
-	    }
+            for (size_t m = 0; m < M; ++m) {
+                // xid - yid
+                Interval xyb = (*this)(y.prodIDs[m].getID(), xid);
+                if (xb.lowerBound >= 0) {
+                    bpGraph(n, m) = xyb.lowerBound >= 0;
+                } else {
+                    // x nonPositive
+                    positive = !positive;
+                    bpGraph(n, m) = xyb.upperBound <= 0;
+                }
+            }
+            if (cy > thresh) {
+                bpGraph(n, M) = xb.lowerBound >= cy;
+            }
         }
-	if (cx > thresh){
-	    for (size_t m = 0; m < M; ++m){
-		auto yid = y.prodIDs[m].getID();
-		Interval yb = (*this)(yid);
-		bpGraph(N, m) = cx >= yb.upperBound;
-	    }
-	    if (cy > thresh){
-		bpGraph(N, M) = cx >= cy;
-	    }
-	}
+        if (cx > thresh) {
+            for (size_t m = 0; m < M; ++m) {
+                auto yid = y.prodIDs[m].getID();
+                Interval yb = (*this)(yid);
+                bpGraph(N, m) = cx >= yb.upperBound;
+            }
+            if (cy > thresh) {
+                bpGraph(N, M) = cx >= cy;
+            }
+        }
         return std::make_pair(maxBipartiteMatch(bpGraph), positive);
     }
 
@@ -356,18 +355,18 @@ struct PartiallyOrderedSet {
                        intptr_t cy = 1) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
-        auto [matchesmatchR,positive] = matchMonomials(x, y, cx, cy);
-        auto& [matches, matchR] = matchesmatchR;
+        auto [matchesmatchR, positive] = matchMonomials(x, y, cx, cy);
+        auto &[matches, matchR] = matchesmatchR;
         // matchR.size() == N
         // matchR maps ys to xs
-	if (!positive){
-	    cx = -cx;
-	    cy = -cy;
-	}
+        if (!positive) {
+            cx = -cx;
+            cy = -cy;
+        }
         Interval itvx(cx);
         Interval itvy(cy);
-	// not all Y matched;
-	// update itvy with unmatched
+        // not all Y matched;
+        // update itvy with unmatched
         llvm::SmallVector<bool> mMatched(M, false);
         for (size_t n = 0; n < N; ++n) {
             size_t m = matchR[n];
