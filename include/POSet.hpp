@@ -469,25 +469,21 @@ struct PartiallyOrderedSet {
         // Interval carriedInterval = Interval::zero();
         for (size_t n = 0; n < N - 1; n += 2) {
             auto &tm = x.terms[n];
-            if (signUnknown(tm.exponent)) {
-                return false;
-            }
+            // if (signUnknown(tm.exponent)) {
+            //     return false;
+            // }
 
             // if (!tmi.notZero()){ return false; }
             auto &tn = x.terms[n + 1];
-            if (signUnknown(tn.exponent)) {
-                return false;
-            }
+            // if (signUnknown(tn.exponent)) {
+            //     return false;
+            // }
             Interval termSum = asInterval(tm) + asInterval(tn);
-            // carriedInterval += termSum;
             if (termSum.lowerBound >= 0) {
                 continue;
-            } // else if (termSum.upperBound < 0)
-            //    return false;
-            //}
+            }
             bool mPos = (tm.coefficient > 0) & (knownPositive(tm.exponent));
             bool nPos = (tn.coefficient > 0) & (knownPositive(tn.exponent));
-
             if (mPos) {
                 if (nPos) {
                     // tm + tn

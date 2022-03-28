@@ -73,11 +73,11 @@ TEST(PolynomialCmp, BasicAssertions) {
     const int varM = 1;
     const int varN = 2;
     const int varO = 3;
-    // const int varP = 4;
+    const int varP = 4;
     auto M = Polynomial::Monomial(Polynomial::ID{varM});
     auto N = Polynomial::Monomial(Polynomial::ID{varN});
     auto O = Polynomial::Monomial(Polynomial::ID{varO});
-    // auto P = Polynomial::Monomial(Polynomial::ID{varP});
+    auto P = Polynomial::Monomial(Polynomial::ID{varP});
     // M >= 0
     poset.push(varZ, varM, Interval::nonNegative());
     // N > M; N >= 1
@@ -85,7 +85,7 @@ TEST(PolynomialCmp, BasicAssertions) {
     // O >= 3
     poset.push(varZ, varO, Interval::LowerBound(3));
     // // P <= 3
-    // poset.push(varZ, varP, Interval::UpperBound(3));
+    poset.push(varZ, varP, Interval::UpperBound(3));
     EXPECT_TRUE(poset.knownGreaterEqualZero(N - M));
     EXPECT_TRUE(poset.knownGreaterEqualZero(N*N - M*N));
     EXPECT_TRUE(poset.knownGreaterEqualZero(N*N - M*M));
@@ -108,5 +108,13 @@ TEST(PolynomialCmp, BasicAssertions) {
     EXPECT_FALSE(poset.knownGreaterEqualZero(O*N - 4*M));
     EXPECT_TRUE(poset.knownGreaterEqualZero(O*N - O*M));
     EXPECT_FALSE(poset.knownGreaterEqualZero(3*N - O*M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(O-3));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(O-4));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N-1));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(N-2));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(M-0));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(M-1));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(3 - P));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(2 - P));
 }
 
