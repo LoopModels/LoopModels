@@ -39,10 +39,10 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
     // applicant number assigned to job i,
     // the value -1 indicates nobody is
     // assigned.
-    auto [M, N] = bpGraph.size();
+    auto [N, M] = bpGraph.size();
     llvm::SmallVector<int> matchR(N, -1);
     size_t result = 0;
-    if (N){
+    if (M){
         llvm::SmallVector<bool> seen(N);
         // Count of jobs assigned to applicants
         for (size_t u = 0; u < M; u++) {

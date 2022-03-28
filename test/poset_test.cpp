@@ -7,10 +7,10 @@ TEST(POSet0, BasicAssertions) {
     int varX = 0;
     int varY = 1;
     int varZ = 2;
-    // (variable_0 - variable_1) in (typemin(Int):-1)
+    // (varX - varY) in (typemin(Int):-1)
     // i.e., varY > varX
     poset.push(varY, varX, Interval::negative()); // typemin(Int):-1
-    // varY < varZ; (variable_2 - variable_1) in (1:typemax(Int))
+    // varY < varZ; (varZ - varY) in (1:typemax(Int))
     poset.push(varY, varZ, Interval::positive()); // 1:typemax(Int)
     EXPECT_EQ(poset.nVar, 3);
     // poset(idx, idy) returns the value of the difference (idy - idx)
@@ -67,3 +67,29 @@ TEST(POSet1, BasicAssertions) {
     EXPECT_EQ(poset(varX,varZ).lowerBound, 18);
     EXPECT_EQ(poset(varX,varZ).upperBound, 18);
 }
+TEST(PolynomialCmp, BasicAssertions) {
+    PartiallyOrderedSet poset;
+    const int varZ = 0; // Zero == 0
+    const int varM = 1;
+    const int varN = 2;
+    // const int varO = 3;
+    auto M = Polynomial::Monomial(Polynomial::ID{varM});
+    auto N = Polynomial::Monomial(Polynomial::ID{varN});
+    // auto O = Polynomial::Monomial(Polynomial::ID{varO});
+    // M >= 0
+    poset.push(varZ, varM, Interval::nonNegative());
+    // N >= M
+    poset.push(varN, varM, Interval::nonPositive());
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N - M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*N - M*N));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*N - M*M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*M - M*M));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(M - N));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(M*N - N*N));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(M*M - N*N));
+    EXPECT_FALSE(poset.knownGreaterEqualZero(M*M - N*M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*N - M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*M - M));
+    EXPECT_TRUE(poset.knownGreaterEqualZero(N*M - N));
+}
+

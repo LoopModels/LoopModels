@@ -255,6 +255,7 @@ struct PartiallyOrderedSet {
         }
         return ji;
     }
+    // j - i = itv
     void push(size_t i, size_t j, Interval itv) {
         if (i > j) {
             return push(j, i, -itv);
@@ -302,27 +303,29 @@ struct PartiallyOrderedSet {
 
     bool knownGreaterEqual(const Polynomial::Monomial &x,
                            const Polynomial::Monomial &y) const {
-        size_t M = x.prodIDs.size();
-        size_t N = y.prodIDs.size();
-        Matrix<bool, 0, 0> bpGraph(M, N);
-        for (size_t n = 0; n < N; ++n) {
-            for (size_t m = 0; m < M; ++m) {
-                bpGraph(m, n) =
-                    (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
+        size_t N = x.prodIDs.size();
+        size_t M = y.prodIDs.size();
+        Matrix<bool, 0, 0> bpGraph(N, M);
+        for (size_t m = 0; m < M; ++m) {
+            for (size_t n = 0; n < N; ++n) {
+                bpGraph(n, m) =
+                    (*this)(y.prodIDs[m].getID(), x.prodIDs[n].getID())
                         .lowerBound >= 0;
             }
         }
         auto [matches, matchR] = maxBipartiteMatch(bpGraph);
         // matchR.size() == N
         // matchR maps ys to xs
-        if (matches < M) {
-            if (matches < N) {
+        if (matches < N) {
+            if (matches < M) {
                 return false;
             } else {
                 // all N matched; need to make sure remaining `X` are positive
                 llvm::SmallVector<bool> mMatched(M, false);
                 for (auto m : matchR) {
-                    mMatched[m] = true;
+		    if (m >= 0){
+			mMatched[m] = true;
+		    }
                 }
                 bool cond = true;
                 for (size_t m = 0; m < M; ++m) {
@@ -338,7 +341,7 @@ struct PartiallyOrderedSet {
                 }
                 return cond;
             }
-        } else if (matches < N) {
+        } else if (matches < M) {
             // all M matched; need to make sure remaining `Y` are negative.
             bool cond = false;
             for (size_t n = 0; n < N; ++n) {
@@ -486,6 +489,7 @@ struct PartiallyOrderedSet {
             //}
             bool mPos = (tm.coefficient > 0) & (knownPositive(tm.exponent));
             bool nPos = (tn.coefficient > 0) & (knownPositive(tn.exponent));
+	    
             if (mPos) {
                 if (nPos) {
                     // tm + tn
