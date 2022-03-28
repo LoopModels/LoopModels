@@ -844,7 +844,8 @@ struct AffineLoopNestBounds {
                             AOld(newVarId, c++) = 1;
                             AOld(newVarId, c++) = -1;
                             // std::cout << "boundDiffPairs["
-                            //           << boundDiffPairs.size() << "] = (j=" << j
+                            //           << boundDiffPairs.size() << "] = (j="
+                            //           << j
                             //           << ", d=" << d << ")" << std::endl;
                             boundDiffPairs.emplace_back(j, d);
                         }
@@ -858,7 +859,8 @@ struct AffineLoopNestBounds {
             // std::cout << "b_pre_elim =\n";
             // printVector(std::cout, bOld) << std::endl;
             do {
-                // std::cout << "dependencyToEliminate = " << dependencyToEliminate
+                // std::cout << "dependencyToEliminate = " <<
+                // dependencyToEliminate
                 //           << std::endl;
                 eliminateVariable(ANew, bNew, AOld, bOld,
                                   size_t(dependencyToEliminate));
@@ -894,14 +896,16 @@ struct AffineLoopNestBounds {
                                     // std::cout << "bOld[j=" << j
                                     //           << "] >= 0: " << bOld[j]
                                     //           << std::endl;
-                                    provenBoundsDeltas[k - numLoops] = Akj > 0 ? 1 : -1;
+                                    provenBoundsDeltas[k - numLoops] =
+                                        Akj > 0 ? 1 : -1;
                                 } else if (aln->poset.knownLessEqualZero(
                                                bOld[j])) {
                                     // Akj * k <= 0
                                     // std::cout << "bOld[j=" << j
                                     //           << "] <= 0: " << bOld[j]
                                     //           << std::endl;
-                                    provenBoundsDeltas[k - numLoops] = Akj > 0 ? -1 : 1;
+                                    provenBoundsDeltas[k - numLoops] =
+                                        Akj > 0 ? -1 : 1;
                                 }
                                 // }
                                 if ((rowsToErase.size() == 0) ||

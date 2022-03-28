@@ -121,7 +121,9 @@ struct Interval {
     bool knownLessEqual(Interval a) { return lowerBound <= a.upperBound; }
     bool knownGreater(Interval a) { return lowerBound > a.upperBound; }
     bool knownGreaterEqual(Interval a) { return lowerBound >= a.upperBound; }
-
+    bool equivalentRange(Interval a) {
+        return (lowerBound == a.lowerBound) & (upperBound == a.upperBound);
+    }
     // to be different in a significant way, we require them to be different,
     // but only for values smaller than half of type max. Values so large
     // are unlikely to effect results, so we don't continue propogating.
@@ -269,10 +271,10 @@ struct PartiallyOrderedSet {
             delta.resize((j * nVar) >> 1, Interval::unconstrained());
         } else {
             Interval itvNew = itv.intersect(delta[l]);
-	    if (!itvNew.significantlyDifferent(itv)){
-		return;
-	    }
-	    itv = itvNew;
+            if (itvNew.equivalentRange(itv)) {
+                return;
+            }
+            itv = itvNew;
         }
         delta[l] = update(i, j, itv);
     }
@@ -295,10 +297,10 @@ struct PartiallyOrderedSet {
             return Interval{1, 1};
         }
         assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarType::Constant);
-	size_t j = bin2(m.prodIDs[0].getID());
+        size_t j = bin2(m.prodIDs[0].getID());
         Interval itv = j < nVar ? delta[j] : Interval::unconstrained();
         for (size_t i = 1; i < m.prodIDs.size(); ++i) {
-	    size_t j = bin2(m.prodIDs[i].getID());
+            size_t j = bin2(m.prodIDs[i].getID());
             itv *= (j < nVar ? delta[j] : Interval::unconstrained());
         }
         return itv;
