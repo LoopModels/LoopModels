@@ -1167,6 +1167,10 @@ template <typename C, IsMonomial M> struct Terms {
         subTerm(std::move(x));
         return *this;
     }
+    Terms<C, M> &operator-=(M const &x) {
+        subTerm(Term{C(One()), x});
+        return *this;
+    }
     Terms<C, M> &operator-=(C const &x) {
         subTerm(Term<C, M>{x});
         return *this;
@@ -1184,7 +1188,7 @@ template <typename C, IsMonomial M> struct Terms {
     //     return *this;
     // }
     Terms<C, M> &operator-=(M &&x) {
-        subTerm(std::forward<M>(x));
+        subTerm(Term{C(One()), std::move(x)});
         return *this;
     }
     Terms<C, M> &operator*=(C const &x) {
@@ -1595,6 +1599,17 @@ template <IsMonomial M> Terms<intptr_t, M> operator-(M &&x, M const &y) {
 template <IsMonomial M> Terms<intptr_t, M> operator-(M &&x, M &&y) {
     Terms<intptr_t, M> z(std::move(x));
     z += Term<intptr_t, M>{-1, std::move(y)};
+    return z;
+}
+template <typename C, IsMonomial M> Terms<C, M> operator-(Term<C, M> x, M &&y){
+    Terms<intptr_t, M> z(std::move(x));
+    z += Term<intptr_t, M>{-1, std::forward<M>(y)};
+    return z;
+}
+template <typename C, IsMonomial M> Terms<C, M> operator-(M &&y, Term<C, M> x){
+    x.coefficient *= -1;
+    Terms<intptr_t, M> z(std::move(x));
+    z += Term<intptr_t, M>{1, std::forward<M>(y)};
     return z;
 }
 

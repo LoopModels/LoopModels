@@ -153,6 +153,12 @@ struct Interval {
         return Interval{std::numeric_limits<intptr_t>::min(),
                         std::numeric_limits<intptr_t>::max()};
     }
+    static Interval LowerBound(intptr_t x) {
+        return Interval{x, std::numeric_limits<intptr_t>::max()};
+    }
+    static Interval UpperBound(intptr_t x) {
+        return Interval{std::numeric_limits<intptr_t>::min(), x};
+    }
     static Interval zero() { return Interval{0, 0}; }
 };
 
@@ -196,11 +202,6 @@ struct PartiallyOrderedSet {
             Interval ik = delta[k + iOff];
             Interval jk = delta[k + jOff];
             // j - i = (j - k) - (i - k)
-            /*
-            std::cout << "i: " << i << "; j: " << j << "; k: " << k <<
-            std::endl; std::cout << "ji: " << ji << std::endl; std::cout << "jk:
-            " << jk << std::endl; std::cout << "ik: " << ik << std::endl;
-            */
             auto [jkt, ikt] = ji.restrictSub(jk, ik);
             delta[k + iOff] = ikt;
             delta[k + jOff] = jkt;
@@ -300,66 +301,126 @@ struct PartiallyOrderedSet {
         const Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
         return asInterval(t.exponent) * t.coefficient;
     }
-
-    bool knownGreaterEqual(const Polynomial::Monomial &x,
-                           const Polynomial::Monomial &y) const {
-        size_t N = x.prodIDs.size();
-        size_t M = y.prodIDs.size();
-        Matrix<bool, 0, 0> bpGraph(N, M);
-        for (size_t m = 0; m < M; ++m) {
-            for (size_t n = 0; n < N; ++n) {
-                bpGraph(n, m) =
-                    (*this)(y.prodIDs[m].getID(), x.prodIDs[n].getID())
-                        .lowerBound >= 0;
+    bool knownGreaterEqual(
+        const Polynomial::Term<intptr_t, Polynomial::Monomial> &x,
+        const Polynomial::Term<intptr_t, Polynomial::Monomial> &y) const {
+        return knownGreaterEqual(x.exponent, y.exponent, x.coefficient,
+                                 y.coefficient);
+    }
+    std::pair<std::pair<size_t, llvm::SmallVector<int>>,bool>
+    matchMonomials(const Polynomial::Monomial &x,
+                   const Polynomial::Monomial &y,
+		   intptr_t cx, intptr_t cy) const {
+        const size_t N = x.prodIDs.size();
+        const size_t M = y.prodIDs.size();
+	const intptr_t thresh = 0;
+        Matrix<bool, 0, 0> bpGraph(N+(cx>thresh), M+(cy>thresh));
+	bool positive = true;
+        for (size_t n = 0; n < N; ++n) {
+            auto xid = x.prodIDs[n].getID();
+            Interval xb = (*this)(xid);
+	    if ((xb.lowerBound < 0) & (xb.upperBound > 0)){
+		continue;
+	    }
+            for (size_t m = 0; m < M; ++m) {
+		// xid - yid
+                Interval xyb = (*this)(y.prodIDs[m].getID(), xid);
+		if (xb.lowerBound >= 0){
+		    bpGraph(n, m) = xyb.lowerBound >= 0;
+		} else {
+		    // x nonPositive
+		    positive = !positive;
+		    bpGraph(n, m) = xyb.upperBound <= 0;
+		}
             }
+	    if (cy > thresh) {
+		bpGraph(n, M) = xb.lowerBound >= cy;
+	    }
         }
-        auto [matches, matchR] = maxBipartiteMatch(bpGraph);
+	if (cx > thresh){
+	    for (size_t m = 0; m < M; ++m){
+		auto yid = y.prodIDs[m].getID();
+		Interval yb = (*this)(yid);
+		bpGraph(N, m) = cx >= yb.upperBound;
+	    }
+	    if (cy > thresh){
+		bpGraph(N, M) = cx >= cy;
+	    }
+	}
+        return std::make_pair(maxBipartiteMatch(bpGraph), positive);
+    }
+
+    std::pair<Interval, Interval>
+    unmatchedIntervals(const Polynomial::Monomial &x,
+                       const Polynomial::Monomial &y, intptr_t cx = 1,
+                       intptr_t cy = 1) const {
+        const size_t N = x.prodIDs.size();
+        const size_t M = y.prodIDs.size();
+        auto [matchesmatchR,positive] = matchMonomials(x, y, cx, cy);
+        auto& [matches, matchR] = matchesmatchR;
         // matchR.size() == N
         // matchR maps ys to xs
-        if (matches < N) {
-            if (matches < M) {
-                return false;
+	if (!positive){
+	    cx = -cx;
+	    cy = -cy;
+	}
+        Interval itvx(cx);
+        Interval itvy(cy);
+	// not all Y matched;
+	// update itvy with unmatched
+        llvm::SmallVector<bool> mMatched(M, false);
+        for (size_t n = 0; n < N; ++n) {
+            size_t m = matchR[n];
+            // size_t(m) is defined to wrap around, so if
+            // m == -1, we get typemax
+            if (m < M) {
+                mMatched[m] = true;
+            }
+        }
+        for (size_t m = 0; m < M; ++m) {
+            if (mMatched[m]) {
+                continue;
+            }
+            itvy *= (*this)(y.prodIDs[m].getID());
+        }
+        // all N matched; need to make sure remaining `Y` are negative.
+        for (size_t n = 0; n < N; ++n) {
+            if (size_t(matchR[n]) < M) {
+                continue;
+            }
+            itvx *= (*this)(x.prodIDs[n].getID());
+        }
+        return std::make_pair(itvx, itvy);
+    }
+    bool knownGreaterEqual(const Polynomial::Monomial &x,
+                           const Polynomial::Monomial &y, intptr_t cx = 1,
+                           intptr_t cy = 1) const {
+        if (cx < 0) {
+            if (cy < 0) {
+                return knownGreaterEqual(y, x, -cy, -cx);
             } else {
-                // all N matched; need to make sure remaining `X` are positive
-                llvm::SmallVector<bool> mMatched(M, false);
-                for (auto m : matchR) {
-		    if (m >= 0){
-			mMatched[m] = true;
-		    }
-                }
-                bool cond = true;
-                for (size_t m = 0; m < M; ++m) {
-                    if (mMatched[m]) {
-                        continue;
-                    }
-                    Interval itvm = (*this)(x.prodIDs[m].getID());
-                    if (itvm.upperBound < 0) {
-                        cond ^= true; // flip sign
-                    } else if ((itvm.lowerBound < 0) & (itvm.upperBound > 0)) {
-                        return false;
-                    }
-                }
-                return cond;
+                return false;
             }
-        } else if (matches < M) {
-            // all M matched; need to make sure remaining `Y` are negative.
-            bool cond = false;
-            for (size_t n = 0; n < N; ++n) {
-                if (matchR[n] != -1) {
-                    continue;
-                }
-                Interval itvn = (*this)(y.prodIDs[n].getID());
-                if (itvn.upperBound < 0) {
-                    cond ^= true; // flip sign
-                } else if ((itvn.lowerBound < 0) & (itvn.upperBound > 0)) {
-                    return false;
-                }
-            }
-            return cond;
-        } else {
-            // all matched
+        } else if (cy < 0) {
             return true;
         }
+        auto [itvx, itvy] = unmatchedIntervals(x, y, cx, cy);
+        return itvx.knownGreaterEqual(itvy);
+    }
+    bool knownGreater(const Polynomial::Monomial &x,
+                      const Polynomial::Monomial &y, intptr_t cx = 1,
+                      intptr_t cy = 1) const {
+        if (cx < 0) {
+            if (cy < 0) {
+                return knownGreater(y, x, -cy, -cx);
+            } else {
+                return false;
+            }
+        } else if (cy < 0) {
+            return true;
+        }
+        auto [itvx, itvy] = unmatchedIntervals(x, y, cx, cy);
+        return itvx.knownGreater(itvy);
     }
     bool atLeastOnePositive(const Polynomial::Monomial &x,
                             const Polynomial::Monomial &y,
@@ -374,69 +435,6 @@ struct PartiallyOrderedSet {
         }
         return false;
     }
-    bool knownGreater(const Polynomial::Monomial &x,
-                      const Polynomial::Monomial &y) const {
-        size_t M = x.prodIDs.size();
-        size_t N = y.prodIDs.size();
-        Matrix<bool, 0, 0> bpGraph(N, M);
-        for (size_t m = 0; m < M; ++m) {
-            for (size_t n = 0; n < N; ++n) {
-                intptr_t lowerBound =
-                    (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID())
-                        .lowerBound;
-                bpGraph(n, m) = lowerBound >= 0;
-            }
-        }
-        auto [matches, matchR] = maxBipartiteMatch(bpGraph);
-        if (!atLeastOnePositive(x, y, matchR)) {
-            return false;
-        }
-        // matchR maps ys to xs
-        if (matches < M) {
-            if (matches < N) {
-                return false;
-            } else {
-                // all N matched; need to make sure remaining `X` are positive
-                llvm::SmallVector<bool> mMatched(M, false);
-                for (auto m : matchR) {
-                    mMatched[m] = true;
-                }
-                bool cond = true;
-                for (size_t m = 0; m < M; ++m) {
-                    if (mMatched[m]) {
-                        continue;
-                    }
-                    Interval itvm = (*this)(x.prodIDs[m].getID());
-                    if (itvm.upperBound < 0) {
-                        cond ^= true; // flip sign
-                    } else if ((itvm.lowerBound < 0) & (itvm.upperBound > 0)) {
-                        return false;
-                    }
-                }
-                return cond;
-            }
-        } else if (matches < N) {
-            // all M matched; need to make sure remaining `Y` are negative.
-            bool cond = false;
-            for (size_t n = 0; n < N; ++n) {
-                if (matchR[n] != -1) {
-                    continue;
-                }
-                Interval itvn = (*this)(y.prodIDs[n].getID());
-                if (itvn.upperBound < 0) {
-                    cond ^= true; // flip sign
-                } else if ((itvn.lowerBound < 0) & (itvn.upperBound > 0)) {
-                    return false;
-                }
-            }
-            return cond;
-        } else {
-            // all matched
-            return true;
-        }
-    }
-    // Interval asInterval(MPoly &x){
-    // }
     bool signUnknown(const Polynomial::Monomial &m) const {
         for (auto &v : m) {
             if ((*this)(v.getID()).signUnknown()) {
@@ -489,15 +487,18 @@ struct PartiallyOrderedSet {
             //}
             bool mPos = (tm.coefficient > 0) & (knownPositive(tm.exponent));
             bool nPos = (tn.coefficient > 0) & (knownPositive(tn.exponent));
-	    
+
             if (mPos) {
                 if (nPos) {
                     // tm + tn
                     continue;
                 } else if (tn.coefficient < 0) {
                     // tm - tn; monomial positive
-                    if ((tm.coefficient + tn.coefficient >= 0) &&
-                        knownGreaterEqual(tm.exponent, tn.exponent)) {
+                    // if ((tm.coefficient + tn.coefficient >= 0) &&
+                    //     knownGreaterEqual(tm.exponent, tn.exponent,
+                    //                       tm.coefficient, -tn.coefficient)) {
+                    if (knownGreaterEqual(tm.exponent, tn.exponent,
+                                          tm.coefficient, -tn.coefficient)) {
                         continue;
                     } else {
                         return false;
@@ -509,8 +510,11 @@ struct PartiallyOrderedSet {
             } else if (nPos) {
                 if (tm.coefficient < 0) {
                     // tn - tm; monomial positive
-                    if ((tm.coefficient + tn.coefficient >= 0) &&
-                        knownGreaterEqual(tn.exponent, tm.exponent)) {
+                    // if ((tm.coefficient + tn.coefficient >= 0) &&
+                    //     knownGreaterEqual(tn.exponent, tm.exponent,
+                    //                       tn.coefficient, -tm.coefficient)) {
+                    if (knownGreaterEqual(tn.exponent, tm.exponent,
+                                          tn.coefficient, -tm.coefficient)) {
                         continue;
                     } else {
                         return false;
