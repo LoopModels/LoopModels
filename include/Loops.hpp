@@ -887,27 +887,25 @@ struct AffineLoopNestBounds {
                                     break;
                                 }
                             }
+                            // Akj * boundDelta <= bOld[j]
                             if (!dependsOnOthers) {
                                 // we can eliminate this equation, but
                                 // check if we can eliminate the bound
                                 // if (AOld(i,j) == 0){
-                                if (aln->poset.knownGreaterEqualZero(bOld[j])) {
-                                    // Akj * k >= 0
-                                    // std::cout << "bOld[j=" << j
-                                    //           << "] >= 0: " << bOld[j]
-                                    //           << std::endl;
-                                    provenBoundsDeltas[k - numLoops] =
-                                        Akj > 0 ? 1 : -1;
-                                } else if (aln->poset.knownLessEqualZero(
-                                               bOld[j])) {
-                                    // Akj * k <= 0
-                                    // std::cout << "bOld[j=" << j
-                                    //           << "] <= 0: " << bOld[j]
-                                    //           << std::endl;
+                                if (aln->poset.knownLessEqualZero(bOld[j])) {
+                                    // boundDelta = b - d
+                                    // Akj * boundDelta <= bOld[j]
+                                    // (b-d) >= 0 === b >= d === (d-b) <= 0
+                                    // -boundDelta <= 0
+                                    // boundDelta >= 0
+                                    // erase b
+                                    //
+                                    // (d-b) >= 0 === d >= b === (b-d) <= 0
+                                    // boundDelta <= 0
+                                    // erase d
                                     provenBoundsDeltas[k - numLoops] =
                                         Akj > 0 ? -1 : 1;
                                 }
-                                // }
                                 if ((rowsToErase.size() == 0) ||
                                     (rowsToErase.back() != j)) {
                                     rowsToErase.push_back(j);
