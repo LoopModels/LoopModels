@@ -1774,6 +1774,12 @@ Terms<C, M> operator-(Term<C, M> &&x, Term<C, M> &&y) {
 }
 
 template <typename C, typename M>
+Term<C, M> operator*(intptr_t x, Term<C,M> y) {
+    y.coefficient *= x;
+    return y;
+}
+
+template <typename C, typename M>
 Term<C, M> operator*(Term<C, M> const &x, Term<C, M> const &y) {
     Term<C, M> z(x);
     z *= y;

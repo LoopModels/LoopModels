@@ -213,7 +213,7 @@ TEST(AffineTest0, BasicAssertions) {
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
     auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
-    auto nOne = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    // auto nOne = Polynomial::Term{intptr_t(-1), Polynomial::Monomial()};
     One.dump();
     std::cout << "initializing poset." << std::endl;
     PartiallyOrderedSet poset;
@@ -354,4 +354,52 @@ TEST(AffineTest0, BasicAssertions) {
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, true));
 
     // affp.zeroExtraIterationsUponExtending(poset, 1, )
+}
+TEST(NonUnimodularExperiment, BasicAssertions) {
+    std::cout << "Starting affine test 0" << std::endl;
+    llvm::SmallVector<MPoly, 8> r;
+    Matrix<Int, 0, 0, 0> A(2, 4);
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    // auto N = Polynomial::Monomial(Polynomial::ID{2});
+    auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
+    auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    auto nOne = Polynomial::Term{intptr_t(-1), Polynomial::Monomial()};
+    PartiallyOrderedSet poset;
+    // ids 1 and 2 are >= 0;
+    poset.push(0, 1, Interval::nonNegative());
+    poset.push(0, 2, Interval::nonNegative());
+    // the loop is
+    // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
+    //
+    // Bounds:
+    // n - m <= M;
+    // r.push_back(Polynomial::Term{intptr_t(1), M} - 1);
+    r.push_back(2 * M);
+    A(0, 0) = -1;
+    A(1, 0) = 1;
+    // n - m >= 1;
+    // r.emplace_back(0);
+    r.push_back(nOne * 2);
+    A(0, 1) = 1;
+    A(1, 1) = -1;
+    // m + n >= -M
+    r.push_back(2 * M);
+    A(0, 2) = -1;
+    A(1, 2) = -1;
+    // m + n <= -1;
+    r.push_back(2 * nOne);
+    A(0, 3) = 1;
+    A(1, 3) = 1;
+    std::cout << "A = \n"
+              << A << "\nb = \n[ " << r[0] << ", " << r[1] << ", " << r[2]
+              << ", " << r[3] << " ]" << std::endl;
+    std::shared_ptr<AffineLoopNest> aff(
+        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
+    AffineLoopNestBounds affp(aff);
+    std::cout << "Original order:" << std::endl;
+    std::cout << affp << std::endl;
+
+    affp.swap(0, 1);
+    std::cout << "Swapped order:" << std::endl;
+    std::cout << affp << std::endl;
 }
