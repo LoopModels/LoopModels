@@ -2318,6 +2318,9 @@ void divExact(Univariate<C> &q, Univariate<C> &d, C const &x) {
         q.terms[n].exponent = d.terms[n].exponent;
     }
 }
+void fnmadd(intptr_t &c, intptr_t a, intptr_t b){
+    c -= a*b;
+}
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     // size_t offset = x.size();
