@@ -262,9 +262,8 @@ TEST(AffineTest0, BasicAssertions) {
     A(2, 5) = -1;
 
     std::cout << "About to construct affine obj" << std::endl;
-    std::shared_ptr<AffineLoopNest> aff(
-        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
-    AffineLoopNestBounds affp(aff);
+
+    AffineLoopNest affp(A, r, poset);
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, false));
@@ -273,26 +272,26 @@ TEST(AffineTest0, BasicAssertions) {
     std::cout << affp << std::endl;
     std::cout << "About to run first set of bounds tests" << std::endl;
     { // lower bound tests
-        EXPECT_EQ(affp.lowerB.size(), 3);
-        EXPECT_EQ(affp.lowerB[0].size(), 1);
-        EXPECT_EQ(affp.lowerB[1].size(), 1);
-        EXPECT_EQ(affp.lowerB[2].size(), 1);
-        EXPECT_TRUE(affp.lowerB[0][0] == 0);
-        EXPECT_TRUE(affp.lowerB[1][0] == 0);
+        EXPECT_EQ(affp.lowerb.size(), 3);
+        EXPECT_EQ(affp.lowerb[0].size(), 1);
+        EXPECT_EQ(affp.lowerb[1].size(), 1);
+        EXPECT_EQ(affp.lowerb[2].size(), 1);
+        EXPECT_TRUE(affp.lowerb[0][0] == 0);
+        EXPECT_TRUE(affp.lowerb[1][0] == 0);
         llvm::SmallVector<intptr_t, 4> a{0, 1, -1};
         MPoly b;
         b -= 1;
         EXPECT_TRUE(affp.lowerA[2].getCol(0) == a);
-        EXPECT_TRUE(affp.lowerB[2][0] == b);
+        EXPECT_TRUE(affp.lowerb[2][0] == b);
     }
     { // upper bound tests
-        EXPECT_EQ(affp.upperB.size(), 3);
-        EXPECT_EQ(affp.upperB[0].size(), 1);
-        EXPECT_EQ(affp.upperB[1].size(), 1);
-        EXPECT_EQ(affp.upperB[2].size(), 1);
-        EXPECT_TRUE(affp.upperB[0][0] == M - 1);
-        EXPECT_TRUE(affp.upperB[1][0] == N - 2);
-        EXPECT_TRUE(affp.upperB[2][0] == N - 1);
+        EXPECT_EQ(affp.upperb.size(), 3);
+        EXPECT_EQ(affp.upperb[0].size(), 1);
+        EXPECT_EQ(affp.upperb[1].size(), 1);
+        EXPECT_EQ(affp.upperb[2].size(), 1);
+        EXPECT_TRUE(affp.upperb[0][0] == M - 1);
+        EXPECT_TRUE(affp.upperb[1][0] == N - 2);
+        EXPECT_TRUE(affp.upperb[2][0] == N - 1);
     }
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
     affp.swap(1, 2);
@@ -302,27 +301,27 @@ TEST(AffineTest0, BasicAssertions) {
     // std::cout << "First lc: \n";
     // affp.lc[0][0].dump();
     { // lower bound tests
-        EXPECT_EQ(affp.lowerB.size(), 3);
-        EXPECT_EQ(affp.lowerB[0].size(), 1);
-        EXPECT_EQ(affp.lowerB[1].size(), 1);
-        EXPECT_EQ(affp.lowerB[2].size(), 1);
-        EXPECT_TRUE(affp.lowerB[0][0] == 0);
-        EXPECT_TRUE(affp.lowerB[2][0] == -1); // -j <= -1
-        EXPECT_TRUE(affp.lowerB[1][0] == 0);
+        EXPECT_EQ(affp.lowerb.size(), 3);
+        EXPECT_EQ(affp.lowerb[0].size(), 1);
+        EXPECT_EQ(affp.lowerb[1].size(), 1);
+        EXPECT_EQ(affp.lowerb[2].size(), 1);
+        EXPECT_TRUE(affp.lowerb[0][0] == 0);
+        EXPECT_TRUE(affp.lowerb[2][0] == -1); // -j <= -1
+        EXPECT_TRUE(affp.lowerb[1][0] == 0);
     }
     { // upper bound tests
-        EXPECT_EQ(affp.upperB.size(), 3);
-        EXPECT_EQ(affp.upperB[0].size(), 1);
-        EXPECT_EQ(affp.upperB[1].size(), 1);
-        EXPECT_EQ(affp.upperB[2].size(), 1);
-        EXPECT_TRUE(affp.upperB[0][0] == M - 1);
-        EXPECT_TRUE(affp.upperB[2][0] == N - 1);
+        EXPECT_EQ(affp.upperb.size(), 3);
+        EXPECT_EQ(affp.upperb[0].size(), 1);
+        EXPECT_EQ(affp.upperb[1].size(), 1);
+        EXPECT_EQ(affp.upperb[2].size(), 1);
+        EXPECT_TRUE(affp.upperb[0][0] == M - 1);
+        EXPECT_TRUE(affp.upperb[2][0] == N - 1);
         // EXPECT_TRUE(affp.uc[2][0] == N - 1);
         llvm::SmallVector<intptr_t, 4> a{0, 1, -1};
         MPoly b;
         b -= 1;
         EXPECT_TRUE(affp.upperA[1].getCol(0) == a);
-        EXPECT_TRUE(affp.upperB[1][0] == b);
+        EXPECT_TRUE(affp.upperb[1][0] == b);
     }
 
     /*
@@ -393,9 +392,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     std::cout << "A = \n"
               << A << "\nb = \n[ " << r[0] << ", " << r[1] << ", " << r[2]
               << ", " << r[3] << " ]" << std::endl;
-    std::shared_ptr<AffineLoopNest> aff(
-        std::make_shared<AffineLoopNest>(AffineLoopNest{A, r, poset}));
-    AffineLoopNestBounds affp(aff);
+    AffineLoopNest affp(A, r, poset);
     std::cout << "Original order:" << std::endl;
     std::cout << affp << std::endl;
 

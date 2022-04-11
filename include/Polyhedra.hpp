@@ -8,19 +8,39 @@
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-template <class T> struct AbstractPolyhedra {
-    Matrix<Int, 0, 0, 0> A;
+template <class T, typename P> struct AbstractPolyhedra {
+    Matrix<intptr_t, 0, 0, 0> A;
+    llvm::SmallVector<P, 8> b;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> lowerb;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> upperb;
+
+    AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> &A,
+                      const llvm::SmallVector<P, 8> &b)
+        : A(A), b(b), lowerA(A.size(0)), upperA(A.size(0)), lowerb(A.size(0)),
+          upperb(A.size(0)){};
+
     size_t getNumVar() const { return A.size(0); }
     size_t getNumConstraints() const { return A.size(1); }
+
+    // methods required to support AbstractPolyhedra
+    bool knownLessEqualZero(P x) const {
+        return static_cast<const T *>(this)->knownLessEqualZeroImpl(
+            std::move(x));
+    }
+    bool knownGreaterEqualZero(const P &x) const {
+        return static_cast<const T *>(this)->knownGreaterEqualZeroImpl(x);
+    }
+    size_t currentToOriginalPerm(intptr_t i) const {
+        return static_cast<const T *>(this)->currentToOriginalPermImpl(i);
+    }
 
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    template <typename P>
     static bool setBounds(PtrVector<intptr_t> a, P &b,
                           llvm::ArrayRef<intptr_t> la, const P &lb,
                           llvm::ArrayRef<intptr_t> ua, const P &ub, size_t i) {
@@ -54,7 +74,6 @@ template <class T> struct AbstractPolyhedra {
     // For `AOld' * x <= bOld, eliminates `i` from `AOld` and `bOld` using
     // Fourier–Motzkin elimination, storing the updated equations in `A` and
     // `b`.
-    template <typename P>
     void eliminateVariable(Matrix<intptr_t, 0, 0, 128> &A,
                            llvm::SmallVectorImpl<P> &b,
                            const Matrix<intptr_t, 0, 0, 128> &AOld,
@@ -158,12 +177,12 @@ template <class T> struct AbstractPolyhedra {
     }
     // takes `A'x <= b`, and seperates into lower and upper bound equations w/
     // respect to `i`th variable
-    static void fillBounds(Matrix<intptr_t, 0, 0, 0> &lA,
-                           Matrix<intptr_t, 0, 0, 0> &uA,
-                           llvm::SmallVectorImpl<MPoly> &lB,
-                           llvm::SmallVectorImpl<MPoly> &uB,
-                           const Matrix<intptr_t, 0, 0, 0> &A,
-                           const llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+    static void categorizeBounds(Matrix<intptr_t, 0, 0, 0> &lA,
+                                 Matrix<intptr_t, 0, 0, 0> &uA,
+                                 llvm::SmallVectorImpl<P> &lB,
+                                 llvm::SmallVectorImpl<P> &uB,
+                                 const Matrix<intptr_t, 0, 0, 0> &A,
+                                 const llvm::SmallVectorImpl<P> &b, size_t i) {
         auto [numLoops, numCol] = A.size();
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         lA.resize(numLoops, numNeg);
@@ -187,17 +206,17 @@ template <class T> struct AbstractPolyhedra {
         }
     }
 
-    void fillBounds(const Matrix<intptr_t, 0, 0, 0> &A,
-                    const llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+    void categorizeBounds(const Matrix<intptr_t, 0, 0, 0> &A,
+                          const llvm::SmallVectorImpl<P> &b, size_t i) {
 
-        fillBounds(lowerA[i], upperA[i], lowerB[i], upperB[i], A, b, i);
+        categorizeBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
     }
     static void appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
                              const Matrix<intptr_t, 0, 0, 0> &uA,
-                             const llvm::SmallVectorImpl<MPoly> &lB,
-                             const llvm::SmallVectorImpl<MPoly> &uB,
+                             const llvm::SmallVectorImpl<P> &lB,
+                             const llvm::SmallVectorImpl<P> &uB,
                              Matrix<intptr_t, 0, 0, 0> &A,
-                             llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+                             llvm::SmallVectorImpl<P> &b, size_t i) {
         const size_t numNeg = lB.size();
         const size_t numPos = uB.size();
 #ifdef EXPENSIVEASSERTS
@@ -222,23 +241,23 @@ template <class T> struct AbstractPolyhedra {
         A.resize(numLoops, c);
         b.resize(c);
     }
-    void appendBounds(Matrix<intptr_t, 0, 0, 0> &A,
-                      llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+    void appendBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
+                      size_t i) {
 
-        appendBounds(lowerA[i], upperA[i],
-                     static_cast<T *>(this)->getLowerBoundCache(i),
-                     static_cast<T *>(this)->getUpperBoundCache(i), A, b, i);
+        appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
     }
-    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A,
-                     llvm::SmallVector<MPoly, 8> &b, const size_t i) const {
+    // removes bounds on `i` that are redundant.
+    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
+                     const size_t i) const {
 
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         if ((numNeg > 1) | (numPos > 1)) {
             pruneBounds(A, b, i, numNeg, numPos);
         }
     }
+    // removes bounds on `i` that are redundant.
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &Aold,
-                     llvm::SmallVector<MPoly, 8> &bold, const size_t i,
+                     llvm::SmallVector<P, 8> &bold, const size_t i,
                      const size_t numNeg, const size_t numPos) const {
 
         const size_t numVarBase = getNumVar();
@@ -407,7 +426,7 @@ template <class T> struct AbstractPolyhedra {
                                 // we can eliminate this equation, but
                                 // check if we can eliminate the bound
                                 // if (AOld(i,j) == 0){
-                                if (aln->poset.knownLessEqualZero(bOld[j])) {
+                                if (knownLessEqualZero(bOld[j])) {
                                     // boundDelta = b - d
                                     // Akj * boundDelta <= bOld[j]
                                     // (b-d) >= 0 === b >= d === (d-b) <= 0
@@ -463,12 +482,9 @@ template <class T> struct AbstractPolyhedra {
                             Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
                             // delta = k - j
 
-                            if (static_cast<T *>(this)->knownGreaterEqualZero(
-                                    delta)) {
+                            if (knownGreaterEqualZero(delta)) {
                                 rowsToErase.push_back(k);
-                            } else if (static_cast<T *>(this)
-                                           ->knownLessEqualZero(
-                                               std::move(delta))) {
+                            } else if (knownLessEqualZero(std::move(delta))) {
                                 rowsToErase.push_back(j);
                             }
                         }
@@ -480,56 +496,11 @@ template <class T> struct AbstractPolyhedra {
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
-    void calculateBounds0() {
-        const size_t i = perm(0);
-        const auto [numNeg, numPos] = countNonZeroSign(remainingA[0], i);
-        if ((numNeg > 1) | (numPos > 1)) {
-            Matrix<intptr_t, 0, 0, 0> Aold = remainingA[0];
-            llvm::SmallVector<MPoly, 8> bold = remainingB[0];
-            pruneBounds(Aold, bold, i, numNeg, numPos);
-            fillBounds(Aold, bold, i);
-        } else {
-            fillBounds(remainingA[0], remainingB[0], i);
-            return;
-        }
-    }
-    // `_i` is w/ respect to current order, `i` for original order.
-    void calculateBounds(const size_t _i) {
-        if (_i == 0) {
-            return calculateBounds0();
-        }
-        const size_t i = perm(_i);
-        // const size_t iNext = perm(_i - 1);
-        remainingA[_i - 1] = remainingA[_i];
-        auto &Aold = remainingA[_i - 1];
-        remainingB[_i - 1] = remainingB[_i];
-        auto &bold = remainingB[_i - 1];
-        // std::cout << "init: A(" << i << ") =\n" << Aold << std::endl;
-        pruneBounds(Aold, bold, i);
-        // std::cout << "pruned: A(" << i << ") =\n" << Aold << std::endl;
-        fillBounds(Aold, bold, i);
-        deleteBounds(Aold, bold, i);
-        // std::cout << "deleted: A(" << i << ") =\n" << Aold << std::endl;
-        appendBounds(Aold, bold, i);
-        // std::cout << "appended: A(" << i << ") =\n" << Aold << std::endl;
-    }
     void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A,
                       llvm::SmallVectorImpl<MPoly> &b, size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
         for (size_t j = 0; j < b.size(); ++j) {
             if (A(i, j)) {
-                // bool doDelete = true;
-                // for (size_t k = 0; k < A.size(0); ++k){
-                //     if ((k != i) & (A(k,j) != 0)){
-                // 	doDelete = false;
-                // 	break;
-                //     }
-                // }
-                // if (doDelete){
-                //     deleteBounds.push_back(j);
-                // } else {
-                //     A(i,j) = 0;
-                // }
                 deleteBounds.push_back(j);
             }
         }
@@ -537,6 +508,13 @@ template <class T> struct AbstractPolyhedra {
             A.eraseRow(*it);
             b.erase(b.begin() + (*it));
         }
+    }
+    void removeVariable(Matrix<intptr_t, 0, 0, 0> &A,
+                        llvm::SmallVector<P, 8> &b, const size_t i) {
+        pruneBounds(A, b, i);
+        categorizeBounds(A, b, i);
+        deleteBounds(A, b, i);
+        appendBounds(A, b, i);
     }
     static void erasePossibleNonUniqueElements(
         Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<MPoly> &b,
@@ -549,212 +527,15 @@ template <class T> struct AbstractPolyhedra {
             b.erase(b.begin() + (*it));
         }
     }
-    // returns true if extending (extendLower ? lower : upper) bound of `_i`th
-    // loop by `extend` doesn't result in the innermost loop experiencing any
-    // extra iterations.
-    // if `extendLower`, `min(i) - extend`
-    // else `max(i) + extend`
-    bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
-        size_t _j = _i + 1;
-        const size_t numLoops = getNumLoops();
-        if (_j == numLoops) {
-            return false;
-        }
-        // eliminate variables 0..._j
-        auto A = remainingA.back();
-        auto b = remainingB.back();
-        Matrix<intptr_t, 0, 0, 0> lwrA;
-        Matrix<intptr_t, 0, 0, 0> uprA;
-        llvm::SmallVector<MPoly, 16> lwrB;
-        llvm::SmallVector<MPoly, 16> uprB;
-        for (size_t _k = 0; _k < _j; ++_k) {
-            if (_k != _i) {
-                size_t k = perm(_k);
-                pruneBounds(A, b, k);
-                fillBounds(lwrA, uprA, lwrB, uprB, A, b, k);
-                appendBounds(lwrA, uprA, lwrB, uprB, A, b, k);
-            }
-        }
-        Matrix<intptr_t, 0, 0, 0> Anew;
-        llvm::SmallVector<MPoly, 8> bnew;
-        size_t i = perm(_i);
-        do {
-            // `A` and `b` contain representation independent of `0..._j`,
-            // except for `_i`
-            size_t j = perm(_j);
-            Anew = A;
-            bnew = b;
-            for (size_t _k = _i + 1; _k < numLoops; ++_k) {
-                if (_k != _j) {
-                    size_t k = perm(_k);
-                    // eliminate
-                    pruneBounds(Anew, bnew, k);
-                    fillBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
-                    appendBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
-                }
-            }
-            // now depends only on `j` and `i`
-            // check if we have zero iterations on loop `j`
-            pruneBounds(Anew, bnew, j);
-            size_t numCols = Anew.size(1);
-            for (size_t l = 0; l < numCols; ++l) {
-                intptr_t Ajl = Anew(j, l);
-                if (Ajl >= 0) {
-                    // then it is not a lower bound
-                    continue;
-                }
-                intptr_t Ail = Anew(i, l);
-                for (size_t u = 0; u < numCols; ++u) {
-                    intptr_t Aju = Anew(j, u);
-                    if (Aju <= 0) {
-                        // then it is not an upper bound
-                        continue;
-                    }
-                    intptr_t Aiu = Anew(i, u);
-                    intptr_t c = Ajl * Aiu - Aju * Ail;
-                    auto delta = bnew[l] * Aju;
-                    Polynomial::fnmadd(delta, bnew[u], Ajl);
-                    // delta + c * i >= 0 -> iterates at least once
-                    if (extendLower) {
-                        if (c > 0) {
-                            bool doesNotIterate = true;
-                            // we're adding to the lower bound
-                            for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = Anew(i, il);
-                                if ((ail >= 0) | (Anew(j, il) != 0)) {
-                                    // (ail >= 0) means not a lower bound
-                                    // (Anew(j, il) != 0) means the lower bound
-                                    // is a function of `j` if we're adding
-                                    // beyond what `j` defines as the bound
-                                    // here, then `j` won't undergo extra
-                                    // iterations, due to being sandwiched
-                                    // between this bound, and whatever bound it
-                                    // was that defines the extrema we're adding
-                                    // to here.
-                                    continue;
-                                }
-                                // recall: ail < 0
-                                //
-                                // ail * i <= bnew[il]
-                                // i >= bnew[il] / ail
-                                //
-                                // ail * (i - e + e) <= bnew[il]
-                                // ail * (i - e) <= bnew[il] - ail*e
-                                // (i - e) >= (bnew[il] - ail*e) / ail
-                                ///
-                                // we want to check
-                                // delta + c * (i - e) >= 0
-                                // ail * (delta + c * (i - e)) <= 0
-                                // ail*delta + c*(ail * (i - e)) <= 0
-                                //
-                                // let c = c, for brevity
-                                //
-                                // c*ail*(i-e) <= c*(bnew[il] - ail*e)
-                                // we also wish to check
-                                // ail*delta + s*c*(ail*(i-e)) <= 0
-                                //
-                                // ail*delta + c*(ail*(i-e)) <=
-                                // ail*delta + c*(bnew[il] - ail*e)
-                                // thus, if
-                                // ail*delta + c*(bnew[il] - ail*e) <= 0
-                                // the loop iterates at least once
-                                // we'll check if it is known that this is
-                                // false, i.e. if
-                                //
-                                // ail*delta + c*(bnew[il] - ail*e) - 1 >= 0
-                                //
-                                // then the following must be
-                                // false:
-                                // ail*delta + c*(bnew[il] - ail*e) - 1 <= -1
-                                auto idelta = ail * delta;
-                                Polynomial::fnmadd(idelta, bnew[il], -c);
-                                // let e = 1
-                                idelta -= c * ail + 1;
-                                if (aln->poset.knownGreaterEqualZero(idelta)) {
-                                    return true;
-                                } else {
-                                    doesNotIterate = false;
-                                }
-                            }
-                            if (doesNotIterate) {
-                                return true;
-                            }
-                        } else {
-                            continue;
-                        }
-
-                    } else {
-                        // extend upper
-                        if (c < 0) {
-                            bool doesNotIterate = true;
-                            // does `imax + e` iterate at least once?
-                            for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = Anew(i, il);
-                                if ((ail <= 0) | (Anew(j, il) != 0)) {
-                                    // not an upper bound
-                                    continue;
-                                }
-                                // ail > 0, c < 0
-                                // ail * i <= ubi
-                                // c*ail*i >= c*ubi
-                                // c*ail*(i+e-e) >= c*ubi
-                                // c*ail*(i+e) >= c*ubi + c*ail*e
-                                //
-                                // iterates at least once if:
-                                // delta + c * (i+e) >= 0
-                                // ail*(delta + c * (i+e)) >= 0
-                                // ail*delta + ail*c*(i+e) >= 0
-                                // note
-                                // ail*delta + ail*c*(i+e) >=
-                                // ail*delta + c*ubi + c*ail+e
-                                // so proving
-                                // ail*delta + c*ubi + c*ail+e >= 0
-                                // proves the loop iterates at least once
-                                // we check if this is known to be false, i.e.
-                                // if this is known to be true:
-                                // - ail*delta - c*ubi - c*ail+e -1 >= 0
-                                auto idelta = (-ail) * delta;
-                                Polynomial::fnmadd(idelta, bnew[il], c);
-                                idelta -= c * ail - 1;
-                                if (aln->poset.knownGreaterEqualZero(idelta)) {
-                                    return true;
-                                } else {
-                                    doesNotIterate = false;
-                                }
-                                /*
-                                auto idelta = ail * delta;
-                                Polynomial::fnmadd(idelta, bnew[il], -c);
-                                idelta += c * ail + 1;
-                                if (poset->knownLessThanZero(
-                                        std::move(idelta))) {
-                                    return true;
-                                } else {
-                                    doesNotIterate = false;
-                                }
-                                */
-                            }
-                            if (doesNotIterate) {
-                                return true;
-                            }
-                        } else {
-                            continue;
-                        }
-                    }
-                }
-            }
-            ++_j;
-        } while (_j != numLoops);
-        return false;
-    }
     // prints in current permutation order.
     friend std::ostream &operator<<(std::ostream &os,
-                                    const AffineLoopNestBounds &alnb) {
-        const size_t numLoops = alnb.getNumLoops();
+                                    const AbstractPolyhedra<T, P> &alnb) {
+        const size_t numLoops = alnb.getNumVar();
         for (size_t _i = 0; _i < numLoops; ++_i) {
-            os << "Loop " << _i << " lower bounds: " << std::endl;
-            size_t i = alnb.perm(_i);
+            os << "Variable " << _i << " lower bounds: " << std::endl;
+            size_t i = alnb.currentToOriginalPerm(_i);
             // size_t _i = alnb.perm(Permutation::Original{i});
-            auto &lb = alnb.lowerB[i];
+            auto &lb = alnb.lowerb[i];
             auto &lA = alnb.lowerA[i];
             for (size_t j = 0; j < lb.size(); ++j) {
                 if (lA(i, j) == -1) {
@@ -789,8 +570,8 @@ template <class T> struct AbstractPolyhedra {
                 }
                 os << std::endl;
             }
-            os << "Loop " << _i << " upper bounds: " << std::endl;
-            auto &ub = alnb.upperB[i];
+            os << "Variable " << _i << " upper bounds: " << std::endl;
+            auto &ub = alnb.upperb[i];
             auto &uA = alnb.upperA[i];
             for (size_t j = 0; j < ub.size(); ++j) {
                 if (uA(i, j) == 1) {
@@ -831,29 +612,26 @@ template <class T> struct AbstractPolyhedra {
     void dump() const { std::cout << *this; }
 };
 
-struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra> {
-    llvm::SmallVector<intptr_t, 8> b;
-    llvm::SmallVector<intptr_t, 8> lb;
-    llvm::SmallVector<intptr_t, 8> ub;
-    intptr_t &getBound(size_t i) { return b[i]; }
-    intptr_t &getLowerBoundCache(size_t i) { return lb[i]; }
-    intptr_t &getUpperBoundCache(size_t i) { return ub[i]; }
-    bool knownGreaterEqualZero(intptr_t x) { return x >= 0; }
-    bool knownLessEqualZero(intptr_t x) { return x <= 0; }
+struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, intptr_t> {
+    bool knownLessEqualZeroImpl(intptr_t x) const { return x <= 0; }
+    bool knownGreaterEqualZeroImpl(intptr_t x) const { return x >= 0; }
+    IntegerPolyhedra(Matrix<intptr_t, 0, 0, 0> &A,
+                     llvm::SmallVector<intptr_t, 8> &b)
+        : AbstractPolyhedra<IntegerPolyhedra, intptr_t>(A, b){};
+    intptr_t currentToOriginalPermImpl(size_t i) const { return i; }
 };
 
-struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra> {
-    llvm::SmallVector<MPoly, 8> b;
+struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra, MPoly> {
     PartiallyOrderedSet poset;
-    llvm::SmallVector<MPoly, 8> lb;
-    llvm::SmallVector<MPoly, 8> ub;
-    MPoly &getBound(size_t i) { return b[i]; }
-    MPoly &getLowerBoundCache(size_t i) { return lb[i]; }
-    MPoly &getUpperBoundCache(size_t i) { return ub[i]; }
-    bool knownGreaterEqualZero(const MPoly &x) {
-        return poset.knownGreaterEqualZero(x);
-    }
-    bool knownLessEqualZero(MPoly x) {
+    SymbolicPolyhedra(Matrix<intptr_t, 0, 0, 0> &A,
+                      llvm::SmallVector<MPoly, 8> &b, PartiallyOrderedSet poset)
+        : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(A, b), poset(poset){};
+
+    bool knownLessEqualZeroImpl(MPoly x) const {
         return poset.knownLessEqualZero(std::move(x));
     }
+    bool knownGreaterEqualZeroImpl(const MPoly &x) const {
+        return poset.knownGreaterEqualZero(x);
+    }
+    intptr_t currentToOriginalPermImpl(size_t i) const { return i; }
 };
