@@ -527,85 +527,96 @@ template <class T, typename P> struct AbstractPolyhedra {
             b.erase(b.begin() + (*it));
         }
     }
+
+    void printLowerBound(std::ostream &os, size_t i) const {
+
+        auto &lb = lowerb[i];
+        auto &lA = lowerA[i];
+        for (size_t j = 0; j < lb.size(); ++j) {
+            if (lA(i, j) == -1) {
+                os << "i_" << i << " >= ";
+            } else {
+                os << -lA(i, j) << "*i_" << i << " >= ";
+            }
+            bool printed = !isZero(lb[j]);
+            if (printed) {
+                os << -lb[j];
+            }
+            for (size_t k = 0; k < getNumVar(); ++k) {
+                if (k == i) {
+                    continue;
+                }
+                if (intptr_t lakj = lA(k, j)) {
+                    if (lakj < 0) {
+                        os << " - ";
+                    } else if (printed) {
+                        os << " + ";
+                    }
+                    lakj = std::abs(lakj);
+                    if (lakj != 1) {
+                        os << lakj << "*";
+                    }
+                    os << "i_" << k;
+                    printed = true;
+                }
+            }
+            if (!printed) {
+                os << 0;
+            }
+            os << std::endl;
+        }
+    }
+    void printUpperBound(std::ostream &os, size_t i) const {
+        auto &ub = upperb[i];
+        auto &uA = upperA[i];
+        for (size_t j = 0; j < ub.size(); ++j) {
+            if (uA(i, j) == 1) {
+                os << "i_" << i << " <= ";
+            } else {
+                os << uA(i, j) << "*i_" << i << " <= ";
+            }
+            bool printed = (!isZero(ub[j]));
+            if (printed) {
+                os << ub[j];
+            }
+            for (size_t k = 0; k < getNumVar(); ++k) {
+                if (k == i) {
+                    continue;
+                }
+                if (intptr_t uakj = uA(k, j)) {
+                    if (uakj > 0) {
+                        os << " - ";
+                    } else if (printed) {
+                        os << " + ";
+                    }
+                    uakj = std::abs(uakj);
+                    if (uakj != 1) {
+                        os << uakj << "*";
+                    }
+                    os << "i_" << k;
+                    printed = true;
+                }
+            }
+            if (!printed) {
+                os << 0;
+            }
+            os << std::endl;
+        }
+    }
     // prints in current permutation order.
+    // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
+    // in which case, we have to remove `currentToOriginalPerm`,
+    // which menas either change printing, or move prints `<<` into
+    // the derived classes.
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractPolyhedra<T, P> &alnb) {
         const size_t numLoops = alnb.getNumVar();
         for (size_t _i = 0; _i < numLoops; ++_i) {
             os << "Variable " << _i << " lower bounds: " << std::endl;
             size_t i = alnb.currentToOriginalPerm(_i);
-            // size_t _i = alnb.perm(Permutation::Original{i});
-            auto &lb = alnb.lowerb[i];
-            auto &lA = alnb.lowerA[i];
-            for (size_t j = 0; j < lb.size(); ++j) {
-                if (lA(i, j) == -1) {
-                    os << "i_" << i << " >= ";
-                } else {
-                    os << -lA(i, j) << "*i_" << i << " >= ";
-                }
-                bool printed = !isZero(lb[j]);
-                if (printed) {
-                    os << -lb[j];
-                }
-                for (size_t k = 0; k < numLoops; ++k) {
-                    if (k == i) {
-                        continue;
-                    }
-                    if (intptr_t lakj = lA(k, j)) {
-                        if (lakj < 0) {
-                            os << " - ";
-                        } else if (printed) {
-                            os << " + ";
-                        }
-                        lakj = std::abs(lakj);
-                        if (lakj != 1) {
-                            os << lakj << "*";
-                        }
-                        os << "i_" << k;
-                        printed = true;
-                    }
-                }
-                if (!printed) {
-                    os << 0;
-                }
-                os << std::endl;
-            }
+            alnb.printLowerBound(i);
             os << "Variable " << _i << " upper bounds: " << std::endl;
-            auto &ub = alnb.upperb[i];
-            auto &uA = alnb.upperA[i];
-            for (size_t j = 0; j < ub.size(); ++j) {
-                if (uA(i, j) == 1) {
-                    os << "i_" << i << " <= ";
-                } else {
-                    os << uA(i, j) << "*i_" << i << " <= ";
-                }
-                bool printed = (!isZero(ub[j]));
-                if (printed) {
-                    os << ub[j];
-                }
-                for (size_t k = 0; k < numLoops; ++k) {
-                    if (k == i) {
-                        continue;
-                    }
-                    if (intptr_t uakj = uA(k, j)) {
-                        if (uakj > 0) {
-                            os << " - ";
-                        } else if (printed) {
-                            os << " + ";
-                        }
-                        uakj = std::abs(uakj);
-                        if (uakj != 1) {
-                            os << uakj << "*";
-                        }
-                        os << "i_" << k;
-                        printed = true;
-                    }
-                }
-                if (!printed) {
-                    os << 0;
-                }
-                os << std::endl;
-            }
+            alnb.printUpperBound(i);
         }
         return os;
     }

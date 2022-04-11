@@ -484,7 +484,6 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
 
-
     bool knownLessEqualZeroImpl(MPoly x) const {
         return poset.knownLessEqualZero(std::move(x));
     }
@@ -492,12 +491,12 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         return poset.knownGreaterEqualZero(x);
     }
     intptr_t currentToOriginalPermImpl(size_t i) const { return perm(i); }
-    
+
     size_t getNumLoops() const { return getNumVar(); }
     AffineLoopNest(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<MPoly, 8> &b,
                    PartiallyOrderedSet poset)
-        : AbstractPolyhedra<AffineLoopNest, MPoly>(A, b), poset(poset), perm(A.size(0)),
-          remainingA(A.size(0)), remainingB(A.size(0)) {
+        : AbstractPolyhedra<AffineLoopNest, MPoly>(A, b), poset(poset),
+          perm(A.size(0)), remainingA(A.size(0)), remainingB(A.size(0)) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
         remainingA[i - 1] = A;
