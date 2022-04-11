@@ -143,7 +143,7 @@ template <class T, typename P> struct AbstractPolyhedra {
         for (size_t i = start; i < numVar; ++i) {
             orCount += ((A(i, l) != 0) | (A(i, u) != 0));
         }
-        return orCount <= 1;
+        return orCount > 1;
         // size_t lFound = false, uFound = false;
         // for (size_t i = start; i < numVar; ++i) {
         //     bool Ail = A(i, l) != 0;
