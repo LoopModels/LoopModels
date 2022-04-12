@@ -16,10 +16,10 @@ template <class T, typename P> struct AbstractPolyhedra {
     llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> lowerb;
     llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> upperb;
 
-    AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> &A,
-                      const llvm::SmallVector<P, 8> &b)
-        : A(A), b(b), lowerA(A.size(0)), upperA(A.size(0)), lowerb(A.size(0)),
-          upperb(A.size(0)){};
+    AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
+                      const llvm::SmallVector<P, 8> b)
+        : A(std::move(A)), b(std::move(b)), lowerA(A.size(0)),
+          upperA(A.size(0)), lowerb(A.size(0)), upperb(A.size(0)){};
 
     size_t getNumVar() const { return A.size(0); }
     size_t getNumConstraints() const { return A.size(1); }
@@ -250,6 +250,8 @@ template <class T, typename P> struct AbstractPolyhedra {
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
                      const size_t i) const {
 
+        std::cout << "i = " << i << "; Aold.size() = ( " << A.size(0) << ", "
+                  << A.size(1) << " )" << std::endl;
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         if ((numNeg > 1) | (numPos > 1)) {
             pruneBounds(A, b, i, numNeg, numPos);
@@ -511,6 +513,8 @@ template <class T, typename P> struct AbstractPolyhedra {
     }
     void removeVariable(Matrix<intptr_t, 0, 0, 0> &A,
                         llvm::SmallVector<P, 8> &b, const size_t i) {
+        std::cout << "i = " << i << "; Aold.size() = ( " << A.size(0) << ", "
+                  << A.size(1) << " )" << std::endl;
         pruneBounds(A, b, i);
         categorizeBounds(A, b, i);
         deleteBounds(A, b, i);
@@ -614,9 +618,9 @@ template <class T, typename P> struct AbstractPolyhedra {
         for (size_t _i = 0; _i < numLoops; ++_i) {
             os << "Variable " << _i << " lower bounds: " << std::endl;
             size_t i = alnb.currentToOriginalPerm(_i);
-            alnb.printLowerBound(i);
+            alnb.printLowerBound(os, i);
             os << "Variable " << _i << " upper bounds: " << std::endl;
-            alnb.printUpperBound(i);
+            alnb.printUpperBound(os, i);
         }
         return os;
     }
@@ -626,17 +630,20 @@ template <class T, typename P> struct AbstractPolyhedra {
 struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, intptr_t> {
     bool knownLessEqualZeroImpl(intptr_t x) const { return x <= 0; }
     bool knownGreaterEqualZeroImpl(intptr_t x) const { return x >= 0; }
-    IntegerPolyhedra(Matrix<intptr_t, 0, 0, 0> &A,
-                     llvm::SmallVector<intptr_t, 8> &b)
-        : AbstractPolyhedra<IntegerPolyhedra, intptr_t>(A, b){};
+    IntegerPolyhedra(Matrix<intptr_t, 0, 0, 0> A,
+                     llvm::SmallVector<intptr_t, 8> b)
+        : AbstractPolyhedra<IntegerPolyhedra, intptr_t>(std::move(A),
+                                                        std::move(b)){};
     intptr_t currentToOriginalPermImpl(size_t i) const { return i; }
 };
 
 struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra, MPoly> {
     PartiallyOrderedSet poset;
-    SymbolicPolyhedra(Matrix<intptr_t, 0, 0, 0> &A,
-                      llvm::SmallVector<MPoly, 8> &b, PartiallyOrderedSet poset)
-        : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(A, b), poset(poset){};
+    SymbolicPolyhedra(Matrix<intptr_t, 0, 0, 0> A,
+                      llvm::SmallVector<MPoly, 8> b, PartiallyOrderedSet poset)
+        : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(std::move(A),
+                                                      std::move(b)),
+          poset(std::move(poset)){};
 
     bool knownLessEqualZeroImpl(MPoly x) const {
         return poset.knownLessEqualZero(std::move(x));

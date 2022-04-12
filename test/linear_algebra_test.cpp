@@ -34,12 +34,13 @@ TEST(LinearAlgebraTest, BasicAssertions) {
     }
     std::cout << "A = \n" << A << "\nB = \n" << B << std::endl;
     std::cout << "F = \n" << LUF.F << "\nperm = \n" << Vector<unsigned,0>(LUF.perm) << std::endl;
-    auto C = LUF.ldiv(B);
-    std::cout << "LUF.ldiv(B) = \n" << C << std::endl;
-    EXPECT_TRUE(C == identity);
+    auto Bcopy = B;
+    EXPECT_FALSE(LUF.ldiv(Bcopy));
+    std::cout << "LUF.ldiv(B) = \n" << Bcopy << std::endl;
+    EXPECT_TRUE(Bcopy == identity);
     std::cout << "I = " << identity << std::endl;
-    
-    auto D = LUF.rdiv(B);
-    std::cout << "LUF.rdiv(B) = \n" << D << std::endl;
-    EXPECT_TRUE(D == identity);
+
+    EXPECT_FALSE(LUF.rdiv(B));
+    std::cout << "LUF.rdiv(B) = \n" << B << std::endl;
+    EXPECT_TRUE(B == identity);
 }

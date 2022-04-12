@@ -493,10 +493,11 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
     intptr_t currentToOriginalPermImpl(size_t i) const { return perm(i); }
 
     size_t getNumLoops() const { return getNumVar(); }
-    AffineLoopNest(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<MPoly, 8> &b,
-                   PartiallyOrderedSet poset)
-        : AbstractPolyhedra<AffineLoopNest, MPoly>(A, b), poset(poset),
-          perm(A.size(0)), remainingA(A.size(0)), remainingB(A.size(0)) {
+    AffineLoopNest(Matrix<intptr_t, 0, 0, 0> Ain, llvm::SmallVector<MPoly, 8> bin,
+                   PartiallyOrderedSet posetin)
+        : AbstractPolyhedra<AffineLoopNest, MPoly>(std::move(Ain), std::move(bin)),
+          poset(std::move(posetin)), perm(A.size(0)), remainingA(A.size(0)),
+          remainingB(A.size(0)) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
         remainingA[i - 1] = A;
@@ -540,6 +541,7 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         auto &Aold = remainingA[_i - 1];
         remainingB[_i - 1] = remainingB[_i];
         auto &bold = remainingB[_i - 1];
+	std::cout << "i = " << i << "; Aold.size() = ( " << Aold.size(0) << ", " << Aold.size(1) << " )" << std::endl;
         removeVariable(Aold, bold, i);
     }
     // returns true if extending (extendLower ? lower : upper) bound of `_i`th

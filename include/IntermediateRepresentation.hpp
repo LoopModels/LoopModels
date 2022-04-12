@@ -524,8 +524,8 @@ bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
 }
 
 llvm::Optional<
-    std::pair<AffineLoopNestBounds, llvm::SmallVector<ArrayReference, 0>>>
-orthogonalize(AffineLoopNestBounds const &alnp,
+    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+orthogonalize(AffineLoopNest const &alnp,
               llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I
@@ -564,11 +564,14 @@ orthogonalize(AffineLoopNestBounds const &alnp,
         // A'*L <= b
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A'*K)*J <= r
-        auto alnNew = std::make_shared<AffineLoopNest>();
-        matmultn(alnNew->A, K, alnp.aln->A);
-        alnNew->b = alnp.aln->b;
-        alnNew->poset = alnp.aln->poset;
-        AffineLoopNestBounds alnpNew(alnNew);
+	Matrix<intptr_t,0,0,0> A;
+	matmultn(A, K, alnp.A);
+	AffineLoopNest alnNew(std::move(A), alnp.b, alnp.poset);
+        // auto alnNew = std::make_shared<AffineLoopNest>();
+        // matmultn(alnNew->A, K, alnp.A);
+        // alnNew->b = alnp.aln->b;
+        // alnNew->poset = alnp.aln->poset;
+        // AffineLoopNestBounds alnpNew(alnNew);
         // Originally, the mapping from our loops to our indices was
         // S*L = I
         // now, we have
@@ -585,7 +588,7 @@ orthogonalize(AffineLoopNestBounds const &alnp,
                 ++i;
             }
         }
-        return std::make_pair(std::move(alnpNew), newArrayRefs);
+        return std::make_pair(std::move(alnNew), newArrayRefs);
     }
     return {};
 }

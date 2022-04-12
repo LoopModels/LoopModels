@@ -146,15 +146,15 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // You can make more decisions here when it comes time to start considering fusion.
     // Just store the original Loop* within the tree.
     // Then, we can use the basic blocks and DT for relevant CFG info.
-    llvm::SmallVector<
-        std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
-        outerLoops;
-    llvm::SmallVector<AffineCmp, 8> affs;
-    for (llvm::Loop *LP : *LI) {
-        descend(tree, outerLoops, affs, LP, DT);
-        outerLoops.clear();
-        affs.clear();
-    }
+    // llvm::SmallVector<
+    //     std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
+    //     outerLoops;
+    // llvm::SmallVector<AffineCmp, 8> affs;
+    // for (llvm::Loop *LP : *LI) {
+    //     descend(tree, outerLoops, affs, LP, DT);
+    //     outerLoops.clear();
+    //     affs.clear();
+    // }
     /*
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : LI) {

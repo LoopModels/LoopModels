@@ -693,6 +693,9 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
         }
         return false;
     }
+    template <typename T> bool lexGreater(const T &y) const {
+        return lexGreater(y.exponent);
+    }
     std::strong_ordering operator<=>(PackedMonomial const &y) const {
         if (K == 1) {
             return bits[0] <=> y.bits[0];
@@ -915,7 +918,7 @@ template <typename C, IsMonomial M> struct Term {
         return exponent.termsMatch(y.exponent);
     }
     bool termsMatch(M const &e) const { return exponent.termsMatch(e); }
-    bool lexGreater(Term const &y) const {
+    bool lexGreater(const auto &y) const {
         return exponent.lexGreater(y.exponent);
     }
     size_t degree() const { return exponent.degree(); }
@@ -1008,7 +1011,7 @@ template <typename C, IsMonomial M> struct Terms {
     llvm::SmallVector<Term<C, M>, 1> terms;
     // std::vector<Term<C, M>> terms;
     Terms() = default;
-    Terms(M x) : terms{Term<C,M>(C(One()), std::move(x))} {};
+    Terms(M x) : terms{Term<C, M>(C(One()), std::move(x))} {};
     Terms(Term<C, M> const &x) {
         if (!isZero(x)) {
             terms.push_back(x);
@@ -1147,23 +1150,23 @@ template <typename C, IsMonomial M> struct Terms {
     }
     void push_back(M const &c) { terms.emplace_back(1, c); }
     void push_back(M &&c) { terms.emplace_back(1, std::move(c)); }
-    Terms<C, M> &operator+=(M const &x) {
+    auto &operator+=(M const &x) {
         addTerm(x);
         return *this;
     }
-    Terms<C, M> &operator+=(Term<C, M> const &x) {
+    auto &operator+=(Term<C, M> const &x) {
         addTerm(x);
         return *this;
     }
-    Terms<C, M> &operator+=(Term<C, M> &&x) {
+    auto &operator+=(Term<C, M> &&x) {
         addTerm(std::move(x));
         return *this;
     }
-    Terms<C, M> &operator-=(Term<C, M> const &x) {
+    auto &operator-=(Term<C, M> const &x) {
         subTerm(x);
         return *this;
     }
-    Terms<C, M> &operator-=(Term<C, M> &&x) {
+    auto &operator-=(Term<C, M> &&x) {
         subTerm(std::move(x));
         return *this;
     }
@@ -1547,28 +1550,37 @@ Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
     // return z += y;
 }
 
-template <IsMonomial M> Terms<intptr_t, M> operator+(M const &x, M const &y) {
-    Terms<intptr_t, M> z(x);
+template <IsMonomial M> auto operator+(M const &x, M const &y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(x);
     // typedef typename std::remove_reference<M>::type MR;
     // Terms<intptr_t, MR> z(x);
     z += y;
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator+(M const &x, M &&y) {
-    Terms<intptr_t, M> z(std::move(y));
+template <IsMonomial M> auto operator+(M const &x, M &&y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(y));
     z += x;
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator+(M &&x, M const &y) {
-    Terms<intptr_t, M> z(std::move(x));
+template <IsMonomial M> auto operator+(M &&x, M const &y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
     z += y;
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator+(M &&x, M &&y) {
-    Terms<intptr_t, M> z(std::move(x));
+template <IsMonomial M> auto operator+(M &&x, M &&y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
     z += std::move(y);
     return z;
 }
+// template <IsMonomial M> Terms<intptr_t, M> operator+(M x, M y) {
+//     if (x.termsMatch(y)) {
+//         return Terms<intptr_t, M>(Term<intptr_t, M>(2, std::move(x)));
+//     } else if (x.lexGreater(y)) {
+//         return Terms<intptr_t, M>(std::move(x), std::move(y));
+//     } else {
+//         return Terms<intptr_t, M>(std::move(y), std::move(x));
+//     }
+// }
 
 Terms<intptr_t, Uninomial> operator-(Uninomial x, Uninomial y) {
     if (x.termsMatch(y)) {
@@ -1581,56 +1593,62 @@ Terms<intptr_t, Uninomial> operator-(Uninomial x, Uninomial y) {
                                           Term<intptr_t, Uninomial>{1, x});
     }
 }
-template <IsMonomial M> Terms<intptr_t, M> operator-(M const &x, M const &y) {
-    Terms<intptr_t, M> z(x);
-    z += Term<intptr_t, M>{-1, y};
+template <IsMonomial M> auto operator-(M const &x, M const &y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(x);
+    z += Term<intptr_t, std::remove_cv_t<M>>{-1, y};
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator-(M const &x, M &&y) {
-    Terms<intptr_t, M> z(Term<intptr_t, M>{-1, std::move(y)});
+template <IsMonomial M> auto operator-(M const &x, M &&y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(Term<intptr_t, M>{-1, std::move(y)});
     z += x;
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator-(M &&x, M const &y) {
-    Terms<intptr_t, M> z(std::move(x));
-    z += Term<intptr_t, M>{-1, y};
+template <IsMonomial M> auto operator-(M &&x, M const &y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<intptr_t, std::remove_cv_t<M>>{-1, y};
     return z;
 }
-template <IsMonomial M> Terms<intptr_t, M> operator-(M &&x, M &&y) {
-    Terms<intptr_t, M> z(std::move(x));
-    z += Term<intptr_t, M>{-1, std::move(y)};
+template <IsMonomial M> auto operator-(M &&x, M &&y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<intptr_t, std::remove_cv_t<M>>{-1, std::move(y)};
     return z;
 }
-template <typename C, IsMonomial M> Terms<C, M> operator-(Term<C, M> x, M &&y){
-    Terms<intptr_t, M> z(std::move(x));
-    z += Term<intptr_t, M>{-1, std::forward<M>(y)};
+template <typename C, IsMonomial M> auto operator-(Term<C, M> x, M &&y) {
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<intptr_t, std::remove_cv_t<M>>{-1, std::forward<M>(y)};
     return z;
 }
-template <typename C, IsMonomial M> Terms<C, M> operator-(M &&y, Term<C, M> x){
+template <typename C, IsMonomial M> auto operator-(M &&y, Term<C, M> x) {
     x.coefficient *= -1;
-    Terms<intptr_t, M> z(std::move(x));
-    z += Term<intptr_t, M>{1, std::forward<M>(y)};
+    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<intptr_t, std::remove_cv_t<M>>{1, std::forward<M>(y)};
     return z;
 }
 
-template <typename C> Terms<C, Uninomial> operator+(Uninomial x, C y) {
+template <typename C> auto operator+(Uninomial x, C y) {
     return Terms<C, Uninomial>(Term<C, Uninomial>(x), Term<C, Uninomial>(y));
 }
-template <typename C> Terms<C, Uninomial> operator+(C y, Uninomial x) {
+template <typename C> auto operator+(C y, Uninomial x) {
     return Terms<C, Uninomial>(Term<C, Uninomial>(x), Term<C, Uninomial>(y));
 }
 
-template <typename C, IsMonomial M> Terms<C, M> operator+(M x, C y) {
-    return Terms<C, M>(Term<C, M>(x), Term<C, M>(y));
+template <typename C, IsMonomial M> auto operator+(M x, C y) {
+    return Terms<C, std::remove_cv_t<M>>(Term<C, std::remove_cv_t<M>>(x),
+                                         Term<C, std::remove_cv_t<M>>(y));
 }
-template <typename C, IsMonomial M> Terms<C, M> operator+(C y, M x) {
-    return Terms<C, M>(Term<C, M>(x), Term<C, M>(y));
+template <typename C, IsMonomial M> auto operator+(C y, M x) {
+    return Terms<C, std::remove_cv_t<M>>(Term<C, std::remove_cv_t<M>>(x),
+                                         Term<C, std::remove_cv_t<M>>(y));
 }
-template <IsMonomial M> Terms<intptr_t, M> operator+(M x, int y) {
-    return Terms<intptr_t, M>(Term<intptr_t, M>(x), Term<intptr_t, M>(y));
+template <IsMonomial M> auto operator+(M x, int y) {
+    return Terms<intptr_t, std::remove_cv_t<M>>(
+        Term<intptr_t, std::remove_cv_t<M>>(x),
+        Term<intptr_t, std::remove_cv_t<M>>(y));
 }
-template <IsMonomial M> Terms<intptr_t, M> operator+(int y, M x) {
-    return Terms<intptr_t, M>(Term<intptr_t, M>(x), Term<intptr_t, M>(y));
+template <IsMonomial M> auto operator+(int y, M x) {
+    return Terms<intptr_t, std::remove_cv_t<M>>(
+        Term<intptr_t, std::remove_cv_t<M>>(x),
+        Term<intptr_t, std::remove_cv_t<M>>(y));
 }
 
 template <typename C>
@@ -1774,7 +1792,7 @@ Terms<C, M> operator-(Term<C, M> &&x, Term<C, M> &&y) {
 }
 
 template <typename C, typename M>
-Term<C, M> operator*(intptr_t x, Term<C,M> y) {
+Term<C, M> operator*(intptr_t x, Term<C, M> y) {
     y.coefficient *= x;
     return y;
 }
@@ -2318,9 +2336,7 @@ void divExact(Univariate<C> &q, Univariate<C> &d, C const &x) {
         q.terms[n].exponent = d.terms[n].exponent;
     }
 }
-void fnmadd(intptr_t &c, intptr_t a, intptr_t b){
-    c -= a*b;
-}
+void fnmadd(intptr_t &c, intptr_t a, intptr_t b) { c -= a * b; }
 template <typename C, typename M>
 void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     // size_t offset = x.size();
