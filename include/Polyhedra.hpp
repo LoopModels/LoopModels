@@ -47,9 +47,6 @@ template <class T, typename P> struct AbstractPolyhedra {
         intptr_t cu = ua[i];
         intptr_t cl = la[i];
         b = cu * lb;
-        // std::cout << "cu="<<cu<<std::endl;
-        // std::cout << "lb=" << lb << "\nlb.terms.size() = " << lb.terms.size()
-        // << std::endl;
         Polynomial::fnmadd(b, ub, cl);
         size_t N = la.size();
         for (size_t n = 0; n < N; ++n) {
@@ -91,8 +88,6 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
         const size_t numExclude = numCol - numNeg - numPos;
         const size_t numColA = numNeg * numPos + numExclude;
-        // std::cout << "numCol=" << numCol << "; numNeg=" << numNeg
-        //           << "; numPos=" << numPos << std::endl;
         A.resizeForOverwrite(numVar, numColA);
         b.resize(numColA);
 
@@ -250,8 +245,6 @@ template <class T, typename P> struct AbstractPolyhedra {
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
                      const size_t i) const {
 
-        std::cout << "i = " << i << "; Aold.size() = ( " << A.size(0) << ", "
-                  << A.size(1) << " )" << std::endl;
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         if ((numNeg > 1) | (numPos > 1)) {
             pruneBounds(A, b, i, numNeg, numPos);
@@ -283,11 +276,6 @@ template <class T, typename P> struct AbstractPolyhedra {
             }
         }
         if (dependencyToEliminate >= 0) {
-            // std::cout << "Aold =\n" << Aold << std::endl;
-            // std::cout << "bold =\n";
-            // printVector(std::cout, bold) << std::endl;
-            // std::cout << "dependencyToEliminate = " << dependencyToEliminate
-            //           << "; i = " << i << std::endl;
             // hopefully stack allocate scratch space
             const size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
             const size_t numVar = numVarBase + numAuxiliaryVar;
@@ -379,10 +367,6 @@ template <class T, typename P> struct AbstractPolyhedra {
                                 numVarBase + boundDiffPairs.size();
                             AOld(newVarId, c++) = 1;
                             AOld(newVarId, c++) = -1;
-                            // std::cout << "boundDiffPairs["
-                            //           << boundDiffPairs.size() << "] = (j="
-                            //           << j
-                            //           << ", d=" << d << ")" << std::endl;
                             boundDiffPairs.emplace_back(j, d);
                         }
                     }
@@ -391,20 +375,11 @@ template <class T, typename P> struct AbstractPolyhedra {
             llvm::SmallVector<int8_t, 32> provenBoundsDeltas(numAuxiliaryVar,
                                                              0);
             llvm::SmallVector<unsigned, 32> rowsToErase;
-            // std::cout << "A_pre_elim =\n" << AOld << std::endl;
-            // std::cout << "b_pre_elim =\n";
-            // printVector(std::cout, bOld) << std::endl;
             do {
-                // std::cout << "dependencyToEliminate = " <<
-                // dependencyToEliminate
-                //           << std::endl;
                 eliminateVariable(ANew, bNew, AOld, bOld,
                                   size_t(dependencyToEliminate));
                 std::swap(ANew, AOld);
                 std::swap(bNew, bOld);
-                // std::cout << "A_post_elim =\n" << AOld << std::endl;
-                // std::cout << "b_post_elim =\n";
-                // printVector(std::cout, bOld) << std::endl;
                 dependencyToEliminate = -1;
                 for (size_t j = 0; j < AOld.size(1); ++j) {
                     for (size_t k = numVarBase; k < numVar; ++k) {
@@ -467,8 +442,6 @@ template <class T, typename P> struct AbstractPolyhedra {
                     rowsToErase.push_back(k == 1 ? j : d);
                 }
             }
-            // std::cout << "rowsToErase (dominated) = ";
-            // printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
 
         } else {
@@ -493,8 +466,6 @@ template <class T, typename P> struct AbstractPolyhedra {
                     }
                 }
             }
-            // std::cout << "rowsToErase (dominated) = ";
-            // printVector(std::cout, rowsToErase) << std::endl;
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
@@ -511,10 +482,10 @@ template <class T, typename P> struct AbstractPolyhedra {
             b.erase(b.begin() + (*it));
         }
     }
+    // A'x <= b
+    // removes variable `i` from `A`
     void removeVariable(Matrix<intptr_t, 0, 0, 0> &A,
                         llvm::SmallVector<P, 8> &b, const size_t i) {
-        std::cout << "i = " << i << "; Aold.size() = ( " << A.size(0) << ", "
-                  << A.size(1) << " )" << std::endl;
         pruneBounds(A, b, i);
         categorizeBounds(A, b, i);
         deleteBounds(A, b, i);

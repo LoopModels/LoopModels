@@ -541,7 +541,6 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         auto &Aold = remainingA[_i - 1];
         remainingB[_i - 1] = remainingB[_i];
         auto &bold = remainingB[_i - 1];
-	std::cout << "i = " << i << "; Aold.size() = ( " << Aold.size(0) << ", " << Aold.size(1) << " )" << std::endl;
         removeVariable(Aold, bold, i);
     }
     // returns true if extending (extendLower ? lower : upper) bound of `_i`th
