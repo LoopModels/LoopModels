@@ -275,6 +275,13 @@ template <class T, typename P> struct AbstractPolyhedra {
                 }
             }
         }
+	// we may have
+	// i <= j
+	// i <= N // redundant
+	// j <= M
+	// poset has: M <= N
+	// so i <= j <= M <= N
+	// renders i <= N redundant
         if (dependencyToEliminate >= 0) {
             // hopefully stack allocate scratch space
             const size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);

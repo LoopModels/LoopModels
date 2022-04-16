@@ -174,9 +174,45 @@ Interval positiveInterval() {
 std::ostream &operator<<(std::ostream &os, Interval a) {
     return os << a.lowerBound << " : " << a.upperBound;
 }
+
 // struct PartiallyOrderedSet
 // Gives partial ordering between variables, using intervals to indicate the
 // range of differences in possible values.
+// Example use case is for delinearization of indices
+//
+// for i = 0:I-1, j = 0:J-1, k = 0:K-1
+//    A[M*N*i + N*j + k]
+// end
+//
+// In the original code, this may have been A[k, j, i]
+// N, M, _ = size(A)
+//
+// if:
+// N = 10
+// K = 12
+// k = 11, j = 2
+// then
+// N*j + k == 10*2 + 11 == 31
+// while if
+// j = 3, k = 1
+// then
+// N*j + k == 10*3 + 1 == 31
+//
+// meaning two different values of j can give us the same
+// linear index / memory address, which means we can't separate
+// if on the other hand
+// K <= N
+// then for any particular value of `j`, no other value of `j`
+// can produce the same memory address
+//
+// d, r = divrem(M*N*i + N*j + k, M*N)
+// d = i
+// r = N*j + k
+//
+// for this to be valid, we need M*N > N*j + k
+// assuming J = M, K = N
+// then we would have
+// M*N > N * (M-1) + N-1 = N*M - 1
 struct PartiallyOrderedSet {
     llvm::SmallVector<Interval, 0> delta;
     size_t nVar;
