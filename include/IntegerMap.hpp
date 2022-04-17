@@ -3,6 +3,8 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/IR/Value.h>
+#include <llvm/IR/ValueMap.h>
 
 // IntegerMap imap;
 // imap.push(2); // adds mapping 2 -> 1
@@ -50,7 +52,7 @@ struct IntegerMap {
     }
 };
 struct ValueToPosetMap {
-    llvm::DenseMap<llvm::Value *, size_t> forward;
+    llvm::ValueMap<llvm::Value *, size_t> forward;
     llvm::SmallVector<llvm::Value *, 0> backward;
     size_t push(llvm::Value *i) {
         if (size_t j = forward.lookup(i)) {

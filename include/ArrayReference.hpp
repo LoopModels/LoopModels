@@ -292,6 +292,17 @@ struct ArrayReference {
     auto end() { return axes.end(); }
     auto begin() const { return axes.begin(); }
     auto end() const { return axes.end(); }
+    bool stridesMatch(const ArrayReference &x) const {
+	if (dim() != x.dim()){
+	    return false;
+	}
+	for (size_t i = 0; i < dim(); ++i){
+	    if (axes[i].stride != x.axes[i].stride){
+		return false;
+	    }
+	}
+	return true;
+    }
     friend std::ostream &operator<<(std::ostream &os,
                                     ArrayReference const &ar) {
         os << "ArrayReference " << ar.arrayID << " (dim = " << ar.axes.size()
