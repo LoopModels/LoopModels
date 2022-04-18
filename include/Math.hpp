@@ -221,6 +221,10 @@ struct VarID {
     IDType getID() const { return id & 0x3fffffff; }
     // IDType getID() const { return id & 0x3fff; }
     VarType getType() const { return static_cast<VarType>(id >> 30); }
+    std::pair<VarType,IDType> getTypeAndId() const {
+	return std::make_pair(getType(), getID());
+    }
+    bool isIndVar() { return getType() == VarType::LoopInductionVariable; }
     bool isLoopInductionVariable() const {
         return getType() == VarType::LoopInductionVariable;
     }

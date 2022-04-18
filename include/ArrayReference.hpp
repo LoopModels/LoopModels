@@ -69,7 +69,7 @@ struct Stride {
     //         MPoly p = (I->first) * (Polynomial::Monomial(I->second));
     // 	    ++I;
     // 	    for (; I != indices.end(); ++I){
-    // 		p += 
+    // 		p +=
     // 	    }
     //         return p;
     //     } else {
@@ -178,11 +178,22 @@ struct Stride {
     }
     Stride operator+(Stride &&x) const { return x += *this; }
     Stride operator-(Stride const &x) const {
-        Stride y = largerCapacityCopy(x.indices.size());
+	// don't increase capcity, in hopes of terms cancelling out.
+        // Stride y = largerCapacityCopy(x.indices.size());
+	Stride y = *this;
         y -= x;
         return y;
     }
-
+    Stride& negBang() {
+	for (auto ind : indices){
+	    ind.first.negate();
+	}
+	return *this;
+    }
+    Stride neg() const {
+	Stride y = *this;
+	return y.negBang();
+    }
     bool operator==(Stride const &x) const {
         return (stride == x.stride) && (indices == x.indices);
     }
