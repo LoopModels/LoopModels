@@ -63,7 +63,27 @@ struct Stride {
     inline size_t numIndices() const { return indices.size(); }
     auto &operator[](size_t i) { return indices[i]; }
     auto &operator[](size_t i) const { return indices[i]; }
-
+    // MPoly indToPoly() const {
+    //     if (indices.size()) {
+    //         auto I = indices.begin();
+    //         MPoly p = (I->first) * (Polynomial::Monomial(I->second));
+    // 	    ++I;
+    // 	    for (; I != indices.end(); ++I){
+    // 		p += 
+    // 	    }
+    //         return p;
+    //     } else {
+    //         return {};
+    //     }
+    // }
+    bool allConstantIndices() const {
+        for (auto &&ind : indices) {
+            if (!ind.first.isCompileTimeConstant()) {
+                return false;
+            }
+        }
+        return true;
+    }
     void addTyp(VarType t) {
         // Clang goes extremely overboard vectorizing loops with dynamic length
         // even if it should be statically inferrable that num iterations <= 4
@@ -199,7 +219,7 @@ std::ostream &operator<<(std::ostream &os, Stride const &axis) {
     }
     bool printPlus = false;
     for (auto &indvar : axis) {
-        auto& [mlt, var] = indvar;
+        auto &[mlt, var] = indvar;
         if (auto optc = mlt.getCompileTimeConstant()) {
             intptr_t c = optc.getValue();
             if (printPlus) {
@@ -292,16 +312,40 @@ struct ArrayReference {
     auto end() { return axes.end(); }
     auto begin() const { return axes.begin(); }
     auto end() const { return axes.end(); }
+    bool allConstantStrides() const {
+        for (auto &axis : axes) {
+            if (!axis.allConstantIndices()) {
+                return false;
+            }
+        }
+        return true;
+    }
     bool stridesMatch(const ArrayReference &x) const {
-	if (dim() != x.dim()){
-	    return false;
-	}
-	for (size_t i = 0; i < dim(); ++i){
-	    if (axes[i].stride != x.axes[i].stride){
-		return false;
-	    }
-	}
-	return true;
+        if (dim() != x.dim()) {
+            return false;
+        }
+        for (size_t i = 0; i < dim(); ++i) {
+            const Stride &ys = axes[i];
+            const Stride &xs = x.axes[i];
+            if (ys.stride != xs.stride) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool stridesMatchAllConstant(const ArrayReference &x) const {
+        if (dim() != x.dim()) {
+            return false;
+        }
+        for (size_t i = 0; i < dim(); ++i) {
+            const Stride &ys = axes[i];
+            const Stride &xs = x.axes[i];
+            if (!((ys.stride == xs.stride) && xs.allConstantIndices() &&
+                  ys.allConstantIndices())) {
+                return false;
+            }
+        }
+        return true;
     }
     friend std::ostream &operator<<(std::ostream &os,
                                     ArrayReference const &ar) {
