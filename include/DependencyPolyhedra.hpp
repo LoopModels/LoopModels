@@ -13,7 +13,9 @@
 #include <llvm/ADT/SmallVector.h>
 #include <utility>
 
-struct DependencePolyhedra {
+namespace Dependence {
+
+struct Polyhedra {
     //   DependencePolyhedra(aln0, aln1, ar0, ar1)
     //
     // dependence from aln0 (src) -> aln1 (tgt)
@@ -22,7 +24,7 @@ struct DependencePolyhedra {
     // Where x = [c_src, c_tgt, beta_src..., beta_tgt]
     // layout of constraints (based on Farkas equalities):
     // comp time constant, indVars0, indVars1, loop constants
-    DependencePolyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
+    Polyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
                         ArrayReference &ar0, ArrayReference &ar1) {
 
         const static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -33,19 +35,41 @@ struct DependencePolyhedra {
             maybeDims.getValue();
 
         llvm::DenseMap<Polynomial::Monomial, size_t> constantTerms;
-        for (auto &&bi : aln0.b) {
-            for (auto &&t : bi) {
+        for (auto &bi : aln0.b) {
+            for (auto &t : bi) {
                 if (!t.isCompileTimeConstant()) {
                     constantTerms.insert(
                         std::make_pair(t.exponent, constantTerms.size()));
                 }
             }
         }
-        for (auto &&bi : aln1.b) {
-            for (auto &&t : bi) {
+        for (auto &bi : aln1.b) {
+            for (auto &t : bi) {
                 if (!t.isCompileTimeConstant()) {
                     constantTerms.insert(
                         std::make_pair(t.exponent, constantTerms.size()));
+                }
+            }
+        }
+        for (auto &axis : ar0.axes) {
+            for (auto &ind : axis) {
+                auto [typ, id] = ind.second.getTypeAndId();
+                if (typ == VarType::Constant) {
+                    for (auto &t : ind.first) {
+                        constantTerms.insert(
+                            std::make_pair(t.exponent, constantTerms.size()));
+                    }
+                }
+            }
+        }
+        for (auto &axis : ar1.axes) {
+            for (auto &ind : axis) {
+                auto [typ, id] = ind.second.getTypeAndId();
+                if (typ == VarType::Constant) {
+                    for (auto &t : ind.first) {
+                        constantTerms.insert(
+                            std::make_pair(t.exponent, constantTerms.size()));
+                    }
                 }
             }
         }
@@ -57,7 +81,6 @@ struct DependencePolyhedra {
 
         // delinearized dependence constraints; we require dims match
         numLambda += dims.size();
-
         //
         const size_t numFarkasMatch =
             aln0.getNumVar() + aln1.getNumVar() + constantTerms.size() + 1;
@@ -77,20 +100,20 @@ struct DependencePolyhedra {
 
         // First, we insert the constant terms
         As(0, 0) = -1; // src
-        As(0, 0) = 1;  // src
+        As(0, 1) = 1;  // src
         As(1, 0) = 1;  // tgt
-        As(1, 0) = -1; // tgt
+        As(1, 1) = -1; // tgt
         // for source, coefs are negative, so -1 * 1 = -1
         for (size_t j = 0; j < aln0.getNumVar(); ++j) {
             // schedule coefficient
-            As(j + 2, (j << 1) + 1) = -1;
-            As(j + 2, (j << 1) + 2) = 1;
+            As(j + 2, (j << 1) + 2) = -1;
+            As(j + 2, (j << 1) + 3) = 1;
             // i corresponds to lambda
             // it is (b - A'i), so -1 * -1 = 1 for first
             for (size_t i = 0; i < aln0.getNumConstraints(); ++i) {
                 if (intptr_t Aji = aln0.A(j, i)) {
-                    As(numScheduleCoefs + 2 + i, (j << 1) + 1) = Aji;
-                    As(numScheduleCoefs + 2 + i, (j << 1) + 2) = -Aji;
+                    As(numScheduleCoefs + 2 + i, (j << 1) + 2) = Aji;
+                    As(numScheduleCoefs + 2 + i, (j << 1) + 3) = -Aji;
                 }
             }
         }
@@ -99,13 +122,13 @@ struct DependencePolyhedra {
                 for (auto &t : aln0.b[i]) {
                     if (auto c = t.getCompileTimeConstant()) {
                         As(numScheduleCoefs + 2 + i, 0) = -c.getValue();
-                        As(numScheduleCoefs + 2 + i, 0) = c.getValue();
+                        As(numScheduleCoefs + 2 + i, 1) = c.getValue();
                     } else {
                         size_t j = constantTerms[t.exponent];
-                        As(numScheduleCoefs + 2 + i, j + numLoopConstraints) =
-                            -t.coefficient;
-                        As(numScheduleCoefs + 2 + i, j + numLoopConstraints) =
-                            t.coefficient;
+                        As(numScheduleCoefs + 2 + i,
+                           j + 2 + numLoopConstraints) = -t.coefficient;
+                        As(numScheduleCoefs + 2 + i,
+                           j + 3 + numLoopConstraints) = t.coefficient;
                     }
                 }
             }
@@ -114,13 +137,13 @@ struct DependencePolyhedra {
         // for target, coefs are positive, so 1 * 1 = 1
         for (size_t _j = 0; _j < aln1.getNumVar(); ++_j) {
             size_t j = _j + aln0.getNumVar();
-            As(j + 2, (j << 1) + 1) = 1;
-            As(j + 2, (j << 1) + 2) = -1;
+            As(j + 2, (j << 1) + 2) = 1;
+            As(j + 2, (j << 1) + 3) = -1;
             for (size_t i = 0; i < aln1.getNumConstraints(); ++i) {
                 if (intptr_t Aji = aln1.A(j, i)) {
                     size_t var = iOff + i;
-                    As(var, (j << 1) + 1) = Aji;
-                    As(var, (j << 1) + 2) = -Aji;
+                    As(var, (j << 1) + 2) = Aji;
+                    As(var, (j << 1) + 3) = -Aji;
                 }
             }
         }
@@ -128,12 +151,14 @@ struct DependencePolyhedra {
             if (!isZero(aln1.b[i])) {
                 for (auto &t : aln1.b[i]) {
                     if (auto c = t.getCompileTimeConstant()) {
-                        As(numScheduleCoefs + 2 + i, 0) = -c.getValue();
-                        As(numScheduleCoefs + 2 + i, 0) = c.getValue();
+                        As(iOff + i, 0) = -c.getValue();
+                        As(iOff + i, 1) = c.getValue();
                     } else {
                         size_t j = constantTerms[t.exponent];
-                        As(iOff + i, j + numLoopConstraints) = -t.coefficient;
-                        As(iOff + i, j + numLoopConstraints) = t.coefficient;
+                        As(iOff + i, j + 2 + numLoopConstraints) =
+                            -t.coefficient;
+                        As(iOff + i, j + 3 + numLoopConstraints) =
+                            t.coefficient;
                     }
                 }
             }
@@ -167,18 +192,38 @@ struct DependencePolyhedra {
             // now we add delta >= 0 and -delta >= 0
             for (auto &ind : delta) {
                 auto &[coef, var] = ind;
-                auto [t, id] = var.getTypeAndId();
-                switch (t) {
+                auto [typ, id] = var.getTypeAndId();
+                switch (typ) {
                 case VarType::LoopInductionVariable:
                     // need this to be a compile time constant
                     // TODO: handle the case gracefully where it isn't!!!
-                    intptr_t c = coef.getCompileTimeConstant().getValue();
-                    // id gives the loop, which yields the Farkas constraint it
-                    // contributed to, i.e. the column of `As` to store into.
-		    // `i`, the dim number, yields the associated labmda.
-                    As(i+eqConstraintOffset, id+1) = c;
-                    As(i+eqConstraintOffset, id+2) = -c;
+                    { // limit scope of `c`
+                        intptr_t c = coef.getCompileTimeConstant().getValue();
+                        // id gives the loop, which yields the Farkas constraint
+                        // it contributed to, i.e. the column of `As` to store
+                        // into. `i`, the dim number, yields the associated
+                        // labmda.
+                        As(i + eqConstraintOffset, id + 2) = c;
+                        As(i + eqConstraintOffset, id + 3) = -c;
+                    }
                     break;
+                case VarType::Constant: {
+		    for (auto &t : coef){
+                        if (auto c = t.getCompileTimeConstant()) {
+                            As(i + eqConstraintOffset, 0) = -c.getValue();
+                            As(i + eqConstraintOffset, 1) = c.getValue();
+                        } else {
+                            size_t j = constantTerms[t.exponent];
+                            As(i + eqConstraintOffset, j + 2 + numLoopConstraints) =
+                                -t.coefficient;
+                            As(i + eqConstraintOffset, j + 3 + numLoopConstraints) =
+                                t.coefficient;
+                        }
+                    }
+                }
+                default:
+                    // break;
+                    assert(false);
                 }
             }
         }
@@ -237,3 +282,21 @@ struct DependencePolyhedra {
         return {};
     }
 };
+
+bool check(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
+           const ArrayReference &ar0, const ArrayReference &ar1) {
+
+    // TODO: two steps:
+    // 1: gcd test
+    // 2: check polyhedra volume
+    // step 1
+
+
+    // step 2
+    const static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
+	maybeDims = Polyhedra::matchingStrideConstraintPairs(aln0, aln1, ar0, ar1);
+    
+    
+    return true;
+}
+}
