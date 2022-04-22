@@ -241,6 +241,11 @@ template <class T, typename P> struct AbstractPolyhedra {
 
         appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
     }
+    void pruneBounds(){
+	for (size_t i = 0; i < getNumConstraints(); ++i){
+	    pruneBounds(A, b, i);
+	}
+    }
     // removes bounds on `i` that are redundant.
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
                      const size_t i) const {
@@ -603,6 +608,35 @@ template <class T, typename P> struct AbstractPolyhedra {
         return os;
     }
     void dump() const { std::cout << *this; }
+
+    bool constraintAllZero(size_t i){
+	for (size_t j = 0; j < getNumVar(); ++j){
+	    if (A(j,i)) return false;
+	}
+	return true;
+    }
+    bool hasEmptyConstraint(){
+	// A'x <= b
+	for (size_t i = 0; i < getNumConstraints(); ++i){
+	    if (constraintAllZero(i) && knownGreaterEqualZero(-1 - b[i])){
+		// if b < 0
+		return true;
+	    }
+	}
+	return false;
+    }
+    bool isEmpty(){
+	// inefficient (compared to ILP + Farkas Lemma approach)
+	auto copy = *this;
+	for (size_t i = 0; i < getNumVar(); ++i){
+	    copy.removeVariable(copy.A, copy.b, i);
+	    if (copy.hasEmptyConstraint()){
+		return true;
+	    }
+	}
+	return false;
+    }
+    
 };
 
 struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, intptr_t> {
