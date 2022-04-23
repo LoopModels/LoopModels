@@ -693,9 +693,9 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
         assert(i < M);
         assert(j < N);
 #endif
-	std::cout << "(i,j) = (" << i << ", " << j << "); Aold.size() = ( " << M << ", " << N << " )" << std::endl;
-	std::cout << "Linear index = " << i + j * M << std::endl;
-	std::cout << "data.size() = " << data.size() << std::endl;
+	// std::cout << "(i,j) = (" << i << ", " << j << "); Aold.size() = ( " << M << ", " << N << " )" << std::endl;
+	// std::cout << "Linear index = " << i + j * M << std::endl;
+	// std::cout << "data.size() = " << data.size() << std::endl;
         return data[i + j * M];
     }
     T &operator[](size_t i) { return data[i]; }

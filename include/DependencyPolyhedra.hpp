@@ -48,8 +48,8 @@ matchingStrideConstraintPairs(const AffineLoopNest &aln0,
     return {};
 }
 
-static bool check(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
-                  const ArrayReference &ar0, const ArrayReference &ar1) {
+bool check(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
+           const ArrayReference &ar0, const ArrayReference &ar1) {
 
     // TODO: two steps:
     // 1: gcd test
@@ -71,8 +71,10 @@ static bool check(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
 // Where x = [c_src, c_tgt, beta_src..., beta_tgt]
 // layout of constraints (based on Farkas equalities):
 // comp time constant, indVars0, indVars1, loop constants
-SymbolicPolyhedra polyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
-                             ArrayReference &ar0, ArrayReference &ar1) {
+SymbolicPolyhedra polyhedra(const AffineLoopNest &aln0,
+                            const AffineLoopNest &aln1,
+                            const ArrayReference &ar0,
+                            const ArrayReference &ar1) {
 
     const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>> maybeDims =
         matchingStrideConstraintPairs(aln0, aln1, ar0, ar1);
@@ -144,6 +146,7 @@ SymbolicPolyhedra polyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
                 break;
             case VarType::Constant: {
                 bound += coef;
+		break;
             }
             default:
                 // break;
@@ -156,9 +159,13 @@ SymbolicPolyhedra polyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
     SymbolicPolyhedra poly = SymbolicPolyhedra(A, b, aln0.poset);
     poly.pruneBounds();
     return poly;
+}
+
+IntegerPolyhedra farkasScheduleDifference(SymbolicPolyhedra &s, intptr_t subInd,
+                                          bool boundAbove) {
 
     llvm::DenseMap<Polynomial::Monomial, size_t> constantTerms;
-    for (auto &bi : aln0.b) {
+    for (auto &bi : s.b) {
         for (auto &t : bi) {
             if (!t.isCompileTimeConstant()) {
                 constantTerms.insert(
@@ -166,208 +173,93 @@ SymbolicPolyhedra polyhedra(AffineLoopNest &aln0, AffineLoopNest &aln1,
             }
         }
     }
-    for (auto &bi : aln1.b) {
-        for (auto &t : bi) {
-            if (!t.isCompileTimeConstant()) {
-                constantTerms.insert(
-                    std::make_pair(t.exponent, constantTerms.size()));
-            }
-        }
-    }
-    for (auto &axis : ar0.axes) {
-        for (auto &ind : axis) {
-            auto [typ, id] = ind.second.getTypeAndId();
-            if (typ == VarType::Constant) {
-                for (auto &t : ind.first) {
-                    constantTerms.insert(
-                        std::make_pair(t.exponent, constantTerms.size()));
-                }
-            }
-        }
-    }
-    for (auto &axis : ar1.axes) {
-        for (auto &ind : axis) {
-            auto [typ, id] = ind.second.getTypeAndId();
-            if (typ == VarType::Constant) {
-                for (auto &t : ind.first) {
-                    constantTerms.insert(
-                        std::make_pair(t.exponent, constantTerms.size()));
-                }
-            }
-        }
-    }
-    // one lambda per constraint
-    const size_t numLoopConstraints =
-        aln0.getNumConstraints() + aln1.getNumConstraints();
-    size_t numLambda = numLoopConstraints + 1;
-    // if dims do not match, we flatten and add a linearized constraint.
+    auto [numVarOld, numContraintsOld] = s.A.size();
+    // delta + 1 coef per
+    size_t numScheduleCoefs = 1 + numVarOld;
+    size_t numLambda = 1 + numContraintsOld;
+    size_t numConstantTerms = constantTerms.size();
+    size_t numBoundingCoefs = boundAbove ? 1 + numConstantTerms : 0;
+    // var order
+    size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
+    size_t numVarNew = numVarKeep + numLambda;
+    // constraint order
+    size_t numNonLambdaConstraint =
+        2 * (1 + numVarOld + numConstantTerms) + numBoundingCoefs;
+    size_t numConstraintsNew = numNonLambdaConstraint + numLambda;
 
-    // delinearized dependence constraints; we require dims match
-    numLambda += dims.size();
-    //
-    const size_t numFarkasMatch =
-        aln0.getNumVar() + aln1.getNumVar() + constantTerms.size() + 1;
+    Matrix<intptr_t, 0, 0, 0> A(numVarNew, numConstraintsNew);
+    llvm::SmallVector<intptr_t, 8> b(numConstraintsNew);
 
-    const size_t numScheduleCoefs = aln0.getNumVar() + aln1.getNumVar() + 2;
-    // const size_t numDistanceCostVars =
-    //     numScheduleCoefs + constantTerms.size();
-
-    Matrix<intptr_t, 0, 0, 0> As(
-        numScheduleCoefs, 2 * numFarkasMatch + 2 * dims.size() + numLambda);
-    llvm::SmallVector<intptr_t, 8> bs;
-    bs.reserve(2 * numFarkasMatch + numLambda);
-    // we add a lot of equality constraints
-    // we add them in positive-negative pairs
-    // (0):  1*coef, -1 * lambda
-    // (1): -1*coef,  1 * lambda
-
-    // First, we insert the constant terms
-    As(0, 0) = -1; // src
-    As(0, 1) = 1;  // src
-    As(1, 0) = 1;  // tgt
-    As(1, 1) = -1; // tgt
-    // for source, coefs are negative, so -1 * 1 = -1
-    for (size_t j = 0; j < aln0.getNumVar(); ++j) {
-        // schedule coefficient
-        As(j + 2, (j << 1) + 2) = -1;
-        As(j + 2, (j << 1) + 3) = 1;
-        // i corresponds to lambda
-        // it is (b - A'i), so -1 * -1 = 1 for first
-        for (size_t i = 0; i < aln0.getNumConstraints(); ++i) {
-            if (intptr_t Aji = aln0.A(j, i)) {
-                As(numScheduleCoefs + 2 + i, (j << 1) + 2) = Aji;
-                As(numScheduleCoefs + 2 + i, (j << 1) + 3) = -Aji;
+    // lambda_0 + lambda' * (b - A*i) == psi
+    // we represent equal constraint as
+    // lambda_0 + lambda' * (b - A*i) - psi <= 0
+    // -lambda_0 - lambda' * (b - A*i) + psi <= 0
+    for (size_t c = 0; c < numContraintsOld; ++c) {
+        size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c;
+        for (size_t v = 0; v < numVarOld; ++v) {
+            A(lambdaInd, 2 + (v << 1)) = -s.A(v, c);
+            A(lambdaInd, 3 + (v << 1)) = s.A(v, c);
+        }
+        for (auto &t : s.b[c]) {
+            if (auto c = t.getCompileTimeConstant()) {
+                A(lambdaInd, 0) = c.getValue();
+                A(lambdaInd, 1) = -c.getValue();
+            } else {
+                size_t constraintInd =
+                    2 * (constantTerms[t.exponent] + numVarOld + 1);
+                A(lambdaInd, constraintInd) = t.coefficient;
+                A(lambdaInd, constraintInd + 1) = -t.coefficient;
             }
         }
     }
-    for (size_t i = 0; i < aln0.b.size(); ++i) {
-        if (!isZero(aln0.b[i])) {
-            for (auto &t : aln0.b[i]) {
-                if (auto c = t.getCompileTimeConstant()) {
-                    As(numScheduleCoefs + 2 + i, 0) = -c.getValue();
-                    As(numScheduleCoefs + 2 + i, 1) = c.getValue();
-                } else {
-                    size_t j = constantTerms[t.exponent];
-                    As(numScheduleCoefs + 2 + i, j + 2 + numLoopConstraints) =
-                        -t.coefficient;
-                    As(numScheduleCoefs + 2 + i, j + 3 + numLoopConstraints) =
-                        t.coefficient;
-                }
-            }
+    // schedule
+    // if subInd > 0,
+    // [subInd...numVar) - [0...subInd)
+    // else
+    // [0...-subInd) - [-subInd...numVar)
+    // aka, we have
+    // if subInd > 0
+    // lambda_0 + lambda' * (b - A*i) + [0...-subInd) - [-subInd...numVar) <= 0
+    // -lambda_0 - lambda' * (b - A*i) + [subInd...numVar) - [0...subInd) <= 0
+    // else
+    // lambda_0 + lambda' * (b - A*i) - [0...-subInd) + [-subInd...numVar) <= 0
+    // -lambda_0 - lambda' * (b - A*i) - [subInd...numVar) + [0...subInd) <= 0
+    intptr_t sign = 2 * (subInd > 0) - 1;
+    size_t absSubInd = std::abs(subInd);
+    for (size_t i = 0; i < numVarOld; ++i) {
+        intptr_t s = (2 * (i < absSubInd) - 1) * sign;
+        A(i, 2 + 2 * i) = s;
+        A(i, 2 + 2 * i) = -s;
+    }
+    // boundAbove
+    if (boundAbove) {
+        // note we'll generally call this function twice, first with
+        // 1. `subInd, boundAbove = false`
+        // 2. `-subInd, boundAbove = true`
+        // boundAbove means we have
+        // ... == w + u'*N + psi
+        for (size_t i = 0; i < numConstantTerms; ++i) {
+            size_t constraintInd = 2 * (i + numVarOld + 1);
+            A(i + numScheduleCoefs, constraintInd) = -1;
+            A(i + numScheduleCoefs, constraintInd + 1) = 1;
         }
     }
-    size_t iOff = numScheduleCoefs + 2 + aln0.getNumConstraints();
-    // for target, coefs are positive, so 1 * 1 = 1
-    for (size_t _j = 0; _j < aln1.getNumVar(); ++_j) {
-        size_t j = _j + aln0.getNumVar();
-        As(j + 2, (j << 1) + 2) = 1;
-        As(j + 2, (j << 1) + 3) = -1;
-        for (size_t i = 0; i < aln1.getNumConstraints(); ++i) {
-            if (intptr_t Aji = aln1.A(j, i)) {
-                size_t var = iOff + i;
-                As(var, (j << 1) + 2) = Aji;
-                As(var, (j << 1) + 3) = -Aji;
-            }
+    // all lambda > 0
+    for (size_t i = 0; i < numLambda; ++i) {
+        A(numVarKeep + i, numNonLambdaConstraint + i) = -1;
+    }
+    IntegerPolyhedra ipoly(std::move(A), std::move(b));
+    // remove lambdas
+    for (size_t i = numVarKeep; i < numVarNew; ++i) {
+        ipoly.removeVariable(i);
+    }
+    Matrix<intptr_t, 0, 0, 0> As(numVarKeep, ipoly.getNumConstraints());
+    for (size_t c = 0; c < ipoly.getNumConstraints(); ++c) {
+        for (size_t v = 0; v < numVarKeep; ++v) {
+            As(v, c) = ipoly.A(v, c);
         }
     }
-    for (size_t i = 0; i < aln1.b.size(); ++i) {
-        if (!isZero(aln1.b[i])) {
-            for (auto &t : aln1.b[i]) {
-                if (auto c = t.getCompileTimeConstant()) {
-                    As(iOff + i, 0) = -c.getValue();
-                    As(iOff + i, 1) = c.getValue();
-                } else {
-                    size_t j = constantTerms[t.exponent];
-                    As(iOff + i, j + 2 + numLoopConstraints) = -t.coefficient;
-                    As(iOff + i, j + 3 + numLoopConstraints) = t.coefficient;
-                }
-            }
-        }
-    }
-    size_t eqConstraintOffset = iOff + aln1.getNumConstraints();
-    // now, insert the constraints corresponding to the matching axes
-    for (size_t i = 0; i < dims.size(); ++i) {
-        auto [d0, d1] = dims[i];
-        Stride delta;
-        if (d0 < 0) {
-            delta = ar1.axes[d1];
-        } else if (d1 < 0) {
-            delta = ar0.axes[d0];
-        } else {
-            // TODO: check if strides match
-            // or perhaps, edit `matchingStrideConstraintPairs` so that
-            // it mutates the reference into matching strides?
-            // but, then how to represent?
-            // Probably simpler to always have `VarType::Constant`
-            // correspond to `1` and then do a gcd/div on strides here.
-            delta = ar1.axes[d1];
-            // offset all loop indvars for ar1
-            for (auto &&ind : delta) {
-                auto &[coef, var] = ind;
-                if (var.isIndVar()) {
-                    var.id += aln0.getNumVar();
-                }
-            }
-            delta -= ar0.axes[d0];
-        }
-        // now we add delta >= 0 and -delta >= 0
-        for (auto &ind : delta) {
-            auto &[coef, var] = ind;
-            auto [typ, id] = var.getTypeAndId();
-            switch (typ) {
-            case VarType::LoopInductionVariable:
-                // need this to be a compile time constant
-                // TODO: handle the case gracefully where it isn't!!!
-                { // limit scope of `c`
-                    intptr_t c = coef.getCompileTimeConstant().getValue();
-                    // id gives the loop, which yields the Farkas constraint
-                    // it contributed to, i.e. the column of `As` to store
-                    // into. `i`, the dim number, yields the associated
-                    // labmda.
-                    As(i + eqConstraintOffset, id + 2) = c;
-                    As(i + eqConstraintOffset, id + 3) = -c;
-                }
-                break;
-            case VarType::Constant: {
-                for (auto &t : coef) {
-                    if (auto c = t.getCompileTimeConstant()) {
-                        As(i + eqConstraintOffset, 0) = -c.getValue();
-                        As(i + eqConstraintOffset, 1) = c.getValue();
-                    } else {
-                        size_t j = constantTerms[t.exponent];
-                        As(i + eqConstraintOffset, j + 2 + numLoopConstraints) =
-                            -t.coefficient;
-                        As(i + eqConstraintOffset, j + 3 + numLoopConstraints) =
-                            t.coefficient;
-                    }
-                }
-            }
-            default:
-                // break;
-                assert(false);
-            }
-        }
-    }
-    // 	Stride &arx = ar0.axes[d0];
-    // 	Stride &ary = ar1.axes[d1];
-    // 	for (auto &ind : arx.indices){
-    // 	    auto& [coef, var] = ind;
-    // 	    auto [t, id] = var.getTypeAndId();
-    // 	    switch (t) {
-    // 	    case VarType::LoopInductionVariable:
-    // 		A(id, eqConstraintOffset + (i<<1));
-    // 		A(id, eqConstraintOffset + (i<<1) + 1);
-    // 		break;
-    // 	    case VarType::Constant:
-    // 		break;
-    // 	    default:
-    // 		assert("not yet supported");
-    // 	    }
-    // }
-
-    // A(, eqConstraintOffset + (i<<1));
-    // A(, eqConstraintOffset + (i<<1) + 1);
-    // arx == ary
+    return IntegerPolyhedra(std::move(As), std::move(ipoly.b));
 }
 
 } // namespace Dependence

@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "llvm/ADT/APInt.h" // for DenseMapInfo
 #include "llvm/ADT/Optional.h"
 #include <algorithm>
 #include <bit>
@@ -3486,3 +3487,30 @@ std::forward<T>(x)); }
     }
 };
 */
+
+template<> struct llvm::DenseMapInfo<Polynomial::Monomial,void>{
+    static inline Polynomial::Monomial getEmptyKey() {
+	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
+	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
+	    prodIDs[i] = VarID(0x3fffffff);
+	}
+	return Polynomial::Monomial(std::move(prodIDs));	
+    }
+    static inline Polynomial::Monomial getTombstoneKey() {
+	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
+	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
+	    prodIDs[i] = VarID(0x7fffffff);
+	}
+	return Polynomial::Monomial(std::move(prodIDs));
+    }
+    static unsigned getHashValue(const Polynomial::Monomial &x){
+	unsigned seed = x.prodIDs.size();
+	for(auto& i : x.prodIDs) {
+	    seed ^= i.id + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+	return seed;
+    }
+    static bool isEqual(const Polynomial::Monomial &lhs, const Polynomial::Monomial &rhs){
+	return lhs == rhs;
+    }
+};

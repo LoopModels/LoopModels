@@ -52,7 +52,8 @@ struct IntegerMap {
     }
 };
 struct ValueToPosetMap {
-    llvm::ValueMap<llvm::Value *, size_t> forward;
+    // llvm::ValueMap<llvm::Value *, size_t> forward;
+    llvm::DenseMap<llvm::Value *, size_t> forward;
     llvm::SmallVector<llvm::Value *, 0> backward;
     size_t push(llvm::Value *i) {
         if (size_t j = forward.lookup(i)) {

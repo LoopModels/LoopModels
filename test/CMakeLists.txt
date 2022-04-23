@@ -113,6 +113,16 @@ target_link_libraries(
   LLVM
 )
 
+add_executable(
+  dependence_test
+  dependence_test.cpp
+)
+target_link_libraries(
+  dependence_test
+  gtest_main
+  LLVM
+)
+
 include(GoogleTest)
 gtest_discover_tests(compat_test)
 # gtest_discover_tests(perm_test)
@@ -123,3 +133,4 @@ gtest_discover_tests(linear_diophantine_test)
 gtest_discover_tests(normal_form_test)
 gtest_discover_tests(linear_algebra_test)
 gtest_discover_tests(orthogonalize_test)
+gtest_discover_tests(dependence_test)

@@ -13,8 +13,8 @@ template <class T, typename P> struct AbstractPolyhedra {
     llvm::SmallVector<P, 8> b;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> lowerb;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 1>, 0> upperb;
+    llvm::SmallVector<llvm::SmallVector<P, 1>, 0> lowerb;
+    llvm::SmallVector<llvm::SmallVector<P, 1>, 0> upperb;
 
     AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
                       const llvm::SmallVector<P, 8> b)
@@ -294,8 +294,8 @@ template <class T, typename P> struct AbstractPolyhedra {
             const size_t totalCol = numCol + 2 * numAuxiliaryVar;
             Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
             Matrix<intptr_t, 0, 0, 128> ANew;
-            llvm::SmallVector<MPoly, 16> bOld(totalCol);
-            llvm::SmallVector<MPoly, 16> bNew;
+            llvm::SmallVector<P, 16> bOld(totalCol);
+            llvm::SmallVector<P, 16> bNew;
             // simple mapping of `k` to particular bounds
             llvm::SmallVector<std::pair<unsigned, unsigned>, 16> boundDiffPairs;
             boundDiffPairs.reserve(numAuxiliaryVar);
@@ -371,7 +371,7 @@ template <class T, typename P> struct AbstractPolyhedra {
                                 AOld(l, c) = Alc;
                                 AOld(l, c + 1) = -Alc;
                             }
-                            MPoly delta = absAij * bold[d];
+                            P delta = absAij * bold[d];
                             Polynomial::fnmadd(delta, bOld[j], absAid);
                             bOld[c] = -delta;
                             bOld[c + 1] = std::move(delta);
@@ -465,7 +465,7 @@ template <class T, typename P> struct AbstractPolyhedra {
                     for (size_t k = j + 1; k < numCol; ++k) {
                         intptr_t Aik = Aold(i, k);
                         if ((Aik != 0) & ((Aik > 0) == (Aij > 0))) {
-                            MPoly delta = bold[k] * std::abs(Aij);
+                            P delta = bold[k] * std::abs(Aij);
                             Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
                             // delta = k - j
 
@@ -482,7 +482,7 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
     void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A,
-                      llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+                      llvm::SmallVectorImpl<P> &b, size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
         for (size_t j = 0; j < b.size(); ++j) {
             if (A(i, j)) {
@@ -503,8 +503,11 @@ template <class T, typename P> struct AbstractPolyhedra {
         deleteBounds(A, b, i);
         appendBounds(A, b, i);
     }
+    void removeVariable(const size_t i){
+	removeVariable(A, b, i);
+    }
     static void erasePossibleNonUniqueElements(
-        Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<MPoly> &b,
+        Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
         llvm::SmallVectorImpl<unsigned> &rowsToErase) {
         std::ranges::sort(rowsToErase);
         for (auto it = std::unique(rowsToErase.begin(), rowsToErase.end());
