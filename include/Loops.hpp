@@ -845,4 +845,5 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         }
         return os;
     }
+    void dump() const { std::cout << *this; }
 };
