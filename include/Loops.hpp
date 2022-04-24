@@ -483,6 +483,10 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
     Permutation perm; // maps current to orig
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
+    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
+    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> lowerb;
+    llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> upperb;
 
     bool knownLessEqualZeroImpl(MPoly x) const {
         return poset.knownLessEqualZero(std::move(x));
@@ -493,11 +497,13 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
     intptr_t currentToOriginalPermImpl(size_t i) const { return perm(i); }
 
     size_t getNumLoops() const { return getNumVar(); }
-    AffineLoopNest(Matrix<intptr_t, 0, 0, 0> Ain, llvm::SmallVector<MPoly, 8> bin,
-                   PartiallyOrderedSet posetin)
-        : AbstractPolyhedra<AffineLoopNest, MPoly>(std::move(Ain), std::move(bin)),
+    AffineLoopNest(Matrix<intptr_t, 0, 0, 0> Ain,
+                   llvm::SmallVector<MPoly, 8> bin, PartiallyOrderedSet posetin)
+        : AbstractPolyhedra<AffineLoopNest, MPoly>(std::move(Ain),
+                                                   std::move(bin)),
           poset(std::move(posetin)), perm(A.size(0)), remainingA(A.size(0)),
-          remainingB(A.size(0)) {
+          remainingB(A.size(0)), lowerA(A.size(0)), upperA(A.size(0)),
+          lowerb(A.size(0)), upperb(A.size(0)) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
         remainingA[i - 1] = A;
@@ -505,6 +511,17 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         do {
             calculateBounds(--i);
         } while (i);
+    }
+    void appendBoundsCache(Matrix<intptr_t, 0, 0, 0> &A,
+                           llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+
+        appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
+    }
+    void categorizeBoundsCache(const Matrix<intptr_t, 0, 0, 0> &A,
+                               const llvm::SmallVectorImpl<MPoly> &b,
+                               size_t i) {
+
+        categorizeBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
     }
 
     void swap(size_t _i, size_t _j) {
@@ -524,9 +541,9 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
             Matrix<intptr_t, 0, 0, 0> Aold = remainingA[0];
             llvm::SmallVector<MPoly, 8> bold = remainingB[0];
             pruneBounds(Aold, bold, i, numNeg, numPos);
-            categorizeBounds(Aold, bold, i);
+            categorizeBoundsCache(Aold, bold, i);
         } else {
-            categorizeBounds(remainingA[0], remainingB[0], i);
+            categorizeBoundsCache(remainingA[0], remainingB[0], i);
             return;
         }
     }
@@ -541,7 +558,8 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
         auto &Aold = remainingA[_i - 1];
         remainingB[_i - 1] = remainingB[_i];
         auto &bold = remainingB[_i - 1];
-        removeVariable(Aold, bold, i);
+        removeVariable(lowerA[i], upperA[i], lowerb[i], upperb[i], Aold, bold,
+                       i);
     }
     // returns true if extending (extendLower ? lower : upper) bound of `_i`th
     // loop by `extend` doesn't result in the innermost loop experiencing any
@@ -739,5 +757,92 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
             ++_j;
         } while (_j != numLoops);
         return false;
+    }
+
+    void printLowerBound(std::ostream &os, size_t i) const {
+        auto &lA = lowerA[i];
+        auto &lb = lowerb[i];
+        for (size_t j = 0; j < lb.size(); ++j) {
+            if (lA(i, j) == -1) {
+                os << "i_" << i << " >= ";
+            } else {
+                os << -lA(i, j) << "*i_" << i << " >= ";
+            }
+            bool printed = !isZero(lb[j]);
+            if (printed) {
+                os << -lb[j];
+            }
+            for (size_t k = 0; k < getNumVar(); ++k) {
+                if (k == i) {
+                    continue;
+                }
+                if (intptr_t lakj = lA(k, j)) {
+                    if (lakj < 0) {
+                        os << " - ";
+                    } else if (printed) {
+                        os << " + ";
+                    }
+                    lakj = std::abs(lakj);
+                    if (lakj != 1) {
+                        os << lakj << "*";
+                    }
+                    os << "i_" << k;
+                    printed = true;
+                }
+            }
+            if (!printed) {
+                os << 0;
+            }
+            os << std::endl;
+        }
+    }
+    void printUpperBound(std::ostream &os, size_t i) const {
+        auto &uA = upperA[i];
+        auto &ub = upperb[i];
+        for (size_t j = 0; j < ub.size(); ++j) {
+            if (uA(i, j) == 1) {
+                os << "i_" << i << " <= ";
+            } else {
+                os << uA(i, j) << "*i_" << i << " <= ";
+            }
+            bool printed = (!isZero(ub[j]));
+            if (printed) {
+                os << ub[j];
+            }
+            for (size_t k = 0; k < getNumVar(); ++k) {
+                if (k == i) {
+                    continue;
+                }
+                if (intptr_t uakj = uA(k, j)) {
+                    if (uakj > 0) {
+                        os << " - ";
+                    } else if (printed) {
+                        os << " + ";
+                    }
+                    uakj = std::abs(uakj);
+                    if (uakj != 1) {
+                        os << uakj << "*";
+                    }
+                    os << "i_" << k;
+                    printed = true;
+                }
+            }
+            if (!printed) {
+                os << 0;
+            }
+            os << std::endl;
+        }
+    }
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const AffineLoopNest &alnb) {
+        const size_t numLoops = alnb.getNumVar();
+        for (size_t _i = 0; _i < numLoops; ++_i) {
+            os << "Variable " << _i << " lower bounds: " << std::endl;
+            size_t i = alnb.currentToOriginalPerm(_i);
+            alnb.printLowerBound(os, i);
+            os << "Variable " << _i << " upper bounds: " << std::endl;
+            alnb.printUpperBound(os, i);
+        }
+        return os;
     }
 };

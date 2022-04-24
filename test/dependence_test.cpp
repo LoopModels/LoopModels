@@ -62,18 +62,18 @@ TEST(DependenceTest, BasicAssertions) {
     AaxesTgt0.emplace_back(1, ip1);
     AaxesTgt0.emplace_back(I, j);
     ArrayReference Atgt0(0, AaxesTgt0); //, axes, indTo
-    std::cout << "AaxesTgt0 = " << Atgt0 << std::endl;
+    std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
 
     // A[i, j+1]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt1;
     AaxesTgt1.emplace_back(1, i);
     AaxesTgt1.emplace_back(I, jp1);
     ArrayReference Atgt1(0, AaxesTgt1); //, axes, indTo
-    std::cout << "AaxesTgt1 = " << Atgt1 << std::endl;
+    std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
     SymbolicPolyhedra dep0(Dependence::polyhedra(loop, loop, Asrc, Atgt0));
-    std::cout << "Dep0 = " << dep0 << std::endl;
+    std::cout << "Dep0 = \n" << dep0 << std::endl;
     SymbolicPolyhedra dep1(Dependence::polyhedra(loop, loop, Asrc, Atgt1));
-    std::cout << "Dep1 = " << dep1 << std::endl;
+    std::cout << "Dep1 = \n" << dep1 << std::endl;
     
 }

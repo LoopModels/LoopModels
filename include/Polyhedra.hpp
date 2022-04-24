@@ -4,6 +4,7 @@
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
 #include <cstdint>
+#include <llvm/ADT/SmallVector.h>
 
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
@@ -11,15 +12,14 @@
 template <class T, typename P> struct AbstractPolyhedra {
     Matrix<intptr_t, 0, 0, 0> A;
     llvm::SmallVector<P, 8> b;
-    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
-    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
-    llvm::SmallVector<llvm::SmallVector<P, 1>, 0> lowerb;
-    llvm::SmallVector<llvm::SmallVector<P, 1>, 0> upperb;
 
+    // AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
+    //                   const llvm::SmallVector<P, 8> b)
+    //     : A(std::move(A)), b(std::move(b)), lowerA(A.size(0)),
+    //       upperA(A.size(0)), lowerb(A.size(0)), upperb(A.size(0)){};
     AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
                       const llvm::SmallVector<P, 8> b)
-        : A(std::move(A)), b(std::move(b)), lowerA(A.size(0)),
-          upperA(A.size(0)), lowerb(A.size(0)), upperb(A.size(0)){};
+        : A(std::move(A)), b(std::move(b)){};
 
     size_t getNumVar() const { return A.size(0); }
     size_t getNumConstraints() const { return A.size(1); }
@@ -201,11 +201,6 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
 
-    void categorizeBounds(const Matrix<intptr_t, 0, 0, 0> &A,
-                          const llvm::SmallVectorImpl<P> &b, size_t i) {
-
-        categorizeBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
-    }
     static void appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
                              const Matrix<intptr_t, 0, 0, 0> &uA,
                              const llvm::SmallVectorImpl<P> &lB,
@@ -236,15 +231,11 @@ template <class T, typename P> struct AbstractPolyhedra {
         A.resize(numLoops, c);
         b.resize(c);
     }
-    void appendBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
-                      size_t i) {
 
-        appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
-    }
-    void pruneBounds(){
-	for (size_t i = 0; i < getNumConstraints(); ++i){
-	    pruneBounds(A, b, i);
-	}
+    void pruneBounds() {
+        for (size_t i = 0; i < getNumConstraints(); ++i) {
+            pruneBounds(A, b, i);
+        }
     }
     // removes bounds on `i` that are redundant.
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
@@ -280,13 +271,13 @@ template <class T, typename P> struct AbstractPolyhedra {
                 }
             }
         }
-	// we may have
-	// i <= j
-	// i <= N // redundant
-	// j <= M
-	// poset has: M <= N
-	// so i <= j <= M <= N
-	// renders i <= N redundant
+        // we may have
+        // i <= j
+        // i <= N // redundant
+        // j <= M
+        // poset has: M <= N
+        // so i <= j <= M <= N
+        // renders i <= N redundant
         if (dependencyToEliminate >= 0) {
             // hopefully stack allocate scratch space
             const size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
@@ -481,8 +472,8 @@ template <class T, typename P> struct AbstractPolyhedra {
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
-    void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A,
-                      llvm::SmallVectorImpl<P> &b, size_t i) {
+    void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
+                      size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
         for (size_t j = 0; j < b.size(); ++j) {
             if (A(i, j)) {
@@ -498,14 +489,26 @@ template <class T, typename P> struct AbstractPolyhedra {
     // removes variable `i` from `A`
     void removeVariable(Matrix<intptr_t, 0, 0, 0> &A,
                         llvm::SmallVector<P, 8> &b, const size_t i) {
+
+        Matrix<intptr_t, 0, 0, 0> lA;
+        Matrix<intptr_t, 0, 0, 0> uA;
+        llvm::SmallVector<P, 8> lb;
+        llvm::SmallVector<P, 8> ub;
+        removeVariable(lA, uA, lb, ub, A, b, i);
+    }
+    void removeVariable(Matrix<intptr_t, 0, 0, 0> &lA,
+                        Matrix<intptr_t, 0, 0, 0> &uA,
+                        llvm::SmallVector<P, 8> &lb,
+                        llvm::SmallVector<P, 8> &ub,
+                        Matrix<intptr_t, 0, 0, 0> &A,
+                        llvm::SmallVector<P, 8> &b, const size_t i) {
+
         pruneBounds(A, b, i);
-        categorizeBounds(A, b, i);
+        categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
-        appendBounds(A, b, i);
+        appendBounds(lA, uA, lb, ub, A, b, i);
     }
-    void removeVariable(const size_t i){
-	removeVariable(A, b, i);
-    }
+    void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(
         Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
         llvm::SmallVectorImpl<unsigned> &rowsToErase) {
@@ -518,128 +521,72 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
 
-    void printLowerBound(std::ostream &os, size_t i) const {
-
-        auto &lb = lowerb[i];
-        auto &lA = lowerA[i];
-        for (size_t j = 0; j < lb.size(); ++j) {
-            if (lA(i, j) == -1) {
-                os << "i_" << i << " >= ";
-            } else {
-                os << -lA(i, j) << "*i_" << i << " >= ";
-            }
-            bool printed = !isZero(lb[j]);
-            if (printed) {
-                os << -lb[j];
-            }
-            for (size_t k = 0; k < getNumVar(); ++k) {
-                if (k == i) {
-                    continue;
-                }
-                if (intptr_t lakj = lA(k, j)) {
-                    if (lakj < 0) {
-                        os << " - ";
-                    } else if (printed) {
-                        os << " + ";
-                    }
-                    lakj = std::abs(lakj);
-                    if (lakj != 1) {
-                        os << lakj << "*";
-                    }
-                    os << "i_" << k;
-                    printed = true;
-                }
-            }
-            if (!printed) {
-                os << 0;
-            }
-            os << std::endl;
-        }
-    }
-    void printUpperBound(std::ostream &os, size_t i) const {
-        auto &ub = upperb[i];
-        auto &uA = upperA[i];
-        for (size_t j = 0; j < ub.size(); ++j) {
-            if (uA(i, j) == 1) {
-                os << "i_" << i << " <= ";
-            } else {
-                os << uA(i, j) << "*i_" << i << " <= ";
-            }
-            bool printed = (!isZero(ub[j]));
-            if (printed) {
-                os << ub[j];
-            }
-            for (size_t k = 0; k < getNumVar(); ++k) {
-                if (k == i) {
-                    continue;
-                }
-                if (intptr_t uakj = uA(k, j)) {
-                    if (uakj > 0) {
-                        os << " - ";
-                    } else if (printed) {
-                        os << " + ";
-                    }
-                    uakj = std::abs(uakj);
-                    if (uakj != 1) {
-                        os << uakj << "*";
-                    }
-                    os << "i_" << k;
-                    printed = true;
-                }
-            }
-            if (!printed) {
-                os << 0;
-            }
-            os << std::endl;
-        }
-    }
     // prints in current permutation order.
     // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
     // in which case, we have to remove `currentToOriginalPerm`,
     // which menas either change printing, or move prints `<<` into
     // the derived classes.
     friend std::ostream &operator<<(std::ostream &os,
-                                    const AbstractPolyhedra<T, P> &alnb) {
-        const size_t numLoops = alnb.getNumVar();
-        for (size_t _i = 0; _i < numLoops; ++_i) {
-            os << "Variable " << _i << " lower bounds: " << std::endl;
-            size_t i = alnb.currentToOriginalPerm(_i);
-            alnb.printLowerBound(os, i);
-            os << "Variable " << _i << " upper bounds: " << std::endl;
-            alnb.printUpperBound(os, i);
-        }
+                                    const AbstractPolyhedra<T, P> &p) {
+	const size_t numVar = p.getNumVar();
+	const size_t numConstraints = p.getNumConstraints();
+	for (size_t c = 0; c < numConstraints; ++c){
+	    bool hasPrinted = false; 
+	    for (size_t v = 0; v < numVar; ++v){
+		if (intptr_t Avc = p.A(v,c)){
+		    if (hasPrinted){
+			if (Avc > 0){
+			    os << " + ";
+			} else {
+			    os << " - ";
+			    Avc *= -1;
+			}
+		    }
+		    if (Avc != 1){
+			if (Avc == -1){
+			    os << "-";
+			} else {
+			    os << Avc;
+			}
+		    }
+		    os << "v_" << v;
+		    hasPrinted = true;
+		}
+	    }
+	    os << " <= " << p.b[c] << std::endl;
+	}
         return os;
     }
     void dump() const { std::cout << *this; }
 
-    bool constraintAllZero(size_t i){
-	for (size_t j = 0; j < getNumVar(); ++j){
-	    if (A(j,i)) return false;
-	}
-	return true;
+    bool constraintAllZero(size_t i) {
+        for (size_t j = 0; j < getNumVar(); ++j) {
+            if (A(j, i))
+                return false;
+        }
+        return true;
     }
-    bool hasEmptyConstraint(){
-	// A'x <= b
-	for (size_t i = 0; i < getNumConstraints(); ++i){
-	    if (constraintAllZero(i) && knownGreaterEqualZero(-1 - b[i])){
-		// if b < 0
-		return true;
-	    }
-	}
-	return false;
+    bool hasEmptyConstraint() {
+        // A'x <= b
+        for (size_t i = 0; i < getNumConstraints(); ++i) {
+            if (constraintAllZero(i) && knownGreaterEqualZero(-1 - b[i])) {
+                // if b < 0
+                return true;
+            }
+        }
+        return false;
     }
-    bool isEmpty(){
-	// inefficient (compared to ILP + Farkas Lemma approach)
-	auto copy = *this;
-	for (size_t i = 0; i < getNumVar(); ++i){
-	    copy.removeVariable(copy.A, copy.b, i);
-	    if (copy.hasEmptyConstraint()){
-		return true;
-	    }
-	}
-	return false;
+    bool isEmpty() {
+        // inefficient (compared to ILP + Farkas Lemma approach)
+        auto copy = *this;
+        for (size_t i = 0; i < getNumVar(); ++i) {
+            copy.removeVariable(copy.A, copy.b, i);
+            if (copy.hasEmptyConstraint()) {
+                return true;
+            }
+        }
+        return false;
     }
-    
 };
 
 struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, intptr_t> {
