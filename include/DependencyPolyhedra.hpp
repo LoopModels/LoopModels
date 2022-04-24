@@ -156,19 +156,26 @@ SymbolicPolyhedra polyhedra(const AffineLoopNest &aln0,
         b.push_back(-bound);
         b.push_back(std::move(bound));
     }
-    std::cout << "A = \n" << A << "\nb = " << std::endl;
-    for (auto &bi : b){
-	std::cout << bi << ", ";
-    }
-    std::cout << std::endl;
+    // std::cout << "A = \n" << A << "\nb = " << std::endl;
+    // for (auto &bi : b){
+    // 	std::cout << bi << ", ";
+    // }
+    // std::cout << std::endl;
+    // return SymbolicPolyhedra(A, b, aln0.poset);
     SymbolicPolyhedra poly = SymbolicPolyhedra(A, b, aln0.poset);
-    std::cout << "Before pruning:\n" << poly << std::endl;
-    std::cout << "poly.A = \n" << poly.A << "\npoly.b = " << std::endl;
-    for (auto &bi : poly.b){
-	std::cout << bi << ", ";
-    }
-    std::cout << std::endl;
+    // std::cout << "Before pruning:\n" << poly << std::endl;
+    // std::cout << "poly.A = \n" << poly.A << "\npoly.b = " << std::endl;
+    // for (auto &bi : poly.b){
+    // 	std::cout << bi << ", ";
+    // }
+    // std::cout << std::endl;
     poly.pruneBounds();
+    // std::cout << "After pruning:\n" << poly << std::endl;
+    // std::cout << "poly.A = \n" << poly.A << "\npoly.b = " << std::endl;
+    // for (auto &bi : poly.b){
+    // 	std::cout << bi << ", ";
+    // }
+    // std::cout << std::endl;
     return poly;
 }
 

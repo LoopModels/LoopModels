@@ -573,8 +573,8 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
             return false;
         }
         // eliminate variables 0..._j
-        auto A = remainingA.back();
-        auto b = remainingB.back();
+        auto A = remainingA.back(); 
+        auto b = remainingB.back(); 
         Matrix<intptr_t, 0, 0, 0> lwrA;
         Matrix<intptr_t, 0, 0, 0> uprA;
         llvm::SmallVector<MPoly, 16> lwrB;
