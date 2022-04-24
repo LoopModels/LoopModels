@@ -957,7 +957,7 @@ template <typename C, IsMonomial M> struct Term {
     void negate() { ::negate(coefficient); }
     friend bool isZero(Term const &x) { return isZero(x.coefficient); }
     friend bool isOne(Term const &x) {
-        return isOne(x.coefficient) & isOne(x.exponent);
+        return isOne(x.coefficient) && isOne(x.exponent);
     }
 
     template <typename CC> operator Term<CC, M>() {
@@ -3304,11 +3304,11 @@ struct ValueRange {
     bool operator>=(ValueRange x) const { return lowerBound >= x.upperBound; }
     bool operator<=(ValueRange x) const { return upperBound <= x.lowerBound; }
     bool operator==(ValueRange x) const {
-        return (isKnown() & x.isKnown()) & (lowerBound == x.lowerBound);
+        return (isKnown() && x.isKnown()) & (lowerBound == x.lowerBound);
     }
     Order compare(ValueRange x) const {
         // return upperBound < x.lowerBound;
-        if (isKnown() & x.isKnown()) {
+        if (isKnown() && x.isKnown()) {
             return upperBound == x.upperBound ? EqualTo : NotEqual;
         }
         if (upperBound < x.lowerBound) {

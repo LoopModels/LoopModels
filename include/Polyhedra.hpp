@@ -130,8 +130,15 @@ template <class T, typename P> struct AbstractPolyhedra {
                         }
                         auto &depHistl = depHistOld[l];
                         auto &depHistu = depHistOld[u];
-                        std::ranges::set_union(depHistl, depHistu,
-                                               std::back_inserter(depHist[c]));
+                        auto &depHistc = depHist[c];
+                        // std::ranges::set_union(depHistl, depHistu,
+                        //                        std::back_inserter(depHistc));
+                        depHistc.reserve(depHistl.size() + depHistu.size());
+                        depHistc = depHistl;
+                        depHistc.insert(depHistc.end(), depHistu.begin(),
+                                        depHistu.end());
+                        // std::ranges::merge(depHistl, depHistu,
+                        // std::back_inserter(depHist[c]));
                         c += setBounds(A.getCol(c), b[c], AOld.getCol(l),
                                        bOld[l], AOld.getCol(u), bOld[u], i);
                     }
@@ -373,6 +380,11 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
         llvm::SmallVector<llvm::SmallVector<unsigned, 8>, 16>
             dependenceHistoryNew;
+        // std::cout << "Initial AOld = \n" << AOld << "\nInitial bOld = \n";
+        // for (auto &b : bOld) {
+        //     std::cout << b << ", ";
+        // }
+        // std::cout << std::endl;
         do {
 
             eliminateVariable(dependenceHistoryNew, ANew, bNew,
@@ -381,7 +393,13 @@ template <class T, typename P> struct AbstractPolyhedra {
             std::swap(dependenceHistoryNew, dependenceHistory);
             std::swap(ANew, AOld);
             std::swap(bNew, bOld);
-
+            // std::cout << "dependenceToEliminate = " << dependencyToEliminate
+            //           << "; AOld = \n"
+            //           << AOld << "\nbOld = \n";
+            // for (auto &b : bOld) {
+            //     std::cout << b << ", ";
+            // }
+            // std::cout << std::endl;
             dependencyToEliminate = -1;
             for (size_t j = 0; j < AOld.size(1); ++j) {
                 for (size_t k = numVarBase; k < numVar; ++k) {
@@ -407,17 +425,29 @@ template <class T, typename P> struct AbstractPolyhedra {
                             auto [b, d] = boundDiffPairs[k - numVarBase];
                             // binary search is probably slower than linear...
                             bool preservesInformation;
+                            // std::cout << "(b = " << b << "; d = " << d
+                            //           << "); dependenceHistory[" << j << "] = ";
+                            // for (auto &dh : dependenceHistory[j]) {
+                            //     std::cout << dh << ", ";
+                            // }
+                            // std::cout << std::endl;
                             if (Akj > 0) {
                                 // -1 -> we erase `d`
                                 preservesInformation =
-                                    std::ranges::binary_search(
-                                        dependenceHistory[j], d);
+                                    std::ranges::count(dependenceHistory[j],
+                                                       d) == 0;
+                                // std::ranges::binary_search(
+                                //     dependenceHistory[j], d);
                             } else {
                                 // 1 -> we erase `b`
                                 preservesInformation =
-                                    std::ranges::binary_search(
-                                        dependenceHistory[j], b);
+                                    std::ranges::count(dependenceHistory[j],
+                                                       b) == 0;
+                                // std::ranges::binary_search(
+                                //     dependenceHistory[j], b);
                             }
+                            // std::cout << "bOld[" << j << "] = " << bOld[j]
+                            //           << std::endl;
                             if (preservesInformation &&
                                 knownLessEqualZero(bOld[j])) {
                                 // boundDelta = b - d
@@ -458,6 +488,11 @@ template <class T, typename P> struct AbstractPolyhedra {
                 rowsToErase.push_back(k == 1 ? j : d);
             }
         }
+        // std::cout << "rowsToErase = ";
+        // for (auto &r : rowsToErase) {
+        //     std::cout << r << ", ";
+        // }
+        // std::cout << std::endl << std::endl;
         erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
     }
 

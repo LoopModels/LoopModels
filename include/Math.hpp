@@ -3,6 +3,7 @@
 // nor an operator will be outside of the struct/class.
 #include <bit>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -221,8 +222,8 @@ struct VarID {
     IDType getID() const { return id & 0x3fffffff; }
     // IDType getID() const { return id & 0x3fff; }
     VarType getType() const { return static_cast<VarType>(id >> 30); }
-    std::pair<VarType,IDType> getTypeAndId() const {
-	return std::make_pair(getType(), getID());
+    std::pair<VarType, IDType> getTypeAndId() const {
+        return std::make_pair(getType(), getID());
     }
     bool isIndVar() { return getType() == VarType::LoopInductionVariable; }
     bool isLoopInductionVariable() const {
@@ -693,9 +694,10 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
         assert(i < M);
         assert(j < N);
 #endif
-	// std::cout << "(i,j) = (" << i << ", " << j << "); Aold.size() = ( " << M << ", " << N << " )" << std::endl;
-	// std::cout << "Linear index = " << i + j * M << std::endl;
-	// std::cout << "data.size() = " << data.size() << std::endl;
+        // std::cout << "(i,j) = (" << i << ", " << j << "); Aold.size() = ( "
+        // << M << ", " << N << " )" << std::endl; std::cout << "Linear index =
+        // " << i + j * M << std::endl; std::cout << "data.size() = " <<
+        // data.size() << std::endl;
         return data[i + j * M];
     }
     T &operator[](size_t i) { return data[i]; }
@@ -857,24 +859,30 @@ std::ostream &operator<<(std::ostream &os, PtrVector<T, L> const &A) {
 
 template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
-    os << "[ ";
     auto [m, n] = A.size();
-    for (size_t i = 0; i < m - 1; i++) {
+    for (size_t i = 0; i < m; i++) {
+        if (i) {
+            os << "  ";
+        } else {
+            os << "[ ";
+        }
         for (size_t j = 0; j < n - 1; j++) {
-            os << A(i, j) << " ";
+            auto Aij = A(i, j);
+            if (Aij >= 0) {
+                os << " ";
+            }
+            os << Aij << " ";
         }
         if (n) {
-            os << A(i, n - 1);
+            auto Aij = A(i, n - 1);
+            if (Aij >= 0) {
+                os << " ";
+            }
+            os << Aij;
         }
-        os << std::endl;
-    }
-    if (m) {
-        for (size_t j = 0; j < n - 1; j++) {
-            os << A(m - 1, j) << " ";
-        }
-        if (n) {
-            os << A(m - 1, n - 1);
-        }
+	if (i != m - 1){
+	    os << std::endl;
+	}
     }
     os << " ]";
     return os;
@@ -1380,7 +1388,10 @@ struct Rational {
         return (widen(numerator) * widen(y.denominator)) >=
                (widen(y.numerator) * widen(denominator));
     }
-
+    bool operator>=(int y) const {
+	return *this >= Rational(y);
+    }
+    
     friend bool isZero(Rational x) { return x.numerator == 0; }
     friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
     bool isInteger() const { return denominator == 1; }

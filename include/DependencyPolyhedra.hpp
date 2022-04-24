@@ -41,9 +41,9 @@ matchingStrideConstraintPairs(const AffineLoopNest &aln0,
     // A[0, i, 0, j], A[k, 0, l, 0]
     // B[i, k], B[i, K] // k = 0:K-1
     // B[i, k], B[i, J] // J's relation to k??? -- split loop?
-    size_t dim = 0;
-    auto axesix = ar0.axes.begin();
-    auto axesiy = ar1.axes.begin();
+    // size_t dim = 0;
+    // auto axesix = ar0.axes.begin();
+    // auto axesiy = ar1.axes.begin();
 
     return {};
 }
