@@ -60,6 +60,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     }
     PartiallyOrderedSet poset;
     AffineLoopNest alnp(A, r, poset);
+    EXPECT_FALSE(alnp.isEmpty());
 
     // we have three array refs
     // W[i+m, j+n]
@@ -197,6 +198,7 @@ TEST(BadMul, BasicAssertions) {
     }
     PartiallyOrderedSet poset;
     AffineLoopNest alnp(A, r, poset);
+    EXPECT_FALSE(alnp.isEmpty());
 
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     // 0, 1, 2

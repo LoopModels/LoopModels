@@ -11,6 +11,7 @@
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <tuple>
+#include <utility>
 
 intptr_t saturatedAdd(intptr_t a, intptr_t b) {
     intptr_t c;
@@ -217,7 +218,7 @@ struct PartiallyOrderedSet {
     llvm::SmallVector<Interval, 0> delta;
     size_t nVar;
 
-    PartiallyOrderedSet() : nVar(0){};
+    PartiallyOrderedSet() : delta(llvm::SmallVector<Interval, 0>()), nVar(0){};
 
     inline static size_t bin2(size_t i) { return (i * (i - 1)) >> 1; }
     inline static size_t uncheckedLinearIndex(size_t i, size_t j) {
@@ -304,7 +305,13 @@ struct PartiallyOrderedSet {
         size_t l = jOff + i;
         if (j >= nVar) {
             nVar = j + 1;
+            size_t oldSize = delta.size();
             delta.resize((j * nVar) >> 1, Interval::unconstrained());
+            // for (size_t k = oldSize; k < delta.size(); ++k){
+            // 	assert(delta[k].lowerBound ==
+            // Interval::unconstrained().lowerBound); 	assert(delta[k].upperBound
+            // == Interval::unconstrained().upperBound);
+            // }
         } else {
             Interval itvNew = itv.intersect(delta[l]);
             if (itvNew.equivalentRange(itv)) {
@@ -334,10 +341,11 @@ struct PartiallyOrderedSet {
         }
         assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarType::Constant);
         size_t j = bin2(m.prodIDs[0].getID());
-        Interval itv = j < nVar ? delta[j] : Interval::unconstrained();
+        Interval itv = j < delta.size() ? delta[j] : Interval::unconstrained();
+	// std::cout << "j = " << j << "; delta.size() = " << delta.size() << "; itv = " << itv;
         for (size_t i = 1; i < m.prodIDs.size(); ++i) {
             size_t j = bin2(m.prodIDs[i].getID());
-            itv *= (j < nVar ? delta[j] : Interval::unconstrained());
+            itv *= (j < delta.size() ? delta[j] : Interval::unconstrained());
         }
         return itv;
     }
@@ -351,46 +359,60 @@ struct PartiallyOrderedSet {
         return knownGreaterEqual(x.exponent, y.exponent, x.coefficient,
                                  y.coefficient);
     }
-    std::pair<std::pair<size_t, llvm::SmallVector<int>>, bool>
+    std::pair<size_t, llvm::SmallVector<int>>
     matchMonomials(const Polynomial::Monomial &x, const Polynomial::Monomial &y,
                    intptr_t cx, intptr_t cy) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
         const intptr_t thresh = 0;
-        Matrix<bool, 0, 0> bpGraph(N + (cx > thresh), M + (cy > thresh));
-        bool positive = true;
+        // TODO: generalize to handle negatives...
+        intptr_t scx = cx > 0 ? 1 : -1;
+        intptr_t scy = cy > 0 ? 1 : -1;
+        intptr_t acx = scx * cx;
+        intptr_t acy = scy * cy;
+        Matrix<bool, 0, 0> bpGraph(N + (acx > thresh), M + (acy > thresh));
         for (size_t n = 0; n < N; ++n) {
             auto xid = x.prodIDs[n].getID();
             Interval xb = (*this)(xid);
-            if ((xb.lowerBound < 0) & (xb.upperBound > 0)) {
+            if ((xb.lowerBound < 0) && (xb.upperBound > 0)) {
+                // we don't match `xb`s of unknown sign
                 continue;
             }
             for (size_t m = 0; m < M; ++m) {
                 // xid - yid
                 Interval xyb = (*this)(y.prodIDs[m].getID(), xid);
                 if (xb.lowerBound >= 0) {
+                    // if xb is positive, we want (x - y) >= 0
                     bpGraph(n, m) = xyb.lowerBound >= 0;
                 } else {
-                    // x nonPositive
-                    positive = !positive;
+                    // x nonPositive, we want (x - y) <= 0
+                    // (i.e., we want x of greater absolute value)
                     bpGraph(n, m) = xyb.upperBound <= 0;
                 }
             }
-            if (cy > thresh) {
-                bpGraph(n, M) = xb.lowerBound >= cy;
+            if (acy > thresh) {
+                if (xb.lowerBound >= 0) {
+                    bpGraph(n, M) = xb.lowerBound >= cy;
+                } else {
+                    bpGraph(n, M) = xb.upperBound <= cy;
+                }
             }
         }
-        if (cx > thresh) {
+        if (acx > thresh) {
             for (size_t m = 0; m < M; ++m) {
                 auto yid = y.prodIDs[m].getID();
                 Interval yb = (*this)(yid);
-                bpGraph(N, m) = cx >= yb.upperBound;
+                if (cx >= 0) {
+                    bpGraph(N, m) = cx >= yb.upperBound;
+                } else {
+                    bpGraph(N, m) = cx <= yb.lowerBound;
+                }
             }
-            if (cy > thresh) {
-                bpGraph(N, M) = cx >= cy;
+            if (acy > thresh) {
+                bpGraph(N, M) = acx >= acy;
             }
         }
-        return std::make_pair(maxBipartiteMatch(bpGraph), positive);
+        return maxBipartiteMatch(bpGraph);
     }
 
     std::pair<Interval, Interval>
@@ -399,14 +421,13 @@ struct PartiallyOrderedSet {
                        intptr_t cy = 1) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
-        auto [matchesmatchR, positive] = matchMonomials(x, y, cx, cy);
-        auto &[matches, matchR] = matchesmatchR;
+        auto [matches, matchR] = matchMonomials(x, y, cx, cy);
         // matchR.size() == N
         // matchR maps ys to xs
-        if (!positive) {
-            cx = -cx;
-            cy = -cy;
-        }
+        // if (!positive) {
+        //     cx = -cx;
+        //     cy = -cy;
+        // }
         Interval itvx(cx);
         Interval itvy(cy);
         // not all Y matched;
@@ -435,9 +456,36 @@ struct PartiallyOrderedSet {
         }
         return std::make_pair(itvx, itvy);
     }
+    // knownGreaterEqual(x, y, cx, xy)
+    // is x*cx >= y*cy
     bool knownGreaterEqual(const Polynomial::Monomial &x,
                            const Polynomial::Monomial &y, intptr_t cx = 1,
                            intptr_t cy = 1) const {
+        const size_t N = x.prodIDs.size();
+        const size_t M = y.prodIDs.size();
+        if (N == 0) {
+            if (M == 0) {
+                return cx >= cy;
+            } else if (M == 1) {
+                return Interval(cx).knownGreaterEqual(
+                    (*this)(y.prodIDs[0].getID()) * cy);
+            }
+        } else if (N == 1) {
+            if (M == 0) {
+                return ((*this)(x.prodIDs[0].getID()) * cx)
+                    .knownGreaterEqual(Interval(cy));
+            } else if (M == 1) {
+                if ((cx == 1) & (cy == 1)) {
+                    // x >= y -> x - y >= 0
+                    return (*this)(y.prodIDs[0].getID(), x.prodIDs[0].getID())
+                               .lowerBound >= 0;
+                } else if ((cx == -1) & (cy == -1)) {
+                    // -x >= -y -> y - x >= 0
+                    return (*this)(x.prodIDs[0].getID(), y.prodIDs[0].getID())
+                               .lowerBound >= 0;
+                }
+            }
+        }
         if (cx < 0) {
             if (cy < 0) {
                 return knownGreaterEqual(y, x, -cy, -cx);
@@ -522,20 +570,44 @@ struct PartiallyOrderedSet {
             //     return false;
             // }
             Interval termSum = asInterval(tm) + asInterval(tn);
+            // std::cout << "tm = " << tm << "; tn = " << tn << std::endl;
+            // std::cout << "asInterval(tm) = " << asInterval(tm)
+            //           << "; asInterval(tn) = " << asInterval(tn) << std::endl;
             if (termSum.lowerBound >= 0) {
                 continue;
             }
-            bool mPos = (tm.coefficient > 0) & (knownPositive(tm.exponent));
-            bool nPos = (tn.coefficient > 0) & (knownPositive(tn.exponent));
+            bool mExpPos = knownPositive(tm.exponent);
+            bool nExpPos = knownPositive(tn.exponent);
+            bool mPos, mNeg, nPos, nNeg;
+            if (mExpPos) {
+                mPos = tm.coefficient > 0;
+                mNeg = tm.coefficient < 0;
+            } else if (knownNegative(tm.exponent)) {
+                mPos = tm.coefficient < 0;
+                mNeg = tm.coefficient > 0;
+            } else {
+                return false;
+                // mPos = false;
+                // mNeg = false;
+            }
+            if (nExpPos) {
+                nPos = tn.coefficient > 0;
+                nNeg = tn.coefficient < 0;
+            } else if (knownNegative(tn.exponent)) {
+                nPos = tn.coefficient < 0;
+                nNeg = tn.coefficient > 0;
+            } else {
+                return false;
+                // nPos = false;
+                // nNeg = false;
+            }
             if (mPos) {
                 if (nPos) {
                     // tm + tn
                     continue;
-                } else if (tn.coefficient < 0) {
-                    // tm - tn; monomial positive
-                    // if ((tm.coefficient + tn.coefficient >= 0) &&
-                    //     knownGreaterEqual(tm.exponent, tn.exponent,
-                    //                       tm.coefficient, -tn.coefficient)) {
+                    // } else if (nNeg) {
+                } else if (nNeg && (tn.coefficient < 0)) {
+                    // if tm -tn
                     if (knownGreaterEqual(tm.exponent, tn.exponent,
                                           tm.coefficient, -tn.coefficient)) {
                         continue;
@@ -547,11 +619,9 @@ struct PartiallyOrderedSet {
                     return false;
                 }
             } else if (nPos) {
-                if (tm.coefficient < 0) {
+                // if (mNeg) {
+                if (mNeg && (tm.coefficient < 0)) {
                     // tn - tm; monomial positive
-                    // if ((tm.coefficient + tn.coefficient >= 0) &&
-                    //     knownGreaterEqual(tn.exponent, tm.exponent,
-                    //                       tn.coefficient, -tm.coefficient)) {
                     if (knownGreaterEqual(tn.exponent, tm.exponent,
                                           tn.coefficient, -tm.coefficient)) {
                         continue;
