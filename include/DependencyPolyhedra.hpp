@@ -146,7 +146,7 @@ SymbolicPolyhedra polyhedra(const AffineLoopNest &aln0,
                 break;
             case VarType::Constant: {
                 bound += coef;
-		break;
+                break;
             }
             default:
                 // break;
@@ -178,7 +178,65 @@ SymbolicPolyhedra polyhedra(const AffineLoopNest &aln0,
     // std::cout << std::endl;
     return poly;
 }
-
+// Farkas: psi(x) >= 0 iff
+// psi(x) = l_0 + lambda' * (b - A'*x) for some l_0, lambda >= 0
+// psi(x) is an affine function.
+// Here, we assume that function is either...
+// if (boundAbove) {
+//   w + u'N + alpha_delta + alpha_t'i_t - alpha_s'i_s
+// else {
+//   alpha_delta + alpha_t'i_t - alpha_s'i_s
+// }
+// N are the symbolic variables, like loop bounds.
+// u and w are introduced variables.
+//
+// x = [i_s..., i_t...]
+//
+// or swap alpha signs if subInd < 0
+//
+// Returns an IntegerPolyhedra C'*y <= d
+// where
+// y = [alpha_delta, alpha_s..., alpha_t..., w, u...]
+// for our cost function, we want to set `sum(u)` to zero
+// Note y >= 0
+//
+// This is useful for eliminating indVars as well as for eliminating `N`
+// We have, for example...
+// b = [I-1, 0, J-1, 0]
+// A = [ 1  -1   0   0
+//       0   0   1  -1 ]
+// N = [I, J]
+// x = [i_s, j_s, i_t, j_t]
+//
+// w + u'N + alpha_delta + alpha_t'i_t - alpha_s'i_s =
+// l_0 + lambda' * (b - A'*x)
+// w + alpha_delta + u_1 * I + u_2 * J + alpha_t_i * i_t + alpha_t_j * j_t -
+// alpha_s_i * i_s - alpha_s_j * j_s = l_0 + lambda_0 * (I - 1 - i_s) + lambda_1
+// * (j_s) + lambda_2 * (J-1 - i_t) + lambda_3 * j_t
+//
+// (w + alpha_delta - l_0 + lambda_0 + lambda_2) + I*(u_1 - lambda_0) + J*(u_2 -
+// lambda_2) + i_t*(alpha_t_i + lambda_2) + j_t * (alpha_t_j-lambda_3) + i_s *
+// (lambda_0 -alpha_s_i) + j_s * (-alpha_s_j-lambda_1) = 0
+//
+// Now...we assume that it is valid to transform this into a system of equations
+// 0 = w + alpha_delta - l_0 + lambda_0 + lambda_2
+// 0 = u_1 - lambda_0
+// 0 = u_2 - lambda_2
+// 0 = alpha_t_i + lambda_2
+// 0 = alpha_t_j - lambda_3
+// 0 = lambda_0 - alpha_s_i
+// 0 = -alpha_s_j - lambda_1
+//
+// A[w*i + x*j]
+// w*(i...)
+// x*(j...)
+// Delinearization seems like the weakest conditions...
+//
+// what about
+// x is symbol, i and j are indvars
+// A[i,j]
+// A[i,x]
+// 
 IntegerPolyhedra farkasScheduleDifference(SymbolicPolyhedra &s, intptr_t subInd,
                                           bool boundAbove) {
 

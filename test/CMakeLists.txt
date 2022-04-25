@@ -5,8 +5,9 @@ FetchContent_Declare(
 )
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest)# highsextern)
 enable_testing()
+include_directories(${highsextern_INCLUDE_DIRS})
 
 # add_executable(
 #  perm_test
@@ -123,6 +124,17 @@ target_link_libraries(
   LLVM
 )
 
+add_executable(
+  highs_test
+  highs_test.cpp
+)
+target_link_libraries(
+  highs_test
+  gtest_main
+  LLVM
+  libhighs
+)
+
 include(GoogleTest)
 gtest_discover_tests(compat_test)
 # gtest_discover_tests(perm_test)
@@ -134,3 +146,4 @@ gtest_discover_tests(normal_form_test)
 gtest_discover_tests(linear_algebra_test)
 gtest_discover_tests(orthogonalize_test)
 gtest_discover_tests(dependence_test)
+gtest_discover_tests(highs_test)

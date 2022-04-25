@@ -5,6 +5,37 @@ project(
     VERSION 0.1
     LANGUAGES CXX)
 
+include(FetchContent)
+
+FetchContent_Declare(
+  highsextern
+  URL https://github.com/ERGO-Code/HiGHS/archive/refs/tags/v1.2.2.zip
+)
+FetchContent_GetProperties(highsextern)
+set(highsextern_CMAKE_BUILD_TYPE Release)
+# FetchContent_MakeAvailable(HIGHSEXTERN)
+if(NOT highsextern_POPULATED)
+  FetchContent_Populate(highsextern)
+  message(STATUS "HiGHS source dir: ${highsextern_SOURCE_DIR}")
+  message(STATUS "HiGHS binary dir: ${highsextern_BINARY_DIR}")
+  add_subdirectory(
+    ${highsextern_SOURCE_DIR}
+    ${highsextern_BINARY_DIR}
+  )
+  #   EXCLUDE_FROM_ALL)
+
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${highsextern_SOURCE_DIR})
+endif()
+# include("${highsextern_SOURCE_DIR}/highs-config.cmake.in")
+# message(STATUS "HiGHS include dirs = ${highsextern_INCLUDE_DIRS}")
+# message(STATUS "HiGHS include dirs = ${highs_INCLUDE_DIRS}")
+# message(STATUS "HiGHS include dirs = ${libhighs_INCLUDE_DIRS}")
+# message(STATUS "HiGHS include dirs = ${highs-targets_INCLUDE_DIRS}")
+# include_directories(${highsextern_INCLUDE_DIRS})
+include_directories("${highsextern_SOURCE_DIR}/src")
+include_directories("${highsextern_BINARY_DIR}")
+
+
 enable_language(C)
 enable_language(CXX)
 set (CMAKE_CXX_STANDARD 20)
@@ -51,8 +82,6 @@ message(STATUS "LLVM Library DIR: ${LLVM_LIBRARY_DIR}")
 
 include_directories("${LLVM_BINARY_DIR}/include" "${LLVM_INCLUDE_DIR}")
 link_directories("${LLVM_LIBRARY_DIR}")
-
-include(FetchContent)
 
 add_subdirectory(lib)
 add_subdirectory(test)
