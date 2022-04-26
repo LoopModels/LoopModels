@@ -19,6 +19,7 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/Support/InstructionCost.h>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <sys/types.h>
@@ -523,10 +524,9 @@ bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
     return false;
 }
 
-llvm::Optional<
-    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
-orthogonalize(AffineLoopNest const &alnp,
-              llvm::SmallVectorImpl<ArrayReference *> const &ai) {
+llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
+                         llvm::SmallVector<ArrayReference, 0>>>
+orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I
     // where L are the loop induct variables, and I are the array indices
@@ -539,7 +539,7 @@ orthogonalize(AffineLoopNest const &alnp,
     // the determinant == 1 or determinant == -1.
     // If so, we can then use the lufactorizationm for computing
     // A/B, to get loop bounds in terms of the indexes.
-    //
+    const AffineLoopNest &alnp = *(ai[0]->loop);
     size_t numLoops = alnp.getNumLoops();
     size_t numRow = 0;
     for (auto a : ai) {
@@ -564,9 +564,10 @@ orthogonalize(AffineLoopNest const &alnp,
         // A'*L <= b
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A'*K)*J <= r
-	Matrix<intptr_t,0,0,0> A;
-	matmultn(A, K, alnp.A);
-	AffineLoopNest alnNew(std::move(A), alnp.b, alnp.poset);
+        Matrix<intptr_t, 0, 0, 0> A;
+        matmultn(A, K, alnp.A);
+        std::shared_ptr<AffineLoopNest> alnNew =
+            std::make_shared<AffineLoopNest>(std::move(A), alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
         // matmultn(alnNew->A, K, alnp.A);
         // alnNew->b = alnp.aln->b;
@@ -582,13 +583,13 @@ orthogonalize(AffineLoopNest const &alnp,
         newArrayRefs.reserve(numRow);
         size_t i = 0;
         for (auto a : ai) {
-            newArrayRefs.emplace_back(a->arrayID);
+            newArrayRefs.emplace_back(a->arrayID, alnNew);
             for (auto &axis : *a) {
                 newArrayRefs.back().pushAffineAxis(axis.stride, SK.getRow(i));
                 ++i;
             }
         }
-        return std::make_pair(std::move(alnNew), newArrayRefs);
+        return std::make_pair(alnNew, newArrayRefs);
     }
     return {};
 }

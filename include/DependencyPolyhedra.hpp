@@ -18,9 +18,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     bool forward; // if (forward){ dep0 -> dep1; } else { dep1 -> depo; }
 
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
-    matchingStrideConstraintPairs(const AffineLoopNest &aln0,
-                                  const AffineLoopNest &aln1,
-                                  const ArrayReference &ar0,
+    matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
         // fast path; most common case
         if (ar0.stridesMatchAllConstant(ar1)) {
@@ -107,8 +105,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         return {};
     }
 
-    static bool check(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
-                      const ArrayReference &ar0, const ArrayReference &ar1) {
+    static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
 
         // TODO: two steps:
         // 1: gcd test
@@ -117,7 +114,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
         // step 2
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
-            maybeDims = matchingStrideConstraintPairs(aln0, aln1, ar0, ar1);
+            maybeDims = matchingStrideConstraintPairs(ar0, ar1);
 
         return true;
     }
@@ -130,34 +127,33 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     // Where x = [c_src, c_tgt, beta_src..., beta_tgt]
     // layout of constraints (based on Farkas equalities):
     // comp time constant, indVars0, indVars1, loop constants
-    DependencePolyhedra(const AffineLoopNest &aln0, const AffineLoopNest &aln1,
-                        const ArrayReference &ar0, const ArrayReference &ar1)
+    DependencePolyhedra(const ArrayReference &ar0, const ArrayReference &ar1)
         : SymbolicPolyhedra(Matrix<intptr_t, 0, 0, 0>(),
-                            llvm::SmallVector<MPoly, 8>(), aln0.poset) {
+                            llvm::SmallVector<MPoly, 8>(), ar0.loop->poset) {
 
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
-            maybeDims = matchingStrideConstraintPairs(aln0, aln1, ar0, ar1);
+            maybeDims = matchingStrideConstraintPairs(ar0, ar1);
 
         assert(maybeDims.hasValue());
         const llvm::SmallVector<std::pair<int, int>, 4> &dims =
             maybeDims.getValue();
 
-        auto [nv0, nc0] = aln0.A.size();
-        auto [nv1, nc1] = aln1.A.size();
+        auto [nv0, nc0] = ar0.loop->A.size();
+        auto [nv1, nc1] = ar1.loop->A.size();
 
         const size_t nc = nc0 + nc1;
         A.resize(nv0 + nv1, nc + 2 * dims.size());
         for (size_t i = 0; i < nc0; ++i) {
             for (size_t j = 0; j < nv0; ++j) {
-                A(j, i) = aln0.A(j, i);
+                A(j, i) = ar0.loop->A(j, i);
             }
-            b.push_back(aln0.b[i]);
+            b.push_back(ar0.loop->b[i]);
         }
         for (size_t i = 0; i < nc1; ++i) {
             for (size_t j = 0; j < nv1; ++j) {
-                A(nv0 + j, nc0 + i) = aln0.A(j, i);
+                A(nv0 + j, nc0 + i) = ar0.loop->A(j, i);
             }
-            b.push_back(aln1.b[i]);
+            b.push_back(ar1.loop->b[i]);
         }
         for (size_t i = 0; i < dims.size(); ++i) {
             auto [d0, d1] = dims[i];
@@ -178,7 +174,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
                 for (auto &&ind : delta) {
                     auto &[coef, var] = ind;
                     if (var.isIndVar()) {
-                        var.id += aln0.getNumVar();
+                        var.id += ar0.loop->getNumVar();
                     }
                 }
                 delta -= ar0.axes[d0];

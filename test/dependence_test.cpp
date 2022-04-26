@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <memory>
 
 TEST(DependenceTest, BasicAssertions) {
 
@@ -37,8 +38,9 @@ TEST(DependenceTest, BasicAssertions) {
 
     PartiallyOrderedSet poset;
     assert(poset.delta.size() == 0);
-    AffineLoopNest loop(Aloop, bloop, poset);
-    assert(loop.poset.delta.size() == 0);
+    std::shared_ptr<AffineLoopNest> loop =
+        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+    assert(loop->poset.delta.size() == 0);
 
     // we have three array refs
     // A[i+1, j+1]
@@ -51,7 +53,7 @@ TEST(DependenceTest, BasicAssertions) {
     jp1.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
     jp1.emplace_back(1, VarID(1, VarType::Constant));
     AaxesSrc.emplace_back(I, jp1);
-    ArrayReference Asrc(0, AaxesSrc); //, axes, indTo
+    ArrayReference Asrc(0, loop, AaxesSrc); //, axes, indTo
     std::cout << "AaxesSrc = " << Asrc << std::endl;
 
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
@@ -63,26 +65,26 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt0;
     AaxesTgt0.emplace_back(1, ip1);
     AaxesTgt0.emplace_back(I, j);
-    ArrayReference Atgt0(0, AaxesTgt0); //, axes, indTo
+    ArrayReference Atgt0(0, loop, AaxesTgt0); //, axes, indTo
     std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
 
     // A[i, j+1]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt1;
     AaxesTgt1.emplace_back(1, i);
     AaxesTgt1.emplace_back(I, jp1);
-    ArrayReference Atgt1(0, AaxesTgt1); //, axes, indTo
+    ArrayReference Atgt1(0, loop, AaxesTgt1); //, axes, indTo
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
-    DependencePolyhedra dep0(loop, loop, Asrc, Atgt0);
+    DependencePolyhedra dep0(Asrc, Atgt0);
     std::cout << "Dep0 = \n" << dep0 << std::endl;
-    DependencePolyhedra dep1(loop, loop, Asrc, Atgt1);
+    DependencePolyhedra dep1(Asrc, Atgt1);
     std::cout << "Dep1 = \n" << dep1 << std::endl;
 
     std::cout << "Poset contents: ";
-    for (auto &d : loop.poset.delta){
-	std::cout << d << ", ";
+    for (auto &d : loop->poset.delta) {
+        std::cout << d << ", ";
     }
-    std::cout<<std::endl;
+    std::cout << std::endl;
     EXPECT_FALSE(dep0.isEmpty());
     EXPECT_FALSE(dep1.isEmpty());
 }
@@ -117,9 +119,10 @@ TEST(IndependentTest, BasicAssertions) {
 
     PartiallyOrderedSet poset;
     assert(poset.delta.size() == 0);
-    AffineLoopNest loop(Aloop, bloop, poset);
-    assert(loop.poset.delta.size() == 0);
-    
+    std::shared_ptr<AffineLoopNest> loop =
+        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+    assert(loop->poset.delta.size() == 0);
+
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
     i.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
@@ -130,22 +133,18 @@ TEST(IndependentTest, BasicAssertions) {
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesSrc;
     AaxesSrc.emplace_back(1, i);
     AaxesSrc.emplace_back(I, j);
-    ArrayReference Asrc(0, AaxesSrc); //, axes, indTo
+    ArrayReference Asrc(0, loop, AaxesSrc); //, axes, indTo
     std::cout << "Asrc = " << Asrc << std::endl;
 
     // A[j, i]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt;
     AaxesTgt.emplace_back(1, j);
     AaxesTgt.emplace_back(I, i);
-    ArrayReference Atgt(0, AaxesTgt); //, axes, indTo
+    ArrayReference Atgt(0, loop, AaxesTgt); //, axes, indTo
     std::cout << "Atgt = " << Atgt << std::endl;
 
-    DependencePolyhedra dep(loop, loop, Asrc, Atgt);
+    DependencePolyhedra dep(Asrc, Atgt);
     std::cout << "Dep = \n" << dep << std::endl;
     EXPECT_TRUE(dep.isEmpty());
-
 }
-TEST(TriangularExampleTest, BasicAssertions) {
-    
-}
-
+TEST(TriangularExampleTest, BasicAssertions) {}

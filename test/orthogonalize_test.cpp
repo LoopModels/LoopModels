@@ -59,8 +59,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         }
     }
     PartiallyOrderedSet poset;
-    AffineLoopNest alnp(A, r, poset);
-    EXPECT_FALSE(alnp.isEmpty());
+    std::shared_ptr<AffineLoopNest> alnp =
+        std::make_shared<AffineLoopNest>(A, r, poset);
+    EXPECT_FALSE(alnp->isEmpty());
 
     // we have three array refs
     // W[i+m, j+n]
@@ -73,7 +74,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     jpn.emplace_back(One, VarID(1, VarType::LoopInductionVariable));
     jpn.emplace_back(One, VarID(3, VarType::LoopInductionVariable));
     Waxes.emplace_back(I + M - One, jpn);
-    ArrayReference War(0, Waxes); //, axes, indTo
+    ArrayReference War(0, alnp, Waxes); //, axes, indTo
     std::cout << "War = " << War << std::endl;
 
     // B[i, j]
@@ -84,7 +85,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> j{
         std::make_pair(One, VarID(3, VarType::LoopInductionVariable))};
     Baxes.emplace_back(I, j);
-    ArrayReference Bar(1, Baxes); //, axes, indTo
+    ArrayReference Bar(1, alnp, Baxes); //, axes, indTo
     std::cout << "Bar = " << Bar << std::endl;
 
     // C[m, n]
@@ -95,30 +96,30 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> n{
         std::make_pair(One, VarID(1, VarType::LoopInductionVariable))};
     Caxes.emplace_back(M, n);
-    ArrayReference Car(2, Caxes); //, axes, indTo
+    ArrayReference Car(2, alnp, Caxes); //, axes, indTo
     std::cout << "Car = " << Car << std::endl;
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<
-        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
-        orth(orthogonalize(alnp, ai));
+    llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
+                             llvm::SmallVector<ArrayReference, 0>>>
+        orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
     auto [newAlnp, newArrayRefs] = orth.getValue();
-    std::cout << "A=" << newAlnp.A << std::endl;
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp.aln->b);
-    EXPECT_EQ(newAlnp.lowerb[0].size(), 1);
-    EXPECT_EQ(newAlnp.lowerb[1].size(), 1);
-    EXPECT_EQ(newAlnp.lowerb[2].size(), 2);
-    EXPECT_EQ(newAlnp.lowerb[3].size(), 2);
-    EXPECT_EQ(newAlnp.upperb[0].size(), 1);
-    EXPECT_EQ(newAlnp.upperb[1].size(), 1);
-    EXPECT_EQ(newAlnp.upperb[2].size(), 2);
-    EXPECT_EQ(newAlnp.upperb[3].size(), 2);
+    std::cout << "A=" << newAlnp->A << std::endl;
+    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
+    EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
+    EXPECT_EQ(newAlnp->lowerb[1].size(), 1);
+    EXPECT_EQ(newAlnp->lowerb[2].size(), 2);
+    EXPECT_EQ(newAlnp->lowerb[3].size(), 2);
+    EXPECT_EQ(newAlnp->upperb[0].size(), 1);
+    EXPECT_EQ(newAlnp->upperb[1].size(), 1);
+    EXPECT_EQ(newAlnp->upperb[2].size(), 2);
+    EXPECT_EQ(newAlnp->upperb[3].size(), 2);
     std::cout << "Skewed loop nest:\n" << newAlnp << std::endl;
     std::cout << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
@@ -197,8 +198,9 @@ TEST(BadMul, BasicAssertions) {
         }
     }
     PartiallyOrderedSet poset;
-    AffineLoopNest alnp(A, r, poset);
-    EXPECT_FALSE(alnp.isEmpty());
+    std::shared_ptr<AffineLoopNest> alnp =
+        std::make_shared<AffineLoopNest>(A, r, poset);
+    EXPECT_FALSE(alnp->isEmpty());
 
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     // 0, 1, 2
@@ -213,7 +215,7 @@ TEST(BadMul, BasicAssertions) {
     jpn.emplace_back(One, VarID(0, VarType::LoopInductionVariable));
     jpn.emplace_back(-One, VarID(1, VarType::LoopInductionVariable));
     Waxes.emplace_back(M, jpn);
-    ArrayReference War(0, Waxes); //, axes, indTo
+    ArrayReference War(0, alnp, Waxes); //, axes, indTo
     std::cout << "War = " << War << std::endl;
 
     // B[j, l - j]
@@ -225,7 +227,7 @@ TEST(BadMul, BasicAssertions) {
         std::make_pair(One, VarID(1, VarType::LoopInductionVariable)),
         std::make_pair(-One, VarID(2, VarType::LoopInductionVariable))};
     Baxes.emplace_back(O, j);
-    ArrayReference Bar(1, Baxes); //, axes, indTo
+    ArrayReference Bar(1, alnp, Baxes); //, axes, indTo
     std::cout << "Bar = " << Bar << std::endl;
 
     // C[l-j,i-l]
@@ -238,28 +240,28 @@ TEST(BadMul, BasicAssertions) {
         std::make_pair(One, VarID(0, VarType::LoopInductionVariable)),
         std::make_pair(-One, VarID(1, VarType::LoopInductionVariable))};
     Caxes.emplace_back(M, n);
-    ArrayReference Car(2, Caxes); //, axes, indTo
+    ArrayReference Car(2, alnp, Caxes); //, axes, indTo
     std::cout << "Car = " << Car << std::endl;
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<
-        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
-        orth(orthogonalize(alnp, ai));
+    llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
+                             llvm::SmallVector<ArrayReference, 0>>>
+        orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
     auto [newAlnp, newArrayRefs] = orth.getValue();
-    std::cout << "A=" << newAlnp.A << std::endl;
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp.aln->b);
-    EXPECT_EQ(newAlnp.lowerb[0].size(), 1);
-    EXPECT_EQ(newAlnp.lowerb[1].size(), 1);
-    EXPECT_EQ(newAlnp.lowerb[2].size(), 1);
-    EXPECT_EQ(newAlnp.upperb[0].size(), 1);
-    EXPECT_EQ(newAlnp.upperb[1].size(), 1);
-    EXPECT_EQ(newAlnp.upperb[2].size(), 1);
+    std::cout << "A=" << newAlnp->A << std::endl;
+    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
+    EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
+    EXPECT_EQ(newAlnp->lowerb[1].size(), 1);
+    EXPECT_EQ(newAlnp->lowerb[2].size(), 1);
+    EXPECT_EQ(newAlnp->upperb[0].size(), 1);
+    EXPECT_EQ(newAlnp->upperb[1].size(), 1);
+    EXPECT_EQ(newAlnp->upperb[2].size(), 1);
     std::cout << "Skewed loop nest:\n" << newAlnp << std::endl;
     std::cout << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {

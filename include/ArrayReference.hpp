@@ -1,8 +1,10 @@
 #pragma once
 
+#include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./Symbolics.hpp"
 #include <cstdint>
+#include <memory>
 
 // Stride terms are sorted based on VarID
 // NOTE: we require all Const sources be folded into the Affine, and their ids
@@ -178,21 +180,21 @@ struct Stride {
     }
     Stride operator+(Stride &&x) const { return x += *this; }
     Stride operator-(Stride const &x) const {
-	// don't increase capcity, in hopes of terms cancelling out.
+        // don't increase capcity, in hopes of terms cancelling out.
         // Stride y = largerCapacityCopy(x.indices.size());
-	Stride y = *this;
+        Stride y = *this;
         y -= x;
         return y;
     }
-    Stride& negBang() {
-	for (auto ind : indices){
-	    ind.first.negate();
-	}
-	return *this;
+    Stride &negBang() {
+        for (auto ind : indices) {
+            ind.first.negate();
+        }
+        return *this;
     }
     Stride neg() const {
-	Stride y = *this;
-	return y.negBang();
+        Stride y = *this;
+        return y.negBang();
     }
     bool operator==(Stride const &x) const {
         return (stride == x.stride) && (indices == x.indices);
@@ -288,17 +290,20 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 
 struct ArrayReferenceFlat {
     size_t arrayID;
+    AffineLoopNest *loop;
     llvm::SmallVector<std::pair<MPoly, VarID>, ArrayRefPreAllocSize> inds;
 };
 struct ArrayReference {
     size_t arrayID;
+    std::shared_ptr<AffineLoopNest> loop;
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
     size_t dim() const { return axes.size(); }
-    ArrayReference(size_t arrayID) : arrayID(arrayID){};
-    ArrayReference(size_t arrayID,
+    ArrayReference(size_t arrayID, std::shared_ptr<AffineLoopNest> loop)
+        : arrayID(arrayID), loop(loop){};
+    ArrayReference(size_t arrayID, std::shared_ptr<AffineLoopNest> loop,
                    llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes)
-        : arrayID(arrayID), axes(axes) {
+        : arrayID(arrayID), loop(loop), axes(axes) {
         // TODO: fill indToStrideMap;
     }
     void pushAffineAxis(const MPoly &stride, const StridedVector<intptr_t> &s) {
