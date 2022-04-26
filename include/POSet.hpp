@@ -305,7 +305,6 @@ struct PartiallyOrderedSet {
         size_t l = jOff + i;
         if (j >= nVar) {
             nVar = j + 1;
-            size_t oldSize = delta.size();
             delta.resize((j * nVar) >> 1, Interval::unconstrained());
             // for (size_t k = oldSize; k < delta.size(); ++k){
             // 	assert(delta[k].lowerBound ==
