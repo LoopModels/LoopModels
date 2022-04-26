@@ -57,6 +57,12 @@ template <class T, typename P> struct AbstractPolyhedra {
             a[n] = cu * la[n] - cl * ua[n];
         }
         a[i] = 0;
+        // bool anynonzero = std::ranges::any_of(a, [](intptr_t ai) { return ai
+        // != 0; }); if (!anynonzero){
+        //     std::cout << "All A[:,"<<i<<"] = 0; b["<<i<<"] = " << b <<
+        //     std::endl;
+        // }
+        // return anynonzero;
         return std::ranges::any_of(a, [](intptr_t ai) { return ai != 0; });
     }
     // independentOfInner(a, i)
@@ -221,7 +227,7 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
 
-    static void appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
+    static bool appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
                              const Matrix<intptr_t, 0, 0, 0> &uA,
                              const llvm::SmallVectorImpl<P> &lB,
                              const llvm::SmallVectorImpl<P> &uB,
@@ -250,6 +256,43 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
         A.resize(numLoops, c);
         b.resize(c);
+        return false;
+    }
+    bool appendBoundsCheckEmpty(const Matrix<intptr_t, 0, 0, 0> &lA,
+                                  const Matrix<intptr_t, 0, 0, 0> &uA,
+                                  const llvm::SmallVectorImpl<P> &lB,
+                                  const llvm::SmallVectorImpl<P> &uB,
+                                  Matrix<intptr_t, 0, 0, 0> &A,
+                                  llvm::SmallVectorImpl<P> &b, size_t i) {
+        const size_t numNeg = lB.size();
+        const size_t numPos = uB.size();
+#ifdef EXPENSIVEASSERTS
+        for (auto &lb : lB) {
+            if (auto c = lb.getCompileTimeConstant()) {
+                if (c.getValue() == 0) {
+                    assert(lb.terms.size() == 0);
+                }
+            }
+        }
+#endif
+        auto [numLoops, numCol] = A.size();
+        A.resize(numLoops, numCol + numNeg * numPos);
+        b.resize_for_overwrite(numCol + numNeg * numPos);
+        size_t c = numCol;
+        for (size_t l = 0; l < numNeg; ++l) {
+            for (size_t u = 0; u < numPos; ++u) {
+                bool anyNonZero = setBounds(A.getCol(c), b[c], lA.getCol(l),
+                                            lB[l], uA.getCol(u), uB[u], i);
+                c += anyNonZero;
+                if ((!anyNonZero && knownLessEqualZero(b[c] + 1))) {
+		    std::cout << "Following <= -1:\nb[c] = " << b[c] << std::endl;
+                    return true;
+                }
+            }
+        }
+        A.resize(numLoops, c);
+        b.resize(c);
+        return false;
     }
 
     void pruneBounds() {
@@ -426,7 +469,8 @@ template <class T, typename P> struct AbstractPolyhedra {
                             // binary search is probably slower than linear...
                             bool preservesInformation;
                             // std::cout << "(b = " << b << "; d = " << d
-                            //           << "); dependenceHistory[" << j << "] = ";
+                            //           << "); dependenceHistory[" << j << "] =
+                            //           ";
                             // for (auto &dh : dependenceHistory[j]) {
                             //     std::cout << dh << ", ";
                             // }
@@ -578,12 +622,11 @@ template <class T, typename P> struct AbstractPolyhedra {
         llvm::SmallVector<P, 8> ub;
         removeVariable(lA, uA, lb, ub, A, b, i);
     }
-    void removeVariable(Matrix<intptr_t, 0, 0, 0> &lA,
-                        Matrix<intptr_t, 0, 0, 0> &uA,
-                        llvm::SmallVector<P, 8> &lb,
-                        llvm::SmallVector<P, 8> &ub,
-                        Matrix<intptr_t, 0, 0, 0> &A,
-                        llvm::SmallVector<P, 8> &b, const size_t i) {
+    void
+    removeVariable(Matrix<intptr_t, 0, 0, 0> &lA, Matrix<intptr_t, 0, 0, 0> &uA,
+                   llvm::SmallVector<P, 8> &lb, llvm::SmallVector<P, 8> &ub,
+                   Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
+                   const size_t i) {
 
         pruneBounds(A, b, i);
         categorizeBounds(lA, uA, lb, ub, A, b, i);
@@ -641,31 +684,24 @@ template <class T, typename P> struct AbstractPolyhedra {
     }
     void dump() const { std::cout << *this; }
 
-    bool constraintAllZero(size_t i) {
-        for (size_t j = 0; j < getNumVar(); ++j) {
-            if (A(j, i))
-                return false;
-        }
-        return true;
-    }
-    bool hasEmptyConstraint() {
-        // A'x <= b
-        for (size_t i = 0; i < getNumConstraints(); ++i) {
-            if (constraintAllZero(i) && knownGreaterEqualZero(-1 - b[i])) {
-                // if b < 0
-                return true;
-            }
-        }
-        return false;
-    }
     bool isEmpty() {
         // inefficient (compared to ILP + Farkas Lemma approach)
-        auto copy = *this;
+	auto copy = *static_cast<const T *>(this);
+        Matrix<intptr_t, 0, 0, 0> lA;
+        Matrix<intptr_t, 0, 0, 0> uA;
+        llvm::SmallVector<P, 8> lb;
+        llvm::SmallVector<P, 8> ub;
         for (size_t i = 0; i < getNumVar(); ++i) {
-            copy.removeVariable(copy.A, copy.b, i);
-            if (copy.hasEmptyConstraint()) {
-                return true;
-            }
+	    copy.pruneBounds(copy.A, copy.b, i);
+	    copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
+	    copy.deleteBounds(copy.A, copy.b, i);
+	    if (copy.appendBoundsCheckEmpty(lA, uA, lb, ub, copy.A, copy.b, i)){
+		return true;
+	    }
+            copy.removeVariable(lA, uA, lb, ub, copy.A, copy.b, i);
+            // std::cout << "i = " << i << std::endl;
+            // copy.dump();
+            // std::cout << "\n" << std::endl;
         }
         return false;
     }

@@ -399,4 +399,6 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     affp.swap(0, 1);
     std::cout << "Swapped order:" << std::endl;
     std::cout << affp << std::endl;
+
+    EXPECT_FALSE(affp.isEmpty());
 }
