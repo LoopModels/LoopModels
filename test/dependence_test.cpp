@@ -73,9 +73,9 @@ TEST(DependenceTest, BasicAssertions) {
     ArrayReference Atgt1(0, AaxesTgt1); //, axes, indTo
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
-    SymbolicPolyhedra dep0(Dependence::polyhedra(loop, loop, Asrc, Atgt0));
+    DependencePolyhedra dep0(loop, loop, Asrc, Atgt0);
     std::cout << "Dep0 = \n" << dep0 << std::endl;
-    SymbolicPolyhedra dep1(Dependence::polyhedra(loop, loop, Asrc, Atgt1));
+    DependencePolyhedra dep1(loop, loop, Asrc, Atgt1);
     std::cout << "Dep1 = \n" << dep1 << std::endl;
 
     std::cout << "Poset contents: ";
@@ -140,7 +140,7 @@ TEST(IndependentTest, BasicAssertions) {
     ArrayReference Atgt(0, AaxesTgt); //, axes, indTo
     std::cout << "Atgt = " << Atgt << std::endl;
 
-    SymbolicPolyhedra dep(Dependence::polyhedra(loop, loop, Asrc, Atgt));
+    DependencePolyhedra dep(loop, loop, Asrc, Atgt);
     std::cout << "Dep = \n" << dep << std::endl;
     EXPECT_TRUE(dep.isEmpty());
 
