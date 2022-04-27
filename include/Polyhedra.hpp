@@ -36,9 +36,6 @@ template <class T, typename P> struct AbstractPolyhedra {
     bool knownGreaterEqualZero(const P &x) const {
         return static_cast<const T *>(this)->knownGreaterEqualZeroImpl(x);
     }
-    size_t currentToOriginalPerm(intptr_t i) const {
-        return static_cast<const T *>(this)->currentToOriginalPermImpl(i);
-    }
 
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
@@ -714,7 +711,6 @@ struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, intptr_t> {
                      llvm::SmallVector<intptr_t, 8> b)
         : AbstractPolyhedra<IntegerPolyhedra, intptr_t>(std::move(A),
                                                         std::move(b)){};
-    intptr_t currentToOriginalPermImpl(size_t i) const { return i; }
 };
 
 struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra, MPoly> {
@@ -731,5 +727,4 @@ struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra, MPoly> {
     bool knownGreaterEqualZeroImpl(const MPoly &x) const {
         return poset.knownGreaterEqualZero(x);
     }
-    intptr_t currentToOriginalPermImpl(size_t i) const { return i; }
 };

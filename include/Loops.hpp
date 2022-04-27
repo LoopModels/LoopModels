@@ -477,8 +477,7 @@ bool compatible(TriangularLoopNest &l1, TriangularLoopNest &l2,
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
-    PartiallyOrderedSet poset;
+struct AffineLoopNest : SymbolicPolyhedra {
     Permutation perm; // maps current to orig
     llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
@@ -493,16 +492,15 @@ struct AffineLoopNest : AbstractPolyhedra<AffineLoopNest, MPoly> {
     bool knownGreaterEqualZeroImpl(const MPoly &x) const {
         return poset.knownGreaterEqualZero(x);
     }
-    intptr_t currentToOriginalPermImpl(size_t i) const { return perm(i); }
+    intptr_t currentToOriginalPerm(size_t i) const { return perm(i); }
 
     size_t getNumLoops() const { return getNumVar(); }
     AffineLoopNest(Matrix<intptr_t, 0, 0, 0> Ain,
                    llvm::SmallVector<MPoly, 8> bin, PartiallyOrderedSet posetin)
-        : AbstractPolyhedra<AffineLoopNest, MPoly>(std::move(Ain),
-                                                   std::move(bin)),
-          poset(std::move(posetin)), perm(A.size(0)), remainingA(A.size(0)),
-          remainingB(A.size(0)), lowerA(A.size(0)), upperA(A.size(0)),
-          lowerb(A.size(0)), upperb(A.size(0)) {
+        : SymbolicPolyhedra(std::move(Ain), std::move(bin), std::move(posetin)),
+          perm(A.size(0)), remainingA(A.size(0)), remainingB(A.size(0)),
+          lowerA(A.size(0)), upperA(A.size(0)), lowerb(A.size(0)),
+          upperb(A.size(0)) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
         remainingA[i - 1] = A;
