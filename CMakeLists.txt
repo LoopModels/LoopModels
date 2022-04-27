@@ -28,7 +28,7 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 if(NOT ${LLVM_ENABLE_RTTI})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -DCXXOPTS_NO_RTTI")
 endif()
 
 include_directories(${LLVM_INCLUDE_DIRS})
@@ -64,6 +64,7 @@ if(NOT highsextern_POPULATED)
 
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${highsextern_SOURCE_DIR})
 endif()
+
 include_directories("${highsextern_SOURCE_DIR}/src")
 include_directories("${highsextern_BINARY_DIR}")
 

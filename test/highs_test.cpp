@@ -2,7 +2,8 @@
 #include "../include/IntermediateRepresentation.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
-#include "llvm/ADT/SmallVector.h"
+#include <llvm/ADT/SmallVector.h>
+#include <Highs.h>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
