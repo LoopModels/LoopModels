@@ -9,7 +9,6 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 
-
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
 // loops may be in rotated form and the guard prevents execution; this is okay
@@ -25,23 +24,24 @@
 // Then, it builds `DependencePolyhedra`.
 // These can be used to construct an ILP.
 struct LoopBlock {
-    struct MemoryAccess{
-	ArrayReference *ref;
-	llvm::User *src; // null if store
-	llvm::User *dst; // null if load
-	llvm::SmallVector<unsigned> edgesIn;
-	llvm::SmallVector<unsigned> edgesOut;
+    struct MemoryAccess {
+        ArrayReference *ref;
+        llvm::User *src; // null if store
+        llvm::User *dst; // null if load
+        // unsigned (instead of ptr) as we build up edges
+        // and I don't want to relocate pointers when resizing vector
+        llvm::SmallVector<unsigned> edgesIn;
+        llvm::SmallVector<unsigned> edgesOut;
     };
-    struct Edge{
-	DependencePolyhedra poly;
-	unsigned in; // memory access in
-	unsigned out; // memory access out
+    struct Edge {
+        DependencePolyhedra poly;
+        MemoryAccess *in;  // memory access in
+        MemoryAccess *out; // memory access out
     };
-    
+
     llvm::SmallVector<ArrayReference, 0> refs;
     llvm::SmallVector<MemoryAccess, 0> memory;
     llvm::SmallVector<Edge, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
-    
 };
