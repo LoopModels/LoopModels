@@ -5,6 +5,7 @@
 #include "./IntermediateRepresentation.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
