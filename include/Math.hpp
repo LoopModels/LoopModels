@@ -477,6 +477,9 @@ template <typename T, typename A> struct BaseMatrix {
     auto end() const { return static_cast<const A *>(this)->end(); }
 
     T *dataPointer() { return static_cast<A *>(this)->dataPointer(); }
+    const T *dataPointer() const {
+        return static_cast<const A *>(this)->dataPointer();
+    }
 
     std::pair<size_t, size_t> size() const {
         return std::make_pair(numRow(), numCol());
@@ -521,6 +524,35 @@ template <typename T, typename A> struct BaseMatrix {
         }
         return true;
     }
+
+    static constexpr size_t getConstRow() {
+	return A::getConstRow();
+    }
+    auto getCol(size_t i) {
+        constexpr size_t M = getConstRow();
+        if constexpr (M) {
+            return PtrVector<T, M>(dataPointer() + i * M);
+        } else {
+            const size_t _M = numRow();
+            return PtrVector<T, 0>{dataPointer() + i * _M, _M};
+        }
+    }
+    auto getCol(size_t i) const {
+        constexpr size_t M = getConstRow();
+        if constexpr (M) {
+            return PtrVector<const T, M>(dataPointer() + i * M);
+        } else {
+            const size_t _M = numRow();
+	    return llvm::ArrayRef<T>(dataPointer() + i * _M, _M);
+            // return PtrVector<const T, 0>{
+        }
+    }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector<T>{dataPointer() + m, numCol(), numRow()};
+    }
+    StridedVector<const T> getRow(size_t m) const {
+        return StridedVector<const T>{dataPointer() + m, numCol(), numRow()};
+    }
 };
 
 //
@@ -542,14 +574,9 @@ struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     size_t numCol() const { return N; }
 
     T *dataPointer() { return data; }
+    const T *dataPointer() const { return data; }
 
-    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
-    PtrVector<const T, M> getCol(size_t i) const {
-        return PtrVector<T, M>(data + i * M);
-    }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector{begin() + m, N, M};
-    }
+    static constexpr size_t getConstRow() { return M; }
 };
 
 template <typename T, size_t M, size_t S>
@@ -565,17 +592,13 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
-
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
 
-    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
-    PtrVector<const T, M> getCol(size_t i) const {
-        return PtrVector<T, M>(data + i * M);
-    }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector{begin() + m, N, M};
-    }
+    static constexpr size_t getConstRow() { return M; }
+    
+    T *dataPointer() { return data.data(); }
+    const T *dataPointer() const { return data.data(); }
 };
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
@@ -593,18 +616,10 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
-
-    PtrVector<T, 0> getCol(size_t i) {
-        T *p = data.data() + i * M;
-        return PtrVector<T, 0>{p, M};
-    }
-    PtrVector<const T, 0> getCol(size_t i) const {
-        const T *p = data.data() + i * M;
-        return PtrVector<T, 0>{p, M};
-    }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector{begin() + m, N, M};
-    }
+    static constexpr size_t getConstRow() { return 0; }
+    
+    T *dataPointer() { return data.data(); }
+    const T *dataPointer() const { return data.data(); }
 };
 
 template <typename T, unsigned STORAGE = 3>
@@ -625,15 +640,11 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
+    static constexpr size_t getConstRow() { return 0; }
 
-    PtrVector<T, 0> getCol(size_t i) {
-        T *p = data.data() + i * M;
-        return PtrVector<T, 0>{p, M};
-    }
-    PtrVector<T, 0> getCol(size_t i) const {
-        T *p = data.data() + i * M;
-        return PtrVector<T, 0>{p, M};
-    }
+    
+    T *dataPointer() { return data.data(); }
+    const T *dataPointer() const { return data.data(); }
     void copyRow(llvm::ArrayRef<T> a, size_t j) {
         for (size_t m = 0; m < M; ++m) {
             (*this)(j, m) = a[m];
@@ -657,9 +668,6 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             }
         }
         return A;
-    }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector{begin() + m, M, M};
     }
 };
 
@@ -699,20 +707,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
+    static constexpr size_t getConstRow() { return 0; }
+    
+    T *dataPointer() { return data.data(); }
+    const T *dataPointer() const { return data.data(); }
 
-    PtrVector<T, 0> getCol(size_t i) {
-        T *p = data.data() + i * M;
-        return PtrVector<T, 0>{p, M};
-    }
-    llvm::ArrayRef<T> getCol(size_t i) const {
-        return llvm::ArrayRef<T>(data.data() + i * M, M);
-    }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector<T>{begin() + m, N, M};
-    }
-    StridedVector<const T> getRow(size_t m) const {
-        return StridedVector<T>{begin() + m, N, M};
-    }
     static Matrix<T, 0, 0> Uninitialized(size_t MM, size_t NN) {
         Matrix<T, 0, 0> A(0, 0);
         A.M = MM;
@@ -750,9 +749,9 @@ static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
-template <typename T, size_t M, size_t N>
-std::pair<size_t, size_t> size(Matrix<T, M, N> const &A) {
-    return std::make_pair(size(A, 0), size(A, 1));
+template <typename T, typename P>
+std::pair<size_t, size_t> size(BaseMatrix<T,P> const &A) {
+    return std::make_pair(A.numRow(), A.numCol());
 }
 
 // template <typename T> struct StrideMatrix {
