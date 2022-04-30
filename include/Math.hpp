@@ -460,80 +460,88 @@ template <typename T> struct StridedVector {
     size_t size() const { return N; }
 };
 
-//
-// Matrix
-//
-template <typename T, size_t M = 0, size_t N = 0,
-          size_t S = std::max(M, size_t(3)) * std::max(N, size_t(3))>
-struct Matrix {
-    static_assert(M * N == S,
-                  "if specifying non-zero M and N, we should have M*N == S");
-    T data[S];
+template <typename T, typename A> struct BaseMatrix {
+    inline T &getLinearElement(size_t i) {
+        return static_cast<A *>(this)->getLinearElement(i);
+    }
+    inline const T &getLinearElement(size_t i) const {
+        return static_cast<const A *>(this)->getLinearElement(i);
+    }
+    inline T &operator[](size_t i) { return getLinearElement(i); }
+    inline const T &operator[](size_t i) const { return getLinearElement(i); }
+    size_t numCol() const { return static_cast<const A *>(this)->numCol(); }
+    size_t numRow() const { return static_cast<const A *>(this)->numRow(); }
+    auto begin() { return static_cast<A *>(this)->begin(); }
+    auto end() { return static_cast<A *>(this)->end(); }
+    auto begin() const { return static_cast<const A *>(this)->begin(); }
+    auto end() const { return static_cast<const A *>(this)->end(); }
+
+    T *dataPointer() { return static_cast<A *>(this)->dataPointer(); }
+
+    std::pair<size_t, size_t> size() const {
+        return std::make_pair(numRow(), numCol());
+    }
+    size_t size(size_t i) const {
+        if (i) {
+            return numCol();
+        } else {
+            return numRow();
+        }
+    }
+    size_t length() const { return numRow() * numCol(); }
+
     T &operator()(size_t i, size_t j) {
+        const size_t M = numRow();
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
-        assert(j < N);
+        assert(j < numCol());
 #endif
-        return data[i + j * M];
+        return getLinearElement(i + j * M);
     }
-    T operator()(size_t i, size_t j) const {
+    const T &operator()(size_t i, size_t j) const {
+        const size_t M = numRow();
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
-        assert(j < N);
+        assert(j < numCol());
 #endif
-        return data[i + j * M];
+        return (*this)[i + j * M];
+        return getLinearElement(i + j * M);
     }
-    T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
-    T *begin() { return data; }
-    T *end() { return begin() + M; }
-    const T *begin() const { return data; }
-    const T *end() const { return begin() + M; }
 
-    size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
-    size_t length() const { return M * N; }
-
-    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
-    PtrVector<const T, M> getCol(size_t i) const {
-        return PtrVector<T, M>(data + i * M);
-    }
-    bool operator==(const Matrix<T, M, N> &A) const {
+    template <typename C> bool operator==(const BaseMatrix<T, C> &B) const {
+        const size_t M = numRow();
+        const size_t N = numCol();
+        if ((N != B.numCol()) || M != B.numRow()) {
+            return false;
+        }
         for (size_t i = 0; i < M * N; ++i) {
-            if (data[i] != A[i]) {
+            if (getLinearElement(i) != B[i]) {
                 return false;
             }
         }
         return true;
     }
-    StridedVector<T> getRow(size_t m) {
-        return StridedVector{begin() + m, N, M};
-    }
 };
 
-template <typename T, size_t M, size_t S> struct Matrix<T, M, 0, S> {
-    llvm::SmallVector<T, S> data;
-    size_t N;
+//
+// Matrix
+//
+template <typename T, size_t M = 0, size_t N = 0,
+          size_t S = std::max(M, size_t(3)) * std::max(N, size_t(3))>
+struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
+    static_assert(M * N == S,
+                  "if specifying non-zero M and N, we should have M*N == S");
+    T data[S];
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
+    T *begin() { return data; }
+    T *end() { return begin() + M; }
+    const T *begin() const { return data; }
+    const T *end() const { return begin() + M; }
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
 
-    Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
-
-    T &operator()(size_t i, size_t j) {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
-
-    size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
-    size_t length() const { return data.size(); }
+    T *dataPointer() { return data; }
 
     PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
     PtrVector<const T, M> getCol(size_t i) const {
@@ -543,36 +551,48 @@ template <typename T, size_t M, size_t S> struct Matrix<T, M, 0, S> {
         return StridedVector{begin() + m, N, M};
     }
 };
-template <typename T, size_t N, size_t S> struct Matrix<T, 0, N, S> {
+
+template <typename T, size_t M, size_t S>
+struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> data;
-    size_t M;
+    size_t N;
 
-    Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
+    Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
 
-    T &operator()(size_t i, size_t j) {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T operator()(size_t i, size_t j) const {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
 
-    size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
-    size_t length() const { return data.size(); }
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
+
+    PtrVector<T, M> getCol(size_t i) { return PtrVector<T, M>(data + i * M); }
+    PtrVector<const T, M> getCol(size_t i) const {
+        return PtrVector<T, M>(data + i * M);
+    }
+    StridedVector<T> getRow(size_t m) {
+        return StridedVector{begin() + m, N, M};
+    }
+};
+template <typename T, size_t N, size_t S>
+struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
+    llvm::SmallVector<T, S> data;
+    size_t M;
+
+    Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
+
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
+    auto begin() { return data.begin(); }
+    auto end() { return data.end(); }
+    auto begin() const { return data.begin(); }
+    auto end() const { return data.end(); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
 
     PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
@@ -587,7 +607,8 @@ template <typename T, size_t N, size_t S> struct Matrix<T, 0, N, S> {
     }
 };
 
-template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
+template <typename T, unsigned STORAGE = 3>
+struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     typedef T eltype;
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
     llvm::SmallVector<T, TOTALSTORAGE> data;
@@ -595,29 +616,15 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
 
     SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};
 
-    T &operator()(size_t i, size_t j) {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < M);
-#endif
-        return data[i + j * M];
-    }
-    T operator()(size_t i, size_t j) const {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < M);
-#endif
-        return data[i + j * M];
-    }
-    T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, M); }
-    size_t size(size_t) const { return M; }
-    size_t length() const { return data.size(); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return M; }
 
     PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
@@ -656,19 +663,20 @@ template <typename T, unsigned STORAGE = 3> struct SquareMatrix {
     }
 };
 
-std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
-    size_t M = A.M;
-    SquareMatrix<intptr_t> B = SquareMatrix<intptr_t>(M);
-    for (size_t n = 0; n < M; ++n) {
-        for (size_t m = 0; m < M; ++m) {
-            B(m, n) = m == n;
-        }
-    }
+// std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
+//     size_t M = A.M;
+//     SquareMatrix<intptr_t> B = SquareMatrix<intptr_t>(M);
+//     for (size_t n = 0; n < M; ++n) {
+//         for (size_t m = 0; m < M; ++m) {
+//             B(m, n) = m == n;
+//         }
+//     }
 
-    return std::make_pair(B, false);
-}
+//     return std::make_pair(B, false);
+// }
 
-template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
+template <typename T, size_t S>
+struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     llvm::SmallVector<T, S> data;
 
     size_t M;
@@ -682,51 +690,22 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
     Matrix(const SquareMatrix<T> &A)
         : data(A.data.begin(), A.data.end()), M(A.M), N(A.M){};
 
-    T &operator()(size_t i, size_t j) {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        return data[i + j * M];
-    }
-    T operator()(size_t i, size_t j) const {
-#ifndef DONOTBOUNDSCHECK
-        assert(i < M);
-        assert(j < N);
-#endif
-        // std::cout << "(i,j) = (" << i << ", " << j << "); Aold.size() = ( "
-        // << M << ", " << N << " )" << std::endl; std::cout << "Linear index =
-        // " << i + j * M << std::endl; std::cout << "data.size() = " <<
-        // data.size() << std::endl;
-        return data[i + j * M];
-    }
-    T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
-    size_t size(size_t i) const { return i == 0 ? M : N; }
-    std::pair<size_t, size_t> size() const { return std::make_pair(M, N); }
-    size_t length() const { return data.size(); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
+
     PtrVector<T, 0> getCol(size_t i) {
         T *p = data.data() + i * M;
         return PtrVector<T, 0>{p, M};
     }
     llvm::ArrayRef<T> getCol(size_t i) const {
         return llvm::ArrayRef<T>(data.data() + i * M, M);
-    }
-    // PtrVector<T, 0> getCol(size_t i) const {
-    // const T *p = data.data() + i * M;
-    // return PtrVector<T, 0>{p, M};
-    // }
-    bool operator==(const Matrix<T, 0, 0> &A) const {
-        for (size_t i = 0; i < M * N; ++i) {
-            if (data[i] != A[i]) {
-                return false;
-            }
-        }
-        return true;
     }
     StridedVector<T> getRow(size_t m) {
         return StridedVector<T>{begin() + m, N, M};
@@ -880,9 +859,9 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
             }
             os << Aij;
         }
-	if (i != m - 1){
-	    os << std::endl;
-	}
+        if (i != m - 1) {
+            os << std::endl;
+        }
     }
     os << " ]";
     return os;
@@ -928,7 +907,7 @@ AbstractMatrix auto matmul(const AbstractMatrix auto &A,
     auto [M, K] = A.size();
     auto [K2, N] = B.size();
     assert(K == K2);
-    Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
+    Matrix<std::remove_cvref_t<decltype(A(0, 0))>, 0, 0> C(M, N);
     for (size_t n = 0; n < N; ++n) {
         for (size_t k = 0; k < K; ++k) {
             for (size_t m = 0; m < M; ++m) {
@@ -943,7 +922,7 @@ AbstractMatrix auto matmultn(const AbstractMatrix auto &A,
     auto [K, M] = A.size();
     auto [K2, N] = B.size();
     assert(K == K2);
-    Matrix<std::remove_reference_t<decltype(A(0, 0))>, 0, 0> C(M, N);
+    Matrix<std::remove_cvref_t<decltype(A(0, 0))>, 0, 0> C(M, N);
     for (size_t n = 0; n < N; ++n) {
         for (size_t m = 0; m < M; ++m) {
             for (size_t k = 0; k < K; ++k) {
@@ -1388,10 +1367,8 @@ struct Rational {
         return (widen(numerator) * widen(y.denominator)) >=
                (widen(y.numerator) * widen(denominator));
     }
-    bool operator>=(int y) const {
-	return *this >= Rational(y);
-    }
-    
+    bool operator>=(int y) const { return *this >= Rational(y); }
+
     friend bool isZero(Rational x) { return x.numerator == 0; }
     friend bool isOne(Rational x) { return (x.numerator == x.denominator); }
     bool isInteger() const { return denominator == 1; }
