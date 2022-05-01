@@ -125,6 +125,16 @@ target_link_libraries(
 )
 
 add_executable(
+  edge_detection_test
+  edge_detection_test.cpp
+)
+target_link_libraries(
+  edge_detection_test
+  gtest_main
+  LLVM
+)
+
+add_executable(
   highs_test
   highs_test.cpp
 )
@@ -146,4 +156,5 @@ gtest_discover_tests(normal_form_test)
 gtest_discover_tests(linear_algebra_test)
 gtest_discover_tests(orthogonalize_test)
 gtest_discover_tests(dependence_test)
+gtest_discover_tests(edge_detection_test)
 gtest_discover_tests(highs_test)

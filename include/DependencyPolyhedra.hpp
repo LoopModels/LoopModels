@@ -344,6 +344,7 @@ struct MemoryAccess {
     llvm::SmallVector<unsigned> edgesOut;
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+    size_t getNumLoops() const { return ref->getNumLoops(); }
 };
 
 struct Dependence {
