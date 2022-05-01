@@ -13,28 +13,28 @@
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-template <class T, typename P> struct AbstractPolyhedra {
+template <class P, typename T> struct AbstractPolyhedra {
     Matrix<intptr_t, 0, 0, 0> A;
-    llvm::SmallVector<P, 8> b;
+    llvm::SmallVector<T, 8> b;
 
     // AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
     //                   const llvm::SmallVector<P, 8> b)
     //     : A(std::move(A)), b(std::move(b)), lowerA(A.size(0)),
     //       upperA(A.size(0)), lowerb(A.size(0)), upperb(A.size(0)){};
     AbstractPolyhedra(const Matrix<intptr_t, 0, 0, 0> A,
-                      const llvm::SmallVector<P, 8> b)
+                      const llvm::SmallVector<T, 8> b)
         : A(std::move(A)), b(std::move(b)){};
 
     size_t getNumVar() const { return A.size(0); }
     size_t getNumConstraints() const { return A.size(1); }
 
     // methods required to support AbstractPolyhedra
-    bool knownLessEqualZero(P x) const {
-        return static_cast<const T *>(this)->knownLessEqualZeroImpl(
+    bool knownLessEqualZero(T x) const {
+        return static_cast<const P *>(this)->knownLessEqualZeroImpl(
             std::move(x));
     }
-    bool knownGreaterEqualZero(const P &x) const {
-        return static_cast<const T *>(this)->knownGreaterEqualZeroImpl(x);
+    bool knownGreaterEqualZero(const T &x) const {
+        return static_cast<const P *>(this)->knownGreaterEqualZeroImpl(x);
     }
 
     // setBounds(a, b, la, lb, ua, ub, i)
@@ -42,9 +42,9 @@ template <class T, typename P> struct AbstractPolyhedra {
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(PtrVector<intptr_t> a, P &b,
-                          llvm::ArrayRef<intptr_t> la, const P &lb,
-                          llvm::ArrayRef<intptr_t> ua, const P &ub, size_t i) {
+    static bool setBounds(PtrVector<intptr_t> a, T &b,
+                          llvm::ArrayRef<intptr_t> la, const T &lb,
+                          llvm::ArrayRef<intptr_t> ua, const T &ub, size_t i) {
         intptr_t cu = ua[i];
         intptr_t cl = la[i];
         b = cu * lb;
@@ -82,10 +82,10 @@ template <class T, typename P> struct AbstractPolyhedra {
         llvm::SmallVector<llvm::SmallVector<unsigned, 8>, 16> &depHist,
         Matrix<intptr_t, 0, 0, 128> &A,
 
-        llvm::SmallVectorImpl<P> &b,
+        llvm::SmallVectorImpl<T> &b,
         const llvm::SmallVector<llvm::SmallVector<unsigned, 8>, 16> &depHistOld,
         const Matrix<intptr_t, 0, 0, 128> &AOld,
-        const llvm::SmallVectorImpl<P> &bOld, const size_t i) const {
+        const llvm::SmallVectorImpl<T> &bOld, const size_t i) const {
         // eliminate variable `i` according to original order
         const size_t numVarBase = getNumVar();
         size_t numNeg = 0;
@@ -197,10 +197,10 @@ template <class T, typename P> struct AbstractPolyhedra {
     // respect to `i`th variable
     static void categorizeBounds(Matrix<intptr_t, 0, 0, 0> &lA,
                                  Matrix<intptr_t, 0, 0, 0> &uA,
-                                 llvm::SmallVectorImpl<P> &lB,
-                                 llvm::SmallVectorImpl<P> &uB,
+                                 llvm::SmallVectorImpl<T> &lB,
+                                 llvm::SmallVectorImpl<T> &uB,
                                  const Matrix<intptr_t, 0, 0, 0> &A,
-                                 const llvm::SmallVectorImpl<P> &b, size_t i) {
+                                 const llvm::SmallVectorImpl<T> &b, size_t i) {
         auto [numLoops, numCol] = A.size();
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         lA.resize(numLoops, numNeg);
@@ -226,10 +226,10 @@ template <class T, typename P> struct AbstractPolyhedra {
 
     static bool appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
                              const Matrix<intptr_t, 0, 0, 0> &uA,
-                             const llvm::SmallVectorImpl<P> &lB,
-                             const llvm::SmallVectorImpl<P> &uB,
+                             const llvm::SmallVectorImpl<T> &lB,
+                             const llvm::SmallVectorImpl<T> &uB,
                              Matrix<intptr_t, 0, 0, 0> &A,
-                             llvm::SmallVectorImpl<P> &b, size_t i) {
+                             llvm::SmallVectorImpl<T> &b, size_t i) {
         const size_t numNeg = lB.size();
         const size_t numPos = uB.size();
 #ifdef EXPENSIVEASSERTS
@@ -256,11 +256,11 @@ template <class T, typename P> struct AbstractPolyhedra {
         return false;
     }
     bool appendBoundsCheckEmpty(const Matrix<intptr_t, 0, 0, 0> &lA,
-                                  const Matrix<intptr_t, 0, 0, 0> &uA,
-                                  const llvm::SmallVectorImpl<P> &lB,
-                                  const llvm::SmallVectorImpl<P> &uB,
-                                  Matrix<intptr_t, 0, 0, 0> &A,
-                                  llvm::SmallVectorImpl<P> &b, size_t i) {
+                                const Matrix<intptr_t, 0, 0, 0> &uA,
+                                const llvm::SmallVectorImpl<T> &lB,
+                                const llvm::SmallVectorImpl<T> &uB,
+                                Matrix<intptr_t, 0, 0, 0> &A,
+                                llvm::SmallVectorImpl<T> &b, size_t i) {
         const size_t numNeg = lB.size();
         const size_t numPos = uB.size();
 #ifdef EXPENSIVEASSERTS
@@ -282,7 +282,8 @@ template <class T, typename P> struct AbstractPolyhedra {
                                             lB[l], uA.getCol(u), uB[u], i);
                 c += anyNonZero;
                 if ((!anyNonZero && knownLessEqualZero(b[c] + 1))) {
-		    std::cout << "Following <= -1:\nb[c] = " << b[c] << std::endl;
+                    std::cout << "Following <= -1:\nb[c] = " << b[c]
+                              << std::endl;
                     return true;
                 }
             }
@@ -298,7 +299,7 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
     // removes bounds on `i` that are redundant.
-    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
+    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<T, 8> &b,
                      const size_t i) const {
 
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
@@ -307,7 +308,7 @@ template <class T, typename P> struct AbstractPolyhedra {
         }
     }
     void removeRedundantConstraints(Matrix<intptr_t, 0, 0, 0> &Aold,
-                                    llvm::SmallVector<P, 8> &bold,
+                                    llvm::SmallVector<T, 8> &bold,
                                     const size_t i, const size_t numNeg,
                                     const size_t numPos,
                                     intptr_t dependencyToEliminate) const {
@@ -319,8 +320,8 @@ template <class T, typename P> struct AbstractPolyhedra {
         const size_t totalCol = numCol + 2 * numAuxiliaryVar;
         Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
         Matrix<intptr_t, 0, 0, 128> ANew;
-        llvm::SmallVector<P, 16> bOld(totalCol);
-        llvm::SmallVector<P, 16> bNew;
+        llvm::SmallVector<T, 16> bOld(totalCol);
+        llvm::SmallVector<T, 16> bNew;
         // simple mapping of `k` to particular bounds
         llvm::SmallVector<std::pair<unsigned, unsigned>, 16> boundDiffPairs;
         boundDiffPairs.reserve(numAuxiliaryVar);
@@ -396,7 +397,7 @@ template <class T, typename P> struct AbstractPolyhedra {
                             AOld(l, c) = Alc;
                             AOld(l, c + 1) = -Alc;
                         }
-                        P delta = absAij * bold[d];
+                        T delta = absAij * bold[d];
                         Polynomial::fnmadd(delta, bOld[j], absAid);
                         bOld[c] = -delta;
                         bOld[c + 1] = std::move(delta);
@@ -539,7 +540,7 @@ template <class T, typename P> struct AbstractPolyhedra {
 
     // removes bounds on `i` that are redundant.
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &Aold,
-                     llvm::SmallVector<P, 8> &bold, const size_t i,
+                     llvm::SmallVector<T, 8> &bold, const size_t i,
                      const size_t numNeg, const size_t numPos) const {
 
         const size_t numVarBase = getNumVar();
@@ -580,7 +581,7 @@ template <class T, typename P> struct AbstractPolyhedra {
                     for (size_t k = j + 1; k < numCol; ++k) {
                         intptr_t Aik = Aold(i, k);
                         if ((Aik != 0) & ((Aik > 0) == (Aij > 0))) {
-                            P delta = bold[k] * std::abs(Aij);
+                            T delta = bold[k] * std::abs(Aij);
                             Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
                             // delta = k - j
                             if (knownGreaterEqualZero(delta)) {
@@ -595,7 +596,7 @@ template <class T, typename P> struct AbstractPolyhedra {
             erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
-    void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
+    void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<T> &b,
                       size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
         for (size_t j = 0; j < b.size(); ++j) {
@@ -611,19 +612,20 @@ template <class T, typename P> struct AbstractPolyhedra {
     // A'x <= b
     // removes variable `i` from `A`
     void removeVariable(Matrix<intptr_t, 0, 0, 0> &A,
-                        llvm::SmallVector<P, 8> &b, const size_t i) {
+                        llvm::SmallVector<T, 8> &b, const size_t i) {
 
         Matrix<intptr_t, 0, 0, 0> lA;
         Matrix<intptr_t, 0, 0, 0> uA;
-        llvm::SmallVector<P, 8> lb;
-        llvm::SmallVector<P, 8> ub;
+        llvm::SmallVector<T, 8> lb;
+        llvm::SmallVector<T, 8> ub;
         removeVariable(lA, uA, lb, ub, A, b, i);
     }
-    void
-    removeVariable(Matrix<intptr_t, 0, 0, 0> &lA, Matrix<intptr_t, 0, 0, 0> &uA,
-                   llvm::SmallVector<P, 8> &lb, llvm::SmallVector<P, 8> &ub,
-                   Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<P, 8> &b,
-                   const size_t i) {
+    void removeVariable(Matrix<intptr_t, 0, 0, 0> &lA,
+                        Matrix<intptr_t, 0, 0, 0> &uA,
+                        llvm::SmallVector<T, 8> &lb,
+                        llvm::SmallVector<T, 8> &ub,
+                        Matrix<intptr_t, 0, 0, 0> &A,
+                        llvm::SmallVector<T, 8> &b, const size_t i) {
 
         pruneBounds(A, b, i);
         categorizeBounds(lA, uA, lb, ub, A, b, i);
@@ -632,7 +634,7 @@ template <class T, typename P> struct AbstractPolyhedra {
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(
-        Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<P> &b,
+        Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<T> &b,
         llvm::SmallVectorImpl<unsigned> &rowsToErase) {
         std::ranges::sort(rowsToErase);
         for (auto it = std::unique(rowsToErase.begin(), rowsToErase.end());
@@ -649,7 +651,7 @@ template <class T, typename P> struct AbstractPolyhedra {
     // which menas either change printing, or move prints `<<` into
     // the derived classes.
     friend std::ostream &operator<<(std::ostream &os,
-                                    const AbstractPolyhedra<T, P> &p) {
+                                    const AbstractPolyhedra<P, T> &p) {
         const size_t numVar = p.getNumVar();
         const size_t numConstraints = p.getNumConstraints();
         for (size_t c = 0; c < numConstraints; ++c) {
@@ -683,24 +685,38 @@ template <class T, typename P> struct AbstractPolyhedra {
 
     bool isEmpty() {
         // inefficient (compared to ILP + Farkas Lemma approach)
-	auto copy = *static_cast<const T *>(this);
+        auto copy = *static_cast<const P *>(this);
         Matrix<intptr_t, 0, 0, 0> lA;
         Matrix<intptr_t, 0, 0, 0> uA;
-        llvm::SmallVector<P, 8> lb;
-        llvm::SmallVector<P, 8> ub;
+        llvm::SmallVector<T, 8> lb;
+        llvm::SmallVector<T, 8> ub;
         for (size_t i = 0; i < getNumVar(); ++i) {
-	    copy.pruneBounds(copy.A, copy.b, i);
-	    copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
-	    copy.deleteBounds(copy.A, copy.b, i);
-	    if (copy.appendBoundsCheckEmpty(lA, uA, lb, ub, copy.A, copy.b, i)){
-		return true;
-	    }
+            copy.pruneBounds(copy.A, copy.b, i);
+            copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
+            copy.deleteBounds(copy.A, copy.b, i);
+            if (copy.appendBoundsCheckEmpty(lA, uA, lb, ub, copy.A, copy.b,
+                                            i)) {
+                return true;
+            }
             copy.removeVariable(lA, uA, lb, ub, copy.A, copy.b, i);
             // std::cout << "i = " << i << std::endl;
             // copy.dump();
             // std::cout << "\n" << std::endl;
         }
         return false;
+    }
+    bool knownSatisfied(llvm::ArrayRef<intptr_t> x) const {
+        T bc;
+        for (size_t c = 0; c < getNumConstraints(); ++c) {
+            bc = b[c];
+            for (size_t v = 0; v < getNumVar(); ++v) {
+                bc -= A(v, c) * x[v];
+            }
+            if (!knownGreaterEqualZero(bc)) {
+                return false;
+            }
+        }
+        return true;
     }
 };
 

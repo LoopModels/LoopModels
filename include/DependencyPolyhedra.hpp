@@ -6,6 +6,7 @@
 #include "./Math.hpp"
 #include "./POSet.hpp"
 #include "./Polyhedra.hpp"
+#include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include <cstdint>
 #include <llvm/ADT/DenseMap.h>
@@ -212,8 +213,16 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         }
         pruneBounds();
     }
-
     IntegerPolyhedra farkasScheduleDifference(bool boundAbove) {
+        return farkasScheduleDifference(boundAbove, forward);
+    }
+    // `direction = true` means second dep follow first
+    // order of variables:
+    // [ schedule coefs on loops, const schedule coef, bounding coefs ]
+    //
+    // Order of constraints:
+    // constant eq
+    IntegerPolyhedra farkasScheduleDifference(bool boundAbove, bool direction) {
 
         llvm::DenseMap<Polynomial::Monomial, size_t> constantTerms;
         for (auto &bi : b) {
@@ -264,26 +273,39 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             }
         }
         // schedule
-        // if forward,
-        // [numDep0Var...numVar) - [0...numDep0Var)
+	// direction = true (and forward=true)
+	// mean x -> y, hence schedule y - schedule x >= 0
+	//
+        // if direction==true (corresponds to forward==true),
+        // [numDep0Var...numVar) - [0...numDep0Var) + offset
         // else
-        // [0...numDep0Var) - [numDep0Var...numVar)
+        // [0...numDep0Var) - [numDep0Var...numVar) - offset
         // aka, we have
-        // if forward
+        // if direction
         // lambda_0 + lambda' * (b - A*i) + [0...numDep0Var) -
-        // [numDep0Var...numVar)
-        // <= 0 -lambda_0 - lambda' * (b - A*i) + [numDep0Var...numVar) -
-        // [0...numDep0Var) <= 0
+        // [numDep0Var...numVar) - offset == 0
         // else
-        // lambda_0 + lambda' * (b - A*i) - [0...numDep0Var)
-        // + [numDep0Var...numVar) <= 0 -lambda_0 - lambda' * (b - A*i) -
-        // [numDep0Var...numVar) + [0...numDep0Var) <= 0
-        intptr_t sign = 2 * (forward ^ boundAbove) - 1;
+        // lambda_0 + lambda' * (b - A*i) - [0...numDep0Var) +
+        // [numDep0Var...numVar) + offset == 0
+        //
+        // if (direction==true & boundAbove == false){
+        //   sign = 1
+        // } else {
+        //   sign = -1
+        // }
+        //
+        // equality constraints get expanded into two inequalities
+        // a == 0 ->
+        // even row: a <= 0
+        // odd row: -a <= 0
+        intptr_t sign = 2 * (direction ^ boundAbove) - 1;
         for (size_t i = 0; i < numVarOld; ++i) {
             intptr_t s = (2 * (i < numDep0Var) - 1) * sign;
             Af(i, 2 + 2 * i) = s;
-            Af(i, 2 + 2 * i) = -s;
+            Af(i, 3 + 2 * i) = -s;
         }
+        Af(numVarOld, 0) = -sign;
+        Af(numVarOld, 1) = sign;
         // boundAbove
         if (boundAbove) {
             // note we'll generally call this function twice, first with
@@ -313,6 +335,76 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             }
         }
         return IntegerPolyhedra(std::move(As), std::move(ipoly.b));
+    }
+
+    static llvm::Optional<std::pair<DependencePolyhedra, IntegerPolyhedra>>
+    checkDependence(const ArrayReference &x, const Schedule &sx,
+                    const ArrayReference &y, const Schedule &sy) {
+        if (x.gcdKnownIndependent(y)) {
+            return {};
+        }
+        DependencePolyhedra dxy(x, y);
+        if (dxy.isEmpty()) {
+            return {};
+        }
+        // x then y
+        IntegerPolyhedra fxy(dxy.farkasScheduleDifference(false, true));
+        // y then x
+        IntegerPolyhedra fyx(dxy.farkasScheduleDifference(false, false));
+        const size_t numLoopsX = x.getNumLoops();
+        const size_t numLoopsY = y.getNumLoops();
+        const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+        const size_t numLoopsTotal = numLoopsX + numLoopsY;
+        SquarePtrMatrix<const intptr_t> xPhi = sx.getPhi();
+        SquarePtrMatrix<const intptr_t> yPhi = sy.getPhi();
+        PtrVector<const intptr_t, 0> xOmega = sx.getOmega();
+        PtrVector<const intptr_t, 0> yOmega = sy.getOmega();
+        llvm::SmallVector<intptr_t, 16> sch;
+        sch.resize_for_overwrite(numLoopsTotal + 1);
+        for (size_t i = 0; i <= numLoopsCommon; ++i) {
+            if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
+                if (o2idiff < 0) {
+                    dxy.forward = false;
+                    // y then x
+                    return std::make_pair(dxy, fyx);
+                } else {
+                    // x then y
+                    return std::make_pair(dxy, fxy);
+                }
+            }
+	    // we should not be able to reach `numLoopsCommon`
+	    // because at the very latest, this last schedule value
+	    // should be different, because either:
+	    // if (numLoopsX == numLoopsY){
+	    //   we're at the inner most loop, where one of the instructions
+	    //   must have appeared before the other.
+	    // } else {
+	    //   the loop nests differ in depth, in which case the deeper loop
+	    //   must appear either above or below the instructions present
+	    //   at that level
+	    // }
+	    assert(i != numLoopsCommon);
+            for (size_t j = 0; j < numLoopsX; ++j) {
+                sch[j] = xPhi(j, i);
+            }
+            for (size_t j = 0; j < numLoopsY; ++j) {
+                sch[j + numLoopsX] = yPhi(j, i);
+            }
+	    intptr_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
+	    // forward means offset is 2nd - 1st
+            sch[numLoopsTotal] = yO - xO;
+	    if (!fxy.knownSatisfied(sch)){
+		dxy.forward = false;
+		// y then x
+		return std::make_pair(dxy, fyx);
+	    }
+	    // backward means offset is 1st - 2nd
+            sch[numLoopsTotal] = xO - yO;
+	    if (!fyx.knownSatisfied(sch)){
+		return std::make_pair(dxy, fxy);
+	    }
+        }
+        return {};
     }
 
 }; // namespace Dependence

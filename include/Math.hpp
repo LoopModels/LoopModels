@@ -355,6 +355,7 @@ template <typename T> struct PtrVector<T, 0> {
     bool operator==(const llvm::ArrayRef<T> x) const {
         return this->arrayref() == x;
     }
+
 };
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
@@ -525,9 +526,7 @@ template <typename T, typename A> struct BaseMatrix {
         return true;
     }
 
-    static constexpr size_t getConstRow() {
-	return A::getConstRow();
-    }
+    static constexpr size_t getConstRow() { return A::getConstRow(); }
     auto getCol(size_t i) {
         constexpr size_t M = getConstRow();
         if constexpr (M) {
@@ -543,7 +542,7 @@ template <typename T, typename A> struct BaseMatrix {
             return PtrVector<const T, M>(dataPointer() + i * M);
         } else {
             const size_t _M = numRow();
-	    return llvm::ArrayRef<T>(dataPointer() + i * _M, _M);
+            return llvm::ArrayRef<T>(dataPointer() + i * _M, _M);
             // return PtrVector<const T, 0>{
         }
     }
@@ -596,7 +595,7 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     size_t numCol() const { return N; }
 
     static constexpr size_t getConstRow() { return M; }
-    
+
     T *dataPointer() { return data.data(); }
     const T *dataPointer() const { return data.data(); }
 };
@@ -617,7 +616,7 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     static constexpr size_t getConstRow() { return 0; }
-    
+
     T *dataPointer() { return data.data(); }
     const T *dataPointer() const { return data.data(); }
 };
@@ -642,7 +641,6 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     size_t numCol() const { return M; }
     static constexpr size_t getConstRow() { return 0; }
 
-    
     T *dataPointer() { return data.data(); }
     const T *dataPointer() const { return data.data(); }
     void copyRow(llvm::ArrayRef<T> a, size_t j) {
@@ -708,7 +706,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     static constexpr size_t getConstRow() { return 0; }
-    
+
     T *dataPointer() { return data.data(); }
     const T *dataPointer() const { return data.data(); }
 
@@ -749,8 +747,48 @@ static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
+template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
+    T *data;
+    const size_t M, N;
+
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
+    T *begin() { return data; }
+    T *end() { return data + (M * N); }
+    const T *begin() const { return data; }
+    const T *end() const { return data + (M * N); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
+    static constexpr size_t getConstRow() { return 0; }
+
+    T *dataPointer() { return data; }
+    const T *dataPointer() const { return data; }
+
+};
+template <typename T> struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
+    T *data;
+    const size_t M;
+    SquarePtrMatrix(T* data, size_t M) : data(data), M(M) {};
+
+    inline T &getLinearElement(size_t i) { return data[i]; }
+    inline const T &getLinearElement(size_t i) const { return data[i]; }
+    T *begin() { return data; }
+    T *end() { return data + (M * M); }
+    const T *begin() const { return data; }
+    const T *end() const { return data + (M * M); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return M; }
+    static constexpr size_t getConstRow() { return 0; }
+
+    T *dataPointer() { return data; }
+    const T *dataPointer() const { return data; }
+
+};
+
 template <typename T, typename P>
-std::pair<size_t, size_t> size(BaseMatrix<T,P> const &A) {
+std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
     return std::make_pair(A.numRow(), A.numCol());
 }
 

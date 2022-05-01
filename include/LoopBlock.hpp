@@ -10,6 +10,9 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 
+
+
+
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
 // loops may be in rotated form and the guard prevents execution; this is okay
@@ -25,12 +28,14 @@
 // Then, it builds `DependencePolyhedra`.
 // These can be used to construct an ILP.
 struct LoopBlock {
+
     struct MemoryAccess {
         ArrayReference *ref;
         llvm::User *src; // null if store
         llvm::User *dst; // null if load
         // unsigned (instead of ptr) as we build up edges
         // and I don't want to relocate pointers when resizing vector
+	Schedule schedule;
         llvm::SmallVector<unsigned> edgesIn;
         llvm::SmallVector<unsigned> edgesOut;
     };

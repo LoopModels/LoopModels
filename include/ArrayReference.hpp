@@ -299,6 +299,7 @@ struct ArrayReference {
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> axes;
     llvm::SmallVector<uint32_t, ArrayRefPreAllocSize> indToStrideMap;
     size_t dim() const { return axes.size(); }
+    size_t getNumLoops() const { return loop->getNumLoops(); }
     ArrayReference(size_t arrayID, std::shared_ptr<AffineLoopNest> loop)
         : arrayID(arrayID), loop(loop){};
     ArrayReference(size_t arrayID, std::shared_ptr<AffineLoopNest> loop,
@@ -371,6 +372,14 @@ struct ArrayReference {
             std::cout << ax << std::endl;
         }
         return os;
+    }
+    // use gcd to check if they're known to be independent
+    bool gcdKnownIndependent(const ArrayReference &x) const {
+	// TODO: handle this!
+	// consider `x[2i]` vs `x[2i + 1]`, the former
+	// will have a stride of `2`, and the latter of `x[2i+1]`
+	// Additionally, in the future, we do 
+	return false;
     }
 };
 
