@@ -27,19 +27,8 @@
 // These can be used to construct an ILP.
 struct LoopBlock {
 
-    struct MemoryAccess {
-        ArrayReference *ref;
-        llvm::User *src; // null if store
-        llvm::User *dst; // null if load
-                         // unsigned (instead of ptr) as we build up edges
-        // and I don't want to relocate pointers when resizing vector
-        Schedule schedule;
-        llvm::SmallVector<unsigned> edgesIn;
-        llvm::SmallVector<unsigned> edgesOut;
-    };
     struct Edge {
-        DependencePolyhedra poly;
-        IntegerPolyhedra scheduleConstraint;
+        Dependence dependence;
         MemoryAccess *in;  // memory access in
         MemoryAccess *out; // memory access out
     };
@@ -49,4 +38,32 @@ struct LoopBlock {
     llvm::SmallVector<Edge, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
+    // fills all the edges between memory accesses, checking for
+    // dependencies.
+    void fillEdges() {
+        for (size_t i = 1; i < memory.size(); ++i) {
+            MemoryAccess &mai = memory[i];
+            for (size_t j = 0; j < i; ++j) {
+                MemoryAccess &maj = memory[j];
+                if (mai.ref->arrayID != maj.ref->arrayID)
+                    continue;
+		if (llvm::Optional<Dependence> dep = Dependence::check(mai, maj)){
+		    size_t numEdges = edges.size();
+		    Dependence& d(dep.getValue());
+		    MemoryAccess* pin, *pout;
+		    if (d.isForward()){
+			pin = &mai;
+			pout = &maj;
+		    } else {
+			pin = &maj;
+			pout = &mai;
+		    }
+		    edges.emplace_back(std::move(dep.getValue()), pin, pout);
+		    // input's out-edge goes to output's in-edge
+		    pin->addEdgeOut(numEdges);
+		    pout->addEdgeIn(numEdges);
+		}
+            }
+        }
+    }
 };

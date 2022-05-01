@@ -11,6 +11,7 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/User.h>
 #include <utility>
 
 struct DependencePolyhedra : SymbolicPolyhedra {
@@ -327,35 +328,47 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         for (size_t i = numVarKeep; i < numVarNew; ++i) {
             ipoly.removeVariable(i);
         }
-        Matrix<intptr_t, 0, 0, 0> As(numVarKeep, ipoly.getNumConstraints());
-        for (size_t c = 0; c < ipoly.getNumConstraints(); ++c) {
-            for (size_t v = 0; v < numVarKeep; ++v) {
-                As(v, c) = ipoly.A(v, c);
-            }
-        }
-        return IntegerPolyhedra(std::move(As), std::move(ipoly.b));
+        ipoly.A.reduceNumRows(numVarKeep);
+        return ipoly;
     }
-    // TODO: how about always boundAbove, and set all variables to `0`
-    // when doing the checks? Because in the end we do want both directions...
-    // Depending on the chosing direction, discard the programing variable
-    // from the associated constraint.
-    // Then this function cal return all three Polyhedra associated
-    // with the constraint
-    // Perhaps this should move to a dedicated `Edge` type
-    static llvm::Optional<std::pair<DependencePolyhedra, IntegerPolyhedra>>
-    checkDependence(const ArrayReference &x, const Schedule &sx,
-                    const ArrayReference &y, const Schedule &sy) {
-        if (x.gcdKnownIndependent(y)) {
+}; // namespace DependencePolyhedra
+
+struct MemoryAccess {
+    ArrayReference *ref;
+    llvm::User *src; // null if store
+    llvm::User *dst; // null if load
+                     // unsigned (instead of ptr) as we build up edges
+    // and I don't want to relocate pointers when resizing vector
+    Schedule schedule;
+    llvm::SmallVector<unsigned> edgesIn;
+    llvm::SmallVector<unsigned> edgesOut;
+    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+};
+
+struct Dependence {
+    DependencePolyhedra depPoly;
+    IntegerPolyhedra dependenceSatisfaction;
+    IntegerPolyhedra dependenceBounding;
+    bool isForward() const { return depPoly.forward; }
+    static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y) {
+        return check(*x.ref, x.schedule, *y.ref, y.schedule);
+    }
+    static llvm::Optional<Dependence> check(const ArrayReference &x,
+                                            const Schedule &sx,
+                                            const ArrayReference &y,
+                                            const Schedule &sy) {
+        if (x.gcdKnownIndependent(y))
             return {};
-        }
         DependencePolyhedra dxy(x, y);
-        if (dxy.isEmpty()) {
+        if (dxy.isEmpty())
             return {};
-        }
-        // x then y
-        IntegerPolyhedra fxy(dxy.farkasScheduleDifference(false, true));
+        // note that we set boundAbove=true, so we reverse the dependence
+        // direction for the dependency we week, we'll discard the program
+        // variables x then y
+        IntegerPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
-        IntegerPolyhedra fyx(dxy.farkasScheduleDifference(false, false));
+        IntegerPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
         const size_t numLoopsX = x.getNumLoops();
         const size_t numLoopsY = y.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
@@ -365,16 +378,21 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         PtrVector<const intptr_t, 0> xOmega = sx.getOmega();
         PtrVector<const intptr_t, 0> yOmega = sy.getOmega();
         llvm::SmallVector<intptr_t, 16> sch;
-        sch.resize_for_overwrite(numLoopsTotal + 1);
+        sch.resize_for_overwrite(fxy.getNumVar());
+        for (size_t i = numLoopsTotal + 1; i < fxy.getNumVar(); ++i) {
+            sch[i] = 0;
+        }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
                 if (o2idiff < 0) {
                     dxy.forward = false;
+                    fyx.A.reduceNumRows(numLoopsTotal + 1);
                     // y then x
-                    return std::make_pair(dxy, fyx);
+                    return Dependence{dxy, fyx, fxy};
                 } else {
+                    fxy.A.reduceNumRows(numLoopsTotal + 1);
                     // x then y
-                    return std::make_pair(dxy, fxy);
+                    return Dependence{dxy, fxy, fyx};
                 }
             }
             // we should not be able to reach `numLoopsCommon`
@@ -400,16 +418,17 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             sch[numLoopsTotal] = yO - xO;
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
+                fyx.A.reduceNumRows(numLoopsTotal + 1);
                 // y then x
-                return std::make_pair(dxy, fyx);
+                return Dependence{dxy, fyx, fxy};
             }
             // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
-                return std::make_pair(dxy, fxy);
+                fxy.A.reduceNumRows(numLoopsTotal + 1);
+                return Dependence{dxy, fxy, fyx};
             }
         }
         return {};
     }
-
-}; // namespace Dependence
+};

@@ -669,18 +669,6 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     }
 };
 
-// std::pair<SquareMatrix<intptr_t>, bool> inv(SquareMatrix<intptr_t> A) {
-//     size_t M = A.M;
-//     SquareMatrix<intptr_t> B = SquareMatrix<intptr_t>(M);
-//     for (size_t n = 0; n < M; ++n) {
-//         for (size_t m = 0; m < M; ++m) {
-//             B(m, n) = m == n;
-//         }
-//     }
-
-//     return std::make_pair(B, false);
-// }
-
 template <typename T, size_t S>
 struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     llvm::SmallVector<T, S> data;
@@ -739,6 +727,34 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         auto it = data.begin() + i * M;
         data.erase(it, it + M);
         --N;
+    }
+    void increaseNumRows(size_t MM){
+	if (M == MM) return;
+	data.resize_for_overwrite(M*N);
+	for (size_t n = N; n != 0; ){
+	    --n;
+	    for (size_t m = 0; m < M; ++m){
+		data[m + n*MM] = data[m + n*M];
+	    }
+	}
+	M = MM;
+    }
+    void reduceNumRows(size_t MM){
+	if (M == MM) return;
+	for (size_t n = 0; n < N; ++n){
+	    for (size_t m = 0; m < MM; ++m){
+		data[m + n*MM] = data[m + n*M];
+	    }
+	}
+	M = MM;
+	data.resize(M*N);
+    }
+    void resizeCols(size_t MM){
+	if (M < MM){
+	    increaseNumRows(MM);
+	} else {
+	    reduceNumRows(MM);
+	}
     }
 };
 static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
