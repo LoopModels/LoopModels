@@ -4,13 +4,12 @@
 #include "./DependencyPolyhedra.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
-
-
-
+#include <llvm/IR/User.h>
 
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
@@ -32,14 +31,15 @@ struct LoopBlock {
         ArrayReference *ref;
         llvm::User *src; // null if store
         llvm::User *dst; // null if load
-        // unsigned (instead of ptr) as we build up edges
+                         // unsigned (instead of ptr) as we build up edges
         // and I don't want to relocate pointers when resizing vector
-	Schedule schedule;
+        Schedule schedule;
         llvm::SmallVector<unsigned> edgesIn;
         llvm::SmallVector<unsigned> edgesOut;
     };
     struct Edge {
         DependencePolyhedra poly;
+        IntegerPolyhedra scheduleConstraint;
         MemoryAccess *in;  // memory access in
         MemoryAccess *out; // memory access out
     };

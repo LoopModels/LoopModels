@@ -335,7 +335,13 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         }
         return IntegerPolyhedra(std::move(As), std::move(ipoly.b));
     }
-
+    // TODO: how about always boundAbove, and set all variables to `0`
+    // when doing the checks? Because in the end we do want both directions...
+    // Depending on the chosing direction, discard the programing variable
+    // from the associated constraint.
+    // Then this function cal return all three Polyhedra associated
+    // with the constraint
+    // Perhaps this should move to a dedicated `Edge` type
     static llvm::Optional<std::pair<DependencePolyhedra, IntegerPolyhedra>>
     checkDependence(const ArrayReference &x, const Schedule &sx,
                     const ArrayReference &y, const Schedule &sy) {
