@@ -1,4 +1,4 @@
-#include "../include/IntermediateRepresentation.hpp"
+#include "../include/ArrayReference.hpp"
 #include "../include/Math.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstdint>
@@ -8,13 +8,12 @@
 #include <utility>
 
 TEST(IRTest, BasicAssertions) {
-    EXPECT_EQ(3, 3);
-    Const a = Const{.NumType = Const::Int64, .i64 = 0};
-    std::cout << a << std::endl;
-    a = Const{.NumType = Const::Float64, .d = 2.3};
-    std::cout << a << std::endl;
-    a = Const{.NumType = Const::Float32, .f = 3.4f};
-    std::cout << a << std::endl;
+    // Const a = Const{.NumType = Const::Int64, .i64 = 0};
+    // std::cout << a << std::endl;
+    // a = Const{.NumType = Const::Float64, .d = 2.3};
+    // std::cout << a << std::endl;
+    // a = Const{.NumType = Const::Float32, .f = 3.4f};
+    // std::cout << a << std::endl;
     // pretty print
     // We'll build an ArrayRef
     // i_2 (Induction Variable) +

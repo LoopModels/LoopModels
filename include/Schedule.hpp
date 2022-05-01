@@ -1,14 +1,14 @@
 #pragma once
 
+#include "./ArrayReference.hpp"
 #include "./BitSets.hpp"
 #include "./Graphs.hpp"
-#include "./IntermediateRepresentation.hpp"
 #include "./Math.hpp"
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
-// We represent a schedule as 
+// We represent a schedule as
 // Phi_s'*i + omega_s <_{lex} Phi_t*s + Omega_t
 // means that schedule `s` executes before schedule `t`.
 struct Schedule {
@@ -35,8 +35,8 @@ struct Schedule {
         return SquarePtrMatrix<const intptr_t>{data.data(), numLoops};
     }
     PtrVector<const intptr_t, 0> getOmega() const {
-	// return llvm::ArrayRef<typename T>
+        // return llvm::ArrayRef<typename T>
         return PtrVector<const intptr_t, 0>{data.data() + numLoops * numLoops,
-                                      2 * numLoops + 1};
+                                            2 * numLoops + 1};
     }
 };

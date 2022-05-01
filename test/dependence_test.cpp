@@ -1,5 +1,5 @@
+#include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
-#include "../include/IntermediateRepresentation.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"

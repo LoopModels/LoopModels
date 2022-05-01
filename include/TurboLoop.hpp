@@ -1,9 +1,9 @@
 #pragma once
 
-#include "IntegerMap.hpp"
-#include "Loops.hpp"
-#include "POSet.hpp"
-#include "Tree.hpp"
+#include "./IntegerMap.hpp"
+#include "./Loops.hpp"
+#include "./POSet.hpp"
+// #include "Tree.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
@@ -38,7 +38,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                                 llvm::FunctionAnalysisManager &AM);
     ValueToPosetMap valueToPosetMap;
     PartiallyOrderedSet poset;
-    Tree tree;
+    // Tree tree;
     // llvm::AssumptionCache *AC;
     const llvm::TargetLibraryInfo *TLI;
     const llvm::TargetTransformInfo *TTI;

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
-#include "./IntermediateRepresentation.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./POSet.hpp"
@@ -273,9 +272,9 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             }
         }
         // schedule
-	// direction = true (and forward=true)
-	// mean x -> y, hence schedule y - schedule x >= 0
-	//
+        // direction = true (and forward=true)
+        // mean x -> y, hence schedule y - schedule x >= 0
+        //
         // if direction==true (corresponds to forward==true),
         // [numDep0Var...numVar) - [0...numDep0Var) + offset
         // else
@@ -372,37 +371,37 @@ struct DependencePolyhedra : SymbolicPolyhedra {
                     return std::make_pair(dxy, fxy);
                 }
             }
-	    // we should not be able to reach `numLoopsCommon`
-	    // because at the very latest, this last schedule value
-	    // should be different, because either:
-	    // if (numLoopsX == numLoopsY){
-	    //   we're at the inner most loop, where one of the instructions
-	    //   must have appeared before the other.
-	    // } else {
-	    //   the loop nests differ in depth, in which case the deeper loop
-	    //   must appear either above or below the instructions present
-	    //   at that level
-	    // }
-	    assert(i != numLoopsCommon);
+            // we should not be able to reach `numLoopsCommon`
+            // because at the very latest, this last schedule value
+            // should be different, because either:
+            // if (numLoopsX == numLoopsY){
+            //   we're at the inner most loop, where one of the instructions
+            //   must have appeared before the other.
+            // } else {
+            //   the loop nests differ in depth, in which case the deeper loop
+            //   must appear either above or below the instructions present
+            //   at that level
+            // }
+            assert(i != numLoopsCommon);
             for (size_t j = 0; j < numLoopsX; ++j) {
                 sch[j] = xPhi(j, i);
             }
             for (size_t j = 0; j < numLoopsY; ++j) {
                 sch[j + numLoopsX] = yPhi(j, i);
             }
-	    intptr_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
-	    // forward means offset is 2nd - 1st
+            intptr_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
+            // forward means offset is 2nd - 1st
             sch[numLoopsTotal] = yO - xO;
-	    if (!fxy.knownSatisfied(sch)){
-		dxy.forward = false;
-		// y then x
-		return std::make_pair(dxy, fyx);
-	    }
-	    // backward means offset is 1st - 2nd
+            if (!fxy.knownSatisfied(sch)) {
+                dxy.forward = false;
+                // y then x
+                return std::make_pair(dxy, fyx);
+            }
+            // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
-	    if (!fyx.knownSatisfied(sch)){
-		return std::make_pair(dxy, fxy);
-	    }
+            if (!fyx.knownSatisfied(sch)) {
+                return std::make_pair(dxy, fxy);
+            }
         }
         return {};
     }

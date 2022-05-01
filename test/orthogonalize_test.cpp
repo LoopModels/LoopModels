@@ -1,4 +1,4 @@
-#include "../include/IntermediateRepresentation.hpp"
+#include "../include/Orthogonalize.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"

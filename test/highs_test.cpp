@@ -1,13 +1,13 @@
+#include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
-#include "../include/IntermediateRepresentation.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
-#include <llvm/ADT/SmallVector.h>
 #include <Highs.h>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <llvm/ADT/SmallVector.h>
 #include <memory>
 
 TEST(DependenceTest, BasicAssertions) {

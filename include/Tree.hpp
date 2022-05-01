@@ -1,5 +1,5 @@
 #pragma once
-#include "./IntermediateRepresentation.hpp"
+#include "./ArrayReference.hpp"
 #include "./Math.hpp"
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>

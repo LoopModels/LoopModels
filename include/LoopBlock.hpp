@@ -2,7 +2,6 @@
 
 #include "./ArrayReference.hpp"
 #include "./DependencyPolyhedra.hpp"
-#include "./IntermediateRepresentation.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./Schedule.hpp"
