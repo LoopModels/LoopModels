@@ -31,3 +31,5 @@ It is expected that in many cases, bounds checks will actually provide informati
 
 `LoopModels` will provide a function pass.
 
+Some details and explanations will be provided at [spmd.org](https://spmd.org/).
+
