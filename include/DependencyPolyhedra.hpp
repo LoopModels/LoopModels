@@ -273,7 +273,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             }
         }
         // schedule
-        // direction = true (and forward=true)
+        // direction = true (aka forward=true)
         // mean x -> y, hence schedule y - schedule x >= 0
         //
         // if direction==true (corresponds to forward==true),
@@ -379,10 +379,11 @@ struct Dependence {
         PtrVector<const intptr_t, 0> xOmega = sx.getOmega();
         PtrVector<const intptr_t, 0> yOmega = sy.getOmega();
         llvm::SmallVector<intptr_t, 16> sch;
-        sch.resize_for_overwrite(fxy.getNumVar());
-        for (size_t i = numLoopsTotal + 1; i < fxy.getNumVar(); ++i) {
-            sch[i] = 0;
-        }
+        sch.resize_for_overwrite(numLoopsTotal + 1);
+        // sch.resize_for_overwrite(fxy.getNumVar());
+        // for (size_t i = numLoopsTotal + 1; i < fxy.getNumVar(); ++i) {
+        //     sch[i] = 0;
+        // }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
                 if (o2idiff < 0) {

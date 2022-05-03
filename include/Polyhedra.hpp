@@ -707,9 +707,10 @@ template <class P, typename T> struct AbstractPolyhedra {
     }
     bool knownSatisfied(llvm::ArrayRef<intptr_t> x) const {
         T bc;
+        size_t numVar = std::min(x.size(), getNumVar());
         for (size_t c = 0; c < getNumConstraints(); ++c) {
             bc = b[c];
-            for (size_t v = 0; v < getNumVar(); ++v) {
+            for (size_t v = 0; v < numVar; ++v) {
                 bc -= A(v, c) * x[v];
             }
             if (!knownGreaterEqualZero(bc)) {
