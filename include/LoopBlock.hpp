@@ -25,8 +25,21 @@
 // `Read` and `Write`s, without any dependence polyhedra.
 // Then, it builds `DependencePolyhedra`.
 // These can be used to construct an ILP.
+//
+// That is:
+// fields that must be provided/filled:
+//  - refs
+//  - memory
+//  - userToMemory
+// fields it self-initializes:
 struct LoopBlock {
-
+    // TODO: figure out how to handle the graph's dependencies based on
+    // operation/instruction chains.
+    // Perhaps implicitly via the graph when using internal orthogonalization
+    // and register tiling methods, and then generate associated constraints
+    // or aliasing between schedules when running the ILP solver?
+    // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
+    // and all other other shared schedule parameters are aliases (i.e., identical)?
     struct Edge {
         Dependence dependence;
         MemoryAccess *in;  // memory access in
