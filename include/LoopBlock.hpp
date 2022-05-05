@@ -39,11 +39,14 @@ struct LoopBlock {
     // and register tiling methods, and then generate associated constraints
     // or aliasing between schedules when running the ILP solver?
     // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
-    // and all other other shared schedule parameters are aliases (i.e., identical)?
+    // and all other other shared schedule parameters are aliases (i.e.,
+    // identical)?
     struct Edge {
         Dependence dependence;
         MemoryAccess *in;  // memory access in
         MemoryAccess *out; // memory access out
+        Edge(Dependence dependence, MemoryAccess *in, MemoryAccess *out)
+            : dependence(dependence), in(in), out(out) {}
         bool isSatisfied() {
             IntegerPolyhedra &sat = dependence.dependenceSatisfaction;
             auto &schIn = in->schedule;
@@ -117,7 +120,8 @@ struct LoopBlock {
             MemoryAccess &mai = memory[i];
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
-                if (mai.ref->arrayID != maj.ref->arrayID)
+                if ((mai.ref->arrayID != maj.ref->arrayID) ||
+                    ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 if (llvm::Optional<Dependence> dep =
                         Dependence::check(mai, maj)) {
@@ -131,7 +135,7 @@ struct LoopBlock {
                         pin = &maj;
                         pout = &mai;
                     }
-                    edges.emplace_back(std::move(dep.getValue()), pin, pout);
+                    edges.emplace_back(std::move(d), pin, pout);
                     // input's out-edge goes to output's in-edge
                     pin->addEdgeOut(numEdges);
                     pout->addEdgeIn(numEdges);

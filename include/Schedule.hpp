@@ -17,11 +17,15 @@ struct Schedule {
     // However, all odd columns of `Phi` are structually zero,
     // so we represent it with an `N x N` matrix instead.
     static constexpr unsigned maxStackLoops = 3;
-    static constexpr unsigned maxStackSorage =
+    static constexpr unsigned maxStackStorage =
         maxStackLoops * (maxStackLoops + 2) + 1;
     // 3*3+ 2*3+1 = 16
-    llvm::SmallVector<intptr_t, maxStackSorage> data;
+    llvm::SmallVector<intptr_t, maxStackStorage> data;
     const size_t numLoops;
+    Schedule(size_t nLoops)
+        : data(llvm::SmallVector<intptr_t, maxStackStorage>(
+              nLoops * (nLoops + 2) + 1)),
+          numLoops(nLoops){};
     SquarePtrMatrix<intptr_t> getPhi() {
         // return SquarePtrMatrix<intptr_t>(data.data(), numLoops);
         return SquarePtrMatrix<intptr_t>{data.data(), numLoops};

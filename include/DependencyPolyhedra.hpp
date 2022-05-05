@@ -21,6 +21,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
+	std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
         // fast path; most common case
         if (ar0.stridesMatchAllConstant(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
@@ -240,6 +241,10 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         size_t numConstantTerms = constantTerms.size();
         size_t numBoundingCoefs = boundAbove ? 1 + numConstantTerms : 0;
         // var order
+	// FIXME: seems to be broken; too many constraints and variables
+	// appear to be created here.
+	// TODO: Add some explicit Farkas tests for easier debugging/
+	// finer grained testing.
         size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
         size_t numVarNew = numVarKeep + numLambda;
         // constraint order
@@ -325,6 +330,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         }
         IntegerPolyhedra ipoly(std::move(Af), std::move(bf));
         // remove lambdas
+	std::cout << "ipoly =\n" << ipoly << std::endl;
         for (size_t i = numVarKeep; i < numVarNew; ++i) {
             ipoly.removeVariable(i);
         }
@@ -335,13 +341,20 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
 struct MemoryAccess {
     ArrayReference *ref;
-    llvm::User *src; // null if store
-    llvm::User *dst; // null if load
-                     // unsigned (instead of ptr) as we build up edges
+    llvm::User *user; // null if store
+    llvm::User *dst;  // null if load
+                      // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
+    const bool isLoad;
+    MemoryAccess(ArrayReference *ref, llvm::User *user, Schedule schedule,
+                 bool isLoad)
+        : ref(ref), user(user), schedule(schedule),
+          edgesIn(llvm::SmallVector<unsigned, 0>()),
+          edgesOut(llvm::SmallVector<unsigned, 0>()), isLoad(isLoad){};
+
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     size_t getNumLoops() const { return ref->getNumLoops(); }
@@ -367,6 +380,7 @@ struct Dependence {
         // note that we set boundAbove=true, so we reverse the dependence
         // direction for the dependency we week, we'll discard the program
         // variables x then y
+	std::cout << "dxy = \n" << dxy << std::endl;
         IntegerPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
         IntegerPolyhedra fyx(dxy.farkasScheduleDifference(true, true));

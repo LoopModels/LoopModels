@@ -114,6 +114,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             b[c++] = bOld[j];
         }
         size_t c = numExclude;
+	std::cout << "Eliminating: " << i << "; numCol = " << numCol << std::endl;
         for (size_t u = 0; u < numCol; ++u) {
             if (AOld(i, u) > 0) {
                 bool independentOfInnerU =

@@ -3492,14 +3492,14 @@ template<> struct llvm::DenseMapInfo<Polynomial::Monomial,void>{
     static inline Polynomial::Monomial getEmptyKey() {
 	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
 	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
-	    prodIDs[i] = VarID(0x3fffffff);
+	    prodIDs.push_back(VarID(0x3fffffff));
 	}
 	return Polynomial::Monomial(std::move(prodIDs));	
     }
     static inline Polynomial::Monomial getTombstoneKey() {
 	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
 	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
-	    prodIDs[i] = VarID(0x7fffffff);
+	    prodIDs.push_back(VarID(0x7fffffff));
 	}
 	return Polynomial::Monomial(std::move(prodIDs));
     }

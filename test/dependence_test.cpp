@@ -214,53 +214,97 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> k;
     k.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
 
+    LoopBlock lblock;
+    lblock.refs.reserve(6);
     // B[m, n]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> BmnAxis;
     BmnAxis.emplace_back(1, m);
     BmnAxis.emplace_back(M, n);
-    ArrayReference Bmn(0, loopMN, BmnAxis);
-    std::cout << "Bmn = " << Bmn << std::endl;
-    const size_t BmnInd = 0;
+    const size_t BmnInd = lblock.refs.size();
+    lblock.refs.emplace_back(0, loopMN, BmnAxis);
+    std::cout << "Bmn = " << lblock.refs.back() << std::endl;
     // A[m, n]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmnAxis;
     AmnAxis.emplace_back(1, m);
     AmnAxis.emplace_back(M, n);
-    ArrayReference Amn2(0, loopMN, AmnAxis);
-    std::cout << "Amn2 = " << Amn2 << std::endl;
-    const size_t Amn2Ind = 1;
+    const size_t Amn2Ind = lblock.refs.size();
+    lblock.refs.emplace_back(1, loopMN, AmnAxis);
+    std::cout << "Amn2 = " << lblock.refs.back() << std::endl;
     // A[m, n]
-    ArrayReference Amn3(0, loopMNK, AmnAxis);
-    std::cout << "Amn3 = " << Amn3 << std::endl;
-    const size_t Amn3Ind = 2;
+    const size_t Amn3Ind = lblock.refs.size();
+    lblock.refs.emplace_back(1, loopMNK, AmnAxis);
+    std::cout << "Amn3 = " << lblock.refs.back() << std::endl;
     // A[m, k]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmkAxis;
     AmkAxis.emplace_back(1, m);
     AmkAxis.emplace_back(M, k);
-    ArrayReference Amk(0, loopMNK, AmkAxis);
-    std::cout << "Amk = " << Amk << std::endl;
-    const size_t AmkInd = 3;
+    const size_t AmkInd = lblock.refs.size();
+    lblock.refs.emplace_back(1, loopMNK, AmkAxis);
+    std::cout << "Amk = " << lblock.refs.back() << std::endl;
     // U[n, k]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> UnkAxis;
     UnkAxis.emplace_back(1, n);
     UnkAxis.emplace_back(N, k);
-    ArrayReference Unk(0, loopMNK, UnkAxis);
-    std::cout << "Unk = " << Unk << std::endl;
-    const size_t UnkInd = 4;
+    const size_t UnkInd = lblock.refs.size();
+    lblock.refs.emplace_back(2, loopMNK, UnkAxis);
+    std::cout << "Unk = " << lblock.refs.back() << std::endl;
     // U[n, n]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> UnnAxis;
     UnnAxis.emplace_back(1, n);
     UnnAxis.emplace_back(N, n);
-    ArrayReference Unn(0, loopMN, UnnAxis);
-    std::cout << "Unn = " << Unn << std::endl;
-    const size_t UnnInd = 5;
-    
-    LoopBlock lblock;
-    lblock.refs.resize_for_overwrite(6);
-    lblock.refs[BmnInd] = Bmn;
-    lblock.refs[Amn2Ind] = Amn2;
-    lblock.refs[Amn3Ind] = Amn3;
-    lblock.refs[AmkInd] = Amk;
-    lblock.refs[UnkInd] = Unk;
-    lblock.refs[UnnInd] = Unn;
-    
+    const size_t UnnInd = lblock.refs.size();
+    lblock.refs.emplace_back(2, loopMN, UnnAxis);
+    std::cout << "Unn = " << lblock.refs.back() << std::endl;
+
+    // for (m = 0; m < M; ++m){
+    //   for (n = 0; n < N; ++n){
+    //     A(m,n) = B(m,n); // sch2
+    //   }
+    //   for (n = 0; n < N; ++n){
+    //     A(m,n) = A(m,n) / U(n,n); // sch2
+    //     for (k = n+1; k < N; ++k){
+    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3
+    //     }
+    //   }
+    // }
+    Schedule sch2(2);
+    SquarePtrMatrix<intptr_t> Phi2 = sch2.getPhi();
+    // Phi0 = [1 0; 0 1]
+    Phi2(0, 0) = 1;
+    Phi2(1, 1) = 1;
+    // A(m,n) = -> B(m,n) <-
+    lblock.memory.emplace_back(&(lblock.refs[BmnInd]), nullptr, sch2, true);
+    sch2.getOmega()[4] = 1;
+    // -> A(m,n) <- = B(m,n)
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, false);
+    sch2.getOmega()[2] = 1;
+    sch2.getOmega()[4] = 0;
+    // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, true);
+    sch2.getOmega()[4] = 1;
+    // A(m,n) = A(m,n) / -> U(n,n) <-;
+    lblock.memory.emplace_back(&(lblock.refs[UnnInd]), nullptr, sch2, true);
+    sch2.getOmega()[4] = 2;
+    // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, false);
+
+    Schedule sch3(3);
+    SquarePtrMatrix<intptr_t> Phi3 = sch3.getPhi();
+    Phi3(0, 0) = 1;
+    Phi3(1, 1) = 1;
+    Phi3(2, 2) = 1;
+    // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
+    lblock.memory.emplace_back(&(lblock.refs[UnkInd]), nullptr, sch3, true);
+    sch3.getOmega()[6] = 1;
+    // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
+    lblock.memory.emplace_back(&(lblock.refs[Amn3Ind]), nullptr, sch3, true);
+    sch3.getOmega()[6] = 2;
+    // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
+    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3, true);
+    sch3.getOmega()[6] = 3;
+    // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
+    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3, false);
+
+    lblock.fillEdges();
+    std::cout << "Edges found: " << lblock.edges.size() << std::endl;
 }
