@@ -254,13 +254,13 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
         Matrix<intptr_t, 0, 0, 0> Af(numVarNew, numConstraintsNew);
         llvm::SmallVector<intptr_t, 8> bf(numConstraintsNew);
-
+	
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
         // lambda_0 + lambda' * (b - A*i) - psi <= 0
         // -lambda_0 - lambda' * (b - A*i) + psi <= 0
         for (size_t c = 0; c < numContraintsOld; ++c) {
-            size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c;
+            size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c + 1;
             for (size_t v = 0; v < numVarOld; ++v) {
                 Af(lambdaInd, 2 + (v << 1)) = -A(v, c);
                 Af(lambdaInd, 3 + (v << 1)) = A(v, c);
@@ -309,6 +309,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             Af(i, 2 + 2 * i) = s;
             Af(i, 3 + 2 * i) = -s;
         }
+	// delta/constant coef at ind numVarOld
         Af(numVarOld, 0) = -sign;
         Af(numVarOld, 1) = sign;
         // boundAbove
@@ -318,16 +319,19 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             // 2. `boundAbove = true`
             // boundAbove means we have
             // ... == w + u'*N + psi
+	    Af(numScheduleCoefs, 0) = -1;
+	    Af(numScheduleCoefs, 1) = 1;
             for (size_t i = 0; i < numConstantTerms; ++i) {
                 size_t constraintInd = 2 * (i + numVarOld + 1);
-                Af(i + numScheduleCoefs, constraintInd) = -1;
-                Af(i + numScheduleCoefs, constraintInd + 1) = 1;
+                Af(i + numScheduleCoefs + 1, constraintInd) = -1;
+                Af(i + numScheduleCoefs + 1, constraintInd + 1) = 1;
             }
         }
         // all lambda > 0
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numVarKeep + i, numNonLambdaConstraint + i) = -1;
         }
+	std::cout << "Af = \n" << Af << std::endl;
         IntegerPolyhedra ipoly(std::move(Af), std::move(bf));
         // remove lambdas
 	std::cout << "ipoly =\n" << ipoly << std::endl;
