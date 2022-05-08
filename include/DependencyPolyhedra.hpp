@@ -21,7 +21,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
-	std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
+        std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
         // fast path; most common case
         if (ar0.stridesMatchAllConstant(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
@@ -222,7 +222,10 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     // [ schedule coefs on loops, const schedule coef, bounding coefs ]
     //
     // Order of constraints:
-    // constant eq
+    // a) constant eq
+    // b) old vars eq
+    // c) constant terms eq
+    // d) bound above eq
     IntegerPolyhedra farkasScheduleDifference(bool boundAbove, bool direction) {
 
         llvm::DenseMap<Polynomial::Monomial, size_t> constantTerms;
@@ -241,10 +244,10 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         size_t numConstantTerms = constantTerms.size();
         size_t numBoundingCoefs = boundAbove ? 1 + numConstantTerms : 0;
         // var order
-	// FIXME: seems to be broken; too many constraints and variables
-	// appear to be created here.
-	// TODO: Add some explicit Farkas tests for easier debugging/
-	// finer grained testing.
+        // FIXME: seems to be broken; too many constraints and variables
+        // appear to be created here.
+        // TODO: Add some explicit Farkas tests for easier debugging/
+        // finer grained testing.
         size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
         size_t numVarNew = numVarKeep + numLambda;
         // constraint order
@@ -254,11 +257,14 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
         Matrix<intptr_t, 0, 0, 0> Af(numVarNew, numConstraintsNew);
         llvm::SmallVector<intptr_t, 8> bf(numConstraintsNew);
-	
+
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
         // lambda_0 + lambda' * (b - A*i) - psi <= 0
         // -lambda_0 - lambda' * (b - A*i) + psi <= 0
+        // first, lambda_0:
+        Af(numVarKeep, 0) = 1;
+        Af(numVarKeep, 1) = -1;
         for (size_t c = 0; c < numContraintsOld; ++c) {
             size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c + 1;
             for (size_t v = 0; v < numVarOld; ++v) {
@@ -309,7 +315,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             Af(i, 2 + 2 * i) = s;
             Af(i, 3 + 2 * i) = -s;
         }
-	// delta/constant coef at ind numVarOld
+        // delta/constant coef at ind numVarOld
         Af(numVarOld, 0) = -sign;
         Af(numVarOld, 1) = sign;
         // boundAbove
@@ -319,26 +325,32 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             // 2. `boundAbove = true`
             // boundAbove means we have
             // ... == w + u'*N + psi
-	    Af(numScheduleCoefs, 0) = -1;
-	    Af(numScheduleCoefs, 1) = 1;
+            Af(numScheduleCoefs, 0) = -1;
+            Af(numScheduleCoefs, 1) = 1;
+            const size_t boundAboveOffset =
+                2 + 2 * (numVarOld + numConstantTerms);
+            Af(numScheduleCoefs, boundAboveOffset) = -1;
             for (size_t i = 0; i < numConstantTerms; ++i) {
-                size_t constraintInd = 2 * (i + numVarOld + 1);
+                size_t ip1 = i + 1;
+                size_t constraintInd = 2 * (ip1 + numVarOld);
                 Af(i + numScheduleCoefs + 1, constraintInd) = -1;
                 Af(i + numScheduleCoefs + 1, constraintInd + 1) = 1;
+                Af(numScheduleCoefs + ip1, boundAboveOffset + ip1) = -1;
             }
         }
         // all lambda > 0
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numVarKeep + i, numNonLambdaConstraint + i) = -1;
         }
-	std::cout << "Af = \n" << Af << std::endl;
+        std::cout << "Af = \n" << Af << std::endl;
         IntegerPolyhedra ipoly(std::move(Af), std::move(bf));
         // remove lambdas
-	std::cout << "ipoly =\n" << ipoly << std::endl;
+        std::cout << "ipoly =\n" << ipoly << std::endl;
         for (size_t i = numVarKeep; i < numVarNew; ++i) {
             ipoly.removeVariable(i);
         }
         ipoly.A.reduceNumRows(numVarKeep);
+        std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
 }; // namespace DependencePolyhedra
@@ -384,7 +396,8 @@ struct Dependence {
         // note that we set boundAbove=true, so we reverse the dependence
         // direction for the dependency we week, we'll discard the program
         // variables x then y
-	std::cout << "dxy = \n" << dxy << std::endl;
+        std::cout << "x = " << x << "\ny = " << y << "\ndxy = \n"
+                  << dxy << std::endl;
         IntegerPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
         IntegerPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
@@ -439,6 +452,7 @@ struct Dependence {
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
                 fyx.A.reduceNumRows(numLoopsTotal + 1);
+		fyx.dropEmptyConstraints();
                 // y then x
                 return Dependence{dxy, fyx, fxy};
             }
@@ -446,9 +460,17 @@ struct Dependence {
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
                 fxy.A.reduceNumRows(numLoopsTotal + 1);
+		fxy.dropEmptyConstraints();
                 return Dependence{dxy, fxy, fyx};
             }
         }
         return {};
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, Dependence &d) {
+        return os << "Dependence Poly:\n"
+                  << d.depPoly << "\nSchedule Constraints:\n"
+                  << d.dependenceSatisfaction << "\nBounding Constraints:\n"
+                  << d.dependenceBounding << std::endl;
     }
 };

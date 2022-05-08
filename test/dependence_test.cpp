@@ -88,6 +88,20 @@ TEST(DependenceTest, BasicAssertions) {
     std::cout << std::endl;
     EXPECT_FALSE(dep0.isEmpty());
     EXPECT_FALSE(dep1.isEmpty());
+
+    //
+    Schedule schLoad(2);
+    Schedule schStore(2);
+    schLoad.getPhi()(0,0) = 1;
+    schLoad.getPhi()(1,1) = 1;
+    schStore.getPhi()(0,0) = 1;
+    schStore.getPhi()(1,1) = 1;
+    schStore.getOmega()[4] = 1;
+    llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt0, schLoad));
+    EXPECT_TRUE(dc.hasValue());
+    Dependence& d(dc.getValue());
+    std::cout << d << std::endl;
+
 }
 TEST(IndependentTest, BasicAssertions) {
     // symmetric copy
@@ -147,7 +161,18 @@ TEST(IndependentTest, BasicAssertions) {
     DependencePolyhedra dep(Asrc, Atgt);
     std::cout << "Dep = \n" << dep << std::endl;
     EXPECT_TRUE(dep.isEmpty());
+    //
+    Schedule schLoad(2);
+    Schedule schStore(2);
+    schLoad.getPhi()(0,0) = 1;
+    schLoad.getPhi()(1,1) = 1;
+    schStore.getPhi()(0,0) = 1;
+    schStore.getPhi()(1,1) = 1;
+    schStore.getOmega()[4] = 1;
+    llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt, schLoad));
+    EXPECT_FALSE(dc.hasValue());
 }
+/*
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
@@ -308,3 +333,4 @@ TEST(TriangularExampleTest, BasicAssertions) {
     lblock.fillEdges();
     std::cout << "Edges found: " << lblock.edges.size() << std::endl;
 }
+*/

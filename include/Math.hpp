@@ -355,7 +355,6 @@ template <typename T> struct PtrVector<T, 0> {
     bool operator==(const llvm::ArrayRef<T> x) const {
         return this->arrayref() == x;
     }
-
 };
 template <typename T> struct Vector<T, 0> {
     llvm::SmallVector<T> data;
@@ -417,15 +416,11 @@ template <typename T> Vector<T, 0> toVector(llvm::SmallVectorImpl<T> const &x) {
     return y;
 }
 
-template <typename T> bool allZero(llvm::SmallVectorImpl<T> const &x) {
+inline bool isZero(auto x) { return x == 0; }
+
+bool allZero(const auto &x) {
     for (auto &a : x)
-        if (a != 0)
-            return false;
-    return true;
-}
-template <typename T> bool allZero(llvm::ArrayRef<T> x) {
-    for (auto &a : x)
-        if (a != 0)
+        if (!isZero(a))
             return false;
     return true;
 }
@@ -654,7 +649,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         }
     }
     void copyCol(const SquareMatrix<T> &A, size_t j) {
-        copyCol(A.getCol(A, j), j);
+        copyCol(A.getCol(j), j);
     }
     // returns the inverse, followed by bool where true means failure
 
@@ -723,38 +718,40 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         N = NN;
         data.resize_for_overwrite(M * N);
     }
-    void eraseRow(size_t i) {
+    void eraseCol(size_t i) {
         auto it = data.begin() + i * M;
         data.erase(it, it + M);
         --N;
     }
-    void increaseNumRows(size_t MM){
-	if (M == MM) return;
-	data.resize_for_overwrite(M*N);
-	for (size_t n = N; n != 0; ){
-	    --n;
-	    for (size_t m = 0; m < M; ++m){
-		data[m + n*MM] = data[m + n*M];
-	    }
-	}
-	M = MM;
+    void increaseNumRows(size_t MM) {
+        if (M == MM)
+            return;
+        data.resize_for_overwrite(M * N);
+        for (size_t n = N; n != 0;) {
+            --n;
+            for (size_t m = 0; m < M; ++m) {
+                data[m + n * MM] = data[m + n * M];
+            }
+        }
+        M = MM;
     }
-    void reduceNumRows(size_t MM){
-	if (M == MM) return;
-	for (size_t n = 0; n < N; ++n){
-	    for (size_t m = 0; m < MM; ++m){
-		data[m + n*MM] = data[m + n*M];
-	    }
-	}
-	M = MM;
-	data.resize(M*N);
+    void reduceNumRows(size_t MM) {
+        if (M == MM)
+            return;
+        for (size_t n = 0; n < N; ++n) {
+            for (size_t m = 0; m < MM; ++m) {
+                data[m + n * MM] = data[m + n * M];
+            }
+        }
+        M = MM;
+        data.resize(M * N);
     }
-    void resizeCols(size_t MM){
-	if (M < MM){
-	    increaseNumRows(MM);
-	} else {
-	    reduceNumRows(MM);
-	}
+    void resizeCols(size_t MM) {
+        if (M < MM) {
+            increaseNumRows(MM);
+        } else {
+            reduceNumRows(MM);
+        }
     }
 };
 static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
@@ -780,12 +777,12 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
 
     T *dataPointer() { return data; }
     const T *dataPointer() const { return data; }
-
 };
-template <typename T> struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
+template <typename T>
+struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     T *data;
     const size_t M;
-    SquarePtrMatrix(T* data, size_t M) : data(data), M(M) {};
+    SquarePtrMatrix(T *data, size_t M) : data(data), M(M){};
 
     inline T &getLinearElement(size_t i) { return data[i]; }
     inline const T &getLinearElement(size_t i) const { return data[i]; }
@@ -800,7 +797,6 @@ template <typename T> struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>>
 
     T *dataPointer() { return data; }
     const T *dataPointer() const { return data; }
-
 };
 
 template <typename T, typename P>

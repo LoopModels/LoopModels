@@ -516,7 +516,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             for (auto it = rowsToErase.rbegin(); it != rowsToErase.rend();
                  ++it) {
-                AOld.eraseRow(*it);
+                AOld.eraseCol(*it);
                 bOld.erase(bOld.begin() + (*it));
             }
             rowsToErase.clear();
@@ -606,7 +606,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
         }
         for (auto it = deleteBounds.rbegin(); it != deleteBounds.rend(); ++it) {
-            A.eraseRow(*it);
+            A.eraseCol(*it);
             b.erase(b.begin() + (*it));
         }
     }
@@ -641,11 +641,20 @@ template <class P, typename T> struct AbstractPolyhedra {
         for (auto it = std::unique(rowsToErase.begin(), rowsToErase.end());
              it != rowsToErase.begin();) {
             --it;
-            A.eraseRow(*it);
+            A.eraseCol(*it);
             b.erase(b.begin() + (*it));
         }
     }
-
+    void dropEmptyConstraints(){
+	const size_t numConstraints = getNumConstraints();
+	for (size_t c = numConstraints; c != 0; ){
+	    --c;
+	    if (allZero(A.getCol(c))){
+		A.eraseCol(c);
+		b.erase(b.begin()+c);
+	    }
+	}
+    }
     // prints in current permutation order.
     // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
     // in which case, we have to remove `currentToOriginalPerm`,

@@ -127,6 +127,11 @@ struct LoopBlock {
                         Dependence::check(mai, maj)) {
                     size_t numEdges = edges.size();
                     Dependence &d(dep.getValue());
+		    if (d.isForward()){
+			std::cout << "dep direction: x -> y" << std::endl;
+		    } else {
+			std::cout << "dep direction: y -> x" << std::endl;
+		    }
                     MemoryAccess *pin, *pout;
                     if (d.isForward()) {
                         pin = &mai;
