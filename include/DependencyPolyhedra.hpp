@@ -142,7 +142,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
         auto [nv0, nc0] = ar0.loop->A.size();
         auto [nv1, nc1] = ar1.loop->A.size();
-	numDep0Var = nv0;
+        numDep0Var = nv0;
         const size_t nc = nc0 + nc1;
         A.resize(nv0 + nv1, nc + 2 * dims.size());
         for (size_t i = 0; i < nc0; ++i) {
@@ -421,13 +421,14 @@ struct Dependence {
                     dxy.forward = false;
                     fyx.A.reduceNumRows(numLoopsTotal + 1);
                     fyx.dropEmptyConstraints();
-		    std::cout << "dep order 0; i = " << i << std::endl;
+                    std::cout << "dep order 0; i = " << i << std::endl;
                     // y then x
                     return Dependence{dxy, fyx, fxy};
                 } else {
+                    dxy.forward = true;
                     fxy.A.reduceNumRows(numLoopsTotal + 1);
                     fxy.dropEmptyConstraints();
-		    std::cout << "dep order 1; i = " << i << std::endl;
+                    std::cout << "dep order 1; i = " << i << std::endl;
                     // x then y
                     return Dependence{dxy, fxy, fyx};
                 }
@@ -457,16 +458,17 @@ struct Dependence {
                 dxy.forward = false;
                 fyx.A.reduceNumRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
-		std::cout << "dep order 2; i = " << i << std::endl;
+                std::cout << "dep order 2; i = " << i << std::endl;
                 // y then x
                 return Dependence{dxy, fyx, fxy};
             }
             // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
+                dxy.forward = true;
                 fxy.A.reduceNumRows(numLoopsTotal + 1);
                 fxy.dropEmptyConstraints();
-		std::cout << "dep order 3; i= " << i << std::endl;
+                std::cout << "dep order 3; i= " << i << std::endl;
                 return Dependence{dxy, fxy, fyx};
             }
         }

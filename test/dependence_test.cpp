@@ -100,6 +100,7 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt0, schLoad));
     EXPECT_TRUE(dc.hasValue());
     Dependence& d(dc.getValue());
+    EXPECT_TRUE(d.isForward());
     std::cout << d << std::endl;
 
 }

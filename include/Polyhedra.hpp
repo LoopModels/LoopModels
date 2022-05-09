@@ -628,7 +628,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                         Matrix<intptr_t, 0, 0, 0> &A,
                         llvm::SmallVector<T, 8> &b, const size_t i) {
 
-        pruneBounds(A, b, i);
+        // pruneBounds(A, b, i);
         categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
         appendBounds(lA, uA, lb, ub, A, b, i);
