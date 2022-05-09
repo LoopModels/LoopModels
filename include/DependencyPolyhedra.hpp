@@ -142,7 +142,7 @@ struct DependencePolyhedra : SymbolicPolyhedra {
 
         auto [nv0, nc0] = ar0.loop->A.size();
         auto [nv1, nc1] = ar1.loop->A.size();
-
+	numDep0Var = nv0;
         const size_t nc = nc0 + nc1;
         A.resize(nv0 + nv1, nc + 2 * dims.size());
         for (size_t i = 0; i < nc0; ++i) {
@@ -420,10 +420,14 @@ struct Dependence {
                 if (o2idiff < 0) {
                     dxy.forward = false;
                     fyx.A.reduceNumRows(numLoopsTotal + 1);
+                    fyx.dropEmptyConstraints();
+		    std::cout << "dep order 0; i = " << i << std::endl;
                     // y then x
                     return Dependence{dxy, fyx, fxy};
                 } else {
                     fxy.A.reduceNumRows(numLoopsTotal + 1);
+                    fxy.dropEmptyConstraints();
+		    std::cout << "dep order 1; i = " << i << std::endl;
                     // x then y
                     return Dependence{dxy, fxy, fyx};
                 }
@@ -452,7 +456,8 @@ struct Dependence {
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
                 fyx.A.reduceNumRows(numLoopsTotal + 1);
-		fyx.dropEmptyConstraints();
+                fyx.dropEmptyConstraints();
+		std::cout << "dep order 2; i = " << i << std::endl;
                 // y then x
                 return Dependence{dxy, fyx, fxy};
             }
@@ -460,7 +465,8 @@ struct Dependence {
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
                 fxy.A.reduceNumRows(numLoopsTotal + 1);
-		fxy.dropEmptyConstraints();
+                fxy.dropEmptyConstraints();
+		std::cout << "dep order 3; i= " << i << std::endl;
                 return Dependence{dxy, fxy, fyx};
             }
         }
@@ -468,8 +474,13 @@ struct Dependence {
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dependence &d) {
-        return os << "Dependence Poly:\n"
-                  << d.depPoly << "\nSchedule Constraints:\n"
+        os << "Dependence Poly ";
+        if (d.isForward()) {
+            os << "x -> y:\n";
+        } else {
+            os << "y -> x:\n";
+        }
+        return os << d.depPoly << "\nSchedule Constraints:\n"
                   << d.dependenceSatisfaction << "\nBounding Constraints:\n"
                   << d.dependenceBounding << std::endl;
     }
