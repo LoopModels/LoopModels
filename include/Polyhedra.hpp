@@ -61,7 +61,6 @@ template <class P, typename T> struct AbstractPolyhedra {
         for (size_t n = 0; n < N; ++n) {
             a[n] = cu * la[n] - cl * ua[n];
         }
-        a[i] = 0;
         // bool anynonzero = std::ranges::any_of(a, [](intptr_t ai) { return ai
         // != 0; }); if (!anynonzero){
         //     std::cout << "All A[:,"<<i<<"] = 0; b["<<i<<"] = " << b <<
@@ -93,17 +92,89 @@ template <class P, typename T> struct AbstractPolyhedra {
     static inline bool auxMisMatch(intptr_t x, intptr_t y) {
         return (x >= 0) && (y >= 0) && (x != y);
     }
-    // eliminateVariable(&A, &b, const &AOld, const &bOld, i)
-    // For `AOld' * x <= bOld, eliminates `i` from `AOld` and `bOld` using
-    // Fourier–Motzkin elimination, storing the updated equations in `A` and
-    // `b`.
-    size_t eliminateVariable(Matrix<intptr_t, 0, 0, 128> &Adst,
-                             llvm::SmallVectorImpl<T> &bdst,
-                             Matrix<intptr_t, 0, 0, 128> &E,
-                             llvm::SmallVectorImpl<T> &q,
-                             const Matrix<intptr_t, 0, 0, 128> &Asrc,
-                             const llvm::SmallVectorImpl<T> &bsrc,
-                             const size_t i) const {
+
+    // eliminateVarForRCElim(&Adst, &bdst, E1, q1, Asrc, bsrc, E0, q0, i)
+    // For `Asrc' * x <= bsrc` and `E0'* x = q0`, eliminates `i`
+    // using Fourier–Motzkin elimination, storing the updated equations in
+    // `Adst`, `bdst`, `E1`, and `q1`.
+    size_t eliminateVarForRCElim(
+        Matrix<intptr_t, 0, 0, 128> &Adst, llvm::SmallVectorImpl<T> &bdst,
+        Matrix<intptr_t, 0, 0, 128> &E1, llvm::SmallVectorImpl<T> &q1,
+        const Matrix<intptr_t, 0, 0, 128> &Asrc,
+        const llvm::SmallVectorImpl<T> &bsrc, Matrix<intptr_t, 0, 0, 128> &E0,
+        llvm::SmallVectorImpl<T> &q0, const size_t i) const {
+        // eliminate variable `i` according to original order
+        auto [numExclude, c, numNonZero] =
+            eliminateVarForRCElimCore(Adst, bdst, E0, q0, Asrc, bsrc, i);
+        auto [Re, Ce] = E0.size();
+        E1.resizeForOverwrite(Re, Ce - numNonZero +
+                                      ((numNonZero * (numNonZero - 1)) >> 1));
+        size_t k = 0;
+        for (size_t u = 0; u < E0.numCol(); ++u) {
+            auto Eu = E0.getCol(u);
+            intptr_t Eiu = Eu[i];
+            if (Eiu == 0) {
+                for (size_t v = 0; v < Re; ++v) {
+                    E1(v, k) = Eu(v);
+                }
+                q1[k] = q0[u];
+                ++k;
+                continue;
+            }
+            if (u == 0)
+                continue;
+            intptr_t auxInd = auxiliaryInd(Eu);
+            bool independentOfInnerU = independentOfInner(Eu, i);
+            for (size_t l = 0; l < u; ++l) {
+                auto El = E0.getCol(l);
+                intptr_t Eil = El[i];
+                if ((Eil == 0) ||
+                    (independentOfInnerU && independentOfInner(El, i)) ||
+                    auxMisMatch(auxInd, auxiliaryInd(El)))
+                    continue;
+
+                intptr_t g = std::gcd(Eiu, Eil);
+                intptr_t Eiug = Eiu / g;
+                intptr_t Eilg = Eil / g;
+                for (size_t v = 0; v < Re; ++v) {
+                    E1(v, k) = Eiug * E0(v, l) - Eilg * E0(v, u);
+                }
+                q1(k) = Eiug * q0(l) - Eilg * q0(u);
+                ++k;
+            }
+        }
+        E1.resize(Re, k);
+        q1.resize(k);
+        Adst.resize(Asrc.numRow(), c);
+        bdst.resize(c);
+        return numExclude;
+    }
+    // method for when we do not match `Ex=q` constraints with themselves
+    // e.g., for removeRedundantConstraints
+    size_t eliminateVarForRCElim(Matrix<intptr_t, 0, 0, 128> &Adst,
+                                 llvm::SmallVectorImpl<T> &bdst,
+                                 Matrix<intptr_t, 0, 0, 128> &E,
+                                 llvm::SmallVectorImpl<T> &q,
+                                 const Matrix<intptr_t, 0, 0, 128> &Asrc,
+                                 const llvm::SmallVectorImpl<T> &bsrc,
+                                 const size_t i) const {
+
+        auto [numExclude, c, _] =
+            eliminateVarForRCElimCore(Adst, bdst, E, q, Asrc, bsrc, i);
+        for (size_t u = E.numCol(); u != 0;) {
+            if (E(i, --u)) {
+                E.eraseCol(u);
+                q.erase(q.begin() + u);
+            }
+        }
+        Adst.resize(Asrc.numRow(), c);
+        bdst.resize(c);
+    }
+    std::tuple<size_t, size_t, size_t> eliminateVarForRCElimCore(
+        Matrix<intptr_t, 0, 0, 128> &Adst, llvm::SmallVectorImpl<T> &bdst,
+        Matrix<intptr_t, 0, 0, 128> &E, llvm::SmallVectorImpl<T> &q,
+        const Matrix<intptr_t, 0, 0, 128> &Asrc,
+        const llvm::SmallVectorImpl<T> &bsrc, const size_t i) const {
         // eliminate variable `i` according to original order
         const auto [numVar, numCol] = Asrc.size();
         size_t numNeg = 0;
@@ -139,7 +210,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         std::cout << "Eliminating: " << i << "; numCol = " << numCol
                   << std::endl;
         // TODO: drop independentOfInner?
-        for (size_t u = 1; u < numCol; ++u) {
+        for (size_t u = 0; u < numCol; ++u) {
             auto Au = Asrc.getCol(u);
             intptr_t Aiu = Au[i];
             if (Aiu == 0)
@@ -173,36 +244,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                                bsrc[u], i);
             }
         }
-        for (size_t u = 1; u < numECol; ++u) {
-            auto Eu = E.getCol(u);
-            intptr_t Eiu = Eu[i];
-            if (Eiu == 0)
-                continue;
-            intptr_t auxInd = auxiliaryInd(Eu);
-            bool independentOfInnerU = independentOfInner(Eu, i);
-            for (size_t l = 0; l < u; ++l) {
-                auto El = E.getCol(l);
-                intptr_t Eil = El[i];
-                if ((Eil == 0) ||
-                    (independentOfInnerU && independentOfInner(El, i)) ||
-                    auxMisMatch(auxInd, auxiliaryInd(El)))
-                    continue;
-                if ((Eiu > 0) == (Eil > 0)) {
-                    for (size_t v = 0; v < E.numRow(); ++v) {
-                        negate(E(v, l));
-                    }
-                    negate(q[l]);
-                }
-                c += setBounds(Adst.getCol(c), bdst[c], El, q[l], Eu, q[u], i);
-            }
-        }
-        for (size_t u = numECol; u != 0;) {
-            if (E(i, --u))
-                E.eraseCol(u);
-        }
-        Adst.resize(numVar, c);
-        bdst.resize(c);
-        return numExclude;
+        return std::make_tuple(numExclude, c, numNonZero);
     }
     // Returns true if `sum(A[start:end,l] .| A[start:end,u]) > 1`
     // We use this as we are not interested in comparing the auxiliary
@@ -277,12 +319,13 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
     }
 
-    static bool appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
-                             const Matrix<intptr_t, 0, 0, 0> &uA,
-                             const llvm::SmallVectorImpl<T> &lB,
-                             const llvm::SmallVectorImpl<T> &uB,
-                             Matrix<intptr_t, 0, 0, 0> &A,
-                             llvm::SmallVectorImpl<T> &b, size_t i) {
+    template <bool CheckEmpty>
+    bool appendBounds(const Matrix<intptr_t, 0, 0, 0> &lA,
+                      const Matrix<intptr_t, 0, 0, 0> &uA,
+                      const llvm::SmallVectorImpl<T> &lB,
+                      const llvm::SmallVectorImpl<T> &uB,
+                      Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<T> &b,
+                      size_t i, Polynomial::Val<CheckEmpty>) const {
         const size_t numNeg = lB.size();
         const size_t numPos = uB.size();
 #ifdef EXPENSIVEASSERTS
@@ -295,378 +338,94 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
 #endif
         auto [numLoops, numCol] = A.size();
-        A.resize(numLoops, numCol + numNeg * numPos);
-        b.resize_for_overwrite(numCol + numNeg * numPos);
-        size_t c = numCol;
+        A.reserve(numLoops, numCol + numNeg * numPos);
+        b.reserve(numCol + numNeg * numPos);
+        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, E;
+        llvm::SmallVector<T, 16> btmp0, btmp1, q;
         for (size_t l = 0; l < numNeg; ++l) {
             for (size_t u = 0; u < numPos; ++u) {
-                c += setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l],
-                               uA.getCol(u), uB[u], i);
-            }
-        }
-        A.resize(numLoops, c);
-        b.resize(c);
-        return false;
-    }
-    bool appendBoundsCheckEmpty(const Matrix<intptr_t, 0, 0, 0> &lA,
-                                const Matrix<intptr_t, 0, 0, 0> &uA,
-                                const llvm::SmallVectorImpl<T> &lB,
-                                const llvm::SmallVectorImpl<T> &uB,
-                                Matrix<intptr_t, 0, 0, 0> &A,
-                                llvm::SmallVectorImpl<T> &b, size_t i) {
-        const size_t numNeg = lB.size();
-        const size_t numPos = uB.size();
-#ifdef EXPENSIVEASSERTS
-        for (auto &lb : lB) {
-            if (auto c = lb.getCompileTimeConstant()) {
-                if (c.getValue() == 0) {
-                    assert(lb.terms.size() == 0);
-                }
-            }
-        }
-#endif
-        auto [numLoops, numCol] = A.size();
-        A.resize(numLoops, numCol + numNeg * numPos);
-        b.resize_for_overwrite(numCol + numNeg * numPos);
-        size_t c = numCol;
-        for (size_t l = 0; l < numNeg; ++l) {
-            for (size_t u = 0; u < numPos; ++u) {
-                bool anyNonZero = setBounds(A.getCol(c), b[c], lA.getCol(l),
-                                            lB[l], uA.getCol(u), uB[u], i);
-                c += anyNonZero;
-                if ((!anyNonZero && knownLessEqualZero(b[c] + 1))) {
-                    std::cout << "Following <= -1:\nb[c] = " << b[c]
-                              << std::endl;
-                    return true;
-                }
-            }
-        }
-        A.resize(numLoops, c);
-        b.resize(c);
-        return false;
-    }
-
-    void pruneBounds() {
-        for (size_t i = 0; i < getNumVar(); ++i) {
-            pruneBounds(A, b, i);
-        }
-    }
-    // removes bounds on `i` that are redundant.
-    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVector<T, 8> &b,
-                     const size_t i) const {
-
-        const auto [numNeg, numPos] = countNonZeroSign(A, i);
-        if ((numNeg > 1) | (numPos > 1)) {
-            pruneBounds(A, b, i, numNeg, numPos);
-        }
-    }
-    void removeRedundantConstraints(Matrix<intptr_t, 0, 0, 0> &Aold,
-                                    llvm::SmallVector<T, 8> &bold,
-                                    const size_t i, const size_t numNeg,
-                                    const size_t numPos,
-                                    intptr_t dependencyToEliminate) const {
-        const size_t numVarBase = getNumVar();
-        const size_t numCol = Aold.size(1);
-        // hopefully stack allocate scratch space
-        const size_t numAuxiliaryVar = bin2(numNeg) + bin2(numPos);
-        const size_t numVar = numVarBase + numAuxiliaryVar;
-        const size_t totalCol = numCol + 2 * numAuxiliaryVar;
-        Matrix<intptr_t, 0, 0, 128> AOld(numVar, totalCol);
-        Matrix<intptr_t, 0, 0, 128> ANew;
-        llvm::SmallVector<T, 16> bOld(totalCol);
-        llvm::SmallVector<T, 16> bNew;
-        // simple mapping of `k` to particular bounds
-        llvm::SmallVector<std::pair<unsigned, unsigned>, 16> boundDiffPairs;
-        boundDiffPairs.reserve(numAuxiliaryVar);
-        size_t c = numCol;
-        for (size_t j = 0; j < numCol; ++j) {
-            bOld[j] = bold[j];
-            for (size_t k = 0; k < numVarBase; ++k) {
-                AOld(k, j) = Aold(k, j);
-            }
-            bOld[j] = bold[j];
-            if (intptr_t Aij = AOld(i, j)) {
-                bool positive = Aij > 0;
-                intptr_t absAij = std::abs(Aij);
-                for (size_t d = j + 1; d < numCol; ++d) {
-                    // index Aold as we haven't yet copied d > j to
-                    // AOld
-                    intptr_t Aid = Aold(i, d);
-                    if ((Aid != 0) & ((Aid > 0) == positive)) {
-                        intptr_t absAid = std::abs(Aid);
-                        // Aij * i <= b_j - a_j*k
-                        // Aid * i <= b_d - a_d*k
-                        // Aij*abs(Aid) * i <=
-                        //        abs(Aid)*b_j - abs(Aid)*a_j*k
-                        // abs(Aij)*Aid * i <=
-                        //        abs(Aij)*b_d - abs(Aij)*a_d*k
-                        //
-                        // So, we define bound difference:
-                        // bd_jd = (abs(Aid)*b_j - abs(Aid)*a_j*k)
-                        //       - (abs(Aij)*b_d - abs(Aij)*a_d*k)
-                        //
-                        // we now introduce bd_jd as a variable to
-                        // our inequalities, by defining both (0)
-                        // bd_jd <= (abs(Aid)*b_j - abs(Aid)*a_j*k)
-                        //            - (abs(Aij)*b_d -
-                        //            abs(Aij)*a_d*k)
-                        // (1) bd_jd >= (abs(Aid)*b_j -
-                        // abs(Aid)*a_j*k)
-                        //            - (abs(Aij)*b_d -
-                        //            abs(Aij)*a_d*k)
-                        //
-                        // These can be rewritten as
-                        // (0) bd_jd + abs(Aid)*a_j*k -
-                        // abs(Aij)*a_d*k
-                        //       <= abs(Aid)*b_j - abs(Aij)*b_d
-                        // (1) -bd_jd - abs(Aid)*a_j*k +
-                        // abs(Aij)*a_d*k
-                        //       <= -abs(Aid)*b_j + abs(Aij)*b_d
-                        //
-                        // Then, we try to prove that either
-                        // bd_jd <= 0, or that bd_jd >= 0
-                        //
-                        // Note that for Aij>0 (i.e. they're upper
-                        // bounds), we want to keep the smaller
-                        // bound, as the other will never come into
-                        // play. For Aij<0 (i.e., they're lower
-                        // bounds), we want the larger bound for the
-                        // same reason. However, as solving for `i`
-                        // means dividing by a negative number, this
-                        // means we're actually looking for the
-                        // smaller of `abs(Aid)*b_j -
-                        // abs(Aid)*a_j*k` and `abs(Aij)*b_d -
-                        // abs(Aij)*a_d*k`. This was the reason for
-                        // multiplying by `abs(...)` rather than raw
-                        // values, so that we could treat both paths
-                        // the same.
-                        //
-                        // Thus, if bd_jd <= 0, we keep the `j`
-                        // bound else if bd_jd >= 0, we keep the `d`
-                        // bound else, we must keep both.
-                        for (size_t l = 0; l < numVarBase; ++l) {
-                            intptr_t Alc =
-                                absAid * AOld(l, j) - absAij * Aold(l, d);
-                            AOld(l, c) = Alc;
-                            AOld(l, c + 1) = -Alc;
-                        }
-                        T delta = absAij * bold[d];
-                        Polynomial::fnmadd(delta, bOld[j], absAid);
-                        bOld[c] = -delta;
-                        bOld[c + 1] = std::move(delta);
-                        size_t newVarId = numVarBase + boundDiffPairs.size();
-                        AOld(newVarId, c++) = 1;
-                        AOld(newVarId, c++) = -1;
-                        boundDiffPairs.emplace_back(j, d);
+                size_t c = b.size();
+                A.resize(numLoops, c + 1);
+                b.resize(c + 1);
+                if (setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l],
+                              uA.getCol(u), uB[u], i)) {
+                    if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0,
+                                                   btmp1, q, A, b, c)) {
+                        // removeRedundantConstraints returns `true` if we are
+                        // to drop the bounds `c`
+                        A.resize(numLoops, c);
+                        b.resize(c);
+                    }
+                } else if (CheckEmpty) {
+                    if (knownLessEqualZero(b[c] + 1)) {
+                        return true;
                     }
                 }
             }
         }
-        llvm::SmallVector<int8_t, 32> provenBoundsDeltas(numAuxiliaryVar, 0);
-        llvm::SmallVector<unsigned, 32> rowsToErase;
-        // dependsOnInformationFrom matches number of constraints in AOld,
-        // and indicates which original constraints each element depends on.
-        llvm::SmallVector<llvm::SmallVector<unsigned, 8>, 16> dependenceHistory(
-            AOld.size(1));
-        // each original constraint depends on itself
-        for (unsigned i = 0; i < unsigned(numCol); ++i) {
-            dependenceHistory[i].push_back(i);
-        }
-        llvm::SmallVector<llvm::SmallVector<unsigned, 8>, 16>
-            dependenceHistoryNew;
-        // std::cout << "Initial AOld = \n" << AOld << "\nInitial bOld = \n";
-        // for (auto &b : bOld) {
-        //     std::cout << b << ", ";
-        // }
-        // std::cout << std::endl;
-        do {
-
-            eliminateVariable(dependenceHistoryNew, ANew, bNew,
-                              dependenceHistory, AOld, bOld,
-                              size_t(dependencyToEliminate));
-            std::swap(dependenceHistoryNew, dependenceHistory);
-            std::swap(ANew, AOld);
-            std::swap(bNew, bOld);
-            // std::cout << "dependenceToEliminate = " << dependencyToEliminate
-            //           << "; AOld = \n"
-            //           << AOld << "\nbOld = \n";
-            // for (auto &b : bOld) {
-            //     std::cout << b << ", ";
-            // }
-            // std::cout << std::endl;
-            dependencyToEliminate = -1;
-            for (size_t j = 0; j < AOld.size(1); ++j) {
-                for (size_t k = numVarBase; k < numVar; ++k) {
-                    if (intptr_t Akj = AOld(k, j)) {
-                        bool dependsOnOthers = false;
-                        // note that we don't add equations for
-                        // comparing the different bounds diffs,
-                        // therefore `AOld(l, j) == 0` for all `l !=
-                        // k && l >= numLoops`
-                        for (size_t l = 0; l < numVarBase; ++l) {
-                            // if ((AOld(l, j) != 0) & (l != i)) {
-                            if (AOld(l, j)) {
-                                dependencyToEliminate = l;
-                                dependsOnOthers = true;
-                                break;
-                            }
-                        }
-                        // Akj * boundDelta <= bOld[j]
-                        if (!dependsOnOthers) {
-                            // we can eliminate this equation, but
-                            // check if we can eliminate the bound
-                            // if (AOld(i,j) == 0){
-                            auto [b, d] = boundDiffPairs[k - numVarBase];
-                            // binary search is probably slower than linear...
-                            bool preservesInformation;
-                            // std::cout << "(b = " << b << "; d = " << d
-                            //           << "); dependenceHistory[" << j << "] =
-                            //           ";
-                            // for (auto &dh : dependenceHistory[j]) {
-                            //     std::cout << dh << ", ";
-                            // }
-                            // std::cout << std::endl;
-                            if (Akj > 0) {
-                                // -1 -> we erase `d`
-                                preservesInformation =
-                                    std::ranges::count(dependenceHistory[j],
-                                                       d) == 0;
-                                // std::ranges::binary_search(
-                                //     dependenceHistory[j], d);
-                            } else {
-                                // 1 -> we erase `b`
-                                preservesInformation =
-                                    std::ranges::count(dependenceHistory[j],
-                                                       b) == 0;
-                                // std::ranges::binary_search(
-                                //     dependenceHistory[j], b);
-                            }
-                            // std::cout << "bOld[" << j << "] = " << bOld[j]
-                            //           << std::endl;
-                            if (preservesInformation &&
-                                knownLessEqualZero(bOld[j])) {
-                                // boundDelta = b - d
-                                // Akj * boundDelta <= bOld[j]
-                                // (b-d) >= 0 === b >= d === (d-b) <= 0
-                                // -boundDelta <= 0
-                                // boundDelta >= 0
-                                // erase b
-                                //
-                                // (d-b) >= 0 === d >= b === (b-d) <= 0
-                                // boundDelta <= 0
-                                // erase d
-                                provenBoundsDeltas[k - numVarBase] =
-                                    Akj > 0 ? -1 : 1;
-                            }
-                            if ((rowsToErase.size() == 0) ||
-                                (rowsToErase.back() != j)) {
-                                rowsToErase.push_back(j);
-                            }
-                        }
-                    }
-                }
-            }
-            for (auto it = rowsToErase.rbegin(); it != rowsToErase.rend();
-                 ++it) {
-                AOld.eraseCol(*it);
-                bOld.erase(bOld.begin() + (*it));
-            }
-            rowsToErase.clear();
-        } while (dependencyToEliminate >= 0);
-        for (size_t l = 0; l < provenBoundsDeltas.size(); ++l) {
-            size_t k = provenBoundsDeltas[l];
-            // eliminate bound difference k
-            // bound difference is j - d
-            if (k) {
-                auto [j, d] = boundDiffPairs[l];
-                // if Akj * k >= 0, discard j, else discard d
-                rowsToErase.push_back(k == 1 ? j : d);
-            }
-        }
-        // std::cout << "rowsToErase = ";
-        // for (auto &r : rowsToErase) {
-        //     std::cout << r << ", ";
-        // }
-        // std::cout << std::endl << std::endl;
-        erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
+        return false;
     }
 
-    // removes bounds on `i` that are redundant.
+    void pruneBounds() { pruneBounds(A, b); }
     void pruneBounds(Matrix<intptr_t, 0, 0, 0> &Aold,
-                     llvm::SmallVector<T, 8> &bold, const size_t i,
-                     const size_t numNeg, const size_t numPos) const {
+                     llvm::SmallVector<T, 8> &bold) const {
 
-        const size_t numVarBase = getNumVar();
-        const size_t numCol = Aold.size(1);
-        // if we have multiple bounds, we try to prune
-        // First, do we have dependencies in these bounds that must be
-        // eliminated?
-        intptr_t dependencyToEliminate = -1;
-        for (size_t j = 0; j < numCol; ++j) {
-            intptr_t Aij = Aold(i, j);
-            if (Aij) {
-                for (size_t k = 0; k < numVarBase; ++k) {
-                    bool depends = ((Aold(k, j) != 0) & (k != i));
-                    dependencyToEliminate =
-                        (depends ? k : dependencyToEliminate);
-                }
-                if (dependencyToEliminate != -1) {
-                    break;
-                }
+        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, E;
+        llvm::SmallVector<T, 16> btmp0, btmp1, q;
+        for (size_t i = 0; Aold.numCol() - 1 - i > 0; ++i) {
+            size_t c = Aold.numCol() - 1 - i;
+            if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q,
+                                           Aold, bold, c)) {
+                // drop `c`
+                Aold.eraseCol(c);
+                bold.erase(bold.begin() + c);
             }
-        }
-        // we may have
-        // i <= j
-        // i <= N // redundant
-        // j <= M
-        // poset has: M <= N
-        // so i <= j <= M <= N
-        // renders i <= N redundant
-        if (dependencyToEliminate >= 0) {
-            removeRedundantConstraints(Aold, bold, i, numNeg, numPos,
-                                       dependencyToEliminate);
-        } else {
-            // no dependencyToEliminate
-            llvm::SmallVector<unsigned, 32> rowsToErase;
-            rowsToErase.reserve(numNeg * numPos);
-            for (size_t j = 0; j < numCol - 1; ++j) {
-                if (intptr_t Aij = Aold(i, j)) {
-                    for (size_t k = j + 1; k < numCol; ++k) {
-                        intptr_t Aik = Aold(i, k);
-                        if ((Aik != 0) & ((Aik > 0) == (Aij > 0))) {
-                            T delta = bold[k] * std::abs(Aij);
-                            Polynomial::fnmadd(delta, bold[j], std::abs(Aik));
-                            // delta = k - j
-                            if (knownGreaterEqualZero(delta)) {
-                                rowsToErase.push_back(k);
-                            } else if (knownLessEqualZero(std::move(delta))) {
-                                rowsToErase.push_back(j);
-                            }
-                        }
-                    }
-                }
-            }
-            erasePossibleNonUniqueElements(Aold, bold, rowsToErase);
         }
     }
-    void removeRedundantConstraints(Matrix<intptr_t, 0, 0, 0> &Aold,
+    void pruneBounds(Matrix<intptr_t, 0, 0, 0> &Aold,
+                     llvm::SmallVector<T, 8> &bold,
+                     Matrix<intptr_t, 0, 0, 0> &Eold,
+                     llvm::SmallVector<T, 8> &qold) const {
+
+        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
+        llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
+        for (size_t i = 0; Aold.numCol() - 1 - i > 0; ++i) {
+            size_t c = Aold.numCol() - 1 - i;
+            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
+                                           btmp1, qtmp0, qtmp1, Aold, bold,
+                                           Eold, qold, c)) {
+                // drop `c`
+                Aold.eraseCol(c);
+                bold.erase(bold.begin() + c);
+            }
+        }
+        for (size_t i = 0; Aold.numCol() - 1 - i > 0; ++i) {
+            size_t c = Aold.numCol() - 1 - i;
+            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, btmp0, btmp1,
+                                           qtmp0, Aold, bold)) {
+                // drop `c`
+                Aold.eraseCol(c);
+                bold.erase(bold.begin() + c);
+            }
+        }
+    }
+    bool removeRedundantConstraints(Matrix<intptr_t, 0, 0, 0> &Aold,
                                     llvm::SmallVector<T, 8> &bold,
                                     const size_t c) const {
         Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, E;
         llvm::SmallVector<T, 16> btmp0, btmp1, q;
-        removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold,
-                                   c);
+        return removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q,
+                                          Aold, bold, c);
     }
-    void removeRedundantConstraints(
+    bool removeRedundantConstraints(
         Matrix<intptr_t, 0, 0, 128> &Atmp0, Matrix<intptr_t, 0, 0, 128> &Atmp1,
         Matrix<intptr_t, 0, 0, 128> &E, llvm::SmallVector<T, 16> &btmp0,
         llvm::SmallVector<T, 16> &btmp1, llvm::SmallVector<T, 16> &q,
         Matrix<intptr_t, 0, 0, 0> &Aold, llvm::SmallVector<T, 8> &bold,
         const size_t c) const {
-        const PtrVector<intptr_t, 0> &a = Aold.getCol(c);
-        const T &b = bold[c];
-        removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold,
-                                   a, b, c);
+        return removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q,
+                                          Aold, bold, Aold.getCol(c), bold[c],
+                                          c);
     }
     intptr_t firstVarInd(llvm::ArrayRef<intptr_t> a) const {
         for (size_t i = 0; i < getNumVar(); ++i) {
@@ -733,14 +492,12 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             q[i] = b - bold[c];
         }
-        llvm::SmallVector<int8_t, 64> provenBoundsDeltas(numAuxiliaryVariable,
-                                                         0);
         llvm::SmallVector<unsigned, 32> colsToErase;
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
             size_t numExcluded =
-                eliminateVariable(Atmp1, btmp1, E, q, Atmp0, btmp0,
-                                  size_t(dependencyToEliminate));
+                eliminateVarForRCElim(Atmp1, btmp1, E, q, Atmp0, btmp0,
+                                      size_t(dependencyToEliminate));
             std::swap(Atmp0, Atmp1);
             std::swap(btmp0, btmp1);
             dependencyToEliminate = -1;
@@ -772,21 +529,146 @@ template <class P, typename T> struct AbstractPolyhedra {
             if (dependencyToEliminate >= 0)
                 continue;
             for (size_t c = 0; c < E.numCol(); ++c) {
-		intptr_t varInd = firstVarInd(E.getCol(c));
-		if (varInd != -1){
-		    dependencyToEliminate = varInd;
-		    break;
-		}
+                intptr_t varInd = firstVarInd(E.getCol(c));
+                if (varInd != -1) {
+                    dependencyToEliminate = varInd;
+                    break;
+                }
             }
             if (dependencyToEliminate >= 0)
                 continue;
-	    for (size_t c = 0; c < numExcluded; ++c){
-		intptr_t varInd = firstVarInd(Atmp0.getCol(c));
-		if (varInd != -1){
-		    dependencyToEliminate = varInd;
-		    break;
-		}
-	    }
+            for (size_t c = 0; c < numExcluded; ++c) {
+                intptr_t varInd = firstVarInd(Atmp0.getCol(c));
+                if (varInd != -1) {
+                    dependencyToEliminate = varInd;
+                    break;
+                }
+            }
+        }
+        erasePossibleNonUniqueElements(Aold, bold, colsToErase);
+        return false;
+    }
+
+    bool removeRedundantConstraints(
+        Matrix<intptr_t, 0, 0, 128> &Atmp0, Matrix<intptr_t, 0, 0, 128> &Atmp1,
+        Matrix<intptr_t, 0, 0, 128> &Etmp0, Matrix<intptr_t, 0, 0, 128> &Etmp1,
+        llvm::SmallVector<T, 16> &btmp0, llvm::SmallVector<T, 16> &btmp1,
+        llvm::SmallVector<T, 16> &qtmp0, llvm::SmallVector<T, 16> &qtmp1,
+        Matrix<intptr_t, 0, 0, 0> &Aold, llvm::SmallVector<T, 8> &bold,
+        Matrix<intptr_t, 0, 0, 0> &Eold, llvm::SmallVector<T, 8> &qold,
+        const PtrVector<intptr_t, 0> &a, const T &b, const size_t C) const {
+
+        const size_t numVar = getNumVar();
+        // simple mapping of `k` to particular bounds
+        // we'll have C - other bound
+        llvm::SmallVector<unsigned, 16> boundDiffs;
+        for (size_t c = 0; c < C; ++c) {
+            for (size_t v = 0; v < numVar; ++v) {
+                intptr_t av = a(v);
+                intptr_t Avc = Aold(v, c);
+                if (((av > 0) && (Avc > 0)) || ((av < 0) && (Avc < 0))) {
+                    boundDiffs.push_back(c);
+                    break;
+                }
+            }
+        }
+        const size_t numAuxiliaryVariable = boundDiffs.size();
+        const size_t numVarAugment = numVar + numAuxiliaryVariable;
+        Atmp0.resizeForOverwrite(numVarAugment, C);
+        btmp0.resize_for_overwrite(C);
+        Etmp0.resizeForOverwrite(numVarAugment, numAuxiliaryVariable);
+        qtmp0.resize_for_overwrite(numAuxiliaryVariable);
+
+        for (size_t i = 0; i < C; ++i) {
+            for (size_t v = 0; v < numVar; ++v) {
+                Atmp0(v, i) = Aold(v, i);
+            }
+            for (size_t v = numVar; v < numVarAugment; ++v) {
+                Atmp0(v, i) = 0;
+            }
+            btmp0[i] = bold[i];
+        }
+        for (size_t i = 0; i < Eold.numCol(); ++i) {
+            for (size_t v = 0; v < numVar; ++v) {
+                Etmp0(v, i) = Eold(v, i);
+            }
+            for (size_t v = numVar; v < numVarAugment; ++v) {
+                Etmp0(v, i) = 0;
+            }
+        }
+        intptr_t dependencyToEliminate = -1;
+        // define variables as
+        // (a-Aold) + delta = b - bold
+        // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
+        // if we prove delta >= 0, then (b - a) >= (bold - Aold)
+        // and thus (b - a) is the redundant constraint, and we return `true`.
+        // else if we prove delta <= 0, then (b - a) <= (bold - Aold)
+        // and thus (bold - Aold) is the redundant constraint, and we eliminate
+        // the associated column.
+        for (size_t i = 0; i < numAuxiliaryVariable; ++i) {
+            size_t c = boundDiffs[i];
+            for (size_t v = 0; v < numVar; ++v) {
+                intptr_t Evi = a[v] - Aold(v, c);
+                Etmp0(v, i) = Evi;
+                dependencyToEliminate = Evi ? v : dependencyToEliminate;
+            }
+            for (size_t j = 0; j < numAuxiliaryVariable; ++j) {
+                Etmp0(numVar + j, i) = (j == i);
+            }
+            qtmp0[i] = b - bold[c];
+        }
+        llvm::SmallVector<unsigned, 32> colsToErase;
+        while (dependencyToEliminate >= 0) {
+            // eliminate dependencyToEliminate
+            size_t numExcluded =
+                eliminateVarForRCElim(Atmp1, btmp1, E, q, Atmp0, btmp0,
+                                      size_t(dependencyToEliminate));
+            std::swap(Atmp0, Atmp1);
+            std::swap(btmp0, btmp1);
+            dependencyToEliminate = -1;
+            // iterate over the new bounds, search for constraints we can drop
+            for (size_t c = numExcluded; c < Atmp0.numCol(); ++c) {
+                PtrVector<intptr_t, 0> Ac = Atmp0.getCol(c);
+                intptr_t varInd = firstVarInd(Ac);
+                if (varInd == -1) {
+                    intptr_t auxInd = auxiliaryInd(Ac);
+                    if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
+                        intptr_t Axc = Atmp0(auxInd, c);
+                        // Axc*delta <= b <= 0
+                        // if (Axc > 0): (upper bound)
+                        // delta <= b/Axc <= 0
+                        // else if (Axc < 0): (lower bound)
+                        // delta >= b/Axc >= 0
+                        if (Axc > 0) {
+                            // upper bound
+                            colsToErase.push_back(boundDiffs[auxInd]);
+                        } else {
+                            // lower bound
+                            return true;
+                        }
+                    }
+                } else {
+                    dependencyToEliminate = varInd;
+                }
+            }
+            if (dependencyToEliminate >= 0)
+                continue;
+            for (size_t c = 0; c < E.numCol(); ++c) {
+                intptr_t varInd = firstVarInd(E.getCol(c));
+                if (varInd != -1) {
+                    dependencyToEliminate = varInd;
+                    break;
+                }
+            }
+            if (dependencyToEliminate >= 0)
+                continue;
+            for (size_t c = 0; c < numExcluded; ++c) {
+                intptr_t varInd = firstVarInd(Atmp0.getCol(c));
+                if (varInd != -1) {
+                    dependencyToEliminate = varInd;
+                    break;
+                }
+            }
         }
         erasePossibleNonUniqueElements(Aold, bold, colsToErase);
         return false;
@@ -795,14 +677,12 @@ template <class P, typename T> struct AbstractPolyhedra {
     void deleteBounds(Matrix<intptr_t, 0, 0, 0> &A, llvm::SmallVectorImpl<T> &b,
                       size_t i) {
         llvm::SmallVector<unsigned, 16> deleteBounds;
-        for (size_t j = 0; j < b.size(); ++j) {
+        for (size_t j = b.size(); j != 0;) {
+            --j;
             if (A(i, j)) {
-                deleteBounds.push_back(j);
+                A.eraseCol(j);
+                b.erase(b.begin() + j);
             }
-        }
-        for (auto it = deleteBounds.rbegin(); it != deleteBounds.rend(); ++it) {
-            A.eraseCol(*it);
-            b.erase(b.begin() + (*it));
         }
     }
     // A'x <= b
@@ -823,10 +703,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                         Matrix<intptr_t, 0, 0, 0> &A,
                         llvm::SmallVector<T, 8> &b, const size_t i) {
 
-        // pruneBounds(A, b, i);
         categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
-        appendBounds(lA, uA, lb, ub, A, b, i);
+        appendBounds(lA, uA, lb, ub, A, b, i, Polynomial::Val<false>());
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(
@@ -899,8 +778,8 @@ template <class P, typename T> struct AbstractPolyhedra {
             copy.pruneBounds(copy.A, copy.b, i);
             copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
             copy.deleteBounds(copy.A, copy.b, i);
-            if (copy.appendBoundsCheckEmpty(lA, uA, lb, ub, copy.A, copy.b,
-                                            i)) {
+            if (copy.appendBounds(lA, uA, lb, ub, copy.A, copy.b, i,
+                                  Polynomial::Val<true>())) {
                 return true;
             }
             copy.removeVariable(lA, uA, lb, ub, copy.A, copy.b, i);

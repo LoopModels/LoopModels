@@ -705,6 +705,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         N = NN;
         data.resize(M * N);
     }
+    void reserve(size_t MM, size_t NN) {
+        M = MM;
+        N = NN;
+        data.reserve(M * N);
+    }
     void resizeForOverwrite(size_t MM, size_t NN) {
         M = MM;
         N = NN;
