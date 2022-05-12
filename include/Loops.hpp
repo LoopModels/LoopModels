@@ -503,17 +503,19 @@ struct AffineLoopNest : SymbolicPolyhedra {
           upperb(A.size(0)) {
         size_t numLoops = getNumLoops();
         size_t i = numLoops;
+        pruneBounds(A, b);
         remainingA[i - 1] = A;
         remainingB[i - 1] = b;
         do {
             calculateBounds(--i);
         } while (i);
     }
-    void appendBoundsCache(Matrix<intptr_t, 0, 0, 0> &A,
-                           llvm::SmallVectorImpl<MPoly> &b, size_t i) {
+    // void appendBoundsCache(Matrix<intptr_t, 0, 0, 0> &A,
+    //                        llvm::SmallVectorImpl<MPoly> &b, size_t i) {
 
-        appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i);
-    }
+    //     appendBounds(lowerA[i], upperA[i], lowerb[i], upperb[i], A, b, i,
+    //                  Polynomial::Val<false>());
+    // }
     void categorizeBoundsCache(const Matrix<intptr_t, 0, 0, 0> &A,
                                const llvm::SmallVectorImpl<MPoly> &b,
                                size_t i) {
@@ -537,7 +539,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
         if ((numNeg > 1) | (numPos > 1)) {
             Matrix<intptr_t, 0, 0, 0> Aold = remainingA[0];
             llvm::SmallVector<MPoly, 8> bold = remainingB[0];
-            pruneBounds(Aold, bold, i, numNeg, numPos);
+            // pruneBounds(Aold, bold, i, numNeg, numPos);
             categorizeBoundsCache(Aold, bold, i);
         } else {
             categorizeBoundsCache(remainingA[0], remainingB[0], i);
@@ -576,12 +578,15 @@ struct AffineLoopNest : SymbolicPolyhedra {
         Matrix<intptr_t, 0, 0, 0> uprA;
         llvm::SmallVector<MPoly, 16> lwrB;
         llvm::SmallVector<MPoly, 16> uprB;
+        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp;
+        llvm::SmallVector<MPoly, 16> btmp0, btmp1, qtmp;
         for (size_t _k = 0; _k < _j; ++_k) {
             if (_k != _i) {
                 size_t k = perm(_k);
-                pruneBounds(A, b, k);
                 categorizeBounds(lwrA, uprA, lwrB, uprB, A, b, k);
-                appendBounds(lwrA, uprA, lwrB, uprB, A, b, k);
+                deleteBounds(A, b, k);
+                appendBounds(lwrA, uprA, lwrB, uprB, Atmp0, Atmp1, Etmp, btmp0,
+                             btmp1, qtmp, A, b, k, Polynomial::Val<false>());
             }
         }
         Matrix<intptr_t, 0, 0, 0> Anew;
@@ -597,14 +602,16 @@ struct AffineLoopNest : SymbolicPolyhedra {
                 if (_k != _j) {
                     size_t k = perm(_k);
                     // eliminate
-                    pruneBounds(Anew, bnew, k);
                     categorizeBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
-                    appendBounds(lwrA, uprA, lwrB, uprB, Anew, bnew, k);
+                    deleteBounds(Anew, bnew, k);
+                    appendBounds(lwrA, uprA, lwrB, uprB, Atmp0, Atmp1, Etmp,
+                                 btmp0, btmp1, qtmp, Anew, bnew, k,
+                                 Polynomial::Val<false>());
                 }
             }
             // now depends only on `j` and `i`
             // check if we have zero iterations on loop `j`
-            pruneBounds(Anew, bnew, j);
+            // pruneBounds(Anew, bnew, j);
             size_t numCols = Anew.size(1);
             for (size_t l = 0; l < numCols; ++l) {
                 intptr_t Ajl = Anew(j, l);
