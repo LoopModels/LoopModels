@@ -78,8 +78,14 @@ TEST(DependenceTest, BasicAssertions) {
 
     DependencePolyhedra dep0(Asrc, Atgt0);
     std::cout << "Dep0 = \n" << dep0 << std::endl;
+
+    EXPECT_EQ(dep0.getNumConstraints(), 4);
+    EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
+    
     DependencePolyhedra dep1(Asrc, Atgt1);
     std::cout << "Dep1 = \n" << dep1 << std::endl;
+    EXPECT_EQ(dep1.getNumConstraints(), 4);
+    EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
 
     std::cout << "Poset contents: ";
     for (auto &d : loop->poset.delta) {
@@ -102,8 +108,8 @@ TEST(DependenceTest, BasicAssertions) {
     Dependence& d(dc.getValue());
     EXPECT_TRUE(d.isForward());
     std::cout << d << std::endl;
-
 }
+/*
 TEST(IndependentTest, BasicAssertions) {
     // symmetric copy
     // for(i = 0:I-1){
@@ -173,6 +179,7 @@ TEST(IndependentTest, BasicAssertions) {
     llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
 }
+*/
 /*
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:

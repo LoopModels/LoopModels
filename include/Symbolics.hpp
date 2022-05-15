@@ -2541,7 +2541,7 @@ template <typename C, IsMonomial M>
 Multivariate<C, M> operator*(Multivariate<C, M> &c, intptr_t x) {
     Multivariate<C, M> p(c);
     p *= x;
-    return std::move(p);
+    return p;
 }
 template <typename C, IsMonomial M>
 Multivariate<C, M> operator*(intptr_t x, Multivariate<C, M> &&c) {

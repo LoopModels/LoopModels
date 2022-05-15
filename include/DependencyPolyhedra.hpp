@@ -14,10 +14,11 @@
 #include <llvm/IR/User.h>
 #include <utility>
 
-struct DependencePolyhedra : SymbolicPolyhedra {
+struct DependencePolyhedra : SymbolicEqPolyhedra {
     size_t numDep0Var;
     bool forward; // if (forward){ dep0 -> dep1; } else { dep1 -> depo; }
 
+    size_t getNumEqualityConstraints() const { return q.size(); }
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
@@ -107,19 +108,19 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         return {};
     }
 
-    static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
+    // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
 
-        // TODO: two steps:
-        // 1: gcd test
-        // 2: check polyhedra volume
-        // step 1
+    //     // TODO: two steps:
+    //     // 1: gcd test
+    //     // 2: check polyhedra volume
+    //     // step 1
 
-        // step 2
-        const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
-            maybeDims = matchingStrideConstraintPairs(ar0, ar1);
+    //     // step 2
+    //     const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
+    //         maybeDims = matchingStrideConstraintPairs(ar0, ar1);
 
-        return true;
-    }
+    //     return true;
+    // }
 
     //   DependencePolyhedra(aln0, aln1, ar0, ar1)
     //
@@ -130,8 +131,10 @@ struct DependencePolyhedra : SymbolicPolyhedra {
     // layout of constraints (based on Farkas equalities):
     // comp time constant, indVars0, indVars1, loop constants
     DependencePolyhedra(const ArrayReference &ar0, const ArrayReference &ar1)
-        : SymbolicPolyhedra(Matrix<intptr_t, 0, 0, 0>(),
-                            llvm::SmallVector<MPoly, 8>(), ar0.loop->poset) {
+        : SymbolicEqPolyhedra(Matrix<intptr_t, 0, 0, 0>(),
+                              llvm::SmallVector<MPoly, 8>(),
+                              Matrix<intptr_t, 0, 0, 0>(),
+                              llvm::SmallVector<MPoly, 8>(), ar0.loop->poset) {
 
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
             maybeDims = matchingStrideConstraintPairs(ar0, ar1);
@@ -144,7 +147,8 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         auto [nv1, nc1] = ar1.loop->A.size();
         numDep0Var = nv0;
         const size_t nc = nc0 + nc1;
-        A.resize(nv0 + nv1, nc + 2 * dims.size());
+        A.resize(nv0 + nv1, nc);
+        E.resize(nv0 + nv1, dims.size());
         for (size_t i = 0; i < nc0; ++i) {
             for (size_t j = 0; j < nv0; ++j) {
                 A(j, i) = ar0.loop->A(j, i);
@@ -196,8 +200,9 @@ struct DependencePolyhedra : SymbolicPolyhedra {
                         // it contributed to, i.e. the column of `As` to store
                         // into. `i`, the dim number, yields the associated
                         // labmda.
-                        A(id, nc + (i << 1)) = c;
-                        A(id, nc + (i << 1) + 1) = -c;
+                        E(id, i) = c;
+                        // A(id, nc + (i << 1)) = c;
+                        // A(id, nc + (i << 1) + 1) = -c;
                     }
                     break;
                 case VarType::Constant: {
@@ -209,9 +214,20 @@ struct DependencePolyhedra : SymbolicPolyhedra {
                     assert(false);
                 }
             }
-            b.push_back(-bound);
-            b.push_back(std::move(bound));
+            q.push_back(-std::move(bound));
+            // b.push_back(-bound);
+            // b.push_back(std::move(bound));
         }
+        std::cout << "About to pruneBounds\nA = \n"
+                  << A << "\nb = " << std::endl;
+        for (auto &bi : b) {
+            std::cout << bi << ", ";
+        }
+        std::cout << "\nE = \n" << E << "\nq = " << std::endl;
+        for (auto &qi : q) {
+            std::cout << qi << ", ";
+        }
+        std::cout << std::endl;
         pruneBounds();
     }
     IntegerPolyhedra farkasScheduleDifference(bool boundAbove) {
@@ -237,10 +253,12 @@ struct DependencePolyhedra : SymbolicPolyhedra {
                 }
             }
         }
-        auto [numVarOld, numContraintsOld] = A.size();
+        auto [numVarOld, numInequalityContraintsOld] = A.size();
         // delta + 1 coef per
         size_t numScheduleCoefs = 1 + numVarOld;
-        size_t numLambda = 1 + numContraintsOld;
+        size_t numEqualityConstraintsOld = E.numCol();
+        size_t numLambda =
+            1 + numInequalityContraintsOld + 2 * numEqualityConstraintsOld;
         size_t numConstantTerms = constantTerms.size();
         size_t numBoundingCoefs = boundAbove ? 1 + numConstantTerms : 0;
         // var order
@@ -251,35 +269,53 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
         size_t numVarNew = numVarKeep + numLambda;
         // constraint order
-        size_t numNonLambdaConstraint =
-            2 * (1 + numVarOld + numConstantTerms) + numBoundingCoefs;
-        size_t numConstraintsNew = numNonLambdaConstraint + numLambda;
 
-        Matrix<intptr_t, 0, 0, 0> Af(numVarNew, numConstraintsNew);
-        llvm::SmallVector<intptr_t, 8> bf(numConstraintsNew);
+        size_t numInequalityConstraints = numBoundingCoefs + numLambda;
+        size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
+
+        Matrix<intptr_t, 0, 0, 0> Af(numVarNew, numInequalityConstraints);
+        llvm::SmallVector<intptr_t, 8> bf(numInequalityConstraints);
+        Matrix<intptr_t, 0, 0, 0> Ef(numVarNew, numEqualityConstraints);
+        llvm::SmallVector<intptr_t, 8> qf(numEqualityConstraints);
 
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
         // lambda_0 + lambda' * (b - A*i) - psi <= 0
         // -lambda_0 - lambda' * (b - A*i) + psi <= 0
         // first, lambda_0:
-        Af(numVarKeep, 0) = 1;
-        Af(numVarKeep, 1) = -1;
-        for (size_t c = 0; c < numContraintsOld; ++c) {
+        Ef(numVarKeep, 0) = 1;
+        for (size_t c = 0; c < numInequalityContraintsOld; ++c) {
             size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c + 1;
             for (size_t v = 0; v < numVarOld; ++v) {
-                Af(lambdaInd, 2 + (v << 1)) = -A(v, c);
-                Af(lambdaInd, 3 + (v << 1)) = A(v, c);
+                Ef(lambdaInd, 1 + v) = -A(v, c);
             }
             for (auto &t : b[c]) {
                 if (auto c = t.getCompileTimeConstant()) {
-                    Af(lambdaInd, 0) = c.getValue();
-                    Af(lambdaInd, 1) = -c.getValue();
+                    Ef(lambdaInd, 0) = c.getValue();
                 } else {
                     size_t constraintInd =
-                        2 * (constantTerms[t.exponent] + numVarOld + 1);
-                    Af(lambdaInd, constraintInd) = t.coefficient;
-                    Af(lambdaInd, constraintInd + 1) = -t.coefficient;
+                        constantTerms[t.exponent] + numVarOld + 1;
+                    Ef(lambdaInd, constraintInd) = t.coefficient;
+                }
+            }
+        }
+        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+            // each of these actually represents 2 inds
+            size_t lambdaInd = numScheduleCoefs + numBoundingCoefs +
+                               numInequalityContraintsOld + 2 * c;
+            for (size_t v = 0; v < numVarOld; ++v) {
+                Ef(lambdaInd + 1, 1 + v) = -E(v, c);
+                Ef(lambdaInd + 2, 1 + v) = E(v, c);
+            }
+            for (auto &t : q[c]) {
+                if (auto c = t.getCompileTimeConstant()) {
+                    Ef(lambdaInd + 1, 0) = c.getValue();
+                    Ef(lambdaInd + 2, 0) = -c.getValue();
+                } else {
+                    size_t constraintInd =
+                        constantTerms[t.exponent] + numVarOld + 1;
+                    Ef(lambdaInd + 1, constraintInd) = t.coefficient;
+                    Ef(lambdaInd + 2, constraintInd) = -t.coefficient;
                 }
             }
         }
@@ -312,12 +348,10 @@ struct DependencePolyhedra : SymbolicPolyhedra {
         intptr_t sign = 2 * (direction ^ boundAbove) - 1;
         for (size_t i = 0; i < numVarOld; ++i) {
             intptr_t s = (2 * (i < numDep0Var) - 1) * sign;
-            Af(i, 2 + 2 * i) = s;
-            Af(i, 3 + 2 * i) = -s;
+            Ef(i, 1 + i) = s;
         }
         // delta/constant coef at ind numVarOld
-        Af(numVarOld, 0) = -sign;
-        Af(numVarOld, 1) = sign;
+        Ef(numVarOld, 0) = -sign;
         // boundAbove
         if (boundAbove) {
             // note we'll generally call this function twice, first with
@@ -325,34 +359,36 @@ struct DependencePolyhedra : SymbolicPolyhedra {
             // 2. `boundAbove = true`
             // boundAbove means we have
             // ... == w + u'*N + psi
+            Ef(numScheduleCoefs, 0) = -1;
             Af(numScheduleCoefs, 0) = -1;
-            Af(numScheduleCoefs, 1) = 1;
-            const size_t boundAboveOffset =
-                2 + 2 * (numVarOld + numConstantTerms);
-            Af(numScheduleCoefs, boundAboveOffset) = -1;
             for (size_t i = 0; i < numConstantTerms; ++i) {
                 size_t ip1 = i + 1;
-                size_t constraintInd = 2 * (ip1 + numVarOld);
-                Af(i + numScheduleCoefs + 1, constraintInd) = -1;
-                Af(i + numScheduleCoefs + 1, constraintInd + 1) = 1;
-                Af(numScheduleCoefs + ip1, boundAboveOffset + ip1) = -1;
+                size_t constraintInd = (ip1 + numVarOld);
+                Ef(i + numScheduleCoefs + 1, constraintInd) = -1;
+                Af(numScheduleCoefs + ip1, ip1) = -1;
             }
         }
         // all lambda > 0
         for (size_t i = 0; i < numLambda; ++i) {
-            Af(numVarKeep + i, numNonLambdaConstraint + i) = -1;
+            Af(numVarKeep + i, numBoundingCoefs + i) = -1;
         }
         std::cout << "Af = \n" << Af << std::endl;
-        IntegerPolyhedra ipoly(std::move(Af), std::move(bf));
+        IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
+                                 std::move(qf));
+        assert(ipoly.E.numCol() == ipoly.q.size());
         // remove lambdas
         std::cout << "ipoly =\n" << ipoly << std::endl;
         for (size_t i = numVarKeep; i < numVarNew; ++i) {
             ipoly.removeVariable(i);
+            std::cout << "After removing variable " << i << " ipoly = \n"
+                      << ipoly << std::endl;
         }
         ipoly.A.reduceNumRows(numVarKeep);
+        ipoly.E.reduceNumRows(numVarKeep);
         std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
+
 }; // namespace DependencePolyhedra
 
 struct MemoryAccess {

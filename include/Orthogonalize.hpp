@@ -57,7 +57,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         }
     }
     auto [K, included] = NormalForm::orthogonalize(S);
-    if (size_t I = included.size()) {
+    if (included.size()) {
         // We let
         // L = K*J
         // Originally, the loop bounds were
