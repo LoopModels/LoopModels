@@ -222,6 +222,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         std::cout << "Eliminating: " << i << "; Asrc.numCol() = " << numCol
                   << "; bsrc.size() = " << bsrc.size()
                   << "; E.numCol() = " << E.numCol() << std::endl;
+	// std::cout << "A = \n" << A << "\n bold =
         // TODO: drop independentOfInner?
         for (size_t u = 0; u < numCol; ++u) {
             auto Au = Asrc.getCol(u);
@@ -504,16 +505,34 @@ template <class P, typename T> struct AbstractPolyhedra {
                 // stricter one, and the constraint is violated
                 return true;
             }
+	    std::cout << "E-Elim; Aold = \n" << Aold << std::endl;
+	    std::cout << "bold = [ ";
+            for (auto &c : bold) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
+	    std::cout << "Eold = \n" << Eold << std::endl;
+	    std::cout << "qold = [ ";
+            for (auto &c : qold) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
         }
         for (size_t i = 0; Aold.numCol() - 1 - i > 0; ++i) {
             size_t c = Aold.numCol() - 1 - i;
             if (removeRedundantConstraints(
                     Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0, qtmp1,
-                    Aold, bold, Eold, qold, Aold.getCol(i), bold[i], c)) {
+                    Aold, bold, Eold, qold, Aold.getCol(c), bold[c], c)) {
                 // drop `c`
                 Aold.eraseCol(c);
                 bold.erase(bold.begin() + c);
             }
+	    std::cout << "Aold = \n" << Aold << std::endl;
+	    std::cout << "bold = [ ";
+            for (auto &c : bold) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
         }
         return false;
     }
@@ -876,7 +895,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
-        const size_t CHECK = 7;
+        const size_t CHECK = C;
         if (C == CHECK) {
             std::cout << "### CHECKING ### C = " << CHECK
                       << " ###\nboundDiffs = [ ";

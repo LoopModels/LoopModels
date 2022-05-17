@@ -108,6 +108,7 @@ TEST(DependenceTest, BasicAssertions) {
     Dependence& d(dc.getValue());
     EXPECT_TRUE(d.isForward());
     std::cout << d << std::endl;
+
 }
 /*
 TEST(IndependentTest, BasicAssertions) {

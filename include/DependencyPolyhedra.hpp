@@ -385,7 +385,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // }
         // ipoly.A.reduceNumRows(numVarKeep);
         // ipoly.E.reduceNumRows(numVarKeep);
-        for (size_t i = numVarNew-1; i >= numVarKeep; --i) {
+        for (size_t i = numVarNew-1; i > numVarKeep; --i) {
             ipoly.removeVariable(i);
 	    ipoly.A.reduceNumRows(i);
 	    ipoly.E.reduceNumRows(i);
