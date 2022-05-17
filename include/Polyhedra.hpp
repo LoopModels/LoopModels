@@ -3,6 +3,7 @@
 #include "./Math.hpp"
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
+#include "NormalForm.hpp"
 #include <algorithm>
 #include <any>
 #include <bits/ranges_algo.h>
@@ -149,6 +150,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         E1.resize(Re, k);
         q1.resize(k);
+        NormalForm::simplifyEqualityConstraints(E1, q1);
         Adst.resize(Asrc.numRow(), c);
         bdst.resize(c);
         return numExclude;
@@ -385,6 +387,64 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         return false;
     }
+    template <size_t CheckEmpty>
+    bool appendBounds(
+        const Matrix<intptr_t, 0, 0, 0> &lA,
+        const Matrix<intptr_t, 0, 0, 0> &uA, const llvm::SmallVectorImpl<T> &lB,
+        const llvm::SmallVectorImpl<T> &uB, Matrix<intptr_t, 0, 0, 128> &Atmp0,
+        Matrix<intptr_t, 0, 0, 128> &Atmp1, Matrix<intptr_t, 0, 0, 128> &Etmp0,
+        Matrix<intptr_t, 0, 0, 128> &Etmp1, llvm::SmallVector<T, 16> &btmp0,
+        llvm::SmallVector<T, 16> &btmp1, llvm::SmallVector<T, 16> &qtmp0,
+        llvm::SmallVector<T, 16> &qtmp1, Matrix<intptr_t, 0, 0, 0> &A,
+        llvm::SmallVectorImpl<T> &b, Matrix<intptr_t, 0, 0, 0> &E,
+        llvm::SmallVectorImpl<T> &q, size_t i,
+        Polynomial::Val<CheckEmpty>) const {
+        const size_t numNeg = lB.size();
+        const size_t numPos = uB.size();
+#ifdef EXPENSIVEASSERTS
+        for (auto &lb : lB) {
+            if (auto c = lb.getCompileTimeConstant()) {
+                if (c.getValue() == 0) {
+                    assert(lb.terms.size() == 0);
+                }
+            }
+        }
+#endif
+        auto [numLoops, numCol] = A.size();
+        A.reserve(numLoops, numCol + numNeg * numPos);
+        b.reserve(numCol + numNeg * numPos);
+        for (size_t l = 0; l < numNeg; ++l) {
+            for (size_t u = 0; u < numPos; ++u) {
+                size_t c = b.size();
+                A.resize(numLoops, c + 1);
+                b.resize(c + 1);
+                if (setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l],
+                              uA.getCol(u), uB[u], i)) {
+                    if (removeRedundantConstraints(
+                            Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
+                            qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
+                        // removeRedundantConstraints returns `true` if we are
+                        // to drop the bounds `c`
+                        std::cout << "c = " << c
+                                  << " is a redundant constraint!" << std::endl;
+                        A.resize(numLoops, c);
+                        b.resize(c);
+                    } else {
+                        std::cout
+                            << "c = " << c
+                            << " may have removed constraints; now we have: "
+                            << A.numCol() << std::endl;
+                    }
+                } else if (CheckEmpty && knownLessEqualZero(b[c] + 1)) {
+                    return true;
+                } else {
+                    A.resize(numLoops, c);
+                    b.resize(c);
+                }
+            }
+        }
+        return false;
+    }
 
     void pruneBounds() { pruneBounds(A, b); }
     void pruneBounds(
@@ -421,6 +481,7 @@ template <class P, typename T> struct AbstractPolyhedra {
 
         Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
         llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
+        NormalForm::simplifyEqualityConstraints(Eold, qold);
         for (size_t i = 0; i < Eold.numCol(); ++i) {
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
@@ -481,6 +542,58 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         return -1;
     }
+    intptr_t checkForTrivialRedundancies(
+        llvm::SmallVector<unsigned, 32> &colsToErase,
+        llvm::SmallVector<unsigned, 16> &boundDiffs,
+        Matrix<intptr_t, 0, 0, 128> &Etmp, llvm::SmallVector<T, 16> &qtmp,
+        Matrix<intptr_t, 0, 0, 0> &Aold, llvm::SmallVectorImpl<T> &bold,
+        const PtrVector<intptr_t, 0> &a, const T &b,
+        size_t numAuxiliaryVariable, size_t EtmpCol = 0) const {
+        const size_t numVar = getNumVar();
+        intptr_t dependencyToEliminate = -1;
+        for (size_t i = 0; i < numAuxiliaryVariable; ++i) {
+            size_t k = EtmpCol + i;
+            size_t c = boundDiffs[i];
+            intptr_t dte = -1;
+            for (size_t v = 0; v < numVar; ++v) {
+                intptr_t Evi = a[v] - Aold(v, c);
+                Etmp(v, k) = Evi;
+                dte = (Evi) ? v : dte;
+            }
+	    std::cout << "dte = " << dte << std::endl;
+            if (dte == -1) {
+                T delta = bold[c] - b;
+                if (knownLessEqualZero(delta)) {
+                    // bold[c] - b <= 0
+                    // bold[c] <= b
+                    // thus, bound `c` will always trigger before `b`
+                    return -2;
+                } else if (knownGreaterEqualZero(delta)) {
+                    // bound `b` triggers first
+                    // normally we insert `c`, but if inserting here
+                    // we also want to erase elements from boundDiffs
+                    colsToErase.push_back(i);
+                }
+            } else {
+                dependencyToEliminate = dte;
+            }
+            for (size_t j = 0; j < numAuxiliaryVariable; ++j) {
+                Etmp(numVar + j, k) = (j == i);
+            }
+            qtmp[k] = b - bold[c];
+        }
+        if (colsToErase.size()) {
+            for (auto it = colsToErase.rbegin(); it != colsToErase.rend();
+                 ++it) {
+                size_t c = boundDiffs[*it];
+                boundDiffs.erase(boundDiffs.begin() + (*it));
+                *it = c; // redefine to `c`
+                Etmp.eraseCol(c);
+                qtmp.erase(qtmp.begin() + c);
+            }
+        }
+        return dependencyToEliminate;
+    }
     // returns `true` if `a` and `b` should be eliminated as redundant,
     // otherwise it eliminates all variables from `Atmp0` and `btmp0` that `a`
     // and `b` render redundant.
@@ -506,9 +619,9 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
         }
         const size_t numAuxiliaryVariable = boundDiffs.size();
-	if (numAuxiliaryVariable == 0){
-	    return false;
-	}
+        if (numAuxiliaryVariable == 0) {
+            return false;
+        }
         const size_t numVarAugment = numVar + numAuxiliaryVariable;
         size_t AtmpCol = Aold.numCol() - (C < Aold.numCol());
         Atmp0.resizeForOverwrite(numVarAugment, AtmpCol);
@@ -527,7 +640,13 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             btmp0[j] = bold[i];
         }
-        intptr_t dependencyToEliminate = -1;
+        llvm::SmallVector<unsigned, 32> colsToErase;
+        intptr_t dependencyToEliminate =
+            checkForTrivialRedundancies(colsToErase, boundDiffs, E, q, Aold,
+                                        bold, a, b, numAuxiliaryVariable);
+	if (dependencyToEliminate == -2){
+	    return true;
+	}
         // define variables as
         // (a-Aold) + delta = b - bold
         // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
@@ -536,38 +655,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         // else if we prove delta <= 0, then (b - a) <= (bold - Aold)
         // and thus (bold - Aold) is the redundant constraint, and we eliminate
         // the associated column.
-        for (size_t i = 0; i < numAuxiliaryVariable; ++i) {
-            size_t c = boundDiffs[i];
-            for (size_t v = 0; v < numVar; ++v) {
-                intptr_t Evi = a[v] - Aold(v, c);
-                E(v, i) = Evi;
-                dependencyToEliminate =
-                    (Evi) ? v : dependencyToEliminate;
-            }
-            for (size_t j = 0; j < numAuxiliaryVariable; ++j) {
-                E(numVar + j, i) = (j == i);
-            }
-            q[i] = b - bold[c];
-        }
         assert(btmp0.size() == Atmp0.numCol());
-        llvm::SmallVector<unsigned, 32> colsToErase;
-	if (dependencyToEliminate == -1){
-	    // then columns must all be exactly equal
-	    T delta;
-	    for (auto &c : boundDiffs){
-		delta = bold[c];
-		delta -= b;
-		if (knownLessEqualZero(delta)){
-		    // bold[c] - b <= 0
-		    // bold[c] <= b
-		    // thus, bound `c` will always trigger before `b`
-		    return true;
-		} else if (knownGreaterEqualZero(delta)) {
-		    // bound `b` triggers first
-		    colsToErase.push_back(c);
-		}
-	    }
-	}
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
             assert(btmp0.size() == Atmp0.numCol());
@@ -623,8 +711,10 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
-        if (C == 10) {
-            std::cout << "boundDiffs = [ ";
+        const size_t CHECK = 6;
+        if (C == CHECK) {
+            std::cout << "### CHECKING ### C = " << CHECK
+                      << " ###\nboundDiffs = [ ";
             for (auto &c : boundDiffs) {
                 std::cout << c << ", ";
             }
@@ -701,7 +791,15 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             qtmp0[j] = qold[i];
         }
-        intptr_t dependencyToEliminate = -1;
+        llvm::SmallVector<unsigned, 32> colsToErase;
+        intptr_t dependencyToEliminate = checkForTrivialRedundancies(
+            colsToErase, boundDiffs, Etmp0, qtmp0, Aold, bold, a, b,
+            numAuxiliaryVariable, EtmpCol);
+	if (dependencyToEliminate == -2){
+	    return true;
+	}
+
+        // intptr_t dependencyToEliminate = -1;
         // fill Etmp0 with bound diffs
         // define variables as
         // (a-Aold) + delta = b - bold
@@ -711,20 +809,6 @@ template <class P, typename T> struct AbstractPolyhedra {
         // else if we prove delta <= 0, then (b - a) <= (bold - Aold)
         // and thus (bold - Aold) is the redundant constraint, and we eliminate
         // the associated column.
-        for (size_t i = 0; i < numAuxiliaryVariable; ++i) {
-            size_t k = EtmpCol + i;
-            size_t c = boundDiffs[i];
-            for (size_t v = 0; v < numVar; ++v) {
-                intptr_t Evi = a[v] - Aold(v, c);
-                Etmp0(v, k) = Evi;
-                dependencyToEliminate =
-                    (Evi && (v != i)) ? v : dependencyToEliminate;
-            }
-            for (size_t j = 0; j < numAuxiliaryVariable; ++j) {
-                Etmp0(numVar + j, k) = (j == i);
-            }
-            qtmp0[k] = b - bold[c];
-        }
         // std::cout << "Entering loop\nAtmp0 = \n" << Atmp0 << "\nbtmp0 = " <<
         // std::endl; for (auto &bi : btmp0){
         //     std::cout << bi << ", ";
@@ -734,7 +818,6 @@ template <class P, typename T> struct AbstractPolyhedra {
         //     std::cout << qi << ", ";
         // }
         // std::cout << std::endl;
-        llvm::SmallVector<unsigned, 32> colsToErase;
         assert(btmp0.size() == Atmp0.numCol());
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
@@ -792,6 +875,32 @@ template <class P, typename T> struct AbstractPolyhedra {
                     break;
                 }
             }
+        }
+        const size_t CHECK = 7;
+        if (C == CHECK) {
+            std::cout << "### CHECKING ### C = " << CHECK
+                      << " ###\nboundDiffs = [ ";
+            for (auto &c : boundDiffs) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "colsToErase = [ ";
+            for (auto &c : colsToErase) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "a = [ ";
+            for (auto &c : a) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "b = " << b << std::endl;
+            std::cout << "Aold = \n" << Aold << std::endl;
+            std::cout << "bold = [";
+            for (auto &c : bold) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
         }
         erasePossibleNonUniqueElements(Aold, bold, colsToErase);
         return false;
@@ -865,13 +974,12 @@ template <class P, typename T> struct AbstractPolyhedra {
                    const size_t i) {
 
         std::cout << "Removing variable: " << i << std::endl;
-        // categorizeBounds(lA, uA, lb, ub, A, b, i);
-        // deleteBounds(A, b, i);
-        // appendBounds(lA, uA, lb, ub, A, b, i, Polynomial::Val<false>());
-        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp;
-        llvm::SmallVector<T, 16> btmp0, btmp1, qtmp;
-        removeVariable(lA, uA, lb, ub, Atmp0, Atmp1, Etmp, btmp0, btmp1, qtmp,
-                       A, b, i);
+        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
+        llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
+        categorizeBounds(lA, uA, lb, ub, A, b, i);
+        deleteBounds(A, b, i);
+        appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1,
+                     qtmp0, qtmp1, A, b, E, q, i, Polynomial::Val<false>());
         // lA and uA updated
         // now, add E and q
         llvm::SmallVector<unsigned, 32> nonZero;
@@ -911,8 +1019,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                 b.resize(c + 1);
                 if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En, q[n],
                               i)) {
-                    if (removeRedundantConstraints(Atmp0, Atmp1, Etmp, btmp0,
-                                                   btmp1, qtmp, A, b, c)) {
+                    if (removeRedundantConstraints(
+                            Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
+                            qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
                         A.resize(A.numRow(), c);
                         b.resize(c);
                     } else {
@@ -941,8 +1050,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                 b.resize(c + 1);
                 if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k), ub[k],
                               i)) {
-                    if (removeRedundantConstraints(Atmp0, Atmp1, Etmp, btmp0,
-                                                   btmp1, qtmp, A, b, c)) {
+                    if (removeRedundantConstraints(
+                            Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
+                            qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
                         A.resize(A.numRow(), c);
                         b.resize(c);
                     }
@@ -1004,6 +1114,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                 break;
             }
         } while (ito != itb);
+        if (numNonZero > 1) {
+            NormalForm::simplifyEqualityConstraints(E, q);
+        }
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(

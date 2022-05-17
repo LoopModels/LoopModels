@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "Symbolics.hpp"
 #include "llvm/ADT/APInt.h" // llvm::Optional
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
@@ -274,18 +275,21 @@ void zeroSupDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
     }
 }
 
-bool pivotCols(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t N) {
-    size_t piv = i;
+bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N, size_t piv) {
+    size_t j = piv;
     while (A(i, piv) == 0) {
         if (++piv == N) {
             return true;
         }
     }
-    if (i != piv) {
-        swapCols(A, i, piv);
-        swapCols(K, i, piv);
+    if (j != piv) {
+        swapCols(A, j, piv);
+        swapCols(K, j, piv);
     }
     return false;
+}
+bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N) {
+    return pivotCols(A, K, i, N, i);
 }
 
 // extend HNF form from (0:i-1,0:N-1) block to the (0:i,0:N-1) block
@@ -329,7 +333,7 @@ orthogonalize(IntMatrix auto A) {
     auto [M, N] = A.size();
     SquareMatrix<intptr_t> K = SquareMatrix<intptr_t>::identity(N);
     llvm::SmallVector<unsigned> included;
-    included.reserve(std::min(M,N));
+    included.reserve(std::min(M, N));
     unsigned j = 0;
     for (size_t i = 0; i < std::min(M, N);) {
         // zero ith row
@@ -357,6 +361,99 @@ orthogonalize(IntMatrix auto A) {
         ++i;
     }
     return std::make_pair(std::move(K), std::move(included));
+}
+template <typename T>
+void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
+                     size_t c) {
+    auto [M, N] = A.size();
+    for (size_t j = c + 1; j < N; ++j) {
+        intptr_t Aii = A(r, c);
+        intptr_t Aij = A(r, j);
+        auto [r, p, q] = gcdx(Aii, Aij);
+        intptr_t Aiir = Aii / r;
+        intptr_t Aijr = Aij / r;
+        for (size_t k = 0; k < M; ++k) {
+            intptr_t Aki = A(k, c);
+            intptr_t Akj = A(k, j);
+            A(k, c) = p * Aki + q * Akj;
+            A(k, j) = Aiir * Akj - Aijr * Aki;
+        }
+        T bi = std::move(b[c]);
+        T bj = std::move(b[j]);
+        b[c] = p * bi + q * bj;
+        b[j] = Aiir * bj - Aijr * bi;
+    }
+}
+template <typename T>
+void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
+                       size_t c) {
+    const size_t M = A.numRow();
+    intptr_t Akk = A(r, c);
+    if (Akk < 0) {
+        Akk = -Akk;
+        for (size_t i = 0; i < M; ++i) {
+            A(i, c) *= -1;
+        }
+	negate(b[c]);
+    }
+    for (size_t z = 0; z < c; ++z) {
+        // try to eliminate `A(k,z)`
+        intptr_t Akz = A(r, z);
+        // if Akk == 1, then this zeros out Akz
+        if (Akz) {
+            // we want positive but smaller subdiagonals
+            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
+            // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        =   5 - 2*2 = 1
+            // or if `Akz = -5, Akk = 2`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+            // if `Akk = 1`, then
+            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        = A(k,z) - A(k,z) = 0
+            // or if `Akz = -7, Akk = 39`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+            intptr_t AkzOld = Akz;
+            Akz /= Akk;
+            if (AkzOld < 0) {
+                Akz -= (AkzOld != (Akz * Akk));
+            }
+        } else {
+            continue;
+        }
+        for (size_t i = 0; i < M; ++i) {
+            A(i, z) -= Akz * A(i, c);
+        }
+	Polynomial::fnmadd(b[z], b[c], Akz);
+    }
+}
+template <typename T, size_t L>
+void simplifyEqualityConstraints(Matrix<intptr_t, 0, 0, L> &E,
+                                 llvm::SmallVectorImpl<T> &q) {
+    auto [M, N] = E.size();
+    size_t dec = 0;
+    for (size_t m = 0; m < M; ++m) {
+        if (m - dec >= N)
+            break;
+
+        if (pivotCols(E, q, m, N, m - dec)) {
+            // row is entirely zero
+            ++dec;
+            continue;
+        }
+        // E(m, m-dec) now contains non-zero
+        // zero row `m` of every column to the right of `m - dec`
+        zeroSupDiagonal(E, q, m, m - dec);
+        // now we reduce the sub diagonal
+        reduceSubDiagonal(E, q, m, m - dec);
+    }
+    size_t Nnew = N;
+    while (allZero(E.getCol(Nnew - 1))) {
+        --Nnew;
+    }
+    E.resize(M, Nnew);
+    q.resize(Nnew);
 }
 
 } // namespace NormalForm

@@ -1000,24 +1000,28 @@ AbstractMatrix auto matmultn(AbstractMatrix auto &C,
 }
 
 void swapRows(IntMatrix auto &A, size_t i, size_t j) {
-    auto [M, N] = A.size();
     if (i == j) {
         return;
     }
+    auto [M, N] = A.size();
     assert((i < M) & (j < M));
     for (size_t n = 0; n < N; ++n) {
         std::swap(A(i, n), A(j, n));
     }
 }
 void swapCols(IntMatrix auto &A, size_t i, size_t j) {
-    auto [M, N] = A.size();
     if (i == j) {
         return;
     }
+    auto [M, N] = A.size();
     assert((i < N) & (j < N));
     for (size_t m = 0; m < M; ++m) {
         std::swap(A(m, i), A(m, j));
     }
+}
+template <typename T>
+void swapCols(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
+    std::swap(A[i], A[j]);
 }
 
 // // template <Integral T> T sign(T i) {

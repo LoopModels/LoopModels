@@ -378,13 +378,20 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         assert(ipoly.E.numCol() == ipoly.q.size());
         // remove lambdas
         std::cout << "ipoly =\n" << ipoly << std::endl;
-        for (size_t i = numVarKeep; i < numVarNew; ++i) {
+        // for (size_t i = numVarKeep; i < numVarNew; ++i) {
+        //     ipoly.removeVariable(i);
+        //     std::cout << "After removing variable " << i << " ipoly = \n"
+        //               << ipoly << std::endl;
+        // }
+        // ipoly.A.reduceNumRows(numVarKeep);
+        // ipoly.E.reduceNumRows(numVarKeep);
+        for (size_t i = numVarNew-1; i >= numVarKeep; --i) {
             ipoly.removeVariable(i);
+	    ipoly.A.reduceNumRows(i);
+	    ipoly.E.reduceNumRows(i);
             std::cout << "After removing variable " << i << " ipoly = \n"
                       << ipoly << std::endl;
         }
-        ipoly.A.reduceNumRows(numVarKeep);
-        ipoly.E.reduceNumRows(numVarKeep);
         std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
