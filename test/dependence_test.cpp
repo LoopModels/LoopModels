@@ -4,11 +4,20 @@
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+
+// TEST(RedundancyElimination, BasicAssertions) {
+//     Matrix<intptr_t,0,0,0> A(12,7);
+//     llvm::SmallVector<intptr_t, 8> b(7);
+//     Matrix<intptr_t,0,0,0> E(12,4);
+//     llvm::SmallVector<intptr_t, 8> q(4);
+    
+// }
 
 TEST(DependenceTest, BasicAssertions) {
 
@@ -81,6 +90,8 @@ TEST(DependenceTest, BasicAssertions) {
 
     EXPECT_EQ(dep0.getNumConstraints(), 4);
     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
+    assert(dep0.getNumConstraints() == 4);
+    assert(dep0.getNumEqualityConstraints() == 2);
     
     DependencePolyhedra dep1(Asrc, Atgt1);
     std::cout << "Dep1 = \n" << dep1 << std::endl;

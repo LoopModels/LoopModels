@@ -222,7 +222,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         std::cout << "Eliminating: " << i << "; Asrc.numCol() = " << numCol
                   << "; bsrc.size() = " << bsrc.size()
                   << "; E.numCol() = " << E.numCol() << std::endl;
-	// std::cout << "A = \n" << A << "\n bold =
+        // std::cout << "A = \n" << A << "\n bold =
         // TODO: drop independentOfInner?
         for (size_t u = 0; u < numCol; ++u) {
             auto Au = Asrc.getCol(u);
@@ -464,6 +464,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                 // drop `c`
                 Aold.eraseCol(c);
                 bold.erase(bold.begin() + c);
+                std::cout << "Dropping column c = " << c << "." << std::endl;
+            } else {
+                std::cout << "Keeping column c = " << c << "." << std::endl;
             }
         }
     }
@@ -490,6 +493,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                                            Aold.numCol() + i)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
+                std::cout << "Oops!!!" << std::endl;
                 return true;
             }
             // flip
@@ -503,16 +507,18 @@ template <class P, typename T> struct AbstractPolyhedra {
                                            Aold.numCol() + i)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
+                std::cout << "Oops!!!" << std::endl;
+
                 return true;
             }
-	    std::cout << "E-Elim; Aold = \n" << Aold << std::endl;
-	    std::cout << "bold = [ ";
+            std::cout << "E-Elim; Aold = \n" << Aold << std::endl;
+            std::cout << "bold = [ ";
             for (auto &c : bold) {
                 std::cout << c << ", ";
             }
             std::cout << "]" << std::endl;
-	    std::cout << "Eold = \n" << Eold << std::endl;
-	    std::cout << "qold = [ ";
+            std::cout << "Eold = \n" << Eold << std::endl;
+            std::cout << "qold = [ ";
             for (auto &c : qold) {
                 std::cout << c << ", ";
             }
@@ -527,8 +533,8 @@ template <class P, typename T> struct AbstractPolyhedra {
                 Aold.eraseCol(c);
                 bold.erase(bold.begin() + c);
             }
-	    std::cout << "Aold = \n" << Aold << std::endl;
-	    std::cout << "bold = [ ";
+            std::cout << "Aold = \n" << Aold << std::endl;
+            std::cout << "bold = [ ";
             for (auto &c : bold) {
                 std::cout << c << ", ";
             }
@@ -579,7 +585,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 Etmp(v, k) = Evi;
                 dte = (Evi) ? v : dte;
             }
-	    std::cout << "dte = " << dte << std::endl;
+            std::cout << "dte = " << dte << std::endl;
             if (dte == -1) {
                 T delta = bold[c] - b;
                 if (knownLessEqualZero(delta)) {
@@ -663,9 +669,9 @@ template <class P, typename T> struct AbstractPolyhedra {
         intptr_t dependencyToEliminate =
             checkForTrivialRedundancies(colsToErase, boundDiffs, E, q, Aold,
                                         bold, a, b, numAuxiliaryVariable);
-	if (dependencyToEliminate == -2){
-	    return true;
-	}
+        if (dependencyToEliminate == -2) {
+            return true;
+        }
         // define variables as
         // (a-Aold) + delta = b - bold
         // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
@@ -694,11 +700,11 @@ template <class P, typename T> struct AbstractPolyhedra {
                     intptr_t auxInd = auxiliaryInd(Ac);
                     if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
                         intptr_t Axc = Atmp0(auxInd, c);
-                        // Axc*delta <= b <= 0
+                        // -Axc*delta <= b <= 0
                         // if (Axc > 0): (upper bound)
                         // delta <= b/Axc <= 0
                         // else if (Axc < 0): (lower bound)
-                        // delta >= b/Axc >= 0
+                        // delta >= -b/Axc >= 0
                         if (Axc > 0) {
                             // upper bound
                             colsToErase.push_back(boundDiffs[auxInd - numVar]);
@@ -730,7 +736,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
-        const size_t CHECK = 6;
+        const size_t CHECK = C;
         if (C == CHECK) {
             std::cout << "### CHECKING ### C = " << CHECK
                       << " ###\nboundDiffs = [ ";
@@ -814,9 +820,9 @@ template <class P, typename T> struct AbstractPolyhedra {
         intptr_t dependencyToEliminate = checkForTrivialRedundancies(
             colsToErase, boundDiffs, Etmp0, qtmp0, Aold, bold, a, b,
             numAuxiliaryVariable, EtmpCol);
-	if (dependencyToEliminate == -2){
-	    return true;
-	}
+        if (dependencyToEliminate == -2) {
+            return true;
+        }
 
         // intptr_t dependencyToEliminate = -1;
         // fill Etmp0 with bound diffs
@@ -857,6 +863,8 @@ template <class P, typename T> struct AbstractPolyhedra {
                 intptr_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     intptr_t auxInd = auxiliaryInd(Ac);
+                    // FIXME: does knownLessEqualZero(btmp0[c]) always
+                    // return `true` when `allZero(bold)`???
                     if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
                         intptr_t Axc = Atmp0(auxInd, c);
                         // Axc*delta <= b <= 0
@@ -869,6 +877,10 @@ template <class P, typename T> struct AbstractPolyhedra {
                             colsToErase.push_back(boundDiffs[auxInd - numVar]);
                         } else {
                             // lower bound
+                            std::cout << "Col to erase, C = " << C
+                                      << "; obsoleted by: "
+                                      << boundDiffs[auxInd - numVar]
+                                      << std::endl;
                             return true;
                         }
                     }
@@ -917,6 +929,12 @@ template <class P, typename T> struct AbstractPolyhedra {
             std::cout << "Aold = \n" << Aold << std::endl;
             std::cout << "bold = [";
             for (auto &c : bold) {
+                std::cout << c << ", ";
+            }
+            std::cout << "]" << std::endl;
+            std::cout << "Eold = \n" << Eold << std::endl;
+            std::cout << "qold = [";
+            for (auto &c : qold) {
                 std::cout << c << ", ";
             }
             std::cout << "]" << std::endl;
