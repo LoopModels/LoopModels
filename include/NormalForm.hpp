@@ -394,7 +394,7 @@ void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
-	negate(b[c]);
+        negate(b[c]);
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
@@ -425,13 +425,15 @@ void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }
-	Polynomial::fnmadd(b[z], b[c], Akz);
+        Polynomial::fnmadd(b[z], b[c], Akz);
     }
 }
 template <typename T, size_t L>
 void simplifyEqualityConstraints(Matrix<intptr_t, 0, 0, L> &E,
                                  llvm::SmallVectorImpl<T> &q) {
     auto [M, N] = E.size();
+    if (N == 0)
+        return;
     size_t dec = 0;
     for (size_t m = 0; m < M; ++m) {
         if (m - dec >= N)
