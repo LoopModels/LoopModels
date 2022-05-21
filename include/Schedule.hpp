@@ -11,6 +11,14 @@
 // We represent a schedule as
 // Phi_s'*i + omega_s <_{lex} Phi_t*s + Omega_t
 // means that schedule `s` executes before schedule `t`.
+//
+// S_0 = {Phi_0, omega_0}
+// S_1 = {Phi_1, omega_1}
+// given i_0 and i_1, if
+// Phi_0 * i_0 + omega_0 << Phi_1 * i_1 + omega_1
+// then "i_0" for schedule "S_0" happens before
+// "i_1" for schedule "S_1"
+// 
 struct Schedule {
     // given `N` loops, `P` is `N+1 x 2*N+1`
     // even rows give offsets indicating fusion (0-indexed)

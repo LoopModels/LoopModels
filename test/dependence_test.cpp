@@ -26,9 +26,13 @@ TEST(DependenceTest, BasicAssertions) {
     //     A(i+1,j+1) = A(i+1,j) + A(i,j+1);
     //   }
     // }
-    auto I = Polynomial::Monomial(Polynomial::ID{3});
-    auto J = Polynomial::Monomial(Polynomial::ID{4});
-
+    auto I = Polynomial::Monomial(Polynomial::ID{1});
+    auto J = Polynomial::Monomial(Polynomial::ID{2});
+    // A'*x <= b
+    // [ 1   0     [i        [ I - 2
+    //  -1   0   *  j ]        0
+    //   0   1           <=    J - 2
+    //   0  -1 ]               0     ]
     Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
@@ -53,7 +57,7 @@ TEST(DependenceTest, BasicAssertions) {
     assert(loop->poset.delta.size() == 0);
 
     // we have three array refs
-    // A[i+1, j+1]
+    // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesSrc;
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> ip1;
     ip1.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
@@ -109,7 +113,7 @@ TEST(DependenceTest, BasicAssertions) {
     EXPECT_FALSE(dep0.isEmpty());
     EXPECT_FALSE(dep1.isEmpty());
 
-    //
+    // 
     Schedule schLoad(2);
     Schedule schStore(2);
     schLoad.getPhi()(0,0) = 1;
