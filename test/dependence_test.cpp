@@ -92,6 +92,7 @@ TEST(DependenceTest, BasicAssertions) {
     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
     assert(dep0.getNumConstraints() == 4);
     assert(dep0.getNumEqualityConstraints() == 2);
+
     
     DependencePolyhedra dep1(Asrc, Atgt1);
     std::cout << "Dep1 = \n" << dep1 << std::endl;
@@ -119,7 +120,7 @@ TEST(DependenceTest, BasicAssertions) {
     Dependence& d(dc.getValue());
     EXPECT_TRUE(d.isForward());
     std::cout << d << std::endl;
-
+    
 }
 /*
 TEST(IndependentTest, BasicAssertions) {
