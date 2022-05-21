@@ -1471,6 +1471,13 @@ template <typename C, IsMonomial M> struct Terms {
         }
     }
 
+    Terms<C, M> &operator/=(C y) {
+        for (auto &x : terms) {
+            x.coefficient /= y;
+        }
+        return *this;
+    }
+
     friend std::ostream &operator<<(std::ostream &os, Terms const &x) {
         if (auto c = x.getCompileTimeConstant()) {
             return os << c.getValue();
@@ -3162,7 +3169,18 @@ uint64_t pickVar(Multivariate<C, M> const &x) {
     }
     return v;
 }
-
+template <typename C, IsMonomial M> C coefGCD(Terms<C, M> const &x) {
+    if (x.size()) {
+        C g(x.terms.front().coefficient);
+        for (size_t i = 1; i < x.terms.size(); ++i) {
+            g = gcd(g, x.terms[i].coefficient);
+        }
+        return g;
+    } else {
+        return C(0);
+    }
+}
+intptr_t coefGCD(intptr_t x) { return x; }
 template <typename C, IsMonomial M>
 Multivariate<C, M> gcd(Multivariate<C, M> const &x,
                        Multivariate<C, M> const &y) {
@@ -3257,6 +3275,8 @@ for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
 }
 return aff;
 }
+
+
 */
 } // end namespace Polynomial
 typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial> MPoly;
@@ -3488,29 +3508,30 @@ std::forward<T>(x)); }
 };
 */
 
-template<> struct llvm::DenseMapInfo<Polynomial::Monomial,void>{
+template <> struct llvm::DenseMapInfo<Polynomial::Monomial, void> {
     static inline Polynomial::Monomial getEmptyKey() {
-	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
-	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
-	    prodIDs.push_back(VarID(0x3fffffff));
-	}
-	return Polynomial::Monomial(std::move(prodIDs));	
+        llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
+        for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i) {
+            prodIDs.push_back(VarID(0x3fffffff));
+        }
+        return Polynomial::Monomial(std::move(prodIDs));
     }
     static inline Polynomial::Monomial getTombstoneKey() {
-	llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
-	for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i){
-	    prodIDs.push_back(VarID(0x7fffffff));
-	}
-	return Polynomial::Monomial(std::move(prodIDs));
+        llvm::SmallVector<VarID, Polynomial::MonomialSmallVectorSize> prodIDs;
+        for (size_t i = 0; i < Polynomial::MonomialSmallVectorSize; ++i) {
+            prodIDs.push_back(VarID(0x7fffffff));
+        }
+        return Polynomial::Monomial(std::move(prodIDs));
     }
-    static unsigned getHashValue(const Polynomial::Monomial &x){
-	unsigned seed = x.prodIDs.size();
-	for(auto& i : x.prodIDs) {
-	    seed ^= i.id + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-	}
-	return seed;
+    static unsigned getHashValue(const Polynomial::Monomial &x) {
+        unsigned seed = x.prodIDs.size();
+        for (auto &i : x.prodIDs) {
+            seed ^= i.id + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        }
+        return seed;
     }
-    static bool isEqual(const Polynomial::Monomial &lhs, const Polynomial::Monomial &rhs){
-	return lhs == rhs;
+    static bool isEqual(const Polynomial::Monomial &lhs,
+                        const Polynomial::Monomial &rhs) {
+        return lhs == rhs;
     }
 };

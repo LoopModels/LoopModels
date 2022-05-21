@@ -62,13 +62,35 @@ template <class P, typename T> struct AbstractPolyhedra {
         for (size_t n = 0; n < N; ++n) {
             a[n] = cu * la[n] - cl * ua[n];
         }
+        g = 0;
+        for (size_t n = 0; n < N; ++n) {
+            intptr_t an = a[n];
+	    if (std::abs(an) == 1){
+		return true;
+	    }
+            if (g) {
+                g = an ? std::gcd(g, an) : g;
+            } else {
+                g = an;
+            }
+        }
+	g = std::gcd(Polynomial::coefGCD(b), g);
+	if (g > 1){
+	    for (size_t n = 0; n < N; ++n){
+		a[n] /= g;
+	    }
+	    b /= g;
+	    return true;
+	} else {
+	    return g != 0;
+	}
         // bool anynonzero = std::ranges::any_of(a, [](intptr_t ai) { return ai
         // != 0; }); if (!anynonzero){
         //     std::cout << "All A[:,"<<i<<"] = 0; b["<<i<<"] = " << b <<
         //     std::endl;
         // }
         // return anynonzero;
-        return std::ranges::any_of(a, [](intptr_t ai) { return ai != 0; });
+        // return std::ranges::any_of(a, [](intptr_t ai) { return ai != 0; });
     }
     static bool uniqueConstraint(auto &A, llvm::ArrayRef<T> b, size_t C) {
         for (size_t c = 0; c < C; ++c) {
@@ -372,7 +394,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         // }
         // simplifyAuxEqualityConstraints(E1, q1);
         NormalForm::simplifyEqualityConstraints(E1, q1);
-        std::cout << "Eliminated variable i = " << i - numAuxVar << std::endl;
+        std::cout << "Eliminated variable v_" << i - numAuxVar << std::endl;
         printConstraints(
             printConstraints(std::cout, Adst, bdst, true, numAuxVar), E1, q1,
             false, numAuxVar);
@@ -439,7 +461,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             bdst[c++] = bsrc[j];
         }
         size_t c = numExclude;
-        std::cout << "Eliminating: " << i + getNumVar() - Asrc.numRow()
+        std::cout << "Eliminating: v_" << i + getNumVar() - Asrc.numRow()
                   << "; Asrc.numCol() = " << numCol
                   << "; bsrc.size() = " << bsrc.size()
                   << "; E.numCol() = " << E.numCol() << std::endl;
@@ -572,7 +594,8 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
-        std::cout << "\n in AppendBounds, about to pruneBounds" << std::endl;
+        std::cout << "\n in AppendBoundsSimple, about to pruneBounds"
+                  << std::endl;
         printConstraints(std::cout, A, b, true, A.numRow() - getNumVar());
         return false;
     }
@@ -706,7 +729,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                      llvm::SmallVectorImpl<T> &q, auto &Aold,
                      llvm::SmallVectorImpl<T> &bold) const {
 
-        for (size_t i = 0; i + 1 < Aold.numCol(); ++i) {
+        for (size_t i = 0; i + 1 <= Aold.numCol(); ++i) {
             size_t c = Aold.numCol() - 1 - i;
             // std::cout << "i = " << i << "; Aold.numCol() = " << Aold.numCol()
             //           << "; c = " << c << std::endl;
@@ -765,7 +788,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             printConstraints(std::cout, Eold, qold, false);
         }
         assert(Aold.numCol() == bold.size());
-        for (size_t i = 0; Aold.numCol() > i + 1; ++i) {
+        for (size_t i = 0; i + 1 <= Aold.numCol(); ++i) {
             size_t c = Aold.numCol() - 1 - i;
             assert(Aold.numCol() == bold.size());
             std::cout << "Aold.numCol() = " << Aold.numCol()
@@ -1382,6 +1405,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
         std::cout << "Removing variable: " << i << std::endl;
+        printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
         Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
         llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
         categorizeBounds(lA, uA, lb, ub, A, b, i);

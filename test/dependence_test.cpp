@@ -98,6 +98,8 @@ TEST(DependenceTest, BasicAssertions) {
     std::cout << "Dep1 = \n" << dep1 << std::endl;
     EXPECT_EQ(dep1.getNumConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
+    assert(dep1.getNumConstraints() == 4);
+    assert(dep1.getNumEqualityConstraints() == 2);
 
     std::cout << "Poset contents: ";
     for (auto &d : loop->poset.delta) {
