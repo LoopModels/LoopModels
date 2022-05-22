@@ -49,7 +49,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         //
         // or swap alpha signs if subInd < 0
         //
-        // Returns an IntegerPolyhedra C'*y <= d
+        // Returns an IntegerEqPolyhedra C'*y <= d
         // where
         // y = [alpha_delta, alpha_s..., alpha_t..., w, u...]
         // for our cost function, we want to set `sum(u)` to zero
@@ -228,9 +228,14 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             std::cout << qi << ", ";
         }
         std::cout << std::endl;
-        pruneBounds();
+	if (pruneBounds()){
+	    A.clear();
+	    b.clear();
+	    E.clear();
+	    q.clear();
+	}
     }
-    IntegerPolyhedra farkasScheduleDifference(bool boundAbove) {
+    IntegerEqPolyhedra farkasScheduleDifference(bool boundAbove) {
         return farkasScheduleDifference(boundAbove, forward);
     }
     // `direction = true` means second dep follow first
@@ -242,7 +247,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // b) old vars eq
     // c) constant terms eq
     // d) bound above eq
-    IntegerPolyhedra farkasScheduleDifference(bool boundAbove, bool direction) {
+    IntegerEqPolyhedra farkasScheduleDifference(bool boundAbove,
+                                                bool direction) {
 
         llvm::DenseMap<Polynomial::Monomial, size_t> constantTerms;
         for (auto &bi : b) {
@@ -421,8 +427,8 @@ struct MemoryAccess {
 
 struct Dependence {
     DependencePolyhedra depPoly;
-    IntegerPolyhedra dependenceSatisfaction;
-    IntegerPolyhedra dependenceBounding;
+    IntegerEqPolyhedra dependenceSatisfaction;
+    IntegerEqPolyhedra dependenceBounding;
     bool isForward() const { return depPoly.forward; }
     static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y) {
         return check(*x.ref, x.schedule, *y.ref, y.schedule);
@@ -441,9 +447,9 @@ struct Dependence {
         // variables x then y
         std::cout << "x = " << x << "\ny = " << y << "\ndxy = \n"
                   << dxy << std::endl;
-        IntegerPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
+        IntegerEqPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
-        IntegerPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
+        IntegerEqPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
         const size_t numLoopsX = x.getNumLoops();
         const size_t numLoopsY = y.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);

@@ -90,6 +90,7 @@ TEST(DependenceTest, BasicAssertions) {
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
     DependencePolyhedra dep0(Asrc, Atgt0);
+    EXPECT_FALSE(dep0.pruneBounds());
     std::cout << "Dep0 = \n" << dep0 << std::endl;
 
     EXPECT_EQ(dep0.getNumConstraints(), 4);
@@ -99,6 +100,7 @@ TEST(DependenceTest, BasicAssertions) {
 
     
     DependencePolyhedra dep1(Asrc, Atgt1);
+    EXPECT_FALSE(dep1.pruneBounds());
     std::cout << "Dep1 = \n" << dep1 << std::endl;
     EXPECT_EQ(dep1.getNumConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
@@ -128,7 +130,7 @@ TEST(DependenceTest, BasicAssertions) {
     std::cout << d << std::endl;
     
 }
-/*
+
 TEST(IndependentTest, BasicAssertions) {
     // symmetric copy
     // for(i = 0:I-1){
@@ -137,8 +139,8 @@ TEST(IndependentTest, BasicAssertions) {
     //   }
     // }
     //
-
-    auto I = Polynomial::Monomial(Polynomial::ID{3});
+    std::cout << "\n\n#### Starting Symmetric Copy Test ####" << std::endl;
+    auto I = Polynomial::Monomial(Polynomial::ID{1});
 
     Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
@@ -197,8 +199,8 @@ TEST(IndependentTest, BasicAssertions) {
     schStore.getOmega()[4] = 1;
     llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
+
 }
-*/
 /*
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:

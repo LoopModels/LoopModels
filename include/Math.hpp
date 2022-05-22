@@ -700,6 +700,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         A.data.resize_for_overwrite(MM * NN);
         return A;
     }
+    void clear(){
+	M = 0;
+	N = 0;
+	data.clear();
+    }
     void resize(size_t MM, size_t NN) {
         M = MM;
         N = NN;

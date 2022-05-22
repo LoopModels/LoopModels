@@ -48,7 +48,7 @@ struct LoopBlock {
         Edge(Dependence dependence, MemoryAccess *in, MemoryAccess *out)
             : dependence(dependence), in(in), out(out) {}
         bool isSatisfied() {
-            IntegerPolyhedra &sat = dependence.dependenceSatisfaction;
+            IntegerEqPolyhedra &sat = dependence.dependenceSatisfaction;
             auto &schIn = in->schedule;
             auto &schOut = out->schedule;
             size_t numLoopsIn = in->getNumLoops();
@@ -127,11 +127,11 @@ struct LoopBlock {
                         Dependence::check(mai, maj)) {
                     size_t numEdges = edges.size();
                     Dependence &d(dep.getValue());
-		    if (d.isForward()){
-			std::cout << "dep direction: x -> y" << std::endl;
-		    } else {
-			std::cout << "dep direction: y -> x" << std::endl;
-		    }
+                    if (d.isForward()) {
+                        std::cout << "dep direction: x -> y" << std::endl;
+                    } else {
+                        std::cout << "dep direction: y -> x" << std::endl;
+                    }
                     MemoryAccess *pin, *pout;
                     if (d.isForward()) {
                         pin = &mai;
