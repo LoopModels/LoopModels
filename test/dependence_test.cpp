@@ -16,7 +16,7 @@
 //     llvm::SmallVector<intptr_t, 8> b(7);
 //     Matrix<intptr_t,0,0,0> E(12,4);
 //     llvm::SmallVector<intptr_t, 8> q(4);
-    
+
 // }
 
 TEST(DependenceTest, BasicAssertions) {
@@ -98,7 +98,6 @@ TEST(DependenceTest, BasicAssertions) {
     assert(dep0.getNumConstraints() == 4);
     assert(dep0.getNumEqualityConstraints() == 2);
 
-    
     DependencePolyhedra dep1(Asrc, Atgt1);
     EXPECT_FALSE(dep1.pruneBounds());
     std::cout << "Dep1 = \n" << dep1 << std::endl;
@@ -115,20 +114,20 @@ TEST(DependenceTest, BasicAssertions) {
     EXPECT_FALSE(dep0.isEmpty());
     EXPECT_FALSE(dep1.isEmpty());
 
-    // 
+    //
     Schedule schLoad(2);
     Schedule schStore(2);
-    schLoad.getPhi()(0,0) = 1;
-    schLoad.getPhi()(1,1) = 1;
-    schStore.getPhi()(0,0) = 1;
-    schStore.getPhi()(1,1) = 1;
+    schLoad.getPhi()(0, 0) = 1;
+    schLoad.getPhi()(1, 1) = 1;
+    schStore.getPhi()(0, 0) = 1;
+    schStore.getPhi()(1, 1) = 1;
     schStore.getOmega()[4] = 1;
-    llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt0, schLoad));
+    llvm::Optional<Dependence> dc(
+        Dependence::check(Asrc, schStore, Atgt0, schLoad));
     EXPECT_TRUE(dc.hasValue());
-    Dependence& d(dc.getValue());
+    Dependence &d(dc.getValue());
     EXPECT_TRUE(d.isForward());
     std::cout << d << std::endl;
-    
 }
 
 TEST(IndependentTest, BasicAssertions) {
@@ -192,14 +191,14 @@ TEST(IndependentTest, BasicAssertions) {
     //
     Schedule schLoad(2);
     Schedule schStore(2);
-    schLoad.getPhi()(0,0) = 1;
-    schLoad.getPhi()(1,1) = 1;
-    schStore.getPhi()(0,0) = 1;
-    schStore.getPhi()(1,1) = 1;
+    schLoad.getPhi()(0, 0) = 1;
+    schLoad.getPhi()(1, 1) = 1;
+    schStore.getPhi()(0, 0) = 1;
+    schStore.getPhi()(1, 1) = 1;
     schStore.getOmega()[4] = 1;
-    llvm::Optional<Dependence> dc(Dependence::check(Asrc, schStore, Atgt, schLoad));
+    llvm::Optional<Dependence> dc(
+        Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
-
 }
 /*
 TEST(TriangularExampleTest, BasicAssertions) {

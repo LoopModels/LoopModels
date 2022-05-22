@@ -93,6 +93,26 @@ template <class P, typename T> struct AbstractPolyhedra {
         // return anynonzero;
         // return std::ranges::any_of(a, [](intptr_t ai) { return ai != 0; });
     }
+
+    // static intptr_t nonUniqueConstraint(auto &A, llvm::ArrayRef<T> b, size_t
+    // C) { 	T nBC = -b[C];
+    //     for (size_t c = 0; c < C; ++c) {
+    //         bool allEqual = b[c] == b[C];
+    //         bool oppositeSign = b[c] == nBC;
+    //         if (allEqual) {
+    //             for (size_t r = 0; r < A.numRow(); ++r) {
+    //                 allEqual &= (A(r, c) == A(r, C));
+    //                 oppositeSign &= (A(r, c) == -A(r, C));
+    //             }
+    //         }
+    //         if (allEqual) {
+    //             return 1;
+    // 	    } else if (oppositeSign) {
+    // 		return -1;
+    // 	    }
+    //     }
+    //     return 0;
+    // }
     static bool uniqueConstraint(auto &A, llvm::ArrayRef<T> b, size_t C) {
         for (size_t c = 0; c < C; ++c) {
             bool allEqual = b[c] == b[C];
@@ -822,6 +842,34 @@ template <class P, typename T> struct AbstractPolyhedra {
         llvm::SmallVector<T, 16> btmp0, btmp1, q;
         pruneBounds(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold);
     }
+    void moveEqualities(auto &Aold, llvm::SmallVectorImpl<T> &bold, auto &Eold,
+                        llvm::SmallVectorImpl<T> &qold) const {
+
+        for (size_t o = Aold.numCol() - 1; o > 0;) {
+            --o;
+            for (size_t i = o + 1; i < Aold.numCol(); ++i) {
+                bool isNeg = true;
+                for (size_t v = 0; v < Aold.numRow(); ++v) {
+                    if (Aold(v, i) != -Aold(v, o)) {
+                        isNeg = false;
+                        break;
+                    }
+                }
+                if (isNeg && (bold[i] == -bold[o])) {
+                    qold.push_back(bold[i]);
+                    size_t e = Eold.numCol();
+                    Eold.resize(Eold.numRow(), qold.size());
+                    for (size_t v = 0; v < Eold.numRow(); ++v) {
+                        Eold(v, e) = Aold(v, i);
+                    }
+                    Aold.eraseCol(i);
+                    Aold.eraseCol(o);
+                    bold.erase(bold.begin() + i);
+                    bold.erase(bold.begin() + o);
+                }
+            }
+        }
+    }
     // returns `false` if not violated, `true` if violated
     bool pruneBounds(auto &Aold, llvm::SmallVectorImpl<T> &bold, auto &Eold,
                      llvm::SmallVectorImpl<T> &qold) const {
@@ -839,7 +887,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                      llvm::SmallVectorImpl<T> &qtmp1, auto &Aold,
                      llvm::SmallVectorImpl<T> &bold, auto &Eold,
                      llvm::SmallVectorImpl<T> &qold) const {
-
+        moveEqualities(Aold, bold, Eold, qold);
         NormalForm::simplifyEqualityConstraints(Eold, qold);
         for (size_t i = 0; i < Eold.numCol(); ++i) {
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
@@ -1807,9 +1855,9 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
                               llvm::SmallVector<T, 8> q)
         : AbstractPolyhedra<P, T>(std::move(A), std::move(b)), E(std::move(E)),
           q(std::move(q)) {}
-    
+
     bool isEmpty() const {
-	return (b.size() + q.size()) == 0;
+        return (b.size() + q.size()) == 0;
         // // inefficient (compared to ILP + Farkas Lemma approach)
         // std::cout << "\ncalling isEmpty()" << std::endl;
         // P copy = *static_cast<const P *>(this);
@@ -1819,10 +1867,11 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
         // llvm::SmallVector<T, 8> ub;
         // Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
         // llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
-	// for (size_t i = 0; i < getNumVar(); ++i){
-        //     if (copy.removeVariable(lA, uA, lb, ub, copy.A, copy.b, copy.A, copy.b, i)){
-	// 	return true;
-	//     }
+        // for (size_t i = 0; i < getNumVar(); ++i){
+        //     if (copy.removeVariable(lA, uA, lb, ub, copy.A, copy.b, copy.A,
+        //     copy.b, i)){
+        // 	return true;
+        //     }
         // }
         // return false;
     }

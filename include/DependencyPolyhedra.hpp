@@ -228,12 +228,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             std::cout << qi << ", ";
         }
         std::cout << std::endl;
-	if (pruneBounds()){
-	    A.clear();
-	    b.clear();
-	    E.clear();
-	    q.clear();
-	}
+        if (pruneBounds()) {
+            A.clear();
+            b.clear();
+            E.clear();
+            q.clear();
+        }
     }
     IntegerEqPolyhedra farkasScheduleDifference(bool boundAbove) {
         return farkasScheduleDifference(boundAbove, forward);
