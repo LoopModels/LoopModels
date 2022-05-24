@@ -469,6 +469,7 @@ struct Dependence {
                 if (o2idiff < 0) {
                     dxy.forward = false;
                     fyx.A.reduceNumRows(numLoopsTotal + 1);
+                    fyx.E.reduceNumRows(numLoopsTotal + 1);
                     fyx.dropEmptyConstraints();
                     std::cout << "dep order 0; i = " << i << std::endl;
                     // y then x
@@ -476,6 +477,7 @@ struct Dependence {
                 } else {
                     dxy.forward = true;
                     fxy.A.reduceNumRows(numLoopsTotal + 1);
+                    fxy.E.reduceNumRows(numLoopsTotal + 1);
                     fxy.dropEmptyConstraints();
                     std::cout << "dep order 1; i = " << i << std::endl;
                     // x then y
@@ -506,6 +508,7 @@ struct Dependence {
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
                 fyx.A.reduceNumRows(numLoopsTotal + 1);
+                fyx.E.reduceNumRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
                 std::cout << "dep order 2; i = " << i << std::endl;
                 // y then x
@@ -516,6 +519,7 @@ struct Dependence {
             if (!fyx.knownSatisfied(sch)) {
                 dxy.forward = true;
                 fxy.A.reduceNumRows(numLoopsTotal + 1);
+                fxy.E.reduceNumRows(numLoopsTotal + 1);
                 fxy.dropEmptyConstraints();
                 std::cout << "dep order 3; i= " << i << std::endl;
                 return Dependence{dxy, fxy, fyx};

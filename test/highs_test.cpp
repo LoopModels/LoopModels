@@ -1,5 +1,6 @@
 #include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
+#include "../include/ILPConstraintElimination.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include <Highs.h>
@@ -10,6 +11,92 @@
 #include <llvm/ADT/SmallVector.h>
 #include <memory>
 
+// ipoly =
+// -v_5 <= 0
+// -v_6 <= 0
+// -v_7 <= 0
+// -v_8 <= 0
+// -v_9 <= 0
+// -v_10 <= 0
+// -v_11 <= 0
+// -v_12 <= 0
+// -v_13 <= 0
+// -v_14 <= 0
+// -v_15 <= 0
+// -v_16 <= 0
+// -v_4 - v_5 + v_8 - 2v_9 - 2v_12 + v_15 - v_16 == 0
+// v_0 - v_9 + v_10 + v_13 - v_14 == 0
+// v_1 + v_11 + v_15 - v_16 == 0
+// -v_2 - v_13 + v_14 == 0
+// -v_3 - v_12 - v_15 + v_16 == 0
+// -v_6 + v_9 == 0
+// -v_7 + v_12 == 0
+
+TEST(ConstraintValidation, BasicAssertions) {
+    Matrix<intptr_t, 0, 0, 0> A(17, 12);
+    llvm::SmallVector<intptr_t, 8> b(12);
+    Matrix<intptr_t, 0, 0, 0> E(17, 7);
+    llvm::SmallVector<intptr_t, 8> q(7);
+    for (size_t i = 0; i < 12; ++i) {
+        A(i + 5, i) = -1;
+    }
+    E(4, 0) = -1;
+    E(5, 0) = -1;
+    E(8, 0) = 1;
+    E(9, 0) = -2;
+    E(12, 0) = -2;
+    E(15, 0) = 1;
+    E(16, 0) = -1;
+    q[0] = 0;
+
+    E(0, 1) = 1;
+    E(9, 1) = -1;
+    E(10, 1) = 1;
+    E(13, 1) = 1;
+    E(14, 1) = -1;
+    q[1] = 0;
+
+    E(1, 2) = 1;
+    E(11, 2) = 1;
+    E(15, 2) = 1;
+    E(16, 2) = -1;
+    q[2] = 0;
+
+    E(2, 3) = -1;
+    E(13, 3) = -1;
+    E(14, 3) = 1;
+    q[3] = 0;
+
+    E(3, 4) = -1;
+    E(12, 4) = -1;
+    E(15, 4) = -1;
+    E(16, 4) = 1;
+    q[4] = 0;
+
+    E(6, 5) = -1;
+    E(9, 5) = 1;
+    q[5] = 0;
+
+    E(7, 6) = -1;
+    E(12, 6) = 1;
+    q[6] = 0;
+
+    Matrix<intptr_t, 0, 0, 0> Ac(A);
+    llvm::SmallVector<intptr_t, 8> bc(b);
+    Matrix<intptr_t, 0, 0, 0> Ec(E);
+    llvm::SmallVector<intptr_t, 8> qc(q);
+    pruneBounds(Ac, bc, Ec, qc);
+    std::cout << "A =\n" << Ac << "\nb=[";
+    for (auto &bi : bc) {
+        std::cout << bi << ", ";
+    }
+    std::cout << "]\nE =\n" << Ec << "\nq=[";
+    for (auto &qi : qc) {
+        std::cout << qi << ", ";
+    }
+    std::cout << "]" << std::endl;
+}
+/*
 TEST(DependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
@@ -149,3 +236,5 @@ TEST(IndependentTest, BasicAssertions) {
     EXPECT_TRUE(dep.isEmpty());
 }
 TEST(TriangularExampleTest, BasicAssertions) {}
+
+*/

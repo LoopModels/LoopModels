@@ -900,7 +900,7 @@ template <typename T> std::ostream &printMatrix(std::ostream &os, T const &A) {
         } else {
             os << "[ ";
         }
-        for (size_t j = 0; j < n - 1; j++) {
+        for (intptr_t j = 0; j < intptr_t(n) - 1; j++) {
             auto Aij = A(i, j);
             if (Aij >= 0) {
                 os << " ";

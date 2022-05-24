@@ -75,7 +75,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 g = an;
             }
         }
-        g = std::gcd(Polynomial::coefGCD(b), g);
+        g = g == 1 ? 1 : std::gcd(Polynomial::coefGCD(b), g);
         if (g > 1) {
             for (size_t n = 0; n < N; ++n) {
                 a[n] /= g;
