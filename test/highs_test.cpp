@@ -88,9 +88,9 @@ TEST(ConstraintValidation, BasicAssertions) {
     Matrix<intptr_t, 0, 0, 0> Ec(E), Enew;
     llvm::SmallVector<intptr_t, 8> qc(q), qnew;
     for (size_t i = 16; i >= 8; --i) {
-        // ipoly.removeVariable(i);
-        // ipoly.A.reduceNumRows(i);
-        // ipoly.E.reduceNumRows(i);
+        ipoly.removeVariable(i);
+        ipoly.A.reduceNumRows(i);
+        ipoly.E.reduceNumRows(i);
 
         fourierMotzkin(Anew, bnew, Enew, qnew, Ac, bc, Ec, qc, i);
 
@@ -101,22 +101,23 @@ TEST(ConstraintValidation, BasicAssertions) {
         Ac.reduceNumRows(i);
         Ec.reduceNumRows(i);
         IntegerPolyhedra::moveEqualities(Ac, bc, Ec, qc);
+        NormalForm::simplifyEqualityConstraints(Ec, qc);
         std::cout << "following fM=\n"
                   << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
         pruneBounds(Ac, bc, Ec, qc);
 
-        // std::cout << "pruned ipoly =\n"
-        //           << ipoly << "\n\npruned via ILP=\n"
-        //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
-        std::cout << "pruned via ILP=\n"
+        std::cout << "pruned ipoly =\n"
+                  << ipoly << "\n\npruned via ILP=\n"
                   << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+        // std::cout << "pruned via ILP=\n"
+        //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
     }
 
-    std::cout << "pruned via ILP=\n"
-              << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
-    // std::cout << "pruned ipoly =\n"
-    //           << ipoly << "\n\npruned via ILP=\n"
+    // std::cout << "pruned via ILP=\n"
     //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+    std::cout << "pruned ipoly =\n"
+              << ipoly << "\n\npruned via ILP=\n"
+              << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
 
     // std::cout << "A =\n" << Ac << "\nb=[";
     // for (auto &bi : bc) {

@@ -171,7 +171,7 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
     size_t a = 0;
     for (size_t j = 0; j < numColA; ++j) {
         if (intptr_t Aij = A(i, j)) {
-            for (size_t k = 0; k < numColA; ++k) {
+            for (size_t k = 0; k < j; ++k) {
                 if ((A(i, k) == 0) || ((Aij > 0) == (A(i, k) > 0)))
                     continue;
                 if (IntegerPolyhedra::setBounds(Anew.getCol(a), bnew[a],
@@ -212,7 +212,7 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
     size_t e = 0;
     for (size_t j = 0; j < numColE; ++j) {
         if (intptr_t Eij = E(i, j)) {
-            for (size_t k = 0; k < numColE; ++k) {
+            for (size_t k = 0; k < j; ++k) {
                 if (k == j)
                     continue;
                 if (intptr_t Eik = E(i, k)) {
