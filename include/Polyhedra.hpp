@@ -115,14 +115,14 @@ template <class P, typename T> struct AbstractPolyhedra {
     // }
     static bool uniqueConstraint(auto &A, llvm::ArrayRef<T> b, size_t C) {
         for (size_t c = 0; c < C; ++c) {
-            bool allEqual = b[c] == b[C];
-            if (allEqual) {
+            if (b[c] == b[C]) {
+                bool allEqual = true;
                 for (size_t r = 0; r < A.numRow(); ++r) {
                     allEqual &= (A(r, c) == A(r, C));
                 }
+                if (allEqual)
+                    return false;
             }
-            if (allEqual)
-                return false;
         }
         return true;
     }
@@ -842,8 +842,8 @@ template <class P, typename T> struct AbstractPolyhedra {
         llvm::SmallVector<T, 16> btmp0, btmp1, q;
         pruneBounds(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold);
     }
-    void moveEqualities(auto &Aold, llvm::SmallVectorImpl<T> &bold, auto &Eold,
-                        llvm::SmallVectorImpl<T> &qold) const {
+    static void moveEqualities(auto &Aold, llvm::SmallVectorImpl<T> &bold,
+                               auto &Eold, llvm::SmallVectorImpl<T> &qold) {
 
         for (size_t o = Aold.numCol() - 1; o > 0;) {
             --o;

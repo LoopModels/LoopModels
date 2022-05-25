@@ -5,6 +5,7 @@
 #include "lp_data/HConst.h"
 #include "llvm/ADT/SmallVector.h"
 #include <Highs.h>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -64,13 +65,14 @@ bool constraintIsRedundant(IntMatrix auto &A,
         } else if (n) {
             // add to col_lower_
             isvar[lastV] |= 1;
-            if (c == C) {
-                // we're minimizing instead
-                // model.lp_.sense_ = ObjSense::kMinimize;
-                model.lp_.col_lower_[lastV] = -b[c] - 1;
-            } else {
-                model.lp_.col_lower_[lastV] = -b[c];
-            }
+            model.lp_.col_lower_[lastV] = -b[c] - (c == C);
+            // if (c == C) {
+            //     // we're minimizing instead
+            //     // model.lp_.sense_ = ObjSense::kMinimize;
+            //     model.lp_.col_lower_[lastV] = -b[c] - 1;
+            // } else {
+            //     model.lp_.col_lower_[lastV] = -b[c];
+            // }
         } else {
             // add to col_upper_
             isvar[lastV] |= 2;
@@ -118,7 +120,14 @@ bool constraintIsRedundant(IntMatrix auto &A,
               << highs.getInfo().objective_function_value << std::endl;
     assert(model_status == HighsModelStatus::kOptimal);
 
-    return highs.getInfo().objective_function_value != target;
+    double obj = highs.getInfo().objective_function_value;
+    bool redundant = !std::isnan(obj) && (obj != target);
+    std::cout << "highs.getInfo().objective_function_value = "
+              << highs.getInfo().objective_function_value
+              << "; target = " << target << "; neq = " << redundant
+              << std::endl;
+    ;
+    return redundant;
 }
 
 void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
@@ -126,8 +135,105 @@ void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
     NormalForm::simplifyEqualityConstraints(E, q);
     for (size_t c = A.numCol(); c > 0;) {
         if (constraintIsRedundant(A, b, E, q, --c)) {
+            std::cout << "dropping constraint c = " << c << std::endl;
             A.eraseCol(c);
             b.erase(b.begin() + c);
         }
     }
+}
+
+void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
+                    IntMatrix auto &Enew, llvm::SmallVectorImpl<intptr_t> &qnew,
+                    IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
+                    IntMatrix auto &E, llvm::SmallVectorImpl<intptr_t> &q,
+                    size_t i) {
+
+    const auto [numRow, numColA] = A.size();
+    const size_t numColE = E.numCol();
+    size_t countNeg = 0, countPos = 0, countEq = 0;
+    for (size_t j = 0; j < numColA; ++j) {
+        countNeg += (A(i, j) < 0);
+        countPos += (A(i, j) > 0);
+    }
+    for (size_t j = 0; j < numColE; ++j) {
+        countEq += (E(i, j) != 0);
+    }
+    size_t newColA = numColA - countNeg - countPos +
+                     (countNeg + countEq) * (countPos + countEq) -
+                     countEq * countEq;
+
+    Anew.resize(numRow, newColA);
+    bnew.resize(newColA);
+    size_t newColE = numColE - countEq + countEq * countEq;
+    Enew.resize(numRow, newColE);
+    qnew.resize(newColE);
+
+    size_t a = 0;
+    for (size_t j = 0; j < numColA; ++j) {
+        if (intptr_t Aij = A(i, j)) {
+            for (size_t k = 0; k < numColA; ++k) {
+                if ((A(i, k) == 0) || ((Aij > 0) == (A(i, k) > 0)))
+                    continue;
+                if (IntegerPolyhedra::setBounds(Anew.getCol(a), bnew[a],
+                                                A.getCol(j), b[j], A.getCol(k),
+                                                b[k], i) &&
+                    IntegerPolyhedra::uniqueConstraint(Anew, bnew, a)) {
+                    ++a;
+                }
+            }
+            for (size_t k = 0; k < numColE; ++k) {
+                if (E(i, k) == 0)
+                    continue;
+                if ((E(i, k) > 0) == (Aij > 0)) {
+                    for (size_t v = 0; v < numRow; ++v) {
+                        E(v, k) *= -1;
+                    }
+                    q[k] *= -1;
+                }
+                if (IntegerPolyhedra::setBounds(Anew.getCol(a), bnew[a],
+                                                A.getCol(j), b[j], E.getCol(k),
+                                                q[k], i) &&
+                    IntegerPolyhedra::uniqueConstraint(Anew, bnew, a)) {
+                    ++a;
+                }
+            }
+        } else {
+            for (size_t v = 0; v < numRow; ++v) {
+                Anew(v, a) = A(v, j);
+            }
+            bnew[a] = b[j];
+            if (IntegerPolyhedra::uniqueConstraint(Anew, bnew, a)) {
+                ++a;
+            }
+        }
+    }
+    Anew.resize(numRow, a);
+    bnew.resize(a);
+    size_t e = 0;
+    for (size_t j = 0; j < numColE; ++j) {
+        if (intptr_t Eij = E(i, j)) {
+            for (size_t k = 0; k < numColE; ++k) {
+                if (k == j)
+                    continue;
+                if (intptr_t Eik = E(i, k)) {
+                    intptr_t g = std::gcd(Eij, Eik);
+                    intptr_t Ejg = Eij / g;
+                    intptr_t Ekg = Eik / g;
+                    for (size_t v = 0; v < numRow; ++v) {
+                        Enew(v, e) = Ejg * E(v, k) - Ekg * E(v, j);
+                    }
+                    qnew[e] = Ejg * q[k] - Ekg * q[j];
+                    ++e;
+                }
+            }
+        } else {
+            for (size_t v = 0; v < numRow; ++v) {
+                Enew(v, e) = E(v, j);
+            }
+            qnew[e] = q[j];
+            ++e;
+        }
+    }
+    Enew.resize(numRow, e);
+    qnew.resize(e);
 }

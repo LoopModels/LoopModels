@@ -81,20 +81,52 @@ TEST(ConstraintValidation, BasicAssertions) {
     E(12, 6) = 1;
     q[6] = 0;
 
-    Matrix<intptr_t, 0, 0, 0> Ac(A);
-    llvm::SmallVector<intptr_t, 8> bc(b);
-    Matrix<intptr_t, 0, 0, 0> Ec(E);
-    llvm::SmallVector<intptr_t, 8> qc(q);
-    pruneBounds(Ac, bc, Ec, qc);
-    std::cout << "A =\n" << Ac << "\nb=[";
-    for (auto &bi : bc) {
-        std::cout << bi << ", ";
+    IntegerEqPolyhedra ipoly(A, b, E, q);
+
+    Matrix<intptr_t, 0, 0, 0> Ac(A), Anew;
+    llvm::SmallVector<intptr_t, 8> bc(b), bnew;
+    Matrix<intptr_t, 0, 0, 0> Ec(E), Enew;
+    llvm::SmallVector<intptr_t, 8> qc(q), qnew;
+    for (size_t i = 16; i >= 8; --i) {
+        // ipoly.removeVariable(i);
+        // ipoly.A.reduceNumRows(i);
+        // ipoly.E.reduceNumRows(i);
+
+        fourierMotzkin(Anew, bnew, Enew, qnew, Ac, bc, Ec, qc, i);
+
+        std::swap(Anew, Ac);
+        std::swap(bnew, bc);
+        std::swap(Enew, Ec);
+        std::swap(qnew, qc);
+        Ac.reduceNumRows(i);
+        Ec.reduceNumRows(i);
+        IntegerPolyhedra::moveEqualities(Ac, bc, Ec, qc);
+        std::cout << "following fM=\n"
+                  << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+        pruneBounds(Ac, bc, Ec, qc);
+
+        // std::cout << "pruned ipoly =\n"
+        //           << ipoly << "\n\npruned via ILP=\n"
+        //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+        std::cout << "pruned via ILP=\n"
+                  << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
     }
-    std::cout << "]\nE =\n" << Ec << "\nq=[";
-    for (auto &qi : qc) {
-        std::cout << qi << ", ";
-    }
-    std::cout << "]" << std::endl;
+
+    std::cout << "pruned via ILP=\n"
+              << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+    // std::cout << "pruned ipoly =\n"
+    //           << ipoly << "\n\npruned via ILP=\n"
+    //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+
+    // std::cout << "A =\n" << Ac << "\nb=[";
+    // for (auto &bi : bc) {
+    //     std::cout << bi << ", ";
+    // }
+    // std::cout << "]\nE =\n" << Ec << "\nq=[";
+    // for (auto &qi : qc) {
+    //     std::cout << qi << ", ";
+    // }
+    // std::cout << "]" << std::endl;
 }
 /*
 TEST(DependenceTest, BasicAssertions) {
