@@ -1323,17 +1323,80 @@ return false;
         appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0, btmp1, q, A, b, i,
                      Polynomial::Val<false>());
     }
+    bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+                            llvm::SmallVectorImpl<T> &q, const size_t i) {
+        const auto [numVar, numColE] = E.size();
+        size_t minNonZero = numVar + 1;
+        size_t colMinNonZero = numColE;
+        for (size_t j = 0; j < numColE; ++j) {
+            if (E(i, j)) {
+                // if (std::abs(E(i,j)) == 1){
+                size_t nonZero = 0;
+                for (size_t v = 0; v < numVar; ++v) {
+                    nonZero += (E(v, j) != 0);
+                }
+                if (nonZero < minNonZero) {
+                    minNonZero = nonZero;
+                    colMinNonZero = j;
+                }
+            }
+        }
+        if (colMinNonZero == numColE) {
+            return true;
+        }
+        auto Es = E.getCol(colMinNonZero);
+        intptr_t Eis = Es[i];
+        // we now subsitute the equality expression with the minimum number
+        // of terms.
+        for (size_t j = 0; j < A.numCol(); ++j) {
+            if (intptr_t Aij = A(i, j)) {
+                intptr_t g = std::gcd(Aij, Eis);
+		intptr_t s = 2*(Eis > 0) - 1;
+                intptr_t Ag = (s * Aij) / g;
+                intptr_t Eg = (s * Eis) / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    A(v, j) = Eg * A(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
+                // TODO: check if should drop
+            }
+        }
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
+                intptr_t g = std::gcd(Eij, Eis);
+                intptr_t Ag = Eij / g;
+                intptr_t Eg = Eis / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+            }
+        }
+        E.eraseCol(colMinNonZero);
+        q.erase(q.begin() + colMinNonZero);
+        return false;
+    }
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
     bool removeVariable(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
-        Matrix<intptr_t, 0, 0, 0> lA;
-        Matrix<intptr_t, 0, 0, 0> uA;
-        llvm::SmallVector<T, 8> lb;
-        llvm::SmallVector<T, 8> ub;
-        return removeVariable(lA, uA, lb, ub, A, b, E, q, i);
+        std::cout << "Removing variable: " << i << std::endl;
+        printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
+        if (substituteEquality(A, b, E, q, i)) {
+	    Matrix<intptr_t, 0, 0, 0> lA;
+	    Matrix<intptr_t, 0, 0, 0> uA;
+	    llvm::SmallVector<T, 8> lb;
+	    llvm::SmallVector<T, 8> ub;
+	    removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
+	}
+	if (E.numCol() > 1) {
+	    NormalForm::simplifyEqualityConstraints(E, q);
+	}
+	return pruneBounds(A, b, E, q);
     }
     bool removeVariable(auto &lA, auto &uA, llvm::SmallVectorImpl<T> &lb,
                         llvm::SmallVectorImpl<T> &ub, auto &A,
@@ -1342,163 +1405,178 @@ return false;
 
         std::cout << "Removing variable: " << i << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
+	if (substituteEquality(A, b, E, q, i)) {
+	    removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
+	}
+	if (E.numCol() > 1) {
+	    NormalForm::simplifyEqualityConstraints(E, q);
+	}
+	return pruneBounds(A, b, E, q);
+    }
+	
+	
+    void removeVariableCore(auto &lA, auto &uA, llvm::SmallVectorImpl<T> &lb,
+                        llvm::SmallVectorImpl<T> &ub, auto &A,
+                        llvm::SmallVectorImpl<T> &b, auto &E,
+                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+
         Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
         llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
+
+	
         categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
         appendBoundsSimple(lA, uA, lb, ub, A, b, i, Polynomial::Val<false>());
-        // lA and uA updated
-        // now, add E and q
-        llvm::SmallVector<unsigned, 32> nonZero;
-        size_t eCol = E.numCol();
-        for (size_t j = 0; j < eCol; ++j) {
-            if (E(i, j))
-                nonZero.push_back(j);
-        }
-        const size_t numNonZero = nonZero.size();
-        if (numNonZero == 0)
-            return false;
-        size_t C = A.numCol();
-        assert(E.numCol() == q.size());
-        size_t reserveIneqCount = C + numNonZero * (lA.numCol() + uA.numCol());
-        A.reserve(A.numRow(), reserveIneqCount);
-        b.reserve(reserveIneqCount);
-        size_t reserveEqCount = eCol + ((numNonZero * (numNonZero - 1)) >> 1);
-        E.reserve(E.numRow(), reserveEqCount);
-        q.reserve(reserveEqCount);
-        // {
-        //     intptr_t lastAux = -1;
-        //     for (size_t c = 0; c < E.numCol(); ++c) {
-        //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
-        //         assert(auxInd >= lastAux);
-        //         lastAux = auxInd;
-        //     }
+	
+        // // lA and uA updated
+        // // now, add E and q
+        // llvm::SmallVector<unsigned, 32> nonZero;
+        // size_t eCol = E.numCol();
+        // for (size_t j = 0; j < eCol; ++j) {
+        //     if (E(i, j))
+        //         nonZero.push_back(j);
         // }
+        // const size_t numNonZero = nonZero.size();
+        // if (numNonZero == 0)
+        //     return;
+        // size_t C = A.numCol();
         // assert(E.numCol() == q.size());
-        auto ito = nonZero.end();
-        auto itb = nonZero.begin();
-        do {
-            --ito;
-            size_t n = *ito;
-            PtrVector<intptr_t, 0> En = E.getCol(n);
-            // compare E(:,n) with A
-            intptr_t Ein = En(i);
-            intptr_t sign = (Ein > 0) * 2 - 1;
-            for (size_t k = 0; k < En.size(); ++k) {
-                En[k] *= sign;
-            }
-            q[n] *= sign;
-            for (size_t k = 0; k < lA.numCol(); ++k) {
-                size_t c = b.size();
-                A.resize(A.numRow(), c + 1);
-                b.resize(c + 1);
-                if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En, q[n],
-                              i) &&
-                    uniqueConstraint(A, b, c)) {
-                    /*if (removeRedundantConstraints(
-                            Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-                            qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
-                        A.resize(A.numRow(), c);
-                        b.resize(c);
-                    } else {
-                        std::cout << "Did not remove any redundant "
-                                     "constraints. c = "
-                                  << c << std::endl;
-                        printConstraints(std::cout, A, b);
-                    }*/
-                } else {
-                    A.resize(A.numRow(), c);
-                    b.resize(c);
-                }
-            }
-            // sign *= -1;
-            for (size_t k = 0; k < En.size(); ++k) {
-                En[k] *= -1;
-            }
-            q[n] *= -1;
-            for (size_t k = 0; k < uA.numCol(); ++k) {
-                size_t c = b.size();
-                A.resize(A.numRow(), c + 1);
-                b.resize(c + 1);
-                if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k), ub[k],
-                              i) &&
-                    uniqueConstraint(A, b, c)) {
-                    /*if (removeRedundantConstraints(
-                            Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-                            qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
-                        A.resize(A.numRow(), c);
-                        b.resize(c);
-                    }*/
-                } else {
-                    A.resize(A.numRow(), c);
-                    b.resize(c);
-                }
-            }
-            assert(E.numCol() == q.size());
-            // here we essentially do Gaussian elimination on `E`
-            if (ito != itb) {
-                // compare E(:,*ito) with earlier (yet unvisited) columns
-                auto iti = itb;
-                assert(E.numCol() == q.size());
-                while (true) {
-                    size_t m = *iti;
-                    PtrVector<intptr_t, 0> Em = E.getCol(m);
-                    ++iti;
-                    // it is for the current iteration
-                    // if iti == ito, this is the last iteration
-                    size_t d;
-                    if (iti == ito) {
-                        // on the last iteration, we overwrite
-                        d = *ito;
-                    } else {
-                        // earlier iterations, we add a new column
-                        d = eCol;
-                        E.resize(E.numRow(), ++eCol);
-                        q.resize(eCol);
-                    }
-                    std::cout << "d = " << d << "; *ito = " << *ito
-                              << "; C = " << C << std::endl;
-                    assert(d < E.numCol());
-                    PtrVector<intptr_t, 0> Ed = E.getCol(d);
-                    intptr_t g = std::gcd(En[i], Em[i]);
-                    intptr_t Eng = En[i] / g;
-                    intptr_t Emg = Em[i] / g;
-                    for (size_t k = 0; k < E.numRow(); ++k) {
-                        Ed[k] = Emg * En[k] - Eng * Em[k];
-                    }
-                    std::cout << "q.size() = " << q.size() << "; d = " << d
-                              << "; n = " << n << "; E.size() = (" << E.numRow()
-                              << ", " << E.numCol() << ")" << std::endl;
-                    q[d] = Emg * q[n];
-                    Polynomial::fnmadd(q[d], q[m], Eng);
-                    // q[d] = Emg * q[n] - Eng * q[m];
-                    if (iti == ito) {
-                        break;
-                    } else if (std::ranges::all_of(
-                                   Ed, [](intptr_t ai) { return ai == 0; })) {
-                        // we get rid of the column
-                        E.resize(E.numRow(), --eCol);
-                        q.resize(eCol);
-                    }
-                };
-            } else {
-                E.eraseCol(n);
-                q.erase(q.begin() + n);
-                break;
-            }
-        } while (ito != itb);
-        // {
-        //     intptr_t lastAux = -1;
-        //     for (size_t c = 0; c < E.numCol(); ++c) {
-        //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
-        //         assert(auxInd >= lastAux);
-        //         lastAux = auxInd;
+        // size_t reserveIneqCount = C + numNonZero * (lA.numCol() + uA.numCol());
+        // A.reserve(A.numRow(), reserveIneqCount);
+        // b.reserve(reserveIneqCount);
+        // size_t reserveEqCount = eCol + ((numNonZero * (numNonZero - 1)) >> 1);
+        // E.reserve(E.numRow(), reserveEqCount);
+        // q.reserve(reserveEqCount);
+        // // {
+        // //     intptr_t lastAux = -1;
+        // //     for (size_t c = 0; c < E.numCol(); ++c) {
+        // //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
+        // //         assert(auxInd >= lastAux);
+        // //         lastAux = auxInd;
+        // //     }
+        // // }
+        // // assert(E.numCol() == q.size());
+        // auto ito = nonZero.end();
+        // auto itb = nonZero.begin();
+        // do {
+        //     --ito;
+        //     size_t n = *ito;
+        //     PtrVector<intptr_t, 0> En = E.getCol(n);
+        //     // compare E(:,n) with A
+        //     intptr_t Ein = En(i);
+        //     intptr_t sign = (Ein > 0) * 2 - 1;
+        //     for (size_t k = 0; k < En.size(); ++k) {
+        //         En[k] *= sign;
         //     }
-        // }
-        if (numNonZero > 1) {
-            NormalForm::simplifyEqualityConstraints(E, q);
-        }
-        return pruneBounds(A, b, E, q);
+        //     q[n] *= sign;
+        //     for (size_t k = 0; k < lA.numCol(); ++k) {
+        //         size_t c = b.size();
+        //         A.resize(A.numRow(), c + 1);
+        //         b.resize(c + 1);
+        //         if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En, q[n],
+        //                       i) &&
+        //             uniqueConstraint(A, b, c)) {
+        //             /*if (removeRedundantConstraints(
+        //                     Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
+        //                     qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
+        //                 A.resize(A.numRow(), c);
+        //                 b.resize(c);
+        //             } else {
+        //                 std::cout << "Did not remove any redundant "
+        //                              "constraints. c = "
+        //                           << c << std::endl;
+        //                 printConstraints(std::cout, A, b);
+        //             }*/
+        //         } else {
+        //             A.resize(A.numRow(), c);
+        //             b.resize(c);
+        //         }
+        //     }
+        //     // sign *= -1;
+        //     for (size_t k = 0; k < En.size(); ++k) {
+        //         En[k] *= -1;
+        //     }
+        //     q[n] *= -1;
+        //     for (size_t k = 0; k < uA.numCol(); ++k) {
+        //         size_t c = b.size();
+        //         A.resize(A.numRow(), c + 1);
+        //         b.resize(c + 1);
+        //         if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k), ub[k],
+        //                       i) &&
+        //             uniqueConstraint(A, b, c)) {
+        //             /*if (removeRedundantConstraints(
+        //                     Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
+        //                     qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
+        //                 A.resize(A.numRow(), c);
+        //                 b.resize(c);
+        //             }*/
+        //         } else {
+        //             A.resize(A.numRow(), c);
+        //             b.resize(c);
+        //         }
+        //     }
+        //     assert(E.numCol() == q.size());
+        //     // here we essentially do Gaussian elimination on `E`
+        //     if (ito != itb) {
+        //         // compare E(:,*ito) with earlier (yet unvisited) columns
+        //         auto iti = itb;
+        //         assert(E.numCol() == q.size());
+        //         while (true) {
+        //             size_t m = *iti;
+        //             PtrVector<intptr_t, 0> Em = E.getCol(m);
+        //             ++iti;
+        //             // it is for the current iteration
+        //             // if iti == ito, this is the last iteration
+        //             size_t d;
+        //             if (iti == ito) {
+        //                 // on the last iteration, we overwrite
+        //                 d = *ito;
+        //             } else {
+        //                 // earlier iterations, we add a new column
+        //                 d = eCol;
+        //                 E.resize(E.numRow(), ++eCol);
+        //                 q.resize(eCol);
+        //             }
+        //             std::cout << "d = " << d << "; *ito = " << *ito
+        //                       << "; C = " << C << std::endl;
+        //             assert(d < E.numCol());
+        //             PtrVector<intptr_t, 0> Ed = E.getCol(d);
+        //             intptr_t g = std::gcd(En[i], Em[i]);
+        //             intptr_t Eng = En[i] / g;
+        //             intptr_t Emg = Em[i] / g;
+        //             for (size_t k = 0; k < E.numRow(); ++k) {
+        //                 Ed[k] = Emg * En[k] - Eng * Em[k];
+        //             }
+        //             std::cout << "q.size() = " << q.size() << "; d = " << d
+        //                       << "; n = " << n << "; E.size() = (" << E.numRow()
+        //                       << ", " << E.numCol() << ")" << std::endl;
+        //             q[d] = Emg * q[n];
+        //             Polynomial::fnmadd(q[d], q[m], Eng);
+        //             // q[d] = Emg * q[n] - Eng * q[m];
+        //             if (iti == ito) {
+        //                 break;
+        //             } else if (std::ranges::all_of(
+        //                            Ed, [](intptr_t ai) { return ai == 0; })) {
+        //                 // we get rid of the column
+        //                 E.resize(E.numRow(), --eCol);
+        //                 q.resize(eCol);
+        //             }
+        //         };
+        //     } else {
+        //         E.eraseCol(n);
+        //         q.erase(q.begin() + n);
+        //         break;
+        //     }
+        // } while (ito != itb);
+        // // {
+        // //     intptr_t lastAux = -1;
+        // //     for (size_t c = 0; c < E.numCol(); ++c) {
+        // //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
+        // //         assert(auxInd >= lastAux);
+        // //         lastAux = auxInd;
+        // //     }
+        // // }
+
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(

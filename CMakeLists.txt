@@ -47,7 +47,7 @@ include(FetchContent)
 FetchContent_Declare(
   highsextern
   GIT_REPOSITORY https://github.com/chriselrod/HiGHS.git
-  GIT_TAG b2de0801387bf0e79702feabafcf316abfb1b4eb
+  GIT_TAG 6a9d90cf416d59a2745a6f4e027d952ecc7bac7a
 )
 FetchContent_GetProperties(highsextern)
 set(highsextern_CMAKE_BUILD_TYPE Release)

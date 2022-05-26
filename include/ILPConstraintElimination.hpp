@@ -16,16 +16,17 @@ bool constraintIsRedundant(IntMatrix auto &A,
                            IntMatrix auto &E,
                            llvm::SmallVectorImpl<intptr_t> &q, const size_t C) {
 
-    auto [numRow, numColA] = A.size();
+    Highs highs;
+    auto [numVar, numColA] = A.size();
     size_t numColE = q.size();
     HighsModel model;
     model.lp_.sense_ = ObjSense::kMaximize;
     model.lp_.offset_ = 0;
-    model.lp_.col_cost_.reserve(numRow);
+    model.lp_.col_cost_.reserve(numVar);
     for (auto &a : A.getCol(C)) {
         model.lp_.col_cost_.push_back(a);
     }
-    model.lp_.num_col_ = numRow;
+    model.lp_.num_col_ = numVar;
     // col_lower_ <= x <= col_upper_
     // row_lower_ <= A*x <= row_upper_
     // We want to be reasonable efficient in partioning constraints into
@@ -33,15 +34,15 @@ bool constraintIsRedundant(IntMatrix auto &A,
     //
     model.lp_.a_matrix_.format_ = MatrixFormat::kRowwise;
 
-    model.lp_.col_lower_.resize(numRow, -1e30);
-    model.lp_.col_upper_.resize(numRow, 1e30);
+    model.lp_.col_lower_.resize(numVar, -highs.getInfinity());
+    model.lp_.col_upper_.resize(numVar, highs.getInfinity());
     size_t numCol = 0;
-    llvm::SmallVector<uint8_t, 64> isvar(numRow);
+    llvm::SmallVector<uint8_t, 64> isvar(numVar);
     intptr_t target = b[C] + 1;
     for (size_t c = 0; c < numColA; ++c) {
         size_t n = 0, p = 0, nz = 0;
         intptr_t lastV = -1;
-        for (size_t v = 0; v < numRow; ++v) {
+        for (size_t v = 0; v < numVar; ++v) {
             intptr_t Avc = A(v, c);
             nz += (Avc != 0);
             p += (Avc == 1);
@@ -50,7 +51,7 @@ bool constraintIsRedundant(IntMatrix auto &A,
         }
         if ((nz != 1) || ((n + p) != 1) || (isvar[lastV] & (n + 2 * p))) {
             // add to row_
-            for (size_t v = 0; v < numRow; ++v) {
+            for (size_t v = 0; v < numVar; ++v) {
                 if (intptr_t Avc = A(v, c)) {
                     model.lp_.a_matrix_.index_.push_back(v);
                     model.lp_.a_matrix_.value_.push_back(Avc);
@@ -59,7 +60,7 @@ bool constraintIsRedundant(IntMatrix auto &A,
             assert(model.lp_.a_matrix_.index_.size());
             model.lp_.a_matrix_.start_.push_back(
                 model.lp_.a_matrix_.index_.size());
-            model.lp_.row_lower_.push_back(-1e30);
+            model.lp_.row_lower_.push_back(-highs.getInfinity());
             model.lp_.row_upper_.push_back(b[c] + (c == C));
             ++numCol;
         } else if (n) {
@@ -80,7 +81,7 @@ bool constraintIsRedundant(IntMatrix auto &A,
         }
     }
     for (size_t c = 0; c < numColE; ++c) {
-        for (size_t v = 0; v < numRow; ++v) {
+        for (size_t v = 0; v < numVar; ++v) {
             if (intptr_t Evc = E(v, c)) {
                 model.lp_.a_matrix_.index_.push_back(v);
                 model.lp_.a_matrix_.value_.push_back(Evc);
@@ -94,10 +95,7 @@ bool constraintIsRedundant(IntMatrix auto &A,
     }
     model.lp_.num_row_ = numCol + numColE;
 
-    model.lp_.integrality_.resize(numRow);
-    for (size_t v = 0; v < numRow; v++) {
-        model.lp_.integrality_[v] = HighsVarType::kInteger;
-    }
+    model.lp_.integrality_.resize(numVar, HighsVarType::kInteger);
     printVector(std::cout << "value= ", model.lp_.a_matrix_.value_)
         << std::endl;
     printVector(std::cout << "index= ", model.lp_.a_matrix_.index_)
@@ -105,19 +103,26 @@ bool constraintIsRedundant(IntMatrix auto &A,
     printVector(std::cout << "start= ", model.lp_.a_matrix_.start_)
         << std::endl;
     printVector(std::cout << "cost= ", model.lp_.col_cost_) << std::endl;
+    printVector(std::cout << "Var lb = ", model.lp_.col_lower_) << std::endl;
+    printVector(std::cout << "Var ub = ", model.lp_.col_upper_) << std::endl;
+    printVector(std::cout << "Constraint lb = ", model.lp_.row_lower_)
+        << std::endl;
+    printVector(std::cout << "Constraint ub = ", model.lp_.row_upper_)
+        << std::endl;
     std::cout << "target = " << target << std::endl;
-    Highs highs;
-    HighsStatus return_status = highs.passModel(model);
+    HighsStatus return_status = highs.passModel(std::move(model));
     assert(return_status == HighsStatus::kOk);
 
     // const HighsLp &lp = highs.getLp();
-
+    // highs.changeColsIntegrality();
     return_status = highs.run();
     assert(return_status == HighsStatus::kOk);
 
     const HighsModelStatus &model_status = highs.getModelStatus();
     std::cout << "Objective function value: "
               << highs.getInfo().objective_function_value << std::endl;
+    std::cout << "Model status: " << highs.modelStatusToString(model_status)
+              << std::endl;
     assert(model_status == HighsModelStatus::kOptimal);
 
     double obj = highs.getInfo().objective_function_value;
