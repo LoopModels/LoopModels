@@ -13,6 +13,64 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
+template <typename T>
+bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+    const auto [numVar, numColE] = E.size();
+    size_t minNonZero = numVar + 1;
+    size_t colMinNonZero = numColE;
+    for (size_t j = 0; j < numColE; ++j) {
+        if (E(i, j)) {
+            // if (std::abs(E(i,j)) == 1){
+            size_t nonZero = 0;
+            for (size_t v = 0; v < numVar; ++v) {
+                nonZero += (E(v, j) != 0);
+            }
+            if (nonZero < minNonZero) {
+                minNonZero = nonZero;
+                colMinNonZero = j;
+            }
+        }
+    }
+    if (colMinNonZero == numColE) {
+        return true;
+    }
+    auto Es = E.getCol(colMinNonZero);
+    intptr_t Eis = Es[i];
+    // we now subsitute the equality expression with the minimum number
+    // of terms.
+    for (size_t j = 0; j < A.numCol(); ++j) {
+        if (intptr_t Aij = A(i, j)) {
+            intptr_t g = std::gcd(Aij, Eis);
+            // `A` contains inequalities; flipping signs is illegal
+            intptr_t s = 2 * (Eis > 0) - 1;
+            intptr_t Ag = (s * Aij) / g;
+            intptr_t Eg = (s * Eis) / g;
+            for (size_t v = 0; v < numVar; ++v) {
+                A(v, j) = Eg * A(v, j) - Ag * Es(v);
+            }
+            Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
+            // TODO: check if should drop
+        }
+    }
+    for (size_t j = 0; j < numColE; ++j) {
+        if (j == colMinNonZero)
+            continue;
+        if (intptr_t Eij = E(i, j)) {
+            intptr_t g = std::gcd(Eij, Eis);
+            intptr_t Ag = Eij / g;
+            intptr_t Eg = Eis / g;
+            for (size_t v = 0; v < numVar; ++v) {
+                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+            }
+            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    }
+    E.eraseCol(colMinNonZero);
+    q.erase(q.begin() + colMinNonZero);
+    return false;
+}
+
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
@@ -1323,61 +1381,7 @@ return false;
         appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0, btmp1, q, A, b, i,
                      Polynomial::Val<false>());
     }
-    bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
-                            llvm::SmallVectorImpl<T> &q, const size_t i) {
-        const auto [numVar, numColE] = E.size();
-        size_t minNonZero = numVar + 1;
-        size_t colMinNonZero = numColE;
-        for (size_t j = 0; j < numColE; ++j) {
-            if (E(i, j)) {
-                // if (std::abs(E(i,j)) == 1){
-                size_t nonZero = 0;
-                for (size_t v = 0; v < numVar; ++v) {
-                    nonZero += (E(v, j) != 0);
-                }
-                if (nonZero < minNonZero) {
-                    minNonZero = nonZero;
-                    colMinNonZero = j;
-                }
-            }
-        }
-        if (colMinNonZero == numColE) {
-            return true;
-        }
-        auto Es = E.getCol(colMinNonZero);
-        intptr_t Eis = Es[i];
-        // we now subsitute the equality expression with the minimum number
-        // of terms.
-        for (size_t j = 0; j < A.numCol(); ++j) {
-            if (intptr_t Aij = A(i, j)) {
-                intptr_t g = std::gcd(Aij, Eis);
-		intptr_t s = 2*(Eis > 0) - 1;
-                intptr_t Ag = (s * Aij) / g;
-                intptr_t Eg = (s * Eis) / g;
-                for (size_t v = 0; v < numVar; ++v) {
-                    A(v, j) = Eg * A(v, j) - Ag * Es(v);
-                }
-                Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
-                // TODO: check if should drop
-            }
-        }
-        for (size_t j = 0; j < numColE; ++j) {
-            if (j == colMinNonZero)
-                continue;
-            if (intptr_t Eij = E(i, j)) {
-                intptr_t g = std::gcd(Eij, Eis);
-                intptr_t Ag = Eij / g;
-                intptr_t Eg = Eis / g;
-                for (size_t v = 0; v < numVar; ++v) {
-                    E(v, j) = Eg * E(v, j) - Ag * Es(v);
-                }
-                Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
-            }
-        }
-        E.eraseCol(colMinNonZero);
-        q.erase(q.begin() + colMinNonZero);
-        return false;
-    }
+
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
@@ -1387,16 +1391,16 @@ return false;
         std::cout << "Removing variable: " << i << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
         if (substituteEquality(A, b, E, q, i)) {
-	    Matrix<intptr_t, 0, 0, 0> lA;
-	    Matrix<intptr_t, 0, 0, 0> uA;
-	    llvm::SmallVector<T, 8> lb;
-	    llvm::SmallVector<T, 8> ub;
-	    removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
-	}
-	if (E.numCol() > 1) {
-	    NormalForm::simplifyEqualityConstraints(E, q);
-	}
-	return pruneBounds(A, b, E, q);
+            Matrix<intptr_t, 0, 0, 0> lA;
+            Matrix<intptr_t, 0, 0, 0> uA;
+            llvm::SmallVector<T, 8> lb;
+            llvm::SmallVector<T, 8> ub;
+            removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
+        }
+        if (E.numCol() > 1) {
+            NormalForm::simplifyEqualityConstraints(E, q);
+        }
+        return pruneBounds(A, b, E, q);
     }
     bool removeVariable(auto &lA, auto &uA, llvm::SmallVectorImpl<T> &lb,
                         llvm::SmallVectorImpl<T> &ub, auto &A,
@@ -1405,29 +1409,27 @@ return false;
 
         std::cout << "Removing variable: " << i << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
-	if (substituteEquality(A, b, E, q, i)) {
-	    removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
-	}
-	if (E.numCol() > 1) {
-	    NormalForm::simplifyEqualityConstraints(E, q);
-	}
-	return pruneBounds(A, b, E, q);
+        if (substituteEquality(A, b, E, q, i)) {
+            removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
+        }
+        if (E.numCol() > 1) {
+            NormalForm::simplifyEqualityConstraints(E, q);
+        }
+        return pruneBounds(A, b, E, q);
     }
-	
-	
+
     void removeVariableCore(auto &lA, auto &uA, llvm::SmallVectorImpl<T> &lb,
-                        llvm::SmallVectorImpl<T> &ub, auto &A,
-                        llvm::SmallVectorImpl<T> &b, auto &E,
-                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+                            llvm::SmallVectorImpl<T> &ub, auto &A,
+                            llvm::SmallVectorImpl<T> &b, auto &E,
+                            llvm::SmallVectorImpl<T> &q, const size_t i) {
 
         Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp0, Etmp1;
         llvm::SmallVector<T, 16> btmp0, btmp1, qtmp0, qtmp1;
 
-	
         categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
         appendBoundsSimple(lA, uA, lb, ub, A, b, i, Polynomial::Val<false>());
-	
+
         // // lA and uA updated
         // // now, add E and q
         // llvm::SmallVector<unsigned, 32> nonZero;
@@ -1441,12 +1443,11 @@ return false;
         //     return;
         // size_t C = A.numCol();
         // assert(E.numCol() == q.size());
-        // size_t reserveIneqCount = C + numNonZero * (lA.numCol() + uA.numCol());
-        // A.reserve(A.numRow(), reserveIneqCount);
+        // size_t reserveIneqCount = C + numNonZero * (lA.numCol() +
+        // uA.numCol()); A.reserve(A.numRow(), reserveIneqCount);
         // b.reserve(reserveIneqCount);
-        // size_t reserveEqCount = eCol + ((numNonZero * (numNonZero - 1)) >> 1);
-        // E.reserve(E.numRow(), reserveEqCount);
-        // q.reserve(reserveEqCount);
+        // size_t reserveEqCount = eCol + ((numNonZero * (numNonZero - 1)) >>
+        // 1); E.reserve(E.numRow(), reserveEqCount); q.reserve(reserveEqCount);
         // // {
         // //     intptr_t lastAux = -1;
         // //     for (size_t c = 0; c < E.numCol(); ++c) {
@@ -1473,7 +1474,8 @@ return false;
         //         size_t c = b.size();
         //         A.resize(A.numRow(), c + 1);
         //         b.resize(c + 1);
-        //         if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En, q[n],
+        //         if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En,
+        //         q[n],
         //                       i) &&
         //             uniqueConstraint(A, b, c)) {
         //             /*if (removeRedundantConstraints(
@@ -1501,7 +1503,8 @@ return false;
         //         size_t c = b.size();
         //         A.resize(A.numRow(), c + 1);
         //         b.resize(c + 1);
-        //         if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k), ub[k],
+        //         if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k),
+        //         ub[k],
         //                       i) &&
         //             uniqueConstraint(A, b, c)) {
         //             /*if (removeRedundantConstraints(
@@ -1548,7 +1551,8 @@ return false;
         //                 Ed[k] = Emg * En[k] - Eng * Em[k];
         //             }
         //             std::cout << "q.size() = " << q.size() << "; d = " << d
-        //                       << "; n = " << n << "; E.size() = (" << E.numRow()
+        //                       << "; n = " << n << "; E.size() = (" <<
+        //                       E.numRow()
         //                       << ", " << E.numCol() << ")" << std::endl;
         //             q[d] = Emg * q[n];
         //             Polynomial::fnmadd(q[d], q[m], Eng);
@@ -1556,7 +1560,8 @@ return false;
         //             if (iti == ito) {
         //                 break;
         //             } else if (std::ranges::all_of(
-        //                            Ed, [](intptr_t ai) { return ai == 0; })) {
+        //                            Ed, [](intptr_t ai) { return ai == 0; }))
+        //                            {
         //                 // we get rid of the column
         //                 E.resize(E.numRow(), --eCol);
         //                 q.resize(eCol);
@@ -1576,7 +1581,6 @@ return false;
         // //         lastAux = auxInd;
         // //     }
         // // }
-
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(
@@ -1729,6 +1733,7 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
     using AbstractPolyhedra<P, T>::b;
     using AbstractPolyhedra<P, T>::removeVariable;
     using AbstractPolyhedra<P, T>::getNumVar;
+    using AbstractPolyhedra<P, T>::pruneBounds;
     AbstractEqualityPolyhedra(Matrix<intptr_t, 0, 0, 0> A,
                               llvm::SmallVector<T, 8> b,
                               Matrix<intptr_t, 0, 0, 0> E,

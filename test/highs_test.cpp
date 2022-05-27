@@ -115,9 +115,16 @@ TEST(ConstraintValidation, BasicAssertions) {
 
     // std::cout << "pruned via ILP=\n"
     //           << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+    removeExtraVariables(A, b, E, q, 8);
+    std::cout << "pruned via eq constraints method=\n"
+              << IntegerEqPolyhedra(A, b, E, q) << std::endl;
+
+    ipoly.pruneBounds(A, b, E, q);
     std::cout << "pruned ipoly =\n"
               << ipoly << "\n\npruned via ILP=\n"
-              << IntegerEqPolyhedra(Ac, bc, Ec, qc) << std::endl;
+              << IntegerEqPolyhedra(Ac, bc, Ec, qc)
+              << "\npruned via eq constraints method=\n"
+              << IntegerEqPolyhedra(A, b, E, q) << std::endl;
 
     // std::cout << "A =\n" << Ac << "\nb=[";
     // for (auto &bi : bc) {

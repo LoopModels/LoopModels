@@ -242,3 +242,80 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
     Enew.resize(numRow, e);
     qnew.resize(e);
 }
+
+template <typename T>
+void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+                          llvm::SmallVectorImpl<T> &q, const size_t numNewVar) {
+
+    const auto [M, N] = A.size();
+    const size_t K = E.numCol();
+    Matrix<intptr_t, 0, 0, 0> C(M + N, N + K);
+    llvm::SmallVector<T> d(N + K);
+    for (size_t n = 0; n < N; ++n) {
+        C(n, n) = 1;
+        for (size_t m = 0; m < M; ++m) {
+            C(N + m, n) = A(m, n);
+        }
+        d[n] = b[n];
+    }
+    for (size_t k = 0; k < K; ++k) {
+        for (size_t m = 0; m < M; ++m) {
+            C(N + m, N + k) = E(m, k);
+        }
+        d[N + k] = q[k];
+    }
+    Matrix<intptr_t, 0, 0, 0> Afake(M + N, 0);
+    llvm::SmallVector<T> bfake(0);
+    for (size_t o = M + N; o > numNewVar + N;) {
+        --o;
+        substituteEquality(Afake, bfake, C, d, o);
+        NormalForm::simplifyEqualityConstraints(C, d);
+    }
+    printVector(std::cout << "M = " << M << "; N = " << N << "; K = " << K
+                          << "; C =\n"
+                          << C << "\nd = ",
+                d)
+        << std::endl;
+    A.resizeForOverwrite(numNewVar, N);
+    b.resize_for_overwrite(N);
+    size_t nC = 0, nA = 0, i = 0;
+    while ((i < N) && (nC < C.numCol()) && (nA < N)) {
+        if (C(i++, nC)) {
+            bool otherNonZero = false;
+            for (size_t j = i; j < N; ++j) {
+                otherNonZero |= (C(j, nC) != 0);
+            }
+            if (otherNonZero) {
+                // printVector(std::cout << "otherNonZero; i = " << i << "; nC = "
+                //                       << nC - 1 << "; C.getCol(nC) = ",
+                //             C.getCol(nC - 1))
+                //     << std::endl;
+		++nC;
+                continue;
+	    }
+            // } else {
+            //     printVector(std::cout << "otherZero; i = " << i << "; nC = "
+            //                           << nC - 1 << "; C.getCol(nC) = ",
+            //                 C.getCol(nC - 1))
+            //         << std::endl;
+            // }
+            for (size_t m = 0; m < numNewVar; ++m) {
+                A(m, nA) = C(N + m, nC);
+            }
+            b[nA] = d[nC];
+            ++nA;
+	    ++nC;
+        }
+    }
+    A.resizeForOverwrite(numNewVar, nA);
+    b.truncate(nA);
+    E.resizeForOverwrite(numNewVar, C.numCol() - nC);
+    q.resize_for_overwrite(C.numCol() - nC);
+    for (size_t i = 0; i < E.numCol(); ++i) {
+        for (size_t m = 0; m < numNewVar; ++m) {
+            E(m, i) = C(N + m, nC + i);
+        }
+        q[i] = d[nC + i];
+    }
+    // pruneBounds(A, b, E, q);
+}
