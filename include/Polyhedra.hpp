@@ -14,6 +14,49 @@
 #include <llvm/ADT/SmallVector.h>
 
 template <typename T>
+bool substituteEquality(auto &E,
+                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+    const auto [numVar, numColE] = E.size();
+    size_t minNonZero = numVar + 1;
+    size_t colMinNonZero = numColE;
+    for (size_t j = 0; j < numColE; ++j) {
+        if (E(i, j)) {
+            // if (std::abs(E(i,j)) == 1){
+            size_t nonZero = 0;
+            for (size_t v = 0; v < numVar; ++v) {
+                nonZero += (E(v, j) != 0);
+            }
+            if (nonZero < minNonZero) {
+                minNonZero = nonZero;
+                colMinNonZero = j;
+            }
+        }
+    }
+    if (colMinNonZero == numColE) {
+        return true;
+    }
+    auto Es = E.getCol(colMinNonZero);
+    intptr_t Eis = Es[i];
+    // we now subsitute the equality expression with the minimum number
+    // of terms.
+    for (size_t j = 0; j < numColE; ++j) {
+        if (j == colMinNonZero)
+            continue;
+        if (intptr_t Eij = E(i, j)) {
+            intptr_t g = std::gcd(Eij, Eis);
+            intptr_t Ag = Eij / g;
+            intptr_t Eg = Eis / g;
+            for (size_t v = 0; v < numVar; ++v) {
+                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+            }
+            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    }
+    E.eraseCol(colMinNonZero);
+    q.erase(q.begin() + colMinNonZero);
+    return false;
+}
+template <typename T>
 bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
     const auto [numVar, numColE] = E.size();
@@ -69,6 +112,84 @@ bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
     E.eraseCol(colMinNonZero);
     q.erase(q.begin() + colMinNonZero);
     return false;
+}
+template <typename T>
+void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+                          llvm::SmallVectorImpl<T> &q, const size_t numNewVar) {
+
+    const auto [M, N] = A.size();
+    const size_t K = E.numCol();
+    Matrix<intptr_t, 0, 0, 0> C(M + N, N + K);
+    llvm::SmallVector<T> d(N + K);
+    for (size_t n = 0; n < N; ++n) {
+        C(n, n) = 1;
+        for (size_t m = 0; m < M; ++m) {
+            C(N + m, n) = A(m, n);
+        }
+        d[n] = b[n];
+    }
+    for (size_t k = 0; k < K; ++k) {
+        for (size_t m = 0; m < M; ++m) {
+            C(N + m, N + k) = E(m, k);
+        }
+        d[N + k] = q[k];
+    }
+    for (size_t o = M + N; o > numNewVar + N;) {
+        --o;
+        substituteEquality(C, d, o);
+        NormalForm::simplifyEqualityConstraints(C, d);
+    }
+    printVector(std::cout << "M = " << M << "; N = " << N << "; K = " << K
+                          << "; C =\n"
+                          << C << "\nd = ",
+                d)
+        << std::endl;
+    A.resizeForOverwrite(numNewVar, N);
+    b.resize_for_overwrite(N);
+    size_t nC = 0, nA = 0, i = 0;
+    while ((i < N) && (nC < C.numCol()) && (nA < N)) {
+        if (C(i++, nC)) {
+            // if we have multiple positives, that still represents a positive
+            // constraint, as augments are >=. if we have + and -, then the
+            // relationship becomes unknown and thus dropped.
+            bool otherNegative = false;
+            for (size_t j = i; j < N; ++j) {
+                otherNegative |= (C(j, nC) < 0);
+            }
+            if (otherNegative) {
+                // printVector(std::cout << "otherNonZero; i = " << i << "; nC =
+                // "
+                //                       << nC - 1 << "; C.getCol(nC) = ",
+                //             C.getCol(nC - 1))
+                //     << std::endl;
+                ++nC;
+                continue;
+            }
+            // } else {
+            //     printVector(std::cout << "otherZero; i = " << i << "; nC = "
+            //                           << nC - 1 << "; C.getCol(nC) = ",
+            //                 C.getCol(nC - 1))
+            //         << std::endl;
+            // }
+            for (size_t m = 0; m < numNewVar; ++m) {
+                A(m, nA) = C(N + m, nC);
+            }
+            b[nA] = d[nC];
+            ++nA;
+            ++nC;
+        }
+    }
+    A.resizeForOverwrite(numNewVar, nA);
+    b.truncate(nA);
+    E.resizeForOverwrite(numNewVar, C.numCol() - nC);
+    q.resize_for_overwrite(C.numCol() - nC);
+    for (size_t i = 0; i < E.numCol(); ++i) {
+        for (size_t m = 0; m < numNewVar; ++m) {
+            E(m, i) = C(N + m, nC + i);
+        }
+        q[i] = d[nC + i];
+    }
+    // pruneBounds(A, b, E, q);
 }
 
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known

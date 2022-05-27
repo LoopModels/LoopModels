@@ -379,11 +379,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             Af(numVarKeep + i, numBoundingCoefs + i) = -1;
         }
         std::cout << "Af = \n" << Af << std::endl;
+        removeExtraVariables(Af, bf, Ef, qf, numVarKeep);
         IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
                                  std::move(qf));
+        ipoly.pruneBounds();
         assert(ipoly.E.numCol() == ipoly.q.size());
         // remove lambdas
-        std::cout << "ipoly =\n" << ipoly << std::endl;
+        // std::cout << "ipoly =\n" << ipoly << std::endl;
         // for (size_t i = numVarKeep; i < numVarNew; ++i) {
         //     ipoly.removeVariable(i);
         //     std::cout << "After removing variable " << i << " ipoly = \n"
@@ -391,14 +393,15 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // }
         // ipoly.A.reduceNumRows(numVarKeep);
         // ipoly.E.reduceNumRows(numVarKeep);
-        for (size_t i = numVarNew - 1; i >= numVarKeep; --i) {
-            ipoly.removeVariable(i);
-            ipoly.A.reduceNumRows(i);
-            ipoly.E.reduceNumRows(i);
-            std::cout << "After removing variable " << i << " ipoly = \n"
-                      << ipoly << std::endl;
-        }
-        std::cout << "reduced ipoly =\n" << ipoly << std::endl;
+
+        // for (size_t i = numVarNew - 1; i >= numVarKeep; --i) {
+        //     ipoly.removeVariable(i);
+        //     ipoly.A.reduceNumRows(i);
+        //     ipoly.E.reduceNumRows(i);
+        //     std::cout << "After removing variable " << i << " ipoly = \n"
+        //               << ipoly << std::endl;
+        // }
+        // std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
 
