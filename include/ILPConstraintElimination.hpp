@@ -281,18 +281,22 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
     size_t nC = 0, nA = 0, i = 0;
     while ((i < N) && (nC < C.numCol()) && (nA < N)) {
         if (C(i++, nC)) {
-            bool otherNonZero = false;
+            // if we have multiple positives, that still represents a positive
+            // constraint, as augments are >=. if we have + and -, then the
+            // relationship becomes unknown and thus dropped.
+            bool otherNegative = false;
             for (size_t j = i; j < N; ++j) {
-                otherNonZero |= (C(j, nC) != 0);
+                otherNegative |= (C(j, nC) < 0);
             }
-            if (otherNonZero) {
-                // printVector(std::cout << "otherNonZero; i = " << i << "; nC = "
+            if (otherNegative) {
+                // printVector(std::cout << "otherNonZero; i = " << i << "; nC =
+                // "
                 //                       << nC - 1 << "; C.getCol(nC) = ",
                 //             C.getCol(nC - 1))
                 //     << std::endl;
-		++nC;
+                ++nC;
                 continue;
-	    }
+            }
             // } else {
             //     printVector(std::cout << "otherZero; i = " << i << "; nC = "
             //                           << nC - 1 << "; C.getCol(nC) = ",
@@ -304,7 +308,7 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
             }
             b[nA] = d[nC];
             ++nA;
-	    ++nC;
+            ++nC;
         }
     }
     A.resizeForOverwrite(numNewVar, nA);
