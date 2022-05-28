@@ -171,6 +171,21 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
             //                 C.getCol(nC - 1))
             //         << std::endl;
             // }
+	    bool duplicate = false;
+	    for (size_t k = 0; k < nA; ++k){
+		bool allMatch = true;
+		for (size_t m = 0; m < numNewVar; ++m){
+		    allMatch &= (A(m,k) == C(N + m, nC));
+		}
+		if (allMatch){
+		    duplicate = true;
+		    break;
+		}
+	    }
+	    if (duplicate){
+		++nC;
+		continue;
+	    }
             for (size_t m = 0; m < numNewVar; ++m) {
                 A(m, nA) = C(N + m, nC);
             }

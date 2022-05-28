@@ -292,7 +292,7 @@ template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
 // Vectors
 //
 template <typename T, size_t M> struct Vector {
-    T data[M];
+    T mem[M];
 
     // Vector(T *ptr) : ptr(ptr){};
     // Vector(Vector<T, M> &a) : data(a.data){};
@@ -301,14 +301,16 @@ template <typename T, size_t M> struct Vector {
 #ifndef DONOTBOUNDSCHECK
         assert(i < M);
 #endif
-        return data[i];
+        return mem[i];
     }
-    T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
-    T *begin() { return data; }
+    T &operator[](size_t i) { return mem[i]; }
+    const T &operator[](size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
     T *end() { return begin() + M; }
-    const T *begin() const { return data; }
+    const T *begin() const { return mem; }
     const T *end() const { return begin() + M; }
+    T *data() { return mem; }
+    const T *data() const { return mem; }
 };
 template <typename T, size_t M = 0> struct PtrVector {
     T *ptr;
@@ -329,6 +331,8 @@ template <typename T, size_t M = 0> struct PtrVector {
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
     constexpr size_t size() const { return M; }
+    T *data() { return ptr; }
+    const T *data() const { return ptr; }
 };
 template <typename T> struct PtrVector<T, 0> {
     T *ptr;
@@ -346,6 +350,8 @@ template <typename T> struct PtrVector<T, 0> {
     T *end() { return ptr + M; }
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
+    T *data() { return ptr; }
+    const T *data() const { return ptr; }
     size_t size() const { return M; }
     operator llvm::ArrayRef<T>() { return llvm::ArrayRef<T>{ptr, M}; }
     llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
@@ -357,31 +363,33 @@ template <typename T> struct PtrVector<T, 0> {
     }
 };
 template <typename T> struct Vector<T, 0> {
-    llvm::SmallVector<T> data;
-    Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
+    llvm::SmallVector<T> mem;
+    Vector(size_t N) : mem(llvm::SmallVector<T>(N)){};
 
-    Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
-    Vector(llvm::SmallVector<T> &&A) : data(std::move(A)){};
+    Vector(const llvm::SmallVector<T> &A) : mem(A.begin(), A.end()){};
+    Vector(llvm::SmallVector<T> &&A) : mem(std::move(A)){};
 
     T &operator()(size_t i) {
 #ifndef DONOTBOUNDSCHECK
-        assert(i < data.size());
+        assert(i < mem.size());
 #endif
-        return data[i];
+        return mem[i];
     }
     const T &operator()(size_t i) const {
 #ifndef DONOTBOUNDSCHECK
-        assert(i < data.size());
+        assert(i < mem.size());
 #endif
-        return data[i];
+        return mem[i];
     }
-    T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
+    T &operator[](size_t i) { return mem[i]; }
+    const T &operator[](size_t i) const { return mem[i]; }
     // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
 };
 template <typename T, size_t M>
 bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
@@ -391,7 +399,7 @@ static_assert(std::copyable<Vector<intptr_t, 4>>);
 static_assert(std::copyable<Vector<intptr_t, 0>>);
 
 template <typename T, size_t M> size_t length(Vector<T, M>) { return M; }
-template <typename T> size_t length(Vector<T, 0> v) { return v.data.size(); }
+template <typename T> size_t length(Vector<T, 0> v) { return v.mem.size(); }
 
 template <typename T, size_t M>
 std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
@@ -409,7 +417,7 @@ std::ostream &operator<<(std::ostream &os, Vector<T, M> const &v) {
 
 template <typename T> Vector<T, 0> toVector(llvm::SmallVectorImpl<T> const &x) {
     Vector<T, 0> y;
-    y.data.reserve(x.size());
+    y.mem.reserve(x.size());
     for (auto &i : x) {
         y.push_back(i);
     }
@@ -472,9 +480,9 @@ template <typename T, typename A> struct BaseMatrix {
     auto begin() const { return static_cast<const A *>(this)->begin(); }
     auto end() const { return static_cast<const A *>(this)->end(); }
 
-    T *dataPointer() { return static_cast<A *>(this)->dataPointer(); }
-    const T *dataPointer() const {
-        return static_cast<const A *>(this)->dataPointer();
+    T *data() { return static_cast<A *>(this)->data(); }
+    const T *data() const {
+        return static_cast<const A *>(this)->data();
     }
 
     std::pair<size_t, size_t> size() const {
@@ -525,27 +533,27 @@ template <typename T, typename A> struct BaseMatrix {
     auto getCol(size_t i) {
         constexpr size_t M = getConstRow();
         if constexpr (M) {
-            return PtrVector<T, M>(dataPointer() + i * M);
+            return PtrVector<T, M>(data() + i * M);
         } else {
             const size_t _M = numRow();
-            return PtrVector<T, 0>{dataPointer() + i * _M, _M};
+            return PtrVector<T, 0>{data() + i * _M, _M};
         }
     }
     auto getCol(size_t i) const {
         constexpr size_t M = getConstRow();
         if constexpr (M) {
-            return PtrVector<const T, M>(dataPointer() + i * M);
+            return PtrVector<const T, M>(data() + i * M);
         } else {
             const size_t _M = numRow();
-            return llvm::ArrayRef<T>(dataPointer() + i * _M, _M);
+            return llvm::ArrayRef<T>(data() + i * _M, _M);
             // return PtrVector<const T, 0>{
         }
     }
     StridedVector<T> getRow(size_t m) {
-        return StridedVector<T>{dataPointer() + m, numCol(), numRow()};
+        return StridedVector<T>{data() + m, numCol(), numRow()};
     }
     StridedVector<const T> getRow(size_t m) const {
-        return StridedVector<const T>{dataPointer() + m, numCol(), numRow()};
+        return StridedVector<const T>{data() + m, numCol(), numRow()};
     }
 };
 
@@ -557,87 +565,87 @@ template <typename T, size_t M = 0, size_t N = 0,
 struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     static_assert(M * N == S,
                   "if specifying non-zero M and N, we should have M*N == S");
-    T data[S];
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    T *begin() { return data; }
+    T mem[S];
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
     T *end() { return begin() + M; }
-    const T *begin() const { return data; }
+    const T *begin() const { return mem; }
     const T *end() const { return begin() + M; }
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
 
-    T *dataPointer() { return data; }
-    const T *dataPointer() const { return data; }
+    T *data() { return mem; }
+    const T *data() const { return mem; }
 
     static constexpr size_t getConstRow() { return M; }
 };
 
 template <typename T, size_t M, size_t S>
 struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
-    llvm::SmallVector<T, S> data;
+    llvm::SmallVector<T, S> mem;
     size_t N;
 
-    Matrix(size_t n) : data(llvm::SmallVector<T>(M * n)), N(n){};
+    Matrix(size_t n) : mem(llvm::SmallVector<T>(M * n)), N(n){};
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
 
     static constexpr size_t getConstRow() { return M; }
 
-    T *dataPointer() { return data.data(); }
-    const T *dataPointer() const { return data.data(); }
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
 };
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
-    llvm::SmallVector<T, S> data;
+    llvm::SmallVector<T, S> mem;
     size_t M;
 
-    Matrix(size_t m) : data(llvm::SmallVector<T>(m * N)), M(m){};
+    Matrix(size_t m) : mem(llvm::SmallVector<T>(m * N)), M(m){};
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     static constexpr size_t getConstRow() { return 0; }
 
-    T *dataPointer() { return data.data(); }
-    const T *dataPointer() const { return data.data(); }
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
 };
 
 template <typename T, unsigned STORAGE = 3>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     typedef T eltype;
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
-    llvm::SmallVector<T, TOTALSTORAGE> data;
+    llvm::SmallVector<T, TOTALSTORAGE> mem;
     size_t M;
 
-    SquareMatrix(size_t m) : data(llvm::SmallVector<T>(m * m)), M(m){};
+    SquareMatrix(size_t m) : mem(llvm::SmallVector<T>(m * m)), M(m){};
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     static constexpr size_t getConstRow() { return 0; }
 
-    T *dataPointer() { return data.data(); }
-    const T *dataPointer() const { return data.data(); }
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
     void copyRow(llvm::ArrayRef<T> a, size_t j) {
         for (size_t m = 0; m < M; ++m) {
             (*this)(j, m) = a[m];
@@ -666,77 +674,77 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
 
 template <typename T, size_t S>
 struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
-    llvm::SmallVector<T, S> data;
+    llvm::SmallVector<T, S> mem;
 
     size_t M;
     size_t N;
 
     Matrix(size_t m, size_t n)
-        : data(llvm::SmallVector<T>(m * n)), M(m), N(n){};
+        : mem(llvm::SmallVector<T>(m * n)), M(m), N(n){};
 
     Matrix() : M(0), N(0){};
-    Matrix(SquareMatrix<T> &&A) : data(std::move(A.data)), M(A.M), N(A.M){};
+    Matrix(SquareMatrix<T> &&A) : mem(std::move(A.mem)), M(A.M), N(A.M){};
     Matrix(const SquareMatrix<T> &A)
-        : data(A.data.begin(), A.data.end()), M(A.M), N(A.M){};
+        : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M){};
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    auto begin() { return data.begin(); }
-    auto end() { return data.end(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.end(); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     static constexpr size_t getConstRow() { return 0; }
 
-    T *dataPointer() { return data.data(); }
-    const T *dataPointer() const { return data.data(); }
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
 
     static Matrix<T, 0, 0> Uninitialized(size_t MM, size_t NN) {
         Matrix<T, 0, 0> A(0, 0);
         A.M = MM;
         A.N = NN;
-        A.data.resize_for_overwrite(MM * NN);
+        A.mem.resize_for_overwrite(MM * NN);
         return A;
     }
     void clear(){
 	M = 0;
 	N = 0;
-	data.clear();
+	mem.clear();
     }
     void resize(size_t MM, size_t NN) {
         M = MM;
         N = NN;
-        data.resize(M * N);
+        mem.resize(M * N);
     }
-    void reserve(size_t MM, size_t NN) { data.reserve(MM * NN); }
+    void reserve(size_t MM, size_t NN) { mem.reserve(MM * NN); }
     void resizeForOverwrite(size_t MM, size_t NN) {
         M = MM;
         N = NN;
-        data.resize_for_overwrite(M * N);
+        mem.resize_for_overwrite(M * N);
     }
     void resizeRows(size_t NN) {
         N = NN;
-        data.resize(M * N);
+        mem.resize(M * N);
     }
     void resizeRowsForOverwrite(size_t NN) {
         N = NN;
-        data.resize_for_overwrite(M * N);
+        mem.resize_for_overwrite(M * N);
     }
     void eraseCol(size_t i) {
-        auto it = data.begin() + i * M;
-        data.erase(it, it + M);
+        auto it = mem.begin() + i * M;
+        mem.erase(it, it + M);
         --N;
     }
     void increaseNumRows(size_t MM) {
         if (M == MM)
             return;
-        data.resize_for_overwrite(M * N);
+        mem.resize_for_overwrite(M * N);
         for (size_t n = N; n != 0;) {
             --n;
             for (size_t m = 0; m < M; ++m) {
-                data[m + n * MM] = data[m + n * M];
+                mem[m + n * MM] = mem[m + n * M];
             }
         }
         M = MM;
@@ -746,11 +754,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             return;
         for (size_t n = 0; n < N; ++n) {
             for (size_t m = 0; m < MM; ++m) {
-                data[m + n * MM] = data[m + n * M];
+                mem[m + n * MM] = mem[m + n * M];
             }
         }
         M = MM;
-        data.resize(M * N);
+        mem.resize(M * N);
     }
     void resizeCols(size_t MM) {
         if (M < MM) {
@@ -767,42 +775,42 @@ static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
-    T *data;
+    T *mem;
     const size_t M, N;
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    T *begin() { return data; }
-    T *end() { return data + (M * N); }
-    const T *begin() const { return data; }
-    const T *end() const { return data + (M * N); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
+    T *end() { return mem + (M * N); }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + (M * N); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     static constexpr size_t getConstRow() { return 0; }
 
-    T *dataPointer() { return data; }
-    const T *dataPointer() const { return data; }
+    T *data() { return mem; }
+    const T *data() const { return mem; }
 };
 template <typename T>
 struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
-    T *data;
+    T *mem;
     const size_t M;
-    SquarePtrMatrix(T *data, size_t M) : data(data), M(M){};
+    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
 
-    inline T &getLinearElement(size_t i) { return data[i]; }
-    inline const T &getLinearElement(size_t i) const { return data[i]; }
-    T *begin() { return data; }
-    T *end() { return data + (M * M); }
-    const T *begin() const { return data; }
-    const T *end() const { return data + (M * M); }
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
+    T *end() { return mem + (M * M); }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + (M * M); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     static constexpr size_t getConstRow() { return 0; }
 
-    T *dataPointer() { return data; }
-    const T *dataPointer() const { return data; }
+    T *data() { return mem; }
+    const T *data() const { return mem; }
 };
 
 template <typename T, typename P>
