@@ -200,7 +200,7 @@ TEST(IndependentTest, BasicAssertions) {
         Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
 }
-/*
+
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
@@ -359,6 +359,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3, false);
 
     lblock.fillEdges();
-    std::cout << "Edges found: " << lblock.edges.size() << std::endl;
+    std::cout << "Number of edges found: " << lblock.edges.size() << std::endl;
 }
-*/
+
