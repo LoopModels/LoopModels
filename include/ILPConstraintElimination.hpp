@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <numberic>
 
 // use ILP solver for eliminating redundant constraints
 
@@ -118,7 +119,16 @@ void updateILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
                                          llvm::SmallVectorImpl<intptr_t> &q,
                                          size_t Cnew, size_t Cold) {
 
-    // highs.changeColsCost();
+    const auto [numVar, numColA] = A.size();
+    llvm::SmallVector<HighsInt, 32> set;
+    set.resize_for_overwrite(numVar);
+    std::iota(set.begin(), set.end(), 0);
+    llvm::SmallVector<double, 32> cost;
+    set.resize_for_overwrite(numVar);
+    std::ranges::copy(A.getCol(Cnew), set);
+    highs.changeColsCost(numVar, set, cost);
+
+    
 }
 
 bool constraintIsRedundant(IntMatrix auto &A,

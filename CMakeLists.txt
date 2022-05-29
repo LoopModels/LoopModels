@@ -14,14 +14,6 @@ set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -ggdb")
 set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -Wall -Wextra -Wpedantic -ggdb")
 
-# Colored output?
-# https://medium.com/@alasher/colored-c-compiler-output-with-ninja-clang-gcc-10bfe7f2b949
-# Not aware of a license agreement on medium content, but was clearly shared with the intent
-# people use it, so I'm assuming I can use it. If not, sue me.
-# TODO: get an implementation without potential licensing problems.
-# I sent a linked in message asking about MIT.
-
-
 find_package(LLVM REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
