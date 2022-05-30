@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
@@ -57,10 +58,9 @@ static void eraseConstraint(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
     b.truncate(penuCol);
 }
 
-// __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
-static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
-                                     llvm::SmallVectorImpl<MPoly> &q,
-                                     const size_t i) {
+MULTIVERSION static size_t
+substituteEqualityImpl(PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<MPoly> &q,
+                       const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -68,7 +68,7 @@ static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-// #pragma clang loop unroll(disable)
+#pragma clang loop unroll(disable)
 #pragma clang loop vectorize(enable)
 #pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
@@ -94,9 +94,9 @@ static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
             intptr_t g = std::gcd(Eij, Eis);
             intptr_t Ag = Eij / g;
             intptr_t Eg = Eis / g;
-            // #pragma clang loop unroll(disable)
-            // #pragma clang loop vectorize(enable)
-            // #pragma clang loop vectorize_predicate(enable)
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 E(v, j) = Eg * E(v, j) - Ag * Es(v);
             }
@@ -105,10 +105,9 @@ static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
     }
     return colMinNonZero;
 }
-// __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
-static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
-                                     llvm::SmallVectorImpl<intptr_t> &q,
-                                     const size_t i) {
+MULTIVERSION static size_t
+substituteEqualityImpl(PtrMatrix<intptr_t> E,
+                       llvm::SmallVectorImpl<intptr_t> &q, const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -116,7 +115,7 @@ static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-// #pragma clang loop unroll(disable)
+#pragma clang loop unroll(disable)
 #pragma clang loop vectorize(enable)
 #pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
@@ -142,9 +141,9 @@ static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
             intptr_t g = std::gcd(Eij, Eis);
             intptr_t Ag = Eij / g;
             intptr_t Eg = Eis / g;
-            // #pragma clang loop unroll(disable)
-            // #pragma clang loop vectorize(enable)
-            // #pragma clang loop vectorize_predicate(enable)
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 E(v, j) = Eg * E(v, j) - Ag * Es(v);
             }
@@ -238,14 +237,24 @@ static bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
     }
     return true;
 }
-
+// (A'*x <= b) && (E'*x == q)
 template <typename T>
 void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
-                          auto &E, llvm::SmallVectorImpl<T> &q,
+                          IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
                           const size_t numNewVar) {
-
+    // M variables
+    // N inequality constraints
+    // K equality constraints
     const auto [M, N] = A.size();
     const size_t K = E.numCol();
+    assert(b.size() == N);
+    assert(q.size() == K);
+    // We add N augment variables (a_n), one per inequality constraint
+    // a_n = b_n - (A'*x)_n, so a_n >= 0
+    // C's first N columns contain constraints from A, last K from E
+    // so we have C*x = [b; q]
+    // C = [ I 0
+    //       A E ]
     Matrix<intptr_t, 0, 0, 0> C(M + N, N + K);
     llvm::SmallVector<T> d(N + K);
     for (size_t n = 0; n < N; ++n) {
@@ -278,6 +287,14 @@ void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
     A.resizeForOverwrite(numNewVar, N);
     b.resize_for_overwrite(N);
     size_t nC = 0, nA = 0, i = 0;
+    // TODO: document behavior and actually verify correctness...
+    // what if we have a_3 - a_7 + .... = ....
+    // if another constraint reveals `a_3 = 33`, then this isn't unbounded
+    // and we are not allowed to just drop the constraint...
+    // However, if we had that, the a_3 would zero-out, so normal form
+    // eliminates this possiblity.
+    // Or, what if 2*a_3 - 3*a_7 == 1?
+    // Then, we have a line, and a_3 - a_7 could still be anything.
     while ((i < N) && (nC < C.numCol()) && (nA < N)) {
         if (C(i++, nC)) {
             // if we have multiple positives, that still represents a positive
@@ -288,20 +305,9 @@ void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
                 otherNegative |= (C(j, nC) < 0);
             }
             if (otherNegative) {
-                // printVector(std::cout << "otherNonZero; i = " << i << "; nC =
-                // "
-                //                       << nC - 1 << "; C.getCol(nC) = ",
-                //             C.getCol(nC - 1))
-                //     << std::endl;
                 ++nC;
                 continue;
             }
-            // } else {
-            //     printVector(std::cout << "otherZero; i = " << i << "; nC = "
-            //                           << nC - 1 << "; C.getCol(nC) = ",
-            //                 C.getCol(nC - 1))
-            //         << std::endl;
-            // }
             bool duplicate = false;
             for (size_t k = 0; k < nA; ++k) {
                 bool allMatch = true;

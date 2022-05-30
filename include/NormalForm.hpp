@@ -1,6 +1,7 @@
 #pragma once
+#include "./Macro.hpp"
 #include "./Math.hpp"
-#include "Symbolics.hpp"
+#include "./Symbolics.hpp"
 #include "llvm/ADT/APInt.h" // llvm::Optional
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
@@ -275,7 +276,8 @@ void zeroSupDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
     }
 }
 
-inline bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N, size_t piv) {
+inline bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N,
+                      size_t piv) {
     size_t j = piv;
     while (A(i, piv) == 0) {
         if (++piv == N) {
@@ -362,9 +364,10 @@ orthogonalize(IntMatrix auto A) {
     }
     return std::make_pair(std::move(K), std::move(included));
 }
-template <typename T>
-inline void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
-                            size_t r, size_t c) {
+
+MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
+                                         llvm::SmallVectorImpl<intptr_t> &b,
+                                         size_t r, size_t c) {
     auto [M, N] = A.size();
     for (size_t j = c + 1; j < N; ++j) {
         intptr_t Aii = A(r, c);
@@ -381,15 +384,15 @@ inline void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
             A(k, c) = p * Aki + q * Akj;
             A(k, j) = Aiir * Akj - Aijr * Aki;
         }
-        T bi = std::move(b[c]);
-        T bj = std::move(b[j]);
+        intptr_t bi = b[c];
+        intptr_t bj = b[j];
         b[c] = p * bi + q * bj;
         b[j] = Aiir * bj - Aijr * bi;
     }
 }
-template <typename T>
-inline void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
-                              size_t r, size_t c) {
+MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
+                                           llvm::SmallVectorImpl<intptr_t> &b,
+                                           size_t r, size_t c) {
     const size_t M = A.numRow();
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
@@ -438,9 +441,85 @@ inline void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
     }
 }
 
-__attribute__((target_clones("arch=skylake-avx512", "avx2", "default"))) size_t
-simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
-                                llvm::SmallVectorImpl<MPoly> &q) {
+MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
+                                         llvm::SmallVectorImpl<MPoly> &b,
+                                         size_t r, size_t c) {
+    auto [M, N] = A.size();
+    for (size_t j = c + 1; j < N; ++j) {
+        intptr_t Aii = A(r, c);
+        intptr_t Aij = A(r, j);
+        auto [r, p, q] = gcdx(Aii, Aij);
+        intptr_t Aiir = Aii / r;
+        intptr_t Aijr = Aij / r;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+        for (size_t k = 0; k < M; ++k) {
+            intptr_t Aki = A(k, c);
+            intptr_t Akj = A(k, j);
+            A(k, c) = p * Aki + q * Akj;
+            A(k, j) = Aiir * Akj - Aijr * Aki;
+        }
+        MPoly bi = std::move(b[c]);
+        MPoly bj = std::move(b[j]);
+        b[c] = p * bi + q * bj;
+        b[j] = Aiir * std::move(bj) - Aijr * std::move(bi);
+    }
+}
+MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
+                                           llvm::SmallVectorImpl<MPoly> &b,
+                                           size_t r, size_t c) {
+    const size_t M = A.numRow();
+    intptr_t Akk = A(r, c);
+    if (Akk < 0) {
+        Akk = -Akk;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+        for (size_t i = 0; i < M; ++i) {
+            A(i, c) *= -1;
+        }
+        negate(b[c]);
+    }
+    for (size_t z = 0; z < c; ++z) {
+        // try to eliminate `A(k,z)`
+        intptr_t Akz = A(r, z);
+        // if Akk == 1, then this zeros out Akz
+        if (Akz) {
+            // we want positive but smaller subdiagonals
+            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
+            // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        =   5 - 2*2 = 1
+            // or if `Akz = -5, Akk = 2`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+            // if `Akk = 1`, then
+            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        = A(k,z) - A(k,z) = 0
+            // or if `Akz = -7, Akk = 39`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+            intptr_t AkzOld = Akz;
+            Akz /= Akk;
+            if (AkzOld < 0) {
+                Akz -= (AkzOld != (Akz * Akk));
+            }
+        } else {
+            continue;
+        }
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+        for (size_t i = 0; i < M; ++i) {
+            A(i, z) -= Akz * A(i, c);
+        }
+        Polynomial::fnmadd(b[z], b[c], Akz);
+    }
+}
+
+MULTIVERSION
+size_t simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
+                                       llvm::SmallVectorImpl<MPoly> &q) {
     auto [M, N] = E.size();
     if (N == 0)
         return 0;
@@ -466,9 +545,8 @@ simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
     }
     return Nnew;
 }
-__attribute__((target_clones("arch=skylake-avx512", "avx2", "default"))) size_t
-simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
-                                llvm::SmallVectorImpl<intptr_t> &q) {
+MULTIVERSION size_t simplifyEqualityConstraintsImpl(
+    PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<intptr_t> &q) {
     auto [M, N] = E.size();
     if (N == 0)
         return 0;

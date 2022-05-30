@@ -432,8 +432,6 @@ struct MemoryAccess {
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     size_t getNumLoops() const { return ref->getNumLoops(); }
-
-
 };
 
 std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
@@ -490,27 +488,25 @@ struct Dependence {
         // }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-                if (o2idiff < 0) {
-                    dxy.forward = false;
-                    fyx.A.reduceNumRows(numLoopsTotal + 1);
-                    fyx.E.reduceNumRows(numLoopsTotal + 1);
-                    fyx.dropEmptyConstraints();
+		
+                if ((dxy.forward = o2idiff > 0)){
+                    std::swap(fxy, fyx);
+                    // fxy.A.reduceNumRows(numLoopsTotal + 1);
+                    // fxy.E.reduceNumRows(numLoopsTotal + 1);
+                    // fxy.dropEmptyConstraints();
+                    // // x then y
+                    // return Dependence{dxy, fxy, fyx};
 #ifndef NDEBUG
                     std::cout << "dep order 0; i = " << i << std::endl;
-#endif
-                    // y then x
-                    return Dependence{dxy, fyx, fxy};
                 } else {
-                    dxy.forward = true;
-                    fxy.A.reduceNumRows(numLoopsTotal + 1);
-                    fxy.E.reduceNumRows(numLoopsTotal + 1);
-                    fxy.dropEmptyConstraints();
-#ifndef NDEBUG
                     std::cout << "dep order 1; i = " << i << std::endl;
 #endif
-                    // x then y
-                    return Dependence{dxy, fxy, fyx};
                 }
+                fyx.A.reduceNumRows(numLoopsTotal + 1);
+                fyx.E.reduceNumRows(numLoopsTotal + 1);
+                fyx.dropEmptyConstraints();
+                // x then y
+                return Dependence{dxy, fyx, fxy};
             }
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value

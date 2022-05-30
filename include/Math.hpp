@@ -298,9 +298,7 @@ template <typename T, size_t M> struct Vector {
     // Vector(Vector<T, M> &a) : data(a.data){};
 
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return mem[i];
     }
     T &operator[](size_t i) { return mem[i]; }
@@ -319,9 +317,7 @@ template <typename T, size_t M = 0> struct PtrVector {
     // Vector(Vector<T, M> &a) : ptr(a.ptr){};
 
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -339,9 +335,7 @@ template <typename T> struct PtrVector<T, 0> {
     size_t M;
     // PtrVector(llvm::ArrayRef<T> A) : ptr(A.data()), M(A.size()) {};
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -370,15 +364,11 @@ template <typename T> struct Vector<T, 0> {
     Vector(llvm::SmallVector<T> &&A) : mem(std::move(A)){};
 
     T &operator()(size_t i) {
-#ifndef DONOTBOUNDSCHECK
         assert(i < mem.size());
-#endif
         return mem[i];
     }
     const T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < mem.size());
-#endif
         return mem[i];
     }
     T &operator[](size_t i) { return mem[i]; }
@@ -497,18 +487,14 @@ template <typename T, typename A> struct BaseMatrix {
 
     T &operator()(size_t i, size_t j) {
         const size_t M = numRow();
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < numCol());
-#endif
         return getLinearElement(i + j * M);
     }
     const T &operator()(size_t i, size_t j) const {
         const size_t M = numRow();
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < numCol());
-#endif
         return (*this)[i + j * M];
         return getLinearElement(i + j * M);
     }
