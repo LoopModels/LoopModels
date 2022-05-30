@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <numberic>
+#include <numeric>
 
 // use ILP solver for eliminating redundant constraints
 
@@ -96,6 +96,7 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
     model.lp_.num_row_ = numCol + numColE;
 
     model.lp_.integrality_.resize(numVar, HighsVarType::kInteger);
+#ifndef NDEBUG
     printVector(std::cout << "value= ", model.lp_.a_matrix_.value_)
         << std::endl;
     printVector(std::cout << "index= ", model.lp_.a_matrix_.index_)
@@ -109,7 +110,8 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
         << std::endl;
     printVector(std::cout << "Constraint ub = ", model.lp_.row_upper_)
         << std::endl;
-    // std::cout << "target = " << target << std::endl;
+// std::cout << "target = " << target << std::endl;
+#endif
     HighsStatus return_status = highs.passModel(std::move(model));
     assert(return_status == HighsStatus::kOk);
 }
@@ -127,8 +129,6 @@ void updateILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
     set.resize_for_overwrite(numVar);
     std::ranges::copy(A.getCol(Cnew), set);
     highs.changeColsCost(numVar, set, cost);
-
-    
 }
 
 bool constraintIsRedundant(IntMatrix auto &A,
@@ -143,19 +143,23 @@ bool constraintIsRedundant(IntMatrix auto &A,
     assert(return_status == HighsStatus::kOk);
 
     const HighsModelStatus &model_status = highs.getModelStatus();
+#ifndef NDEBUG
     std::cout << "Objective function value: "
               << highs.getInfo().objective_function_value << std::endl;
     std::cout << "Model status: " << highs.modelStatusToString(model_status)
               << std::endl;
+#endif
     assert(model_status == HighsModelStatus::kOptimal);
 
     double obj = highs.getInfo().objective_function_value;
     intptr_t target = b[C] + 1;
     bool redundant = !std::isnan(obj) && (obj != target);
+#ifndef NDEBUG
     std::cout << "highs.getInfo().objective_function_value = "
               << highs.getInfo().objective_function_value
               << "; target = " << target << "; neq = " << redundant
               << std::endl;
+#endif
     ;
     return redundant;
 }
@@ -165,7 +169,9 @@ void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
     NormalForm::simplifyEqualityConstraints(E, q);
     for (size_t c = A.numCol(); c > 0;) {
         if (constraintIsRedundant(A, b, E, q, --c)) {
+#ifndef NDEBUG
             std::cout << "dropping constraint c = " << c << std::endl;
+#endif
             A.eraseCol(c);
             b.erase(b.begin() + c);
         }

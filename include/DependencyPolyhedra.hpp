@@ -22,7 +22,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
+#ifndef NDEBUG
         std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
+#endif
         // fast path; most common case
         if (ar0.stridesMatchAllConstant(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
@@ -218,6 +220,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             // b.push_back(-bound);
             // b.push_back(std::move(bound));
         }
+#ifndef NDEBUG
         std::cout << "About to pruneBounds\nA = \n"
                   << A << "\nb = " << std::endl;
         for (auto &bi : b) {
@@ -228,6 +231,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             std::cout << qi << ", ";
         }
         std::cout << std::endl;
+#endif
         if (pruneBounds()) {
             A.clear();
             b.clear();
@@ -378,7 +382,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numVarKeep + i, numBoundingCoefs + i) = -1;
         }
+#ifndef NDEBUG
         std::cout << "Af = \n" << Af << std::endl;
+#endif
         removeExtraVariables(Af, bf, Ef, qf, numVarKeep);
         IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
                                  std::move(qf));
@@ -445,11 +451,13 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return {};
-        // note that we set boundAbove=true, so we reverse the dependence
-        // direction for the dependency we week, we'll discard the program
-        // variables x then y
+            // note that we set boundAbove=true, so we reverse the dependence
+            // direction for the dependency we week, we'll discard the program
+            // variables x then y
+#ifndef NDEBUG
         std::cout << "x = " << x << "\ny = " << y << "\ndxy = \n"
                   << dxy << std::endl;
+#endif
         IntegerEqPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
         IntegerEqPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
@@ -474,7 +482,9 @@ struct Dependence {
                     fyx.A.reduceNumRows(numLoopsTotal + 1);
                     fyx.E.reduceNumRows(numLoopsTotal + 1);
                     fyx.dropEmptyConstraints();
+#ifndef NDEBUG
                     std::cout << "dep order 0; i = " << i << std::endl;
+#endif
                     // y then x
                     return Dependence{dxy, fyx, fxy};
                 } else {
@@ -482,7 +492,9 @@ struct Dependence {
                     fxy.A.reduceNumRows(numLoopsTotal + 1);
                     fxy.E.reduceNumRows(numLoopsTotal + 1);
                     fxy.dropEmptyConstraints();
+#ifndef NDEBUG
                     std::cout << "dep order 1; i = " << i << std::endl;
+#endif
                     // x then y
                     return Dependence{dxy, fxy, fyx};
                 }
@@ -513,7 +525,9 @@ struct Dependence {
                 fyx.A.reduceNumRows(numLoopsTotal + 1);
                 fyx.E.reduceNumRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
+#ifndef NDEBUG
                 std::cout << "dep order 2; i = " << i << std::endl;
+#endif
                 // y then x
                 return Dependence{dxy, fyx, fxy};
             }
@@ -524,7 +538,9 @@ struct Dependence {
                 fxy.A.reduceNumRows(numLoopsTotal + 1);
                 fxy.E.reduceNumRows(numLoopsTotal + 1);
                 fxy.dropEmptyConstraints();
+#ifndef NDEBUG
                 std::cout << "dep order 3; i= " << i << std::endl;
+#endif
                 return Dependence{dxy, fxy, fyx};
             }
         }

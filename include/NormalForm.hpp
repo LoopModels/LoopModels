@@ -275,7 +275,7 @@ void zeroSupDiagonal(IntMatrix auto &A, IntMatrix auto &K, size_t i, size_t M,
     }
 }
 
-bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N, size_t piv) {
+inline bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N, size_t piv) {
     size_t j = piv;
     while (A(i, piv) == 0) {
         if (++piv == N) {
@@ -288,7 +288,7 @@ bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N, size_t piv) {
     }
     return false;
 }
-bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N) {
+inline bool pivotCols(IntMatrix auto &A, auto &K, size_t i, size_t N) {
     return pivotCols(A, K, i, N, i);
 }
 
@@ -363,8 +363,8 @@ orthogonalize(IntMatrix auto A) {
     return std::make_pair(std::move(K), std::move(included));
 }
 template <typename T>
-void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
-                     size_t c) {
+inline void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                            size_t r, size_t c) {
     auto [M, N] = A.size();
     for (size_t j = c + 1; j < N; ++j) {
         intptr_t Aii = A(r, c);
@@ -372,6 +372,9 @@ void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
         auto [r, p, q] = gcdx(Aii, Aij);
         intptr_t Aiir = Aii / r;
         intptr_t Aijr = Aij / r;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
         for (size_t k = 0; k < M; ++k) {
             intptr_t Aki = A(k, c);
             intptr_t Akj = A(k, j);
@@ -385,12 +388,15 @@ void zeroSupDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
     }
 }
 template <typename T>
-void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
-                       size_t c) {
+inline void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                              size_t r, size_t c) {
     const size_t M = A.numRow();
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
         Akk = -Akk;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
@@ -422,18 +428,22 @@ void reduceSubDiagonal(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, size_t r,
         } else {
             continue;
         }
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }
         Polynomial::fnmadd(b[z], b[c], Akz);
     }
 }
-template <typename T, size_t L>
-void simplifyEqualityConstraints(Matrix<intptr_t, 0, 0, L> &E,
-                                 llvm::SmallVectorImpl<T> &q) {
+
+__attribute__((target_clones("arch=skylake-avx512", "avx2", "default"))) size_t
+simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
+                                llvm::SmallVectorImpl<MPoly> &q) {
     auto [M, N] = E.size();
     if (N == 0)
-        return;
+        return 0;
     size_t dec = 0;
     for (size_t m = 0; m < M; ++m) {
         if (m - dec >= N)
@@ -454,7 +464,43 @@ void simplifyEqualityConstraints(Matrix<intptr_t, 0, 0, L> &E,
     while (allZero(E.getCol(Nnew - 1))) {
         --Nnew;
     }
-    E.resize(M, Nnew);
+    return Nnew;
+}
+__attribute__((target_clones("arch=skylake-avx512", "avx2", "default"))) size_t
+simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t> E,
+                                llvm::SmallVectorImpl<intptr_t> &q) {
+    auto [M, N] = E.size();
+    if (N == 0)
+        return 0;
+    size_t dec = 0;
+    for (size_t m = 0; m < M; ++m) {
+        if (m - dec >= N)
+            break;
+
+        if (pivotCols(E, q, m, N, m - dec)) {
+            // row is entirely zero
+            ++dec;
+            continue;
+        }
+        // E(m, m-dec) now contains non-zero
+        // zero row `m` of every column to the right of `m - dec`
+        zeroSupDiagonal(E, q, m, m - dec);
+        // now we reduce the sub diagonal
+        reduceSubDiagonal(E, q, m, m - dec);
+    }
+    size_t Nnew = N;
+    while (allZero(E.getCol(Nnew - 1))) {
+        --Nnew;
+    }
+    return Nnew;
+}
+
+template <typename T, size_t L>
+void simplifyEqualityConstraints(Matrix<intptr_t, 0, 0, L> &E,
+                                 llvm::SmallVectorImpl<T> &q) {
+
+    size_t Nnew = simplifyEqualityConstraintsImpl(PtrMatrix<intptr_t>(E), q);
+    E.truncateColumns(Nnew);
     q.resize(Nnew);
 }
 

@@ -13,9 +13,9 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
-template <typename T>
-bool substituteEquality(auto &E,
-                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+// __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
+size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
+                              llvm::SmallVectorImpl<MPoly> &q, const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -23,6 +23,9 @@ bool substituteEquality(auto &E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
+            // #pragma clang loop unroll(disable)
+            #pragma clang loop vectorize(enable)
+            #pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(v, j) != 0);
             }
@@ -33,7 +36,7 @@ bool substituteEquality(auto &E,
         }
     }
     if (colMinNonZero == numColE) {
-        return true;
+        return colMinNonZero;
     }
     auto Es = E.getCol(colMinNonZero);
     intptr_t Eis = Es[i];
@@ -46,18 +49,78 @@ bool substituteEquality(auto &E,
             intptr_t g = std::gcd(Eij, Eis);
             intptr_t Ag = Eij / g;
             intptr_t Eg = Eis / g;
+            // #pragma clang loop unroll(disable)
+            // #pragma clang loop vectorize(enable)
+            // #pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 E(v, j) = Eg * E(v, j) - Ag * Es(v);
             }
             Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
         }
     }
-    E.eraseCol(colMinNonZero);
-    q.erase(q.begin() + colMinNonZero);
-    return false;
+    return colMinNonZero;
+}
+// __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
+size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
+                              llvm::SmallVectorImpl<intptr_t> &q,
+                              const size_t i) {
+    const auto [numVar, numColE] = E.size();
+    size_t minNonZero = numVar + 1;
+    size_t colMinNonZero = numColE;
+    for (size_t j = 0; j < numColE; ++j) {
+        if (E(i, j)) {
+            // if (std::abs(E(i,j)) == 1){
+            size_t nonZero = 0;
+            // #pragma clang loop unroll(disable)
+            #pragma clang loop vectorize(enable)
+            #pragma clang loop vectorize_predicate(enable)
+            for (size_t v = 0; v < numVar; ++v) {
+                nonZero += (E(v, j) != 0);
+            }
+            if (nonZero < minNonZero) {
+                minNonZero = nonZero;
+                colMinNonZero = j;
+            }
+        }
+    }
+    if (colMinNonZero == numColE) {
+        return colMinNonZero;
+    }
+    auto Es = E.getCol(colMinNonZero);
+    intptr_t Eis = Es[i];
+    // we now subsitute the equality expression with the minimum number
+    // of terms.
+    for (size_t j = 0; j < numColE; ++j) {
+        if (j == colMinNonZero)
+            continue;
+        if (intptr_t Eij = E(i, j)) {
+            intptr_t g = std::gcd(Eij, Eis);
+            intptr_t Ag = Eij / g;
+            intptr_t Eg = Eis / g;
+            // #pragma clang loop unroll(disable)
+            // #pragma clang loop vectorize(enable)
+            // #pragma clang loop vectorize_predicate(enable)
+            for (size_t v = 0; v < numVar; ++v) {
+                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+            }
+            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    }
+    return colMinNonZero;
 }
 template <typename T>
-bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+bool substituteEquality(IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
+                        const size_t i) {
+    size_t colMinNonZero = substituteEqualityImpl(E, q, i);
+    if (colMinNonZero != E.numCol()) {
+        E.eraseCol(colMinNonZero);
+        q.erase(q.begin() + colMinNonZero);
+    }
+    return false;
+}
+
+template <typename T>
+bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
@@ -114,7 +177,7 @@ bool substituteEquality(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
     return false;
 }
 template <typename T>
-void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
+void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                           llvm::SmallVectorImpl<T> &q, const size_t numNewVar) {
 
     const auto [M, N] = A.size();
@@ -139,11 +202,13 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
         substituteEquality(C, d, o);
         NormalForm::simplifyEqualityConstraints(C, d);
     }
+#ifndef NDEBUG
     printVector(std::cout << "M = " << M << "; N = " << N << "; K = " << K
                           << "; C =\n"
                           << C << "\nd = ",
                 d)
         << std::endl;
+#endif
     A.resizeForOverwrite(numNewVar, N);
     b.resize_for_overwrite(N);
     size_t nC = 0, nA = 0, i = 0;
@@ -171,21 +236,21 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
             //                 C.getCol(nC - 1))
             //         << std::endl;
             // }
-	    bool duplicate = false;
-	    for (size_t k = 0; k < nA; ++k){
-		bool allMatch = true;
-		for (size_t m = 0; m < numNewVar; ++m){
-		    allMatch &= (A(m,k) == C(N + m, nC));
-		}
-		if (allMatch){
-		    duplicate = true;
-		    break;
-		}
-	    }
-	    if (duplicate){
-		++nC;
-		continue;
-	    }
+            bool duplicate = false;
+            for (size_t k = 0; k < nA; ++k) {
+                bool allMatch = true;
+                for (size_t m = 0; m < numNewVar; ++m) {
+                    allMatch &= (A(m, k) == C(N + m, nC));
+                }
+                if (allMatch) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) {
+                ++nC;
+                continue;
+            }
             for (size_t m = 0; m < numNewVar; ++m) {
                 A(m, nA) = C(N + m, nC);
             }
@@ -194,7 +259,7 @@ void removeExtraVariables(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
             ++nC;
         }
     }
-    A.resizeForOverwrite(numNewVar, nA);
+    A.truncateColumns(nA);
     b.truncate(nA);
     E.resizeForOverwrite(numNewVar, C.numCol() - nC);
     q.resize_for_overwrite(C.numCol() - nC);
@@ -648,13 +713,17 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
+#ifndef NDEBUG
         std::cout << "\n in AppendBounds, about to pruneBounds" << std::endl;
         printConstraints(
             printConstraints(std::cout, A, b, true, A.numRow() - getNumVar()),
             E, q, false, A.numRow() - getNumVar());
+#endif
         if (A.numCol()) {
+#ifndef NDEBUG
             std::cout << "CheckEmpty = " << CheckEmpty
                       << "; A.numCol() = " << A.numCol() << std::endl;
+#endif
             if (pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
                             qtmp1, A, b, E, q)) {
                 return CheckEmpty;
@@ -718,11 +787,15 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
+#ifndef NDEBUG
         std::cout << "\n in AppendBounds, about to pruneBounds" << std::endl;
         printConstraints(std::cout, A, b, true, A.numRow() - getNumVar());
+#endif
         if (A.numCol()) {
+#ifndef NDEBUG
             std::cout << "CheckEmpty = " << CheckEmpty
                       << "; A.numCol() = " << A.numCol() << std::endl;
+#endif
             pruneBounds(Atmp0, Atmp1, Etmp, btmp0, btmp1, qtmp, A, b);
         }
         /*if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0,
@@ -815,9 +888,11 @@ return false;
                 // drop `c`
                 Aold.eraseCol(c);
                 bold.erase(bold.begin() + c);
+#ifndef NDEBUG
                 std::cout << "Dropping column c = " << c << "." << std::endl;
             } else {
                 std::cout << "Keeping column c = " << c << "." << std::endl;
+#endif
             }
         }
     }
@@ -874,9 +949,11 @@ return false;
                      llvm::SmallVectorImpl<T> &qold) const {
         moveEqualities(Aold, bold, Eold, qold);
         NormalForm::simplifyEqualityConstraints(Eold, qold);
+#ifndef NDEBUG
         printConstraints(printConstraints(std::cout << "About to pruneBounds\n",
                                           Aold, bold, true),
                          Eold, qold, false);
+#endif
         for (size_t i = 0; i < Eold.numCol(); ++i) {
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
@@ -884,7 +961,9 @@ return false;
                                            Aold.numCol() + i, true)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
+#ifndef NDEBUG
                 std::cout << "Oops!!!" << std::endl;
+#endif
                 return true;
             }
             // flip
@@ -898,22 +977,26 @@ return false;
                                            Aold.numCol() + i, true)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
+#ifndef NDEBUG
                 std::cout << "Oops!!!" << std::endl;
-
+#endif
                 return true;
             }
+#ifndef NDEBUG
             std::cout << "E-Elim" << std::endl;
             printConstraints(std::cout, Aold, bold, true);
             printConstraints(std::cout, Eold, qold, false);
+#endif
         }
         assert(Aold.numCol() == bold.size());
         for (size_t i = 0; i + 1 <= Aold.numCol(); ++i) {
             size_t c = Aold.numCol() - 1 - i;
             assert(Aold.numCol() == bold.size());
+#ifndef NDEBUG
             std::cout << "Aold.numCol() = " << Aold.numCol()
                       << "; bold.size() = " << bold.size() << "; c = " << c
                       << std::endl;
-
+#endif
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
                                            Eold, qold, Aold.getCol(c), bold[c],
@@ -922,8 +1005,10 @@ return false;
                 Aold.eraseCol(c);
                 bold.erase(bold.begin() + c);
             }
+#ifndef NDEBUG
             std::cout << "\nAold = " << std::endl;
             printConstraints(std::cout, Aold, bold, true);
+#endif
         }
         return false;
     }
@@ -1200,6 +1285,7 @@ return false;
             //     }
             // }
         }
+#ifndef NDEBUG
         const size_t CHECK = C;
         if (C == CHECK) {
             std::cout << "### CHECKING ### C = " << CHECK
@@ -1221,6 +1307,7 @@ return false;
             std::cout << "b = " << b << std::endl;
             printConstraints(std::cout, Aold, bold, true);
         }
+#endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
             Aold.eraseCol(c);
@@ -1240,11 +1327,13 @@ return false;
         const size_t numVar = getNumVar();
         // simple mapping of `k` to particular bounds
         // we'll have C - other bound
+#ifndef NDEBUG
         std::cout << "a = [";
         for (auto &ai : a) {
             std::cout << ai << ", ";
         }
         std::cout << "]; b = " << b << std::endl;
+#endif
         llvm::SmallVector<int, 16> boundDiffs;
         for (size_t c = 0; c < Aold.numCol(); ++c) {
             if (c == C)
@@ -1328,6 +1417,7 @@ return false;
             }
             qtmp0[j] = qold[i];
         }
+#ifndef NDEBUG
         std::cout << "Removing Redundant Constraints ### C = " << C
                   << " ###\nboundDiffs = [ ";
         for (auto &c : boundDiffs) {
@@ -1337,7 +1427,7 @@ return false;
         printConstraints(
             printConstraints(std::cout, Atmp0, btmp0, true, numAuxVar), Etmp0,
             qtmp0, false, numAuxVar);
-
+#endif
         // intptr_t dependencyToEliminate = -1;
         // fill Etmp0 with bound diffs
         // define variables as
@@ -1396,11 +1486,13 @@ return false;
                 intptr_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     intptr_t auxInd = auxiliaryInd(Ac);
+#ifndef NDEBUG
                     std::cout
                         << "auxInd = " << auxInd << "; knownLessEqualZero("
                         << btmp0[c] << ") = "
                         << (knownLessEqualZero(btmp0[c]) ? "true" : "false")
                         << std::endl;
+#endif
                     // FIXME: does knownLessEqualZero(btmp0[c]) always
                     // return `true` when `allZero(bold)`???
                     if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
@@ -1416,10 +1508,12 @@ return false;
                         } else if ((!AbIsEq) ||
                                    knownLessEqualZero(btmp0[c] - 1)) {
                             // lower bound
+#ifndef NDEBUG
                             std::cout
                                 << "Col to erase, C = " << C
                                 << "; obsoleted by: " << boundDiffs[auxInd]
                                 << std::endl;
+#endif
                             return true;
                         }
                     }
@@ -1446,6 +1540,7 @@ return false;
             //     }
             // }
         }
+#ifndef NDEBUG
         const size_t CHECK = C;
         if (C == CHECK) {
             std::cout << "### CHECKING ### C = " << CHECK
@@ -1468,6 +1563,7 @@ return false;
             printConstraints(std::cout, Aold, bold, true);
             printConstraints(std::cout, Eold, qold, false);
         }
+#endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
 
@@ -1524,8 +1620,10 @@ return false;
     bool removeVariable(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
+#ifndef NDEBUG
         std::cout << "Removing variable: " << i << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
+#endif
         if (substituteEquality(A, b, E, q, i)) {
             Matrix<intptr_t, 0, 0, 0> lA;
             Matrix<intptr_t, 0, 0, 0> uA;
@@ -1543,8 +1641,10 @@ return false;
                         llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
+#ifndef NDEBUG
         std::cout << "Removing variable: " << i << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
+#endif
         if (substituteEquality(A, b, E, q, i)) {
             removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
         }
@@ -1794,7 +1894,9 @@ return false;
 
     bool isEmpty() {
         // inefficient (compared to ILP + Farkas Lemma approach)
+#ifndef NDEBUG
         std::cout << "calling isEmpty()" << std::endl;
+#endif
         auto copy = *static_cast<const P *>(this);
         Matrix<intptr_t, 0, 0, 0> lA;
         Matrix<intptr_t, 0, 0, 0> uA;

@@ -481,9 +481,7 @@ template <typename T, typename A> struct BaseMatrix {
     auto end() const { return static_cast<const A *>(this)->end(); }
 
     T *data() { return static_cast<A *>(this)->data(); }
-    const T *data() const {
-        return static_cast<const A *>(this)->data();
-    }
+    const T *data() const { return static_cast<const A *>(this)->data(); }
 
     std::pair<size_t, size_t> size() const {
         return std::make_pair(numRow(), numCol());
@@ -555,6 +553,29 @@ template <typename T, typename A> struct BaseMatrix {
     StridedVector<const T> getRow(size_t m) const {
         return StridedVector<const T>{data() + m, numCol(), numRow()};
     }
+};
+template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
+    T *mem;
+    const size_t M, N;
+
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
+    T *end() { return mem + (M * N); }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + (M * N); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return N; }
+    static constexpr size_t getConstRow() { return 0; }
+
+    T *data() { return mem; }
+    const T *data() const { return mem; }
+
+    // void truncateColumns(size_t Nnew) {
+    //     assert(Nnew <= N);
+    //     N = Nnew;
+    // }
 };
 
 //
@@ -679,13 +700,16 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     size_t M;
     size_t N;
 
-    Matrix(size_t m, size_t n)
-        : mem(llvm::SmallVector<T>(m * n)), M(m), N(n){};
+    Matrix(size_t m, size_t n) : mem(llvm::SmallVector<T>(m * n)), M(m), N(n){};
 
     Matrix() : M(0), N(0){};
     Matrix(SquareMatrix<T> &&A) : mem(std::move(A.mem)), M(A.M), N(A.M){};
     Matrix(const SquareMatrix<T> &A)
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M){};
+
+    operator PtrMatrix<T>() {
+        return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
+    }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -708,10 +732,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         A.mem.resize_for_overwrite(MM * NN);
         return A;
     }
-    void clear(){
-	M = 0;
-	N = 0;
-	mem.clear();
+    void clear() {
+        M = 0;
+        N = 0;
+        mem.clear();
     }
     void resize(size_t MM, size_t NN) {
         M = MM;
@@ -737,6 +761,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         mem.erase(it, it + M);
         --N;
     }
+    void truncateColumns(size_t Nnew) {
+        assert(Nnew <= N);
+        N = Nnew;
+    }
+
     void increaseNumRows(size_t MM) {
         if (M == MM)
             return;
@@ -774,24 +803,6 @@ static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
 
-template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
-    T *mem;
-    const size_t M, N;
-
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    T *begin() { return mem; }
-    T *end() { return mem + (M * N); }
-    const T *begin() const { return mem; }
-    const T *end() const { return mem + (M * N); }
-
-    size_t numRow() const { return M; }
-    size_t numCol() const { return N; }
-    static constexpr size_t getConstRow() { return 0; }
-
-    T *data() { return mem; }
-    const T *data() const { return mem; }
-};
 template <typename T>
 struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     T *mem;
@@ -1022,12 +1033,15 @@ void swapRows(IntMatrix auto &A, size_t i, size_t j) {
         std::swap(A(i, n), A(j, n));
     }
 }
-void swapCols(IntMatrix auto &A, size_t i, size_t j) {
+inline void swapCols(IntMatrix auto &A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
     auto [M, N] = A.size();
     assert((i < N) & (j < N));
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
     for (size_t m = 0; m < M; ++m) {
         std::swap(A(m, i), A(m, j));
     }
