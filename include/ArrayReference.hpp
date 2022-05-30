@@ -257,7 +257,7 @@ std::ostream &operator<<(std::ostream &os, Stride const &axis) {
         printPlus = true;
     }
     if (!strideIsOne) {
-        os << ")\n";
+        os << ")";
     }
     return os;
 }

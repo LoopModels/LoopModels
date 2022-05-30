@@ -13,9 +13,54 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
+// does not preserve the order of columns, instead it swaps the `i`th column
+// to the last, and truncates.
+template <typename T>
+static void eraseConstraint(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                            size_t i) {
+    const auto [M, N] = A.size();
+    const size_t lastCol = N - 1;
+    if (lastCol != i) {
+        for (size_t m = 0; m < M; ++m) {
+            A(m, i) = A(m, lastCol);
+        }
+        b[i] = b[lastCol];
+    }
+    A.truncateColumns(lastCol);
+    b.truncate(lastCol);
+}
+template <typename T>
+static void eraseConstraint(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                            size_t _i, size_t _j) {
+    assert(_i != _j);
+    size_t i = std::min(_i, _j);
+    size_t j = std::max(_i, _j);
+    const auto [M, N] = A.size();
+    const size_t lastCol = N - 1;
+    const size_t penuCol = lastCol - 1;
+    if (j == penuCol) {
+        // then we only need to copy one column (i to lastCol)
+        eraseConstraint(A, b, i);
+    } else if (i != penuCol) {
+        // if i == penuCol, then j == lastCol
+        // and we thus don't need to copy
+        if (lastCol != i) {
+            for (size_t m = 0; m < M; ++m) {
+                A(m, i) = A(m, penuCol);
+                A(m, j) = A(m, lastCol);
+            }
+            b[i] = b[penuCol];
+            b[j] = b[lastCol];
+        }
+    }
+    A.truncateColumns(penuCol);
+    b.truncate(penuCol);
+}
+
 // __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
-size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
-                              llvm::SmallVectorImpl<MPoly> &q, const size_t i) {
+static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
+                                     llvm::SmallVectorImpl<MPoly> &q,
+                                     const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -23,9 +68,9 @@ size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-            // #pragma clang loop unroll(disable)
-            #pragma clang loop vectorize(enable)
-            #pragma clang loop vectorize_predicate(enable)
+// #pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(v, j) != 0);
             }
@@ -61,9 +106,9 @@ size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
     return colMinNonZero;
 }
 // __attribute__((target_clones("arch=skylake-avx512", "avx2", "default")))
-size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
-                              llvm::SmallVectorImpl<intptr_t> &q,
-                              const size_t i) {
+static size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
+                                     llvm::SmallVectorImpl<intptr_t> &q,
+                                     const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -71,9 +116,9 @@ size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-            // #pragma clang loop unroll(disable)
-            #pragma clang loop vectorize(enable)
-            #pragma clang loop vectorize_predicate(enable)
+// #pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(v, j) != 0);
             }
@@ -109,19 +154,23 @@ size_t substituteEqualityImpl(PtrMatrix<intptr_t> E,
     return colMinNonZero;
 }
 template <typename T>
-bool substituteEquality(IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
-                        const size_t i) {
+static bool substituteEquality(IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
+                               const size_t i) {
     size_t colMinNonZero = substituteEqualityImpl(E, q, i);
     if (colMinNonZero != E.numCol()) {
-        E.eraseCol(colMinNonZero);
-        q.erase(q.begin() + colMinNonZero);
+        eraseConstraint(E, q, colMinNonZero);
+        // E.eraseCol(colMinNonZero);
+        // q.erase(q.begin() + colMinNonZero);
+        return false;
     }
-    return false;
+    return true;
 }
 
 template <typename T>
-bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
-                        llvm::SmallVectorImpl<T> &q, const size_t i) {
+static size_t
+substituteEqualityImpl(PtrMatrix<intptr_t> A, llvm::SmallVectorImpl<T> &b,
+                       PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<T> &q,
+                       const size_t i) {
     const auto [numVar, numColE] = E.size();
     size_t minNonZero = numVar + 1;
     size_t colMinNonZero = numColE;
@@ -139,17 +188,18 @@ bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
         }
     }
     if (colMinNonZero == numColE) {
-        return true;
+        return colMinNonZero;
     }
     auto Es = E.getCol(colMinNonZero);
     intptr_t Eis = Es[i];
+    intptr_t s = 2 * (Eis > 0) - 1;
     // we now subsitute the equality expression with the minimum number
     // of terms.
     for (size_t j = 0; j < A.numCol(); ++j) {
         if (intptr_t Aij = A(i, j)) {
             intptr_t g = std::gcd(Aij, Eis);
+            assert(g > 0);
             // `A` contains inequalities; flipping signs is illegal
-            intptr_t s = 2 * (Eis > 0) - 1;
             intptr_t Ag = (s * Aij) / g;
             intptr_t Eg = (s * Eis) / g;
             for (size_t v = 0; v < numVar; ++v) {
@@ -172,13 +222,27 @@ bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
             Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
         }
     }
-    E.eraseCol(colMinNonZero);
-    q.erase(q.begin() + colMinNonZero);
-    return false;
+    return colMinNonZero;
 }
 template <typename T>
-void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
-                          llvm::SmallVectorImpl<T> &q, const size_t numNewVar) {
+static bool substituteEquality(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                               IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
+                               const size_t i) {
+
+    size_t colMinNonZero = substituteEqualityImpl(A, b, E, q, i);
+    if (colMinNonZero != E.numCol()) {
+        eraseConstraint(E, q, colMinNonZero);
+        // E.eraseCol(colMinNonZero);
+        // q.erase(q.begin() + colMinNonZero);
+        return false;
+    }
+    return true;
+}
+
+template <typename T>
+void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                          auto &E, llvm::SmallVectorImpl<T> &q,
+                          const size_t numNewVar) {
 
     const auto [M, N] = A.size();
     const size_t K = E.numCol();
@@ -200,7 +264,9 @@ void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b, auto &
     for (size_t o = M + N; o > numNewVar + N;) {
         --o;
         substituteEquality(C, d, o);
-        NormalForm::simplifyEqualityConstraints(C, d);
+        if (C.numCol() > 1) {
+            NormalForm::simplifyEqualityConstraints(C, d);
+        }
     }
 #ifndef NDEBUG
     printVector(std::cout << "M = " << M << "; N = " << N << "; K = " << K
@@ -383,16 +449,36 @@ template <class P, typename T> struct AbstractPolyhedra {
     static inline bool auxMisMatch(intptr_t x, intptr_t y) {
         return (x >= 0) && (y >= 0) && (x != y);
     }
+    // static size_t
+
     // eliminateVarForRCElim(&Adst, &bdst, E1, q1, Asrc, bsrc, E0, q0, i)
     // For `Asrc' * x <= bsrc` and `E0'* x = q0`, eliminates `i`
     // using Fourier–Motzkin elimination, storing the updated equations in
     // `Adst`, `bdst`, `E1`, and `q1`.
-    size_t eliminateVarForRCElim(auto &Adst, llvm::SmallVectorImpl<T> &bdst,
-                                 auto &E1, llvm::SmallVectorImpl<T> &q1,
-                                 const auto &Asrc,
-                                 const llvm::SmallVectorImpl<T> &bsrc, auto &E0,
-                                 llvm::SmallVectorImpl<T> &q0,
-                                 const size_t i) const {
+    bool eliminateVarForRCElim(IntMatrix auto &Adst,
+                               llvm::SmallVectorImpl<T> &bdst,
+                               IntMatrix auto &E1, llvm::SmallVectorImpl<T> &q1,
+                               IntMatrix auto &Asrc,
+                               llvm::SmallVectorImpl<T> &bsrc,
+                               IntMatrix auto &E0, llvm::SmallVectorImpl<T> &q0,
+                               const size_t i) const {
+        if (!substituteEquality(Asrc, bsrc, E0, q0, i)) {
+            const size_t numAuxVar = Asrc.numRow() - getNumVar();
+            size_t c = Asrc.numCol();
+            while (c-- > 0) {
+                size_t s = 0;
+                for (size_t j = 0; j < numAuxVar; ++j) {
+                    s += (Asrc(j, c) != 0);
+                }
+                if (s > 1) {
+                    eraseConstraint(Asrc, bsrc, c);
+                }
+            }
+            if (E0.numCol() > 1) {
+                NormalForm::simplifyEqualityConstraints(E0, q0);
+            }
+            return false;
+        }
         // eliminate variable `i` according to original order
         auto [numExclude, c, numNonZero] =
             eliminateVarForRCElimCore(Adst, bdst, E0, q0, Asrc, bsrc, i);
@@ -411,13 +497,9 @@ template <class P, typename T> struct AbstractPolyhedra {
             Ce - numNonZero + ((numNonZero * (numNonZero - 1)) >> 1);
         E1.resizeForOverwrite(Re, numReserve);
         q1.resize_for_overwrite(numReserve);
-        const size_t numAuxVar = Asrc.numRow() - getNumVar();
         // auxInds are kept sorted
         // TODO: take advantage of the sorting to make iterating&checking more
         // efficient
-        // std::cout << "Constraints prior to eliminateVarForRCElim" <<
-        // std::endl; printConstraints(std::cout, E0, q0, false, numAuxVar);
-        // const size_t numAuxVar = Asrc.numRow() - getNumVar();
         size_t k = 0;
         for (size_t u = 0; u < E0.numCol(); ++u) {
             auto Eu = E0.getCol(u);
@@ -456,38 +538,25 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         E1.resize(Re, k);
         q1.resize(k);
-        // std::cout << "Constraints after eliminateVarForRCElim" << std::endl;
-        // printConstraints(std::cout, E1, q1, false, numAuxVar);
-        // {
-        //     intptr_t lastAux = -1;
-        //     for (size_t c = 0; c < E1.numCol(); ++c) {
-        //         intptr_t auxInd = auxiliaryInd(E1.getCol(c));
-        //         assert(auxInd >= lastAux);
-        //         lastAux = auxInd;
-        //     }
-        // }
-        // simplifyAuxEqualityConstraints(E1, q1);
         NormalForm::simplifyEqualityConstraints(E1, q1);
-        /*std::cout << "Eliminated variable v_" << i - numAuxVar << std::endl;
-        printConstraints(
-                printConstraints(std::cout, Adst, bdst, true, numAuxVar), E1,
-        q1, false, numAuxVar);*/
-        return numExclude;
+        return true;
     }
     // method for when we do not match `Ex=q` constraints with themselves
     // e.g., for removeRedundantConstraints
-    size_t eliminateVarForRCElim(auto &Adst, llvm::SmallVectorImpl<T> &bdst,
-                                 auto &E, llvm::SmallVectorImpl<T> &q,
-                                 const auto &Asrc,
-                                 const llvm::SmallVectorImpl<T> &bsrc,
-                                 const size_t i) const {
+    void eliminateVarForRCElim(IntMatrix auto &Adst,
+                               llvm::SmallVectorImpl<T> &bdst,
+                               IntMatrix auto &E, llvm::SmallVectorImpl<T> &q,
+                               IntMatrix auto &Asrc,
+                               llvm::SmallVectorImpl<T> &bsrc,
+                               const size_t i) const {
 
         auto [numExclude, c, _] =
             eliminateVarForRCElimCore(Adst, bdst, E, q, Asrc, bsrc, i);
         for (size_t u = E.numCol(); u != 0;) {
             if (E(i, --u)) {
-                E.eraseCol(u);
-                q.erase(q.begin() + u);
+                eraseConstraint(E, q, u);
+                // E.eraseCol(u);
+                // q.erase(q.begin() + u);
             }
         }
         if (Adst.numCol() != c) {
@@ -496,7 +565,6 @@ template <class P, typename T> struct AbstractPolyhedra {
         if (bdst.size() != c) {
             bdst.resize(c);
         }
-        return numExclude;
     }
     std::tuple<size_t, size_t, size_t> eliminateVarForRCElimCore(
         auto &Adst, llvm::SmallVectorImpl<T> &bdst, auto &E,
@@ -729,20 +797,6 @@ template <class P, typename T> struct AbstractPolyhedra {
                 return CheckEmpty;
             }
         }
-        /*if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0,
-          btmp1, q, A, b, c)) {
-        // removeRedundantConstraints returns `true` if we are
-        // to drop the bounds `c`
-        std::cout << "c = " << c
-        << " is a redundant constraint!" << std::endl;
-        A.resize(numLoops, c);
-        b.resize(c);
-        } else {
-        std::cout
-        << "c = " << c
-        << " may have removed constraints; now we have: "
-        << A.numCol() << std::endl;
-        }*/
         return false;
     }
     template <size_t CheckEmpty>
@@ -798,79 +852,8 @@ template <class P, typename T> struct AbstractPolyhedra {
 #endif
             pruneBounds(Atmp0, Atmp1, Etmp, btmp0, btmp1, qtmp, A, b);
         }
-        /*if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0,
-          btmp1, q, A, b, c)) {
-        // removeRedundantConstraints returns `true` if we are
-        // to drop the bounds `c`
-        std::cout << "c = " << c
-        << " is a redundant constraint!" << std::endl;
-        A.resize(numLoops, c);
-        b.resize(c);
-        } else {
-        std::cout
-        << "c = " << c
-        << " may have removed constraints; now we have: "
-        << A.numCol() << std::endl;
-        }*/
         return false;
     }
-    /*
-       template <size_t CheckEmpty>
-       bool appendBounds(
-       const auto &lA, const auto &uA, const llvm::SmallVectorImpl<T> &lB,
-       const llvm::SmallVectorImpl<T> &uB, auto &Atmp0, auto &Atmp1,
-       auto &Etmp0, auto &Etmp1, llvm::SmallVectorImpl<T> &btmp0,
-       llvm::SmallVectorImpl<T> &btmp1, llvm::SmallVectorImpl<T> &qtmp0,
-       llvm::SmallVectorImpl<T> &qtmp1, auto &A, llvm::SmallVectorImpl<T> &b,
-       auto &E, llvm::SmallVectorImpl<T> &q, size_t i,
-       Polynomial::Val<CheckEmpty>) const {
-       const size_t numNeg = lB.size();
-       const size_t numPos = uB.size();
-#ifdef EXPENSIVEASSERTS
-for (auto &lb : lB) {
-if (auto c = lb.getCompileTimeConstant()) {
-if (c.getValue() == 0) {
-assert(lb.terms.size() == 0);
-}
-}
-}
-#endif
-auto [numLoops, numCol] = A.size();
-A.reserve(numLoops, numCol + numNeg * numPos);
-b.reserve(numCol + numNeg * numPos);
-for (size_t l = 0; l < numNeg; ++l) {
-for (size_t u = 0; u < numPos; ++u) {
-size_t c = b.size();
-A.resize(numLoops, c + 1);
-b.resize(c + 1);
-if (setBounds(A.getCol(c), b[c], lA.getCol(l), lB[l],
-uA.getCol(u), uB[u], i)) {
-if (removeRedundantConstraints(
-Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
-// removeRedundantConstraints returns `true` if we are
-// to drop the bounds `c`
-std::cout << "c = " << c
-<< " is a redundant constraint!" << std::endl;
-A.resize(numLoops, c);
-b.resize(c);
-} else {
-std::cout
-<< "c = " << c
-<< " may have removed constraints; now we have: "
-<< A.numCol() << std::endl;
-}
-} else if (CheckEmpty && knownLessEqualZero(b[c] + 1)) {
-return true;
-} else {
-A.resize(numLoops, c);
-b.resize(c);
-}
-}
-}
-return false;
-}
-*/
     void pruneBounds() { pruneBounds(A, b); }
     void pruneBounds(auto &Atmp0, auto &Atmp1, auto &E,
                      llvm::SmallVectorImpl<T> &btmp0,
@@ -886,8 +869,9 @@ return false;
             if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q,
                                            Aold, bold, c)) {
                 // drop `c`
-                Aold.eraseCol(c);
-                bold.erase(bold.begin() + c);
+                eraseConstraint(Aold, bold, c);
+                // Aold.eraseCol(c);
+                // bold.erase(bold.begin() + c);
 #ifndef NDEBUG
                 std::cout << "Dropping column c = " << c << "." << std::endl;
             } else {
@@ -905,27 +889,31 @@ return false;
     static void moveEqualities(auto &Aold, llvm::SmallVectorImpl<T> &bold,
                                auto &Eold, llvm::SmallVectorImpl<T> &qold) {
 
-        for (size_t o = Aold.numCol() - 1; o > 0;) {
-            --o;
-            for (size_t i = o + 1; i < Aold.numCol(); ++i) {
-                bool isNeg = true;
-                for (size_t v = 0; v < Aold.numRow(); ++v) {
-                    if (Aold(v, i) != -Aold(v, o)) {
-                        isNeg = false;
+        if (Aold.numCol() > 1) {
+            for (size_t o = Aold.numCol() - 1; o > 0;) {
+                --o;
+                for (size_t i = o + 1; i < Aold.numCol(); ++i) {
+                    bool isNeg = true;
+                    for (size_t v = 0; v < Aold.numRow(); ++v) {
+                        if (Aold(v, i) != -Aold(v, o)) {
+                            isNeg = false;
+                            break;
+                        }
+                    }
+                    if (isNeg && (bold[i] == -bold[o])) {
+                        qold.push_back(bold[i]);
+                        size_t e = Eold.numCol();
+                        Eold.resize(Eold.numRow(), qold.size());
+                        for (size_t v = 0; v < Eold.numRow(); ++v) {
+                            Eold(v, e) = Aold(v, i);
+                        }
+                        eraseConstraint(Aold, bold, i, o);
+                        // Aold.eraseCol(i);
+                        // Aold.eraseCol(o);
+                        // bold.erase(bold.begin() + i);
+                        // bold.erase(bold.begin() + o);
                         break;
                     }
-                }
-                if (isNeg && (bold[i] == -bold[o])) {
-                    qold.push_back(bold[i]);
-                    size_t e = Eold.numCol();
-                    Eold.resize(Eold.numRow(), qold.size());
-                    for (size_t v = 0; v < Eold.numRow(); ++v) {
-                        Eold(v, e) = Aold(v, i);
-                    }
-                    Aold.eraseCol(i);
-                    Aold.eraseCol(o);
-                    bold.erase(bold.begin() + i);
-                    bold.erase(bold.begin() + o);
                 }
             }
         }
@@ -1002,8 +990,9 @@ return false;
                                            Eold, qold, Aold.getCol(c), bold[c],
                                            c, false)) {
                 // drop `c`
-                Aold.eraseCol(c);
-                bold.erase(bold.begin() + c);
+                eraseConstraint(Aold, bold, c);
+                // Aold.eraseCol(c);
+                // bold.erase(bold.begin() + c);
             }
 #ifndef NDEBUG
             std::cout << "\nAold = " << std::endl;
@@ -1084,10 +1073,12 @@ return false;
                 size_t c = boundDiffs[i];
                 boundDiffs.erase(boundDiffs.begin() + i);
                 // *it = c; // redefine to `c`
-                Aold.eraseCol(c);
-                bold.erase(bold.begin() + c);
-                Etmp.eraseCol(i);
-                qtmp.erase(qtmp.begin() + i);
+                eraseConstraint(Aold, bold, c);
+                eraseConstraint(Etmp, qtmp, i);
+                // Aold.eraseCol(c);
+                // bold.erase(bold.begin() + c);
+                // Etmp.eraseCol(i);
+                // qtmp.erase(qtmp.begin() + i);
             }
             colsToErase.clear();
         }
@@ -1158,11 +1149,13 @@ return false;
                 boundDiffs.erase(boundDiffs.begin() + i);
                 // *it = c; // redefine to `c`
                 if ((0 <= c) && (size_t(c) < Aold.numCol())) {
-                    Aold.eraseCol(c);
-                    bold.erase(bold.begin() + c);
+                    eraseConstraint(Aold, bold, c);
+                    // Aold.eraseCol(c);
+                    // bold.erase(bold.begin() + c);
                 }
-                Etmp.eraseCol(i);
-                qtmp.erase(qtmp.begin() + i);
+                eraseConstraint(Etmp, qtmp, i);
+                // Etmp.eraseCol(i);
+                // qtmp.erase(qtmp.begin() + i);
             }
             colsToErase.clear();
         }
@@ -1233,9 +1226,8 @@ return false;
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
             assert(btmp0.size() == Atmp0.numCol());
-            size_t numExcluded =
-                eliminateVarForRCElim(Atmp1, btmp1, E, q, Atmp0, btmp0,
-                                      size_t(dependencyToEliminate));
+            eliminateVarForRCElim(Atmp1, btmp1, E, q, Atmp0, btmp0,
+                                  size_t(dependencyToEliminate));
             assert(btmp1.size() == Atmp1.numCol());
             std::swap(Atmp0, Atmp1);
             std::swap(btmp0, btmp1);
@@ -1310,8 +1302,9 @@ return false;
 #endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
-            Aold.eraseCol(c);
-            bold.erase(bold.begin() + c);
+            eraseConstraint(Aold, bold, c);
+            // Aold.eraseCol(c);
+            // bold.erase(bold.begin() + c);
             // erasePossibleNonUniqueElements(Aold, bold, colsToErase);
         }
         return false;
@@ -1347,24 +1340,27 @@ return false;
                 }
             }
         }
-        for (intptr_t c = 0; c < intptr_t(Eold.numCol()); ++c) {
-            int cc = c + Aold.numCol();
-            if (cc == int(C))
-                continue;
-            unsigned mask = 3;
-            for (size_t v = 0; v < numVar; ++v) {
-                intptr_t av = a(v);
-                intptr_t Evc = Eold(v, c);
-                if ((av != 0) & (Evc != 0)) {
-                    if (((av > 0) == (Evc > 0)) && (mask & 1)) {
-                        boundDiffs.push_back(cc);
-                        mask &= 2;
-                    } else if (mask & 2) {
-                        boundDiffs.push_back(-cc);
-                        mask &= 1;
-                    }
-                    if (mask == 0) {
-                        break;
+        if (!AbIsEq) {
+            // if AbIsEq, would be eliminated via GaussianElimination
+            for (intptr_t c = 0; c < intptr_t(Eold.numCol()); ++c) {
+                int cc = c + Aold.numCol();
+                if (cc == int(C))
+                    continue;
+                unsigned mask = 3;
+                for (size_t v = 0; v < numVar; ++v) {
+                    intptr_t av = a(v);
+                    intptr_t Evc = Eold(v, c);
+                    if ((av != 0) & (Evc != 0)) {
+                        if (((av > 0) == (Evc > 0)) && (mask & 1)) {
+                            boundDiffs.push_back(cc);
+                            mask &= 2;
+                        } else if (mask & 2) {
+                            boundDiffs.push_back(-cc);
+                            mask &= 1;
+                        }
+                        if (mask == 0) {
+                            break;
+                        }
                     }
                 }
             }
@@ -1460,15 +1456,25 @@ return false;
             //         lastAux = auxInd;
             //     }
             // }
-            size_t numExcluded = eliminateVarForRCElim(
-                Atmp1, btmp1, Etmp1, qtmp1, Atmp0, btmp0, Etmp0, qtmp0,
-                size_t(dependencyToEliminate));
+            if (eliminateVarForRCElim(Atmp1, btmp1, Etmp1, qtmp1, Atmp0, btmp0,
+                                      Etmp0, qtmp0,
+                                      size_t(dependencyToEliminate))) {
+                std::swap(Atmp0, Atmp1);
+                std::swap(btmp0, btmp1);
+                std::swap(Etmp0, Etmp1);
+                std::swap(qtmp0, qtmp1);
+#ifndef NDEBUG
+            } else {
+                printConstraints(
+                    printConstraints(std::cout
+                                         << "Eliminated v_"
+                                         << dependencyToEliminate - numAuxVar
+                                         << "; updated Constraints:\n",
+                                     Atmp0, btmp0, true, numAuxVar),
+                    Etmp0, qtmp0, false, numAuxVar);
+#endif
+            }
             assert(btmp1.size() == Atmp1.numCol());
-
-            std::swap(Atmp0, Atmp1);
-            std::swap(btmp0, btmp1);
-            std::swap(Etmp0, Etmp1);
-            std::swap(qtmp0, qtmp1);
             // {
             //     intptr_t lastAux = -1;
             //     for (size_t c = 0; c < Etmp0.numCol(); ++c) {
@@ -1566,9 +1572,9 @@ return false;
 #endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
-
-            Aold.eraseCol(c);
-            bold.erase(bold.begin() + c);
+            eraseConstraint(Aold, bold, c);
+            // Aold.eraseCol(c);
+            // bold.erase(bold.begin() + c);
         }
         // erasePossibleNonUniqueElements(Aold, bold, colsToErase);
         return false;
@@ -1576,10 +1582,11 @@ return false;
 
     void deleteBounds(auto &A, llvm::SmallVectorImpl<T> &b, size_t i) const {
         for (size_t j = b.size(); j != 0;) {
-            --j;
-            if (A(i, j)) {
-                A.eraseCol(j);
-                b.erase(b.begin() + j);
+            // --j;
+            if (A(i, --j)) {
+                eraseConstraint(A, b, j);
+                // A.eraseCol(j);
+                // b.erase(b.begin() + j);
             }
         }
     }
@@ -1665,158 +1672,6 @@ return false;
         categorizeBounds(lA, uA, lb, ub, A, b, i);
         deleteBounds(A, b, i);
         appendBoundsSimple(lA, uA, lb, ub, A, b, i, Polynomial::Val<false>());
-
-        // // lA and uA updated
-        // // now, add E and q
-        // llvm::SmallVector<unsigned, 32> nonZero;
-        // size_t eCol = E.numCol();
-        // for (size_t j = 0; j < eCol; ++j) {
-        //     if (E(i, j))
-        //         nonZero.push_back(j);
-        // }
-        // const size_t numNonZero = nonZero.size();
-        // if (numNonZero == 0)
-        //     return;
-        // size_t C = A.numCol();
-        // assert(E.numCol() == q.size());
-        // size_t reserveIneqCount = C + numNonZero * (lA.numCol() +
-        // uA.numCol()); A.reserve(A.numRow(), reserveIneqCount);
-        // b.reserve(reserveIneqCount);
-        // size_t reserveEqCount = eCol + ((numNonZero * (numNonZero - 1)) >>
-        // 1); E.reserve(E.numRow(), reserveEqCount); q.reserve(reserveEqCount);
-        // // {
-        // //     intptr_t lastAux = -1;
-        // //     for (size_t c = 0; c < E.numCol(); ++c) {
-        // //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
-        // //         assert(auxInd >= lastAux);
-        // //         lastAux = auxInd;
-        // //     }
-        // // }
-        // // assert(E.numCol() == q.size());
-        // auto ito = nonZero.end();
-        // auto itb = nonZero.begin();
-        // do {
-        //     --ito;
-        //     size_t n = *ito;
-        //     PtrVector<intptr_t, 0> En = E.getCol(n);
-        //     // compare E(:,n) with A
-        //     intptr_t Ein = En(i);
-        //     intptr_t sign = (Ein > 0) * 2 - 1;
-        //     for (size_t k = 0; k < En.size(); ++k) {
-        //         En[k] *= sign;
-        //     }
-        //     q[n] *= sign;
-        //     for (size_t k = 0; k < lA.numCol(); ++k) {
-        //         size_t c = b.size();
-        //         A.resize(A.numRow(), c + 1);
-        //         b.resize(c + 1);
-        //         if (setBounds(A.getCol(c), b[c], lA.getCol(k), lb[k], En,
-        //         q[n],
-        //                       i) &&
-        //             uniqueConstraint(A, b, c)) {
-        //             /*if (removeRedundantConstraints(
-        //                     Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-        //                     qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
-        //                 A.resize(A.numRow(), c);
-        //                 b.resize(c);
-        //             } else {
-        //                 std::cout << "Did not remove any redundant "
-        //                              "constraints. c = "
-        //                           << c << std::endl;
-        //                 printConstraints(std::cout, A, b);
-        //             }*/
-        //         } else {
-        //             A.resize(A.numRow(), c);
-        //             b.resize(c);
-        //         }
-        //     }
-        //     // sign *= -1;
-        //     for (size_t k = 0; k < En.size(); ++k) {
-        //         En[k] *= -1;
-        //     }
-        //     q[n] *= -1;
-        //     for (size_t k = 0; k < uA.numCol(); ++k) {
-        //         size_t c = b.size();
-        //         A.resize(A.numRow(), c + 1);
-        //         b.resize(c + 1);
-        //         if (setBounds(A.getCol(c), b[c], En, q[n], uA.getCol(k),
-        //         ub[k],
-        //                       i) &&
-        //             uniqueConstraint(A, b, c)) {
-        //             /*if (removeRedundantConstraints(
-        //                     Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-        //                     qtmp1, A, b, E, q, A.getCol(c), b[c], c)) {
-        //                 A.resize(A.numRow(), c);
-        //                 b.resize(c);
-        //             }*/
-        //         } else {
-        //             A.resize(A.numRow(), c);
-        //             b.resize(c);
-        //         }
-        //     }
-        //     assert(E.numCol() == q.size());
-        //     // here we essentially do Gaussian elimination on `E`
-        //     if (ito != itb) {
-        //         // compare E(:,*ito) with earlier (yet unvisited) columns
-        //         auto iti = itb;
-        //         assert(E.numCol() == q.size());
-        //         while (true) {
-        //             size_t m = *iti;
-        //             PtrVector<intptr_t, 0> Em = E.getCol(m);
-        //             ++iti;
-        //             // it is for the current iteration
-        //             // if iti == ito, this is the last iteration
-        //             size_t d;
-        //             if (iti == ito) {
-        //                 // on the last iteration, we overwrite
-        //                 d = *ito;
-        //             } else {
-        //                 // earlier iterations, we add a new column
-        //                 d = eCol;
-        //                 E.resize(E.numRow(), ++eCol);
-        //                 q.resize(eCol);
-        //             }
-        //             std::cout << "d = " << d << "; *ito = " << *ito
-        //                       << "; C = " << C << std::endl;
-        //             assert(d < E.numCol());
-        //             PtrVector<intptr_t, 0> Ed = E.getCol(d);
-        //             intptr_t g = std::gcd(En[i], Em[i]);
-        //             intptr_t Eng = En[i] / g;
-        //             intptr_t Emg = Em[i] / g;
-        //             for (size_t k = 0; k < E.numRow(); ++k) {
-        //                 Ed[k] = Emg * En[k] - Eng * Em[k];
-        //             }
-        //             std::cout << "q.size() = " << q.size() << "; d = " << d
-        //                       << "; n = " << n << "; E.size() = (" <<
-        //                       E.numRow()
-        //                       << ", " << E.numCol() << ")" << std::endl;
-        //             q[d] = Emg * q[n];
-        //             Polynomial::fnmadd(q[d], q[m], Eng);
-        //             // q[d] = Emg * q[n] - Eng * q[m];
-        //             if (iti == ito) {
-        //                 break;
-        //             } else if (std::ranges::all_of(
-        //                            Ed, [](intptr_t ai) { return ai == 0; }))
-        //                            {
-        //                 // we get rid of the column
-        //                 E.resize(E.numRow(), --eCol);
-        //                 q.resize(eCol);
-        //             }
-        //         };
-        //     } else {
-        //         E.eraseCol(n);
-        //         q.erase(q.begin() + n);
-        //         break;
-        //     }
-        // } while (ito != itb);
-        // // {
-        // //     intptr_t lastAux = -1;
-        // //     for (size_t c = 0; c < E.numCol(); ++c) {
-        // //         intptr_t auxInd = auxiliaryInd(E.getCol(c));
-        // //         assert(auxInd >= lastAux);
-        // //         lastAux = auxInd;
-        // //     }
-        // // }
     }
     void removeVariable(const size_t i) { removeVariable(A, b, i); }
     static void erasePossibleNonUniqueElements(
@@ -1825,18 +1680,20 @@ return false;
         std::ranges::sort(colsToErase);
         for (auto it = std::unique(colsToErase.begin(), colsToErase.end());
              it != colsToErase.begin();) {
-            --it;
-            A.eraseCol(*it);
-            b.erase(b.begin() + (*it));
+            // --it;
+            eraseConstraint(A, b, *(--it));
+            // A.eraseCol(*it);
+            // b.erase(b.begin() + (*it));
         }
     }
     void dropEmptyConstraints() {
         const size_t numConstraints = getNumConstraints();
         for (size_t c = numConstraints; c != 0;) {
-            --c;
-            if (allZero(A.getCol(c))) {
-                A.eraseCol(c);
-                b.erase(b.begin() + c);
+            // --c;
+            if (allZero(A.getCol(--c))) {
+                eraseConstraint(A, b, c);
+                // A.eraseCol(c);
+                // b.erase(b.begin() + c);
             }
         }
     }

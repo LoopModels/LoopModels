@@ -62,6 +62,7 @@ struct LoopBlock {
             const PtrVector<intptr_t, 0> inOmega = schIn.getOmega();
             const PtrVector<intptr_t, 0> outOmega = schOut.getOmega();
 
+	    // when i == numLoopsCommon, we've passed the last loop
             for (size_t i = 0; i <= numLoopsCommon; ++i) {
                 if (intptr_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
                     return (o2idiff > 0);
@@ -104,7 +105,13 @@ struct LoopBlock {
                     return false;
                 }
             }
-            return true;
+	    assert(false);
+	    return false;
+        }
+        friend std::ostream &operator<<(std::ostream &os, const Edge &e) {
+
+            os << *(e.in->ref) << "-> \n" << *(e.out->ref);
+            return os;
         }
     };
 

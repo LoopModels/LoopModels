@@ -360,5 +360,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     lblock.fillEdges();
     std::cout << "Number of edges found: " << lblock.edges.size() << std::endl;
+    for (auto &e : lblock.edges){
+	std::cout << "Edge:\n" << e << "\n" << std::endl;
+    }
 }
 

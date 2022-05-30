@@ -7,9 +7,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(benchmark)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=restrict")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --save-temps=obj")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --save-temps=obj")
 
 add_executable(
   polynomial_benchmark

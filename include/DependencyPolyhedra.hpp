@@ -432,7 +432,20 @@ struct MemoryAccess {
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     size_t getNumLoops() const { return ref->getNumLoops(); }
+
+
 };
+
+std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
+    if (m.isLoad) {
+        os << "= ";
+    }
+    os << *(m.ref);
+    if (!m.isLoad) {
+        os << " =";
+    }
+    return os;
+}
 
 struct Dependence {
     DependencePolyhedra depPoly;
