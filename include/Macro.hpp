@@ -5,7 +5,8 @@
 #else
 #define MULTIVERSION                                                           \
     __attribute__((target_clones(                                              \
-        "arch=skylake-avx512,arch=cascadelake,arch=icelake-client,arch=tigerlake,"    \
-        "arch=icelake-server,arch=sapphirerapids,arch=cooperlake",              \
+        "arch=skylake-avx512,arch=cascadelake,arch=icelake-client,arch="       \
+        "tigerlake,"                                                           \
+        "arch=icelake-server,arch=sapphirerapids,arch=cooperlake",             \
         "avx2", "default")))
 #endif
