@@ -18,7 +18,7 @@
 //     llvm::SmallVector<intptr_t, 8> q(4);
 
 // }
-
+/*
 TEST(DependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
@@ -200,7 +200,7 @@ TEST(IndependentTest, BasicAssertions) {
         Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
 }
-
+*/
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
@@ -311,57 +311,151 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = B(m,n); // sch2
+    //     // sch.Omega = [ 0, _, 0, _, {0-1} ]
+    //     A(m,n) = B(m,n); // sch2_0_{0-1}
     //   }
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = A(m,n) / U(n,n); // sch2
+    //     // sch.Omega = [ 0, _, 1, _, {0-2} ]
+    //     A(m,n) = A(m,n) / U(n,n); // sch2_2_{0-2}
     //     for (k = n+1; k < N; ++k){
-    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3
+    //       // sch.Omega = [ 0, _, 1, _, 3, _, {0-3} ]
+    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3_{0-3}
     //     }
     //   }
     // }
-    Schedule sch2(2);
-    SquarePtrMatrix<intptr_t> Phi2 = sch2.getPhi();
+    Schedule sch2_0_0(2);
+    SquarePtrMatrix<intptr_t> Phi2 = sch2_0_0.getPhi();
     // Phi0 = [1 0; 0 1]
     Phi2(0, 0) = 1;
     Phi2(1, 1) = 1;
+    Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
-    lblock.memory.emplace_back(&(lblock.refs[BmnInd]), nullptr, sch2, true);
-    sch2.getOmega()[4] = 1;
+    lblock.memory.emplace_back(&(lblock.refs[BmnInd]), nullptr, sch2_0_0, true);
+    sch2_0_1.getOmega()[4] = 1;
+    Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, false);
-    sch2.getOmega()[2] = 1;
-    sch2.getOmega()[4] = 0;
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_0_1,
+                               false);
+    sch2_1_0.getOmega()[2] = 1;
+    sch2_1_0.getOmega()[4] = 0;
+    Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, true);
-    sch2.getOmega()[4] = 1;
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_1_0,
+                               true);
+    sch2_1_1.getOmega()[4] = 1;
+    Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
-    lblock.memory.emplace_back(&(lblock.refs[UnnInd]), nullptr, sch2, true);
-    sch2.getOmega()[4] = 2;
+    lblock.memory.emplace_back(&(lblock.refs[UnnInd]), nullptr, sch2_1_1, true);
+    sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2, false);
+    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_1_2,
+                               false);
 
-    Schedule sch3(3);
-    SquarePtrMatrix<intptr_t> Phi3 = sch3.getPhi();
+    Schedule sch3_0(3);
+    sch3_0.getOmega()[2] = 1;
+    sch3_0.getOmega()[4] = 3;
+    SquarePtrMatrix<intptr_t> Phi3 = sch3_0.getPhi();
     Phi3(0, 0) = 1;
     Phi3(1, 1) = 1;
     Phi3(2, 2) = 1;
+    Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
-    lblock.memory.emplace_back(&(lblock.refs[UnkInd]), nullptr, sch3, true);
-    sch3.getOmega()[6] = 1;
+    lblock.memory.emplace_back(&(lblock.refs[UnkInd]), nullptr, sch3_0, true);
+    sch3_1.getOmega()[6] = 1;
+    Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[Amn3Ind]), nullptr, sch3, true);
-    sch3.getOmega()[6] = 2;
+    lblock.memory.emplace_back(&(lblock.refs[Amn3Ind]), nullptr, sch3_1, true);
+    sch3_2.getOmega()[6] = 2;
+    Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3, true);
-    sch3.getOmega()[6] = 3;
+    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3_2, true);
+    sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3, false);
+    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3_3, false);
 
+    // for (m = 0; m < M; ++m){
+    //   for (n = 0; n < N; ++n){
+    //     A(m,n) = B(m,n); // sch2_0_{0-1}
+    //   }
+    //   for (n = 0; n < N; ++n){
+    //     A(m,n) = A(m,n) / U(n,n); // sch2_2_{0-2}
+    //     for (k = n+1; k < N; ++k){
+    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3_{0-3}
+    //     }
+    //   }
+    // }
+
+    // First, comparisons of store to `A(m,n) = B(m,n)` versus...
+    ArrayReference &Amn2 = lblock.refs[Amn2Ind];
+    ArrayReference &Amn3 = lblock.refs[Amn3Ind];
+    ArrayReference &Amk = lblock.refs[AmkInd];
+    // load in `A(m,n) = A(m,n) / U(n,n)`
+    llvm::Optional<Dependence> d00(
+        Dependence::check(Amn2, sch2_0_1, Amn2, sch2_1_0));
+    EXPECT_TRUE(d00.hasValue());
+    EXPECT_TRUE(d00.getValue().isForward());
+    //
+    //
+    // store in `A(m,n) = A(m,n) / U(n,n)`
+    llvm::Optional<Dependence> d01(
+        Dependence::check(Amn2, sch2_0_1, Amn2, sch2_1_2));
+    EXPECT_TRUE(d01.hasValue());
+    EXPECT_TRUE(d01.getValue().isForward());
+
+    //
+    // sch3_               3        0         1     2
+    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+
+    llvm::Optional<Dependence> d02(
+        Dependence::check(Amn2, sch2_0_1, Amn3, sch3_1));
+    EXPECT_TRUE(d02.hasValue());
+    EXPECT_TRUE(d02.getValue().isForward());
+    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    //
+    llvm::Optional<Dependence> d03(
+        Dependence::check(Amn2, sch2_0_1, Amk, sch3_0));
+    EXPECT_TRUE(d03.hasValue());
+    EXPECT_TRUE(d03.getValue().isForward());
+    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d04(
+        Dependence::check(Amn2, sch2_0_1, Amk, sch3_3));
+    EXPECT_TRUE(d04.hasValue());
+    EXPECT_TRUE(d04.getValue().isForward());
+
+    // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
+    // with...
+    //
+    // store in `A(m,n) = A(m,n) / U(n,n)`
+    llvm::Optional<Dependence> d11(
+        Dependence::check(Amn2, sch2_1_0, Amn2, sch2_1_2));
+    EXPECT_TRUE(d01.hasValue());
+    EXPECT_TRUE(d01.getValue().isForward());
+
+    //
+    // sch3_               3        0         1     2
+    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d12(
+        Dependence::check(Amn2, sch2_1_0, Amn3, sch3_1));
+    EXPECT_TRUE(d12.hasValue());
+    EXPECT_TRUE(d12.getValue().isForward());
+    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d13(
+        Dependence::check(Amn2, sch2_1_0, Amk, sch3_0));
+    EXPECT_TRUE(d13.hasValue());
+    EXPECT_FALSE(d13.getValue().isForward());
+    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d14(
+        Dependence::check(Amn2, sch2_1_0, Amk, sch3_3));
+    EXPECT_TRUE(d14.hasValue());
+    EXPECT_FALSE(d14.getValue().isForward());
+
+
+    /*
     lblock.fillEdges();
     std::cout << "Number of edges found: " << lblock.edges.size() << std::endl;
-    for (auto &e : lblock.edges){
-	std::cout << "Edge:\n" << e << "\n" << std::endl;
+    EXPECT_EQ(lblock.edges.size(), 12);
+    for (auto &e : lblock.edges) {
+        std::cout << "Edge:\n" << e << "\n" << std::endl;
     }
+    */
 }
-

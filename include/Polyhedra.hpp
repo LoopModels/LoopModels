@@ -14,6 +14,53 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
+// prints in current permutation order.
+// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
+// in which case, we have to remove `currentToOriginalPerm`,
+// which menas either change printing, or move prints `<<` into
+// the derived classes.
+template <typename T>
+static std::ostream &
+printConstraints(std::ostream &os, PtrMatrix<const intptr_t> A,
+                 const llvm::SmallVectorImpl<T> &b, bool inequality = true,
+                 size_t numAuxVar = 0) {
+    const auto [numVar, numConstraints] = A.size();
+    for (size_t c = 0; c < numConstraints; ++c) {
+        bool hasPrinted = false;
+        for (size_t v = 0; v < numVar; ++v) {
+            if (intptr_t Avc = A(v, c)) {
+                if (hasPrinted) {
+                    if (Avc > 0) {
+                        os << " + ";
+                    } else {
+                        os << " - ";
+                        Avc *= -1;
+                    }
+                }
+                if (Avc != 1) {
+                    if (Avc == -1) {
+                        os << "-";
+                    } else {
+                        os << Avc;
+                    }
+                }
+                if (v >= numAuxVar) {
+                    os << "v_" << v - numAuxVar;
+                } else {
+                    os << "d_" << v;
+                }
+                hasPrinted = true;
+            }
+        }
+        if (inequality) {
+            os << " <= ";
+        } else {
+            os << " == ";
+        }
+        os << b[c] << std::endl;
+    }
+    return os;
+}
 // does not preserve the order of columns, instead it swaps the `i`th column
 // to the last, and truncates.
 template <typename T>
@@ -277,6 +324,7 @@ void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
             NormalForm::simplifyEqualityConstraints(C, d);
         }
     }
+    /*
 #ifndef NDEBUG
     printVector(std::cout << "M = " << M << "; N = " << N << "; K = " << K
                           << "; C =\n"
@@ -284,6 +332,7 @@ void removeExtraVariables(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
                 d)
         << std::endl;
 #endif
+*/
     A.resizeForOverwrite(numNewVar, N);
     b.resize_for_overwrite(N);
     size_t nC = 0, nA = 0, i = 0;
@@ -787,17 +836,21 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
+        /*
 #ifndef NDEBUG
         std::cout << "\n in AppendBounds, about to pruneBounds" << std::endl;
         printConstraints(
             printConstraints(std::cout, A, b, true, A.numRow() - getNumVar()),
             E, q, false, A.numRow() - getNumVar());
 #endif
+*/
         if (A.numCol()) {
-#ifndef NDEBUG
-            std::cout << "CheckEmpty = " << CheckEmpty
-                      << "; A.numCol() = " << A.numCol() << std::endl;
-#endif
+            /*
+            #ifndef NDEBUG
+                        std::cout << "CheckEmpty = " << CheckEmpty
+                                  << "; A.numCol() = " << A.numCol() <<
+            std::endl; #endif
+            */
             if (pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
                             qtmp1, A, b, E, q)) {
                 return CheckEmpty;
@@ -847,15 +900,19 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
+        /*
 #ifndef NDEBUG
         std::cout << "\n in AppendBounds, about to pruneBounds" << std::endl;
         printConstraints(std::cout, A, b, true, A.numRow() - getNumVar());
 #endif
+*/
         if (A.numCol()) {
-#ifndef NDEBUG
-            std::cout << "CheckEmpty = " << CheckEmpty
-                      << "; A.numCol() = " << A.numCol() << std::endl;
-#endif
+            /*
+            #ifndef NDEBUG
+                        std::cout << "CheckEmpty = " << CheckEmpty
+                                  << "; A.numCol() = " << A.numCol() <<
+            std::endl; #endif
+            */
             pruneBounds(Atmp0, Atmp1, Etmp, btmp0, btmp1, qtmp, A, b);
         }
         return false;
@@ -878,11 +935,13 @@ template <class P, typename T> struct AbstractPolyhedra {
                 eraseConstraint(Aold, bold, c);
                 // Aold.eraseCol(c);
                 // bold.erase(bold.begin() + c);
-#ifndef NDEBUG
-                std::cout << "Dropping column c = " << c << "." << std::endl;
-            } else {
-                std::cout << "Keeping column c = " << c << "." << std::endl;
-#endif
+                //#ifndef NDEBUG
+                //                std::cout << "Dropping column c = " << c <<
+                //                "." << std::endl;
+                //            } else {
+                //                std::cout << "Keeping column c = " << c << "."
+                //                << std::endl;
+                //#endif
             }
         }
     }
@@ -943,11 +1002,12 @@ template <class P, typename T> struct AbstractPolyhedra {
                      llvm::SmallVectorImpl<T> &qold) const {
         moveEqualities(Aold, bold, Eold, qold);
         NormalForm::simplifyEqualityConstraints(Eold, qold);
-#ifndef NDEBUG
-        printConstraints(printConstraints(std::cout << "About to pruneBounds\n",
-                                          Aold, bold, true),
-                         Eold, qold, false);
-#endif
+        //#ifndef NDEBUG
+        //        printConstraints(printConstraints(std::cout << "About to
+        //        pruneBounds\n",
+        //                                          Aold, bold, true),
+        //                         Eold, qold, false);
+        //#endif
         for (size_t i = 0; i < Eold.numCol(); ++i) {
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
@@ -955,9 +1015,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                                            Aold.numCol() + i, true)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
-#ifndef NDEBUG
-                std::cout << "Oops!!!" << std::endl;
-#endif
+                //#ifndef NDEBUG
+                //                std::cout << "Oops!!!" << std::endl;
+                //#endif
                 return true;
             }
             // flip
@@ -971,26 +1031,27 @@ template <class P, typename T> struct AbstractPolyhedra {
                                            Aold.numCol() + i, true)) {
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
-#ifndef NDEBUG
-                std::cout << "Oops!!!" << std::endl;
-#endif
+                //#ifndef NDEBUG
+                //                std::cout << "Oops!!!" << std::endl;
+                //#endif
                 return true;
             }
-#ifndef NDEBUG
-            std::cout << "E-Elim" << std::endl;
-            printConstraints(std::cout, Aold, bold, true);
-            printConstraints(std::cout, Eold, qold, false);
-#endif
+            //#ifndef NDEBUG
+            //            std::cout << "E-Elim" << std::endl;
+            //            printConstraints(std::cout, Aold, bold, true);
+            //            printConstraints(std::cout, Eold, qold, false);
+            //#endif
         }
         assert(Aold.numCol() == bold.size());
         for (size_t i = 0; i + 1 <= Aold.numCol(); ++i) {
             size_t c = Aold.numCol() - 1 - i;
             assert(Aold.numCol() == bold.size());
-#ifndef NDEBUG
-            std::cout << "Aold.numCol() = " << Aold.numCol()
-                      << "; bold.size() = " << bold.size() << "; c = " << c
-                      << std::endl;
-#endif
+            //#ifndef NDEBUG
+            //            std::cout << "Aold.numCol() = " << Aold.numCol()
+            //                      << "; bold.size() = " << bold.size() << "; c
+            //                      = " << c
+            //                      << std::endl;
+            //#endif
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
                                            Eold, qold, Aold.getCol(c), bold[c],
@@ -1000,10 +1061,10 @@ template <class P, typename T> struct AbstractPolyhedra {
                 // Aold.eraseCol(c);
                 // bold.erase(bold.begin() + c);
             }
-#ifndef NDEBUG
-            std::cout << "\nAold = " << std::endl;
-            printConstraints(std::cout, Aold, bold, true);
-#endif
+            //#ifndef NDEBUG
+            //            std::cout << "\nAold = " << std::endl;
+            //            printConstraints(std::cout, Aold, bold, true);
+            //#endif
         }
         return false;
     }
@@ -1283,29 +1344,29 @@ template <class P, typename T> struct AbstractPolyhedra {
             //     }
             // }
         }
-#ifndef NDEBUG
-        const size_t CHECK = C;
-        if (C == CHECK) {
-            std::cout << "### CHECKING ### C = " << CHECK
-                      << " ###\nboundDiffs = [ ";
-            for (auto &c : boundDiffs) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "colsToErase = [ ";
-            for (auto &c : colsToErase) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "a = [ ";
-            for (auto &c : a) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "b = " << b << std::endl;
-            printConstraints(std::cout, Aold, bold, true);
-        }
-#endif
+        //#ifndef NDEBUG
+        //        const size_t CHECK = C;
+        //        if (C == CHECK) {
+        //            std::cout << "### CHECKING ### C = " << CHECK
+        //                      << " ###\nboundDiffs = [ ";
+        //            for (auto &c : boundDiffs) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "colsToErase = [ ";
+        //            for (auto &c : colsToErase) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "a = [ ";
+        //            for (auto &c : a) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "b = " << b << std::endl;
+        //            printConstraints(std::cout, Aold, bold, true);
+        //        }
+        //#endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
             eraseConstraint(Aold, bold, c);
@@ -1326,13 +1387,13 @@ template <class P, typename T> struct AbstractPolyhedra {
         const size_t numVar = getNumVar();
         // simple mapping of `k` to particular bounds
         // we'll have C - other bound
-#ifndef NDEBUG
-        std::cout << "a = [";
-        for (auto &ai : a) {
-            std::cout << ai << ", ";
-        }
-        std::cout << "]; b = " << b << std::endl;
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "a = [";
+        //        for (auto &ai : a) {
+        //            std::cout << ai << ", ";
+        //        }
+        //        std::cout << "]; b = " << b << std::endl;
+        //#endif
         llvm::SmallVector<int, 16> boundDiffs;
         for (size_t c = 0; c < Aold.numCol(); ++c) {
             if (c == C)
@@ -1419,17 +1480,17 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             qtmp0[j] = qold[i];
         }
-#ifndef NDEBUG
-        std::cout << "Removing Redundant Constraints ### C = " << C
-                  << " ###\nboundDiffs = [ ";
-        for (auto &c : boundDiffs) {
-            std::cout << c << ", ";
-        }
-        std::cout << "]" << std::endl;
-        printConstraints(
-            printConstraints(std::cout, Atmp0, btmp0, true, numAuxVar), Etmp0,
-            qtmp0, false, numAuxVar);
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "Removing Redundant Constraints ### C = " << C
+        //                  << " ###\nboundDiffs = [ ";
+        //        for (auto &c : boundDiffs) {
+        //            std::cout << c << ", ";
+        //        }
+        //        std::cout << "]" << std::endl;
+        //        printConstraints(
+        //            printConstraints(std::cout, Atmp0, btmp0, true,
+        //            numAuxVar), Etmp0, qtmp0, false, numAuxVar);
+        //#endif
         // intptr_t dependencyToEliminate = -1;
         // fill Etmp0 with bound diffs
         // define variables as
@@ -1469,16 +1530,20 @@ template <class P, typename T> struct AbstractPolyhedra {
                 std::swap(btmp0, btmp1);
                 std::swap(Etmp0, Etmp1);
                 std::swap(qtmp0, qtmp1);
-#ifndef NDEBUG
-            } else {
-                printConstraints(
-                    printConstraints(std::cout
-                                         << "Eliminated v_"
-                                         << dependencyToEliminate - numAuxVar
-                                         << "; updated Constraints:\n",
-                                     Atmp0, btmp0, true, numAuxVar),
-                    Etmp0, qtmp0, false, numAuxVar);
-#endif
+                //#ifndef NDEBUG
+                //            } else {
+                //                printConstraints(
+                //                    printConstraints(std::cout
+                //                                         << "Eliminated v_"
+                //                                         <<
+                //                                         dependencyToEliminate
+                //                                         - numAuxVar
+                //                                         << "; updated
+                //                                         Constraints:\n",
+                //                                     Atmp0, btmp0, true,
+                //                                     numAuxVar),
+                //                    Etmp0, qtmp0, false, numAuxVar);
+                //#endif
             }
             assert(btmp1.size() == Atmp1.numCol());
             // {
@@ -1498,13 +1563,15 @@ template <class P, typename T> struct AbstractPolyhedra {
                 intptr_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     intptr_t auxInd = auxiliaryInd(Ac);
-#ifndef NDEBUG
-                    std::cout
-                        << "auxInd = " << auxInd << "; knownLessEqualZero("
-                        << btmp0[c] << ") = "
-                        << (knownLessEqualZero(btmp0[c]) ? "true" : "false")
-                        << std::endl;
-#endif
+                    //#ifndef NDEBUG
+                    //                    std::cout
+                    //                        << "auxInd = " << auxInd << ";
+                    //                        knownLessEqualZero("
+                    //                        << btmp0[c] << ") = "
+                    //                        << (knownLessEqualZero(btmp0[c]) ?
+                    //                        "true" : "false")
+                    //                        << std::endl;
+                    //#endif
                     // FIXME: does knownLessEqualZero(btmp0[c]) always
                     // return `true` when `allZero(bold)`???
                     if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
@@ -1520,12 +1587,15 @@ template <class P, typename T> struct AbstractPolyhedra {
                         } else if ((!AbIsEq) ||
                                    knownLessEqualZero(btmp0[c] - 1)) {
                             // lower bound
-#ifndef NDEBUG
-                            std::cout
-                                << "Col to erase, C = " << C
-                                << "; obsoleted by: " << boundDiffs[auxInd]
-                                << std::endl;
-#endif
+                            //#ifndef NDEBUG
+                            //                            std::cout
+                            //                                << "Col to erase,
+                            //                                C = " << C
+                            //                                << "; obsoleted
+                            //                                by: " <<
+                            //                                boundDiffs[auxInd]
+                            //                                << std::endl;
+                            //#endif
                             return true;
                         }
                     }
@@ -1552,30 +1622,30 @@ template <class P, typename T> struct AbstractPolyhedra {
             //     }
             // }
         }
-#ifndef NDEBUG
-        const size_t CHECK = C;
-        if (C == CHECK) {
-            std::cout << "### CHECKING ### C = " << CHECK
-                      << " ###\nboundDiffs = [ ";
-            for (auto &c : boundDiffs) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "colsToErase = [ ";
-            for (auto &c : colsToErase) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "a = [ ";
-            for (auto &c : a) {
-                std::cout << c << ", ";
-            }
-            std::cout << "]" << std::endl;
-            std::cout << "b = " << b << std::endl;
-            printConstraints(std::cout, Aold, bold, true);
-            printConstraints(std::cout, Eold, qold, false);
-        }
-#endif
+        //#ifndef NDEBUG
+        //        const size_t CHECK = C;
+        //        if (C == CHECK) {
+        //            std::cout << "### CHECKING ### C = " << CHECK
+        //                      << " ###\nboundDiffs = [ ";
+        //            for (auto &c : boundDiffs) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "colsToErase = [ ";
+        //            for (auto &c : colsToErase) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "a = [ ";
+        //            for (auto &c : a) {
+        //                std::cout << c << ", ";
+        //            }
+        //            std::cout << "]" << std::endl;
+        //            std::cout << "b = " << b << std::endl;
+        //            printConstraints(std::cout, Aold, bold, true);
+        //            printConstraints(std::cout, Eold, qold, false);
+        //        }
+        //#endif
         if (colsToErase.size()) {
             size_t c = colsToErase.front();
             eraseConstraint(Aold, bold, c);
@@ -1633,10 +1703,11 @@ template <class P, typename T> struct AbstractPolyhedra {
     bool removeVariable(auto &A, llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
-#ifndef NDEBUG
-        std::cout << "Removing variable: " << i << std::endl;
-        printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "Removing variable: " << i << std::endl;
+        //        printConstraints(printConstraints(std::cout, A, b, true), E,
+        //        q, false);
+        //#endif
         if (substituteEquality(A, b, E, q, i)) {
             Matrix<intptr_t, 0, 0, 0> lA;
             Matrix<intptr_t, 0, 0, 0> uA;
@@ -1654,10 +1725,11 @@ template <class P, typename T> struct AbstractPolyhedra {
                         llvm::SmallVectorImpl<T> &b, auto &E,
                         llvm::SmallVectorImpl<T> &q, const size_t i) {
 
-#ifndef NDEBUG
-        std::cout << "Removing variable: " << i << std::endl;
-        printConstraints(printConstraints(std::cout, A, b, true), E, q, false);
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "Removing variable: " << i << std::endl;
+        //        printConstraints(printConstraints(std::cout, A, b, true), E,
+        //        q, false);
+        //#endif
         if (substituteEquality(A, b, E, q, i)) {
             removeVariableCore(lA, uA, lb, ub, A, b, E, q, i);
         }
@@ -1703,63 +1775,17 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
         }
     }
-    // prints in current permutation order.
-    // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
-    // in which case, we have to remove `currentToOriginalPerm`,
-    // which menas either change printing, or move prints `<<` into
-    // the derived classes.
-    static std::ostream &printConstraints(std::ostream &os, const auto &A,
-                                          const llvm::ArrayRef<T> b,
-                                          bool inequality = true,
-                                          size_t numAuxVar = 0) {
-        const auto [numVar, numConstraints] = A.size();
-        for (size_t c = 0; c < numConstraints; ++c) {
-            bool hasPrinted = false;
-            for (size_t v = 0; v < numVar; ++v) {
-                if (intptr_t Avc = A(v, c)) {
-                    if (hasPrinted) {
-                        if (Avc > 0) {
-                            os << " + ";
-                        } else {
-                            os << " - ";
-                            Avc *= -1;
-                        }
-                    }
-                    if (Avc != 1) {
-                        if (Avc == -1) {
-                            os << "-";
-                        } else {
-                            os << Avc;
-                        }
-                    }
-                    if (v >= numAuxVar) {
-                        os << "v_" << v - numAuxVar;
-                    } else {
-                        os << "d_" << v;
-                    }
-                    hasPrinted = true;
-                }
-            }
-            if (inequality) {
-                os << " <= ";
-            } else {
-                os << " == ";
-            }
-            os << b[c] << std::endl;
-        }
-        return os;
-    }
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractPolyhedra<P, T> &p) {
-        return p.printConstraints(os, p.A, p.b);
+        return printConstraints(os, p.A, p.b);
     }
     void dump() const { std::cout << *this; }
 
     bool isEmpty() {
         // inefficient (compared to ILP + Farkas Lemma approach)
-#ifndef NDEBUG
-        std::cout << "calling isEmpty()" << std::endl;
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "calling isEmpty()" << std::endl;
+        //#endif
         auto copy = *static_cast<const P *>(this);
         Matrix<intptr_t, 0, 0, 0> lA;
         Matrix<intptr_t, 0, 0, 0> uA;
@@ -1871,8 +1897,8 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractEqualityPolyhedra<P, T> &p) {
-        return p.printConstraints(p.printConstraints(os, p.A, p.b, true), p.E,
-                                  p.q, false);
+        return printConstraints(printConstraints(os, p.A, p.b, true), p.E, p.q,
+                                false);
     }
 };
 

@@ -151,15 +151,17 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t nc = nc0 + nc1;
         A.resize(nv0 + nv1, nc);
         E.resize(nv0 + nv1, dims.size());
+        // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
             for (size_t j = 0; j < nv0; ++j) {
                 A(j, i) = ar0.loop->A(j, i);
             }
             b.push_back(ar0.loop->b[i]);
         }
+        // ar1 loop
         for (size_t i = 0; i < nc1; ++i) {
             for (size_t j = 0; j < nv1; ++j) {
-                A(nv0 + j, nc0 + i) = ar0.loop->A(j, i);
+                A(nv0 + j, nc0 + i) = ar1.loop->A(j, i);
             }
             b.push_back(ar1.loop->b[i]);
         }
@@ -221,16 +223,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             // b.push_back(std::move(bound));
         }
 #ifndef NDEBUG
-        std::cout << "About to pruneBounds\nA = \n"
-                  << A << "\nb = " << std::endl;
-        for (auto &bi : b) {
-            std::cout << bi << ", ";
-        }
-        std::cout << "\nE = \n" << E << "\nq = " << std::endl;
-        for (auto &qi : q) {
-            std::cout << qi << ", ";
-        }
-        std::cout << std::endl;
+        printConstraints(printConstraints(std::cout, A, b, true), E, q, false)
+            << std::endl;
 #endif
         if (pruneBounds()) {
             A.clear();
@@ -382,9 +376,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numVarKeep + i, numBoundingCoefs + i) = -1;
         }
-#ifndef NDEBUG
-        std::cout << "Af = \n" << Af << std::endl;
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "Af = \n" << Af << std::endl;
+        //#endif
         removeExtraVariables(Af, bf, Ef, qf, numVarKeep);
         IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
                                  std::move(qf));

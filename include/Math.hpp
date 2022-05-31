@@ -696,6 +696,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     operator PtrMatrix<T>() {
         return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
     }
+    operator PtrMatrix<const T>() const {
+        return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
+    }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
