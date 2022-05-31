@@ -2,9 +2,9 @@
 
 #include "./Macro.hpp"
 #include "./Math.hpp"
+#include "./NormalForm.hpp"
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
-#include "NormalForm.hpp"
 #include <algorithm>
 #include <any>
 #include <bits/ranges_algo.h>
@@ -63,17 +63,41 @@ printConstraints(std::ostream &os, PtrMatrix<const intptr_t> A,
 }
 // does not preserve the order of columns, instead it swaps the `i`th column
 // to the last, and truncates.
-template <typename T>
-static void eraseConstraint(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
-                            size_t i) {
+MULTIVERSION static void eraseConstraintImpl(PtrMatrix<intptr_t> A,
+                                             llvm::SmallVectorImpl<intptr_t> &b,
+                                             size_t i) {
     const auto [M, N] = A.size();
     const size_t lastCol = N - 1;
     if (lastCol != i) {
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
         for (size_t m = 0; m < M; ++m) {
             A(m, i) = A(m, lastCol);
         }
         b[i] = b[lastCol];
     }
+}
+MULTIVERSION static void eraseConstraintImpl(PtrMatrix<intptr_t> A,
+                                             llvm::SmallVectorImpl<MPoly> &b,
+                                             size_t i) {
+    const auto [M, N] = A.size();
+    const size_t lastCol = N - 1;
+    if (lastCol != i) {
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+        for (size_t m = 0; m < M; ++m) {
+            A(m, i) = A(m, lastCol);
+        }
+        b[i] = b[lastCol];
+    }
+}
+template <typename T>
+static void eraseConstraint(IntMatrix auto &A, llvm::SmallVectorImpl<T> &b,
+                            size_t i) {
+    eraseConstraintImpl(A, b, i);
+    const size_t lastCol = A.numCol() - 1;
     A.truncateColumns(lastCol);
     b.truncate(lastCol);
 }
@@ -134,20 +158,36 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<MPoly> &q,
     intptr_t Eis = Es[i];
     // we now subsitute the equality expression with the minimum number
     // of terms.
-    for (size_t j = 0; j < numColE; ++j) {
-        if (j == colMinNonZero)
-            continue;
-        if (intptr_t Eij = E(i, j)) {
-            intptr_t g = std::gcd(Eij, Eis);
-            intptr_t Ag = Eij / g;
-            intptr_t Eg = Eis / g;
+    if (std::abs(Eis) == 1) {
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
 #pragma clang loop unroll(disable)
 #pragma clang loop vectorize(enable)
 #pragma clang loop vectorize_predicate(enable)
-            for (size_t v = 0; v < numVar; ++v) {
-                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eis * E(v, j) - Eij * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eis, q[colMinNonZero], Eij);
             }
-            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    } else {
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
+                intptr_t g = std::gcd(Eij, Eis);
+                intptr_t Ag = Eij / g;
+                intptr_t Eg = Eis / g;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+            }
         }
     }
     return colMinNonZero;
@@ -181,20 +221,36 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E,
     intptr_t Eis = Es[i];
     // we now subsitute the equality expression with the minimum number
     // of terms.
-    for (size_t j = 0; j < numColE; ++j) {
-        if (j == colMinNonZero)
-            continue;
-        if (intptr_t Eij = E(i, j)) {
-            intptr_t g = std::gcd(Eij, Eis);
-            intptr_t Ag = Eij / g;
-            intptr_t Eg = Eis / g;
+    if (std::abs(Eis) == 1) {
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
 #pragma clang loop unroll(disable)
 #pragma clang loop vectorize(enable)
 #pragma clang loop vectorize_predicate(enable)
-            for (size_t v = 0; v < numVar; ++v) {
-                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eis * E(v, j) - Eij * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eis, q[colMinNonZero], Eij);
             }
-            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    } else {
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
+                intptr_t g = std::gcd(Eij, Eis);
+                intptr_t Ag = Eij / g;
+                intptr_t Eg = Eis / g;
+#pragma clang loop unroll(disable)
+#pragma clang loop vectorize(enable)
+#pragma clang loop vectorize_predicate(enable)
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+            }
         }
     }
     return colMinNonZero;
@@ -241,31 +297,56 @@ substituteEqualityImpl(PtrMatrix<intptr_t> A, llvm::SmallVectorImpl<T> &b,
     intptr_t s = 2 * (Eis > 0) - 1;
     // we now subsitute the equality expression with the minimum number
     // of terms.
-    for (size_t j = 0; j < A.numCol(); ++j) {
-        if (intptr_t Aij = A(i, j)) {
-            intptr_t g = std::gcd(Aij, Eis);
-            assert(g > 0);
-            // `A` contains inequalities; flipping signs is illegal
-            intptr_t Ag = (s * Aij) / g;
-            intptr_t Eg = (s * Eis) / g;
-            for (size_t v = 0; v < numVar; ++v) {
-                A(v, j) = Eg * A(v, j) - Ag * Es(v);
+    if (std::abs(Eis) == 1) {
+        for (size_t j = 0; j < A.numCol(); ++j) {
+            if (intptr_t Aij = A(i, j)) {
+                // `A` contains inequalities; flipping signs is illegal
+                intptr_t Ag = (s * Aij);
+                intptr_t Eg = (s * Eis);
+                for (size_t v = 0; v < numVar; ++v) {
+                    A(v, j) = Eg * A(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
+                // TODO: check if should drop
             }
-            Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
-            // TODO: check if should drop
         }
-    }
-    for (size_t j = 0; j < numColE; ++j) {
-        if (j == colMinNonZero)
-            continue;
-        if (intptr_t Eij = E(i, j)) {
-            intptr_t g = std::gcd(Eij, Eis);
-            intptr_t Ag = Eij / g;
-            intptr_t Eg = Eis / g;
-            for (size_t v = 0; v < numVar; ++v) {
-                E(v, j) = Eg * E(v, j) - Ag * Es(v);
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eis * E(v, j) - Eij * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eis, q[colMinNonZero], Eij);
             }
-            Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+        }
+    } else {
+        for (size_t j = 0; j < A.numCol(); ++j) {
+            if (intptr_t Aij = A(i, j)) {
+                intptr_t g = std::gcd(Aij, Eis);
+                assert(g > 0);
+                // `A` contains inequalities; flipping signs is illegal
+                intptr_t Ag = (s * Aij) / g;
+                intptr_t Eg = (s * Eis) / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    A(v, j) = Eg * A(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(b[j] *= Eg, q[colMinNonZero], Ag);
+                // TODO: check if should drop
+            }
+        }
+        for (size_t j = 0; j < numColE; ++j) {
+            if (j == colMinNonZero)
+                continue;
+            if (intptr_t Eij = E(i, j)) {
+                intptr_t g = std::gcd(Eij, Eis);
+                intptr_t Ag = Eij / g;
+                intptr_t Eg = Eis / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(v, j) = Eg * E(v, j) - Ag * Es(v);
+                }
+                Polynomial::fnmadd(q[j] *= Eg, q[colMinNonZero], Ag);
+            }
         }
     }
     return colMinNonZero;

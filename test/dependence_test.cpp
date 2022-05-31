@@ -18,7 +18,7 @@
 //     llvm::SmallVector<intptr_t, 8> q(4);
 
 // }
-/*
+
 TEST(DependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
@@ -200,7 +200,7 @@ TEST(IndependentTest, BasicAssertions) {
         Dependence::check(Asrc, schStore, Atgt, schLoad));
     EXPECT_FALSE(dc.hasValue());
 }
-*/
+
 TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){

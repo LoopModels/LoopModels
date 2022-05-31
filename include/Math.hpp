@@ -1,6 +1,7 @@
 #pragma once
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
+#include "./Macro.hpp"
 #include <bit>
 #include <cassert>
 #include <cmath>
@@ -677,6 +678,12 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         }
         return A;
     }
+    operator PtrMatrix<T>() {
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
+    }
+    operator PtrMatrix<const T>() const {
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
+    }
 };
 
 template <typename T, size_t S>
@@ -694,10 +701,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M){};
 
     operator PtrMatrix<T>() {
-        return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(N)};
     }
     operator PtrMatrix<const T>() const {
-        return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(N)};
     }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
@@ -1012,7 +1019,7 @@ AbstractMatrix auto matmultn(AbstractMatrix auto &C,
     return C;
 }
 
-void swapRows(IntMatrix auto &A, size_t i, size_t j) {
+void swapRows(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
@@ -1022,7 +1029,7 @@ void swapRows(IntMatrix auto &A, size_t i, size_t j) {
         std::swap(A(i, n), A(j, n));
     }
 }
-inline void swapCols(IntMatrix auto &A, size_t i, size_t j) {
+MULTIVERSION inline void swapCols(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
