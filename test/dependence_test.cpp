@@ -424,7 +424,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
-    //
     // store in `A(m,n) = A(m,n) / U(n,n)`
     llvm::Optional<Dependence> d11(
         Dependence::check(Amn2, sch2_1_0, Amn2, sch2_1_2));
@@ -449,6 +448,49 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_TRUE(d14.hasValue());
     EXPECT_FALSE(d14.getValue().isForward());
 
+    // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
+    // with...
+    // sch3_               3        0         1     2
+    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d22(
+        Dependence::check(Amn2, sch2_1_2, Amn3, sch3_1));
+    EXPECT_TRUE(d22.hasValue());
+    EXPECT_TRUE(d22.getValue().isForward());
+    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d23(
+        Dependence::check(Amn2, sch2_1_2, Amk, sch3_0));
+    EXPECT_TRUE(d23.hasValue());
+    EXPECT_FALSE(d23.getValue().isForward());
+    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d24(
+        Dependence::check(Amn2, sch2_1_2, Amk, sch3_3));
+    EXPECT_TRUE(d24.hasValue());
+    EXPECT_FALSE(d24.getValue().isForward());
+
+    // Fourth, comparisons of load `A(m,n)` in
+    // sch3_               3        0         1     2
+    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // with...
+    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d33(
+        Dependence::check(Amn3, sch3_1, Amk, sch3_0));
+    EXPECT_TRUE(d33.hasValue());
+    EXPECT_FALSE(d33.getValue().isForward());
+    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d34(
+        Dependence::check(Amn3, sch3_1, Amk, sch3_3));
+    EXPECT_TRUE(d34.hasValue());
+    EXPECT_FALSE(d34.getValue().isForward());
+
+    // Fifth, comparisons of load `A(m,k)` in
+    // sch3_               3        0         1     2
+    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // with...
+    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    llvm::Optional<Dependence> d44(
+        Dependence::check(Amk, sch3_0, Amk, sch3_3));
+    EXPECT_TRUE(d44.hasValue());
+    EXPECT_TRUE(d44.getValue().isForward());
 
     /*
     lblock.fillEdges();
