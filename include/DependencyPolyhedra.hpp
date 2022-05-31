@@ -488,8 +488,8 @@ struct Dependence {
         // }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-		
-                if ((dxy.forward = o2idiff > 0)){
+
+                if ((dxy.forward = o2idiff > 0)) {
                     std::swap(fxy, fyx);
                     // fxy.A.reduceNumRows(numLoopsTotal + 1);
                     // fxy.E.reduceNumRows(numLoopsTotal + 1);
