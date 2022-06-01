@@ -32,6 +32,29 @@
 //  - memory
 //  - userToMemory
 // fields it self-initializes:
+//
+//
+// NOTE: w/ respect to index linearization (e.g., going from Cartesian indexing
+// to linear indexing), the current behavior will be to fully delinearize as a
+// preprocessing step. Linear indexing may be used later as an optimization.
+// This means that not only do we want to delinearize
+// for (n = 0; n < N; ++n){
+//   for (m = 0; m < M; ++m){
+//      C(m + n*M)
+//   }
+// }
+// we would also want to delinearize
+// for (i = 0; i < M*N; ++i){
+//   C(i)
+// }
+// into
+// for (n = 0; n < N; ++n){
+//   for (m = 0; m < M; ++m){
+//      C(m, n)
+//   }
+// }
+// and then relinearize as an optimization later.
+// Then we can compare fully delinearized loop accesses.
 struct LoopBlock {
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -62,7 +85,7 @@ struct LoopBlock {
             const PtrVector<intptr_t, 0> inOmega = schIn.getOmega();
             const PtrVector<intptr_t, 0> outOmega = schOut.getOmega();
 
-	    // when i == numLoopsCommon, we've passed the last loop
+            // when i == numLoopsCommon, we've passed the last loop
             for (size_t i = 0; i <= numLoopsCommon; ++i) {
                 if (intptr_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
                     return (o2idiff > 0);
@@ -105,8 +128,8 @@ struct LoopBlock {
                     return false;
                 }
             }
-	    assert(false);
-	    return false;
+            assert(false);
+            return false;
         }
         friend std::ostream &operator<<(std::ostream &os, const Edge &e) {
 
@@ -120,6 +143,69 @@ struct LoopBlock {
     llvm::SmallVector<Edge, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
+    // NOTE: this relies on two important assumptions:
+    // 1. Code has been fully delinearized, so that axes all match
+    //    (this means that even C[i], 0<=i<M*N -> C[m*M*n])
+    //    (TODO: what if we have C[n+N*m] and C[m+M*n]???)
+    //    (this of course means we have to see other uses in
+    //     deciding whether to expand `C[i]`, and what to expand
+    //     it into.)
+    // 2. Reduction targets have been orthogonalized, so that
+    //     the number of axes reflects the number of loops they
+    //     depend on.
+    // if we have
+    // for (i = I, j = J, m = M, n = N) {
+    //   C(m,n) = foo(C(m,n), ...)
+    // }
+    // then we have dependencies that
+    // the load C(m,n) [ i = x, j = y ]
+    // happens after the store C(m,n) [ i = x-1, j = y], and
+    // happens after the store C(m,n) [ i = x, j = y-1]
+    // and that the store C(m,n) [ i = x, j = y ]
+    // happens after the load C(m,n) [ i = x-1, j = y], and
+    // happens after the load C(m,n) [ i = x, j = y-1]
+    //
+    // so, `pushReductionEdges` will
+    void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
+	if (!x.sameLoop(y)){ return; }
+        const size_t numLoopsX = x.getNumLoops();
+        const size_t numLoopsY = y.getNumLoops();
+        const size_t numAxes = x.getNumAxes();
+	// we preprocess to delinearize all, including linear indexing
+	assert(numAxes == y.getNumAxes());
+	const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+	for (size_t i = numAxes; i < numLoopsCommon; ++i){
+	    // push both edge directions 
+	}
+    }
+    void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
+        // note, axes should be fully delinearized, so should line up
+	// as a result of preprocessing.
+        if (llvm::Optional<Dependence> dep = Dependence::check(mai, maj)) {
+            size_t numEdges = edges.size();
+            Dependence &d(dep.getValue());
+#ifndef NDEBUG
+            if (d.isForward()) {
+                std::cout << "dep direction: x -> y" << std::endl;
+            } else {
+                std::cout << "dep direction: y -> x" << std::endl;
+            }
+#endif
+            MemoryAccess *pin, *pout;
+            if (d.isForward()) {
+                pin = &mai;
+                pout = &maj;
+            } else {
+                pin = &maj;
+                pout = &mai;
+            }
+            edges.emplace_back(std::move(d), pin, pout);
+            // input's out-edge goes to output's in-edge
+            pin->addEdgeOut(numEdges);
+            pout->addEdgeIn(numEdges);
+            pushReductionEdges(mai, maj);
+        }
+    }
     // fills all the edges between memory accesses, checking for
     // dependencies.
     void fillEdges() {
@@ -130,30 +216,7 @@ struct LoopBlock {
                 if ((mai.ref->arrayID != maj.ref->arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
-                if (llvm::Optional<Dependence> dep =
-                        Dependence::check(mai, maj)) {
-                    size_t numEdges = edges.size();
-                    Dependence &d(dep.getValue());
-#ifndef NDEBUG
-                    if (d.isForward()) {
-                        std::cout << "dep direction: x -> y" << std::endl;
-                    } else {
-                        std::cout << "dep direction: y -> x" << std::endl;
-                    }
-#endif
-                    MemoryAccess *pin, *pout;
-                    if (d.isForward()) {
-                        pin = &mai;
-                        pout = &maj;
-                    } else {
-                        pin = &maj;
-                        pout = &mai;
-                    }
-                    edges.emplace_back(std::move(d), pin, pout);
-                    // input's out-edge goes to output's in-edge
-                    pin->addEdgeOut(numEdges);
-                    pout->addEdgeIn(numEdges);
-                }
+                addEdge(mai, maj);
             }
         }
     }

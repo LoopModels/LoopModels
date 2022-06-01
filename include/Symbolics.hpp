@@ -155,7 +155,7 @@ inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
     return offset;
 }
 static std::string programVarName(size_t i) { return std::string(1, 'L' + i); }
-std::string monomialTermStr(size_t id, size_t exponent) {
+static std::string monomialTermStr(size_t id, size_t exponent) {
     if (exponent) {
         if (exponent > 1) {
             return programVarName(id) + "^" + std::to_string(exponent);

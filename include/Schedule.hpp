@@ -51,4 +51,14 @@ struct Schedule {
         return PtrVector<const intptr_t, 0>{data.data() + numLoops * numLoops,
                                             2 * numLoops + 1};
     }
+    bool sameLoop(const Schedule &y) const {
+	PtrVector<const intptr_t, 0> o0 = getOmega();
+	PtrVector<const intptr_t, 0> o1 = y.getOmega();
+	const size_t numLoopsCommon = std::min(numLoops, y.numLoops);
+	bool allEqual = true;
+	for (size_t n = 0; n < numLoopsCommon; ++n){
+	    allEqual &= (o0[2*n] == o1[2*n]);
+	}
+	return allEqual;
+    }
 };

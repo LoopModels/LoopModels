@@ -384,24 +384,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                                  std::move(qf));
         ipoly.pruneBounds();
         assert(ipoly.E.numCol() == ipoly.q.size());
-        // remove lambdas
-        // std::cout << "ipoly =\n" << ipoly << std::endl;
-        // for (size_t i = numVarKeep; i < numVarNew; ++i) {
-        //     ipoly.removeVariable(i);
-        //     std::cout << "After removing variable " << i << " ipoly = \n"
-        //               << ipoly << std::endl;
-        // }
-        // ipoly.A.reduceNumRows(numVarKeep);
-        // ipoly.E.reduceNumRows(numVarKeep);
-
-        // for (size_t i = numVarNew - 1; i >= numVarKeep; --i) {
-        //     ipoly.removeVariable(i);
-        //     ipoly.A.reduceNumRows(i);
-        //     ipoly.E.reduceNumRows(i);
-        //     std::cout << "After removing variable " << i << " ipoly = \n"
-        //               << ipoly << std::endl;
-        // }
-        // std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
 
@@ -426,6 +408,13 @@ struct MemoryAccess {
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     size_t getNumLoops() const { return ref->getNumLoops(); }
+    size_t getNumAxes() const { return ref->axes.size(); }
+    std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
+    bool sameLoop(MemoryAccess &x){
+	// originally separate loops could be fused
+	// if (loop() != x.loop()){ return false; }
+	return schedule.sameLoop(x.schedule);
+    }
 };
 
 std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
