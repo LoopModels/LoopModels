@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./AbstractEqualityPolyhedra.hpp"
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
@@ -410,10 +411,10 @@ struct MemoryAccess {
     size_t getNumLoops() const { return ref->getNumLoops(); }
     size_t getNumAxes() const { return ref->axes.size(); }
     std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    bool sameLoop(MemoryAccess &x){
-	// originally separate loops could be fused
-	// if (loop() != x.loop()){ return false; }
-	return schedule.sameLoop(x.schedule);
+    bool sameLoop(MemoryAccess &x) {
+        // originally separate loops could be fused
+        // if (loop() != x.loop()){ return false; }
+        return schedule.sameLoop(x.schedule);
     }
 };
 

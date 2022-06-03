@@ -521,7 +521,8 @@ template <typename T, typename A> struct BaseMatrix {
             return PtrVector<T, M>(data() + i * M);
         } else {
             const size_t _M = numRow();
-            return PtrVector<T, 0>{data() + i * _M, _M};
+            return llvm::MutableArrayRef<T>(data() + i * _M, _M);
+            // return PtrVector<T, 0>{data() + i * _M, _M};
         }
     }
     auto getCol(size_t i) const {

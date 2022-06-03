@@ -1,3 +1,4 @@
+#include "../include/AbstractEqualityPolyhedra.hpp"
 #include "../include/Polyhedra.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>

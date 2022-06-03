@@ -1,4 +1,5 @@
 #pragma once
+#ifdef NDEBUG
 #if defined(__clang__)
 #define MULTIVERSION                                                           \
     __attribute__((target_clones("avx512dq", "avx2", "default")))
@@ -12,5 +13,8 @@
     __attribute__((target_clones("arch=x86-64-v4", "arch=x86-64-v3", "default")))
 #define VECTORIZE _Pragma("GCC ivdep")
 #endif
-
+#else
+#define MULTIVERSION
+#define VECTORIZE
+#endif
 

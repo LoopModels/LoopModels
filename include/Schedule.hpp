@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
-#include "./BitSets.hpp"
 #include "./Graphs.hpp"
 #include "./Math.hpp"
 #include <cstdint>
