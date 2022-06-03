@@ -5,7 +5,7 @@
 #include "./POSet.hpp"
 #include "./Permutation.hpp"
 #include "./Symbolics.hpp"
-#include "Polyhedra.hpp"
+#include "./Polyhedra.hpp"
 #include <algorithm>
 #include <bits/ranges_algo.h>
 #include <cstddef>

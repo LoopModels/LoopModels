@@ -175,7 +175,8 @@ struct LoopBlock {
 	assert(numAxes == y.getNumAxes());
 	const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 	for (size_t i = numAxes; i < numLoopsCommon; ++i){
-	    // push both edge directions 
+	    // push both edge directions
+	    
 	}
     }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
@@ -219,5 +220,16 @@ struct LoopBlock {
                 addEdge(mai, maj);
             }
         }
+    }
+    void orthogonalizeReductions(){
+        for (size_t i = 1; i < memory.size(); ++i) {
+            MemoryAccess &mai = memory[i];
+            for (size_t j = 0; j < i; ++j) {
+                MemoryAccess &maj = memory[j];
+                if ((mai.ref->arrayID != maj.ref->arrayID) ||
+                    (mai.isLoad == maj.isLoad))
+                    continue;
+	    }
+	}
     }
 };

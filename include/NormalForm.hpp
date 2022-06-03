@@ -287,9 +287,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
         auto [r, p, q] = gcdx(Aii, Aij);
         intptr_t Aiir = Aii / r;
         intptr_t Aijr = Aij / r;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t k = 0; k < M; ++k) {
             intptr_t Aki = A(k, c);
             intptr_t Akj = A(k, j);
@@ -309,9 +307,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
         Akk = -Akk;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
@@ -343,9 +339,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
         } else {
             continue;
         }
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }
@@ -361,9 +355,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
         intptr_t Aii = A(rr, c);
         if (intptr_t Aij = A(rr, j)) {
             if (std::abs(Aii) == 1) {
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
                 for (size_t k = 0; k < M; ++k) {
                     A(k, j) = Aii * A(k, j) - Aij * A(k, c);
                 }
@@ -372,9 +364,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
                 auto [r, p, q] = gcdx(Aii, Aij);
                 intptr_t Aiir = Aii / r;
                 intptr_t Aijr = Aij / r;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
                 for (size_t k = 0; k < M; ++k) {
                     intptr_t Aki = A(k, c);
                     intptr_t Akj = A(k, j);
@@ -396,9 +386,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
         Akk = -Akk;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
@@ -430,9 +418,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
                 Akz -= (AkzOld != (Akz * Akk));
             }
         }
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }

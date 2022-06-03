@@ -1035,9 +1035,7 @@ MULTIVERSION inline void swapCols(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     }
     auto [M, N] = A.size();
     assert((i < N) & (j < N));
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
     for (size_t m = 0; m < M; ++m) {
         std::swap(A(m, i), A(m, j));
     }

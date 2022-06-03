@@ -69,9 +69,7 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<intptr_t> A,
     const auto [M, N] = A.size();
     const size_t lastCol = N - 1;
     if (lastCol != i) {
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t m = 0; m < M; ++m) {
             A(m, i) = A(m, lastCol);
         }
@@ -84,9 +82,7 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<intptr_t> A,
     const auto [M, N] = A.size();
     const size_t lastCol = N - 1;
     if (lastCol != i) {
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
         for (size_t m = 0; m < M; ++m) {
             A(m, i) = A(m, lastCol);
         }
@@ -139,9 +135,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<MPoly> &q,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+	    VECTORIZE
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(v, j) != 0);
             }
@@ -163,9 +157,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<MPoly> &q,
             if (j == colMinNonZero)
                 continue;
             if (intptr_t Eij = E(i, j)) {
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+		VECTORIZE
                 for (size_t v = 0; v < numVar; ++v) {
                     E(v, j) = Eis * E(v, j) - Eij * Es(v);
                 }
@@ -180,9 +172,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E, llvm::SmallVectorImpl<MPoly> &q,
                 intptr_t g = std::gcd(Eij, Eis);
                 intptr_t Ag = Eij / g;
                 intptr_t Eg = Eis / g;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
                 for (size_t v = 0; v < numVar; ++v) {
                     E(v, j) = Eg * E(v, j) - Ag * Es(v);
                 }
@@ -202,9 +192,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E,
         if (E(i, j)) {
             // if (std::abs(E(i,j)) == 1){
             size_t nonZero = 0;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(v, j) != 0);
             }
@@ -226,9 +214,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E,
             if (j == colMinNonZero)
                 continue;
             if (intptr_t Eij = E(i, j)) {
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
                 for (size_t v = 0; v < numVar; ++v) {
                     E(v, j) = Eis * E(v, j) - Eij * Es(v);
                 }
@@ -243,9 +229,7 @@ substituteEqualityImpl(PtrMatrix<intptr_t> E,
                 intptr_t g = std::gcd(Eij, Eis);
                 intptr_t Ag = Eij / g;
                 intptr_t Eg = Eis / g;
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+VECTORIZE
                 for (size_t v = 0; v < numVar; ++v) {
                     E(v, j) = Eg * E(v, j) - Ag * Es(v);
                 }
