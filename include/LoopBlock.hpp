@@ -167,21 +167,22 @@ struct LoopBlock {
     //
     // so, `pushReductionEdges` will
     void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
-	if (!x.sameLoop(y)){ return; }
+        if (!x.sameLoop(y)) {
+            return;
+        }
         const size_t numLoopsX = x.getNumLoops();
         const size_t numLoopsY = y.getNumLoops();
         const size_t numAxes = x.getNumAxes();
-	// we preprocess to delinearize all, including linear indexing
-	assert(numAxes == y.getNumAxes());
-	const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-	for (size_t i = numAxes; i < numLoopsCommon; ++i){
-	    // push both edge directions
-	    
-	}
+        // we preprocess to delinearize all, including linear indexing
+        assert(numAxes == y.getNumAxes());
+        const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+        for (size_t i = numAxes; i < numLoopsCommon; ++i) {
+            // push both edge directions
+        }
     }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
-	// as a result of preprocessing.
+        // as a result of preprocessing.
         if (llvm::Optional<Dependence> dep = Dependence::check(mai, maj)) {
             size_t numEdges = edges.size();
             Dependence &d(dep.getValue());
@@ -221,15 +222,16 @@ struct LoopBlock {
             }
         }
     }
-    void orthogonalizeReductions(){
+    void orthogonalizeStores() {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
-            for (size_t j = 0; j < i; ++j) {
-                MemoryAccess &maj = memory[j];
-                if ((mai.ref->arrayID != maj.ref->arrayID) ||
-                    (mai.isLoad == maj.isLoad))
-                    continue;
-	    }
-	}
+            // for (size_t j = 0; j < i; ++j) {
+            //     MemoryAccess &maj = memory[j];
+            //     if ((mai.ref->arrayID != maj.ref->arrayID) ||
+            //         (mai.isLoad == maj.isLoad))
+            //         continue;
+
+            // }
+        }
     }
 };

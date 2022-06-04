@@ -1120,6 +1120,7 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
         }
     }
+    
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractPolyhedra<P, T> &p) {
         return printConstraints(os, p.A, p.b);

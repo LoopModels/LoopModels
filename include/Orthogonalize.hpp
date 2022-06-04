@@ -8,7 +8,7 @@
 
 // `B` is a transposed mirror in reduced form
 // it is used to check whether a new row is linearly independent.
-bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
+bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j) {
     // std::ranges::fill(A.getRow(j), intptr_t(0));
     for (size_t i = 0; i < axis.size(); ++i) {
         VarID v = axis[i].second;
