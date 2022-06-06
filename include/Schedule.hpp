@@ -8,7 +8,7 @@
 #include <llvm/ADT/SmallVector.h>
 
 // We represent a schedule as
-// Phi_s'*i + omega_s <_{lex} Phi_t*s + Omega_t
+// Phi_s'*i + omega_s <_{lex} Phi_t'*s + Omega_t
 // means that schedule `s` executes before schedule `t`.
 //
 // S_0 = {Phi_0, omega_0}
@@ -17,7 +17,7 @@
 // Phi_0 * i_0 + omega_0 << Phi_1 * i_1 + omega_1
 // then "i_0" for schedule "S_0" happens before
 // "i_1" for schedule "S_1"
-// 
+//
 struct Schedule {
     // given `N` loops, `P` is `N+1 x 2*N+1`
     // even rows give offsets indicating fusion (0-indexed)
@@ -50,14 +50,16 @@ struct Schedule {
         return PtrVector<const intptr_t, 0>{data.data() + numLoops * numLoops,
                                             2 * numLoops + 1};
     }
-    bool sameLoop(const Schedule &y) const {
-	PtrVector<const intptr_t, 0> o0 = getOmega();
-	PtrVector<const intptr_t, 0> o1 = y.getOmega();
-	const size_t numLoopsCommon = std::min(numLoops, y.numLoops);
-	bool allEqual = true;
-	for (size_t n = 0; n < numLoopsCommon; ++n){
-	    allEqual &= (o0[2*n] == o1[2*n]);
-	}
-	return allEqual;
+    bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
+        PtrVector<const intptr_t, 0> o0 = getOmega();
+        PtrVector<const intptr_t, 0> o1 = y.getOmega();
+        bool allEqual = true;
+        for (size_t n = 0; n < numLoopsCommon; ++n) {
+            allEqual &= (o0[2 * n] == o1[2 * n]);
+        }
+        return allEqual;
+    }
+    bool fusedThrough(const Schedule &y) const {
+        return fusedThrough(y, std::min(numLoops, y.numLoops));
     }
 };

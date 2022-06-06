@@ -390,53 +390,15 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
 }; // namespace DependencePolyhedra
 
-struct MemoryAccess {
-    ArrayReference *ref;
-    llvm::User *user; // null if store
-    llvm::User *dst;  // null if load
-                      // unsigned (instead of ptr) as we build up edges
-    // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
-    llvm::SmallVector<unsigned> edgesIn;
-    llvm::SmallVector<unsigned> edgesOut;
-    const bool isLoad;
-    MemoryAccess(ArrayReference *ref, llvm::User *user, Schedule schedule,
-                 bool isLoad)
-        : ref(ref), user(user), schedule(schedule),
-          edgesIn(llvm::SmallVector<unsigned, 0>()),
-          edgesOut(llvm::SmallVector<unsigned, 0>()), isLoad(isLoad){};
-
-    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    size_t getNumLoops() const { return ref->getNumLoops(); }
-    size_t getNumAxes() const { return ref->axes.size(); }
-    std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    bool sameLoop(MemoryAccess &x) {
-        // originally separate loops could be fused
-        // if (loop() != x.loop()){ return false; }
-        return schedule.sameLoop(x.schedule);
-    }
-};
-
-std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
-    if (m.isLoad) {
-        os << "= ";
-    }
-    os << *(m.ref);
-    if (!m.isLoad) {
-        os << " =";
-    }
-    return os;
-}
-
 struct Dependence {
     DependencePolyhedra depPoly;
     IntegerEqPolyhedra dependenceSatisfaction;
     IntegerEqPolyhedra dependenceBounding;
     bool isForward() const { return depPoly.forward; }
-    static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y) {
-        return check(*x.ref, x.schedule, *y.ref, y.schedule);
-    }
+    // static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y)
+    // {
+    //     return check(*x.ref, x.schedule, *y.ref, y.schedule);
+    // }
     static llvm::Optional<Dependence> check(const ArrayReference &x,
                                             const Schedule &sx,
                                             const ArrayReference &y,

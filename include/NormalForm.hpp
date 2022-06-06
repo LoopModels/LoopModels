@@ -241,7 +241,7 @@ void dropRow(IntMatrix auto &A, size_t i, size_t M, size_t N) {
 }
 
 std::pair<SquareMatrix<intptr_t>, llvm::SmallVector<unsigned>>
-orthogonalize(IntMatrix auto A) {
+orthogonalize(PtrMatrix<intptr_t> A) {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
@@ -287,7 +287,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
         auto [r, p, q] = gcdx(Aii, Aij);
         intptr_t Aiir = Aii / r;
         intptr_t Aijr = Aij / r;
-VECTORIZE
+        VECTORIZE
         for (size_t k = 0; k < M; ++k) {
             intptr_t Aki = A(k, c);
             intptr_t Akj = A(k, j);
@@ -307,7 +307,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
         Akk = -Akk;
-VECTORIZE
+        VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
@@ -339,7 +339,7 @@ VECTORIZE
         } else {
             continue;
         }
-VECTORIZE
+        VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }
@@ -355,7 +355,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,
         intptr_t Aii = A(rr, c);
         if (intptr_t Aij = A(rr, j)) {
             if (std::abs(Aii) == 1) {
-VECTORIZE
+                VECTORIZE
                 for (size_t k = 0; k < M; ++k) {
                     A(k, j) = Aii * A(k, j) - Aij * A(k, c);
                 }
@@ -364,7 +364,7 @@ VECTORIZE
                 auto [r, p, q] = gcdx(Aii, Aij);
                 intptr_t Aiir = Aii / r;
                 intptr_t Aijr = Aij / r;
-VECTORIZE
+                VECTORIZE
                 for (size_t k = 0; k < M; ++k) {
                     intptr_t Aki = A(k, c);
                     intptr_t Akj = A(k, j);
@@ -386,7 +386,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<intptr_t> A,
     intptr_t Akk = A(r, c);
     if (Akk < 0) {
         Akk = -Akk;
-VECTORIZE
+        VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, c) *= -1;
         }
@@ -418,7 +418,7 @@ VECTORIZE
                 Akz -= (AkzOld != (Akz * Akk));
             }
         }
-VECTORIZE
+        VECTORIZE
         for (size_t i = 0; i < M; ++i) {
             A(i, z) -= Akz * A(i, c);
         }

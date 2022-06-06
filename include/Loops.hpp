@@ -12,7 +12,7 @@
 
 
 
-// A' * i <= r
+// A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order

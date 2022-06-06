@@ -22,6 +22,58 @@
 template <class T>
 concept Integral = std::is_integral<T>::value;
 
+intptr_t gcd(intptr_t x, intptr_t y) {
+    if (x == 0) {
+        return std::abs(y);
+    } else if (y == 0) {
+        return std::abs(x);
+    }
+    assert(x != std::numeric_limits<intptr_t>::min());
+    assert(y != std::numeric_limits<intptr_t>::min());
+    intptr_t a = std::abs(x);
+    intptr_t b = std::abs(y);
+    if (a == 1) {
+        return b;
+    } else if (b == 1) {
+        return a;
+    }
+    intptr_t az = std::countr_zero(uintptr_t(x));
+    intptr_t bz = std::countr_zero(uintptr_t(y));
+    b >>= bz;
+    intptr_t k = std::min(az, bz);
+    while (a) {
+        a >>= az;
+        intptr_t d = a - b;
+        az = std::countr_zero(uintptr_t(d));
+        b = std::min(a, b);
+        a = std::abs(d);
+    }
+    return b << k;
+}
+// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
+    T old_r = a;
+    T r = b;
+    T old_s = 1;
+    T s = 0;
+    T old_t = 0;
+    T t = 1;
+    while (r) {
+        T quotient = old_r / r;
+        old_r -= quotient * r;
+        old_s -= quotient * s;
+        old_t -= quotient * t;
+        std::swap(r, old_r);
+        std::swap(s, old_s);
+        std::swap(t, old_t);
+    }
+    // Solving for `t` at the end has 1 extra division, but lets us remove
+    // the `t` updates in the loop:
+    // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
+    // For now, I'll favor forgoing the division.
+    return std::make_tuple(old_r, old_s, old_t);
+}
+
 std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
     intptr_t g = std::gcd(x, y);
     return std::make_pair(x / g, y / g);
@@ -794,6 +846,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         }
     }
 };
+template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
 static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 4, 0>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
@@ -1036,7 +1089,7 @@ MULTIVERSION inline void swapCols(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     }
     auto [M, N] = A.size();
     assert((i < N) & (j < N));
-VECTORIZE
+    VECTORIZE
     for (size_t m = 0; m < M; ++m) {
         std::swap(A(m, i), A(m, j));
     }
@@ -1218,30 +1271,6 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
 // M == 1 // if M >= N => N <= 1; if N <= 1 => 0 inner loop iterations
 // or
 // i == j == c0 // can tell from loop bounds this is impossible
-
-// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
-    T old_r = a;
-    T r = b;
-    T old_s = 1;
-    T s = 0;
-    T old_t = 0;
-    T t = 1;
-    while (r) {
-        T quotient = old_r / r;
-        old_r -= quotient * r;
-        old_s -= quotient * s;
-        old_t -= quotient * t;
-        std::swap(r, old_r);
-        std::swap(s, old_s);
-        std::swap(t, old_t);
-    }
-    // Solving for `t` at the end has 1 extra division, but lets us remove
-    // the `t` updates in the loop:
-    // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
-    // For now, I'll favor forgoing the division.
-    return std::make_tuple(old_r, old_s, old_t);
-}
 
 template <int Bits, class T>
 constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
