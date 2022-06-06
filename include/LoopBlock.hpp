@@ -116,8 +116,12 @@ struct LoopBlock {
 
     ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
-    const ArrayReference &ref(MemoryAccess &x) const { return refs[x.ref]; }
-    const ArrayReference &ref(MemoryAccess *x) const { return refs[x->ref]; }
+    const ArrayReference &ref(const MemoryAccess &x) const {
+        return refs[x.ref];
+    }
+    const ArrayReference &ref(const MemoryAccess *x) const {
+        return refs[x->ref];
+    }
     bool isSatisfied(const Edge &e) const {
         const IntegerEqPolyhedra &sat = e.dependence.dependenceSatisfaction;
 
@@ -270,15 +274,33 @@ struct LoopBlock {
     std::shared_ptr<AffineLoopNest> getBang(
         llvm::DenseMap<const AffineLoopNest *, std::shared_ptr<AffineLoopNest>>
             &map,
-        size_t i) const {
-        auto p = map.find(ref(memory[i]).loop.get());
+        SquarePtrMatrix<intptr_t> K, size_t i) const {
+        const AffineLoopNest *aln = ref(memory[i]).loop.get();
+        auto p = map.find(aln);
         std::shared_ptr<AffineLoopNest> newp;
         if (p == map.end()) {
-            Matrix<intptr_t, 0, 0, 0> A;
-            A.mem.resize_for_overwrite(1);
-
+            const size_t numVar = aln->getNumVar();
+            const size_t numConstraints = aln->getNumConstraints();
+            const size_t numTransformed = K.numRow();
+            const size_t numPeeled = numVar - numTransformed;
+            DynamicMatrix<intptr_t> A;
+            A.resizeForOverwrite(numVar, numConstraints);
+            for (size_t k = 0; k < numConstraints; ++k) {
+                for (size_t j = 0; j < numPeeled; ++j) {
+                    A(j, k) = aln->A(j, k);
+                }
+                for (size_t j = numPeeled; j < numVar; ++j) {
+                    intptr_t Ajk = 0;
+                    for (size_t l = 0; l < numTransformed; ++l) {
+                        Ajk += K(l, j - numPeeled) * aln->A(l, k);
+                    }
+                    A(j, k) = Ajk;
+                }
+            }
+            return std::make_shared<AffineLoopNest>(std::move(A), aln->b,
+                                                    aln->poset);
         } else {
-            newp = p->second;
+            return p->second;
         }
     }
     void orthogonalizeStores() {
@@ -370,11 +392,11 @@ struct LoopBlock {
                 continue;
             auto [K, included] = NormalForm::orthogonalize(S);
             if (included.size()) {
-                llvm::DenseMap<AffineLoopNest *,
+                llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
                     map;
                 for (auto &oi : orthInds) {
-                    std::shared_ptr<AffineLoopNest> newp = getBang(map, oi);
+                    std::shared_ptr<AffineLoopNest> newp = getBang(map, K, oi);
                 }
             }
         }

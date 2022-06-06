@@ -685,6 +685,27 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     const T *data() const { return mem.data(); }
 };
 
+template <typename T>
+struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
+    T *mem;
+    const size_t M;
+    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
+
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
+    T *end() { return mem + (M * M); }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + (M * M); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return M; }
+    static constexpr size_t getConstRow() { return 0; }
+
+    T *data() { return mem; }
+    const T *data() const { return mem; }
+};
+
 template <typename T, unsigned STORAGE = 3>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     typedef T eltype;
@@ -736,6 +757,9 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     }
     operator PtrMatrix<const T>() const {
         return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
+    }
+    operator SquarePtrMatrix<T>() {
+        return {.mem = mem.data(), .M = size_t(M)};
     }
 };
 
@@ -852,27 +876,6 @@ static_assert(std::copyable<Matrix<intptr_t, 4, 0>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
-
-template <typename T>
-struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
-    T *mem;
-    const size_t M;
-    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
-
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    T *begin() { return mem; }
-    T *end() { return mem + (M * M); }
-    const T *begin() const { return mem; }
-    const T *end() const { return mem + (M * M); }
-
-    size_t numRow() const { return M; }
-    size_t numCol() const { return M; }
-    static constexpr size_t getConstRow() { return 0; }
-
-    T *data() { return mem; }
-    const T *data() const { return mem; }
-};
 
 template <typename T, typename P>
 std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
