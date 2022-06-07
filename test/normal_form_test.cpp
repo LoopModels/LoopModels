@@ -98,12 +98,19 @@ TEST(NormalFormTest, BasicAssertions) {
             }
             EXPECT_TRUE(matmul(A, K) == I4);
         } else {
-            // std::cout << "K= " << K << "\n";
+            // std::cout << "K= " << K << "\nB= " << B << std::endl;
+            printVector(std::cout << "included = ", included);
             if (auto optlu = lufact(K)) {
                 if (auto optA2 = optlu.getValue().inv()) {
-                    auto A2 = optA2.getValue();
+                    SquareMatrix<Rational, 3> &A2 = optA2.getValue();
+                    std::cout << "A= " << A << std::endl;
                     for (size_t n = 0; n < 4; ++n) {
                         for (size_t j = 0; j < included.size(); ++j) {
+                            // std::cout
+                            //    << "A2(" << j << ", " << n << ") = " << A2(j,
+                            //    n)
+                            //    << "; B(" << included[j] << ", " << n
+                            //    << ") = " << B(included[j], n) << std::endl;
                             EXPECT_TRUE(A2(j, n) == B(included[j], n));
                         }
                     }
@@ -168,5 +175,6 @@ TEST(NormalFormTest, BasicAssertions) {
             ++m;
         }
     }
+    std::cout << "A = " << A << "\nA * K = " << matmul(A, K) << std::endl;
     EXPECT_TRUE(matmul(A, K) == I4);
 }

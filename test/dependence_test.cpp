@@ -330,26 +330,23 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Phi2(1, 1) = 1;
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
-    lblock.memory.emplace_back(&(lblock.refs[BmnInd]), nullptr, sch2_0_0, true);
+    lblock.memory.emplace_back(BmnInd, nullptr, sch2_0_0, true);
     sch2_0_1.getOmega()[4] = 1;
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_0_1,
-                               false);
+    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_0_1, false);
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_1_0,
-                               true);
+    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_0, true);
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
-    lblock.memory.emplace_back(&(lblock.refs[UnnInd]), nullptr, sch2_1_1, true);
+    lblock.memory.emplace_back(UnnInd, nullptr, sch2_1_1, true);
     sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
-    lblock.memory.emplace_back(&(lblock.refs[Amn2Ind]), nullptr, sch2_1_2,
-                               false);
+    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_2, false);
 
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
@@ -360,18 +357,18 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Phi3(2, 2) = 1;
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
-    lblock.memory.emplace_back(&(lblock.refs[UnkInd]), nullptr, sch3_0, true);
+    lblock.memory.emplace_back(UnkInd, nullptr, sch3_0, true);
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[Amn3Ind]), nullptr, sch3_1, true);
+    lblock.memory.emplace_back(Amn3Ind, nullptr, sch3_1, true);
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3_2, true);
+    lblock.memory.emplace_back(AmkInd, nullptr, sch3_2, true);
     sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(&(lblock.refs[AmkInd]), nullptr, sch3_3, false);
+    lblock.memory.emplace_back(AmkInd, nullptr, sch3_3, false);
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -487,8 +484,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     // with...
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
-    llvm::Optional<Dependence> d44(
-        Dependence::check(Amk, sch3_0, Amk, sch3_3));
+    llvm::Optional<Dependence> d44(Dependence::check(Amk, sch3_0, Amk, sch3_3));
     EXPECT_TRUE(d44.hasValue());
     EXPECT_TRUE(d44.getValue().isForward());
 

@@ -241,7 +241,7 @@ void dropRow(IntMatrix auto &A, size_t i, size_t M, size_t N) {
 }
 
 std::pair<SquareMatrix<intptr_t>, llvm::SmallVector<unsigned>>
-orthogonalize(PtrMatrix<intptr_t> A) {
+orthogonalizeBang(PtrMatrix<intptr_t> A) {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
@@ -275,6 +275,10 @@ orthogonalize(PtrMatrix<intptr_t> A) {
         ++i;
     }
     return std::make_pair(std::move(K), std::move(included));
+}
+std::pair<SquareMatrix<intptr_t>, llvm::SmallVector<unsigned>>
+orthogonalize(IntMatrix auto A) {
+    return orthogonalizeBang(A);
 }
 
 MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<intptr_t> A,

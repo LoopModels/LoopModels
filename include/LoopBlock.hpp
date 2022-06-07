@@ -283,7 +283,8 @@ struct LoopBlock {
             const size_t numConstraints = aln->getNumConstraints();
             const size_t numTransformed = K.numRow();
             const size_t numPeeled = numVar - numTransformed;
-            DynamicMatrix<intptr_t> A;
+	    //DynamicMatrix<intptr_t> A;
+            Matrix<intptr_t,0,0,0> A;
             A.resizeForOverwrite(numVar, numConstraints);
             for (size_t k = 0; k < numConstraints; ++k) {
                 for (size_t j = 0; j < numPeeled; ++j) {

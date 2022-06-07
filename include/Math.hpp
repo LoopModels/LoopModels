@@ -759,7 +759,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
     }
     operator SquarePtrMatrix<T>() {
-        return {.mem = mem.data(), .M = size_t(M)};
+        return SquarePtrMatrix(mem.data(), size_t(M));
     }
 };
 
