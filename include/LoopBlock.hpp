@@ -7,6 +7,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
+#include "LinearAlgebra.hpp"
 #include "Orthogonalize.hpp"
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
@@ -209,7 +210,9 @@ struct LoopBlock {
     // happens after the load C(m,n) [ i = x-1, j = y], and
     // happens after the load C(m,n) [ i = x, j = y-1]
     //
-    // so, `pushReductionEdges` will
+    // so, `pushReductionEdges` will...
+    // actually, probably better to put this into dependence checking
+    // so that it can add optionally 0, 1, or 2 dependencies
     void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
         if (!x.fusedThrough(y)) {
             return;
@@ -283,8 +286,8 @@ struct LoopBlock {
             const size_t numConstraints = aln->getNumConstraints();
             const size_t numTransformed = K.numRow();
             const size_t numPeeled = numVar - numTransformed;
-	    //DynamicMatrix<intptr_t> A;
-            Matrix<intptr_t,0,0,0> A;
+            // DynamicMatrix<intptr_t> A;
+            Matrix<intptr_t, 0, 0, 0> A;
             A.resizeForOverwrite(numVar, numConstraints);
             for (size_t k = 0; k < numConstraints; ++k) {
                 for (size_t j = 0; j < numPeeled; ++j) {
@@ -363,23 +366,18 @@ struct LoopBlock {
                 // if orth fails we could still viably set a narrower subset
                 // or if it succeeds, perhaps a wider one.
                 // So the item here is to adjust peelOuter.
-                visited[j] = true;
                 orthInds.push_back(j);
             }
             Matrix<intptr_t, 0, 0> S(numRow, numLoops - peelOuter);
             size_t rowStore = 0;
             size_t rowLoad = numStore;
             bool dobreakj = false;
-            for (size_t j = 0; j < memory.size(); ++j) {
+            for (auto j : orthInds) {
                 MemoryAccess &maj = memory[j];
-                // TODO: don't repeat mai.fusedThrough(maj)
-                // i != j check here is to skip
-                if ((i != j) && (!mai.fusedThrough(maj)))
-                    continue;
                 ArrayReference &refJ = ref(maj);
-                size_t row = maj.isLoad ? rowStore : rowLoad;
+                size_t row = maj.isLoad ? rowLoad : rowStore;
                 for (auto &axis : refJ.axes) {
-                    if (addIndRow(S, axis, row, peelOuter)) {
+                    if (addIndRow(S, axis, row++, peelOuter)) {
                         dobreakj = true;
                         break;
                     }
@@ -393,11 +391,45 @@ struct LoopBlock {
                 continue;
             auto [K, included] = NormalForm::orthogonalize(S);
             if (included.size()) {
+                // L = old inds, J = new inds
+                // L = K*J
+                // Bounds:
+                // A*L <= b
+                // (A*J)*J <= b
+                // Indices:
+                // S*L = (S*K)*J
+                // Schedule:
+                // Phi*L = (Phi*K)*J
+                Matrix<intptr_t, 0, 0> SK(matmul(S, K));
                 llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
                     map;
-                for (auto &oi : orthInds) {
-                    std::shared_ptr<AffineLoopNest> newp = getBang(map, K, oi);
+                rowStore = 0;
+                rowLoad = numStore;
+                for (auto &j : orthInds) {
+                    visited[j] = true;
+                    MemoryAccess &maj = memory[j];
+                    ArrayReference &oldRef = ref(maj);
+                    maj.ref = refs.size();
+                    refs.emplace_back(oldRef.arrayID, getBang(map, K, j));
+                    size_t row = maj.isLoad ? rowLoad : rowStore;
+                    for (auto &axis : oldRef) {
+                        refs.back().pushAffineAxis(axis, SK.getRow(row++),
+                                                   peelOuter);
+                    }
+                    rowLoad = maj.isLoad ? row : rowLoad;
+                    rowStore = maj.isLoad ? rowStore : row;
+                    // set maj's schedule to rotation
+                    // phi * L = (phi * K) * J
+                    // NOTE: we're assuming the schedule is the identity
+                    // otherwise, new schedule = old schedule * K
+                    SquarePtrMatrix<intptr_t> Phi = maj.schedule.getPhi();
+                    size_t phiDim = Phi.numCol();
+                    for (size_t n = 0; n < phiDim; ++n) {
+                        for (size_t m = 0; m < phiDim; ++m) {
+                            Phi(m, n) = K(peelOuter + m, peelOuter + n);
+                        }
+                    }
                 }
             }
         }

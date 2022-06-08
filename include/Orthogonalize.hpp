@@ -102,8 +102,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         for (auto a : ai) {
             newArrayRefs.emplace_back(a->arrayID, alnNew);
             for (auto &axis : *a) {
-                newArrayRefs.back().pushAffineAxis(axis.stride, SK.getRow(i));
-                ++i;
+                newArrayRefs.back().pushAffineAxis(axis, SK.getRow(i++));
             }
         }
         return newArrayRefs;

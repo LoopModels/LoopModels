@@ -497,3 +497,124 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     */
 }
+TEST(ConvReversePass, BasicAssertions) {
+    // for (n = 0; n < N; ++n){
+    //   for (m = 0; n < M; ++m){
+    //     for (j = 0; n < J; ++j){
+    //       for (i = 0; n < I; ++j){
+    //         C[m+i,j+n] += A[m,n] * B[i,j];
+    //       }
+    //     }
+    //   }
+    // }
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    auto N = Polynomial::Monomial(Polynomial::ID{2});
+    auto I = Polynomial::Monomial(Polynomial::ID{3});
+    auto J = Polynomial::Monomial(Polynomial::ID{4});
+    // Construct the loops
+    Matrix<intptr_t, 0, 0, 0> Aloop(4, 8);
+    llvm::SmallVector<MPoly, 8> bloop;
+
+    // n <= N-1
+    Aloop(0, 0) = 1;
+    bloop.push_back(N - 1);
+    // n >= 0
+    Aloop(0, 1) = -1;
+    bloop.push_back(0);
+    // m <= M-1
+    Aloop(1, 2) = 1;
+    bloop.push_back(M - 1);
+    // m >= 0
+    Aloop(1, 3) = -1;
+    bloop.push_back(0);
+    // j <= J-1
+    Aloop(2, 4) = 1;
+    bloop.push_back(J - 1);
+    // j >= 0
+    Aloop(2, 5) = -1;
+    bloop.push_back(0);
+    // i <= I-1
+    Aloop(3, 6) = 1;
+    bloop.push_back(I - 1);
+    // i >= 0
+    Aloop(3, 7) = -1;
+    bloop.push_back(0);
+
+    PartiallyOrderedSet poset;
+    std::shared_ptr<AffineLoopNest> loop =
+        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+
+    // construct indices
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
+    m.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
+    n.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
+    n.emplace_back(1, VarID(3, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
+    n.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
+
+    LoopBlock lblock;
+    lblock.refs.reserve(3);
+    // B[m, n]
+    llvm::SmallVector<Stride, ArrayRefPreAllocSize> BijAxis;
+    BijAxis.emplace_back(1, i);
+    BijAxis.emplace_back(I, j);
+    const size_t BmnInd = lblock.refs.size();
+    lblock.refs.emplace_back(0, loop, BijAxis);
+    std::cout << "Bmn = " << lblock.refs.back() << std::endl;
+    // A[m, n]
+    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmnAxis;
+    AmnAxis.emplace_back(1, m);
+    AmnAxis.emplace_back(M, n);
+    const size_t AmnInd = lblock.refs.size();
+    lblock.refs.emplace_back(1, loop, AmnAxis);
+    // C[m+i, n+j]
+    llvm::SmallVector<Stride, ArrayRefPreAllocSize> CmijnAxis;
+    {
+        llvm::SmallVector<std::pair<MPoly, VarID>, 1> mpi;
+        mpi.emplace_back(1, m);
+        mpi.emplace_back(1, i);
+        CmijnAxis.emplace_back(1, std::move(mpi));
+        llvm::SmallVector<std::pair<MPoly, VarID>, 1> npj;
+        npj.emplace_back(1, m);
+        npj.emplace_back(1, i);
+        CmijnAxis.emplace_back(M + I - 1, std::move(npj));
+    }
+    const size_t CmijnInd = lblock.refs.size();
+    lblock.refs.emplace_back(1, loop, CmijnAxis);
+
+    // for (n = 0; n < N; ++n){
+    //   for (m = 0; n < M; ++m){
+    //     for (j = 0; n < J; ++j){
+    //       for (i = 0; n < I; ++j){
+    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * B[i,j];
+    //       }
+    //     }
+    //   }
+    // }
+    Schedule sch_0(2);
+    SquarePtrMatrix<intptr_t> Phi = sch_0.getPhi();
+    // Phi0 = [1 0; 0 1]
+    Phi(0, 0) = 1;
+    Phi(1, 1) = 1;
+    Phi(2, 2) = 1;
+    Phi(3, 3) = 1;
+    Schedule sch_1 = sch_0;
+    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
+    lblock.memory.emplace_back(BmnInd, nullptr, sch_0, true);
+    sch_1.getOmega()[8] = 1;
+    Schedule sch_2 = sch_1;
+    //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
+    lblock.memory.emplace_back(AmnInd, nullptr, sch_1, true);
+    sch_2.getOmega()[8] = 2;
+    Schedule sch_3 = sch_2;
+    //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
+    lblock.memory.emplace_back(CmijnInd, nullptr, sch_2, true);
+    sch_3.getOmega()[8] = 3;
+    //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
+    lblock.memory.emplace_back(CmijnInd, nullptr, sch_3, false);
+
+    lblock.orthogonalizeStores();
+    
+}

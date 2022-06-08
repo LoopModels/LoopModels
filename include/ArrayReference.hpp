@@ -283,7 +283,6 @@ static constexpr unsigned ArrayRefPreAllocSize = 2;
 //     llvm::SmallVector<std::pair<MPoly, VarID>, ArrayRefPreAllocSize> inds;
 // };
 
-
 // `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
 // `baz` needs its own (of depth 2):
 // for i = I, j = J
@@ -309,19 +308,23 @@ struct ArrayReference {
         : arrayID(arrayID), loop(loop), axes(axes) {
         // TODO: fill indToStrideMap;
     }
-    void pushAffineAxis(const MPoly &stride, const StridedVector<intptr_t> &s) {
-        // if (s.size() >= indToStrideMap.size()) {
-        //     indToStrideMap.resize(s.size());
-        // }
-        // uint32_t m = uint32_t(1) << axes.size();
-        axes.emplace_back(stride);
+    void pushAffineAxis(const Stride &stride, const StridedVector<intptr_t> &s,
+                        size_t j = 0) {
+        axes.emplace_back(stride.stride);
         llvm::SmallVector<std::pair<MPoly, VarID>, 1> &inds =
             axes.back().indices;
         for (IDType i = 0; i < s.size(); ++i) {
             if (intptr_t c = s[i]) {
-                inds.emplace_back(c, VarID(i, VarType::LoopInductionVariable));
+                inds.emplace_back(c,
+                                  VarID(i + j, VarType::LoopInductionVariable));
                 assert(inds.back().first.getCompileTimeConstant().getValue() ==
                        c);
+            }
+        }
+        for (auto &i : stride) {
+            if ((i.second.getType() != VarType::LoopInductionVariable) ||
+                (i.second.getID() < j)) {
+                inds.push_back(i);
             }
         }
     }
