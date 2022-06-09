@@ -274,11 +274,10 @@ struct LoopBlock {
             }
         }
     }
-    std::shared_ptr<AffineLoopNest> getBang(
+    static std::shared_ptr<AffineLoopNest> getBang(
         llvm::DenseMap<const AffineLoopNest *, std::shared_ptr<AffineLoopNest>>
             &map,
-        SquarePtrMatrix<intptr_t> K, size_t i) const {
-        const AffineLoopNest *aln = ref(memory[i]).loop.get();
+        SquarePtrMatrix<intptr_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
         std::shared_ptr<AffineLoopNest> newp;
         if (p == map.end()) {
@@ -406,12 +405,13 @@ struct LoopBlock {
                     map;
                 rowStore = 0;
                 rowLoad = numStore;
-                for (auto &j : orthInds) {
+                for (unsigned j : orthInds) {
                     visited[j] = true;
                     MemoryAccess &maj = memory[j];
                     ArrayReference &oldRef = ref(maj);
                     maj.ref = refs.size();
-                    refs.emplace_back(oldRef.arrayID, getBang(map, K, j));
+                    refs.emplace_back(oldRef.arrayID,
+                                      getBang(map, K, oldRef.loop.get()));
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     for (auto &axis : oldRef) {
                         refs.back().pushAffineAxis(axis, SK.getRow(row++),

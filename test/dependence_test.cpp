@@ -550,9 +550,9 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
     n.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
-    n.emplace_back(1, VarID(3, VarType::LoopInductionVariable));
+    i.emplace_back(1, VarID(3, VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
-    n.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
+    j.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
 
     LoopBlock lblock;
     lblock.refs.reserve(3);
@@ -572,13 +572,11 @@ TEST(ConvReversePass, BasicAssertions) {
     // C[m+i, n+j]
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> CmijnAxis;
     {
-        llvm::SmallVector<std::pair<MPoly, VarID>, 1> mpi;
-        mpi.emplace_back(1, m);
-        mpi.emplace_back(1, i);
+        llvm::SmallVector<std::pair<MPoly, VarID>, 1> mpi = m;
+        mpi.push_back(i.front());
         CmijnAxis.emplace_back(1, std::move(mpi));
-        llvm::SmallVector<std::pair<MPoly, VarID>, 1> npj;
-        npj.emplace_back(1, m);
-        npj.emplace_back(1, i);
+        llvm::SmallVector<std::pair<MPoly, VarID>, 1> npj = n;
+        npj.push_back(j.front());
         CmijnAxis.emplace_back(M + I - 1, std::move(npj));
     }
     const size_t CmijnInd = lblock.refs.size();
@@ -593,7 +591,7 @@ TEST(ConvReversePass, BasicAssertions) {
     //     }
     //   }
     // }
-    Schedule sch_0(2);
+    Schedule sch_0(4);
     SquarePtrMatrix<intptr_t> Phi = sch_0.getPhi();
     // Phi0 = [1 0; 0 1]
     Phi(0, 0) = 1;
@@ -616,5 +614,5 @@ TEST(ConvReversePass, BasicAssertions) {
     lblock.memory.emplace_back(CmijnInd, nullptr, sch_3, false);
 
     lblock.orthogonalizeStores();
-    
+    std::cout << "lblock.refs.size() = " << lblock.refs.size() << std::endl;
 }
