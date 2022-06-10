@@ -280,7 +280,9 @@ struct LoopBlock {
         SquarePtrMatrix<intptr_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
         std::shared_ptr<AffineLoopNest> newp;
-        if (p == map.end()) {
+        if (p != map.end()) {
+            return p->second;
+        } else {
             const size_t numVar = aln->getNumVar();
             const size_t numConstraints = aln->getNumConstraints();
             const size_t numTransformed = K.numRow();
@@ -300,10 +302,11 @@ struct LoopBlock {
                     A(j, k) = Ajk;
                 }
             }
-            return std::make_shared<AffineLoopNest>(std::move(A), aln->b,
-                                                    aln->poset);
-        } else {
-            return p->second;
+            std::shared_ptr<AffineLoopNest> alshr =
+                std::make_shared<AffineLoopNest>(std::move(A), aln->b,
+                                                 aln->poset);
+            map.insert(std::make_pair(aln, alshr));
+            return alshr;
         }
     }
     void orthogonalizeStores() {
@@ -402,16 +405,23 @@ struct LoopBlock {
                 Matrix<intptr_t, 0, 0> SK(matmul(S, K));
                 llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
-                    map;
+                    loopMap;
+                llvm::SmallVector<int, 16> refMap(
+                    refs.size() + orthInds.size() - 1, -1);
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
                     visited[j] = true;
                     MemoryAccess &maj = memory[j];
+                    unsigned oldRefID = maj.ref;
+                    if (refMap[oldRefID] >= 0) {
+                        maj.ref = oldRefID;
+                        continue;
+                    }
                     ArrayReference &oldRef = ref(maj);
-                    maj.ref = refs.size();
+                    refMap[oldRefID] = maj.ref = refs.size();
                     refs.emplace_back(oldRef.arrayID,
-                                      getBang(map, K, oldRef.loop.get()));
+                                      getBang(loopMap, K, oldRef.loop.get()));
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     for (auto &axis : oldRef) {
                         refs.back().pushAffineAxis(axis, SK.getRow(row++),
