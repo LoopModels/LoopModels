@@ -1,5 +1,5 @@
-#include "../include/Orthogonalize.hpp"
 #include "../include/Math.hpp"
+#include "../include/Orthogonalize.hpp"
 #include "../include/Symbolics.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
@@ -103,13 +103,17 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
-                             llvm::SmallVector<ArrayReference, 0>>>
-        orth(orthogonalize(ai));
+    llvm::Optional<llvm::SmallVector<ArrayReference, 0>> orth(
+        orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
-    auto [newAlnp, newArrayRefs] = orth.getValue();
+    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth.getValue();
+    AffineLoopNest *newAlnp = newArrayRefs.begin()->loop.get();
+    for (auto &ar : newArrayRefs) {
+        EXPECT_EQ(newAlnp, ar.loop.get());
+    }
+
     std::cout << "A=" << newAlnp->A << std::endl;
     // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
     EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
@@ -247,13 +251,17 @@ TEST(BadMul, BasicAssertions) {
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
-                             llvm::SmallVector<ArrayReference, 0>>>
-        orth(orthogonalize(ai));
+    llvm::Optional<llvm::SmallVector<ArrayReference, 0>> orth(
+        orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
-    auto [newAlnp, newArrayRefs] = orth.getValue();
+    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth.getValue();
+    AffineLoopNest *newAlnp = newArrayRefs.begin()->loop.get();
+    for (auto &ar : newArrayRefs) {
+        EXPECT_EQ(newAlnp, ar.loop.get());
+    }
+
     std::cout << "A=" << newAlnp->A << std::endl;
     // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
     EXPECT_EQ(newAlnp->lowerb[0].size(), 1);

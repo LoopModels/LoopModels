@@ -17,7 +17,8 @@ struct Permutation {
     size_t getNumLoops() const { return data.size(0); }
     size_t length() const { return data.length(); }
 
-    PtrVector<unsigned, 0> inv() { return data.getCol(1); }
+    // llvm::MutableArrayRef<unsigned> inv() { return data.getCol(1); }
+    llvm::ArrayRef<unsigned> inv() { return data.getCol(1); }
 
     unsigned &inv(size_t j) { return data(j, 1); }
     auto begin() { return data.begin(); }

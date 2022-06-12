@@ -8,7 +8,7 @@
 
 // `B` is a transposed mirror in reduced form
 // it is used to check whether a new row is linearly independent.
-bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
+static bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j) {
     // std::ranges::fill(A.getRow(j), intptr_t(0));
     for (size_t i = 0; i < axis.size(); ++i) {
         VarID v = axis[i].second;
@@ -23,9 +23,26 @@ bool addIndRow(Matrix<intptr_t, 0, 0> &A, const Stride &axis, size_t j) {
     }
     return false;
 }
+static bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j,
+                      size_t k) {
+    // std::ranges::fill(A.getRow(j), intptr_t(0));
+    for (size_t i = 0; i < axis.size(); ++i) {
+        VarID v = axis[i].second;
+        if (v.isLoopInductionVariable()) {
+            if (llvm::Optional<intptr_t> c =
+                    axis[i].first.getCompileTimeConstant()) {
+                IDType id = v.getID();
+                if (id >= k)
+                    A(j, id - k) = c.getValue();
+                continue;
+            }
+        }
+        return true;
+    }
+    return false;
+}
 
-llvm::Optional<std::pair<std::shared_ptr<AffineLoopNest>,
-                         llvm::SmallVector<ArrayReference, 0>>>
+llvm::Optional<llvm::SmallVector<ArrayReference, 0>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I
@@ -85,11 +102,10 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         for (auto a : ai) {
             newArrayRefs.emplace_back(a->arrayID, alnNew);
             for (auto &axis : *a) {
-                newArrayRefs.back().pushAffineAxis(axis.stride, SK.getRow(i));
-                ++i;
+                newArrayRefs.back().pushAffineAxis(axis, SK.getRow(i++));
             }
         }
-        return std::make_pair(alnNew, newArrayRefs);
+        return newArrayRefs;
     }
     return {};
 }

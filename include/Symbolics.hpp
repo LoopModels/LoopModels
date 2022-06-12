@@ -155,7 +155,7 @@ inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
     return offset;
 }
 static std::string programVarName(size_t i) { return std::string(1, 'L' + i); }
-std::string monomialTermStr(size_t id, size_t exponent) {
+static std::string monomialTermStr(size_t id, size_t exponent) {
     if (exponent) {
         if (exponent > 1) {
             return programVarName(id) + "^" + std::to_string(exponent);
@@ -2561,13 +2561,20 @@ static Multivariate<C, M> operator*(Multivariate<C, M> &c, intptr_t x) {
 }
 template <typename C, IsMonomial M>
 static Multivariate<C, M> operator*(intptr_t x, Multivariate<C, M> &&c) {
-    c *= x;
-    return std::move(c);
+    return std::move(c *= x);
 }
 template <typename C, IsMonomial M>
 static Multivariate<C, M> operator*(Multivariate<C, M> &&c, intptr_t x) {
-    c *= x;
-    return std::move(c);
+    return std::move(c *= x);
+}
+
+template <IsMonomial M>
+static Multivariate<intptr_t, M> operator*(intptr_t x, Multivariate<intptr_t, M> &&c) {
+    return std::move(c *= x);
+}
+template <IsMonomial M>
+static Multivariate<intptr_t, M> operator*(Multivariate<intptr_t, M> &&c, intptr_t x) {
+    return std::move(c *= x);
 }
 
 template <typename C, IsMonomial M>

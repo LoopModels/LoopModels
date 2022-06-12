@@ -6,10 +6,11 @@ FetchContent_Declare(
     GIT_TAG 6d50251d8e6ed6b7f6eb1e12c558d2808fb4ddaa)
 FetchContent_MakeAvailable(benchmark)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=restrict")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=restrict --save-temps")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --save-temps=obj")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --save-temps=obj")
 
 add_executable(
   polynomial_benchmark

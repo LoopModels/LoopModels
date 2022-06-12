@@ -1,6 +1,7 @@
 #pragma once
 // We'll follow Julia style, so anything that's not a constructor, destructor,
 // nor an operator will be outside of the struct/class.
+#include "./Macro.hpp"
 #include <bit>
 #include <cassert>
 #include <cmath>
@@ -20,6 +21,58 @@
 
 template <class T>
 concept Integral = std::is_integral<T>::value;
+
+intptr_t gcd(intptr_t x, intptr_t y) {
+    if (x == 0) {
+        return std::abs(y);
+    } else if (y == 0) {
+        return std::abs(x);
+    }
+    assert(x != std::numeric_limits<intptr_t>::min());
+    assert(y != std::numeric_limits<intptr_t>::min());
+    intptr_t a = std::abs(x);
+    intptr_t b = std::abs(y);
+    if (a == 1) {
+        return b;
+    } else if (b == 1) {
+        return a;
+    }
+    intptr_t az = std::countr_zero(uintptr_t(x));
+    intptr_t bz = std::countr_zero(uintptr_t(y));
+    b >>= bz;
+    intptr_t k = std::min(az, bz);
+    while (a) {
+        a >>= az;
+        intptr_t d = a - b;
+        az = std::countr_zero(uintptr_t(d));
+        b = std::min(a, b);
+        a = std::abs(d);
+    }
+    return b << k;
+}
+// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
+    T old_r = a;
+    T r = b;
+    T old_s = 1;
+    T s = 0;
+    T old_t = 0;
+    T t = 1;
+    while (r) {
+        T quotient = old_r / r;
+        old_r -= quotient * r;
+        old_s -= quotient * s;
+        old_t -= quotient * t;
+        std::swap(r, old_r);
+        std::swap(s, old_s);
+        std::swap(t, old_t);
+    }
+    // Solving for `t` at the end has 1 extra division, but lets us remove
+    // the `t` updates in the loop:
+    // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
+    // For now, I'll favor forgoing the division.
+    return std::make_tuple(old_r, old_s, old_t);
+}
 
 std::pair<intptr_t, intptr_t> divgcd(intptr_t x, intptr_t y) {
     intptr_t g = std::gcd(x, y);
@@ -298,9 +351,7 @@ template <typename T, size_t M> struct Vector {
     // Vector(Vector<T, M> &a) : data(a.data){};
 
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return mem[i];
     }
     T &operator[](size_t i) { return mem[i]; }
@@ -319,9 +370,7 @@ template <typename T, size_t M = 0> struct PtrVector {
     // Vector(Vector<T, M> &a) : ptr(a.ptr){};
 
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -339,9 +388,7 @@ template <typename T> struct PtrVector<T, 0> {
     size_t M;
     // PtrVector(llvm::ArrayRef<T> A) : ptr(A.data()), M(A.size()) {};
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -370,15 +417,11 @@ template <typename T> struct Vector<T, 0> {
     Vector(llvm::SmallVector<T> &&A) : mem(std::move(A)){};
 
     T &operator()(size_t i) {
-#ifndef DONOTBOUNDSCHECK
         assert(i < mem.size());
-#endif
         return mem[i];
     }
     const T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < mem.size());
-#endif
         return mem[i];
     }
     T &operator[](size_t i) { return mem[i]; }
@@ -497,18 +540,14 @@ template <typename T, typename A> struct BaseMatrix {
 
     T &operator()(size_t i, size_t j) {
         const size_t M = numRow();
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < numCol());
-#endif
         return getLinearElement(i + j * M);
     }
     const T &operator()(size_t i, size_t j) const {
         const size_t M = numRow();
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
         assert(j < numCol());
-#endif
         return (*this)[i + j * M];
         return getLinearElement(i + j * M);
     }
@@ -534,7 +573,8 @@ template <typename T, typename A> struct BaseMatrix {
             return PtrVector<T, M>(data() + i * M);
         } else {
             const size_t _M = numRow();
-            return PtrVector<T, 0>{data() + i * _M, _M};
+            return llvm::MutableArrayRef<T>(data() + i * _M, _M);
+            // return PtrVector<T, 0>{data() + i * _M, _M};
         }
     }
     auto getCol(size_t i) const {
@@ -645,6 +685,27 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     const T *data() const { return mem.data(); }
 };
 
+template <typename T>
+struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
+    T *mem;
+    const size_t M;
+    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
+
+    inline T &getLinearElement(size_t i) { return mem[i]; }
+    inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    T *begin() { return mem; }
+    T *end() { return mem + (M * M); }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + (M * M); }
+
+    size_t numRow() const { return M; }
+    size_t numCol() const { return M; }
+    static constexpr size_t getConstRow() { return 0; }
+
+    T *data() { return mem; }
+    const T *data() const { return mem; }
+};
+
 template <typename T, unsigned STORAGE = 3>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     typedef T eltype;
@@ -691,6 +752,15 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         }
         return A;
     }
+    operator PtrMatrix<T>() {
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
+    }
+    operator PtrMatrix<const T>() const {
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(M)};
+    }
+    operator SquarePtrMatrix<T>() {
+        return SquarePtrMatrix(mem.data(), size_t(M));
+    }
 };
 
 template <typename T, size_t S>
@@ -708,7 +778,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M){};
 
     operator PtrMatrix<T>() {
-        return {.mem=mem.data(), .M=size_t(M), .N=size_t(N)};
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(N)};
+    }
+    operator PtrMatrix<const T>() const {
+        return {.mem = mem.data(), .M = size_t(M), .N = size_t(N)};
     }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
@@ -797,32 +870,12 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         }
     }
 };
+template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
 static_assert(std::copyable<Matrix<intptr_t, 4, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 4, 0>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 4>>);
 static_assert(std::copyable<Matrix<intptr_t, 0, 0>>);
 static_assert(std::copyable<SquareMatrix<intptr_t>>);
-
-template <typename T>
-struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
-    T *mem;
-    const size_t M;
-    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
-
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    T *begin() { return mem; }
-    T *end() { return mem + (M * M); }
-    const T *begin() const { return mem; }
-    const T *end() const { return mem + (M * M); }
-
-    size_t numRow() const { return M; }
-    size_t numCol() const { return M; }
-    static constexpr size_t getConstRow() { return 0; }
-
-    T *data() { return mem; }
-    const T *data() const { return mem; }
-};
 
 template <typename T, typename P>
 std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
@@ -1023,7 +1076,7 @@ AbstractMatrix auto matmultn(AbstractMatrix auto &C,
     return C;
 }
 
-void swapRows(IntMatrix auto &A, size_t i, size_t j) {
+void swapRows(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
@@ -1033,15 +1086,13 @@ void swapRows(IntMatrix auto &A, size_t i, size_t j) {
         std::swap(A(i, n), A(j, n));
     }
 }
-inline void swapCols(IntMatrix auto &A, size_t i, size_t j) {
+MULTIVERSION inline void swapCols(PtrMatrix<intptr_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
     auto [M, N] = A.size();
     assert((i < N) & (j < N));
-#pragma clang loop unroll(disable)
-#pragma clang loop vectorize(enable)
-#pragma clang loop vectorize_predicate(enable)
+    VECTORIZE
     for (size_t m = 0; m < M; ++m) {
         std::swap(A(m, i), A(m, j));
     }
@@ -1223,30 +1274,6 @@ std::pair<PermutationSubset, bool> advance_state(PermutationLevelIterator p,
 // M == 1 // if M >= N => N <= 1; if N <= 1 => 0 inner loop iterations
 // or
 // i == j == c0 // can tell from loop bounds this is impossible
-
-// https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
-    T old_r = a;
-    T r = b;
-    T old_s = 1;
-    T s = 0;
-    T old_t = 0;
-    T t = 1;
-    while (r) {
-        T quotient = old_r / r;
-        old_r -= quotient * r;
-        old_s -= quotient * s;
-        old_t -= quotient * t;
-        std::swap(r, old_r);
-        std::swap(s, old_s);
-        std::swap(t, old_t);
-    }
-    // Solving for `t` at the end has 1 extra division, but lets us remove
-    // the `t` updates in the loop:
-    // T t = (b == 0) ? 0 : ((old_r - old_s * a) / b);
-    // For now, I'll favor forgoing the division.
-    return std::make_tuple(old_r, old_s, old_t);
-}
 
 template <int Bits, class T>
 constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&

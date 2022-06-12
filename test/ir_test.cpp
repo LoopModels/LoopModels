@@ -73,7 +73,7 @@ TEST(IRTest, BasicAssertions) {
                                  Polynomial::ID{2})));
     inds.emplace_back(p4, VarID(0, VarType::LoopInductionVariable));
 
-    ArrayReferenceFlat ar{.arrayID = 10, .inds = inds};
-    std::cout << ar << std::endl;
+    // ArrayReferenceFlat ar{.arrayID = 10, .inds = inds};
+    // std::cout << ar << std::endl;
     // std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./AbstractEqualityPolyhedra.hpp"
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
@@ -151,15 +152,17 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t nc = nc0 + nc1;
         A.resize(nv0 + nv1, nc);
         E.resize(nv0 + nv1, dims.size());
+        // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
             for (size_t j = 0; j < nv0; ++j) {
                 A(j, i) = ar0.loop->A(j, i);
             }
             b.push_back(ar0.loop->b[i]);
         }
+        // ar1 loop
         for (size_t i = 0; i < nc1; ++i) {
             for (size_t j = 0; j < nv1; ++j) {
-                A(nv0 + j, nc0 + i) = ar0.loop->A(j, i);
+                A(nv0 + j, nc0 + i) = ar1.loop->A(j, i);
             }
             b.push_back(ar1.loop->b[i]);
         }
@@ -221,16 +224,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             // b.push_back(std::move(bound));
         }
 #ifndef NDEBUG
-        std::cout << "About to pruneBounds\nA = \n"
-                  << A << "\nb = " << std::endl;
-        for (auto &bi : b) {
-            std::cout << bi << ", ";
-        }
-        std::cout << "\nE = \n" << E << "\nq = " << std::endl;
-        for (auto &qi : q) {
-            std::cout << qi << ", ";
-        }
-        std::cout << std::endl;
+        printConstraints(printConstraints(std::cout, A, b, true), E, q, false)
+            << std::endl;
 #endif
         if (pruneBounds()) {
             A.clear();
@@ -382,66 +377,28 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numVarKeep + i, numBoundingCoefs + i) = -1;
         }
-#ifndef NDEBUG
-        std::cout << "Af = \n" << Af << std::endl;
-#endif
+        //#ifndef NDEBUG
+        //        std::cout << "Af = \n" << Af << std::endl;
+        //#endif
         removeExtraVariables(Af, bf, Ef, qf, numVarKeep);
         IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
                                  std::move(qf));
         ipoly.pruneBounds();
         assert(ipoly.E.numCol() == ipoly.q.size());
-        // remove lambdas
-        // std::cout << "ipoly =\n" << ipoly << std::endl;
-        // for (size_t i = numVarKeep; i < numVarNew; ++i) {
-        //     ipoly.removeVariable(i);
-        //     std::cout << "After removing variable " << i << " ipoly = \n"
-        //               << ipoly << std::endl;
-        // }
-        // ipoly.A.reduceNumRows(numVarKeep);
-        // ipoly.E.reduceNumRows(numVarKeep);
-
-        // for (size_t i = numVarNew - 1; i >= numVarKeep; --i) {
-        //     ipoly.removeVariable(i);
-        //     ipoly.A.reduceNumRows(i);
-        //     ipoly.E.reduceNumRows(i);
-        //     std::cout << "After removing variable " << i << " ipoly = \n"
-        //               << ipoly << std::endl;
-        // }
-        // std::cout << "reduced ipoly =\n" << ipoly << std::endl;
         return ipoly;
     }
 
 }; // namespace DependencePolyhedra
-
-struct MemoryAccess {
-    ArrayReference *ref;
-    llvm::User *user; // null if store
-    llvm::User *dst;  // null if load
-                      // unsigned (instead of ptr) as we build up edges
-    // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
-    llvm::SmallVector<unsigned> edgesIn;
-    llvm::SmallVector<unsigned> edgesOut;
-    const bool isLoad;
-    MemoryAccess(ArrayReference *ref, llvm::User *user, Schedule schedule,
-                 bool isLoad)
-        : ref(ref), user(user), schedule(schedule),
-          edgesIn(llvm::SmallVector<unsigned, 0>()),
-          edgesOut(llvm::SmallVector<unsigned, 0>()), isLoad(isLoad){};
-
-    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    size_t getNumLoops() const { return ref->getNumLoops(); }
-};
 
 struct Dependence {
     DependencePolyhedra depPoly;
     IntegerEqPolyhedra dependenceSatisfaction;
     IntegerEqPolyhedra dependenceBounding;
     bool isForward() const { return depPoly.forward; }
-    static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y) {
-        return check(*x.ref, x.schedule, *y.ref, y.schedule);
-    }
+    // static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y)
+    // {
+    //     return check(*x.ref, x.schedule, *y.ref, y.schedule);
+    // }
     static llvm::Optional<Dependence> check(const ArrayReference &x,
                                             const Schedule &sx,
                                             const ArrayReference &y,
@@ -477,27 +434,25 @@ struct Dependence {
         // }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-                if (o2idiff < 0) {
-                    dxy.forward = false;
-                    fyx.A.reduceNumRows(numLoopsTotal + 1);
-                    fyx.E.reduceNumRows(numLoopsTotal + 1);
-                    fyx.dropEmptyConstraints();
+
+                if ((dxy.forward = o2idiff > 0)) {
+                    std::swap(fxy, fyx);
+                    // fxy.A.reduceNumRows(numLoopsTotal + 1);
+                    // fxy.E.reduceNumRows(numLoopsTotal + 1);
+                    // fxy.dropEmptyConstraints();
+                    // // x then y
+                    // return Dependence{dxy, fxy, fyx};
 #ifndef NDEBUG
                     std::cout << "dep order 0; i = " << i << std::endl;
-#endif
-                    // y then x
-                    return Dependence{dxy, fyx, fxy};
                 } else {
-                    dxy.forward = true;
-                    fxy.A.reduceNumRows(numLoopsTotal + 1);
-                    fxy.E.reduceNumRows(numLoopsTotal + 1);
-                    fxy.dropEmptyConstraints();
-#ifndef NDEBUG
                     std::cout << "dep order 1; i = " << i << std::endl;
 #endif
-                    // x then y
-                    return Dependence{dxy, fxy, fyx};
                 }
+                fyx.A.reduceNumRows(numLoopsTotal + 1);
+                fyx.E.reduceNumRows(numLoopsTotal + 1);
+                fyx.dropEmptyConstraints();
+                // x then y
+                return Dependence{dxy, fyx, fxy};
             }
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
