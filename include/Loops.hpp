@@ -18,17 +18,17 @@
 // extrema are the extremes, in orig order
 struct AffineLoopNest : SymbolicPolyhedra {
     Permutation perm; // maps current to orig
-    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> remainingA;
+    llvm::SmallVector<Matrix<int64_t, 0, 0, 0>, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
-    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> lowerA;
-    llvm::SmallVector<Matrix<intptr_t, 0, 0, 0>, 0> upperA;
+    llvm::SmallVector<Matrix<int64_t, 0, 0, 0>, 0> lowerA;
+    llvm::SmallVector<Matrix<int64_t, 0, 0, 0>, 0> upperA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> lowerb;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> upperb;
 
-    intptr_t currentToOriginalPerm(size_t i) const { return perm(i); }
+    int64_t currentToOriginalPerm(size_t i) const { return perm(i); }
 
     size_t getNumLoops() const { return getNumVar(); }
-    AffineLoopNest(Matrix<intptr_t, 0, 0, 0> Ain,
+    AffineLoopNest(Matrix<int64_t, 0, 0, 0> Ain,
                    llvm::SmallVector<MPoly, 8> bin, PartiallyOrderedSet posetin)
         : SymbolicPolyhedra(std::move(Ain), std::move(bin), std::move(posetin)),
           perm(A.size(0)), remainingA(A.size(0)), remainingB(A.size(0)),
@@ -43,7 +43,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
             calculateBounds(--i);
         } while (i);
     }
-    void categorizeBoundsCache(const Matrix<intptr_t, 0, 0, 0> &A,
+    void categorizeBoundsCache(const Matrix<int64_t, 0, 0, 0> &A,
                                const llvm::SmallVectorImpl<MPoly> &b,
                                size_t i) {
 
@@ -55,7 +55,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
             return;
         }
         perm.swap(_i, _j);
-        for (intptr_t i = std::max(_i, _j); i >= intptr_t(std::min(_i, _j));
+        for (int64_t i = std::max(_i, _j); i >= int64_t(std::min(_i, _j));
              --i) {
             calculateBounds(i);
         }
@@ -64,7 +64,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
         const size_t i = perm(0);
         const auto [numNeg, numPos] = countNonZeroSign(remainingA[0], i);
         if ((numNeg > 1) | (numPos > 1)) {
-            Matrix<intptr_t, 0, 0, 0> Aold = remainingA[0];
+            Matrix<int64_t, 0, 0, 0> Aold = remainingA[0];
             llvm::SmallVector<MPoly, 8> bold = remainingB[0];
             categorizeBoundsCache(Aold, bold, i);
         } else {
@@ -100,11 +100,11 @@ struct AffineLoopNest : SymbolicPolyhedra {
         // eliminate variables 0..._j
         auto A = remainingA.back();
         auto b = remainingB.back();
-        Matrix<intptr_t, 0, 0, 0> lwrA;
-        Matrix<intptr_t, 0, 0, 0> uprA;
+        Matrix<int64_t, 0, 0, 0> lwrA;
+        Matrix<int64_t, 0, 0, 0> uprA;
         llvm::SmallVector<MPoly, 16> lwrB;
         llvm::SmallVector<MPoly, 16> uprB;
-        Matrix<intptr_t, 0, 0, 128> Atmp0, Atmp1, Etmp;
+        Matrix<int64_t, 0, 0, 128> Atmp0, Atmp1, Etmp;
         llvm::SmallVector<MPoly, 16> btmp0, btmp1, qtmp;
         for (size_t _k = 0; _k < _j; ++_k) {
             if (_k != _i) {
@@ -115,7 +115,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
                              btmp1, qtmp, A, b, k, Polynomial::Val<false>());
             }
         }
-        Matrix<intptr_t, 0, 0, 0> Anew;
+        Matrix<int64_t, 0, 0, 0> Anew;
         llvm::SmallVector<MPoly, 8> bnew;
         size_t i = perm(_i);
         do {
@@ -140,20 +140,20 @@ struct AffineLoopNest : SymbolicPolyhedra {
             // pruneBounds(Anew, bnew, j);
             size_t numCols = Anew.size(1);
             for (size_t l = 0; l < numCols; ++l) {
-                intptr_t Ajl = Anew(j, l);
+                int64_t Ajl = Anew(j, l);
                 if (Ajl >= 0) {
                     // then it is not a lower bound
                     continue;
                 }
-                intptr_t Ail = Anew(i, l);
+                int64_t Ail = Anew(i, l);
                 for (size_t u = 0; u < numCols; ++u) {
-                    intptr_t Aju = Anew(j, u);
+                    int64_t Aju = Anew(j, u);
                     if (Aju <= 0) {
                         // then it is not an upper bound
                         continue;
                     }
-                    intptr_t Aiu = Anew(i, u);
-                    intptr_t c = Ajl * Aiu - Aju * Ail;
+                    int64_t Aiu = Anew(i, u);
+                    int64_t c = Ajl * Aiu - Aju * Ail;
                     auto delta = bnew[l] * Aju;
                     Polynomial::fnmadd(delta, bnew[u], Ajl);
                     // delta + c * i >= 0 -> iterates at least once
@@ -162,7 +162,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
                             bool doesNotIterate = true;
                             // we're adding to the lower bound
                             for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = Anew(i, il);
+                                int64_t ail = Anew(i, il);
                                 if ((ail >= 0) || (Anew(j, il) != 0)) {
                                     // (ail >= 0) means not a lower bound
                                     // (Anew(j, il) != 0) means the lower bound
@@ -231,7 +231,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
                             bool doesNotIterate = true;
                             // does `imax + e` iterate at least once?
                             for (size_t il = 0; il < numCols; ++il) {
-                                intptr_t ail = Anew(i, il);
+                                int64_t ail = Anew(i, il);
                                 if ((ail <= 0) || (Anew(j, il) != 0)) {
                                     // not an upper bound
                                     continue;
@@ -295,7 +295,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
                 if (k == i) {
                     continue;
                 }
-                if (intptr_t lakj = lA(k, j)) {
+                if (int64_t lakj = lA(k, j)) {
                     if (lakj < 0) {
                         os << " - ";
                     } else if (printed) {
@@ -332,7 +332,7 @@ struct AffineLoopNest : SymbolicPolyhedra {
                 if (k == i) {
                     continue;
                 }
-                if (intptr_t uakj = uA(k, j)) {
+                if (int64_t uakj = uA(k, j)) {
                     if (uakj > 0) {
                         os << " - ";
                     } else if (printed) {

@@ -7,7 +7,7 @@
 
 TEST(LinearAlgebraTest, BasicAssertions) {
     const SquareMatrix<Rational> identity = SquareMatrix<Rational>::identity(4);
-    SquareMatrix<intptr_t> A(4);
+    SquareMatrix<int64_t> A(4);
     A(0, 0) = 2;
     A(0, 1) = -10;
     A(0, 2) = 6;

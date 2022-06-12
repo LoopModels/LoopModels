@@ -25,7 +25,7 @@ template <typename T> T &negate(T &x) {
     return x;
 }
 // template <typename T> T& negate(T &x) { return x.negate(); }
-intptr_t negate(intptr_t &x) { return x *= -1; }
+int64_t negate(int64_t &x) { return x *= -1; }
 // pass by value to copy
 // template <typename T> T cnegate(T x) { return negate(x); }
 template <typename TRC> auto cnegate(TRC &&x) {
@@ -40,7 +40,7 @@ template <typename TRC> auto cnegate(TRC &&x) {
 // template <typename T> T cnegate(T &&x){ return negate(x); }
 
 // template <typename T> bool isZero(T x) { return x.isZero(); }
-bool isZero(intptr_t x) { return x == 0; }
+bool isZero(int64_t x) { return x == 0; }
 bool isZero(size_t x) { return x == 0; }
 
 template <typename T, typename S> static void addTerm(T &a, S &&x) {
@@ -942,11 +942,11 @@ template <typename C, IsMonomial M> struct Term {
     bool addCoef(Term const &t, C const &c) {
         return addCoef(t.coefficient * c);
     }
-    Term<C, M> &operator*=(intptr_t x) {
+    Term<C, M> &operator*=(int64_t x) {
         coefficient *= x;
         return *this;
     }
-    Term<C, M> operator*(intptr_t x) const {
+    Term<C, M> operator*(int64_t x) const {
         Term y(*this);
         return y *= x;
     }
@@ -971,7 +971,7 @@ template <typename C, IsMonomial M> struct Term {
     }
 
     bool isCompileTimeConstant() const { return isOne(exponent); }
-    llvm::Optional<intptr_t> getCompileTimeConstant() const {
+    llvm::Optional<int64_t> getCompileTimeConstant() const {
         if (isCompileTimeConstant()) {
             return coefficient;
         } else {
@@ -1420,7 +1420,7 @@ template <typename C, IsMonomial M> struct Terms {
             return false;
         }
     }
-    llvm::Optional<intptr_t> getCompileTimeConstant() const {
+    llvm::Optional<int64_t> getCompileTimeConstant() const {
         switch (terms.size()) {
         case 0:
             return 0;
@@ -1490,7 +1490,7 @@ template <typename C, IsMonomial M> struct Terms {
         }
         os << " ( ";
         for (size_t j = 0; j < length(x.terms); ++j) {
-            if (std::is_same_v<C, intptr_t>) {
+            if (std::is_same_v<C, int64_t>) {
                 Term<C, M> t = x.terms[j];
                 if (j) {
                     if (t.coefficient >= 0) {
@@ -1552,90 +1552,90 @@ bool operator==(Multivariate<C, M> const &x, M const &y) {
     return (x.terms.size() == 1) && (x.leadingTerm() == y);
 }
 
-static Terms<intptr_t, Uninomial> operator+(Uninomial x, Uninomial y) {
+static Terms<int64_t, Uninomial> operator+(Uninomial x, Uninomial y) {
     if (x.termsMatch(y)) {
-        return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>(2, x));
+        return Terms<int64_t, Uninomial>(Term<int64_t, Uninomial>(2, x));
     } else if (x.lexGreater(y)) {
-        return Terms<intptr_t, Uninomial>(x, y);
+        return Terms<int64_t, Uninomial>(x, y);
     } else {
-        return Terms<intptr_t, Uninomial>(y, x);
+        return Terms<int64_t, Uninomial>(y, x);
     }
-    // Terms<intptr_t, Uninomial> z(x);
+    // Terms<int64_t, Uninomial> z(x);
     // return z += y;
 }
 
 template <IsMonomial M> static auto operator+(M const &x, M const &y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(x);
+    Terms<int64_t, std::remove_cv_t<M>> z(x);
     // typedef typename std::remove_reference<M>::type MR;
-    // Terms<intptr_t, MR> z(x);
+    // Terms<int64_t, MR> z(x);
     z += y;
     return z;
 }
 template <IsMonomial M> static auto operator+(M const &x, M &&y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(y));
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(y));
     z += x;
     return z;
 }
 template <IsMonomial M> static auto operator+(M &&x, M const &y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
     z += y;
     return z;
 }
 template <IsMonomial M> static auto operator+(M &&x, M &&y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
     z += std::move(y);
     return z;
 }
-// template <IsMonomial M> Terms<intptr_t, M> operator+(M x, M y) {
+// template <IsMonomial M> Terms<int64_t, M> operator+(M x, M y) {
 //     if (x.termsMatch(y)) {
-//         return Terms<intptr_t, M>(Term<intptr_t, M>(2, std::move(x)));
+//         return Terms<int64_t, M>(Term<int64_t, M>(2, std::move(x)));
 //     } else if (x.lexGreater(y)) {
-//         return Terms<intptr_t, M>(std::move(x), std::move(y));
+//         return Terms<int64_t, M>(std::move(x), std::move(y));
 //     } else {
-//         return Terms<intptr_t, M>(std::move(y), std::move(x));
+//         return Terms<int64_t, M>(std::move(y), std::move(x));
 //     }
 // }
 
-Terms<intptr_t, Uninomial> static operator-(Uninomial x, Uninomial y) {
+Terms<int64_t, Uninomial> static operator-(Uninomial x, Uninomial y) {
     if (x.termsMatch(y)) {
-        return Terms<intptr_t, Uninomial>();
+        return Terms<int64_t, Uninomial>();
     } else if (x.lexGreater(y)) {
-        return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>{1, x},
-                                          Term<intptr_t, Uninomial>{-1, y});
+        return Terms<int64_t, Uninomial>(Term<int64_t, Uninomial>{1, x},
+                                          Term<int64_t, Uninomial>{-1, y});
     } else {
-        return Terms<intptr_t, Uninomial>(Term<intptr_t, Uninomial>{-1, y},
-                                          Term<intptr_t, Uninomial>{1, x});
+        return Terms<int64_t, Uninomial>(Term<int64_t, Uninomial>{-1, y},
+                                          Term<int64_t, Uninomial>{1, x});
     }
 }
 template <IsMonomial M> static auto operator-(M const &x, M const &y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(x);
-    z += Term<intptr_t, std::remove_cv_t<M>>{-1, y};
+    Terms<int64_t, std::remove_cv_t<M>> z(x);
+    z += Term<int64_t, std::remove_cv_t<M>>{-1, y};
     return z;
 }
 template <IsMonomial M> static auto operator-(M const &x, M &&y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(Term<intptr_t, M>{-1, std::move(y)});
+    Terms<int64_t, std::remove_cv_t<M>> z(Term<int64_t, M>{-1, std::move(y)});
     z += x;
     return z;
 }
 template <IsMonomial M> static auto operator-(M &&x, M const &y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
-    z += Term<intptr_t, std::remove_cv_t<M>>{-1, y};
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<int64_t, std::remove_cv_t<M>>{-1, y};
     return z;
 }
 template <IsMonomial M> static auto operator-(M &&x, M &&y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
-    z += Term<intptr_t, std::remove_cv_t<M>>{-1, std::move(y)};
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<int64_t, std::remove_cv_t<M>>{-1, std::move(y)};
     return z;
 }
 template <typename C, IsMonomial M> static auto operator-(Term<C, M> x, M &&y) {
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
-    z += Term<intptr_t, std::remove_cv_t<M>>{-1, std::forward<M>(y)};
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<int64_t, std::remove_cv_t<M>>{-1, std::forward<M>(y)};
     return z;
 }
 template <typename C, IsMonomial M> static auto operator-(M &&y, Term<C, M> x) {
     x.coefficient *= -1;
-    Terms<intptr_t, std::remove_cv_t<M>> z(std::move(x));
-    z += Term<intptr_t, std::remove_cv_t<M>>{1, std::forward<M>(y)};
+    Terms<int64_t, std::remove_cv_t<M>> z(std::move(x));
+    z += Term<int64_t, std::remove_cv_t<M>>{1, std::forward<M>(y)};
     return z;
 }
 
@@ -1655,14 +1655,14 @@ template <typename C, IsMonomial M> static auto operator+(C y, M x) {
                                          Term<C, std::remove_cv_t<M>>(y));
 }
 template <IsMonomial M> static auto operator+(M x, int y) {
-    return Terms<intptr_t, std::remove_cv_t<M>>(
-        Term<intptr_t, std::remove_cv_t<M>>(x),
-        Term<intptr_t, std::remove_cv_t<M>>(y));
+    return Terms<int64_t, std::remove_cv_t<M>>(
+        Term<int64_t, std::remove_cv_t<M>>(x),
+        Term<int64_t, std::remove_cv_t<M>>(y));
 }
 template <IsMonomial M> static auto operator+(int y, M x) {
-    return Terms<intptr_t, std::remove_cv_t<M>>(
-        Term<intptr_t, std::remove_cv_t<M>>(x),
-        Term<intptr_t, std::remove_cv_t<M>>(y));
+    return Terms<int64_t, std::remove_cv_t<M>>(
+        Term<int64_t, std::remove_cv_t<M>>(x),
+        Term<int64_t, std::remove_cv_t<M>>(y));
 }
 
 template <typename C>
@@ -1691,51 +1691,51 @@ static Terms<C, M> operator+(Term<C, M> const &x, M const &y) {
     return z;
 }
 template <typename C, IsMonomial M>
-static Terms<intptr_t, M> operator+(Term<C, M> const &x, M &&y) {
+static Terms<int64_t, M> operator+(Term<C, M> const &x, M &&y) {
     Terms<C, M> z(std::move(y));
     z += x;
     return z;
 }
 template <typename C, IsMonomial M>
-static Terms<intptr_t, M> operator+(Term<C, M> &&x, M const &y) {
+static Terms<int64_t, M> operator+(Term<C, M> &&x, M const &y) {
     Terms<C, M> z(std::move(x));
     z += y;
     return z;
 }
 template <typename C, IsMonomial M>
-static Terms<intptr_t, M> operator+(Term<C, M> &&x, M &&y) {
+static Terms<int64_t, M> operator+(Term<C, M> &&x, M &&y) {
     Terms<C, M> z(std::move(x));
     return z += std::move(y);
     return z;
 }
 
-static Terms<intptr_t, Uninomial> operator+(Uninomial x, int y) {
-    return Term<intptr_t, Uninomial>{y} + x;
+static Terms<int64_t, Uninomial> operator+(Uninomial x, int y) {
+    return Term<int64_t, Uninomial>{y} + x;
 }
-static Terms<intptr_t, Uninomial> operator+(int y, Uninomial x) {
-    return Term<intptr_t, Uninomial>{y} + x;
+static Terms<int64_t, Uninomial> operator+(int y, Uninomial x) {
+    return Term<int64_t, Uninomial>{y} + x;
 }
-static Terms<intptr_t, Uninomial> operator-(Uninomial x, int y) {
-    return Term<intptr_t, Uninomial>{-y} + x;
+static Terms<int64_t, Uninomial> operator-(Uninomial x, int y) {
+    return Term<int64_t, Uninomial>{-y} + x;
 }
-static Terms<intptr_t, Uninomial> operator-(int y, Uninomial x) {
-    return Term<intptr_t, Uninomial>{y} - x;
-}
-template <typename C>
-static Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &x, int y) {
-    return Term<intptr_t, Uninomial>{-y} + x;
+static Terms<int64_t, Uninomial> operator-(int y, Uninomial x) {
+    return Term<int64_t, Uninomial>{y} - x;
 }
 template <typename C>
-static Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &x) {
-    return Term<intptr_t, Uninomial>{y} - x;
+static Terms<int64_t, Uninomial> operator-(Term<C, Uninomial> &x, int y) {
+    return Term<int64_t, Uninomial>{-y} + x;
+}
+template <typename C>
+static Terms<int64_t, Uninomial> operator-(int y, Term<C, Uninomial> &x) {
+    return Term<int64_t, Uninomial>{y} - x;
 }
 // template <typename C>
-// Terms<intptr_t, Uninomial> operator-(Term<C, Uninomial> &&x, int y) {
-//     return Term<intptr_t, Uninomial>{-y} + std::move(x);
+// Terms<int64_t, Uninomial> operator-(Term<C, Uninomial> &&x, int y) {
+//     return Term<int64_t, Uninomial>{-y} + std::move(x);
 // }
 template <typename C>
-static Terms<intptr_t, Uninomial> operator-(int y, Term<C, Uninomial> &&x) {
-    return Term<intptr_t, Uninomial>{y} - std::move(x);
+static Terms<int64_t, Uninomial> operator-(int y, Term<C, Uninomial> &&x) {
+    return Term<int64_t, Uninomial>{y} - std::move(x);
 }
 
 template <typename C, typename M>
@@ -1806,7 +1806,7 @@ static Terms<C, M> operator-(Term<C, M> &&x, Term<C, M> &&y) {
 }
 
 template <typename C, typename M>
-static Term<C, M> operator*(intptr_t x, Term<C, M> y) {
+static Term<C, M> operator*(int64_t x, Term<C, M> y) {
     y.coefficient *= x;
     return y;
 }
@@ -1860,48 +1860,48 @@ static Term<C, M> operator*(M const &y, Term<C, M> &&x) {
 }
 
 template <typename C, typename M>
-static Terms<C, M> operator+(Terms<C, M> const &x, intptr_t y) {
+static Terms<C, M> operator+(Terms<C, M> const &x, int64_t y) {
     Terms<C, M> z = x.largerCapacityCopy(1);
     // Term<C,M> tt = Term<C,M>(C(y));
     // return std::move(z += tt);
     return std::move(z += Term<C, M>(C(y)));
 }
 template <typename C, typename M>
-static Terms<C, M> operator+(Terms<C, M> &&x, intptr_t y) {
+static Terms<C, M> operator+(Terms<C, M> &&x, int64_t y) {
     return std::move(x += Term<C, M>(C(y)));
 }
 
 template <typename C, typename M>
-static Terms<C, M> operator-(Terms<C, M> const &x, intptr_t y) {
+static Terms<C, M> operator-(Terms<C, M> const &x, int64_t y) {
     Terms<C, M> z = x.largerCapacityCopy(1);
     z -= y;
     return z;
 }
 template <typename C, typename M>
-static Terms<C, M> operator-(Terms<C, M> &&x, intptr_t y) {
+static Terms<C, M> operator-(Terms<C, M> &&x, int64_t y) {
     return std::move(x -= y);
 }
 
 template <typename C, typename M>
-static Terms<C, M> operator+(intptr_t x, Terms<C, M> const &y) {
+static Terms<C, M> operator+(int64_t x, Terms<C, M> const &y) {
     Terms<C, M> z = y.largerCapacityCopy(1);
     z += x;
     return z;
 }
 template <typename C, typename M>
-static Terms<C, M> operator+(intptr_t x, Terms<C, M> &&y) {
+static Terms<C, M> operator+(int64_t x, Terms<C, M> &&y) {
     return std::move(y += x);
 }
 
 template <typename C, typename M>
-static Terms<C, M> operator-(intptr_t x, Terms<C, M> const &y) {
+static Terms<C, M> operator-(int64_t x, Terms<C, M> const &y) {
     Terms<C, M> z = y.largerCapacityCopy(1);
     z -= x;
     z.negate();
     return z;
 }
 template <typename C, typename M>
-static Terms<C, M> operator-(intptr_t x, Terms<C, M> &&y) {
+static Terms<C, M> operator-(int64_t x, Terms<C, M> &&y) {
     y -= x;
     y.negate();
     return std::move(y);
@@ -1948,8 +1948,8 @@ template <typename C, typename M>
 static Terms<C, M> operator-(Terms<C, M> &&x, C &&y) {
     return std::move(x -= std::move(y));
 }
-template <IsMonomial M> static Terms<intptr_t, M> operator-(size_t x, M &y) {
-    Terms<intptr_t, M> z;
+template <IsMonomial M> static Terms<int64_t, M> operator-(size_t x, M &y) {
+    Terms<int64_t, M> z;
     z.terms.reserve(2);
     z.terms.emplace_back(-1, y);
     z.terms.push_back(x);
@@ -2015,23 +2015,23 @@ static Terms<C, M> operator-(Term<C, M> &&x, C &&y) {
     return z;
 }
 template <typename M>
-static Terms<intptr_t, M> operator-(Term<intptr_t, M> const &x, int y) {
-    return x - intptr_t(y);
+static Terms<int64_t, M> operator-(Term<int64_t, M> const &x, int y) {
+    return x - int64_t(y);
 }
 template <typename M>
-static Terms<intptr_t, M> operator-(Term<intptr_t, M> &&x, int y) {
-    return std::move(x) - intptr_t(y);
+static Terms<int64_t, M> operator-(Term<int64_t, M> &&x, int y) {
+    return std::move(x) - int64_t(y);
 }
 template <IsMonomial M>
-static Terms<intptr_t, M> operator-(size_t x, M const &y) {
-    Terms<intptr_t, M> z;
+static Terms<int64_t, M> operator-(size_t x, M const &y) {
+    Terms<int64_t, M> z;
     z.terms.reserve(2);
     z.terms.emplace_back(-1, y);
     z.terms.push_back(x);
     return z; // no std::move because of copy elision
 }
-template <IsMonomial M> static Terms<intptr_t, M> operator-(M const &y, int x) {
-    Terms<intptr_t, M> z;
+template <IsMonomial M> static Terms<int64_t, M> operator-(M const &y, int x) {
+    Terms<int64_t, M> z;
     z.terms.reserve(2);
     z.terms.emplace_back(1, y);
     z.terms.push_back(-x);
@@ -2352,7 +2352,7 @@ static void divExact(Univariate<C> &q, Univariate<C> &d, C const &x) {
         q.terms[n].exponent = d.terms[n].exponent;
     }
 }
-void fnmadd(intptr_t &c, intptr_t a, intptr_t b) { c -= a * b; }
+void fnmadd(int64_t &c, int64_t a, int64_t b) { c -= a * b; }
 template <typename C, typename M>
 static void fnmadd(Terms<C, M> &x, Terms<C, M> const &y, Term<C, M> const &z) {
     // size_t offset = x.size();
@@ -2534,46 +2534,40 @@ static Term<C, Uninomial> operator^(Term<C, M> &x, size_t i) {
 // return std::make_pair(Term{x.coefficient / y.coefficient, u}, f);
 // }
 
-static Term<intptr_t, Uninomial> operator*(Uninomial const &x, intptr_t c) {
-    return Term<intptr_t, Uninomial>{c, x};
+static Term<int64_t, Uninomial> operator*(Uninomial const &x, int64_t c) {
+    return Term<int64_t, Uninomial>{c, x};
 }
-static Term<intptr_t, Uninomial> operator*(intptr_t c, Uninomial const &x) {
-    return Term<intptr_t, Uninomial>{c, x};
-}
-static Term<Rational, Uninomial> operator*(Uninomial const &x, Rational c) {
-    return Term<Rational, Uninomial>{c, x};
-}
-static Term<Rational, Uninomial> operator*(Rational c, Uninomial const &x) {
-    return Term<Rational, Uninomial>{c, x};
+static Term<int64_t, Uninomial> operator*(int64_t c, Uninomial const &x) {
+    return Term<int64_t, Uninomial>{c, x};
 }
 
 template <typename C, IsMonomial M>
-static Multivariate<C, M> operator*(intptr_t x, Multivariate<C, M> &c) {
+static Multivariate<C, M> operator*(int64_t x, Multivariate<C, M> &c) {
     Multivariate<C, M> p(c);
     p *= x;
     return p; // copy elision
 }
 template <typename C, IsMonomial M>
-static Multivariate<C, M> operator*(Multivariate<C, M> &c, intptr_t x) {
+static Multivariate<C, M> operator*(Multivariate<C, M> &c, int64_t x) {
     Multivariate<C, M> p(c);
     p *= x;
     return p;
 }
 template <typename C, IsMonomial M>
-static Multivariate<C, M> operator*(intptr_t x, Multivariate<C, M> &&c) {
+static Multivariate<C, M> operator*(int64_t x, Multivariate<C, M> &&c) {
     return std::move(c *= x);
 }
 template <typename C, IsMonomial M>
-static Multivariate<C, M> operator*(Multivariate<C, M> &&c, intptr_t x) {
+static Multivariate<C, M> operator*(Multivariate<C, M> &&c, int64_t x) {
     return std::move(c *= x);
 }
 
 template <IsMonomial M>
-static Multivariate<intptr_t, M> operator*(intptr_t x, Multivariate<intptr_t, M> &&c) {
+static Multivariate<int64_t, M> operator*(int64_t x, Multivariate<int64_t, M> &&c) {
     return std::move(c *= x);
 }
 template <IsMonomial M>
-static Multivariate<intptr_t, M> operator*(Multivariate<intptr_t, M> &&c, intptr_t x) {
+static Multivariate<int64_t, M> operator*(Multivariate<int64_t, M> &&c, int64_t x) {
     return std::move(c *= x);
 }
 
@@ -2597,29 +2591,17 @@ static Term<Polynomial::Multivariate<C, M>, Uninomial>
 operator*(Polynomial::Multivariate<C, M> &&c, Uninomial const &x) {
     return Term<Polynomial::Multivariate<C, M>, Uninomial>{std::move(c), x};
 }
-template <IsMonomial M> static Term<intptr_t, M> operator*(M &x, intptr_t c) {
-    return Term<intptr_t, M>(c, x);
+template <IsMonomial M> static Term<int64_t, M> operator*(M &x, int64_t c) {
+    return Term<int64_t, M>(c, x);
 }
-template <IsMonomial M> static Term<intptr_t, M> operator*(intptr_t c, M &x) {
-    return Term<intptr_t, M>(c, x);
+template <IsMonomial M> static Term<int64_t, M> operator*(int64_t c, M &x) {
+    return Term<int64_t, M>(c, x);
 }
-template <IsMonomial M> static Term<intptr_t, M> operator*(M &&x, intptr_t c) {
-    return Term<intptr_t, M>(c, std::move(x));
+template <IsMonomial M> static Term<int64_t, M> operator*(M &&x, int64_t c) {
+    return Term<int64_t, M>(c, std::move(x));
 }
-template <IsMonomial M> static Term<intptr_t, M> operator*(intptr_t c, M &&x) {
-    return Term<intptr_t, M>(c, std::move(x));
-}
-template <IsMonomial M> static Term<Rational, M> operator*(M &x, Rational c) {
-    return Term<Rational, M>(c, x);
-}
-template <IsMonomial M> static Term<Rational, M> operator*(Rational c, M &x) {
-    return Term<Rational, M>(c, x);
-}
-template <IsMonomial M> static Term<Rational, M> operator*(M &&x, Rational c) {
-    return Term<Rational, M>(c, std::move(x));
-}
-template <IsMonomial M> static Term<Rational, M> operator*(Rational c, M &&x) {
-    return Term<Rational, M>(c, std::move(x));
+template <IsMonomial M> static Term<int64_t, M> operator*(int64_t c, M &&x) {
+    return Term<int64_t, M>(c, std::move(x));
 }
 
 template <typename C, typename M>
@@ -2943,7 +2925,7 @@ Monomial gcd(Monomial &&x, Monomial &&y) {
     }
 }
 */
-static size_t gcd(intptr_t x, intptr_t y) { return std::gcd(x, y); }
+static size_t gcd(int64_t x, int64_t y) { return std::gcd(x, y); }
 
 template <typename C, typename M>
 static Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
@@ -3197,7 +3179,7 @@ template <typename C, IsMonomial M> static C coefGCD(Terms<C, M> const &x) {
         return C(0);
     }
 }
-inline intptr_t coefGCD(intptr_t x) { return x; }
+inline int64_t coefGCD(int64_t x) { return x; }
 template <typename C, IsMonomial M>
 static Multivariate<C, M> gcd(Multivariate<C, M> const &x,
                               Multivariate<C, M> const &y) {
@@ -3274,14 +3256,14 @@ static Multivariate<C, M> gcd(MultivariateTerm<C, M> const &x,
 }
 
 /*
-Multivariate<intptr_t>
+Multivariate<int64_t>
 loopToAffineUpperBound(Vector<Int, MAX_PROGRAM_VARIABLES> loopvars) {
 // loopvars is a vector, first index corresponds to constant, remaining
 // indices are offset by 1 with respect to program indices.
-Multivariate<intptr_t> aff;
+Multivariate<int64_t> aff;
 for (size_t i = 0; i < MAX_PROGRAM_VARIABLES; ++i) {
     if (loopvars[i]) {
-        MultivariateTerm<intptr_t> sym(loopvars[i]);
+        MultivariateTerm<int64_t> sym(loopvars[i]);
         if (i) {
             sym.exponent.prodIDs.push_back(i - 1);
         } // i == 0 => constant
@@ -3296,7 +3278,7 @@ return aff;
 
 */
 } // end namespace Polynomial
-typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial> MPoly;
+typedef Polynomial::Multivariate<int64_t, Polynomial::Monomial> MPoly;
 
 // A(m, n + k + 1)
 // A( 1*m1 + M*(n1 + k1 + 1) )
@@ -3313,217 +3295,6 @@ typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial> MPoly;
 // [ 0 ], k1 + 1;
 //
 
-enum Order {
-    InvalidOrder,
-    EqualTo,
-    LessThan,
-    LessOrEqual,
-    GreaterThan,
-    GreaterOrEqual,
-    NotEqual,
-    UnknownOrder
-};
-inline auto maybeEqual(Order o) { return o & 1; }
-inline auto maybeLess(Order o) { return o & 2; }
-inline auto maybeGreater(Order o) { return o & 4; }
-
-struct ValueRange {
-    double lowerBound;
-    double upperBound;
-    template <typename T> ValueRange(T x) : lowerBound(x), upperBound(x) {}
-    template <typename T> ValueRange(T l, T u) : lowerBound(l), upperBound(u) {}
-    ValueRange(const ValueRange &x)
-        : lowerBound(x.lowerBound), upperBound(x.upperBound) {}
-    ValueRange &operator=(const ValueRange &x) = default;
-    bool isKnown() const { return lowerBound == upperBound; }
-    bool operator>(ValueRange x) const { return lowerBound > x.upperBound; }
-    bool operator<(ValueRange x) const { return upperBound < x.lowerBound; }
-    bool operator>=(ValueRange x) const { return lowerBound >= x.upperBound; }
-    bool operator<=(ValueRange x) const { return upperBound <= x.lowerBound; }
-    bool operator==(ValueRange x) const {
-        return (isKnown() && x.isKnown()) & (lowerBound == x.lowerBound);
-    }
-    Order compare(ValueRange x) const {
-        // return upperBound < x.lowerBound;
-        if (isKnown() && x.isKnown()) {
-            return upperBound == x.upperBound ? EqualTo : NotEqual;
-        }
-        if (upperBound < x.lowerBound) {
-            return LessThan;
-        } else if (upperBound == x.lowerBound) {
-            return LessOrEqual;
-        } else if (lowerBound > x.upperBound) {
-            return GreaterThan;
-        } else if (lowerBound == x.upperBound) {
-            return GreaterOrEqual;
-        } else {
-            return UnknownOrder;
-        }
-    }
-    Order compare(intptr_t x) const { return compare(ValueRange{x, x}); }
-    ValueRange &operator+=(ValueRange x) {
-        lowerBound += x.lowerBound;
-        upperBound += x.upperBound;
-        return *this;
-    }
-    ValueRange &operator-=(ValueRange x) {
-        lowerBound -= x.upperBound;
-        upperBound -= x.lowerBound;
-        return *this;
-    }
-    ValueRange &operator*=(ValueRange x) {
-        intptr_t a = lowerBound * x.lowerBound;
-        intptr_t b = lowerBound * x.upperBound;
-        intptr_t c = upperBound * x.lowerBound;
-        intptr_t d = upperBound * x.upperBound;
-        lowerBound = std::min(std::min(a, b), std::min(c, d));
-        upperBound = std::max(std::max(a, b), std::max(c, d));
-        return *this;
-    }
-    ValueRange operator+(ValueRange x) const {
-        ValueRange y(*this);
-        return y += x;
-    }
-    ValueRange operator-(ValueRange x) const {
-        ValueRange y(*this);
-        return y -= x;
-    }
-    ValueRange operator*(ValueRange x) const {
-        ValueRange y(*this);
-        return y *= x;
-    }
-    ValueRange negate() const { return ValueRange{-upperBound, -lowerBound}; }
-    void negate() {
-        double lb = -upperBound;
-        upperBound = -lowerBound;
-        lowerBound = lb;
-    }
-};
-/*
-std::intptr_t addWithOverflow(intptr_t x, intptr_t y) {
-    intptr_t z;
-    if (__builtin_add_overflow(x, y, &z)) {
-        z = std::numeric_limits<intptr_t>::max();
-    }
-    return z;
-}
-std::intptr_t subWithOverflow(intptr_t x, intptr_t y) {
-    intptr_t z;
-    if (__builtin_sub_overflow(x, y, &z)) {
-        z = std::numeric_limits<intptr_t>::min();
-    }
-    return z;
-}
-std::intptr_t mulWithOverflow(intptr_t x, intptr_t y) {
-    intptr_t z;
-    if (__builtin_mul_overflow(x, y, &z)) {
-        if ((x > 0) ^ (y > 0)) { // wouldn't overflow if `x` or `y` were `0`
-            z = std::numeric_limits<intptr_t>::min(); // opposite sign
-        } else {
-            z = std::numeric_limits<intptr_t>::max(); // same sign
-        }
-    }
-    return z;
-}
-
-struct ValueRange {
-    intptr_t lowerBound;
-    intptr_t upperBound;
-    ValueRange(intptr_t x) : lowerBound(x), upperBound(x) {}
-    ValueRange(intptr_t l, intptr_t u) : lowerBound(l), upperBound(u) {}
-    ValueRange(const ValueRange &x)
-        : lowerBound(x.lowerBound), upperBound(x.upperBound) {}
-    ValueRange &operator=(const ValueRange &x) = default;
-    bool isKnown() { return lowerBound == upperBound; }
-    bool operator<(ValueRange x) { return upperBound < x.lowerBound; }
-    Order compare(ValueRange x) {
-        // return upperBound < x.lowerBound;
-        if (isKnown() & x.isKnown()) {
-            return upperBound == x.upperBound ? EqualTo : NotEqual;
-        }
-        if (upperBound < x.lowerBound) {
-            return LessThan;
-        } else if (upperBound == x.lowerBound) {
-            return LessOrEqual;
-        } else if (lowerBound > x.upperBound) {
-            return GreaterThan;
-        } else if (lowerBound == x.upperBound) {
-            return GreaterOrEqual;
-        } else {
-            return UnknownOrder;
-        }
-    }
-    Order compare(intptr_t x) { return compare(ValueRange{x, x}); }
-    ValueRange &operator+=(ValueRange x) {
-        lowerBound = addWithOverflow(lowerBound, x.lowerBound);
-        upperBound = addWithOverflow(upperBound, x.upperBound);
-        return *this;
-    }
-    ValueRange &operator-=(ValueRange x) {
-        lowerBound = subWithOverflow(lowerBound, x.upperBound);
-        upperBound = subWithOverflow(upperBound, x.lowerBound);
-        return *this;
-    }
-    ValueRange &operator*=(ValueRange x) {
-        intptr_t a = mulWithOverflow(lowerBound, x.lowerBound);
-        intptr_t b = mulWithOverflow(lowerBound, x.upperBound);
-        intptr_t c = mulWithOverflow(upperBound, x.lowerBound);
-        intptr_t d = mulWithOverflow(upperBound, x.upperBound);
-        lowerBound = std::min(std::min(a, b), std::min(c, d));
-        upperBound = std::max(std::max(a, b), std::max(c, d));
-        return *this;
-    }
-    ValueRange operator+(ValueRange x) {
-        ValueRange y(*this);
-        return y += x;
-    }
-    ValueRange operator-(ValueRange x) {
-        ValueRange y(*this);
-        return y -= x;
-    }
-    ValueRange operator*(ValueRange x) {
-        ValueRange y(*this);
-        return y *= x;
-    }
-};
-*/
-
-// Univariate Polynomial for multivariate gcd
-/*
-struct UniPoly{
-    struct Monomial{
-        size_t power;
-    };
-    struct Term{
-        Polynomial coefficient;
-        Monomial monomial;
-    };
-    std::vector<Term> terms;
-    inline auto begin() { return terms.begin(); }
-    inline auto end() { return terms.end(); }
-    inline auto begin() const { return terms.begin(); }
-    inline auto end() const { return terms.end(); }
-    inline auto cbegin() const { return terms.cbegin(); }
-    inline auto cend() const { return terms.cend(); }
-    // Polynomial(std::tuple<Term, Term> &&x) : terms({std::get<0>(x),
-    // std::get<1>(x)}) {}
-    template<typename I> void erase(I it){ terms.erase(it); }
-    template<typename I, typename T> void insert(I it, T &&x){ terms.insert(it,
-std::forward<T>(x)); }
-
-    template <typename S> void addTerm(S &&x) {
-        ::addTerm(*this, std::forward<S>(x));
-    }
-    template <typename S> void subTerm(S &&x) {
-        ::subTerm(*this, std::forward<S>(x));
-    }
-    UniPoly(Polynomial const &x, size_t u) {
-        for (auto it = x.cbegin(); it != x.cend(); ++it){
-            it -> degree(u);
-        }
-    }
-};
-*/
 
 template <> struct llvm::DenseMapInfo<Polynomial::Monomial, void> {
     static inline Polynomial::Monomial getEmptyKey() {

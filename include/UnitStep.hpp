@@ -47,7 +47,7 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
 
   private:
     static bool isConstantIntZero(llvm::Value *x) {
-        if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(x)) {
+        if (auto *c = llvm::dyn_cast<llvm::Constantint64_t>(x)) {
             return c->isZero();
         }
         return false;
@@ -74,7 +74,7 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
             // auto pred
             llvm::Value *step = bounds.getStepValue();
             if (llvm::ConstantInt *stepConst =
-                    llvm::dyn_cast<llvm::ConstantInt>(step)) {
+                    llvm::dyn_cast<llvm::Constantint64_t>(step)) {
                 if (stepConst->isOne()) {
                     return false;
                 }

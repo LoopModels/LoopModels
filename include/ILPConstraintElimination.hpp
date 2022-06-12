@@ -14,9 +14,9 @@
 // use ILP solver for eliminating redundant constraints
 
 void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
-                                        llvm::SmallVectorImpl<intptr_t> &b,
+                                        llvm::SmallVectorImpl<int64_t> &b,
                                         IntMatrix auto &E,
-                                        llvm::SmallVectorImpl<intptr_t> &q,
+                                        llvm::SmallVectorImpl<int64_t> &q,
                                         size_t C) {
     auto [numVar, numColA] = A.size();
     size_t numColE = q.size();
@@ -41,9 +41,9 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
     llvm::SmallVector<uint8_t, 64> isvar(numVar);
     for (size_t c = 0; c < numColA; ++c) {
         size_t n = 0, p = 0, nz = 0;
-        intptr_t lastV = -1;
+        int64_t lastV = -1;
         for (size_t v = 0; v < numVar; ++v) {
-            intptr_t Avc = A(v, c);
+            int64_t Avc = A(v, c);
             nz += (Avc != 0);
             p += (Avc == 1);
             n += (Avc == -1);
@@ -52,7 +52,7 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
         if ((nz != 1) || ((n + p) != 1) || (isvar[lastV] & (n + 2 * p))) {
             // add to row_
             for (size_t v = 0; v < numVar; ++v) {
-                if (intptr_t Avc = A(v, c)) {
+                if (int64_t Avc = A(v, c)) {
                     model.lp_.a_matrix_.index_.push_back(v);
                     model.lp_.a_matrix_.value_.push_back(Avc);
                 }
@@ -82,14 +82,14 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
     }
     for (size_t c = 0; c < numColE; ++c) {
         for (size_t v = 0; v < numVar; ++v) {
-            if (intptr_t Evc = E(v, c)) {
+            if (int64_t Evc = E(v, c)) {
                 model.lp_.a_matrix_.index_.push_back(v);
                 model.lp_.a_matrix_.value_.push_back(Evc);
             }
         }
         assert(model.lp_.a_matrix_.index_.size());
         model.lp_.a_matrix_.start_.push_back(model.lp_.a_matrix_.index_.size());
-        intptr_t qc = q[c];
+        int64_t qc = q[c];
         model.lp_.row_lower_.push_back(qc);
         model.lp_.row_upper_.push_back(qc);
     }
@@ -116,9 +116,9 @@ void buildILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
     assert(return_status == HighsStatus::kOk);
 }
 void updateILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
-                                         llvm::SmallVectorImpl<intptr_t> &b,
+                                         llvm::SmallVectorImpl<int64_t> &b,
                                          IntMatrix auto &E,
-                                         llvm::SmallVectorImpl<intptr_t> &q,
+                                         llvm::SmallVectorImpl<int64_t> &q,
                                          size_t Cnew, size_t Cold) {
 
     const auto [numVar, numColA] = A.size();
@@ -132,9 +132,9 @@ void updateILPRedundancyEliminationModel(Highs &highs, IntMatrix auto &A,
 }
 
 bool constraintIsRedundant(IntMatrix auto &A,
-                           llvm::SmallVectorImpl<intptr_t> &b,
+                           llvm::SmallVectorImpl<int64_t> &b,
                            IntMatrix auto &E,
-                           llvm::SmallVectorImpl<intptr_t> &q, const size_t C) {
+                           llvm::SmallVectorImpl<int64_t> &q, const size_t C) {
 
     Highs highs;
     buildILPRedundancyEliminationModel(highs, A, b, E, q, C);
@@ -152,7 +152,7 @@ bool constraintIsRedundant(IntMatrix auto &A,
     assert(model_status == HighsModelStatus::kOptimal);
 
     double obj = highs.getInfo().objective_function_value;
-    intptr_t target = b[C] + 1;
+    int64_t target = b[C] + 1;
     bool redundant = !std::isnan(obj) && (obj != target);
 #ifndef NDEBUG
     std::cout << "highs.getInfo().objective_function_value = "
@@ -164,8 +164,8 @@ bool constraintIsRedundant(IntMatrix auto &A,
     return redundant;
 }
 
-void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
-                 IntMatrix auto &E, llvm::SmallVectorImpl<intptr_t> &q) {
+void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<int64_t> &b,
+                 IntMatrix auto &E, llvm::SmallVectorImpl<int64_t> &q) {
     NormalForm::simplifyEqualityConstraints(E, q);
     for (size_t c = A.numCol(); c > 0;) {
         if (constraintIsRedundant(A, b, E, q, --c)) {
@@ -178,10 +178,10 @@ void pruneBounds(IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
     }
 }
 
-void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
-                    IntMatrix auto &Enew, llvm::SmallVectorImpl<intptr_t> &qnew,
-                    IntMatrix auto &A, llvm::SmallVectorImpl<intptr_t> &b,
-                    IntMatrix auto &E, llvm::SmallVectorImpl<intptr_t> &q,
+void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<int64_t> &bnew,
+                    IntMatrix auto &Enew, llvm::SmallVectorImpl<int64_t> &qnew,
+                    IntMatrix auto &A, llvm::SmallVectorImpl<int64_t> &b,
+                    IntMatrix auto &E, llvm::SmallVectorImpl<int64_t> &q,
                     size_t i) {
 
     const auto [numRow, numColA] = A.size();
@@ -206,7 +206,7 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
 
     size_t a = 0;
     for (size_t j = 0; j < numColA; ++j) {
-        if (intptr_t Aij = A(i, j)) {
+        if (int64_t Aij = A(i, j)) {
             for (size_t k = 0; k < j; ++k) {
                 if ((A(i, k) == 0) || ((Aij > 0) == (A(i, k) > 0)))
                     continue;
@@ -247,14 +247,14 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<intptr_t> &bnew,
     bnew.resize(a);
     size_t e = 0;
     for (size_t j = 0; j < numColE; ++j) {
-        if (intptr_t Eij = E(i, j)) {
+        if (int64_t Eij = E(i, j)) {
             for (size_t k = 0; k < j; ++k) {
                 if (k == j)
                     continue;
-                if (intptr_t Eik = E(i, k)) {
-                    intptr_t g = std::gcd(Eij, Eik);
-                    intptr_t Ejg = Eij / g;
-                    intptr_t Ekg = Eik / g;
+                if (int64_t Eik = E(i, k)) {
+                    int64_t g = std::gcd(Eij, Eik);
+                    int64_t Ejg = Eij / g;
+                    int64_t Ekg = Eik / g;
                     for (size_t v = 0; v < numRow; ++v) {
                         Enew(v, e) = Ejg * E(v, k) - Ekg * E(v, j);
                     }

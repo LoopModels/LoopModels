@@ -6,10 +6,10 @@
 
 static void BM_Constraint_Elim(benchmark::State &state) {
 
-    Matrix<intptr_t, 0, 0, 0> A(17, 12), Ac(17, 12);
-    llvm::SmallVector<intptr_t, 8> b(12), bc(12);
-    Matrix<intptr_t, 0, 0, 0> E(17, 7), Ec(17, 7);
-    llvm::SmallVector<intptr_t, 8> q(7), qc(7);
+    Matrix<int64_t, 0, 0, 0> A(17, 12), Ac(17, 12);
+    llvm::SmallVector<int64_t, 8> b(12), bc(12);
+    Matrix<int64_t, 0, 0, 0> E(17, 7), Ec(17, 7);
+    llvm::SmallVector<int64_t, 8> q(7), qc(7);
     for (size_t i = 0; i < 12; ++i) {
         A(i + 5, i) = -1;
     }

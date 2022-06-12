@@ -13,8 +13,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
-    auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
-    auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    auto Zero = Polynomial::Term{int64_t(0), Polynomial::Monomial()};
+    auto One = Polynomial::Term{int64_t(1), Polynomial::Monomial()};
     // for m = 0:M-1, n = 0:N-1, i = 0:I-1, j = 0:J-1
     //   W[m + i, n + j] += C[i,j] * B[m,n]
     //
@@ -133,11 +133,11 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
 TEST(BadMul, BasicAssertions) {
     auto M =
-        Polynomial::Term{intptr_t(1), Polynomial::Monomial(Polynomial::ID{1})};
+        Polynomial::Term{int64_t(1), Polynomial::Monomial(Polynomial::ID{1})};
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto O = Polynomial::Monomial(Polynomial::ID{3});
-    auto Zero = Polynomial::Term{intptr_t(0), Polynomial::Monomial()};
-    auto One = Polynomial::Term{intptr_t(1), Polynomial::Monomial()};
+    auto Zero = Polynomial::Term{int64_t(0), Polynomial::Monomial()};
+    auto One = Polynomial::Term{int64_t(1), Polynomial::Monomial()};
     // for i in 0:M+N+O-3, l in max(0,i+1-N):min(M+O-2,i), j in
     // max(0,l+1-O):min(M-1,l)
     //       W[j,i-l] += B[j,l-j]*C[l-j,i-l]

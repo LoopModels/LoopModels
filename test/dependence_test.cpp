@@ -12,10 +12,10 @@
 #include <memory>
 
 // TEST(RedundancyElimination, BasicAssertions) {
-//     Matrix<intptr_t,0,0,0> A(12,7);
-//     llvm::SmallVector<intptr_t, 8> b(7);
-//     Matrix<intptr_t,0,0,0> E(12,4);
-//     llvm::SmallVector<intptr_t, 8> q(4);
+//     Matrix<int64_t,0,0,0> A(12,7);
+//     llvm::SmallVector<int64_t, 8> b(7);
+//     Matrix<int64_t,0,0,0> E(12,4);
+//     llvm::SmallVector<int64_t, 8> q(4);
 
 // }
 
@@ -33,7 +33,7 @@ TEST(DependenceTest, BasicAssertions) {
     //  -1   0   *  j ]        0
     //   0   1           <=    J - 2
     //   0  -1 ]               0     ]
-    Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
+    Matrix<int64_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-2
@@ -141,7 +141,7 @@ TEST(IndependentTest, BasicAssertions) {
     std::cout << "\n\n#### Starting Symmetric Copy Test ####" << std::endl;
     auto I = Polynomial::Monomial(Polynomial::ID{1});
 
-    Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
+    Matrix<int64_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-1
@@ -218,9 +218,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     // Construct the loops
-    Matrix<intptr_t, 0, 0, 0> AMN(2, 4);
+    Matrix<int64_t, 0, 0, 0> AMN(2, 4);
     llvm::SmallVector<MPoly, 8> bMN;
-    Matrix<intptr_t, 0, 0, 0> AMNK(3, 6);
+    Matrix<int64_t, 0, 0, 0> AMNK(3, 6);
     llvm::SmallVector<MPoly, 8> bMNK;
 
     // m <= M-1
@@ -324,7 +324,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
     Schedule sch2_0_0(2);
-    SquarePtrMatrix<intptr_t> Phi2 = sch2_0_0.getPhi();
+    SquarePtrMatrix<int64_t> Phi2 = sch2_0_0.getPhi();
     // Phi0 = [1 0; 0 1]
     Phi2(0, 0) = 1;
     Phi2(1, 1) = 1;
@@ -351,7 +351,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
-    SquarePtrMatrix<intptr_t> Phi3 = sch3_0.getPhi();
+    SquarePtrMatrix<int64_t> Phi3 = sch3_0.getPhi();
     Phi3(0, 0) = 1;
     Phi3(1, 1) = 1;
     Phi3(2, 2) = 1;
@@ -512,7 +512,7 @@ TEST(ConvReversePass, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
     // Construct the loops
-    Matrix<intptr_t, 0, 0, 0> Aloop(4, 8);
+    Matrix<int64_t, 0, 0, 0> Aloop(4, 8);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // n <= N-1
@@ -592,7 +592,7 @@ TEST(ConvReversePass, BasicAssertions) {
     //   }
     // }
     Schedule sch_0(4);
-    SquarePtrMatrix<intptr_t> Phi = sch_0.getPhi();
+    SquarePtrMatrix<int64_t> Phi = sch_0.getPhi();
     // Phi0 = [1 0; 0 1]
     Phi(0, 0) = 1;
     Phi(1, 1) = 1;

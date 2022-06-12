@@ -33,10 +33,10 @@
 // -v_7 + v_12 == 0
 
 TEST(ConstraintValidation, BasicAssertions) {
-    Matrix<intptr_t, 0, 0, 0> A(17, 12);
-    llvm::SmallVector<intptr_t, 8> b(12);
-    Matrix<intptr_t, 0, 0, 0> E(17, 7);
-    llvm::SmallVector<intptr_t, 8> q(7);
+    Matrix<int64_t, 0, 0, 0> A(17, 12);
+    llvm::SmallVector<int64_t, 8> b(12);
+    Matrix<int64_t, 0, 0, 0> E(17, 7);
+    llvm::SmallVector<int64_t, 8> q(7);
     for (size_t i = 0; i < 12; ++i) {
         A(i + 5, i) = -1;
     }
@@ -83,10 +83,10 @@ TEST(ConstraintValidation, BasicAssertions) {
 
     IntegerEqPolyhedra ipoly(A, b, E, q);
 
-    Matrix<intptr_t, 0, 0, 0> Ac(A), Anew;
-    llvm::SmallVector<intptr_t, 8> bc(b), bnew;
-    Matrix<intptr_t, 0, 0, 0> Ec(E), Enew;
-    llvm::SmallVector<intptr_t, 8> qc(q), qnew;
+    Matrix<int64_t, 0, 0, 0> Ac(A), Anew;
+    llvm::SmallVector<int64_t, 8> bc(b), bnew;
+    Matrix<int64_t, 0, 0, 0> Ec(E), Enew;
+    llvm::SmallVector<int64_t, 8> qc(q), qnew;
     for (size_t i = 16; i >= 8; --i) {
         ipoly.removeVariable(i);
         ipoly.A.reduceNumRows(i);
@@ -147,7 +147,7 @@ TEST(DependenceTest, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
 
-    Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
+    Matrix<int64_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-2
@@ -227,7 +227,7 @@ TEST(IndependentTest, BasicAssertions) {
 
     auto I = Polynomial::Monomial(Polynomial::ID{3});
 
-    Matrix<intptr_t, 0, 0, 0> Aloop(2, 4);
+    Matrix<int64_t, 0, 0, 0> Aloop(2, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-1

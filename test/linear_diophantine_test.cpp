@@ -10,7 +10,7 @@ TEST(LinearDiophantineTest, BasicAssertions) {
     {
         std::vector perm{2, 3, 4};
         do {
-            intptr_t x = perm[0], y = perm[1], z = perm[2];
+            int64_t x = perm[0], y = perm[1], z = perm[2];
             auto opts = linearDiophantine(1, std::make_tuple(x, y, z));
             EXPECT_TRUE(opts.hasValue());
             if (opts.hasValue()) {
@@ -24,7 +24,7 @@ TEST(LinearDiophantineTest, BasicAssertions) {
     {
         std::vector perm{2, 3, 4, 5};
         do {
-            intptr_t w = perm[0], x = perm[1], y = perm[2], z = perm[3];
+            int64_t w = perm[0], x = perm[1], y = perm[2], z = perm[3];
             auto opts = linearDiophantine(1, std::make_tuple(w, x, y, z));
             EXPECT_TRUE(opts.hasValue());
             if (opts.hasValue()) {
@@ -36,7 +36,7 @@ TEST(LinearDiophantineTest, BasicAssertions) {
     {
         std::vector perm{2, 3, 4, 5, 6};
         do {
-            intptr_t w = perm[0], x = perm[1], y = perm[2], z = perm[3],
+            int64_t w = perm[0], x = perm[1], y = perm[2], z = perm[3],
                      u = perm[4];
             auto opts = linearDiophantine(1, std::make_tuple(w, x, y, z, u));
             EXPECT_TRUE(opts.hasValue());
@@ -52,23 +52,23 @@ TEST(LinearDiophantineTest, BasicAssertions) {
     size_t solvedOneCounter = 0;
     size_t numIters = 100000;
     for (size_t n = 0; n < numIters; ++n) {
-        intptr_t a0 = distrib(gen);
-        intptr_t a1 = distrib(gen);
-        intptr_t a2 = distrib(gen);
-        intptr_t a3 = distrib(gen);
-        intptr_t a4 = distrib(gen);
-        intptr_t a5 = distrib(gen);
-        intptr_t a6 = distrib(gen);
+        int64_t a0 = distrib(gen);
+        int64_t a1 = distrib(gen);
+        int64_t a2 = distrib(gen);
+        int64_t a3 = distrib(gen);
+        int64_t a4 = distrib(gen);
+        int64_t a5 = distrib(gen);
+        int64_t a6 = distrib(gen);
         auto t = std::make_tuple(a0, a1, a2, a3, a4, a5, a6);
 
-        intptr_t b0 = distrib(gen);
-        intptr_t b1 = distrib(gen);
-        intptr_t b2 = distrib(gen);
-        intptr_t b3 = distrib(gen);
-        intptr_t b4 = distrib(gen);
-        intptr_t b5 = distrib(gen);
-        intptr_t b6 = distrib(gen);
-        intptr_t d =
+        int64_t b0 = distrib(gen);
+        int64_t b1 = distrib(gen);
+        int64_t b2 = distrib(gen);
+        int64_t b3 = distrib(gen);
+        int64_t b4 = distrib(gen);
+        int64_t b5 = distrib(gen);
+        int64_t b6 = distrib(gen);
+        int64_t d =
             a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3 + a4 * b4 + a5 * b5 + a6 * b6;
         auto opt = linearDiophantine(d, t);
         EXPECT_TRUE(opt.hasValue());

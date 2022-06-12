@@ -23,7 +23,7 @@
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
 static bool isKnownOne(llvm::Value *x) {
-    if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
+    if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::Constantint64_t>(x)) {
         return constInt->isOne();
     } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x)) {
         return constVal->isOneValue();
@@ -89,13 +89,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //     size_t startInvariant = invariant(initV, outerLoops);
     //     size_t stopInvariant = invariant(finalV, outerLoops);
 
-    //     llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
-    //     llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
+    //     llvm::SmallVector<int64_t, 4> aL(outerLoops.size() + 1, 0);
+    //     llvm::SmallVector<int64_t, 4> aU(outerLoops.size() + 1, 0);
     //     MPoly bL;
     //     MPoly bU;
     //     /*
     //     if (llvm::ConstantInt *stepConst =
-    //             llvm::dyn_cast<llvm::ConstantInt>(stepV)) {
+    //             llvm::dyn_cast<llvm::Constantint64_t>(stepV)) {
     //         if (!(stepConst->isOne())) {
     //             // stepConst->getValue();
     //             // divide by const
@@ -132,12 +132,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //     } else {
     //     }
     //     */
-    // 	if (llvm::ConstantInt *initConst = llvm::dyn_cast<llvm::ConstantInt>(&initV)){
+    // 	if (llvm::ConstantInt *initConst = llvm::dyn_cast<llvm::Constantint64_t>(&initV)){
 	    
     // 	} else {
 
     // 	}
-    // 	if (llvm::ConstantInt *finalConst = llvm::dyn_cast<llvm::ConstantInt>(&finalV)){
+    // 	if (llvm::ConstantInt *finalConst = llvm::dyn_cast<llvm::Constantint64_t>(&finalV)){
 	    
     // 	} else {
 

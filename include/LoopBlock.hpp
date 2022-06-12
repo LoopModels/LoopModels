@@ -134,16 +134,16 @@ struct LoopBlock {
         size_t numLoopsOut = refOut.getNumLoops();
         size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
         size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-        llvm::SmallVector<intptr_t, 16> schv;
+        llvm::SmallVector<int64_t, 16> schv;
         schv.resize_for_overwrite(sat.getNumVar());
-        const SquarePtrMatrix<intptr_t> inPhi = schIn.getPhi();
-        const SquarePtrMatrix<intptr_t> outPhi = schOut.getPhi();
-        const PtrVector<intptr_t, 0> inOmega = schIn.getOmega();
-        const PtrVector<intptr_t, 0> outOmega = schOut.getOmega();
+        const SquarePtrMatrix<int64_t> inPhi = schIn.getPhi();
+        const SquarePtrMatrix<int64_t> outPhi = schOut.getPhi();
+        const PtrVector<int64_t, 0> inOmega = schIn.getOmega();
+        const PtrVector<int64_t, 0> outOmega = schOut.getOmega();
 
         // when i == numLoopsCommon, we've passed the last loop
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
-            if (intptr_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
+            if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
                 return (o2idiff > 0);
             }
 
@@ -167,7 +167,7 @@ struct LoopBlock {
             for (size_t j = 0; j < numLoopsOut; ++j) {
                 schv[j + offOut] = outPhi(j, i);
             }
-            intptr_t inO = inOmega[2 * i + 1], outO = outOmega[2 * i + 1];
+            int64_t inO = inOmega[2 * i + 1], outO = outOmega[2 * i + 1];
             // forward means offset is 2nd - 1st
             schv[numLoopsTotal] = outO - inO;
             // dependenceSatisfaction is phi_t - phi_s >= 0
@@ -277,7 +277,7 @@ struct LoopBlock {
     static std::shared_ptr<AffineLoopNest> getBang(
         llvm::DenseMap<const AffineLoopNest *, std::shared_ptr<AffineLoopNest>>
             &map,
-        SquarePtrMatrix<intptr_t> K, const AffineLoopNest *aln) {
+        SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
         std::shared_ptr<AffineLoopNest> newp;
         if (p != map.end()) {
@@ -287,15 +287,15 @@ struct LoopBlock {
             const size_t numConstraints = aln->getNumConstraints();
             const size_t numTransformed = K.numRow();
             const size_t numPeeled = numVar - numTransformed;
-            // DynamicMatrix<intptr_t> A;
-            Matrix<intptr_t, 0, 0, 0> A;
+            // DynamicMatrix<int64_t> A;
+            Matrix<int64_t, 0, 0, 0> A;
             A.resizeForOverwrite(numVar, numConstraints);
             for (size_t k = 0; k < numConstraints; ++k) {
                 for (size_t j = 0; j < numPeeled; ++j) {
                     A(j, k) = aln->A(j, k);
                 }
                 for (size_t j = numPeeled; j < numVar; ++j) {
-                    intptr_t Ajk = 0;
+                    int64_t Ajk = 0;
                     for (size_t l = 0; l < numTransformed; ++l) {
                         Ajk += K(l, j - numPeeled) * aln->A(l, k);
                     }
@@ -370,7 +370,7 @@ struct LoopBlock {
                 // So the item here is to adjust peelOuter.
                 orthInds.push_back(j);
             }
-            Matrix<intptr_t, 0, 0> S(numRow, numLoops - peelOuter);
+            Matrix<int64_t, 0, 0> S(numRow, numLoops - peelOuter);
             size_t rowStore = 0;
             size_t rowLoad = numStore;
             bool dobreakj = false;
@@ -402,7 +402,7 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-                Matrix<intptr_t, 0, 0> SK(matmul(S, K));
+                Matrix<int64_t, 0, 0> SK(matmul(S, K));
                 llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
                     loopMap;
@@ -433,7 +433,7 @@ struct LoopBlock {
                     // phi * L = (phi * K) * J
                     // NOTE: we're assuming the schedule is the identity
                     // otherwise, new schedule = old schedule * K
-                    SquarePtrMatrix<intptr_t> Phi = maj.schedule.getPhi();
+                    SquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
                     size_t phiDim = Phi.numCol();
                     for (size_t n = 0; n < phiDim; ++n) {
                         for (size_t m = 0; m < phiDim; ++m) {

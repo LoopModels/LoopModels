@@ -12,8 +12,8 @@
 // end
 
 // if `A` can be unimodularized, returns the inverse of the unimodularized `A`
-llvm::Optional<SquareMatrix<intptr_t>>
-unimodularize(Matrix<intptr_t, 0, 0> A) {
+llvm::Optional<SquareMatrix<int64_t>>
+unimodularize(Matrix<int64_t, 0, 0> A) {
     auto OHNF = NormalForm::hermite(std::move(A));
     if (!OHNF.hasValue()){
 	return {};
@@ -30,7 +30,7 @@ unimodularize(Matrix<intptr_t, 0, 0> A) {
 /*
 
 llvm::Optional<std::pair<size_t, size_t>>
-searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
+searchPivot(const SquareMatrix<int64_t> &A, size_t k, size_t originalRows) {
     size_t N = A.size(0);
     for (size_t r = k; r < originalRows; ++r) {
         for (size_t c = k; c < N; ++c) {
@@ -41,7 +41,7 @@ searchPivot(const SquareMatrix<intptr_t> &A, size_t k, size_t originalRows) {
     }
     return llvm::Optional<std::pair<size_t, size_t>>();
 }
-void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k,
+void swapRowCol(SquareMatrix<int64_t> &A, Permutation &permCol, size_t k,
                 size_t i, size_t j, size_t originalRows) {
     size_t N = A.size(0);
     if (k != j) {
@@ -56,7 +56,7 @@ void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k,
         }
     }
 }
-// void swapCol(SquareMatrix<intptr_t> &A, size_t i,
+// void swapCol(SquareMatrix<int64_t> &A, size_t i,
 //                 size_t j0, size_t j1) {
 //     if (j0 != j1){
 // 	std::swap(A(i,j0),A(i,j1));
@@ -65,38 +65,38 @@ void swapRowCol(SquareMatrix<intptr_t> &A, Permutation &permCol, size_t k,
 
 // solve c == a*x + b*y, returning g, x, y?
 
-llvm::Optional<std::tuple<intptr_t, intptr_t, intptr_t>>
-unimodularize2x3(intptr_t A00, intptr_t A01, intptr_t A02, intptr_t A10,
-                 intptr_t A11, intptr_t A12) {
-    intptr_t c = A00 * A11 - A01 * A10;
-    intptr_t b = A02 * A10 - A00 * A12;
-    intptr_t a = A01 * A12 - A02 * A11;
+llvm::Optional<std::tuple<int64_t, int64_t, int64_t>>
+unimodularize2x3(int64_t A00, int64_t A01, int64_t A02, int64_t A10,
+                 int64_t A11, int64_t A12) {
+    int64_t c = A00 * A11 - A01 * A10;
+    int64_t b = A02 * A10 - A00 * A12;
+    int64_t a = A01 * A12 - A02 * A11;
     return linearDiophantine(1, std::make_tuple(a, b, c));
 }
 
-llvm::Optional<std::pair<std::tuple<intptr_t, intptr_t, intptr_t>,
-                         std::tuple<intptr_t, intptr_t, intptr_t>>>
-unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
+llvm::Optional<std::pair<std::tuple<int64_t, int64_t, int64_t>,
+                         std::tuple<int64_t, int64_t, int64_t>>>
+unimodularize1x3(int64_t a, int64_t b, int64_t c) {
     // we need to find a second row, we let x = 1
     // we need
     // 1 == gcd(b - a*y, c - a*z)
-    // intptr_t args[3];
+    // int64_t args[3];
     if (std::gcd(b, c) == 1) {
-        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), intptr_t(0));
+        auto t1 = std::make_tuple(int64_t(1), int64_t(0), int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 1, 0, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
         }
     }
     if (std::gcd(a, c) == 1) {
-        auto t1 = std::make_tuple(intptr_t(0), intptr_t(1), intptr_t(0));
+        auto t1 = std::make_tuple(int64_t(0), int64_t(1), int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 0, 1, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
         }
     }
     if (std::gcd(a, b) == 1) {
-        auto t1 = std::make_tuple(intptr_t(0), intptr_t(0), intptr_t(1));
+        auto t1 = std::make_tuple(int64_t(0), int64_t(0), int64_t(1));
         auto t2 = unimodularize2x3(a, b, c, 0, 0, 1);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -104,8 +104,8 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     }
     // just try [1, 0, 1], [1, 1, 0], and [0, 1, 1] as solutions
     for (size_t i = 0; i < 3; ++i) {
-        auto t1 = std::make_tuple(intptr_t(i != 0), intptr_t(i != 1),
-                                  intptr_t(i != 2));
+        auto t1 = std::make_tuple(int64_t(i != 0), int64_t(i != 1),
+                                  int64_t(i != 2));
         auto t2 = unimodularize2x3(a, b, c, i != 0, i != 1, i != 2);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -114,8 +114,8 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     // can we solve b - a*y == 1?
     auto opt0 = linearDiophantine(b - 1, std::make_tuple(a));
     if (opt0.hasValue()) {
-        intptr_t y = std::get<0>(opt0.getValue());
-        auto t1 = std::make_tuple(intptr_t(1), y, intptr_t(0));
+        int64_t y = std::get<0>(opt0.getValue());
+        auto t1 = std::make_tuple(int64_t(1), y, int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 1, y, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -124,8 +124,8 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     // can we solve c - a*z == 1?
     auto opt1 = linearDiophantine(c - 1, std::make_tuple(a));
     if (opt1.hasValue()) {
-        intptr_t z = std::get<0>(opt1.getValue());
-        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), z);
+        int64_t z = std::get<0>(opt1.getValue());
+        auto t1 = std::make_tuple(int64_t(1), int64_t(0), z);
         auto t2 = unimodularize2x3(a, b, c, 1, 0, z);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -135,8 +135,8 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     //              c - b + 1 == a*(z-y)
     auto opt2 = linearDiophantine(c - b + 1, std::make_tuple(a));
     if (opt2.hasValue()) {
-        intptr_t z = std::get<0>(opt2.getValue()); // let y = 0, so z-y == z
-        auto t1 = std::make_tuple(intptr_t(1), intptr_t(0), z);
+        int64_t z = std::get<0>(opt2.getValue()); // let y = 0, so z-y == z
+        auto t1 = std::make_tuple(int64_t(1), int64_t(0), z);
         auto t2 = unimodularize2x3(a, b, c, 1, 0, z);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -146,8 +146,8 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     //              b - c + 1 == a*(y-z)
     auto opt3 = linearDiophantine(c - b + 1, std::make_tuple(a));
     if (opt3.hasValue()) {
-        intptr_t y = std::get<0>(opt3.getValue()); // let z = 0, so y-z == y
-        auto t1 = std::make_tuple(intptr_t(1), y, intptr_t(0));
+        int64_t y = std::get<0>(opt3.getValue()); // let z = 0, so y-z == y
+        auto t1 = std::make_tuple(int64_t(1), y, int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 1, y, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
@@ -156,20 +156,20 @@ unimodularize1x3(intptr_t a, intptr_t b, intptr_t c) {
     return {};
 }
 
-llvm::Optional<std::tuple<intptr_t, intptr_t>> unimodularize1x2(intptr_t A00,
-                                                                intptr_t A01) {
+llvm::Optional<std::tuple<int64_t, int64_t>> unimodularize1x2(int64_t A00,
+                                                                int64_t A01) {
     return linearDiophantine(1, A00, A01);
 }
 
-llvm::Optional<SquareMatrix<intptr_t>>
-unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
+llvm::Optional<SquareMatrix<int64_t>>
+unimodularization(const SquareMatrix<int64_t> &Aorig, size_t originalRows) {
 
     size_t N = Aorig.size(0);
     // special cases
     if (N == originalRows) {
         return Aorig;
     } else if (originalRows == 0) {
-        SquareMatrix<intptr_t> A(N);
+        SquareMatrix<int64_t> A(N);
         for (size_t r = 0; r < N; ++r) {
             for (size_t c = 0; c < N; ++c) {
                 A(c, r) = r == c;
@@ -179,7 +179,7 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
         // originalRows == 1
         auto cd = unimodularize1x2(Aorig(0, 0), Aorig(0, 1));
         if (cd.hasValue()) {
-            SquareMatrix<intptr_t> A = Aorig;
+            SquareMatrix<int64_t> A = Aorig;
             auto [c, d] = cd.getValue();
             A(1, 0) = c;
             A(1, 1) = d;
@@ -190,7 +190,7 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
         if (originalRows == 1) {
             auto r1r2 = unimodularize1x3(Aorig(0, 0), Aorig(0, 1), Aorig(0, 2));
             if (r1r2.hasValue()) {
-                SquareMatrix<intptr_t> A = Aorig;
+                SquareMatrix<int64_t> A = Aorig;
                 auto [r1, r2] = r1r2.getValue();
                 auto [x1, y1, z1] = r1;
                 A(1, 0) = x1;
@@ -208,7 +208,7 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
             auto r2 = unimodularize2x3(Aorig(0, 0), Aorig(0, 1), Aorig(0, 2),
                                        Aorig(1, 0), Aorig(1, 1), Aorig(1, 2));
             if (r2.hasValue()) {
-                SquareMatrix<intptr_t> A = Aorig;
+                SquareMatrix<int64_t> A = Aorig;
                 auto [x, y, z] = r2.getValue();
                 A(2, 0) = x;
                 A(2, 1) = y;
@@ -218,7 +218,7 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
             }
         }
     }
-    SquareMatrix<intptr_t> A = Aorig;
+    SquareMatrix<int64_t> A = Aorig;
     // [1 x x x x]
     // [0 1 x x x]
     // [0 0 1 x x]
@@ -250,9 +250,9 @@ unimodularization(const SquareMatrix<intptr_t> &Aorig, size_t originalRows) {
             break; // assert(false && "Not implemented");
         }
         // now reduce
-        intptr_t Akk = A(k, k); // 1 or -1
+        int64_t Akk = A(k, k); // 1 or -1
         for (size_t i = k + 1; i < originalRows; ++i) {
-            intptr_t scale = A(i, k) * Akk;
+            int64_t scale = A(i, k) * Akk;
             A(i, k) = 0;
             for (size_t j = k + 1; j < N; ++j) {
                 A(i, j) -= scale * A(k, j);

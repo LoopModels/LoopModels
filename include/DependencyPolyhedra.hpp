@@ -134,9 +134,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // layout of constraints (based on Farkas equalities):
     // comp time constant, indVars0, indVars1, loop constants
     DependencePolyhedra(const ArrayReference &ar0, const ArrayReference &ar1)
-        : SymbolicEqPolyhedra(Matrix<intptr_t, 0, 0, 0>(),
+        : SymbolicEqPolyhedra(Matrix<int64_t, 0, 0, 0>(),
                               llvm::SmallVector<MPoly, 8>(),
-                              Matrix<intptr_t, 0, 0, 0>(),
+                              Matrix<int64_t, 0, 0, 0>(),
                               llvm::SmallVector<MPoly, 8>(), ar0.loop->poset) {
 
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -200,7 +200,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                     // need this to be a compile time constant
                     // TODO: handle the case gracefully where it isn't!!!
                     { // limit scope of `c`
-                        intptr_t c = coef.getCompileTimeConstant().getValue();
+                        int64_t c = coef.getCompileTimeConstant().getValue();
                         // id gives the loop, which yields the Farkas constraint
                         // it contributed to, i.e. the column of `As` to store
                         // into. `i`, the dim number, yields the associated
@@ -278,10 +278,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         size_t numInequalityConstraints = numBoundingCoefs + numLambda;
         size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
 
-        Matrix<intptr_t, 0, 0, 0> Af(numVarNew, numInequalityConstraints);
-        llvm::SmallVector<intptr_t, 8> bf(numInequalityConstraints);
-        Matrix<intptr_t, 0, 0, 0> Ef(numVarNew, numEqualityConstraints);
-        llvm::SmallVector<intptr_t, 8> qf(numEqualityConstraints);
+        Matrix<int64_t, 0, 0, 0> Af(numVarNew, numInequalityConstraints);
+        llvm::SmallVector<int64_t, 8> bf(numInequalityConstraints);
+        Matrix<int64_t, 0, 0, 0> Ef(numVarNew, numEqualityConstraints);
+        llvm::SmallVector<int64_t, 8> qf(numEqualityConstraints);
 
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
@@ -350,9 +350,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // a == 0 ->
         // even row: a <= 0
         // odd row: -a <= 0
-        intptr_t sign = 2 * (direction ^ boundAbove) - 1;
+        int64_t sign = 2 * (direction ^ boundAbove) - 1;
         for (size_t i = 0; i < numVarOld; ++i) {
-            intptr_t s = (2 * (i < numDep0Var) - 1) * sign;
+            int64_t s = (2 * (i < numDep0Var) - 1) * sign;
             Ef(i, 1 + i) = s;
         }
         // delta/constant coef at ind numVarOld
@@ -399,15 +399,14 @@ struct Dependence {
     // {
     //     return check(*x.ref, x.schedule, *y.ref, y.schedule);
     // }
-    static llvm::Optional<Dependence> check(const ArrayReference &x,
-                                            const Schedule &sx,
-                                            const ArrayReference &y,
-                                            const Schedule &sy) {
+    static void check(llvm::SmallVectorImpl<Dependence> deps,
+                      const ArrayReference &x, const Schedule &sx,
+                      const ArrayReference &y, const Schedule &sy) {
         if (x.gcdKnownIndependent(y))
-            return {};
+            return;
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
-            return {};
+            return;
             // note that we set boundAbove=true, so we reverse the dependence
             // direction for the dependency we week, we'll discard the program
             // variables x then y
@@ -422,18 +421,18 @@ struct Dependence {
         const size_t numLoopsY = y.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
-        SquarePtrMatrix<const intptr_t> xPhi = sx.getPhi();
-        SquarePtrMatrix<const intptr_t> yPhi = sy.getPhi();
-        PtrVector<const intptr_t, 0> xOmega = sx.getOmega();
-        PtrVector<const intptr_t, 0> yOmega = sy.getOmega();
-        llvm::SmallVector<intptr_t, 16> sch;
+        SquarePtrMatrix<const int64_t> xPhi = sx.getPhi();
+        SquarePtrMatrix<const int64_t> yPhi = sy.getPhi();
+        PtrVector<const int64_t, 0> xOmega = sx.getOmega();
+        PtrVector<const int64_t, 0> yOmega = sy.getOmega();
+        llvm::SmallVector<int64_t, 16> sch;
         sch.resize_for_overwrite(numLoopsTotal + 1);
         // sch.resize_for_overwrite(fxy.getNumVar());
         // for (size_t i = numLoopsTotal + 1; i < fxy.getNumVar(); ++i) {
         //     sch[i] = 0;
         // }
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
-            if (intptr_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
+            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
 
                 if ((dxy.forward = o2idiff > 0)) {
                     std::swap(fxy, fyx);
@@ -452,7 +451,9 @@ struct Dependence {
                 fyx.E.reduceNumRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
                 // x then y
-                return Dependence{dxy, fyx, fxy};
+                deps.emplace_back(std::move(dxy), std::move(fyx),
+                                  std::move(fxy));
+                return;
             }
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
@@ -472,7 +473,7 @@ struct Dependence {
             for (size_t j = 0; j < numLoopsY; ++j) {
                 sch[j + numLoopsX] = yPhi(j, i);
             }
-            intptr_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
+            int64_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
             // forward means offset is 2nd - 1st
             sch[numLoopsTotal] = yO - xO;
             if (!fxy.knownSatisfied(sch)) {
@@ -484,7 +485,9 @@ struct Dependence {
                 std::cout << "dep order 2; i = " << i << std::endl;
 #endif
                 // y then x
-                return Dependence{dxy, fyx, fxy};
+                deps.emplace_back(std::move(dxy), std::move(fyx),
+                                  std::move(fxy));
+                return;
             }
             // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
@@ -496,10 +499,12 @@ struct Dependence {
 #ifndef NDEBUG
                 std::cout << "dep order 3; i= " << i << std::endl;
 #endif
-                return Dependence{dxy, fxy, fyx};
+                deps.emplace_back(std::move(dxy), std::move(fxy),
+                                  std::move(fyx));
+                return;
             }
         }
-        return {};
+        return;
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dependence &d) {

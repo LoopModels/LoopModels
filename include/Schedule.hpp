@@ -27,32 +27,32 @@ struct Schedule {
     static constexpr unsigned maxStackStorage =
         maxStackLoops * (maxStackLoops + 2) + 1;
     // 3*3+ 2*3+1 = 16
-    llvm::SmallVector<intptr_t, maxStackStorage> data;
+    llvm::SmallVector<int64_t, maxStackStorage> data;
     const size_t numLoops;
     Schedule(size_t nLoops)
-        : data(llvm::SmallVector<intptr_t, maxStackStorage>(
+        : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops){};
-    SquarePtrMatrix<intptr_t> getPhi() {
-        // return SquarePtrMatrix<intptr_t>(data.data(), numLoops);
-        return SquarePtrMatrix<intptr_t>{data.data(), numLoops};
+    SquarePtrMatrix<int64_t> getPhi() {
+        // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
+        return SquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
-    PtrVector<intptr_t, 0> getOmega() {
-        return PtrVector<intptr_t, 0>{data.data() + numLoops * numLoops,
+    PtrVector<int64_t, 0> getOmega() {
+        return PtrVector<int64_t, 0>{data.data() + numLoops * numLoops,
                                       2 * numLoops + 1};
     }
-    SquarePtrMatrix<const intptr_t> getPhi() const {
-        // return SquarePtrMatrix<intptr_t>(data.data(), numLoops);
-        return SquarePtrMatrix<const intptr_t>{data.data(), numLoops};
+    SquarePtrMatrix<const int64_t> getPhi() const {
+        // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
+        return SquarePtrMatrix<const int64_t>{data.data(), numLoops};
     }
-    PtrVector<const intptr_t, 0> getOmega() const {
+    PtrVector<const int64_t, 0> getOmega() const {
         // return llvm::ArrayRef<typename T>
-        return PtrVector<const intptr_t, 0>{data.data() + numLoops * numLoops,
+        return PtrVector<const int64_t, 0>{data.data() + numLoops * numLoops,
                                             2 * numLoops + 1};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
-        PtrVector<const intptr_t, 0> o0 = getOmega();
-        PtrVector<const intptr_t, 0> o1 = y.getOmega();
+        PtrVector<const int64_t, 0> o0 = getOmega();
+        PtrVector<const int64_t, 0> o1 = y.getOmega();
         bool allEqual = true;
         for (size_t n = 0; n < numLoopsCommon; ++n) {
             allEqual &= (o0[2 * n] == o1[2 * n]);

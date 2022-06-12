@@ -13,42 +13,42 @@
 #include <tuple>
 #include <utility>
 
-intptr_t saturatedAdd(intptr_t a, intptr_t b) {
-    intptr_t c;
+int64_t saturatedAdd(int64_t a, int64_t b) {
+    int64_t c;
     if (__builtin_add_overflow(a, b, &c)) {
-        c = ((a > 0) & (b > 0)) ? std::numeric_limits<intptr_t>::max()
-                                : std::numeric_limits<intptr_t>::min();
+        c = ((a > 0) & (b > 0)) ? std::numeric_limits<int64_t>::max()
+                                : std::numeric_limits<int64_t>::min();
     }
     return c;
 }
-intptr_t saturatedSub(intptr_t a, intptr_t b) {
-    intptr_t c;
+int64_t saturatedSub(int64_t a, int64_t b) {
+    int64_t c;
     if (__builtin_sub_overflow(a, b, &c)) {
-        c = ((a > 0) & (b < 0)) ? std::numeric_limits<intptr_t>::max()
-                                : std::numeric_limits<intptr_t>::min();
+        c = ((a > 0) & (b < 0)) ? std::numeric_limits<int64_t>::max()
+                                : std::numeric_limits<int64_t>::min();
     }
     return c;
 }
-intptr_t saturatedMul(intptr_t a, intptr_t b) {
-    intptr_t c;
+int64_t saturatedMul(int64_t a, int64_t b) {
+    int64_t c;
     if (__builtin_mul_overflow(a, b, &c)) {
-        c = ((a > 0) ^ (b > 0)) ? std::numeric_limits<intptr_t>::min()
-                                : std::numeric_limits<intptr_t>::max();
+        c = ((a > 0) ^ (b > 0)) ? std::numeric_limits<int64_t>::min()
+                                : std::numeric_limits<int64_t>::max();
     }
     return c;
 }
-intptr_t saturatingAbs(intptr_t a) {
-    if (a == std::numeric_limits<intptr_t>::min()) {
-        return std::numeric_limits<intptr_t>::max();
+int64_t saturatingAbs(int64_t a) {
+    if (a == std::numeric_limits<int64_t>::min()) {
+        return std::numeric_limits<int64_t>::max();
     }
     return std::abs(a);
 }
 // struct Interval
 // Provides saturating interval arithmetic.
 struct Interval {
-    intptr_t lowerBound, upperBound;
-    Interval(intptr_t x) : lowerBound(x), upperBound(x){};
-    Interval(intptr_t lb, intptr_t ub) : lowerBound(lb), upperBound(ub){};
+    int64_t lowerBound, upperBound;
+    Interval(int64_t x) : lowerBound(x), upperBound(x){};
+    Interval(int64_t lb, int64_t ub) : lowerBound(lb), upperBound(ub){};
     Interval intersect(Interval b) const {
         return Interval{std::max(lowerBound, b.lowerBound),
                         std::min(upperBound, b.upperBound)};
@@ -64,10 +64,10 @@ struct Interval {
     }
 
     Interval operator*(Interval b) const {
-        intptr_t ll = saturatedMul(lowerBound, b.lowerBound);
-        intptr_t lu = saturatedMul(lowerBound, b.upperBound);
-        intptr_t ul = saturatedMul(upperBound, b.lowerBound);
-        intptr_t uu = saturatedMul(upperBound, b.upperBound);
+        int64_t ll = saturatedMul(lowerBound, b.lowerBound);
+        int64_t lu = saturatedMul(lowerBound, b.upperBound);
+        int64_t ul = saturatedMul(upperBound, b.lowerBound);
+        int64_t uu = saturatedMul(upperBound, b.upperBound);
         return Interval{std::min(std::min(ll, lu), std::min(ul, uu)),
                         std::max(std::max(ll, lu), std::max(ul, uu))};
     }
@@ -111,8 +111,8 @@ struct Interval {
     };
 
     Interval operator-() const {
-        intptr_t typeMin = std::numeric_limits<intptr_t>::min();
-        intptr_t typeMax = std::numeric_limits<intptr_t>::max();
+        int64_t typeMin = std::numeric_limits<int64_t>::min();
+        int64_t typeMax = std::numeric_limits<int64_t>::max();
         return Interval{upperBound == typeMin ? typeMax : -upperBound,
                         lowerBound == typeMin ? typeMax : -lowerBound};
     }
@@ -132,44 +132,44 @@ struct Interval {
         return ((lowerBound != b.lowerBound) &&
                 (std::min(saturatingAbs(lowerBound),
                           saturatingAbs(b.lowerBound)) <
-                 std::numeric_limits<intptr_t>::max() >> 1)) ||
+                 std::numeric_limits<int64_t>::max() >> 1)) ||
                ((upperBound != b.upperBound) &&
                 (std::min(saturatingAbs(upperBound),
                           saturatingAbs(b.upperBound)) <
-                 std::numeric_limits<intptr_t>::max() >> 1));
+                 std::numeric_limits<int64_t>::max() >> 1));
     }
     bool signUnknown() const { return (lowerBound < 0) & (upperBound > 0); }
 
     static Interval negative() {
-        return Interval{std::numeric_limits<intptr_t>::min(), -1};
+        return Interval{std::numeric_limits<int64_t>::min(), -1};
     }
     static Interval positive() {
-        return Interval{1, std::numeric_limits<intptr_t>::max()};
+        return Interval{1, std::numeric_limits<int64_t>::max()};
     }
     static Interval nonPositive() {
-        return Interval{std::numeric_limits<intptr_t>::min(), 0};
+        return Interval{std::numeric_limits<int64_t>::min(), 0};
     }
     static Interval nonNegative() {
-        return Interval{0, std::numeric_limits<intptr_t>::max()};
+        return Interval{0, std::numeric_limits<int64_t>::max()};
     }
     static Interval unconstrained() {
-        return Interval{std::numeric_limits<intptr_t>::min(),
-                        std::numeric_limits<intptr_t>::max()};
+        return Interval{std::numeric_limits<int64_t>::min(),
+                        std::numeric_limits<int64_t>::max()};
     }
-    static Interval LowerBound(intptr_t x) {
-        return Interval{x, std::numeric_limits<intptr_t>::max()};
+    static Interval LowerBound(int64_t x) {
+        return Interval{x, std::numeric_limits<int64_t>::max()};
     }
-    static Interval UpperBound(intptr_t x) {
-        return Interval{std::numeric_limits<intptr_t>::min(), x};
+    static Interval UpperBound(int64_t x) {
+        return Interval{std::numeric_limits<int64_t>::min(), x};
     }
     static Interval zero() { return Interval{0, 0}; }
 };
 
 Interval negativeInterval() {
-    return Interval{std::numeric_limits<intptr_t>::min(), -1};
+    return Interval{std::numeric_limits<int64_t>::min(), -1};
 }
 Interval positiveInterval() {
-    return Interval{1, std::numeric_limits<intptr_t>::max()};
+    return Interval{1, std::numeric_limits<int64_t>::max()};
 }
 
 std::ostream &operator<<(std::ostream &os, Interval a) {
@@ -349,26 +349,26 @@ struct PartiallyOrderedSet {
         return itv;
     }
     Interval asInterval(
-        const Polynomial::Term<intptr_t, Polynomial::Monomial> &t) const {
+        const Polynomial::Term<int64_t, Polynomial::Monomial> &t) const {
         return asInterval(t.exponent) * t.coefficient;
     }
     bool knownGreaterEqual(
-        const Polynomial::Term<intptr_t, Polynomial::Monomial> &x,
-        const Polynomial::Term<intptr_t, Polynomial::Monomial> &y) const {
+        const Polynomial::Term<int64_t, Polynomial::Monomial> &x,
+        const Polynomial::Term<int64_t, Polynomial::Monomial> &y) const {
         return knownGreaterEqual(x.exponent, y.exponent, x.coefficient,
                                  y.coefficient);
     }
     std::pair<size_t, llvm::SmallVector<int>>
     matchMonomials(const Polynomial::Monomial &x, const Polynomial::Monomial &y,
-                   intptr_t cx, intptr_t cy) const {
+                   int64_t cx, int64_t cy) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
-        const intptr_t thresh = 0;
+        const int64_t thresh = 0;
         // TODO: generalize to handle negatives...
-        intptr_t scx = cx > 0 ? 1 : -1;
-        intptr_t scy = cy > 0 ? 1 : -1;
-        intptr_t acx = scx * cx;
-        intptr_t acy = scy * cy;
+        int64_t scx = cx > 0 ? 1 : -1;
+        int64_t scy = cy > 0 ? 1 : -1;
+        int64_t acx = scx * cx;
+        int64_t acy = scy * cy;
         Matrix<bool, 0, 0> bpGraph(N + (acx > thresh), M + (acy > thresh));
         for (size_t n = 0; n < N; ++n) {
             auto xid = x.prodIDs[n].getID();
@@ -416,8 +416,8 @@ struct PartiallyOrderedSet {
 
     std::pair<Interval, Interval>
     unmatchedIntervals(const Polynomial::Monomial &x,
-                       const Polynomial::Monomial &y, intptr_t cx = 1,
-                       intptr_t cy = 1) const {
+                       const Polynomial::Monomial &y, int64_t cx = 1,
+                       int64_t cy = 1) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
         auto [matches, matchR] = matchMonomials(x, y, cx, cy);
@@ -458,8 +458,8 @@ struct PartiallyOrderedSet {
     // knownGreaterEqual(x, y, cx, xy)
     // is x*cx >= y*cy
     bool knownGreaterEqual(const Polynomial::Monomial &x,
-                           const Polynomial::Monomial &y, intptr_t cx = 1,
-                           intptr_t cy = 1) const {
+                           const Polynomial::Monomial &y, int64_t cx = 1,
+                           int64_t cy = 1) const {
         const size_t N = x.prodIDs.size();
         const size_t M = y.prodIDs.size();
         if (N == 0) {
@@ -498,8 +498,8 @@ struct PartiallyOrderedSet {
         return itvx.knownGreaterEqual(itvy);
     }
     bool knownGreater(const Polynomial::Monomial &x,
-                      const Polynomial::Monomial &y, intptr_t cx = 1,
-                      intptr_t cy = 1) const {
+                      const Polynomial::Monomial &y, int64_t cx = 1,
+                      int64_t cy = 1) const {
         if (cx < 0) {
             if (cy < 0) {
                 return knownGreater(y, x, -cy, -cx);
@@ -517,7 +517,7 @@ struct PartiallyOrderedSet {
                             const llvm::SmallVectorImpl<int> &matchR) const {
         for (size_t n = 0; n < matchR.size(); ++n) {
             size_t m = matchR[n];
-            intptr_t lowerBound =
+            int64_t lowerBound =
                 (*this)(y.prodIDs[n].getID(), x.prodIDs[m].getID()).lowerBound;
             if (lowerBound > 0) {
                 return true;
@@ -651,7 +651,7 @@ struct PartiallyOrderedSet {
         x -= 1;
         return knownGreaterEqualZero(x);
     }
-    // bool knownOffsetLessEqual(MPoly &x, MPoly &y, intptr_t offset = 0) {
+    // bool knownOffsetLessEqual(MPoly &x, MPoly &y, int64_t offset = 0) {
     // return knownOffsetGreaterEqual(y, x, -offset);
     // }
 };

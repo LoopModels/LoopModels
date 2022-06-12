@@ -24,7 +24,7 @@ struct Stride {
         : stride(std::move(stride)), indices(std::move(indices)){};
     Stride(Polynomial::Monomial stride,
            llvm::SmallVector<std::pair<MPoly, VarID>, 1> indices)
-        : stride(MPoly{Polynomial::Term{intptr_t(1), std::move(stride)}}),
+        : stride(MPoly{Polynomial::Term{int64_t(1), std::move(stride)}}),
           indices(std::move(indices)){};
     size_t size() const { return indices.size(); }
     // size_t getCount(VarType i) {
@@ -233,7 +233,7 @@ std::ostream &operator<<(std::ostream &os, Stride const &axis) {
     for (auto &indvar : axis) {
         auto &[mlt, var] = indvar;
         if (auto optc = mlt.getCompileTimeConstant()) {
-            intptr_t c = optc.getValue();
+            int64_t c = optc.getValue();
             if (printPlus) {
                 if (c < 0) {
                     c *= -1;
@@ -308,13 +308,13 @@ struct ArrayReference {
         : arrayID(arrayID), loop(loop), axes(axes) {
         // TODO: fill indToStrideMap;
     }
-    void pushAffineAxis(const Stride &stride, const StridedVector<intptr_t> &s,
+    void pushAffineAxis(const Stride &stride, const StridedVector<int64_t> &s,
                         size_t j = 0) {
         axes.emplace_back(stride.stride);
         llvm::SmallVector<std::pair<MPoly, VarID>, 1> &inds =
             axes.back().indices;
         for (IDType i = 0; i < s.size(); ++i) {
-            if (intptr_t c = s[i]) {
+            if (int64_t c = s[i]) {
                 inds.emplace_back(c,
                                   VarID(i + j, VarType::LoopInductionVariable));
                 assert(inds.back().first.getCompileTimeConstant().getValue() ==
