@@ -93,7 +93,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // S'*L = I
         // now, we have
         // (S'*K')*J = (K*S)'*J = I
-        auto SK = matmultt(S, K);
+        IntMatrix SK = matmultt(S, K);
         // auto KS = matmul(K, S);
         // llvm::SmallVector<ArrayReference*> aiNew;
         llvm::SmallVector<ArrayReference, 0> newArrayRefs;

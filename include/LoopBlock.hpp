@@ -67,7 +67,7 @@
 //   f(m, ...); // Omega = [2, _, 0]
 // }
 struct LoopBlock {
-    llvm::SmallVector<ArrayReference, 0> refs;
+    // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
     // Perhaps implicitly via the graph when using internal orthogonalization
@@ -82,21 +82,21 @@ struct LoopBlock {
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
 
-    ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
-    ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
-    const ArrayReference &ref(const MemoryAccess &x) const {
-        return refs[x.ref];
-    }
-    const ArrayReference &ref(const MemoryAccess *x) const {
-        return refs[x->ref];
-    }
+    // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
+    // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
+    // const ArrayReference &ref(const MemoryAccess &x) const {
+    //     return refs[x.ref];
+    // }
+    // const ArrayReference &ref(const MemoryAccess *x) const {
+    //     return refs[x->ref];
+    // }
     bool isSatisfied(const Dependence &e) const {
         const IntegerEqPolyhedra &sat = e.dependenceSatisfaction;
 
         auto &schIn = e.in->schedule;
         auto &schOut = e.out->schedule;
-        const ArrayReference &refIn = ref(e.in);
-        const ArrayReference &refOut = ref(e.out);
+        const ArrayReference &refIn = e.in->ref;
+        const ArrayReference &refOut = e.out->ref;
         size_t numLoopsIn = refIn.getNumLoops();
         size_t numLoopsOut = refOut.getNumLoops();
         size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
@@ -180,49 +180,55 @@ struct LoopBlock {
     // so, `pushReductionEdges` will...
     // actually, probably better to put this into dependence checking
     // so that it can add optionally 0, 1, or 2 dependencies
-    void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
-        if (!x.fusedThrough(y)) {
-            return;
-        }
-        ArrayReference &refX = ref(x);
-        ArrayReference &refY = ref(y);
-        const size_t numLoopsX = refX.getNumLoops();
-        const size_t numLoopsY = refY.getNumLoops();
-        const size_t numAxes = refX.dim();
-        // we preprocess to delinearize all, including linear indexing
-        assert(numAxes == refY.dim());
-        const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-        for (size_t i = numAxes; i < numLoopsCommon; ++i) {
-            // push both edge directions
-        }
-    }
+    // void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
+    //     if (!x.fusedThrough(y)) {
+    //         return;
+    //     }
+    //     ArrayReference &refX = x.ref;
+    //     ArrayReference &refY = y.ref;
+    //     const size_t numLoopsX = refX.getNumLoops();
+    //     const size_t numLoopsY = refY.getNumLoops();
+    //     const size_t numAxes = refX.dim();
+    //     // we preprocess to delinearize all, including linear indexing
+    //     assert(numAxes == refY.dim());
+    //     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+    //     for (size_t i = numAxes; i < numLoopsCommon; ++i) {
+    //         // push both edge directions
+    //     }
+    // }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
         // as a result of preprocessing.
-        if (llvm::Optional<Dependence> dep = Dependence::check(edges,
-                ref(mai), mai.schedule, ref(maj), maj.schedule)) {
+        if (size_t numDeps = Dependence::check(edges, mai, maj)) {
             size_t numEdges = edges.size();
-            Dependence &d(dep.getValue());
-#ifndef NDEBUG
-            if (d.isForward()) {
-                std::cout << "dep direction: x -> y" << std::endl;
-            } else {
-                std::cout << "dep direction: y -> x" << std::endl;
-            }
-#endif
-            MemoryAccess *pin, *pout;
-            if (d.isForward()) {
-                pin = &mai;
-                pout = &maj;
-            } else {
-                pin = &maj;
-                pout = &mai;
-            }
-            edges.emplace_back(std::move(d), pin, pout);
-            // input's out-edge goes to output's in-edge
-            pin->addEdgeOut(numEdges);
-            pout->addEdgeIn(numEdges);
-            pushReductionEdges(mai, maj);
+            size_t e = numEdges - numDeps;
+            do {
+                edges[e].in->addEdgeOut(e);
+                edges[e].out->addEdgeIn(e);
+            } while (++e < numEdges);
+            //             Dependence &d(dep.getValue());
+            // #ifndef NDEBUG
+            //             if (d.isForward()) {
+            //                 std::cout << "dep direction: x -> y" <<
+            //                 std::endl;
+            //             } else {
+            //                 std::cout << "dep direction: y -> x" <<
+            //                 std::endl;
+            //             }
+            // #endif
+            //             MemoryAccess *pin, *pout;
+            //             if (d.isForward()) {
+            //                 pin = &mai;
+            //                 pout = &maj;
+            //             } else {
+            //                 pin = &maj;
+            //                 pout = &mai;
+            //             }
+            //             edges.emplace_back(std::move(d), pin, pout);
+            //             // input's out-edge goes to output's in-edge
+            //             pin->addEdgeOut(numEdges);
+            //             pout->addEdgeIn(numEdges);
+            //             // pushReductionEdges(mai, maj);
         }
     }
     // fills all the edges between memory accesses, checking for
@@ -230,10 +236,10 @@ struct LoopBlock {
     void fillEdges() {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
-            ArrayReference &refI = ref(mai);
+            ArrayReference &refI = mai.ref;
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
@@ -284,7 +290,7 @@ struct LoopBlock {
             MemoryAccess &mai = memory[i];
             if (mai.isLoad)
                 continue;
-            ArrayReference &refI = ref(mai);
+            ArrayReference &refI = mai.ref;
             size_t dimI = refI.dim();
             auto &axesI = refI.axes;
             size_t multiInds = 0;
@@ -325,7 +331,7 @@ struct LoopBlock {
                 MemoryAccess &maj = memory[j];
                 if (!mai.fusedThrough(maj))
                     continue;
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 numLoops = std::max(numLoops, refJ.getNumLoops());
                 numRow += refJ.dim();
                 // numLoad += maj.isLoad;
@@ -342,7 +348,7 @@ struct LoopBlock {
             bool dobreakj = false;
             for (auto j : orthInds) {
                 MemoryAccess &maj = memory[j];
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 size_t row = maj.isLoad ? rowLoad : rowStore;
                 for (auto &axis : refJ.axes) {
                     if (addIndRow(S, axis, row++, peelOuter)) {
@@ -368,29 +374,30 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-                IntMatrix SK(matmul(S, K));
+                IntMatrix SK(matmultt(S, K));
                 llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
                     loopMap;
-                llvm::SmallVector<int, 16> refMap(
-                    refs.size() + orthInds.size() - 1, -1);
+                // llvm::SmallVector<int, 16> refMap(
+                //     refs.size() + orthInds.size() - 1, -1);
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
                     visited[j] = true;
                     MemoryAccess &maj = memory[j];
-                    unsigned oldRefID = maj.ref;
-                    if (refMap[oldRefID] >= 0) {
-                        maj.ref = oldRefID;
-                        continue;
-                    }
-                    ArrayReference &oldRef = ref(maj);
-                    refMap[oldRefID] = maj.ref = refs.size();
-                    refs.emplace_back(oldRef.arrayID,
-                                      getBang(loopMap, K, oldRef.loop.get()));
+                    // unsigned oldRefID = maj.ref;
+                    // if (refMap[oldRefID] >= 0) {
+                    //     maj.ref = oldRefID;
+                    //     continue;
+                    // }
+                    ArrayReference oldRef = std::move(maj.ref);
+                    maj.ref = {oldRef.arrayID,
+                               getBang(loopMap, K, oldRef.loop.get())};
+                    // refMap[oldRefID] = maj.ref = refs.size();
+                    // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     for (auto &axis : oldRef) {
-                        refs.back().pushAffineAxis(axis, SK.getCol(row++),
+                        maj.ref.pushAffineAxis(axis, SK.getRow(row++),
                                                    peelOuter);
                     }
                     rowLoad = maj.isLoad ? row : rowLoad;
@@ -412,18 +419,13 @@ struct LoopBlock {
     }
 };
 
-std::ostream &operator<<(std::ostream &os, const LoopBlock::MemoryAccess &m) {
+std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
     if (m.isLoad) {
         os << "= ";
     }
-    os << "ArrayReference #" << m.ref;
+    os << "ArrayReference:\n" << m.ref;
     if (!m.isLoad) {
         os << " =";
     }
-    return os;
-}
-std::ostream &operator<<(std::ostream &os, const LoopBlock::Edge &e) {
-
-    os << "Ref #" << e.in->ref << "-> Ref #" << e.out->ref;
     return os;
 }

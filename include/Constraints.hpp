@@ -12,8 +12,9 @@
 // the derived classes.
 template <typename T>
 static std::ostream &
-printConstraints(std::ostream &os, PtrMatrix<int64_t> A, llvm::ArrayRef<T> b,
-                 bool inequality = true, size_t numAuxVar = 0) {
+printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
+                 llvm::ArrayRef<T> b, bool inequality = true,
+                 size_t numAuxVar = 0) {
     const unsigned numConstraints = A.numCol();
     const unsigned numVar = A.numRow();
     for (size_t c = 0; c < numConstraints; ++c) {
@@ -53,12 +54,11 @@ printConstraints(std::ostream &os, PtrMatrix<int64_t> A, llvm::ArrayRef<T> b,
     return os;
 }
 template <typename T>
-static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
-                                      llvm::SmallVectorImpl<T> &b,
-                                      bool inequality = true,
-                                      size_t numAuxVar = 0) {
-    return printConstraints(os, A, llvm::ArrayRef<int64_t>(b), inequality,
-                            numAuxVar);
+static std::ostream &
+printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
+                 const llvm::SmallVectorImpl<T> &b, bool inequality = true,
+                 size_t numAuxVar = 0) {
+    return printConstraints(os, A, llvm::ArrayRef<T>(b), inequality, numAuxVar);
 }
 
 // does not preserve the order of columns, instead it swaps the `i`th column

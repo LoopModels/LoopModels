@@ -542,8 +542,10 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
 
     T *data() { return mem; }
     const T *data() const { return mem; }
+    // operator SquarePtrMatrix<const T>() const { return {.mem = mem, .M = M};
+    // }
     operator SquarePtrMatrix<const T>() const {
-        return {.mem = mem, .M = M, .N = M, .X = M};
+        return SquarePtrMatrix<const T>(mem, M);
     }
 };
 

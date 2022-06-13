@@ -47,7 +47,7 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
 
   private:
     static bool isConstantIntZero(llvm::Value *x) {
-        if (auto *c = llvm::dyn_cast<llvm::Constantint64_t>(x)) {
+        if (auto *c = llvm::dyn_cast<llvm::ConstantInt>(x)) {
             return c->isZero();
         }
         return false;
@@ -57,7 +57,9 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
             return false;
         }
         llvm::errs() << "Before replacement:\n"
-                     << L << "\nPreHeader:\n" << *L.getLoopPreheader() << "\nHeader:" << *L.getHeader() << "\n\n";
+                     << L << "\nPreHeader:\n"
+                     << *L.getLoopPreheader() << "\nHeader:" << *L.getHeader()
+                     << "\n\n";
         // llvm::Function *F = L.getHeader()->getParent();
         // const llvm::DataLayout &DL = F->getParent()->getDataLayout();
 
@@ -74,7 +76,7 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
             // auto pred
             llvm::Value *step = bounds.getStepValue();
             if (llvm::ConstantInt *stepConst =
-                    llvm::dyn_cast<llvm::Constantint64_t>(step)) {
+                    llvm::dyn_cast<llvm::ConstantInt>(step)) {
                 if (stepConst->isOne()) {
                     return false;
                 }
@@ -91,14 +93,14 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
             // oldIV = newIV * oldStep + oldInit
             llvm::Value *exitCount = preHeaderBuilder.CreateSDiv(
                 preHeaderBuilder.CreateNSWSub(finl, init), step);
-            //llvm::Value *tripCount = preHeaderBuilder.CreateNSWAdd(
-            //    exitCount, llvm::ConstantInt::get(exitCount->getType(), 1));
-            // our new loop will be
-            // for (auto newIV = 0; newIV != tripCount; ++newIV){
-            //   oldIV = newIV*oldStep + oldInit;
-            //   ...
-            // }
-            // llvm::BasicBlock *header = L.getHeader();
+            // llvm::Value *tripCount = preHeaderBuilder.CreateNSWAdd(
+            //     exitCount, llvm::ConstantInt::get(exitCount->getType(), 1));
+            //  our new loop will be
+            //  for (auto newIV = 0; newIV != tripCount; ++newIV){
+            //    oldIV = newIV*oldStep + oldInit;
+            //    ...
+            //  }
+            //  llvm::BasicBlock *header = L.getHeader();
             llvm::IRBuilder<> headerBuilder(oldIV);
             auto *newIV =
                 headerBuilder.CreatePHI(exitCount->getType(), 2, "newIndVar");
@@ -136,7 +138,9 @@ class UnitStepPass : public llvm::PassInfoMixin<UnitStepPass> {
             oldBI->setCondition(newCmp);
             oldIV->replaceAllUsesWith(replacementIV);
             oldIV->eraseFromParent();
-            llvm::errs() << "After replacement PreHeader:\n" << *preHeader << "\nHeader:\n" << *L.getHeader();
+            llvm::errs() << "After replacement PreHeader:\n"
+                         << *preHeader << "\nHeader:\n"
+                         << *L.getHeader();
             // oldCmp->replaceAllUsesWith(newCmp);
         }
         return false;
