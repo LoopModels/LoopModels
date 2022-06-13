@@ -15,8 +15,9 @@ static std::ostream &
 printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
                  llvm::ArrayRef<T> b, bool inequality = true,
                  size_t numAuxVar = 0) {
-    const unsigned numConstraints = A.numCol();
-    const unsigned numVar = A.numRow();
+    const unsigned numConstraints = A.numRow();
+    const unsigned numVar = A.numCol();
+    assert(b.size() == numConstraints);
     for (size_t c = 0; c < numConstraints; ++c) {
         bool hasPrinted = false;
         for (size_t v = 0; v < numVar; ++v) {
@@ -92,9 +93,18 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
 template <typename T>
 static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                             size_t i) {
+#ifndef NDEBUG
+    std::cout << "A0 (i = " << i << ") = \n" << A << std::endl;
+#endif
     eraseConstraintImpl(A, llvm::MutableArrayRef<T>(b), i);
+#ifndef NDEBUG
+    std::cout << "A1=\n" << A << std::endl;
+#endif
     const size_t lastRow = A.numRow() - 1;
     A.truncateRows(lastRow);
+#ifndef NDEBUG
+    std::cout << "A2=\n" << A << std::endl;
+#endif
     b.truncate(lastRow);
 }
 
@@ -241,9 +251,9 @@ substituteEqualityImpl(IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
 template <typename T>
 static bool substituteEquality(IntMatrix &E, llvm::SmallVectorImpl<T> &q,
                                const size_t i) {
-    size_t colMinNonZero = substituteEqualityImpl(E, q, i);
-    if (colMinNonZero != E.numCol()) {
-        eraseConstraint(E, q, colMinNonZero);
+    size_t rowMinNonZero = substituteEqualityImpl(E, q, i);
+    if (rowMinNonZero != E.numRow()) {
+        eraseConstraint(E, q, rowMinNonZero);
         return false;
     }
     return true;
@@ -257,8 +267,7 @@ static size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     size_t minNonZero = numVar + 1;
     size_t rowMinNonZero = numConstraints;
     for (size_t j = 0; j < numConstraints; ++j) {
-        if (E(i, j)) {
-            // if (std::abs(E(i,j)) == 1){
+        if (E(j, i)) {
             size_t nonZero = 0;
             for (size_t v = 0; v < numVar; ++v) {
                 nonZero += (E(j, v) != 0);
@@ -272,13 +281,13 @@ static size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     if (rowMinNonZero == numConstraints) {
         return rowMinNonZero;
     }
-    auto Es = E.getCol(rowMinNonZero);
+    auto Es = E.getRow(rowMinNonZero);
     int64_t Eis = Es[i];
     int64_t s = 2 * (Eis > 0) - 1;
     // we now subsitute the equality expression with the minimum number
     // of terms.
     if (std::abs(Eis) == 1) {
-        for (size_t j = 0; j < A.numCol(); ++j) {
+        for (size_t j = 0; j < A.numRow(); ++j) {
             if (int64_t Aij = A(j, i)) {
                 // `A` contains inequalities; flipping signs is illegal
                 int64_t Ag = (s * Aij);
@@ -301,7 +310,7 @@ static size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
             }
         }
     } else {
-        for (size_t j = 0; j < A.numCol(); ++j) {
+        for (size_t j = 0; j < A.numRow(); ++j) {
             if (int64_t Aij = A(j, i)) {
                 int64_t g = std::gcd(Aij, Eis);
                 assert(g > 0);
@@ -336,9 +345,9 @@ static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                                IntMatrix &E, llvm::SmallVectorImpl<T> &q,
                                const size_t i) {
 
-    size_t colMinNonZero = substituteEqualityImpl(A, b, E, q, i);
-    if (colMinNonZero != E.numCol()) {
-        eraseConstraint(E, q, colMinNonZero);
+    size_t rowMinNonZero = substituteEqualityImpl(A, b, E, q, i);
+    if (rowMinNonZero != E.numRow()) {
+        eraseConstraint(E, q, rowMinNonZero);
         return false;
     }
     return true;
@@ -353,6 +362,7 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // K equality constraints
     const auto [M, N] = A.size();
     const size_t K = E.numRow();
+    assert(E.numCol() == N);
     assert(b.size() == M);
     assert(q.size() == K);
     // We add M augment variables (a_m), one per inequality constraint
@@ -376,15 +386,14 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
         }
         d[M + k] = q[k];
     }
-    for (size_t o = M + N; o > numNewVar + N;) {
-        --o;
-        substituteEquality(C, d, o);
-        if (C.numCol() > 1) {
+    for (size_t o = M + N; o > numNewVar + M;) {
+        substituteEquality(C, d, --o);
+        if (C.numRow() > 1) {
             NormalForm::simplifyEqualityConstraints(C, d);
         }
     }
-    A.resizeForOverwrite(numNewVar, N);
-    b.resize_for_overwrite(N);
+    A.resizeForOverwrite(M, numNewVar);
+    b.resize_for_overwrite(M);
     size_t nC = 0, nA = 0, i = 0;
     // TODO: document behavior and actually verify correctness...
     // what if we have a_3 - a_7 + .... = ....
@@ -394,13 +403,13 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // eliminates this possiblity.
     // Or, what if 2*a_3 - 3*a_7 == 1?
     // Then, we have a line, and a_3 - a_7 could still be anything.
-    while ((i < N) && (nC < C.numCol()) && (nA < N)) {
+    while ((i < M) && (nC < C.numRow()) && (nA < M)) {
         if (C(nC, i++)) {
             // if we have multiple positives, that still represents a positive
             // constraint, as augments are >=. if we have + and -, then the
             // relationship becomes unknown and thus dropped.
             bool otherNegative = false;
-            for (size_t j = i; j < N; ++j) {
+            for (size_t j = i; j < M; ++j) {
                 otherNegative |= (C(nC, j) < 0);
             }
             if (otherNegative) {
@@ -411,7 +420,7 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
             for (size_t k = 0; k < nA; ++k) {
                 bool allMatch = true;
                 for (size_t m = 0; m < numNewVar; ++m) {
-                    allMatch &= (A(k, m) == C(nC, N + m));
+                    allMatch &= (A(k, m) == C(nC, M + m));
                 }
                 if (allMatch) {
                     duplicate = true;
@@ -423,7 +432,7 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                 continue;
             }
             for (size_t m = 0; m < numNewVar; ++m) {
-                A(nA, m) = C(nC, N + m);
+                A(nA, m) = C(nC, M + m);
             }
             b[nA] = d[nC];
             ++nA;
@@ -432,11 +441,11 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     }
     A.truncateRows(nA);
     b.truncate(nA);
-    E.resizeForOverwrite(numNewVar, C.numCol() - nC);
-    q.resize_for_overwrite(C.numCol() - nC);
-    for (size_t i = 0; i < E.numCol(); ++i) {
+    E.resizeForOverwrite(C.numRow() - nC, numNewVar);
+    q.resize_for_overwrite(C.numRow() - nC);
+    for (size_t i = 0; i < E.numRow(); ++i) {
         for (size_t m = 0; m < numNewVar; ++m) {
-            E(i, m) = C(nC + i, N + m);
+            E(i, m) = C(nC + i, M + m);
         }
         q[i] = d[nC + i];
     }

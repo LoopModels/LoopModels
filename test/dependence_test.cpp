@@ -28,26 +28,26 @@ TEST(DependenceTest, BasicAssertions) {
     // }
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     auto J = Polynomial::Monomial(Polynomial::ID{2});
-    // A'*x <= b
+    // A*x <= b
     // [ 1   0     [i        [ I - 2
     //  -1   0   *  j ]        0
     //   0   1           <=    J - 2
     //   0  -1 ]               0     ]
-    IntMatrix Aloop(2, 4);
+    IntMatrix Aloop(4, 2);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-2
     Aloop(0, 0) = 1;
     bloop.push_back(I - 2);
     // i >= 0
-    Aloop(0, 1) = -1;
+    Aloop(1, 0) = -1;
     bloop.push_back(0);
 
     // j <= J-2
-    Aloop(1, 2) = 1;
+    Aloop(2, 1) = 1;
     bloop.push_back(J - 2);
     // j >= 0
-    Aloop(1, 3) = -1;
+    Aloop(3, 1) = -1;
     bloop.push_back(0);
 
     PartiallyOrderedSet poset;
@@ -145,22 +145,22 @@ TEST(IndependentTest, BasicAssertions) {
     std::cout << "\n\n#### Starting Symmetric Copy Test ####" << std::endl;
     auto I = Polynomial::Monomial(Polynomial::ID{1});
 
-    IntMatrix Aloop(2, 4);
+    IntMatrix Aloop(4, 2);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // i <= I-1
     Aloop(0, 0) = 1;
     bloop.push_back(I - 1);
     // i >= 0
-    Aloop(0, 1) = -1;
+    Aloop(1, 0) = -1;
     bloop.push_back(0);
 
     // j <= i-1
-    Aloop(0, 2) = -1;
-    Aloop(1, 2) = 1;
+    Aloop(2, 0) = -1;
+    Aloop(2, 1) = 1;
     bloop.push_back(-1);
     // j >= 0
-    Aloop(1, 3) = -1;
+    Aloop(3, 1) = -1;
     bloop.push_back(0);
 
     PartiallyOrderedSet poset;
@@ -224,9 +224,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     // Construct the loops
-    IntMatrix AMN(2, 4);
+    IntMatrix AMN(4, 2);
     llvm::SmallVector<MPoly, 8> bMN;
-    IntMatrix AMNK(3, 6);
+    IntMatrix AMNK(6, 3);
     llvm::SmallVector<MPoly, 8> bMNK;
 
     // m <= M-1
@@ -235,28 +235,28 @@ TEST(TriangularExampleTest, BasicAssertions) {
     AMNK(0, 0) = 1;
     bMNK.push_back(M - 1);
     // m >= 0
-    AMN(0, 1) = -1;
+    AMN(1, 0) = -1;
     bMN.push_back(0);
-    AMNK(0, 1) = -1;
+    AMNK(1, 0) = -1;
     bMNK.push_back(0);
 
     // n <= N-1
-    AMN(1, 2) = 1;
+    AMN(2, 1) = 1;
     bMN.push_back(N - 1);
-    AMNK(1, 2) = 1;
+    AMNK(2, 1) = 1;
     bMNK.push_back(N - 1);
     // n >= 0
-    AMN(1, 3) = -1;
+    AMN(3, 1) = -1;
     bMN.push_back(0);
-    AMNK(1, 3) = -1;
+    AMNK(3, 1) = -1;
     bMNK.push_back(0);
 
     // k <= N-1
-    AMNK(2, 4) = 1;
+    AMNK(4, 2) = 1;
     bMNK.push_back(N - 1);
     // k >= n+1 -> n - k <= -1
-    AMNK(1, 5) = 1;
-    AMNK(2, 5) = -1;
+    AMNK(5, 1) = 1;
+    AMNK(5, 2) = -1;
     bMNK.push_back(-1);
 
     PartiallyOrderedSet poset;
@@ -322,6 +322,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //     }
     //   }
     // }
+    // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
+    lblock.memory.reserve(9);
     Schedule sch2_0_0(2);
     SquarePtrMatrix<int64_t> Phi2 = sch2_0_0.getPhi();
     // Phi0 = [1 0; 0 1]
@@ -335,21 +337,44 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
     lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_0_1, false);
+    std::cout << "Amn2Ind.loop->poset.delta.size() = "
+              << Amn2Ind.loop->poset.delta.size() << std::endl;
+    std::cout << "lblock.memory.back().ref.loop->poset.delta.size() = "
+              << lblock.memory.back().ref.loop->poset.delta.size() << std::endl;
     MemoryAccess &mSch2_0_1 = lblock.memory.back();
+    std::cout << "lblock.memory.back().ref.loop = "
+              << lblock.memory.back().ref.loop << std::endl;
+    std::cout << "lblock.memory.back().ref.loop.get() = "
+              << lblock.memory.back().ref.loop.get() << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_0, true);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     MemoryAccess &mSch2_1_0 = lblock.memory.back();
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
     lblock.memory.emplace_back(UnnInd, nullptr, sch2_1_1, true);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     // MemoryAccess &mSch2_1_1 = lblock.memory.back();
     sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_2, false);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     MemoryAccess &mSch2_1_2 = lblock.memory.back();
 
     Schedule sch3_0(3);
@@ -362,20 +387,36 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
     lblock.memory.emplace_back(UnkInd, nullptr, sch3_0, true);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     // MemoryAccess &mSch3_2 = lblock.memory.back();
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
     lblock.memory.emplace_back(Amn3Ind, nullptr, sch3_1, true);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     MemoryAccess &mSch3_1 = lblock.memory.back();
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
     lblock.memory.emplace_back(AmkInd, nullptr, sch3_2, true);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     MemoryAccess &mSch3_0 = lblock.memory.back();
     sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
     lblock.memory.emplace_back(AmkInd, nullptr, sch3_3, false);
+    std::cout << "\nPushing back" << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     MemoryAccess &mSch3_3 = lblock.memory.back();
 
     // for (m = 0; m < M; ++m){
@@ -393,6 +434,17 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // First, comparisons of store to `A(m,n) = B(m,n)` versus...
     llvm::SmallVector<Dependence, 0> d;
     d.reserve(15);
+    std::cout << "lblock.memory[1].ref.loop->poset.delta.size() = "
+              << lblock.memory[1].ref.loop->poset.delta.size() << std::endl;
+    std::cout << "&mSch2_0_1 = " << &mSch2_0_1 << std::endl;
+    std::cout << "&(mSch2_0_1.ref) = " << &(mSch2_0_1.ref) << std::endl;
+    std::cout << "lblock.memory[1].ref.loop = " << lblock.memory[1].ref.loop
+              << std::endl;
+    std::cout << "lblock.memory[1].ref.loop.get() = "
+              << lblock.memory[1].ref.loop.get() << std::endl;
+    std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
+    std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
+              << std::endl;
     // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().isForward());
@@ -490,32 +542,32 @@ TEST(ConvReversePass, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
     // Construct the loops
-    IntMatrix Aloop(4, 8);
+    IntMatrix Aloop(8, 4);
     llvm::SmallVector<MPoly, 8> bloop;
 
     // n <= N-1
     Aloop(0, 0) = 1;
     bloop.push_back(N - 1);
     // n >= 0
-    Aloop(0, 1) = -1;
+    Aloop(1, 0) = -1;
     bloop.push_back(0);
     // m <= M-1
-    Aloop(1, 2) = 1;
+    Aloop(2, 1) = 1;
     bloop.push_back(M - 1);
     // m >= 0
-    Aloop(1, 3) = -1;
+    Aloop(3, 1) = -1;
     bloop.push_back(0);
     // j <= J-1
-    Aloop(2, 4) = 1;
+    Aloop(4, 2) = 1;
     bloop.push_back(J - 1);
     // j >= 0
-    Aloop(2, 5) = -1;
+    Aloop(5, 2) = -1;
     bloop.push_back(0);
     // i <= I-1
-    Aloop(3, 6) = 1;
+    Aloop(6, 3) = 1;
     bloop.push_back(I - 1);
     // i >= 0
-    Aloop(3, 7) = -1;
+    Aloop(7, 3) = -1;
     bloop.push_back(0);
 
     PartiallyOrderedSet poset;

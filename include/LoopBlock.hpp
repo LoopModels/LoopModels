@@ -258,20 +258,22 @@ struct LoopBlock {
         } else {
             const size_t numVar = aln->getNumVar();
             const size_t numConstraints = aln->getNumConstraints();
-            const size_t numTransformed = K.numRow();
+            const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
-            IntMatrix A;
-            A.resizeForOverwrite(numVar, numConstraints);
-            for (size_t k = 0; k < numConstraints; ++k) {
-                for (size_t j = 0; j < numPeeled; ++j) {
-                    A(j, k) = aln->A(j, k);
+	    // A = aln->A*K';
+            IntMatrix A(IntMatrix::Uninitialized(numConstraints, numVar));
+	    for (size_t j = 0; j < numPeeled; ++j) {
+		for (size_t k = 0; k < numConstraints; ++k) {
+                    A(k, j) = aln->A(k, j);
                 }
-                for (size_t j = numPeeled; j < numVar; ++j) {
-                    int64_t Ajk = 0;
+	    }
+	    for (size_t j = numPeeled; j < numVar; ++j) {
+		for (size_t k = 0; k < numConstraints; ++k) {
+                    int64_t Akj = 0;
                     for (size_t l = 0; l < numTransformed; ++l) {
-                        Ajk += K(l, j - numPeeled) * aln->A(l, k);
+                        Akj += aln->A(k, l) * K(j - numPeeled, l);
                     }
-                    A(j, k) = Ajk;
+                    A(k, j) = Akj;
                 }
             }
             std::shared_ptr<AffineLoopNest> alshr =
@@ -342,7 +344,7 @@ struct LoopBlock {
                 // So the item here is to adjust peelOuter.
                 orthInds.push_back(j);
             }
-            IntMatrix S(numRow, numLoops - peelOuter);
+            IntMatrix S(numLoops - peelOuter, numRow);
             size_t rowStore = 0;
             size_t rowLoad = numStore;
             bool dobreakj = false;

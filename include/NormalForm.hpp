@@ -74,9 +74,10 @@ void zeroSupDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
         int64_t Aii = A(i, i);
         int64_t Aji = A(j, i);
         // std::cout << "A(" << i << ", " << i << ") = " << Aii << "; A(" << j
-                  // << ", " << i << ") = " << Aji << std::endl;
+        // << ", " << i << ") = " << Aji << std::endl;
         auto [r, p, q] = gcdx(Aii, Aji);
-        // std::cout << "r = " << r << "; p = " << p << "; q = " << q << std::endl;
+        // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
+        // std::endl;
         int64_t Aiir = Aii / r;
         int64_t Aijr = Aji / r;
         for (size_t k = 0; k < std::min(M, N); ++k) {
@@ -225,7 +226,8 @@ orthogonalizeBang(PtrMatrix<int64_t> A) {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
-    // std::cout << "orthogonalizeBang; M = " << M << "; N = " << N << std::endl;
+    // std::cout << "orthogonalizeBang; M = " << M << "; N = " << N <<
+    // std::endl;
     SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(M);
     llvm::SmallVector<unsigned> included;
     included.reserve(std::min(M, N));
@@ -416,11 +418,11 @@ MULTIVERSION
 size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
                                        llvm::SmallVectorImpl<MPoly> &q) {
     auto [M, N] = E.size();
-    if (N == 0)
+    if (M == 0)
         return 0;
     size_t dec = 0;
     for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= N)
+        if (m - dec >= M)
             break;
 
         if (pivotRows(E, q, m, M, m - dec)) {
@@ -434,20 +436,20 @@ size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
         // now we reduce the sub diagonal
         reduceSubDiagonal(E, q, m, m - dec);
     }
-    size_t Nnew = N;
-    while (allZero(E.getCol(Nnew - 1))) {
-        --Nnew;
+    size_t Mnew = M;
+    while (allZero(E.getCol(Mnew - 1))) {
+        --Mnew;
     }
-    return Nnew;
+    return Mnew;
 }
 MULTIVERSION size_t simplifyEqualityConstraintsImpl(
     PtrMatrix<int64_t> E, llvm::SmallVectorImpl<int64_t> &q) {
     auto [M, N] = E.size();
-    if (N == 0)
+    if (M == 0)
         return 0;
     size_t dec = 0;
     for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= N)
+        if (m - dec >= M)
             break;
 
         if (pivotRows(E, q, m, M, m - dec)) {
@@ -468,11 +470,10 @@ MULTIVERSION size_t simplifyEqualityConstraintsImpl(
     return Mnew;
 }
 
-template <typename T, size_t L>
-void simplifyEqualityConstraints(Matrix<int64_t, 0, 0, L> &E,
-                                 llvm::SmallVectorImpl<T> &q) {
+template <typename T>
+void simplifyEqualityConstraints(IntMatrix &E, llvm::SmallVectorImpl<T> &q) {
 
-    size_t Mnew = simplifyEqualityConstraintsImpl(PtrMatrix<int64_t>(E), q);
+    size_t Mnew = simplifyEqualityConstraintsImpl(E, q);
     E.truncateRows(Mnew);
     q.resize(Mnew);
 }

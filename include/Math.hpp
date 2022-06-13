@@ -643,8 +643,8 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     T *data() { return mem.data(); }
     const T *data() const { return mem.data(); }
 
-    static Matrix<T, 0, 0> Uninitialized(size_t MM, size_t NN) {
-        Matrix<T, 0, 0> A(0, 0);
+    static Matrix<T, 0, 0, S> Uninitialized(size_t MM, size_t NN) {
+        Matrix<T, 0, 0, S> A(0, 0);
         A.M = MM;
         A.X = A.N = NN;
         A.mem.resize_for_overwrite(MM * NN);

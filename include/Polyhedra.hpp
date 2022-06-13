@@ -132,7 +132,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                                IntMatrix &Asrc, llvm::SmallVectorImpl<T> &bsrc,
                                IntMatrix &E0, llvm::SmallVectorImpl<T> &q0,
                                const size_t i) const {
+	std::cout << "Asrc0 =\n" << Asrc << std::endl;
         if (!substituteEquality(Asrc, bsrc, E0, q0, i)) {
+	    std::cout << "Asrc1 =\n" << Asrc << std::endl;
             const size_t numAuxVar = Asrc.numCol() - getNumVar();
             size_t c = Asrc.numRow();
             while (c-- > 0) {
@@ -601,12 +603,12 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         return -1;
     }
-    int64_t
-    checkForTrivialRedundancies(llvm::SmallVector<unsigned, 32> &colsToErase,
-                                llvm::SmallVector<unsigned, 16> &boundDiffs,
-                                IntMatrix &Etmp, llvm::SmallVectorImpl<T> &qtmp,
-                                IntMatrix &Aold, llvm::SmallVectorImpl<T> &bold,
-                                llvm::ArrayRef<int64_t> a, const T &b) const {
+    int64_t checkForTrivialRedundancies(
+        llvm::SmallVector<unsigned, 32> &constraintsToErase,
+        llvm::SmallVector<unsigned, 16> &boundDiffs, IntMatrix &Etmp,
+        llvm::SmallVectorImpl<T> &qtmp, IntMatrix &Aold,
+        llvm::SmallVectorImpl<T> &bold, llvm::ArrayRef<int64_t> a,
+        const T &b) const {
         const size_t numVar = getNumVar();
         const size_t numAuxVar = Etmp.numCol() - numVar;
         int64_t dependencyToEliminate = -1;
@@ -631,7 +633,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                     // bound `b` triggers first
                     // normally we insert `c`, but if inserting here
                     // we also want to erase elements from boundDiffs
-                    colsToErase.push_back(i);
+                    constraintsToErase.push_back(i);
                 }
             } else {
                 dependencyToEliminate = dte;
@@ -640,27 +642,26 @@ template <class P, typename T> struct AbstractPolyhedra {
                 Etmp(i, j) = (j == i);
             }
         }
-        if (colsToErase.size()) {
-            for (auto it = colsToErase.rbegin(); it != colsToErase.rend();
-                 ++it) {
+        if (constraintsToErase.size()) {
+            for (auto it = constraintsToErase.rbegin();
+                 it != constraintsToErase.rend(); ++it) {
                 size_t i = *it;
                 size_t c = boundDiffs[i];
                 boundDiffs.erase(boundDiffs.begin() + i);
                 eraseConstraint(Aold, bold, c);
                 eraseConstraint(Etmp, qtmp, i);
             }
-            colsToErase.clear();
+            constraintsToErase.clear();
         }
         return dependencyToEliminate;
     }
-    int64_t
-    checkForTrivialRedundancies(llvm::SmallVector<unsigned, 32> &colsToErase,
-                                llvm::SmallVector<int, 16> &boundDiffs,
-                                IntMatrix &Etmp, llvm::SmallVectorImpl<T> &qtmp,
-                                IntMatrix &Aold, llvm::SmallVectorImpl<T> &bold,
-                                IntMatrix &Eold, llvm::SmallVectorImpl<T> &qold,
-                                llvm::ArrayRef<int64_t> a, const T &b,
-                                bool AbIsEq) const {
+    int64_t checkForTrivialRedundancies(
+        llvm::SmallVector<unsigned, 32> &constraintsToErase,
+        llvm::SmallVector<int, 16> &boundDiffs, IntMatrix &Etmp,
+        llvm::SmallVectorImpl<T> &qtmp, IntMatrix &Aold,
+        llvm::SmallVectorImpl<T> &bold, IntMatrix &Eold,
+        llvm::SmallVectorImpl<T> &qold, llvm::ArrayRef<int64_t> a, const T &b,
+        bool AbIsEq) const {
         const size_t numVar = getNumVar();
         const size_t numAuxVar = Etmp.numCol() - numVar;
         int64_t dependencyToEliminate = -1;
@@ -698,7 +699,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                     // bound `b` triggers first
                     // normally we insert `c`, but if inserting here
                     // we also want to erase elements from boundDiffs
-                    colsToErase.push_back(i);
+                    constraintsToErase.push_back(i);
                 }
             } else {
                 dependencyToEliminate = dte;
@@ -710,9 +711,9 @@ template <class P, typename T> struct AbstractPolyhedra {
             Polynomial::fnmadd(qtmp[i], *bc, sign);
             // qtmp[k] = b - (*bc)*sign;
         }
-        if (colsToErase.size()) {
-            for (auto it = colsToErase.rbegin(); it != colsToErase.rend();
-                 ++it) {
+        if (constraintsToErase.size()) {
+            for (auto it = constraintsToErase.rbegin();
+                 it != constraintsToErase.rend(); ++it) {
                 size_t i = *it;
                 size_t c = std::abs(boundDiffs[i]);
                 boundDiffs.erase(boundDiffs.begin() + i);
@@ -721,7 +722,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
                 eraseConstraint(Etmp, qtmp, i);
             }
-            colsToErase.clear();
+            constraintsToErase.clear();
         }
         return dependencyToEliminate;
     }
@@ -845,6 +846,12 @@ template <class P, typename T> struct AbstractPolyhedra {
         llvm::SmallVectorImpl<T> &qold, llvm::ArrayRef<int64_t> a, const T &b,
         const size_t C, const bool AbIsEq) const {
 
+        printConstraints(
+            printConstraints(std::cout << "Constraints, eliminating C=" << C
+                                       << ":\n",
+                             Aold, bold, true),
+            Eold, qold, false)
+            << std::endl;
         const size_t numVar = getNumVar();
         // simple mapping of `k` to particular bounds
         // we'll have C - other bound
@@ -889,15 +896,14 @@ template <class P, typename T> struct AbstractPolyhedra {
         const size_t numAuxVar = boundDiffs.size();
         const size_t numVarAugment = numVar + numAuxVar;
         bool CinA = C < Aold.numRow();
-        size_t AtmpCol = Aold.numRow() - CinA;
-        size_t EtmpCol = Eold.numRow() - (!CinA);
-        Atmp0.resizeForOverwrite(AtmpCol, numVarAugment);
-        btmp0.resize_for_overwrite(AtmpCol);
-        Etmp0.reserve(EtmpCol + numAuxVar, numVarAugment);
-        qtmp0.reserve(EtmpCol + numAuxVar);
+        size_t AtmpC = Aold.numRow() - CinA;
+        size_t EtmpC = Eold.numRow() - (!CinA);
+        Atmp0.resizeForOverwrite(AtmpC, numVarAugment);
+        btmp0.resize_for_overwrite(AtmpC);
+        Etmp0.reserve(EtmpC + numAuxVar, numVarAugment);
+        qtmp0.reserve(EtmpC + numAuxVar);
         Etmp0.resizeForOverwrite(numAuxVar, numVarAugment);
         qtmp0.resize_for_overwrite(numAuxVar);
-        // fill Atmp0 with Aold
         for (size_t i = 0; i < Aold.numRow(); ++i) {
             if (i == C)
                 continue;
@@ -910,16 +916,16 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             btmp0[j] = bold[i];
         }
-        llvm::SmallVector<unsigned, 32> colsToErase;
-        int64_t dependencyToEliminate =
-            checkForTrivialRedundancies(colsToErase, boundDiffs, Etmp0, qtmp0,
-                                        Aold, bold, Eold, qold, a, b, AbIsEq);
+        llvm::SmallVector<unsigned, 32> constraintsToErase;
+        int64_t dependencyToEliminate = checkForTrivialRedundancies(
+            constraintsToErase, boundDiffs, Etmp0, qtmp0, Aold, bold, Eold,
+            qold, a, b, AbIsEq);
         if (dependencyToEliminate == -2) {
             return true;
         }
         size_t numEtmpAuxVar = Etmp0.numRow();
-        Etmp0.resize(EtmpCol + numEtmpAuxVar, numVarAugment);
-        qtmp0.resize(EtmpCol + numEtmpAuxVar);
+        Etmp0.resize(EtmpC + numEtmpAuxVar, numVarAugment);
+        qtmp0.resize(EtmpC + numEtmpAuxVar);
         // fill Etmp0 with Eold
         for (size_t i = 0; i < Eold.numRow(); ++i) {
             if (i + Aold.numRow() == C)
@@ -946,6 +952,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         assert(btmp0.size() == Atmp0.numRow());
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
+	    std::cout << "Atmp0 (1) =\n" << Atmp0 << std::endl;
             assert(btmp0.size() == Atmp0.numRow());
             if (eliminateVarForRCElim(Atmp1, btmp1, Etmp1, qtmp1, Atmp0, btmp0,
                                       Etmp0, qtmp0,
@@ -955,6 +962,17 @@ template <class P, typename T> struct AbstractPolyhedra {
                 std::swap(Etmp0, Etmp1);
                 std::swap(qtmp0, qtmp1);
             }
+	    std::cout << "Atmp0 (2) =\n" << Atmp0 << std::endl;
+	    for (auto &a : Atmp0.mem){
+		assert(std::abs(a) < 100);
+	    }
+            printConstraints(
+                printConstraints(std::cout << "Temporary Constraints:\n", Atmp0,
+                                 btmp0, true, numAuxVar),
+                Etmp0, qtmp0, false, numAuxVar)
+                << std::endl;
+            // std::cout << "dependencyToEliminate = " << dependencyToEliminate
+            // << std::endl;
             assert(btmp1.size() == Atmp1.numRow());
             // {
             //     int64_t lastAux = -1;
@@ -984,7 +1002,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                         // delta >= b/Axc >= 0
                         if (Axc > 0) {
                             // upper bound
-                            colsToErase.push_back(std::abs(boundDiffs[auxInd]));
+                            int c = std::abs(boundDiffs[auxInd]);
+                            if (c < Aold.numRow())
+                                constraintsToErase.push_back(c);
                         } else if ((!AbIsEq) ||
                                    knownLessEqualZero(btmp0[c] - 1)) {
                             // lower bound
@@ -1005,8 +1025,10 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
             }
         }
-        if (colsToErase.size()) {
-            size_t c = colsToErase.front();
+        if (constraintsToErase.size()) {
+            auto c = constraintsToErase.front();
+
+            std::cout << "Erasing Inequality Constraint c = " << c << std::endl;
             eraseConstraint(Aold, bold, c);
         }
         return false;
