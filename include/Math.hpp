@@ -542,6 +542,9 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
 
     T *data() { return mem; }
     const T *data() const { return mem; }
+    operator SquarePtrMatrix<const T>() const {
+        return {.mem = mem, .M = M, .N = M, .X = M};
+    }
 };
 
 template <typename T, unsigned STORAGE = 4>
@@ -773,7 +776,8 @@ template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     return true;
 }
 
-MULTIVERSION IntMatrix matmul(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
+MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
+                              PtrMatrix<const int64_t> B) {
     unsigned M = A.numRow();
     unsigned K = A.numCol();
     assert(K == B.numRow());
@@ -788,7 +792,8 @@ MULTIVERSION IntMatrix matmul(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
     }
     return C;
 }
-MULTIVERSION IntMatrix matmulnt(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
+MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
+                                PtrMatrix<const int64_t> B) {
     unsigned M = A.numRow();
     unsigned K = A.numCol();
     assert(K == B.numCol());
@@ -803,7 +808,8 @@ MULTIVERSION IntMatrix matmulnt(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
     }
     return C;
 }
-MULTIVERSION IntMatrix matmultn(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
+MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
+                                PtrMatrix<const int64_t> B) {
     unsigned M = A.numCol();
     unsigned K = A.numRow();
     assert(K == B.numRow());
@@ -818,7 +824,8 @@ MULTIVERSION IntMatrix matmultn(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
     }
     return C;
 }
-MULTIVERSION IntMatrix matmultt(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
+MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
+                                PtrMatrix<const int64_t> B) {
     unsigned M = A.numCol();
     unsigned K = A.numRow();
     assert(K == B.numCol());

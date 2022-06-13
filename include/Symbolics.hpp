@@ -1489,7 +1489,7 @@ template <typename C, IsMonomial M> struct Terms {
             return os << c.getValue();
         }
         os << " ( ";
-        for (size_t j = 0; j < length(x.terms); ++j) {
+        for (size_t j = 0; j < x.terms.size(); ++j) {
             if (std::is_same_v<C, int64_t>) {
                 Term<C, M> t = x.terms[j];
                 if (j) {

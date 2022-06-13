@@ -102,7 +102,7 @@ TEST(NormalFormTest, BasicAssertions) {
         } else {
             // std::cout << "K= " << K << "\nB= " << B << std::endl;
             printVector(std::cout << "included = ", included) << std::endl;
-            if (auto optlu = lufact(K)) {
+            if (auto optlu = LU::fact(K)) {
                 printMatrix(std::cout << "K=\n", K) << std::endl;
                 if (auto optA2 = optlu.getValue().inv()) {
                     SquareMatrix<Rational, 4> &A2 = optA2.getValue();

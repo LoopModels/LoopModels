@@ -37,22 +37,18 @@ struct Schedule {
         // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
         return SquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
-    PtrVector<int64_t, 0> getOmega() {
-        return PtrVector<int64_t, 0>{data.data() + numLoops * numLoops,
-                                      2 * numLoops + 1};
+    llvm::MutableArrayRef<int64_t> getOmega() {
+        return {data.data() + numLoops * numLoops, 2 * numLoops + 1};
     }
     SquarePtrMatrix<const int64_t> getPhi() const {
-        // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
         return SquarePtrMatrix<const int64_t>{data.data(), numLoops};
     }
-    PtrVector<const int64_t, 0> getOmega() const {
-        // return llvm::ArrayRef<typename T>
-        return PtrVector<const int64_t, 0>{data.data() + numLoops * numLoops,
-                                            2 * numLoops + 1};
+    llvm::ArrayRef<int64_t> getOmega() const {
+        return {data.data() + numLoops * numLoops, 2 * numLoops + 1};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
-        PtrVector<const int64_t, 0> o0 = getOmega();
-        PtrVector<const int64_t, 0> o1 = y.getOmega();
+        llvm::ArrayRef<int64_t> o0 = getOmega();
+        llvm::ArrayRef<int64_t> o1 = y.getOmega();
         bool allEqual = true;
         for (size_t n = 0; n < numLoopsCommon; ++n) {
             allEqual &= (o0[2 * n] == o1[2 * n]);

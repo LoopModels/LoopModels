@@ -308,7 +308,7 @@ struct ArrayReference {
         : arrayID(arrayID), loop(loop), axes(axes) {
         // TODO: fill indToStrideMap;
     }
-    void pushAffineAxis(const Stride &stride, const StridedVector<int64_t> &s,
+    void pushAffineAxis(const Stride &stride, llvm::ArrayRef<int64_t> s,
                         size_t j = 0) {
         axes.emplace_back(stride.stride);
         llvm::SmallVector<std::pair<MPoly, VarID>, 1> &inds =

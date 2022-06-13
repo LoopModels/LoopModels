@@ -7,7 +7,7 @@
 #include <random>
 
 TEST(UnimodularizationTest, BasicAssertions) {
-    Matrix<int64_t> VE(2,4);
+    IntMatrix VE(2,4);
     VE(0, 0) = 0;
     VE(0, 1) = 1;
     VE(0, 2) = 0;
@@ -21,7 +21,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
     EXPECT_TRUE(VB.hasValue());
     std::cout << "VB:\n" << VB.getValue() << std::endl;
 
-    Matrix<int64_t> A23(2,3);
+    IntMatrix A23(2,3);
     A23(0, 0) = 9;
     A23(0, 1) = -5;
     A23(0, 2) = 1;
@@ -34,7 +34,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
     // EXPECT_EQ(j, length(bsc));
     // EXPECT_EQ(j, length(bs));
 
-    Matrix<int64_t> A13(1,3);
+    IntMatrix A13(1,3);
     A13(0,0) = 6;
     A13(0,1) = -5;
     A13(0,2) = 15;

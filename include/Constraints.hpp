@@ -52,8 +52,9 @@ printConstraints(std::ostream &os, PtrMatrix<int64_t> A, llvm::ArrayRef<T> b,
     }
     return os;
 }
+template <typename T>
 static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
-                                      llvm::ArrayRef<int64_t> b,
+                                      llvm::SmallVectorImpl<T> &b,
                                       bool inequality = true,
                                       size_t numAuxVar = 0) {
     return printConstraints(os, A, llvm::ArrayRef<int64_t>(b), inequality,
@@ -238,10 +239,10 @@ substituteEqualityImpl(IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
     return rowMinNonZero;
 }
 template <typename T>
-static bool substituteEquality(mlir::Matrix &E, llvm::SmallVectorImpl<T> &q,
+static bool substituteEquality(IntMatrix &E, llvm::SmallVectorImpl<T> &q,
                                const size_t i) {
     size_t colMinNonZero = substituteEqualityImpl(E, q, i);
-    if (colMinNonZero != E.getNumColumns()) {
+    if (colMinNonZero != E.numCol()) {
         eraseConstraint(E, q, colMinNonZero);
         return false;
     }

@@ -1,7 +1,7 @@
 #pragma once
 #include "./Math.hpp"
 
-struct LUFact {
+struct LU {
     SquareMatrix<Rational> F;
     llvm::SmallVector<unsigned> ipiv;
 
@@ -143,62 +143,68 @@ struct LUFact {
         }
         return d;
     }
-};
-
-llvm::Optional<LUFact> lufact(const SquareMatrix<int64_t> &B) {
-    size_t M = B.M;
-    SquareMatrix<Rational> A(M);
-    for (size_t m = 0; m < M * M; ++m)
-        A[m] = B[m];
-    // printMatrix(std::cout << "in lu, initial A =\n", A) << std::endl;
-    llvm::SmallVector<unsigned> ipiv(M); //, perm(M);
-    for (size_t i = 0; i < M; ++i) {
-        ipiv[i] = i;
-        // perm[i] = i;
+    llvm::SmallVector<unsigned> perm() const {
+	size_t M = F.numCol();
+        llvm::SmallVector<unsigned> perm;
+	for (size_t m = 0; m < M; ++m){
+	    perm.push_back(m);
+	}
+        for (size_t m = 0; m < M; ++m) {
+            std::swap(perm[m], perm[ipiv[m]]);
+        }
+	return perm;
     }
-    for (size_t k = 0; k < M; ++k) {
-        size_t kp = k;
-        for (; kp < M; ++kp) {
-            if (A(kp, k) != 0) {
-                ipiv[k] = kp;
-                break;
-            }
+    static llvm::Optional<LU> fact(const SquareMatrix<int64_t> &B) {
+        size_t M = B.M;
+        SquareMatrix<Rational> A(M);
+        for (size_t m = 0; m < M * M; ++m)
+            A[m] = B[m];
+        // printMatrix(std::cout << "in lu, initial A =\n", A) << std::endl;
+        llvm::SmallVector<unsigned> ipiv(M);
+        for (size_t i = 0; i < M; ++i) {
+            ipiv[i] = i;
         }
-        if (kp != k) {
-            for (size_t j = 0; j < M; ++j)
-                std::swap(A(kp, j), A(k, j));
-        }
-        // std::cout << "A(k=" << k << ",k=" << k << ") = " << A(k, k)
-        //           << std::endl;
-        Rational Akkinv = A(k, k).inv();
-        // std::cout << "1/A(k=" << k << ",k=" << k << ") = " << Akkinv
-        // << std::endl;
-        for (size_t i = k + 1; i < M; ++i) {
-            if (llvm::Optional<Rational> Aik = A(i, k) * Akkinv) {
-                A(i, k) = Aik.getValue();
-                // std::cout << "A(i=" << i << ",k=" << k << ") = " << A(i, k)
-                // << " = Aik = " << Aik.getValue() << std::endl;
-                // assert(A.data() + M * i + k == &(A(i, k)));
-            } else {
-                return {};
-            }
-        }
-        for (size_t j = k + 1; j < M; ++j) {
-            for (size_t i = k + 1; i < M; ++i) {
-                if (llvm::Optional<Rational> Aikj = A(i, k) * A(k, j)) {
-                    if (llvm::Optional<Rational> Aij =
-                            A(i, j) - Aikj.getValue()) {
-                        A(i, j) = Aij.getValue();
-                        continue;
-                    }
+        for (size_t k = 0; k < M; ++k) {
+            size_t kp = k;
+            for (; kp < M; ++kp) {
+                if (A(kp, k) != 0) {
+                    ipiv[k] = kp;
+                    break;
                 }
-                return {};
+            }
+            if (kp != k) {
+                for (size_t j = 0; j < M; ++j)
+                    std::swap(A(kp, j), A(k, j));
+            }
+            // std::cout << "A(k=" << k << ",k=" << k << ") = " << A(k, k)
+            //           << std::endl;
+            Rational Akkinv = A(k, k).inv();
+            // std::cout << "1/A(k=" << k << ",k=" << k << ") = " << Akkinv
+            // << std::endl;
+            for (size_t i = k + 1; i < M; ++i) {
+                if (llvm::Optional<Rational> Aik = A(i, k) * Akkinv) {
+                    A(i, k) = Aik.getValue();
+                    // std::cout << "A(i=" << i << ",k=" << k << ") = " << A(i,
+                    // k)
+                    // << " = Aik = " << Aik.getValue() << std::endl;
+                    // assert(A.data() + M * i + k == &(A(i, k)));
+                } else {
+                    return {};
+                }
+            }
+            for (size_t j = k + 1; j < M; ++j) {
+                for (size_t i = k + 1; i < M; ++i) {
+                    if (llvm::Optional<Rational> Aikj = A(i, k) * A(k, j)) {
+                        if (llvm::Optional<Rational> Aij =
+                                A(i, j) - Aikj.getValue()) {
+                            A(i, j) = Aij.getValue();
+                            continue;
+                        }
+                    }
+                    return {};
+                }
             }
         }
+        return LU{std::move(A), std::move(ipiv)};
     }
-    // for (size_t m = 0; m < M; ++m) {
-    //     std::swap(perm[m], perm[ipiv[m]]);
-    // }
-    // return LUFact{std::move(A), std::move(perm)};
-    return LUFact{std::move(A), std::move(ipiv)};
-}
+};

@@ -4,7 +4,7 @@
 
 template <class P, typename T>
 struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
-    Matrix<int64_t, 0, 0, 0> E;
+    IntMatrix E;
     llvm::SmallVector<T, 8> q;
 
     using AbstractPolyhedra<P, T>::A;
@@ -12,10 +12,8 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
     using AbstractPolyhedra<P, T>::removeVariable;
     using AbstractPolyhedra<P, T>::getNumVar;
     using AbstractPolyhedra<P, T>::pruneBounds;
-    AbstractEqualityPolyhedra(Matrix<int64_t, 0, 0, 0> A,
-                              llvm::SmallVector<T, 8> b,
-                              Matrix<int64_t, 0, 0, 0> E,
-                              llvm::SmallVector<T, 8> q)
+    AbstractEqualityPolyhedra(IntMatrix A, llvm::SmallVector<T, 8> b,
+                              IntMatrix E, llvm::SmallVector<T, 8> q)
         : AbstractPolyhedra<P, T>(std::move(A), std::move(b)), E(std::move(E)),
           q(std::move(q)) {}
 
@@ -38,10 +36,8 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
 struct IntegerEqPolyhedra
     : public AbstractEqualityPolyhedra<IntegerEqPolyhedra, int64_t> {
 
-    IntegerEqPolyhedra(Matrix<int64_t, 0, 0, 0> A,
-                       llvm::SmallVector<int64_t, 8> b,
-                       Matrix<int64_t, 0, 0, 0> E,
-                       llvm::SmallVector<int64_t, 8> q)
+    IntegerEqPolyhedra(IntMatrix A, llvm::SmallVector<int64_t, 8> b,
+                       IntMatrix E, llvm::SmallVector<int64_t, 8> q)
         : AbstractEqualityPolyhedra(std::move(A), std::move(b), std::move(E),
                                     std::move(q)){};
     bool knownLessEqualZeroImpl(int64_t x) const { return x <= 0; }
@@ -51,9 +47,7 @@ struct SymbolicEqPolyhedra
     : public AbstractEqualityPolyhedra<SymbolicEqPolyhedra, MPoly> {
     PartiallyOrderedSet poset;
 
-    SymbolicEqPolyhedra(Matrix<int64_t, 0, 0, 0> A,
-                        llvm::SmallVector<MPoly, 8> b,
-                        Matrix<int64_t, 0, 0, 0> E,
+    SymbolicEqPolyhedra(IntMatrix A, llvm::SmallVector<MPoly, 8> b, IntMatrix E,
                         llvm::SmallVector<MPoly, 8> q,
                         PartiallyOrderedSet poset)
         : AbstractEqualityPolyhedra(std::move(A), std::move(b), std::move(E),

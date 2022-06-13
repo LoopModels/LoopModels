@@ -134,9 +134,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // layout of constraints (based on Farkas equalities):
     // comp time constant, indVars0, indVars1, loop constants
     DependencePolyhedra(const ArrayReference &ar0, const ArrayReference &ar1)
-        : SymbolicEqPolyhedra(Matrix<int64_t, 0, 0, 0>(),
+        : SymbolicEqPolyhedra(IntMatrix(),
                               llvm::SmallVector<MPoly, 8>(),
-                              Matrix<int64_t, 0, 0, 0>(),
+                              IntMatrix(),
                               llvm::SmallVector<MPoly, 8>(), ar0.loop->poset) {
 
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -278,9 +278,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         size_t numInequalityConstraints = numBoundingCoefs + numLambda;
         size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
 
-        Matrix<int64_t, 0, 0, 0> Af(numVarNew, numInequalityConstraints);
+        IntMatrix Af(numVarNew, numInequalityConstraints);
         llvm::SmallVector<int64_t, 8> bf(numInequalityConstraints);
-        Matrix<int64_t, 0, 0, 0> Ef(numVarNew, numEqualityConstraints);
+        IntMatrix Ef(numVarNew, numEqualityConstraints);
         llvm::SmallVector<int64_t, 8> qf(numEqualityConstraints);
 
         // lambda_0 + lambda' * (b - A*i) == psi
@@ -390,15 +390,46 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
 }; // namespace DependencePolyhedra
 
+    struct MemoryAccess {
+        unsigned ref; // index to ArrayReference
+        llvm::User *user;
+        // unsigned (instead of ptr) as we build up edges
+        // and I don't want to relocate pointers when resizing vector
+        Schedule schedule;
+        llvm::SmallVector<unsigned> edgesIn;
+        llvm::SmallVector<unsigned> edgesOut;
+        const bool isLoad;
+        MemoryAccess(unsigned ref, llvm::User *user, Schedule schedule,
+                     bool isLoad)
+            : ref(ref), user(user), schedule(schedule),
+              edgesIn(llvm::SmallVector<unsigned>()),
+              edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
+
+        void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+        void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+        // size_t getNumLoops() const { return ref->getNumLoops(); }
+        // size_t getNumAxes() const { return ref->axes.size(); }
+        // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
+        bool fusedThrough(MemoryAccess &x) {
+            // originally separate loops could be fused
+            // if (loop() != x.loop()){ return false; }
+            return schedule.fusedThrough(x.schedule);
+        }
+    };
+
+
 struct Dependence {
     DependencePolyhedra depPoly;
     IntegerEqPolyhedra dependenceSatisfaction;
     IntegerEqPolyhedra dependenceBounding;
+    MemoryAccess *in;  // memory access in
+    MemoryAccess *out; // memory access out
     bool isForward() const { return depPoly.forward; }
     // static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y)
     // {
     //     return check(*x.ref, x.schedule, *y.ref, y.schedule);
     // }
+
     static void check(llvm::SmallVectorImpl<Dependence> deps,
                       const ArrayReference &x, const Schedule &sx,
                       const ArrayReference &y, const Schedule &sy) {
@@ -423,8 +454,8 @@ struct Dependence {
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
         SquarePtrMatrix<const int64_t> xPhi = sx.getPhi();
         SquarePtrMatrix<const int64_t> yPhi = sy.getPhi();
-        PtrVector<const int64_t, 0> xOmega = sx.getOmega();
-        PtrVector<const int64_t, 0> yOmega = sy.getOmega();
+        llvm::ArrayRef<int64_t> xOmega = sx.getOmega();
+        llvm::ArrayRef<int64_t> yOmega = sy.getOmega();
         llvm::SmallVector<int64_t, 16> sch;
         sch.resize_for_overwrite(numLoopsTotal + 1);
         // sch.resize_for_overwrite(fxy.getNumVar());
@@ -436,8 +467,8 @@ struct Dependence {
 
                 if ((dxy.forward = o2idiff > 0)) {
                     std::swap(fxy, fyx);
-                    // fxy.A.reduceNumRows(numLoopsTotal + 1);
-                    // fxy.E.reduceNumRows(numLoopsTotal + 1);
+                    // fxy.A.truncateRows(numLoopsTotal + 1);
+                    // fxy.E.truncateRows(numLoopsTotal + 1);
                     // fxy.dropEmptyConstraints();
                     // // x then y
                     // return Dependence{dxy, fxy, fyx};
@@ -447,8 +478,8 @@ struct Dependence {
                     std::cout << "dep order 1; i = " << i << std::endl;
 #endif
                 }
-                fyx.A.reduceNumRows(numLoopsTotal + 1);
-                fyx.E.reduceNumRows(numLoopsTotal + 1);
+                fyx.A.truncateRows(numLoopsTotal + 1);
+                fyx.E.truncateRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
                 // x then y
                 deps.emplace_back(std::move(dxy), std::move(fyx),
@@ -478,8 +509,8 @@ struct Dependence {
             sch[numLoopsTotal] = yO - xO;
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
-                fyx.A.reduceNumRows(numLoopsTotal + 1);
-                fyx.E.reduceNumRows(numLoopsTotal + 1);
+                fyx.A.truncateRows(numLoopsTotal + 1);
+                fyx.E.truncateRows(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
 #ifndef NDEBUG
                 std::cout << "dep order 2; i = " << i << std::endl;
@@ -493,8 +524,8 @@ struct Dependence {
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
                 dxy.forward = true;
-                fxy.A.reduceNumRows(numLoopsTotal + 1);
-                fxy.E.reduceNumRows(numLoopsTotal + 1);
+                fxy.A.truncateRows(numLoopsTotal + 1);
+                fxy.E.truncateRows(numLoopsTotal + 1);
                 fxy.dropEmptyConstraints();
 #ifndef NDEBUG
                 std::cout << "dep order 3; i= " << i << std::endl;
