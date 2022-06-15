@@ -374,10 +374,24 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         for (size_t i = 0; i < numLambda; ++i) {
             Af(numBoundingCoefs + i, numVarKeep + i) = -1;
         }
-        //#ifndef NDEBUG
-        //        std::cout << "Af = \n" << Af << std::endl;
-        //#endif
+#ifndef NDEBUG
+        printConstraints(
+            printConstraints(std::cout << "Dependency Poly:\n", A, b, true), E, q,
+            false)
+            << std::endl;
+        printConstraints(
+            printConstraints(std::cout << "Farkas w/ lambdas:\n", Af, bf, true),
+            Ef, qf, false)
+            << std::endl;
+#endif
         removeExtraVariables(Af, bf, Ef, qf, numVarKeep);
+#ifndef NDEBUG
+        printConstraints(
+            printConstraints(std::cout << "Farkas w/out lambdas:\n", Af, bf,
+                             true),
+            Ef, qf, false)
+            << std::endl;
+#endif
         IntegerEqPolyhedra ipoly(std::move(Af), std::move(bf), std::move(Ef),
                                  std::move(qf));
         ipoly.pruneBounds();
@@ -510,14 +524,19 @@ struct Dependence {
             // }
             assert(i != numLoopsCommon);
             for (size_t j = 0; j < numLoopsX; ++j) {
-                sch[j] = xPhi(j, i);
+                sch[j] = xPhi(i, j);
             }
             for (size_t j = 0; j < numLoopsY; ++j) {
-                sch[j + numLoopsX] = yPhi(j, i);
+                sch[j + numLoopsX] = yPhi(i, j);
             }
             int64_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
             // forward means offset is 2nd - 1st
             sch[numLoopsTotal] = yO - xO;
+            printVector(std::cout << "fxy =\n"
+                                  << fxy << "Schedule = ",
+                        sch)
+                << std::endl
+                << std::endl;
             if (!fxy.knownSatisfied(sch)) {
                 dxy.forward = false;
                 fyx.A.truncateCols(numLoopsTotal + 1);

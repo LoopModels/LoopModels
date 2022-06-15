@@ -132,9 +132,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                                IntMatrix &Asrc, llvm::SmallVectorImpl<T> &bsrc,
                                IntMatrix &E0, llvm::SmallVectorImpl<T> &q0,
                                const size_t i) const {
-	std::cout << "Asrc0 =\n" << Asrc << std::endl;
+        std::cout << "Asrc0 =\n" << Asrc << std::endl;
         if (!substituteEquality(Asrc, bsrc, E0, q0, i)) {
-	    std::cout << "Asrc1 =\n" << Asrc << std::endl;
+            std::cout << "Asrc1 =\n" << Asrc << std::endl;
             const size_t numAuxVar = Asrc.numCol() - getNumVar();
             size_t c = Asrc.numRow();
             while (c-- > 0) {
@@ -498,12 +498,13 @@ template <class P, typename T> struct AbstractPolyhedra {
                                IntMatrix &Eold,
                                llvm::SmallVectorImpl<T> &qold) {
 
+	const size_t numVar = Eold.numCol();
+	assert(Aold.numCol() == numVar);
         if (Aold.numRow() > 1) {
             for (size_t o = Aold.numRow() - 1; o > 0;) {
-                --o;
-                for (size_t i = o + 1; i < Aold.numRow(); ++i) {
+                for (size_t i = o--; i < Aold.numRow(); ++i) {
                     bool isNeg = true;
-                    for (size_t v = 0; v < Aold.numCol(); ++v) {
+                    for (size_t v = 0; v < numVar; ++v) {
                         if (Aold(i, v) != -Aold(o, v)) {
                             isNeg = false;
                             break;
@@ -512,8 +513,8 @@ template <class P, typename T> struct AbstractPolyhedra {
                     if (isNeg && (bold[i] == -bold[o])) {
                         qold.push_back(bold[i]);
                         size_t e = Eold.numRow();
-                        Eold.resize(qold.size(), Eold.numCol());
-                        for (size_t v = 0; v < Eold.numCol(); ++v) {
+                        Eold.resize(qold.size(), numVar);
+                        for (size_t v = 0; v < numVar; ++v) {
                             Eold(e, v) = Aold(i, v);
                         }
                         eraseConstraint(Aold, bold, i, o);
@@ -541,6 +542,11 @@ template <class P, typename T> struct AbstractPolyhedra {
                      llvm::SmallVectorImpl<T> &qold) const {
         moveEqualities(Aold, bold, Eold, qold);
         NormalForm::simplifyEqualityConstraints(Eold, qold);
+        // printConstraints(
+        //     printConstraints(std::cout << "Constraints post-simplify:\n", Aold,
+        //                      bold, true),
+        //     Eold, qold, false)
+        //     << std::endl;
         for (size_t i = 0; i < Eold.numRow(); ++i) {
             if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
                                            btmp1, qtmp0, qtmp1, Aold, bold,
@@ -621,7 +627,6 @@ template <class P, typename T> struct AbstractPolyhedra {
                 dte = (Evi) ? v + numAuxVar : dte;
             }
             qtmp[i] = b - bold[c];
-            // std::cout << "dte = " << dte << std::endl;
             if (dte == -1) {
                 T delta = bold[c] - b;
                 if (knownLessEqualZero(delta)) {
@@ -686,7 +691,6 @@ template <class P, typename T> struct AbstractPolyhedra {
                 }
                 bc = &(qold[cc]);
             }
-            // std::cout << "dte = " << dte << std::endl;
             if (dte == -1) {
                 T delta = (*bc) * sign - b;
                 if (AbIsEq ? knownLessEqualZero(delta - 1)
@@ -952,7 +956,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         assert(btmp0.size() == Atmp0.numRow());
         while (dependencyToEliminate >= 0) {
             // eliminate dependencyToEliminate
-	    std::cout << "Atmp0 (1) =\n" << Atmp0 << std::endl;
+            // std::cout << "Atmp0 (1) =\n" << Atmp0 << std::endl;
             assert(btmp0.size() == Atmp0.numRow());
             if (eliminateVarForRCElim(Atmp1, btmp1, Etmp1, qtmp1, Atmp0, btmp0,
                                       Etmp0, qtmp0,
@@ -962,13 +966,15 @@ template <class P, typename T> struct AbstractPolyhedra {
                 std::swap(Etmp0, Etmp1);
                 std::swap(qtmp0, qtmp1);
             }
-	    std::cout << "Atmp0 (2) =\n" << Atmp0 << std::endl;
-	    for (auto &a : Atmp0.mem){
-		assert(std::abs(a) < 100);
-	    }
+            // std::cout << "Atmp0 (2) =\n" << Atmp0 << std::endl;
+            for (auto &a : Atmp0.mem) {
+                assert(std::abs(a) < 100);
+            }
             printConstraints(
-                printConstraints(std::cout << "Temporary Constraints:\n", Atmp0,
-                                 btmp0, true, numAuxVar),
+                printConstraints(std::cout << "dependencyToEliminate = "
+                                           << dependencyToEliminate
+                                           << "; Temporary Constraints:\n",
+                                 Atmp0, btmp0, true, numAuxVar),
                 Etmp0, qtmp0, false, numAuxVar)
                 << std::endl;
             // std::cout << "dependencyToEliminate = " << dependencyToEliminate
@@ -1027,8 +1033,8 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
         if (constraintsToErase.size()) {
             auto c = constraintsToErase.front();
-
-            std::cout << "Erasing Inequality Constraint c = " << c << std::endl;
+            // std::cout << "Erasing Inequality Constraint c = " << c <<
+            // std::endl;
             eraseConstraint(Aold, bold, c);
         }
         return false;

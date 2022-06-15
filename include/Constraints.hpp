@@ -93,18 +93,18 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
 template <typename T>
 static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                             size_t i) {
-#ifndef NDEBUG
-    std::cout << "A0 (i = " << i << ") = \n" << A << std::endl;
-#endif
+// #ifndef NDEBUG
+//     std::cout << "A0 (i = " << i << ") = \n" << A << std::endl;
+// #endif
     eraseConstraintImpl(A, llvm::MutableArrayRef<T>(b), i);
-#ifndef NDEBUG
-    std::cout << "A1=\n" << A << std::endl;
-#endif
+// #ifndef NDEBUG
+//     std::cout << "A1=\n" << A << std::endl;
+// #endif
     const size_t lastRow = A.numRow() - 1;
     A.truncateRows(lastRow);
-#ifndef NDEBUG
-    std::cout << "A2=\n" << A << std::endl;
-#endif
+// #ifndef NDEBUG
+//     std::cout << "A2=\n" << A << std::endl;
+// #endif
     b.truncate(lastRow);
 }
 
@@ -260,7 +260,7 @@ static bool substituteEquality(IntMatrix &E, llvm::SmallVectorImpl<T> &q,
 }
 
 template <typename T>
-static size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
+inline size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                                      IntMatrix &E, llvm::SmallVectorImpl<T> &q,
                                      const size_t i) {
     const auto [numConstraints, numVar] = E.size();
@@ -340,9 +340,31 @@ static size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     }
     return rowMinNonZero;
 }
-template <typename T>
-static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
-                               IntMatrix &E, llvm::SmallVectorImpl<T> &q,
+// template <typename T>
+// static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
+//                                IntMatrix &E, llvm::SmallVectorImpl<T> &q,
+//                                const size_t i) {
+
+//     size_t rowMinNonZero = substituteEqualityImpl(A, b, E, q, i);
+//     if (rowMinNonZero != E.numRow()) {
+//         eraseConstraint(E, q, rowMinNonZero);
+//         return false;
+//     }
+//     return true;
+// }
+MULTIVERSION static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b,
+                               IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
+                               const size_t i) {
+
+    size_t rowMinNonZero = substituteEqualityImpl(A, b, E, q, i);
+    if (rowMinNonZero != E.numRow()) {
+        eraseConstraint(E, q, rowMinNonZero);
+        return false;
+    }
+    return true;
+}
+MULTIVERSION static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b,
+                               IntMatrix &E, llvm::SmallVectorImpl<MPoly> &q,
                                const size_t i) {
 
     size_t rowMinNonZero = substituteEqualityImpl(A, b, E, q, i);
@@ -451,3 +473,5 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     }
     // pruneBounds(A, b, E, q);
 }
+
+

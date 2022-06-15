@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-CFLAGS="" CXXFLAGS="" CXX=g++ cmake -G Ninja -S . -B release_build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+CFLAGS="" CXXFLAGS="" CXX=clang++ cmake -G Ninja -S . -B release_build -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1

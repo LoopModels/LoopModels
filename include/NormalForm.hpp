@@ -145,7 +145,7 @@ void zeroSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
     }
 }
 
-inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
+MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
                       size_t M, size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0) {
@@ -154,6 +154,13 @@ inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
         }
     }
     if (j != piv) {
+	// const size_t N = A.numCol();
+	// assert(N == K.numCol());
+	// VECTORIZE
+	// for (size_t n = 0; n < N; ++n) {
+	//     std::swap(A(i, n), A(piv, n));
+	//     std::swap(K(i, n), K(piv, n));
+	// }
         swapRows(A, j, piv);
         swapRows(K, j, piv);
     }
@@ -437,7 +444,7 @@ size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
         reduceSubDiagonal(E, q, m, m - dec);
     }
     size_t Mnew = M;
-    while (allZero(E.getCol(Mnew - 1))) {
+    while (allZero(E.getRow(Mnew - 1))) {
         --Mnew;
     }
     return Mnew;
@@ -464,7 +471,7 @@ MULTIVERSION size_t simplifyEqualityConstraintsImpl(
         reduceSubDiagonal(E, q, m, m - dec);
     }
     size_t Mnew = M;
-    while (allZero(E.getCol(Mnew - 1))) {
+    while (allZero(E.getRow(Mnew - 1))) {
         --Mnew;
     }
     return Mnew;

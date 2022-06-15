@@ -19,7 +19,12 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-
+// #ifndef NDEBUG
+// #include <memory>
+// #include <stacktrace>
+// using stacktrace =
+//     std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
+// #endif
 template <class T>
 concept Integral = std::is_integral<T>::value;
 
@@ -370,8 +375,14 @@ template <typename T, typename A> struct BaseMatrix {
     size_t length() const { return numRow() * numCol(); }
 
     T &operator()(size_t i, size_t j) {
+// #ifndef NDEBUG
+// 	if ((i >= numRow()) || (j >= numCol())){
+//         std::cout << "Bounds Error! Accessed (" << numRow() << ", " << numCol() << ") array at index (" << i << ", " << j << ").\n" << 
+//             stacktrace::current() << std::endl;
         assert(i < numRow());
         assert(j < numCol());
+//     }
+// #endif
         return getLinearElement(i * rowStride() + j * colStride());
     }
     const T &operator()(size_t i, size_t j) const {
@@ -479,7 +490,7 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> mem;
     size_t N, X;
 
-    Matrix(size_t n) : mem(llvm::SmallVector<T>(M * n)), N(n), X(n){};
+    Matrix(size_t n) : mem(llvm::SmallVector<T,S>(M * n)), N(n), X(n){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -502,7 +513,7 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     llvm::SmallVector<T, S> mem;
     size_t M;
 
-    Matrix(size_t m) : mem(llvm::SmallVector<T>(m * N)), M(m){};
+    Matrix(size_t m) : mem(llvm::SmallVector<T,S>(m * N)), M(m){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -544,6 +555,10 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     const T *data() const { return mem; }
     // operator SquarePtrMatrix<const T>() const { return {.mem = mem, .M = M};
     // }
+    explicit operator PtrMatrix<const T>() const {
+	return {.mem = mem, .M = M, .N = M, .X = M};
+        return PtrMatrix<const T>(mem, M);
+    }
     operator SquarePtrMatrix<const T>() const {
         return SquarePtrMatrix<const T>(mem, M);
     }
@@ -556,7 +571,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     llvm::SmallVector<T, TOTALSTORAGE> mem;
     size_t M;
 
-    SquareMatrix(size_t m) : mem(llvm::SmallVector<T>(m * m)), M(m){};
+    SquareMatrix(size_t m) : mem(llvm::SmallVector<T,TOTALSTORAGE>(m * m)), M(m){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -612,7 +627,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     size_t M, N, X;
 
     Matrix(size_t m, size_t n)
-        : mem(llvm::SmallVector<T>(m * n)), M(m), N(n), X(n){};
+        : mem(llvm::SmallVector<T,S>(m * n)), M(m), N(n), X(n){};
 
     Matrix() : M(0), N(0), X(0){};
     Matrix(SquareMatrix<T> &&A)
@@ -738,9 +753,7 @@ std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
 }
 
 template <typename T>
-// std::ostream &printVector(std::ostream &os, llvm::ArrayRef<T> a) {
-std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
-    // std::ostream &printMatrix(std::ostream &os, T const &A) {
+std::ostream &printVector(std::ostream &os, llvm::ArrayRef<T> a) {
     os << "[ ";
     if (size_t M = a.size()) {
         os << a[0];
@@ -750,6 +763,10 @@ std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
     }
     os << " ]";
     return os;
+}
+template <typename T>
+std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
+    return printVector(os, llvm::ArrayRef<T>(a));
 }
 
 // template <typename T, size_t L>
@@ -787,6 +804,7 @@ MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
+	    VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(m, k) * B(k, n);
             }
@@ -803,6 +821,7 @@ MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
+	    VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(m, k) * B(n, k);
             }
@@ -819,6 +838,7 @@ MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
+	    VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(k, m) * B(k, n);
             }
@@ -835,6 +855,7 @@ MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
+	    VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(k, m) * B(n, k);
             }
