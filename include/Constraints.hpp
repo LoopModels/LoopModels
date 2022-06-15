@@ -235,7 +235,7 @@ substituteEqualityImpl(IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
             if (j == rowMinNonZero)
                 continue;
             if (int64_t Eij = E(j, i)) {
-                int64_t g = std::gcd(Eij, Eis);
+                int64_t g = gcd(Eij, Eis);
                 int64_t Ag = Eij / g;
                 int64_t Eg = Eis / g;
                 VECTORIZE
@@ -312,7 +312,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     } else {
         for (size_t j = 0; j < A.numRow(); ++j) {
             if (int64_t Aij = A(j, i)) {
-                int64_t g = std::gcd(Aij, Eis);
+                int64_t g = gcd(Aij, Eis);
                 assert(g > 0);
                 // `A` contains inequalities; flipping signs is illegal
                 int64_t Ag = (s * Aij) / g;
@@ -328,7 +328,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
             if (j == rowMinNonZero)
                 continue;
             if (int64_t Eij = E(j, i)) {
-                int64_t g = std::gcd(Eij, Eis);
+                int64_t g = gcd(Eij, Eis);
                 int64_t Ag = Eij / g;
                 int64_t Eg = Eis / g;
                 for (size_t v = 0; v < numVar; ++v) {

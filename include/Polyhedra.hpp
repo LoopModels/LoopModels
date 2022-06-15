@@ -51,7 +51,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         if ((cu_base < 0) && (cl_base > 0))
             // if cu_base < 0, then it is an lower bound, so swap
             return setBounds(a, b, ua, ub, la, lb, i);
-        int64_t g = std::gcd(cu_base, cl_base);
+        int64_t g = gcd(cu_base, cl_base);
         int64_t cu = cu_base / g;
         int64_t cl = cl_base / g;
         b = cu * lb;
@@ -67,12 +67,12 @@ template <class P, typename T> struct AbstractPolyhedra {
                 return true;
             }
             if (g) {
-                g = an ? std::gcd(g, an) : g;
+                g = an ? gcd(g, an) : g;
             } else {
                 g = an;
             }
         }
-        g = g == 1 ? 1 : std::gcd(Polynomial::coefGCD(b), g);
+        g = g == 1 ? 1 : gcd(Polynomial::coefGCD(b), g);
         if (g > 1) {
             for (size_t n = 0; n < N; ++n) {
                 a[n] /= g;
@@ -188,7 +188,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                     auxMisMatch(auxInd, auxiliaryInd(El)))
                     continue;
 
-                int64_t g = std::gcd(Eiu, Eil);
+                int64_t g = gcd(Eiu, Eil);
                 int64_t Eiug = Eiu / g;
                 int64_t Eilg = Eil / g;
                 for (size_t v = 0; v < Re; ++v) {
