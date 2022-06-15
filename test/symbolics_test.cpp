@@ -12,12 +12,12 @@ TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem
     Polynomial::Uninomial x{1};
 
-    Polynomial::UnivariateTerm<intptr_t> y(x);
+    Polynomial::UnivariateTerm<int64_t> y(x);
 
-    Polynomial::UnivariateTerm<intptr_t> t0 = 3 * x;
-    Polynomial::Univariate<intptr_t> t1 = 3 * x - 3;
+    Polynomial::UnivariateTerm<int64_t> t0 = 3 * x;
+    Polynomial::Univariate<int64_t> t1 = 3 * x - 3;
 
-    Polynomial::Univariate<intptr_t> p =
+    Polynomial::Univariate<int64_t> p =
         2 * (x ^ 10) + (x ^ 7) + 7 * (x ^ 2) + 2 * x + 3 * x;
 
     printf("t0 = 3*x:\n");
@@ -35,29 +35,29 @@ TEST(pseudoRemTests, BasicAssertions) {
     printf("p, num terms:\n");
     showln(p.terms.size());
 
-    printf("Term<intptr_t,Uninomial>(1):\n");
-    Polynomial::Term<intptr_t, Polynomial::Uninomial> tt(1);
+    printf("Term<int64_t,Uninomial>(1):\n");
+    Polynomial::Term<int64_t, Polynomial::Uninomial> tt(1);
     showln(tt);
 
-    // Polynomial::Univariate<intptr_t> pp1 = (p + intptr_t(1));
-    Polynomial::Univariate<intptr_t> pp1 = (p + 1);
+    // Polynomial::Univariate<int64_t> pp1 = (p + int64_t(1));
+    Polynomial::Univariate<int64_t> pp1 = (p + 1);
     printf("pp1, p + 1:\n");
     showln(pp1);
-    // Polynomial::Univariate<intptr_t> pp1v2(p);
+    // Polynomial::Univariate<int64_t> pp1v2(p);
     // pp1v2 += 1;
     // printf("pp1v2, p + 1:\n");
     // showln(pp1v2);
 
-    Polynomial::Univariate<intptr_t> pp2 = (p + 2);
+    Polynomial::Univariate<int64_t> pp2 = (p + 2);
     printf("pp2, p + 2:\n");
     showln(pp2);
-    Polynomial::Univariate<intptr_t> pp3 = (p + 3);
+    Polynomial::Univariate<int64_t> pp3 = (p + 3);
     printf("pp3, p + 3:\n");
     showln(pp3);
-    Polynomial::Univariate<intptr_t> ppp12 = pp1 * pp2;
+    Polynomial::Univariate<int64_t> ppp12 = pp1 * pp2;
     printf("ppp12, (p+1) * (p+2):\n");
     showln(ppp12);
-    Polynomial::Univariate<intptr_t> ppp12v2 = (p + 1) * (p + 2);
+    Polynomial::Univariate<int64_t> ppp12v2 = (p + 1) * (p + 2);
     printf("ppp12v2, (p+1) * (p+2):\n");
     showln(ppp12v2);
     printf("p = 2x^10 + x^7 + 7x^2 + 5x:\n");
@@ -66,22 +66,22 @@ TEST(pseudoRemTests, BasicAssertions) {
     showln(pp1);
     EXPECT_EQ(ppp12, ppp12v2);
 
-    Polynomial::Univariate<intptr_t> pppp = ppp12 * pp3;
+    Polynomial::Univariate<int64_t> pppp = ppp12 * pp3;
     printf("pppp, (p+1) * (p+2) * (p+3):\n");
     showln(pppp);
 
-    Polynomial::Univariate<intptr_t> q0 = (p + 1) * (p + 2) * (p + 3);
+    Polynomial::Univariate<int64_t> q0 = (p + 1) * (p + 2) * (p + 3);
     printf("q0, (p + 1) * (p + 2) * (p + 3):\n");
     showln(q0);
     std::cout << "pseudorem(q0, p) = " << Polynomial::pseudorem(q0, p)
               << " == 12582912" << std::endl;
     EXPECT_TRUE(Polynomial::pseudorem(q0, p) == 12582912);
-    Polynomial::Univariate<intptr_t> q1 = (x ^ 7) + 20;
+    Polynomial::Univariate<int64_t> q1 = (x ^ 7) + 20;
     EXPECT_TRUE(Polynomial::pseudorem(q1, p) == q1);
-    Polynomial::Univariate<intptr_t> r1 = Polynomial::pseudorem(p, q1);
+    Polynomial::Univariate<int64_t> r1 = Polynomial::pseudorem(p, q1);
     printf("r1, should be -40*(x^3) + 7*(x^2) + 5*x - 20:\n");
     showln(r1);
-    Polynomial::Univariate<intptr_t> r1check =
+    Polynomial::Univariate<int64_t> r1check =
         (-40 * (x ^ 3) + 7 * (x * x) + 5 * x - 20);
     printf("r1 check:\n");
     showln(r1check);
@@ -89,8 +89,8 @@ TEST(pseudoRemTests, BasicAssertions) {
     // EXPECT_TRUE(Polynomial::pseudorem(p, q1) == (-40*(x^3) + 7*(x*x) + 5*x -
     // 20)); EXPECT_TRUE(Polynomial::pseudorem(p, q1) == (-40*(x^3) + 7*(x^2) +
     // 5*x - 20));
-    Polynomial::Univariate<intptr_t> q2 = (x ^ 6) + 23;
-    Polynomial::Univariate<intptr_t> r = Polynomial::pseudorem(p, q2);
+    Polynomial::Univariate<int64_t> q2 = (x ^ 6) + 23;
+    Polynomial::Univariate<int64_t> r = Polynomial::pseudorem(p, q2);
     printf("r, should be -46*(x^4) + 7*(x^2) - 18*x:\n");
     showln(r);
     EXPECT_TRUE(Polynomial::pseudorem(p, q2) ==
@@ -117,7 +117,7 @@ TEST(MultivariateMonomialTests, BasicAssertions) {
     Polynomial::Monomial x = Polynomial::Monomial(Polynomial::ID{0});
     Polynomial::Monomial y = Polynomial::Monomial(Polynomial::ID{1});
     Polynomial::Monomial z = Polynomial::Monomial(Polynomial::ID{2});
-    typedef Polynomial::Multivariate<intptr_t, Polynomial::Monomial>
+    typedef Polynomial::Multivariate<int64_t, Polynomial::Monomial>
         MultivariatePolynomial;
     MultivariatePolynomial xp1z = x * z + z;
     MultivariatePolynomial c0v2 = 10 * xp1z;
@@ -128,10 +128,10 @@ TEST(MultivariateMonomialTests, BasicAssertions) {
     MultivariatePolynomial c2 = 2 * (2 - z);
     MultivariatePolynomial c3 = 20 * (x * (z ^ 2));
 
-    intptr_t e0 = 0;
-    intptr_t e1 = 5;
-    intptr_t e2 = 7;
-    intptr_t e3 = 10;
+    int64_t e0 = 0;
+    int64_t e1 = 5;
+    int64_t e2 = 7;
+    int64_t e3 = 10;
 
     showln(x);
     showln(y);
@@ -218,7 +218,7 @@ TEST(MultivariateMonomialTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(x * k, p * k) == k);
     EXPECT_TRUE(Polynomial::gcd(p * k, x * k) == k);
 
-    Polynomial::Term<intptr_t, Polynomial::Monomial> twoxy = 2 * (x * y);
+    Polynomial::Term<int64_t, Polynomial::Monomial> twoxy = 2 * (x * y);
     MultivariatePolynomial twoxyplusx = (2 * x) * y + x;
     EXPECT_TRUE(Polynomial::gcd(twoxy, twoxyplusx) == x);
     EXPECT_TRUE(Polynomial::gcd(twoxyplusx, twoxy) == x);
@@ -325,7 +325,7 @@ TEST(PackedMultivariateMonomialTests, BasicAssertions) {
     EXPECT_EQ(y.degree(), 1);
     z.calcDegree();
     EXPECT_EQ(z.degree(), 1);
-    typedef Polynomial::Multivariate<intptr_t,
+    typedef Polynomial::Multivariate<int64_t,
                                      Polynomial::PackedMonomial<15, 7>>
         MultivariatePolynomial;
     MultivariatePolynomial xp1z = x * z + z;
@@ -337,10 +337,10 @@ TEST(PackedMultivariateMonomialTests, BasicAssertions) {
     MultivariatePolynomial c2 = 2 * (2 - z);
     MultivariatePolynomial c3 = 20 * (x * (z ^ 2));
 
-    intptr_t e0 = 0;
-    intptr_t e1 = 5;
-    intptr_t e2 = 7;
-    intptr_t e3 = 10;
+    int64_t e0 = 0;
+    int64_t e1 = 5;
+    int64_t e2 = 7;
+    int64_t e3 = 10;
 
     MultivariatePolynomial p =
         c0 * (y ^ e0) + c1 * (y ^ e1) + c2 * (y ^ e2) + c3 * (y ^ e3);
@@ -433,7 +433,7 @@ TEST(PackedMultivariateMonomialTests, BasicAssertions) {
     EXPECT_TRUE(Polynomial::gcd(x * k, p * k) == k);
     EXPECT_TRUE(Polynomial::gcd(p * k, x * k) == k);
 
-    Polynomial::Term<intptr_t, Polynomial::PackedMonomial<15, 7>> twoxy =
+    Polynomial::Term<int64_t, Polynomial::PackedMonomial<15, 7>> twoxy =
         2 * (x * y);
     MultivariatePolynomial twoxyplusx = (2 * x) * y + x;
     EXPECT_TRUE(Polynomial::gcd(twoxy, twoxyplusx) == x);

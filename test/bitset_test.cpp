@@ -12,7 +12,7 @@ TEST(BitSetTest, BasicAssertions) {
     push(bs, 87);
     push(bs, 991);
     std::cout << bs << std::endl;
-    std::vector<size_t> bsc{4, 10, 87, 117, 200, 991};
+    llvm::SmallVector<size_t> bsc{4, 10, 87, 117, 200, 991};
     size_t j = 0;
     for (auto I = bs.begin(); I != bs.end(); ++I) {
         EXPECT_EQ(*I, bsc[j]);
@@ -20,6 +20,6 @@ TEST(BitSetTest, BasicAssertions) {
         printf("We get: %zu\n", *I);
         ++j;
     }
-    EXPECT_EQ(j, length(bsc));
+    EXPECT_EQ(j, bsc.size());
     EXPECT_EQ(j, length(bs));
 }

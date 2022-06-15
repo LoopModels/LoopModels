@@ -8,14 +8,14 @@
 
 // `B` is a transposed mirror in reduced form
 // it is used to check whether a new row is linearly independent.
-static bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j) {
-    // std::ranges::fill(A.getRow(j), intptr_t(0));
+static bool addIndRow(PtrMatrix<int64_t> A, const Stride &axis, size_t j) {
+    // std::ranges::fill(A.getRow(j), int64_t(0));
     for (size_t i = 0; i < axis.size(); ++i) {
         VarID v = axis[i].second;
         if (v.isLoopInductionVariable()) {
-            if (llvm::Optional<intptr_t> c =
+            if (llvm::Optional<int64_t> c =
                     axis[i].first.getCompileTimeConstant()) {
-                A(j, v.getID()) = c.getValue();
+                A(v.getID(), j) = c.getValue();
                 continue;
             }
         }
@@ -23,17 +23,17 @@ static bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j) {
     }
     return false;
 }
-static bool addIndRow(PtrMatrix<intptr_t> A, const Stride &axis, size_t j,
+static bool addIndRow(PtrMatrix<int64_t> A, const Stride &axis, size_t j,
                       size_t k) {
-    // std::ranges::fill(A.getRow(j), intptr_t(0));
+    // std::ranges::fill(A.getRow(j), int64_t(0));
     for (size_t i = 0; i < axis.size(); ++i) {
         VarID v = axis[i].second;
         if (v.isLoopInductionVariable()) {
-            if (llvm::Optional<intptr_t> c =
+            if (llvm::Optional<int64_t> c =
                     axis[i].first.getCompileTimeConstant()) {
                 IDType id = v.getID();
                 if (id >= k)
-                    A(j, id - k) = c.getValue();
+                    A(id - k, j) = c.getValue();
                 continue;
             }
         }
@@ -62,8 +62,8 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     for (auto a : ai) {
         numRow += a->dim();
     }
-    Matrix<intptr_t, 0, 0> S(numRow, numLoops);
-    // std::ranges::fill(S, intptr_t(0));
+    IntMatrix S(numLoops, numRow);
+    // std::ranges::fill(S, int64_t(0));
     size_t row = 0;
     for (auto a : ai) {
         for (auto &axis : (*a)) {
@@ -76,13 +76,12 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     auto [K, included] = NormalForm::orthogonalize(S);
     if (included.size()) {
         // We let
-        // L = K*J
+        // L = K'*J
         // Originally, the loop bounds were
-        // A'*L <= b
+        // A*L <= b
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
-        // (A'*K)*J <= r
-        Matrix<intptr_t, 0, 0, 0> A;
-        matmultn(A, K, alnp.A);
+        // (A*K')*J <= r
+        IntMatrix A(matmulnt(alnp.A, K));
         std::shared_ptr<AffineLoopNest> alnNew =
             std::make_shared<AffineLoopNest>(std::move(A), alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
@@ -91,10 +90,11 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // alnNew->poset = alnp.aln->poset;
         // AffineLoopNestBounds alnpNew(alnNew);
         // Originally, the mapping from our loops to our indices was
-        // S*L = I
+        // S'*L = I
         // now, we have
-        // (S*K)*J = I
-        auto SK = matmul(S, K);
+        // (S'*K')*J = (K*S)'*J = I
+        IntMatrix SK(matmultt(S, K));
+        // auto KS = matmul(K, S);
         // llvm::SmallVector<ArrayReference*> aiNew;
         llvm::SmallVector<ArrayReference, 0> newArrayRefs;
         newArrayRefs.reserve(numRow);

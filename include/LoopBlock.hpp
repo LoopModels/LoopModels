@@ -67,7 +67,7 @@
 //   f(m, ...); // Omega = [2, _, 0]
 // }
 struct LoopBlock {
-    llvm::SmallVector<ArrayReference, 0> refs;
+    // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
     // Perhaps implicitly via the graph when using internal orthogonalization
@@ -76,74 +76,41 @@ struct LoopBlock {
     // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
     // and all other other shared schedule parameters are aliases (i.e.,
     // identical)?
-    struct MemoryAccess {
-        unsigned ref; // index to ArrayReference
-        llvm::User *user;
-        // unsigned (instead of ptr) as we build up edges
-        // and I don't want to relocate pointers when resizing vector
-        Schedule schedule;
-        llvm::SmallVector<unsigned> edgesIn;
-        llvm::SmallVector<unsigned> edgesOut;
-        const bool isLoad;
-        MemoryAccess(unsigned ref, llvm::User *user, Schedule schedule,
-                     bool isLoad)
-            : ref(ref), user(user), schedule(schedule),
-              edgesIn(llvm::SmallVector<unsigned>()),
-              edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-
-        void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-        void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-        // size_t getNumLoops() const { return ref->getNumLoops(); }
-        // size_t getNumAxes() const { return ref->axes.size(); }
-        // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-        bool fusedThrough(MemoryAccess &x) {
-            // originally separate loops could be fused
-            // if (loop() != x.loop()){ return false; }
-            return schedule.fusedThrough(x.schedule);
-        }
-    };
     llvm::SmallVector<MemoryAccess, 0> memory;
 
-    struct Edge {
-        Dependence dependence;
-        MemoryAccess *in;  // memory access in
-        MemoryAccess *out; // memory access out
-        Edge(Dependence dependence, MemoryAccess *in, MemoryAccess *out)
-            : dependence(dependence), in(in), out(out) {}
-    };
-    llvm::SmallVector<Edge, 0> edges;
+    llvm::SmallVector<Dependence, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
 
-    ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
-    ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
-    const ArrayReference &ref(const MemoryAccess &x) const {
-        return refs[x.ref];
-    }
-    const ArrayReference &ref(const MemoryAccess *x) const {
-        return refs[x->ref];
-    }
-    bool isSatisfied(const Edge &e) const {
-        const IntegerEqPolyhedra &sat = e.dependence.dependenceSatisfaction;
+    // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
+    // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
+    // const ArrayReference &ref(const MemoryAccess &x) const {
+    //     return refs[x.ref];
+    // }
+    // const ArrayReference &ref(const MemoryAccess *x) const {
+    //     return refs[x->ref];
+    // }
+    bool isSatisfied(const Dependence &e) const {
+        const IntegerEqPolyhedra &sat = e.dependenceSatisfaction;
 
         auto &schIn = e.in->schedule;
         auto &schOut = e.out->schedule;
-        const ArrayReference &refIn = ref(e.in);
-        const ArrayReference &refOut = ref(e.out);
+        const ArrayReference &refIn = e.in->ref;
+        const ArrayReference &refOut = e.out->ref;
         size_t numLoopsIn = refIn.getNumLoops();
         size_t numLoopsOut = refOut.getNumLoops();
         size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
         size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-        llvm::SmallVector<intptr_t, 16> schv;
+        llvm::SmallVector<int64_t, 16> schv;
         schv.resize_for_overwrite(sat.getNumVar());
-        const SquarePtrMatrix<intptr_t> inPhi = schIn.getPhi();
-        const SquarePtrMatrix<intptr_t> outPhi = schOut.getPhi();
-        const PtrVector<intptr_t, 0> inOmega = schIn.getOmega();
-        const PtrVector<intptr_t, 0> outOmega = schOut.getOmega();
+        const SquarePtrMatrix<int64_t> inPhi = schIn.getPhi();
+        const SquarePtrMatrix<int64_t> outPhi = schOut.getPhi();
+        llvm::ArrayRef<int64_t> inOmega = schIn.getOmega();
+        llvm::ArrayRef<int64_t> outOmega = schOut.getOmega();
 
         // when i == numLoopsCommon, we've passed the last loop
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
-            if (intptr_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
+            if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
                 return (o2idiff > 0);
             }
 
@@ -159,22 +126,22 @@ struct LoopBlock {
             //   present at that level
             // }
             assert(i != numLoopsCommon);
-            const size_t offIn = e.dependence.isForward() ? 0 : numLoopsOut;
-            const size_t offOut = e.dependence.isForward() ? numLoopsIn : 0;
+            const size_t offIn = e.isForward() ? 0 : numLoopsOut;
+            const size_t offOut = e.isForward() ? numLoopsIn : 0;
             for (size_t j = 0; j < numLoopsIn; ++j) {
                 schv[j + offIn] = inPhi(j, i);
             }
             for (size_t j = 0; j < numLoopsOut; ++j) {
                 schv[j + offOut] = outPhi(j, i);
             }
-            intptr_t inO = inOmega[2 * i + 1], outO = outOmega[2 * i + 1];
+            int64_t inO = inOmega[2 * i + 1], outO = outOmega[2 * i + 1];
             // forward means offset is 2nd - 1st
             schv[numLoopsTotal] = outO - inO;
             // dependenceSatisfaction is phi_t - phi_s >= 0
             // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
             // we implicitly 0-out `w` and `u` here,
-            if (e.dependence.dependenceSatisfaction.knownSatisfied(schv)) {
-                if (!e.dependence.dependenceBounding.knownSatisfied(schv)) {
+            if (e.dependenceSatisfaction.knownSatisfied(schv)) {
+                if (!e.dependenceBounding.knownSatisfied(schv)) {
                     // if zerod-out bounding not >= 0, then that means
                     // phi_t - phi_s > 0, so the dependence is satisfied
                     return true;
@@ -213,49 +180,55 @@ struct LoopBlock {
     // so, `pushReductionEdges` will...
     // actually, probably better to put this into dependence checking
     // so that it can add optionally 0, 1, or 2 dependencies
-    void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
-        if (!x.fusedThrough(y)) {
-            return;
-        }
-        ArrayReference &refX = ref(x);
-        ArrayReference &refY = ref(y);
-        const size_t numLoopsX = refX.getNumLoops();
-        const size_t numLoopsY = refY.getNumLoops();
-        const size_t numAxes = refX.dim();
-        // we preprocess to delinearize all, including linear indexing
-        assert(numAxes == refY.dim());
-        const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-        for (size_t i = numAxes; i < numLoopsCommon; ++i) {
-            // push both edge directions
-        }
-    }
+    // void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
+    //     if (!x.fusedThrough(y)) {
+    //         return;
+    //     }
+    //     ArrayReference &refX = x.ref;
+    //     ArrayReference &refY = y.ref;
+    //     const size_t numLoopsX = refX.getNumLoops();
+    //     const size_t numLoopsY = refY.getNumLoops();
+    //     const size_t numAxes = refX.dim();
+    //     // we preprocess to delinearize all, including linear indexing
+    //     assert(numAxes == refY.dim());
+    //     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+    //     for (size_t i = numAxes; i < numLoopsCommon; ++i) {
+    //         // push both edge directions
+    //     }
+    // }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
         // as a result of preprocessing.
-        if (llvm::Optional<Dependence> dep = Dependence::check(
-                ref(mai), mai.schedule, ref(maj), maj.schedule)) {
+        if (size_t numDeps = Dependence::check(edges, mai, maj)) {
             size_t numEdges = edges.size();
-            Dependence &d(dep.getValue());
-#ifndef NDEBUG
-            if (d.isForward()) {
-                std::cout << "dep direction: x -> y" << std::endl;
-            } else {
-                std::cout << "dep direction: y -> x" << std::endl;
-            }
-#endif
-            MemoryAccess *pin, *pout;
-            if (d.isForward()) {
-                pin = &mai;
-                pout = &maj;
-            } else {
-                pin = &maj;
-                pout = &mai;
-            }
-            edges.emplace_back(std::move(d), pin, pout);
-            // input's out-edge goes to output's in-edge
-            pin->addEdgeOut(numEdges);
-            pout->addEdgeIn(numEdges);
-            pushReductionEdges(mai, maj);
+            size_t e = numEdges - numDeps;
+            do {
+                edges[e].in->addEdgeOut(e);
+                edges[e].out->addEdgeIn(e);
+            } while (++e < numEdges);
+            //             Dependence &d(dep.getValue());
+            // #ifndef NDEBUG
+            //             if (d.isForward()) {
+            //                 std::cout << "dep direction: x -> y" <<
+            //                 std::endl;
+            //             } else {
+            //                 std::cout << "dep direction: y -> x" <<
+            //                 std::endl;
+            //             }
+            // #endif
+            //             MemoryAccess *pin, *pout;
+            //             if (d.isForward()) {
+            //                 pin = &mai;
+            //                 pout = &maj;
+            //             } else {
+            //                 pin = &maj;
+            //                 pout = &mai;
+            //             }
+            //             edges.emplace_back(std::move(d), pin, pout);
+            //             // input's out-edge goes to output's in-edge
+            //             pin->addEdgeOut(numEdges);
+            //             pout->addEdgeIn(numEdges);
+            //             // pushReductionEdges(mai, maj);
         }
     }
     // fills all the edges between memory accesses, checking for
@@ -263,10 +236,10 @@ struct LoopBlock {
     void fillEdges() {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
-            ArrayReference &refI = ref(mai);
+            ArrayReference &refI = mai.ref;
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
@@ -277,7 +250,7 @@ struct LoopBlock {
     static std::shared_ptr<AffineLoopNest> getBang(
         llvm::DenseMap<const AffineLoopNest *, std::shared_ptr<AffineLoopNest>>
             &map,
-        SquarePtrMatrix<intptr_t> K, const AffineLoopNest *aln) {
+        SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
         std::shared_ptr<AffineLoopNest> newp;
         if (p != map.end()) {
@@ -285,21 +258,22 @@ struct LoopBlock {
         } else {
             const size_t numVar = aln->getNumVar();
             const size_t numConstraints = aln->getNumConstraints();
-            const size_t numTransformed = K.numRow();
+            const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
-            // DynamicMatrix<intptr_t> A;
-            Matrix<intptr_t, 0, 0, 0> A;
-            A.resizeForOverwrite(numVar, numConstraints);
-            for (size_t k = 0; k < numConstraints; ++k) {
-                for (size_t j = 0; j < numPeeled; ++j) {
-                    A(j, k) = aln->A(j, k);
+	    // A = aln->A*K';
+            IntMatrix A(IntMatrix::Uninitialized(numConstraints, numVar));
+	    for (size_t j = 0; j < numPeeled; ++j) {
+		for (size_t k = 0; k < numConstraints; ++k) {
+                    A(k, j) = aln->A(k, j);
                 }
-                for (size_t j = numPeeled; j < numVar; ++j) {
-                    intptr_t Ajk = 0;
+	    }
+	    for (size_t j = numPeeled; j < numVar; ++j) {
+		for (size_t k = 0; k < numConstraints; ++k) {
+                    int64_t Akj = 0;
                     for (size_t l = 0; l < numTransformed; ++l) {
-                        Ajk += K(l, j - numPeeled) * aln->A(l, k);
+                        Akj += aln->A(k, l) * K(j - numPeeled, l);
                     }
-                    A(j, k) = Ajk;
+                    A(k, j) = Akj;
                 }
             }
             std::shared_ptr<AffineLoopNest> alshr =
@@ -318,7 +292,7 @@ struct LoopBlock {
             MemoryAccess &mai = memory[i];
             if (mai.isLoad)
                 continue;
-            ArrayReference &refI = ref(mai);
+            ArrayReference &refI = mai.ref;
             size_t dimI = refI.dim();
             auto &axesI = refI.axes;
             size_t multiInds = 0;
@@ -359,7 +333,7 @@ struct LoopBlock {
                 MemoryAccess &maj = memory[j];
                 if (!mai.fusedThrough(maj))
                     continue;
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 numLoops = std::max(numLoops, refJ.getNumLoops());
                 numRow += refJ.dim();
                 // numLoad += maj.isLoad;
@@ -370,13 +344,13 @@ struct LoopBlock {
                 // So the item here is to adjust peelOuter.
                 orthInds.push_back(j);
             }
-            Matrix<intptr_t, 0, 0> S(numRow, numLoops - peelOuter);
+            IntMatrix S(numLoops - peelOuter, numRow);
             size_t rowStore = 0;
             size_t rowLoad = numStore;
             bool dobreakj = false;
             for (auto j : orthInds) {
                 MemoryAccess &maj = memory[j];
-                ArrayReference &refJ = ref(maj);
+                ArrayReference &refJ = maj.ref;
                 size_t row = maj.isLoad ? rowLoad : rowStore;
                 for (auto &axis : refJ.axes) {
                     if (addIndRow(S, axis, row++, peelOuter)) {
@@ -402,29 +376,30 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-                Matrix<intptr_t, 0, 0> SK(matmul(S, K));
+                IntMatrix SK(matmultt(S, K));
                 llvm::DenseMap<const AffineLoopNest *,
                                std::shared_ptr<AffineLoopNest>>
                     loopMap;
-                llvm::SmallVector<int, 16> refMap(
-                    refs.size() + orthInds.size() - 1, -1);
+                // llvm::SmallVector<int, 16> refMap(
+                //     refs.size() + orthInds.size() - 1, -1);
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
                     visited[j] = true;
                     MemoryAccess &maj = memory[j];
-                    unsigned oldRefID = maj.ref;
-                    if (refMap[oldRefID] >= 0) {
-                        maj.ref = oldRefID;
-                        continue;
-                    }
-                    ArrayReference &oldRef = ref(maj);
-                    refMap[oldRefID] = maj.ref = refs.size();
-                    refs.emplace_back(oldRef.arrayID,
-                                      getBang(loopMap, K, oldRef.loop.get()));
+                    // unsigned oldRefID = maj.ref;
+                    // if (refMap[oldRefID] >= 0) {
+                    //     maj.ref = oldRefID;
+                    //     continue;
+                    // }
+                    ArrayReference oldRef = std::move(maj.ref);
+                    maj.ref = {oldRef.arrayID,
+                               getBang(loopMap, K, oldRef.loop.get())};
+                    // refMap[oldRefID] = maj.ref = refs.size();
+                    // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     for (auto &axis : oldRef) {
-                        refs.back().pushAffineAxis(axis, SK.getRow(row++),
+                        maj.ref.pushAffineAxis(axis, SK.getRow(row++),
                                                    peelOuter);
                     }
                     rowLoad = maj.isLoad ? row : rowLoad;
@@ -433,7 +408,7 @@ struct LoopBlock {
                     // phi * L = (phi * K) * J
                     // NOTE: we're assuming the schedule is the identity
                     // otherwise, new schedule = old schedule * K
-                    SquarePtrMatrix<intptr_t> Phi = maj.schedule.getPhi();
+                    SquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
                     size_t phiDim = Phi.numCol();
                     for (size_t n = 0; n < phiDim; ++n) {
                         for (size_t m = 0; m < phiDim; ++m) {
@@ -446,18 +421,13 @@ struct LoopBlock {
     }
 };
 
-std::ostream &operator<<(std::ostream &os, const LoopBlock::MemoryAccess &m) {
+std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
     if (m.isLoad) {
         os << "= ";
     }
-    os << "ArrayReference #" << m.ref;
+    os << "ArrayReference:\n" << m.ref;
     if (!m.isLoad) {
         os << " =";
     }
-    return os;
-}
-std::ostream &operator<<(std::ostream &os, const LoopBlock::Edge &e) {
-
-    os << "Ref #" << e.in->ref << "-> Ref #" << e.out->ref;
     return os;
 }

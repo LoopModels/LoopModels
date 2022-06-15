@@ -73,7 +73,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
     // // 	return;
     // // }
-    // // this can result in unfavorable rotations in canonicalizing the starting
+    // // this can result in unfavorable rotations in canonicalizing the
+    // starting
     // // index to 0 so we rely on orthogonalizing indices later. Supporting
     // // orthogonalization is needed anyway, as loops may have originally been
     // // written in an unfavorable way.
@@ -89,8 +90,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //     size_t startInvariant = invariant(initV, outerLoops);
     //     size_t stopInvariant = invariant(finalV, outerLoops);
 
-    //     llvm::SmallVector<intptr_t, 4> aL(outerLoops.size() + 1, 0);
-    //     llvm::SmallVector<intptr_t, 4> aU(outerLoops.size() + 1, 0);
+    //     llvm::SmallVector<int64_t, 4> aL(outerLoops.size() + 1, 0);
+    //     llvm::SmallVector<int64_t, 4> aU(outerLoops.size() + 1, 0);
     //     MPoly bL;
     //     MPoly bU;
     //     /*
@@ -111,8 +112,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //             // llvm::Value *len = rewriter.expandCodeFor(
     //             //     SE->getAddExpr(
     //             //         SE->getUDivExpr(SE->getMinusSCEV(stopSCEV,
-    //             //                                          SE->getSCEV(initV),
-    //             //                                          llvm::SCEV::FlagNUW),
+    //             // SE->getSCEV(initV),
+    //             // llvm::SCEV::FlagNUW),
     //             //                         SE->getSCEV(stepV)),
     //             //         SE->getOne(stopSCEV->getType())),
     //             //     stopSCEV->getType(), startStopPre->getTerminator());
@@ -132,13 +133,15 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //     } else {
     //     }
     //     */
-    // 	if (llvm::ConstantInt *initConst = llvm::dyn_cast<llvm::ConstantInt>(&initV)){
-	    
+    // 	if (llvm::ConstantInt *initConst =
+    // llvm::dyn_cast<llvm::Constantint64_t>(&initV)){
+
     // 	} else {
 
     // 	}
-    // 	if (llvm::ConstantInt *finalConst = llvm::dyn_cast<llvm::ConstantInt>(&finalV)){
-	    
+    // 	if (llvm::ConstantInt *finalConst =
+    // llvm::dyn_cast<llvm::Constantint64_t>(&finalV)){
+
     // 	} else {
 
     // 	}
@@ -146,8 +149,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // void descend(
     //     Tree &tree,
     //     llvm::SmallVector<
-    //         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
-    //         &outerLoops,
+    //         std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>,
+    //         4> &outerLoops,
     //     llvm::SmallVector<AffineCmp, 8> &affs, llvm::Loop *LP,
     //     llvm::DominatorTree &DT) {
     //     size_t numOuter = outerLoops.size();
@@ -166,7 +169,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //                 llvm::Value *stop = &bounds.getFinalIVValue();
 
     //                 llvm::errs()
-    //                     << "\nloop bounds: " << *start << " : " << *stop << "\n";
+    //                     << "\nloop bounds: " << *start << " : " << *stop <<
+    //                     "\n";
     //             }
     //         }
     //     }

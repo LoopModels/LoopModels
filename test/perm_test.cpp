@@ -6,8 +6,8 @@
 #include <vector>
 
 const size_t numloop = 5;
-std::set<std::vector<Int>> s;
-std::vector<Int> tperm(numloop);
+std::set<std::vector<int64_t>> s;
+std::vector<int64_t> tperm(numloop);
 
 void check_partition(Permutation p, Int num_exterior) {
     for (Int j = 0; j < num_exterior; j++) tperm[j] = p(j);
@@ -25,7 +25,7 @@ void recursive_iterator(Permutation p, Int lv = 0, Int num_exterior = 0) {
     if ((lv + 1) == nloops) {
         for (size_t j = 0; j < numloop; j++) tperm[j] = p(j);
 	std::cout << p << std::endl;
-        std::vector<Int> perm = tperm;
+        std::vector<int64_t> perm = tperm;
         std::sort(tperm.begin(), tperm.end());
         auto ip = inv(p);
         for (size_t j = 0; j < numloop; j++) {
@@ -61,7 +61,7 @@ void recursive_iterator_2(PermutationLevelIterator pli, Int lv = 0, Int num_exte
     if ((lv + 1) == nloops) {
         for (size_t j = 0; j < numloop; j++) tperm[j] = p(j);
 	std::cout << p << std::endl;
-        std::vector<Int> perm = tperm;
+        std::vector<int64_t> perm = tperm;
         std::sort(tperm.begin(), tperm.end());
         auto ip = inv(p);
         for (size_t j = 0; j < numloop; j++) {

@@ -24,7 +24,7 @@ struct IntegerMap {
         if (forward.size() <= i) {
             forward.resize(i + 1, 0);
         } else {
-            if (intptr_t j = forward[i]) {
+            if (int64_t j = forward[i]) {
                 return j;
             }
         }
@@ -42,7 +42,7 @@ struct IntegerMap {
         }
     }
     // 1 is sentinal for not found
-    intptr_t getBackward(size_t j) {
+    int64_t getBackward(size_t j) {
         j -= 1;
         if (j <= backward.size()) {
             return backward[j];

@@ -7,7 +7,7 @@
 
 TEST(LinearAlgebraTest, BasicAssertions) {
     const SquareMatrix<Rational> identity = SquareMatrix<Rational>::identity(4);
-    SquareMatrix<intptr_t> A(4);
+    SquareMatrix<int64_t> A(4);
     A(0, 0) = 2;
     A(0, 1) = -10;
     A(0, 2) = 6;
@@ -25,15 +25,18 @@ TEST(LinearAlgebraTest, BasicAssertions) {
     A(3, 2) = -2;
     A(3, 3) = 4;
 
-    auto LUFopt = lufact(A);
+    auto LUFopt = LU::fact(A);
     EXPECT_TRUE(LUFopt.hasValue());
     auto LUF = LUFopt.getValue();
-    Matrix<Rational,0,0> B(4);
-    for (size_t i = 0; i < 16; ++i){
-	B[i] = A[i];
+    Matrix<Rational, 0, 0> B(4);
+    for (size_t i = 0; i < 16; ++i) {
+        B[i] = A[i];
     }
     std::cout << "A = \n" << A << "\nB = \n" << B << std::endl;
-    std::cout << "F = \n" << LUF.F << "\nperm = \n" << Vector<unsigned,0>(LUF.perm) << std::endl;
+    printVector(std::cout << "F = \n"
+                          << LUF.F << "\nperm = \n",
+                LUF.ipiv)
+        << std::endl;
     auto Bcopy = B;
     EXPECT_FALSE(LUF.ldiv(Bcopy));
     std::cout << "LUF.ldiv(B) = \n" << Bcopy << std::endl;
