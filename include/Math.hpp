@@ -12,7 +12,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
-#include <mlir/Analysis/Presburger/Matrix.h>
+// #include <mlir/Analysis/Presburger/Matrix.h>
 #include <numeric>
 #include <string>
 #include <tuple>
@@ -663,6 +663,13 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         A.M = MM;
         A.X = A.N = NN;
         A.mem.resize_for_overwrite(MM * NN);
+        return A;
+    }
+    static Matrix<T, 0, 0, S> identity(size_t MM) {
+        Matrix<T, 0, 0, S> A(MM,MM);
+	for (size_t i = 0; i < MM; ++i){
+	    A(i,i) = 1;
+	}
         return A;
     }
     void clear() {

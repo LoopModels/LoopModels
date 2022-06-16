@@ -145,8 +145,8 @@ void zeroSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
     }
 }
 
-MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
-                      size_t M, size_t piv) {
+MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, PtrMatrix<int64_t> K,
+                                   size_t i, size_t M, size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0) {
         if (++piv == M) {
@@ -154,13 +154,13 @@ MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &
         }
     }
     if (j != piv) {
-	// const size_t N = A.numCol();
-	// assert(N == K.numCol());
-	// VECTORIZE
-	// for (size_t n = 0; n < N; ++n) {
-	//     std::swap(A(i, n), A(piv, n));
-	//     std::swap(K(i, n), K(piv, n));
-	// }
+        // const size_t N = A.numCol();
+        // assert(N == K.numCol());
+        // VECTORIZE
+        // for (size_t n = 0; n < N; ++n) {
+        //     std::swap(A(i, n), A(piv, n));
+        //     std::swap(K(i, n), K(piv, n));
+        // }
         swapRows(A, j, piv);
         swapRows(K, j, piv);
     }
@@ -293,6 +293,34 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
         int64_t bj = b[j];
         b[c] = p * bi + q * bj;
         b[j] = Aiir * bj - Aijr * bi;
+    }
+}
+MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
+                                         PtrMatrix<int64_t> B, size_t r,
+                                         size_t c) {
+    auto [M, N] = A.size();
+    const size_t K = B.numCol();
+    assert(M == B.numRow());
+    for (size_t j = c + 1; j < M; ++j) {
+        int64_t Aii = A(c, r);
+        int64_t Aij = A(j, r);
+        auto [r, p, q] = gcdx(Aii, Aij);
+        int64_t Aiir = Aii / r;
+        int64_t Aijr = Aij / r;
+        VECTORIZE
+        for (size_t k = 0; k < N; ++k) {
+            int64_t Ack = A(c, k);
+            int64_t Ajk = A(j, k);
+            A(c, k) = p * Ack + q * Ajk;
+            A(j, k) = Aiir * Ajk - Aijr * Ack;
+        }
+        VECTORIZE
+        for (size_t k = 0; k < K; ++k) {
+            int64_t Bck = B(c, k);
+            int64_t Bjk = B(j, k);
+            B(c, k) = p * Bck + q * Bjk;
+            B(j, k) = Aiir * Bjk - Aijr * Bck;
+        }
     }
 }
 MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
@@ -478,11 +506,79 @@ MULTIVERSION size_t simplifyEqualityConstraintsImpl(
 }
 
 template <typename T>
-void simplifyEqualityConstraints(IntMatrix &E, llvm::SmallVectorImpl<T> &q) {
+static void simplifyEqualityConstraints(IntMatrix &E,
+                                        llvm::SmallVectorImpl<T> &q) {
 
     size_t Mnew = simplifyEqualityConstraintsImpl(E, q);
     E.truncateRows(Mnew);
     q.resize(Mnew);
+}
+MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
+                                         size_t c) {
+    const size_t N = A.numCol();
+    const size_t K = B.numCol();
+    for (size_t j = 0; j < c; ++j) {
+        int64_t Aic = A(c, rr);
+        int64_t Aij = A(j, rr);
+        if (Aij == 0)
+            continue;
+        int64_t g = gcd(Aic, Aij);
+        int64_t Aicr = Aic / g;
+        int64_t Aijr = Aij / g;
+        VECTORIZE
+        for (size_t k = 0; k < N; ++k) {
+            int64_t Ack = A(c, k) * Aijr;
+            int64_t Ajk = A(j, k) * Aicr;
+            A(j, k) = Ajk - Ack;
+        }
+        VECTORIZE
+        for (size_t k = 0; k < K; ++k) {
+            int64_t Bck = B(c, k) * Aijr;
+            int64_t Bjk = B(j, k) * Aicr;
+            B(j, k) = Bjk - Bck;
+        }
+    }
+}
+MULTIVERSION void simplifySystem(IntMatrix &A, IntMatrix &B) {
+    const auto [M, N] = A.size();
+    if (M == 0)
+        return;
+    size_t dec = 0;
+    for (size_t m = 0; m < N; ++m) {
+        if (m - dec >= M) {
+            break;
+        }
+        if (pivotRows(A, B, m, M, m - dec)) {
+            ++dec;
+            continue;
+        }
+        zeroSupDiagonal(A, B, m, m - dec);
+        zeroSubDiagonal(A, B, m, m - dec);
+    }
+}
+
+MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
+    const size_t M = A.numRow();
+    IntMatrix B(IntMatrix::identity(M));
+    simplifySystem(A, B);
+    size_t R = M;
+    while ((R > 0) && allZero(A.getRow(R - 1))) {
+        R -= 1;
+    }
+    // slice B[R:end, :]
+    // if R == 0, no need to truncate or copy
+    if (R) {
+        // we keep last D columns
+        size_t D = M - R;
+        size_t o = R * M;
+        // we keep `D` columns
+        VECTORIZE
+        for (size_t d = 0; d < D * M; ++d) {
+            B[d] = B[d + o];
+        }
+        B.truncateRows(D);
+    }
+    return B;
 }
 
 } // namespace NormalForm

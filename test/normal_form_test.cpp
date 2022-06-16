@@ -183,3 +183,24 @@ TEST(NormalFormTest, BasicAssertions) {
     std::cout << "A = " << A << "\nA * K = " << matmul(K, A) << std::endl;
     EXPECT_TRUE(matmul(K, A) == I4);
 }
+
+TEST(NullSpaceTests, BasicAssertions) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(-10, 10);
+
+    size_t numIters = 1000;
+    IntMatrix B(4, 8);
+    for (size_t i = 0; i < numIters; ++i) {
+        for (size_t n = 0; n < 32; ++n) {
+	    B[n] = distrib(gen);
+        }
+	IntMatrix NS = NormalForm::nullSpace(B);
+	IntMatrix Z = matmul(NS, B);
+	for (size_t j = 0; j < Z.length(); ++j){
+	    EXPECT_EQ(Z[j], 0);
+	}
+	EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
+    }
+}
+

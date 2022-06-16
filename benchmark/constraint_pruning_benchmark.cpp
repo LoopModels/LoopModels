@@ -1,4 +1,5 @@
 #include "../include/AbstractEqualityPolyhedra.hpp"
+#include "../include/NormalForm.hpp"
 #include "../include/Polyhedra.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
@@ -66,5 +67,38 @@ static void BM_Constraint_Elim(benchmark::State &state) {
 }
 // Register the function as a benchmark
 BENCHMARK(BM_Constraint_Elim);
+
+static void BM_NullSpace(benchmark::State &state) {
+
+    IntMatrix B(4, 6);
+    B(0, 0) = 1;
+    B(0, 1) = 0;
+    B(0, 2) = -3;
+    B(0, 3) = 0;
+    B(0, 4) = 2;
+    B(0, 5) = -8;
+
+    B(0, 0) = 0;
+    B(0, 1) = 1;
+    B(0, 2) = 5;
+    B(0, 3) = 0;
+    B(0, 4) = -1;
+    B(0, 5) = 4;
+
+    B(0, 0) = 0;
+    B(0, 1) = 0;
+    B(0, 2) = 0;
+    B(0, 3) = 1;
+    B(0, 4) = 7;
+    B(0, 5) = -9;
+
+    // fourth row is 0
+
+    for (auto _ : state) {
+        NormalForm::nullSpace(B);
+    }
+}
+// Register the function as a benchmark
+BENCHMARK(BM_NullSpace);
 
 BENCHMARK_MAIN();
