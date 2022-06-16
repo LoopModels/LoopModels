@@ -7,63 +7,8 @@
 #include <numeric>
 #include <random>
 
-TEST(NormalFormTest, BasicAssertions) {
-    // Matrix<int64_t,0,0> A4x4(4,4);
-    IntMatrix A4x3(4, 3);
-    A4x3(0, 0) = 2;
-    A4x3(1, 0) = 3;
-    A4x3(2, 0) = 6;
-    A4x3(3, 0) = 2;
-    A4x3(0, 1) = 5;
-    A4x3(1, 1) = 6;
-    A4x3(2, 1) = 1;
-    A4x3(3, 1) = 6;
-    A4x3(0, 2) = 8;
-    A4x3(1, 2) = 3;
-    A4x3(2, 2) = 1;
-    A4x3(3, 2) = 1;
-    std::cout << "A=\n" << A4x3 << std::endl;
-    auto hnf = NormalForm::hermite(A4x3);
-    EXPECT_TRUE(hnf.hasValue());
-    auto [H, U] = hnf.getValue();
-    std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
-
-    EXPECT_TRUE(H == matmul(U, A4x3));
-
-    for (size_t i = 0; i < 3; ++i) {
-        A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
-    }
-    std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
-    hnf = NormalForm::hermite(A4x3);
-    EXPECT_TRUE(hnf.hasValue());
-    auto [H2, U2] = hnf.getValue();
-    std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
-
-    EXPECT_TRUE(H2 == matmul(U2, A4x3));
-
+TEST(OrthogonalizeTest, BasicAssertions) {
     SquareMatrix<int64_t> A(4);
-    A(0, 0) = 3;
-    A(1, 0) = -6;
-    A(2, 0) = 7;
-    A(3, 0) = 7;
-    A(0, 1) = 7;
-    A(1, 1) = -8;
-    A(2, 1) = 10;
-    A(3, 1) = 6;
-    A(0, 2) = -5;
-    A(1, 2) = 8;
-    A(2, 2) = 7;
-    A(3, 2) = 3;
-    A(0, 3) = -5;
-    A(1, 3) = -6;
-    A(2, 3) = 8;
-    A(3, 3) = -1;
-    auto hnfsm = NormalForm::hermite(A);
-    EXPECT_TRUE(hnfsm.hasValue());
-    auto [H3, U3] = hnfsm.getValue();
-    std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
-    EXPECT_TRUE(H3 == matmul(U3, A));
-
     std::cout << "\n\n\n========\n========\n========\n\n";
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -184,20 +129,161 @@ TEST(NormalFormTest, BasicAssertions) {
     EXPECT_TRUE(matmul(K, A) == I4);
 }
 
-TEST(Hermite2, BasicAssertions){
-    IntMatrix A(2,3);
-    A(0,0) = -3;
-    A(0,1) = -1;
-    A(0,2) = 1;
-    A(1,0) = 0;
-    A(1,1) = 0;
-    A(1,2) = -2;
-    llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
-        NormalForm::hermite(A);
-    EXPECT_TRUE(B.hasValue());
-    auto [H,U] = B.getValue();
-    EXPECT_TRUE(matmul(U, A) == H);
-    std::cout << "H =\n" << H << "\nU =\n" << U << std::endl;
+bool isHNF(PtrMatrix<int64_t> A) {
+    const auto [M, N] = A.size();
+    // l is lead
+    size_t l = 0;
+    for (size_t m = 0; m < M; ++m) {
+        // all entries must be 0
+        for (size_t n = 0; n < l; ++n) {
+            if (A(m, n))
+                return false;
+        }
+        // now search for next lead
+        while ((l < N) && A(m, l) == 0) {
+            ++l;
+        }
+        if (l == N)
+            continue;
+        int64_t Aml = A(m, l);
+        if (Aml < 0)
+            return false;
+        for (size_t r = 0; r < m; ++r) {
+            int64_t Arl = A(r, l);
+            if ((Arl >= Aml) || (Arl < 0))
+                return false;
+        }
+    }
+    return true;
+}
+
+TEST(Hermite, BasicAssertions) {
+    {
+	IntMatrix A4x3(4, 3);
+	A4x3(0, 0) = 2;
+	A4x3(1, 0) = 3;
+	A4x3(2, 0) = 6;
+	A4x3(3, 0) = 2;
+	A4x3(0, 1) = 5;
+	A4x3(1, 1) = 6;
+	A4x3(2, 1) = 1;
+	A4x3(3, 1) = 6;
+	A4x3(0, 2) = 8;
+	A4x3(1, 2) = 3;
+	A4x3(2, 2) = 1;
+	A4x3(3, 2) = 1;
+	std::cout << "A=\n" << A4x3 << std::endl;
+	auto hnf = NormalForm::hermite(A4x3);
+	EXPECT_TRUE(hnf.hasValue());
+	auto [H, U] = hnf.getValue();
+	std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
+
+	EXPECT_TRUE(isHNF(H));
+	EXPECT_TRUE(H == matmul(U, A4x3));
+
+	for (size_t i = 0; i < 3; ++i) {
+	    A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
+	}
+	std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
+	hnf = NormalForm::hermite(A4x3);
+	EXPECT_TRUE(hnf.hasValue());
+	auto [H2, U2] = hnf.getValue();
+	std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
+	EXPECT_TRUE(isHNF(H2));
+	EXPECT_TRUE(H2 == matmul(U2, A4x3));
+    }
+    {
+        SquareMatrix<int64_t> A(4);
+        A(0, 0) = 3;
+        A(1, 0) = -6;
+        A(2, 0) = 7;
+        A(3, 0) = 7;
+        A(0, 1) = 7;
+        A(1, 1) = -8;
+        A(2, 1) = 10;
+        A(3, 1) = 6;
+        A(0, 2) = -5;
+        A(1, 2) = 8;
+        A(2, 2) = 7;
+        A(3, 2) = 3;
+        A(0, 3) = -5;
+        A(1, 3) = -6;
+        A(2, 3) = 8;
+        A(3, 3) = -1;
+        auto hnfsm = NormalForm::hermite(A);
+        EXPECT_TRUE(hnfsm.hasValue());
+        auto [H3, U3] = hnfsm.getValue();
+        std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
+	EXPECT_TRUE(isHNF(H3));
+        EXPECT_TRUE(H3 == matmul(U3, A));
+    }
+    {
+        IntMatrix A(2, 3);
+        A(0, 0) = -3;
+        A(0, 1) = -1;
+        A(0, 2) = 1;
+        A(1, 0) = 0;
+        A(1, 1) = 0;
+        A(1, 2) = -2;
+        llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
+            NormalForm::hermite(A);
+        EXPECT_TRUE(B.hasValue());
+        auto [H, U] = B.getValue();
+	EXPECT_TRUE(isHNF(H));
+        EXPECT_TRUE(matmul(U, A) == H);
+        std::cout << "A = \n"
+                  << A << "\nH =\n"
+                  << H << "\nU =\n"
+                  << U << std::endl;
+    }
+    {
+        IntMatrix A(3, 11);
+        A(0, 0) = 3;
+        A(0, 1) = 3;
+        A(0, 2) = -3;
+        A(0, 3) = 1;
+        A(0, 4) = 0;
+        A(0, 5) = -1;
+        A(0, 6) = -2;
+        A(0, 7) = 1;
+        A(0, 8) = 1;
+        A(0, 9) = 2;
+        A(0, 10) = -1;
+
+        A(1, 0) = 3;
+        A(1, 1) = 3;
+        A(1, 2) = -3;
+        A(1, 3) = 1;
+        A(1, 4) = 1;
+        A(1, 5) = -3;
+        A(1, 6) = 2;
+        A(1, 7) = 0;
+        A(1, 8) = 3;
+        A(1, 9) = 0;
+        A(1, 10) = -3;
+
+        A(2, 0) = 2;
+        A(2, 1) = -3;
+        A(2, 2) = -2;
+        A(2, 3) = -1;
+        A(2, 4) = 1;
+        A(2, 5) = -2;
+        A(2, 6) = 3;
+        A(2, 7) = 3;
+        A(2, 8) = 3;
+        A(2, 9) = 3;
+        A(2, 10) = -3;
+        llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
+            NormalForm::hermite(A);
+        EXPECT_TRUE(B.hasValue());
+        auto [H, U] = B.getValue();
+	EXPECT_TRUE(isHNF(H));
+        EXPECT_TRUE(matmul(U, A) == H);
+        std::cout << "A = \n"
+                  << A << "\nH =\n"
+                  << H << "\nU =\n"
+                  << U << std::endl;
+    }
 }
 
 TEST(NullSpaceTests, BasicAssertions) {
@@ -209,14 +295,13 @@ TEST(NullSpaceTests, BasicAssertions) {
     IntMatrix B(4, 8);
     for (size_t i = 0; i < numIters; ++i) {
         for (size_t n = 0; n < 32; ++n) {
-	    B[n] = distrib(gen);
+            B[n] = distrib(gen);
         }
-	IntMatrix NS = NormalForm::nullSpace(B);
-	IntMatrix Z = matmul(NS, B);
-	for (size_t j = 0; j < Z.length(); ++j){
-	    EXPECT_EQ(Z[j], 0);
-	}
-	EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
+        IntMatrix NS = NormalForm::nullSpace(B);
+        IntMatrix Z = matmul(NS, B);
+        for (size_t j = 0; j < Z.length(); ++j) {
+            EXPECT_EQ(Z[j], 0);
+        }
+        EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
     }
 }
-
