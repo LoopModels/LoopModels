@@ -12,18 +12,22 @@
 
 namespace NormalForm {
 
-void reduceSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
-                       size_t M, size_t N) {
+MULTIVERSION void reduceSubDiagonal(PtrMatrix<int64_t> A,
+                                    SquareMatrix<int64_t> &K, size_t k,
+                                    size_t M, size_t N) {
     int64_t Akk = A(k, k);
     if (Akk < 0) {
         Akk = -Akk;
+        VECTORIZE
         for (size_t i = 0; i < std::min(M, N); ++i) {
             A(k, i) *= -1;
             K(k, i) *= -1;
         }
+        VECTORIZE
         for (size_t i = N; i < M; ++i) {
             K(k, i) *= -1;
         }
+        VECTORIZE
         for (size_t i = M; i < N; ++i) {
             A(k, i) *= -1;
         }
@@ -54,20 +58,34 @@ void reduceSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
         } else {
             continue;
         }
+        VECTORIZE
         for (size_t i = 0; i < std::min(M, N); ++i) {
             A(z, i) -= Akz * A(k, i);
             K(z, i) -= Akz * K(k, i);
         }
+        VECTORIZE
         for (size_t i = N; i < M; ++i) {
             K(z, i) -= Akz * K(k, i);
         }
+        VECTORIZE
         for (size_t i = M; i < N; ++i) {
             A(z, i) -= Akz * A(k, i);
         }
     }
 }
-void zeroSupDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
-                     size_t M, size_t N) {
+inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
+                                                                int64_t b) {
+    // if (std::abs(a) == 1) {
+    if ((a == 1) || (a == -1)) {
+        return std::make_tuple(a == 1 ? 1 : -1, 0, a, b);
+    } else {
+        auto [g, p, q] = gcdx(a, b);
+        return std::make_tuple(p, q, a / g, b / g);
+    }
+}
+MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
+                                  SquareMatrix<int64_t> &K, size_t i, size_t M,
+                                  size_t N) {
     // std::cout << "M = " << M << "; N = " << N << "; i = " << i << std::endl;
     // printMatrix(std::cout, A) << std::endl;
     for (size_t j = i + 1; j < M; ++j) {
@@ -75,11 +93,10 @@ void zeroSupDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
         int64_t Aji = A(j, i);
         // std::cout << "A(" << i << ", " << i << ") = " << Aii << "; A(" << j
         // << ", " << i << ") = " << Aji << std::endl;
-        auto [r, p, q] = gcdx(Aii, Aji);
+        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aji);
         // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
         // std::endl;
-        int64_t Aiir = Aii / r;
-        int64_t Aijr = Aji / r;
+        VECTORIZE
         for (size_t k = 0; k < std::min(M, N); ++k) {
             int64_t Aki = A(i, k);
             int64_t Akj = A(j, k);
@@ -94,12 +111,14 @@ void zeroSupDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
             K(i, k) = p * Kki + q * Kkj;
             K(j, k) = Aiir * Kkj - Aijr * Kki;
         }
+        VECTORIZE
         for (size_t k = N; k < M; ++k) {
             int64_t Kki = K(i, k);
             int64_t Kkj = K(j, k);
             K(i, k) = p * Kki + q * Kkj;
             K(j, k) = Aiir * Kkj - Aijr * Kki;
         }
+        VECTORIZE
         for (size_t k = M; k < N; ++k) {
             int64_t Aki = A(i, k);
             int64_t Akj = A(j, k);
@@ -108,17 +127,21 @@ void zeroSupDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
         }
     }
 }
-void zeroSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
-                     size_t M, size_t N) {
+MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
+                                  SquareMatrix<int64_t> &K, size_t k, size_t M,
+                                  size_t N) {
     int64_t Akk = A(k, k);
     if (Akk == -1) {
+        VECTORIZE
         for (size_t i = 0; i < std::min(M, N); ++i) {
             A(k, i) *= -1;
             K(k, i) *= -1;
         }
+        VECTORIZE
         for (size_t i = N; i < M; ++i) {
             K(k, i) *= -1;
         }
+        VECTORIZE
         for (size_t i = M; i < N; ++i) {
             A(k, i) *= -1;
         }
@@ -132,13 +155,16 @@ void zeroSubDiagonal(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t k,
             continue;
         }
         // A(k, k) == 1, so A(k,z) -= Akz * 1;
+        VECTORIZE
         for (size_t i = 0; i < std::min(M, N); ++i) {
             A(z, i) -= Akz * A(k, i);
             K(z, i) -= Akz * K(k, i);
         }
+        VECTORIZE
         for (size_t i = N; i < M; ++i) {
             K(z, i) -= Akz * K(k, i);
         }
+        VECTORIZE
         for (size_t i = M; i < N; ++i) {
             A(z, i) -= Akz * A(k, i);
         }
@@ -214,13 +240,14 @@ hermite(IntMatrix A) {
     return std::make_pair(std::move(A), std::move(K));
 }
 
-void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
+MULTIVERSION void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
     // if any rows are left, we shift them up to replace it
     if (i < N) {
         // std::cout << "A.numRow() = " << A.numRow()
         //           << "; A.numCol() = " << A.numCol() << "; M = " << M
         //           << "; N = " << N << std::endl;
         for (size_t m = 0; m < M; ++m) {
+            VECTORIZE
             for (size_t n = i; n < N; ++n) {
                 A(m, n) = A(m, n + 1);
             }
@@ -228,7 +255,7 @@ void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
     }
 }
 
-std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>>
+MULTIVERSION std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>>
 orthogonalizeBang(PtrMatrix<int64_t> A) {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
@@ -279,9 +306,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, r);
         int64_t Aij = A(j, r);
-        auto [r, p, q] = gcdx(Aii, Aij);
-        int64_t Aiir = Aii / r;
-        int64_t Aijr = Aij / r;
+        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
         VECTORIZE
         for (size_t k = 0; k < N; ++k) {
             int64_t Aki = A(c, k);
@@ -304,9 +329,7 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, r);
         int64_t Aij = A(j, r);
-        auto [r, p, q] = gcdx(Aii, Aij);
-        int64_t Aiir = Aii / r;
-        int64_t Aijr = Aij / r;
+        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
         VECTORIZE
         for (size_t k = 0; k < N; ++k) {
             int64_t Ack = A(c, k);
@@ -377,28 +400,18 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, rr);
         if (int64_t Aij = A(j, rr)) {
-            if (std::abs(Aii) == 1) {
-                VECTORIZE
-                for (size_t k = 0; k < N; ++k) {
-                    A(j, k) = Aii * A(j, k) - Aij * A(c, k);
-                }
-                Polynomial::fnmadd(b[j] *= Aii, b[c], Aij);
-            } else {
-                auto [r, p, q] = gcdx(Aii, Aij);
-                int64_t Aiir = Aii / r;
-                int64_t Aijr = Aij / r;
-                VECTORIZE
-                for (size_t k = 0; k < N; ++k) {
-                    int64_t Aki = A(c, k);
-                    int64_t Akj = A(j, k);
-                    A(c, k) = p * Aki + q * Akj;
-                    A(j, k) = Aiir * Akj - Aijr * Aki;
-                }
-                MPoly bi = std::move(b[c]);
-                MPoly bj = std::move(b[j]);
-                b[c] = p * bi + q * bj;
-                b[j] = Aiir * std::move(bj) - Aijr * std::move(bi);
+            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Aki = A(c, k);
+                int64_t Akj = A(j, k);
+                A(c, k) = p * Aki + q * Akj;
+                A(j, k) = Aiir * Akj - Aijr * Aki;
             }
+            MPoly bi = std::move(b[c]);
+            MPoly bj = std::move(b[j]);
+            b[c] = p * bi + q * bj;
+            b[j] = Aiir * std::move(bj) - Aijr * std::move(bi);
         }
     }
 }
@@ -522,6 +535,7 @@ MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
         int64_t Aij = A(j, rr);
         if (Aij == 0)
             continue;
+
         int64_t g = gcd(Aic, Aij);
         int64_t Aicr = Aic / g;
         int64_t Aijr = Aij / g;
