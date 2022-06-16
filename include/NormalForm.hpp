@@ -29,43 +29,47 @@ MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
     // printMatrix(std::cout, A) << std::endl;
     for (size_t j = i + 1; j < M; ++j) {
         int64_t Aii = A(i, i);
-        int64_t Aji = A(j, i);
-        // std::cout << "A(" << i << ", " << i << ") = " << Aii << "; A(" << j
-        // << ", " << i << ") = " << Aji << std::endl;
-        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aji);
-        // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
-        // std::endl;
-        VECTORIZE
-        for (size_t k = 0; k < std::min(M, N); ++k) {
-            int64_t Aki = A(i, k);
-            int64_t Akj = A(j, k);
-            int64_t Kki = K(i, k);
-            int64_t Kkj = K(j, k);
-            // when k == i, then
-            // p * Aii + q * Akj == r, so we set A(i,i) = r
-            A(i, k) = p * Aki + q * Akj;
-            // Aii/r * Akj - Aij/r * Aki = 0
-            A(j, k) = Aiir * Akj - Aijr * Aki;
-            // Mirror for K
-            K(i, k) = p * Kki + q * Kkj;
-            K(j, k) = Aiir * Kkj - Aijr * Kki;
-        }
-        VECTORIZE
-        for (size_t k = N; k < M; ++k) {
-            int64_t Kki = K(i, k);
-            int64_t Kkj = K(j, k);
-            K(i, k) = p * Kki + q * Kkj;
-            K(j, k) = Aiir * Kkj - Aijr * Kki;
-        }
-        VECTORIZE
-        for (size_t k = M; k < N; ++k) {
-            int64_t Aki = A(i, k);
-            int64_t Akj = A(j, k);
-            A(i, k) = p * Aki + q * Akj;
-            A(j, k) = Aiir * Akj - Aijr * Aki;
+        if (int64_t Aji = A(j, i)) {
+            // std::cout << "A(" << i << ", " << i << ") = " << Aii << "; A(" <<
+            // j
+            // << ", " << i << ") = " << Aji << std::endl;
+            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aji);
+            // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
+            // std::endl;
+            VECTORIZE
+            for (size_t k = 0; k < std::min(M, N); ++k) {
+                int64_t Aki = A(i, k);
+                int64_t Akj = A(j, k);
+                int64_t Kki = K(i, k);
+                int64_t Kkj = K(j, k);
+                // when k == i, then
+                // p * Aii + q * Akj == r, so we set A(i,i) = r
+                A(i, k) = p * Aki + q * Akj;
+                // Aii/r * Akj - Aij/r * Aki = 0
+                A(j, k) = Aiir * Akj - Aijr * Aki;
+                // Mirror for K
+                K(i, k) = p * Kki + q * Kkj;
+                K(j, k) = Aiir * Kkj - Aijr * Kki;
+            }
+            VECTORIZE
+            for (size_t k = N; k < M; ++k) {
+                int64_t Kki = K(i, k);
+                int64_t Kkj = K(j, k);
+                K(i, k) = p * Kki + q * Kkj;
+                K(j, k) = Aiir * Kkj - Aijr * Kki;
+            }
+            VECTORIZE
+            for (size_t k = M; k < N; ++k) {
+                int64_t Aki = A(i, k);
+                int64_t Akj = A(j, k);
+                A(i, k) = p * Aki + q * Akj;
+                A(j, k) = Aiir * Akj - Aijr * Aki;
+            }
         }
     }
 }
+// This method is only called by orthogonalize, hence we can assume
+// (Akk == 1) || (Akk == -1)
 MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
                                   SquareMatrix<int64_t> &K, size_t k, size_t M,
                                   size_t N) {
@@ -89,23 +93,21 @@ MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
     }
     for (size_t z = 0; z < k; ++z) {
         // eliminate `A(k,z)`
-        int64_t Akz = A(z, k);
-        if (Akz == 0) {
-            continue;
-        }
-        // A(k, k) == 1, so A(k,z) -= Akz * 1;
-        VECTORIZE
-        for (size_t i = 0; i < std::min(M, N); ++i) {
-            A(z, i) -= Akz * A(k, i);
-            K(z, i) -= Akz * K(k, i);
-        }
-        VECTORIZE
-        for (size_t i = N; i < M; ++i) {
-            K(z, i) -= Akz * K(k, i);
-        }
-        VECTORIZE
-        for (size_t i = M; i < N; ++i) {
-            A(z, i) -= Akz * A(k, i);
+        if (int64_t Akz = A(z, k)) {
+            // A(k, k) == 1, so A(k,z) -= Akz * 1;
+            VECTORIZE
+            for (size_t i = 0; i < std::min(M, N); ++i) {
+                A(z, i) -= Akz * A(k, i);
+                K(z, i) -= Akz * K(k, i);
+            }
+            VECTORIZE
+            for (size_t i = N; i < M; ++i) {
+                K(z, i) -= Akz * K(k, i);
+            }
+            VECTORIZE
+            for (size_t i = M; i < N; ++i) {
+                A(z, i) -= Akz * A(k, i);
+            }
         }
     }
 }
@@ -220,19 +222,20 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
     auto [M, N] = A.size();
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, r);
-        int64_t Aij = A(j, r);
-        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
-        VECTORIZE
-        for (size_t k = 0; k < N; ++k) {
-            int64_t Aki = A(c, k);
-            int64_t Akj = A(j, k);
-            A(c, k) = p * Aki + q * Akj;
-            A(j, k) = Aiir * Akj - Aijr * Aki;
+        if (int64_t Aij = A(j, r)) {
+            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Aki = A(c, k);
+                int64_t Akj = A(j, k);
+                A(c, k) = p * Aki + q * Akj;
+                A(j, k) = Aiir * Akj - Aijr * Aki;
+            }
+            int64_t bi = b[c];
+            int64_t bj = b[j];
+            b[c] = p * bi + q * bj;
+            b[j] = Aiir * bj - Aijr * bi;
         }
-        int64_t bi = b[c];
-        int64_t bj = b[j];
-        b[c] = p * bi + q * bj;
-        b[j] = Aiir * bj - Aijr * bi;
     }
 }
 MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
@@ -243,21 +246,22 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
     assert(M == B.numRow());
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, r);
-        int64_t Aij = A(j, r);
-        const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
-        VECTORIZE
-        for (size_t k = 0; k < N; ++k) {
-            int64_t Ack = A(c, k);
-            int64_t Ajk = A(j, k);
-            A(c, k) = p * Ack + q * Ajk;
-            A(j, k) = Aiir * Ajk - Aijr * Ack;
-        }
-        VECTORIZE
-        for (size_t k = 0; k < K; ++k) {
-            int64_t Bck = B(c, k);
-            int64_t Bjk = B(j, k);
-            B(c, k) = p * Bck + q * Bjk;
-            B(j, k) = Aiir * Bjk - Aijr * Bck;
+        if (int64_t Aij = A(j, r)) {
+            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Ack = A(c, k);
+                int64_t Ajk = A(j, k);
+                A(c, k) = p * Ack + q * Ajk;
+                A(j, k) = Aiir * Ajk - Aijr * Ack;
+            }
+            VECTORIZE
+            for (size_t k = 0; k < K; ++k) {
+                int64_t Bck = B(c, k);
+                int64_t Bjk = B(j, k);
+                B(c, k) = p * Bck + q * Bjk;
+                B(j, k) = Aiir * Bjk - Aijr * Bck;
+            }
         }
     }
 }
@@ -276,9 +280,8 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
-        int64_t Akz = A(z, r);
         // if Akk == 1, then this zeros out Akz
-        if (Akz) {
+        if (int64_t Akz = A(z, r)) {
             // we want positive but smaller subdiagonals
             // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
             // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
@@ -297,14 +300,12 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
             if (AkzOld < 0) {
                 Akz -= (AkzOld != (Akz * Akk));
             }
-        } else {
-            continue;
+            VECTORIZE
+            for (size_t i = 0; i < N; ++i) {
+                A(z, i) -= Akz * A(c, i);
+            }
+            Polynomial::fnmadd(b[z], b[c], Akz);
         }
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i) {
-            A(z, i) -= Akz * A(c, i);
-        }
-        Polynomial::fnmadd(b[z], b[c], Akz);
     }
 }
 
@@ -345,40 +346,39 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
-        int64_t Akz = A(z, r);
-        // if Akk == 1, then this zeros out Akz
-        if (Akz == 0) {
-            continue;
-        } else if (Akk != 1) {
-            // we want positive but smaller subdiagonals
-            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
-            // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        =   5 - 2*2 = 1
-            // or if `Akz = -5, Akk = 2`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
-            // if `Akk = 1`, then
-            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        = A(k,z) - A(k,z) = 0
-            // or if `Akz = -7, Akk = 39`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-            int64_t AkzOld = Akz;
-            Akz /= Akk;
-            if (AkzOld < 0) {
-                Akz -= (AkzOld != (Akz * Akk));
+        if (int64_t Akz = A(z, r)) {
+            // if Akk == 1, then this zeros out Akz
+            if (Akk != 1) {
+                // we want positive but smaller subdiagonals
+                // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
+                // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+                //        =   5 - 2*2 = 1
+                // or if `Akz = -5, Akk = 2`, then in the loop below we get
+                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+                //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+                // if `Akk = 1`, then
+                // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+                //        = A(k,z) - A(k,z) = 0
+                // or if `Akz = -7, Akk = 39`, then in the loop below we get
+                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+                //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+                int64_t AkzOld = Akz;
+                Akz /= Akk;
+                if (AkzOld < 0) {
+                    Akz -= (AkzOld != (Akz * Akk));
+                }
             }
+            VECTORIZE
+            for (size_t i = 0; i < N; ++i) {
+                A(z, i) -= Akz * A(c, i);
+            }
+            Polynomial::fnmadd(b[z], b[c], Akz);
         }
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i) {
-            A(z, i) -= Akz * A(c, i);
-        }
-        Polynomial::fnmadd(b[z], b[c], Akz);
     }
 }
 MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
-                                           PtrMatrix<int64_t> B,
-                                           size_t r, size_t c) {
+                                           PtrMatrix<int64_t> B, size_t r,
+                                           size_t c) {
     const size_t N = A.numCol();
     const size_t K = B.numCol();
     int64_t Akk = A(c, r);
@@ -395,37 +395,36 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
-        int64_t Akz = A(z, r);
-        // if Akk == 1, then this zeros out Akz
-        if (Akz == 0) {
-            continue;
-        } else if (Akk != 1) {
-            // we want positive but smaller subdiagonals
-            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
-            // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        =   5 - 2*2 = 1
-            // or if `Akz = -5, Akk = 2`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
-            // if `Akk = 1`, then
-            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        = A(k,z) - A(k,z) = 0
-            // or if `Akz = -7, Akk = 39`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-            int64_t AkzOld = Akz;
-            Akz /= Akk;
-            if (AkzOld < 0) {
-                Akz -= (AkzOld != (Akz * Akk));
+        if (int64_t Akz = A(z, r)) {
+            // if Akk == 1, then this zeros out Akz
+            if (Akk != 1) {
+                // we want positive but smaller subdiagonals
+                // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
+                // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+                //        =   5 - 2*2 = 1
+                // or if `Akz = -5, Akk = 2`, then in the loop below we get
+                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+                //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+                // if `Akk = 1`, then
+                // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+                //        = A(k,z) - A(k,z) = 0
+                // or if `Akz = -7, Akk = 39`, then in the loop below we get
+                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+                //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+                int64_t AkzOld = Akz;
+                Akz /= Akk;
+                if (AkzOld < 0) {
+                    Akz -= (AkzOld != (Akz * Akk));
+                }
             }
-        }
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i) {
-            A(z, i) -= Akz * A(c, i);
-        }
-        VECTORIZE
-        for (size_t i = 0; i < K; ++i) {
-            B(z, i) -= Akz * B(c, i);
+            VECTORIZE
+            for (size_t i = 0; i < N; ++i) {
+                A(z, i) -= Akz * A(c, i);
+            }
+            VECTORIZE
+            for (size_t i = 0; i < K; ++i) {
+                B(z, i) -= Akz * B(c, i);
+            }
         }
     }
 }
@@ -495,7 +494,7 @@ static void simplifyEqualityConstraints(IntMatrix &E,
     q.resize(Mnew);
 }
 MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
-                                        PtrMatrix<int64_t> B) {
+                                                         PtrMatrix<int64_t> B) {
     auto [M, N] = A.size();
     if (M == 0)
         return;
@@ -517,7 +516,7 @@ MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
     }
 }
 MULTIVERSION static void simplifyEqualityConstraints(IntMatrix &A,
-                                        IntMatrix &B) {
+                                                     IntMatrix &B) {
     simplifyEqualityConstraintsImpl(A, B);
     size_t Mnew = A.numRow();
     while (allZero(A.getRow(Mnew - 1))) {
@@ -535,31 +534,28 @@ hermite(IntMatrix A) {
     return std::make_pair(std::move(A), std::move(U));
 }
 
-
 MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
                                          size_t c) {
     const size_t N = A.numCol();
     const size_t K = B.numCol();
     for (size_t j = 0; j < c; ++j) {
         int64_t Aic = A(c, rr);
-        int64_t Aij = A(j, rr);
-        if (Aij == 0)
-            continue;
-
-        int64_t g = gcd(Aic, Aij);
-        int64_t Aicr = Aic / g;
-        int64_t Aijr = Aij / g;
-        VECTORIZE
-        for (size_t k = 0; k < N; ++k) {
-            int64_t Ack = A(c, k) * Aijr;
-            int64_t Ajk = A(j, k) * Aicr;
-            A(j, k) = Ajk - Ack;
-        }
-        VECTORIZE
-        for (size_t k = 0; k < K; ++k) {
-            int64_t Bck = B(c, k) * Aijr;
-            int64_t Bjk = B(j, k) * Aicr;
-            B(j, k) = Bjk - Bck;
+        if (int64_t Aij = A(j, rr)) {
+            int64_t g = gcd(Aic, Aij);
+            int64_t Aicr = Aic / g;
+            int64_t Aijr = Aij / g;
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Ack = A(c, k) * Aijr;
+                int64_t Ajk = A(j, k) * Aicr;
+                A(j, k) = Ajk - Ack;
+            }
+            VECTORIZE
+            for (size_t k = 0; k < K; ++k) {
+                int64_t Bck = B(c, k) * Aijr;
+                int64_t Bjk = B(j, k) * Aicr;
+                B(j, k) = Bjk - Bck;
+            }
         }
     }
 }
