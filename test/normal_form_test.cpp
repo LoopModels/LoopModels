@@ -184,6 +184,22 @@ TEST(NormalFormTest, BasicAssertions) {
     EXPECT_TRUE(matmul(K, A) == I4);
 }
 
+TEST(Hermite2, BasicAssertions){
+    IntMatrix A(2,3);
+    A(0,0) = -3;
+    A(0,1) = -1;
+    A(0,2) = 1;
+    A(1,0) = 0;
+    A(1,1) = 0;
+    A(1,2) = -2;
+    llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
+        NormalForm::hermite(A);
+    EXPECT_TRUE(B.hasValue());
+    auto [H,U] = B.getValue();
+    EXPECT_TRUE(matmul(U, A) == H);
+    std::cout << "H =\n" << H << "\nU =\n" << U << std::endl;
+}
+
 TEST(NullSpaceTests, BasicAssertions) {
     std::random_device rd;
     std::mt19937 gen(rd());

@@ -12,67 +12,6 @@
 
 namespace NormalForm {
 
-MULTIVERSION void reduceSubDiagonal(PtrMatrix<int64_t> A,
-                                    SquareMatrix<int64_t> &K, size_t k,
-                                    size_t M, size_t N) {
-    int64_t Akk = A(k, k);
-    if (Akk < 0) {
-        Akk = -Akk;
-        VECTORIZE
-        for (size_t i = 0; i < std::min(M, N); ++i) {
-            A(k, i) *= -1;
-            K(k, i) *= -1;
-        }
-        VECTORIZE
-        for (size_t i = N; i < M; ++i) {
-            K(k, i) *= -1;
-        }
-        VECTORIZE
-        for (size_t i = M; i < N; ++i) {
-            A(k, i) *= -1;
-        }
-    }
-    for (size_t z = 0; z < k; ++z) {
-        // try to eliminate `A(k,z)`
-        int64_t Akz = A(z, k);
-        // if Akk == 1, then this zeros out Akz
-        if (Akz) {
-            // we want positive but smaller subdiagonals
-            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
-            // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        =   5 - 2*2 = 1
-            // or if `Akz = -5, Akk = 2`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
-            // if `Akk = 1`, then
-            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        = A(k,z) - A(k,z) = 0
-            // or if `Akz = -7, Akk = 39`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-            int64_t AkzOld = Akz;
-            Akz /= Akk;
-            if (AkzOld < 0) {
-                Akz -= (AkzOld != (Akz * Akk));
-            }
-        } else {
-            continue;
-        }
-        VECTORIZE
-        for (size_t i = 0; i < std::min(M, N); ++i) {
-            A(z, i) -= Akz * A(k, i);
-            K(z, i) -= Akz * K(k, i);
-        }
-        VECTORIZE
-        for (size_t i = N; i < M; ++i) {
-            K(z, i) -= Akz * K(k, i);
-        }
-        VECTORIZE
-        for (size_t i = M; i < N; ++i) {
-            A(z, i) -= Akz * A(k, i);
-        }
-    }
-}
 inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
                                                                 int64_t b) {
     // if (std::abs(a) == 1) {
@@ -214,30 +153,6 @@ inline bool pivotRows(PtrMatrix<int64_t> A, llvm::SmallVectorImpl<T> &K,
 inline bool pivotRows(PtrMatrix<int64_t> A, llvm::SmallVectorImpl<int64_t> &K,
                       size_t i, size_t N) {
     return pivotRows(A, K, i, N, i);
-}
-
-// extend HNF form from (0:i-1,0:N-1) block to the (0:i,0:N-1) block
-bool extendHNFRow(IntMatrix &A, SquareMatrix<int64_t> &K, size_t i, size_t M,
-                  size_t N) {
-    if (pivotRows(A, K, i, M)) {
-        return true;
-    }
-    assert(A(i, i) != 0 && "Diagonal of A is 0.");
-    zeroSupDiagonal(A, K, i, M, N);
-    reduceSubDiagonal(A, K, i, M, N);
-    return false;
-}
-
-llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
-hermite(IntMatrix A) {
-    auto [M, N] = A.size();
-    SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(M);
-    for (size_t i = 0; i < N; ++i) {
-        if (extendHNFRow(A, K, i, M, N)) {
-            return {}; // failed
-        }
-    }
-    return std::make_pair(std::move(A), std::move(K));
 }
 
 MULTIVERSION void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
@@ -461,6 +376,59 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
         Polynomial::fnmadd(b[z], b[c], Akz);
     }
 }
+MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
+                                           PtrMatrix<int64_t> B,
+                                           size_t r, size_t c) {
+    const size_t N = A.numCol();
+    const size_t K = B.numCol();
+    int64_t Akk = A(c, r);
+    if (Akk < 0) {
+        Akk = -Akk;
+        VECTORIZE
+        for (size_t i = 0; i < N; ++i) {
+            A(c, i) *= -1;
+        }
+        VECTORIZE
+        for (size_t i = 0; i < K; ++i) {
+            B(c, i) *= -1;
+        }
+    }
+    for (size_t z = 0; z < c; ++z) {
+        // try to eliminate `A(k,z)`
+        int64_t Akz = A(z, r);
+        // if Akk == 1, then this zeros out Akz
+        if (Akz == 0) {
+            continue;
+        } else if (Akk != 1) {
+            // we want positive but smaller subdiagonals
+            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
+            // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        =   5 - 2*2 = 1
+            // or if `Akz = -5, Akk = 2`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
+            // if `Akk = 1`, then
+            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
+            //        = A(k,z) - A(k,z) = 0
+            // or if `Akz = -7, Akk = 39`, then in the loop below we get
+            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
+            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+            int64_t AkzOld = Akz;
+            Akz /= Akk;
+            if (AkzOld < 0) {
+                Akz -= (AkzOld != (Akz * Akk));
+            }
+        }
+        VECTORIZE
+        for (size_t i = 0; i < N; ++i) {
+            A(z, i) -= Akz * A(c, i);
+        }
+        VECTORIZE
+        for (size_t i = 0; i < K; ++i) {
+            B(z, i) -= Akz * B(c, i);
+        }
+    }
+}
 
 MULTIVERSION
 size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
@@ -526,6 +494,48 @@ static void simplifyEqualityConstraints(IntMatrix &E,
     E.truncateRows(Mnew);
     q.resize(Mnew);
 }
+MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
+                                        PtrMatrix<int64_t> B) {
+    auto [M, N] = A.size();
+    if (M == 0)
+        return;
+    size_t dec = 0;
+    for (size_t m = 0; m < N; ++m) {
+        if (m - dec >= M)
+            break;
+
+        if (pivotRows(A, B, m, M, m - dec)) {
+            // row is entirely zero
+            ++dec;
+            continue;
+        }
+        // E(m, m-dec) now contains non-zero
+        // zero row `m` of every column to the right of `m - dec`
+        zeroSupDiagonal(A, B, m, m - dec);
+        // now we reduce the sub diagonal
+        reduceSubDiagonal(A, B, m, m - dec);
+    }
+}
+MULTIVERSION static void simplifyEqualityConstraints(IntMatrix &A,
+                                        IntMatrix &B) {
+    simplifyEqualityConstraintsImpl(A, B);
+    size_t Mnew = A.numRow();
+    while (allZero(A.getRow(Mnew - 1))) {
+        --Mnew;
+    }
+    A.truncateRows(Mnew);
+    B.truncateRows(Mnew);
+    return;
+}
+llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
+hermite(IntMatrix A) {
+    auto [M, N] = A.size();
+    SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
+    simplifyEqualityConstraintsImpl(A, U);
+    return std::make_pair(std::move(A), std::move(U));
+}
+
+
 MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
                                          size_t c) {
     const size_t N = A.numCol();
