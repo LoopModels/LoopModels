@@ -101,4 +101,37 @@ static void BM_NullSpace(benchmark::State &state) {
 // Register the function as a benchmark
 BENCHMARK(BM_NullSpace);
 
+static void BM_NullSpace2000(benchmark::State &state) {
+    const size_t N = 20;
+    IntMatrix A(N, N);
+    A(0, 0) = 2;
+    for (size_t i = 1; i < N; ++i) {
+        A(i - 1, i) = -1;
+        A(i, i) = 2;
+        A(i, i - 1) = -1;
+    }
+    for (size_t j = 0; j < N; j += 8) {
+        // A(j,:)
+        for (size_t i = 0; i < N; ++i) {
+            A(j, i) = 0;
+        }
+        for (size_t i = 0; i < N; i += 7) {
+            int64_t s = (i & 1) ? 1 : -1;
+            for (size_t k = 0; k < N; ++k) {
+                A(j, k) += s * A(i, k);
+            }
+        }
+    }
+
+    // fourth row is 0
+    IntMatrix NS;
+    for (auto _ : state) {
+        NS = NormalForm::nullSpace(A);
+    }
+    // std::cout << "NS.size() = (" << NS.numRow() << ", " << NS.numCol() << ")"
+    //           << std::endl;
+}
+// Register the function as a benchmark
+BENCHMARK(BM_NullSpace2000);
+
 BENCHMARK_MAIN();
