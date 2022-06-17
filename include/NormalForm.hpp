@@ -14,9 +14,8 @@ namespace NormalForm {
 
 inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
                                                                 int64_t b) {
-    // if (std::abs(a) == 1) {
-    if ((a == 1) || (a == -1)) {
-        return std::make_tuple(a == 1 ? 1 : -1, 0, a, b);
+    if (std::abs(a) == 1) {
+        return std::make_tuple(a, 0, a, b);
     } else {
         auto [g, p, q] = gcdx(a, b);
         return std::make_tuple(p, q, a / g, b / g);
