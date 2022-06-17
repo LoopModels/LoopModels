@@ -289,19 +289,25 @@ TEST(Hermite, BasicAssertions) {
 TEST(NullSpaceTests, BasicAssertions) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(-10, 10);
+    std::uniform_int_distribution<> distrib(-10, 100);
 
     size_t numIters = 1000;
-    IntMatrix B(4, 8);
+    IntMatrix B(8, 6);
+    size_t nullDim = 0;
     for (size_t i = 0; i < numIters; ++i) {
         for (size_t n = 0; n < 32; ++n) {
             B[n] = distrib(gen);
+	    if (B[n] > 10){
+		B[n] = 0;
+	    }
         }
         IntMatrix NS = NormalForm::nullSpace(B);
+	nullDim += NS.numRow();
         IntMatrix Z = matmul(NS, B);
         for (size_t j = 0; j < Z.length(); ++j) {
             EXPECT_EQ(Z[j], 0);
         }
         EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
     }
+    std::cout << "Average tested null dim = " << double(nullDim) / double(numIters) << std::endl;
 }

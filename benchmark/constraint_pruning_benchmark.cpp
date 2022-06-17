@@ -70,30 +70,30 @@ BENCHMARK(BM_Constraint_Elim);
 
 static void BM_NullSpace(benchmark::State &state) {
 
-    IntMatrix B(4, 6);
+    IntMatrix B(6, 4);
     B(0, 0) = 1;
-    B(0, 1) = 0;
-    B(0, 2) = -3;
-    B(0, 3) = 0;
-    B(0, 4) = 2;
-    B(0, 5) = -8;
+    B(1, 0) = 0;
+    B(2, 0) = -3;
+    B(3, 0) = 0;
+    B(4, 0) = 2;
+    B(5, 0) = -8;
 
-    B(0, 0) = 0;
-    B(0, 1) = 1;
-    B(0, 2) = 5;
-    B(0, 3) = 0;
-    B(0, 4) = -1;
-    B(0, 5) = 4;
-
-    B(0, 0) = 0;
     B(0, 1) = 0;
+    B(1, 1) = 1;
+    B(2, 1) = 5;
+    B(3, 1) = 0;
+    B(4, 1) = -1;
+    B(5, 1) = 4;
+
     B(0, 2) = 0;
-    B(0, 3) = 1;
-    B(0, 4) = 7;
-    B(0, 5) = -9;
+    B(1, 2) = 0;
+    B(2, 2) = 0;
+    B(3, 2) = 1;
+    B(4, 2) = 7;
+    B(5, 2) = -9;
 
     // fourth row is 0
-
+    // std::cout << "B=\n" << B << "\nnullSpace(B) =\n" << NormalForm::nullSpace(B) << std::endl;
     for (auto _ : state) {
         NormalForm::nullSpace(B);
     }
