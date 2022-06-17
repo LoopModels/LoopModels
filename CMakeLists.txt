@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-
+include(CheckCXXCompilerFlag)
 project(
     LoopModels
     VERSION 0.1
@@ -18,7 +18,10 @@ set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-point
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-semantic-interposition")
 endif()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mprefer-vector-width=512")
+check_cxx_compiler_flag("-mprefer-vector-width=512" VEC512)
+if ("${VEC512}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mprefer-vector-width=512")
+endif()
 find_package(LLVM REQUIRED CONFIG)
 
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
@@ -33,7 +36,7 @@ separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_definitions(${LLVM_DEFINITIONS_LIST})
 
 
-list(APPEND CMAKE_MODULE_PATH ${LLVM_DIR})
+list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
 
 message(STATUS "LLVM Binary DIR: ${LLVM_BINARY_DIR}")

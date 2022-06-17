@@ -1,5 +1,5 @@
 #pragma once
-#ifdef NDEBUG
+#if defined(NDEBUG) && defined(__x86_64__)
 #if defined(__clang__)
 #define MULTIVERSION                                                           \
     __attribute__((target_clones("avx512dq", "avx2", "default")))
