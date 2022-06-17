@@ -159,38 +159,38 @@ bool isHNF(PtrMatrix<int64_t> A) {
 
 TEST(Hermite, BasicAssertions) {
     {
-	IntMatrix A4x3(4, 3);
-	A4x3(0, 0) = 2;
-	A4x3(1, 0) = 3;
-	A4x3(2, 0) = 6;
-	A4x3(3, 0) = 2;
-	A4x3(0, 1) = 5;
-	A4x3(1, 1) = 6;
-	A4x3(2, 1) = 1;
-	A4x3(3, 1) = 6;
-	A4x3(0, 2) = 8;
-	A4x3(1, 2) = 3;
-	A4x3(2, 2) = 1;
-	A4x3(3, 2) = 1;
-	std::cout << "A=\n" << A4x3 << std::endl;
-	auto hnf = NormalForm::hermite(A4x3);
-	EXPECT_TRUE(hnf.hasValue());
-	auto [H, U] = hnf.getValue();
-	std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
+        IntMatrix A4x3(4, 3);
+        A4x3(0, 0) = 2;
+        A4x3(1, 0) = 3;
+        A4x3(2, 0) = 6;
+        A4x3(3, 0) = 2;
+        A4x3(0, 1) = 5;
+        A4x3(1, 1) = 6;
+        A4x3(2, 1) = 1;
+        A4x3(3, 1) = 6;
+        A4x3(0, 2) = 8;
+        A4x3(1, 2) = 3;
+        A4x3(2, 2) = 1;
+        A4x3(3, 2) = 1;
+        std::cout << "A=\n" << A4x3 << std::endl;
+        auto hnf = NormalForm::hermite(A4x3);
+        EXPECT_TRUE(hnf.hasValue());
+        auto [H, U] = hnf.getValue();
+        std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
 
-	EXPECT_TRUE(isHNF(H));
-	EXPECT_TRUE(H == matmul(U, A4x3));
+        EXPECT_TRUE(isHNF(H));
+        EXPECT_TRUE(H == matmul(U, A4x3));
 
-	for (size_t i = 0; i < 3; ++i) {
-	    A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
-	}
-	std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
-	hnf = NormalForm::hermite(A4x3);
-	EXPECT_TRUE(hnf.hasValue());
-	auto [H2, U2] = hnf.getValue();
-	std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
-	EXPECT_TRUE(isHNF(H2));
-	EXPECT_TRUE(H2 == matmul(U2, A4x3));
+        for (size_t i = 0; i < 3; ++i) {
+            A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
+        }
+        std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
+        hnf = NormalForm::hermite(A4x3);
+        EXPECT_TRUE(hnf.hasValue());
+        auto [H2, U2] = hnf.getValue();
+        std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
+        EXPECT_TRUE(isHNF(H2));
+        EXPECT_TRUE(H2 == matmul(U2, A4x3));
     }
     {
         SquareMatrix<int64_t> A(4);
@@ -214,7 +214,7 @@ TEST(Hermite, BasicAssertions) {
         EXPECT_TRUE(hnfsm.hasValue());
         auto [H3, U3] = hnfsm.getValue();
         std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
-	EXPECT_TRUE(isHNF(H3));
+        EXPECT_TRUE(isHNF(H3));
         EXPECT_TRUE(H3 == matmul(U3, A));
     }
     {
@@ -229,7 +229,7 @@ TEST(Hermite, BasicAssertions) {
             NormalForm::hermite(A);
         EXPECT_TRUE(B.hasValue());
         auto [H, U] = B.getValue();
-	EXPECT_TRUE(isHNF(H));
+        EXPECT_TRUE(isHNF(H));
         EXPECT_TRUE(matmul(U, A) == H);
         std::cout << "A = \n"
                   << A << "\nH =\n"
@@ -277,7 +277,7 @@ TEST(Hermite, BasicAssertions) {
             NormalForm::hermite(A);
         EXPECT_TRUE(B.hasValue());
         auto [H, U] = B.getValue();
-	EXPECT_TRUE(isHNF(H));
+        EXPECT_TRUE(isHNF(H));
         EXPECT_TRUE(matmul(U, A) == H);
         std::cout << "A = \n"
                   << A << "\nH =\n"
@@ -292,22 +292,26 @@ TEST(NullSpaceTests, BasicAssertions) {
     std::uniform_int_distribution<> distrib(-10, 100);
 
     size_t numIters = 1000;
-    IntMatrix B(8, 6);
-    size_t nullDim = 0;
-    for (size_t i = 0; i < numIters; ++i) {
-        for (size_t n = 0; n < 32; ++n) {
-            B[n] = distrib(gen);
-	    if (B[n] > 10){
-		B[n] = 0;
-	    }
+    for (size_t numCol = 2; numCol < 11; numCol += 2) {
+        IntMatrix B(8, numCol);
+        size_t nullDim = 0;
+	IntMatrix Z, NS;
+        for (size_t i = 0; i < numIters; ++i) {
+            for (size_t n = 0; n < B.length(); ++n) {
+                B[n] = distrib(gen);
+                if (B[n] > 10) {
+                    B[n] = 0;
+                }
+            }
+            NS = NormalForm::nullSpace(B);
+            nullDim += NS.numRow();
+            Z = matmul(NS, B);
+            for (size_t j = 0; j < Z.length(); ++j) {
+                EXPECT_EQ(Z[j], 0);
+            }
+            EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
         }
-        IntMatrix NS = NormalForm::nullSpace(B);
-	nullDim += NS.numRow();
-        IntMatrix Z = matmul(NS, B);
-        for (size_t j = 0; j < Z.length(); ++j) {
-            EXPECT_EQ(Z[j], 0);
-        }
-        EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
+        std::cout << "Average tested null dim = "
+                  << double(nullDim) / double(numIters) << std::endl;
     }
-    std::cout << "Average tested null dim = " << double(nullDim) / double(numIters) << std::endl;
 }
