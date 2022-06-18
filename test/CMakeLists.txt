@@ -124,6 +124,16 @@ target_link_libraries(
 )
 
 add_executable(
+  dependence_test2
+  dependence_test2.cpp
+)
+target_link_libraries(
+  dependence_test2
+  gtest_main
+  LLVM
+)
+
+add_executable(
   edge_detection_test
   edge_detection_test.cpp
 )

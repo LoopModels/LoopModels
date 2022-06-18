@@ -400,7 +400,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
 
 }; // namespace DependencePolyhedra
-
+// TODO:
+// refactor to use GraphTraits.h 
+// https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
     ArrayReference ref;
     // unsigned ref; // index to ArrayReference
