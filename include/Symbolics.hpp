@@ -700,14 +700,14 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
     template <typename T> bool lexGreater(const T &y) const {
         return lexGreater(y.exponent);
     }
-    std::strong_ordering operator<=>(PackedMonomial const &y) const {
-        if (K == 1) {
-            return bits[0] <=> y.bits[0];
-        }
-        const uint64_t *xp = this->bits;
-        const uint64_t *yp = y.bits;
-        return std::lexicographical_compare_three_way(xp, xp + K, yp, yp + K);
-    }
+    //std::strong_ordering operator<=>(PackedMonomial const &y) const {
+    //    if (K == 1) {
+    //        return bits[0] <=> y.bits[0];
+    //    }
+    //    const uint64_t *xp = this->bits;
+    //    const uint64_t *yp = y.bits;
+    //    return std::lexicographical_compare_three_way(xp, xp + K, yp, yp + K);
+    //}
     friend bool isOne(PackedMonomial const &x) { return (x.degree() == 0); }
     friend bool isZero(PackedMonomial const &) { return false; }
 

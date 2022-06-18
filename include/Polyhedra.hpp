@@ -8,7 +8,6 @@
 #include "./Symbolics.hpp"
 #include <algorithm>
 #include <any>
-#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -1132,7 +1131,8 @@ template <class P, typename T> struct AbstractPolyhedra {
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<T> &b,
         llvm::SmallVectorImpl<unsigned> &colsToErase) {
-        std::ranges::sort(colsToErase);
+        //std::ranges::sort(colsToErase);
+        std::sort(colsToErase.begin(), colsToErase.end());
         for (auto it = std::unique(colsToErase.begin(), colsToErase.end());
              it != colsToErase.begin();) {
             eraseConstraint(A, b, *(--it));
