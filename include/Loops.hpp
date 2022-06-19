@@ -8,13 +8,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
 
 // A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : SymbolicPolyhedra {
+struct AffineLoopNest : SymbolicPolyhedra,
+                        llvm::RefCountedBase<AffineLoopNest> {
     Permutation perm; // maps current to orig
     llvm::SmallVector<IntMatrix, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;

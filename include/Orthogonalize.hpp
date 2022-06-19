@@ -6,42 +6,6 @@
 #include "./Symbolics.hpp"
 #include <llvm/ADT/SmallVector.h>
 
-// `B` is a transposed mirror in reduced form
-// it is used to check whether a new row is linearly independent.
-static bool addIndRow(PtrMatrix<int64_t> A, const Stride &axis, size_t j) {
-    // std::ranges::fill(A.getRow(j), int64_t(0));
-    for (size_t i = 0; i < axis.size(); ++i) {
-        VarID v = axis[i].second;
-        if (v.isLoopInductionVariable()) {
-            if (llvm::Optional<int64_t> c =
-                    axis[i].first.getCompileTimeConstant()) {
-                A(v.getID(), j) = c.getValue();
-                continue;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-static bool addIndRow(PtrMatrix<int64_t> A, const Stride &axis, size_t j,
-                      size_t k) {
-    // std::ranges::fill(A.getRow(j), int64_t(0));
-    for (size_t i = 0; i < axis.size(); ++i) {
-        VarID v = axis[i].second;
-        if (v.isLoopInductionVariable()) {
-            if (llvm::Optional<int64_t> c =
-                    axis[i].first.getCompileTimeConstant()) {
-                IDType id = v.getID();
-                if (id >= k)
-                    A(id - k, j) = c.getValue();
-                continue;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 llvm::Optional<llvm::SmallVector<ArrayReference, 0>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
@@ -51,11 +15,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // B = [1 1; 0 1]
     // additionally, the loop is defined by the bounds
     // A*L = A*(B\^-1 * I) <= r
-    // assuming that `B` is an invertible integer matrix,
-    // which we can check via `lufact(B)`, and confirming that
-    // the determinant == 1 or determinant == -1.
-    // If so, we can then use the lufactorizationm for computing
-    // A/B, to get loop bounds in terms of the indexes.
+    // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
     const AffineLoopNest &alnp = *(ai[0]->loop);
     size_t numLoops = alnp.getNumLoops();
     size_t numRow = 0;
@@ -63,12 +23,12 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         numRow += a->dim();
     }
     IntMatrix S(numLoops, numRow);
-    // std::ranges::fill(S, int64_t(0));
     size_t row = 0;
     for (auto a : ai) {
-        for (auto &axis : (*a)) {
-            if (addIndRow(S, axis, row)) {
-                return {};
+        PtrMatrix<int64_t> A = a->indexMatrix();
+        for (size_t r = 0; r < A.numRow(); ++r) {
+            for (size_t l = 0; l < numLoops; ++l) {
+                S(l, row) = A(r, l);
             }
             ++row;
         }
@@ -81,9 +41,9 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // A*L <= b
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A*K')*J <= r
-        IntMatrix A(matmulnt(alnp.A, K));
-        std::shared_ptr<AffineLoopNest> alnNew =
-            std::make_shared<AffineLoopNest>(std::move(A), alnp.b, alnp.poset);
+        llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
+            llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
+                                                      alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
         // matmultn(alnNew->A, K, alnp.A);
         // alnNew->b = alnp.aln->b;
@@ -92,7 +52,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // Originally, the mapping from our loops to our indices was
         // S'*L = I
         // now, we have
-        // (S'*K')*J = (K*S)'*J = I
+        // (S'*K')*J = I
         IntMatrix SK(matmultt(S, K));
         // auto KS = matmul(K, S);
         // llvm::SmallVector<ArrayReference*> aiNew;
@@ -100,9 +60,16 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         newArrayRefs.reserve(numRow);
         size_t i = 0;
         for (auto a : ai) {
-            newArrayRefs.emplace_back(a->arrayID, alnNew);
-            for (auto &axis : *a) {
-                newArrayRefs.back().pushAffineAxis(axis, SK.getRow(i++));
+            newArrayRefs.emplace_back(a->arrayID, alnNew, a->dim());
+            PtrMatrix<int64_t> A = newArrayRefs.back().indexMatrix();
+            for (size_t j = 0; j < A.length(); ++j) {
+                A[j] = SK[i + j];
+            }
+            i += A.length();
+            llvm::SmallVector<std::pair<MPoly, MPoly>> &stridesOffsets =
+                newArrayRefs.back().stridesOffsets;
+            for (size_t d = 0; d < A.numRow(); ++d) {
+                stridesOffsets[d] = a->stridesOffsets[d];
             }
         }
         return newArrayRefs;

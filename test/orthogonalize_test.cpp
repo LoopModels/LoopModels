@@ -25,33 +25,33 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     //       0  0  0  0  1 -1  0  0
     //       0  0  0  0  0  0  1 -1 ]'
     // r = [ M - 1, 0, N - 1, 0, I - 1, 0, J - 1, 0 ]
-    // Loop: A*i <= r
-    llvm::SmallVector<MPoly, 8> r;
+    // Loop: A*i <= b
+    llvm::SmallVector<MPoly, 8> b;
     // m <= M-1
     A(0, 0) = 1;
-    r.push_back(M - 1);
+    b.push_back(M - 1);
     // m >= 0;
     A(1, 0) = -1;
-    r.push_back(Zero);
+    b.push_back(Zero);
     // n <= N-1
     A(2, 1) = 1;
-    r.push_back(N - 1);
+    b.push_back(N - 1);
     // n >= 0;
     A(3, 1) = -1;
-    r.push_back(Zero);
+    b.push_back(Zero);
     // i <= I-1
     A(4, 2) = 1;
-    r.push_back(I - 1);
+    b.push_back(I - 1);
     // i >= 0;
     A(5, 2) = -1;
-    r.push_back(Zero);
+    b.push_back(Zero);
     // j <= J-1
     A(6, 3) = 1;
-    r.push_back(J - 1);
+    b.push_back(J - 1);
     // j >= 0;
     A(7, 3) = -1;
-    r.push_back(Zero);
-    for (auto &b : r) {
+    b.push_back(Zero);
+    for (auto &b : b) {
         if (auto c = b.getCompileTimeConstant()) {
             if (c.getValue() == 0) {
                 assert(b.terms.size() == 0);
@@ -59,44 +59,45 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         }
     }
     PartiallyOrderedSet poset;
-    std::shared_ptr<AffineLoopNest> alnp(
-        std::make_shared<AffineLoopNest>(A, r, poset));
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp(
+        llvm::makeIntrusiveRefCnt<AffineLoopNest>(A, b, poset));
     EXPECT_FALSE(alnp->isEmpty());
 
     // we have three array refs
     // W[i+m, j+n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Waxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> ipm;
-    ipm.emplace_back(One, VarID(0, VarType::LoopInductionVariable));
-    ipm.emplace_back(One, VarID(2, VarType::LoopInductionVariable));
-    Waxes.emplace_back(One, ipm);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> jpn;
-    jpn.emplace_back(One, VarID(1, VarType::LoopInductionVariable));
-    jpn.emplace_back(One, VarID(3, VarType::LoopInductionVariable));
-    Waxes.emplace_back(I + M - One, jpn);
-    ArrayReference War(0, alnp, Waxes); //, axes, indTo
+    // llvm::SmallVector<std::pair<MPoly,MPoly>>
+    ArrayReference War{0, alnp, 2};
+    {
+        PtrMatrix<int64_t> IndMat = War.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(0, 2) = 1; // i
+        IndMat(1, 1) = 1; // n
+        IndMat(1, 3) = 1; // j
+        War.stridesOffsets[0] = std::make_pair(One, Zero);
+        War.stridesOffsets[1] = std::make_pair(I + M - One, Zero);
+    }
     std::cout << "War = " << War << std::endl;
 
     // B[i, j]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Baxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i{
-        std::make_pair(One, VarID(2, VarType::LoopInductionVariable))};
-    Baxes.emplace_back(One, i);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j{
-        std::make_pair(One, VarID(3, VarType::LoopInductionVariable))};
-    Baxes.emplace_back(I, j);
-    ArrayReference Bar(1, alnp, Baxes); //, axes, indTo
+    ArrayReference Bar{1, alnp, 2};
+    {
+        PtrMatrix<int64_t> IndMat = Bar.indexMatrix();
+        IndMat(0, 2) = 1; // i
+        IndMat(1, 3) = 1; // j
+        Bar.stridesOffsets[0] = std::make_pair(One, Zero);
+        Bar.stridesOffsets[1] = std::make_pair(I, Zero);
+    }
     std::cout << "Bar = " << Bar << std::endl;
 
     // C[m, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Caxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m{
-        std::make_pair(One, VarID(0, VarType::LoopInductionVariable))};
-    Caxes.emplace_back(One, m);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n{
-        std::make_pair(One, VarID(1, VarType::LoopInductionVariable))};
-    Caxes.emplace_back(M, n);
-    ArrayReference Car(2, alnp, Caxes); //, axes, indTo
+    ArrayReference Car{2, alnp, 2};
+    {
+        PtrMatrix<int64_t> IndMat = Car.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(1, 1) = 1; // n
+        Car.stridesOffsets[0] = std::make_pair(One, Zero);
+        Car.stridesOffsets[1] = std::make_pair(M, Zero);
+    }
     std::cout << "Car = " << Car << std::endl;
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
@@ -113,12 +114,12 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     for (auto &ar : newArrayRefs) {
         EXPECT_EQ(newAlnp, ar.loop.get());
     }
-    EXPECT_EQ(newArrayRefs[0].axes[0].indices.size(), 1);
-    EXPECT_EQ(newArrayRefs[0].axes[1].indices.size(), 1);
-    EXPECT_EQ(newArrayRefs[1].axes[0].indices.size(), 1);
-    EXPECT_EQ(newArrayRefs[1].axes[1].indices.size(), 1);
-    EXPECT_EQ(newArrayRefs[2].axes[0].indices.size(), 2);
-    EXPECT_EQ(newArrayRefs[2].axes[1].indices.size(), 2);
+    EXPECT_EQ(newArrayRefs[0][0].rank(), 1);
+    EXPECT_EQ(newArrayRefs[0][1].rank(), 1);
+    EXPECT_EQ(newArrayRefs[1][0].rank(), 1);
+    EXPECT_EQ(newArrayRefs[1][1].rank(), 1);
+    EXPECT_EQ(newArrayRefs[2][0].rank(), 2);
+    EXPECT_EQ(newArrayRefs[2][1].rank(), 2);
     std::cout << "A=" << newAlnp->A << std::endl;
     // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
     EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
@@ -207,49 +208,52 @@ TEST(BadMul, BasicAssertions) {
         }
     }
     PartiallyOrderedSet poset;
-    std::shared_ptr<AffineLoopNest> alnp =
-        std::make_shared<AffineLoopNest>(A, r, poset);
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp(
+        llvm::makeIntrusiveRefCnt<AffineLoopNest>(A, r, poset));
     EXPECT_FALSE(alnp->isEmpty());
 
+    // for i in 0:M+N+O-3, l in max(0,i+1-N):min(M+O-2,i), j in
+    // max(0,l+1-O):min(M-1,l)
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     // 0, 1, 2
     // i, l, j
     // we have three array refs
     // W[j, i - l]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Waxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> ipm;
-    ipm.emplace_back(One, VarID(2, VarType::LoopInductionVariable));
-    Waxes.emplace_back(One, ipm);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> jpn;
-    jpn.emplace_back(One, VarID(0, VarType::LoopInductionVariable));
-    jpn.emplace_back(-One, VarID(1, VarType::LoopInductionVariable));
-    Waxes.emplace_back(M, jpn);
-    ArrayReference War(0, alnp, Waxes); //, axes, indTo
+    const int iId = 0, lId = 1, jId = 2;
+    ArrayReference War(0, alnp, 2); //, axes, indTo
+    {
+        PtrMatrix<int64_t> IndMat = War.indexMatrix();
+        IndMat(0, jId) = 1;  // j
+        IndMat(1, iId) = 1;  // i
+        IndMat(1, lId) = -1; // l
+        War.stridesOffsets[0] = std::make_pair(One, Zero);
+        War.stridesOffsets[1] = std::make_pair(M, Zero);
+    }
     std::cout << "War = " << War << std::endl;
 
     // B[j, l - j]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Baxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i{
-        std::make_pair(One, VarID(2, VarType::LoopInductionVariable))};
-    Baxes.emplace_back(One, i);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j{
-        std::make_pair(One, VarID(1, VarType::LoopInductionVariable)),
-        std::make_pair(-One, VarID(2, VarType::LoopInductionVariable))};
-    Baxes.emplace_back(O, j);
-    ArrayReference Bar(1, alnp, Baxes); //, axes, indTo
+    ArrayReference Bar(1, alnp, 2); //, axes, indTo
+    {
+        PtrMatrix<int64_t> IndMat = Bar.indexMatrix();
+        IndMat(0, jId) = 1;  // j
+        IndMat(1, lId) = 1;  // l
+        IndMat(1, jId) = -1; // j
+        Bar.stridesOffsets[0] = std::make_pair(One, Zero);
+        Bar.stridesOffsets[1] = std::make_pair(M, Zero);
+    }
     std::cout << "Bar = " << Bar << std::endl;
 
     // C[l-j,i-l]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> Caxes;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m{
-        std::make_pair(One, VarID(1, VarType::LoopInductionVariable)),
-        std::make_pair(-One, VarID(2, VarType::LoopInductionVariable))};
-    Caxes.emplace_back(One, m);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n{
-        std::make_pair(One, VarID(0, VarType::LoopInductionVariable)),
-        std::make_pair(-One, VarID(1, VarType::LoopInductionVariable))};
-    Caxes.emplace_back(M, n);
-    ArrayReference Car(2, alnp, Caxes); //, axes, indTo
+    ArrayReference Car(2, alnp, 2); //, axes, indTo
+    {
+        PtrMatrix<int64_t> IndMat = Car.indexMatrix();
+        IndMat(0, lId) = 1;  // l
+        IndMat(0, jId) = -1; // j
+        IndMat(1, iId) = 1;  // i
+        IndMat(1, lId) = -1; // l
+        Car.stridesOffsets[0] = std::make_pair(One, Zero);
+        Car.stridesOffsets[1] = std::make_pair(O, Zero);
+    }
     std::cout << "Car = " << Car << std::endl;
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};

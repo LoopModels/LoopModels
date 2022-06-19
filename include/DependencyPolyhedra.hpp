@@ -12,7 +12,6 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/IR/User.h>
 #include <utility>
 
 struct DependencePolyhedra : SymbolicEqPolyhedra {
@@ -400,36 +399,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
 
 }; // namespace DependencePolyhedra
-// TODO:
-// refactor to use GraphTraits.h 
-// https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
-struct MemoryAccess {
-    ArrayReference ref;
-    // unsigned ref; // index to ArrayReference
-    llvm::User *user;
-    // unsigned (instead of ptr) as we build up edges
-    // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
-    llvm::SmallVector<unsigned> edgesIn;
-    llvm::SmallVector<unsigned> edgesOut;
-    const bool isLoad;
-    MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
-                 bool isLoad)
-        : ref(std::move(ref)), user(user), schedule(schedule),
-          edgesIn(llvm::SmallVector<unsigned>()),
-          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-
-    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    // size_t getNumLoops() const { return ref->getNumLoops(); }
-    // size_t getNumAxes() const { return ref->axes.size(); }
-    // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    bool fusedThrough(MemoryAccess &x) {
-        // originally separate loops could be fused
-        // if (loop() != x.loop()){ return false; }
-        return schedule.fusedThrough(x.schedule);
-    }
-};
 
 struct Dependence {
     DependencePolyhedra depPoly;
