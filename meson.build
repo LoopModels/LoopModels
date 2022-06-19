@@ -38,7 +38,7 @@ test_files = [
 ]
 
 foreach f : test_files
-  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : extra_args)
+  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_dep.get_variable(configtool: 'libdir'))
   test(f, test_exe)
 endforeach
 
