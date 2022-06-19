@@ -34,7 +34,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         i += A.numCol();
     }
     auto [K, included] = NormalForm::orthogonalize(S);
-    std::cout << "S = \n" << S << "\nK =\n" << K << std::endl;
+    // std::cout << "S = \n" << S << "\nK =\n" << K << std::endl;
     if (included.size()) {
         // We let
         // L = K'*J
