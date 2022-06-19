@@ -28,7 +28,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // fast path; most common case
         if (ar0.stridesMatchAllConstant(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
-            size_t numDims = ar0.dim();
+            size_t numDims = ar0.arrayDim();
             dims.reserve(numDims);
             for (size_t i = 0; i < numDims; ++i) {
                 dims.emplace_back(i, i);

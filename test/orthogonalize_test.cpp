@@ -70,9 +70,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     {
         PtrMatrix<int64_t> IndMat = War.indexMatrix();
         IndMat(0, 0) = 1; // m
-        IndMat(0, 2) = 1; // i
+        IndMat(2, 0) = 1; // i
         IndMat(1, 1) = 1; // n
-        IndMat(1, 3) = 1; // j
+        IndMat(3, 1) = 1; // j
         War.stridesOffsets[0] = std::make_pair(One, Zero);
         War.stridesOffsets[1] = std::make_pair(I + M - One, Zero);
     }
@@ -82,8 +82,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     ArrayReference Bar{1, alnp, 2};
     {
         PtrMatrix<int64_t> IndMat = Bar.indexMatrix();
-        IndMat(0, 2) = 1; // i
-        IndMat(1, 3) = 1; // j
+        IndMat(2, 0) = 1; // i
+        IndMat(3, 1) = 1; // j
         Bar.stridesOffsets[0] = std::make_pair(One, Zero);
         Bar.stridesOffsets[1] = std::make_pair(I, Zero);
     }
@@ -223,9 +223,9 @@ TEST(BadMul, BasicAssertions) {
     ArrayReference War(0, alnp, 2); //, axes, indTo
     {
         PtrMatrix<int64_t> IndMat = War.indexMatrix();
-        IndMat(0, jId) = 1;  // j
-        IndMat(1, iId) = 1;  // i
-        IndMat(1, lId) = -1; // l
+        IndMat(jId, 0) = 1;  // j
+        IndMat(iId, 1) = 1;  // i
+        IndMat(lId, 1) = -1; // l
         War.stridesOffsets[0] = std::make_pair(One, Zero);
         War.stridesOffsets[1] = std::make_pair(M, Zero);
     }
@@ -235,9 +235,9 @@ TEST(BadMul, BasicAssertions) {
     ArrayReference Bar(1, alnp, 2); //, axes, indTo
     {
         PtrMatrix<int64_t> IndMat = Bar.indexMatrix();
-        IndMat(0, jId) = 1;  // j
-        IndMat(1, lId) = 1;  // l
-        IndMat(1, jId) = -1; // j
+        IndMat(jId, 0) = 1;  // j
+        IndMat(lId, 1) = 1;  // l
+        IndMat(jId, 1) = -1; // j
         Bar.stridesOffsets[0] = std::make_pair(One, Zero);
         Bar.stridesOffsets[1] = std::make_pair(M, Zero);
     }
@@ -247,10 +247,10 @@ TEST(BadMul, BasicAssertions) {
     ArrayReference Car(2, alnp, 2); //, axes, indTo
     {
         PtrMatrix<int64_t> IndMat = Car.indexMatrix();
-        IndMat(0, lId) = 1;  // l
-        IndMat(0, jId) = -1; // j
-        IndMat(1, iId) = 1;  // i
-        IndMat(1, lId) = -1; // l
+        IndMat(lId, 0) = 1;  // l
+        IndMat(jId, 0) = -1; // j
+        IndMat(iId, 1) = 1;  // i
+        IndMat(lId, 1) = -1; // l
         Car.stridesOffsets[0] = std::make_pair(One, Zero);
         Car.stridesOffsets[1] = std::make_pair(O, Zero);
     }

@@ -20,20 +20,21 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     size_t numLoops = alnp.getNumLoops();
     size_t numRow = 0;
     for (auto a : ai) {
-        numRow += a->dim();
+        numRow += a->arrayDim();
     }
     IntMatrix S(numLoops, numRow);
-    size_t row = 0;
+    size_t i = 0;
     for (auto a : ai) {
         PtrMatrix<int64_t> A = a->indexMatrix();
-        for (size_t r = 0; r < A.numRow(); ++r) {
-            for (size_t l = 0; l < numLoops; ++l) {
-                S(l, row) = A(r, l);
+        for (size_t j = 0; j < numLoops; ++j) {
+            for (size_t k = 0; k < A.numCol(); ++k) {
+                S(j, k + i) = A(j, k);
             }
-            ++row;
         }
+        i += A.numCol();
     }
     auto [K, included] = NormalForm::orthogonalize(S);
+    std::cout << "S = \n" << S << "\nK =\n" << K << std::endl;
     if (included.size()) {
         // We let
         // L = K'*J
@@ -52,23 +53,25 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // Originally, the mapping from our loops to our indices was
         // S'*L = I
         // now, we have
-        // (S'*K')*J = I
-        IntMatrix SK(matmultt(S, K));
+        // (S'*K')*J = (K*S)'*J  = I
+        IntMatrix KS(matmul(K, S));
         // auto KS = matmul(K, S);
         // llvm::SmallVector<ArrayReference*> aiNew;
         llvm::SmallVector<ArrayReference, 0> newArrayRefs;
         newArrayRefs.reserve(numRow);
         size_t i = 0;
         for (auto a : ai) {
-            newArrayRefs.emplace_back(a->arrayID, alnNew, a->dim());
+            newArrayRefs.emplace_back(a->arrayID, alnNew, a->arrayDim());
             PtrMatrix<int64_t> A = newArrayRefs.back().indexMatrix();
-            for (size_t j = 0; j < A.length(); ++j) {
-                A[j] = SK[i + j];
+            for (size_t j = 0; j < numLoops; ++j) {
+                for (size_t k = 0; k < A.numCol(); ++k) {
+                    A(j, k) = KS(j, k + i);
+                }
             }
-            i += A.length();
+            i += A.numCol();
             llvm::SmallVector<std::pair<MPoly, MPoly>> &stridesOffsets =
                 newArrayRefs.back().stridesOffsets;
-            for (size_t d = 0; d < A.numRow(); ++d) {
+            for (size_t d = 0; d < A.numCol(); ++d) {
                 stridesOffsets[d] = a->stridesOffsets[d];
             }
         }

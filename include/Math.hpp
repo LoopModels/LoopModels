@@ -331,6 +331,15 @@ template <typename T> struct StridedVector {
     T &operator[](size_t i) { return d[i * x]; }
     const T &operator[](size_t i) const { return d[i * x]; }
     size_t size() const { return N; }
+    bool operator==(StridedVector<T> x) const {
+        if (size() != x.size())
+            return false;
+        for (size_t i = 0; i < size(); ++i) {
+            if ((*this)[i] != x[i])
+                return false;
+        }
+        return true;
+    }
 };
 
 template <typename T, typename A> struct BaseMatrix {

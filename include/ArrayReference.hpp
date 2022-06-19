@@ -15,27 +15,28 @@ struct Stride {
     const std::pair<MPoly, MPoly> *strideAndOffset;
     const int64_t *inds;
     const size_t dim;
+    const size_t memStride;
 
     inline size_t size() const { return dim; }
-    inline auto begin() { return inds; }
-    inline auto end() { return inds + dim; }
-    inline auto begin() const { return inds; }
-    inline auto end() const { return inds + dim; }
-    inline auto cbegin() const { return inds + dim; }
-    inline auto cend() const { return inds + dim; }
+    inline auto begin() { return indices().begin(); }
+    inline auto end() { return indices().end(); }
+    inline auto begin() const { return indices().begin(); }
+    inline auto end() const { return indices().end(); }
+    inline auto cbegin() const { return indices().begin(); }
+    inline auto cend() const { return indices().end(); }
     size_t rank() const {
         size_t r = 0;
-        for (size_t i = 0; i < dim; ++i)
+        for (size_t i = 0; i < dim * memStride; i += memStride)
             r += (inds[i] != 0);
         return r;
     }
     // int64_t &operator[](size_t i) { return inds[i]; }
-    int64_t operator[](size_t i) const { return inds[i]; }
+    int64_t operator[](size_t i) const { return inds[i * memStride]; }
     // llvm::MutableArrayRef<int64_t> indices() {
     //     return llvm::MutableArrayRef{inds, dim};
     // }
-    llvm::ArrayRef<int64_t> indices() const {
-        return llvm::ArrayRef{inds, dim};
+    StridedVector<const int64_t> indices() const {
+        return StridedVector<const int64_t>{inds, dim, memStride};
     }
     bool isLoopIndependent() const { return allZero(indices()); }
     // MPoly &stride() { return strideAndOffset->first; }
@@ -51,12 +52,12 @@ struct StrideIterator {
     Stride x;
     StrideIterator operator++() {
         x.strideAndOffset++;
-        x.inds += x.dim;
+        x.inds++;
         return *this;
     }
     StrideIterator operator--() {
         x.strideAndOffset--;
-        x.inds -= x.dim;
+        x.inds--;
         return *this;
     }
     bool operator==(StrideIterator y) {
@@ -87,7 +88,7 @@ std::ostream &operator<<(std::ostream &os, Stride const &axis) {
             } else {
                 os << c << " * i_" << i << " ";
             }
-	    printPlus = true;
+            printPlus = true;
         }
     }
     if (!isZero(axis.offset())) {
@@ -143,17 +144,18 @@ struct ArrayReference {
     llvm::SmallVector<std::pair<MPoly, MPoly>> stridesOffsets;
     llvm::SmallVector<int64_t> indices;
 
-    size_t dim() const { return stridesOffsets.size(); }
+    size_t arrayDim() const { return stridesOffsets.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
+    // indexMatrix()' * i == indices
+    // indexMatrix() returns a getNumLoops() x arrayDim() matrix.
+    // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     PtrMatrix<int64_t> indexMatrix() {
-        const size_t numLoops = getNumLoops();
-        return {
-            .mem = indices.data(), .M = dim(), .N = numLoops, .X = numLoops};
+        const size_t d = arrayDim();
+        return {.mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
     }
     PtrMatrix<const int64_t> indexMatrix() const {
-        const size_t numLoops = getNumLoops();
-        return {
-            .mem = indices.data(), .M = dim(), .N = numLoops, .X = numLoops};
+        const size_t d = arrayDim();
+        return {.mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
     }
 
     ArrayReference(size_t arrayID,
@@ -187,16 +189,15 @@ struct ArrayReference {
     //                                  getNumLoops()}};
     // }
     StrideIterator begin() const {
-        return {stridesOffsets.data(), indices.data(), getNumLoops()};
+        return {stridesOffsets.data(), indices.data(), getNumLoops(), arrayDim()};
     }
     StrideIterator end() const {
-        return {stridesOffsets.end(), indices.data() + indices.size(),
-                getNumLoops()};
+        return {stridesOffsets.end(), indices.data() + arrayDim(), getNumLoops(),
+                arrayDim()};
     }
     Stride operator[](size_t i) const {
-        size_t numLoops = getNumLoops();
-        return {stridesOffsets.data() + i, indices.data() + numLoops * i,
-                numLoops};
+        return {stridesOffsets.data() + i, indices.data() + i, getNumLoops(),
+                arrayDim()};
     }
     bool isLoopIndependent() const { return allZero(indices); }
     bool allConstantIndices() const {
@@ -208,10 +209,10 @@ struct ArrayReference {
     }
     // Assumes stridesOffsets are sorted
     bool stridesMatch(const ArrayReference &x) const {
-        if (dim() != x.dim()) {
+        if (arrayDim() != x.arrayDim()) {
             return false;
         }
-        for (size_t i = 0; i < dim(); ++i) {
+        for (size_t i = 0; i < arrayDim(); ++i) {
             if (stridesOffsets[i].first != x.stridesOffsets[i].first)
                 return false;
         }
@@ -219,7 +220,7 @@ struct ArrayReference {
     }
     friend std::ostream &operator<<(std::ostream &os,
                                     ArrayReference const &ar) {
-        os << "ArrayReference " << ar.arrayID << " (dim = " << ar.dim()
+        os << "ArrayReference " << ar.arrayID << " (dim = " << ar.arrayDim()
            << "):" << std::endl;
         for (auto ax : ar) {
             std::cout << ax << std::endl;
