@@ -48,14 +48,9 @@ benchmark_files = [
 ]
 benchmarkdeps = [bench_dep, llvm_dep]
 #bench_args = ['-O3', '-DNDEBUG', '-march=native'] + extra_args
-bench_args = ['-O3', '-DNDEBUG'] + extra_args
+#bench_args = ['-O3', '-DNDEBUG'] + extra_args
+bench_args = ['-DNDEBUG'] + extra_args
 foreach f : benchmark_files
-  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release'], cpp_args : bench_args, build_rpath : llvm_rpath)
+  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release', 'optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
   benchmark(f, benchmark_exe)
 endforeach
-
-#normal_form_test = executable('normal_form_test', 'test/normal_form_test.cpp', dependencies : testdeps, include_directories: incdir)
-#test('gtest test', normal_form_test)
-#
-#poset_test = executable('poset_test', 'test/poset_test.cpp', dependencies : testdeps, include_directories: incdir)
-#test('gtest test', poset_test)
