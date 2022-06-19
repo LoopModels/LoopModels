@@ -1,18 +1,16 @@
 project('LoopModels', ['c', 'cpp'], version : '0.1', default_options : ['cpp_std=gnu++20'])
 
-llvm_dep = dependency('llvm', version : ['>=14.0', '< 15'])
+llvm_dep = dependency('llvm', version : '>=14.0')
 incdir = include_directories('include')
 
 if meson.get_compiler('cpp').get_id() == 'gcc'
   add_global_arguments('-fno-semantic-interposition', language : 'cpp')
-  #extra_args = ['-fno-semantic-interposition']
-#else
- # extra_args = []
 endif
 
+llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 extra_args = []
 
-shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : extra_args)
+shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_rpath)
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
@@ -38,7 +36,7 @@ test_files = [
 ]
 
 foreach f : test_files
-  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_dep.get_variable(configtool: 'libdir'))
+  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_rpath)
   test(f, test_exe)
 endforeach
 
@@ -52,8 +50,7 @@ benchmarkdeps = [bench_dep, llvm_dep]
 #bench_args = ['-O3', '-DNDEBUG', '-march=native'] + extra_args
 bench_args = ['-O3', '-DNDEBUG'] + extra_args
 foreach f : benchmark_files
-  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release'], cpp_args : bench_args)
-  #benchmark_exe = build_target(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release'], target_type : 'executable')
+  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release'], cpp_args : bench_args, build_rpath : llvm_rpath)
   benchmark(f, benchmark_exe)
 endforeach
 
