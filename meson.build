@@ -50,7 +50,9 @@ benchmarkdeps = [bench_dep, llvm_dep]
 #bench_args = ['-O3', '-DNDEBUG', '-march=native'] + extra_args
 #bench_args = ['-O3', '-DNDEBUG'] + extra_args
 bench_args = ['-DNDEBUG'] + extra_args
+# https://github.com/mesonbuild/meson/issues/5920
+# TODO: add 'buildtype=release' when issue resolved
 foreach f : benchmark_files
-  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['buildtype=release', 'optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
+  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
   benchmark(f, benchmark_exe)
 endforeach
