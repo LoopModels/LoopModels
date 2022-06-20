@@ -52,41 +52,41 @@ TEST(DependenceTest, BasicAssertions) {
 
     PartiallyOrderedSet poset;
     assert(poset.delta.size() == 0);
-    std::shared_ptr<AffineLoopNest> loop =
-        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
     assert(loop->poset.delta.size() == 0);
 
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesSrc;
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> ip1;
-    ip1.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
-    ip1.emplace_back(1, VarID(1, VarType::Constant));
-    AaxesSrc.emplace_back(1, ip1);
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> jp1;
-    jp1.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
-    jp1.emplace_back(1, VarID(1, VarType::Constant));
-    AaxesSrc.emplace_back(I, jp1);
-    ArrayReference Asrc(0, loop, AaxesSrc);
+    ArrayReference Asrc(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(1));
+        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(1));
+    }
     std::cout << "AaxesSrc = " << Asrc << std::endl;
 
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
-    i.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
-    j.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
-
     // A[i+1, j]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt0;
-    AaxesTgt0.emplace_back(1, ip1);
-    AaxesTgt0.emplace_back(I, j);
-    ArrayReference Atgt0(0, loop, AaxesTgt0);
+    ArrayReference Atgt0(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Atgt0.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(1));
+        Atgt0.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
     std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
 
     // A[i, j+1]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt1;
-    AaxesTgt1.emplace_back(1, i);
-    AaxesTgt1.emplace_back(I, jp1);
-    ArrayReference Atgt1(0, loop, AaxesTgt1);
+    ArrayReference Atgt1(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Atgt1.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Atgt1.stridesOffsets[1] = std::make_pair(I, MPoly(1));
+    }
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
     DependencePolyhedra dep0(Asrc, Atgt0);
@@ -165,28 +165,30 @@ TEST(IndependentTest, BasicAssertions) {
 
     PartiallyOrderedSet poset;
     assert(poset.delta.size() == 0);
-    std::shared_ptr<AffineLoopNest> loop =
-        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
     assert(loop->poset.delta.size() == 0);
-
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
-    i.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
-    j.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
 
     // we have three array refs
     // A[i, j]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesSrc;
-    AaxesSrc.emplace_back(1, i);
-    AaxesSrc.emplace_back(I, j);
-    ArrayReference Asrc(0, loop, AaxesSrc);
+    ArrayReference Asrc(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
     std::cout << "Asrc = " << Asrc << std::endl;
 
     // A[j, i]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AaxesTgt;
-    AaxesTgt.emplace_back(1, j);
-    AaxesTgt.emplace_back(I, i);
-    ArrayReference Atgt(0, loop, AaxesTgt);
+    ArrayReference Atgt(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
+        IndMat(1, 0) = 1; // j
+        IndMat(0, 1) = 1; // i
+        Atgt.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Atgt.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
     std::cout << "Atgt = " << Atgt << std::endl;
 
     DependencePolyhedra dep(Asrc, Atgt);
@@ -260,52 +262,71 @@ TEST(TriangularExampleTest, BasicAssertions) {
     bMNK.push_back(-1);
 
     PartiallyOrderedSet poset;
-    std::shared_ptr<AffineLoopNest> loopMN =
-        std::make_shared<AffineLoopNest>(AMN, bMN, poset);
-    std::shared_ptr<AffineLoopNest> loopMNK =
-        std::make_shared<AffineLoopNest>(AMNK, bMNK, poset);
+    auto loopMN = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMN, bMN, poset);
+    auto loopMNK = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMNK, bMNK, poset);
 
     // construct indices
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
-    m.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
-    n.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> k;
-    k.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
 
     LoopBlock lblock;
     // B[m, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> BmnAxis;
-    BmnAxis.emplace_back(1, m);
-    BmnAxis.emplace_back(M, n);
-    const ArrayReference BmnInd{0, loopMN, BmnAxis};
+    ArrayReference BmnInd{0, loopMN, 2};
+    {
+        PtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(1, 1) = 1; // n
+        BmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        BmnInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+    }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmnAxis;
-    AmnAxis.emplace_back(1, m);
-    AmnAxis.emplace_back(M, n);
-    ArrayReference Amn2Ind{1, loopMN, AmnAxis};
+    ArrayReference Amn2Ind{1, loopMN, 2};
+    {
+        PtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(1, 1) = 1; // n
+        Amn2Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Amn2Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+    }
     std::cout << "Amn2 = " << Amn2Ind << std::endl;
     // A[m, n]
-    ArrayReference Amn3Ind{1, loopMNK, AmnAxis};
+    ArrayReference Amn3Ind{1, loopMNK, 2};
+    {
+        PtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(1, 1) = 1; // n
+        Amn3Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Amn3Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+    }
     std::cout << "Amn3 = " << Amn3Ind << std::endl;
     // A[m, k]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmkAxis;
-    AmkAxis.emplace_back(1, m);
-    AmkAxis.emplace_back(M, k);
-    ArrayReference AmkInd{1, loopMNK, AmkAxis};
+    ArrayReference AmkInd{1, loopMNK, 2};
+    {
+        PtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
+        IndMat(0, 0) = 1; // m
+        IndMat(2, 1) = 1; // k
+        AmkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        AmkInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+    }
     std::cout << "Amk = " << AmkInd << std::endl;
     // U[n, k]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> UnkAxis;
-    UnkAxis.emplace_back(1, n);
-    UnkAxis.emplace_back(N, k);
-    ArrayReference UnkInd{2, loopMNK, UnkAxis};
+    ArrayReference UnkInd{2, loopMNK, 2};
+    {
+        PtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
+        IndMat(1, 0) = 1; // n
+        IndMat(2, 1) = 1; // k
+        UnkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        UnkInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+    }
     std::cout << "Unk = " << UnkInd << std::endl;
     // U[n, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> UnnAxis;
-    UnnAxis.emplace_back(1, n);
-    UnnAxis.emplace_back(N, n);
-    ArrayReference UnnInd{2, loopMN, UnnAxis};
+    ArrayReference UnnInd{2, loopMN, 2};
+    {
+        PtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
+        IndMat(1, 0) = 1; // n
+        IndMat(1, 1) = 1; // k
+        UnnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        UnnInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+    }
     std::cout << "Unn = " << UnnInd << std::endl;
 
     // for (m = 0; m < M; ++m){
@@ -340,7 +361,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // std::cout << "Amn2Ind.loop->poset.delta.size() = "
     //           << Amn2Ind.loop->poset.delta.size() << std::endl;
     // std::cout << "lblock.memory.back().ref.loop->poset.delta.size() = "
-    //           << lblock.memory.back().ref.loop->poset.delta.size() << std::endl;
+    //           << lblock.memory.back().ref.loop->poset.delta.size() <<
+    //           std::endl;
     MemoryAccess &mSch2_0_1 = lblock.memory.back();
     // std::cout << "lblock.memory.back().ref.loop = "
     //           << lblock.memory.back().ref.loop << std::endl;
@@ -448,13 +470,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     //
     //
     // store in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     //
     // sch3_               3        0         1     2
@@ -462,38 +484,38 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_1), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     //
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_0), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_3), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
     // store in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     //
     // sch3_               3        0         1     2
     // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_1), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_0), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_3), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
     // with...
@@ -501,15 +523,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_1), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_0), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_3), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Fourth, comparisons of load `A(m,n)` in
     // sch3_               3        0         1     2
@@ -518,40 +540,42 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_0), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_3), 1);
     EXPECT_FALSE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
-    
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+
     // Fifth, comparisons of load `A(m,k)` in
     // sch3_               3        0         1     2
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     // with...
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
-    // printMatrix(std::cout << "mSch3_0.schedule.getPhi() =\n", PtrMatrix<const int64_t>(mSch3_0.schedule.getPhi())) << std::endl;
-    // printMatrix(std::cout << "mSch3_3.schedule.getPhi() =\n", PtrMatrix<const int64_t>(mSch3_3.schedule.getPhi())) << std::endl;
-    // printVector(std::cout << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) << std::endl;
-    // printVector(std::cout << "mSch3_3.schedule.getOmega() = ", mSch3_3.schedule.getOmega()) << std::endl;
+    // printMatrix(std::cout << "mSch3_0.schedule.getPhi() =\n", PtrMatrix<const
+    // int64_t>(mSch3_0.schedule.getPhi())) << std::endl; printMatrix(std::cout
+    // << "mSch3_3.schedule.getPhi() =\n", PtrMatrix<const
+    // int64_t>(mSch3_3.schedule.getPhi())) << std::endl; printVector(std::cout
+    // << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) <<
+    // std::endl; printVector(std::cout << "mSch3_3.schedule.getOmega() = ",
+    // mSch3_3.schedule.getOmega()) << std::endl;
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 1);
     EXPECT_TRUE(d.back().isForward());
-    std::cout << "dep#"<<d.size()<<":\n" << d.back()<<std::endl;
+    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     assert(d.back().isForward());
     EXPECT_EQ(d.size(), 15);
-    /*
-    lblock.fillEdges();
-    std::cout << "Number of edges found: " << lblock.edges.size() << std::endl;
-    EXPECT_EQ(lblock.edges.size(), 12);
-    for (auto &e : lblock.edges) {
-        std::cout << "Edge:\n" << e << "\n" << std::endl;
-    }
-    */
+    //
+    // lblock.fillEdges();
+    // std::cout << "Number of edges found: " << lblock.edges.size() <<
+    // std::endl; EXPECT_EQ(lblock.edges.size(), 12); for (auto &e :
+    // lblock.edges) {
+    //    std::cout << "Edge:\n" << e << "\n" << std::endl;
+    //}
 }
 TEST(ConvReversePass, BasicAssertions) {
     // for (n = 0; n < N; ++n){
     //   for (m = 0; n < M; ++m){
     //     for (j = 0; n < J; ++j){
-    //       for (i = 0; n < I; ++j){
+    //       for (i = 0; n < I; ++i){
     //         C[m+i,j+n] += A[m,n] * B[i,j];
     //       }
     //     }
@@ -591,8 +615,7 @@ TEST(ConvReversePass, BasicAssertions) {
     bloop.push_back(0);
 
     PartiallyOrderedSet poset;
-    std::shared_ptr<AffineLoopNest> loop =
-        std::make_shared<AffineLoopNest>(Aloop, bloop, poset);
+    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
 
     // construct indices
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
@@ -606,32 +629,40 @@ TEST(ConvReversePass, BasicAssertions) {
 
     LoopBlock lblock;
     // B[m, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> BijAxis;
-    BijAxis.emplace_back(1, i);
-    BijAxis.emplace_back(I, j);
-    ArrayReference BmnInd{0, loop, BijAxis};
+    ArrayReference BmnInd{0, loop, 2};
+    {
+        PtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(0, 1) = 1; // n
+        BmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        BmnInd.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> AmnAxis;
-    AmnAxis.emplace_back(1, m);
-    AmnAxis.emplace_back(M, n);
-    ArrayReference AmnInd{1, loop, AmnAxis};
-    // C[m+i, n+j]
-    llvm::SmallVector<Stride, ArrayRefPreAllocSize> CmijnAxis;
+    ArrayReference AmnInd{1, loop, 2};
     {
-        llvm::SmallVector<std::pair<MPoly, VarID>, 1> mpi = m;
-        mpi.push_back(i.front());
-        CmijnAxis.emplace_back(1, std::move(mpi));
-        llvm::SmallVector<std::pair<MPoly, VarID>, 1> npj = n;
-        npj.push_back(j.front());
-        CmijnAxis.emplace_back(M + I - 1, std::move(npj));
+        PtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(0, 1) = 1; // n
+        AmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        AmnInd.stridesOffsets[1] = std::make_pair(I, MPoly(0));
     }
-    ArrayReference CmijnInd{1, loop, CmijnAxis};
+    // C[m+i, n+j]
+    ArrayReference CmijnInd{1, loop, 2};
+    {
+        PtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(3, 0) = 1; // i
+        IndMat(0, 1) = 1; // n
+        IndMat(2, 1) = 1; // j
+        CmijnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        CmijnInd.stridesOffsets[1] = std::make_pair(M + I - 1, MPoly(0));
+    }
 
     // for (n = 0; n < N; ++n){
     //   for (m = 0; n < M; ++m){
     //     for (j = 0; n < J; ++j){
-    //       for (i = 0; n < I; ++j){
+    //       for (i = 0; n < I; ++i){
     //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * B[i,j];
     //       }
     //     }

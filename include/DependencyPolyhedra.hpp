@@ -150,6 +150,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t nc = nc0 + nc1;
         A.resize(nc, nv0 + nv1);
         E.resize(dims.size(), nv0 + nv1);
+        q.resize(dims.size());
         // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
             for (size_t j = 0; j < nv0; ++j) {
@@ -164,64 +165,36 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             }
             b.push_back(ar1.loop->b[i]);
         }
+        auto A0 = ar0.indexMatrix();
+        auto A1 = ar1.indexMatrix();
+        // printMatrix(std::cout << "A0 =\n", A0);
+        // printMatrix(std::cout << "\nA1 =\n", A1) << std::endl;
+        // std::cout << "dims.size() = " << dims.size() << std::endl;
+        // E(i,:)* indVars = q[i]
+        // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
+        // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
         for (size_t i = 0; i < dims.size(); ++i) {
             auto [d0, d1] = dims[i];
-            Stride delta;
-            if (d0 < 0) {
-                delta = ar1.axes[d1];
-            } else if (d1 < 0) {
-                delta = ar0.axes[d0];
-            } else {
-                // TODO: check if strides match
-                // or perhaps, edit `matchingStrideConstraintPairs` so that
-                // it mutates the reference into matching strides?
-                // but, then how to represent?
-                // Probably simpler to always have `VarType::Constant`
-                // correspond to `1` and then do a gcd/div on strides here.
-                delta = ar1.axes[d1];
-                // offset all loop indvars for ar1
-                for (auto &&ind : delta) {
-                    auto &[coef, var] = ind;
-                    if (var.isIndVar()) {
-                        var.id += ar0.loop->getNumVar();
-                    }
+            // std::cout << "d0 = " << d0 << "; d1 = " << d1 << std::endl;
+            if (d0 >= 0) {
+                for (size_t j = 0; j < nv0; ++j) {
+                    E(i, j) = A0(j, d0);
                 }
-                delta -= ar0.axes[d0];
+                q[i] = -ar0.stridesOffsets[d0].second;
             }
-            // now we add delta >= 0 and -delta >= 0
-            MPoly bound;
-            for (auto &ind : delta) {
-                auto &[coef, var] = ind;
-                auto [typ, id] = var.getTypeAndId();
-                switch (typ) {
-                case VarType::LoopInductionVariable:
-                    // need this to be a compile time constant
-                    // TODO: handle the case gracefully where it isn't!!!
-                    { // limit scope of `c`
-                        int64_t c = coef.getCompileTimeConstant().getValue();
-                        // id gives the loop, which yields the Farkas constraint
-                        // it contributed to, i.e. the column of `As` to store
-                        // into. `i`, the dim number, yields the associated
-                        // labmda.
-                        E(i, id) = c;
-                    }
-                    break;
-                case VarType::Constant: {
-                    bound += coef;
-                    break;
+            if (d1 >= 0) {
+                for (size_t j = 0; j < nv1; ++j) {
+                    E(i, j + nv0) = -A1(j, d1);
                 }
-                default:
-                    // break;
-                    assert(false);
-                }
+                q[i] += ar1.stridesOffsets[d1].second;
             }
-            q.push_back(-std::move(bound));
-            // b.push_back(-bound);
-            // b.push_back(std::move(bound));
         }
 #ifndef NDEBUG
+        std::cout << "Assembling constraint matrices:" << std::endl;
         printConstraints(printConstraints(std::cout, A, b, true), E, q, false)
             << std::endl;
+        std::cout << "Done printing assembled, pre-pruned, matrices."
+                  << std::endl;
 #endif
         if (pruneBounds()) {
             A.clear();
@@ -375,8 +348,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         }
 #ifndef NDEBUG
         printConstraints(
-            printConstraints(std::cout << "Dependency Poly:\n", A, b, true), E, q,
-            false)
+            printConstraints(std::cout << "Dependency Poly:\n", A, b, true), E,
+            q, false)
             << std::endl;
         printConstraints(
             printConstraints(std::cout << "Farkas w/ lambdas:\n", Af, bf, true),
@@ -423,7 +396,7 @@ struct Dependence {
 #ifndef NDEBUG
         std::cout << "&x = " << &x << std::endl;
         std::cout << "&xRef = " << &xRef << std::endl;
-        std::cout << "x.ref.loop = " << x.ref.loop << std::endl;
+        std::cout << "x.ref.loop = " << *(x.ref.loop) << std::endl;
         std::cout << "x.ref.loop.get() = " << x.ref.loop.get() << std::endl;
         std::cout << "x.ref.loop->poset.delta.size() = "
                   << x.ref.loop->poset.delta.size() << std::endl;

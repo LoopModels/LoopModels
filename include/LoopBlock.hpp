@@ -247,12 +247,12 @@ struct LoopBlock {
             }
         }
     }
-    static std::shared_ptr<AffineLoopNest> getBang(
-        llvm::DenseMap<const AffineLoopNest *, std::shared_ptr<AffineLoopNest>>
-            &map,
-        SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
+    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    getBang(llvm::DenseMap<const AffineLoopNest *,
+                           llvm::IntrusiveRefCntPtr<AffineLoopNest>> &map,
+            SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
-        std::shared_ptr<AffineLoopNest> newp;
+        llvm::IntrusiveRefCntPtr<AffineLoopNest> newp;
         if (p != map.end()) {
             return p->second;
         } else {
@@ -260,15 +260,15 @@ struct LoopBlock {
             const size_t numConstraints = aln->getNumConstraints();
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
-	    // A = aln->A*K';
+            // A = aln->A*K';
             IntMatrix A(IntMatrix::Uninitialized(numConstraints, numVar));
-	    for (size_t j = 0; j < numPeeled; ++j) {
-		for (size_t k = 0; k < numConstraints; ++k) {
+            for (size_t j = 0; j < numPeeled; ++j) {
+                for (size_t k = 0; k < numConstraints; ++k) {
                     A(k, j) = aln->A(k, j);
                 }
-	    }
-	    for (size_t j = numPeeled; j < numVar; ++j) {
-		for (size_t k = 0; k < numConstraints; ++k) {
+            }
+            for (size_t j = numPeeled; j < numVar; ++j) {
+                for (size_t k = 0; k < numConstraints; ++k) {
                     int64_t Akj = 0;
                     for (size_t l = 0; l < numTransformed; ++l) {
                         Akj += aln->A(k, l) * K(j - numPeeled, l);
@@ -276,9 +276,8 @@ struct LoopBlock {
                     A(k, j) = Akj;
                 }
             }
-            std::shared_ptr<AffineLoopNest> alshr =
-                std::make_shared<AffineLoopNest>(std::move(A), aln->b,
-                                                 aln->poset);
+            auto alshr = llvm::makeIntrusiveRefCnt<AffineLoopNest>(
+                std::move(A), aln->b, aln->poset);
             map.insert(std::make_pair(aln, alshr));
             return alshr;
         }
@@ -288,26 +287,24 @@ struct LoopBlock {
         for (size_t i = 0; i < memory.size(); ++i) {
             if (visited[i])
                 continue;
-            visited[i] = true;
             MemoryAccess &mai = memory[i];
             if (mai.isLoad)
                 continue;
+            visited[i] = true;
             ArrayReference &refI = mai.ref;
             size_t dimI = refI.arrayDim();
-            auto &axesI = refI.axes;
+            auto indMatI = refI.indexMatrix();
+            size_t numLoopsI = indMatI.numRow();
+            auto &stridesOffsetsI = refI.stridesOffsets;
             size_t multiInds = 0;
             size_t multiLoops = 0;
             for (size_t j = 0; j < dimI; ++j) {
-                auto &axisJ = axesI[j];
-                if (axisJ.size() < 2) {
-                    continue;
-                }
                 size_t count = 0;
                 size_t loopsJ = 0;
-                for (auto &ax : axisJ) {
-                    if (ax.second.getType() == VarType::LoopInductionVariable) {
+                for (size_t k = 0; k < numLoopsI; ++k) {
+                    if (indMatI(k, j)) {
                         ++count;
-                        loopsJ |= (size_t(1) << ax.second.getID());
+                        loopsJ |= (size_t(1) << k);
                     }
                 }
                 if (count > 1) {
@@ -352,12 +349,13 @@ struct LoopBlock {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
                 size_t row = maj.isLoad ? rowLoad : rowStore;
-                for (auto &axis : refJ.axes) {
-                    if (addIndRow(S, axis, row++, peelOuter)) {
-                        dobreakj = true;
-                        break;
+                auto indMatJ = refJ.indexMatrix();
+                for (size_t l = peelOuter; l < indMatJ.numRow(); ++l) {
+                    for (size_t k = 0; k < indMatJ.numCol(); ++k) {
+                        S(l - peelOuter, row + k) = indMatJ(l, k);
                     }
                 }
+                row += indMatJ.numCol();
                 if (dobreakj)
                     break;
                 rowLoad = maj.isLoad ? row : rowLoad;
@@ -376,12 +374,10 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-                IntMatrix SK(matmultt(S, K));
+                IntMatrix KS(matmul(K, S));
                 llvm::DenseMap<const AffineLoopNest *,
-                               std::shared_ptr<AffineLoopNest>>
+                               llvm::IntrusiveRefCntPtr<AffineLoopNest>>
                     loopMap;
-                // llvm::SmallVector<int, 16> refMap(
-                //     refs.size() + orthInds.size() - 1, -1);
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
@@ -398,10 +394,13 @@ struct LoopBlock {
                     // refMap[oldRefID] = maj.ref = refs.size();
                     // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
-                    for (auto &axis : oldRef) {
-                        maj.ref.pushAffineAxis(axis, SK.getRow(row++),
-                                                   peelOuter);
+                    auto indMatJ = oldRef.indexMatrix();
+                    for (size_t l = peelOuter; l < indMatJ.numRow(); ++l) {
+                        for (size_t k = 0; k < indMatJ.numCol(); ++k) {
+                            indMatJ(l, k) = KS(l - peelOuter, row + k);
+                        }
                     }
+                    row += indMatJ.numCol();
                     rowLoad = maj.isLoad ? row : rowLoad;
                     rowStore = maj.isLoad ? rowStore : row;
                     // set maj's schedule to rotation
