@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-
 TEST(AffineTest0, BasicAssertions) {
     std::cout << "Starting affine test 0" << std::endl;
     llvm::SmallVector<MPoly, 8> r;

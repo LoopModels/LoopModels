@@ -1434,6 +1434,8 @@ template <typename C, IsMonomial M> struct Terms {
     bool operator==(Terms<C, M> const &x) const { return (terms == x.terms); }
     bool operator!=(Terms<C, M> const &x) const { return (terms != x.terms); }
     bool operator==(C const &x) const {
+        if (isZero(x))
+            return terms.size() == 0;
         return isCompileTimeConstant() && leadingCoefficient() == x;
     }
     std::strong_ordering operator<=>(Terms<C, M> const &x) const {
@@ -1454,8 +1456,12 @@ template <typename C, IsMonomial M> struct Terms {
 
     Term<C, M> &leadingTerm() { return terms[0]; }
     Term<C, M> const &leadingTerm() const { return terms[0]; }
-    C &leadingCoefficient() { return begin()->coefficient; }
-    const C &leadingCoefficient() const { return begin()->coefficient; }
+    C &leadingCoefficient() { 
+        assert(terms.size());
+        return begin()->coefficient; }
+    const C &leadingCoefficient() const { 
+        assert(terms.size());
+        return begin()->coefficient; }
     void removeLeadingTerm() { terms.erase(terms.begin()); }
     // void takeLeadingTerm(Term<C,M> &x) {
     //     addTerm(std::move(x.leadingTerm()));
