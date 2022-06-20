@@ -331,6 +331,15 @@ template <typename T> struct StridedVector {
     T &operator[](size_t i) { return d[i * x]; }
     const T &operator[](size_t i) const { return d[i * x]; }
     size_t size() const { return N; }
+    bool operator==(StridedVector<T> x) const {
+        if (size() != x.size())
+            return false;
+        for (size_t i = 0; i < size(); ++i) {
+            if ((*this)[i] != x[i])
+                return false;
+        }
+        return true;
+    }
 };
 
 template <typename T, typename A> struct BaseMatrix {
@@ -375,14 +384,16 @@ template <typename T, typename A> struct BaseMatrix {
     size_t length() const { return numRow() * numCol(); }
 
     T &operator()(size_t i, size_t j) {
-// #ifndef NDEBUG
-// 	if ((i >= numRow()) || (j >= numCol())){
-//         std::cout << "Bounds Error! Accessed (" << numRow() << ", " << numCol() << ") array at index (" << i << ", " << j << ").\n" << 
-//             stacktrace::current() << std::endl;
+        // #ifndef NDEBUG
+        // 	if ((i >= numRow()) || (j >= numCol())){
+        //         std::cout << "Bounds Error! Accessed (" << numRow() << ", "
+        //         << numCol() << ") array at index (" << i << ", " << j <<
+        //         ").\n" <<
+        //             stacktrace::current() << std::endl;
         assert(i < numRow());
         assert(j < numCol());
-//     }
-// #endif
+        //     }
+        // #endif
         return getLinearElement(i * rowStride() + j * colStride());
     }
     const T &operator()(size_t i, size_t j) const {
@@ -455,7 +466,7 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     const T *data() const { return mem; }
 
     operator PtrMatrix<const T>() const {
-        return {.mem = mem, .M = M, .N = M, .X = M};
+        return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
     }
 };
 
@@ -490,7 +501,7 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> mem;
     size_t N, X;
 
-    Matrix(size_t n) : mem(llvm::SmallVector<T,S>(M * n)), N(n), X(n){};
+    Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -513,7 +524,7 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     llvm::SmallVector<T, S> mem;
     size_t M;
 
-    Matrix(size_t m) : mem(llvm::SmallVector<T,S>(m * N)), M(m){};
+    Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -556,8 +567,7 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     // operator SquarePtrMatrix<const T>() const { return {.mem = mem, .M = M};
     // }
     explicit operator PtrMatrix<const T>() const {
-	return {.mem = mem, .M = M, .N = M, .X = M};
-        return PtrMatrix<const T>(mem, M);
+        return PtrMatrix<const T>{.mem = mem, .M = M, .N = M, .X = M};
     }
     operator SquarePtrMatrix<const T>() const {
         return SquarePtrMatrix<const T>(mem, M);
@@ -571,7 +581,8 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     llvm::SmallVector<T, TOTALSTORAGE> mem;
     size_t M;
 
-    SquareMatrix(size_t m) : mem(llvm::SmallVector<T,TOTALSTORAGE>(m * m)), M(m){};
+    SquareMatrix(size_t m)
+        : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -610,10 +621,10 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         return A;
     }
     operator PtrMatrix<T>() {
-        return {.mem = mem.data(), .M = M, .N = M, .X = M};
+        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M};
     }
     operator PtrMatrix<const T>() const {
-        return {.mem = mem.data(), .M = M, .N = M, .X = M};
+        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
     }
     operator SquarePtrMatrix<T>() {
         return SquarePtrMatrix(mem.data(), size_t(M));
@@ -627,7 +638,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     size_t M, N, X;
 
     Matrix(size_t m, size_t n)
-        : mem(llvm::SmallVector<T,S>(m * n)), M(m), N(n), X(n){};
+        : mem(llvm::SmallVector<T, S>(m * n)), M(m), N(n), X(n){};
 
     Matrix() : M(0), N(0), X(0){};
     Matrix(SquareMatrix<T> &&A)
@@ -636,10 +647,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M), X(A.M){};
 
     operator PtrMatrix<T>() {
-        return {.mem = mem.data(), .M = M, .N = N, .X = X};
+        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
     operator PtrMatrix<const T>() const {
-        return {.mem = mem.data(), .M = M, .N = N, .X = X};
+        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
@@ -666,10 +677,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         return A;
     }
     static Matrix<T, 0, 0, S> identity(size_t MM) {
-        Matrix<T, 0, 0, S> A(MM,MM);
-	for (size_t i = 0; i < MM; ++i){
-	    A(i,i) = 1;
-	}
+        Matrix<T, 0, 0, S> A(MM, MM);
+        for (size_t i = 0; i < MM; ++i) {
+            A(i, i) = 1;
+        }
         return A;
     }
     void clear() {
@@ -745,6 +756,15 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         assert(MM <= M);
         M = MM;
     }
+    Matrix<T, 0, 0, S> transpose() const {
+        Matrix<T, 0, 0, S> A(Matrix<T, 0, 0, S>::Uninitialized(N, M));
+        for (size_t n = 0; n < N; ++n) {
+            for (size_t m = 0; m < M; ++m) {
+                A(n, m) = (*this)(m, n);
+            }
+        }
+        return A;
+    }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
 typedef DynamicMatrix<int64_t> IntMatrix;
@@ -811,7 +831,7 @@ MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
-	    VECTORIZE
+            VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(m, k) * B(k, n);
             }
@@ -828,7 +848,7 @@ MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
-	    VECTORIZE
+            VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(m, k) * B(n, k);
             }
@@ -845,7 +865,7 @@ MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
-	    VECTORIZE
+            VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(k, m) * B(k, n);
             }
@@ -862,7 +882,7 @@ MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
     IntMatrix C(M, N);
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
-	    VECTORIZE
+            VECTORIZE
             for (size_t n = 0; n < N; ++n) {
                 C(m, n) += A(k, m) * B(n, k);
             }

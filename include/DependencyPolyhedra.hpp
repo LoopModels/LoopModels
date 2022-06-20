@@ -12,7 +12,6 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/IR/User.h>
 #include <utility>
 
 struct DependencePolyhedra : SymbolicEqPolyhedra {
@@ -27,9 +26,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
 #endif
         // fast path; most common case
-        if (ar0.stridesMatchAllConstant(ar1)) {
+        if (ar0.stridesMatch(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
-            size_t numDims = ar0.dim();
+            size_t numDims = ar0.arrayDim();
             dims.reserve(numDims);
             for (size_t i = 0; i < numDims; ++i) {
                 dims.emplace_back(i, i);
@@ -400,36 +399,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
 
 }; // namespace DependencePolyhedra
-// TODO:
-// refactor to use GraphTraits.h 
-// https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
-struct MemoryAccess {
-    ArrayReference ref;
-    // unsigned ref; // index to ArrayReference
-    llvm::User *user;
-    // unsigned (instead of ptr) as we build up edges
-    // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
-    llvm::SmallVector<unsigned> edgesIn;
-    llvm::SmallVector<unsigned> edgesOut;
-    const bool isLoad;
-    MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
-                 bool isLoad)
-        : ref(std::move(ref)), user(user), schedule(schedule),
-          edgesIn(llvm::SmallVector<unsigned>()),
-          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-
-    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    // size_t getNumLoops() const { return ref->getNumLoops(); }
-    // size_t getNumAxes() const { return ref->axes.size(); }
-    // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    bool fusedThrough(MemoryAccess &x) {
-        // originally separate loops could be fused
-        // if (loop() != x.loop()){ return false; }
-        return schedule.fusedThrough(x.schedule);
-    }
-};
 
 struct Dependence {
     DependencePolyhedra depPoly;

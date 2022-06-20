@@ -293,7 +293,7 @@ struct LoopBlock {
             if (mai.isLoad)
                 continue;
             ArrayReference &refI = mai.ref;
-            size_t dimI = refI.dim();
+            size_t dimI = refI.arrayDim();
             auto &axesI = refI.axes;
             size_t multiInds = 0;
             size_t multiLoops = 0;
@@ -322,7 +322,7 @@ struct LoopBlock {
             size_t numLoops = refI.getNumLoops();
             // size_t numLoad = 0;
             size_t numStore = 1;
-            size_t numRow = refI.dim();
+            size_t numRow = refI.arrayDim();
             // we prioritize orthogonalizing stores
             // therefore, we sort the loads after
             llvm::SmallVector<unsigned, 16> orthInds;
@@ -335,7 +335,7 @@ struct LoopBlock {
                     continue;
                 ArrayReference &refJ = maj.ref;
                 numLoops = std::max(numLoops, refJ.getNumLoops());
-                numRow += refJ.dim();
+                numRow += refJ.arrayDim();
                 // numLoad += maj.isLoad;
                 numStore += (!maj.isLoad);
                 // TODO: maybe don't set so aggressive, e.g.
