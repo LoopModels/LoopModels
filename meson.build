@@ -8,9 +8,9 @@ if meson.get_compiler('cpp').get_id() == 'gcc'
 endif
 
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
-extra_args = []
+debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 
-shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_rpath)
+shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
@@ -34,7 +34,7 @@ test_files = [
 ]
 
 foreach f : test_files
-  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : extra_args, build_rpath : llvm_rpath)
+  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
   test(f, test_exe)
 endforeach
 
@@ -45,12 +45,12 @@ benchmark_files = [
   'polynomial_benchmark'
 ]
 benchmarkdeps = [bench_dep, llvm_dep]
-#bench_args = ['-O3', '-DNDEBUG', '-march=native'] + extra_args
-#bench_args = ['-O3', '-DNDEBUG'] + extra_args
-bench_args = ['-DNDEBUG'] + extra_args
+#bench_args = ['-O3', '-DNDEBUG', '-march=native']
+#bench_args = ['-O3', '-DNDEBUG']
+bench_args = ['-DNDEBUG']
 # https://github.com/mesonbuild/meson/issues/5920
 # TODO: add 'buildtype=release' when issue resolved
 foreach f : benchmark_files
-  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
+  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
   benchmark(f, benchmark_exe)
 endforeach

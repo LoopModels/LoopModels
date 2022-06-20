@@ -151,11 +151,11 @@ struct ArrayReference {
     // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     PtrMatrix<int64_t> indexMatrix() {
         const size_t d = arrayDim();
-        return {.mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+        return PtrMatrix<int64_t>(indices.data(), getNumLoops(), d, d);
     }
     PtrMatrix<const int64_t> indexMatrix() const {
         const size_t d = arrayDim();
-        return {.mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+        return PtrMatrix<const int64_t>(indices.data(), getNumLoops(), d, d);
     }
 
     ArrayReference(size_t arrayID,
@@ -189,11 +189,12 @@ struct ArrayReference {
     //                                  getNumLoops()}};
     // }
     StrideIterator begin() const {
-        return {stridesOffsets.data(), indices.data(), getNumLoops(), arrayDim()};
+        return {stridesOffsets.data(), indices.data(), getNumLoops(),
+                arrayDim()};
     }
     StrideIterator end() const {
-        return {stridesOffsets.end(), indices.data() + arrayDim(), getNumLoops(),
-                arrayDim()};
+        return {stridesOffsets.end(), indices.data() + arrayDim(),
+                getNumLoops(), arrayDim()};
     }
     Stride operator[](size_t i) const {
         return {stridesOffsets.data() + i, indices.data() + i, getNumLoops(),

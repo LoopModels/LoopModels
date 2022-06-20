@@ -6,7 +6,6 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <utility>
-#include <vector>
 
 TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem

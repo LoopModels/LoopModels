@@ -7,10 +7,8 @@
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
 #include <algorithm>
-#include <any>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
@@ -497,8 +495,8 @@ template <class P, typename T> struct AbstractPolyhedra {
                                IntMatrix &Eold,
                                llvm::SmallVectorImpl<T> &qold) {
 
-	const size_t numVar = Eold.numCol();
-	assert(Aold.numCol() == numVar);
+        const size_t numVar = Eold.numCol();
+        assert(Aold.numCol() == numVar);
         if (Aold.numRow() > 1) {
             for (size_t o = Aold.numRow() - 1; o > 0;) {
                 for (size_t i = o--; i < Aold.numRow(); ++i) {
@@ -542,7 +540,8 @@ template <class P, typename T> struct AbstractPolyhedra {
         moveEqualities(Aold, bold, Eold, qold);
         NormalForm::simplifyEqualityConstraints(Eold, qold);
         // printConstraints(
-        //     printConstraints(std::cout << "Constraints post-simplify:\n", Aold,
+        //     printConstraints(std::cout << "Constraints post-simplify:\n",
+        //     Aold,
         //                      bold, true),
         //     Eold, qold, false)
         //     << std::endl;
@@ -720,7 +719,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 size_t i = *it;
                 size_t c = std::abs(boundDiffs[i]);
                 boundDiffs.erase(boundDiffs.begin() + i);
-                if ((0 <= c) && (size_t(c) < Aold.numRow())) {
+                if (c < Aold.numRow()) {
                     eraseConstraint(Aold, bold, c);
                 }
                 eraseConstraint(Etmp, qtmp, i);
@@ -1007,7 +1006,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                         // delta >= b/Axc >= 0
                         if (Axc > 0) {
                             // upper bound
-                            int c = std::abs(boundDiffs[auxInd]);
+                            size_t c = std::abs(boundDiffs[auxInd]);
                             if (c < Aold.numRow())
                                 constraintsToErase.push_back(c);
                         } else if ((!AbIsEq) ||
@@ -1131,7 +1130,7 @@ template <class P, typename T> struct AbstractPolyhedra {
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<T> &b,
         llvm::SmallVectorImpl<unsigned> &colsToErase) {
-        //std::ranges::sort(colsToErase);
+        // std::ranges::sort(colsToErase);
         std::sort(colsToErase.begin(), colsToErase.end());
         for (auto it = std::unique(colsToErase.begin(), colsToErase.end());
              it != colsToErase.begin();) {

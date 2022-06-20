@@ -18,7 +18,6 @@
 #include <type_traits>
 #include <unistd.h>
 #include <utility>
-#include <vector>
 
 template <typename T> T &negate(T &x) {
     x.negate();

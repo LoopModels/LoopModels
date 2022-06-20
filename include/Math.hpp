@@ -18,7 +18,6 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <vector>
 // #ifndef NDEBUG
 // #include <memory>
 // #include <stacktrace>
@@ -449,6 +448,9 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
 
+    PtrMatrix(T *mem, size_t M, size_t N, size_t X)
+        : mem(mem), M(M), N(N), X(X){};
+
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
     T *begin() { return mem; }
@@ -466,7 +468,7 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     const T *data() const { return mem; }
 
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
+        return PtrMatrix<const T>(mem, M, N, X);
     }
 };
 
@@ -564,10 +566,8 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
 
     T *data() { return mem; }
     const T *data() const { return mem; }
-    // operator SquarePtrMatrix<const T>() const { return {.mem = mem, .M = M};
-    // }
     explicit operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem, .M = M, .N = M, .X = M};
+        return PtrMatrix<const T>(mem, M, M, M);
     }
     operator SquarePtrMatrix<const T>() const {
         return SquarePtrMatrix<const T>(mem, M);
@@ -620,11 +620,9 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             A(r, r) = 1;
         return A;
     }
-    operator PtrMatrix<T>() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M};
-    }
+    operator PtrMatrix<T>() { return PtrMatrix<T>(mem.data(), M, M, M); }
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
+        return PtrMatrix<const T>(mem.data(), M, M, M);
     }
     operator SquarePtrMatrix<T>() {
         return SquarePtrMatrix(mem.data(), size_t(M));
@@ -646,11 +644,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     Matrix(const SquareMatrix<T> &A)
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M), X(A.M){};
 
-    operator PtrMatrix<T>() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    }
+    operator PtrMatrix<T>() { return PtrMatrix<T>(mem.data(), M, N, X); }
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = N, .X = X};
+        return PtrMatrix<const T>(mem.data(), M, N, X);
     }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
@@ -822,13 +818,14 @@ template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     return true;
 }
 
-MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
-                              PtrMatrix<const int64_t> B) {
+MULTIVERSION void matmul(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
+                         PtrMatrix<const int64_t> B) {
     unsigned M = A.numRow();
     unsigned K = A.numCol();
-    assert(K == B.numRow());
     unsigned N = B.numCol();
-    IntMatrix C(M, N);
+    assert(K == B.numRow());
+    assert(M == C.numRow());
+    assert(N == C.numCol());
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
             VECTORIZE
@@ -837,15 +834,23 @@ MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
             }
         }
     }
+}
+MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
+                              PtrMatrix<const int64_t> B) {
+    unsigned M = A.numRow();
+    unsigned N = B.numCol();
+    IntMatrix C(M, N);
+    matmul(C, A, B);
     return C;
 }
-MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
-                                PtrMatrix<const int64_t> B) {
+MULTIVERSION void matmulnt(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
+                           PtrMatrix<const int64_t> B) {
     unsigned M = A.numRow();
     unsigned K = A.numCol();
-    assert(K == B.numCol());
     unsigned N = B.numRow();
-    IntMatrix C(M, N);
+    assert(K == B.numCol());
+    assert(M == C.numRow());
+    assert(N == C.numCol());
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
             VECTORIZE
@@ -854,15 +859,23 @@ MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
             }
         }
     }
+}
+MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
+                                PtrMatrix<const int64_t> B) {
+    unsigned M = A.numRow();
+    unsigned N = B.numRow();
+    IntMatrix C(M, N);
+    matmulnt(C, A, B);
     return C;
 }
-MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
-                                PtrMatrix<const int64_t> B) {
+MULTIVERSION void matmultn(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
+                           PtrMatrix<const int64_t> B) {
     unsigned M = A.numCol();
     unsigned K = A.numRow();
-    assert(K == B.numRow());
     unsigned N = B.numCol();
-    IntMatrix C(M, N);
+    assert(K == B.numRow());
+    assert(M == C.numRow());
+    assert(N == C.numCol());
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
             VECTORIZE
@@ -871,15 +884,23 @@ MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
             }
         }
     }
-    return C;
 }
-MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
+MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
                                 PtrMatrix<const int64_t> B) {
     unsigned M = A.numCol();
-    unsigned K = A.numRow();
-    assert(K == B.numCol());
-    unsigned N = B.numRow();
+    unsigned N = B.numCol();
     IntMatrix C(M, N);
+    matmultn(C, A, B);
+    return C;
+}
+MULTIVERSION void matmultt(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
+                           PtrMatrix<const int64_t> B) {
+    unsigned M = A.numCol();
+    unsigned K = A.numRow();
+    unsigned N = B.numRow();
+    assert(K == B.numCol());
+    assert(M == C.numRow());
+    assert(N == C.numCol());
     for (size_t m = 0; m < M; ++m) {
         for (size_t k = 0; k < K; ++k) {
             VECTORIZE
@@ -888,6 +909,13 @@ MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
             }
         }
     }
+}
+MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
+                                PtrMatrix<const int64_t> B) {
+    unsigned M = A.numCol();
+    unsigned N = B.numRow();
+    IntMatrix C(M, N);
+    matmultt(C, A, B);
     return C;
 }
 

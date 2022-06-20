@@ -3,13 +3,12 @@
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
-#include <memory>
+#include <llvm/ADT/SmallVector.h>
 
 // TEST(RedundancyElimination, BasicAssertions) {
 //     Matrix<int64_t,0,0,0> A(12,7);

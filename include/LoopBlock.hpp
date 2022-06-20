@@ -295,7 +295,6 @@ struct LoopBlock {
             size_t dimI = refI.arrayDim();
             auto indMatI = refI.indexMatrix();
             size_t numLoopsI = indMatI.numRow();
-            auto &stridesOffsetsI = refI.stridesOffsets;
             size_t multiInds = 0;
             size_t multiLoops = 0;
             for (size_t j = 0; j < dimI; ++j) {

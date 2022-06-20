@@ -127,7 +127,7 @@ struct LU {
         // printMatrix(std::cout << "F =\n", F) << std::endl;
         // printVector(std::cout << "perm =\n", ipiv) << std::endl;
         if (!ldiv(A)) {
-            return std::move(A);
+            return A;
         } else {
             return {};
         }
@@ -144,15 +144,15 @@ struct LU {
         return d;
     }
     llvm::SmallVector<unsigned> perm() const {
-	size_t M = F.numCol();
+        size_t M = F.numCol();
         llvm::SmallVector<unsigned> perm;
-	for (size_t m = 0; m < M; ++m){
-	    perm.push_back(m);
-	}
+        for (size_t m = 0; m < M; ++m) {
+            perm.push_back(m);
+        }
         for (size_t m = 0; m < M; ++m) {
             std::swap(perm[m], perm[ipiv[m]]);
         }
-	return perm;
+        return perm;
     }
     static llvm::Optional<LU> fact(const SquareMatrix<int64_t> &B) {
         size_t M = B.M;
