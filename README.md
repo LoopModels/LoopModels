@@ -1,6 +1,8 @@
 
 ### LoopModels
 
+###### Description
+
 LoopModels is intended to be the successor to [LoopVectorization.jl](https://github.com/JuliaSIMD/LoopVectorization.jl) and the [JuliaSIMD](https://github.com/JuliaSIMD/) ecosystem.
 
 It is a work in progress, it will probably be many months before it achieves the level of completeness needed for a working prototype capable of compiling LLVM IR.
@@ -32,4 +34,24 @@ It is expected that in many cases, bounds checks will actually provide informati
 `LoopModels` will provide a function pass.
 
 Some details and explanations will be provided at [spmd.org](https://spmd.org/).
+
+###### Getting Started
+
+This project requires C++20.
+On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
+```
+# needed to build; g++ also works in place of clang
+sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev pkg-config
+# quality of life
+sudo apt install clangd clang-format ccache lld
+```
+I did not start from a clean ubuntu, so some dependencies may be missing.
+
+Then to build and run the test suite, simply run
+```
+CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
+cd builddir
+time meson test
+```
+Recompiling and rerunning tests simply requires rerunning `meson test`.
 
