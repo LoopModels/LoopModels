@@ -41,7 +41,7 @@ This project requires C++20.
 On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
 ```
 # needed to build; g++ also works in place of clang
-sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev pkg-config
+sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev pkg-config ninja-build
 # quality of life
 sudo apt install clangd clang-format ccache lld
 ```
@@ -54,6 +54,7 @@ cd builddir
 time meson test
 ```
 Recompiling and rerunning tests simply requires rerunning `meson test`.
+The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.
 
 Benchmarks can be run via `meson test benchmarks`, which isn't that useful as it benchmarks the benchmark scripts. `meson`'s benchmark support seems ideal for macro benchmarks, which this project doesn't currently have.
 Instead, it just has a few micro benchmarks making use of [google benchmark](https://github.com/google/benchmark), which I should probably change to no longer mark as benchmarks w/ respect to `meson`, but as separate targets.

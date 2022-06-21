@@ -14,43 +14,47 @@ shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
-testdeps = [gtest_dep, llvm_dep]
+if gtest_dep.found()
+  testdeps = [gtest_dep, llvm_dep]
 
-test_files = [
-  'bitset_test',
-  'compat_test',
-  #'dependence_test2',
-  'dependence_test',
-  #'edge_detection_test',
-  'ir_test',
-  'linear_algebra_test',
-  'linear_diophantine_test',
-  'matrix_test',
-  'normal_form_test',
-  'orthogonalize_test',
-  'poset_test',
-  'symbolics_test',
-  'unimodularization_test',
-]
+  test_files = [
+    'bitset_test',
+    'compat_test',
+    #'dependence_test2',
+    'dependence_test',
+    #'edge_detection_test',
+    'ir_test',
+    'linear_algebra_test',
+    'linear_diophantine_test',
+    'matrix_test',
+    'normal_form_test',
+    'orthogonalize_test',
+    'poset_test',
+    'symbolics_test',
+    'unimodularization_test',
+  ]
 
-foreach f : test_files
-  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
-  test(f, test_exe)
-endforeach
+  foreach f : test_files
+    test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+    test(f, test_exe)
+  endforeach
+endif
 
-bench_dep = dependency('benchmark')
+bench_dep = dependency('benchmark', required : false)
 
-benchmark_files = [
-  'constraint_pruning_benchmark',
-  'polynomial_benchmark'
-]
-benchmarkdeps = [bench_dep, llvm_dep]
-#bench_args = ['-O3', '-DNDEBUG', '-march=native']
-#bench_args = ['-O3', '-DNDEBUG']
-bench_args = ['-DNDEBUG']
-# https://github.com/mesonbuild/meson/issues/5920
-# TODO: add 'buildtype=release' when issue resolved
-foreach f : benchmark_files
-  benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
-  benchmark(f, benchmark_exe)
-endforeach
+if bench_dep.found()
+  benchmark_files = [
+    'constraint_pruning_benchmark',
+    'polynomial_benchmark'
+  ]
+  benchmarkdeps = [bench_dep, llvm_dep]
+  #bench_args = ['-O3', '-DNDEBUG', '-march=native']
+  #bench_args = ['-O3', '-DNDEBUG']
+  bench_args = ['-DNDEBUG']
+  # https://github.com/mesonbuild/meson/issues/5920
+  # TODO: add 'buildtype=release' when issue resolved
+  foreach f : benchmark_files
+    benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+    benchmark(f, benchmark_exe)
+  endforeach
+endif
