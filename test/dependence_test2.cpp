@@ -78,7 +78,7 @@ TEST(DependenceTest, BasicAssertions) {
     MemoryAccess msrc{Xref, nullptr, schStore, false};
     MemoryAccess mtgt{Xref, nullptr, schLoad, true};
     EXPECT_EQ(Dependence::check(dc, msrc, mtgt), 0);
-
+    
 
 }
 

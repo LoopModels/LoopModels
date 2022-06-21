@@ -374,6 +374,80 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 }; // namespace DependencePolyhedra
 
 struct Dependence {
+    // Plan here is...
+    // depPoly gives the constraints
+    // dependenceFwd gives forward constraints
+    // dependenceBwd gives forward constraints
+    // isForward() indicates whether forward is non-empty
+    // isBackward() indicates whether backward is non-empty
+    // bounding constraints, used for ILP solve, are reverse,
+    // i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
+    // 
+    // Consider the following simple example dependencies:
+    // for (k = 0; k < K; ++k)
+    //   for (i = 0; i < I; ++i)
+    //     for (j = 0; j < J; ++j)
+    //       for (l = 0; l < L; ++l)
+    //         A(i, j) = f(A(i+1, j), A(i, j-1), A(j, j), A(j, i), A(i, j - k))
+    // label:     0             1        2          3        4        5
+    // We have...
+    ////// 0 <-> 1 //////
+    // i_0 = i_1 + 1
+    // j_0 = j_1
+    // null spaces: [k_0, l_0], [k_1, l_1]
+    // forward:  k_0 = k_1 - 1
+    //           l_0 = l_1 - 1
+    // backward: k_0 = k_1
+    //           l_0 = l_1
+    //
+    //
+    ////// 0 <-> 2 //////
+    // i_0 = i_1
+    // j_0 = j_1 - 1
+    // null spaces: [k_0, l_0], [k_1, l_1]
+    // forward:  k_0 = k_1 - 1
+    //           l_0 = l_1 - 1
+    // backward: k_0 = k_1
+    //           l_0 = l_1
+    //
+    ////// 0 <-> 3 //////
+    // i_0 = j_1
+    // j_0 = j_1
+    // null spaces: [k_0, l_0], [i_1, k_1, l_1]
+    // forward:  k_0 = k_1 - 1
+    //           l_0 = l_1 - 1
+    // backward: k_0 = k_1
+    //           l_0 = l_1
+    //
+    // i_0 = j_1, we essentially lose the `i` dimension.
+    // Thus, to get fwd/bwd, we take the intersection of nullspaces to get the time dimension?
+    // TODO: try and come up with counter examples where this will fail.
+    //
+    ////// 0 <-> 4 //////
+    // i_0 = j_1
+    // j_0 = i_1
+    // null spaces: [k_0, l_0], [k_1, l_1]
+    // if j_0 > i_0) [store first]
+    //   forward:  k_0 = k_1
+    //             l_0 = l_1
+    //   backward: k_0 = k_1 - 1
+    //             l_0 = l_1 - 1
+    // else (if j_0 <= i_0) [load first]
+    //   forward:  k_0 = k_1 - 1
+    //             l_0 = l_1 - 1
+    //   backward: k_0 = k_1
+    //             l_0 = l_1
+    // 
+    // Note that the dependency on `l` is broken when we can condition on `i_0 != j_0`,
+    // meaning that we can fully reorder interior loops when we can break dependencies.
+    // 
+    //
+    ////// 0 <-> 5 //////
+    // i_0 = i_1
+    // j_0 = j_1 - k_1
+    //
+    //
+    //
     DependencePolyhedra depPoly;
     IntegerEqPolyhedra dependenceSatisfaction;
     IntegerEqPolyhedra dependenceBounding;
