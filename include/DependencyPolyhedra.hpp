@@ -382,7 +382,7 @@ struct Dependence {
     // isBackward() indicates whether backward is non-empty
     // bounding constraints, used for ILP solve, are reverse,
     // i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
-    // 
+    //
     // Consider the following simple example dependencies:
     // for (k = 0; k < K; ++k)
     //   for (i = 0; i < I; ++i)
@@ -395,32 +395,33 @@ struct Dependence {
     // i_0 = i_1 + 1
     // j_0 = j_1
     // null spaces: [k_0, l_0], [k_1, l_1]
-    // forward:  k_0 = k_1 - 1
-    //           l_0 = l_1 - 1
-    // backward: k_0 = k_1
-    //           l_0 = l_1
+    // forward:  k_0 <= k_1 - 1
+    //           l_0 <= l_1 - 1
+    // backward: k_0 >= k_1
+    //           l_0 >= l_1
     //
     //
     ////// 0 <-> 2 //////
     // i_0 = i_1
     // j_0 = j_1 - 1
     // null spaces: [k_0, l_0], [k_1, l_1]
-    // forward:  k_0 = k_1 - 1
-    //           l_0 = l_1 - 1
-    // backward: k_0 = k_1
-    //           l_0 = l_1
+    // forward:  k_0 <= k_1 - 1
+    //           l_0 <= l_1 - 1
+    // backward: k_0 >= k_1
+    //           l_0 >= l_1
     //
     ////// 0 <-> 3 //////
     // i_0 = j_1
     // j_0 = j_1
     // null spaces: [k_0, l_0], [i_1, k_1, l_1]
-    // forward:  k_0 = k_1 - 1
-    //           l_0 = l_1 - 1
-    // backward: k_0 = k_1
-    //           l_0 = l_1
+    // forward:  k_0 <= k_1 - 1
+    //           l_0 <= l_1 - 1
+    // backward: k_0 >= k_1
+    //           l_0 >= l_1
     //
     // i_0 = j_1, we essentially lose the `i` dimension.
-    // Thus, to get fwd/bwd, we take the intersection of nullspaces to get the time dimension?
+    // Thus, to get fwd/bwd, we take the intersection of nullspaces to get the
+    // time dimension?
     // TODO: try and come up with counter examples where this will fail.
     //
     ////// 0 <-> 4 //////
@@ -428,19 +429,20 @@ struct Dependence {
     // j_0 = i_1
     // null spaces: [k_0, l_0], [k_1, l_1]
     // if j_0 > i_0) [store first]
-    //   forward:  k_0 = k_1
-    //             l_0 = l_1
-    //   backward: k_0 = k_1 - 1
-    //             l_0 = l_1 - 1
+    //   forward:  k_0 >= k_1
+    //             l_0 >= l_1
+    //   backward: k_0 <= k_1 - 1
+    //             l_0 <= l_1 - 1
     // else (if j_0 <= i_0) [load first]
-    //   forward:  k_0 = k_1 - 1
-    //             l_0 = l_1 - 1
-    //   backward: k_0 = k_1
-    //             l_0 = l_1
-    // 
-    // Note that the dependency on `l` is broken when we can condition on `i_0 != j_0`,
-    // meaning that we can fully reorder interior loops when we can break dependencies.
-    // 
+    //   forward:  k_0 <= k_1 - 1
+    //             l_0 <= l_1 - 1
+    //   backward: k_0 >= k_1
+    //             l_0 >= l_1
+    //
+    // Note that the dependency on `l` is broken when we can condition on `i_0
+    // != j_0`, meaning that we can fully reorder interior loops when we can
+    // break dependencies.
+    //
     //
     ////// 0 <-> 5 //////
     // i_0 = i_1
@@ -454,10 +456,24 @@ struct Dependence {
     MemoryAccess *in;  // memory access in
     MemoryAccess *out; // memory access out
     bool isForward() const { return depPoly.forward; }
-    // static llvm::Optional<Dependence> check(MemoryAccess &x, MemoryAccess &y)
-    // {
-    //     return check(*x.ref, x.schedule, *y.ref, y.schedule);
-    // }
+    static IntMatrix nullSpace(const ArrayReference &xRef,
+                               const ArrayReference &yRef,
+                               const size_t numLoopsCommon) {
+        const size_t xDim = xRef.arrayDim();
+        const size_t yDim = yRef.arrayDim();
+        PtrMatrix<const int64_t> indMatX = xRef.indexMatrix();
+        PtrMatrix<const int64_t> indMatY = yRef.indexMatrix();
+        IntMatrix A(numLoopsCommon, xDim + yDim);
+        for (size_t i = 0; i < numLoopsCommon; ++i) {
+            for (size_t j = 0; j < xDim; ++j) {
+                A(i, j) = indMatX(i, j);
+            }
+            for (size_t j = 0; j < yDim; ++j) {
+                A(i, j + xDim) = indMatY(i, j);
+            }
+        }
+        return NormalForm::nullSpace(A);
+    }
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
                         MemoryAccess &x, MemoryAccess &y) {
         // static void check(llvm::SmallVectorImpl<Dependence> deps,
