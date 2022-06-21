@@ -41,11 +41,17 @@ This project requires C++20.
 On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
 ```
 # needed to build; g++ also works in place of clang
-sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev pkg-config ninja-build
+sudo apt install meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
 # quality of life
 sudo apt install clangd clang-format ccache lld
 ```
-I did not start from a clean ubuntu, so some dependencies may be missing.
+On Fedora 36:
+```
+sudo dnf install meson clang llvm-devel gtest-devel google-benchmark-devel ninja-build pkgconf cmake
+sudo dnf install clang-tools-extra ccache lld
+```
+I did not start from a clean ubuntu or fedora, so some dependencies may be missing.
+
 
 Then to build and run the test suite, simply run
 ```
@@ -56,8 +62,10 @@ time meson test
 Recompiling and rerunning tests simply requires rerunning `meson test`.
 The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.
 
+If you chose a directory name other than `builddir`, you may want to update the symbolically linked file `compile_commands.json`, as `clangd` will in your editor will likely be looking for this (and use it for example to find your header files).
+
 Benchmarks can be run via `meson test benchmarks`, which isn't that useful as it benchmarks the benchmark scripts. `meson`'s benchmark support seems ideal for macro benchmarks, which this project doesn't currently have.
-Instead, it just has a few micro benchmarks making use of [google benchmark](https://github.com/google/benchmark), which I should probably change to no longer mark as benchmarks w/ respect to `meson`, but as separate targets.
+This repository currently only has a few micro benchmarks making use of [google benchmark](https://github.com/google/benchmark), which I should probably change to no longer mark as benchmarks w/ respect to `meson`, but as separate targets.
 These can be run via (or optionally `meson compile` to build all targets).
 ```
 meson compile polynomial_benchmark constraint_pruning_benchmark
