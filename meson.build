@@ -10,7 +10,7 @@ endif
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 
-shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
@@ -34,7 +34,7 @@ test_files = [
 ]
 
 foreach f : test_files
-  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+  test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
   test(f, test_exe)
 endforeach
 

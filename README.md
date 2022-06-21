@@ -49,9 +49,18 @@ I did not start from a clean ubuntu, so some dependencies may be missing.
 
 Then to build and run the test suite, simply run
 ```
-CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
+CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
 cd builddir
 time meson test
 ```
 Recompiling and rerunning tests simply requires rerunning `meson test`.
+
+Benchmarks can be run via `meson test benchmarks`, which isn't that useful as it benchmarks the benchmark scripts. `meson`'s benchmark support seems ideal for macro benchmarks, which this project doesn't currently have.
+Instead, it just has a few micro benchmarks making use of [google benchmark](https://github.com/google/benchmark), which I should probably change to no longer mark as benchmarks w/ respect to `meson`, but as separate targets.
+These can be run via (or optionally `meson compile` to build all targets).
+```
+meson compile polynomial_benchmark constraint_pruning_benchmark
+./polynomial_benchmark
+./constraint_pruning_benchmark
+```
 
