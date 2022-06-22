@@ -53,6 +53,8 @@ sudo dnf install clang-tools-extra ccache lld libasan
 I did not start from a clean ubuntu or fedora, so some dependencies may be missing.
 
 
+
+
 Then to build and run the test suite, simply run
 ```
 CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
@@ -72,4 +74,62 @@ meson compile polynomial_benchmark constraint_pruning_benchmark
 ./polynomial_benchmark
 ./constraint_pruning_benchmark
 ```
+
+###### No Root
+If you don't have root, or are using an operating system with package managers less wieldy than manual package management...
+Make sure you've defined the environmental variables
+```
+export PATH=$HOME/.local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
+export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
+export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH
+export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
+```
+You should probably place these in a script you can easily source it whenever you're developing LoopModels. Alternatively, place this in your `~/.bashrc` or equivalent.
+These paths will let the compiler and linker find the new LLVM tool chain.
+
+```
+curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+python3 get-pip.py
+python3 -m pip install meson --user
+rm get-pip.py
+mkdir -p $HOME/Documents/libraries
+cd $HOME/Documents/libraries
+git clone https://github.com/llvm/llvm-project.git
+cd llvm-project
+git checkout release/14.x
+mkdir build && cd build
+cmake -G Ninja -DCMAKE_BUILD_TYPE="Release" -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_ENABLE_PROJECTS="mlir;clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="host" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" ../llvm
+time ninja
+ninja install
+```
+You've now build a new enough toolchain that the project can use, both for linking with (LoopModels depends on LLVM >= 14) and for compiling the project (LoopModels uses C++20). 
+The project and all its dependencies will have to be built with and link to this toolchain, so it's important to set `CXXFLAGS="-stdlib=libc++"` below.
+```
+cd $HOME/Documents/libraries
+git clone https://github.com/google/benchmark.git
+cd benchmark
+cmake -E make_directory "build"
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DCMAKE_BUILD_TYPE=Release ../
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
+
+cd $HOME/Documents/libraries
+git clone https://github.com/google/googletest.git
+cd googletest
+cmake -E make_directory "build"
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DCMAKE_BUILD_TYPE=Release ../
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
+```
+Now that all our dependencies are built, we can finally build `LoopModels` itself. It of course also requires `libc++`.
+```
+cd $HOME/Documents/libraries
+git clone https://github.com/JuliaSIMD/LoopModels.git
+cd LoopModels
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir
+cd builddir
+meson test
+```
+Now that this is all set up, you just need to make sure the environmental variables are defined, and can just reinvoke `meson test` and `meson compile` to build the test suite/project as needed.
+
+If you need to wipe the build dir, you'll have to set the temporary environment variables such as the linkers and CXX flags again.
 
