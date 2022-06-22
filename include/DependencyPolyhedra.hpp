@@ -531,40 +531,23 @@ struct Dependence {
                 return i;
         return M;
     }
-    static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
-                        MemoryAccess &x, MemoryAccess &y) {
-        // static void check(llvm::SmallVectorImpl<Dependence> deps,
-        //                   const ArrayReference &x, const Schedule &sx,
-        //                   const ArrayReference &y, const Schedule &sy) {
-        ArrayReference &xRef = x.ref;
-        ArrayReference &yRef = y.ref;
-        if (xRef.gcdKnownIndependent(yRef))
-            return 0;
-#ifndef NDEBUG
-        std::cout << "&x = " << &x << std::endl;
-        std::cout << "&xRef = " << &xRef << std::endl;
-        std::cout << "x.ref.loop = " << *(x.ref.loop) << std::endl;
-        std::cout << "x.ref.loop.get() = " << x.ref.loop.get() << std::endl;
-        std::cout << "x.ref.loop->poset.delta.size() = "
-                  << x.ref.loop->poset.delta.size() << std::endl;
-        std::cout << "xRef.loop->poset.delta.size() = "
-                  << xRef.loop->poset.delta.size() << std::endl;
-#endif
-        DependencePolyhedra dxy(xRef, yRef);
-        if (dxy.isEmpty())
-            return 0;
-            // note that we set boundAbove=true, so we reverse the dependence
-            // direction for the dependency we week, we'll discard the program
-            // variables x then y
-#ifndef NDEBUG
-        std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
-                  << dxy << std::endl;
-#endif
+    static std::pair<IntMatrix, int64_t>
+    transformationMatrix(const MemoryAccess &x, const MemoryAccess &y) {
+        return transformationMatrix(
+            x.ref, y.ref,
+            findFirstNonEqualEven(x.schedule.getOmega(),
+                                  y.schedule.getOmega()) >>
+                1);
+    }
+    // emplaces dependencies without any repeat accesses to the same memory 
+    static size_t timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
+                                DependencePolyhedra dxy, MemoryAccess &x,
+                                MemoryAccess &y) {
         IntegerEqPolyhedra fxy(dxy.farkasScheduleDifference(true, false));
         // y then x
         IntegerEqPolyhedra fyx(dxy.farkasScheduleDifference(true, true));
-        const size_t numLoopsX = xRef.getNumLoops();
-        const size_t numLoopsY = yRef.getNumLoops();
+        const size_t numLoopsX = x.ref.getNumLoops();
+        const size_t numLoopsY = y.ref.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
         SquarePtrMatrix<const int64_t> xPhi = x.schedule.getPhi();
@@ -600,7 +583,7 @@ struct Dependence {
                 fxy.dropEmptyConstraints();
                 // x then y
                 Dependence dep{std::move(dxy), std::move(fxy), std::move(fyx),
-                               input,          output,         forwardFlag};
+                               input,          output,         direction};
                 deps.push_back(std::move(dep));
                 // deps.emplace_back(std::move(dxy), std::move(fyx),
                 //                   std::move(fxy), input, output);
@@ -633,7 +616,6 @@ struct Dependence {
                 << std::endl
                 << std::endl;
             if (!fxy.knownSatisfied(sch)) {
-                dxy.forward = false;
                 fyx.A.truncateCols(numLoopsTotal + 1);
                 fyx.E.truncateCols(numLoopsTotal + 1);
                 fyx.dropEmptyConstraints();
@@ -641,8 +623,9 @@ struct Dependence {
                 std::cout << "dep order 2; i = " << i << std::endl;
 #endif
                 // y then x
-                Dependence dep{std::move(dxy), std::move(fyx), std::move(fxy),
-                               &y, &x};
+                Dependence dep{
+                    std::move(dxy), std::move(fyx), std::move(fxy), &y, &x,
+                    backwardFlag};
                 deps.push_back(std::move(dep));
                 // deps.emplace_back(std::move(dxy), std::move(fyx),
                 //                   std::move(fxy), &y, &x);
@@ -651,15 +634,15 @@ struct Dependence {
             // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
             if (!fyx.knownSatisfied(sch)) {
-                dxy.forward = true;
                 fxy.A.truncateCols(numLoopsTotal + 1);
                 fxy.E.truncateCols(numLoopsTotal + 1);
                 fxy.dropEmptyConstraints();
 #ifndef NDEBUG
                 std::cout << "dep order 3; i= " << i << std::endl;
 #endif
-                Dependence dep{std::move(dxy), std::move(fxy), std::move(fyx),
-                               &x, &y};
+                Dependence dep{
+                    std::move(dxy), std::move(fxy), std::move(fyx), &x, &y,
+                    forwardFlag};
                 deps.push_back(std::move(dep));
                 // deps.emplace_back(std::move(dxy), std::move(fxy),
                 //                   std::move(fyx), &x, &y);
@@ -667,6 +650,48 @@ struct Dependence {
             }
         }
         return 0;
+    }
+
+    // emplaces dependencies with repeat accesses to the same memory across time
+    static size_t timeCheck(llvm::SmallVectorImpl<Dependence> &deps,
+                            DependencePolyhedra dxy, IntMatrix R,
+                            size_t nullDims, MemoryAccess &x, MemoryAccess &y) {
+        // first nullDims of `R` are nullDims
+
+        return 2;
+    }
+
+    static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
+                        MemoryAccess &x, MemoryAccess &y) {
+        // static void check(llvm::SmallVectorImpl<Dependence> deps,
+        //                   const ArrayReference &x, const Schedule &sx,
+        //                   const ArrayReference &y, const Schedule &sy) {
+        if (x.ref.gcdKnownIndependent(y.ref))
+            return 0;
+#ifndef NDEBUG
+        std::cout << "&x = " << &x << std::endl;
+        std::cout << "&x.ref = " << &x.ref << std::endl;
+        std::cout << "x.ref.loop = " << *(x.ref.loop) << std::endl;
+        std::cout << "x.ref.loop.get() = " << x.ref.loop.get() << std::endl;
+        std::cout << "x.ref.loop->poset.delta.size() = "
+                  << x.ref.loop->poset.delta.size() << std::endl;
+#endif
+        DependencePolyhedra dxy(x.ref, y.ref);
+        if (dxy.isEmpty())
+            return 0;
+            // note that we set boundAbove=true, so we reverse the dependence
+            // direction for the dependency we week, we'll discard the program
+            // variables x then y
+#ifndef NDEBUG
+        std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
+                  << dxy << std::endl;
+#endif
+        auto [R, nullDim] = transformationMatrix(x, y);
+        if (nullDim) {
+            return timeCheck(deps, std::move(dxy), std::move(R), nullDim, x, y);
+        } else {
+            return timelessCheck(deps, std::move(dxy), x, y);
+        }
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dependence &d) {

@@ -105,6 +105,9 @@ ninja install
 ```
 You've now build a new enough toolchain that the project can use, both for linking with (LoopModels depends on LLVM >= 14) and for compiling the project (LoopModels uses C++20). 
 The project and all its dependencies will have to be built with and link to this toolchain, so it's important to set `CXXFLAGS="-stdlib=libc++"` below.
+
+When building LLVM, if you have a lot of RAM, you can remove the option `-DLLVM_PARALLEL_LINK_JOBS=1` to allow parallel linking. If your RAM is limited, the OOM Killer is likely to hit your build.
+
 ```
 cd $HOME/Documents/libraries
 git clone https://github.com/google/benchmark.git
