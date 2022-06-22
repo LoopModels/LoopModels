@@ -48,7 +48,7 @@ sudo apt install clangd clang-format ccache lld
 On Fedora 36:
 ```
 sudo dnf install meson clang llvm-devel gtest-devel google-benchmark-devel ninja-build pkgconf cmake
-sudo dnf install clang-tools-extra ccache lld
+sudo dnf install clang-tools-extra ccache lld libasan
 ```
 I did not start from a clean ubuntu or fedora, so some dependencies may be missing.
 

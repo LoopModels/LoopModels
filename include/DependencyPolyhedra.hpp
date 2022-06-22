@@ -4,10 +4,12 @@
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./NormalForm.hpp"
 #include "./POSet.hpp"
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
@@ -473,7 +475,53 @@ struct Dependence {
             }
         }
         // returns rank x num loops
-        return NormalForm::nullSpace(A);
+        return NormalForm::nullSpace(std::move(A));
+    }
+    // if there is no time dimension, it returns a 0xdim matrix and `R == 0`
+    // else, it returns a square matrix, where the first `R` rows correspond
+    // to time-axis.
+    static std::pair<IntMatrix, int64_t>
+    transformationMatrix(const ArrayReference &xRef, const ArrayReference &yRef,
+                         const size_t numLoopsCommon) {
+        const size_t xDim = xRef.arrayDim();
+        const size_t yDim = yRef.arrayDim();
+        PtrMatrix<const int64_t> indMatX = xRef.indexMatrix();
+        PtrMatrix<const int64_t> indMatY = yRef.indexMatrix();
+        IntMatrix A(numLoopsCommon, xDim + yDim);
+        for (size_t i = 0; i < numLoopsCommon; ++i) {
+            for (size_t j = 0; j < xDim; ++j) {
+                A(i, j) = indMatX(i, j);
+            }
+            for (size_t j = 0; j < yDim; ++j) {
+                A(i, j + xDim) = indMatY(i, j);
+            }
+        }
+        IntMatrix N = NormalForm::nullSpace(A);
+        const auto [R, D] = N.size();
+        if (R) {
+            N.resizeRows(D);
+            A = NormalForm::removeRedundantRows(A.transpose());
+            assert(D - R == A.numRow());
+            for (size_t r = R; r < D; ++r) {
+                for (size_t d = 0; d < D; ++d) {
+                    N(r, d) = A(r - R, d);
+                }
+            }
+        }
+        return std::make_pair(N, R);
+        // IntMatrix B = NormalForm::removeRedundantRows(A.transpose());
+        // const auto [R, D] = B.size();
+        // if (R < D) {
+        //     IntMatrix N = NormalForm::nullSpace(A.transpose());
+        //     assert(N.numRow() == D - R);
+        //     A.resizeRows(D);
+        //     for (size_t r = R; r < D; ++r) {
+        //         for (size_t d = 0; d < D; ++d) {
+        //             A(r, d) = N(r - R, d);
+        //         }
+        //     }
+        // }
+        // return std::make_pair(A, R);
     }
     static size_t findFirstNonEqualEven(llvm::ArrayRef<int64_t> x,
                                         llvm::ArrayRef<int64_t> y) {

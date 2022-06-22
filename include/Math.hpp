@@ -752,6 +752,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         assert(MM <= M);
         M = MM;
     }
+    // Allocates a transposed copy
     Matrix<T, 0, 0, S> transpose() const {
         Matrix<T, 0, 0, S> A(Matrix<T, 0, 0, S>::Uninitialized(N, M));
         for (size_t n = 0; n < N; ++n) {
