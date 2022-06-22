@@ -16,7 +16,6 @@
 
 struct DependencePolyhedra : SymbolicEqPolyhedra {
     size_t numDep0Var;
-    bool forward; // if (forward){ dep0 -> dep1; } else { dep1 -> depo; }
 
     size_t getNumEqualityConstraints() const { return q.size(); }
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -202,9 +201,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             E.clear();
             q.clear();
         }
-    }
-    IntegerEqPolyhedra farkasScheduleDifference(bool boundAbove) {
-        return farkasScheduleDifference(boundAbove, forward);
     }
     // `direction = true` means second dep follow first
     // order of variables:
@@ -455,7 +451,11 @@ struct Dependence {
     IntegerEqPolyhedra dependenceBounding;
     MemoryAccess *in;  // memory access in
     MemoryAccess *out; // memory access out
-    bool isForward() const { return depPoly.forward; }
+    uint8_t direction;
+    static constexpr uint8_t forwardFlag = 0x01;
+    static constexpr uint8_t backwardFlag = 0x02;
+    bool isForward() const { return direction & forwardFlag; }
+    bool isBackward() const { return direction & backwardFlag; }
     static IntMatrix nullSpace(const ArrayReference &xRef,
                                const ArrayReference &yRef,
                                const size_t numLoopsCommon) {
@@ -472,7 +472,16 @@ struct Dependence {
                 A(i, j + xDim) = indMatY(i, j);
             }
         }
+        // returns rank x num loops
         return NormalForm::nullSpace(A);
+    }
+    static size_t findFirstNonEqualEven(llvm::ArrayRef<int64_t> x,
+                                        llvm::ArrayRef<int64_t> y) {
+        const size_t M = std::min(x.size(), y.size());
+        for (size_t i = 0; i < M; i += 2)
+            if (x[i] != y[i])
+                return i;
+        return M;
     }
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
                         MemoryAccess &x, MemoryAccess &y) {
@@ -518,11 +527,15 @@ struct Dependence {
         sch.resize_for_overwrite(numLoopsTotal + 1);
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-                MemoryAccess *input = &y;
-                MemoryAccess *output = &x;
-                if ((dxy.forward = o2idiff > 0)) {
+                MemoryAccess *input = &x;
+                MemoryAccess *output = &y;
+                uint8_t direction = forwardFlag;
+                if ((o2idiff < 0)) {
+                    // backward
+                    direction <<= 1;
                     std::swap(fxy, fyx);
                     std::swap(input, output);
+
                     // fxy.A.truncateCols(numLoopsTotal + 1);
                     // fxy.E.truncateCols(numLoopsTotal + 1);
                     // fxy.dropEmptyConstraints();
@@ -534,12 +547,12 @@ struct Dependence {
                     std::cout << "dep order 1; i = " << i << std::endl;
 #endif
                 }
-                fyx.A.truncateCols(numLoopsTotal + 1);
-                fyx.E.truncateCols(numLoopsTotal + 1);
-                fyx.dropEmptyConstraints();
+                fxy.A.truncateCols(numLoopsTotal + 1);
+                fxy.E.truncateCols(numLoopsTotal + 1);
+                fxy.dropEmptyConstraints();
                 // x then y
-                Dependence dep{std::move(dxy), std::move(fyx), std::move(fxy),
-                               input, output};
+                Dependence dep{std::move(dxy), std::move(fxy), std::move(fyx),
+                               input,          output,         forwardFlag};
                 deps.push_back(std::move(dep));
                 // deps.emplace_back(std::move(dxy), std::move(fyx),
                 //                   std::move(fxy), input, output);

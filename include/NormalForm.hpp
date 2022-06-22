@@ -35,6 +35,7 @@ MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
             const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aji);
             // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
             // std::endl;
+	    
             VECTORIZE
             for (size_t k = 0; k < std::min(M, N); ++k) {
                 int64_t Aki = A(i, k);
