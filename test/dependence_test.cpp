@@ -341,6 +341,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3_{0-3}
     //     }
     //   }
+    //   foo(arg...) // [ 0, _, 2 ]
     // }
     // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
     lblock.memory.reserve(9);
@@ -692,4 +693,81 @@ TEST(ConvReversePass, BasicAssertions) {
     lblock.orthogonalizeStores();
     std::cout << lblock.memory.back();
     // std::cout << "lblock.refs.size() = " << lblock.refs.size() << std::endl;
+}
+
+TEST(RankDeficientLoad, BasicAssertions) {
+
+    // for (i = 0:I-1){
+    //   for (j = 0:i){
+    //     A(i,j) = A(i,i);
+    //   }
+    // }
+    auto I = Polynomial::Monomial(Polynomial::ID{1});
+    auto J = Polynomial::Monomial(Polynomial::ID{2});
+    // A*x <= b
+    // [ 1   0     [i        [ I - 1
+    //  -1   0   *  j ]        0
+    //  -1   1           <=    0
+    //   0  -1 ]               0     ]
+    //
+    IntMatrix Aloop(4, 2);
+    llvm::SmallVector<MPoly, 8> bloop;
+
+    // i <= I-1
+    Aloop(0, 0) = 1;
+    bloop.push_back(I - 1);
+    // i >= 0
+    Aloop(1, 0) = -1;
+    bloop.push_back(0);
+
+    // j <= i
+    Aloop(2, 0) = -1;
+    Aloop(2, 1) = 1;
+    bloop.push_back(0);
+    // j >= 0
+    Aloop(3, 1) = -1;
+    bloop.push_back(0);
+
+    PartiallyOrderedSet poset;
+    assert(poset.delta.size() == 0);
+    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
+    assert(loop->poset.delta.size() == 0);
+
+    // we have three array refs
+    // A[i, j] // i*stride(A,1) + j*stride(A,2);
+    ArrayReference Asrc(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
+    std::cout << "AaxesSrc = " << Asrc << std::endl;
+
+    // A[i, i]
+    ArrayReference Atgt(0, loop, 2);
+    {
+        PtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(0, 1) = 1; // i
+        Atgt.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Atgt.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+    }
+    std::cout << "AaxesTgt = \n" << Atgt << std::endl;
+
+    Schedule schLoad(2);
+    Schedule schStore(2);
+    schLoad.getPhi()(0, 0) = 1;
+    schLoad.getPhi()(1, 1) = 1;
+    schStore.getPhi()(0, 0) = 1;
+    schStore.getPhi()(1, 1) = 1;
+    schStore.getOmega()[4] = 1;
+    MemoryAccess msrc{Asrc, nullptr, schStore, false};
+    MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
+
+    llvm::SmallVector<Dependence, 1> deps;
+    EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
+
+    std::cout << "Blog post example:\n" << deps[0] << std::endl;
 }
