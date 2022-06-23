@@ -16,6 +16,17 @@
 #include <llvm/ADT/SmallVector.h>
 #include <utility>
 
+// for i = 1:N, j = 1:i
+//     A[i,j] = foo(A[i,i])
+// labels: 0           1
+//
+// Dependence Poly:
+// 1 <= i_0 <= N
+// 1 <= j_0 <= i_0
+// 1 <= i_1 <= N
+// 1 <= j_1 <= i_1
+// i_0 == i_1
+// j_0 == i_1
 struct DependencePolyhedra : SymbolicEqPolyhedra {
     size_t numDep0Var;
 
@@ -539,7 +550,7 @@ struct Dependence {
                                   y.schedule.getOmega()) >>
                 1);
     }
-    // emplaces dependencies without any repeat accesses to the same memory 
+    // emplaces dependencies without any repeat accesses to the same memory
     static size_t timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
                                 DependencePolyhedra dxy, MemoryAccess &x,
                                 MemoryAccess &y) {
@@ -657,7 +668,7 @@ struct Dependence {
                             DependencePolyhedra dxy, IntMatrix R,
                             size_t nullDims, MemoryAccess &x, MemoryAccess &y) {
         // first nullDims of `R` are nullDims
-
+        assert(false);
         return 2;
     }
 
@@ -686,12 +697,13 @@ struct Dependence {
         std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
                   << dxy << std::endl;
 #endif
-        auto [R, nullDim] = transformationMatrix(x, y);
-        if (nullDim) {
-            return timeCheck(deps, std::move(dxy), std::move(R), nullDim, x, y);
-        } else {
-            return timelessCheck(deps, std::move(dxy), x, y);
-        }
+        // auto [R, nullDim] = transformationMatrix(x, y);
+        // if (nullDim) {
+        //    return timeCheck(deps, std::move(dxy), std::move(R), nullDim, x,
+        //    y);
+        // } else {
+        return timelessCheck(deps, std::move(dxy), x, y);
+        //}
     }
 
     friend std::ostream &operator<<(std::ostream &os, Dependence &d) {
