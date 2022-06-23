@@ -92,9 +92,8 @@ struct LoopBlock {
     // }
     bool isSatisfied(const Dependence &e) const {
         const IntegerEqPolyhedra &sat = e.dependenceSatisfaction;
-
-        auto &schIn = e.in->schedule;
-        auto &schOut = e.out->schedule;
+        Schedule &schIn = e.in->schedule;
+        Schedule &schOut = e.out->schedule;
         const ArrayReference &refIn = e.in->ref;
         const ArrayReference &refOut = e.out->ref;
         size_t numLoopsIn = refIn.getNumLoops();

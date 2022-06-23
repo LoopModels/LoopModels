@@ -10,7 +10,6 @@
 TEST(pseudoRemTests, BasicAssertions) {
     // pseudorem
     Polynomial::Uninomial x{1};
-
     Polynomial::UnivariateTerm<int64_t> y(x);
 
     Polynomial::UnivariateTerm<int64_t> t0 = 3 * x;
