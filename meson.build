@@ -10,7 +10,8 @@ endif
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 
-shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+#shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
@@ -19,6 +20,7 @@ if gtest_dep.found()
 
   test_files = [
     'bitset_test',
+    'cost_modeling_test',
     'compat_test',
     #'dependence_test2',
     'dependence_test',
@@ -35,7 +37,8 @@ if gtest_dep.found()
   ]
 
   foreach f : test_files
-    test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+    #test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+    test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
     test(f, test_exe)
   endforeach
 endif
@@ -54,7 +57,7 @@ if bench_dep.found()
   # https://github.com/mesonbuild/meson/issues/5920
   # TODO: add 'buildtype=release' when issue resolved
   foreach f : benchmark_files
-    benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
+    benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
     benchmark(f, benchmark_exe)
   endforeach
 endif
