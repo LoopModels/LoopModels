@@ -99,7 +99,7 @@ git clone https://github.com/llvm/llvm-project.git
 cd llvm-project
 git checkout release/14.x
 mkdir build && cd build
-cmake -G Ninja -DCMAKE_BUILD_TYPE="Release" -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_ENABLE_PROJECTS="mlir;clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="host" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" ../llvm
+cmake -G Ninja -DCMAKE_BUILD_TYPE="Release" -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_BUILD_LLVM_DYLIB=ON -DLLVM_ENABLE_PROJECTS="mlir;clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="host" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DLLVM_PARALLEL_LINK_JOBS=1 -DLLVM_OPTIMIZED_TABLEGEN=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" ../llvm
 time ninja
 ninja install
 ```
@@ -113,14 +113,14 @@ cd $HOME/Documents/libraries
 git clone https://github.com/google/benchmark.git
 cd benchmark
 cmake -E make_directory "build"
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DCMAKE_BUILD_TYPE=Release ../
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_BUILD_TYPE=Release ../
 CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
 
 cd $HOME/Documents/libraries
 git clone https://github.com/google/googletest.git
 cd googletest
 cmake -E make_directory "build"
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DCMAKE_INSTALL_PREFIX="${HOME}/.local" -DCMAKE_BUILD_TYPE=Release ../
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake -E chdir "build" cmake -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_BUILD_TYPE=Release ../
 CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ cmake --build "build" --config Release --target install
 ```
 Now that all our dependencies are built, we can finally build `LoopModels` itself. It of course also requires `libc++`.
