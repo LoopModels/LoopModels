@@ -22,6 +22,8 @@ template <class P, typename T> struct AbstractPolyhedra {
 
     AbstractPolyhedra(const IntMatrix A, const llvm::SmallVector<T, 8> b)
         : A(std::move(A)), b(std::move(b)){};
+    AbstractPolyhedra(size_t numIneq, size_t numVar)
+        : A(numIneq, numVar), b(numIneq){};
 
     size_t getNumVar() const { return A.numCol(); }
     size_t getNumConstraints() const { return A.numRow(); }
@@ -1195,6 +1197,8 @@ template <class P, typename T> struct AbstractPolyhedra {
 struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, int64_t> {
     bool knownLessEqualZeroImpl(int64_t x) const { return x <= 0; }
     bool knownGreaterEqualZeroImpl(int64_t x) const { return x >= 0; }
+    IntegerPolyhedra(size_t numIneq, size_t numVar)
+        : AbstractPolyhedra<IntegerPolyhedra, int64_t>(numIneq, numVar){};
     IntegerPolyhedra(IntMatrix A, llvm::SmallVector<int64_t, 8> b)
         : AbstractPolyhedra<IntegerPolyhedra, int64_t>(std::move(A),
                                                        std::move(b)){};

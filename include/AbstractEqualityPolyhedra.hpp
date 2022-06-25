@@ -12,6 +12,10 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
     using AbstractPolyhedra<P, T>::removeVariable;
     using AbstractPolyhedra<P, T>::getNumVar;
     using AbstractPolyhedra<P, T>::pruneBounds;
+    AbstractEqualityPolyhedra(size_t numIneq, size_t numEq, size_t numVar)
+        : AbstractPolyhedra<P, T>(numIneq, numVar), E(numEq, numVar),
+          q(numEq){};
+
     AbstractEqualityPolyhedra(IntMatrix A, llvm::SmallVector<T, 8> b,
                               IntMatrix E, llvm::SmallVector<T, 8> q)
         : AbstractPolyhedra<P, T>(std::move(A), std::move(b)), E(std::move(E)),
@@ -24,6 +28,10 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
     }
     void removeVariable(const size_t i) {
         AbstractPolyhedra<P, T>::removeVariable(A, b, E, q, i);
+    }
+    void removeExtraVariables(size_t numVarKeep) {
+        ::removeExtraVariables(A, b, E, q, numVarKeep);
+        pruneBounds();
     }
 
     friend std::ostream &operator<<(std::ostream &os,
@@ -38,8 +46,11 @@ struct IntegerEqPolyhedra
 
     IntegerEqPolyhedra(IntMatrix A, llvm::SmallVector<int64_t, 8> b,
                        IntMatrix E, llvm::SmallVector<int64_t, 8> q)
-        : AbstractEqualityPolyhedra(std::move(A), std::move(b), std::move(E),
-                                    std::move(q)){};
+        : AbstractEqualityPolyhedra<IntegerEqPolyhedra, int64_t>(
+              std::move(A), std::move(b), std::move(E), std::move(q)){};
+    IntegerEqPolyhedra(size_t numIneq, size_t numEq, size_t numVar)
+        : AbstractEqualityPolyhedra<IntegerEqPolyhedra, int64_t>(numIneq, numEq,
+                                                                 numVar){};
     bool knownLessEqualZeroImpl(int64_t x) const { return x <= 0; }
     bool knownGreaterEqualZeroImpl(int64_t x) const { return x >= 0; }
 };
