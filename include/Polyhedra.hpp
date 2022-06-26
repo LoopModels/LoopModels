@@ -1139,13 +1139,9 @@ template <class P, typename T> struct AbstractPolyhedra {
             eraseConstraint(A, b, *(--it));
         }
     }
+
     void dropEmptyConstraints() {
-        const size_t numConstraints = getNumInequalityConstraints();
-        for (size_t c = numConstraints; c != 0;) {
-            if (allZero(A.getRow(--c))) {
-                eraseConstraint(A, b, c);
-            }
-        }
+	::dropEmptyConstraints(A, b);
     }
 
     friend std::ostream &operator<<(std::ostream &os,

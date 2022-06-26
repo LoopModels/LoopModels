@@ -22,7 +22,7 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
           q(std::move(q)) {}
 
     bool isEmpty() const { return (b.size() | q.size()) == 0; }
-
+    size_t getNumEqualityConstraints() const { return E.numRow(); }
     bool pruneBounds() {
         return AbstractPolyhedra<P, T>::pruneBounds(A, b, E, q);
     }
@@ -33,7 +33,24 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
         ::removeExtraVariables(A, b, E, q, numVarKeep);
         pruneBounds();
     }
-
+    void zeroExtraVariables(size_t numVarKeep) {
+        A.truncateCols(numVarKeep);
+        E.truncateCols(numVarKeep);
+        dropEmptyConstraints();
+        pruneBounds();
+    }
+    void dropEmptyConstraints() {
+        ::dropEmptyConstraints(A, b);
+        ::dropEmptyConstraints(E, q);
+    }
+    void removeExtraThenZeroExtraVariables(size_t numNotRemove,
+                                           size_t numVarKeep) {
+        ::removeExtraVariables(A, b, E, q, numNotRemove);
+        A.truncateCols(numVarKeep);
+        E.truncateCols(numVarKeep);
+        dropEmptyConstraints();
+        pruneBounds();
+    }
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractEqualityPolyhedra<P, T> &p) {
         return printConstraints(printConstraints(os, p.A, p.b, true), p.E, p.q,

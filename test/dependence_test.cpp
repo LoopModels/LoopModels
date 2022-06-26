@@ -549,11 +549,43 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
     std::cout << "dep#" << d.size() << std::endl;
-    std::cout << "forward dependence:\n" << d[d.size() - 2];
-    std::cout << "reverse dependence:\n" << d[d.size() - 1];
-    assert(d[d.size() - 2].forward);
-    assert(!d[d.size() - 1].forward);
+    auto &forward = d[d.size() - 2];
+    auto &reverse = d[d.size() - 1];
+    std::cout << "forward dependence:\n" << forward;
+    std::cout << "reverse dependence:\n" << reverse;
+    assert(forward.forward);
+    assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
+    EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(), 2);
+    EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(), 1);
+    EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(), 1);
+    EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(), 1);
+    EXPECT_TRUE(allZero(forward.depPoly.q));
+    EXPECT_FALSE(allZero(reverse.depPoly.q));
+    int nonZeroInd = -1;
+    for (unsigned i = 0; i < reverse.depPoly.q.size(); ++i) {
+        bool notZero = !isZero(reverse.depPoly.q[i]);
+        // we should only find 1 non-zero
+        EXPECT_FALSE((nonZeroInd != -1) & notZero);
+        if (notZero) {
+            nonZeroInd = i;
+        }
+    }
+    // v_1 is `n` for the load
+    // v_4 is `n` for the store
+    // thus, we expect v_1 = v_4 + 1
+    // that is, the load depends on the store from the previous iteration
+    // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
+    if (reverse.depPoly.q[nonZeroInd] == 1) {
+        // v_1 - v_4 == 1
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), 1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), -1);
+    } else {
+        // -v_1 + v_4 == -1
+        EXPECT_TRUE(reverse.depPoly.q[nonZeroInd] == -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), 1);
+    }
     //
     // lblock.fillEdges();
     // std::cout << "Number of edges found: " << lblock.edges.size() <<
@@ -756,10 +788,9 @@ TEST(RankDeficientLoad, BasicAssertions) {
     schStore.getOmega()[4] = 1;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
-    
+
     llvm::SmallVector<Dependence, 1> deps;
     EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
 
     std::cout << "Blog post example:\n" << deps[0] << std::endl;
 }
-

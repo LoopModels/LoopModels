@@ -679,8 +679,7 @@ struct Dependence {
             std::swap(in, out);
             std::swap(pair.first, pair.second);
         }
-        pair.first.A.truncateCols(numScheduleCoefs);
-        pair.first.E.truncateCols(numScheduleCoefs);
+        pair.first.zeroExtraVariables(numScheduleCoefs);
         // pair.first.removeExtraVariables(numScheduleCoefs);
         deps.emplace_back(dxy, std::move(pair.first), std::move(pair.second),
                           in, out, isFwd);
@@ -690,8 +689,7 @@ struct Dependence {
         const size_t numVar = numVarOld - timeDim;
         const size_t numEqualityConstraintsOld = dxy.E.numRow();
         // const size_t numBoundingCoefs = numVarKeep - numLambda;
-        deps.back().depPoly.A.truncateCols(numVar);
-        deps.back().depPoly.E.truncateCols(numVar);
+        deps.back().depPoly.zeroExtraVariables(numVar);
         // deps.back().depPoly.removeExtraVariables(numVar);
         assert(timeDim);
         // now we need to check the time direction for all times
@@ -771,12 +769,10 @@ struct Dependence {
                 farkasBackups.second.E(0, lambdaInd + 2) += Ecv;
             }
         } while (++t < timeDim);
-        dxy.A.truncateCols(numVar);
-        dxy.E.truncateCols(numVar);
+        dxy.zeroExtraVariables(numVar);
         // farkasBackups.first.removeExtraVariables(numScheduleCoefs);
-        farkasBackups.first.removeExtraVariables(numVarKeep);
-        farkasBackups.first.A.truncateCols(numScheduleCoefs);
-        farkasBackups.first.E.truncateCols(numScheduleCoefs);
+        farkasBackups.first.removeExtraThenZeroExtraVariables(numVarKeep,
+                                                              numScheduleCoefs);
         farkasBackups.second.removeExtraVariables(numVarKeep);
         deps.emplace_back(std::move(dxy), std::move(farkasBackups.first),
                           std::move(farkasBackups.second), out, in, !isFwd);
