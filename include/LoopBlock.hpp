@@ -126,8 +126,8 @@ struct LoopBlock {
             //   present at that level
             // }
             assert(i != numLoopsCommon);
-            const size_t offIn = e.isForward() ? 0 : numLoopsOut;
-            const size_t offOut = e.isForward() ? numLoopsIn : 0;
+            const size_t offIn = e.forward ? 0 : numLoopsOut;
+            const size_t offOut = e.forward ? numLoopsIn : 0;
             for (size_t j = 0; j < numLoopsIn; ++j) {
                 schv[j + offIn] = inPhi(j, i);
             }
@@ -140,7 +140,7 @@ struct LoopBlock {
             // dependenceSatisfaction is phi_t - phi_s >= 0
             // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
             // we implicitly 0-out `w` and `u` here,
-            if (e.dependenceSatisfaction.knownSatisfied(schv)) {
+            if (sat.knownSatisfied(schv)) {
                 if (!e.dependenceBounding.knownSatisfied(schv)) {
                     // if zerod-out bounding not >= 0, then that means
                     // phi_t - phi_s > 0, so the dependence is satisfied
@@ -257,7 +257,7 @@ struct LoopBlock {
             return p->second;
         } else {
             const size_t numVar = aln->getNumVar();
-            const size_t numConstraints = aln->getNumConstraints();
+            const size_t numConstraints = aln->getNumInequalityConstraints();
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
