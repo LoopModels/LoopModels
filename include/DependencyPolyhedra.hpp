@@ -273,7 +273,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // c) constant terms eq
     // d) bound above eq
     //
-    // Time parameters are carried over into faras polies
+    // Time parameters are carried over into faras polys
     std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> farkasPair() const {
 
         llvm::DenseMap<Polynomial::Monomial, unsigned> constantTerms;
@@ -671,7 +671,9 @@ struct Dependence {
             std::swap(in, out);
             std::swap(pair.first, pair.second);
         }
-        pair.first.removeExtraVariables(numScheduleCoefs);
+        pair.first.A.truncateCols(numScheduleCoefs);
+        pair.first.E.truncateCols(numScheduleCoefs);
+        // pair.first.removeExtraVariables(numScheduleCoefs);
         deps.emplace_back(dxy, std::move(pair.first), std::move(pair.second),
                           in, out, isFwd);
         // pair is invalid
@@ -680,7 +682,9 @@ struct Dependence {
         const size_t numVar = numVarOld - timeDim;
         const size_t numEqualityConstraintsOld = dxy.E.numRow();
         // const size_t numBoundingCoefs = numVarKeep - numLambda;
-        deps.back().depPoly.removeExtraVariables(numVar);
+        deps.back().depPoly.A.truncateCols(numVar);
+        deps.back().depPoly.E.truncateCols(numVar);
+        // deps.back().depPoly.removeExtraVariables(numVar);
         assert(timeDim);
         // now we need to check the time direction for all times
         // anything approaching 16 time dimensions would be absolutely insane
@@ -700,6 +704,10 @@ struct Dependence {
                 size_t lambdaInd =
                     numVarKeep + numInequalityConstraintsOld + 2 * c;
                 int64_t Ecv = dxy.E(c, v);
+                if (Ecv) {
+                    std::cout << "Found non-0: E(" << c << ", " << v
+                              << ") = " << Ecv << std::endl;
+                }
                 farkasBackups.first.E(0, lambdaInd + 1) -= Ecv;
                 farkasBackups.first.E(0, lambdaInd + 2) += Ecv;
                 farkasBackups.second.E(0, lambdaInd + 1) -= Ecv;
@@ -755,8 +763,12 @@ struct Dependence {
                 farkasBackups.second.E(0, lambdaInd + 2) += Ecv;
             }
         } while (++t < timeDim);
-        dxy.removeExtraVariables(numVar);
-        farkasBackups.first.removeExtraVariables(numScheduleCoefs);
+        dxy.A.truncateCols(numVar);
+        dxy.E.truncateCols(numVar);
+        // farkasBackups.first.removeExtraVariables(numScheduleCoefs);
+        farkasBackups.first.removeExtraVariables(numVarKeep);
+        farkasBackups.first.A.truncateCols(numScheduleCoefs);
+        farkasBackups.first.E.truncateCols(numScheduleCoefs);
         farkasBackups.second.removeExtraVariables(numVarKeep);
         deps.emplace_back(std::move(dxy), std::move(farkasBackups.first),
                           std::move(farkasBackups.second), out, in, !isFwd);
