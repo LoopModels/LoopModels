@@ -441,11 +441,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) <<
     // std::endl; printVector(std::cout << "mSch3_3.schedule.getOmega() = ",
     // mSch3_3.schedule.getOmega()) << std::endl;
-    EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 1);
-    EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    assert(d.back().forward);
-    EXPECT_EQ(d.size(), 15);
+    EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
+    EXPECT_TRUE(d[d.size() - 2].forward);
+    EXPECT_FALSE(d[d.size() - 1].forward);
+    std::cout << "dep#" << d.size() << std::endl;
+    std::cout << "forward dependence:\n" << d[d.size() - 2];
+    std::cout << "reverse dependence:\n" << d[d.size() - 1];
+    assert(d[d.size() - 2].forward);
+    assert(!d[d.size() - 1].forward);
+    EXPECT_EQ(d.size(), 16);
     //
     // lblock.fillEdges();
     // std::cout << "Number of edges found: " << lblock.edges.size() <<
