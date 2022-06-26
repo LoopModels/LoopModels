@@ -333,10 +333,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
     lblock.memory.reserve(9);
     Schedule sch2_0_0(2);
-    SquarePtrMatrix<int64_t> Phi2 = sch2_0_0.getPhi();
-    // Phi0 = [1 0; 0 1]
-    Phi2(0, 0) = 1;
-    Phi2(1, 1) = 1;
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
     lblock.memory.emplace_back(BmnInd, nullptr, sch2_0_0, true);
@@ -389,10 +385,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
-    SquarePtrMatrix<int64_t> Phi3 = sch3_0.getPhi();
-    Phi3(0, 0) = 1;
-    Phi3(1, 1) = 1;
-    Phi3(2, 2) = 1;
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
     lblock.memory.emplace_back(UnkInd, nullptr, sch3_0, true);
@@ -692,12 +684,6 @@ TEST(ConvReversePass, BasicAssertions) {
     //   }
     // }
     Schedule sch_0(4);
-    SquarePtrMatrix<int64_t> Phi = sch_0.getPhi();
-    // Phi0 = [1 0; 0 1]
-    Phi(0, 0) = 1;
-    Phi(1, 1) = 1;
-    Phi(2, 2) = 1;
-    Phi(3, 3) = 1;
     Schedule sch_1 = sch_0;
     //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
     lblock.memory.emplace_back(BmnInd, nullptr, sch_0, true);
@@ -781,10 +767,6 @@ TEST(RankDeficientLoad, BasicAssertions) {
 
     Schedule schLoad(2);
     Schedule schStore(2);
-    schLoad.getPhi()(0, 0) = 1;
-    schLoad.getPhi()(1, 1) = 1;
-    schStore.getPhi()(0, 0) = 1;
-    schStore.getPhi()(1, 1) = 1;
     schStore.getOmega()[4] = 1;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
@@ -793,4 +775,84 @@ TEST(RankDeficientLoad, BasicAssertions) {
     EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
 
     std::cout << "Blog post example:\n" << deps[0] << std::endl;
+}
+
+TEST(TimeHidingInRankDeficiency, BasicAssertions) {
+    // for (i = 0; i < I; ++i)
+    //   for (j = 0; j < J; ++j)
+    //     for (k = 0; k < K; ++k)
+    //       A(i+j, j+k, i-k) = foo(A(i+j, j+k, i-k));
+    //
+    // Indexed by three LIVs, and three dimensional
+    // but memory access pattern is only rank 2, leaving
+    // a time dimension of repeated memory accesses.
+    auto I = Polynomial::Monomial(Polynomial::ID{1});
+    auto J = Polynomial::Monomial(Polynomial::ID{2});
+    auto K = Polynomial::Monomial(Polynomial::ID{3});
+    // A*x <= b
+    // [ 1   0  0     [i        [ I - 1
+    //  -1   0  0   *  j          0
+    //   0   1  0      k ]    <=  J - 1
+    //   0  -1  0 ]               0
+    //   0   0  1 ]               K - 1
+    //   0   0 -1 ]               0     ]
+    //
+    IntMatrix Aloop(6, 3);
+    llvm::SmallVector<MPoly, 8> bloop;
+
+    // i <= I-1
+    Aloop(0, 0) = 1;
+    bloop.push_back(I - 1);
+    // i >= 0
+    Aloop(1, 0) = -1;
+    bloop.push_back(0);
+
+    // j <= J - 1
+    Aloop(2, 1) = 1;
+    bloop.push_back(J - 1);
+    // j >= 0
+    Aloop(3, 1) = -1;
+    bloop.push_back(0);
+
+    // k <= K - 1
+    Aloop(4, 2) = 1;
+    bloop.push_back(K - 1);
+    // k >= 0
+    Aloop(5, 2) = -1;
+    bloop.push_back(0);
+
+    PartiallyOrderedSet poset;
+    assert(poset.delta.size() == 0);
+    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
+    assert(loop->poset.delta.size() == 0);
+
+    // we have three array refs
+    // A[i+j, j+k, i - k]
+    ArrayReference Aref(0, loop, 3);
+    {
+        PtrMatrix<int64_t> IndMat = Aref.indexMatrix();
+        IndMat(0, 0) = 1;  // i
+        IndMat(1, 0) = 1;  // + j
+        IndMat(1, 1) = 1;  // j
+        IndMat(2, 1) = 1;  // + k
+        IndMat(0, 2) = 1;  // i
+        IndMat(2, 2) = -1; // -k
+        Aref.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
+        Aref.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Aref.stridesOffsets[2] = std::make_pair(I * J, MPoly(0));
+    }
+    std::cout << "Aref = " << Aref << std::endl;
+
+    Schedule schLoad(3);
+    Schedule schStore(3);
+    schStore.getOmega().back() = 1;
+    MemoryAccess msrc{Aref, nullptr, schStore, false};
+    MemoryAccess mtgt{Aref, nullptr, schLoad, true};
+
+    llvm::SmallVector<Dependence, 2> deps;
+    EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 2);
+    assert(deps.size() == 2);
+    std::cout << "Rank deficicient example:\nForward:\n"
+              << deps[0] << "\nReverse:\n"
+              << deps[1] << std::endl;
 }
