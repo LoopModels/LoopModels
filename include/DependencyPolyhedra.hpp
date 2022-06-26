@@ -285,22 +285,23 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 }
             }
         }
-        auto [numInequalityContraintsOld, numVarOld] = A.size();
+        const auto [numInequalityConstraintsOld, numVarOld] = A.size();
         // delta + 1 coef per
-        size_t timeDim = getTimeDim();
-        size_t numScheduleCoefs = 1 + numVarOld - timeDim;
-        size_t numEqualityConstraintsOld = E.numRow();
-        size_t numLambda =
-            1 + numInequalityContraintsOld + 2 * numEqualityConstraintsOld;
-        size_t numConstantTerms = constantTerms.size();
-        size_t numBoundingCoefs = 1 + numConstantTerms;
-        size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
-        size_t numVarNew = numVarKeep + numLambda;
+        const size_t timeDim = getTimeDim();
+        const size_t numVar = numVarOld - timeDim;
+        const size_t numScheduleCoefs = 1 + numVar;
+        const size_t numEqualityConstraintsOld = E.numRow();
+        const size_t numLambda =
+            1 + numInequalityConstraintsOld + 2 * numEqualityConstraintsOld;
+        const size_t numConstantTerms = constantTerms.size();
+        const size_t numBoundingCoefs = 1 + numConstantTerms;
+        const size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
+        const size_t numVarNew = numVarKeep + numLambda;
         // constraint order
         // t_0 = either -1, 0, or 1
         // d + p_0*k_0 - p_1*k_1 = l_0 + l_1 * (k_0 - k_1 + t_0)
-        size_t numInequalityConstraints = numBoundingCoefs + numLambda;
-        size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
+        const size_t numInequalityConstraints = numBoundingCoefs + numLambda;
+        const size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
 
         std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> pair(std::make_pair(
             IntegerEqPolyhedra(numInequalityConstraints, numEqualityConstraints,
@@ -317,11 +318,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // first, lambda_0:
         fw.E(0, numVarKeep) = 1;
         bw.E(0, numVarKeep) = 1;
-        for (size_t c = 0; c < numInequalityContraintsOld; ++c) {
-            size_t lambdaInd = numScheduleCoefs + numBoundingCoefs + c + 1;
-            for (size_t v = 0; v < numVarOld; ++v) {
-                fw.E(1 + v, lambdaInd) = -A(c, v);
-                bw.E(1 + v, lambdaInd) = -A(c, v);
+        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+            size_t lambdaInd = numVarKeep + c + 1;
+            for (size_t v = 0; v < numVar; ++v) {
+                int64_t nAcv = -A(c, v);
+                fw.E(1 + v, lambdaInd) = nAcv;
+                bw.E(1 + v, lambdaInd) = nAcv;
             }
             for (auto &t : b[c]) {
                 if (auto c = t.getCompileTimeConstant()) {
@@ -337,13 +339,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         }
         for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
             // each of these actually represents 2 inds
-            size_t lambdaInd = numScheduleCoefs + numBoundingCoefs +
-                               numInequalityContraintsOld + 2 * c;
-            for (size_t v = 0; v < numVarOld; ++v) {
-                fw.E(1 + v, lambdaInd + 1) = -E(c, v);
-                fw.E(1 + v, lambdaInd + 2) = E(c, v);
-                bw.E(1 + v, lambdaInd + 1) = -E(c, v);
-                bw.E(1 + v, lambdaInd + 2) = E(c, v);
+            size_t lambdaInd = numVarKeep + numInequalityConstraintsOld + 2 * c;
+            for (size_t v = 0; v < numVar; ++v) {
+                int64_t Ecv = E(c, v);
+                fw.E(1 + v, lambdaInd + 1) = -Ecv;
+                fw.E(1 + v, lambdaInd + 2) = Ecv;
+                bw.E(1 + v, lambdaInd + 1) = -Ecv;
+                bw.E(1 + v, lambdaInd + 2) = Ecv;
             }
             for (auto &t : q[c]) {
                 if (auto c = t.getCompileTimeConstant()) {
@@ -622,7 +624,8 @@ struct Dependence {
             if (!fyx.knownSatisfied(sch))
                 return true;
         }
-        return 0;
+        assert(false);
+        return false;
     }
     static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
                               DependencePolyhedra dxy, MemoryAccess &x,
@@ -651,23 +654,112 @@ struct Dependence {
                           MemoryAccess &y) {
         std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> pair(
             dxy.farkasPair());
-        // copy
-        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> timeCheckPair = pair;
+        // copy backup
+        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> farkasBackups = pair;
 
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
         const size_t numVarKeep = pair.first.getNumVar() - numLambda;
+        const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
         pair.first.removeExtraVariables(numVarKeep);
         pair.second.removeExtraVariables(numVarKeep);
-        if (checkDirection(pair, x, y)) {
-            pair.first.removeExtraVariables(dxy.getNumScheduleCoefficients());
-            deps.emplace_back(std::move(dxy), std::move(pair.first),
-                              std::move(pair.second), &x, &y, true);
+        MemoryAccess *in = &x, *out = &y;
+        const bool isFwd = checkDirection(pair, x, y);
+        if (isFwd) {
+            std::swap(farkasBackups.first, farkasBackups.second);
         } else {
-            pair.second.removeExtraVariables(dxy.getNumScheduleCoefficients());
-            deps.emplace_back(std::move(dxy), std::move(pair.second),
-                              std::move(pair.first), &y, &x, false);
+            std::swap(in, out);
+            std::swap(pair.first, pair.second);
         }
+        pair.first.removeExtraVariables(numScheduleCoefs);
+        deps.emplace_back(dxy, std::move(pair.first), std::move(pair.second),
+                          in, out, isFwd);
+        // pair is invalid
+        const size_t timeDim = dxy.getTimeDim();
+        const auto [numInequalityConstraintsOld, numVarOld] = dxy.A.size();
+        const size_t numVar = numVarOld - timeDim;
+        const size_t numEqualityConstraintsOld = dxy.E.numRow();
+        // const size_t numBoundingCoefs = numVarKeep - numLambda;
+        deps.back().depPoly.removeExtraVariables(numVar);
+        assert(timeDim);
+        // now we need to check the time direction for all times
+        // anything approaching 16 time dimensions would be absolutely insane
+        llvm::SmallVector<bool, 16> timeDirection(timeDim);
+        size_t t = 0;
+        do {
+            // set `t`th timeDim to +1/-1
+            size_t v = numVar + t;
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+                size_t lambdaInd = numVarKeep + c + 1;
+                int64_t Acv = dxy.A(c, v);
+                farkasBackups.first.E(0, lambdaInd) -= Acv;  // *1
+                farkasBackups.second.E(0, lambdaInd) -= Acv; // *1
+            }
+            for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+                // each of these actually represents 2 inds
+                size_t lambdaInd =
+                    numVarKeep + numInequalityConstraintsOld + 2 * c;
+                int64_t Ecv = dxy.E(c, v);
+                farkasBackups.first.E(0, lambdaInd + 1) -= Ecv;
+                farkasBackups.first.E(0, lambdaInd + 2) += Ecv;
+                farkasBackups.second.E(0, lambdaInd + 1) -= Ecv;
+                farkasBackups.second.E(0, lambdaInd + 2) += Ecv;
+            }
+            pair = farkasBackups;
+            pair.first.removeExtraVariables(numVarKeep);
+            pair.second.removeExtraVariables(numVarKeep);
+            // farkasBackups is swapped with respect to
+            // checkDirection(..., *in, *out);
+            timeDirection[t] = checkDirection(pair, *out, *in);
+            // fix
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+                size_t lambdaInd = numVarKeep + c + 1;
+                int64_t Acv = dxy.A(c, v);
+                farkasBackups.first.E(0, lambdaInd) += Acv;
+                farkasBackups.second.E(0, lambdaInd) += Acv;
+            }
+            for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+                // each of these actually represents 2 inds
+                size_t lambdaInd =
+                    numVarKeep + numInequalityConstraintsOld + 2 * c;
+                int64_t Ecv = dxy.E(c, v);
+                farkasBackups.first.E(0, lambdaInd + 1) += Ecv;
+                farkasBackups.first.E(0, lambdaInd + 2) -= Ecv;
+                farkasBackups.second.E(0, lambdaInd + 1) += Ecv;
+                farkasBackups.second.E(0, lambdaInd + 2) -= Ecv;
+            }
+        } while (++t < timeDim);
+        t = 0;
+        do {
+            // checkDirection(farkasBackups, x, y) == false
+            // correct time direction would make it return true
+            // thus sign = timeDirection[t] ? 1 : -1
+            int64_t sign = 2 * timeDirection[t] - 1;
+            size_t v = numVar + t;
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
+                size_t lambdaInd = numVarKeep + c + 1;
+                int64_t Acv = dxy.A(c, v) * sign;
+                dxy.b[c] -= Acv;
+                farkasBackups.first.E(0, lambdaInd) -= Acv;  // *1
+                farkasBackups.second.E(0, lambdaInd) -= Acv; // *-1
+            }
+            for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
+                // each of these actually represents 2 inds
+                size_t lambdaInd =
+                    numVarKeep + numInequalityConstraintsOld + 2 * c;
+                int64_t Ecv = dxy.E(c, v) * sign;
+                dxy.q[c] -= Ecv;
+                farkasBackups.first.E(0, lambdaInd + 1) -= Ecv;
+                farkasBackups.first.E(0, lambdaInd + 2) += Ecv;
+                farkasBackups.second.E(0, lambdaInd + 1) -= Ecv;
+                farkasBackups.second.E(0, lambdaInd + 2) += Ecv;
+            }
+        } while (++t < timeDim);
+        dxy.removeExtraVariables(numVar);
+        farkasBackups.first.removeExtraVariables(numScheduleCoefs);
+        farkasBackups.second.removeExtraVariables(numVarKeep);
+        deps.emplace_back(std::move(dxy), std::move(farkasBackups.first),
+                          std::move(farkasBackups.second), out, in, !isFwd);
     }
 
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
@@ -697,10 +789,11 @@ struct Dependence {
 #endif
         if (dxy.getTimeDim()) {
             timeCheck(deps, std::move(dxy), x, y);
+            return 2;
         } else {
             timelessCheck(deps, std::move(dxy), x, y);
+            return 1;
         }
-        return 1;
         // auto [R, nullDim] = transformationMatrix(x, y);
         // if (nullDim) {
         //    return timeCheck(deps, std::move(dxy), std::move(R), nullDim, x,

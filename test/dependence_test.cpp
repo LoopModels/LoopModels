@@ -10,7 +10,6 @@
 #include <iostream>
 #include <llvm/ADT/SmallVector.h>
 
-
 TEST(DependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
@@ -87,7 +86,7 @@ TEST(DependenceTest, BasicAssertions) {
     schStore.getOmega()[4] = 2;
     llvm::SmallVector<Dependence, 1> dc;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
-    MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};    
+    MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
     DependencePolyhedra dep0(msrc, mtgt0);
     EXPECT_FALSE(dep0.pruneBounds());
     std::cout << "Dep0 = \n" << dep0 << std::endl;
@@ -115,7 +114,6 @@ TEST(DependenceTest, BasicAssertions) {
     std::cout << std::endl;
     EXPECT_FALSE(dep0.isEmpty());
     EXPECT_FALSE(dep1.isEmpty());
-
 
     // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
     EXPECT_EQ(dc.size(), 0);
@@ -548,11 +546,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) <<
     // std::endl; printVector(std::cout << "mSch3_3.schedule.getOmega() = ",
     // mSch3_3.schedule.getOmega()) << std::endl;
-    EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 1);
-    EXPECT_TRUE(d.back().forward);
+    EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
+    EXPECT_TRUE(d[d.size() - 2].forward);
+    EXPECT_FALSE(d[d.size() - 1].forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    assert(d.back().forward);
-    EXPECT_EQ(d.size(), 15);
+    assert(d[d.size() - 2].forward);
+    assert(!d[d.size() - 1].forward);
+    EXPECT_EQ(d.size(), 16);
     //
     // lblock.fillEdges();
     // std::cout << "Number of edges found: " << lblock.edges.size() <<
@@ -761,4 +761,3 @@ TEST(RankDeficientLoad, BasicAssertions) {
 
     std::cout << "Blog post example:\n" << deps[0] << std::endl;
 }
-
