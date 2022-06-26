@@ -24,7 +24,7 @@ if gtest_dep.found()
 
   test_files = [
     'bitset_test',
-    'cost_modeling_test',
+    # 'cost_modeling_test',
     'compat_test',
     #'dependence_test2',
     'dependence_test',

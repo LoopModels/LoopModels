@@ -513,6 +513,14 @@ struct Dependence {
     MemoryAccess *in;
     MemoryAccess *out;
     const bool forward;
+    Dependence(DependencePolyhedra depPoly,
+               IntegerEqPolyhedra dependenceSatisfaction,
+               IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
+               MemoryAccess *out, const bool forward)
+        : depPoly(std::move(depPoly)),
+          dependenceSatisfaction(std::move(dependenceSatisfaction)),
+          dependenceBounding(std::move(dependenceBounding)), in(in), out(out),
+          forward(forward){};
     // if there is no time dimension, it returns a 0xdim matrix and `R == 0`
     // else, it returns a square matrix, where the first `R` rows correspond
     // to time-axis.
