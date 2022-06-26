@@ -26,7 +26,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         : A(numIneq, numVar), b(numIneq){};
 
     size_t getNumVar() const { return A.numCol(); }
-    size_t getNumConstraints() const { return A.numRow(); }
+    size_t getNumInequalityConstraints() const { return A.numRow(); }
 
     // methods required to support AbstractPolyhedra
     bool knownLessEqualZero(T x) const {
@@ -1140,7 +1140,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
     }
     void dropEmptyConstraints() {
-        const size_t numConstraints = getNumConstraints();
+        const size_t numConstraints = getNumInequalityConstraints();
         for (size_t c = numConstraints; c != 0;) {
             if (allZero(A.getRow(--c))) {
                 eraseConstraint(A, b, c);
@@ -1181,7 +1181,7 @@ template <class P, typename T> struct AbstractPolyhedra {
     bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
         T bc;
         size_t numVar = std::min(x.size(), getNumVar());
-        for (size_t c = 0; c < getNumConstraints(); ++c) {
+        for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
             bc = b[c];
             for (size_t v = 0; v < numVar; ++v) {
                 bc -= A(c, v) * x[v];

@@ -33,7 +33,12 @@ struct Schedule {
     Schedule(size_t nLoops)
         : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
-          numLoops(nLoops){};
+          numLoops(nLoops) {
+        SquarePtrMatrix<int64_t> Phi(getPhi());
+        for (size_t i = 0; i < nLoops; ++i) {
+            Phi(i, i) = 1;
+        }
+    };
     SquarePtrMatrix<int64_t> getPhi() {
         // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
         return SquarePtrMatrix<int64_t>{data.data(), numLoops};
@@ -62,7 +67,7 @@ struct Schedule {
 };
 
 // TODO:
-// refactor to use GraphTraits.h 
+// refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
     ArrayReference ref;
@@ -91,4 +96,3 @@ struct MemoryAccess {
         return schedule.fusedThrough(x.schedule);
     }
 };
-
