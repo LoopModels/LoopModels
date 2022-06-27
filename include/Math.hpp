@@ -55,6 +55,15 @@ static int64_t gcd(int64_t x, int64_t y) {
     }
     return b << k;
 }
+static int64_t lcm(int64_t x, int64_t y) {
+    if (std::abs(x) == 1) {
+        return y;
+    } else if (std::abs(y) == 1) {
+        return x;
+    } else {
+        return x * (y / gcd(x, y));
+    }
+}
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
     T old_r = a;
@@ -80,7 +89,7 @@ template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
 }
 
 std::pair<int64_t, int64_t> divgcd(int64_t x, int64_t y) {
-    int64_t g = std::gcd(x, y);
+    int64_t g = gcd(x, y);
     return std::make_pair(x / g, y / g);
 }
 
@@ -1018,7 +1027,23 @@ struct Rational {
     Rational() : numerator(0), denominator(1){};
     Rational(int64_t coef) : numerator(coef), denominator(1){};
     Rational(int coef) : numerator(coef), denominator(1){};
-    Rational(int64_t n, int64_t d) : numerator(n), denominator(n ? d : 1){};
+    Rational(int64_t n, int64_t d)
+        : numerator(d > 0 ? n : -n), denominator(n ? (d > 0 ? d : -d) : 1) {}
+    static Rational create(int64_t n, int64_t d) {
+        if (n) {
+            int64_t sign = 2 * (d > 0) - 1;
+            int64_t g = gcd(n, d);
+            n *= sign;
+            d *= sign;
+            if (g != 1) {
+                n /= g;
+                d /= g;
+            }
+            return Rational{n, d};
+        } else {
+            return Rational{0, 1};
+        }
+    }
     llvm::Optional<Rational> operator+(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
@@ -1063,6 +1088,15 @@ struct Rational {
         *this = a.getValue();
         return *this;
     }
+    llvm::Optional<Rational> operator*(int64_t y) const {
+        auto [xd, yn] = divgcd(denominator, y);
+        int64_t n;
+        if (__builtin_mul_overflow(numerator, yn, &n)) {
+            return llvm::Optional<Rational>();
+        } else {
+            return Rational{n, xd};
+        }
+    }
     llvm::Optional<Rational> operator*(Rational y) const {
         auto [xn, yd] = divgcd(numerator, y.denominator);
         auto [xd, yn] = divgcd(denominator, y.numerator);
@@ -1072,7 +1106,7 @@ struct Rational {
         if (o1 | o2) {
             return llvm::Optional<Rational>();
         } else {
-            return Rational(n, d);
+            return Rational{n, d};
         }
     }
     Rational &operator*=(Rational y) {
@@ -1170,8 +1204,23 @@ struct Rational {
     void dump() const { std::cout << *this << std::endl; }
 };
 llvm::Optional<Rational> gcd(Rational x, Rational y) {
-    return Rational{std::gcd(x.numerator, y.numerator),
-                    std::lcm(x.denominator, y.denominator)};
+    return Rational{gcd(x.numerator, y.numerator),
+                    lcm(x.denominator, y.denominator)};
+}
+
+static void normalizeByGCD(llvm::MutableArrayRef<int64_t> x) {
+    if (size_t N = x.size()) {
+        if (N == 1) {
+            x[0] = 1;
+            return;
+        }
+        int64_t g = gcd(x[0], x[1]);
+        for (size_t n = 2; (n < N) & (g != 1); ++n)
+            g = gcd(g, x[n]);
+        if (g > 1)
+            for (auto &&a : x)
+                a /= g;
+    }
 }
 
 template <typename T>

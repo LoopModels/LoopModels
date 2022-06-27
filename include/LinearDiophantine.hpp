@@ -68,7 +68,7 @@ llvm::Optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
             return {};
         }
     }
-    int64_t q = std::gcd(a0, a1);
+    int64_t q = gcd(a0, a1);
     // d == q*((a/q)*x + (b/q)*y) + ... == q*w + ...
     // solve the rest
     auto dio_dqc =

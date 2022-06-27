@@ -81,21 +81,21 @@ unimodularize1x3(int64_t a, int64_t b, int64_t c) {
     // we need
     // 1 == gcd(b - a*y, c - a*z)
     // int64_t args[3];
-    if (std::gcd(b, c) == 1) {
+    if (gcd(b, c) == 1) {
         auto t1 = std::make_tuple(int64_t(1), int64_t(0), int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 1, 0, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
         }
     }
-    if (std::gcd(a, c) == 1) {
+    if (gcd(a, c) == 1) {
         auto t1 = std::make_tuple(int64_t(0), int64_t(1), int64_t(0));
         auto t2 = unimodularize2x3(a, b, c, 0, 1, 0);
         if (t2.hasValue()) {
             return std::make_pair(t1, t2.getValue());
         }
     }
-    if (std::gcd(a, b) == 1) {
+    if (gcd(a, b) == 1) {
         auto t1 = std::make_tuple(int64_t(0), int64_t(0), int64_t(1));
         auto t2 = unimodularize2x3(a, b, c, 0, 0, 1);
         if (t2.hasValue()) {

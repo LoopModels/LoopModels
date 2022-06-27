@@ -252,7 +252,7 @@ void fourierMotzkin(IntMatrix auto &Anew, llvm::SmallVectorImpl<int64_t> &bnew,
                 if (k == j)
                     continue;
                 if (int64_t Eik = E(i, k)) {
-                    int64_t g = std::gcd(Eij, Eik);
+                    int64_t g = gcd(Eij, Eik);
                     int64_t Ejg = Eij / g;
                     int64_t Ekg = Eik / g;
                     for (size_t v = 0; v < numRow; ++v) {
