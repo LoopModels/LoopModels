@@ -26,16 +26,25 @@ IntMatrix orthogonalize(IntMatrix A) {
                 d += A(j, k) * A(j, k);
             }
             for (size_t k = 0; k < A.numCol(); ++k) {
-                buff[k] -= Rational::create(A(j, k) * n, d);
+                buff[k] -= Rational::createPositiveDenominator(A(j, k) * n, d);
             }
         }
         int64_t lm = 1;
         for (size_t k = 0; k < A.numCol(); ++k)
             lm = lcm(lm, buff[k].denominator);
         for (size_t k = 0; k < A.numCol(); ++k)
-            A(i, k) = (lm * buff[k].numerator) / buff[k].denominator;
+            A(i, k) = buff[k].numerator * (lm / buff[k].denominator);
     }
     return A;
+}
+
+IntMatrix orthogonalNullSpace(IntMatrix A) {
+    return orthogonalize(NormalForm::nullSpace(std::move(A)));
+    // IntMatrix NS{NormalForm::nullSpace(std::move(A))};
+    // std::cout << "Pre-Orth NS =\n" << NS << std::endl;
+    // IntMatrix ONS{orthogonalize(std::move(NS))};
+    // std::cout << "Post-Orth NS =\n" << ONS << std::endl;
+    // return ONS;
 }
 
 llvm::Optional<llvm::SmallVector<ArrayReference, 0>>

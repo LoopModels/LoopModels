@@ -515,3 +515,35 @@ static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b) {
         }
     }
 }
+static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b) {
+    for (size_t c = b.size(); c != 0;) {
+        MPoly &bc = b[--c];
+        int64_t g = 0;
+        for (auto &t : bc)
+            g = gcd(t.coefficient, g);
+        if (g == 1)
+            continue;
+        for (size_t v = 0; v < A.numCol(); ++v) {
+            if (int64_t Acv = A(c, v)) {
+                int64_t absAcv = std::abs(Acv);
+                if (Acv == 1) {
+                    g = 1;
+                    break;
+                }
+                g = gcd(g, absAcv);
+            }
+        }
+        if (g) {
+            if (g == 1)
+                continue;
+            if (!isZero(bc))
+                for (auto &&t : bc)
+                    t.coefficient /= g;
+            for (size_t v = 0; v < A.numCol(); ++v)
+                if (int64_t Acv = A(c, v))
+                    A(c, v) = Acv / g;
+        } else {
+            eraseConstraint(A, b, c);
+        }
+    }
+}

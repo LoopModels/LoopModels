@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Polyhedra.hpp"
+#include "Constraints.hpp"
 
 template <class P, typename T>
 struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
@@ -41,7 +42,8 @@ struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
     }
     void dropEmptyConstraints() {
         ::dropEmptyConstraints(A, b);
-        ::dropEmptyConstraints(E, q);
+        // ::dropEmptyConstraints(E, q);
+        divByGCDDropZeros(E, q);
     }
     void removeExtraThenZeroExtraVariables(size_t numNotRemove,
                                            size_t numVarKeep) {

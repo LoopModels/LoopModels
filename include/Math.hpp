@@ -37,10 +37,8 @@ static int64_t gcd(int64_t x, int64_t y) {
     assert(y != std::numeric_limits<int64_t>::min());
     int64_t a = std::abs(x);
     int64_t b = std::abs(y);
-    if (a == 1) {
-        return b;
-    } else if (b == 1) {
-        return a;
+    if ((a == 1) | (b == 1)) {
+        return 1;
     }
     int64_t az = std::countr_zero(uint64_t(x));
     int64_t bz = std::countr_zero(uint64_t(y));
@@ -89,8 +87,26 @@ template <Integral T> std::tuple<T, T, T> gcdx(T a, T b) {
 }
 
 std::pair<int64_t, int64_t> divgcd(int64_t x, int64_t y) {
-    int64_t g = gcd(x, y);
-    return std::make_pair(x / g, y / g);
+    if (x) {
+        if (y) {
+            int64_t g = gcd(x, y);
+#ifndef NDEBUG
+            if (g != std::gcd(x, y)) {
+                std::cout << "gcd(" << x << ", " << y
+                          << ") = " << std::gcd(x, y) << " != " << g
+                          << std::endl;
+                assert(false);
+            }
+#endif
+            return std::make_pair(x / g, y / g);
+        } else {
+            return std::make_pair(1, 0);
+        }
+    } else if (y) {
+        return std::make_pair(0, 1);
+    } else {
+        return std::make_pair(0, 0);
+    }
 }
 
 // template<typename T> T one(const T) { return T(1); }
@@ -1044,6 +1060,18 @@ struct Rational {
             return Rational{0, 1};
         }
     }
+    static Rational createPositiveDenominator(int64_t n, int64_t d) {
+        if (n) {
+            int64_t g = gcd(n, d);
+            if (g != 1) {
+                n /= g;
+                d /= g;
+            }
+            return Rational{n, d};
+        } else {
+            return Rational{0, 1};
+        }
+    }
     llvm::Optional<Rational> operator+(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
@@ -1098,22 +1126,31 @@ struct Rational {
         }
     }
     llvm::Optional<Rational> operator*(Rational y) const {
-        auto [xn, yd] = divgcd(numerator, y.denominator);
-        auto [xd, yn] = divgcd(denominator, y.numerator);
-        int64_t n, d;
-        bool o1 = __builtin_mul_overflow(xn, yn, &n);
-        bool o2 = __builtin_mul_overflow(xd, yd, &d);
-        if (o1 | o2) {
-            return llvm::Optional<Rational>();
+        if ((numerator != 0) & (y.numerator != 0)) {
+            auto [xn, yd] = divgcd(numerator, y.denominator);
+            auto [xd, yn] = divgcd(denominator, y.numerator);
+            int64_t n, d;
+            bool o1 = __builtin_mul_overflow(xn, yn, &n);
+            bool o2 = __builtin_mul_overflow(xd, yd, &d);
+            if (o1 | o2) {
+                return llvm::Optional<Rational>();
+            } else {
+                return Rational{n, d};
+            }
         } else {
-            return Rational{n, d};
+            return Rational{0, 1};
         }
     }
     Rational &operator*=(Rational y) {
-        auto [xn, yd] = divgcd(numerator, y.denominator);
-        auto [xd, yn] = divgcd(denominator, y.numerator);
-        numerator = xn * yn;
-        denominator = xd * yd;
+        if ((numerator != 0) & (y.numerator != 0)) {
+            auto [xn, yd] = divgcd(numerator, y.denominator);
+            auto [xd, yn] = divgcd(denominator, y.numerator);
+            numerator = xn * yn;
+            denominator = xd * yd;
+        } else {
+            numerator = 0;
+            denominator = 1;
+        }
         return *this;
     }
     Rational inv() const {

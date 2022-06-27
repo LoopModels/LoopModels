@@ -9,6 +9,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
+#include "Orthogonalize.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/DenseMap.h>
@@ -28,9 +29,14 @@
 // i_0 == i_1
 // j_0 == i_1
 struct DependencePolyhedra : SymbolicEqPolyhedra {
-    size_t numDep0Var, numDep1Var;
-    size_t getTimeDim() const { return getNumVar() - numDep0Var - numDep1Var; }
-    size_t getNumEqualityConstraints() const { return q.size(); }
+    size_t numDep0Var;
+    llvm::SmallVector<int64_t, 2> nullStep;
+    inline size_t getTimeDim() const { return nullStep.size(); }
+    inline size_t getDim0() const { return numDep0Var; }
+    inline size_t getDim1() const {
+        return getNumVar() - numDep0Var - nullStep.size();
+    }
+    inline size_t getNumEqualityConstraints() const { return q.size(); }
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
@@ -151,7 +157,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 }
             }
             // returns rank x num loops
-            return NormalForm::nullSpace(std::move(A));
+            return orthogonalNullSpace(std::move(A));
         } else {
             return A;
         }
@@ -192,11 +198,18 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = nv0;
-        numDep1Var = nv1;
+        // numDep1Var = nv1;
         const size_t nc = nc0 + nc1;
         IntMatrix NS(nullSpace(ma0, ma1));
         const size_t nullDim(NS.numRow());
         const size_t indexDim(dims.size());
+        nullStep.resize_for_overwrite(nullDim);
+        for (size_t i = 0; i < nullDim; ++i) {
+            int64_t s = 0;
+            for (size_t j = 0; j < NS.numCol(); ++j)
+                s += NS(i, j) * NS(i, j);
+            nullStep[i] = s;
+        }
         A.resize(nc, nv0 + nv1 + nullDim);
         E.resize(indexDim + nullDim, nv0 + nv1 + nullDim);
         q.resize(indexDim + nullDim);
@@ -261,7 +274,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         }
     }
     inline size_t getNumScheduleCoefficients() const {
-        return 1 + numDep0Var + numDep1Var;
+        return 1 + getNumVar() - getTimeDim();
     }
     // `direction = true` means second dep follow first
     // order of variables:
@@ -710,10 +723,12 @@ struct Dependence {
                 size_t lambdaInd =
                     numVarKeep + numInequalityConstraintsOld + 2 * c;
                 int64_t Ecv = dxy.E(c, v);
+#ifndef NDEBUG
                 if (Ecv) {
                     std::cout << "Found non-0: E(" << c << ", " << v
                               << ") = " << Ecv << std::endl;
                 }
+#endif
                 farkasBackups.first.E(0, lambdaInd + 1) -= Ecv;
                 farkasBackups.first.E(0, lambdaInd + 2) += Ecv;
                 farkasBackups.second.E(0, lambdaInd + 1) -= Ecv;
@@ -748,11 +763,11 @@ struct Dependence {
             // checkDirection(farkasBackups, x, y) == false
             // correct time direction would make it return true
             // thus sign = timeDirection[t] ? 1 : -1
-            int64_t sign = 2 * timeDirection[t] - 1;
+            int64_t step = (2 * timeDirection[t] - 1) * dxy.nullStep[t];
             size_t v = numVar + t;
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 size_t lambdaInd = numVarKeep + c + 1;
-                int64_t Acv = dxy.A(c, v) * sign;
+                int64_t Acv = dxy.A(c, v) * step;
                 dxy.b[c] -= Acv;
                 farkasBackups.first.E(0, lambdaInd) -= Acv;  // *1
                 farkasBackups.second.E(0, lambdaInd) -= Acv; // *-1
@@ -761,7 +776,7 @@ struct Dependence {
                 // each of these actually represents 2 inds
                 size_t lambdaInd =
                     numVarKeep + numInequalityConstraintsOld + 2 * c;
-                int64_t Ecv = dxy.E(c, v) * sign;
+                int64_t Ecv = dxy.E(c, v) * step;
                 dxy.q[c] -= Ecv;
                 farkasBackups.first.E(0, lambdaInd + 1) -= Ecv;
                 farkasBackups.first.E(0, lambdaInd + 2) += Ecv;
@@ -769,7 +784,13 @@ struct Dependence {
                 farkasBackups.second.E(0, lambdaInd + 2) += Ecv;
             }
         } while (++t < timeDim);
+#ifndef NDEBUG
+        std::cout << "time dxy = \n" << dxy << std::endl;
+#endif
         dxy.zeroExtraVariables(numVar);
+#ifndef NDEBUG
+        std::cout << "after 0ing, time dxy = \n" << dxy << std::endl;
+#endif
         // farkasBackups.first.removeExtraVariables(numScheduleCoefs);
         farkasBackups.first.removeExtraThenZeroExtraVariables(numVarKeep,
                                                               numScheduleCoefs);
