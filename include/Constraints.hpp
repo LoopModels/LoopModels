@@ -4,6 +4,8 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Symbolics.hpp"
+#include <cstddef>
+#include <cstdint>
 
 // prints in current permutation order.
 // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
@@ -480,6 +482,35 @@ template <typename T>
 static void dropEmptyConstraints(IntMatrix &A, llvm::SmallVectorImpl<T> &b) {
     for (size_t c = b.size(); c != 0;) {
         if (allZero(A.getRow(--c))) {
+            eraseConstraint(A, b, c);
+        }
+    }
+}
+static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b) {
+    for (size_t c = b.size(); c != 0;) {
+        int64_t bc = b[--c];
+        int64_t g = std::abs(bc);
+        if (g == 1)
+            continue;
+        for (size_t v = 0; v < A.numCol(); ++v) {
+            if (int64_t Acv = A(c, v)) {
+                int64_t absAcv = std::abs(Acv);
+                if (Acv == 1) {
+                    g = 1;
+                    break;
+                }
+                g = gcd(g, absAcv);
+            }
+        }
+        if (g) {
+            if (g == 1)
+                continue;
+            if (bc)
+                b[c] = bc / g;
+            for (size_t v = 0; v < A.numCol(); ++v)
+                if (int64_t Acv = A(c, v))
+                    A(c, v) = Acv / g;
+        } else {
             eraseConstraint(A, b, c);
         }
     }

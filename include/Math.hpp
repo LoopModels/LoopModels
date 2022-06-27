@@ -27,7 +27,7 @@
 template <class T>
 concept Integral = std::is_integral<T>::value;
 
-int64_t gcd(int64_t x, int64_t y) {
+static int64_t gcd(int64_t x, int64_t y) {
     if (x == 0) {
         return std::abs(y);
     } else if (y == 0) {

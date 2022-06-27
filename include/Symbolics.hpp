@@ -2930,7 +2930,6 @@ Monomial gcd(Monomial &&x, Monomial &&y) {
     }
 }
 */
-static size_t gcd(int64_t x, int64_t y) { return std::gcd(x, y); }
 
 template <typename C, typename M>
 static Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
