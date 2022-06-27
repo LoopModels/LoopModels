@@ -1,6 +1,7 @@
 #include "../include/AbstractEqualityPolyhedra.hpp"
 #include "../include/NormalForm.hpp"
 #include "../include/Polyhedra.hpp"
+#include "Orthogonalize.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <cstdint>
@@ -93,7 +94,8 @@ static void BM_NullSpace(benchmark::State &state) {
     B(5, 2) = -9;
 
     // fourth row is 0
-    // std::cout << "B=\n" << B << "\nnullSpace(B) =\n" << NormalForm::nullSpace(B) << std::endl;
+    // std::cout << "B=\n" << B << "\nnullSpace(B) =\n" <<
+    // NormalForm::nullSpace(B) << std::endl;
     for (auto _ : state) {
         NormalForm::nullSpace(B);
     }
@@ -133,5 +135,63 @@ static void BM_NullSpace2000(benchmark::State &state) {
 }
 // Register the function as a benchmark
 BENCHMARK(BM_NullSpace2000);
+
+static void BM_Orthogonalize(benchmark::State &state) {
+    IntMatrix A(7, 7);
+    IntMatrix B;
+    A(1, 1) = -2;
+    A(1, 2) = 2;
+    A(1, 3) = 0;
+    A(1, 4) = 1;
+    A(1, 5) = 1;
+    A(1, 6) = 1;
+    A(1, 7) = 2;
+    A(2, 1) = 3;
+    A(2, 2) = -3;
+    A(2, 3) = 2;
+    A(2, 4) = 3;
+    A(2, 5) = 2;
+    A(2, 6) = 3;
+    A(2, 7) = 2;
+    A(3, 1) = -3;
+    A(3, 2) = 0;
+    A(3, 3) = 2;
+    A(3, 4) = 3;
+    A(3, 5) = -2;
+    A(3, 6) = 0;
+    A(3, 7) = 1;
+    A(4, 1) = 2;
+    A(4, 2) = 1;
+    A(4, 3) = 0;
+    A(4, 4) = -1;
+    A(4, 5) = 3;
+    A(4, 6) = -1;
+    A(4, 7) = 1;
+    A(5, 1) = 1;
+    A(5, 2) = -3;
+    A(5, 3) = -3;
+    A(5, 4) = -2;
+    A(5, 5) = 2;
+    A(5, 6) = -2;
+    A(5, 7) = 2;
+    A(6, 1) = 0;
+    A(6, 2) = 0;
+    A(6, 3) = 1;
+    A(6, 4) = 2;
+    A(6, 5) = -3;
+    A(6, 6) = -2;
+    A(6, 7) = -2;
+    A(7, 1) = 0;
+    A(7, 2) = -3;
+    A(7, 3) = -2;
+    A(7, 4) = -1;
+    A(7, 5) = 1;
+    A(7, 6) = 0;
+    A(7, 7) = 1;
+    for (auto _ : state) {
+        B = orthogonalize(A);
+    }
+}
+BENCHMARK(BM_Orthogonalize);
 
 BENCHMARK_MAIN();

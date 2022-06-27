@@ -699,14 +699,15 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
     template <typename T> bool lexGreater(const T &y) const {
         return lexGreater(y.exponent);
     }
-    //std::strong_ordering operator<=>(PackedMonomial const &y) const {
-    //    if (K == 1) {
-    //        return bits[0] <=> y.bits[0];
-    //    }
-    //    const uint64_t *xp = this->bits;
-    //    const uint64_t *yp = y.bits;
-    //    return std::lexicographical_compare_three_way(xp, xp + K, yp, yp + K);
-    //}
+    // std::strong_ordering operator<=>(PackedMonomial const &y) const {
+    //     if (K == 1) {
+    //         return bits[0] <=> y.bits[0];
+    //     }
+    //     const uint64_t *xp = this->bits;
+    //     const uint64_t *yp = y.bits;
+    //     return std::lexicographical_compare_three_way(xp, xp + K, yp, yp +
+    //     K);
+    // }
     friend bool isOne(PackedMonomial const &x) { return (x.degree() == 0); }
     friend bool isZero(PackedMonomial const &) { return false; }
 
@@ -1455,12 +1456,14 @@ template <typename C, IsMonomial M> struct Terms {
 
     Term<C, M> &leadingTerm() { return terms[0]; }
     Term<C, M> const &leadingTerm() const { return terms[0]; }
-    C &leadingCoefficient() { 
+    C &leadingCoefficient() {
         assert(terms.size());
-        return begin()->coefficient; }
-    const C &leadingCoefficient() const { 
+        return begin()->coefficient;
+    }
+    const C &leadingCoefficient() const {
         assert(terms.size());
-        return begin()->coefficient; }
+        return begin()->coefficient;
+    }
     void removeLeadingTerm() { terms.erase(terms.begin()); }
     // void takeLeadingTerm(Term<C,M> &x) {
     //     addTerm(std::move(x.leadingTerm()));
@@ -1606,10 +1609,10 @@ Terms<int64_t, Uninomial> static operator-(Uninomial x, Uninomial y) {
         return Terms<int64_t, Uninomial>();
     } else if (x.lexGreater(y)) {
         return Terms<int64_t, Uninomial>(Term<int64_t, Uninomial>{1, x},
-                                          Term<int64_t, Uninomial>{-1, y});
+                                         Term<int64_t, Uninomial>{-1, y});
     } else {
         return Terms<int64_t, Uninomial>(Term<int64_t, Uninomial>{-1, y},
-                                          Term<int64_t, Uninomial>{1, x});
+                                         Term<int64_t, Uninomial>{1, x});
     }
 }
 template <IsMonomial M> static auto operator-(M const &x, M const &y) {
@@ -2568,11 +2571,13 @@ static Multivariate<C, M> operator*(Multivariate<C, M> &&c, int64_t x) {
 }
 
 template <IsMonomial M>
-static Multivariate<int64_t, M> operator*(int64_t x, Multivariate<int64_t, M> &&c) {
+static Multivariate<int64_t, M> operator*(int64_t x,
+                                          Multivariate<int64_t, M> &&c) {
     return std::move(c *= x);
 }
 template <IsMonomial M>
-static Multivariate<int64_t, M> operator*(Multivariate<int64_t, M> &&c, int64_t x) {
+static Multivariate<int64_t, M> operator*(Multivariate<int64_t, M> &&c,
+                                          int64_t x) {
     return std::move(c *= x);
 }
 
@@ -2937,6 +2942,7 @@ static Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
     C gr = gcd(x.coefficient, y.coefficient);
     return Term<C, M>(std::move(gr), std::move(g));
 }
+inline int64_t gcd(int64_t x, int64_t y) { return ::gcd(x, y); }
 template <typename C, IsMonomial M>
 static Term<C, M> gcd(Term<C, M> const &x, Term<C, M> const &y) {
     C gr = gcd(x.coefficient, y.coefficient);
@@ -3298,7 +3304,6 @@ typedef Polynomial::Multivariate<int64_t, Polynomial::Monomial> MPoly;
 //
 // [ 0 ], k1 + 1;
 //
-
 
 template <> struct llvm::DenseMapInfo<Polynomial::Monomial, void> {
     static inline Polynomial::Monomial getEmptyKey() {

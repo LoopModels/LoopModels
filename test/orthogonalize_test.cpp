@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
+#include <random>
 
 TEST(OrthogonalizeTest, BasicAssertions) {
     auto M = Polynomial::Monomial(Polynomial::ID{1});
@@ -283,5 +284,32 @@ TEST(BadMul, BasicAssertions) {
     std::cout << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
         std::cout << ar << std::endl << std::endl;
+    }
+}
+
+TEST(OrthogonalizeMatricesTest, BasicAssertions) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> distrib(-3, 3);
+
+    const size_t M = 7;
+    const size_t N = 7;
+    IntMatrix A(M, N);
+    IntMatrix B(N, N);
+    const size_t iters = 1000;
+    for (size_t i = 0; i < iters; ++i){
+	for (auto &&a : A)
+	    a = distrib(gen);
+	// std::cout << "Random A =\n" << A << std::endl;
+	A = orthogonalize(std::move(A));
+	// std::cout << "Orthogonal A =\n" << A << std::endl;
+	// note, A'A is not diagonal
+	// but AA' is
+	matmulnt(B, A, A);
+	// std::cout << "A'A =\n" << B << std::endl;
+	for (size_t m = 0; m < M; ++m)
+	    for (size_t n = 0; n < N; ++n)
+		if (m != n)
+		    EXPECT_EQ(B(m,n), 0);
     }
 }
