@@ -16,9 +16,8 @@
 
 TEST(TriangularExampleTest, BasicAssertions) {
 
-    // llvm::DataLayout
-    // dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-    //                     "n8:16:32:64-S128");
+    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+                        "n8:16:32:64-S128");
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();
@@ -46,48 +45,56 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   for (n = 0; n < N; ++n){
     //     A(m,n) = B(m,n);
     //   }    auto Bload = builder.CreateLoad(
-    auto Bload = builder.CreateLoad(
+    auto Bload = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrB,
-                          llvm::SmallVector<llvm::Value *, 1>{Boffset}));
-    auto Astore0 = builder.CreateStore(
-        Bload, builder.CreateGEP(Float64, ptrA,
-                                 llvm::SmallVector<llvm::Value *, 1>{Boffset}));
+                          llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+        llvm::MaybeAlign(8));
+    auto Astore0 = builder.CreateAlignedStore(
+        Bload,
+        builder.CreateGEP(Float64, ptrA,
+                          llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+        llvm::MaybeAlign(8));
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(m,n) = A(m,n) / U(n,n);
     llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
-    auto Uloadnn = builder.CreateLoad(
+    auto Uloadnn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
-                          llvm::SmallVector<llvm::Value *, 1>{Uoffsetnn}));
+                          llvm::SmallVector<llvm::Value *, 1>{Uoffsetnn}),
+        llvm::MaybeAlign(8));
     auto Ageped0 = builder.CreateGEP(
         Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Boffset});
-    auto Aload0 = builder.CreateLoad(Float64, Ageped0);
-    auto AstoreFDiv =
-        builder.CreateStore(builder.CreateFDiv(Aload0, Uloadnn), Ageped0);
+    auto Aload0 =
+        builder.CreateAlignedLoad(Float64, Ageped0, llvm::MaybeAlign(8));
+    auto AstoreFDiv = builder.CreateAlignedStore(
+        builder.CreateFDiv(Aload0, Uloadnn), Ageped0, llvm::MaybeAlign(8));
 
     // for (m = 0; m < M; ++m){
     //     for (k = n+1; k < N; ++k){
     //       A(m,k) = A(m,k) - A(m,n)*U(n,k);
     //     }
     llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
-    auto Uloadnk = builder.CreateLoad(
+    auto Uloadnk = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
-                          llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}));
+                          llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}),
+        llvm::MaybeAlign(8));
     llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
     auto Ageped1mk = builder.CreateGEP(
         Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk});
-    auto Aload1mk = builder.CreateLoad(Float64, Ageped1mk);
-    auto Aload1mn = builder.CreateLoad(
+    auto Aload1mk =
+        builder.CreateAlignedLoad(Float64, Ageped1mk, llvm::MaybeAlign(8));
+    auto Aload1mn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{Boffset}));
-    auto Astore2mk = builder.CreateStore(
+                          llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+        llvm::MaybeAlign(8));
+    auto Astore2mk = builder.CreateAlignedStore(
         builder.CreateFSub(Aload1mk, builder.CreateFMul(Aload1mn, Uloadnk)),
-        Ageped0);
+        Ageped0, llvm::MaybeAlign(8));
 
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
@@ -226,10 +233,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
     lblock.memory.reserve(9);
     Schedule sch2_0_0(2);
-    SquarePtrMatrix<int64_t> Phi2 = sch2_0_0.getPhi();
-    // Phi0 = [1 0; 0 1]
-    Phi2(0, 0) = 1;
-    Phi2(1, 1) = 1;
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
     // a load points to the loaded instruction
@@ -285,10 +288,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
-    SquarePtrMatrix<int64_t> Phi3 = sch3_0.getPhi();
-    Phi3(0, 0) = 1;
-    Phi3(1, 1) = 1;
-    Phi3(2, 2) = 1;
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
     lblock.memory.emplace_back(UnkInd, Uloadnk, sch3_0, true);
