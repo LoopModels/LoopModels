@@ -462,6 +462,7 @@ template <typename T, typename A> struct BaseMatrix {
         return StridedVector<const T>{data() + n, numRow(), rowStride()};
     }
 };
+template <typename T> struct SparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
@@ -487,6 +488,23 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
 
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>(mem, M, N, X);
+    }
+    PtrMatrix<T> operator=(SparseMatrix<T> &A) {
+	assert(M == A.numRow());
+	assert(N == A.numCol());
+        size_t k = 0;
+        for (size_t i = 0; i < M; ++i) {
+            uint32_t m = A.rows[i] & 0x00ffffff;
+            size_t j = 0;
+            while (m) {
+                uint32_t tz = std::countr_zero(m);
+                m >>= tz + 1;
+                j += tz;
+		mem[i*X + (j++)] = A.nonZeros[k++];
+            }
+        }
+        assert(k == A.nonZeros.size());
+	return *this;
     }
 };
 
@@ -779,6 +797,23 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             }
         }
         return A;
+    }
+
+    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                      size_t colEnd) {
+        assert(rowEnd > rowStart);
+        assert(colEnd > colStart);
+        return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
+                            rowEnd - rowStart, colEnd - colStart, X);
+    }
+
+    PtrMatrix<T> operator=(PtrMatrix<T> A) {
+        assert(M == A.numRow());
+        assert(N == A.numCol());
+        for (size_t m = 0; m < M; ++m)
+            for (size_t n = 0; n < N; ++n)
+                mem[n + m * X] = A(m, n);
+        return *this;
     }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
@@ -1355,6 +1390,8 @@ template <typename T> struct SparseMatrix {
         return A;
     }
 };
+
+
 template <typename T>
 std::ostream &operator<<(std::ostream &os, SparseMatrix<T> const &A) {
     size_t k = 0;
