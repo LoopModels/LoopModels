@@ -90,14 +90,7 @@ std::pair<int64_t, int64_t> divgcd(int64_t x, int64_t y) {
     if (x) {
         if (y) {
             int64_t g = gcd(x, y);
-#ifndef NDEBUG
-            if (g != std::gcd(x, y)) {
-                std::cout << "gcd(" << x << ", " << y
-                          << ") = " << std::gcd(x, y) << " != " << g
-                          << std::endl;
-                assert(false);
-            }
-#endif
+            assert(g == std::gcd(x, y));
             return std::make_pair(x / g, y / g);
         } else {
             return std::make_pair(1, 0);
@@ -469,6 +462,7 @@ template <typename T, typename A> struct BaseMatrix {
         return StridedVector<const T>{data() + n, numRow(), rowStride()};
     }
 };
+template <typename T> struct SparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
@@ -494,6 +488,23 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
 
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>(mem, M, N, X);
+    }
+    PtrMatrix<T> operator=(SparseMatrix<T> &A) {
+	assert(M == A.numRow());
+	assert(N == A.numCol());
+        size_t k = 0;
+        for (size_t i = 0; i < M; ++i) {
+            uint32_t m = A.rows[i] & 0x00ffffff;
+            size_t j = 0;
+            while (m) {
+                uint32_t tz = std::countr_zero(m);
+                m >>= tz + 1;
+                j += tz;
+		mem[i*X + (j++)] = A.nonZeros[k++];
+            }
+        }
+        assert(k == A.nonZeros.size());
+	return *this;
     }
 };
 
@@ -786,6 +797,23 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             }
         }
         return A;
+    }
+
+    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                      size_t colEnd) {
+        assert(rowEnd > rowStart);
+        assert(colEnd > colStart);
+        return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
+                            rowEnd - rowStart, colEnd - colStart, X);
+    }
+
+    PtrMatrix<T> operator=(PtrMatrix<T> A) {
+        assert(M == A.numRow());
+        assert(N == A.numCol());
+        for (size_t m = 0; m < M; ++m)
+            for (size_t n = 0; n < N; ++n)
+                mem[n + m * X] = A(m, n);
+        return *this;
     }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
@@ -1291,6 +1319,109 @@ std::ostream &printMatrixImpl(std::ostream &os, PtrMatrix<const T> A) {
     os << " ]";
     return os;
 }
+
+template <typename T> struct SparseMatrix {
+    // non-zeros
+    llvm::SmallVector<T> nonZeros;
+    // masks, the upper 8 bits give the number of elements in previous rows
+    // the remaining 24 bits are a mask indicating non-zeros within this row
+    llvm::SmallVector<uint32_t> rows;
+    size_t col;
+    size_t numRow() const { return rows.size(); }
+    size_t numCol() const { return col; }
+    SparseMatrix(size_t numRows, size_t numCols)
+        : nonZeros(llvm::SmallVector<T>()),
+          rows(llvm::SmallVector<uint32_t>(numRows)), col(numCols) {
+        assert(col <= 24);
+    }
+    T get(size_t i, size_t j) const {
+        assert(j < col);
+        uint32_t r(rows[i]);
+        uint32_t jshift = uint32_t(1) << j;
+        if (r & (jshift)) {
+            // offset from previous rows
+            uint32_t prevRowOffset = r >> 24;
+            uint32_t rowOffset = std::popcount(r & (jshift - 1));
+            return nonZeros[rowOffset + prevRowOffset];
+        } else {
+            return 0;
+        }
+    }
+    inline T operator()(size_t i, size_t j) const { return get(i, j); }
+    void insert(T x, size_t i, size_t j) {
+        assert(j < col);
+        uint32_t r(rows[i]);
+        uint32_t jshift = uint32_t(1) << j;
+        // offset from previous rows
+        uint32_t prevRowOffset = r >> 24;
+        uint32_t rowOffset = std::popcount(r & (jshift - 1));
+        size_t k = rowOffset + prevRowOffset;
+        if (r & jshift) {
+            nonZeros[k] = std::move(x);
+        } else {
+            nonZeros.insert(nonZeros.begin() + k, std::move(x));
+            rows[i] = r | jshift;
+            for (size_t k = i + 1; k < rows.size(); ++k)
+                rows[k] += uint32_t(1) << 24;
+        }
+    }
+
+    struct Reference {
+        SparseMatrix<T> *A;
+        size_t i, j;
+        operator T() const { return A->get(i, j); }
+        T operator=(T x) { A->insert(std::move(x), i, j); }
+    };
+    Reference operator()(size_t i, size_t j) { return Reference(this, i, j); }
+    operator DynamicMatrix<T>() {
+        DynamicMatrix<T> A(numRow(), numCol());
+        size_t k = 0;
+        for (size_t i = 0; i < numRow(); ++i) {
+            uint32_t m = rows[i] & 0x00ffffff;
+            size_t j = 0;
+            while (m) {
+                uint32_t tz = std::countr_zero(m);
+                m >>= tz + 1;
+                j += tz;
+                A(i, j++) = nonZeros[k++];
+            }
+        }
+        assert(k == nonZeros.size());
+        return A;
+    }
+};
+
+
+template <typename T>
+std::ostream &operator<<(std::ostream &os, SparseMatrix<T> const &A) {
+    size_t k = 0;
+    os << "[ ";
+    for (size_t i = 0; i < A.numRow(); ++i) {
+        if (i)
+            os << "  ";
+        uint32_t m = A.rows[i] & 0x00ffffff;
+        size_t j = 0;
+        while (m) {
+            if (j)
+                os << " ";
+            uint32_t tz = std::countr_zero(m);
+            m >>= (tz + 1);
+            j += (tz + 1);
+            while (tz--)
+                os << " 0 ";
+            const T &x = A.nonZeros[k++];
+            if (x >= 0)
+                os << " ";
+            os << x;
+        }
+        for (; j < A.numCol(); ++j)
+            os << "  0";
+        os << "\n";
+    }
+    os << " ]";
+    assert(k == A.nonZeros.size());
+}
+
 std::ostream &printMatrix(std::ostream &os, PtrMatrix<const Rational> A) {
     return printMatrixImpl(os, A);
 }
