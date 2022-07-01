@@ -7,6 +7,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
+#include "./Simplex.hpp"
 #include "LinearAlgebra.hpp"
 #include "Orthogonalize.hpp"
 #include <llvm/ADT/DenseMap.h>
@@ -81,7 +82,7 @@ struct LoopBlock {
     llvm::SmallVector<Dependence, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
-
+    Simplex simplex;
     // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
     // const ArrayReference &ref(const MemoryAccess &x) const {

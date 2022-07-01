@@ -1,7 +1,7 @@
 #pragma once
 
+#include "./Constraints.hpp"
 #include "./Polyhedra.hpp"
-#include "Constraints.hpp"
 
 template <class P, typename T>
 struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {

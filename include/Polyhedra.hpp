@@ -9,33 +9,21 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 
 // the AbstractPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-template <class P, typename T> struct AbstractPolyhedra {
-
+struct AbstractPolyhedra {
     IntMatrix A;
-    llvm::SmallVector<T, 8> b;
 
-    AbstractPolyhedra(const IntMatrix A, const llvm::SmallVector<T, 8> b)
-        : A(std::move(A)), b(std::move(b)){};
-    AbstractPolyhedra(size_t numIneq, size_t numVar)
-        : A(numIneq, numVar), b(numIneq){};
+    AbstractPolyhedra(const IntMatrix A) : A(std::move(A)){};
+    AbstractPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
 
     size_t getNumVar() const { return A.numCol(); }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
-
-    // methods required to support AbstractPolyhedra
-    bool knownLessEqualZero(T x) const {
-        return static_cast<const P *>(this)->knownLessEqualZeroImpl(
-            std::move(x));
-    }
-    bool knownGreaterEqualZero(const T &x) const {
-        return static_cast<const P *>(this)->knownGreaterEqualZeroImpl(x);
-    }
 
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
@@ -374,7 +362,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
                                     uA.getRow(u), uB[u], i);
                 if (!sb) {
-                    if (CheckEmpty && knownLessEqualZero(b[c] + 1)) {
+                    if (CheckEmpty && (b[c] < 0)) {
                         return true;
                     }
                 }
@@ -413,7 +401,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
                                     uA.getRow(u), uB[u], i);
                 if (!sb) {
-                    if (CheckEmpty && knownLessEqualZero(b[c] + 1)) {
+                    if (CheckEmpty && (b[c] < 0)) {
                         return true;
                     }
                 }
@@ -455,7 +443,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
                                     uA.getRow(u), uB[u], i);
                 if (!sb) {
-                    if (CheckEmpty && knownLessEqualZero(b[c] + 1)) {
+                    if (CheckEmpty && (b[c] < 0)) {
                         return true;
                     }
                 }
@@ -629,12 +617,12 @@ template <class P, typename T> struct AbstractPolyhedra {
             qtmp[i] = b - bold[c];
             if (dte == -1) {
                 T delta = bold[c] - b;
-                if (knownLessEqualZero(delta)) {
+                if ((delta <= 0)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
                     // thus, bound `c` will always trigger before `b`
                     return -2;
-                } else if (knownGreaterEqualZero(delta)) {
+                } else if ((delta >= 0)) {
                     // bound `b` triggers first
                     // normally we insert `c`, but if inserting here
                     // we also want to erase elements from boundDiffs
@@ -693,13 +681,12 @@ template <class P, typename T> struct AbstractPolyhedra {
             }
             if (dte == -1) {
                 T delta = (*bc) * sign - b;
-                if (AbIsEq ? knownLessEqualZero(delta - 1)
-                           : knownLessEqualZero(delta)) {
+                if (AbIsEq ? (delta <= 1) : (delta <= 0)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
                     // thus, bound `c` will always trigger before `b`
                     return -2;
-                } else if (knownGreaterEqualZero(delta)) {
+                } else if ((delta >= 0)) {
                     // bound `b` triggers first
                     // normally we insert `c`, but if inserting here
                     // we also want to erase elements from boundDiffs
@@ -807,7 +794,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                 int64_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     int64_t auxInd = auxiliaryInd(Ac);
-                    if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
+                    if ((auxInd != -1) && (btmp0[c] <= 0)) {
                         int64_t Axc = Atmp0(c, auxInd);
                         // -Axc*delta <= b <= 0
                         // if (Axc > 0): (upper bound)
@@ -997,9 +984,9 @@ template <class P, typename T> struct AbstractPolyhedra {
                 int64_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     int64_t auxInd = auxiliaryInd(Ac);
-                    // FIXME: does knownLessEqualZero(btmp0[c]) always
+                    // FIXME: does (btmp0[c]<=0) always
                     // return `true` when `allZero(bold)`???
-                    if ((auxInd != -1) && knownLessEqualZero(btmp0[c])) {
+                    if ((auxInd != -1) && (btmp0[c] <= 0)) {
                         int64_t Axc = Atmp0(c, auxInd);
                         // Axc*delta <= b <= 0
                         // if (Axc > 0): (upper bound)
@@ -1011,8 +998,7 @@ template <class P, typename T> struct AbstractPolyhedra {
                             size_t c = std::abs(boundDiffs[auxInd]);
                             if (c < Aold.numRow())
                                 constraintsToErase.push_back(c);
-                        } else if ((!AbIsEq) ||
-                                   knownLessEqualZero(btmp0[c] - 1)) {
+                        } else if ((!AbIsEq) || (btmp0[c] <= 1)) {
                             // lower bound
                             return true;
                         }
@@ -1140,9 +1126,7 @@ template <class P, typename T> struct AbstractPolyhedra {
         }
     }
 
-    void dropEmptyConstraints() {
-	::dropEmptyConstraints(A, b);
-    }
+    void dropEmptyConstraints() { ::dropEmptyConstraints(A, b); }
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const AbstractPolyhedra<P, T> &p) {
@@ -1151,66 +1135,140 @@ template <class P, typename T> struct AbstractPolyhedra {
     void dump() const { std::cout << *this; }
 
     bool isEmpty() {
-        // inefficient (compared to ILP + Farkas Lemma approach)
-        //#ifndef NDEBUG
-        //        std::cout << "calling isEmpty()" << std::endl;
-        //#endif
-        auto copy = *static_cast<const P *>(this);
-        IntMatrix lA;
-        IntMatrix uA;
-        llvm::SmallVector<T, 8> lb;
-        llvm::SmallVector<T, 8> ub;
-        IntMatrix Atmp0, Atmp1, E;
-        llvm::SmallVector<T, 16> btmp0, btmp1, q;
-        size_t i = getNumVar();
-        while (i--) {
-            copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
-            copy.deleteBounds(copy.A, copy.b, i);
-            if (copy.appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0, btmp1,
-                                  q, copy.A, copy.b, i,
-                                  Polynomial::Val<true>())) {
-                return true;
-            }
-        }
+        assert(false);
         return false;
-    }
-    bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
-        T bc;
-        size_t numVar = std::min(x.size(), getNumVar());
-        for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
-            bc = b[c];
-            for (size_t v = 0; v < numVar; ++v) {
-                bc -= A(c, v) * x[v];
+        // TODO: implement with simplex feasibility check
+        //     // inefficient (compared to ILP + Farkas Lemma approach)
+        //     //#ifndef NDEBUG
+        //     //        std::cout << "calling isEmpty()" << std::endl;
+        //     //#endif
+        //     auto copy = *static_cast<const P *>(this);
+        //     IntMatrix lA;
+        //     IntMatrix uA;
+        //     llvm::SmallVector<T, 8> lb;
+        //     llvm::SmallVector<T, 8> ub;
+        //     IntMatrix Atmp0, Atmp1, E;
+        //     llvm::SmallVector<T, 16> btmp0, btmp1, q;
+        //     size_t i = getNumVar();
+        //     while (i--) {
+        //         copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
+        //         copy.deleteBounds(copy.A, copy.b, i);
+        //         if (copy.appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0,
+        //         btmp1,
+        //                               q, copy.A, copy.b, i,
+        //                               Polynomial::Val<true>())) {
+        //             return true;
+        //         }
+        //     }
+        //     return false;
+        // }
+        bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
+            T bc;
+            size_t numVar = std::min(x.size(), getNumVar());
+            for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
+                bc = b[c];
+                for (size_t v = 0; v < numVar; ++v) {
+                    bc -= A(c, v) * x[v];
+                }
+                if (bc < 0) {
+                    return false;
+                }
             }
-            if (!knownGreaterEqualZero(bc)) {
-                return false;
-            }
+            return true;
         }
-        return true;
-    }
-};
+    };
 
-struct IntegerPolyhedra : public AbstractPolyhedra<IntegerPolyhedra, int64_t> {
-    bool knownLessEqualZeroImpl(int64_t x) const { return x <= 0; }
-    bool knownGreaterEqualZeroImpl(int64_t x) const { return x >= 0; }
-    IntegerPolyhedra(size_t numIneq, size_t numVar)
-        : AbstractPolyhedra<IntegerPolyhedra, int64_t>(numIneq, numVar){};
-    IntegerPolyhedra(IntMatrix A, llvm::SmallVector<int64_t, 8> b)
-        : AbstractPolyhedra<IntegerPolyhedra, int64_t>(std::move(A),
-                                                       std::move(b)){};
-};
-struct SymbolicPolyhedra : public AbstractPolyhedra<SymbolicPolyhedra, MPoly> {
-    PartiallyOrderedSet poset;
-    SymbolicPolyhedra(IntMatrix A, llvm::SmallVector<MPoly, 8> b,
-                      PartiallyOrderedSet poset)
-        : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(std::move(A),
-                                                      std::move(b)),
-          poset(std::move(poset)){};
+    struct IntegerPolyhedra : public AbstractPolyhedra {
+        bool knownLessEqualZeroImpl(int64_t x) const { return x <= 0; }
+        bool knownGreaterEqualZeroImpl(int64_t x) const { return x >= 0; }
+        IntegerPolyhedra(size_t numIneq, size_t numVar)
+            : AbstractPolyhedra<IntegerPolyhedra, int64_t>(numIneq, numVar){};
+        IntegerPolyhedra(IntMatrix A, llvm::SmallVector<int64_t, 8> b)
+            : AbstractPolyhedra<IntegerPolyhedra, int64_t>(std::move(A),
+                                                           std::move(b)){};
+    };
+    struct SymbolicPolyhedra : public AbstractPolyhedra {
+        llvm::SmallVector<Polynomial::Monomial> monomials;
+        SymbolicPolyhedra(IntMatrix A, llvm::ArrayRef<MPoly> b,
+                          const PartiallyOrderedSet &poset)
+            : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(std::move(A)),
+              monomials({}) {
+            // use poset
+            // monomials[{unsigned}_1] >= monomials[{unsigned}_2] + {int64_t}_1
+            llvm::SmallVector<std::pair<int64_t, unsigned, unsigned>> cmps;
+            for (auto &bi : b) {
+                for (auto &t : bi) {
+                    if (!t.isCompileTimeConstant()) {
+                        bool doPushBack = true;
+                        for (auto &m : monomials) {
+                            if (m == t.exponent) {
+                                doPushBack = false;
+                                break;
+                            }
+                        }
+                        if (doPushBack) {
+                            for (size_t i = 0; i < monomials.size(); ++i) {
+                                auto &m = monomials[i];
+                                // loop inner triangle
+                                if ((m.degree() == 1) && (t.degree() == 1)) {
+                                    // we can do a direct lookup
+                                    // interval on t - m
+                                    const itv =
+                                        poset(m.exponent.prodIDs.front(),
+                                              t.exponent.prodIDs.front());
+                                    if ((itv.lowerBound >
+                                         (std::numeric_limits<int64_t>::min() >>
+                                          2)) &&
+                                        (itv.lowerBound <
+                                         (std::numeric_limits<int64_t>::max() >>
+                                          2))) {
+                                        // t - m >= lowerBound
+                                        // t >= m + lowerBound
+                                        cmps.emplace_back(itv.lowerBound,
+                                                          monomials.size(), i);
+                                    }
+                                    if ((itv.upperBound >
+                                         (std::numeric_limits<int64_t>::min() >>
+                                          2)) &&
+                                        (itv.upperBound <
+                                         (std::numeric_limits<int64_t>::max() >>
+                                          2))) {
+                                        // t - m <= upperBound
+                                        // m >= t + -upperBound
+                                        cmps.emplace_back(-itv.upperBound, i,
+                                                          monomials.size());
+                                    }
+                                } else {
+                                    auto [itvt, itvm] =
+                                        poset.unmatchedIntervals(t, m);
+                                    // TODO: tighten by using matched to
+                                    // get less conservative bounds
+                                    if (itvt.knownGreaterEqual(itvm)) {
+                                        cmps.emplace_back(0, monomials.size(),
+                                                          i);
+                                    } else if (itvm.knownGreaterEqual(itvt)) {
+                                        cmps.emplace_back(0, i,
+                                                          monomials.size());
+                                    }
+                                }
+                            }
+                            monomials.push_back(t.exponent);
+                        }
+                    }
+                }
+            }
+            // order of vars:
+            // loop vars, symbolic vars, constants
+            // this is because of hnf prioritizing diagonalizing leading rows
+            const origNumCol = A.numCol();
+            const numSymbolicVars = monomials.size();
+            A.resizeCols(origNumCol + numSymbolicVars + 1);
+        };
 
-    bool knownLessEqualZeroImpl(MPoly x) const {
-        return poset.knownLessEqualZero(std::move(x));
-    }
-    bool knownGreaterEqualZeroImpl(const MPoly &x) const {
-        return poset.knownGreaterEqualZero(x);
-    }
-};
+        bool knownLessEqualZeroImpl(MPoly x) const {
+            return poset.knownLessEqualZero(std::move(x));
+        }
+        bool knownGreaterEqualZeroImpl(const MPoly &x) const {
+            return poset.knownGreaterEqualZero(x);
+        }
+    };
