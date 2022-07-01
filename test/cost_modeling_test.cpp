@@ -1,4 +1,5 @@
 #include "../include/ArrayReference.hpp"
+#include "../include/CostModeling.hpp"
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
