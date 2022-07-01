@@ -111,6 +111,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // ClassID 1: RegisterRC
     // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
+    llvm::errs() << "DataLayout: " << F.getParent()->getDataLayout().getStringRepresentation() << "\n";
     std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0) << std::endl;
     std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1) << std::endl;
 
@@ -155,20 +156,20 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     outerLoops.clear();
     //     affs.clear();
     // }
-    /*
+    
     llvm::InductionDescriptor ID;
-    for (llvm::Loop *LP : LI) {
-        auto *inductOuter = LP->getInductionVariable(SE);
+    for (llvm::Loop *LP : *LI) {
+        auto *inductOuter = LP->getInductionVariable(*SE);
         const llvm::SCEV *backEdgeTaken = nullptr;
         if (inductOuter) {
             llvm::errs() << "Outer InductionVariable: " << *inductOuter << "\n";
-            backEdgeTaken = SE.getBackedgeTakenCount(LP);
+            backEdgeTaken = SE->getBackedgeTakenCount(LP);
             if (backEdgeTaken) {
                 llvm::errs()
                     << "Back edge taken count: " << *backEdgeTaken
                     << "\n\ttrip count: "
-                    << *SE.getAddExpr(backEdgeTaken,
-                                      SE.getOne(backEdgeTaken->getType()))
+                    << *(SE->getAddExpr(backEdgeTaken,
+                                      SE->getOne(backEdgeTaken->getType())))
                     << "\n";
             } else {
                 std::cout << "couldn't find backedge taken?\n";
@@ -176,7 +177,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         } else {
             std::cout << "no outer induction variable" << std::endl;
         }
-        auto obouter = LP->getBounds(SE);
+        auto obouter = LP->getBounds(*SE);
         if (obouter.hasValue()) {
             auto b = obouter.getValue();
             llvm::errs() << "\nOuter loop bounds: " << b.getInitialIVValue()
@@ -187,7 +188,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
         int i = 0;
         for (llvm::Loop *SubLP : depth_first(LP)) {
-            auto *induct = SubLP->getInductionVariable(SE);
+            auto *induct = SubLP->getInductionVariable(*SE);
             if (induct) {
                 if (inductOuter) {
                     llvm::errs()
@@ -195,33 +196,33 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                         << " in outer InductionVariable: " << *induct << "\n";
                     llvm::errs()
                         << "innerInduct > outerInduct: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SGT,
-                               SE.getSCEV(induct), SE.getSCEV(inductOuter))
+                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
                         << "\n";
                     llvm::errs()
                         << "innerInduct == outerInduct: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_EQ,
-                               SE.getSCEV(induct), SE.getSCEV(inductOuter))
+                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
                         << "\n";
                     llvm::errs()
                         << "innerInduct < outerInduct: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SLT,
-                               SE.getSCEV(induct), SE.getSCEV(inductOuter))
+                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
                         << "\n";
                 }
             } else {
                 std::cout << "no inner induction variable?" << std::endl;
             }
-            if (SubLP->getInductionDescriptor(SE, ID)) {
+            if (SubLP->getInductionDescriptor(*SE, ID)) {
                 std::cout << "Found induction descriptor" << std::endl;
             } else {
                 std::cout << "no induction description" << std::endl;
             }
 
-            auto ob = SubLP->getBounds(SE);
+            auto ob = SubLP->getBounds(*SE);
             if (ob.hasValue()) {
                 auto b = ob.getValue();
                 auto &inner_LB = b.getInitialIVValue();
@@ -231,42 +232,42 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                              << *b.getStepValue() << " : " << inner_UB << "\n";
                 if (obouter.hasValue()) {
                     auto ob = obouter.getValue();
-                    auto oLB = SE.getSCEV(&ob.getInitialIVValue());
-                    auto oUB = SE.getSCEV(&ob.getFinalIVValue());
-                    auto iLB = SE.getSCEV(&inner_LB);
-                    auto iUB = SE.getSCEV(&inner_UB);
+                    auto oLB = SE->getSCEV(&ob.getInitialIVValue());
+                    auto oUB = SE->getSCEV(&ob.getFinalIVValue());
+                    auto iLB = SE->getSCEV(&inner_LB);
+                    auto iUB = SE->getSCEV(&inner_UB);
 
                     // both ob and ib have values
                     llvm::errs() << "Loop " << i++
                                  << " in bounds cmp: " << *induct << "\n";
                     llvm::errs()
                         << "inner_LB > outer_UB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SGT, iLB, oUB)
                         << "\n";
                     llvm::errs()
                         << "inner_LB == outer_UB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_EQ, iLB, oUB)
                         << "\n";
                     llvm::errs()
                         << "inner_LB < outer_UB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SLT, iLB, oUB)
                         << "\n";
                     llvm::errs()
                         << "inner_UB > outer_LB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SGT, iUB, oLB)
                         << "\n";
                     llvm::errs()
                         << "inner_UB == outer_LB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_EQ, iUB, oLB)
                         << "\n";
                     llvm::errs()
                         << "inner_UB < outer_LB: "
-                        << SE.isKnownPredicate(
+                        << SE->isKnownPredicate(
                                llvm::CmpInst::Predicate::ICMP_SLT, iUB, oLB)
                         << "\n";
                 }
@@ -276,7 +277,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             std::cout << "\n";
         }
     }
-    */
+    
     return llvm::PreservedAnalyses::none();
     // return llvm::PreservedAnalyses::all();
 }
