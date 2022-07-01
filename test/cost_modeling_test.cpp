@@ -9,6 +9,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
@@ -18,6 +19,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
                         "n8:16:32:64-S128");
+    llvm::TargetTransformInfo TTI{dl};
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();

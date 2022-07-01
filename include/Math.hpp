@@ -490,8 +490,8 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
         return PtrMatrix<const T>(mem, M, N, X);
     }
     PtrMatrix<T> operator=(SparseMatrix<T> &A) {
-	assert(M == A.numRow());
-	assert(N == A.numCol());
+        assert(M == A.numRow());
+        assert(N == A.numCol());
         size_t k = 0;
         for (size_t i = 0; i < M; ++i) {
             uint32_t m = A.rows[i] & 0x00ffffff;
@@ -500,11 +500,11 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
                 uint32_t tz = std::countr_zero(m);
                 m >>= tz + 1;
                 j += tz;
-		mem[i*X + (j++)] = A.nonZeros[k++];
+                mem[i * X + (j++)] = A.nonZeros[k++];
             }
         }
         assert(k == A.nonZeros.size());
-	return *this;
+        return *this;
     }
 };
 
@@ -1330,8 +1330,7 @@ template <typename T> struct SparseMatrix {
     size_t numRow() const { return rows.size(); }
     size_t numCol() const { return col; }
     SparseMatrix(size_t numRows, size_t numCols)
-        : nonZeros(llvm::SmallVector<T>()),
-          rows(llvm::SmallVector<uint32_t>(numRows)), col(numCols) {
+        : nonZeros{}, rows{llvm::SmallVector<uint32_t>(numRows)}, col{numCols} {
         assert(col <= 24);
     }
     T get(size_t i, size_t j) const {
@@ -1350,7 +1349,7 @@ template <typename T> struct SparseMatrix {
     inline T operator()(size_t i, size_t j) const { return get(i, j); }
     void insert(T x, size_t i, size_t j) {
         assert(j < col);
-        uint32_t r(rows[i]);
+        uint32_t r{rows[i]};
         uint32_t jshift = uint32_t(1) << j;
         // offset from previous rows
         uint32_t prevRowOffset = r >> 24;
@@ -1370,9 +1369,12 @@ template <typename T> struct SparseMatrix {
         SparseMatrix<T> *A;
         size_t i, j;
         operator T() const { return A->get(i, j); }
-        T operator=(T x) { A->insert(std::move(x), i, j); }
+        void operator=(T x) {
+            A->insert(std::move(x), i, j);
+            return;
+        }
     };
-    Reference operator()(size_t i, size_t j) { return Reference(this, i, j); }
+    Reference operator()(size_t i, size_t j) { return Reference{this, i, j}; }
     operator DynamicMatrix<T>() {
         DynamicMatrix<T> A(numRow(), numCol());
         size_t k = 0;
@@ -1390,7 +1392,6 @@ template <typename T> struct SparseMatrix {
         return A;
     }
 };
-
 
 template <typename T>
 std::ostream &operator<<(std::ostream &os, SparseMatrix<T> const &A) {
