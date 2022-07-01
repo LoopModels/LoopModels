@@ -378,6 +378,72 @@ substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b, IntMatrix &E,
     }
     return true;
 }
+template <typename T>
+std::pair<IntMatrix,llvm::SmallVector<T>>
+slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<T> b,
+                         PtrMatrix<const int64_t> E, llvm::ArrayRef<T> q) {
+
+    const auto [M, N] = A.size();
+    const size_t K = E.numRow();
+    assert(E.numCol() == N);
+    assert(b.size() == M);
+    assert(q.size() == K);
+    // We add M augment variables (a_m), one per inequality constraint
+    // a_n = b_n - (A*x)_n, so a_n >= 0
+    // C's first N columns contain constraints from A, last K from E
+    // so we have C*x = [b; q]
+    // C = [ I A
+    //       0 E ]
+    IntMatrix C{M + K, M + N};
+    llvm::SmallVector<T> d(M + K);
+    for (size_t m = 0; m < M; ++m) {
+        C(m, m) = 1;
+        for (size_t n = 0; n < N; ++n) {
+            C(m, M + n) = A(m, n);
+        }
+        d[m] = b[m];
+    }
+    for (size_t k = 0; k < K; ++k) {
+        for (size_t n = 0; n < N; ++n) {
+            C(M + k, M + n) = E(k, n);
+        }
+        d[M + k] = q[k];
+    }
+    return std::make_pair(C,d);
+}
+std::pair<IntMatrix,llvm::SmallVector<int64_t>>
+slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<int64_t> b,
+                         PtrMatrix<const int64_t> E, llvm::ArrayRef<int64_t> q) {
+
+    const auto [M, N] = A.size();
+    const size_t K = E.numRow();
+    assert(E.numCol() == N);
+    assert(b.size() == M);
+    assert(q.size() == K);
+    // We add M augment variables (a_m), one per inequality constraint
+    // a_n = b_n - (A*x)_n, so a_n >= 0
+    // C's first N columns contain constraints from A, last K from E
+    // so we have C*x = [b; q]
+    // C = [ I A
+    //       0 E ]
+    IntMatrix C{M + K, M + N};
+    llvm::SmallVector<int64_t> d(M + K);
+    for (size_t m = 0; m < M; ++m) {
+        C(m, m) = 1;
+        for (size_t n = 0; n < N; ++n) {
+            C(m, M + n) = A(m, n);
+        }
+        d[m] = b[m];
+    }
+    for (size_t k = 0; k < K; ++k) {
+        for (size_t n = 0; n < N; ++n) {
+            C(M + k, M + n) = E(k, n);
+        }
+        d[M + k] = q[k];
+    }
+    return std::make_pair(C,d);
+}
+
 // (A*x <= b) && (E*x == q)
 template <typename T>
 void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
@@ -397,21 +463,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // so we have C*x = [b; q]
     // C = [ I A
     //       0 E ]
-    IntMatrix C(M + K, M + N);
-    llvm::SmallVector<T> d(M + K);
-    for (size_t m = 0; m < M; ++m) {
-        C(m, m) = 1;
-        for (size_t n = 0; n < N; ++n) {
-            C(m, M + n) = A(m, n);
-        }
-        d[m] = b[m];
-    }
-    for (size_t k = 0; k < K; ++k) {
-        for (size_t n = 0; n < N; ++n) {
-            C(M + k, M + n) = E(k, n);
-        }
-        d[M + k] = q[k];
-    }
+    auto [C,d] = slackEqualityConstraints(A, b, E, q);
+    // IntMatrix C{slackEqualityConstraints(A, b, E, q)};
     for (size_t o = M + N; o > numNewVar + M;) {
         substituteEquality(C, d, --o);
         if (C.numRow() > 1) {

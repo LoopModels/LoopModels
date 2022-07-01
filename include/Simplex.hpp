@@ -16,14 +16,6 @@ struct Simplex {
     // column 0: indicates whether that row (constraint) is basic, and if so which one
     // column 1: denominator for the row
     llvm::SmallVector<int64_t, 0> data{};
-    // length equal to the number of variables, indicating which constraint is
-    // non-zero
-    llvm::SmallVector<intptr_t, 0> basicConstraints{};
-    // length equal to the number of constraints, indicating which variable is
-    // basic
-    // llvm::SmallVector<int, 0> basicVariables;
-    llvm::SmallVector<std::pair<int64_t, intptr_t>, 0> basicVariablesDenom{};
-    // Simplex() : data({}), basicConstraints({}), basicVariablesDenom({}) {}
     static Simplex positiveVariables(PtrMatrix<const int64_t> A,
                                      llvm::ArrayRef<int64_t> b,
                                      PtrMatrix<const int64_t> E,
