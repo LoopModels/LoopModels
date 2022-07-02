@@ -137,25 +137,6 @@ inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
                       size_t M) {
     return pivotRows(A, K, i, M, i);
 }
-template <typename T>
-inline bool pivotRows(PtrMatrix<int64_t> A, llvm::SmallVectorImpl<T> &K,
-                      size_t i, size_t M, size_t piv) {
-    size_t j = piv;
-    while (A(piv, i) == 0) {
-        if (++piv == M) {
-            return true;
-        }
-    }
-    if (j != piv) {
-        swapRows(A, j, piv);
-        swapRows(K, j, piv);
-    }
-    return false;
-}
-inline bool pivotRows(PtrMatrix<int64_t> A, llvm::SmallVectorImpl<int64_t> &K,
-                      size_t i, size_t N) {
-    return pivotRows(A, K, i, N, i);
-}
 inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0) {
@@ -249,28 +230,6 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A, size_t r,
     }
 }
 MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
-                                         llvm::SmallVectorImpl<int64_t> &b,
-                                         size_t r, size_t c) {
-    auto [M, N] = A.size();
-    for (size_t j = c + 1; j < M; ++j) {
-        int64_t Aii = A(c, r);
-        if (int64_t Aij = A(j, r)) {
-            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
-            VECTORIZE
-            for (size_t k = 0; k < N; ++k) {
-                int64_t Aki = A(c, k);
-                int64_t Akj = A(j, k);
-                A(c, k) = p * Aki + q * Akj;
-                A(j, k) = Aiir * Akj - Aijr * Aki;
-            }
-            int64_t bi = b[c];
-            int64_t bj = b[j];
-            b[c] = p * bi + q * bj;
-            b[j] = Aiir * bj - Aijr * bi;
-        }
-    }
-}
-MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
                                          PtrMatrix<int64_t> B, size_t r,
                                          size_t c) {
     auto [M, N] = A.size();
@@ -337,117 +296,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A, size_t r,
         }
     }
 }
-MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
-                                           llvm::SmallVectorImpl<int64_t> &b,
-                                           size_t r, size_t c) {
-    const size_t N = A.numCol();
-    int64_t Akk = A(c, r);
-    if (Akk < 0) {
-        Akk = -Akk;
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i) {
-            A(c, i) *= -1;
-        }
-        negate(b[c]);
-    }
-    for (size_t z = 0; z < c; ++z) {
-        // try to eliminate `A(k,z)`
-        // if Akk == 1, then this zeros out Akz
-        if (int64_t Akz = A(z, r)) {
-            // we want positive but smaller subdiagonals
-            // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
-            // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        =   5 - 2*2 = 1
-            // or if `Akz = -5, Akk = 2`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
-            // if `Akk = 1`, then
-            // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-            //        = A(k,z) - A(k,z) = 0
-            // or if `Akz = -7, Akk = 39`, then in the loop below we get
-            // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-            //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-            int64_t AkzOld = Akz;
-            Akz /= Akk;
-            if (AkzOld < 0) {
-                Akz -= (AkzOld != (Akz * Akk));
-            }
-            VECTORIZE
-            for (size_t i = 0; i < N; ++i) {
-                A(z, i) -= Akz * A(c, i);
-            }
-            Polynomial::fnmadd(b[z], b[c], Akz);
-        }
-    }
-}
 
-MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
-                                         llvm::SmallVectorImpl<MPoly> &b,
-                                         size_t rr, size_t c) {
-    auto [M, N] = A.size();
-    for (size_t j = c + 1; j < M; ++j) {
-        int64_t Aii = A(c, rr);
-        if (int64_t Aij = A(j, rr)) {
-            const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aij);
-            VECTORIZE
-            for (size_t k = 0; k < N; ++k) {
-                int64_t Aki = A(c, k);
-                int64_t Akj = A(j, k);
-                A(c, k) = p * Aki + q * Akj;
-                A(j, k) = Aiir * Akj - Aijr * Aki;
-            }
-            MPoly bi = std::move(b[c]);
-            MPoly bj = std::move(b[j]);
-            b[c] = p * bi + q * bj;
-            b[j] = Aiir * std::move(bj) - Aijr * std::move(bi);
-        }
-    }
-}
-MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
-                                           llvm::SmallVectorImpl<MPoly> &b,
-                                           size_t r, size_t c) {
-    const size_t N = A.numCol();
-    int64_t Akk = A(c, r);
-    if (Akk < 0) {
-        Akk = -Akk;
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i) {
-            A(c, i) *= -1;
-        }
-        negate(b[c]);
-    }
-    for (size_t z = 0; z < c; ++z) {
-        // try to eliminate `A(k,z)`
-        if (int64_t Akz = A(z, r)) {
-            // if Akk == 1, then this zeros out Akz
-            if (Akk != 1) {
-                // we want positive but smaller subdiagonals
-                // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`,
-                // we set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-                //        =   5 - 2*2 = 1
-                // or if `Akz = -5, Akk = 2`, then in the loop below we get
-                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-                //        =  -5 - (-2 - 1)*2 = = 6 - 5 = 1
-                // if `Akk = 1`, then
-                // A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
-                //        = A(k,z) - A(k,z) = 0
-                // or if `Akz = -7, Akk = 39`, then in the loop below we get
-                // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
-                //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
-                int64_t AkzOld = Akz;
-                Akz /= Akk;
-                if (AkzOld < 0) {
-                    Akz -= (AkzOld != (Akz * Akk));
-                }
-            }
-            VECTORIZE
-            for (size_t i = 0; i < N; ++i) {
-                A(z, i) -= Akz * A(c, i);
-            }
-            Polynomial::fnmadd(b[z], b[c], Akz);
-        }
-    }
-}
 MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
                                            PtrMatrix<int64_t> B, size_t r,
                                            size_t c) {
@@ -501,9 +350,7 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
 }
 
-MULTIVERSION
-size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
-                                       llvm::SmallVectorImpl<MPoly> &q) {
+MULTIVERSION size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E) {
     auto [M, N] = E.size();
     if (M == 0)
         return 0;
@@ -512,43 +359,16 @@ size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
         if (m - dec >= M)
             break;
 
-        if (pivotRows(E, q, m, M, m - dec)) {
+        if (pivotRows(E, m, M, m - dec)) {
             // row is entirely zero
             ++dec;
             continue;
         }
         // E(m, m-dec) now contains non-zero
         // zero row `m` of every column to the right of `m - dec`
-        zeroSupDiagonal(E, q, m, m - dec);
+        zeroSupDiagonal(E, m, m - dec);
         // now we reduce the sub diagonal
-        reduceSubDiagonal(E, q, m, m - dec);
-    }
-    size_t Mnew = M;
-    while (allZero(E.getRow(Mnew - 1))) {
-        --Mnew;
-    }
-    return Mnew;
-}
-MULTIVERSION size_t simplifyEqualityConstraintsImpl(
-    PtrMatrix<int64_t> E, llvm::SmallVectorImpl<int64_t> &q) {
-    auto [M, N] = E.size();
-    if (M == 0)
-        return 0;
-    size_t dec = 0;
-    for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= M)
-            break;
-
-        if (pivotRows(E, q, m, M, m - dec)) {
-            // row is entirely zero
-            ++dec;
-            continue;
-        }
-        // E(m, m-dec) now contains non-zero
-        // zero row `m` of every column to the right of `m - dec`
-        zeroSupDiagonal(E, q, m, m - dec);
-        // now we reduce the sub diagonal
-        reduceSubDiagonal(E, q, m, m - dec);
+        reduceSubDiagonal(E, m, m - dec);
     }
     size_t Mnew = M;
     while (allZero(E.getRow(Mnew - 1))) {
@@ -557,13 +377,10 @@ MULTIVERSION size_t simplifyEqualityConstraintsImpl(
     return Mnew;
 }
 
-template <typename T>
-static void simplifyEqualityConstraints(IntMatrix &E,
-                                        llvm::SmallVectorImpl<T> &q) {
+static void simplifyEqualityConstraints(IntMatrix &E) {
 
-    size_t Mnew = simplifyEqualityConstraintsImpl(E, q);
+    size_t Mnew = simplifyEqualityConstraintsImpl(E);
     E.truncateRows(Mnew);
-    q.resize(Mnew);
 }
 MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
                                                          PtrMatrix<int64_t> B) {

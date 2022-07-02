@@ -378,16 +378,40 @@ substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b, IntMatrix &E,
     }
     return true;
 }
-template <typename T>
-std::pair<IntMatrix,llvm::SmallVector<T>>
-slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<T> b,
-                         PtrMatrix<const int64_t> E, llvm::ArrayRef<T> q) {
+
+// C = [ I A
+//       0 B ]
+void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B){
+    const size_t numVar = A.numCol();
+    assert(numVar == B.numCol());
+    const size_t numSlack = A.numRow();
+    const size_t numStrict = B.numRow();
+    assert(C.numRow() == numSlack + numStrict);
+    assert(C.numCol() == numSlack + numVar);
+    // [I A]
+    for (size_t s = 0; s < numSlack; ++s){
+	for (size_t i = 0; i < numSlack; ++i)
+	    C(s,i) = 0;
+	C(s,s) = 1;
+	for (size_t i = 0; i < numVar; ++i)
+	    C(s,i+numSlack) = -A(s,i);
+    }
+    // [0 B]
+    for (size_t s = 0; s < numStrict; ++s){
+	for (size_t i = 0; i < numSlack; ++i)
+	    C(s+numSlack,i) = 0;
+	for (size_t i = 0; i < numVar; ++i)
+	    C(s+numSlack,i+numSlack) = B(s,i);
+    }
+}
+
+IntMatrix
+slackEqualityConstraints(PtrMatrix<const int64_t> A,
+                         PtrMatrix<const int64_t> E) {
 
     const auto [M, N] = A.size();
     const size_t K = E.numRow();
     assert(E.numCol() == N);
-    assert(b.size() == M);
-    assert(q.size() == K);
     // We add M augment variables (a_m), one per inequality constraint
     // a_n = b_n - (A*x)_n, so a_n >= 0
     // C's first N columns contain constraints from A, last K from E
@@ -395,21 +419,8 @@ slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<T> b,
     // C = [ I A
     //       0 E ]
     IntMatrix C{M + K, M + N};
-    llvm::SmallVector<T> d(M + K);
-    for (size_t m = 0; m < M; ++m) {
-        C(m, m) = 1;
-        for (size_t n = 0; n < N; ++n) {
-            C(m, M + n) = A(m, n);
-        }
-        d[m] = b[m];
-    }
-    for (size_t k = 0; k < K; ++k) {
-        for (size_t n = 0; n < N; ++n) {
-            C(M + k, M + n) = E(k, n);
-        }
-        d[M + k] = q[k];
-    }
-    return std::make_pair(C,d);
+    slackEqualityConstraints(C, A, E);
+    return C;
 }
 std::pair<IntMatrix,llvm::SmallVector<int64_t>>
 slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<int64_t> b,
