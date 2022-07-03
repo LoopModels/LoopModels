@@ -506,6 +506,16 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
         assert(k == A.nonZeros.size());
         return *this;
     }
+    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                      size_t colEnd) {
+        assert(rowEnd > rowStart);
+        assert(colEnd > colStart);
+        return PtrMatrix<T>(mem + colStart + rowStart * X, rowEnd - rowStart,
+                            colEnd - colStart, X);
+    }
+    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
+        return view(0, rowEnd, 0, colEnd);
+    }
 };
 
 //
@@ -737,10 +747,19 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         N = NN;
     }
     void reserve(size_t MM, size_t NN) { mem.reserve(MM * std::max(X, NN)); }
+    void resizeForOverwrite(size_t MM, size_t NN, size_t XX) {
+	assert(XX>=NN);
+        M = MM;
+        N = NN;
+	X = XX;
+	if (M*X > mem.size())
+	    mem.resize_for_overwrite(M * X);
+    }
     void resizeForOverwrite(size_t MM, size_t NN) {
         M = MM;
         X = N = NN;
-        mem.resize_for_overwrite(M * N);
+	if (M*X > mem.size())
+	    mem.resize_for_overwrite(M * X);
     }
 
     void resizeRows(size_t MM) {
@@ -805,6 +824,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         assert(colEnd > colStart);
         return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
                             rowEnd - rowStart, colEnd - colStart, X);
+    }
+    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
+        return view(0, rowEnd, 0, colEnd);
     }
 
     PtrMatrix<T> operator=(PtrMatrix<T> A) {
