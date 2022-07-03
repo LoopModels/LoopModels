@@ -21,6 +21,7 @@ inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
         return std::make_tuple(p, q, a / g, b / g);
     }
 }
+// zero out below diagonal
 MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
                                   SquareMatrix<int64_t> &K, size_t i, size_t M,
                                   size_t N) {
@@ -350,17 +351,18 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
 }
 
-MULTIVERSION size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E) {
+MULTIVERSION size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
+                                                    size_t rowInit = 0) {
     auto [M, N] = E.size();
     if (M == 0)
         return 0;
-    size_t dec = 0;
-    for (size_t m = 0; m < N; ++m) {
+    size_t dec = rowInit;
+    for (size_t m = rowInit; m < N; ++m) {
         if (m - dec >= M)
             break;
 
         if (pivotRows(E, m, M, m - dec)) {
-            // row is entirely zero
+            // col is entirely zero
             ++dec;
             continue;
         }
@@ -421,6 +423,20 @@ hermite(IntMatrix A) {
     SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
     simplifyEqualityConstraintsImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
+}
+
+// zero A(i,k) with A(j,k)
+inline void zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
+                                 size_t k) {
+    if (int64_t Aik = A(i, k)) {
+        int64_t Ajk = A(j, k);
+        int64_t g = gcd(Aik, Ajk);
+        Aik /= g;
+        Ajk /= g;
+        VECTORIZE
+        for (size_t l = 0; l < A.numCol(); ++l)
+            A(i, l) = Ajk * A(i, l) - Aik * A(j, l);
+    }
 }
 
 MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,

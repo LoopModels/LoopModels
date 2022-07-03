@@ -729,8 +729,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         M = N = X = 0;
         mem.clear();
     }
-    void resize(size_t MM, size_t NN) {
-        size_t XX = NN > X ? NN : X;
+    void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
         if (NN > X) {
             for (size_t m = 1; m < std::min(M, MM); ++m) {
@@ -745,6 +744,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         }
         M = MM;
         N = NN;
+    }
+    void resize(size_t MM, size_t NN) {
+        size_t XX = NN > X ? NN : X;
+        resize(MM, NN, XX);
     }
     void reserve(size_t MM, size_t NN) { mem.reserve(MM * std::max(X, NN)); }
     void resizeForOverwrite(size_t MM, size_t NN, size_t XX) {

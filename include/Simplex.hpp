@@ -4,6 +4,7 @@
 #include "./NormalForm.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/SmallVector.h>
 
 // The goal here:
@@ -23,6 +24,16 @@ struct Simplex {
     // size_t numConstraints;
     // size_t stride{};
 
+    void resize(size_t numCon, size_t numVar) {
+        tableau.resize(numCon + 2, numVar + 2);
+    }
+    void resize(size_t numCon, size_t numVar, size_t stride) {
+        tableau.resize(numCon + 2, numVar + 2, stride);
+    }
+    void addVars(size_t numVars) {
+        tableau.resize(tableau.numRow(), numVars + 2,
+                       std::max(numVars + 2, tableau.rowStride()));
+    }
     void resizeForOverwrite(size_t numCon, size_t numVar) {
         tableau.resizeForOverwrite(numCon + 2, numVar + 2);
     }
@@ -33,7 +44,7 @@ struct Simplex {
     //     return PtrMatrix<int64_t>(data.data(), numConstraints + 2,
     //                               numVariables + 2, stride);
     // }
-    PtrMatrix<int64_t> constraints() {
+    PtrMatrix<int64_t> getConstraints() {
         return tableau.view(2, tableau.numRow(), 2, tableau.numCol());
     }
     size_t getNumVar() const { return tableau.numCol() - 2; }
@@ -41,41 +52,46 @@ struct Simplex {
 
     void simplifyConstraints() {
         tableau.truncateRows(
-            NormalForm::simplifyEqualityConstraintsImpl(constraints()) + 2);
+            NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1) +
+            2);
     }
     llvm::MutableArrayRef<int64_t> getTableauRow(size_t i) {
         return llvm::MutableArrayRef<int64_t>(
             tableau.data() + 2 + i * tableau.rowStride(), getNumConstraints());
     }
-    llvm::MutableArrayRef<int64_t> basicConstraints() {
+    llvm::MutableArrayRef<int64_t> getBasicConstraints() {
         return getTableauRow(0);
     }
-    llvm::MutableArrayRef<int64_t> cost() { return getTableauRow(1); }
+    llvm::MutableArrayRef<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<int64_t> getTableauCol(size_t i) {
         return StridedVector<int64_t>{tableau.data() + i +
                                           2 * tableau.rowStride(),
                                       getNumVar(), tableau.rowStride()};
     }
-    StridedVector<int64_t> basicVariables() { return getTableauCol(0); }
-    StridedVector<int64_t> constraintDenominators() { return getTableauCol(1); }
+    StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
+    StridedVector<int64_t> getConstraintDenominators() {
+        return getTableauCol(1);
+    }
+    StridedVector<int64_t> getConstants() { return getTableauCol(2); }
     bool initiateFeasible() {
         // remove trivially redundant constraints
         simplifyConstraints();
+        // [ I;  X ; b ]
+        //
         // original number of variables
         const size_t numVar = getNumVar();
-        const size_t equalityIndex = numVar - 1;
-        PtrMatrix<int64_t> C{constraints()};
-        auto basicCons = basicConstraints();
+        PtrMatrix<int64_t> C{getConstraints()};
+        auto basicCons = getBasicConstraints();
         for (auto &&x : basicCons)
             x = -2;
-
         // first pass, we make sure the equalities are >= 0
-        // and we greedily try and find columns with
+        // and we eagerly try and find columns with
         // only a single non-0 element.
         for (size_t c = 0; c < C.numRow(); ++c) {
-            int64_t &Ceq = C(c, equalityIndex);
+            int64_t &Ceq = C(c, 0);
             if (Ceq >= 0) {
-                for (size_t v = 0; v < equalityIndex; ++v) {
+                // close-open and close-close are out, open-open is in
+                for (size_t v = 1; v < numVar; ++v) {
                     if (int64_t Ccv = C(c, v)) {
                         if (((basicCons[v] == -2) && (Ccv > 0))) {
                             basicCons[v] = c;
@@ -86,7 +102,7 @@ struct Simplex {
                 }
             } else {
                 Ceq *= -1;
-                for (size_t v = 0; v < equalityIndex; ++v) {
+                for (size_t v = 1; v < numVar; ++v) {
                     if (int64_t Ccv = -C(c, v)) {
                         if (((basicCons[v] == -2) && (Ccv > 0))) {
                             basicCons[v] = c;
@@ -101,22 +117,100 @@ struct Simplex {
         // basicCons should now contain either `-1` or an integer >= 0
         // indicating which row contains the only non-zero element; we'll now
         // fill basicVars.
-        auto basicVars = basicVariables();
+        //
+        auto basicVars = getBasicVariables();
         for (auto &&x : basicVars)
             x = -1;
-        for (size_t v = 0; v < equalityIndex; ++v) {
+        for (size_t v = 1; v < numVar; ++v) {
             int64_t r = basicCons[v];
-            if (r >= 0)
-                basicVars[r] = v;
+            if (r >= 0) {
+                if (basicVars[r] == -1) {
+                    basicVars[r] = v;
+                } else {
+                    // this is reachable, as we could have
+                    // [ 1  1  0
+                    //   0  0  1 ]
+                    // TODO: is their actual harm in having multiple basicCons?
+                    basicCons[v] = -1;
+                }
+            }
         }
-        size_t numAugmentVars = 0;
+        llvm::SmallVector<unsigned> augmentVars{};
+        for (unsigned i = 0; i < basicVars.size(); ++i)
+            if (basicVars[i] == -1)
+                augmentVars.push_back(i);
+        addVars(augmentVars.size());
+        for (auto &&d : getConstraintDenominators())
+            d = 1;
+        {
+            PtrMatrix<int64_t> C{getConstraints()};
+            auto costs{getCost()};
+            for (auto &&c : costs)
+                c = 0;
+            for (size_t i = 0; i < augmentVars.size(); ++i) {
+                size_t a = augmentVars[i];
+                C(a, numVar + i) = 1;
+                // we now zero out the implicit cost of `1`
+                for (size_t j = 0; j < numVar; ++j)
+                    costs[j] -= C(a, j);
+            }
+            // false/0 means feasible
+            // true/non-zero infeasible
+            return run();
+        }
         // for (size_t c = 0; c < C.numRow(); ++c) {
         //     int64_t &basicVar{basicVars[c]};
         //     basicVar = -1;
         // }
 
         // now, every
-        return false;
+    }
+    static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
+        // Bland's algorithm; guaranteed to terminate
+        for (int i = 1; i < costs.size(); ++i)
+            if (costs[i] < 0)
+                return i;
+        return -1;
+    }
+    static int getLeavingVariable(PtrMatrix<int64_t> C,
+                                  size_t enteringVariable) {
+        // inits guarantee first valid is selected
+        int64_t n = 0;
+        int64_t d = -1;
+        int j = -1;
+        for (size_t i = 0; i < C.numRow(); ++i) {
+            int64_t Civ = C(i, enteringVariable);
+            if (Civ > 0) {
+                int64_t Ci0 = C(i, 0);
+                assert(Ci0 >= 0);
+                if (Civ * d < n * Ci0) {
+                    n = Civ;
+                    d = Ci0;
+                    j = i;
+                }
+            }
+        }
+        return j;
+    }
+    // run the simplex algorithm
+    int64_t run() {
+        auto costs{getCost()};
+        PtrMatrix<int64_t> C{getConstraints()};
+        while (true) {
+            // entering variable is the row
+            int enteringVariable = getEnteringVariable(costs);
+            if (enteringVariable == -1)
+                return costs[0];
+            // leaving variable is the column
+            int leavingVariable = getLeavingVariable(C, enteringVariable);
+            if (leavingVariable == -1)
+                return std::numeric_limits<int64_t>::max(); // unbounded
+            for (size_t i = 0; i < C.numRow(); ++i)
+                if (i != leavingVariable)
+                    NormalForm::zeroWithRowOperation(C, i, leavingVariable,
+                                                     enteringVariable);
+        }
+        return costs[0];
     }
     // A*x >= 0
     // B*x == 0
@@ -141,7 +235,7 @@ struct Simplex {
         // [ I A 0
         //   0 B I ]
         // then drop the extra variables
-        slackEqualityConstraints(simplex.constraints(), A, B);
+        slackEqualityConstraints(simplex.getConstraints(), A, B);
         simplex.initiateFeasible();
 
         return simplex;
