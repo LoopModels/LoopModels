@@ -34,6 +34,7 @@ struct Simplex {
         tableau.resize(tableau.numRow(), numVars + 2,
                        std::max(numVars + 2, tableau.rowStride()));
     }
+    void truncateVars(size_t numVars) { tableau.truncateCols(numVars + 2); }
     void resizeForOverwrite(size_t numCon, size_t numVar) {
         tableau.resizeForOverwrite(numCon + 2, numVar + 2);
     }
@@ -156,14 +157,12 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            return run();
+            if (int64_t r = run())
+                return r;
+            // all augment vars are now 0
+            truncateVars(numVar);
         }
-        // for (size_t c = 0; c < C.numRow(); ++c) {
-        //     int64_t &basicVar{basicVars[c]};
-        //     basicVar = -1;
-        // }
-
-        // now, every
+        return 0;
     }
     static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
@@ -210,12 +209,12 @@ struct Simplex {
                     NormalForm::zeroWithRowOperation(C, i, leavingVariable,
                                                      enteringVariable);
         }
-        return costs[0];
+        // return costs[0];
     }
     // A*x >= 0
     // B*x == 0
-    static Simplex positiveVariables(PtrMatrix<const int64_t> A,
-                                     PtrMatrix<const int64_t> B) {
+    static llvm::Optional<Simplex>
+    positiveVariables(PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B) {
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -236,8 +235,8 @@ struct Simplex {
         //   0 B I ]
         // then drop the extra variables
         slackEqualityConstraints(simplex.getConstraints(), A, B);
-        simplex.initiateFeasible();
-
+        if (simplex.initiateFeasible())
+            return {};
         return simplex;
     }
 };
