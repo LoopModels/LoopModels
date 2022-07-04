@@ -20,7 +20,7 @@
 // In either case, we assume the matrix `A` consists of known integers.
 struct IntegerPolyhedra {
     // order of vars:
-    // loop vars, symbolic vars, constants
+    // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
 
@@ -1268,7 +1268,7 @@ struct SymbolicPolyhedra : public IntegerPolyhedra {
             }
         }
         // order of vars:
-        // loop vars, symbolic vars, constants
+        // constants, loop vars, symbolic vars
         // this is because of hnf prioritizing diagonalizing leading rows
         const size_t origNumRow = A.numRow();
         const size_t origNumCol = A.numCol();

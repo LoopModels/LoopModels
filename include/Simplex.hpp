@@ -19,11 +19,7 @@ struct Simplex {
     // column 0: indicates whether that row (constraint) is basic, and if so
     // which one column 1: denominator for the row
     Matrix<int64_t, 0, 0, 0> tableau;
-    // llvm::SmallVector<int64_t, 0> data{};
-    // size_t numVariables;
-    // size_t numConstraints;
-    // size_t stride{};
-
+    // NOTE: all methods resizing the tableau may invalidate references to it
     void resize(size_t numCon, size_t numVar) {
         tableau.resize(numCon + 2, numVar + 2);
     }
@@ -140,7 +136,7 @@ struct Simplex {
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
                 augmentVars.push_back(i);
-        addVars(augmentVars.size());
+        addVars(augmentVars.size()); // NOTE: invalidates all refs
         for (auto &&d : getConstraintDenominators())
             d = 1;
         {
@@ -166,7 +162,7 @@ struct Simplex {
     }
     static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
-        for (int i = 1; i < costs.size(); ++i)
+        for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
         return -1;
@@ -205,7 +201,7 @@ struct Simplex {
             if (leavingVariable == -1)
                 return std::numeric_limits<int64_t>::max(); // unbounded
             for (size_t i = 0; i < C.numRow(); ++i)
-                if (i != leavingVariable)
+                if (i != size_t(leavingVariable))
                     NormalForm::zeroWithRowOperation(C, i, leavingVariable,
                                                      enteringVariable);
         }
@@ -213,6 +209,7 @@ struct Simplex {
     }
     // A*x >= 0
     // B*x == 0
+    // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex>
     positiveVariables(PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B) {
         size_t numVar = A.numCol();
@@ -239,4 +236,7 @@ struct Simplex {
             return {};
         return simplex;
     }
+
+    static void pruneBounds(PtrMatrix<const int64_t> A,
+                            PtrMatrix<const int64_t> B) {}
 };
