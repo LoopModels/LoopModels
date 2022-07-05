@@ -14,24 +14,24 @@
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
 
-// A*x + b >= 0
+// A*x <= b
 // the IntegerPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-struct IntegerPolyhedra {
+struct ZPolyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
 
-    IntegerPolyhedra(const IntMatrix A) : A(std::move(A)){};
-    IntegerPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
+    ZPolyhedra(const IntMatrix A) : A(std::move(A)){};
+    ZPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
 
     size_t getNumVar() const { return A.numCol() - 1; }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
 
-    auto inequalityBounds() { return A.getCol(getNumVar()); }
-
+    StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
+    /*
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
@@ -79,17 +79,14 @@ struct IntegerPolyhedra {
         }
     }
 
-    static bool uniqueConstraint(PtrMatrix<const int64_t> A,
-                                 llvm::ArrayRef<int64_t> b, size_t C) {
+    static bool uniqueConstraint(PtrMatrix<const int64_t> A, size_t C) {
         for (size_t c = 0; c < C; ++c) {
-            if (b[c] == b[C]) {
-                bool allEqual = true;
-                for (size_t r = 0; r < A.numCol(); ++r) {
-                    allEqual &= (A(c, r) == A(C, r));
-                }
-                if (allEqual)
-                    return false;
+            bool allEqual = true;
+            for (size_t r = 0; r < A.numCol(); ++r) {
+                allEqual &= (A(c, r) == A(C, r));
             }
+            if (allEqual)
+                return false;
         }
         return true;
     }
@@ -122,14 +119,10 @@ struct IntegerPolyhedra {
     // For `Asrc' * x <= bsrc` and `E0'* x = q0`, eliminates `i`
     // using Fourier–Motzkin elimination, storing the updated equations in
     // `Adst`, `bdst`, `E1`, and `q1`.
-    bool
-    eliminateVarForRCElim(IntMatrix &Adst, llvm::SmallVectorImpl<int64_t> &bdst,
-                          IntMatrix &E1, llvm::SmallVectorImpl<int64_t> &q1,
-                          IntMatrix &Asrc, llvm::SmallVectorImpl<int64_t> &bsrc,
-                          IntMatrix &E0, llvm::SmallVectorImpl<int64_t> &q0,
-                          const size_t i) const {
+    bool eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E1, IntMatrix &Asrc,
+                               IntMatrix &E0, const size_t i) const {
         std::cout << "Asrc0 =\n" << Asrc << std::endl;
-        if (!substituteEquality(Asrc, bsrc, E0, q0, i)) {
+        if (!substituteEquality(Asrc, E0, i)) {
             std::cout << "Asrc1 =\n" << Asrc << std::endl;
             const size_t numAuxVar = Asrc.numCol() - getNumVar();
             size_t c = Asrc.numRow();
@@ -139,19 +132,18 @@ struct IntegerPolyhedra {
                     s += (Asrc(c, j) != 0);
                 }
                 if (s > 1) {
-                    eraseConstraint(Asrc, bsrc, c);
+                    eraseConstraint(Asrc, c);
                 }
             }
             if (E0.numRow() > 1) {
-                NormalForm::simplifyEqualityConstraints(E0, q0);
+                NormalForm::simplifyEqualityConstraints(E0);
             }
             return false;
         }
         // eliminate variable `i` according to original order
         auto [numExclude, c, numNonZero] =
-            eliminateVarForRCElimCore(Adst, bdst, E0, q0, Asrc, bsrc, i);
+            eliminateVarForRCElimCore(Adst, E0, Asrc, i);
         Adst.resize(c, Asrc.numCol());
-        bdst.resize(c);
         auto [Ce, Re] = E0.size();
         size_t numReserve =
             Ce - numNonZero + ((numNonZero * (numNonZero - 1)) >> 1);
@@ -1150,8 +1142,7 @@ struct IntegerPolyhedra {
 
     void dropEmptyConstraints() { ::dropEmptyConstraints(A, b); }
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const IntegerPolyhedra &p) {
+    friend std::ostream &operator<<(std::ostream &os, const ZPolyhedra &p) {
         return printConstraints(os, p.A);
     }
     void dump() const { std::cout << *this; }
@@ -1184,87 +1175,108 @@ struct IntegerPolyhedra {
         //     }
         //     return false;
     }
+    */
+    // A*x <= b
     bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
         int64_t bc;
         size_t numVar = std::min(x.size(), getNumVar());
         for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
-            bc = b[c];
-            for (size_t v = 0; v < numVar; ++v) {
-                bc -= A(c, v) * x[v];
-            }
-            if (bc < 0) {
+            bc = A(c, 0);
+            for (size_t v = 0; v < numVar; ++v)
+                bc -= A(c, v + 1) * x[v];
+            if (bc < 0)
                 return false;
-            }
         }
         return true;
     }
 };
 
-struct SymbolicPolyhedra : public IntegerPolyhedra {
+// A*x <= b
+// x >= 0 (not represented explicitly above)
+struct ZStarPolyhedra {
+    IntMatrix A;
+
+    ZStarPolyhedra(const IntMatrix A) : A(std::move(A)){};
+    ZStarPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
+
+    size_t getNumVar() const { return A.numCol() - 1; }
+    size_t getNumInequalityConstraints() const { return A.numRow(); }
+
+    StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
+    bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
+        int64_t bc;
+        size_t numVar = std::min(x.size(), getNumVar());
+        for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
+            bc = A(c, 0);
+            for (size_t v = 0; v < numVar; ++v)
+                bc -= A(c, v + 1) * x[v];
+            if (bc < 0)
+                return false;
+        }
+        return true;
+    }
+};
+
+struct SymbolicPolyhedra : public ZPolyhedra {
     llvm::SmallVector<Polynomial::Monomial> monomials;
     SymbolicPolyhedra(IntMatrix A, llvm::ArrayRef<MPoly> b,
                       const PartiallyOrderedSet &poset)
-        : AbstractPolyhedra<SymbolicPolyhedra, MPoly>(std::move(A)),
-          monomials({}) {
+        : ZPolyhedra(std::move(A)), monomials({}) {
         // use poset
         // monomials[{unsigned}_1] >= monomials[{unsigned}_2] + {int64_t}_1
-        llvm::SmallVector<std::pair<int64_t, unsigned, unsigned>> cmps;
+        llvm::SmallVector<std::tuple<int64_t, unsigned, unsigned>> cmps;
         for (auto &bi : b) {
             for (auto &t : bi) {
-                if (!t.isCompileTimeConstant()) {
-                    bool doPushBack = true;
-                    for (auto &m : monomials) {
-                        if (m == t.exponent) {
-                            doPushBack = false;
-                            break;
-                        }
-                    }
-                    if (doPushBack) {
-                        for (size_t i = 0; i < monomials.size(); ++i) {
-                            auto &m = monomials[i];
-                            // loop inner triangle
-                            if ((m.degree() == 1) && (t.degree() == 1)) {
-                                // we can do a direct lookup
-                                // interval on t - m
-                                const itv = poset(m.exponent.prodIDs.front(),
-                                                  t.exponent.prodIDs.front());
-                                if ((itv.lowerBound >
-                                     (std::numeric_limits<int64_t>::min() >>
-                                      2)) &&
-                                    (itv.lowerBound <
-                                     (std::numeric_limits<int64_t>::max() >>
-                                      2))) {
-                                    // t - m >= lowerBound
-                                    // t >= m + lowerBound
-                                    cmps.emplace_back(itv.lowerBound,
-                                                      monomials.size(), i);
-                                }
-                                if ((itv.upperBound >
-                                     (std::numeric_limits<int64_t>::min() >>
-                                      2)) &&
-                                    (itv.upperBound <
-                                     (std::numeric_limits<int64_t>::max() >>
-                                      2))) {
-                                    // t - m <= upperBound
-                                    // m >= t + -upperBound
-                                    cmps.emplace_back(-itv.upperBound, i,
-                                                      monomials.size());
-                                }
-                            } else {
-                                auto [itvt, itvm] =
-                                    poset.unmatchedIntervals(t, m);
-                                // TODO: tighten by using matched to
-                                // get less conservative bounds
-                                if (itvt.knownGreaterEqual(itvm)) {
-                                    cmps.emplace_back(0, monomials.size(), i);
-                                } else if (itvm.knownGreaterEqual(itvt)) {
-                                    cmps.emplace_back(0, i, monomials.size());
-                                }
-                            }
-                        }
-                        monomials.push_back(t.exponent);
+                if (t.isCompileTimeConstant())
+                    continue;
+                bool dontPushBack = false;
+                const Polynomial::Monomial &tm = t.exponent;
+                for (auto &m : monomials) {
+                    if (m == tm) {
+                        dontPushBack = true;
+                        break;
                     }
                 }
+                if (dontPushBack)
+                    continue;
+                for (size_t i = 0; i < monomials.size(); ++i) {
+                    Polynomial::Monomial &m = monomials[i];
+                    // loop inner triangle
+                    if ((m.degree() == 1) && (t.degree() == 1)) {
+                        // we can do a direct lookup
+                        // interval on t - m
+                        const Interval itv = poset(m.prodIDs.front().getID(),
+                                                   tm.prodIDs.front().getID());
+                        if ((itv.lowerBound >
+                             (std::numeric_limits<int64_t>::min() >> 2)) &&
+                            (itv.lowerBound <
+                             (std::numeric_limits<int64_t>::max() >> 2))) {
+                            // t - m >= lowerBound
+                            // t >= m + lowerBound
+                            cmps.emplace_back(itv.lowerBound, monomials.size(),
+                                              i);
+                        }
+                        if ((itv.upperBound >
+                             (std::numeric_limits<int64_t>::min() >> 2)) &&
+                            (itv.upperBound <
+                             (std::numeric_limits<int64_t>::max() >> 2))) {
+                            // t - m <= upperBound
+                            // m >= t + -upperBound
+                            cmps.emplace_back(-itv.upperBound, i,
+                                              monomials.size());
+                        }
+                    } else {
+                        auto [itvt, itvm] = poset.unmatchedIntervals(tm, m);
+                        // TODO: tighten by using matched to
+                        // get less conservative bounds
+                        if (itvt.knownGreaterEqual(itvm)) {
+                            cmps.emplace_back(0, monomials.size(), i);
+                        } else if (itvm.knownGreaterEqual(itvt)) {
+                            cmps.emplace_back(0, i, monomials.size());
+                        }
+                    }
+                }
+                monomials.push_back(tm);
             }
         }
         // order of vars:

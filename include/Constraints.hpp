@@ -264,12 +264,73 @@ substituteEqualityImpl(IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
     }
     return rowMinNonZero;
 }
+MULTIVERSION static size_t substituteEqualityImpl(IntMatrix &E,
+                                                  const size_t i) {
+    const auto [numConstraints, numVar] = E.size();
+    size_t minNonZero = numVar + 1;
+    size_t rowMinNonZero = numConstraints;
+    for (size_t j = 0; j < numConstraints; ++j) {
+        if (E(j, i)) {
+            size_t nonZero = 0;
+            VECTORIZE
+            for (size_t v = 0; v < numVar; ++v) {
+                nonZero += (E(j, v) != 0);
+            }
+            if (nonZero < minNonZero) {
+                minNonZero = nonZero;
+                rowMinNonZero = j;
+            }
+        }
+    }
+    if (rowMinNonZero == numConstraints) {
+        return rowMinNonZero;
+    }
+    auto Es = E.getRow(rowMinNonZero);
+    int64_t Eis = Es[i];
+    // we now subsitute the equality expression with the minimum number
+    // of terms.
+    if (std::abs(Eis) == 1) {
+        for (size_t j = 0; j < numConstraints; ++j) {
+            if (j == rowMinNonZero)
+                continue;
+            if (int64_t Eij = E(j, i)) {
+                VECTORIZE
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(j, v) = Eis * E(j, v) - Eij * Es[v];
+                }
+            }
+        }
+    } else {
+        for (size_t j = 0; j < numConstraints; ++j) {
+            if (j == rowMinNonZero)
+                continue;
+            if (int64_t Eij = E(j, i)) {
+                int64_t g = gcd(Eij, Eis);
+                int64_t Ag = Eij / g;
+                int64_t Eg = Eis / g;
+                VECTORIZE
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(j, v) = Eg * E(j, v) - Ag * Es[v];
+                }
+            }
+        }
+    }
+    return rowMinNonZero;
+}
 template <typename T>
 static bool substituteEquality(IntMatrix &E, llvm::SmallVectorImpl<T> &q,
                                const size_t i) {
     size_t rowMinNonZero = substituteEqualityImpl(E, q, i);
     if (rowMinNonZero != E.numRow()) {
         eraseConstraint(E, q, rowMinNonZero);
+        return false;
+    }
+    return true;
+}
+static bool substituteEquality(IntMatrix &E, const size_t i) {
+    size_t rowMinNonZero = substituteEqualityImpl(E, i);
+    if (rowMinNonZero != E.numRow()) {
+        eraseConstraint(E, rowMinNonZero);
         return false;
     }
     return true;
@@ -356,6 +417,79 @@ inline size_t substituteEqualityImpl(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     }
     return rowMinNonZero;
 }
+inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
+                                     const size_t i) {
+    const auto [numConstraints, numVar] = E.size();
+    size_t minNonZero = numVar + 1;
+    size_t rowMinNonZero = numConstraints;
+    for (size_t j = 0; j < numConstraints; ++j) {
+        if (E(j, i)) {
+            size_t nonZero = 0;
+            for (size_t v = 0; v < numVar; ++v) {
+                nonZero += (E(j, v) != 0);
+            }
+            if (nonZero < minNonZero) {
+                minNonZero = nonZero;
+                rowMinNonZero = j;
+            }
+        }
+    }
+    if (rowMinNonZero == numConstraints) {
+        return rowMinNonZero;
+    }
+    auto Es = E.getRow(rowMinNonZero);
+    int64_t Eis = Es[i];
+    int64_t s = 2 * (Eis > 0) - 1;
+    // we now subsitute the equality expression with the minimum number
+    // of terms.
+    if (std::abs(Eis) == 1) {
+        for (size_t j = 0; j < A.numRow(); ++j) {
+            if (int64_t Aij = A(j, i)) {
+                // `A` contains inequalities; flipping signs is illegal
+                int64_t Ag = (s * Aij);
+                int64_t Eg = (s * Eis);
+                for (size_t v = 0; v < numVar; ++v) {
+                    A(j, v) = Eg * A(j, v) - Ag * Es[v];
+                }
+            }
+        }
+        for (size_t j = 0; j < numConstraints; ++j) {
+            if (j == rowMinNonZero)
+                continue;
+            if (int64_t Eij = E(j, i)) {
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(j, v) = Eis * E(j, v) - Eij * Es[v];
+                }
+            }
+        }
+    } else {
+        for (size_t j = 0; j < A.numRow(); ++j) {
+            if (int64_t Aij = A(j, i)) {
+                int64_t g = gcd(Aij, Eis);
+                assert(g > 0);
+                // `A` contains inequalities; flipping signs is illegal
+                int64_t Ag = (s * Aij) / g;
+                int64_t Eg = (s * Eis) / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    A(j, v) = Eg * A(j, v) - Ag * Es[v];
+                }
+            }
+        }
+        for (size_t j = 0; j < numConstraints; ++j) {
+            if (j == rowMinNonZero)
+                continue;
+            if (int64_t Eij = E(j, i)) {
+                int64_t g = gcd(Eij, Eis);
+                int64_t Ag = Eij / g;
+                int64_t Eg = Eis / g;
+                for (size_t v = 0; v < numVar; ++v) {
+                    E(j, v) = Eg * E(j, v) - Ag * Es[v];
+                }
+            }
+        }
+    }
+    return rowMinNonZero;
+}
 // template <typename T>
 // static bool substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
 //                                IntMatrix &E, llvm::SmallVectorImpl<T> &q,
@@ -377,6 +511,16 @@ MULTIVERSION static bool substituteEquality(IntMatrix &A,
     size_t rowMinNonZero = substituteEqualityImpl(A, b, E, q, i);
     if (rowMinNonZero != E.numRow()) {
         eraseConstraint(E, q, rowMinNonZero);
+        return false;
+    }
+    return true;
+}
+MULTIVERSION static bool substituteEquality(IntMatrix &A, IntMatrix &E,
+                                            const size_t i) {
+
+    size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
+    if (rowMinNonZero != E.numRow()) {
+        eraseConstraint(E, rowMinNonZero);
         return false;
     }
     return true;
