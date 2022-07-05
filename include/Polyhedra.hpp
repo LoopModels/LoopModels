@@ -6,10 +6,13 @@
 #include "./NormalForm.hpp"
 #include "./POSet.hpp"
 #include "./Symbolics.hpp"
+#include "./Symplex.hpp"
+#include "Simplex.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm-14/llvm/ADT/Optional.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
@@ -1215,6 +1218,36 @@ struct ZStarPolyhedra {
         }
         return true;
     }
+    // transform: x = B*y
+    // this ZStarPoly is defined in terms of x:
+    // [  A   * x <= [ b
+    //   -I ]          0 ]
+    // performing the substitution
+    // [  A   * B*y <= [ b
+    //   -I ]            0 ]
+    // [  A*B   * y <= [ b
+    //     -B ]          0 ]
+    // thus it returns a ZPolyhedra
+    ZPolyhedra transformVariables(const IntMatrix &B) const {
+        const auto [M, N] = A.size();
+        const size_t numVar = N - 1;
+        IntMatrix C{};
+        C.resizeForOverwrite(M + numVar, N);
+        for (size_t i = 0; i < M; ++i)
+            C(i, 0) = A(i, 0);
+        matmul(C.view(0, M + numVar, 1, N), A.view(0, M, 1, N), B);
+        for (size_t i = 0; i < numVar; ++i) {
+            C(i + M, 0) = 0;
+            for (size_t j = 1; j < N; ++j)
+                C(i + M, j) = B(i, j);
+        }
+        return ZPolyhedra(std::move(C));
+    }
+    llvm::Optional<Simplex> toSimplex() const {
+        Matrix<int64_t, 0, 0, 0> B(0, A.numCol());
+        return Simplex::positiveVariables(A, B);
+    }
+    bool isEmpty() const { return !toSimplex().hasValue(); }
 };
 
 struct SymbolicPolyhedra : public ZPolyhedra {
