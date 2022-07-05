@@ -19,6 +19,7 @@ struct Simplex {
     // column 0: indicates whether that row (constraint) is basic, and if so
     // which one column 1: denominator for the row
     Matrix<int64_t, 0, 0, 0> tableau;
+    size_t numSlackVar;
     // NOTE: all methods resizing the tableau may invalidate references to it
     void resize(size_t numCon, size_t numVar) {
         tableau.resize(numCon + 2, numVar + 2);
@@ -41,6 +42,9 @@ struct Simplex {
     //     return PtrMatrix<int64_t>(data.data(), numConstraints + 2,
     //                               numVariables + 2, stride);
     // }
+    PtrMatrix<int64_t> getCostsAndConstraints() {
+        return tableau.view(1, tableau.numRow(), 2, tableau.numCol());
+    }
     PtrMatrix<int64_t> getConstraints() {
         return tableau.view(2, tableau.numRow(), 2, tableau.numCol());
     }
@@ -51,6 +55,10 @@ struct Simplex {
         tableau.truncateRows(
             NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1) +
             2);
+    }
+    void deleteConstraint(size_t c) {
+        eraseConstraintImpl(tableau, c + 2);
+        --tableau.M;
     }
     llvm::MutableArrayRef<int64_t> getTableauRow(size_t i) {
         return llvm::MutableArrayRef<int64_t>(
@@ -153,7 +161,7 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            if (int64_t r = run())
+            if (int64_t r = runCore())
                 return r;
             // all augment vars are now 0
             truncateVars(numVar);
@@ -187,25 +195,42 @@ struct Simplex {
         }
         return j;
     }
-    // run the simplex algorithm
-    int64_t run() {
+    // run the simplex algorithm, assuming basicVar's costs have been set to 0
+    int64_t runCore(int64_t f = 1) {
         auto costs{getCost()};
-        PtrMatrix<int64_t> C{getConstraints()};
+        PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the row
             int enteringVariable = getEnteringVariable(costs);
             if (enteringVariable == -1)
-                return costs[0];
+                return costs[0] / f;
             // leaving variable is the column
             int leavingVariable = getLeavingVariable(C, enteringVariable);
             if (leavingVariable == -1)
                 return std::numeric_limits<int64_t>::max(); // unbounded
+            ++leavingVariable;
             for (size_t i = 0; i < C.numRow(); ++i)
-                if (i != size_t(leavingVariable))
-                    NormalForm::zeroWithRowOperation(C, i, leavingVariable,
-                                                     enteringVariable);
+                if (i != size_t(leavingVariable)) {
+                    int64_t m = NormalForm::zeroWithRowOperation(
+                        C, i, leavingVariable, enteringVariable);
+                    if (i == 0)
+                        f *= m;
+                }
         }
         // return costs[0];
+    }
+    // set basicVar's costs to 0, and then runCore()
+    int64_t run() {
+        StridedVector<int64_t> basicVars = getBasicVariables();
+        PtrMatrix<int64_t> C = getCostsAndConstraints();
+        int64_t f = 1;
+        for (size_t c = 0; c < basicVars.size();) {
+            int64_t v = basicVars[c++];
+            if (int64_t cost = C(0, v)) {
+                f *= NormalForm::zeroWithRowOperation(C, 0, c, v);
+            }
+        }
+        return runCore(f);
     }
     // A*x >= 0
     // B*x == 0
@@ -216,20 +241,18 @@ struct Simplex {
         assert(numVar == B.numCol());
         Simplex simplex{};
         size_t numSlack = A.numRow();
+        simplex.numSlackVar = numSlack;
         size_t numStrict = B.numRow();
         size_t numCon = numSlack + numStrict;
-        // llvm::SmallVector<unsigned> negativeInequalities;
         size_t extraStride = 0;
         for (unsigned i = 0; i < numSlack; ++i)
             extraStride += A(i, numVar - 1) < 0;
-        // if (A(i,numVar-1)<0)
-        // 	negativeInequalities.push_back(i);
-
+        // try to avoid reallocating
         size_t stride = numVar + numCon + extraStride + 2;
         simplex.resizeForOverwrite(numCon, numVar + numSlack, stride);
-        // initial construction:
-        // [ I A 0
-        //   0 B I ]
+        // construct:
+        // [ I A
+        //   0 B ]
         // then drop the extra variables
         slackEqualityConstraints(simplex.getConstraints(), A, B);
         if (simplex.initiateFeasible())
@@ -237,6 +260,17 @@ struct Simplex {
         return simplex;
     }
 
-    static void pruneBounds(PtrMatrix<const int64_t> A,
-                            PtrMatrix<const int64_t> B) {}
+    void pruneBounds() {
+        Simplex simplex;
+        for (size_t c = 0; c < getNumConstraints(); ++c) {
+            simplex = *this;
+            PtrMatrix<int64_t> constraints = simplex.getConstraints();
+            int64_t bumpedBound = ++constraints(c, 0);
+            llvm::MutableArrayRef<int64_t> cost = simplex.getCost();
+            for (size_t v = numSlackVar; v < cost.size(); ++v)
+                cost[v] = -constraints(c, v);
+            if (simplex.run() != bumpedBound)
+                deleteConstraint(c--); // redundant
+        }
+    }
 };

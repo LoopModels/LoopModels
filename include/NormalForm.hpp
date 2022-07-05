@@ -426,7 +426,7 @@ hermite(IntMatrix A) {
 }
 
 // zero A(i,k) with A(j,k)
-inline void zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
+inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
                                  size_t k) {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
@@ -436,7 +436,9 @@ inline void zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
         VECTORIZE
         for (size_t l = 0; l < A.numCol(); ++l)
             A(i, l) = Ajk * A(i, l) - Aik * A(j, l);
+	return Ajk;
     }
+    return 1;
 }
 
 MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,

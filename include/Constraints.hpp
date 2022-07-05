@@ -79,6 +79,16 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
         b[i] = b[lastRow];
     }
 }
+MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A, size_t i) {
+    const auto [M, N] = A.size();
+    const size_t lastRow = M - 1;
+    if (lastRow != i) {
+        VECTORIZE
+        for (size_t n = 0; n < N; ++n) {
+            A(i, n) = A(lastRow, n);
+        }
+    }
+}
 MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
                                              llvm::MutableArrayRef<MPoly> b,
                                              size_t i) {
@@ -108,6 +118,10 @@ static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     //     std::cout << "A2=\n" << A << std::endl;
     // #endif
     b.truncate(lastRow);
+}
+static void eraseConstraint(IntMatrix &A, size_t i) {
+    eraseConstraintImpl(A, i);
+    A.truncateRows(A.numRow() - 1);
 }
 
 template <typename T>
@@ -381,7 +395,8 @@ substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b, IntMatrix &E,
 
 // C = [ I A
 //       0 B ]
-void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B){
+void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
+                              PtrMatrix<const int64_t> B) {
     const size_t numVar = A.numCol();
     assert(numVar == B.numCol());
     const size_t numSlack = A.numRow();
@@ -389,25 +404,24 @@ void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A, 
     assert(C.numRow() == numSlack + numStrict);
     assert(C.numCol() == numSlack + numVar);
     // [I A]
-    for (size_t s = 0; s < numSlack; ++s){
-	for (size_t i = 0; i < numSlack; ++i)
-	    C(s,i) = 0;
-	C(s,s) = 1;
-	for (size_t i = 0; i < numVar; ++i)
-	    C(s,i+numSlack) = -A(s,i);
+    for (size_t s = 0; s < numSlack; ++s) {
+        for (size_t i = 0; i < numSlack; ++i)
+            C(s, i) = 0;
+        C(s, s) = 1;
+        for (size_t i = 0; i < numVar; ++i)
+            C(s, i + numSlack) = -A(s, i);
     }
     // [0 B]
-    for (size_t s = 0; s < numStrict; ++s){
-	for (size_t i = 0; i < numSlack; ++i)
-	    C(s+numSlack,i) = 0;
-	for (size_t i = 0; i < numVar; ++i)
-	    C(s+numSlack,i+numSlack) = B(s,i);
+    for (size_t s = 0; s < numStrict; ++s) {
+        for (size_t i = 0; i < numSlack; ++i)
+            C(s + numSlack, i) = 0;
+        for (size_t i = 0; i < numVar; ++i)
+            C(s + numSlack, i + numSlack) = B(s, i);
     }
 }
 
-IntMatrix
-slackEqualityConstraints(PtrMatrix<const int64_t> A,
-                         PtrMatrix<const int64_t> E) {
+IntMatrix slackEqualityConstraints(PtrMatrix<const int64_t> A,
+                                   PtrMatrix<const int64_t> E) {
 
     const auto [M, N] = A.size();
     const size_t K = E.numRow();
@@ -422,9 +436,10 @@ slackEqualityConstraints(PtrMatrix<const int64_t> A,
     slackEqualityConstraints(C, A, E);
     return C;
 }
-std::pair<IntMatrix,llvm::SmallVector<int64_t>>
+std::pair<IntMatrix, llvm::SmallVector<int64_t>>
 slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<int64_t> b,
-                         PtrMatrix<const int64_t> E, llvm::ArrayRef<int64_t> q) {
+                         PtrMatrix<const int64_t> E,
+                         llvm::ArrayRef<int64_t> q) {
 
     const auto [M, N] = A.size();
     const size_t K = E.numRow();
@@ -452,7 +467,7 @@ slackEqualityConstraints(PtrMatrix<const int64_t> A, llvm::ArrayRef<int64_t> b,
         }
         d[M + k] = q[k];
     }
-    return std::make_pair(C,d);
+    return std::make_pair(C, d);
 }
 
 // (A*x <= b) && (E*x == q)
@@ -474,7 +489,7 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // so we have C*x = [b; q]
     // C = [ I A
     //       0 E ]
-    auto [C,d] = slackEqualityConstraints(A, b, E, q);
+    auto [C, d] = slackEqualityConstraints(A, b, E, q);
     // IntMatrix C{slackEqualityConstraints(A, b, E, q)};
     for (size_t o = M + N; o > numNewVar + M;) {
         substituteEquality(C, d, --o);
