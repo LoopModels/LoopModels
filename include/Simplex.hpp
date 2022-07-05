@@ -197,13 +197,12 @@ struct Simplex {
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     int64_t runCore(int64_t f = 1) {
-        auto costs{getCost()};
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the row
-            int enteringVariable = getEnteringVariable(costs);
+            int enteringVariable = getEnteringVariable(C.getRow(0));
             if (enteringVariable == -1)
-                return costs[0] / f;
+                return C[0] / f;
             // leaving variable is the column
             int leavingVariable = getLeavingVariable(C, enteringVariable);
             if (leavingVariable == -1)
@@ -217,7 +216,6 @@ struct Simplex {
                         f *= m;
                 }
         }
-        // return costs[0];
     }
     // set basicVar's costs to 0, and then runCore()
     int64_t run() {
