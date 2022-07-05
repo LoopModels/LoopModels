@@ -4,31 +4,31 @@
 #include "./Polyhedra.hpp"
 
 template <class P, typename T>
-struct AbstractEqualityPolyhedra : public AbstractPolyhedra<P, T> {
+struct AbstractEqualityPolyhedra : public ZPolyhedra {
     IntMatrix E;
     llvm::SmallVector<T, 8> q;
 
-    using AbstractPolyhedra<P, T>::A;
-    using AbstractPolyhedra<P, T>::b;
-    using AbstractPolyhedra<P, T>::removeVariable;
-    using AbstractPolyhedra<P, T>::getNumVar;
-    using AbstractPolyhedra<P, T>::pruneBounds;
+    using ZPolyhedra::A;
+    using ZPolyhedra::b;
+    using ZPolyhedra::removeVariable;
+    using ZPolyhedra::getNumVar;
+    using ZPolyhedra::pruneBounds;
     AbstractEqualityPolyhedra(size_t numIneq, size_t numEq, size_t numVar)
-        : AbstractPolyhedra<P, T>(numIneq, numVar), E(numEq, numVar),
+        : ZPolyhedra(numIneq, numVar), E(numEq, numVar),
           q(numEq){};
 
     AbstractEqualityPolyhedra(IntMatrix A, llvm::SmallVector<T, 8> b,
                               IntMatrix E, llvm::SmallVector<T, 8> q)
-        : AbstractPolyhedra<P, T>(std::move(A), std::move(b)), E(std::move(E)),
+        : ZPolyhedra(std::move(A), std::move(b)), E(std::move(E)),
           q(std::move(q)) {}
 
     bool isEmpty() const { return (b.size() | q.size()) == 0; }
     size_t getNumEqualityConstraints() const { return E.numRow(); }
     bool pruneBounds() {
-        return AbstractPolyhedra<P, T>::pruneBounds(A, b, E, q);
+        return ZPolyhedra::pruneBounds(A, b, E, q);
     }
     void removeVariable(const size_t i) {
-        AbstractPolyhedra<P, T>::removeVariable(A, b, E, q, i);
+        ZPolyhedra::removeVariable(A, b, E, q, i);
     }
     void removeExtraVariables(size_t numVarKeep) {
         ::removeExtraVariables(A, b, E, q, numVarKeep);

@@ -467,8 +467,8 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
 
-    PtrMatrix(T *mem, size_t M, size_t N, size_t X)
-        : mem(mem), M(M), N(N), X(X){};
+    //PtrMatrix(T *mem, size_t M, size_t N, size_t X)
+    //    : mem(mem), M(M), N(N), X(X){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }

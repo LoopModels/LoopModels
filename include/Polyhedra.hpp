@@ -5,9 +5,8 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./POSet.hpp"
+#include "./Simplex.hpp"
 #include "./Symbolics.hpp"
-#include "./Symplex.hpp"
-#include "Simplex.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -16,18 +15,27 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
+#include <type_traits>
 
+struct EmptyMatrix{};
+constexpr EmptyMatrix matmul(EmptyMatrix, PtrMatrix<const int64_t>) { return EmptyMatrix{}; }
+constexpr EmptyMatrix matmul(PtrMatrix<const int64_t>, EmptyMatrix) { return EmptyMatrix{}; }
+
+template <typename T>
+concept MaybeMatrix = std::is_same_v<T, IntMatrix> || std::is_same_v<T, EmptyMatrix>;
 // A*x <= b
 // the IntegerPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
+template <MaybeMatrix I64Matrix>
 struct ZPolyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
-
-    ZPolyhedra(const IntMatrix A) : A(std::move(A)){};
+    I64Matrix E;
+    
+    ZPolyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E) {};
     ZPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
 
     size_t getNumVar() const { return A.numCol() - 1; }
@@ -1196,8 +1204,10 @@ struct ZPolyhedra {
 
 // A*x <= b
 // x >= 0 (not represented explicitly above)
+template <MaybeMatrix I64Matrix>
 struct ZStarPolyhedra {
     IntMatrix A;
+    I64Matrix E;
 
     ZStarPolyhedra(const IntMatrix A) : A(std::move(A)){};
     ZStarPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
@@ -1228,7 +1238,7 @@ struct ZStarPolyhedra {
     // [  A*B   * y <= [ b
     //     -B ]          0 ]
     // thus it returns a ZPolyhedra
-    ZPolyhedra transformVariables(const IntMatrix &B) const {
+    ZPolyhedra<I64Matrix> transformVariables(const IntMatrix &B) const {
         const auto [M, N] = A.size();
         const size_t numVar = N - 1;
         IntMatrix C{};
@@ -1241,7 +1251,7 @@ struct ZStarPolyhedra {
             for (size_t j = 1; j < N; ++j)
                 C(i + M, j) = B(i, j);
         }
-        return ZPolyhedra(std::move(C));
+        return ZPolyhedra(std::move(C), matmul(E, B));
     }
     llvm::Optional<Simplex> toSimplex() const {
         Matrix<int64_t, 0, 0, 0> B(0, A.numCol());
@@ -1250,11 +1260,12 @@ struct ZStarPolyhedra {
     bool isEmpty() const { return !toSimplex().hasValue(); }
 };
 
-struct SymbolicPolyhedra : public ZPolyhedra {
+template <MaybeMatrix I64Matrix>
+struct SymbolicPolyhedra : public ZPolyhedra<I64Matrix>{
     llvm::SmallVector<Polynomial::Monomial> monomials;
-    SymbolicPolyhedra(IntMatrix A, llvm::ArrayRef<MPoly> b,
+    SymbolicPolyhedra(IntMatrix A, I64Matrix E, llvm::ArrayRef<MPoly> b,
                       const PartiallyOrderedSet &poset)
-        : ZPolyhedra(std::move(A)), monomials({}) {
+        : ZPolyhedra<I64Matrix>(std::move(A), std::move(E)), monomials({}) {
         // use poset
         // monomials[{unsigned}_1] >= monomials[{unsigned}_2] + {int64_t}_1
         llvm::SmallVector<std::tuple<int64_t, unsigned, unsigned>> cmps;
