@@ -467,8 +467,8 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
 
-    //PtrMatrix(T *mem, size_t M, size_t N, size_t X)
-    //    : mem(mem), M(M), N(N), X(X){};
+    // PtrMatrix(T *mem, size_t M, size_t N, size_t X)
+    //     : mem(mem), M(M), N(N), X(X){};
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -700,9 +700,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     Matrix(const SquareMatrix<T> &A)
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M), X(A.M){};
 
-    operator PtrMatrix<T>() { return PtrMatrix<T>(mem.data(), M, N, X); }
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>(mem.data(), M, N, X);
+    }
+    operator PtrMatrix<T>() {
+        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
@@ -892,12 +894,14 @@ std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
 }
 
 // template <typename T, size_t L>
-// std::ostream &operator<<(std::ostream &os, llvm::PtrVector<T, L> const &A) {
+// std::ostream &operator<<(std::ostream &os, llvm::PtrVector<T, L> const
+// &A) {
 //     return printVector(os, A);
 // }
 template <typename T, size_t M, size_t N, size_t L>
 std::ostream &operator<<(std::ostream &os, Matrix<T, M, N, L> const &A) {
-    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A) {
+    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+    // {
     return printMatrix(os, A);
 }
 template <typename T>

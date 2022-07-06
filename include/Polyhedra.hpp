@@ -11,31 +11,35 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <llvm-14/llvm/ADT/Optional.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
 #include <type_traits>
 
-struct EmptyMatrix{};
-constexpr EmptyMatrix matmul(EmptyMatrix, PtrMatrix<const int64_t>) { return EmptyMatrix{}; }
-constexpr EmptyMatrix matmul(PtrMatrix<const int64_t>, EmptyMatrix) { return EmptyMatrix{}; }
+struct EmptyMatrix {};
+constexpr EmptyMatrix matmul(EmptyMatrix, PtrMatrix<const int64_t>) {
+    return EmptyMatrix{};
+}
+constexpr EmptyMatrix matmul(PtrMatrix<const int64_t>, EmptyMatrix) {
+    return EmptyMatrix{};
+}
 
 template <typename T>
-concept MaybeMatrix = std::is_same_v<T, IntMatrix> || std::is_same_v<T, EmptyMatrix>;
+concept MaybeMatrix =
+    std::is_same_v<T, IntMatrix> || std::is_same_v<T, EmptyMatrix>;
 // A*x <= b
 // the IntegerPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-template <MaybeMatrix I64Matrix>
-struct ZPolyhedra {
+template <MaybeMatrix I64Matrix> struct ZPolyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
     I64Matrix E;
-    
-    ZPolyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E) {};
+
+    ZPolyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
     ZPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
 
     size_t getNumVar() const { return A.numCol() - 1; }
@@ -1204,13 +1208,14 @@ struct ZPolyhedra {
 
 // A*x <= b
 // x >= 0 (not represented explicitly above)
-template <MaybeMatrix I64Matrix>
-struct ZStarPolyhedra {
+template <MaybeMatrix I64Matrix> struct ZStarPolyhedra {
     IntMatrix A;
     I64Matrix E;
 
     ZStarPolyhedra(const IntMatrix A) : A(std::move(A)){};
     ZStarPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
+
+    ZStarPolyhedra(Simplex B);
 
     size_t getNumVar() const { return A.numCol() - 1; }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
@@ -1260,8 +1265,53 @@ struct ZStarPolyhedra {
     bool isEmpty() const { return !toSimplex().hasValue(); }
 };
 
+// template<> ZStarPolyhedra<EmptyMatrix>::ZStarPolyhedra(const Simplex &B){
+
+// }
+
+// currently, pruneBounds is useful, and thus should have been performed first
+// while hermiteNormalForm would require re-initializing the simplex to a
+// feasible solution, thus we probably don't want to do it to a simplex we wish
+// to keep around. Hence, this function takes a Simplex by value, and calls
+// hermiteNormalForm() inside
+template <> ZStarPolyhedra<IntMatrix>::ZStarPolyhedra(Simplex B) {
+    B.hermiteNormalForm();
+    const size_t numSlackVar = B.numSlackVar;
+    const size_t numVarTotal = B.getNumVar();        // includes constant col
+    const size_t numVar = numVarTotal - numSlackVar; // includes constant col
+    PtrMatrix<int64_t> C{B.getConstraints()};
+
+    // initially allocate enough space
+    A.resize(numSlackVar, numVar);
+    size_t nC = 0, nA = 0, i = 0;
+    while ((i < numSlackVar) && (nC < C.numRow())) {
+        if (C(nC, ++i)) {
+            // if we have multiple positives, that still represents a positive
+            // constraint, as augments are >=. if we have + and -, then the
+            // relationship becomes unknown and thus dropped.
+            size_t nCold = nC++;
+            bool otherNegative = false;
+            for (size_t j = i; j < numSlackVar;)
+                otherNegative |= (C(nCold, ++j) < 0);
+            if (otherNegative)
+                continue;
+            A(nA, 0) = C(nCold, 0);
+            for (size_t m = 1; m < numVar; ++m)
+                A(nA, m) = C(nCold, numSlackVar + m);
+            ++nA;
+        }
+    }
+    A.truncateRows(nA);
+    E.resizeForOverwrite(C.numRow() - nC, numVar);
+    for (size_t i = 0; i < E.numRow(); ++i) {
+        E(i, 0) = C(nC + i, 0);
+        for (size_t m = 1; m < numVar; ++m)
+            E(i, m) = C(nC + i, numSlackVar + m);
+    }
+}
+
 template <MaybeMatrix I64Matrix>
-struct SymbolicPolyhedra : public ZPolyhedra<I64Matrix>{
+struct SymbolicPolyhedra : public ZPolyhedra<I64Matrix> {
     llvm::SmallVector<Polynomial::Monomial> monomials;
     SymbolicPolyhedra(IntMatrix A, I64Matrix E, llvm::ArrayRef<MPoly> b,
                       const PartiallyOrderedSet &poset)

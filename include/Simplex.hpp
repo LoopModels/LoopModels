@@ -14,10 +14,12 @@
 struct Simplex {
     // mapped to a PtrMatrix tableau
     // row 0: indicator indicating whether that column (variable) is basic, and
-    // if so which row (constraint) is the basic one. row 1: cost numerators
-    // remaining rows: tableau numerators
-    // column 0: indicates whether that row (constraint) is basic, and if so
-    // which one column 1: denominator for the row
+    //        if so which row (constraint) is the basic one.
+    // row 1: cost numerators remaining rows: tableau numerators
+    // column 0: indicates whether that row (constraint) is basic,
+    //           and if so which one
+    // column 1: denominator for the row
+    // column 2: constraint values
     Matrix<int64_t, 0, 0, 0> tableau;
     size_t numSlackVar;
     // NOTE: all methods resizing the tableau may invalidate references to it
@@ -48,10 +50,12 @@ struct Simplex {
     PtrMatrix<int64_t> getConstraints() {
         return tableau.view(2, tableau.numRow(), 2, tableau.numCol());
     }
+    // note that this is 1 more than the actual number of variables
+    // as it includes the constants
     size_t getNumVar() const { return tableau.numCol() - 2; }
     size_t getNumConstraints() const { return tableau.numRow() - 2; }
 
-    void simplifyConstraints() {
+    void hermiteNormalForm() {
         tableau.truncateRows(
             NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1) +
             2);
@@ -62,7 +66,7 @@ struct Simplex {
     }
     llvm::MutableArrayRef<int64_t> getTableauRow(size_t i) {
         return llvm::MutableArrayRef<int64_t>(
-            tableau.data() + 2 + i * tableau.rowStride(), getNumConstraints());
+            tableau.data() + 2 + i * tableau.rowStride(), getNumVar());
     }
     llvm::MutableArrayRef<int64_t> getBasicConstraints() {
         return getTableauRow(0);
@@ -71,7 +75,7 @@ struct Simplex {
     StridedVector<int64_t> getTableauCol(size_t i) {
         return StridedVector<int64_t>{tableau.data() + i +
                                           2 * tableau.rowStride(),
-                                      getNumVar(), tableau.rowStride()};
+                                      getNumConstraints(), tableau.rowStride()};
     }
     StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
     StridedVector<int64_t> getConstraintDenominators() {
@@ -80,7 +84,7 @@ struct Simplex {
     StridedVector<int64_t> getConstants() { return getTableauCol(2); }
     bool initiateFeasible() {
         // remove trivially redundant constraints
-        simplifyConstraints();
+        hermiteNormalForm();
         // [ I;  X ; b ]
         //
         // original number of variables
