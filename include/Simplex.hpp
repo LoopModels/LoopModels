@@ -22,6 +22,7 @@ struct Simplex {
     // column 2: constraint values
     Matrix<int64_t, 0, 0, 0> tableau;
     size_t numSlackVar;
+    bool inCanonicalForm;
     // NOTE: all methods resizing the tableau may invalidate references to it
     void resize(size_t numCon, size_t numVar) {
         tableau.resize(numCon + 2, numVar + 2);
@@ -34,6 +35,9 @@ struct Simplex {
                        std::max(numVars + 2, tableau.rowStride()));
     }
     void truncateVars(size_t numVars) { tableau.truncateCols(numVars + 2); }
+    void truncateConstraints(size_t numVars) {
+        tableau.truncateRows(numVars + 2);
+    }
     void resizeForOverwrite(size_t numCon, size_t numVar) {
         tableau.resizeForOverwrite(numCon + 2, numVar + 2);
     }
@@ -56,9 +60,9 @@ struct Simplex {
     size_t getNumConstraints() const { return tableau.numRow() - 2; }
 
     void hermiteNormalForm() {
-        tableau.truncateRows(
-            NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1) +
-            2);
+        inCanonicalForm = false;
+        truncateConstraints(
+            NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1));
     }
     void deleteConstraint(size_t c) {
         eraseConstraintImpl(tableau, c + 2);
@@ -170,6 +174,7 @@ struct Simplex {
             // all augment vars are now 0
             truncateVars(numVar);
         }
+        inCanonicalForm = true;
         return 0;
     }
     static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
@@ -273,6 +278,29 @@ struct Simplex {
                 cost[v] = -constraints(c, v);
             if (simplex.run() != bumpedBound)
                 deleteConstraint(c--); // redundant
+        }
+    }
+
+    void removeVariable(size_t i) {
+        // TODO: can you maintain state?
+        inCanonicalForm = false;
+        PtrMatrix<int64_t> C{getConstraints()};
+        size_t j = C.numRow();
+        while (C(--j, i) == 0)
+            if (j == 0)
+                return;
+        for (size_t k = 0; k < j; ++k)
+            if (C(k, i))
+                NormalForm::zeroWithRowOperation(C, k, j, i);
+        size_t lastRow = C.numRow() - 1;
+        if (lastRow != j)
+            swapRows(C, j, lastRow);
+        truncateConstraints(lastRow);
+    }
+    void removeExtraVariables(size_t i) {
+        for (size_t j = getNumVar(); j > i;) {
+            removeVariable(--j);
+            truncateVars(j);
         }
     }
 };

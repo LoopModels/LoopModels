@@ -441,6 +441,7 @@ inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
     return 1;
 }
 
+
 MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
                                          size_t c) {
     const size_t N = A.numCol();

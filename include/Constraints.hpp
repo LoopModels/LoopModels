@@ -637,9 +637,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // IntMatrix C{slackEqualityConstraints(A, b, E, q)};
     for (size_t o = M + N; o > numNewVar + M;) {
         substituteEquality(C, d, --o);
-        if (C.numRow() > 1) {
+        if (C.numRow() > 1)
             NormalForm::simplifyEqualityConstraints(C, d);
-        }
     }
     A.resizeForOverwrite(M, numNewVar);
     b.resize_for_overwrite(M);
@@ -658,9 +657,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
             // constraint, as augments are >=. if we have + and -, then the
             // relationship becomes unknown and thus dropped.
             bool otherNegative = false;
-            for (size_t j = i; j < M; ++j) {
+            for (size_t j = i; j < M; ++j)
                 otherNegative |= (C(nC, j) < 0);
-            }
             if (otherNegative) {
                 ++nC;
                 continue;
@@ -668,9 +666,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
             bool duplicate = false;
             for (size_t k = 0; k < nA; ++k) {
                 bool allMatch = true;
-                for (size_t m = 0; m < numNewVar; ++m) {
+                for (size_t m = 0; m < numNewVar; ++m)
                     allMatch &= (A(k, m) == C(nC, M + m));
-                }
                 if (allMatch) {
                     duplicate = true;
                     break;
@@ -680,9 +677,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                 ++nC;
                 continue;
             }
-            for (size_t m = 0; m < numNewVar; ++m) {
+            for (size_t m = 0; m < numNewVar; ++m)
                 A(nA, m) = C(nC, M + m);
-            }
             b[nA] = d[nC];
             ++nA;
             ++nC;
@@ -693,9 +689,8 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     E.resizeForOverwrite(C.numRow() - nC, numNewVar);
     q.resize_for_overwrite(C.numRow() - nC);
     for (size_t i = 0; i < E.numRow(); ++i) {
-        for (size_t m = 0; m < numNewVar; ++m) {
+        for (size_t m = 0; m < numNewVar; ++m)
             E(i, m) = C(nC + i, M + m);
-        }
         q[i] = d[nC + i];
     }
     // pruneBounds(A, b, E, q);
@@ -703,11 +698,9 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
 
 template <typename T>
 static void dropEmptyConstraints(IntMatrix &A, llvm::SmallVectorImpl<T> &b) {
-    for (size_t c = b.size(); c != 0;) {
-        if (allZero(A.getRow(--c))) {
+    for (size_t c = b.size(); c != 0;)
+        if (allZero(A.getRow(--c)))
             eraseConstraint(A, b, c);
-        }
-    }
 }
 static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b) {
     for (size_t c = b.size(); c != 0;) {

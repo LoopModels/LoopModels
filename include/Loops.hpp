@@ -15,7 +15,7 @@
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : SymbolicPolyhedra,
+struct AffineLoopNest : Simplex,
                         llvm::RefCountedBase<AffineLoopNest> {
     Permutation perm; // maps current to orig
     llvm::SmallVector<IntMatrix, 0> remainingA;
