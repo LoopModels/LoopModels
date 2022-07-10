@@ -2,10 +2,12 @@
 #include "./Constraints.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
+#include <tuple>
 
 // The goal here:
 // this Simplex struct will orchestrate search through the solution space
@@ -52,6 +54,9 @@ struct Simplex {
         return tableau.view(1, tableau.numRow(), 2, tableau.numCol());
     }
     PtrMatrix<int64_t> getConstraints() {
+        return tableau.view(2, tableau.numRow(), 2, tableau.numCol());
+    }
+    PtrMatrix<const int64_t> getConstraints() const {
         return tableau.view(2, tableau.numRow(), 2, tableau.numCol());
     }
     // note that this is 1 more than the actual number of variables
@@ -204,26 +209,38 @@ struct Simplex {
         }
         return j;
     }
+    int64_t makeBasic(PtrMatrix<int64_t> C, int64_t f, int enteringVariable) {
+        int leavingVariable = getLeavingVariable(C, enteringVariable);
+        if (leavingVariable == -1)
+            return 0; // unbounded
+        ++leavingVariable;
+        for (size_t i = 0; i < C.numRow(); ++i)
+            if (i != size_t(leavingVariable)) {
+                int64_t m = NormalForm::zeroWithRowOperation(
+                    C, i, leavingVariable, enteringVariable);
+                if (i == 0)
+                    f *= m;
+            }
+        // update baisc vars and constraints
+        StridedVector<int64_t> basicVars{getBasicVariables()};
+        int64_t oldBasicVar = basicVars[leavingVariable];
+        basicVars[leavingVariable] = enteringVariable;
+        llvm::MutableArrayRef<int64_t> basicConstraints{getBasicConstraints()};
+        basicConstraints[oldBasicVar] = -1;
+        basicConstraints[enteringVariable] = leavingVariable;
+        return f;
+    }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     int64_t runCore(int64_t f = 1) {
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
-            // entering variable is the row
+            // entering variable is the column
             int enteringVariable = getEnteringVariable(C.getRow(0));
             if (enteringVariable == -1)
                 return C[0] / f;
-            // leaving variable is the column
-            int leavingVariable = getLeavingVariable(C, enteringVariable);
-            if (leavingVariable == -1)
+            f = makeBasic(C, f, enteringVariable);
+            if (f == 0)
                 return std::numeric_limits<int64_t>::max(); // unbounded
-            ++leavingVariable;
-            for (size_t i = 0; i < C.numRow(); ++i)
-                if (i != size_t(leavingVariable)) {
-                    int64_t m = NormalForm::zeroWithRowOperation(
-                        C, i, leavingVariable, enteringVariable);
-                    if (i == 0)
-                        f *= m;
-                }
         }
     }
     // set basicVar's costs to 0, and then runCore()
@@ -233,9 +250,8 @@ struct Simplex {
         int64_t f = 1;
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
-            if (int64_t cost = C(0, v)) {
+            if (int64_t cost = C(0, v))
                 f *= NormalForm::zeroWithRowOperation(C, 0, c, v);
-            }
         }
         return runCore(f);
     }
@@ -247,8 +263,7 @@ struct Simplex {
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
-        size_t numSlack = A.numRow();
-        simplex.numSlackVar = numSlack;
+        size_t numSlack = simplex.numSlackVar = A.numRow();
         size_t numStrict = B.numRow();
         size_t numCon = numSlack + numStrict;
         size_t extraStride = 0;
@@ -282,19 +297,17 @@ struct Simplex {
     }
 
     void removeVariable(size_t i) {
-        // TODO: can you maintain state?
-        inCanonicalForm = false;
+        // We remove a variable by isolating it, and then dropping the
+        // constraint. This allows us to preserve canonical form
+        llvm::MutableArrayRef<int64_t> basicConstraints{getBasicConstraints()};
         PtrMatrix<int64_t> C{getConstraints()};
-        size_t j = C.numRow();
-        while (C(--j, i) == 0)
-            if (j == 0)
-                return;
-        for (size_t k = 0; k < j; ++k)
-            if (C(k, i))
-                NormalForm::zeroWithRowOperation(C, k, j, i);
+        // ensure sure `i` is basic
+        if (basicConstraints[i] < 0)
+            makeBasic(C, 0, i);
+        size_t ind = basicConstraints[i];
         size_t lastRow = C.numRow() - 1;
-        if (lastRow != j)
-            swapRows(C, j, lastRow);
+        if (lastRow != ind)
+            swapRows(C, ind, lastRow);
         truncateConstraints(lastRow);
     }
     void removeExtraVariables(size_t i) {
@@ -302,5 +315,98 @@ struct Simplex {
             removeVariable(--j);
             truncateVars(j);
         }
+    }
+
+    std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {
+        PtrMatrix<const int64_t> C{getConstraints()};
+        // C is
+        // C(:,0) = C(:,1:numSlackVar)*s_0 + C(:,numSlackVar+1:end)*x
+        // we implicitly have additional slack vars `s_1`
+        // that define lower bounds of `x` as being 0.
+        // 0 = I * s_1 - I * x
+        // Calling `rotate(A)` defines `x = A*y`, and returns a simplex
+        // in terms of `y`.
+        // Thus, we have
+        // C(:,0) = C(:,1:numSlackVar)*s_0 + (C(:,numSlackVar+1:end)*A)*y
+        // 0 = I * s_1 - A * y
+        // The tricky part is that if a row of `A` contains
+        // i) more than 1 non-zero, or
+        // ii) a negative entry
+        // we do not have a clear 0 lower bound on `y`.
+        // If we do have a clear 0 lower bound, we can avoid doing work
+        // for that row, dropping it.
+        // Else, we'll have compute it, calculating the offset needed
+        // to lower bound it at 0.
+        //
+        // Idea for algorithm for getting a lower bound on a var `v`:
+        // substitute v_i = v_i^+ - v_i^-
+        // then add cost 2v_i^+ - v_i^-; minimize
+        // while v_i^- > 0, redefine `v_i` to be offset by the value of `v_i`.
+
+        const size_t numVarTotal = getNumVar();
+        const size_t numVar = numVarTotal - numSlackVar;
+        assert(A.numCol() == numVar);
+        assert(A.numRow() == numVar);
+        assert(numVar <= 64);
+        uint64_t knownNonNegative = 0;
+        // llvm::SmallVector<bool,64> knownNonNegative(numVar);
+        for (size_t r = 0; r < numVar; ++r) {
+            int nonNegativeIndex = -1;
+            for (size_t c = 0; c < numVar; ++c) {
+                if (int64_t Arc = A(r, c)) {
+                    if ((Arc > 0) && (nonNegativeIndex == -1)) {
+                        nonNegativeIndex = c;
+                    } else {
+                        nonNegativeIndex = -1;
+                        break;
+                    }
+                }
+            }
+            // `A` is assumed to be full rank, so we can only hit a particular
+            // `nonNegativeIndex != -1` once, meaning we do not risk flipping
+            // a `true` back off with `^`.
+            if (nonNegativeIndex >= 0)
+                knownNonNegative ^= (uint64_t(1) << uint64_t(nonNegativeIndex));
+            // knownNonNegative[nonNegativeIndex] = true;
+        }
+        // all `false` indices of `knownNonNegative` indicate
+	size_t numPositive = std::popcount(knownNonNegative);
+        size_t numUnknownSign = numVar - numPositive;
+        // Now, we create structure
+        // C(:,0) = C(:,1:numSlackVar)*s_0 + (C(:,numSlackVar+1:end)*A(:,nn))*z
+        //  + (C(:,numSlackVar+1:end)*A(:,!nn))*(y^+ - y^-)
+        // C(:,0) = C(:,1:numSlackVar)*s_0 + (C(:,numSlackVar+1:end)*A)*z^*
+        //  - (C(:,numSlackVar+1:end)*A(:,!nn))*y^-
+        // 0 = I * s_1 - A*z^* + A(:,!nn) * y^-
+        // where `nn` refers to the known non-negative indices
+        // and we have separated `y` into `z`, `y^+`, and `y^-`.
+        // z = y[nn]
+        // y^+ - y^- = y[!nn]
+        // y^+ >= 0
+        // y^- >= 0
+        //
+        // Layout is as follows:
+        // [s_0, z^*, s_1, y^-]
+        // where z^* is `z` intermixed with `y^+`
+        // We will proceed by trying to maximize `y^-`,
+        // shifting it until we get the maximum value
+        // to be `0`, in which case we can drop it and let `y^+ -> z`.
+        // once all `y^-` are gone, we can render all `s_1` non-basic,
+        // and then drop these as well.
+        // We can then finally return the simplex as well as the shifts needed
+        // for positivity.
+	// We use the full s_1 for initializing the simplex.
+        std::tuple<Simplex, IntMatrix, uint64_t> ret{
+            {}, {numUnknownSign, numVar}, knownNonNegative};
+
+        Simplex &simplex{std::get<0>(ret)};
+        IntMatrix &S{std::get<1>(ret)}; // S for Shift
+	size_t numConstraintsNew = getNumConstraints() + numVar;
+	// additional variables are numUnownSign s_1s + numUnknownSign y^-s.
+	size_t numVarTotalNew = numVarTotal + numVar + numUnknownSign;
+	simplex.resizeForOverwrite(numConstraintsNew, numVarTotalNew);
+	
+	
+        return ret;
     }
 };
