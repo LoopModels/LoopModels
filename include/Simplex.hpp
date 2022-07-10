@@ -575,7 +575,7 @@ struct Simplex {
         // now, our goal is to eliminate `y^-`
         if (numVarTotal) {
             auto CC{simplex.getCostsAndConstraints()};
-            do {
+            while (true) {
 		size_t i = numVarTotalNew;
                 size_t j = zStarOffset + ((--i) - yMinusOffset);
                 costs[j] = 2;
@@ -589,15 +589,20 @@ struct Simplex {
 		    if (c != -1)
 			NormalForm::zeroWithRowOperation(CC, 0, ++c, j);
 		}
-		simplex.run();
+		simplex.runCore();
 		if ((basicCons[i] == -1) || (D(i,0)==0)){
 		    // i == 0
 		    numVarTotalNew = i;
 		    simplex.truncateVars(i);
+		    if (numVarTotalNew == yMinusOffset)
+			break;
 		} else {
 		    // redefine variable, add offset to `S`
+		    
 		}
-            } while (numVarTotalNew > yMinusOffset);
+		for (auto &&c : costs)
+		    c = 0;
+            }
         }
         return ret;
     }
