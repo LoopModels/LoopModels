@@ -578,17 +578,10 @@ struct Simplex {
             while (true) {
 		size_t i = numVarTotalNew;
                 size_t j = zStarOffset + ((--i) - yMinusOffset);
-                costs[j] = 2;
                 costs[i] = -1;
-                int64_t c = basicCons[j];
-                if (c != -1) {
-                    NormalForm::zeroWithRowOperation(CC, 0, ++c, j);
-		    assert(basicCons[i] == -1);
-		} else {
-		    c = basicCons[i];
-		    if (c != -1)
-			NormalForm::zeroWithRowOperation(CC, 0, ++c, j);
-		}
+		int64_t c = basicCons[i];
+		if (c != -1)
+		    NormalForm::zeroWithRowOperation(CC, 0, ++c, j);
 		simplex.runCore();
 		if ((basicCons[i] == -1) || (D(i,0)==0)){
 		    // i == 0
