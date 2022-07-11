@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Constraints.hpp"
+#include "./EmptyArrays.hpp"
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
@@ -16,18 +17,6 @@
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
 #include <type_traits>
-
-struct EmptyMatrix {};
-constexpr EmptyMatrix matmul(EmptyMatrix, PtrMatrix<const int64_t>) {
-    return EmptyMatrix{};
-}
-constexpr EmptyMatrix matmul(PtrMatrix<const int64_t>, EmptyMatrix) {
-    return EmptyMatrix{};
-}
-
-template <typename T>
-concept MaybeMatrix =
-    std::is_same_v<T, IntMatrix> || std::is_same_v<T, EmptyMatrix>;
 // A*x <= b
 // the IntegerPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
