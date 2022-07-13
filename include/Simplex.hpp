@@ -25,7 +25,7 @@ struct Simplex {
     size_t numSlackVar;
     bool inCanonicalForm;
     static constexpr size_t numExtraRows = 2;
-    static constexpr size_t numExtraCols = 1;
+    static constexpr size_t numExtraCols = 2;
     static constexpr size_t numTableauRows(size_t i) {
         return i + numExtraRows;
     }
@@ -112,8 +112,11 @@ struct Simplex {
     StridedVector<const int64_t> getBasicVariables() const {
         return getTableauCol(0);
     }
-    StridedVector<const int64_t> getConstants() const {
+    StridedVector<const int64_t> getDenominators() const {
         return getTableauCol(1);
+    }
+    StridedVector<const int64_t> getConstants() const {
+        return getTableauCol(2);
     }
     StridedVector<int64_t> getTableauCol(size_t i) {
         return StridedVector<int64_t>{tableau.data() + i +
@@ -121,7 +124,8 @@ struct Simplex {
                                       getNumConstraints(), tableau.rowStride()};
     }
     StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
-    StridedVector<int64_t> getConstants() { return getTableauCol(1); }
+    StridedVector<int64_t> getDenominators() { return getTableauCol(1); }
+    StridedVector<int64_t> getConstants() { return getTableauCol(2); }
     bool initiateFeasible() {
         // remove trivially redundant constraints
         hermiteNormalForm();

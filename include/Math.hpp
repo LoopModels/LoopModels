@@ -461,6 +461,15 @@ template <typename T, typename A> struct BaseMatrix {
     StridedVector<const T> getCol(size_t n) const {
         return StridedVector<const T>{data() + n, numRow(), rowStride()};
     }
+
+    StridedVector<T> viewCol(size_t rowStart, size_t rowEnd, size_t col) {
+        return StridedVector<T>{data() + col + rowStart * rowStride(),
+                                rowEnd - rowStart, rowStride()};
+    }
+    StridedVector<const T> viewCol(size_t rowStart, size_t rowEnd, size_t col) const {
+        return StridedVector<const T>{data() + col + rowStart * rowStride(),
+                                rowEnd - rowStart, rowStride()};
+    }
 };
 template <typename T> struct SparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {

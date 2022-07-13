@@ -3,6 +3,7 @@
 #include "./Bipartite.hpp"
 #include "./Math.hpp"
 #include "./Symbolics.hpp"
+#include "NormalForm.hpp"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -655,3 +656,33 @@ struct PartiallyOrderedSet {
     // return knownOffsetGreaterEqual(y, x, -offset);
     // }
 };
+
+/*
+// Doesn't seem like this would have any advantage over regular POset
+struct LinearPoset{
+    IntMatrix A;
+    IntMatrix B;
+    llvm::SmallVector<Polynomial::Monomial> m;
+
+    bool query(llvm::ArrayRef<int64_t> x){
+	B = A;
+	const auto [M,N] = A.size();
+	const size_t K = N-1;
+	assert(M == x.size());
+	for (size_t i = 0; i < M; ++i)
+	    B(i,K) = x[i];
+	NormalForm::solveSystem(B);
+	for (size_t i = K; i < M; ++i)
+	    if (B(i,K))
+		return false;
+	for (size_t r = 0, c = 0; c < K && r < M; ++c){
+	    if (int64_t Brc = B(r,c)){
+		// value is Brk // Brk
+		int64_t Brk = B(r,K);
+		++r;
+	    }
+	}	
+	return false;
+    }
+};
+*/

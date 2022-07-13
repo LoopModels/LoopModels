@@ -14,12 +14,10 @@ namespace NormalForm {
 
 inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
                                                                 int64_t b) {
-    if (std::abs(a) == 1) {
+    if (std::abs(a) == 1)
         return std::make_tuple(a, 0, a, b);
-    } else {
-        auto [g, p, q] = gcdx(a, b);
-        return std::make_tuple(p, q, a / g, b / g);
-    }
+    auto [g, p, q] = gcdx(a, b);
+    return std::make_tuple(p, q, a / g, b / g);
 }
 // zero out below diagonal
 MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
@@ -116,11 +114,9 @@ MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
 MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, PtrMatrix<int64_t> K,
                                    size_t i, size_t M, size_t piv) {
     size_t j = piv;
-    while (A(piv, i) == 0) {
-        if (++piv == M) {
+    while (A(piv, i) == 0)
+        if (++piv == M)
             return true;
-        }
-    }
     if (j != piv) {
         // const size_t N = A.numCol();
         // assert(N == K.numCol());
@@ -140,14 +136,11 @@ inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
 }
 inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
     size_t j = piv;
-    while (A(piv, i) == 0) {
-        if (++piv == M) {
+    while (A(piv, i) == 0)
+        if (++piv == M)
             return true;
-        }
-    }
-    if (j != piv) {
+    if (j != piv)
         swapRows(A, j, piv);
-    }
     return false;
 }
 inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t N) {
@@ -162,9 +155,8 @@ MULTIVERSION void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
         //           << "; N = " << N << std::endl;
         for (size_t m = 0; m < M; ++m) {
             VECTORIZE
-            for (size_t n = i; n < N; ++n) {
+            for (size_t n = i; n < N; ++n)
                 A(m, n) = A(m, n + 1);
-            }
         }
     }
 }
@@ -391,10 +383,12 @@ MULTIVERSION static void simplifyEqualityConstraints(IntMatrix &A,
                                                      IntMatrix &B) {
     simplifyEqualityConstraintsImpl(A, B);
     size_t Mnew = A.numRow();
-    while (allZero(A.getRow(Mnew - 1)))
-        --Mnew;
-    A.truncateRows(Mnew);
-    B.truncateRows(Mnew);
+    if (allZero(A.getRow(Mnew - 1))) {
+        do {
+        } while (allZero(A.getRow(--Mnew)));
+        A.truncateRows(Mnew);
+        B.truncateRows(Mnew);
+    }
     return;
 }
 llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
@@ -421,59 +415,139 @@ inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
     return 1;
 }
 
-MULTIVERSION static void zeroSubDiagonal(IntMatrix &A, IntMatrix &B, size_t rr,
-                                         size_t c) {
+// use row `r` to zero the remaining rows of column `c`
+MULTIVERSION static void zeroColumn(IntMatrix &A, IntMatrix &B, size_t c,
+                                    size_t r) {
     const size_t N = A.numCol();
     const size_t K = B.numCol();
-    for (size_t j = 0; j < c; ++j) {
-        int64_t Aic = A(c, rr);
-        if (int64_t Aij = A(j, rr)) {
-            int64_t g = gcd(Aic, Aij);
-            int64_t Aicr = Aic / g;
-            int64_t Aijr = Aij / g;
+    const size_t M = A.numRow();
+    assert(M == B.numRow());
+    for (size_t j = 0; j < r; ++j) {
+        int64_t Arc = A(r, c);
+        if (int64_t Ajc = A(j, c)) {
+            int64_t g = gcd(Arc, Ajc);
+            Arc /= g;
+            Ajc /= g;
             VECTORIZE
             for (size_t k = 0; k < N; ++k)
-                A(j, k) = A(j, k) * Aicr - A(c, k) * Aijr;
+                A(j, k) = Arc * A(j, k) - Ajc * A(r, k);
             VECTORIZE
             for (size_t k = 0; k < K; ++k)
-                B(j, k) = B(j, k) * Aicr - B(c, k) * Aijr;
+                B(j, k) = Arc * B(j, k) - Ajc * B(r, k);
+        }
+    }
+    // greater rows in previous columns have been zeroed out
+    // therefore it is safe to use them for row operations with this row
+    for (size_t j = r + 1; j < M; ++j) {
+        int64_t Arc = A(r, c);
+        if (int64_t Ajc = A(j, c)) {
+            const auto [p, q, Arcr, Ajcr] = gcdxScale(Arc, Ajc);
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Ark = A(r, k);
+                int64_t Ajk = A(j, k);
+                A(r, k) = q * Ajk + p * Ark;
+                A(j, k) = Arcr * Ajk - Ajcr * Ark;
+            }
+            VECTORIZE
+            for (size_t k = 0; k < K; ++k) {
+                int64_t Brk = B(r, k);
+                int64_t Bjk = B(j, k);
+                B(r, k) = q * Bjk + p * Brk;
+                B(j, k) = Arcr * Bjk - Ajcr * Brk;
+            }
         }
     }
 }
+// use row `r` to zero the remaining rows of column `c`
+MULTIVERSION static void zeroColumn(IntMatrix &A, size_t c, size_t r) {
+    const size_t N = A.numCol();
+    const size_t M = A.numRow();
+    for (size_t j = 0; j < r; ++j) {
+        int64_t Arc = A(r, c);
+        if (int64_t Ajc = A(j, c)) {
+            int64_t g = gcd(Arc, Ajc);
+            Arc /= g;
+            Ajc /= g;
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k)
+                A(j, k) = Arc * A(j, k) - Ajc * A(r, k);
+        }
+    }
+    // greater rows in previous columns have been zeroed out
+    // therefore it is safe to use them for row operations with this row
+    for (size_t j = r + 1; j < M; ++j) {
+        int64_t Arc = A(r, c);
+        if (int64_t Ajc = A(j, c)) {
+            const auto [p, q, Arcr, Ajcr] = gcdxScale(Arc, Ajc);
+            VECTORIZE
+            for (size_t k = 0; k < N; ++k) {
+                int64_t Ark = A(r, k);
+                int64_t Ajk = A(j, k);
+                A(r, k) = q * Ajk + p * Ark;
+                A(j, k) = Arcr * Ajk - Ajcr * Ark;
+            }
+        }
+    }
+}
+
 MULTIVERSION void simplifySystem(IntMatrix &A, IntMatrix &B) {
     const auto [M, N] = A.size();
-    if (M == 0)
-        return;
-    size_t dec = 0;
-    for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= M)
-            break;
-        if (pivotRows(A, B, m, M, m - dec)) {
-            ++dec;
-        } else {
-            zeroSupDiagonal(A, B, m, m - dec);
-            zeroSubDiagonal(A, B, m, m - dec);
-        }
-    }
+    for (size_t r = 0, c = 0; c < N && r < M; ++c)
+        if (!pivotRows(A, B, c, M, r))
+            zeroColumn(A, B, c, r++);
 }
+// diagonalizes A(1:K,1:K)
+MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
+    const auto [M, N] = A.size();
+    for (size_t r = 0, c = 0; c < K && r < M; ++c)
+        if (!pivotRows(A, c, M, r))
+            zeroColumn(A, c, r++);
+}
+// assume last col
+// MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
+//     const auto [M, N] = A.size();
+//     if (M == 0)
+//         return;
+//     size_t n = 0;
+//     for (size_t dec = 0; n < K; ++n) {
+//         if (n - dec >= M)
+//             break;
+//         if (pivotRows(A, n, M, n - dec)) {
+//             ++dec;
+//         } else {
+//             zeroColumn(A, n, n - dec);
+//         }
+//     }
+//     for (size_t c = 0, dec = 0; c < n; ++c) {
+//         size_t r = c - dec;
+//         switch (int64_t Arc = A(r, c)) {
+//         case 0:
+//             ++dec;
+//         case 1:
+//             break;
+//         default:
+//             A(r, c) = 1;
+//             for (size_t l = n; l < N; ++l)
+//                 A(r, l) /= Arc;
+//         }
+//     }
+// }
+
+// returns `true` if the solve failed, `false` otherwise
+// diagonals contain denominators.
+// Assumes the last column is the vector to solve for.
+MULTIVERSION void solveSystem(IntMatrix &A) { solveSystem(A, A.numCol() - 1); }
 MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
     const auto [M, N] = A.size();
-    if (M == 0)
-        return A;
-    size_t dec = 0;
-    for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= M)
-            break;
-        if (pivotRows(A, m, M, m - dec)) {
-            ++dec;
-        } else {
-            zeroSupDiagonal(A, m, m - dec);
-            reduceSubDiagonal(A, m, m - dec);
-        }
-    }
+    for (size_t r = 0, c = 0; c < M && r < M; ++c)
+        if (!pivotRows(A, c, M, r)){
+            zeroSupDiagonal(A, c, r++);
+            reduceSubDiagonal(A, c, r++);
+	}
     size_t R = M;
     while ((R > 0) && allZero(A.getRow(R - 1))) {
-        R -= 1;
+        --R;
     }
     A.truncateRows(R);
     return A;

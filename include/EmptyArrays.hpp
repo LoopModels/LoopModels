@@ -1,6 +1,6 @@
 #pragma once
 #include "./Math.hpp"
-#include "Symbolics.hpp"
+#include "./Symbolics.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
@@ -23,5 +23,5 @@ template <typename T> struct EmptyVector {
 };
 
 template <typename T>
-concept MaybeVector = std::is_same_v<T, EmptyVector<Polynomial::Monomial>> ||
+concept MaybeSymbolicVector = std::is_same_v<T, EmptyVector<Polynomial::Monomial>> ||
     std::is_same_v<T, llvm::SmallVector<Polynomial::Monomial>>;

@@ -17,16 +17,21 @@
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
 #include <type_traits>
+
 // A*x <= b
 // the IntegerPolyhedra defines methods we reuse across Polyhedra with known
 // (`Int`) bounds, as well as with unknown (symbolic) bounds.
 // In either case, we assume the matrix `A` consists of known integers.
-template <MaybeMatrix I64Matrix> struct ZPolyhedra {
+template <MaybeMatrix I64Matrix, MaybeMatrix POSMatrix,
+          MaybeSymbolicVector MonVector>
+struct ZPolyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
     I64Matrix E;
+    POSMatrix Q;
+    MonVector s;
 
     ZPolyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
     ZPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
