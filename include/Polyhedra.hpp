@@ -19,12 +19,18 @@
 #include <type_traits>
 
 // A*x <= b
-// the IntegerPolyhedra defines methods we reuse across Polyhedra with known
-// (`Int`) bounds, as well as with unknown (symbolic) bounds.
-// In either case, we assume the matrix `A` consists of known integers.
-template <MaybeMatrix I64Matrix, MaybeMatrix POSMatrix,
+// representation is
+// A[:,1+s.size()]*x <= A[:,0] + A[:,1:s.size()]*s
+// E[:,1+s.size()]*x == E[:,0] + E[:,1:s.size()]*s
+// where `s` is the vector of symbolic variables.
+// These are treated as constants, and clearly separated from the dynamically
+// varying values `x`.
+// We have `A.numRow()` inequality constraints and `E.numRow()` equality
+// constraints.
+//
+template <MaybeMatrix<int64_t> I64Matrix, MaybeMatrix<int64_t> POSMatrix,
           MaybeSymbolicVector MonVector>
-struct ZPolyhedra {
+struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
@@ -33,13 +39,15 @@ struct ZPolyhedra {
     POSMatrix Q;
     MonVector s;
 
-    ZPolyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
-    ZPolyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
+    Polyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
+    Polyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
 
     size_t getNumVar() const { return A.numCol() - 1; }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
+    size_t getNumEqualityConstraints() const { return E.numRow(); }
 
     StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
+    StridedVector<int64_t> EqualityBounds() { return E.getCol(0); }
     /*
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
@@ -1151,7 +1159,7 @@ struct ZPolyhedra {
 
     void dropEmptyConstraints() { ::dropEmptyConstraints(A, b); }
 
-    friend std::ostream &operator<<(std::ostream &os, const ZPolyhedra &p) {
+    friend std::ostream &operator<<(std::ostream &os, const Polyhedra &p) {
         return printConstraints(os, p.A);
     }
     void dump() const { std::cout << *this; }
@@ -1236,8 +1244,8 @@ template <MaybeMatrix I64Matrix> struct ZStarPolyhedra {
     //   -I ]            0 ]
     // [  A*B   * y <= [ b
     //     -B ]          0 ]
-    // thus it returns a ZPolyhedra
-    ZPolyhedra<I64Matrix> transformVariables(const IntMatrix &B) const {
+    // thus it returns a Polyhedra
+    Polyhedra<I64Matrix> transformVariables(const IntMatrix &B) const {
         const auto [M, N] = A.size();
         const size_t numVar = N - 1;
         IntMatrix C{};
@@ -1250,7 +1258,7 @@ template <MaybeMatrix I64Matrix> struct ZStarPolyhedra {
             for (size_t j = 1; j < N; ++j)
                 C(i + M, j) = B(i, j);
         }
-        return ZPolyhedra(std::move(C), matmul(E, B));
+        return Polyhedra(std::move(C), matmul(E, B));
     }
     llvm::Optional<Simplex> toSimplex() const {
         Matrix<int64_t, 0, 0, 0> B(0, A.numCol());
@@ -1305,11 +1313,11 @@ template <> ZStarPolyhedra<IntMatrix>::ZStarPolyhedra(Simplex B) {
 }
 
 template <MaybeMatrix I64Matrix>
-struct SymbolicPolyhedra : public ZPolyhedra<I64Matrix> {
+struct SymbolicPolyhedra : public Polyhedra<I64Matrix> {
     llvm::SmallVector<Polynomial::Monomial> monomials;
     SymbolicPolyhedra(IntMatrix A, I64Matrix E, llvm::ArrayRef<MPoly> b,
                       const PartiallyOrderedSet &poset)
-        : ZPolyhedra<I64Matrix>(std::move(A), std::move(E)), monomials({}) {
+        : Polyhedra<I64Matrix>(std::move(A), std::move(E)), monomials({}) {
         // use poset
         // monomials[{unsigned}_1] >= monomials[{unsigned}_2] + {int64_t}_1
         llvm::SmallVector<std::tuple<int64_t, unsigned, unsigned>> cmps;

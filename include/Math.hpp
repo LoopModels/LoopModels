@@ -357,7 +357,23 @@ template <typename T> struct StridedVector {
         }
         return true;
     }
+    inline StridedVector<T> view(size_t start, size_t stop) {
+        return StridedVector<T>{*d + start * x, stop - start, x};
+    }
+    inline StridedVector<const T> view(size_t start, size_t stop) const {
+        return StridedVector<const T>{*d + start * x, stop - start, x};
+    }
 };
+
+template <typename T>
+inline llvm::ArrayRef<T> view(llvm::ArrayRef<T> a, size_t start, size_t stop) {
+    return llvm::ArrayRef<T>{a.data() + start, stop - start};
+}
+template <typename T>
+inline llvm::MutableArrayRef<T> view(llvm::MutableArrayRef<T> a, size_t start,
+                                     size_t stop) {
+    return llvm::MutableArrayRef<T>{a.data() + start, stop - start};
+}
 
 template <typename T, typename A> struct BaseMatrix {
     inline T &getLinearElement(size_t i) {
@@ -435,7 +451,7 @@ template <typename T, typename A> struct BaseMatrix {
     }
 
     static constexpr size_t getConstCol() { return A::getConstCol(); }
-    auto getRow(size_t i) {
+    inline auto getRow(size_t i) {
         constexpr size_t N = getConstCol();
         if constexpr (N) {
             return PtrVector<T, N>(data() + i * N);
@@ -445,7 +461,7 @@ template <typename T, typename A> struct BaseMatrix {
             // return PtrVector<T, 0>{data() + i * _M, _M};
         }
     }
-    auto getRow(size_t i) const {
+    inline auto getRow(size_t i) const {
         constexpr size_t N = getConstCol();
         if constexpr (N) {
             return PtrVector<const T, N>(data() + i * N);
@@ -455,22 +471,25 @@ template <typename T, typename A> struct BaseMatrix {
             // return PtrVector<const T, 0>{
         }
     }
-    StridedVector<T> getCol(size_t n) {
+    inline StridedVector<T> getCol(size_t n) {
         return StridedVector<T>{data() + n, numRow(), rowStride()};
     }
-    StridedVector<const T> getCol(size_t n) const {
+    inline StridedVector<const T> getCol(size_t n) const {
         return StridedVector<const T>{data() + n, numRow(), rowStride()};
     }
 
-    StridedVector<T> viewCol(size_t rowStart, size_t rowEnd, size_t col) {
+    inline StridedVector<T> viewCol(size_t rowStart, size_t rowEnd,
+                                    size_t col) {
         return StridedVector<T>{data() + col + rowStart * rowStride(),
                                 rowEnd - rowStart, rowStride()};
     }
-    StridedVector<const T> viewCol(size_t rowStart, size_t rowEnd, size_t col) const {
+    inline StridedVector<const T> viewCol(size_t rowStart, size_t rowEnd,
+                                          size_t col) const {
         return StridedVector<const T>{data() + col + rowStart * rowStride(),
-                                rowEnd - rowStart, rowStride()};
+                                      rowEnd - rowStart, rowStride()};
     }
 };
+
 template <typename T> struct SparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
@@ -515,24 +534,24 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
         assert(k == A.nonZeros.size());
         return *this;
     }
-    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-                      size_t colEnd) {
+    inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                             size_t colEnd) {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
         return PtrMatrix<T>(mem + colStart + rowStart * X, rowEnd - rowStart,
                             colEnd - colStart, X);
     }
-    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
+    inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
         return view(0, rowEnd, 0, colEnd);
     }
-    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-                      size_t colEnd) const {
+    inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                             size_t colEnd) const {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
         return PtrMatrix<T>(mem + colStart + rowStart * X, rowEnd - rowStart,
                             colEnd - colStart, X);
     }
-    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
+    inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
         return view(0, rowEnd, 0, colEnd);
     }
 };
@@ -842,24 +861,24 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         return A;
     }
 
-    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-                      size_t colEnd) {
+    inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                             size_t colEnd) {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
         return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
                             rowEnd - rowStart, colEnd - colStart, X);
     }
-    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
+    inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
         return view(0, rowEnd, 0, colEnd);
     }
-    PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-                      size_t colEnd) const {
+    inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
+                             size_t colEnd) const {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
         return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
                             rowEnd - rowStart, colEnd - colStart, X);
     }
-    PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
+    inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
         return view(0, rowEnd, 0, colEnd);
     }
 
