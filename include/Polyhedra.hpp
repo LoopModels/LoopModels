@@ -29,14 +29,14 @@
 // We have `A.numRow()` inequality constraints and `E.numRow()` equality
 // constraints.
 //
-template <MaybeMatrix<int64_t> I64Matrix, Comparator BCompType>
+template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType>
 struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
     I64Matrix E;
-    BCompType C;
+    CmptrType C;
 
     Polyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
     Polyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
@@ -47,26 +47,24 @@ struct Polyhedra {
 
     StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
     StridedVector<int64_t> EqualityBounds() { return E.getCol(0); }
-    /*
+    
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(llvm::MutableArrayRef<int64_t> a, int64_t &b,
-                          llvm::ArrayRef<int64_t> la, const int64_t &lb,
-                          llvm::ArrayRef<int64_t> ua, const int64_t &ub,
+    static bool setBounds(llvm::MutableArrayRef<int64_t> a,
+                          llvm::ArrayRef<int64_t> la,
+                          llvm::ArrayRef<int64_t> ua,
                           size_t i) {
         int64_t cu_base = ua[i];
-        int64_t cl_base = la[i];
+        int64_t cl_base = la[i]; 
         if ((cu_base > 0) && (cl_base < 0))
             // if cu_base > 0, then it is an lower bound, so swap
-            return setBounds(a, b, ua, ub, la, lb, i);
+            return setBounds(a, ua, la, i);
         int64_t g = gcd(cu_base, cl_base);
         int64_t cu = cu_base / g;
         int64_t cl = cl_base / g;
-        b = cu * lb;
-        Polynomial::fnmadd(b, ub, cl);
         size_t N = la.size();
         for (size_t n = 0; n < N; ++n) {
             a[n] = cu * la[n] - cl * ua[n];
@@ -83,12 +81,10 @@ struct Polyhedra {
                 g = an;
             }
         }
-        g = g == 1 ? 1 : gcd(Polynomial::coefGCD(b), g);
         if (g > 1) {
             for (size_t n = 0; n < N; ++n) {
                 a[n] /= g;
             }
-            b /= g;
             return true;
         } else {
             return g != 0;
@@ -1191,7 +1187,6 @@ struct Polyhedra {
         //     }
         //     return false;
     }
-    */
     // A*x <= b
     bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
         int64_t bc;
