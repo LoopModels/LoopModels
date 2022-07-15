@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./ConstantQuery.hpp"
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
 #include "./Macro.hpp"
@@ -28,16 +29,14 @@
 // We have `A.numRow()` inequality constraints and `E.numRow()` equality
 // constraints.
 //
-template <MaybeMatrix<int64_t> I64Matrix, MaybeMatrix<int64_t> POSMatrix,
-          MaybeSymbolicVector MonVector>
+template <MaybeMatrix<int64_t> I64Matrix, Comparator BCompType>
 struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
     IntMatrix A;
     I64Matrix E;
-    POSMatrix Q;
-    MonVector s;
+    BCompType C;
 
     Polyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
     Polyhedra(size_t numIneq, size_t numVar) : A(numIneq, numVar + 1){};
