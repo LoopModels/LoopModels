@@ -47,7 +47,7 @@ struct Polyhedra {
 
     StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
     StridedVector<int64_t> EqualityBounds() { return E.getCol(0); }
-    
+
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
@@ -55,10 +55,9 @@ struct Polyhedra {
     // Returns `true` if `a` still depends on another variable.
     static bool setBounds(llvm::MutableArrayRef<int64_t> a,
                           llvm::ArrayRef<int64_t> la,
-                          llvm::ArrayRef<int64_t> ua,
-                          size_t i) {
+                          llvm::ArrayRef<int64_t> ua, size_t i) {
         int64_t cu_base = ua[i];
-        int64_t cl_base = la[i]; 
+        int64_t cl_base = la[i];
         if ((cu_base > 0) && (cl_base < 0))
             // if cu_base > 0, then it is an lower bound, so swap
             return setBounds(a, ua, la, i);
@@ -160,7 +159,6 @@ struct Polyhedra {
         size_t numReserve =
             Ce - numNonZero + ((numNonZero * (numNonZero - 1)) >> 1);
         E1.resizeForOverwrite(numReserve, Re);
-        q1.resize_for_overwrite(numReserve);
         // auxInds are kept sorted
         // TODO: take advantage of the sorting to make iterating&checking more
         // efficient
@@ -169,10 +167,8 @@ struct Polyhedra {
             auto Eu = E0.getRow(u);
             int64_t Eiu = Eu[i];
             if (Eiu == 0) {
-                for (size_t v = 0; v < Re; ++v) {
+                for (size_t v = 0; v < Re; ++v)
                     E1(k, v) = Eu[v];
-                }
-                q1[k] = q0[u];
                 ++k;
                 continue;
             }
@@ -191,50 +187,32 @@ struct Polyhedra {
                 int64_t g = gcd(Eiu, Eil);
                 int64_t Eiug = Eiu / g;
                 int64_t Eilg = Eil / g;
-                for (size_t v = 0; v < Re; ++v) {
+                for (size_t v = 0; v < Re; ++v)
                     E1(k, v) = Eiug * E0(l, v) - Eilg * E0(u, v);
-                }
-                q1[k] = Eiug * q0[l];
-                Polynomial::fnmadd(q1[k], q0[u], Eilg);
-                // q1(k) = Eiug * q0(l) - Eilg * q0(u);
                 ++k;
             }
         }
         E1.resize(k, Re);
-        q1.resize(k);
-        NormalForm::simplifyEqualityConstraints(E1, q1);
+        NormalForm::simplifyEqualityConstraints(E1);
         return true;
     }
     // method for when we do not match `Ex=q` constraints with themselves
     // e.g., for removeRedundantConstraints
-    void eliminateVarForRCElim(IntMatrix &Adst,
-                               llvm::SmallVectorImpl<int64_t> &bdst,
-                               IntMatrix &E, llvm::SmallVectorImpl<int64_t> &q,
-                               PtrMatrix<int64_t> Asrc,
-                               llvm::ArrayRef<int64_t> bsrc,
-                               const size_t i) const {
+    void eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E,
+                               PtrMatrix<int64_t> Asrc, const size_t i) const {
 
-        auto [numExclude, c, _] =
-            eliminateVarForRCElimCore(Adst, bdst, E, q, Asrc, bsrc, i);
-        for (size_t u = E.numRow(); u != 0;) {
-            if (E(--u, i)) {
-                eraseConstraint(E, q, u);
-            }
-        }
-        if (Adst.numRow() != c) {
+        auto [numExclude, c, _] = eliminateVarForRCElimCore(Adst, E, Asrc, i);
+        for (size_t u = E.numRow(); u != 0;)
+            if (E(--u, i))
+                eraseConstraint(E, u);
+        if (Adst.numRow() != c)
             Adst.resize(c, Asrc.numCol());
-        }
-        if (bdst.size() != c) {
-            bdst.resize(c);
-        }
     }
-    std::tuple<size_t, size_t, size_t> eliminateVarForRCElimCore(
-        IntMatrix &Adst, llvm::SmallVectorImpl<int64_t> &bdst, IntMatrix &E,
-        llvm::SmallVectorImpl<int64_t> &q, PtrMatrix<int64_t> Asrc,
-        llvm::ArrayRef<int64_t> bsrc, const size_t i) const {
+    std::tuple<size_t, size_t, size_t>
+    eliminateVarForRCElimCore(IntMatrix &Adst, IntMatrix &E,
+                              PtrMatrix<int64_t> Asrc, const size_t i) const {
         // eliminate variable `i` according to original order
         const auto [numCol, numVar] = Asrc.size();
-        assert(bsrc.size() == numCol);
         size_t numNeg = 0;
         size_t numPos = 0;
         for (size_t j = 0; j < numCol; ++j) {
@@ -252,17 +230,13 @@ struct Polyhedra {
                                numNonZero * (numNeg + numPos) +
                                ((numNonZero * (numNonZero - 1)) >> 1);
         Adst.resizeForOverwrite(numColA, numVar);
-        bdst.resize(numColA);
-        assert(Adst.numRow() == bdst.size());
         // assign to `A = Aold[:,exlcuded]`
         for (size_t j = 0, c = 0; c < numExclude; ++j) {
-            if (Asrc(j, i)) {
+            if (Asrc(j, i))
                 continue;
-            }
-            for (size_t k = 0; k < numVar; ++k) {
+            for (size_t k = 0; k < numVar; ++k)
                 Adst(c, k) = Asrc(j, k);
-            }
-            bdst[c++] = bsrc[j];
+            ++c;
         }
         size_t c = numExclude;
         assert(numCol <= 500);
@@ -280,12 +254,9 @@ struct Polyhedra {
                     (independentOfInnerU && independentOfInner(Al, i)) ||
                     (auxMisMatch(auxInd, auxiliaryInd(Al))))
                     continue;
-                if (setBounds(Adst.getRow(c), bdst[c], Al, bsrc[l], Au, bsrc[u],
-                              i)) {
-                    if (uniqueConstraint(Adst, bdst, c)) {
+                if (setBounds(Adst.getRow(c), Al, Au, i))
+                    if (uniqueConstraint(Adst, c))
                         ++c;
-                    }
-                }
             }
             for (size_t l = 0; l < numECol; ++l) {
                 auto El = E.getRow(l);
@@ -294,19 +265,13 @@ struct Polyhedra {
                     (independentOfInnerU && independentOfInner(El, i)) ||
                     (auxMisMatch(auxInd, auxiliaryInd(El))))
                     continue;
-                if ((Eil > 0) == (Aiu > 0)) {
+                if ((Eil > 0) == (Aiu > 0))
                     // need to flip constraint in E
-                    for (size_t v = 0; v < E.numCol(); ++v) {
+                    for (size_t v = 0; v < E.numCol(); ++v)
                         negate(El[v]);
-                    }
-                    negate(q[l]);
-                }
-                if (setBounds(Adst.getRow(c), bdst[c], El, q[l], Au, bsrc[u],
-                              i)) {
-                    if (uniqueConstraint(Adst, bdst, c)) {
+                if (setBounds(Adst.getRow(c), El, Au, i))
+                    if (uniqueConstraint(Adst, c))
                         ++c;
-                    }
-                }
             }
         }
         return std::make_tuple(numExclude, c, numNonZero);
@@ -330,59 +295,44 @@ struct Polyhedra {
     // takes `A'x <= b`, and seperates into lower and upper bound equations w/
     // respect to `i`th variable
     static void categorizeBounds(IntMatrix &lA, IntMatrix &uA,
-                                 llvm::SmallVectorImpl<int64_t> &lB,
-                                 llvm::SmallVectorImpl<int64_t> &uB,
-                                 PtrMatrix<const int64_t> A,
-                                 llvm::ArrayRef<int64_t> b, size_t i) {
+                                 PtrMatrix<const int64_t> A, size_t i) {
         auto [numConstraints, numLoops] = A.size();
         const auto [numNeg, numPos] = countNonZeroSign(A, i);
         lA.resize(numNeg, numLoops);
-        lB.resize(numNeg);
         uA.resize(numPos, numLoops);
-        uB.resize(numPos);
         // fill bounds
         for (size_t j = 0, l = 0, u = 0; j < numConstraints; ++j) {
-            int64_t Aij = A(j, i);
-            if (Aij > 0) {
-                for (size_t k = 0; k < numLoops; ++k) {
-                    uA(u, k) = A(j, k);
+            if (int64_t Aij = A(j, i)) {
+                if (Aij > 0) {
+                    for (size_t k = 0; k < numLoops; ++k)
+                        uA(u, k) = A(j, k);
+                } else {
+                    for (size_t k = 0; k < numLoops; ++k)
+                        lA(l, k) = A(j, k);
                 }
-                uB[u++] = b[j];
-            } else if (Aij < 0) {
-                for (size_t k = 0; k < numLoops; ++k) {
-                    lA(l, k) = A(j, k);
-                }
-                lB[l++] = b[j];
             }
         }
     }
     template <size_t CheckEmpty>
     bool appendBoundsSimple(const IntMatrix &lA, const IntMatrix &uA,
-                            const llvm::SmallVectorImpl<int64_t> &lB,
-                            const llvm::SmallVectorImpl<int64_t> &uB,
-                            IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b,
-                            size_t i, Polynomial::Val<CheckEmpty>) const {
-        const size_t numNeg = lB.size();
-        const size_t numPos = uB.size();
+                            IntMatrix &A, size_t i,
+                            Polynomial::Val<CheckEmpty>) const {
+        // const size_t
         auto [numConstraints, numLoops] = A.size();
         A.reserve(numConstraints + numNeg * numPos, numLoops);
-        b.reserve(numConstraints + numNeg * numPos);
 
         for (size_t l = 0; l < numNeg; ++l) {
             for (size_t u = 0; u < numPos; ++u) {
-                size_t c = b.size();
+                size_t c = A.numRow();
                 A.resize(c + 1, numLoops);
-                b.resize(c + 1);
-                bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
-                                    uA.getRow(u), uB[u], i);
+                bool sb = setBounds(A.getRow(c), lA.getRow(l), uA.getRow(u), i);
                 if (!sb) {
-                    if (CheckEmpty && (b[c] < 0)) {
+                    if (CheckEmpty &&
+                        C.less(view(A.getRow(c), 0, C.numConstantTerms())))
                         return true;
-                    }
                 }
-                if ((!sb) || (!uniqueConstraint(A, b, c))) {
+                if ((!sb) || (!uniqueConstraint(A, c))) {
                     A.resize(c, numLoops);
-                    b.resize(c);
                 }
             }
         }
