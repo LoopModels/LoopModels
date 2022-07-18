@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include "./ConstantQuery.hpp"
@@ -18,6 +19,31 @@
 #include <llvm/ADT/SmallVector.h>
 #include <sys/types.h>
 #include <type_traits>
+
+// Can we represent Polyhedra using slack variables + equalities?
+// What must we do with Polyhedra?
+// 1) Ax <= b && c'x >= 0 <-> l_0 + l'(b - Ax) == c'x && l >= 0 && l_0 >= 0
+// 2) pruning bounds
+
+// For "1)", we'd need to recover inequalities from slack vars.
+// How does moving through solutions work with a mix of non-negative and
+// unbounded variables?
+// i <= j - 1
+// j <= J - 1
+// i <= J - 1
+//
+// for fun, lower bounds are -2
+// i >= -2
+// j >= -2
+// and we have symbolic J
+//  c  J  i  j s0 s1 s2 s3 s4
+// -1  0  1 -1  1  0  0  0  0
+// -1  1  0  1  0  1  0  0  0
+// -1  1  1  0  0  0  1  0  0
+// -2  0  1  0  0  0  0 -1  0
+// -2  0  0  1  0  0  0  0 -1
+// How confident can we be about arbitrary combinations of variables vs 0 for
+// comparisons?
 
 // A*x <= b
 // representation is
@@ -47,6 +73,31 @@ struct Polyhedra {
 
     StridedVector<int64_t> inequalityBounds() { return A.getCol(0); }
     StridedVector<int64_t> EqualityBounds() { return E.getCol(0); }
+
+    bool lessZero(const IntMatrix &A, const size_t r) const {
+        return C.less(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool lessEqualZero(const IntMatrix &A, const size_t r) const {
+        return C.lessEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool greaterZero(const IntMatrix &A, const size_t r) const {
+        return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
+        return C.greatEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool lessZero(const size_t r) const {
+        return C.less(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool lessEqualZero(const size_t r) const {
+        return C.lessEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool greaterZero(const size_t r) const {
+        return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
+    bool greaterEqualZero(const size_t r) const {
+        return C.greatEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+    }
 
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
@@ -93,9 +144,8 @@ struct Polyhedra {
     static bool uniqueConstraint(PtrMatrix<const int64_t> A, size_t C) {
         for (size_t c = 0; c < C; ++c) {
             bool allEqual = true;
-            for (size_t r = 0; r < A.numCol(); ++r) {
+            for (size_t r = 0; r < A.numCol(); ++r)
                 allEqual &= (A(c, r) == A(C, r));
-            }
             if (allEqual)
                 return false;
         }
@@ -105,20 +155,17 @@ struct Polyhedra {
     // checks if any `a[j] != 0`, such that `j != i`.
     // I.e., if this vector defines a hyper plane otherwise independent of `i`.
     static inline bool independentOfInner(llvm::ArrayRef<int64_t> a, size_t i) {
-        for (size_t j = 0; j < a.size(); ++j) {
-            if ((a[j] != 0) & (i != j)) {
+        for (size_t j = 0; j < a.size(); ++j)
+            if ((a[j] != 0) & (i != j))
                 return false;
-            }
-        }
         return true;
     }
     // -1 indicates no auxiliary variable
     int64_t auxiliaryInd(llvm::ArrayRef<int64_t> a) const {
         const size_t numAuxVar = a.size() - getNumVar();
-        for (size_t i = 0; i < numAuxVar; ++i) {
+        for (size_t i = 0; i < numAuxVar; ++i)
             if (a[i])
                 return i;
-        }
         return -1;
     }
     static inline bool auxMisMatch(int64_t x, int64_t y) {
@@ -139,16 +186,13 @@ struct Polyhedra {
             size_t c = Asrc.numRow();
             while (c-- > 0) {
                 size_t s = 0;
-                for (size_t j = 0; j < numAuxVar; ++j) {
+                for (size_t j = 0; j < numAuxVar; ++j)
                     s += (Asrc(c, j) != 0);
-                }
-                if (s > 1) {
+                if (s > 1)
                     eraseConstraint(Asrc, c);
-                }
             }
-            if (E0.numRow() > 1) {
+            if (E0.numRow() > 1)
                 NormalForm::simplifyEqualityConstraints(E0);
-            }
             return false;
         }
         // eliminate variable `i` according to original order
@@ -319,6 +363,8 @@ struct Polyhedra {
                             Polynomial::Val<CheckEmpty>) const {
         // const size_t
         auto [numConstraints, numLoops] = A.size();
+        const size_t numNeg = lA.numRow();
+        const size_t numPos = uA.numRow();
         A.reserve(numConstraints + numNeg * numPos, numLoops);
 
         for (size_t l = 0; l < numNeg; ++l) {
@@ -341,88 +387,54 @@ struct Polyhedra {
 
     template <size_t CheckEmpty>
     bool appendBounds(const IntMatrix &lA, const IntMatrix &uA,
-                      const llvm::SmallVectorImpl<int64_t> &lB,
-                      const llvm::SmallVectorImpl<int64_t> &uB,
                       IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp0,
-                      IntMatrix &Etmp1, llvm::SmallVectorImpl<int64_t> &btmp0,
-                      llvm::SmallVectorImpl<int64_t> &btmp1,
-                      llvm::SmallVectorImpl<int64_t> &qtmp0,
-                      llvm::SmallVectorImpl<int64_t> &qtmp1, IntMatrix &A,
-                      llvm::SmallVectorImpl<int64_t> &b, IntMatrix &E,
-                      llvm::SmallVectorImpl<int64_t> &q, size_t i,
+                      IntMatrix &Etmp1, IntMatrix &A, IntMatrix &E, size_t i,
                       Polynomial::Val<CheckEmpty>) const {
-        const size_t numNeg = lB.size();
-        const size_t numPos = uB.size();
-        auto [numConstraints, numLoops] = A.size();
-        A.reserve(numConstraints + numNeg * numPos, numLoops);
-        b.reserve(numConstraints + numNeg * numPos);
-
+        const size_t numNeg = lA.numRow();
+        const size_t numPos = uA.numRow();
+        auto [numConstraints, numVar] = A.size();
+        A.reserve(numConstraints + numNeg * numPos, numVar);
         for (size_t l = 0; l < numNeg; ++l) {
             for (size_t u = 0; u < numPos; ++u) {
-                size_t c = b.size();
-                A.resize(c + 1, numLoops);
-                b.resize(c + 1);
-                bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
-                                    uA.getRow(u), uB[u], i);
-                if (!sb) {
-                    if (CheckEmpty && (b[c] < 0)) {
-                        return true;
-                    }
-                }
-                if ((!sb) || (!uniqueConstraint(A, b, c))) {
-                    A.resize(c, numLoops);
-                    b.resize(c);
-                }
+                size_t c = A.numRow();
+                A.resize(c + 1, numVar);
+                bool sb = setBounds(A.getRow(c), lA.getRow(l), uA.getRow(u), i);
+                if (CheckEmpty && (!sb) && lessZero(A, c))
+                    return true;
+                if ((!sb) || (!uniqueConstraint(A, c)))
+                    A.resize(c, numVar);
             }
         }
-        if (A.numRow()) {
-            if (pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-                            qtmp1, A, b, E, q)) {
-                return CheckEmpty;
-            }
-        }
+        if (A.numRow() && pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, A, E))
+            return CheckEmpty;
         return false;
     }
     template <size_t CheckEmpty>
     bool appendBounds(const IntMatrix &lA, const IntMatrix &uA,
-                      const llvm::SmallVectorImpl<int64_t> &lB,
-                      const llvm::SmallVectorImpl<int64_t> &uB,
                       IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp,
-                      llvm::SmallVectorImpl<int64_t> &btmp0,
-                      llvm::SmallVectorImpl<int64_t> &btmp1,
-                      llvm::SmallVectorImpl<int64_t> &qtmp, IntMatrix &A,
-                      llvm::SmallVectorImpl<int64_t> &b, size_t i,
+                      IntMatrix &A, size_t i,
                       Polynomial::Val<CheckEmpty>) const {
-        const size_t numNeg = lB.size();
-        const size_t numPos = uB.size();
+        const size_t numNeg = lA.numCol();
+        const size_t numPos = uA.numRow();
         auto [numConstraints, numLoops] = A.size();
         A.reserve(numConstraints + numNeg * numPos, numLoops);
-        b.reserve(numConstraints + numNeg * numPos);
 
         for (size_t l = 0; l < numNeg; ++l) {
             for (size_t u = 0; u < numPos; ++u) {
-                size_t c = b.size();
+                size_t c = A.numRow();
                 A.resize(c + 1, numLoops);
-                b.resize(c + 1);
-                bool sb = setBounds(A.getRow(c), b[c], lA.getRow(l), lB[l],
-                                    uA.getRow(u), uB[u], i);
-                if (!sb) {
-                    if (CheckEmpty && (b[c] < 0)) {
-                        return true;
-                    }
-                }
-                if ((!sb) || (!uniqueConstraint(A, b, c))) {
+                bool sb = setBounds(A.getRow(c), lA.getRow(l), uA.getRow(u), i);
+                if (CheckEmpty && (!sb) && lessZero(A, c))
+                    return true;
+                if ((!sb) || (!uniqueConstraint(A, c)))
                     A.resize(c, numLoops);
-                    b.resize(c);
-                }
             }
         }
-        if (A.numRow()) {
-            pruneBounds(Atmp0, Atmp1, Etmp, btmp0, btmp1, qtmp, A, b);
-        }
+        if (A.numRow())
+            pruneBounds(Atmp0, Atmp1, Etmp, A);
         return false;
     }
-    void pruneBounds() { pruneBounds(A, b); }
+    void pruneBounds() { pruneBounds(A); }
     void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
                      llvm::SmallVectorImpl<int64_t> &btmp0,
                      llvm::SmallVectorImpl<int64_t> &btmp1,
@@ -446,33 +458,31 @@ struct Polyhedra {
         llvm::SmallVector<int64_t, 16> btmp0, btmp1, q;
         pruneBounds(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold);
     }
-    static void moveEqualities(IntMatrix &Aold,
-                               llvm::SmallVectorImpl<int64_t> &bold,
-                               IntMatrix &Eold,
-                               llvm::SmallVectorImpl<int64_t> &qold) {
+    static void moveEqualities(IntMatrix &Aold, IntMatrix &Eold) {
 
         const size_t numVar = Eold.numCol();
         assert(Aold.numCol() == numVar);
-        if (Aold.numRow() > 1) {
-            for (size_t o = Aold.numRow() - 1; o > 0;) {
-                for (size_t i = o--; i < Aold.numRow(); ++i) {
-                    bool isNeg = true;
-                    for (size_t v = 0; v < numVar; ++v) {
-                        if (Aold(i, v) != -Aold(o, v)) {
-                            isNeg = false;
-                            break;
-                        }
-                    }
-                    if (isNeg && (bold[i] == -bold[o])) {
-                        qold.push_back(bold[i]);
-                        size_t e = Eold.numRow();
-                        Eold.resize(qold.size(), numVar);
-                        for (size_t v = 0; v < numVar; ++v) {
-                            Eold(e, v) = Aold(i, v);
-                        }
-                        eraseConstraint(Aold, bold, i, o);
-                        break;
-                    }
+        if (Aold.numRow() <= 1)
+	    return;
+	for (size_t o = Aold.numRow() - 1; o > 0;) {
+	    for (size_t i = o--; i < Aold.numRow(); ++i) {
+		bool isNeg = true;
+		for (size_t v = 0; v < numVar; ++v) {
+		    if (Aold(i, v) != -Aold(o, v)) {
+			isNeg = false;
+			break;
+		    }
+		}
+		if (isNeg && (bold[i] == -bold[o])) {
+		    qold.push_back(bold[i]);
+		    size_t e = Eold.numRow();
+		    Eold.resize(qold.size(), numVar);
+		    for (size_t v = 0; v < numVar; ++v) {
+			Eold(e, v) = Aold(i, v);
+		    }
+		    eraseConstraint(Aold, bold, i, o);
+		    break;
+                    
                 }
             }
         }
@@ -488,14 +498,9 @@ struct Polyhedra {
                            qtmp1, Aold, bold, Eold, qold);
     }
     bool pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp0,
-                     IntMatrix &Etmp1, llvm::SmallVectorImpl<int64_t> &btmp0,
-                     llvm::SmallVectorImpl<int64_t> &btmp1,
-                     llvm::SmallVectorImpl<int64_t> &qtmp0,
-                     llvm::SmallVectorImpl<int64_t> &qtmp1, IntMatrix &Aold,
-                     llvm::SmallVectorImpl<int64_t> &bold, IntMatrix &Eold,
-                     llvm::SmallVectorImpl<int64_t> &qold) const {
-        moveEqualities(Aold, bold, Eold, qold);
-        NormalForm::simplifyEqualityConstraints(Eold, qold);
+                     IntMatrix &Etmp1, IntMatrix &Aold, IntMatrix &Eold) const {
+        moveEqualities(Aold, Eold);
+        NormalForm::simplifyEqualityConstraints(Eold);
         // printConstraints(
         //     printConstraints(std::cout << "Constraints post-simplify:\n",
         //     Aold,
@@ -1038,9 +1043,9 @@ struct Polyhedra {
                         llvm::SmallVectorImpl<int64_t> &btmp1,
                         llvm::SmallVectorImpl<int64_t> &q, IntMatrix &A,
                         llvm::SmallVectorImpl<int64_t> &b, const size_t i) {
-        categorizeBounds(lA, uA, lb, ub, A, b, i);
+        categorizeBounds(lA, uA, A, b, i);
         deleteBounds(A, b, i);
-        appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0, btmp1, q, A, b, i,
+        appendBounds(lA, uA, Atmp0, Atmp1, E, q, A, i,
                      Polynomial::Val<false>());
     }
 
@@ -1058,10 +1063,9 @@ struct Polyhedra {
             llvm::SmallVector<int64_t, 8> ub;
             removeVariableCore(lA, uA, lb, ub, A, b, i);
         }
-        if (E.numRow() > 1) {
-            NormalForm::simplifyEqualityConstraints(E, q);
-        }
-        return pruneBounds(A, b, E, q);
+        if (E.numRow() > 1)
+            NormalForm::simplifyEqualityConstraints(E);
+        return pruneBounds(A, E);
     }
     bool removeVariable(IntMatrix &lA, IntMatrix &uA,
                         llvm::SmallVectorImpl<int64_t> &lb,
@@ -1215,47 +1219,7 @@ template <MaybeMatrix I64Matrix> struct ZStarPolyhedra {
 
 // }
 
-// currently, pruneBounds is useful, and thus should have been performed first
-// while hermiteNormalForm would require re-initializing the simplex to a
-// feasible solution, thus we probably don't want to do it to a simplex we wish
-// to keep around. Hence, this function takes a Simplex by value, and calls
-// hermiteNormalForm() inside
-template <> ZStarPolyhedra<IntMatrix>::ZStarPolyhedra(Simplex B) {
-    B.hermiteNormalForm();
-    const size_t numSlackVar = B.numSlackVar;
-    const size_t numVarTotal = B.getNumVar();        // includes constant col
-    const size_t numVar = numVarTotal - numSlackVar; // includes constant col
-    PtrMatrix<int64_t> C{B.getConstraints()};
-
-    // initially allocate enough space
-    A.resize(numSlackVar, numVar);
-    size_t nC = 0, nA = 0, i = 0;
-    while ((i < numSlackVar) && (nC < C.numRow())) {
-        if (C(nC, ++i)) {
-            // if we have multiple positives, that still represents a positive
-            // constraint, as augments are >=. if we have + and -, then the
-            // relationship becomes unknown and thus dropped.
-            size_t nCold = nC++;
-            bool otherNegative = false;
-            for (size_t j = i; j < numSlackVar;)
-                otherNegative |= (C(nCold, ++j) < 0);
-            if (otherNegative)
-                continue;
-            A(nA, 0) = C(nCold, 0);
-            for (size_t m = 1; m < numVar; ++m)
-                A(nA, m) = C(nCold, numSlackVar + m);
-            ++nA;
-        }
-    }
-    A.truncateRows(nA);
-    E.resizeForOverwrite(C.numRow() - nC, numVar);
-    for (size_t i = 0; i < E.numRow(); ++i) {
-        E(i, 0) = C(nC + i, 0);
-        for (size_t m = 1; m < numVar; ++m)
-            E(i, m) = C(nC + i, numSlackVar + m);
-    }
-}
-
+/*
 template <MaybeMatrix I64Matrix>
 struct SymbolicPolyhedra : public Polyhedra<I64Matrix> {
     llvm::SmallVector<Polynomial::Monomial> monomials;
@@ -1328,3 +1292,4 @@ struct SymbolicPolyhedra : public Polyhedra<I64Matrix> {
         A.resize(origNumRow + cmps.size(), origNumCol + numSymbolicVars + 1);
     };
 };
+*/

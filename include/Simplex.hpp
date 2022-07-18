@@ -358,7 +358,7 @@ struct Simplex {
     }
     uint64_t getBasicTrueVarMask() const {
         const size_t numVarTotal = getNumVar();
-        assert(numVar <= 64);
+        assert(numVarTotal <= 64);
         uint64_t m = 0;
         llvm::ArrayRef<int64_t> basicCons{getBasicConstraints()};
         for (size_t i = numSlackVar; i < numVarTotal; ++i)

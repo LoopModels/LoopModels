@@ -286,7 +286,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // c) constant terms eq
     // d) bound above eq
     //
-    // Time parameters are carried over into faras polys
+    // Time parameters are carried over into farkas polys
     std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> farkasPair() const {
 
         llvm::DenseMap<Polynomial::Monomial, unsigned> constantTerms;
