@@ -154,7 +154,18 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
                 delta.terms.emplace_back(d, monomials[i]);
         if (int64_t d = x[0] - y[0])
             delta.terms.emplace_back(d);
-        return POSet.knownLessThanZero(delta);
+        return POSet.knownGreaterEqualZero(delta);
+    }
+    bool greaterEqual(llvm::SmallVector<int64_t> x) const {
+        MPoly delta;
+        assert(x.size());
+        assert(x.size() == 1 + monomials.size());
+        for (size_t i = 0; i < monomials.size(); ++i)
+            if (int64_t d = x[i + 1])
+                delta.terms.emplace_back(d, monomials[i]);
+        if (int64_t d = x[0])
+            delta.terms.emplace_back(d);
+        return POSet.knownGreaterEqualZero(delta);
     }
 };
 
