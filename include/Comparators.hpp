@@ -6,7 +6,41 @@
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
-// for non-symbolic Polyhedra
+// For `== 0` constraints
+struct EmptyComparator {
+    static constexpr size_t numConstantTerms() { return 0; }
+    static constexpr bool greaterEqual(llvm::ArrayRef<int64_t>,
+                                       llvm::ArrayRef<int64_t>) {
+        return true;
+    }
+    static constexpr bool greater(llvm::ArrayRef<int64_t>,
+                                  llvm::ArrayRef<int64_t>) {
+        return false;
+    }
+    static constexpr bool lessEqual(llvm::ArrayRef<int64_t>,
+                                    llvm::ArrayRef<int64_t>) {
+        return true;
+    }
+    static constexpr bool less(llvm::ArrayRef<int64_t>,
+                               llvm::ArrayRef<int64_t>) {
+        return false;
+    }
+    static constexpr bool equal(llvm::ArrayRef<int64_t>,
+                                llvm::ArrayRef<int64_t>) {
+        return true;
+    }
+    static constexpr bool greaterEqual(llvm::ArrayRef<int64_t>) { return true; }
+    static constexpr bool greater(llvm::ArrayRef<int64_t>) { return false; }
+    static constexpr bool lessEqual(llvm::ArrayRef<int64_t>) { return true; }
+    static constexpr bool less(llvm::ArrayRef<int64_t>) { return false; }
+    static constexpr bool equal(llvm::ArrayRef<int64_t>) { return true; }
+    static constexpr bool equalNegative(llvm::ArrayRef<int64_t>,
+                                        llvm::ArrayRef<int64_t>) {
+        return true;
+    }
+};
+
+// for non-symbolic constraints
 struct LiteralComparator {
     static constexpr size_t numConstantTerms() { return 1; }
     static inline bool greaterEqual(llvm::ArrayRef<int64_t> x,
@@ -55,26 +89,34 @@ struct LiteralComparator {
 // Note: only allowed to return `true` if known
 // therefore, `a > b -> false` does not imply `a <= b`
 template <typename T> struct BaseComparator {
+    inline bool greaterEqual(llvm::MutableArrayRef<int64_t> delta,
+                             llvm::ArrayRef<int64_t> x,
+                             llvm::ArrayRef<int64_t> y) const {
+        const size_t N = x.size();
+        assert(N == y.size());
+        assert(N == delta.size());
+        for (size_t n = 0; n < N; ++n)
+            delta[n] = x[n] - y[n];
+        return static_cast<const T *>(this)->greaterEqual(delta);
+    }
     inline bool greaterEqual(llvm::ArrayRef<int64_t> x,
                              llvm::ArrayRef<int64_t> y) const {
-        return static_cast<const T *>(this)->greaterEqual(x, y);
+        llvm::SmallVector<int64_t> delta(x.size());
+        return greaterEqual(delta, x, y);
     }
     inline bool less(llvm::ArrayRef<int64_t> x,
                      llvm::ArrayRef<int64_t> y) const {
         return greater(y, x);
     }
-    inline bool greater(llvm::MutableArrayRef<int64_t> x,
-                        llvm::ArrayRef<int64_t> y) const {
-        int64_t x0 = x[0]--;
-        bool ret = static_cast<const T *>(this)->greaterEqual(x, y);
-        x[0] = x0;
-        return ret;
-    }
     inline bool greater(llvm::ArrayRef<int64_t> x,
                         llvm::ArrayRef<int64_t> y) const {
-        // TODO: avoid this needless memcopy and (possible) allocation?
-        llvm::SmallVector<int64_t, 8> xm{x.begin(), x.end()};
-        return greater(xm, y);
+        const size_t N = x.size();
+        assert(N == y.size());
+        llvm::SmallVector<int64_t> delta(N);
+        for (size_t n = 0; n < N; ++n)
+            delta[n] = x[n] - y[n];
+        --delta[0];
+        return static_cast<const T *>(this)->greaterEqual(delta);
     }
     inline bool lessEqual(llvm::ArrayRef<int64_t> x,
                           llvm::ArrayRef<int64_t> y) const {
@@ -83,8 +125,10 @@ template <typename T> struct BaseComparator {
     inline bool equal(llvm::ArrayRef<int64_t> x,
                       llvm::ArrayRef<int64_t> y) const {
         // check cheap trivial first
-        return (x == y) || (static_cast<const T *>(this)->greaterEqual(x, y) &&
-                            static_cast<const T *>(this)->greaterEqual(y, x));
+        if (x == y)
+            return true;
+        llvm::SmallVector<int64_t> delta(x.size());
+        return (greaterEqual(delta, x, y) && greaterEqual(delta, y, x));
     }
     inline bool greaterEqual(llvm::ArrayRef<int64_t> x) const {
         return static_cast<const T *>(this)->greaterEqual(x);

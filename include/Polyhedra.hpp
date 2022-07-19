@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "./ConstantQuery.hpp"
+#include "./Comparators.hpp"
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
 #include "./Macro.hpp"
@@ -463,26 +463,25 @@ struct Polyhedra {
         const size_t numVar = Eold.numCol();
         assert(Aold.numCol() == numVar);
         if (Aold.numRow() <= 1)
-	    return;
-	for (size_t o = Aold.numRow() - 1; o > 0;) {
-	    for (size_t i = o--; i < Aold.numRow(); ++i) {
-		bool isNeg = true;
-		for (size_t v = 0; v < numVar; ++v) {
-		    if (Aold(i, v) != -Aold(o, v)) {
-			isNeg = false;
-			break;
-		    }
-		}
-		if (isNeg && (bold[i] == -bold[o])) {
-		    qold.push_back(bold[i]);
-		    size_t e = Eold.numRow();
-		    Eold.resize(qold.size(), numVar);
-		    for (size_t v = 0; v < numVar; ++v) {
-			Eold(e, v) = Aold(i, v);
-		    }
-		    eraseConstraint(Aold, bold, i, o);
-		    break;
-                    
+            return;
+        for (size_t o = Aold.numRow() - 1; o > 0;) {
+            for (size_t i = o--; i < Aold.numRow(); ++i) {
+                bool isNeg = true;
+                for (size_t v = 0; v < numVar; ++v) {
+                    if (Aold(i, v) != -Aold(o, v)) {
+                        isNeg = false;
+                        break;
+                    }
+                }
+                if (isNeg && (bold[i] == -bold[o])) {
+                    qold.push_back(bold[i]);
+                    size_t e = Eold.numRow();
+                    Eold.resize(qold.size(), numVar);
+                    for (size_t v = 0; v < numVar; ++v) {
+                        Eold(e, v) = Aold(i, v);
+                    }
+                    eraseConstraint(Aold, bold, i, o);
+                    break;
                 }
             }
         }
