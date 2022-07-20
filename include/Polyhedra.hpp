@@ -84,7 +84,7 @@ struct Polyhedra {
         return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
     }
     bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.greatEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greaterEqual(view(A.getRow(r), 0, C.numConstantTerms()));
     }
     bool lessZero(const size_t r) const {
         return C.less(view(A.getRow(r), 0, C.numConstantTerms()));
@@ -96,7 +96,7 @@ struct Polyhedra {
         return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
     }
     bool greaterEqualZero(const size_t r) const {
-        return C.greatEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greaterEqual(view(A.getRow(r), 0, C.numConstantTerms()));
     }
     bool equalNegative(const size_t i, const size_t j) const {
         return C.equalNegative(view(A.getRow(i), 0, C.numConstantTerms()),
