@@ -152,6 +152,14 @@ template <typename T> struct BaseComparator {
             x[i] *= -1;
         return ret;
     }
+    inline bool lessEqual(llvm::ArrayRef<int64_t> x) const {
+	llvm::SmallVector y{x.begin(), x.end()};
+	return lessEqual(y);
+    }
+    inline bool less(llvm::ArrayRef<int64_t> x) const {
+	llvm::SmallVector y{x.begin(), x.end()};
+	return less(y);
+    }
     inline bool greater(llvm::MutableArrayRef<int64_t> x) const {
         int64_t x0 = x[0]--;
         bool ret = static_cast<const T *>(this)->greaterEqual(x);
@@ -187,8 +195,8 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
     PartiallyOrderedSet POSet;
     llvm::SmallVector<Polynomial::Monomial> monomials;
     size_t numConstantTerms() const { return monomials.size(); }
-    bool greaterEqual(llvm::SmallVector<int64_t> x,
-                      llvm::SmallVector<int64_t> y) const {
+    bool greaterEqual(llvm::ArrayRef<int64_t> x,
+                      llvm::ArrayRef<int64_t> y) const {
         MPoly delta;
         assert(x.size());
         assert(x.size() == y.size());
@@ -200,7 +208,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
             delta.terms.emplace_back(d);
         return POSet.knownGreaterEqualZero(delta);
     }
-    bool greaterEqual(llvm::SmallVector<int64_t> x) const {
+    bool greaterEqual(llvm::ArrayRef<int64_t> x) const {
         MPoly delta;
         assert(x.size());
         assert(x.size() == 1 + monomials.size());
@@ -218,9 +226,15 @@ concept Comparator = requires(T t) {
     { t.numConstantTerms() } -> std::convertible_to<size_t>;
 }
 &&requires(T t, llvm::ArrayRef<int64_t> x) {
+    { t.greaterEqual(x) } -> std::convertible_to<bool>;
+    { t.lessEqual(x) } -> std::convertible_to<bool>;
+    { t.greater(x) } -> std::convertible_to<bool>;
+    { t.less(x) } -> std::convertible_to<bool>;
+    { t.equal(x) } -> std::convertible_to<bool>;
     { t.greaterEqual(x, x) } -> std::convertible_to<bool>;
     { t.lessEqual(x, x) } -> std::convertible_to<bool>;
     { t.greater(x, x) } -> std::convertible_to<bool>;
     { t.less(x, x) } -> std::convertible_to<bool>;
     { t.equal(x, x) } -> std::convertible_to<bool>;
+    { t.equalNegative(x, x) } -> std::convertible_to<bool>;
 };

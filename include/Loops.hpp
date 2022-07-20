@@ -5,6 +5,8 @@
 #include "./Permutation.hpp"
 #include "./Polyhedra.hpp"
 #include "./Symbolics.hpp"
+#include "Comparators.hpp"
+#include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
@@ -15,15 +17,13 @@
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : Simplex,
+struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,SymbolicComparator>,
                         llvm::RefCountedBase<AffineLoopNest> {
     Permutation perm; // maps current to orig
     llvm::SmallVector<IntMatrix, 0> remainingA;
     llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> remainingB;
     llvm::SmallVector<IntMatrix, 0> lowerA;
     llvm::SmallVector<IntMatrix, 0> upperA;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> lowerb;
-    llvm::SmallVector<llvm::SmallVector<MPoly, 8>, 0> upperb;
 
     int64_t currentToOriginalPerm(size_t i) const { return perm(i); }
 

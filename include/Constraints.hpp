@@ -66,6 +66,7 @@ printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
 
 // does not preserve the order of columns, instead it swaps the `i`th column
 // to the last, and truncates.
+/*
 MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
                                              llvm::MutableArrayRef<int64_t> b,
                                              size_t i) {
@@ -73,22 +74,22 @@ MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
     const size_t lastRow = M - 1;
     if (lastRow != i) {
         VECTORIZE
-        for (size_t n = 0; n < N; ++n) {
+        for (size_t n = 0; n < N; ++n)
             A(i, n) = A(lastRow, n);
-        }
         b[i] = b[lastRow];
     }
 }
+*/
 MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A, size_t i) {
     const auto [M, N] = A.size();
     const size_t lastRow = M - 1;
     if (lastRow != i) {
         VECTORIZE
-        for (size_t n = 0; n < N; ++n) {
+        for (size_t n = 0; n < N; ++n)
             A(i, n) = A(lastRow, n);
-        }
     }
 }
+/*
 MULTIVERSION static void eraseConstraintImpl(PtrMatrix<int64_t> A,
                                              llvm::MutableArrayRef<MPoly> b,
                                              size_t i) {
@@ -119,11 +120,36 @@ static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // #endif
     b.truncate(lastRow);
 }
+*/
 static void eraseConstraint(IntMatrix &A, size_t i) {
     eraseConstraintImpl(A, i);
     A.truncateRows(A.numRow() - 1);
 }
 
+static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
+    assert(_i != _j);
+    size_t i = std::min(_i, _j);
+    size_t j = std::max(_i, _j);
+    const auto [M, N] = A.size();
+    const size_t lastRow = M - 1;
+    const size_t penuRow = lastRow - 1;
+    if (j == penuRow) {
+        // then we only need to copy one column (i to lastCol)
+        eraseConstraint(A, i);
+    } else if (i != penuRow) {
+        // if i == penuCol, then j == lastCol
+        // and we thus don't need to copy
+        if (lastRow != i) {
+            for (size_t n = 0; n < N; ++n) {
+                A(i, n) = A(penuRow, n);
+                A(j, n) = A(lastRow, n);
+            }
+        }
+    }
+    A.truncateRows(penuRow);
+}
+
+/*
 template <typename T>
 static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
                             size_t _i, size_t _j) {
@@ -763,3 +789,4 @@ static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b) {
         }
     }
 }
+*/

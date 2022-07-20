@@ -98,7 +98,67 @@ struct Polyhedra {
     bool greaterEqualZero(const size_t r) const {
         return C.greatEqual(view(A.getRow(r), 0, C.numConstantTerms()));
     }
+    bool equalNegative(const size_t i, const size_t j) const {
+        return C.equalNegative(view(A.getRow(i), 0, C.numConstantTerms()),
+                               view(A.getRow(j), 0, C.numConstantTerms()));
+    }
+    bool equalNegative(const IntMatrix &A, const size_t i,
+                       const size_t j) const {
+        return C.equalNegative(view(A.getRow(i), 0, C.numConstantTerms()),
+                               view(A.getRow(j), 0, C.numConstantTerms()));
+    }
 
+    // counts how many negative and positive elements there are in row `i`.
+    // A row corresponds to a particular variable in `A'x <= b`.
+    static std::pair<size_t, size_t>
+    countNonZeroSign(PtrMatrix<const int64_t> A, size_t i) {
+        size_t numNeg = 0;
+        size_t numPos = 0;
+        size_t numRow = A.numRow();
+        for (size_t j = 0; j < numRow; ++j) {
+            int64_t Aij = A(j, i);
+            numNeg += (Aij < 0);
+            numPos += (Aij > 0);
+        }
+        return std::make_pair(numNeg, numPos);
+    }
+    static void fourierMotzkin(IntMatrix &A, size_t v) {
+        const auto [numNeg, numPos] = countNonZeroSign(A, v);
+        const size_t numRowsOld = A.numRow();
+        const size_t numRowsNew =
+            numRowsOld - numNeg - numPos + numNeg * numPos;
+	// we need one extra, as on the last overwrite, we still need to
+	// read from two constraints we're deleting; we can't write into
+	// both of them. Thus, we use a little extra memory here,
+	// and then truncate.
+        A.resizeRows(numRowsNew + 1);
+        // plan is to replace
+        for (size_t i = 0, numRows = numRowsOld, posCount = numPos;
+             i < numRowsOld; ++i) {
+            int64_t Aiv = A(i, v);
+            if (Aiv <= 0)
+                continue;
+            --posCount;
+            for (size_t negCount = numNeg, j = 0; negCount; ++j) {
+                int64_t Ajv = A(j, v);
+                if (Ajv >= 0)
+                    continue;
+                // for the last `negCount`, we overwrite `A(i, k)`
+		// last posCount does not get overwritten
+		--negCount;
+		size_t c = posCount ? (negCount ? i : numRows++) : j;
+                int64_t g = gcd(Aiv, Ajv);
+                int64_t Ai = Aiv / g, Aj = Ajv / g;
+                for (size_t k = 0; k < A.numCol(); ++k)
+                    A(c, k) = Ai * A(j, k) - Aj * A(i, k);
+            }
+	    if (posCount == 0) // last posCount not overwritten, so we erase
+		eraseConstraint(A, i);
+        }
+        assert(numRows == (numRowsNew+1));
+    }
+    
+    
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
@@ -322,20 +382,6 @@ struct Polyhedra {
     }
     // returns std::make_pair(numNeg, numPos);
     // countNonZeroSign(Matrix A, i)
-    // counts how many negative and positive elements there are in row `i`.
-    // A row corresponds to a particular variable in `A'x <= b`.
-    static std::pair<size_t, size_t>
-    countNonZeroSign(PtrMatrix<const int64_t> A, size_t i) {
-        size_t numNeg = 0;
-        size_t numPos = 0;
-        size_t numRow = A.numRow();
-        for (size_t j = 0; j < numRow; ++j) {
-            int64_t Aij = A(j, i);
-            numNeg += (Aij < 0);
-            numPos += (Aij > 0);
-        }
-        return std::make_pair(numNeg, numPos);
-    }
     // takes `A'x <= b`, and seperates into lower and upper bound equations w/
     // respect to `i`th variable
     static void categorizeBounds(IntMatrix &lA, IntMatrix &uA,
@@ -436,19 +482,14 @@ struct Polyhedra {
     }
     void pruneBounds() { pruneBounds(A); }
     void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
-                     llvm::SmallVectorImpl<int64_t> &btmp0,
-                     llvm::SmallVectorImpl<int64_t> &btmp1,
-                     llvm::SmallVectorImpl<int64_t> &q, IntMatrix &Aold,
-                     llvm::SmallVectorImpl<int64_t> &bold) const {
+                     IntMatrix &Aold) const {
 
         for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
             size_t c = Aold.numRow() - 1 - i;
             assert(Aold.numRow() == bold.size());
-            if (removeRedundantConstraints(Atmp0, Atmp1, E, btmp0, btmp1, q,
-                                           Aold, bold, c)) {
+            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, c))
                 // drop `c`
-                eraseConstraint(Aold, bold, c);
-            }
+                eraseConstraint(Aold, c);
         }
     }
     void pruneBounds(IntMatrix &Aold,
@@ -458,7 +499,7 @@ struct Polyhedra {
         llvm::SmallVector<int64_t, 16> btmp0, btmp1, q;
         pruneBounds(Atmp0, Atmp1, E, btmp0, btmp1, q, Aold, bold);
     }
-    static void moveEqualities(IntMatrix &Aold, IntMatrix &Eold) {
+    void moveEqualities(IntMatrix &Aold, IntMatrix &Eold) const {
 
         const size_t numVar = Eold.numCol();
         assert(Aold.numCol() == numVar);
@@ -473,14 +514,12 @@ struct Polyhedra {
                         break;
                     }
                 }
-                if (isNeg && (bold[i] == -bold[o])) {
-                    qold.push_back(bold[i]);
+                if (isNeg && equalNegative(Aold, i, o)) {
                     size_t e = Eold.numRow();
-                    Eold.resize(qold.size(), numVar);
-                    for (size_t v = 0; v < numVar; ++v) {
+                    Eold.resize(e + 1, numVar);
+                    for (size_t v = 0; v < numVar; ++v)
                         Eold(e, v) = Aold(i, v);
-                    }
-                    eraseConstraint(Aold, bold, i, o);
+                    eraseConstraint(Aold, i, o);
                     break;
                 }
             }
@@ -507,39 +546,29 @@ struct Polyhedra {
         //     Eold, qold, false)
         //     << std::endl;
         for (size_t i = 0; i < Eold.numRow(); ++i) {
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
-                                           btmp1, qtmp0, qtmp1, Aold, bold,
-                                           Eold, qold, Eold.getRow(i), qold[i],
-                                           Aold.numRow() + i, true)) {
+            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
+                                           Eold, Eold.getRow(i),
+                                           Aold.numRow() + i, true))
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
                 return true;
-            }
             // flip
-            for (size_t v = 0; v < Eold.numCol(); ++v) {
-                Eold(i, v) *= -1;
-            }
-            qold[i] *= -1;
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
-                                           btmp1, qtmp0, qtmp1, Aold, bold,
-                                           Eold, qold, Eold.getRow(i), qold[i],
-                                           Aold.numRow() + i, true)) {
+            for (auto &&e : Eold.getRow(i))
+                e *= -1;
+            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
+                                           Eold, Eold.getRow(i),
+                                           Aold.numRow() + i, true))
                 // if Eold's constraint is redundant, that means there was a
                 // stricter one, and the constraint is violated
                 return true;
-            }
         }
         assert(Aold.numRow() == bold.size());
         for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
             size_t c = Aold.numRow() - 1 - i;
             assert(Aold.numRow() == bold.size());
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, btmp0,
-                                           btmp1, qtmp0, qtmp1, Aold, bold,
-                                           Eold, qold, Aold.getRow(c), bold[c],
-                                           c, false)) {
-                // drop `c`
-                eraseConstraint(Aold, bold, c);
-            }
+            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
+                                           Eold, Aold.getRow(c), c, false))
+                eraseConstraint(Aold, c); // drop `c`
         }
         return false;
     }
@@ -571,63 +600,10 @@ struct Polyhedra {
         }
         return -1;
     }
-    int64_t checkForint64_trivialRedundancies(
-        llvm::SmallVector<unsigned, 32> &constraintsToErase,
-        llvm::SmallVector<unsigned, 16> &boundDiffs, IntMatrix &Etmp,
-        llvm::SmallVectorImpl<int64_t> &qtmp, IntMatrix &Aold,
-        llvm::SmallVectorImpl<int64_t> &bold, llvm::ArrayRef<int64_t> a,
-        const int64_t &b) const {
-        const size_t numVar = getNumVar();
-        const size_t numAuxVar = Etmp.numCol() - numVar;
-        int64_t dependencyToEliminate = -1;
-        for (size_t i = 0; i < numAuxVar; ++i) {
-            size_t c = boundDiffs[i];
-            int64_t dte = -1;
-            for (size_t v = 0; v < numVar; ++v) {
-                int64_t Evi = a[v] - Aold(c, v);
-                Etmp(i, v + numAuxVar) = Evi;
-                dte = (Evi) ? v + numAuxVar : dte;
-            }
-            qtmp[i] = b - bold[c];
-            if (dte == -1) {
-                int64_t delta = bold[c] - b;
-                if ((delta <= 0)) {
-                    // bold[c] - b <= 0
-                    // bold[c] <= b
-                    // thus, bound `c` will always trigger before `b`
-                    return -2;
-                } else if ((delta >= 0)) {
-                    // bound `b` triggers first
-                    // normally we insert `c`, but if inserting here
-                    // we also want to erase elements from boundDiffs
-                    constraintsToErase.push_back(i);
-                }
-            } else {
-                dependencyToEliminate = dte;
-            }
-            for (size_t j = 0; j < numAuxVar; ++j) {
-                Etmp(i, j) = (j == i);
-            }
-        }
-        if (constraintsToErase.size()) {
-            for (auto it = constraintsToErase.rbegin();
-                 it != constraintsToErase.rend(); ++it) {
-                size_t i = *it;
-                size_t c = boundDiffs[i];
-                boundDiffs.erase(boundDiffs.begin() + i);
-                eraseConstraint(Aold, bold, c);
-                eraseConstraint(Etmp, qtmp, i);
-            }
-            constraintsToErase.clear();
-        }
-        return dependencyToEliminate;
-    }
     int64_t checkForTrivialRedundancies(
         llvm::SmallVector<unsigned, 32> &constraintsToErase,
         llvm::SmallVector<int, 16> &boundDiffs, IntMatrix &Etmp,
-        llvm::SmallVectorImpl<int64_t> &qtmp, IntMatrix &Aold,
-        llvm::SmallVectorImpl<int64_t> &bold, IntMatrix &Eold,
-        llvm::SmallVectorImpl<int64_t> &qold, llvm::ArrayRef<int64_t> a,
+        IntMatrix &Aold, IntMatrix &Eold, llvm::ArrayRef<int64_t> a,
         const int64_t &b, bool AbIsEq) const {
         const size_t numVar = getNumVar();
         const size_t numAuxVar = Etmp.numCol() - numVar;
