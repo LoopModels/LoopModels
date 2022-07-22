@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Math.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <cstddef>
 #include <string>
@@ -8,29 +9,28 @@
 IntMatrix stringToIntMatrix(const std::string &s) {
     assert(s.starts_with('['));
     assert(s.ends_with(']'));
-    std::cout << "s = \n" << s << std::endl;
-    size_t numRows = 1, numCols = 1;
-    for (auto &c : s)
-        numRows += c == ';';
-    size_t rowEnd = numRows == 1 ? s.size() - 1 : s.find(';', 1);
-    std::basic_string<char> row = s.substr(1, rowEnd);
-    for (auto &c : row)
-        numCols += c == ' ';
-    std::cout << "numRows = " << numRows << "; numCols = " << numCols << std::endl;
-    IntMatrix A(numRows, numCols);
-    std::string::size_type n, p=1;
-    for (size_t r = 0; r < numRows; ++r){
-	auto rowTerminator = (r+1) == numRows ? ']' : ';';
-	for (size_t c = 0; c < numCols; ++c){
-	    n = s.find((c+1==numCols) ? rowTerminator : ' ', p);
-	    std::cout << "p = " << p << "; n = " << n << std::endl;
-	    auto subStr = s.substr(p, n);
-	    std::cout << "subStr = " << subStr<< std::endl;
-	    auto Arc = std::stoll(subStr);
-	    std::cout << "Arc = " << Arc << std::endl;
-	    A(r,c) = Arc;
-	    p = n;
-	}
+    llvm::SmallVector<int64_t, 64> content;
+    size_t cur = 1;
+    size_t numRows = 1;
+    while (cur < s.length()) {
+        char c = s[cur];
+        if (c == ' ') {
+            ++cur;
+            continue;
+        } else if (c == ';') {
+            numRows += 1;
+            ++cur;
+            continue;
+        } else if (c == ']') {
+            break;
+        }
+        size_t sz = 0;
+        long long ll = std::stoll(s.c_str() + cur, &sz, 10);
+        cur += sz;
+        content.push_back(ll);
     }
+    size_t numCols = content.size() / numRows;
+    assert(content.size() % numRows == 0);
+    IntMatrix A(std::move(content), numRows, numCols);
     return A;
 }

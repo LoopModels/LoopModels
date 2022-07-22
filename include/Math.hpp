@@ -719,6 +719,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
 
     size_t M, N, X;
 
+    Matrix(llvm::SmallVector<T, S> content, size_t m, size_t n)
+        : mem(std::move(content)), M(m), N(n), X(n){};
+
     Matrix(size_t m, size_t n)
         : mem(llvm::SmallVector<T, S>(m * n)), M(m), N(n), X(n){};
 
