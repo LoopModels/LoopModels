@@ -729,7 +729,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M), X(A.M){};
 
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>(mem.data(), M, N, X);
+        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
     operator PtrMatrix<T>() {
         return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
