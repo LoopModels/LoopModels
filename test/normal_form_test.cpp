@@ -1,6 +1,7 @@
 #include "../include/LinearAlgebra.hpp"
 #include "../include/Math.hpp"
 #include "../include/NormalForm.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -295,7 +296,7 @@ TEST(NullSpaceTests, BasicAssertions) {
     for (size_t numCol = 2; numCol < 11; numCol += 2) {
         IntMatrix B(8, numCol);
         size_t nullDim = 0;
-	IntMatrix Z, NS;
+        IntMatrix Z, NS;
         for (size_t i = 0; i < numIters; ++i) {
             for (size_t n = 0; n < B.length(); ++n) {
                 B[n] = distrib(gen);
@@ -314,4 +315,22 @@ TEST(NullSpaceTests, BasicAssertions) {
         std::cout << "Average tested null dim = "
                   << double(nullDim) / double(numIters) << std::endl;
     }
+}
+
+TEST(SimplifySystemTests, BasicAssertions) {
+    IntMatrix A = stringToIntMatrix(
+        "[2 4 5 5 -5; -4 3 -4 -3 -1; 1 0 -2 1 -4; -4 -2 3 -2 -1]");
+    IntMatrix B =
+        stringToIntMatrix("[-6 86 -27 46 0 -15; -90 -81 91 44 -2 78; 4 -54 -98 "
+                          "80 -10 82; -98 -15 -28 98 82 87]");
+    NormalForm::simplifySystem(A, B);
+    IntMatrix sA = stringToIntMatrix("[-3975 0 0 0 -11370; 0 -1325 0 0 -1305; "
+                                     "0 0 -265 0 -347; 0 0 0 -265 1124]");
+    IntMatrix trueB = stringToIntMatrix(
+            "[-154140 -128775 -205035 317580 83820 299760; -4910 -21400 -60890 "
+            "44820 14480 43390; -1334 -6865 -7666 8098 -538 9191; 6548 9165 "
+            "24307 -26176 -4014 -23332]");
+
+    EXPECT_EQ(sA, A);
+    EXPECT_EQ(trueB, B);
 }

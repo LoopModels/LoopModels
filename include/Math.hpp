@@ -704,9 +704,9 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             A(r, r) = 1;
         return A;
     }
-    operator PtrMatrix<T>() { return PtrMatrix<T>(mem.data(), M, M, M); }
+    operator PtrMatrix<T>() { return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M}; }
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>(mem.data(), M, M, M);
+        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
     }
     operator SquarePtrMatrix<T>() {
         return SquarePtrMatrix(mem.data(), size_t(M));

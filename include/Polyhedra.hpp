@@ -157,8 +157,8 @@ struct Polyhedra {
         }
         assert(numRows == (numRowsNew+1));
     }
-    
-    
+
+
     // setBounds(a, b, la, lb, ua, ub, i)
     // `la` and `lb` correspond to the lower bound of `i`
     // `ua` and `ub` correspond to the upper bound of `i`
