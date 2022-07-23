@@ -566,7 +566,7 @@ MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
 MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
     const size_t M = A.numRow();
     IntMatrix B(IntMatrix::identity(M));
-    simplifySystem(A, B);
+    solveSystem(A, B);
     size_t R = M;
     while ((R > 0) && allZero(A.getRow(R - 1)))
         --R;
@@ -580,7 +580,7 @@ MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
         VECTORIZE
         for (size_t d = 0; d < D * M; ++d)
             B[d] = B[d + o];
-        B.truncateRows(D);
+	B.truncateRows(D);
     }
     return B;
 }

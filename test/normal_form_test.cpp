@@ -323,7 +323,7 @@ TEST(SimplifySystemTests, BasicAssertions) {
     IntMatrix B =
         stringToIntMatrix("[-6 86 -27 46 0 -15; -90 -81 91 44 -2 78; 4 -54 -98 "
                           "80 -10 82; -98 -15 -28 98 82 87]");
-    NormalForm::simplifySystem(A, B);
+    NormalForm::solveSystem(A, B);
     IntMatrix sA = stringToIntMatrix("[-3975 0 0 0 -11370; 0 -1325 0 0 -1305; "
                                      "0 0 -265 0 -347; 0 0 0 -265 1124]");
     IntMatrix trueB = stringToIntMatrix(
