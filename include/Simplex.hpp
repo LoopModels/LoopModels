@@ -118,7 +118,7 @@ struct Simplex {
     //     return getTableauCol(1);
     // }
     StridedVector<const int64_t> getConstants() const {
-        return getTableauCol(1);
+        return getTableauCol(numExtraCols);
     }
     StridedVector<int64_t> getTableauCol(size_t i) {
         return StridedVector<int64_t>{tableau.data() + i +
@@ -127,7 +127,9 @@ struct Simplex {
     }
     StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
     // StridedVector<int64_t> getDenominators() { return getTableauCol(1); }
-    StridedVector<int64_t> getConstants() { return getTableauCol(1); }
+    StridedVector<int64_t> getConstants() {
+        return getTableauCol(numExtraCols);
+    }
     bool initiateFeasible() {
         // remove trivially redundant constraints
         printMatrix(std::cout << "constraints=\n", getConstraints())
@@ -265,13 +267,14 @@ struct Simplex {
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
-            if (i != size_t(leavingVariable+1)) {
+            if (i != size_t(leavingVariable + 1)) {
                 int64_t m = NormalForm::zeroWithRowOperation(
-                    C, i, leavingVariable + 1, enteringVariable);
+                    C, i, leavingVariable + 1, enteringVariable,
+                    i == 0 ? f : 0);
                 if (i == 0)
-                    f *= m;
+                    f = m;
             }
-	printMatrix(std::cout << "post-removal C = \n", C) << std::endl;
+        printMatrix(std::cout << "post-removal C = \n", C) << std::endl;
         // update baisc vars and constraints
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -286,7 +289,7 @@ struct Simplex {
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-	    printMatrix(std::cout << "C = \n", C) << std::endl;
+            printMatrix(std::cout << "C = \n", C) << std::endl;
             int enteringVariable = getEnteringVariable(C.getRow(0));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
@@ -306,7 +309,7 @@ struct Simplex {
             std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
                       << "; C.numCol()  = " << C.numCol() << std::endl;
             if (int64_t cost = C(0, v))
-                f *= NormalForm::zeroWithRowOperation(C, 0, c, v);
+                f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
         return runCore(f);
     }
@@ -617,7 +620,7 @@ struct Simplex {
                 costs[i] = -1;
                 int64_t c = basicCons[i];
                 if (c != -1)
-                    NormalForm::zeroWithRowOperation(CC, 0, ++c, j);
+                    NormalForm::zeroWithRowOperation(CC, 0, ++c, j, 0);
                 simplex.runCore();
                 if ((basicCons[i] == -1) || (D(i, 0) == 0)) {
                     // i == 0

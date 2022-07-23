@@ -11,9 +11,11 @@ TEST(SimplexTest, BasicAssertions){
     Simplex &S{optS.getValue()};
     llvm::MutableArrayRef<int64_t> C{S.getCost()};
     C[0] = 0;
-    C[1] = 2;
-    C[2] = 3;
-    C[3] = 4;
+    C[1] = 0;
+    C[2] = 0;
+    C[3] = -2;
+    C[4] = -3;
+    C[5] = -4;
     std::cout << "S.tableau = \n" << S.tableau << std::endl;
     EXPECT_EQ(S.run(), 20);
 }

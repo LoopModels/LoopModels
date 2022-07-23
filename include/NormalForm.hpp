@@ -401,18 +401,29 @@ hermite(IntMatrix A) {
 
 // zero A(i,k) with A(j,k)
 inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
-                                    size_t k) {
+                                    size_t k, size_t f) {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
         int64_t g = gcd(Aik, Ajk);
         Aik /= g;
         Ajk /= g;
-        VECTORIZE
-        for (size_t l = 0; l < A.numCol(); ++l)
-            A(i, l) = Ajk * A(i, l) - Aik * A(j, l);
-        return Ajk;
+        int64_t ret = f * Ajk;
+        g = ret;
+        for (size_t l = 0; l < A.numCol(); ++l) {
+            int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+            A(i, l) = Ail;
+            g = gcd(Ail, g);
+        }
+	std::cout << "g = " << g << std::endl;
+        if (g > 1) {
+            for (size_t l = 0; l < A.numCol(); ++l)
+                if (int64_t Ail = A(i, l))
+                    A(i, l) = Ail / g;
+            ret /= g;
+        }
+        return ret;
     }
-    return 1;
+    return f;
 }
 
 // use row `r` to zero the remaining rows of column `c`
@@ -541,10 +552,10 @@ MULTIVERSION void solveSystem(IntMatrix &A) { solveSystem(A, A.numCol() - 1); }
 MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
     const auto [M, N] = A.size();
     for (size_t r = 0, c = 0; c < M && r < M; ++c)
-        if (!pivotRows(A, c, M, r)){
+        if (!pivotRows(A, c, M, r)) {
             zeroSupDiagonal(A, c, r++);
             reduceSubDiagonal(A, c, r++);
-	}
+        }
     size_t R = M;
     while ((R > 0) && allZero(A.getRow(R - 1))) {
         --R;
