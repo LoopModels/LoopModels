@@ -36,6 +36,7 @@ if gtest_dep.found()
     'normal_form_test',
     'orthogonalize_test',
     'poset_test',
+    'simplex_test',
     'string_to_intmat_test',
     'symbolics_test',
     'unimodularization_test',

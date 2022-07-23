@@ -562,7 +562,7 @@ substituteEquality(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b, IntMatrix &E,
     }
     return true;
 }
-
+*/
 // C = [ I A
 //       0 B ]
 void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
@@ -579,7 +579,7 @@ void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
             C(s, i) = 0;
         C(s, s) = 1;
         for (size_t i = 0; i < numVar; ++i)
-            C(s, i + numSlack) = -A(s, i);
+            C(s, i + numSlack) = A(s, i);
     }
     // [0 B]
     for (size_t s = 0; s < numStrict; ++s) {
@@ -589,7 +589,7 @@ void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
             C(s + numSlack, i + numSlack) = B(s, i);
     }
 }
-
+/*
 IntMatrix slackEqualityConstraints(PtrMatrix<const int64_t> A,
                                    PtrMatrix<const int64_t> E) {
 

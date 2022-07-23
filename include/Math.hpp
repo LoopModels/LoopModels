@@ -490,7 +490,7 @@ template <typename T, typename A> struct BaseMatrix {
     }
 };
 
-template <typename T> struct SparseMatrix;
+template <typename T> struct SmallSparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
@@ -515,9 +515,9 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     const T *data() const { return mem; }
 
     operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>(mem, M, N, X);
+        return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
     }
-    PtrMatrix<T> operator=(SparseMatrix<T> &A) {
+    PtrMatrix<T> operator=(SmallSparseMatrix<T> &A) {
         assert(M == A.numRow());
         assert(N == A.numCol());
         size_t k = 0;
@@ -536,20 +536,24 @@ template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     }
     inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
                              size_t colEnd) {
-        assert(rowEnd > rowStart);
-        assert(colEnd > colStart);
-        return PtrMatrix<T>(mem + colStart + rowStart * X, rowEnd - rowStart,
-                            colEnd - colStart, X);
+        assert(rowEnd >= rowStart);
+        assert(colEnd >= colStart);
+        return PtrMatrix<T>{.mem = mem + colStart + rowStart * X,
+                            .M = rowEnd - rowStart,
+                            .N = colEnd - colStart,
+                            .X = X};
     }
     inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
         return view(0, rowEnd, 0, colEnd);
     }
     inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
                              size_t colEnd) const {
-        assert(rowEnd > rowStart);
-        assert(colEnd > colStart);
-        return PtrMatrix<T>(mem + colStart + rowStart * X, rowEnd - rowStart,
-                            colEnd - colStart, X);
+        assert(rowEnd >= rowStart);
+        assert(colEnd >= colStart);
+        return PtrMatrix<T>{.mem = mem + colStart + rowStart * X,
+                            .M = rowEnd - rowStart,
+                            .N = colEnd - colStart,
+                            .X = X};
     }
     inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
         return view(0, rowEnd, 0, colEnd);
@@ -704,7 +708,9 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             A(r, r) = 1;
         return A;
     }
-    operator PtrMatrix<T>() { return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M}; }
+    operator PtrMatrix<T>() {
+        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M};
+    }
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
     }
@@ -831,11 +837,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     void eraseCol(size_t i) {
         assert(i < N);
         // TODO: optimize this to reduce copying
-        for (size_t m = 0; m < M; ++m) {
-            for (size_t n = 0; n < N; ++n) {
+        for (size_t m = 0; m < M; ++m)
+            for (size_t n = 0; n < N; ++n)
                 mem.erase(mem.begin() + m * X + n);
-            }
-        }
         --N;
         --X;
     }
@@ -856,11 +860,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     // Allocates a transposed copy
     Matrix<T, 0, 0, S> transpose() const {
         Matrix<T, 0, 0, S> A(Matrix<T, 0, 0, S>::Uninitialized(N, M));
-        for (size_t n = 0; n < N; ++n) {
-            for (size_t m = 0; m < M; ++m) {
+        for (size_t n = 0; n < N; ++n)
+            for (size_t m = 0; m < M; ++m)
                 A(n, m) = (*this)(m, n);
-            }
-        }
         return A;
     }
 
@@ -868,18 +870,22 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                              size_t colEnd) {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
-        return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
-                            rowEnd - rowStart, colEnd - colStart, X);
+        return PtrMatrix<T>{.mem = mem.data() + colStart + rowStart * X,
+                            .M = rowEnd - rowStart,
+                            .N = colEnd - colStart,
+                            .X = X};
     }
     inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
         return view(0, rowEnd, 0, colEnd);
     }
-    inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-                             size_t colEnd) const {
+    inline PtrMatrix<const T> view(size_t rowStart, size_t rowEnd,
+                                   size_t colStart, size_t colEnd) const {
         assert(rowEnd > rowStart);
         assert(colEnd > colStart);
-        return PtrMatrix<T>(mem.data() + colStart + rowStart * X,
-                            rowEnd - rowStart, colEnd - colStart, X);
+        return PtrMatrix<const T>{.mem = mem.data() + colStart + rowStart * X,
+                                  .M = rowEnd - rowStart,
+                                  .N = colEnd - colStart,
+                                  .X = X};
     }
     inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
         return view(0, rowEnd, 0, colEnd);
@@ -1400,18 +1406,19 @@ std::ostream &printMatrixImpl(std::ostream &os, PtrMatrix<const T> A) {
     return os;
 }
 
-template <typename T> struct SparseMatrix {
+template <typename T> struct SmallSparseMatrix {
     // non-zeros
     llvm::SmallVector<T> nonZeros;
     // masks, the upper 8 bits give the number of elements in previous rows
     // the remaining 24 bits are a mask indicating non-zeros within this row
+    static constexpr size_t maxElemPerRow = 24;
     llvm::SmallVector<uint32_t> rows;
     size_t col;
     size_t numRow() const { return rows.size(); }
     size_t numCol() const { return col; }
-    SparseMatrix(size_t numRows, size_t numCols)
+    SmallSparseMatrix(size_t numRows, size_t numCols)
         : nonZeros{}, rows{llvm::SmallVector<uint32_t>(numRows)}, col{numCols} {
-        assert(col <= 24);
+        assert(col <= maxElemPerRow);
     }
     T get(size_t i, size_t j) const {
         assert(j < col);
@@ -1419,7 +1426,7 @@ template <typename T> struct SparseMatrix {
         uint32_t jshift = uint32_t(1) << j;
         if (r & (jshift)) {
             // offset from previous rows
-            uint32_t prevRowOffset = r >> 24;
+            uint32_t prevRowOffset = r >> maxElemPerRow;
             uint32_t rowOffset = std::popcount(r & (jshift - 1));
             return nonZeros[rowOffset + prevRowOffset];
         } else {
@@ -1432,7 +1439,7 @@ template <typename T> struct SparseMatrix {
         uint32_t r{rows[i]};
         uint32_t jshift = uint32_t(1) << j;
         // offset from previous rows
-        uint32_t prevRowOffset = r >> 24;
+        uint32_t prevRowOffset = r >> maxElemPerRow;
         uint32_t rowOffset = std::popcount(r & (jshift - 1));
         size_t k = rowOffset + prevRowOffset;
         if (r & jshift) {
@@ -1441,12 +1448,12 @@ template <typename T> struct SparseMatrix {
             nonZeros.insert(nonZeros.begin() + k, std::move(x));
             rows[i] = r | jshift;
             for (size_t k = i + 1; k < rows.size(); ++k)
-                rows[k] += uint32_t(1) << 24;
+                rows[k] += uint32_t(1) << maxElemPerRow;
         }
     }
 
     struct Reference {
-        SparseMatrix<T> *A;
+        SmallSparseMatrix<T> *A;
         size_t i, j;
         operator T() const { return A->get(i, j); }
         void operator=(T x) {
@@ -1474,7 +1481,7 @@ template <typename T> struct SparseMatrix {
 };
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, SparseMatrix<T> const &A) {
+std::ostream &operator<<(std::ostream &os, SmallSparseMatrix<T> const &A) {
     size_t k = 0;
     os << "[ ";
     for (size_t i = 0; i < A.numRow(); ++i) {

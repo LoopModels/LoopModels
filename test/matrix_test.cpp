@@ -4,7 +4,7 @@
 
 // Demonstrate some basic assertions.
 TEST(HelloTest, BasicAssertions) {
-    SparseMatrix<int64_t> Asparse(3, 4);
+    SmallSparseMatrix<int64_t> Asparse(3, 4);
     std::cout << "&Asparse = " << &Asparse << std::endl;
     Asparse(0, 1) = 5;
     Asparse(1, 3) = 3;

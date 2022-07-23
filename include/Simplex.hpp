@@ -25,7 +25,7 @@ struct Simplex {
     size_t numSlackVar;
     bool inCanonicalForm;
     static constexpr size_t numExtraRows = 2;
-    static constexpr size_t numExtraCols = 2;
+    static constexpr size_t numExtraCols = 1;
     static constexpr size_t numTableauRows(size_t i) {
         return i + numExtraRows;
     }
@@ -40,13 +40,15 @@ struct Simplex {
         tableau.resize(numTableauRows(numCon), numTableauCols(numVar), stride);
     }
     void addVars(size_t numVars) {
-        size_t numCol = numTableauCols(numVars);
+        size_t numCol = tableau.numCol() + numVars;
         tableau.resize(tableau.numRow(), numCol,
                        std::max(numCol, tableau.rowStride()));
     }
-    void truncateVars(size_t numVars) { tableau.truncateCols(numVars + 2); }
-    void truncateConstraints(size_t numVars) {
-        tableau.truncateRows(numTableauCols(numVars));
+    void truncateVars(size_t numVars) {
+        tableau.truncateCols(numTableauCols(numVars));
+    }
+    void truncateConstraints(size_t numCons) {
+        tableau.truncateRows(numTableauRows(numCons));
     }
     void resizeForOverwrite(size_t numCon, size_t numVar) {
         tableau.resizeForOverwrite(numTableauRows(numCon),
@@ -112,11 +114,11 @@ struct Simplex {
     StridedVector<const int64_t> getBasicVariables() const {
         return getTableauCol(0);
     }
-    StridedVector<const int64_t> getDenominators() const {
-        return getTableauCol(1);
-    }
+    // StridedVector<const int64_t> getDenominators() const {
+    //     return getTableauCol(1);
+    // }
     StridedVector<const int64_t> getConstants() const {
-        return getTableauCol(2);
+        return getTableauCol(1);
     }
     StridedVector<int64_t> getTableauCol(size_t i) {
         return StridedVector<int64_t>{tableau.data() + i +
@@ -124,17 +126,20 @@ struct Simplex {
                                       getNumConstraints(), tableau.rowStride()};
     }
     StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
-    StridedVector<int64_t> getDenominators() { return getTableauCol(1); }
-    StridedVector<int64_t> getConstants() { return getTableauCol(2); }
+    // StridedVector<int64_t> getDenominators() { return getTableauCol(1); }
+    StridedVector<int64_t> getConstants() { return getTableauCol(1); }
     bool initiateFeasible() {
         // remove trivially redundant constraints
+        printMatrix(std::cout << "constraints=\n", getConstraints())
+            << std::endl;
         hermiteNormalForm();
         // [ I;  X ; b ]
         //
         // original number of variables
         const size_t numVar = getNumVar();
         PtrMatrix<int64_t> C{getConstraints()};
-        llvm::MutableArrayRef<int64_t> basicCons = getBasicConstraints();
+        printMatrix(std::cout << "C=", C) << std::endl;
+        llvm::MutableArrayRef<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
         // first pass, we make sure the equalities are >= 0
@@ -171,7 +176,7 @@ struct Simplex {
         // indicating which row contains the only non-zero element; we'll now
         // fill basicVars.
         //
-        auto basicVars = getBasicVariables();
+        auto basicVars{getBasicVariables()};
         for (auto &&x : basicVars)
             x = -1;
         for (size_t v = 1; v < numVar; ++v) {
@@ -188,18 +193,26 @@ struct Simplex {
                 }
             }
         }
+        std::cout << "tableau = \n" << tableau << std::endl;
         llvm::SmallVector<unsigned> augmentVars{};
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
                 augmentVars.push_back(i);
-        addVars(augmentVars.size()); // NOTE: invalidates all refs
-        {
+        if (augmentVars.size()) {
+            addVars(augmentVars.size()); // NOTE: invalidates all refs
             PtrMatrix<int64_t> C{getConstraints()};
+            auto basicVars{getBasicVariables()};
+            llvm::MutableArrayRef<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
             for (auto &&c : costs)
                 c = 0;
+            printVector(std::cout, augmentVars) << std::endl;
+            std::cout << "tableau = \n" << tableau << std::endl;
+            std::cout << "numVar = " << numVar << std::endl;
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
+                basicVars[a] = i + numVar;
+                basicCons[i + numVar] = a;
                 C(a, numVar + i) = 1;
                 // we now zero out the implicit cost of `1`
                 for (size_t j = 0; j < numVar; ++j)
@@ -207,16 +220,20 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
+            std::cout << "tableau = \n" << tableau << std::endl;
             if (int64_t r = runCore())
                 return r;
+            std::cout << "initialized tableau = \n" << tableau << std::endl;
             // all augment vars are now 0
             truncateVars(numVar);
         }
+        std::cout << "initialized tableau = \n" << tableau << std::endl;
         inCanonicalForm = true;
         return 0;
     }
     static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
+        printVector(std::cout << "costs = ", costs) << std::endl;
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
@@ -225,35 +242,36 @@ struct Simplex {
     static int getLeavingVariable(PtrMatrix<int64_t> C,
                                   size_t enteringVariable) {
         // inits guarantee first valid is selected
-        int64_t n = 0;
-        int64_t d = -1;
-        int j = -1;
-        for (size_t i = 0; i < C.numRow(); ++i) {
+        int64_t n = -1;
+        int64_t d = 0;
+        int j = 0;
+        for (size_t i = 1; i < C.numRow(); ++i) {
             int64_t Civ = C(i, enteringVariable);
             if (Civ > 0) {
                 int64_t Ci0 = C(i, 0);
                 assert(Ci0 >= 0);
-                if (Civ * d < n * Ci0) {
+                if (n * Ci0 < Civ * d) {
                     n = Civ;
                     d = Ci0;
                     j = i;
                 }
             }
         }
-        return j;
+        return --j;
     }
     int64_t makeBasic(PtrMatrix<int64_t> C, int64_t f, int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
+        std::cout << "leavingVariable = " << leavingVariable << std::endl;
         if (leavingVariable == -1)
             return 0; // unbounded
-        ++leavingVariable;
         for (size_t i = 0; i < C.numRow(); ++i)
-            if (i != size_t(leavingVariable)) {
+            if (i != size_t(leavingVariable+1)) {
                 int64_t m = NormalForm::zeroWithRowOperation(
-                    C, i, leavingVariable, enteringVariable);
+                    C, i, leavingVariable + 1, enteringVariable);
                 if (i == 0)
                     f *= m;
             }
+	printMatrix(std::cout << "post-removal C = \n", C) << std::endl;
         // update baisc vars and constraints
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -268,7 +286,9 @@ struct Simplex {
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
+	    printMatrix(std::cout << "C = \n", C) << std::endl;
             int enteringVariable = getEnteringVariable(C.getRow(0));
+            std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
                 return C[0] / f;
             f = makeBasic(C, f, enteringVariable);
@@ -283,13 +303,15 @@ struct Simplex {
         int64_t f = 1;
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
+            std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
+                      << "; C.numCol()  = " << C.numCol() << std::endl;
             if (int64_t cost = C(0, v))
                 f *= NormalForm::zeroWithRowOperation(C, 0, c, v);
         }
         return runCore(f);
     }
-    // A*x >= 0
-    // B*x == 0
+    // A(1:end,:)*x <= A(:,0)
+    // B(1:end,:)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex>
     positiveVariables(PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B) {
@@ -300,8 +322,9 @@ struct Simplex {
         size_t numStrict = B.numRow();
         size_t numCon = numSlack + numStrict;
         size_t extraStride = 0;
+        // see how many slack vars are infeasible as solution
         for (unsigned i = 0; i < numSlack; ++i)
-            extraStride += A(i, numVar - 1) < 0;
+            extraStride += A(i, 0) < 0;
         // try to avoid reallocating
         size_t stride = numVar + numCon + extraStride + 2;
         simplex.resizeForOverwrite(numCon, numVar + numSlack, stride);
@@ -309,7 +332,16 @@ struct Simplex {
         // [ I A
         //   0 B ]
         // then drop the extra variables
-        slackEqualityConstraints(simplex.getConstraints(), A, B);
+        slackEqualityConstraints(
+            simplex.getConstraints().view(0, numCon, 1, numVar + numSlack),
+            A.view(0, numSlack, 1, numVar), B.view(0, numStrict, 1, numVar));
+        std::cout << "simplex.tableau = \n" << simplex.tableau << std::endl;
+        auto consts{simplex.getConstants()};
+        for (size_t i = 0; i < numSlack; ++i)
+            consts[i] = A(i, 0);
+        for (size_t i = 0; i < numStrict; ++i)
+            consts[i + numSlack] = B(i, 0);
+        std::cout << "simplex.tableau = \n" << simplex.tableau << std::endl;
         if (simplex.initiateFeasible())
             return {};
         return simplex;
