@@ -664,7 +664,7 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     for (size_t o = M + N; o > numNewVar + M;) {
         substituteEquality(C, d, --o);
         if (C.numRow() > 1)
-            NormalForm::simplifyEqualityConstraints(C, d);
+            NormalForm::simplifySystem(C, d);
     }
     A.resizeForOverwrite(M, numNewVar);
     b.resize_for_overwrite(M);

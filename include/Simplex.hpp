@@ -82,7 +82,7 @@ struct Simplex {
     void hermiteNormalForm() {
         inCanonicalForm = false;
         truncateConstraints(
-            NormalForm::simplifyEqualityConstraintsImpl(getConstraints(), 1));
+            NormalForm::simplifySystemImpl(getConstraints(), 1));
     }
     void deleteConstraint(size_t c) {
         eraseConstraintImpl(tableau, numTableauRows(c));

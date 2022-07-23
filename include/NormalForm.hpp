@@ -327,8 +327,8 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
 }
 
-MULTIVERSION size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
-                                                    size_t rowInit = 0) {
+MULTIVERSION size_t simplifySystemImpl(PtrMatrix<int64_t> E,
+                                       size_t rowInit = 0) {
     auto [M, N] = E.size();
     if (M == 0)
         return 0;
@@ -353,13 +353,13 @@ MULTIVERSION size_t simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> E,
     return Mnew;
 }
 
-static void simplifyEqualityConstraints(IntMatrix &E) {
+static void simplifySystem(IntMatrix &E) {
 
-    size_t Mnew = simplifyEqualityConstraintsImpl(E);
+    size_t Mnew = simplifySystemImpl(E);
     E.truncateRows(Mnew);
 }
-MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
-                                                         PtrMatrix<int64_t> B) {
+MULTIVERSION static void simplifySystemImpl(PtrMatrix<int64_t> A,
+                                            PtrMatrix<int64_t> B) {
     auto [M, N] = A.size();
     if (M == 0)
         return;
@@ -379,9 +379,8 @@ MULTIVERSION static void simplifyEqualityConstraintsImpl(PtrMatrix<int64_t> A,
         reduceSubDiagonal(A, B, m, m - dec);
     }
 }
-MULTIVERSION static void simplifyEqualityConstraints(IntMatrix &A,
-                                                     IntMatrix &B) {
-    simplifyEqualityConstraintsImpl(A, B);
+MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
+    simplifySystemImpl(A, B);
     size_t Mnew = A.numRow();
     if (allZero(A.getRow(Mnew - 1))) {
         do {
@@ -395,7 +394,7 @@ llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
 hermite(IntMatrix A) {
     auto [M, N] = A.size();
     SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
-    simplifyEqualityConstraintsImpl(A, U);
+    simplifySystemImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
 }
 
@@ -414,7 +413,7 @@ inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
             A(i, l) = Ail;
             g = gcd(Ail, g);
         }
-	std::cout << "g = " << g << std::endl;
+        std::cout << "g = " << g << std::endl;
         if (g > 1) {
             for (size_t l = 0; l < A.numCol(); ++l)
                 if (int64_t Ail = A(i, l))
@@ -502,19 +501,6 @@ MULTIVERSION static void zeroColumn(IntMatrix &A, size_t c, size_t r) {
     }
 }
 
-MULTIVERSION void simplifySystem(IntMatrix &A, IntMatrix &B) {
-    const auto [M, N] = A.size();
-    for (size_t r = 0, c = 0; c < N && r < M; ++c)
-        if (!pivotRows(A, B, c, M, r))
-            zeroColumn(A, B, c, r++);
-}
-// diagonalizes A(1:K,1:K)
-MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
-    const auto [M, N] = A.size();
-    for (size_t r = 0, c = 0; c < K && r < M; ++c)
-        if (!pivotRows(A, c, M, r))
-            zeroColumn(A, c, r++);
-}
 // assume last col
 // MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
 //     const auto [M, N] = A.size();
@@ -544,6 +530,19 @@ MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
 //         }
 //     }
 // }
+MULTIVERSION void solveSystem(IntMatrix &A, IntMatrix &B) {
+    const auto [M, N] = A.size();
+    for (size_t r = 0, c = 0; c < N && r < M; ++c)
+        if (!pivotRows(A, B, c, M, r))
+            zeroColumn(A, B, c, r++);
+}
+// diagonalizes A(1:K,1:K)
+MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
+    const auto [M, N] = A.size();
+    for (size_t r = 0, c = 0; c < K && r < M; ++c)
+        if (!pivotRows(A, c, M, r))
+            zeroColumn(A, c, r++);
+}
 
 // returns `true` if the solve failed, `false` otherwise
 // diagonals contain denominators.

@@ -252,7 +252,7 @@ struct Polyhedra {
                     eraseConstraint(Asrc, c);
             }
             if (E0.numRow() > 1)
-                NormalForm::simplifyEqualityConstraints(E0);
+                NormalForm::simplifySystem(E0);
             return false;
         }
         // eliminate variable `i` according to original order
@@ -297,7 +297,7 @@ struct Polyhedra {
             }
         }
         E1.resize(k, Re);
-        NormalForm::simplifyEqualityConstraints(E1);
+        NormalForm::simplifySystem(E1);
         return true;
     }
     // method for when we do not match `Ex=q` constraints with themselves
@@ -538,7 +538,7 @@ struct Polyhedra {
     bool pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp0,
                      IntMatrix &Etmp1, IntMatrix &Aold, IntMatrix &Eold) const {
         moveEqualities(Aold, Eold);
-        NormalForm::simplifyEqualityConstraints(Eold);
+        NormalForm::simplifySystem(Eold);
         // printConstraints(
         //     printConstraints(std::cout << "Constraints post-simplify:\n",
         //     Aold,
@@ -1039,7 +1039,7 @@ struct Polyhedra {
             removeVariableCore(lA, uA, lb, ub, A, b, i);
         }
         if (E.numRow() > 1)
-            NormalForm::simplifyEqualityConstraints(E);
+            NormalForm::simplifySystem(E);
         return pruneBounds(A, E);
     }
     bool removeVariable(IntMatrix &lA, IntMatrix &uA,
@@ -1052,7 +1052,7 @@ struct Polyhedra {
             removeVariableCore(lA, uA, lb, ub, A, b, i);
         }
         if (E.numRow() > 1) {
-            NormalForm::simplifyEqualityConstraints(E, q);
+            NormalForm::simplifySystem(E, q);
         }
         return pruneBounds(A, b, E, q);
     }
