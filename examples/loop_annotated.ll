@@ -30,11 +30,14 @@ L31:                                              ; preds = %L31.loopexit, %top
   ret i64 %value_phi9, !dbg !33
 
 idxend:                                           ; preds = %idxend, %L14.preheader
-  ; induction variable `i` is %value_phi3
+  ; induction variable is %value_phi3
   %value_phi3 = phi i64 [ %13, %idxend ], [ 1, %L14.preheader ] 
   %value_phi5 = phi i64 [ %12, %idxend ], [ 0, %L14.preheader ]
   %9 = add nsw i64 %value_phi3, -1, !dbg !28
+  ; array %8, at index %9
+  ; %value_phi3 <-- %9 <-- %10
   %10 = getelementptr inbounds i64, i64 addrspace(13)* %8, i64 %9, !dbg !28
+  ; load %10
   %11 = load i64, i64 addrspace(13)* %10, align 8, !dbg !28, !tbaa !34
   %12 = add i64 %11, %value_phi5, !dbg !31
   %.not = icmp eq i64 %value_phi3, %5, !dbg !37

@@ -160,8 +160,10 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // Then, we can use the basic blocks and DT for relevant CFG info.
 
     // Alex: for now, assuming
-    //  1. Exists one single loop
-    //  2. No nested loops
+    //  1. Exists one single loop,
+    //  2. No nested loops,
+    //  3. Simple control flow
+    //
 
     // A*x <= b
     // [ 1 ]  *  [i]  <=  [I]
@@ -203,7 +205,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
 
         auto obouter = LP->getBounds(*SE);
-        
+
         if (obouter.hasValue()) {
             auto b = obouter.getValue();
             llvm::outs() << "Outer loop bounds:\n" << 
@@ -220,10 +222,26 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         llvm::outs() << "Latch:\n" << *LP->getLoopLatch() << "\n";        
         llvm::outs() << "Exit:\n" << *LP->getExitBlock() << "\n";        
 
-        for (llvm::BasicBlock* block : LP->getBlocks()) {
-            
-        }
+        llvm::outs() << "BasicBlocks:" << "\n";
 
+        for (llvm::BasicBlock *block : LP->getBlocks()) {
+            llvm::outs() << "BasicBlock: " << "\n";
+            for (auto inst = block->begin(); inst != block->end(); inst ++) {
+                llvm::outs() << *inst << " : " << "\n";
+                llvm::outs() << "Op: " << inst->getOpcodeName() << 
+                    ", MayWriteToMemory: " << inst->mayWriteToMemory() << 
+                    ", MayReadFromMemory: " << inst->mayReadFromMemory() << 
+                    ", MayHaveSideEffects: " << inst->mayReadFromMemory() << "\n";
+                llvm::outs() << "Operands: ";
+                for (size_t i = 0; i != inst->getNumOperands(); i ++) {
+                    llvm::outs() << *inst->getOperand(i)->getType() << " / ";
+                }
+                llvm::outs() << "\n" << "//" << "\n";
+                
+            }
+        }
+        
+        
     }
 
     // llvm::SmallVector<

@@ -3,7 +3,7 @@ source_filename = "twoloops"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define i64 @julia_twoloops_51(i64 signext %0, {} addrspace(10)* nonnull align 16 dereferenceable(40) %1) local_unnamed_addr #0 !dbg !5 {
+define i64 @julia_twoloops_144(i64 signext %0, {} addrspace(10)* nonnull align 16 dereferenceable(40) %1) local_unnamed_addr #0 !dbg !5 {
 top:
   %2 = tail call {}*** @julia.get_pgcstack()
   %3 = bitcast {} addrspace(10)* %1 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)*, !dbg !7
@@ -46,8 +46,7 @@ L48:                                              ; preds = %L48.preheader, %idx
   %value_phi13.in = phi i64 [ %value_phi13, %idxend17 ], [ %7, %L48.preheader ]
   %value_phi15 = phi i64 [ %28, %idxend17 ], [ %value_phi9, %L48.preheader ]
   %value_phi13 = add nuw i64 %value_phi13.in, 1, !dbg !45
-  %exitcond.not = icmp eq i64 %value_phi13.in, %6, !dbg !43
-  br i1 %exitcond.not, label %oob16, label %idxend17, !dbg !43
+  br i1 false, label %oob16, label %idxend17, !dbg !43
 
 L65.loopexit:                                     ; preds = %idxend17
   %.lcssa = phi i64 [ %28, %idxend17 ], !dbg !46
@@ -90,7 +89,7 @@ idxend17:                                         ; preds = %L48
   br i1 %.not8, label %L65.loopexit, label %L48, !dbg !44
 }
 
-define nonnull {} addrspace(10)* @jfptr_twoloops_52({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
+define nonnull {} addrspace(10)* @jfptr_twoloops_145({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
 top:
   %3 = tail call {}*** @julia.get_pgcstack()
   %4 = bitcast {} addrspace(10)** %1 to i64 addrspace(10)**
@@ -99,7 +98,7 @@ top:
   %7 = load i64, i64 addrspace(11)* %6, align 8
   %8 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)** %1, i64 1
   %9 = load {} addrspace(10)*, {} addrspace(10)** %8, align 8, !nonnull !4, !dereferenceable !58, !align !59
-  %10 = tail call i64 @julia_twoloops_51(i64 signext %7, {} addrspace(10)* %9) #0
+  %10 = tail call i64 @julia_twoloops_144(i64 signext %7, {} addrspace(10)* %9) #0
   %11 = tail call nonnull {} addrspace(10)* @jl_box_int64(i64 signext %10)
   ret {} addrspace(10)* %11
 }
@@ -123,12 +122,12 @@ attributes #2 = { noreturn }
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
 !3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/examples/generator.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "twoloops", linkageName: "julia_twoloops_51", scope: null, file: !3, line: 27, type: !6, scopeLine: 27, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "twoloops", linkageName: "julia_twoloops_144", scope: null, file: !3, line: 33, type: !6, scopeLine: 33, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !DILocation(line: 215, scope: !8, inlinedAt: !10)
 !8 = distinct !DISubprogram(name: "length;", linkageName: "length", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !9 = !DIFile(filename: "array.jl", directory: ".")
-!10 = !DILocation(line: 29, scope: !5)
+!10 = !DILocation(line: 35, scope: !5)
 !11 = !{!12, !12, i64 0}
 !12 = !{!"jtbaa_arraylen", !13, i64 0}
 !13 = !{!"jtbaa_array", !14, i64 0}
@@ -148,24 +147,24 @@ attributes #2 = { noreturn }
 !27 = !DIFile(filename: "range.jl", directory: ".")
 !28 = !DILocation(line: 833, scope: !29, inlinedAt: !30)
 !29 = distinct !DISubprogram(name: "iterate;", linkageName: "iterate", scope: !27, file: !27, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
-!30 = !DILocation(line: 30, scope: !5)
+!30 = !DILocation(line: 36, scope: !5)
 !31 = !DILocation(line: 861, scope: !32, inlinedAt: !33)
 !32 = distinct !DISubprogram(name: "getindex;", linkageName: "getindex", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
-!33 = !DILocation(line: 31, scope: !5)
+!33 = !DILocation(line: 37, scope: !5)
 !34 = !DILocation(line: 87, scope: !35, inlinedAt: !33)
 !35 = distinct !DISubprogram(name: "+;", linkageName: "+", scope: !19, file: !19, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !36 = !DILocation(line: 83, scope: !21, inlinedAt: !37)
 !37 = !DILocation(line: 378, scope: !23, inlinedAt: !38)
 !38 = !DILocation(line: 609, scope: !26, inlinedAt: !39)
 !39 = !DILocation(line: 833, scope: !29, inlinedAt: !40)
-!40 = !DILocation(line: 33, scope: !5)
+!40 = !DILocation(line: 39, scope: !5)
 !41 = !{!42, !42, i64 0}
 !42 = !{!"jtbaa_arrayptr", !13, i64 0}
 !43 = !DILocation(line: 861, scope: !32, inlinedAt: !44)
-!44 = !DILocation(line: 34, scope: !5)
+!44 = !DILocation(line: 40, scope: !5)
 !45 = !DILocation(line: 0, scope: !5)
 !46 = !DILocation(line: 87, scope: !35, inlinedAt: !44)
-!47 = !DILocation(line: 36, scope: !5)
+!47 = !DILocation(line: 42, scope: !5)
 !48 = !{!49, !49, i64 0}
 !49 = !{!"jtbaa_arraybuf", !50, i64 0}
 !50 = !{!"jtbaa_data", !14, i64 0}
