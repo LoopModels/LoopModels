@@ -64,6 +64,8 @@ TEST(AffineTest0, BasicAssertions) {
     std::cout << "About to construct affine obj" << std::endl;
 
     AffineLoopNest affp(A, r, poset);
+    std::cout << "affp.remainingA.back() = \n"
+              << affp.remainingA.back() << std::endl;
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, false));
@@ -76,10 +78,10 @@ TEST(AffineTest0, BasicAssertions) {
         EXPECT_EQ(affp.lowerA[0].numRow(), 1);
         EXPECT_EQ(affp.lowerA[1].numRow(), 1);
         EXPECT_EQ(affp.lowerA[2].numRow(), 1);
-        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[0],0)));
-        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[1],0)));
-	//                              0  M  N  m  n   k
-        llvm::SmallVector<int64_t,6> a{-1, 0, 0, 0, 1, -1};
+        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[0], 0)));
+        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[1], 0)));
+        //                              0  M  N  m  n   k
+        llvm::SmallVector<int64_t, 6> a{-1, 0, 0, 0, 1, -1};
         EXPECT_TRUE(affp.lowerA[2].getRow(0) == a);
     }
     { // upper bound tests
@@ -87,14 +89,14 @@ TEST(AffineTest0, BasicAssertions) {
         EXPECT_EQ(affp.upperA[0].numRow(), 1);
         EXPECT_EQ(affp.upperA[1].numRow(), 1);
         EXPECT_EQ(affp.upperA[2].numRow(), 1);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a0{-1, 1, 0, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
         EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a1{-2, 0, 1, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a1{-2, 0, 1, 0, 0, 0};
         EXPECT_TRUE(affp.upperA[1].getRow(0) == a1);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a2{-1, 0, 1, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a2{-1, 0, 1, 0, 0, 0};
         EXPECT_TRUE(affp.upperA[2].getRow(0) == a2);
     }
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
@@ -110,8 +112,8 @@ TEST(AffineTest0, BasicAssertions) {
         EXPECT_EQ(affp.lowerA[1].numRow(), 1);
         EXPECT_EQ(affp.lowerA[2].numRow(), 1);
         EXPECT_TRUE(allZero(affp.lowerA[0].getRow(0)));
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a1{-1, 0, 0, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a1{-1, 0, 0, 0, 0, 0};
         EXPECT_TRUE(affp.lowerA[2].getRow(0) == a1);
         EXPECT_TRUE(allZero(affp.lowerA[1].getRow(0)));
     }
@@ -120,14 +122,14 @@ TEST(AffineTest0, BasicAssertions) {
         EXPECT_EQ(affp.upperA[0].numRow(), 1);
         EXPECT_EQ(affp.upperA[1].numRow(), 1);
         EXPECT_EQ(affp.upperA[2].numRow(), 1);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a0{-1, 1, 0, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
         EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a1{-1, 0, 1, 0, 0, 0};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a1{-1, 0, 1, 0, 0, 0};
         EXPECT_TRUE(affp.upperA[2].getRow(0) == a1);
-	//                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t,6> a2{-1, 0, 0, 0, 1,-1};
+        //                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t, 6> a2{-1, 0, 0, 0, 1, -1};
         EXPECT_TRUE(affp.upperA[1].getRow(0) == a2);
     }
 

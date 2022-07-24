@@ -142,7 +142,7 @@ template <typename T> struct BaseComparator {
         return static_cast<const T *>(this)->greaterEqual(x);
     }
     inline bool lessEqual(llvm::SmallVectorImpl<int64_t> &x) const {
-	return lessEqual(llvm::MutableArrayRef<int64_t>(x));
+        return lessEqual(llvm::MutableArrayRef<int64_t>(x));
     }
     inline bool lessEqual(llvm::MutableArrayRef<int64_t> x) const {
         for (auto &&a : x)
@@ -229,7 +229,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
                     addTerm(sc.monomials, t.exponent);
         return sc;
     }
-    size_t numConstantTerms() const { return monomials.size(); }
+    size_t getNumConstTerms() const { return 1 + monomials.size(); }
     MPoly getPoly(llvm::ArrayRef<int64_t> x) const {
         MPoly delta;
         assert(x.size());
@@ -268,7 +268,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
 
 template <typename T>
 concept Comparator = requires(T t, llvm::ArrayRef<int64_t> x, int64_t y) {
-    { t.numConstantTerms() } -> std::convertible_to<size_t>;
+    { t.getNumConstTerms() } -> std::convertible_to<size_t>;
     { t.greaterEqual(x) } -> std::convertible_to<bool>;
     { t.lessEqual(x) } -> std::convertible_to<bool>;
     { t.greater(x) } -> std::convertible_to<bool>;

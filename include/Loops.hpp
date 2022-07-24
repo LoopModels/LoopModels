@@ -27,27 +27,27 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
 
     int64_t currentToOriginalPerm(size_t i) const { return perm(i); }
 
-    static std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>>
-    toMatrixRepr(const IntMatrix &A, const PartiallyOrderedSet &poset) {
-	std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>> ret;
-        IntMatrix &B = ret.first;
-        llvm::SmallVector<Polynomial::Monomial> &monomials = ret.second;
-	
-	
-        return ret;
-    }
+    // static std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>>
+    // toMatrixRepr(const IntMatrix &A, const PartiallyOrderedSet &poset) {
+    //     std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>> ret;
+    //     IntMatrix &B = ret.first;
+    //     llvm::SmallVector<Polynomial::Monomial> &monomials = ret.second;
 
-    size_t getNumLoops() const { return getNumVar(); }
+    //     return ret;
+    // }
+
+    inline size_t getNumLoops() const { return getNumVar(); }
     AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
                    PartiallyOrderedSet posetin)
         : Polyhedra{.A = std::move(Ain),
                     .E = EmptyMatrix<int64_t>{},
                     .C = SymbolicComparator::construct(b, std::move(posetin))},
-          perm(A.numCol()), remainingA(A.numCol()), lowerA(A.numCol()),
-          upperA(A.numCol()) {
-        size_t numLoops = getNumLoops();
-        size_t i = numLoops;
+          perm(A.numCol() - C.getNumConstTerms()),
+          remainingA(A.numCol() - C.getNumConstTerms()),
+          lowerA(A.numCol() - C.getNumConstTerms()),
+          upperA(A.numCol() - C.getNumConstTerms()) {
         pruneBounds(A);
+        size_t i = getNumLoops();
         remainingA[i - 1] = A;
         do {
             calculateBounds(--i);
@@ -58,11 +58,12 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
                     SymbolicComparator>{.A = std::move(Ain),
                                         .E = EmptyMatrix<int64_t>{},
                                         .C = std::move(C)},
-          perm(A.numCol()), remainingA(A.numCol()), lowerA(A.numCol()),
-          upperA(A.numCol()) {
-        size_t numLoops = getNumLoops();
-        size_t i = numLoops;
+          perm(A.numCol() - C.getNumConstTerms()),
+          remainingA(A.numCol() - C.getNumConstTerms()),
+          lowerA(A.numCol() - C.getNumConstTerms()),
+          upperA(A.numCol() - C.getNumConstTerms()) {
         pruneBounds(A);
+        size_t i = getNumLoops();
         remainingA[i - 1] = A;
         do {
             calculateBounds(--i);
@@ -92,13 +93,12 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
     }
     // `_i` is w/ respect to current order, `i` for original order.
     void calculateBounds(const size_t _i) {
-        if (_i == 0) {
+        if (_i == 0)
             return calculateBounds0();
-        }
         const size_t i = perm(_i);
         // const size_t iNext = perm(_i - 1);
         remainingA[_i - 1] = remainingA[_i];
-        removeVariable(lowerA[i], upperA[i], remainingA[_i - 1], i);
+        removeVariable(remainingA[_i - 1], i);
     }
     // returns true if extending (extendLower ? lower : upper) bound of `_i`th
     // loop by `extend` doesn't result in the innermost loop experiencing any
@@ -113,17 +113,20 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
         }
         // eliminate variables 0..._j
         auto A = remainingA.back();
+        const size_t numConst = C.getNumConstTerms();
         IntMatrix lwrA;
         IntMatrix uprA;
         IntMatrix Atmp0, Atmp1, Etmp;
+        std::cout << "A = \n" << A << std::endl;
         for (size_t _k = 0; _k < _j; ++_k)
             if (_k != _i)
-                fourierMotzkin(A, perm(_k));
+                fourierMotzkin(A, perm(_k) + numConst);
+        std::cout << "A = \n" << A << std::endl;
         IntMatrix Anew;
         size_t i = perm(_i);
         llvm::SmallVector<int64_t> delta, idelta;
-        delta.resize_for_overwrite(C.numConstantTerms());
-        idelta.resize_for_overwrite(C.numConstantTerms());
+        delta.resize_for_overwrite(numConst);
+        idelta.resize_for_overwrite(numConst);
         do {
             // `A` and `b` contain representation independent of `0..._j`,
             // except for `_i`
@@ -132,7 +135,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
             for (size_t _k = _i + 1; _k < numLoops; ++_k)
                 if (_k != _j)
                     // eliminate
-                    fourierMotzkin(Anew, perm(_k));
+                    fourierMotzkin(Anew, perm(_k) + numConst);
             // now depends only on `j` and `i`
             // check if we have zero iterations on loop `j`
             // pruneBounds(Anew, bnew, j);
@@ -154,70 +157,65 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
                         delta[i] = Anew(l, i) * Aju - Anew(u, i) * Ajl;
                     // delta + c * i >= 0 -> iterates at least once
                     if (extendLower) {
-                        if (c > 0) {
-                            bool doesNotIterate = true;
-                            // we're adding to the lower bound
-                            for (size_t il = 0; il < numRows; ++il) {
-                                int64_t ail = Anew(il, i);
-                                if ((ail >= 0) || (Anew(il, j) != 0)) {
-                                    // (ail >= 0) means not a lower bound
-                                    // (Anew(il, j) != 0) means the lower bound
-                                    // is a function of `j` if we're adding
-                                    // beyond what `j` defines as the bound
-                                    // here, then `j` won't undergo extra
-                                    // iterations, due to being sandwiched
-                                    // between this bound, and whatever bound it
-                                    // was that defines the extrema we're adding
-                                    // to here.
-                                    continue;
-                                }
-                                // recall: ail < 0
-                                //
-                                // ail * i <= bnew[il]
-                                // i >= bnew[il] / ail
-                                //
-                                // ail * (i - e + e) <= bnew[il]
-                                // ail * (i - e) <= bnew[il] - ail*e
-                                // (i - e) >= (bnew[il] - ail*e) / ail
-                                ///
-                                // we want to check
-                                // delta + c * (i - e) >= 0
-                                // ail * (delta + c * (i - e)) <= 0
-                                // ail*delta + c*(ail * (i - e)) <= 0
-                                //
-                                // let c = c, for brevity
-                                //
-                                // c*ail*(i-e) <= c*(bnew[il] - ail*e)
-                                // we also wish to check
-                                // ail*delta + s*c*(ail*(i-e)) <= 0
-                                //
-                                // ail*delta + c*(ail*(i-e)) <=
-                                // ail*delta + c*(bnew[il] - ail*e)
-                                // thus, if
-                                // ail*delta + c*(bnew[il] - ail*e) <= 0
-                                // the loop iterates at least once
-                                // we'll check if it is known that this is
-                                // false, i.e. if
-                                //
-                                // ail*delta + c*(bnew[il] - ail*e) - 1 >= 0
-                                //
-                                // then the following must be
-                                // false:
-                                // ail*delta + c*(bnew[il] - ail*e) - 1 <= -1
-                                for (size_t i = 0; i < delta.size(); ++i)
-                                    idelta[i] =
-                                        (-ail) * delta[i] - Anew(il, i) * c;
-                                idelta[0] -= (c * ail - 1);
-                                if (C.greaterEqual(idelta))
-                                    return true;
-                                doesNotIterate = false;
-                            }
-                            if (doesNotIterate)
-                                return true;
-                        } else {
+                        if (c <= 0)
                             continue;
+                        bool doesNotIterate = true;
+                        // we're adding to the lower bound
+                        for (size_t il = 0; il < numRows; ++il) {
+                            int64_t ail = Anew(il, i);
+                            if ((ail >= 0) || (Anew(il, j) != 0))
+                                // (ail >= 0) means not a lower bound
+                                // (Anew(il, j) != 0) means the lower bound
+                                // is a function of `j` if we're adding
+                                // beyond what `j` defines as the bound
+                                // here, then `j` won't undergo extra
+                                // iterations, due to being sandwiched
+                                // between this bound, and whatever bound it
+                                // was that defines the extrema we're adding
+                                // to here.
+                                continue;
+                            // recall: ail < 0
+                            //
+                            // ail * i <= bnew[il]
+                            // i >= bnew[il] / ail
+                            //
+                            // ail * (i - e + e) <= bnew[il]
+                            // ail * (i - e) <= bnew[il] - ail*e
+                            // (i - e) >= (bnew[il] - ail*e) / ail
+                            ///
+                            // we want to check
+                            // delta + c * (i - e) >= 0
+                            // ail * (delta + c * (i - e)) <= 0
+                            // ail*delta + c*(ail * (i - e)) <= 0
+                            //
+                            // let c = c, for brevity
+                            //
+                            // c*ail*(i-e) <= c*(bnew[il] - ail*e)
+                            // we also wish to check
+                            // ail*delta + s*c*(ail*(i-e)) <= 0
+                            //
+                            // ail*delta + c*(ail*(i-e)) <=
+                            // ail*delta + c*(bnew[il] - ail*e)
+                            // thus, if
+                            // ail*delta + c*(bnew[il] - ail*e) <= 0
+                            // the loop iterates at least once
+                            // we'll check if it is known that this is
+                            // false, i.e. if
+                            //
+                            // ail*delta + c*(bnew[il] - ail*e) - 1 >= 0
+                            //
+                            // then the following must be
+                            // false:
+                            // ail*delta + c*(bnew[il] - ail*e) - 1 <= -1
+                            for (size_t i = 0; i < delta.size(); ++i)
+                                idelta[i] = (-ail) * delta[i] - Anew(il, i) * c;
+                            idelta[0] -= (c * ail - 1);
+                            if (C.greaterEqual(idelta))
+                                return true;
+                            doesNotIterate = false;
                         }
-
+                        if (doesNotIterate)
+                            return true;
                     } else {
                         if (c >= 0)
                             continue;
@@ -226,10 +224,9 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
                         // does `imax + e` iterate at least once?
                         for (size_t il = 0; il < numRows; ++il) {
                             int64_t ail = Anew(il, i);
-                            if ((ail <= 0) || (Anew(il, j) != 0)) {
+                            if ((ail <= 0) || (Anew(il, j) != 0))
                                 // not an upper bound
                                 continue;
-                            }
                             // ail > 0, c < 0
                             // ail * i <= ubi
                             // c*ail*i >= c*ubi

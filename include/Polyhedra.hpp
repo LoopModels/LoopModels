@@ -69,7 +69,7 @@ struct Polyhedra {
     // A(numIneq, numVar + 1)
     // 	};
 
-    size_t getNumVar() const { return A.numCol() - C.numConstantTerms(); }
+    size_t getNumVar() const { return A.numCol() - C.getNumConstTerms(); }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
     size_t getNumEqualityConstraints() const { return E.numRow(); }
 
@@ -77,36 +77,36 @@ struct Polyhedra {
         !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
     bool lessZero(const IntMatrix &A, const size_t r) const {
-        return C.less(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.less(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool lessEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.lessEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.lessEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool greaterZero(const IntMatrix &A, const size_t r) const {
-        return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greater(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.greaterEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greaterEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool lessZero(const size_t r) const {
-        return C.less(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.less(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool lessEqualZero(const size_t r) const {
-        return C.lessEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.lessEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool greaterZero(const size_t r) const {
-        return C.greater(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greater(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     bool greaterEqualZero(const size_t r) const {
-        return C.greaterEqual(view(A.getRow(r), 0, C.numConstantTerms()));
+        return C.greaterEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
     }
     llvm::ArrayRef<int64_t> getSymbol(PtrMatrix<const int64_t> A,
                                       size_t i) const {
-        return view(A.getRow(i), 0, C.numConstantTerms());
+        return view(A.getRow(i), 0, C.getNumConstTerms());
     }
     llvm::ArrayRef<int64_t> getNonSymbol(PtrMatrix<const int64_t> A,
                                          size_t i) const {
-        return view(A.getRow(i), C.numConstantTerms(), A.numCol());
+        return view(A.getRow(i), C.getNumConstTerms(), A.numCol());
     }
     bool equalNegative(const size_t i, const size_t j) const {
         return C.equalNegative(getSymbol(A, i), getSymbol(A, j));
@@ -368,7 +368,7 @@ struct Polyhedra {
                 bool sb = setBounds(A.getRow(c), lA.getRow(l), uA.getRow(u), i);
                 if (!sb) {
                     if (CheckEmpty &&
-                        C.less(view(A.getRow(c), 0, C.numConstantTerms())))
+                        C.less(view(A.getRow(c), 0, C.getNumConstTerms())))
                         return true;
                 }
                 if ((!sb) || (!uniqueConstraint(A, c)))
@@ -545,7 +545,7 @@ struct Polyhedra {
         const size_t numAuxVar = Etmp.numCol() - numCol;
         int64_t dependencyToEliminate = -1;
         llvm::SmallVector<int64_t> delta;
-        delta.resize_for_overwrite(C.numConstantTerms());
+        delta.resize_for_overwrite(C.getNumConstTerms());
         for (size_t i = 0; i < numAuxVar; ++i) {
             size_t c = boundDiffs[i];
             int64_t dte = -1;
@@ -597,7 +597,7 @@ struct Polyhedra {
         const size_t numAuxVar = Etmp.numCol() - numCol;
         int64_t dependencyToEliminate = -1;
         llvm::SmallVector<int64_t> delta;
-        delta.resize_for_overwrite(C.numConstantTerms());
+        delta.resize_for_overwrite(C.getNumConstTerms());
         for (size_t i = 0; i < numAuxVar; ++i) {
             int c = boundDiffs[i];
             int64_t dte = -1;
@@ -756,8 +756,8 @@ struct Polyhedra {
         printConstraints(
             printConstraints(std::cout << "Constraints, eliminating C=" << C
                                        << ":\n",
-                             Aold, C.numConstantTerms(), true),
-            Eold, C.numConstantTerms(), false)
+                             Aold, C.getNumConstTerms(), true),
+            Eold, C.getNumConstTerms(), false)
             << std::endl;
         const size_t numVar = getNumVar();
         // simple mapping of `k` to particular bounds
@@ -859,8 +859,8 @@ struct Polyhedra {
                 printConstraints(std::cout << "dependencyToEliminate = "
                                            << dependencyToEliminate
                                            << "; Temporary Constraints:\n",
-                                 Atmp0, C.numConstantTerms(), true, numAuxVar),
-                Etmp0, C.numConstantTerms(), false, numAuxVar)
+                                 Atmp0, C.getNumConstTerms(), true, numAuxVar),
+                Etmp0, C.getNumConstTerms(), false, numAuxVar)
                 << std::endl;
             // std::cout << "dependencyToEliminate = " << dependencyToEliminate
             // << std::endl;
@@ -931,25 +931,8 @@ struct Polyhedra {
     // A'x <= b
     // removes variable `i` from system
     void removeVariable(IntMatrix &A, const size_t i) {
-
-        IntMatrix lA;
-        IntMatrix uA;
-        removeVariable(lA, uA, A, i);
+	fourierMotzkin(A, i);
     }
-    void removeVariable(IntMatrix &lA, IntMatrix &uA, IntMatrix &A,
-                        const size_t i) {
-
-        IntMatrix Atmp0, Atmp1, E;
-        removeVariable(lA, uA, Atmp0, Atmp1, E, A, i);
-    }
-    void removeVariable(IntMatrix &lA, IntMatrix &uA, IntMatrix &Atmp0,
-                        IntMatrix &Atmp1, IntMatrix &E, IntMatrix &A,
-                        const size_t i) {
-        categorizeBounds(lA, uA, A, i);
-        deleteBounds(A, i);
-        appendBounds(lA, uA, Atmp0, Atmp1, E, A, i, Polynomial::Val<false>());
-    }
-
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
@@ -988,9 +971,9 @@ struct Polyhedra {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Polyhedra &p) {
-        auto &&os2 = printConstraints(os, p.A, p.C.numConstantTerms());
+        auto &&os2 = printConstraints(os, p.A, p.C.getNumConstTerms());
         if (hasEqualities)
-            return printConstraints(os2, p.E, p.C.numConstantTerms());
+            return printConstraints(os2, p.E, p.C.getNumConstTerms());
         return os2;
     }
     void dump() const { std::cout << *this; }

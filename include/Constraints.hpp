@@ -328,7 +328,7 @@ static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<const int64_t> A,
 static void fourierMotzkin(IntMatrix &A, size_t v) {
     const auto [numNeg, numPos] = countNonZeroSign(A, v);
     const size_t numRowsOld = A.numRow();
-    const size_t numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos;
+    const size_t numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
     // we need one extra, as on the last overwrite, we still need to
     // read from two constraints we're deleting; we can't write into
     // both of them. Thus, we use a little extra memory here,
