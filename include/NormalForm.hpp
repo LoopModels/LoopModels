@@ -501,6 +501,45 @@ MULTIVERSION static void zeroColumn(IntMatrix &A, size_t c, size_t r) {
     }
 }
 
+MULTIVERSION int pivotRows2(PtrMatrix<int64_t> A, size_t i, size_t M,
+                            size_t piv) {
+    size_t j = piv;
+    while (A(piv, i) == 0)
+        if (++piv == M)
+            return -1;
+    if (j != piv)
+        swapRows(A, j, piv);
+    return piv;
+}
+MULTIVERSION void bareiss(IntMatrix &A, llvm::SmallVectorImpl<size_t> &pivots) {
+    const auto [M, N] = A.size();
+    int64_t prev = 1;
+    for (size_t r = 0, c = 0; c < N && r < M; ++c) {
+        auto piv = pivotRows2(A, c, M, r);
+        if (piv >= 0) {
+            pivots.push_back(piv);
+            for (size_t k = r + 1; k < M; ++k) {
+                for (size_t j = c + 1; j < N; ++j) {
+                    auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
+                    auto Akj = Akj_u / prev;
+                    auto rr = Akj_u % prev;
+                    assert(rr == 0);
+                    A(k, j) = Akj;
+                }
+                A(k, r) = 0;
+            }
+            prev = A(r, c);
+            ++r;
+        }
+    }
+}
+
+MULTIVERSION auto bareiss(IntMatrix &A) {
+    llvm::SmallVector<size_t, 16> pivots;
+    bareiss(A, pivots);
+    return pivots;
+}
+
 // assume last col
 // MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
 //     const auto [M, N] = A.size();

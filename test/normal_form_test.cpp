@@ -2,6 +2,7 @@
 #include "../include/Math.hpp"
 #include "../include/NormalForm.hpp"
 #include "MatrixStringParse.hpp"
+#include "llvm/ADT/SmallVector.h"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -327,10 +328,28 @@ TEST(SimplifySystemTests, BasicAssertions) {
     IntMatrix sA = stringToIntMatrix("[-3975 0 0 0 -11370; 0 -1325 0 0 -1305; "
                                      "0 0 -265 0 -347; 0 0 0 -265 1124]");
     IntMatrix trueB = stringToIntMatrix(
-            "[-154140 -128775 -205035 317580 83820 299760; -4910 -21400 -60890 "
-            "44820 14480 43390; -1334 -6865 -7666 8098 -538 9191; 6548 9165 "
-            "24307 -26176 -4014 -23332]");
+        "[-154140 -128775 -205035 317580 83820 299760; -4910 -21400 -60890 "
+        "44820 14480 43390; -1334 -6865 -7666 8098 -538 9191; 6548 9165 "
+        "24307 -26176 -4014 -23332]");
 
     EXPECT_EQ(sA, A);
     EXPECT_EQ(trueB, B);
+}
+
+TEST(BareissTests, BasicAssertions) {
+    IntMatrix A = stringToIntMatrix(
+        "[-4 3 -2 2 -5; -5 1 -1 2 -5; -1 0 5 -3 2; -4 5 -4 -2 -4]");
+    NormalForm::bareiss(A);
+    IntMatrix B = stringToIntMatrix(
+        "[-4 3 -2 2 -5; 0 11 -6 2 -5; 0 0 56 -37 32; 0 0 0 -278 136]");
+    EXPECT_EQ(A, B);
+
+    IntMatrix C = stringToIntMatrix("[-2 -2 -1 -2 -1; 1 1 2 2 -2; -2 2 2 -1 "
+                                    "-1; 0 0 -2 1 -1; -1 -2 2 1 -1]");
+    IntMatrix D = stringToIntMatrix("[-2 -2 -1 -2 -1; 0 -8 -6 -2 0; 0 0 -12 -8 "
+                                    "20; 0 0 0 -28 52; 0 0 0 0 -142]");
+    auto pivots = NormalForm::bareiss(C);
+    EXPECT_EQ(C, D);
+    auto truePivots = llvm::SmallVector<size_t, 16>{0, 2, 2, 3, 4};
+    EXPECT_EQ(pivots, truePivots);
 }
