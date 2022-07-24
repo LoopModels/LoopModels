@@ -455,6 +455,10 @@ template <typename T, typename A> struct BaseMatrix {
         constexpr size_t N = getConstCol();
         if constexpr (N) {
             return PtrVector<T, N>(data() + i * N);
+        } else if constexpr (std::is_const_v<T>) {
+            const size_t _N = numCol();
+            return llvm::ArrayRef<std::remove_const_t<T>>(
+                data() + i * rowStride(), _N);
         } else {
             const size_t _N = numCol();
             return llvm::MutableArrayRef<T>(data() + i * rowStride(), _N);

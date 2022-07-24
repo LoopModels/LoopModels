@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./POSet.hpp"
+#include "Math.hpp"
 #include "Symbolics.hpp"
 #include <cassert>
 #include <cstdint>
@@ -140,6 +141,9 @@ template <typename T> struct BaseComparator {
     inline bool greaterEqual(llvm::ArrayRef<int64_t> x) const {
         return static_cast<const T *>(this)->greaterEqual(x);
     }
+    inline bool lessEqual(llvm::SmallVectorImpl<int64_t> &x) const {
+	return lessEqual(llvm::MutableArrayRef<int64_t>(x));
+    }
     inline bool lessEqual(llvm::MutableArrayRef<int64_t> x) const {
         for (auto &&a : x)
             a *= -1;
@@ -167,12 +171,12 @@ template <typename T> struct BaseComparator {
         return ret;
     }
     inline bool lessEqual(llvm::ArrayRef<int64_t> x) const {
-        llvm::SmallVector y{x.begin(), x.end()};
-        return lessEqual(y);
+        llvm::SmallVector<int64_t, 16> y{x.begin(), x.end()};
+        return lessEqual(llvm::MutableArrayRef<int64_t>(y));
     }
     inline bool less(llvm::ArrayRef<int64_t> x) const {
-        llvm::SmallVector y{x.begin(), x.end()};
-        return less(y);
+        llvm::SmallVector<int64_t, 16> y{x.begin(), x.end()};
+        return less(llvm::MutableArrayRef<int64_t>(y));
     }
     inline bool greater(llvm::MutableArrayRef<int64_t> x) const {
         int64_t x0 = x[0]--;
@@ -187,7 +191,8 @@ template <typename T> struct BaseComparator {
     }
     inline bool equal(llvm::ArrayRef<int64_t> x) const {
         // check cheap trivial first
-        return static_cast<const T *>(this)->greaterEqual(x) && lessEqual(x);
+        return allZero(x) ||
+               (static_cast<const T *>(this)->greaterEqual(x) && lessEqual(x));
     }
     inline bool equalNegative(llvm::ArrayRef<int64_t> x,
                               llvm::ArrayRef<int64_t> y) const {
@@ -225,6 +230,17 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
         return sc;
     }
     size_t numConstantTerms() const { return monomials.size(); }
+    MPoly getPoly(llvm::ArrayRef<int64_t> x) const {
+        MPoly delta;
+        assert(x.size());
+        assert(x.size() == 1 + monomials.size());
+        for (size_t i = 0; i < monomials.size(); ++i)
+            if (int64_t d = x[i + 1])
+                delta.terms.emplace_back(d, monomials[i]);
+        if (int64_t d = x[0])
+            delta.terms.emplace_back(d);
+        return delta;
+    }
     bool greaterEqual(llvm::ArrayRef<int64_t> x,
                       llvm::ArrayRef<int64_t> y) const {
         MPoly delta;
@@ -239,15 +255,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
         return POSet.knownGreaterEqualZero(delta);
     }
     bool greaterEqual(llvm::ArrayRef<int64_t> x) const {
-        MPoly delta;
-        assert(x.size());
-        assert(x.size() == 1 + monomials.size());
-        for (size_t i = 0; i < monomials.size(); ++i)
-            if (int64_t d = x[i + 1])
-                delta.terms.emplace_back(d, monomials[i]);
-        if (int64_t d = x[0])
-            delta.terms.emplace_back(d);
-        return POSet.knownGreaterEqualZero(delta);
+        return POSet.knownGreaterEqualZero(getPoly(x));
     }
     std::ostream &printSymbol(std::ostream &os, llvm::ArrayRef<int64_t> x,
                               int64_t mul = 1) const {

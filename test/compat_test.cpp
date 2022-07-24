@@ -72,26 +72,30 @@ TEST(AffineTest0, BasicAssertions) {
     std::cout << affp << std::endl;
     std::cout << "About to run first set of bounds tests" << std::endl;
     { // lower bound tests
-        EXPECT_EQ(affp.lowerb.size(), 3);
-        EXPECT_EQ(affp.lowerb[0].size(), 1);
-        EXPECT_EQ(affp.lowerb[1].size(), 1);
-        EXPECT_EQ(affp.lowerb[2].size(), 1);
-        EXPECT_TRUE(affp.lowerb[0][0] == 0);
-        EXPECT_TRUE(affp.lowerb[1][0] == 0);
-        llvm::SmallVector<int64_t, 4> a{0, 1, -1};
-        MPoly b;
-        b -= 1;
+        EXPECT_EQ(affp.lowerA.size(), 3);
+        EXPECT_EQ(affp.lowerA[0].numRow(), 1);
+        EXPECT_EQ(affp.lowerA[1].numRow(), 1);
+        EXPECT_EQ(affp.lowerA[2].numRow(), 1);
+        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[0],0)));
+        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[1],0)));
+	//                              0  M  N  m  n   k
+        llvm::SmallVector<int64_t,6> a{-1, 0, 0, 0, 1, -1};
         EXPECT_TRUE(affp.lowerA[2].getRow(0) == a);
-        EXPECT_TRUE(affp.lowerb[2][0] == b);
     }
     { // upper bound tests
-        EXPECT_EQ(affp.upperb.size(), 3);
-        EXPECT_EQ(affp.upperb[0].size(), 1);
-        EXPECT_EQ(affp.upperb[1].size(), 1);
-        EXPECT_EQ(affp.upperb[2].size(), 1);
-        EXPECT_TRUE(affp.upperb[0][0] == M - 1);
-        EXPECT_TRUE(affp.upperb[1][0] == N - 2);
-        EXPECT_TRUE(affp.upperb[2][0] == N - 1);
+        EXPECT_EQ(affp.upperA.size(), 3);
+        EXPECT_EQ(affp.upperA[0].numRow(), 1);
+        EXPECT_EQ(affp.upperA[1].numRow(), 1);
+        EXPECT_EQ(affp.upperA[2].numRow(), 1);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a0{-1, 1, 0, 0, 0, 0};
+        EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a1{-2, 0, 1, 0, 0, 0};
+        EXPECT_TRUE(affp.upperA[1].getRow(0) == a1);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a2{-1, 0, 1, 0, 0, 0};
+        EXPECT_TRUE(affp.upperA[2].getRow(0) == a2);
     }
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
     affp.swap(1, 2);
@@ -101,27 +105,30 @@ TEST(AffineTest0, BasicAssertions) {
     // std::cout << "First lc: \n";
     // affp.lc[0][0].dump();
     { // lower bound tests
-        EXPECT_EQ(affp.lowerb.size(), 3);
-        EXPECT_EQ(affp.lowerb[0].size(), 1);
-        EXPECT_EQ(affp.lowerb[1].size(), 1);
-        EXPECT_EQ(affp.lowerb[2].size(), 1);
-        EXPECT_TRUE(affp.lowerb[0][0] == 0);
-        EXPECT_TRUE(affp.lowerb[2][0] == -1); // -j <= -1
-        EXPECT_TRUE(affp.lowerb[1][0] == 0);
+        EXPECT_EQ(affp.lowerA.size(), 3);
+        EXPECT_EQ(affp.lowerA[0].numRow(), 1);
+        EXPECT_EQ(affp.lowerA[1].numRow(), 1);
+        EXPECT_EQ(affp.lowerA[2].numRow(), 1);
+        EXPECT_TRUE(allZero(affp.lowerA[0].getRow(0)));
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a1{-1, 0, 0, 0, 0, 0};
+        EXPECT_TRUE(affp.lowerA[2].getRow(0) == a1);
+        EXPECT_TRUE(allZero(affp.lowerA[1].getRow(0)));
     }
     { // upper bound tests
-        EXPECT_EQ(affp.upperb.size(), 3);
-        EXPECT_EQ(affp.upperb[0].size(), 1);
-        EXPECT_EQ(affp.upperb[1].size(), 1);
-        EXPECT_EQ(affp.upperb[2].size(), 1);
-        EXPECT_TRUE(affp.upperb[0][0] == M - 1);
-        EXPECT_TRUE(affp.upperb[2][0] == N - 1);
-        // EXPECT_TRUE(affp.uc[2][0] == N - 1);
-        llvm::SmallVector<int64_t, 4> a{0, 1, -1};
-        MPoly b;
-        b -= 1;
-        EXPECT_TRUE(affp.upperA[1].getRow(0) == a);
-        EXPECT_TRUE(affp.upperb[1][0] == b);
+        EXPECT_EQ(affp.upperA.size(), 3);
+        EXPECT_EQ(affp.upperA[0].numRow(), 1);
+        EXPECT_EQ(affp.upperA[1].numRow(), 1);
+        EXPECT_EQ(affp.upperA[2].numRow(), 1);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a0{-1, 1, 0, 0, 0, 0};
+        EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a1{-1, 0, 1, 0, 0, 0};
+        EXPECT_TRUE(affp.upperA[2].getRow(0) == a1);
+	//                               0  M  N  m  n  k
+        llvm::SmallVector<int64_t,6> a2{-1, 0, 0, 0, 1,-1};
+        EXPECT_TRUE(affp.upperA[1].getRow(0) == a2);
     }
 
     /*

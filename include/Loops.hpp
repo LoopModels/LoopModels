@@ -266,7 +266,8 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
         return false;
     }
 
-    void printBound(std::ostream &os, const IntMatrix &A, size_t i,
+    // void printBound(std::ostream &os, const IntMatrix &A, size_t i,
+    void printBound(std::ostream &os, PtrMatrix<const int64_t> A, size_t i,
                     int64_t sign) const {
 
         size_t numVar = A.numCol();
