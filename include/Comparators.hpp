@@ -38,6 +38,9 @@ struct EmptyComparator {
                                         llvm::ArrayRef<int64_t>) {
         return true;
     }
+    static constexpr bool lessEqual(llvm::ArrayRef<int64_t>, int64_t x) {
+        return 0 <= x;
+    }
 };
 
 // for non-symbolic constraints
@@ -77,6 +80,9 @@ struct LiteralComparator {
         // this version should return correct results for
         // `std::numeric_limits<int64_t>::min()`
         return (x[0] + y[0]) == 0;
+    }
+    static inline bool lessEqual(llvm::ArrayRef<int64_t> y, int64_t x) {
+        return y[0] <= x;
     }
 };
 // BaseComparator defines all other comparator methods as a function of
@@ -141,6 +147,13 @@ template <typename T> struct BaseComparator {
             a *= -1;
         return ret;
     }
+    inline bool lessEqual(llvm::MutableArrayRef<int64_t> x, int64_t y) const {
+	int64_t x0 = x[0];
+	x[0] = x0 - y;
+	bool ret = lessEqual(x);
+	x[0] = x0;
+	return ret;
+    }
     inline bool less(llvm::MutableArrayRef<int64_t> x) const {
         int64_t x0 = x[0];
         x[0] = -x0 - 1;
@@ -153,12 +166,12 @@ template <typename T> struct BaseComparator {
         return ret;
     }
     inline bool lessEqual(llvm::ArrayRef<int64_t> x) const {
-	llvm::SmallVector y{x.begin(), x.end()};
-	return lessEqual(y);
+        llvm::SmallVector y{x.begin(), x.end()};
+        return lessEqual(y);
     }
     inline bool less(llvm::ArrayRef<int64_t> x) const {
-	llvm::SmallVector y{x.begin(), x.end()};
-	return less(y);
+        llvm::SmallVector y{x.begin(), x.end()};
+        return less(y);
     }
     inline bool greater(llvm::MutableArrayRef<int64_t> x) const {
         int64_t x0 = x[0]--;
