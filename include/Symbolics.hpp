@@ -291,7 +291,7 @@ struct Monomial {
     inline auto rend() { return prodIDs.rend(); }
     inline auto rbegin() const { return prodIDs.rbegin(); }
     inline auto rend() const { return prodIDs.rend(); }
-
+    static constexpr bool addCoef(const Monomial&) { return false; }
     void addTerm(VarID v) {
         for (auto it = begin(); it != end(); ++it) {
             if (v <= *it) {

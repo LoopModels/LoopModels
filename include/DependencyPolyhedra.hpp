@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./AbstractEqualityPolyhedra.hpp"
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
@@ -28,7 +27,7 @@
 // 1 <= j_1 <= i_1
 // i_0 == i_1
 // j_0 == i_1
-struct DependencePolyhedra : SymbolicEqPolyhedra {
+struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
     size_t numDep0Var;
     llvm::SmallVector<int64_t, 2> nullStep;
     inline size_t getTimeDim() const { return nullStep.size(); }
@@ -36,7 +35,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     inline size_t getDim1() const {
         return getNumVar() - numDep0Var - nullStep.size();
     }
-    inline size_t getNumEqualityConstraints() const { return q.size(); }
+    inline size_t getNumEqualityConstraints() const { return E.numRow(); }
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {

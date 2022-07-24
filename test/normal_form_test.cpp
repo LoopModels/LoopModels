@@ -334,7 +334,13 @@ TEST(SimplifySystemTests, BasicAssertions) {
 
     EXPECT_EQ(sA, A);
     EXPECT_EQ(trueB, B);
+
+    IntMatrix C = stringToIntMatrix("[1 1 0; 0 1 1; 1 2 1]");
+    IntMatrix D = stringToIntMatrix("[1 0 0; 0 1 0; 0 0 1]");
+    NormalForm::simplifySystem(C, D);
+    std::cout<< "Simplify C =\n" << C << std::endl;
 }
+
 
 TEST(BareissTests, BasicAssertions) {
     IntMatrix A = stringToIntMatrix(
@@ -353,3 +359,4 @@ TEST(BareissTests, BasicAssertions) {
     auto truePivots = llvm::SmallVector<size_t, 16>{0, 2, 2, 3, 4};
     EXPECT_EQ(pivots, truePivots);
 }
+

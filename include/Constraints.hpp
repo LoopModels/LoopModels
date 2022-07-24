@@ -4,6 +4,7 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Symbolics.hpp"
+#include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
 
@@ -12,17 +13,15 @@
 // in which case, we have to remove `currentToOriginalPerm`,
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
-template <typename T>
 static std::ostream &
 printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
-                 llvm::ArrayRef<T> b, bool inequality = true,
+                 size_t numSyms, bool inequality = true,
                  size_t numAuxVar = 0) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
-    assert(b.size() == numConstraints);
     for (size_t c = 0; c < numConstraints; ++c) {
         bool hasPrinted = false;
-        for (size_t v = 0; v < numVar; ++v) {
+        for (size_t v = numSyms; v < numVar; ++v) {
             if (int64_t Acv = A(c, v)) {
                 if (hasPrinted) {
                     if (Acv > 0) {
@@ -52,16 +51,19 @@ printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
         } else {
             os << " == ";
         }
-        os << b[c] << std::endl;
+        os << A(c,0);
+	for (size_t v = 1; v < numSyms; ++v)
+	    os << " + " << A(c,v) << "*" << monomialTermStr(v-1, 1);
+	os << std::endl;
     }
     return os;
 }
 template <typename T>
 static std::ostream &
 printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
-                 const llvm::SmallVectorImpl<T> &b, bool inequality = true,
+                 size_t numSyms, bool inequality = true,
                  size_t numAuxVar = 0) {
-    return printConstraints(os, A, llvm::ArrayRef<T>(b), inequality, numAuxVar);
+    return printConstraints(os, A, numSyms, inequality, numAuxVar);
 }
 
 // does not preserve the order of columns, instead it swaps the `i`th column
@@ -253,7 +255,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
                 // `A` contains inequalities; flipping signs is illegal
                 int64_t Ag = (s * Aij) / g;
                 int64_t Eg = (s * Eis) / g;
-                for (size_t v = 0; v < numVar; ++v) 
+                for (size_t v = 0; v < numVar; ++v)
                     A(j, v) = Eg * A(j, v) - Ag * Es[v];
                 // TODO: check if should drop
             }
@@ -265,7 +267,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
                 int64_t g = gcd(Eij, Eis);
                 int64_t Ag = Eij / g;
                 int64_t Eg = Eis / g;
-                for (size_t v = 0; v < numVar; ++v) 
+                for (size_t v = 0; v < numVar; ++v)
                     E(j, v) = Eg * E(j, v) - Ag * Es[v];
             }
         }
@@ -277,7 +279,7 @@ MULTIVERSION static bool substituteEquality(IntMatrix &A, IntMatrix &E,
 
     size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
     if (rowMinNonZero == E.numRow())
-	return true;
+        return true;
     eraseConstraint(E, rowMinNonZero);
     return false;
 }
@@ -308,6 +310,67 @@ void slackEqualityConstraints(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
             C(s + numSlack, i + numSlack) = B(s, i);
     }
 }
+// counts how many negative and positive elements there are in row `i`.
+// A row corresponds to a particular variable in `A'x <= b`.
+static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<const int64_t> A,
+                                                  size_t i) {
+    size_t numNeg = 0;
+    size_t numPos = 0;
+    size_t numRow = A.numRow();
+    for (size_t j = 0; j < numRow; ++j) {
+        int64_t Aij = A(j, i);
+        numNeg += (Aij < 0);
+        numPos += (Aij > 0);
+    }
+    return std::make_pair(numNeg, numPos);
+}
+
+static void fourierMotzkin(IntMatrix &A, size_t v) {
+    const auto [numNeg, numPos] = countNonZeroSign(A, v);
+    const size_t numRowsOld = A.numRow();
+    const size_t numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos;
+    // we need one extra, as on the last overwrite, we still need to
+    // read from two constraints we're deleting; we can't write into
+    // both of them. Thus, we use a little extra memory here,
+    // and then truncate.
+    A.resizeRows(numRowsNew + 1);
+    // plan is to replace
+    for (size_t i = 0, numRows = numRowsOld, posCount = numPos; i < numRowsOld;
+         ++i) {
+        int64_t Aiv = A(i, v);
+        if (Aiv <= 0)
+            continue;
+        --posCount;
+        for (size_t negCount = numNeg, j = 0; negCount; ++j) {
+            int64_t Ajv = A(j, v);
+            if (Ajv >= 0)
+                continue;
+            // for the last `negCount`, we overwrite `A(i, k)`
+            // last posCount does not get overwritten
+            --negCount;
+            size_t c = posCount ? (negCount ? i : numRows++) : j;
+            int64_t g = gcd(Aiv, Ajv);
+            int64_t Ai = Aiv / g, Aj = Ajv / g;
+            for (size_t k = 0; k < A.numCol(); ++k)
+                A(c, k) = Ai * A(j, k) - Aj * A(i, k);
+        }
+        if (posCount == 0) // last posCount not overwritten, so we erase
+            eraseConstraint(A, i);
+    }
+    // assert(numRows == (numRowsNew+1));
+}
+// static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t){
+//     return true;
+// }
+static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
+    fourierMotzkin(A, v);
+}
+static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
+    if (substituteEquality(A, E, v))
+	fourierMotzkin(A, v);
+}
+
+
 /*
 IntMatrix slackEqualityConstraints(PtrMatrix<const int64_t> A,
                                    PtrMatrix<const int64_t> E) {
@@ -441,12 +504,6 @@ void removeExtraVariables(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     // pruneBounds(A, b, E, q);
 }
 
-template <typename T>
-static void dropEmptyConstraints(IntMatrix &A, llvm::SmallVectorImpl<T> &b) {
-    for (size_t c = b.size(); c != 0;)
-        if (allZero(A.getRow(--c)))
-            eraseConstraint(A, b, c);
-}
 static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<int64_t> &b) {
     for (size_t c = b.size(); c != 0;) {
         int64_t bc = b[--c];
@@ -509,3 +566,8 @@ static void divByGCDDropZeros(IntMatrix &A, llvm::SmallVectorImpl<MPoly> &b) {
     }
 }
 */
+static void dropEmptyConstraints(IntMatrix &A) {
+    for (size_t c = A.numRow(); c != 0;)
+        if (allZero(A.getRow(--c)))
+            eraseConstraint(A, c);
+}

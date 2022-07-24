@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
+#include <ostream>
 
 // For `== 0` constraints
 struct EmptyComparator {
@@ -148,11 +149,11 @@ template <typename T> struct BaseComparator {
         return ret;
     }
     inline bool lessEqual(llvm::MutableArrayRef<int64_t> x, int64_t y) const {
-	int64_t x0 = x[0];
-	x[0] = x0 - y;
-	bool ret = lessEqual(x);
-	x[0] = x0;
-	return ret;
+        int64_t x0 = x[0];
+        x[0] = x0 - y;
+        bool ret = lessEqual(x);
+        x[0] = x0;
+        return ret;
     }
     inline bool less(llvm::MutableArrayRef<int64_t> x) const {
         int64_t x0 = x[0];
@@ -207,6 +208,22 @@ template <typename T> struct BaseComparator {
 struct SymbolicComparator : BaseComparator<SymbolicComparator> {
     PartiallyOrderedSet POSet;
     llvm::SmallVector<Polynomial::Monomial> monomials;
+    static SymbolicComparator construct(PartiallyOrderedSet poset) {
+        SymbolicComparator sc{.POSet = std::move(poset),
+                              .monomials =
+                                  llvm::SmallVector<Polynomial::Monomial>{}};
+
+        return sc;
+    }
+    static SymbolicComparator construct(llvm::ArrayRef<MPoly> x,
+                                        PartiallyOrderedSet poset) {
+        SymbolicComparator sc{SymbolicComparator::construct(poset)};
+        for (auto &p : x)
+            for (auto &t : p)
+                if (t.exponent.degree())
+                    addTerm(sc.monomials, t.exponent);
+        return sc;
+    }
     size_t numConstantTerms() const { return monomials.size(); }
     bool greaterEqual(llvm::ArrayRef<int64_t> x,
                       llvm::ArrayRef<int64_t> y) const {
@@ -232,13 +249,18 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
             delta.terms.emplace_back(d);
         return POSet.knownGreaterEqualZero(delta);
     }
+    std::ostream &printSymbol(std::ostream &os, llvm::ArrayRef<int64_t> x,
+                              int64_t mul = 1) const {
+        os << mul * x[0];
+        for (size_t i = 1; i < x.size(); ++i)
+            os << "+" << Polynomial::Term{x[i] * mul, monomials[i - 1]};
+        return os;
+    }
 };
 
 template <typename T>
-concept Comparator = requires(T t) {
+concept Comparator = requires(T t, llvm::ArrayRef<int64_t> x, int64_t y) {
     { t.numConstantTerms() } -> std::convertible_to<size_t>;
-}
-&&requires(T t, llvm::ArrayRef<int64_t> x) {
     { t.greaterEqual(x) } -> std::convertible_to<bool>;
     { t.lessEqual(x) } -> std::convertible_to<bool>;
     { t.greater(x) } -> std::convertible_to<bool>;
@@ -250,4 +272,5 @@ concept Comparator = requires(T t) {
     { t.less(x, x) } -> std::convertible_to<bool>;
     { t.equal(x, x) } -> std::convertible_to<bool>;
     { t.equalNegative(x, x) } -> std::convertible_to<bool>;
+    { t.lessEqual(x, y) } -> std::convertible_to<bool>;
 };
