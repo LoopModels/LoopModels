@@ -4,3 +4,4 @@ release_build*/
 *~
 .cache
 benchmark/mybenchmark
+custom-llvm.ini
