@@ -35,6 +35,20 @@
 
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
+
+
+    llvm::outs() << F.getName() << '\n';                                      
+    
+    
+
+    // LI = &FAM.getResult<llvm::LoopAnalysis>(F);
+    // SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+
+    // for (llvm::Loop *LP : LI) {
+    //     auto *inductOuter = LP->getInductionVariable(SE);
+    //     const llvm::SCEV *backEdgeTaken = nullptr;
+    // }
+    
     llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
     std::cout << "Assumptions:" << std::endl;
     for (auto &a : AC.assumptions()) {
@@ -114,8 +128,6 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0) << std::endl;
     std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1) << std::endl;
 
-    LI = &FAM.getResult<llvm::LoopAnalysis>(F);
-    SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
     // DL = &F.getParent()->getDataLayout();
 
     // llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
@@ -146,6 +158,73 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // You can make more decisions here when it comes time to start considering fusion.
     // Just store the original Loop* within the tree.
     // Then, we can use the basic blocks and DT for relevant CFG info.
+
+    // Alex: for now, assuming
+    //  1. Exists one single loop
+    //  2. No nested loops
+
+    // A*x <= b
+    // [ 1 ]  *  [i]  <=  [I]
+    // [ -1]              [1]
+    //
+    // <=> (i <= I) & (-i <= 0)
+    IntMatrix Aloop(2, 1);
+    llvm::SmallVector<MPoly, 2> bloop;
+
+    // PartiallyOrderedSet poset;
+    // auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
+
+    LI = &FAM.getResult<llvm::LoopAnalysis>(F);
+    SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+    
+    for (llvm::Loop *LP : *LI) {
+        llvm::outs() << "--------------------" << '\n';
+        llvm::outs() << "Loop ID: " << LP->getLoopID() << '\n';
+
+        llvm::outs() << "Loop depth: " << LP->getLoopDepth() << "\n";
+
+        auto *inductOuter = LP->getInductionVariable(*SE);
+        llvm::outs() << "Outer induction var:\n\t"; 
+        llvm::outs() << *inductOuter << '\n';
+
+        const llvm::SCEV *backEdgeTaken = nullptr;
+        backEdgeTaken = SE->getBackedgeTakenCount(LP);
+        if (backEdgeTaken) {
+            llvm::outs()
+                << "Back edge taken count: " << *backEdgeTaken
+                << "\n\ttrip count: "
+                << *(SE->getAddExpr(
+                        backEdgeTaken,
+                        SE->getOne(backEdgeTaken->getType())
+                    ))
+                << "\n";
+        } else {
+            llvm::outs() << "Couldn not find backedge taken. D:\n";
+        }
+
+        auto obouter = LP->getBounds(*SE);
+        if (obouter.hasValue()) {
+            auto b = obouter.getValue();
+            llvm::outs() << "Outer loop bounds:\n" << 
+                        "\tInitialIVValue: " << obouter->getInitialIVValue() << "\n" <<
+                        "\tStepValue: " << *obouter->getStepValue() << "\n" <<
+                        "\tFinalIVValue: \n\t" << obouter->getFinalIVValue() << "\n" <<
+                        "\tDirection: " << (static_cast<int>(obouter->getDirection()) == 0 ? "Increasing" : "Decreasing??") << "\n";
+
+        } else {
+            llvm::outs() << "Could not find outer loop bounds. =(" << "\n";
+        }
+
+        llvm::outs() << "Preheader:\n" << *LP->getLoopPreheader() << "\n";
+        llvm::outs() << "Latch:\n" << *LP->getLoopLatch() << "\n";        
+        llvm::outs() << "Exit:\n" << *LP->getExitBlock() << "\n";        
+
+        for (llvm::BasicBlock* block : LP->getBlocks()) {
+            
+        }
+
+    }
+
     // llvm::SmallVector<
     //     std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
     //     outerLoops;

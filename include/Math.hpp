@@ -1370,9 +1370,9 @@ template <typename T> struct SparseMatrix {
         SparseMatrix<T> *A;
         size_t i, j;
         operator T() const { return A->get(i, j); }
-        T operator=(T x) { A->insert(std::move(x), i, j); }
+        void operator=(T x) { A->insert(std::move(x), i, j); }
     };
-    Reference operator()(size_t i, size_t j) { return Reference(this, i, j); }
+    Reference operator()(size_t i, size_t j) { return Reference{this, i, j}; }
     operator DynamicMatrix<T>() {
         DynamicMatrix<T> A(numRow(), numCol());
         size_t k = 0;
