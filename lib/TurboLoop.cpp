@@ -203,6 +203,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         }
 
         auto obouter = LP->getBounds(*SE);
+        
         if (obouter.hasValue()) {
             auto b = obouter.getValue();
             llvm::outs() << "Outer loop bounds:\n" << 
