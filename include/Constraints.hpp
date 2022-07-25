@@ -13,10 +13,10 @@
 // in which case, we have to remove `currentToOriginalPerm`,
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
-static std::ostream &
-printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
-                 size_t numSyms, bool inequality = true,
-                 size_t numAuxVar = 0) {
+static std::ostream &printConstraints(std::ostream &os,
+                                      PtrMatrix<const int64_t> A,
+                                      size_t numSyms, bool inequality = true,
+                                      size_t numAuxVar = 0) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
     for (size_t c = 0; c < numConstraints; ++c) {
@@ -51,18 +51,17 @@ printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
         } else {
             os << " == ";
         }
-        os << A(c,0);
-	for (size_t v = 1; v < numSyms; ++v)
-	    os << " + " << A(c,v) << "*" << monomialTermStr(v-1, 1);
-	os << std::endl;
+        os << A(c, 0);
+        for (size_t v = 1; v < numSyms; ++v)
+            os << " + " << A(c, v) << "*" << monomialTermStr(v - 1, 1);
+        os << std::endl;
     }
     return os;
 }
 template <typename T>
 static std::ostream &
-printConstraints(std::ostream &os, PtrMatrix<const int64_t> A,
-                 size_t numSyms, bool inequality = true,
-                 size_t numAuxVar = 0) {
+printConstraints(std::ostream &os, PtrMatrix<const int64_t> A, size_t numSyms,
+                 bool inequality = true, size_t numAuxVar = 0) {
     return printConstraints(os, A, numSyms, inequality, numAuxVar);
 }
 
@@ -326,13 +325,21 @@ static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<const int64_t> A,
 }
 
 static void fourierMotzkin(IntMatrix &A, size_t v) {
+    assert(v < A.numCol());
     const auto [numNeg, numPos] = countNonZeroSign(A, v);
     const size_t numRowsOld = A.numRow();
-    const size_t numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
+    const size_t numRowsNew =
+        numRowsOld - numNeg - numPos + numNeg * numPos + 1;
     // we need one extra, as on the last overwrite, we still need to
     // read from two constraints we're deleting; we can't write into
     // both of them. Thus, we use a little extra memory here,
     // and then truncate.
+    if ((numNeg == 0) | (numPos == 0)) {
+        for (size_t i = numRowsOld; i != 0;)
+            if (A(--i, v))
+                eraseConstraint(A, i);
+        return;
+    }
     A.resizeRows(numRowsNew + 1);
     // plan is to replace
     for (size_t i = 0, numRows = numRowsOld, posCount = numPos; i < numRowsOld;
@@ -359,7 +366,8 @@ static void fourierMotzkin(IntMatrix &A, size_t v) {
     }
     // assert(numRows == (numRowsNew+1));
 }
-// static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t){
+// static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>,
+// size_t){
 //     return true;
 // }
 static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
@@ -367,9 +375,8 @@ static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
 }
 static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
     if (substituteEquality(A, E, v))
-	fourierMotzkin(A, v);
+        fourierMotzkin(A, v);
 }
-
 
 /*
 IntMatrix slackEqualityConstraints(PtrMatrix<const int64_t> A,

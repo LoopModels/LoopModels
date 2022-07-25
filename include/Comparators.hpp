@@ -261,7 +261,8 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
                               int64_t mul = 1) const {
         os << mul * x[0];
         for (size_t i = 1; i < x.size(); ++i)
-            os << "+" << Polynomial::Term{x[i] * mul, monomials[i - 1]};
+	    if (int64_t xi = x[i])
+		os << " + " << Polynomial::Term{xi * mul, monomials[i - 1]};
         return os;
     }
 };
