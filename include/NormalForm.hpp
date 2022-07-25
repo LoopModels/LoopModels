@@ -382,9 +382,12 @@ MULTIVERSION static void simplifySystemImpl(PtrMatrix<int64_t> A,
 MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
     simplifySystemImpl(A, B);
     size_t Mnew = A.numRow();
-    if (allZero(A.getRow(Mnew - 1))) {
-        do {
-        } while (allZero(A.getRow(--Mnew)));
+    bool need_trunc = false;
+    while (allZero(A.getRow(Mnew - 1))) {
+        --Mnew;
+        need_trunc = true;
+    }
+    if (need_trunc) {
         A.truncateRows(Mnew);
         B.truncateRows(Mnew);
     }
@@ -619,7 +622,7 @@ MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
         VECTORIZE
         for (size_t d = 0; d < D * M; ++d)
             B[d] = B[d + o];
-	B.truncateRows(D);
+        B.truncateRows(D);
     }
     return B;
 }
