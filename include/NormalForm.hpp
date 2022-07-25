@@ -393,7 +393,7 @@ MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
     }
     return;
 }
-llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
+std::pair<IntMatrix, SquareMatrix<int64_t>>
 hermite(IntMatrix A) {
     auto [M, N] = A.size();
     SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
