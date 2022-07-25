@@ -1,7 +1,12 @@
 #pragma once
 
 #include "./POSet.hpp"
+<<<<<<< Updated upstream
 #include "Math.hpp"
+=======
+#include "./Math.hpp"
+#include "./NormalForm.hpp"
+>>>>>>> Stashed changes
 #include "Symbolics.hpp"
 #include <cassert>
 #include <cstdint>
@@ -282,3 +287,37 @@ concept Comparator = requires(T t, llvm::ArrayRef<int64_t> x, int64_t y) {
     { t.equalNegative(x, x) } -> std::convertible_to<bool>;
     { t.lessEqual(x, y) } -> std::convertible_to<bool>;
 };
+
+struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
+    IntMatrix A;
+    //IntMatrix A2(IntMatrix::identity(A));
+    IntMatrix sol(4, 1);
+    LinearSymbolicComparator(IntMatrix Ap) : A(std::move(Ap)) {};
+    IntMatrix A2(A.mem, A.numRow(), A.numCol());
+    IntMatrix Id(IntMatrix::identity(A.numCol()));
+
+    bool greaterEqualZero(llvm::ArrayRef<int64_t> x) const {
+        IntMatrix b(x, A.numRow(), x.size()/A.numRow());
+        size_t colNullDim = 0;
+        auto NS = NormalForm::nullSpace(A);
+        if (A.numRow() > A.numCol()){
+            colNullDim += A.numRow() - A.numCol() - NS.numRow();
+        }else{
+            colNullDim += NS.numRow();
+        }
+        if (colNullDim == 0){
+            NormalForm::solveSystem(A, b);
+            for (size_t i = 0; i < A.numCol(); i++){
+                sol[i,1] = b[i,1]/A[i,i];
+            }
+        }
+        else{
+            NormalForm::simplifySystem(A, b);
+            auto V2 = NormalForm::nullSpace(A).transpose();
+            auto HT = A.transpose()
+            NormalForm::solveSystem(HT, Id); //Id: V1.transpose(), HT:D
+            
+
+        }
+    }
+}
