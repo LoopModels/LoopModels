@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
 
@@ -27,21 +28,40 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
 
     int64_t currentToOriginalPerm(size_t i) const { return perm(i); }
 
-    // static std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>>
-    // toMatrixRepr(const IntMatrix &A, const PartiallyOrderedSet &poset) {
-    //     std::pair<IntMatrix, llvm::SmallVector<Polynomial::Monomial>> ret;
-    //     IntMatrix &B = ret.first;
-    //     llvm::SmallVector<Polynomial::Monomial> &monomials = ret.second;
+    static Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>
+    symbolicPolyhedra(const IntMatrix &A, llvm::ArrayRef<MPoly> b,
+                      PartiallyOrderedSet poset) {
+        assert(b.size() == A.numRow());
+        IntMatrix B;
+        llvm::SmallVector<Polynomial::Monomial> monomials;
+        llvm::DenseMap<Polynomial::Monomial, unsigned> map;
 
-    //     return ret;
-    // }
+        for (auto &p : b)
+            for (auto &t : p)
+                if (!t.isCompileTimeConstant())
+                    if (map.insert(std::make_pair(t.exponent, map.size()))
+                            .second)
+                        monomials.push_back(t.exponent);
+        const size_t numMonomials = monomials.size();
+        B.resize(A.numRow(), A.numCol() + 1 + map.size());
+        for (size_t r = 0; r < A.numRow(); ++r) {
+            for (auto &t : b[r]) {
+                size_t c = t.isCompileTimeConstant() ? 0 : map[t.exponent] + 1;
+                B(r, c) = t.coefficient;
+            }
+            for (size_t c = 0; c < A.numCol(); ++c)
+                B(r, c + 1 + numMonomials) = A(r, c);
+        }
+        // return ret;
+        return Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>{
+            std::move(B), EmptyMatrix<int64_t>{},
+            SymbolicComparator::construct(b, std::move(poset))};
+    }
 
     inline size_t getNumLoops() const { return getNumVar(); }
     AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
                    PartiallyOrderedSet posetin)
-        : Polyhedra{.A = std::move(Ain),
-                    .E = EmptyMatrix<int64_t>{},
-                    .C = SymbolicComparator::construct(b, std::move(posetin))},
+        : Polyhedra{symbolicPolyhedra(Ain, b, std::move(posetin))},
           perm(A.numCol() - C.getNumConstTerms()),
           remainingA(A.numCol() - C.getNumConstTerms()),
           lowerA(A.numCol() - C.getNumConstTerms()),
@@ -100,11 +120,10 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>,
         remainingA[_i - 1] = remainingA[_i];
         removeVariable(remainingA[_i - 1], i);
     }
-    // returns true if extending (extendLower ? lower : upper) bound of `_i`th
-    // loop by `extend` doesn't result in the innermost loop experiencing any
-    // extra iterations.
-    // if `extendLower`, `min(i) - extend`
-    // else `max(i) + extend`
+    // returns true if extending (extendLower ? lower : upper) bound of
+    // `_i`th loop by `extend` doesn't result in the innermost loop
+    // experiencing any extra iterations. if `extendLower`, `min(i) -
+    // extend` else `max(i) + extend`
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         size_t _j = _i + 1;
         const size_t numLoops = getNumLoops();

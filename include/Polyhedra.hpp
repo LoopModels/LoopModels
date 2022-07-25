@@ -930,9 +930,7 @@ struct Polyhedra {
     }
     // A'x <= b
     // removes variable `i` from system
-    void removeVariable(IntMatrix &A, const size_t i) {
-	fourierMotzkin(A, i);
-    }
+    void removeVariable(IntMatrix &A, const size_t i) { fourierMotzkin(A, i); }
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
