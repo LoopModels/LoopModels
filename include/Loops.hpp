@@ -116,9 +116,32 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
     bool zeroExtraIterations(size_t _i, bool extendLower) {
         AffineLoopNest tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
-        for (size_t i = 0; i < numPrevLoops; ++i)
-            if (_i != i)
-                tmp.removeLoopBang(i);
+        // for (size_t i = 0; i < numPrevLoops; ++i)
+	    // if (_i != i)
+		// tmp.removeLoopBang(i);
+	
+        for (size_t i = _i+1; i < numPrevLoops; ++i)
+	    tmp.removeLoopBang(i);
+	AffineLoopNest margi{tmp};
+	margi.removeLoopBang(numPrevLoops);
+	AffineLoopNest tmp2{tmp};
+	// margi contains extrema for `_i`
+	// we can substitute extended for value of `_i`
+	// in `tmp`
+	if (extendLower){
+	    for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c){
+		int64_t Aci = margi.A(c,_i);
+		if (Aci < 0){
+		    // c is lower bound
+		    // now, define `i` to be equal to lower bound - 1
+		}
+	    }
+	} else {
+	    
+	}
+	return tmp.isEmpty();
+        for (size_t i = 0; i < _i; ++i)
+	    tmp.removeLoopBang(i);
         const size_t numCons = tmp.getNumInequalityConstraints();
         // get num upper and lower bounds for inner most loop
         for (size_t l = 0; l < numCons; ++l) {
@@ -132,6 +155,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
 		
             }
         }
+	return true;
         // const auto [numNeg, numPos] = countSigns(A, numPrevLoops);
     }
 
@@ -179,12 +203,12 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             os << std::endl;
         }
     }
-    void printLowerBound(std::ostream &os, size_t i) const {
-        printBound(os, lowerA[i], i, -1);
-    }
-    void printUpperBound(std::ostream &os, size_t i) const {
-        printBound(os, upperA[i], i, 1);
-    }
+    // void printLowerBound(std::ostream &os, PtrMatrix<const int64_t> A, size_t i) const {
+    //     printBound(os, A, i, -1);
+    // }
+    // void printUpperBound(std::ostream &os, PtrMatrix<const int64_t> A, size_t i) const {
+    //     printBound(os, A, i, 1);
+    // }
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNest &alnb) {
         const size_t numLoops = alnb.getNumVar();
