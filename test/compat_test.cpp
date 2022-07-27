@@ -6,6 +6,64 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+TEST(TrivialPruneBounds, BasicAssertions) {
+    llvm::SmallVector<MPoly, 8> r;
+    IntMatrix A(4, 1);
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    // auto N = Polynomial::Monomial(Polynomial::ID{2});
+    
+    PartiallyOrderedSet poset;
+    // ids 1 and 2 are >= 0;
+    poset.push(0, 1, Interval::nonNegative());
+    // poset.push(0, 2, Interval::nonNegative());
+
+    // m <= M-1;
+    r.push_back(M - 1);
+    A(0, 0) = 1;
+    // 0 <= m;
+    r.emplace_back(0);
+    A(1, 0) = -1;
+
+    // m <= M-2;
+    r.push_back(M - 2);
+    A(2, 0) = 1;
+    // -1 <= m;
+    r.emplace_back(1);
+    A(3, 0) = -1;
+
+    
+    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
+    affp.pruneBounds();
+    affp.dump();
+    EXPECT_EQ(affp.A.numRow(), 2);
+    // assert(affp.A.numRow() == 2);
+}
+TEST(LessTrivialPruneBounds, BasicAssertions) {
+    auto A{stringToIntMatrix("[1 0; -1 0; 0 0; 0 -1; 0 1]")};
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    auto N = Polynomial::Monomial(Polynomial::ID{2});
+    llvm::SmallVector<MPoly, 8> b;
+    b.push_back(M-1);
+    b.emplace_back(0);
+    b.push_back(N-1);
+    b.emplace_back(-1);
+    b.push_back(N-1);
+    PartiallyOrderedSet poset;
+    // ids 1 and 2 are >= 0;
+    poset.push(0, 1, Interval::nonNegative());
+    AffineLoopNest affp{AffineLoopNest::construct(A, b, poset)};
+    affp.pruneBounds();
+    affp.dump();
+    EXPECT_EQ(affp.A.numRow(), 5);
+    
+ // -1  1  0
+ //  0  0  0
+ // -1  0  1
+ // -1  0  0
+ // -1  0  1    
+}
+
+
 TEST(AffineTest0, BasicAssertions) {
     std::cout << "Starting affine test 0" << std::endl;
     llvm::SmallVector<MPoly, 8> r;
@@ -212,3 +270,4 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
 
     EXPECT_FALSE(affp10.isEmpty());
 }
+

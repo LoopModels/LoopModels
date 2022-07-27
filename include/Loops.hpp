@@ -60,11 +60,19 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         assert(numConst + getNumLoops() == N);
         IntMatrix B;
         B.resizeForOverwrite(M, N);
-        for (size_t m = 0; m < M; ++m)
+        for (size_t m = 0; m < M; ++m) {
             for (size_t n = 0; n < numConst; ++n)
                 B(m, n) = A(m, n);
+            for (size_t n = numConst; n < N; ++n)
+                B(m, n) = 0;
+        }
         matmul(B.view(0, M, numConst, N), A.view(0, M, numConst, N), R);
-        return AffineLoopNest{matmul(A, R), EmptyMatrix<int64_t>(), C};
+        std::cout << "A = \n" << A << std::endl;
+        std::cout << "R = \n" << R << std::endl;
+        std::cout << "B = \n" << B << std::endl;
+	AffineLoopNest aff{AffineLoopNest{std::move(B), EmptyMatrix<int64_t>(), C}};
+	// aff.pruneBounds();
+        return aff;
     }
     // AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
     //                PartiallyOrderedSet posetin)
@@ -79,16 +87,16 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
     //     pruneBounds();
     // }
     void removeLoopBang(size_t i) {
-	for (size_t i = 0; i < A.numRow(); ++i)
-	    assert(!allZero(A.getRow(i)));
-        // std::cout << "removing i = " << i << "\nA=\n" << A << std::endl;
+        for (size_t i = 0; i < A.numRow(); ++i)
+            assert(!allZero(A.getRow(i)));
+        std::cout << "removing i = " << i << "\nA=\n" << A << std::endl;
         fourierMotzkin(A, i + C.getNumConstTerms());
-        // std::cout << "removed i = " << i << "\nA=\n" << A << std::endl;
-	for (size_t i = 0; i < A.numRow(); ++i)
-	    assert(!allZero(A.getRow(i)));
+        std::cout << "removed i = " << i << "\nA=\n" << A << std::endl;
+        for (size_t i = 0; i < A.numRow(); ++i)
+            assert(!allZero(A.getRow(i)));
         pruneBounds();
-	for (size_t i = 0; i < A.numRow(); ++i)
-	    assert(!allZero(A.getRow(i)));
+        for (size_t i = 0; i < A.numRow(); ++i)
+            assert(!allZero(A.getRow(i)));
         assert(allZero(A.getCol(i + C.getNumConstTerms())));
     }
     AffineLoopNest removeLoop(size_t i) {
@@ -266,6 +274,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             if (i == 0)
                 break;
             aln.removeLoopBang(i);
+	    std::cout << "aln after removing i = " << i << "\n"<<aln.A << std::endl;
         }
         return os;
     }

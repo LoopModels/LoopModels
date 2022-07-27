@@ -943,16 +943,10 @@ std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
 // &A) {
 //     return printVector(os, A);
 // }
-template <typename T, size_t M, size_t N, size_t L>
-std::ostream &operator<<(std::ostream &os, Matrix<T, M, N, L> const &A) {
-    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
-    // {
-    return printMatrix(os, A);
-}
-template <typename T>
-std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
-    return printMatrix(os, A);
-}
+// template <typename T>
+// std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
+//     return printMatrix(os, A);
+// }
 
 template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
     size_t N = length(x0);
@@ -1524,3 +1518,15 @@ std::ostream &printMatrix(std::ostream &os, PtrMatrix<const Rational> A) {
 std::ostream &printMatrix(std::ostream &os, PtrMatrix<const int64_t> A) {
     return printMatrixImpl(os, A);
 }
+std::ostream &operator<<(std::ostream &os, PtrMatrix<const int64_t> A) {
+    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+    // {
+    return printMatrix(os, A);
+}
+template <typename T>
+std::ostream &operator<<(std::ostream &os, PtrMatrix<const T> &A) {
+    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+    // {
+    return printMatrix(os, A);
+}
+

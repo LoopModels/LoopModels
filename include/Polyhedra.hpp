@@ -142,13 +142,11 @@ struct Polyhedra {
                 return true;
             g = g ? (an ? gcd(g, an) : g) : an;
         }
-        if (g > 1) {
-            for (size_t n = 0; n < N; ++n)
-                a[n] /= g;
-            return true;
-        } else {
+        if (g <= 0)
             return g != 0;
-        }
+        for (size_t n = 0; n < N; ++n)
+            a[n] /= g;
+        return true;
     }
 
     static bool uniqueConstraint(PtrMatrix<const int64_t> A, size_t C) {
@@ -171,9 +169,8 @@ struct Polyhedra {
         return true;
     }
     // -1 indicates no auxiliary variable
-    int64_t auxiliaryInd(llvm::ArrayRef<int64_t> a) const {
-        const size_t numAuxVar = a.size() - getNumVar();
-        for (size_t i = 0; i < numAuxVar; ++i)
+    inline int64_t auxiliaryInd(llvm::ArrayRef<int64_t> a) const {
+        for (size_t i = A.numCol(); i < a.size(); ++i)
             if (a[i])
                 return i;
         return -1;
@@ -189,20 +186,22 @@ struct Polyhedra {
     // `Adst`, `bdst`, `E1`, and `q1`.
     bool eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E1, IntMatrix &Asrc,
                                IntMatrix &E0, const size_t i) const {
+        const size_t numConst = C.getNumConstTerms();
+        const size_t numCol = A.numCol();
         // std::cout << "Asrc0 =\n" << Asrc << std::endl;
         if (!substituteEquality(Asrc, E0, i)) {
             // std::cout << "Asrc1 =\n" << Asrc << std::endl;
             const size_t numAuxVar = Asrc.numCol() - getNumVar();
             size_t c = Asrc.numRow();
-            while (c-- > 0) {
+            while (c--) {
                 size_t s = 0;
-                for (size_t j = 0; j < numAuxVar; ++j)
+                for (size_t j = numCol; j < Asrc.numCol(); ++j)
                     s += (Asrc(c, j) != 0);
                 if (s > 1)
                     eraseConstraint(Asrc, c);
             }
             if (E0.numRow() > 1)
-                NormalForm::simplifySystem(E0);
+                NormalForm::simplifySystem(E0, numConst);
             return false;
         }
         // eliminate variable `i` according to original order
@@ -246,8 +245,8 @@ struct Polyhedra {
                 ++k;
             }
         }
-        E1.resize(k, Re);
-        NormalForm::simplifySystem(E1);
+        E1.resizeRows(k);
+        NormalForm::simplifySystem(E1, numConst);
         return true;
     }
     // method for when we do not match `Ex=q` constraints with themselves
@@ -364,9 +363,11 @@ struct Polyhedra {
     void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
                      IntMatrix &Aold) const {
 
-        for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
-            size_t c = Aold.numRow() - 1 - i;
-            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, c))
+        // for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
+            // size_t c = Aold.numRow() - 1 - i;
+        for (size_t c = Aold.numRow(); c; ) {
+	    // std::cout << "trying to prune c = "<<c<<std::endl;
+            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, --c))
                 // drop `c`
                 eraseConstraint(Aold, c);
         }
@@ -378,6 +379,7 @@ struct Polyhedra {
     }
     inline static bool equalsNegative(llvm::ArrayRef<int64_t> x,
                                       llvm::ArrayRef<int64_t> y) {
+        assert(x.size() == y.size());
         for (size_t i = 0; i < x.size(); ++i)
             if (x[i] + y[i])
                 return false;
@@ -428,18 +430,16 @@ struct Polyhedra {
         }
         return false;
     }
-    bool removeRedundantConstraints(IntMatrix &Aold, const size_t c) const {
-        IntMatrix Atmp0, Atmp1, E;
-        return removeRedundantConstraints(Atmp0, Atmp1, E, Aold, c);
+    bool removeRedundantConstraints(IntMatrix &A, const size_t c) const {
+        IntMatrix A0, A1, E;
+        return removeRedundantConstraints(A0, A1, E, A, c);
     }
-    bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
-                                    IntMatrix &E, IntMatrix &Aold,
-                                    const size_t c) const {
-        return removeRedundantConstraints(Atmp0, Atmp1, E, Aold, Aold.getRow(c),
-                                          c);
+    bool removeRedundantConstraints(IntMatrix &A0, IntMatrix &A1, IntMatrix &E,
+                                    IntMatrix &A, const size_t c) const {
+        return removeRedundantConstraints(A0, A1, E, A, A.getRow(c), c);
     }
     int64_t firstVarInd(llvm::ArrayRef<int64_t> a) const {
-        for (size_t i = a.size() - getNumVar(); i < a.size(); ++i)
+        for (size_t i = 0; i < A.numCol(); ++i)
             if (a[i])
                 return i;
         return -1;
@@ -448,8 +448,11 @@ struct Polyhedra {
         llvm::SmallVector<unsigned, 32> &constraintsToErase,
         llvm::SmallVector<unsigned, 16> &boundDiffs, IntMatrix &Etmp,
         IntMatrix &Aold, llvm::ArrayRef<int64_t> a) const {
+        const size_t numConst = C.getNumConstTerms();
         const size_t numCol = Aold.numCol();
         const size_t numAuxVar = Etmp.numCol() - numCol;
+        const size_t numVar = getNumVar();
+        assert(numConst + numVar == numCol);
         int64_t dependencyToEliminate = -1;
         llvm::SmallVector<int64_t> delta;
         delta.resize_for_overwrite(C.getNumConstTerms());
@@ -457,13 +460,14 @@ struct Polyhedra {
             size_t c = boundDiffs[i];
             int64_t dte = -1;
             for (size_t v = 0; v < numCol; ++v) {
-                int64_t Evi = a[v] - Aold(c, v);
-                Etmp(i, v + numAuxVar) = Evi;
-                dte = (Evi) ? v + numAuxVar : dte;
+                int64_t Evi = a[v] + Aold(c, v);
+                Etmp(i, v) = Evi;
+                dte = (Evi & (v >= numConst)) ? v : dte;
             }
             if (dte == -1) {
-                for (size_t i = 0; i < delta.size(); ++i)
-                    delta[i] = Aold(c, i) - A[i];
+                for (size_t j = 0; j < delta.size(); ++j)
+                    delta[j] = Aold(c, j) - a[j];
+                // printVector(std::cout << "delta = ", delta) << std::endl;
                 if (C.lessEqual(delta)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
@@ -478,9 +482,8 @@ struct Polyhedra {
             } else {
                 dependencyToEliminate = dte;
             }
-            for (size_t j = 0; j < numAuxVar; ++j) {
-                Etmp(i, j) = (j == i);
-            }
+            for (size_t j = 0; j < numAuxVar; ++j)
+                Etmp(i, j + numCol) = (j == i);
         }
         if (constraintsToErase.size()) {
             for (auto it = constraintsToErase.rbegin();
@@ -501,6 +504,7 @@ struct Polyhedra {
         IntMatrix &Aold, I64Matrix &Eold, llvm::ArrayRef<int64_t> a,
         bool AbIsEq) const {
         const size_t numCol = Aold.numCol();
+        const size_t numConst = C.getNumConstTerms();
         const size_t numAuxVar = Etmp.numCol() - numCol;
         int64_t dependencyToEliminate = -1;
         llvm::SmallVector<int64_t> delta;
@@ -512,39 +516,38 @@ struct Polyhedra {
             int64_t sign = (c > 0) ? 1 : -1;
             if ((0 <= c) && (size_t(c) < Aold.numRow())) {
                 for (size_t v = 0; v < numCol; ++v) {
-                    int64_t Evi = a[v] - Aold(c, v);
-                    Etmp(i, v + numAuxVar) = Evi;
-                    dte = (Evi) ? v + numAuxVar : dte;
+                    int64_t Evi = a[v] + Aold(c, v);
+                    Etmp(i, v) = Evi;
+                    dte = (Evi & (v >= numConst)) ? v : dte;
                 }
                 bc = getSymbol(Aold, c);
             } else {
                 size_t cc = std::abs(c) - A.numRow();
                 for (size_t v = 0; v < numCol; ++v) {
                     int64_t Evi = a[v] - sign * Eold(cc, v);
-                    Etmp(i, v + numAuxVar) = Evi;
-                    dte = (Evi) ? v + numAuxVar : dte;
+                    Etmp(i, v) = Evi;
+                    dte = (Evi & (v >= numConst)) ? v : dte;
                 }
                 bc = getSymbol(Eold, cc);
             }
             if (dte == -1) {
-                for (size_t i = 0; delta.size(); ++i)
-                    delta[i] = bc[i] * sign - a[i];
-                if (C.lessEqual(delta, AbIsEq)) {
+                for (size_t j = 0; j < delta.size(); ++j)
+                    delta[j] = bc[j] * sign - a[j];
+                if (C.lessEqual(delta, AbIsEq))
                     // bold[c] - b <= 0
                     // bold[c] <= b
                     // thus, bound `c` will always trigger before `b`
                     return -2;
-                } else if (C.greaterEqual(delta)) {
+                if (C.greaterEqual(delta))
                     // bound `b` triggers first
                     // normally we insert `c`, but if inserting here
                     // we also want to erase elements from boundDiffs
                     constraintsToErase.push_back(i);
-                }
             } else {
                 dependencyToEliminate = dte;
             }
             for (size_t j = 0; j < numAuxVar; ++j)
-                Etmp(i, j) = (j == i);
+                Etmp(i, j + numCol) = (j == i);
         }
         if (constraintsToErase.size()) {
             for (auto it = constraintsToErase.rbegin();
@@ -577,35 +580,44 @@ struct Polyhedra {
         llvm::SmallVector<unsigned, 16> boundDiffs;
         for (size_t c = 0; c < CC; ++c) {
             for (size_t v = 0; v < numVar; ++v) {
-                int64_t av = a[v];
+                int64_t av = a[v + numConst];
                 int64_t Avc = Aold(c, v + numConst);
-                if (((av > 0) && (Avc > 0)) || ((av < 0) && (Avc < 0))) {
+                if ((av > 0) == (Avc > 0)) {
                     boundDiffs.push_back(c);
                     break;
                 }
             }
         }
+        // std::cout << "A =\n" << A << std::endl;
+        // printVector(std::cout << "a = ", a) << std::endl;
+        // printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
         const size_t numAuxVar = boundDiffs.size();
+        // std::cout << "numAuxVar = " << numAuxVar << std::endl;
         if (numAuxVar == 0)
             return false;
         const size_t numColAugment = numCol + numAuxVar;
-        size_t AtmpCol = Aold.numRow() - (CC < Aold.numRow());
-        Atmp0.resizeForOverwrite(AtmpCol, numColAugment);
+        Atmp0.resizeForOverwrite(Aold.numRow() - (CC < Aold.numRow()),
+                                 numColAugment);
         E.resizeForOverwrite(numAuxVar, numColAugment);
         for (size_t i = 0; i < Aold.numRow(); ++i) {
             if (i == CC)
                 continue;
             size_t j = i - (i > CC);
-            for (size_t v = 0; v < numAuxVar; ++v)
-                Atmp0(j, v) = 0;
             for (size_t v = 0; v < numCol; ++v)
-                Atmp0(j, v + numAuxVar) = Aold(i, v);
+                Atmp0(j, v) = Aold(i, v);
+            for (size_t v = numCol; v < numColAugment; ++v)
+                Atmp0(j, v) = 0;
         }
         llvm::SmallVector<unsigned, 32> colsToErase;
         int64_t dependencyToEliminate =
             checkForTrivialRedundancies(colsToErase, boundDiffs, E, Aold, a);
+        // std::cout << "Initial eliminating: " << dependencyToEliminate
+        //           << std::endl;
         if (dependencyToEliminate == -2)
             return true;
+        // std::cout << "Aold =\n" << Aold << std::endl;
+        // std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
+        // std::cout << "E =\n" << E << std::endl;
         // define variables as
         // (a-Aold) + delta = b - bold
         // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
@@ -615,12 +627,14 @@ struct Polyhedra {
         // and thus (bold - Aold) is the redundant constraint, and we eliminate
         // the associated column.
         while (dependencyToEliminate >= 0) {
+            // std::cout << "eliminating: " << dependencyToEliminate << std::endl;
             // eliminate dependencyToEliminate
             eliminateVarForRCElim(Atmp1, E, Atmp0,
                                   size_t(dependencyToEliminate));
             std::swap(Atmp0, Atmp1);
             dependencyToEliminate = -1;
             // iterate over the new bounds, search for constraints we can drop
+            // std::cout << "Atmp0 = \n" << Atmp0 << "E =\n" << E << std::endl;
             for (size_t c = 0; c < Atmp0.numRow(); ++c) {
                 llvm::ArrayRef<int64_t> Ac = Atmp0.getRow(c);
                 int64_t varInd = firstVarInd(Ac);
@@ -637,7 +651,7 @@ struct Polyhedra {
                             // lower bound
                             return true;
                         // upper bound
-                        colsToErase.push_back(boundDiffs[auxInd]);
+                        colsToErase.push_back(boundDiffs[auxInd - numCol]);
                     }
                 } else {
                     dependencyToEliminate = varInd;
@@ -679,7 +693,7 @@ struct Polyhedra {
             for (size_t v = 0; v < numVar; ++v) {
                 int64_t av = a[v];
                 int64_t Avc = Aold(c, v);
-                if (((av > 0) && (Avc > 0)) || ((av < 0) && (Avc < 0))) {
+                if ((av > 0) == (Avc > 0)) {
                     boundDiffs.push_back(c);
                     break;
                 }
