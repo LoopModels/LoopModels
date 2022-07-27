@@ -318,9 +318,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             A(j + numVar, j) = 1;
             A(j + numVar, j + numCon) = 1;
         }
+        std::cout << "A = " << A << std::endl;
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
         std::cout << "H = " << H << std::endl;
+        std::cout << "U = " << U << std::endl;
         //std::cout << "U matrix:" << U << std::endl;
         auto Ht = H.transpose();
         auto NS = NormalForm::nullSpace(H);
@@ -330,7 +332,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // Vt * Ht = D
         std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
         NormalForm::solveSystem(Ht, Vt);
-        std::cout << "Vt matrix:" << Vt << std::endl;
+        std::cout << "Vt =" << Vt << std::endl;
         // H * V = D
         auto D = std::move(Ht);
         std::cout << "D matrix:" << D << std::endl;
@@ -340,47 +342,46 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
         //for low rank deficient case:
-        auto const numCon = V.numRow()/2;
-        IntMatrix J(numCon, 2 * numCon);
-        for (size_t i = 0; i < numCon; ++i)
-            J(i, i + numCon) = 1;
-        IntMatrix q(2 * numCon,1);
-        for (size_t i = 0; i < query.size(); ++i)
-            q[i] = query[i];
-
-        size_t NSdim = D.numCol() - D.numRow();
-        IntMatrix JV2(numCon, NSdim * 2);
-        IntMatrix JV1DiUq(numCon, 1);
-        auto JV1 = matmul(J, V.view(0,V.numRow(),0,numCon*2-NSdim));
-        auto JV1Di = matmul(std::move(JV1), D.view(0,numCon*2-NSdim,0,numCon*2-NSdim));
-        //Need to pay attention to the size of D and U carefully.
-        std::cout << "U = " << U << std::endl;
-        //auto JV1DiU = matmul(std::move(JV1Di), U);
-        //JV1*D(-1)
-        //auto JV1DiU = matmul(std::move(JV1), U);
-        std::cout << "U = " << D << std::endl;
-        //std::cout << "JV1 = " << JV1 << std::endl;
-        //auto J_ = J.view(0,2,0,1);
-        //std::cout << "J = " << J_(1,0) << std::endl;
-
-        //Ax = q -> Hx = b
-        // Ux = Vb
-        //auto b = matmul(U, query);
-        //auto b = U * query;
-        //size_t checkgreaterEqualZero = 0;
-        // if (D.numCol() <= D.numRow()){
-        //     // No solution
-        //     for (size_t i = D.numCol(); i < D.numRow(); ++i){
-        //         if(b[i] != 0)
-        //             return false;
+        //U: 10 x 10; 
+        //Vt: 8 x 8;
+        //
+        // if (D.numRow() > D.numCol()){
+        //     auto const numCon = V.numRow()/2;
+        //     IntMatrix J(numCon, 2 * numCon);
+        //     for (size_t i = 0; i < numCon; ++i)
+        //         J(i, i + numCon) = 1;
+        //     IntMatrix q(query.size() + numCon,1);
+        //     for (size_t i = 0; i < query.size(); ++i)
+        //         q[i] = query[i];
+        //     size_t NSdim = D.numCol() - D.numRow();
+        //     // IntMatrix JV2(numCon, NSdim * 2);
+        //     IntMatrix JV1DiUq(numCon, 1);
+        //     // std::cout<< "J = " << J << std::endl;
+        //     // std::cout<< "V = " << V << std::endl;
+        //     auto JV1 = matmul(J, V.view(0, V.numRow(),0,numCon*2-NSdim));
+        //     auto JV1Di = matmul(std::move(JV1), D.view(0,numCon*2-NSdim,0,numCon*2));
+        //     //std::cout << "col size = " << U.numsCol() << std::endl;
+        //     auto b = matmul(U, std::move(q));
+        //     // std::cout << "JV1Di = " << JV1Di << std::endl;
+        //     // std::cout << "b = " << b << std::endl;
+        //     //identify b and JV1Dis size
+        //     auto c = matmul(std::move(JV1Di), std::move(b));
+        //     IntMatrix expandV2(numCon*2, NSdim * 2 + 1); //extra one dim for simplex
+        //     for (size_t i = 0; i < numCon * 2; ++i)
+        //     {   
+        //         expandV2(i, 0) = c(i, 0);
+        //         for (size_t j = 0; j < NSdim * 2; ++j){
+        //             expandV2(i, j + 1) = V(i, j);
+        //             expandV2(i, j + NSdim + 1) = V(i, j);
+        //         }
         //     }
-        //     //Check sign of Vb/D
-        // }
-        //IntMatrix b(query, V.numCol(), 1);
-        //auto b = matmul(U, query);
-        //auto 
-        //for (int i = 0; i < )
+        //     IntMatrix B{0, expandV2.numCol()};
+        //     llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandV2, B)};
+        } else{
+
+        }
         return true;
+       // return optS.hasValue();
     }
 };
 
