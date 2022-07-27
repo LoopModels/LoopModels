@@ -3,7 +3,9 @@
 #include "./POSet.hpp"
 #include "Constraints.hpp"
 #include "Math.hpp"
+#include "NormalForm.hpp"
 #include "Symbolics.hpp"
+#include "llvm/ADT/Optional.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -303,7 +305,7 @@ concept Comparator = requires(T t, llvm::ArrayRef<int64_t> x, int64_t y) {
 struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
     IntMatrix V;
-    IntMatrix D;
+    llvm::Optional<llvm::SmallVector<int64_t, 16>> d;
     //llvm::SmallVector<int64_t, 16> sol;
     static LinearSymbolicComparator construct(IntMatrix Ap) {
         const auto [numCon, numVar] = Ap.size();
@@ -321,6 +323,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         std::cout << "A = " << A << std::endl;
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
+        size_t R = H.numRow();
+        while ((R > 0) && allZero(H.getRow(R - 1)))
+            --R;
+        H.truncateRows(R);
+        if (H.isSquare())
+            return LinearSymbolicComparator{.U = std::move(U), .V = std::move(H), .d = {}};
         std::cout << "H = " << H << std::endl;
         std::cout << "U = " << U << std::endl;
         //std::cout << "U matrix:" << U << std::endl;
@@ -333,16 +341,44 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
         NormalForm::solveSystem(Ht, Vt);
         std::cout << "Vt =" << Vt << std::endl;
-        // H * V = D
-        auto D = std::move(Ht);
-        std::cout << "D matrix:" << D << std::endl;
+        // H * V = Diagonal(d)
+        auto d = Ht.diag();
+        printVector(std::cout << "D matrix:", d) << std::endl;
         auto V = Vt.transpose();
-        return LinearSymbolicComparator{.U = std::move(U), .V = std::move(V), .D = std::move(D)};
+        return LinearSymbolicComparator{.U = std::move(U), .V = std::move(V), .d = std::move(d)};
     };
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
+        if (!d.hasValue()) {
+            auto nVars = query.size();
+            auto nEqs = V.numCol() / 2;
+            auto b = U.view(0, U.numRow(), 0, query.size()) * query;
+            for (size_t i = V.numRow(); i < b.size(); ++i) {
+                if (b[i] != 0)
+                    return false;
+            }
+            auto H = V;
+            std::cout << "H = \n" << H << std::endl;
+            auto oldn = H.numCol();
+            H.resizeCols(oldn + 1);
+            std::cout << "V = \n" << V << std::endl;
+            std::cout << "H = \n" << H << std::endl;
+            for (size_t i = 0; i < H.numRow(); ++i)
+                H(i, oldn) = b[i];
+            NormalForm::solveSystem(H);
+            std::cout << H << std::endl;
+            for (size_t i = nEqs; i < H.numRow(); ++i) {
+                if (auto rhs = H(i, oldn))
+                    if ((rhs > 0) != (H(i, i) > 0)) {
+                        std::cout    << "Wow: " << i << std::endl;
+                        return false;
+                    }
+            }
+            return true;
+        }
+        return true;
         //for low rank deficient case:
-        //U: 10 x 10; 
+        //U: 10 x 10;
         //Vt: 8 x 8;
         //
         // if (D.numRow() > D.numCol()){
@@ -368,7 +404,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         //     auto c = matmul(std::move(JV1Di), std::move(b));
         //     IntMatrix expandV2(numCon*2, NSdim * 2 + 1); //extra one dim for simplex
         //     for (size_t i = 0; i < numCon * 2; ++i)
-        //     {   
+        //     {
         //         expandV2(i, 0) = c(i, 0);
         //         for (size_t j = 0; j < NSdim * 2; ++j){
         //             expandV2(i, j + 1) = V(i, j);
@@ -377,9 +413,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         //     }
         //     IntMatrix B{0, expandV2.numCol()};
         //     llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandV2, B)};
-        } else{
-
-        }
         return true;
        // return optS.hasValue();
     }

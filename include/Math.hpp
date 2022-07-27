@@ -375,6 +375,12 @@ inline llvm::MutableArrayRef<T> view(llvm::MutableArrayRef<T> a, size_t start,
     return llvm::MutableArrayRef<T>{a.data() + start, stop - start};
 }
 
+template <typename T>
+concept IntVector = requires(T t, int64_t y) {
+    { t.size() } -> std::convertible_to<size_t>;
+    { t[y] } -> std::convertible_to<int64_t>;
+};
+
 template <typename T, typename A> struct BaseMatrix {
     inline T &getLinearElement(size_t i) {
         return static_cast<A *>(this)->getLinearElement(i);
@@ -475,9 +481,9 @@ template <typename T, typename A> struct BaseMatrix {
             // return PtrVector<const T, 0>{
         }
     }
-    void copyRow(llvm::ArrayRef<T> x, size_t i){
-	for (size_t j = 0; j < numCol(); ++j)
-	    (*this)(i,j) = x[j];
+    void copyRow(llvm::ArrayRef<T> x, size_t i) {
+        for (size_t j = 0; j < numCol(); ++j)
+            (*this)(i, j) = x[j];
     }
     inline StridedVector<T> getCol(size_t n) {
         return StridedVector<T>{data() + n, numRow(), rowStride()};
@@ -495,6 +501,26 @@ template <typename T, typename A> struct BaseMatrix {
                                           size_t col) const {
         return StridedVector<const T>{data() + col + rowStart * rowStride(),
                                       rowEnd - rowStart, rowStride()};
+    }
+
+    llvm::SmallVector<T, 16> diag() const {
+        llvm::SmallVector<T, 16> d;
+        size_t n = std::min(numRow(), numCol());
+        d.resize_for_overwrite(n);
+        for (size_t i = 0; i < n; ++i)
+            d[i] = (*this)(i, i);
+        return d;
+    }
+
+    bool isSquare() const { return numRow() == numCol(); }
+
+    auto operator*(IntVector auto &b) const {
+        assert(numCol() == b.size());
+        llvm::SmallVector<std::remove_const_t<T>, 16> c(numRow());
+        for (size_t i = 0; i < numRow(); ++i)
+            for (size_t j = 0; j < numCol(); ++j)
+                c[i] += (*this)(i, j) * b[j];
+        return c;
     }
 };
 
@@ -789,10 +815,13 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
         if (NN > X) {
-            for (size_t m = 1; m < std::min(M, MM); ++m) {
-                for (size_t n = 0; n < N; ++n) {
+            for (size_t m = std::min(M, MM) - 1; m > 0; --m) {
+                for (size_t n = N; n > 0;) {
+                    --n;
                     mem[m * NN + n] = mem[m * X + n];
                 }
+            }
+            for (size_t m = 1; m < std::min(M, MM); ++m) {
                 for (size_t n = N; n < NN; ++n) {
                     mem[m * NN + n] = 0;
                 }
