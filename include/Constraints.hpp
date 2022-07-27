@@ -47,6 +47,8 @@ static std::ostream &printConstraints(std::ostream &os,
                 hasPrinted = true;
             }
         }
+	if (!hasPrinted)
+	    os << '0';
         if (inequality) {
             os << " <= ";
         } else {

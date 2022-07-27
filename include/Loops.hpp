@@ -168,7 +168,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         // in `tmp`
         int64_t sign = 1 - 2 * extendLower; // extendLower ? -1 : 1
         for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c) {
-            int64_t Aci = margi.A(c, _i);
+            int64_t Aci = margi.A(c, _i + numConst);
             int64_t b = sign * Aci;
             if (b <= 0)
                 continue;
@@ -184,7 +184,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             // and then check if the resulting polyhedra is empty.
             // if not, then we may have >0 iterations.
             for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
-                int64_t d = tmp2.A(cc, _i);
+                int64_t d = tmp2.A(cc, _i + numConst);
                 if (d == 0)
                     continue;
                 d *= sign;
@@ -192,7 +192,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
                     tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
             }
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
-                if (tmp2.A(--cc, numPrevLoops) == 0)
+                if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
             std::cout << "\nc=" << c << std::endl;
             tmp2.dump();

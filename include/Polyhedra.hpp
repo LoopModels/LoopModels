@@ -832,17 +832,17 @@ struct Polyhedra {
     }
 
     void deleteBounds(IntMatrix &A, size_t i) const {
-        for (size_t j = A.numRow(); j != 0;) {
-            if (A(--j, i)) {
+        for (size_t j = A.numRow(); j != 0;)
+            if (A(--j, i))
                 eraseConstraint(A, j);
-            }
-        }
     }
     // returns `true` if empty, `false` otherwise
     bool checkZeros() {
-        for (size_t c = A.numCol(); c != 0;)
+        for (size_t c = A.numRow(); c != 0;)
             if (allZero(getNonSymbol(A, --c))) {
-                if (greaterZero(c))
+                // std::cout << "checkZeros c = " << c << std::endl;
+                // dump();
+                if (lessZero(c))
                     return true;
                 eraseConstraint(A, c);
             }
@@ -852,6 +852,8 @@ struct Polyhedra {
     // removes variable `i` from system
     bool removeVariable(IntMatrix &A, const size_t i) {
         fourierMotzkin(A, i);
+        // std::cout << "removed i = " << i << "\nA=\n"<<A <<std::endl;
+        // dump();
         return checkZeros();
     }
     // A'x <= b
@@ -869,9 +871,9 @@ struct Polyhedra {
     }
 
     bool removeVariable(const size_t i) {
-	if constexpr (hasEqualities)
-	    return removeVariable(A, E, i);
-	return removeVariable(A, i);
+        if constexpr (hasEqualities)
+            return removeVariable(A, E, i);
+        return removeVariable(A, i);
     }
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<unsigned> &colsToErase) {
@@ -905,9 +907,9 @@ struct Polyhedra {
         const size_t numVar = getNumVar();
         const size_t numConst = C.getNumConstTerms();
         for (size_t i = 0; i < numVar; ++i)
-            if (!allZero(A.getCol(numConst + i))) {
-                removeVariable(numConst + i);
-            }
+            if (!allZero(A.getCol(numConst + i)))
+                if (removeVariable(numConst + i))
+                    return true;
         return false;
     }
     bool isEmpty() const {
