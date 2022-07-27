@@ -2,6 +2,7 @@
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./Symbolics.hpp"
+#include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -352,7 +353,7 @@ MULTIVERSION size_t simplifySystemImpl(PtrMatrix<int64_t> E,
         --Mnew;
     return Mnew;
 }
-
+constexpr static void simplifySystem(EmptyMatrix<int64_t>) {}
 static void simplifySystem(IntMatrix &E) {
 
     size_t Mnew = simplifySystemImpl(E);

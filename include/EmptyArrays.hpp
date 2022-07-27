@@ -6,7 +6,7 @@
 #include <llvm/ADT/SmallVector.h>
 
 template <typename T> struct EmptyMatrix : BaseMatrix<T, EmptyMatrix<T>> {
-    static constexpr T getLinearElement(size_t i) { return 0; }
+    static constexpr T getLinearElement(size_t) { return 0; }
     static constexpr T *begin() { return nullptr; }
     static constexpr T *end() { return nullptr; }
 
@@ -17,6 +17,9 @@ template <typename T> struct EmptyMatrix : BaseMatrix<T, EmptyMatrix<T>> {
     static constexpr size_t getConstCol() { return 0; }
 
     static constexpr T *data() { return nullptr; }
+    inline T operator()(size_t, size_t) {
+	return 0;
+    }
 };
 
 template <typename T>
