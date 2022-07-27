@@ -304,18 +304,66 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
+        std::cout << "H = " << H << std::endl;
+        //std::cout << "U matrix:" << U << std::endl;
         auto Ht = H.transpose();
+        auto NS = NormalForm::nullSpace(H);
+        std::cout << "NS = " << NS << std::endl;
+        std::cout << "Ht matrix:" << Ht << std::endl;
         auto Vt = IntMatrix::identity(Ht.numRow());
         // Vt * Ht = D
+        std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
         NormalForm::solveSystem(Ht, Vt);
+        std::cout << "Vt matrix:" << Vt << std::endl;
         // H * V = D
         auto D = std::move(Ht);
+        std::cout << "D matrix:" << D << std::endl;
         auto V = Vt.transpose();
         return LinearSymbolicComparator{.U = std::move(U), .V = std::move(V), .D = std::move(D)};
     };
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
-        //TODO: for Junpeng
+        //for low rank deficient case:
+        auto const numCon = V.numRow()/2;
+        IntMatrix J(numCon, 2 * numCon);
+        for (size_t i = 0; i < numCon; ++i)
+            J(i, i + numCon) = 1;
+        IntMatrix q(2 * numCon,1);
+        for (size_t i = 0; i < query.size(); ++i)
+            q[i] = query[i];
+
+        size_t NSdim = D.numCol() - D.numRow();
+        IntMatrix JV2(numCon, NSdim * 2);
+        IntMatrix JV1DiUq(numCon, 1);
+        auto JV1 = matmul(J, V.view(0,V.numRow(),0,numCon*2-NSdim));
+        auto JV1Di = matmul(std::move(JV1), D.view(0,numCon*2-NSdim,0,numCon*2-NSdim));
+        //Need to pay attention to the size of D and U carefully.
+        std::cout << "U = " << U << std::endl;
+        //auto JV1DiU = matmul(std::move(JV1Di), U);
+        //JV1*D(-1)
+        //auto JV1DiU = matmul(std::move(JV1), U);
+        std::cout << "U = " << D << std::endl;
+        //std::cout << "JV1 = " << JV1 << std::endl;
+        //auto J_ = J.view(0,2,0,1);
+        //std::cout << "J = " << J_(1,0) << std::endl;
+
+        //Ax = q -> Hx = b
+        // Ux = Vb
+        //auto b = matmul(U, query);
+        //auto b = U * query;
+        //size_t checkgreaterEqualZero = 0;
+        // if (D.numCol() <= D.numRow()){
+        //     // No solution
+        //     for (size_t i = D.numCol(); i < D.numRow(); ++i){
+        //         if(b[i] != 0)
+        //             return false;
+        //     }
+        //     //Check sign of Vb/D
+        // }
+        //IntMatrix b(query, V.numCol(), 1);
+        //auto b = matmul(U, query);
+        //auto 
+        //for (int i = 0; i < )
         return true;
     }
 };
