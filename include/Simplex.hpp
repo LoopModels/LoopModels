@@ -400,7 +400,7 @@ struct Simplex {
             m = ((m << 1) | (basicCons[i] > 0));
         return m;
     }
-
+    /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {
         PtrMatrix<const int64_t> C{getConstraints()};
         // C is
@@ -484,7 +484,7 @@ struct Simplex {
             {}, {numUnknownSign, numVar}, knownNonNegative};
 
         Simplex &simplex{std::get<0>(ret)};
-        IntMatrix &S{std::get<1>(ret)}; // S for Shift
+        // IntMatrix &S{std::get<1>(ret)}; // S for Shift
         const size_t numConstraintsOld = getNumConstraints();
         // one additional constraint for each unknown sign
         size_t numConstraintsNew = numConstraintsOld + numUnknownSign;
@@ -637,4 +637,5 @@ struct Simplex {
         }
         return ret;
     }
+    */
 };

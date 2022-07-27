@@ -7,6 +7,7 @@
 #include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <sys/types.h>
 
 // prints in current permutation order.
 // TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
@@ -58,11 +59,9 @@ static std::ostream &printConstraints(std::ostream &os,
     }
     return os;
 }
-template <typename T>
-static std::ostream &
-printConstraints(std::ostream &os, PtrMatrix<const int64_t> A, size_t numSyms,
-                 bool inequality = true, size_t numAuxVar = 0) {
-    return printConstraints(os, A, numSyms, inequality, numAuxVar);
+static std::ostream &printConstraints(std::ostream &os, EmptyMatrix<int64_t>,
+                                      size_t, bool = true, size_t = 0) {
+    return os;
 }
 
 // does not preserve the order of columns, instead it swaps the `i`th column
@@ -273,6 +272,10 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
     }
     return rowMinNonZero;
 }
+constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t) {
+    return false;
+}
+
 MULTIVERSION static bool substituteEquality(IntMatrix &A, IntMatrix &E,
                                             const size_t i) {
 

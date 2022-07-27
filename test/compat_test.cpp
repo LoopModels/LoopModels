@@ -1,5 +1,6 @@
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -63,79 +64,79 @@ TEST(AffineTest0, BasicAssertions) {
 
     std::cout << "About to construct affine obj" << std::endl;
 
-    AffineLoopNest affp(A, r, poset);
-    std::cout << "affp.remainingA.back() = \n"
-              << affp.remainingA.back() << std::endl;
+    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
+    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(0, false));
+    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(0, true));
     EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, false));
     std::cout << "About to run second compat test" << std::endl;
     EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(1, true));
     std::cout << affp << std::endl;
     std::cout << "About to run first set of bounds tests" << std::endl;
-    { // lower bound tests
-        EXPECT_EQ(affp.lowerA.size(), 3);
-        EXPECT_EQ(affp.lowerA[0].numRow(), 1);
-        EXPECT_EQ(affp.lowerA[1].numRow(), 1);
-        EXPECT_EQ(affp.lowerA[2].numRow(), 1);
-        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[0], 0)));
-        EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[1], 0)));
-        //                              0  M  N  m  n   k
-        llvm::SmallVector<int64_t, 6> a{-1, 0, 0, 0, 1, -1};
-        EXPECT_TRUE(affp.lowerA[2].getRow(0) == a);
-    }
-    { // upper bound tests
-        EXPECT_EQ(affp.upperA.size(), 3);
-        EXPECT_EQ(affp.upperA[0].numRow(), 1);
-        EXPECT_EQ(affp.upperA[1].numRow(), 1);
-        EXPECT_EQ(affp.upperA[2].numRow(), 1);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
-        EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a1{-2, 0, 1, 0, 0, 0};
-        EXPECT_TRUE(affp.upperA[1].getRow(0) == a1);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a2{-1, 0, 1, 0, 0, 0};
-        EXPECT_TRUE(affp.upperA[2].getRow(0) == a2);
-    }
+    // { // lower bound tests
+    //     EXPECT_EQ(affp.lowerA.size(), 3);
+    //     EXPECT_EQ(affp.lowerA[0].numRow(), 1);
+    //     EXPECT_EQ(affp.lowerA[1].numRow(), 1);
+    //     EXPECT_EQ(affp.lowerA[2].numRow(), 1);
+    //     EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[0], 0)));
+    //     EXPECT_TRUE(affp.C.equal(affp.getSymbol(affp.lowerA[1], 0)));
+    //     //                              0  M  N  m  n   k
+    //     llvm::SmallVector<int64_t, 6> a{-1, 0, 0, 0, 1, -1};
+    //     EXPECT_TRUE(affp.lowerA[2].getRow(0) == a);
+    // }
+    // { // upper bound tests
+    //     EXPECT_EQ(affp.upperA.size(), 3);
+    //     EXPECT_EQ(affp.upperA[0].numRow(), 1);
+    //     EXPECT_EQ(affp.upperA[1].numRow(), 1);
+    //     EXPECT_EQ(affp.upperA[2].numRow(), 1);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
+    //     EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a1{-2, 0, 1, 0, 0, 0};
+    //     EXPECT_TRUE(affp.upperA[1].getRow(0) == a1);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a2{-1, 0, 1, 0, 0, 0};
+    //     EXPECT_TRUE(affp.upperA[2].getRow(0) == a2);
+    // }
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
-    affp.swap(1, 2);
+    AffineLoopNest affp021{affp.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
     // Now that we've swapped loops 1 and 2, we should have
     // for m in 0:M-1, k in 1:N-1, n in 0:k-1
-    affp.dump();
+    affp021.dump();
     // std::cout << "First lc: \n";
-    // affp.lc[0][0].dump();
-    { // lower bound tests
-        EXPECT_EQ(affp.lowerA.size(), 3);
-        EXPECT_EQ(affp.lowerA[0].numRow(), 1);
-        EXPECT_EQ(affp.lowerA[1].numRow(), 1);
-        EXPECT_EQ(affp.lowerA[2].numRow(), 1);
-        EXPECT_TRUE(allZero(affp.lowerA[0].getRow(0)));
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a1{-1, 0, 0, 0, 0, 0};
-        EXPECT_TRUE(affp.lowerA[2].getRow(0) == a1);
-        EXPECT_TRUE(allZero(affp.lowerA[1].getRow(0)));
-    }
-    { // upper bound tests
-        EXPECT_EQ(affp.upperA.size(), 3);
-        EXPECT_EQ(affp.upperA[0].numRow(), 1);
-        EXPECT_EQ(affp.upperA[1].numRow(), 1);
-        EXPECT_EQ(affp.upperA[2].numRow(), 1);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
-        EXPECT_TRUE(affp.upperA[0].getRow(0) == a0);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a1{-1, 0, 1, 0, 0, 0};
-        EXPECT_TRUE(affp.upperA[2].getRow(0) == a1);
-        //                               0  M  N  m  n  k
-        llvm::SmallVector<int64_t, 6> a2{-1, 0, 0, 0, 1, -1};
-        EXPECT_TRUE(affp.upperA[1].getRow(0) == a2);
-    }
+    // affp021.lc[0][0].dump();
+    // { // lower bound tests
+    //     EXPECT_EQ(affp021.lowerA.size(), 3);
+    //     EXPECT_EQ(affp021.lowerA[0].numRow(), 1);
+    //     EXPECT_EQ(affp021.lowerA[1].numRow(), 1);
+    //     EXPECT_EQ(affp021.lowerA[2].numRow(), 1);
+    //     EXPECT_TRUE(allZero(affp021.lowerA[0].getRow(0)));
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a1{-1, 0, 0, 0, 0, 0};
+    //     EXPECT_TRUE(affp021.lowerA[2].getRow(0) == a1);
+    //     EXPECT_TRUE(allZero(affp021.lowerA[1].getRow(0)));
+    // }
+    // { // upper bound tests
+    //     EXPECT_EQ(affp021.upperA.size(), 3);
+    //     EXPECT_EQ(affp021.upperA[0].numRow(), 1);
+    //     EXPECT_EQ(affp021.upperA[1].numRow(), 1);
+    //     EXPECT_EQ(affp021.upperA[2].numRow(), 1);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a0{-1, 1, 0, 0, 0, 0};
+    //     EXPECT_TRUE(affp021.upperA[0].getRow(0) == a0);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a1{-1, 0, 1, 0, 0, 0};
+    //     EXPECT_TRUE(affp021.upperA[2].getRow(0) == a1);
+    //     //                               0  M  N  m  n  k
+    //     llvm::SmallVector<int64_t, 6> a2{-1, 0, 0, 0, 1, -1};
+    //     EXPECT_TRUE(affp021.upperA[1].getRow(0) == a2);
+    // }
 
     /*
     std::cout << "\nExtrema of loops:" << std::endl;
-    for (size_t i = 0; i < affp.getNumLoops(); ++i) {
+    for (size_t i = 0; i < affp021.getNumLoops(); ++i) {
         auto lbs = aff->lExtrema[i];
         auto ubs = aff->uExtrema[i];
         std::cout << "Loop " << i << " lower bounds: " << std::endl;
@@ -157,11 +158,11 @@ TEST(AffineTest0, BasicAssertions) {
               << std::endl;
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
-    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(1, false));
+    EXPECT_FALSE(affp021.zeroExtraIterationsUponExtending(1, false));
     std::cout << "About to run second compat test" << std::endl;
-    EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, true));
+    EXPECT_TRUE(affp021.zeroExtraIterationsUponExtending(1, true));
 
-    // affp.zeroExtraIterationsUponExtending(poset, 1, )
+    // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }
 TEST(NonUnimodularExperiment, BasicAssertions) {
     std::cout << "Starting affine test 0" << std::endl;
@@ -201,13 +202,13 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     std::cout << "A = \n"
               << A << "\nb = \n[ " << r[0] << ", " << r[1] << ", " << r[2]
               << ", " << r[3] << " ]" << std::endl;
-    AffineLoopNest affp(A, r, poset);
+    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
     std::cout << "Original order:" << std::endl;
     std::cout << affp << std::endl;
 
-    affp.swap(0, 1);
+    AffineLoopNest affp10{affp.rotate(stringToIntMatrix("[0 1; 1 0]"))};
     std::cout << "Swapped order:" << std::endl;
-    std::cout << affp << std::endl;
+    std::cout << affp10 << std::endl;
 
-    EXPECT_FALSE(affp.isEmpty());
+    EXPECT_FALSE(affp10.isEmpty());
 }

@@ -477,7 +477,7 @@ template <typename T, typename A> struct BaseMatrix {
     }
     void copyRow(llvm::ArrayRef<T> x, size_t i){
 	for (size_t j = 0; j < numCol(); ++j)
-	    A(i,j) = x[j];
+	    (*this)(i,j) = x[j];
     }
     inline StridedVector<T> getCol(size_t n) {
         return StridedVector<T>{data() + n, numRow(), rowStride()};

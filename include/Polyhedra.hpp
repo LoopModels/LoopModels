@@ -262,7 +262,8 @@ struct Polyhedra {
         if (Adst.numRow() != c)
             Adst.resize(c, Asrc.numCol());
     }
-    static std::pair<size_t,size_t> countSigns(PtrMatrix<const int64_t> A, size_t i){
+    static std::pair<size_t, size_t> countSigns(PtrMatrix<const int64_t> A,
+                                                size_t i) {
         size_t numNeg = 0;
         size_t numPos = 0;
         for (size_t j = 0; j < A.numRow(); ++j) {
@@ -270,14 +271,14 @@ struct Polyhedra {
             numNeg += (Aij < 0);
             numPos += (Aij > 0);
         }
-	return std::make_pair(numNeg, numPos);
+        return std::make_pair(numNeg, numPos);
     }
     std::tuple<size_t, size_t, size_t>
     eliminateVarForRCElimCore(IntMatrix &Adst, IntMatrix &E,
                               PtrMatrix<int64_t> Asrc, const size_t i) const {
         // eliminate variable `i` according to original order
         const auto [numCon, numVar] = Asrc.size();
-	const auto [numNeg, numPos] = countSigns(Asrc, i);
+        const auto [numNeg, numPos] = countSigns(Asrc, i);
         const size_t numECol = E.numRow();
         size_t numNonZero = 0;
         for (size_t j = 0; j < numECol; ++j)
@@ -333,6 +334,9 @@ struct Polyhedra {
         }
         return std::make_tuple(numExclude, c, numNonZero);
     }
+    void moveEqualities(IntMatrix &Aold, I64Matrix &Eold) const {
+        ::moveEqualities(Aold, Eold, C);
+    }
     // returns std::make_pair(numNeg, numPos);
     // countNonZeroSign(Matrix A, i)
     // takes `A'x <= b`, and seperates into lower and upper bound equations w/
@@ -379,41 +383,15 @@ struct Polyhedra {
                 return false;
         return true;
     }
-    void moveEqualities(IntMatrix &Aold, IntMatrix &Eold) const {
-
-        const size_t numVar = Eold.numCol();
-        assert(Aold.numCol() == numVar);
-        if (Aold.numRow() <= 1)
-            return;
-        for (size_t o = Aold.numRow() - 1; o > 0;) {
-            for (size_t i = o--; i < Aold.numRow(); ++i) {
-                bool isNeg = true;
-                for (size_t v = 0; v < numVar; ++v) {
-                    if (Aold(i, v) != -Aold(o, v)) {
-                        isNeg = false;
-                        break;
-                    }
-                }
-                if (isNeg && equalNegative(Aold, i, o)) {
-                    size_t e = Eold.numRow();
-                    Eold.resize(e + 1, numVar);
-                    for (size_t v = 0; v < numVar; ++v)
-                        Eold(e, v) = Aold(i, v);
-                    eraseConstraint(Aold, i, o);
-                    break;
-                }
-            }
-        }
-    }
     // returns `false` if not violated, `true` if violated
-    bool pruneBounds(IntMatrix &Aold, llvm::SmallVectorImpl<int64_t> &bold,
-                     IntMatrix &Eold,
-                     llvm::SmallVectorImpl<int64_t> &qold) const {
-
-        IntMatrix Atmp0, Atmp1, Etmp0, Etmp1;
-        llvm::SmallVector<int64_t, 16> btmp0, btmp1, qtmp0, qtmp1;
-        return pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, btmp0, btmp1, qtmp0,
-                           qtmp1, Aold, bold, Eold, qold);
+    bool pruneBounds(IntMatrix &Aold, I64Matrix &Eold) const {
+        IntMatrix Atmp0, Atmp1, Etmp0;
+        if constexpr (!hasEqualities) {
+            pruneBounds(Atmp0, Atmp1, Etmp0, Aold);
+            return false;
+        }
+        IntMatrix Etmp1;
+        return pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, Aold, Eold);
     }
     bool pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp0,
                      IntMatrix &Etmp1, IntMatrix &Aold, IntMatrix &Eold) const {
@@ -520,7 +498,7 @@ struct Polyhedra {
     int64_t checkForTrivialRedundancies(
         llvm::SmallVector<unsigned, 32> &constraintsToErase,
         llvm::SmallVector<int, 16> &boundDiffs, IntMatrix &Etmp,
-        IntMatrix &Aold, IntMatrix &Eold, llvm::ArrayRef<int64_t> a,
+        IntMatrix &Aold, I64Matrix &Eold, llvm::ArrayRef<int64_t> a,
         bool AbIsEq) const {
         const size_t numCol = Aold.numCol();
         const size_t numAuxVar = Etmp.numCol() - numCol;
@@ -681,12 +659,12 @@ struct Polyhedra {
     }
     bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
                                     IntMatrix &Etmp0, IntMatrix &Etmp1,
-                                    IntMatrix &Aold, IntMatrix &Eold,
+                                    IntMatrix &Aold, I64Matrix &Eold,
                                     llvm::ArrayRef<int64_t> a, const size_t CC,
                                     const bool AbIsEq) const {
 
         printConstraints(
-            printConstraints(std::cout << "Constraints, eliminating C=" << C
+            printConstraints(std::cout << "Constraints, eliminating C=" << CC
                                        << ":\n",
                              Aold, C.getNumConstTerms(), true),
             Eold, C.getNumConstTerms(), false)
@@ -860,25 +838,40 @@ struct Polyhedra {
             }
         }
     }
+    // returns `true` if empty, `false` otherwise
+    bool checkZeros() {
+        for (size_t c = A.numCol(); c != 0;)
+            if (allZero(getNonSymbol(A, --c))) {
+                if (greaterZero(c))
+                    return true;
+                eraseConstraint(A, c);
+            }
+        return false;
+    }
     // A'x <= b
     // removes variable `i` from system
-    void removeVariable(IntMatrix &A, const size_t i) { fourierMotzkin(A, i); }
+    bool removeVariable(IntMatrix &A, const size_t i) {
+        fourierMotzkin(A, i);
+        return checkZeros();
+    }
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
     bool removeVariable(IntMatrix &A, IntMatrix &E, const size_t i) {
-
         if (substituteEquality(A, E, i))
             fourierMotzkin(A, i);
         if (E.numRow() > 1)
             NormalForm::simplifySystem(E);
-        return pruneBounds(A, E);
+        if (checkZeros())
+            return true;
+        pruneBounds(A, E);
+        return false;
     }
 
-    void removeVariable(const size_t i) {
-        if (hasEqualities)
-            return removeVariable(A, E, i);
-        removeVariable(A, i);
+    bool removeVariable(const size_t i) {
+	if constexpr (hasEqualities)
+	    return removeVariable(A, E, i);
+	return removeVariable(A, i);
     }
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<unsigned> &colsToErase) {
@@ -896,45 +889,30 @@ struct Polyhedra {
     }
     void dropEmptyConstraints() {
         dropEmptyConstraints(A);
-        if (hasEqualities)
+        if constexpr (hasEqualities)
             dropEmptyConstraints(E);
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Polyhedra &p) {
         auto &&os2 = printConstraints(os, p.A, p.C.getNumConstTerms());
-        if (hasEqualities)
+        if constexpr (hasEqualities)
             return printConstraints(os2, p.E, p.C.getNumConstTerms());
         return os2;
     }
     void dump() const { std::cout << *this; }
 
-    bool isEmpty() {
-        assert(false);
+    bool isEmptyBang() {
+        const size_t numVar = getNumVar();
+        const size_t numConst = C.getNumConstTerms();
+        for (size_t i = 0; i < numVar; ++i)
+            if (!allZero(A.getCol(numConst + i))) {
+                removeVariable(numConst + i);
+            }
         return false;
-        // TODO: implement with simplex feasibility check
-        //     // inefficient (compared to ILP + Farkas Lemma approach)
-        //     //#ifndef NDEBUG
-        //     //        std::cout << "calling isEmpty()" << std::endl;
-        //     //#endif
-        //     auto copy = *static_cast<const P *>(this);
-        //     IntMatrix lA;
-        //     IntMatrix uA;
-        //     llvm::SmallVector<int64_t, 8> lb;
-        //     llvm::SmallVector<int64_t, 8> ub;
-        //     IntMatrix Atmp0, Atmp1, E;
-        //     llvm::SmallVector<int64_t, 16> btmp0, btmp1, q;
-        //     size_t i = getNumVar();
-        //     while (i--) {
-        //         copy.categorizeBounds(lA, uA, lb, ub, copy.A, copy.b, i);
-        //         copy.deleteBounds(copy.A, copy.b, i);
-        //         if (copy.appendBounds(lA, uA, lb, ub, Atmp0, Atmp1, E, btmp0,
-        //         btmp1,
-        //                               q, copy.A, copy.b, i,
-        //                               Polynomial::Val<true>())) {
-        //             return true;
-        //         }
-        //     }
-        //     return false;
+    }
+    bool isEmpty() const {
+        auto B{*this};
+        return B.isEmptyBang();
     }
     // A*x <= b
     bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
