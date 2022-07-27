@@ -79,9 +79,16 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
     //     pruneBounds();
     // }
     void removeLoopBang(size_t i) {
+	for (size_t i = 0; i < A.numRow(); ++i)
+	    assert(!allZero(A.getRow(i)));
+        // std::cout << "removing i = " << i << "\nA=\n" << A << std::endl;
         fourierMotzkin(A, i + C.getNumConstTerms());
+        // std::cout << "removed i = " << i << "\nA=\n" << A << std::endl;
+	for (size_t i = 0; i < A.numRow(); ++i)
+	    assert(!allZero(A.getRow(i)));
         pruneBounds();
-        // std::cout << "removed i = " << i << std::endl;
+	for (size_t i = 0; i < A.numRow(); ++i)
+	    assert(!allZero(A.getRow(i)));
         assert(allZero(A.getCol(i + C.getNumConstTerms())));
     }
     AffineLoopNest removeLoop(size_t i) {
