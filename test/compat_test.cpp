@@ -39,28 +39,25 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     // assert(affp.A.numRow() == 2);
 }
 TEST(LessTrivialPruneBounds, BasicAssertions) {
-    auto A{stringToIntMatrix("[1 0; -1 0; 0 0; 0 -1; 0 1]")};
+    auto A{stringToIntMatrix("[0 -1 0; 0 0 0; 0 1 0; 0 0 0]")};
+    // auto A{stringToIntMatrix("[-1 0 0 0 -1 1; -1 1 0 0 0 0; -1 0 1 0 0 1; 0 0 0 0 0 -1; -1 0 1 0 1 0]")};
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     llvm::SmallVector<MPoly, 8> b;
-    b.push_back(M-1);
-    b.emplace_back(0);
-    b.push_back(N-1);
     b.emplace_back(-1);
-    b.push_back(N-1);
+    b.emplace_back(M-1);
+    b.emplace_back(N-1);
+    // b.emplace_back(0);
+    b.emplace_back(N-1);
     PartiallyOrderedSet poset;
     // ids 1 and 2 are >= 0;
     poset.push(0, 1, Interval::nonNegative());
+    poset.push(0, 2, Interval::nonNegative());
     AffineLoopNest affp{AffineLoopNest::construct(A, b, poset)};
     affp.pruneBounds();
     affp.dump();
-    EXPECT_EQ(affp.A.numRow(), 5);
+    EXPECT_EQ(affp.A.numRow(), 4);
     
- // -1  1  0
- //  0  0  0
- // -1  0  1
- // -1  0  0
- // -1  0  1    
 }
 
 

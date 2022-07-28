@@ -364,12 +364,14 @@ struct Polyhedra {
                      IntMatrix &Aold) const {
 
         // for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
-            // size_t c = Aold.numRow() - 1 - i;
-        for (size_t c = Aold.numRow(); c; ) {
-	    // std::cout << "trying to prune c = "<<c<<std::endl;
-            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, --c))
+        // size_t c = Aold.numRow() - 1 - i;
+        for (size_t c = Aold.numRow(); c;) {
+            // std::cout << "trying to prune c = "<<c<<std::endl;
+            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, --c)) {
                 // drop `c`
+                std::cout << "ERASING c = " << c << std::endl;
                 eraseConstraint(Aold, c);
+            }
         }
     }
     void pruneBounds(IntMatrix &Aold) const {
@@ -467,7 +469,7 @@ struct Polyhedra {
             if (dte == -1) {
                 for (size_t j = 0; j < delta.size(); ++j)
                     delta[j] = Aold(c, j) - a[j];
-                // printVector(std::cout << "delta = ", delta) << std::endl;
+                printVector(std::cout << "delta = ", delta) << std::endl;
                 if (C.lessEqual(delta)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
@@ -582,7 +584,7 @@ struct Polyhedra {
             for (size_t v = 0; v < numVar; ++v) {
                 int64_t av = a[v + numConst];
                 int64_t Avc = Aold(c, v + numConst);
-                if ((av > 0) == (Avc > 0)) {
+                if (((av > 0) == (Avc > 0)) && ((av != 0) & (Avc != 0))) {
                     boundDiffs.push_back(c);
                     break;
                 }
@@ -611,13 +613,15 @@ struct Polyhedra {
         llvm::SmallVector<unsigned, 32> colsToErase;
         int64_t dependencyToEliminate =
             checkForTrivialRedundancies(colsToErase, boundDiffs, E, Aold, a);
-        // std::cout << "Initial eliminating: " << dependencyToEliminate
-        //           << std::endl;
+        std::cout << "Aold =\n" << Aold << std::endl;
+        printVector(std::cout << "CC = " << CC << "; a = ", a) << std::endl;
+        printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
+        std::cout << "Initial eliminating: " << dependencyToEliminate
+                  << std::endl;
         if (dependencyToEliminate == -2)
             return true;
-        // std::cout << "Aold =\n" << Aold << std::endl;
-        // std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
-        // std::cout << "E =\n" << E << std::endl;
+        std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
+        std::cout << "E =\n" << E << std::endl;
         // define variables as
         // (a-Aold) + delta = b - bold
         // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
@@ -627,19 +631,23 @@ struct Polyhedra {
         // and thus (bold - Aold) is the redundant constraint, and we eliminate
         // the associated column.
         while (dependencyToEliminate >= 0) {
-            // std::cout << "eliminating: " << dependencyToEliminate << std::endl;
+            std::cout << "eliminating: " << dependencyToEliminate << std::endl;
             // eliminate dependencyToEliminate
             eliminateVarForRCElim(Atmp1, E, Atmp0,
                                   size_t(dependencyToEliminate));
             std::swap(Atmp0, Atmp1);
             dependencyToEliminate = -1;
             // iterate over the new bounds, search for constraints we can drop
-            // std::cout << "Atmp0 = \n" << Atmp0 << "E =\n" << E << std::endl;
+            std::cout << "Atmp0 = \n" << Atmp0 << "\nE =\n" << E << std::endl;
             for (size_t c = 0; c < Atmp0.numRow(); ++c) {
                 llvm::ArrayRef<int64_t> Ac = Atmp0.getRow(c);
                 int64_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     int64_t auxInd = auxiliaryInd(Ac);
+                    printVector(std::cout << "sym = ", getSymbol(Atmp0, c))
+                        << std::endl;
+                    std::cout << "C.lessEqual(getSymbol(Atmp0, c)) = "
+                              << C.lessEqual(getSymbol(Atmp0, c)) << std::endl;
                     if ((auxInd != -1) && (C.lessEqual(getSymbol(Atmp0, c)))) {
                         int64_t Axc = Atmp0(c, auxInd);
                         // -Axc*delta <= b <= 0
@@ -693,7 +701,7 @@ struct Polyhedra {
             for (size_t v = 0; v < numVar; ++v) {
                 int64_t av = a[v];
                 int64_t Avc = Aold(c, v);
-                if ((av > 0) == (Avc > 0)) {
+                if (((av > 0) == (Avc > 0)) && ((av != 0) & (Avc != 0))) {
                     boundDiffs.push_back(c);
                     break;
                 }
