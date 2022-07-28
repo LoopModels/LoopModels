@@ -33,10 +33,57 @@
 // directly leads to another, which would be important for whether two loops may
 // be fused.
 
+void printLoopDebugInfo(llvm::Loop *LP, 
+                        llvm::LoopInfo *LI,
+                        llvm::ScalarEvolution *SE) {
+
+    llvm::outs() << "\n" << "--------------------" << '\n';
+    llvm::outs() << "Loop ID: " << LP->getLoopID() << '\n';
+
+    llvm::outs() << "Loop depth: " << LP->getLoopDepth() << "\n";
+
+    auto *inductOuter = LP->getInductionVariable(*SE);
+    llvm::outs() << "Outer induction var:\n\t"; 
+    llvm::outs() << *inductOuter << "\n";
+
+    llvm::outs() << "induction var scev: " << *SE->getSCEV(inductOuter) << "\n";
+
+    const llvm::SCEV *backEdgeTaken = nullptr;
+    backEdgeTaken = SE->getBackedgeTakenCount(LP);
+    if (backEdgeTaken) {
+        llvm::outs()
+            << "Back edge taken count: " << *backEdgeTaken
+            << "\n\ttrip count: "
+            << *(SE->getAddExpr(
+                    backEdgeTaken,
+                    SE->getOne(backEdgeTaken->getType())
+                ))
+            << "\n";
+    } else {
+        llvm::outs() << "Couldn not find backedge taken. D:\n";
+    }
+
+    auto obouter = LP->getBounds(*SE);
+
+    if (obouter.hasValue()) {
+        auto b = obouter.getValue();
+        llvm::outs() << "Outer loop bounds:\n" << 
+                    "\tInitialIVValue: " << obouter->getInitialIVValue() << "\n" <<
+                    "\tStepValue: " << *obouter->getStepValue() << "\n" <<
+                    "\tFinalIVValue: \n\t" << obouter->getFinalIVValue() << "\n" <<
+                    "\tDirection: " << (static_cast<int>(obouter->getDirection()) == 0 ? "Increasing" : "Decreasing??") << "\n";
+
+    } else {
+        llvm::outs() << "Could not find outer loop bounds. =(" << "\n";
+    }
+
+    
+}
+
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
-
-
+    
+    llvm::outs() << "\n\t###### TurboLoopPass ######" << "\n";
     llvm::outs() << F.getName() << '\n';                                      
     
     
@@ -180,69 +227,94 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
     
     for (llvm::Loop *LP : *LI) {
-        llvm::outs() << "--------------------" << '\n';
-        llvm::outs() << "Loop ID: " << LP->getLoopID() << '\n';
-
-        llvm::outs() << "Loop depth: " << LP->getLoopDepth() << "\n";
-
-        auto *inductOuter = LP->getInductionVariable(*SE);
-        llvm::outs() << "Outer induction var:\n\t"; 
-        llvm::outs() << *inductOuter << "\n";
-
-        llvm::outs() << "induction var scev: " << *SE->getSCEV(inductOuter) << "\n";
-
-        const llvm::SCEV *backEdgeTaken = nullptr;
-        backEdgeTaken = SE->getBackedgeTakenCount(LP);
-        if (backEdgeTaken) {
-            llvm::outs()
-                << "Back edge taken count: " << *backEdgeTaken
-                << "\n\ttrip count: "
-                << *(SE->getAddExpr(
-                        backEdgeTaken,
-                        SE->getOne(backEdgeTaken->getType())
-                    ))
-                << "\n";
-        } else {
-            llvm::outs() << "Couldn not find backedge taken. D:\n";
-        }
-
-        auto obouter = LP->getBounds(*SE);
-
-        if (obouter.hasValue()) {
-            auto b = obouter.getValue();
-            llvm::outs() << "Outer loop bounds:\n" << 
-                        "\tInitialIVValue: " << obouter->getInitialIVValue() << "\n" <<
-                        "\tStepValue: " << *obouter->getStepValue() << "\n" <<
-                        "\tFinalIVValue: \n\t" << obouter->getFinalIVValue() << "\n" <<
-                        "\tDirection: " << (static_cast<int>(obouter->getDirection()) == 0 ? "Increasing" : "Decreasing??") << "\n";
-
-        } else {
-            llvm::outs() << "Could not find outer loop bounds. =(" << "\n";
-        }
-
-        llvm::outs() << "Preheader:\n" << *LP->getLoopPreheader() << "\n";
-        llvm::outs() << "Latch:\n" << *LP->getLoopLatch() << "\n";        
-        llvm::outs() << "Exit:\n" << *LP->getExitBlock() << "\n";        
-
-        llvm::outs() << "BasicBlocks:" << "\n";
+        
+        printLoopDebugInfo(LP, LI, SE);
 
         for (llvm::BasicBlock *block : LP->getBlocks()) {
-            llvm::outs() << "BasicBlock: " << "\n";
-            for (auto inst = block->begin(); inst != block->end(); inst ++) {
-                llvm::outs() << *inst << " : " << "\n";
-                llvm::outs() << "Op: " << inst->getOpcodeName() << 
-                    ", MayWriteToMemory: " << inst->mayWriteToMemory() << 
-                    ", MayReadFromMemory: " << inst->mayReadFromMemory() << 
-                    ", MayHaveSideEffects: " << inst->mayReadFromMemory() << "\n";
-                llvm::outs() << "Operands: ";
+        llvm::outs() << "BasicBlock: " << "\n";
+        for (auto inst = block->begin(); inst != block->end(); inst ++) {
+            // llvm::outs() << *inst << " : " << "\n";
+            // llvm::outs() << "Op: " << inst->getOpcodeName() << 
+            //     ", MayWriteToMemory: " << inst->mayWriteToMemory() << 
+            //     ", MayReadFromMemory: " << inst->mayReadFromMemory() << 
+            //     ", MayHaveSideEffects: " << inst->mayReadFromMemory() << "\n";
+            // llvm::outs() << "Operands: ";
+            // for (size_t i = 0; i != inst->getNumOperands(); i ++) {
+            //     llvm::outs() << *inst->getOperand(i)->getType() << " / ";
+            // }
+            // llvm::outs() << "\n" << "//" << "\n";
+            
+            // store
+            if (inst->mayWriteToMemory()) {
+                if (inst->mayReadFromMemory()) {
+                    throw "What has happened?";
+                } 
+                llvm::outs() << "mayWriteToMemory:" << "\n";
+                llvm::outs() << *inst << "\n";
+                llvm::outs() << "Operands: " << "\n";
                 for (size_t i = 0; i != inst->getNumOperands(); i ++) {
-                    llvm::outs() << *inst->getOperand(i)->getType() << " / ";
-                }
-                llvm::outs() << "\n" << "//" << "\n";
-                
+                    llvm::outs() << "\t" << *inst->getOperand(i)->getType() << "\n";
+                    const llvm::SCEV* scev = SE->getSCEV(inst->getOperand(i));
+                    llvm::outs() << "\tscev: " << *scev << "\n";
+                    llvm::outs() << "\tgetPointerBase: " << *SE->getPointerBase(scev) << "\n";
+
+                }                
             }
+            
+            // load
+            if (inst->mayReadFromMemory()) {
+                llvm::outs() << "mayReadFromMemory:" << "\n";
+                llvm::outs() << *inst << "\n";
+
+                llvm::outs() << "Operands: " << "\n";
+                for (size_t i = 0; i != inst->getNumOperands(); i ++) {
+                    llvm::outs() << "\t" << *inst->getOperand(i)->getType() << "\n";
+                    const llvm::SCEV* scev = SE->getSCEV(inst->getOperand(i));
+                    llvm::outs() << "\tscev: " << *scev << "\n";
+                    llvm::outs() << "\tgetPointerBase: " << *SE->getPointerBase(scev) << "\n";
+                }
+
+                // 
+                auto GEP = inst->getOperand(0);
+                llvm::outs() << "GEP: " << *GEP << "\n";
+
+                auto idx = static_cast<llvm::Instruction*>(GEP)->getOperand(1);
+
+                llvm::outs() << "idx: " << *idx << "\n";
+                llvm::outs() << "idx scev: " << *SE->getSCEV(idx) << "\n";
+            }
+
         }
-        
+
+    }
+
+        // llvm::outs() << "Preheader:\n" << *LP->getLoopPreheader() << "\n";
+        // llvm::outs() << "Latch:\n" << *LP->getLoopLatch() << "\n";        
+        // llvm::outs() << "Exit:\n" << *LP->getExitBlock() << "\n";        
+
+        // llvm::outs() << "BasicBlocks:" << "\n";
+
+        // for (llvm::BasicBlock *block : LP->getBlocks()) {
+        //     llvm::outs() << "BasicBlock: " << "\n";
+        //     for (auto inst = block->begin(); inst != block->end(); inst ++) {
+        //         llvm::outs() << *inst << " : " << "\n";
+        //         llvm::outs() << "Op: " << inst->getOpcodeName() << 
+        //             ", MayWriteToMemory: " << inst->mayWriteToMemory() << 
+        //             ", MayReadFromMemory: " << inst->mayReadFromMemory() << 
+        //             ", MayHaveSideEffects: " << inst->mayReadFromMemory() << "\n";
+        //         llvm::outs() << "Operands: ";
+        //         for (size_t i = 0; i != inst->getNumOperands(); i ++) {
+        //             llvm::outs() << *inst->getOperand(i)->getType() << " / ";
+        //         }
+        //         llvm::outs() << "\n" << "//" << "\n";
+                
+        //     }
+        // }
+
+
+        for (auto SubLP = ++df_begin(LP); SubLP != df_end(LP); SubLP++) {
+            printLoopDebugInfo(*SubLP, LI, SE);
+        }
         
     }
 
