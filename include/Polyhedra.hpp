@@ -22,7 +22,7 @@
 
 // Can we represent Polyhedra using slack variables + equalities?
 // What must we do with Polyhedra?
-// 1) Ax <= b && c'x >= 0 <-> l_0 + l'(b - Ax) == c'x && l >= 0 && l_0 >= 0
+// 1) A*x >= 0 && c'x >= 0 <-> l_0 + l'Ax == c'x && l >= 0 && l_0 >= 0
 // 2) pruning bounds
 
 // For "1)", we'd need to recover inequalities from slack vars.
@@ -47,8 +47,8 @@
 
 // A*x <= b
 // representation is
-// A[:,1+s.size()]*x <= A[:,0] + A[:,1:s.size()]*s
-// E[:,1+s.size()]*x == E[:,0] + E[:,1:s.size()]*s
+// A[:,0] + A[:,1:s.size()]*s + A[:,1+s.size():end]*x >= 0
+// E[:,0] + E[:,1:s.size()]*s + E[:,1+s.size():end]*x == 0
 // where `s` is the vector of symbolic variables.
 // These are treated as constants, and clearly separated from the dynamically
 // varying values `x`.
@@ -191,7 +191,7 @@ struct Polyhedra {
         // std::cout << "Asrc0 =\n" << Asrc << std::endl;
         if (!substituteEquality(Asrc, E0, i)) {
             // std::cout << "Asrc1 =\n" << Asrc << std::endl;
-            const size_t numAuxVar = Asrc.numCol() - getNumVar();
+            // const size_t numAuxVar = Asrc.numCol() - getNumVar();
             size_t c = Asrc.numRow();
             while (c--) {
                 size_t s = 0;
@@ -897,6 +897,15 @@ struct Polyhedra {
             return removeVariable(A, E, i);
         return removeVariable(A, i);
     }
+    void removeVariableAndPrune(const size_t i) {
+        if constexpr (hasEqualities){
+	    removeVariable(A, E, i);
+	} else {
+	    removeVariable(A, i);
+	}
+	pruneBounds();
+    }
+    
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<unsigned> &colsToErase) {
         // std::ranges::sort(colsToErase);
@@ -952,6 +961,8 @@ struct Polyhedra {
         return true;
     }
 };
+
+typedef Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> SymbolicPolyhedra;
 
 /*
 template <MaybeMatrix I64Matrix>

@@ -32,10 +32,10 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     A(3, 0) = 1;
 
     
-    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
-    affp.pruneBounds();
-    affp.dump();
-    EXPECT_EQ(affp.A.numRow(), 2);
+    auto affp{AffineLoopNest::construct(A, r, poset)};
+    affp->pruneBounds();
+    affp->dump();
+    EXPECT_EQ(affp->A.numRow(), 2);
     // assert(affp.A.numRow() == 2);
 }
 TEST(LessTrivialPruneBounds, BasicAssertions) {
@@ -53,10 +53,10 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
     // ids 1 and 2 are >= 0;
     poset.push(0, 1, Interval::nonNegative());
     poset.push(0, 2, Interval::nonNegative());
-    AffineLoopNest affp{AffineLoopNest::construct(A, b, poset)};
-    affp.pruneBounds();
-    affp.dump();
-    EXPECT_EQ(affp.A.numRow(), 4);
+    auto affp{AffineLoopNest::construct(A, b, poset)};
+    affp->pruneBounds();
+    affp->dump();
+    EXPECT_EQ(affp->A.numRow(), 4);
     
 }
 
@@ -119,15 +119,15 @@ TEST(AffineTest0, BasicAssertions) {
 
     std::cout << "About to construct affine obj" << std::endl;
 
-    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
+    auto affp{AffineLoopNest::construct(A, r, poset)};
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
-    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(0, false));
-    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(0, true));
-    EXPECT_TRUE(affp.zeroExtraIterationsUponExtending(1, false));
+    EXPECT_FALSE(affp->zeroExtraIterationsUponExtending(0, false));
+    EXPECT_FALSE(affp->zeroExtraIterationsUponExtending(0, true));
+    EXPECT_TRUE(affp->zeroExtraIterationsUponExtending(1, false));
     std::cout << "About to run second compat test" << std::endl;
-    EXPECT_FALSE(affp.zeroExtraIterationsUponExtending(1, true));
-    std::cout << affp << std::endl;
+    EXPECT_FALSE(affp->zeroExtraIterationsUponExtending(1, true));
+    affp->dump();
     std::cout << "About to run first set of bounds tests" << std::endl;
     // { // lower bound tests
     //     EXPECT_EQ(affp.lowerA.size(), 3);
@@ -156,10 +156,10 @@ TEST(AffineTest0, BasicAssertions) {
     //     EXPECT_TRUE(affp.upperA[2].getRow(0) == a2);
     // }
     std::cout << "\nPermuting loops 1 and 2" << std::endl;
-    AffineLoopNest affp021{affp.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
+    auto affp021{affp->rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
     // Now that we've swapped loops 1 and 2, we should have
     // for m in 0:M-1, k in 1:N-1, n in 0:k-1
-    affp021.dump();
+    affp021->dump();
     // std::cout << "First lc: \n";
     // affp021.lc[0][0].dump();
     // { // lower bound tests
@@ -213,9 +213,9 @@ TEST(AffineTest0, BasicAssertions) {
               << std::endl;
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
-    EXPECT_FALSE(affp021.zeroExtraIterationsUponExtending(1, false));
+    EXPECT_FALSE(affp021->zeroExtraIterationsUponExtending(1, false));
     std::cout << "About to run second compat test" << std::endl;
-    EXPECT_TRUE(affp021.zeroExtraIterationsUponExtending(1, true));
+    EXPECT_TRUE(affp021->zeroExtraIterationsUponExtending(1, true));
 
     // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }
@@ -257,14 +257,14 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     std::cout << "A = \n"
               << A << "\nb = \n[ " << r[0] << ", " << r[1] << ", " << r[2]
               << ", " << r[3] << " ]" << std::endl;
-    AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
+    auto affp{AffineLoopNest::construct(A, r, poset)};
     std::cout << "Original order:" << std::endl;
-    std::cout << affp << std::endl;
+    affp->dump();
 
-    AffineLoopNest affp10{affp.rotate(stringToIntMatrix("[0 1; 1 0]"))};
+    auto affp10{affp->rotate(stringToIntMatrix("[0 1; 1 0]"))};
     std::cout << "Swapped order:" << std::endl;
-    std::cout << affp10 << std::endl;
+    affp10->dump();
 
-    EXPECT_FALSE(affp10.isEmpty());
+    EXPECT_FALSE(affp10->isEmpty());
 }
 
