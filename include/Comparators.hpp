@@ -385,10 +385,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         else{
             // std::cout << "Col rank deficient" << std::endl;
-            IntMatrix tmpU(U.numRow()-1, U.numCol());
-            for (size_t i = 0; i < tmpU.numRow(); ++i)
-                for (size_t j = 0; j < tmpU.numCol(); ++j)
-                    tmpU(i, j) = U(i, j);
+            //IntMatrix tmpU(U.numRow()-1, U.numCol());
+            // for (size_t i = 0; i < tmpU.numRow(); ++i)
+            //     for (size_t j = 0; j < tmpU.numCol(); ++j)
+            //         tmpU(i, j) = U(i, j);
+            auto tmpU = U.view(0, U.numRow()-1, 0, U.numCol());
             auto b = U.view(0, tmpU.numRow(), 0, query.size()) * query;
             IntMatrix J(nEqs, 2 * nEqs);
             for (size_t i = 0; i < nEqs; ++i)
