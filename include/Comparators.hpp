@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./POSet.hpp"
+#include "Simplex.hpp"
 #include "Constraints.hpp"
 #include "Math.hpp"
 #include "NormalForm.hpp"
@@ -308,6 +309,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     llvm::Optional<llvm::SmallVector<int64_t, 16>> d;
     //llvm::SmallVector<int64_t, 16> sol;
     static LinearSymbolicComparator construct(IntMatrix Ap) {
+        // std::cout << "start Test = " << std::endl;
         const auto [numCon, numVar] = Ap.size();
         IntMatrix A(numVar + numCon, 2 * numCon);
         // A = [Ap' 0
@@ -317,30 +319,33 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 A(j, i) = Ap(i, j);
 
         for (size_t j = 0; j < numCon; ++j) {
-            A(j + numVar, j) = 1;
+            A(j + numVar, j) = -1;
             A(j + numVar, j + numCon) = 1;
         }
-        std::cout << "A = " << A << std::endl;
+        // std::cout << "A = " << A << std::endl;
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
+        // auto NS2 = NormalForm::nullSpace(H);
+        //std::cout << "H = " << H << std::endl;
+        //std::cout << "NS = " << NS2.numRow() << std::endl;
         size_t R = H.numRow();
         while ((R > 0) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
+        // auto NS = NormalForm::nullSpace(H);
+        // std::cout << "NS = " << NS.numRow() << std::endl;
         if (H.isSquare())
             return LinearSymbolicComparator{.U = std::move(U), .V = std::move(H), .d = {}};
-        std::cout << "H = " << H << std::endl;
-        std::cout << "U = " << U << std::endl;
+        // std::cout << "H = " << H << std::endl;
+        // std::cout << "U = " << U << std::endl;
         //std::cout << "U matrix:" << U << std::endl;
         auto Ht = H.transpose();
-        auto NS = NormalForm::nullSpace(H);
-        std::cout << "NS = " << NS << std::endl;
-        std::cout << "Ht matrix:" << Ht << std::endl;
+        // std::cout << "Ht matrix:" << Ht << std::endl;
         auto Vt = IntMatrix::identity(Ht.numRow());
         // Vt * Ht = D
-        std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
+        // std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
         NormalForm::solveSystem(Ht, Vt);
-        std::cout << "Vt =" << Vt << std::endl;
+        // std::cout << "Vt =" << Vt << std::endl;
         // H * V = Diagonal(d)
         auto d = Ht.diag();
         printVector(std::cout << "D matrix:", d) << std::endl;
@@ -349,24 +354,26 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     };
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
+        std::cout << "----start testing greaterEqualZero-----"<< std::endl;
+        auto nVars = query.size();
+        auto nEqs = V.numCol() / 2;
         if (!d.hasValue()) {
-            auto nVars = query.size();
-            auto nEqs = V.numCol() / 2;
             auto b = U.view(0, U.numRow(), 0, query.size()) * query;
+            // std::cout << "U =" << U << std::endl;
             for (size_t i = V.numRow(); i < b.size(); ++i) {
                 if (b[i] != 0)
                     return false;
-            }
+            }       
             auto H = V;
-            std::cout << "H = \n" << H << std::endl;
+            // std::cout << "H = \n" << H << std::endl;
             auto oldn = H.numCol();
             H.resizeCols(oldn + 1);
-            std::cout << "V = \n" << V << std::endl;
-            std::cout << "H = \n" << H << std::endl;
+            // std::cout << "V = \n" << V << std::endl;
+            // std::cout << "H = \n" << H << std::endl;
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = b[i];
             NormalForm::solveSystem(H);
-            std::cout << H << std::endl;
+            // std::cout <<"after solving:" << H << std::endl;
             for (size_t i = nEqs; i < H.numRow(); ++i) {
                 if (auto rhs = H(i, oldn))
                     if ((rhs > 0) != (H(i, i) > 0)) {
@@ -376,7 +383,53 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             }
             return true;
         }
-        return true;
+        else{
+            // std::cout << "Col rank deficient" << std::endl;
+            IntMatrix tmpU(U.numRow()-1, U.numCol());
+            for (size_t i = 0; i < tmpU.numRow(); ++i)
+                for (size_t j = 0; j < tmpU.numCol(); ++j)
+                    tmpU(i, j) = U(i, j);
+            auto b = U.view(0, tmpU.numRow(), 0, query.size()) * query;
+            IntMatrix J(nEqs, 2 * nEqs);
+            for (size_t i = 0; i < nEqs; ++i)
+                 J(i, i + nEqs) = 1;
+            auto dinv = d.getValue();
+            auto Dlcm = dinv[0];
+            for (size_t i = 1; i < dinv.size(); ++i){
+                Dlcm = lcm(Dlcm, dinv[i]);
+            }
+            for (size_t i = 0; i < dinv.size(); ++i){
+                dinv[i] = Dlcm / dinv[i];
+            }
+            for (size_t i = 0; i < b.size(); ++i){
+                b[i] *= dinv[i];
+            }
+            auto JV1 = matmul(J, V.view(0, V.numRow(), 0, tmpU.numRow()));
+            //std::cout <<"JV1 = " << JV1 << std::endl;
+            auto c = JV1 * b;
+            auto NSdim = V.numRow() - tmpU.numRow();
+            IntMatrix expandW(nEqs, NSdim * 2 +1);
+
+            for (size_t i = 0; i < nEqs; ++i)
+            {
+                expandW(i, 0) = c[i];
+                expandW(i, 0) *= Dlcm;
+                for (size_t j = 0; j < NSdim; ++j){
+                    auto val = V(i, tmpU.numRow() + j) * Dlcm;
+                    // should change positive and negative?
+                    expandW(i, j + 1) = val;
+                    expandW(i, j + NSdim + 1) = -val;
+                }
+            }
+            // std::cout <<"expandW " << expandW << std::endl;
+            IntMatrix Wcouple{0, expandW.numCol()};
+            llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
+            //optS.hasValue()
+            // std::cout <<"size of dinv: " << dinv.size() << std::endl;
+            // std::cout <<"size of b: " << b.size() << std::endl;
+            std::cout <<"has value " << optS.hasValue() << std::endl;
+            return optS.hasValue();
+        }
         //for low rank deficient case:
         //U: 10 x 10;
         //Vt: 8 x 8;
