@@ -187,7 +187,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
         auto *inductOuter = LP->getInductionVariable(*SE);
         llvm::outs() << "Outer induction var:\n\t"; 
-        llvm::outs() << *inductOuter << '\n';
+        llvm::outs() << *inductOuter << "\n";
+
+        llvm::outs() << "induction var scev: " << *SE->getSCEV(inductOuter) << "\n";
 
         const llvm::SCEV *backEdgeTaken = nullptr;
         backEdgeTaken = SE->getBackedgeTakenCount(LP);

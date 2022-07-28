@@ -1,0 +1,104 @@
+Printing analysis 'Scalar Evolution Analysis' for function 'julia_nestedloop_2!_62':
+Classifying expressions for: @"julia_nestedloop_2!_62"
+  %3 = tail call {}*** @julia.get_pgcstack()
+  -->  %3 U: full-set S: full-set
+  %4 = bitcast {} addrspace(10)* %0 to {} addrspace(10)* addrspace(10)*, !dbg !7
+  -->  %0 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %5 = addrspacecast {} addrspace(10)* addrspace(10)* %4 to {} addrspace(10)* addrspace(11)*, !dbg !7
+  -->  %5 U: full-set S: full-set
+  %6 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %5, i64 3, !dbg !7
+  -->  (24 + %5)<nuw> U: [24,0) S: [24,0)
+  %7 = bitcast {} addrspace(10)* addrspace(11)* %6 to i64 addrspace(11)*, !dbg !7
+  -->  (24 + %5)<nuw> U: [24,0) S: [24,0)
+  %8 = load i64, i64 addrspace(11)* %7, align 8, !dbg !7, !tbaa !11, !range !15, !invariant.load !4
+  -->  %8 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %9 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %5, i64 4
+  -->  (32 + %5) U: full-set S: full-set
+  %10 = bitcast {} addrspace(10)* addrspace(11)* %9 to i64 addrspace(11)*
+  -->  (32 + %5) U: full-set S: full-set
+  %11 = load i64, i64 addrspace(11)* %10, align 8, !tbaa !11, !range !15, !invariant.load !4
+  -->  %11 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %12 = bitcast {} addrspace(10)* %0 to i64 addrspace(13)* addrspace(10)*
+  -->  %0 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %13 = addrspacecast i64 addrspace(13)* addrspace(10)* %12 to i64 addrspace(13)* addrspace(11)*
+  -->  %13 U: full-set S: full-set
+  %14 = load i64 addrspace(13)*, i64 addrspace(13)* addrspace(11)* %13, align 8
+  -->  %14 U: full-set S: full-set
+  %value_phi3 = phi i64 [ %29, %L50 ], [ 1, %L14.preheader ]
+  -->  {1,+,1}<nuw><nsw><%L14> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %8		LoopDispositions: { %L14: Computable, %L29: Invariant }
+  %15 = mul i64 %value_phi3, %2
+  -->  {%2,+,%2}<%L14> U: full-set S: full-set		Exits: (%2 * %8)		LoopDispositions: { %L14: Computable, %L29: Invariant }
+  %16 = add nsw i64 %value_phi3, -1
+  -->  {0,+,1}<nuw><nsw><%L14> U: [0,9223372036854775806) S: [0,9223372036854775806)		Exits: (-1 + %8)<nsw>		LoopDispositions: { %L14: Computable, %L29: Invariant }
+  %value_phi8 = phi i64 [ %28, %L29 ], [ 1, %L29.preheader ]
+  -->  {1,+,1}<nuw><nsw><%L29> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %11		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %17 = mul i64 %value_phi8, 3, !dbg !29
+  -->  {3,+,3}<%L29> U: full-set S: full-set		Exits: (3 * %11)		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %18 = add i64 %17, 3, !dbg !31
+  -->  {6,+,3}<%L29> U: full-set S: full-set		Exits: (3 + (3 * %11))		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %19 = mul i64 %18, %8, !dbg !31
+  -->  {(6 * %8),+,(3 * %8)}<%L29> U: full-set S: full-set		Exits: ((3 + (3 * %11)) * %8)		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %20 = add i64 %19, %15, !dbg !31
+  -->  {{((6 * %8) + %2),+,%2}<%L14>,+,(3 * %8)}<%L29> U: full-set S: full-set		Exits: {(((3 + (3 * %11)) * %8) + %2),+,%2}<%L14>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %21 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %20, !dbg !31
+  -->  {{((8 * %2) + (48 * %8) + %14),+,(8 * %2)}<%L14>,+,(24 * %8)}<%L29> U: full-set S: full-set		Exits: {((8 * %2) + ((24 + (24 * %11)) * %8) + %14),+,(8 * %2)}<%L14>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %22 = load i64, i64 addrspace(13)* %21, align 8, !dbg !31, !tbaa !33
+  -->  %22 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L29: Variant, %L14: Variant }
+  %23 = add i64 %22, %1, !dbg !36
+  -->  (%1 + %22) U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L29: Variant, %L14: Variant }
+  %24 = add nsw i64 %value_phi8, -1, !dbg !38
+  -->  {0,+,1}<nuw><nsw><%L29> U: [0,9223372036854775806) S: [0,9223372036854775806)		Exits: (-1 + %11)<nsw>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %25 = mul i64 %24, %8, !dbg !38
+  -->  {0,+,%8}<%L29> U: full-set S: full-set		Exits: ((-1 + %11)<nsw> * %8)		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %26 = add i64 %16, %25, !dbg !38
+  -->  {{0,+,1}<nuw><nsw><%L14>,+,%8}<%L29> U: full-set S: full-set		Exits: {((-1 + %11)<nsw> * %8),+,1}<nw><%L14>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %27 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %26, !dbg !38
+  -->  {{%14,+,8}<%L14>,+,(8 * %8)}<%L29> U: full-set S: full-set		Exits: {((8 * (-1 + %11)<nsw> * %8) + %14),+,8}<%L14>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %28 = add nuw nsw i64 %value_phi8, 1, !dbg !43
+  -->  {2,+,1}<nuw><nsw><%L29> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %11)<nuw><nsw>		LoopDispositions: { %L29: Computable, %L14: Variant }
+  %29 = add nuw nsw i64 %value_phi3, 1, !dbg !43
+  -->  {2,+,1}<nuw><nsw><%L14> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %8)<nuw><nsw>		LoopDispositions: { %L14: Computable, %L29: Invariant }
+Determining loop execution counts for: @"julia_nestedloop_2!_62"
+Loop %L29: backedge-taken count is (-1 + %11)<nsw>
+Loop %L29: max backedge-taken count is 9223372036854775805
+Loop %L29: Predicated backedge-taken count is (-1 + %11)<nsw>
+ Predicates:
+
+Loop %L29: Trip multiple is 1
+Loop %L14: backedge-taken count is (-1 + %8)<nsw>
+Loop %L14: max backedge-taken count is 9223372036854775805
+Loop %L14: Predicated backedge-taken count is (-1 + %8)<nsw>
+ Predicates:
+
+Loop %L14: Trip multiple is 1
+Printing analysis 'Scalar Evolution Analysis' for function 'jfptr_nestedloop_2!_63':
+Classifying expressions for: @"jfptr_nestedloop_2!_63"
+  %3 = tail call {}*** @julia.get_pgcstack()
+  -->  %3 U: full-set S: full-set
+  %4 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !5, !align !6
+  -->  %4 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %5 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)** %1, i64 1
+  -->  (8 + %1) U: full-set S: full-set
+  %6 = bitcast {} addrspace(10)** %5 to i64 addrspace(10)**
+  -->  (8 + %1) U: full-set S: full-set
+  %7 = load i64 addrspace(10)*, i64 addrspace(10)** %6, align 8, !nonnull !4, !dereferenceable !7, !align !7
+  -->  %7 U: [0,-7) S: [-9223372036854775808,9223372036854775801)
+  %8 = addrspacecast i64 addrspace(10)* %7 to i64 addrspace(11)*
+  -->  %8 U: full-set S: full-set
+  %9 = load i64, i64 addrspace(11)* %8, align 8
+  -->  %9 U: full-set S: full-set
+  %10 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)** %1, i64 2
+  -->  (16 + %1) U: full-set S: full-set
+  %11 = bitcast {} addrspace(10)** %10 to i64 addrspace(10)**
+  -->  (16 + %1) U: full-set S: full-set
+  %12 = load i64 addrspace(10)*, i64 addrspace(10)** %11, align 8, !nonnull !4, !dereferenceable !7, !align !7
+  -->  %12 U: [0,-7) S: [-9223372036854775808,9223372036854775801)
+  %13 = addrspacecast i64 addrspace(10)* %12 to i64 addrspace(11)*
+  -->  %13 U: full-set S: full-set
+  %14 = load i64, i64 addrspace(11)* %13, align 8
+  -->  %14 U: full-set S: full-set
+  %15 = tail call nonnull {} addrspace(10)* @"julia_nestedloop_2!_62"({} addrspace(10)* %4, i64 signext %9, i64 signext %14) #0
+  -->  %4 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %16 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8
+  -->  %16 U: full-set S: full-set
+Determining loop execution counts for: @"jfptr_nestedloop_2!_63"

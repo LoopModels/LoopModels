@@ -51,12 +51,13 @@ function nestedloop_1!(a::Vector{Vector{T}}, c::T) where {T}
     end
 end
 
-function nestedloop_2!(a::Matrix{T}, c::T) where {T}
+function nestedloop_2!(a::Matrix{T}, c::T, k::Int) where {T}
     for i in 1:size(a, 1)
         for j in 1:size(a, 2)
-            a[i, j] *= c
+            @inbounds a[i, j] = a[k*i + 1, 3*j + 4] + c
         end
     end
+    return a
 end
 
 function write_code_llvm(f, args...; filename = nothing, passes = "default<Oz>,function(simplifycfg,instcombine,early-cse,loop-rotate,lcssa,indvars)")
@@ -79,4 +80,4 @@ write_code_llvm(loopstore!, [2], 5, filename="loopstore.ll")
 write_code_llvm(dot, [1], [2], filename="dot.ll")
 write_code_llvm(twoloops, 0, [1, 5, 17], filename="twoloops.ll")
 write_code_llvm(nestedloop_1!, [Int[1]], 5, filename="nestedloop_1.ll")
-write_code_llvm(nestedloop_2!, [1 2; 3 4;], 5, filename="nestedloop_2.ll")
+write_code_llvm(nestedloop_2!, [1 2; 3 4;], 4, 5, filename="nestedloop_2.ll")

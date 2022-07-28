@@ -3,7 +3,7 @@ source_filename = "optimizedloop"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define i64 @julia_optimizedloop_128(i64 signext %0) local_unnamed_addr #0 !dbg !5 {
+define i64 @julia_optimizedloop_32(i64 signext %0) local_unnamed_addr #0 !dbg !5 {
 top:
   %1 = tail call {}*** @julia.get_pgcstack()
   %2 = icmp slt i64 %0, 1, !dbg !7
@@ -27,14 +27,14 @@ L29:                                              ; preds = %L13.preheader, %top
   ret i64 %value_phi9, !dbg !20
 }
 
-define nonnull {} addrspace(10)* @jfptr_optimizedloop_129({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
+define nonnull {} addrspace(10)* @jfptr_optimizedloop_33({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
 top:
   %3 = tail call {}*** @julia.get_pgcstack()
   %4 = bitcast {} addrspace(10)** %1 to i64 addrspace(10)**
   %5 = load i64 addrspace(10)*, i64 addrspace(10)** %4, align 8, !nonnull !4, !dereferenceable !21, !align !21
   %6 = addrspacecast i64 addrspace(10)* %5 to i64 addrspace(11)*
   %7 = load i64, i64 addrspace(11)* %6, align 8
-  %8 = tail call i64 @julia_optimizedloop_128(i64 signext %7) #0
+  %8 = tail call i64 @julia_optimizedloop_32(i64 signext %7) #0
   %9 = tail call nonnull {} addrspace(10)* @jl_box_int64(i64 signext %8)
   ret {} addrspace(10)* %9
 }
@@ -54,7 +54,7 @@ attributes #1 = { "probe-stack"="inline-asm" "thunk" }
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
 !3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/examples/generator.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "optimizedloop", linkageName: "julia_optimizedloop_128", scope: null, file: !3, line: 2, type: !6, scopeLine: 2, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "optimizedloop", linkageName: "julia_optimizedloop_32", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !DILocation(line: 83, scope: !8, inlinedAt: !10)
 !8 = distinct !DISubprogram(name: "<;", linkageName: "<", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
@@ -67,7 +67,7 @@ attributes #1 = { "probe-stack"="inline-asm" "thunk" }
 !15 = !DIFile(filename: "range.jl", directory: ".")
 !16 = !DILocation(line: 833, scope: !17, inlinedAt: !18)
 !17 = distinct !DISubprogram(name: "iterate;", linkageName: "iterate", scope: !15, file: !15, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
-!18 = !DILocation(line: 4, scope: !5)
-!19 = !DILocation(line: 5, scope: !5)
-!20 = !DILocation(line: 7, scope: !5)
+!18 = !DILocation(line: 5, scope: !5)
+!19 = !DILocation(line: 6, scope: !5)
+!20 = !DILocation(line: 8, scope: !5)
 !21 = !{i64 8}

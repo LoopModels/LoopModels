@@ -1,0 +1,54 @@
+Printing analysis 'Scalar Evolution Analysis' for function 'julia_loop_134':
+Classifying expressions for: @julia_loop_134
+  %1 = tail call {}*** @julia.get_pgcstack()
+  -->  %1 U: full-set S: full-set
+  %2 = bitcast {} addrspace(10)* %0 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)*, !dbg !7
+  -->  %0 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %3 = addrspacecast { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)* %2 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(11)*, !dbg !7
+  -->  %3 U: full-set S: full-set
+  %4 = getelementptr inbounds { i8 addrspace(13)*, i64, i16, i16, i32 }, { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(11)* %3, i64 0, i32 1, !dbg !7
+  -->  (8 + %3)<nuw> U: [8,0) S: [8,0)
+  %5 = load i64, i64 addrspace(11)* %4, align 8, !dbg !7, !tbaa !11, !range !16
+  -->  %5 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %6 = bitcast {} addrspace(10)* %0 to i64 addrspace(13)* addrspace(10)*
+  -->  %0 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %7 = addrspacecast i64 addrspace(13)* addrspace(10)* %6 to i64 addrspace(13)* addrspace(11)*
+  -->  %7 U: full-set S: full-set
+  %8 = load i64 addrspace(13)*, i64 addrspace(13)* addrspace(11)* %7, align 8
+  -->  %8 U: full-set S: full-set
+  %.lcssa = phi i64 [ %12, %idxend ], !dbg !31
+  -->  %.lcssa U: full-set S: full-set
+  %value_phi9 = phi i64 [ 0, %top ], [ %.lcssa, %L31.loopexit ]
+  -->  %value_phi9 U: full-set S: full-set
+  %value_phi3 = phi i64 [ %13, %idxend ], [ 1, %L14.preheader ]
+  -->  {1,+,1}<nuw><nsw><%idxend> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %5		LoopDispositions: { %idxend: Computable }
+  %value_phi5 = phi i64 [ %12, %idxend ], [ 0, %L14.preheader ]
+  -->  %value_phi5 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %idxend: Variant }
+  %9 = add nsw i64 %value_phi3, -1, !dbg !28
+  -->  {0,+,1}<nuw><nsw><%idxend> U: [0,9223372036854775806) S: [0,9223372036854775806)		Exits: (-1 + %5)<nsw>		LoopDispositions: { %idxend: Computable }
+  %10 = getelementptr inbounds i64, i64 addrspace(13)* %8, i64 %9, !dbg !28
+  -->  {%8,+,8}<nuw><%idxend> U: full-set S: full-set		Exits: (-8 + (8 * %5) + %8)		LoopDispositions: { %idxend: Computable }
+  %11 = load i64, i64 addrspace(13)* %10, align 8, !dbg !28, !tbaa !34
+  -->  %11 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %idxend: Variant }
+  %12 = add i64 %11, %value_phi5, !dbg !31
+  -->  (%11 + %value_phi5) U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %idxend: Variant }
+  %13 = add nuw nsw i64 %value_phi3, 1, !dbg !40
+  -->  {2,+,1}<nuw><nsw><%idxend> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %5)<nuw><nsw>		LoopDispositions: { %idxend: Computable }
+Determining loop execution counts for: @julia_loop_134
+Loop %idxend: backedge-taken count is (-1 + %5)<nsw>
+Loop %idxend: max backedge-taken count is 9223372036854775805
+Loop %idxend: Predicated backedge-taken count is (-1 + %5)<nsw>
+ Predicates:
+
+Loop %idxend: Trip multiple is 1
+Printing analysis 'Scalar Evolution Analysis' for function 'jfptr_loop_135':
+Classifying expressions for: @jfptr_loop_135
+  %3 = tail call {}*** @julia.get_pgcstack()
+  -->  %3 U: full-set S: full-set
+  %4 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !5, !align !6
+  -->  %4 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %5 = tail call i64 @julia_loop_134({} addrspace(10)* %4) #0
+  -->  %5 U: full-set S: full-set
+  %6 = tail call nonnull {} addrspace(10)* @jl_box_int64(i64 signext %5)
+  -->  %6 U: full-set S: full-set
+Determining loop execution counts for: @jfptr_loop_135
