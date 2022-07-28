@@ -19,17 +19,17 @@ TEST(TrivialPruneBounds, BasicAssertions) {
 
     // m <= M-1;
     r.push_back(M - 1);
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     // 0 <= m;
     r.emplace_back(0);
-    A(1, 0) = -1;
+    A(1, 0) = 1;
 
     // m <= M-2;
     r.push_back(M - 2);
-    A(2, 0) = 1;
+    A(2, 0) = -1;
     // -1 <= m;
     r.emplace_back(1);
-    A(3, 0) = -1;
+    A(3, 0) = 1;
 
     
     AffineLoopNest affp{AffineLoopNest::construct(A, r, poset)};
@@ -39,8 +39,8 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     // assert(affp.A.numRow() == 2);
 }
 TEST(LessTrivialPruneBounds, BasicAssertions) {
-    auto A{stringToIntMatrix("[0 -1 0; 0 0 0; 0 1 0; 0 0 0]")};
-    // auto A{stringToIntMatrix("[-1 0 0 0 -1 1; -1 1 0 0 0 0; -1 0 1 0 0 1; 0 0 0 0 0 -1; -1 0 1 0 1 0]")};
+    auto A{stringToIntMatrix("[0 1 0; 0 0 0; 0 -1 0; 0 0 0]")};
+    // auto A{stringToIntMatrix("[1 0 0 0 1 -1; 1 -1 0 0 0 0; 1 0 -1 0 0 -1; 0 0 0 0 0 1; 1 0 -1 0 -1 0]")};
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     llvm::SmallVector<MPoly, 8> b;
@@ -86,36 +86,36 @@ TEST(AffineTest0, BasicAssertions) {
     // m <= M - 1;
     // r.push_back(Polynomial::Term{int64_t(1), M} - 1);
     r.push_back(M - 1);
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     A(0, 1) = 0;
     A(0, 2) = 0;
     // 0 <= m;
     // r.emplace_back(0);
     r.push_back(Zero);
-    A(1, 0) = -1;
+    A(1, 0) = 1;
     A(1, 1) = 0;
     A(1, 2) = 0;
     // n <= N - 1;
     r.push_back(N - 1);
     A(2, 0) = 0;
-    A(2, 1) = 1;
+    A(2, 1) = -1;
     A(2, 2) = 0;
     // 0 <= n;
     // r.emplace_back(0);
     r.push_back(Zero);
     A(3, 0) = 0;
-    A(3, 1) = -1;
+    A(3, 1) = 1;
     A(3, 2) = 0;
     // k <= N - 1
     r.push_back(N - 1);
     A(4, 0) = 0;
     A(4, 1) = 0;
-    A(4, 2) = 1;
+    A(4, 2) = -1;
     // n - k <= -1  ->  n + 1 <= k
     r.push_back(Polynomial::Term{int64_t(-1), Polynomial::Monomial()});
     A(5, 0) = 0;
-    A(5, 1) = 1;
-    A(5, 2) = -1;
+    A(5, 1) = -1;
+    A(5, 2) = 1;
 
     std::cout << "About to construct affine obj" << std::endl;
 
@@ -239,21 +239,21 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     // n - m <= M;
     // r.push_back(Polynomial::Term{int64_t(1), M} - 1);
     r.push_back(2 * M);
-    A(0, 0) = -1;
-    A(0, 1) = 1;
+    A(0, 0) = 1;
+    A(0, 1) = -1;
     // n - m >= 1;
     // r.emplace_back(0);
     r.push_back(nOne * 2);
-    A(1, 0) = 1;
-    A(1, 1) = -1;
+    A(1, 0) = -1;
+    A(1, 1) = 1;
     // m + n >= -M
     r.push_back(2 * M);
-    A(2, 0) = -1;
-    A(2, 1) = -1;
+    A(2, 0) = 1;
+    A(2, 1) = 1;
     // m + n <= -1;
     r.push_back(2 * nOne);
-    A(3, 0) = 1;
-    A(3, 1) = 1;
+    A(3, 0) = -1;
+    A(3, 1) = -1;
     std::cout << "A = \n"
               << A << "\nb = \n[ " << r[0] << ", " << r[1] << ", " << r[2]
               << ", " << r[3] << " ]" << std::endl;

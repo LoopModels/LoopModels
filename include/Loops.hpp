@@ -70,8 +70,9 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         std::cout << "A = \n" << A << std::endl;
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
-	AffineLoopNest aff{AffineLoopNest{std::move(B), EmptyMatrix<int64_t>(), C}};
-	// aff.pruneBounds();
+        AffineLoopNest aff{
+            AffineLoopNest{std::move(B), EmptyMatrix<int64_t>(), C}};
+        // aff.pruneBounds();
         return aff;
     }
     // AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
@@ -95,7 +96,8 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         for (size_t i = 0; i < A.numRow(); ++i)
             assert(!allZero(A.getRow(i)));
         pruneBounds();
-	// std::cout << "After prune bounds i = " << i << "; A =\n"<< A << std::endl;
+        // std::cout << "After prune bounds i = " << i << "; A =\n"<< A <<
+        // std::endl;
         for (size_t i = 0; i < A.numRow(); ++i)
             assert(!allZero(A.getRow(i)));
         assert(allZero(A.getCol(i + C.getNumConstTerms())));
@@ -175,7 +177,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         // margi contains extrema for `_i`
         // we can substitute extended for value of `_i`
         // in `tmp`
-        int64_t sign = 1 - 2 * extendLower; // extendLower ? -1 : 1
+        int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
         for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c) {
             int64_t Aci = margi.A(c, _i + numConst);
             int64_t b = sign * Aci;
@@ -184,8 +186,8 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             tmp2 = tmp;
             // increment to increase bound
             // this is correct for both extending lower and extending upper
-            // lower: a'x - i <= b -> i >= a'x - b
-            // upper: a'x + i <= b -> i <= b - a'x
+            // lower: a'x + i + b >= 0 -> i >= -a'x - b
+            // upper: a'x - i + b >= 0 -> i <=  a'x + b
             // to decrease the lower bound or increase the upper, we increment
             // `b`
             ++margi.A(c, 0);
@@ -203,7 +205,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
-            std::cout << "\nc=" << c << std::endl;
+            std::cout << "\nc=" << c << "; tmp2=" << std::endl;
             tmp2.dump();
             if (!(tmp2.isEmpty()))
                 return false;
@@ -213,28 +215,26 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
 
     // void printBound(std::ostream &os, const IntMatrix &A, size_t i,
     void printBound(std::ostream &os, size_t i, int64_t sign) const {
-
         const size_t numVar = getNumVar();
         const size_t numConst = C.getNumConstTerms();
         // printVector(std::cout << "A.getRow(i) = ", A.getRow(i)) << std::endl;
         for (size_t j = 0; j < A.numRow(); ++j) {
-            if (A(j, i + numConst) * sign <= 0)
+            int64_t Aji = A(j, i + numConst) * sign;
+            if (Aji <= 0)
                 continue;
             if (A(j, i + numConst) == sign) {
                 if (sign < 0) {
-                    os << "i_" << i << " >= ";
-                } else {
                     os << "i_" << i << " <= ";
+                } else {
+                    os << "i_" << i << " >= ";
                 }
-            } else if (sign < 0) {
-                os << sign * A(j, i + numConst) << "*i_" << i << " >= ";
             } else {
-                os << sign * A(j, i + numConst) << "*i_" << i << " <= ";
+                os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
             }
             llvm::ArrayRef<int64_t> b = getSymbol(A, j);
             bool printed = !allZero(b);
             if (printed)
-                C.printSymbol(os, b, sign);
+                C.printSymbol(os, b, -sign);
             for (size_t k = 0; k < numVar; ++k) {
                 if (k == i)
                     continue;
@@ -257,10 +257,10 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         }
     }
     void printLowerBound(std::ostream &os, size_t i) const {
-        printBound(os, i, -1);
+        printBound(os, i, 1);
     }
     void printUpperBound(std::ostream &os, size_t i) const {
-        printBound(os, i, 1);
+        printBound(os, i, -1);
     }
     // prints loops from inner most to outer most.
     friend std::ostream &operator<<(std::ostream &os,
