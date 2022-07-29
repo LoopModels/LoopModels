@@ -414,9 +414,14 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < b.size(); ++i){
                 b[i] *= dinv[i];
             }
+            IntMatrix JV1(nEqs, tmpU.numRow());
+            for (size_t i = 0; i < nEqs; ++i)
+                for (size_t j = 0; j < tmpU.numRow(); ++j)
+                    JV1(i, j) = V(i + nEqs, j);
             // std::cout <<"Dlcm = " << Dlcm << std::endl;
-            auto JV1 = matmul(J, V.view(0, V.numRow(), 0, tmpU.numRow()));
-            //std::cout <<"JV1 = " << JV1 << std::endl;
+            // auto JV1 = matmul(J, V.view(0, V.numRow(), 0, tmpU.numRow()));
+            // std::cout <<"JV1 = " << JV1 << std::endl;
+            // std::cout <<"V = " <<  V << std::endl;
             auto c = JV1 * b;
             auto NSdim = V.numRow() - tmpU.numRow();
             IntMatrix expandW(nEqs, NSdim * 2 +1);
@@ -428,7 +433,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 expandW(i, 0) = c[i];
                 // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j){
-                    auto val = V(i, tmpU.numRow() + j) * Dlcm;
+                    auto val = V(i + nEqs, tmpU.numRow() + j) * Dlcm;
                     //auto val = JV2(i, j) * Dlcm;
                     // should change positive and negative?
                     expandW(i, j + 1) = -val;
@@ -438,48 +443,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // std::cout <<"expandW =" << expandW << std::endl;
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
-            //optS.hasValue()
-            // std::cout <<"size of dinv: " << dinv.size() << std::endl;
-            // std::cout <<"size of b: " << b.size() << std::endl;
-            // std::cout <<"has value " << optS.hasValue() << std::endl;
             return optS.hasValue();
         }
-        //for low rank deficient case:
-        //U: 10 x 10;
-        //Vt: 8 x 8;
-        //
-        // if (D.numRow() > D.numCol()){
-        //     auto const numCon = V.numRow()/2;
-        //     IntMatrix J(numCon, 2 * numCon);
-        //     for (size_t i = 0; i < numCon; ++i)
-        //         J(i, i + numCon) = 1;
-        //     IntMatrix q(query.size() + numCon,1);
-        //     for (size_t i = 0; i < query.size(); ++i)
-        //         q[i] = query[i];
-        //     size_t NSdim = D.numCol() - D.numRow();
-        //     // IntMatrix JV2(numCon, NSdim * 2);
-        //     IntMatrix JV1DiUq(numCon, 1);
-        //     // std::cout<< "J = " << J << std::endl;
-        //     // std::cout<< "V = " << V << std::endl;
-        //     auto JV1 = matmul(J, V.view(0, V.numRow(),0,numCon*2-NSdim));
-        //     auto JV1Di = matmul(std::move(JV1), D.view(0,numCon*2-NSdim,0,numCon*2));
-        //     //std::cout << "col size = " << U.numsCol() << std::endl;
-        //     auto b = matmul(U, std::move(q));
-        //     // std::cout << "JV1Di = " << JV1Di << std::endl;
-        //     // std::cout << "b = " << b << std::endl;
-        //     //identify b and JV1Dis size
-        //     auto c = matmul(std::move(JV1Di), std::move(b));
-        //     IntMatrix expandV2(numCon*2, NSdim * 2 + 1); //extra one dim for simplex
-        //     for (size_t i = 0; i < numCon * 2; ++i)
-        //     {
-        //         expandV2(i, 0) = c(i, 0);
-        //         for (size_t j = 0; j < NSdim * 2; ++j){
-        //             expandV2(i, j + 1) = V(i, j);
-        //             expandV2(i, j + NSdim + 1) = V(i, j);
-        //         }
-        //     }
-        //     IntMatrix B{0, expandV2.numCol()};
-        //     llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandV2, B)};
+
         return true;
        // return optS.hasValue();
     }
