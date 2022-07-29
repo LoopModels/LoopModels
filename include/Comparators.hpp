@@ -326,14 +326,15 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
         // auto NS2 = NormalForm::nullSpace(H);
-        //std::cout << "H = " << H << std::endl;
-        //std::cout << "NS = " << NS2.numRow() << std::endl;
+        // std::cout << "H = " << H << std::endl;
+        // std::cout << "NS = " << NS2.numRow() << std::endl;
         size_t R = H.numRow();
         while ((R > 0) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
-        // auto NS = NormalForm::nullSpace(H);
-        // std::cout << "NS = " << NS.numRow() << std::endl;
+        std::cout << "H = " << H << std::endl;
+        auto NS = NormalForm::nullSpace(H);
+        std::cout << "NS = " << NS.numRow() << std::endl;
         if (H.isSquare())
             return LinearSymbolicComparator{.U = std::move(U), .V = std::move(H), .d = {}};
         // std::cout << "H = " << H << std::endl;

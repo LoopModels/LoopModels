@@ -28,6 +28,7 @@ TEST(BasicCompare, BasicAssertions) {
 
 TEST(V2Matrix, BasicAssertions) {
     IntMatrix A = stringToIntMatrix("[0 -1 0 1 0 0; 0 0 -1 1 0 0; 0 0 0 1 -1 0; 0 0 0 1 0 -1]");
+    //IntMatrix A = stringToIntMatrix(" [1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]");
     auto comp = LinearSymbolicComparator::construct(A);
     auto [H, U] = NormalForm::hermite(std::move(A));
     auto Ht = H.transpose();
@@ -47,3 +48,8 @@ TEST(V2Matrix, BasicAssertions) {
             EXPECT_EQ(NS(i, j), Vt(offset+i, j));}
 }
 
+TEST(TmpTest, BasicAssertions){
+    IntMatrix A = stringToIntMatrix("[1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]");
+    auto NS = NormalForm::nullSpace(A);
+    std::cout<< NS <<std::endl;
+}

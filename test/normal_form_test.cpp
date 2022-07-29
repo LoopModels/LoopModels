@@ -175,9 +175,7 @@ TEST(Hermite, BasicAssertions) {
         A4x3(2, 2) = 1;
         A4x3(3, 2) = 1;
         std::cout << "A=\n" << A4x3 << std::endl;
-        auto hnf = NormalForm::hermite(A4x3);
-        EXPECT_TRUE(hnf.hasValue());
-        auto [H, U] = hnf.getValue();
+        auto [H, U] = NormalForm::hermite(A4x3);
         std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
 
         EXPECT_TRUE(isHNF(H));
@@ -187,9 +185,7 @@ TEST(Hermite, BasicAssertions) {
             A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
         }
         std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
-        hnf = NormalForm::hermite(A4x3);
-        EXPECT_TRUE(hnf.hasValue());
-        auto [H2, U2] = hnf.getValue();
+        auto [H2, U2] = NormalForm::hermite(A4x3);
         std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
         EXPECT_TRUE(isHNF(H2));
         EXPECT_TRUE(H2 == matmul(U2, A4x3));
@@ -212,9 +208,7 @@ TEST(Hermite, BasicAssertions) {
         A(1, 3) = -6;
         A(2, 3) = 8;
         A(3, 3) = -1;
-        auto hnfsm = NormalForm::hermite(A);
-        EXPECT_TRUE(hnfsm.hasValue());
-        auto [H3, U3] = hnfsm.getValue();
+        auto [H3, U3] = NormalForm::hermite(A);
         std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
         EXPECT_TRUE(isHNF(H3));
         EXPECT_TRUE(H3 == matmul(U3, A));
@@ -315,6 +309,7 @@ TEST(NullSpaceTests, BasicAssertions) {
         }
         std::cout << "Average tested null dim = "
                   << double(nullDim) / double(numIters) << std::endl;
+
     }
 }
 
