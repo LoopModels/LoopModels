@@ -307,6 +307,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
     IntMatrix V;
     llvm::Optional<llvm::SmallVector<int64_t, 16>> d;
+    size_t numRowDiff;
     //llvm::SmallVector<int64_t, 16> sol;
     static LinearSymbolicComparator construct(IntMatrix Ap) {
         // std::cout << "start Test = " << std::endl;
@@ -329,12 +330,14 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // std::cout << "H = " << H << std::endl;
         // std::cout << "NS = " << NS2.numRow() << std::endl;
         size_t R = H.numRow();
+        size_t numRowPre = R;
         while ((R > 0) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
-        std::cout << "H = " << H << std::endl;
-        auto NS = NormalForm::nullSpace(H);
-        std::cout << "NS = " << NS.numRow() << std::endl;
+        size_t numRowDiff = numRowPre - R;
+        // std::cout << "H = " << H << std::endl;
+        // auto NS = NormalForm::nullSpace(H);
+        // std::cout << "NS = " << NS.numRow() << std::endl;
         if (H.isSquare())
             return LinearSymbolicComparator{.U = std::move(U), .V = std::move(H), .d = {}};
         // std::cout << "H = " << H << std::endl;
@@ -348,10 +351,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         NormalForm::solveSystem(Ht, Vt);
         // std::cout << "Vt =" << Vt << std::endl;
         // H * V = Diagonal(d)
+        // std::cout <<"D = " << Ht << std::endl;
         auto d = Ht.diag();
         printVector(std::cout << "D matrix:", d) << std::endl;
         auto V = Vt.transpose();
-        return LinearSymbolicComparator{.U = std::move(U), .V = std::move(V), .d = std::move(d)};
+        return LinearSymbolicComparator{.U = std::move(U), .V = std::move(V), .d = std::move(d), .numRowDiff = numRowDiff} ;
     };
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
@@ -390,8 +394,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // for (size_t i = 0; i < tmpU.numRow(); ++i)
             //     for (size_t j = 0; j < tmpU.numCol(); ++j)
             //         tmpU(i, j) = U(i, j);
-            auto tmpU = U.view(0, U.numRow()-1, 0, U.numCol());
+            auto tmpU = U.view(0, U.numRow()-numRowDiff, 0, U.numCol());
             auto b = U.view(0, tmpU.numRow(), 0, query.size()) * query;
+            // std::cout << "b size 0= " << b.size() << std::endl;
             IntMatrix J(nEqs, 2 * nEqs);
             for (size_t i = 0; i < nEqs; ++i)
                  J(i, i + nEqs) = 1;
@@ -402,34 +407,41 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             }
             for (size_t i = 0; i < dinv.size(); ++i){
                 dinv[i] = Dlcm / dinv[i];
+                // std::cout << "d inv i= " << dinv[i] << std::endl;
             }
+            // std::cout << "d size = " << dinv.size() << std::endl;
+            // std::cout << "b size = " << b.size() << std::endl;
             for (size_t i = 0; i < b.size(); ++i){
                 b[i] *= dinv[i];
             }
+            // std::cout <<"Dlcm = " << Dlcm << std::endl;
             auto JV1 = matmul(J, V.view(0, V.numRow(), 0, tmpU.numRow()));
             //std::cout <<"JV1 = " << JV1 << std::endl;
             auto c = JV1 * b;
             auto NSdim = V.numRow() - tmpU.numRow();
             IntMatrix expandW(nEqs, NSdim * 2 +1);
-
+            // auto JV2 = matmul(J, V.view(0, V.numRow(), tmpU.numRow(), V.numCol()));
+            // std::cout <<"JV2 = " << JV2 << std::endl;
+            // std::cout <<"V2 = " << V << std::endl;
             for (size_t i = 0; i < nEqs; ++i)
             {
                 expandW(i, 0) = c[i];
-                expandW(i, 0) *= Dlcm;
+                // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j){
                     auto val = V(i, tmpU.numRow() + j) * Dlcm;
+                    //auto val = JV2(i, j) * Dlcm;
                     // should change positive and negative?
-                    expandW(i, j + 1) = val;
-                    expandW(i, j + NSdim + 1) = -val;
+                    expandW(i, j + 1) = -val;
+                    expandW(i, j + NSdim + 1) = val;
                 }
             }
-            // std::cout <<"expandW " << expandW << std::endl;
+            // std::cout <<"expandW =" << expandW << std::endl;
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
             //optS.hasValue()
             // std::cout <<"size of dinv: " << dinv.size() << std::endl;
             // std::cout <<"size of b: " << b.size() << std::endl;
-            std::cout <<"has value " << optS.hasValue() << std::endl;
+            // std::cout <<"has value " << optS.hasValue() << std::endl;
             return optS.hasValue();
         }
         //for low rank deficient case:

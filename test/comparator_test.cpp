@@ -20,10 +20,26 @@ TEST(BasicCompare, BasicAssertions) {
     //TEST column deficient rank case of A
     IntMatrix A2 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1; -1 1 0 0 0; -1 0 0 1 0]");
     auto comp2 = LinearSymbolicComparator::construct(std::move(A2));
-    llvm::SmallVector<int64_t, 16> query2{-1, 0, 0, 1, 0};
+    llvm::SmallVector<int64_t, 16> query2{-1, 0, 0, 0, 1};
     llvm::SmallVector<int64_t, 16> query3{0, 0, 0, -1, 1};
     EXPECT_TRUE(comp2.greaterEqualZero(query2));
     EXPECT_TRUE(!comp2.greaterEqualZero(query3));
+
+    //TEST on non identity diagonal case
+    // std::cout << "------Start testing A3---------" << std::endl;
+    IntMatrix A3 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1; -1 1 0 0 0; -2 -1 0 1 0]");
+    auto comp3 = LinearSymbolicComparator::construct(std::move(A3));
+    //llvm::SmallVector<int64_t, 16> query2{-1, 0, 0, 1, 0};
+    // llvm::SmallVector<int64_t, 16> query3{0, 0, 0, -1, 1};
+    llvm::SmallVector<int64_t, 16> query4{-3, 0, 0, 1, 0};
+    llvm::SmallVector<int64_t, 16> query5{0, 0, 0, 1, -1};
+    llvm::SmallVector<int64_t, 16> query6{0, -2, 0, 1, 0};
+    EXPECT_TRUE(comp3.greaterEqualZero(query2));
+    // std::cout <<  "comp3 wrong test " << comp3.greaterEqualZero(query3) <<std::endl;
+    EXPECT_TRUE(!comp3.greaterEqualZero(query3));
+    EXPECT_TRUE(!comp3.greaterEqualZero(query5));
+    EXPECT_TRUE(comp3.greaterEqualZero(query4));
+    EXPECT_TRUE(!comp3.greaterEqualZero(query6));
 }
 
 TEST(V2Matrix, BasicAssertions) {
