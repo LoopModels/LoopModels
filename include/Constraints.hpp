@@ -47,6 +47,8 @@ static std::ostream &printConstraints(std::ostream &os,
                 hasPrinted = true;
             }
         }
+	if (!hasPrinted)
+	    os << '0';
         if (inequality) {
             os << " <= ";
         } else {
@@ -122,6 +124,7 @@ static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
 }
 */
 static void eraseConstraint(IntMatrix &A, size_t i) {
+    // std::cout << "erase constraint i = " << i <<" of A =\n" <<A<< std::endl;
     eraseConstraintImpl(A, i);
     A.truncateRows(A.numRow() - 1);
 }
@@ -338,15 +341,16 @@ static void fourierMotzkin(IntMatrix &A, size_t v) {
     // both of them. Thus, we use a little extra memory here,
     // and then truncate.
     if ((numNeg == 0) | (numPos == 0)) {
+        if ((numNeg == 0) & (numPos == 0))
+            return;
         for (size_t i = numRowsOld; i != 0;)
             if (A(--i, v))
                 eraseConstraint(A, i);
         return;
     }
-    A.resizeRows(numRowsNew + 1);
+    A.resizeRows(numRowsNew);
     // plan is to replace
-    for (size_t i = 0, numRows = numRowsOld, posCount = numPos; i < numRowsOld;
-         ++i) {
+    for (size_t i = 0, numRows = numRowsOld, posCount = numPos; posCount; ++i) {
         int64_t Aiv = A(i, v);
         if (Aiv <= 0)
             continue;
@@ -358,11 +362,30 @@ static void fourierMotzkin(IntMatrix &A, size_t v) {
             // for the last `negCount`, we overwrite `A(i, k)`
             // last posCount does not get overwritten
             --negCount;
-            size_t c = posCount ? (negCount ? i : numRows++) : j;
+            size_t c = posCount ? (negCount ? numRows++ : i) : j;
+            // std::cout << "c = " << c << "; posCount = " << posCount
+            //           << "; negCount = " << negCount << "; i = " << i
+            //           << "; j = " << j << std::endl;
             int64_t g = gcd(Aiv, Ajv);
             int64_t Ai = Aiv / g, Aj = Ajv / g;
-            for (size_t k = 0; k < A.numCol(); ++k)
-                A(c, k) = Ai * A(j, k) - Aj * A(i, k);
+	    bool allZero = true;
+            for (size_t k = 0; k < A.numCol(); ++k){
+		int64_t Ack = Ai * A(j, k) - Aj * A(i, k);
+                A(c, k) = Ack;
+		allZero &= (Ack == 0);
+	    }
+	    if (allZero){
+		eraseConstraint(A,c);
+		if (posCount){
+		    if (negCount){
+			--numRows;
+		    } else {
+			--i;
+		    }
+		} else {
+		    --j;
+		}
+	    }
         }
         if (posCount == 0) // last posCount not overwritten, so we erase
             eraseConstraint(A, i);

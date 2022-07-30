@@ -328,57 +328,37 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
 }
 
-MULTIVERSION size_t simplifySystemImpl(PtrMatrix<int64_t> E,
-                                       size_t rowInit = 0) {
-    auto [M, N] = E.size();
-    if (M == 0)
-        return 0;
-    size_t dec = rowInit;
-    for (size_t m = rowInit; m < N; ++m) {
-        if (m - dec >= M)
-            break;
-        if (pivotRows(E, m, M, m - dec)) {
-            // col is entirely zero
-            ++dec;
-            continue;
-        }
-        // E(m, m-dec) now contains non-zero
-        // zero row `m` of every column to the right of `m - dec`
-        zeroSupDiagonal(E, m, m - dec);
-        // now we reduce the sub diagonal
-        reduceSubDiagonal(E, m, m - dec);
-    }
+void reduceColumn(PtrMatrix<int64_t> A, size_t c, size_t r) {
+    zeroSupDiagonal(A, c, r);
+    reduceSubDiagonal(A, c, r);
+}
+MULTIVERSION size_t simplifySystemImpl(PtrMatrix<int64_t> A,
+                                       size_t colInit = 0) {
+    auto [M, N] = A.size();
+    for (size_t r = 0, c = colInit; c < N && r < M; ++c)
+        if (!pivotRows(A, c, M, r))
+            reduceColumn(A, c, r++);
     size_t Mnew = M;
-    while (allZero(E.getRow(Mnew - 1)))
+    while (allZero(A.getRow(Mnew - 1)))
         --Mnew;
     return Mnew;
 }
-constexpr static void simplifySystem(EmptyMatrix<int64_t>) {}
-static void simplifySystem(IntMatrix &E) {
-
-    size_t Mnew = simplifySystemImpl(E);
+constexpr static void simplifySystem(EmptyMatrix<int64_t>, size_t = 0) {}
+static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
+    size_t Mnew = simplifySystemImpl(E, colInit);
     E.truncateRows(Mnew);
+}
+void reduceColumn(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B, size_t c,
+                  size_t r) {
+    zeroSupDiagonal(A, B, c, r);
+    reduceSubDiagonal(A, B, c, r);
 }
 MULTIVERSION static void simplifySystemImpl(PtrMatrix<int64_t> A,
                                             PtrMatrix<int64_t> B) {
     auto [M, N] = A.size();
-    if (M == 0)
-        return;
-    size_t dec = 0;
-    for (size_t m = 0; m < N; ++m) {
-        if (m - dec >= M)
-            break;
-        if (pivotRows(A, B, m, M, m - dec)) {
-            // row is entirely zero
-            ++dec;
-            continue;
-        }
-        // E(m, m-dec) now contains non-zero
-        // zero row `m` of every column to the right of `m - dec`
-        zeroSupDiagonal(A, B, m, m - dec);
-        // now we reduce the sub diagonal
-        reduceSubDiagonal(A, B, m, m - dec);
-    }
+    for (size_t r = 0, c = 0; c < N && r < M; ++c)
+        if (!pivotRows(A, B, c, M, r))
+            reduceColumn(A, B, c, r++);
 }
 MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
     simplifySystemImpl(A, B);
@@ -397,7 +377,7 @@ MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
 std::pair<IntMatrix, SquareMatrix<int64_t>>
 hermite(IntMatrix A) {
     auto [M, N] = A.size();
-    SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
+    SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(M)};
     simplifySystemImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
 }

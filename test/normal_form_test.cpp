@@ -43,14 +43,14 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                     ++m;
                 }
             }
-            printMatrix(std::cout << "K=\n", K) << std::endl;
-            printMatrix(std::cout << "A=\n", A) << std::endl;
+            std::cout << "K=\n" << K << std::endl;
+            std::cout << "A=\n" << A << std::endl;
             EXPECT_TRUE(matmul(K, A) == I4);
         } else {
             // std::cout << "K= " << K << "\nB= " << B << std::endl;
             printVector(std::cout << "included = ", included) << std::endl;
             if (auto optlu = LU::fact(K)) {
-                printMatrix(std::cout << "K=\n", K) << std::endl;
+                std::cout << "K=\n" << K << std::endl;
                 if (auto optA2 = optlu.getValue().inv()) {
                     SquareMatrix<Rational, 4> &A2 = optA2.getValue();
                     std::cout << "A2 =\n" << A2 << std::endl;
@@ -269,10 +269,7 @@ TEST(Hermite, BasicAssertions) {
         A(2, 8) = 3;
         A(2, 9) = 3;
         A(2, 10) = -3;
-        llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
-            NormalForm::hermite(A);
-        EXPECT_TRUE(B.hasValue());
-        auto [H, U] = B.getValue();
+        auto [H, U] = NormalForm::hermite(A);
         EXPECT_TRUE(isHNF(H));
         EXPECT_TRUE(matmul(U, A) == H);
         std::cout << "A = \n"

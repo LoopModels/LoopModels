@@ -19,12 +19,16 @@
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
+struct AffineLoopNest : SymbolicPolyhedra,
+                        llvm::RefCountedBase<AffineLoopNest> {
+    // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
+    // SymbolicComparator> {
 
-    static AffineLoopNest construct(const IntMatrix &A, llvm::ArrayRef<MPoly> b,
-                                    PartiallyOrderedSet poset) {
+    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    construct(const IntMatrix &A, llvm::ArrayRef<MPoly> b,
+              PartiallyOrderedSet poset) {
         assert(b.size() == A.numRow());
-        IntMatrix B;
+        // IntMatrix B;
         llvm::SmallVector<Polynomial::Monomial> monomials;
         llvm::DenseMap<Polynomial::Monomial, unsigned> map;
 
@@ -35,6 +39,8 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
                             .second)
                         monomials.push_back(t.exponent);
         const size_t numMonomials = monomials.size();
+        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
+	auto &B = ret->A;
         B.resize(A.numRow(), A.numCol() + 1 + map.size());
         for (size_t r = 0; r < A.numRow(); ++r) {
             for (auto &t : b[r]) {
@@ -44,27 +50,39 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             for (size_t c = 0; c < A.numCol(); ++c)
                 B(r, c + 1 + numMonomials) = A(r, c);
         }
-        // return ret;
-        return AffineLoopNest{
-            std::move(B), EmptyMatrix<int64_t>{},
-            SymbolicComparator::construct(b, std::move(poset))};
+	ret->C = SymbolicComparator::construct(b, std::move(poset));
+	return ret;
+        // return llvm::makeIntrusiveRefCnt<AffineLoopNest>(
+        //     std::move(B), EmptyMatrix<int64_t>{},
+        //     SymbolicComparator::construct(b, std::move(poset)));
     }
 
     inline size_t getNumLoops() const { return getNumVar(); }
 
-    AffineLoopNest rotate(PtrMatrix<const int64_t> R) const {
+    llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    rotate(PtrMatrix<const int64_t> R) const {
         assert(R.numCol() == getNumLoops());
         assert(R.numRow() == getNumLoops());
         const size_t numConst = C.getNumConstTerms();
         const auto [M, N] = A.size();
         assert(numConst + getNumLoops() == N);
-        IntMatrix B;
+        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
+	ret->C =C;
+        IntMatrix &B = ret->A;
         B.resizeForOverwrite(M, N);
-        for (size_t m = 0; m < M; ++m)
+        for (size_t m = 0; m < M; ++m) {
             for (size_t n = 0; n < numConst; ++n)
                 B(m, n) = A(m, n);
+            for (size_t n = numConst; n < N; ++n)
+                B(m, n) = 0;
+        }
         matmul(B.view(0, M, numConst, N), A.view(0, M, numConst, N), R);
-        return AffineLoopNest{matmul(A, R), EmptyMatrix<int64_t>(), C};
+        std::cout << "A = \n" << A << std::endl;
+        std::cout << "R = \n" << R << std::endl;
+        std::cout << "B = \n" << B << std::endl;
+	return ret;
+        // return llvm::makeIntrusiveRefCnt<AffineLoopNest>(
+            // std::move(B), EmptyMatrix<int64_t>(), C);
     }
     // AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
     //                PartiallyOrderedSet posetin)
@@ -79,24 +97,37 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
     //     pruneBounds();
     // }
     void removeLoopBang(size_t i) {
+        // for (size_t i = 0; i < A.numRow(); ++i)
+        // assert(!allZero(A.getRow(i)));
+        // std::cout << "removing i = " << i << "; A=\n" << A << std::endl;
         fourierMotzkin(A, i + C.getNumConstTerms());
+        // std::cout << "removed i = " << i << "; A=\n" << A << std::endl;
+        // for (size_t i = 0; i < A.numRow(); ++i)
+        // assert(!allZero(A.getRow(i)));
         pruneBounds();
-        // std::cout << "removed i = " << i << std::endl;
-        assert(allZero(A.getCol(i + C.getNumConstTerms())));
+        // // std::cout << "After prune bounds i = " << i << "; A =\n"<< A <<
+        // // std::endl;
+        // for (size_t i = 0; i < A.numRow(); ++i)
+        //     assert(!allZero(A.getRow(i)));
+        // assert(allZero(A.getCol(i + C.getNumConstTerms())));
     }
-    AffineLoopNest removeLoop(size_t i) {
-        AffineLoopNest L = *this;
-        L.removeLoopBang(i);
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> removeLoop(size_t i) {
+        auto L{llvm::makeIntrusiveRefCnt<AffineLoopNest>(*this)};
+        // AffineLoopNest L = *this;
+        L->removeLoopBang(i);
         return L;
     }
-    llvm::SmallVector<AffineLoopNest, 0> perm(llvm::ArrayRef<unsigned> x) {
-        llvm::SmallVector<AffineLoopNest, 0> ret;
+    llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>>
+    perm(llvm::ArrayRef<unsigned> x) {
+        llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>> ret;
+        // llvm::SmallVector<AffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
-        ret.back() = *this;
+        ret.back() = this;
         for (size_t i = x.size() - 1; i != 0;) {
-            AffineLoopNest &prev = ret[i];
+            llvm::IntrusiveRefCntPtr<AffineLoopNest> prev = ret[i];
+            // AffineLoopNest &prev = ret[i];
             size_t oldi = i;
-            ret[--i] = prev.removeLoop(x[oldi]);
+            ret[--i] = prev->removeLoop(x[oldi]);
         }
         return ret;
     }
@@ -130,7 +161,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         return ret;
     }
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
-        AffineLoopNest tmp{*this};
+        SymbolicPolyhedra tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
         // for (size_t i = 0; i < numPrevLoops; ++i)
         // if (_i != i)
@@ -140,7 +171,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         // tmp.removeLoopBang(i);
         for (size_t i = 0; i < numPrevLoops; ++i)
             if (i != _i)
-                tmp.removeLoopBang(i);
+                tmp.removeVariableAndPrune(i + C.getNumConstTerms());
         bool indep = true;
         const size_t numConst = C.getNumConstTerms();
         for (size_t n = 0; n < tmp.A.numRow(); ++n)
@@ -149,9 +180,9 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
                 indep = false;
         if (indep)
             return false;
-        AffineLoopNest margi{tmp};
-        margi.removeLoopBang(numPrevLoops);
-        AffineLoopNest tmp2;
+        SymbolicPolyhedra margi{tmp};
+        margi.removeVariableAndPrune(numPrevLoops + C.getNumConstTerms());
+        SymbolicPolyhedra tmp2;
         std::cout << "\nmargi=" << std::endl;
         margi.dump();
         std::cout << "\ntmp=" << std::endl;
@@ -159,17 +190,17 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         // margi contains extrema for `_i`
         // we can substitute extended for value of `_i`
         // in `tmp`
-        int64_t sign = 1 - 2 * extendLower; // extendLower ? -1 : 1
+        int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
         for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c) {
-            int64_t Aci = margi.A(c, _i);
+            int64_t Aci = margi.A(c, _i + numConst);
             int64_t b = sign * Aci;
             if (b <= 0)
                 continue;
             tmp2 = tmp;
             // increment to increase bound
             // this is correct for both extending lower and extending upper
-            // lower: a'x - i <= b -> i >= a'x - b
-            // upper: a'x + i <= b -> i <= b - a'x
+            // lower: a'x + i + b >= 0 -> i >= -a'x - b
+            // upper: a'x - i + b >= 0 -> i <=  a'x + b
             // to decrease the lower bound or increase the upper, we increment
             // `b`
             ++margi.A(c, 0);
@@ -177,7 +208,7 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
             // and then check if the resulting polyhedra is empty.
             // if not, then we may have >0 iterations.
             for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
-                int64_t d = tmp2.A(cc, _i);
+                int64_t d = tmp2.A(cc, _i + numConst);
                 if (d == 0)
                     continue;
                 d *= sign;
@@ -185,9 +216,9 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
                     tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
             }
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
-                if (tmp2.A(--cc, numPrevLoops) == 0)
+                if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
-            std::cout << "\nc=" << c << std::endl;
+            std::cout << "\nc=" << c << "; tmp2=" << std::endl;
             tmp2.dump();
             if (!(tmp2.isEmpty()))
                 return false;
@@ -197,28 +228,26 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
 
     // void printBound(std::ostream &os, const IntMatrix &A, size_t i,
     void printBound(std::ostream &os, size_t i, int64_t sign) const {
-
         const size_t numVar = getNumVar();
         const size_t numConst = C.getNumConstTerms();
         // printVector(std::cout << "A.getRow(i) = ", A.getRow(i)) << std::endl;
         for (size_t j = 0; j < A.numRow(); ++j) {
-            if (A(j, i + numConst) * sign <= 0)
+            int64_t Aji = A(j, i + numConst) * sign;
+            if (Aji <= 0)
                 continue;
             if (A(j, i + numConst) == sign) {
                 if (sign < 0) {
-                    os << "i_" << i << " >= ";
-                } else {
                     os << "i_" << i << " <= ";
+                } else {
+                    os << "i_" << i << " >= ";
                 }
-            } else if (sign < 0) {
-                os << sign * A(j, i + numConst) << "*i_" << i << " >= ";
             } else {
-                os << sign * A(j, i + numConst) << "*i_" << i << " <= ";
+                os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
             }
             llvm::ArrayRef<int64_t> b = getSymbol(A, j);
             bool printed = !allZero(b);
             if (printed)
-                C.printSymbol(os, b, sign);
+                C.printSymbol(os, b, -sign);
             for (size_t k = 0; k < numVar; ++k) {
                 if (k == i)
                     continue;
@@ -241,10 +270,10 @@ struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> {
         }
     }
     void printLowerBound(std::ostream &os, size_t i) const {
-        printBound(os, i, -1);
+        printBound(os, i, 1);
     }
     void printUpperBound(std::ostream &os, size_t i) const {
-        printBound(os, i, 1);
+        printBound(os, i, -1);
     }
     // prints loops from inner most to outer most.
     friend std::ostream &operator<<(std::ostream &os,

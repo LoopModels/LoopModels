@@ -181,10 +181,8 @@ struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
     // Where x = [inds0..., inds1..., time..]
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
-        : SymbolicEqPolyhedra(IntMatrix(), llvm::SmallVector<MPoly, 8>(),
-                              IntMatrix(), llvm::SmallVector<MPoly, 8>(),
-                              ma0.ref.loop->poset) {
-
+	: Polyhedra<IntMatrix, SymbolicComparator>{IntMatrix{},IntMatrix{},ma0.ref.loop.C} {
+	
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>

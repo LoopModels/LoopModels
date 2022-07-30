@@ -132,15 +132,14 @@ struct Simplex {
     }
     bool initiateFeasible() {
         // remove trivially redundant constraints
-        printMatrix(std::cout << "constraints=\n", getConstraints())
-            << std::endl;
+        std::cout << "constraints=\n" << getConstraints() << std::endl;
         hermiteNormalForm();
         // [ I;  X ; b ]
         //
         // original number of variables
         const size_t numVar = getNumVar();
         PtrMatrix<int64_t> C{getConstraints()};
-        printMatrix(std::cout << "C=", C) << std::endl;
+        std::cout << "C=" << C << std::endl;
         llvm::MutableArrayRef<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
@@ -274,7 +273,7 @@ struct Simplex {
                 if (i == 0)
                     f = m;
             }
-        printMatrix(std::cout << "post-removal C = \n", C) << std::endl;
+        std::cout << "post-removal C = \n" << C << std::endl;
         // update baisc vars and constraints
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -289,7 +288,7 @@ struct Simplex {
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-            printMatrix(std::cout << "C = \n", C) << std::endl;
+            std::cout << "C = \n" << C << std::endl;
             int enteringVariable = getEnteringVariable(C.getRow(0));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
