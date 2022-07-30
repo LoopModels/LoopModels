@@ -319,6 +319,18 @@ bool allZero(const auto &x) {
     return true;
 }
 
+template <typename T>
+concept AbstractVector = requires(T t, size_t i) {
+    { t(i) } -> std::convertible_to<typename T::eltype>;
+    { t.size() } -> std::convertible_to<size_t>;
+};
+template <typename T>
+concept AbstractMatrix = requires(T t, size_t i) {
+    { t(i, i) } -> std::convertible_to<typename T::eltype>;
+    { t.numRow() } -> std::convertible_to<size_t>;
+    { t.numCol() } -> std::convertible_to<size_t>;
+};
+
 struct Add {
     constexpr auto operator()(auto x, auto y) { return x + y; }
 };
@@ -339,12 +351,21 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     auto operator()(size_t i) const { return op(a(i)); }
     auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 };
+// scalars broadcast
+inline auto get(const std::integral auto A, size_t) { return A; }
+inline auto get(const std::floating_point auto A, size_t) { return A; }
+inline auto &get(const AbstractVector auto &A, size_t i) { return A(i); }
+inline auto &get(const AbstractMatrix auto &A, size_t i, size_t j) {
+    return A(i, j);
+}
 template <typename Op, typename A, typename B> struct ElementwiseBinaryOp {
     Op op;
     A a;
     B b;
-    auto operator()(size_t i) const { return op(a(i), b(i)); }
-    auto operator()(size_t i, size_t j) const { return op(a(i, j), b(i, j)); }
+    auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
+    auto operator()(size_t i, size_t j) const {
+        return op(get(a, i, j), get(b, i, j));
+    }
 };
 template <typename A> struct Transpose {
     A a;
@@ -367,24 +388,6 @@ template <typename A, typename B> struct MatMul {
     }
 };
 
-// template <typename T, typename S>
-template <typename T>
-concept AbstractVector = requires(T t, size_t i) {
-    // { t(i) } -> std::convertible_to<S>;
-    { t(i) };
-    { t.size() } -> std::convertible_to<size_t>;
-};
-// template <typename T, typename S>
-template <typename T>
-concept AbstractMatrix = requires(T t, size_t i) {
-    { t(i, i) } -> std::convertible_to<typename T::eltype>;
-    // { t(i, i) } -> std::same_as<typename T::leltype>;
-    // { t(i, i) };
-    // { T::eltype };
-    { t.numRow() } -> std::convertible_to<size_t>;
-    { t.numCol() } -> std::convertible_to<size_t>;
-};
-
 struct Begin {
 } begin;
 struct End {
@@ -394,7 +397,7 @@ struct Colon {
 } _;
 
 template <typename T, typename V> struct BaseVector {
-    using eltype=T;
+    using eltype = T;
     inline T &ref(size_t i) { return static_cast<V *>(this)(i); }
     inline T &size() { return static_cast<V *>(this)->size(); }
     V &operator=(AbstractVector auto &x) {
@@ -411,25 +414,26 @@ template <typename T, typename V> struct BaseVector {
             self(i) = x(i);
         return self;
     }
-    bool operator==(AbstractVector auto &x){
-	const size_t N = size();
-	if (N != x.size())
-	    return false;
-	for (size_t n = 0; n < N; ++n)
-	    if (ref(n) != x(n))
-		return false;
-	return true;
+    bool operator==(AbstractVector auto &x) {
+        const size_t N = size();
+        if (N != x.size())
+            return false;
+        for (size_t n = 0; n < N; ++n)
+            if (ref(n) != x(n))
+                return false;
+        return true;
     }
-    V& view(Begin,End) { return *static_cast<V*>(this);}
-    auto view(Begin,size_t i) { return static_cast<V*>(this)->view(0,i);}
-    auto view(size_t i,End) { return static_cast<V*>(this)->view(i,size());}
-    
+    V &view(Begin, End) { return *static_cast<V *>(this); }
+    auto view(Begin, size_t i) { return static_cast<V *>(this)->view(0, i); }
+    auto view(size_t i, End) { return static_cast<V *>(this)->view(i, size()); }
 };
-auto operator*(AbstractMatrix auto &A, AbstractVector auto &x){ return MatMul(A,x);}
+auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
+    return MatMul(A, x);
+}
 //
 // Vectors
 //
-template <typename T, size_t M> struct Vector : BaseVector<T,Vector<T,M>> {
+template <typename T, size_t M> struct Vector : BaseVector<T, Vector<T, M>> {
     T data[M];
 
     // Vector(T *ptr) : ptr(ptr){};
@@ -448,7 +452,8 @@ template <typename T, size_t M> struct Vector : BaseVector<T,Vector<T,M>> {
     const T *begin() const { return data; }
     const T *end() const { return begin() + M; }
 };
-template <typename T, size_t M> struct PtrVector : BaseVector<T,PtrVector<T,M>> {
+template <typename T, size_t M>
+struct PtrVector : BaseVector<T, PtrVector<T, M>> {
     T *ptr;
 
     PtrVector(T *ptr) : ptr(ptr){};
@@ -581,7 +586,7 @@ inline llvm::MutableArrayRef<T> view(llvm::MutableArrayRef<T> a, size_t start,
 }
 
 template <typename T, typename A> struct BaseMatrix {
-    using eltype=T;
+    using eltype = T;
     // using leltype=std::add_lvalue_reference_t<T>;
     inline T &getLinearElement(size_t i) {
         return static_cast<A *>(this)->getLinearElement(i);
@@ -934,7 +939,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     }
 };
 
-static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype,int64_t>);
+static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
 
 template <typename T, size_t S>
 struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
@@ -1726,8 +1731,7 @@ std::ostream &operator<<(std::ostream &os, PtrMatrix<const int64_t> A) {
     // {
     return printMatrix(os, A);
 }
-template < AbstractMatrix T>
-std::ostream &operator<<(std::ostream &os,  T &A) {
+template <AbstractMatrix T> std::ostream &operator<<(std::ostream &os, T &A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
     // {
     return printMatrix(os, PtrMatrix<const typename T::eltype>(A));
