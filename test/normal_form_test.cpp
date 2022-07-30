@@ -43,14 +43,14 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                     ++m;
                 }
             }
-            printMatrix(std::cout << "K=\n", K) << std::endl;
-            printMatrix(std::cout << "A=\n", A) << std::endl;
+            std::cout << "K=\n" << K << std::endl;
+            std::cout << "A=\n" << A << std::endl;
             EXPECT_TRUE(matmul(K, A) == I4);
         } else {
             // std::cout << "K= " << K << "\nB= " << B << std::endl;
             printVector(std::cout << "included = ", included) << std::endl;
             if (auto optlu = LU::fact(K)) {
-                printMatrix(std::cout << "K=\n", K) << std::endl;
+                std::cout << "K=\n" << K << std::endl;
                 if (auto optA2 = optlu.getValue().inv()) {
                     SquareMatrix<Rational, 4> &A2 = optA2.getValue();
                     std::cout << "A2 =\n" << A2 << std::endl;
@@ -175,9 +175,7 @@ TEST(Hermite, BasicAssertions) {
         A4x3(2, 2) = 1;
         A4x3(3, 2) = 1;
         std::cout << "A=\n" << A4x3 << std::endl;
-        auto hnf = NormalForm::hermite(A4x3);
-        EXPECT_TRUE(hnf.hasValue());
-        auto [H, U] = hnf.getValue();
+        auto [H, U] = NormalForm::hermite(A4x3);
         std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
 
         EXPECT_TRUE(isHNF(H));
@@ -187,9 +185,7 @@ TEST(Hermite, BasicAssertions) {
             A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
         }
         std::cout << "\n\n\n=======\n\nA=\n" << A4x3 << std::endl;
-        hnf = NormalForm::hermite(A4x3);
-        EXPECT_TRUE(hnf.hasValue());
-        auto [H2, U2] = hnf.getValue();
+        auto [H2, U2] = NormalForm::hermite(A4x3);
         std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
         EXPECT_TRUE(isHNF(H2));
         EXPECT_TRUE(H2 == matmul(U2, A4x3));
@@ -212,9 +208,7 @@ TEST(Hermite, BasicAssertions) {
         A(1, 3) = -6;
         A(2, 3) = 8;
         A(3, 3) = -1;
-        auto hnfsm = NormalForm::hermite(A);
-        EXPECT_TRUE(hnfsm.hasValue());
-        auto [H3, U3] = hnfsm.getValue();
+        auto [H3, U3] = NormalForm::hermite(A);
         std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
         EXPECT_TRUE(isHNF(H3));
         EXPECT_TRUE(H3 == matmul(U3, A));
@@ -275,10 +269,7 @@ TEST(Hermite, BasicAssertions) {
         A(2, 8) = 3;
         A(2, 9) = 3;
         A(2, 10) = -3;
-        llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
-            NormalForm::hermite(A);
-        EXPECT_TRUE(B.hasValue());
-        auto [H, U] = B.getValue();
+        auto [H, U] = NormalForm::hermite(A);
         EXPECT_TRUE(isHNF(H));
         EXPECT_TRUE(matmul(U, A) == H);
         std::cout << "A = \n"

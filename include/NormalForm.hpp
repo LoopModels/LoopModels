@@ -357,7 +357,7 @@ MULTIVERSION static void simplifySystemImpl(PtrMatrix<int64_t> A,
                                             PtrMatrix<int64_t> B) {
     auto [M, N] = A.size();
     for (size_t r = 0, c = 0; c < N && r < M; ++c)
-        if (!pivotRows(A, c, M, r))
+        if (!pivotRows(A, B, c, M, r))
             reduceColumn(A, B, c, r++);
 }
 MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
@@ -374,10 +374,10 @@ MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
     }
     return;
 }
-llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>>
+std::pair<IntMatrix, SquareMatrix<int64_t>>
 hermite(IntMatrix A) {
     auto [M, N] = A.size();
-    SquareMatrix<int64_t> U = SquareMatrix<int64_t>::identity(M);
+    SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(M)};
     simplifySystemImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
 }
