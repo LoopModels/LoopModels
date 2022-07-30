@@ -1,0 +1,14 @@
+----------------------------
+
+Analyze SCEV expressions of each statement present 
+in the llvm IR `path/to/llvmir.ll` and
+print results to `path/to/scev.analyzed` file
+
+$ opt -analyze -scalar-evolution -enable-new-pm=0 path/to/llvmir.ll -S -o path/to/scev.analyzed
+
+----------------------------
+
+Try to delinearize all memory accesses in the program `path/to/llvmir.ll`
+and print results to `path/to/scev.analyzed` file
+
+$ opt -analyze --delinearize -enable-new-pm=0 path/to/llvmir.ll -S -o path/to/scev.analyzed

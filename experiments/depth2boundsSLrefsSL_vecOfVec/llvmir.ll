@@ -1,9 +1,9 @@
-; ModuleID = 'nestedloop_1.ll'
-source_filename = "nestedloop_1!"
+; ModuleID = './depth2boundsSLrefsSL_vecOfVec/llvmir.ll'
+source_filename = "foo"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define void @"julia_nestedloop_1!_131"({} addrspace(10)* nonnull align 16 dereferenceable(40) %0, i64 signext %1) local_unnamed_addr #0 !dbg !5 {
+define void @julia_foo_263({} addrspace(10)* nonnull align 16 dereferenceable(40) %0, i64 signext %1) local_unnamed_addr #0 !dbg !5 {
 top:
   %2 = tail call {}*** @julia.get_pgcstack()
   %3 = bitcast {} addrspace(10)* %0 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)*, !dbg !7
@@ -19,13 +19,13 @@ L14.preheader:                                    ; preds = %top
   %9 = load {} addrspace(10)* addrspace(13)*, {} addrspace(10)* addrspace(13)* addrspace(11)* %8, align 8
   br label %idxend, !dbg !28
 
-L48.loopexit:                                     ; preds = %idxend17
+L48.loopexit:                                     ; preds = %pass11
   br label %L48, !dbg !31
 
 L48:                                              ; preds = %L48.loopexit, %pass
-  %.not11 = icmp eq i64 %value_phi3, %6, !dbg !31
+  %.not10 = icmp eq i64 %value_phi3, %6, !dbg !31
   %10 = add nuw nsw i64 %value_phi3, 1, !dbg !34
-  br i1 %.not11, label %L60.loopexit, label %idxend, !dbg !35
+  br i1 %.not10, label %L60.loopexit, label %idxend, !dbg !35
 
 L60.loopexit:                                     ; preds = %L48
   br label %L60, !dbg !35
@@ -42,7 +42,7 @@ idxend:                                           ; preds = %L48, %L14.preheader
   br i1 %.not, label %fail, label %pass, !dbg !28
 
 fail:                                             ; preds = %idxend
-  tail call void @jl_throw({} addrspace(12)* addrspacecast ({}* inttoptr (i64 139756673433088 to {}*) to {} addrspace(12)*)), !dbg !28
+  tail call void @jl_throw({} addrspace(12)* addrspacecast ({}* inttoptr (i64 140205053107712 to {}*) to {} addrspace(12)*)), !dbg !28
   unreachable, !dbg !28
 
 pass:                                             ; preds = %idxend
@@ -50,28 +50,28 @@ pass:                                             ; preds = %idxend
   %15 = addrspacecast { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)* %14 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(11)*, !dbg !39
   %16 = getelementptr inbounds { i8 addrspace(13)*, i64, i16, i16, i32 }, { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(11)* %15, i64 0, i32 1, !dbg !39
   %17 = load i64, i64 addrspace(11)* %16, align 8, !dbg !39, !tbaa !11, !range !16
-  %.not8.not = icmp eq i64 %17, 0, !dbg !40
-  br i1 %.not8.not, label %L48, label %pass13.preheader, !dbg !30
+  %.not7.not = icmp eq i64 %17, 0, !dbg !40
+  br i1 %.not7.not, label %L48, label %pass11.preheader, !dbg !30
 
-pass13.preheader:                                 ; preds = %pass
+pass11.preheader:                                 ; preds = %pass
   %18 = bitcast {} addrspace(10)* %13 to i64 addrspace(13)* addrspace(10)*
   %19 = addrspacecast i64 addrspace(13)* addrspace(10)* %18 to i64 addrspace(13)* addrspace(11)*
   %20 = load i64 addrspace(13)*, i64 addrspace(13)* addrspace(11)* %19, align 8, !tbaa !44, !nonnull !4
-  br label %idxend17, !dbg !46
+  br label %pass11, !dbg !35
 
-idxend17:                                         ; preds = %idxend17, %pass13.preheader
-  %value_phi8 = phi i64 [ %25, %idxend17 ], [ 1, %pass13.preheader ]
+pass11:                                           ; preds = %pass11.preheader, %pass11
+  %value_phi8 = phi i64 [ %25, %pass11 ], [ 1, %pass11.preheader ]
   %21 = add nsw i64 %value_phi8, -1, !dbg !46
   %22 = getelementptr inbounds i64, i64 addrspace(13)* %20, i64 %21, !dbg !46
   %23 = load i64, i64 addrspace(13)* %22, align 8, !dbg !46, !tbaa !47
   %24 = mul i64 %23, %1, !dbg !49
   store i64 %24, i64 addrspace(13)* %22, align 8, !dbg !51, !tbaa !47
-  %.not10 = icmp eq i64 %value_phi8, %17, !dbg !31
+  %.not9 = icmp eq i64 %value_phi8, %17, !dbg !31
   %25 = add nuw nsw i64 %value_phi8, 1, !dbg !34
-  br i1 %.not10, label %L48.loopexit, label %idxend17, !dbg !35
+  br i1 %.not9, label %L48.loopexit, label %pass11, !dbg !35
 }
 
-define nonnull {} addrspace(10)* @"jfptr_nestedloop_1!_132"({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
+define nonnull {} addrspace(10)* @jfptr_foo_264({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
 top:
   %3 = tail call {}*** @julia.get_pgcstack()
   %4 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !53, !align !54
@@ -80,8 +80,8 @@ top:
   %7 = load i64 addrspace(10)*, i64 addrspace(10)** %6, align 8, !nonnull !4, !dereferenceable !55, !align !55
   %8 = addrspacecast i64 addrspace(10)* %7 to i64 addrspace(11)*
   %9 = load i64, i64 addrspace(11)* %8, align 8
-  tail call void @"julia_nestedloop_1!_131"({} addrspace(10)* %4, i64 signext %9) #0
-  ret {} addrspace(10)* addrspacecast ({}* inttoptr (i64 139756847849480 to {}*) to {} addrspace(10)*)
+  tail call void @julia_foo_263({} addrspace(10)* %4, i64 signext %9) #0
+  ret {} addrspace(10)* addrspacecast ({}* inttoptr (i64 140205227524104 to {}*) to {} addrspace(10)*)
 }
 
 declare {}*** @julia.get_pgcstack() local_unnamed_addr
@@ -99,14 +99,14 @@ attributes #2 = { noreturn }
 !0 = !{i32 2, !"Dwarf Version", i32 4}
 !1 = !{i32 2, !"Debug Info Version", i32 3}
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
-!3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/examples/generator.jl", directory: ".")
+!3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/experiments/depth2boundsSLrefsSL_vecOfVec/source.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "nestedloop_1!", linkageName: "julia_nestedloop_1!_131", scope: null, file: !3, line: 46, type: !6, scopeLine: 46, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "foo", linkageName: "julia_foo_263", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !DILocation(line: 215, scope: !8, inlinedAt: !10)
 !8 = distinct !DISubprogram(name: "length;", linkageName: "length", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !9 = !DIFile(filename: "array.jl", directory: ".")
-!10 = !DILocation(line: 47, scope: !5)
+!10 = !DILocation(line: 4, scope: !5)
 !11 = !{!12, !12, i64 0}
 !12 = !{!"jtbaa_arraylen", !13, i64 0}
 !13 = !{!"jtbaa_array", !14, i64 0}
@@ -126,12 +126,12 @@ attributes #2 = { noreturn }
 !27 = distinct !DISubprogram(name: "iterate;", linkageName: "iterate", scope: !25, file: !25, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !28 = !DILocation(line: 861, scope: !29, inlinedAt: !30)
 !29 = distinct !DISubprogram(name: "getindex;", linkageName: "getindex", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
-!30 = !DILocation(line: 48, scope: !5)
+!30 = !DILocation(line: 5, scope: !5)
 !31 = !DILocation(line: 468, scope: !32, inlinedAt: !34)
 !32 = distinct !DISubprogram(name: "==;", linkageName: "==", scope: !33, file: !33, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !33 = !DIFile(filename: "promotion.jl", directory: ".")
 !34 = !DILocation(line: 837, scope: !27, inlinedAt: !35)
-!35 = !DILocation(line: 49, scope: !5)
+!35 = !DILocation(line: 6, scope: !5)
 !36 = !{!37, !37, i64 0}
 !37 = !{!"jtbaa_ptrarraybuf", !38, i64 0}
 !38 = !{!"jtbaa_data", !14, i64 0}

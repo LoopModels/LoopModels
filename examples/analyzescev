@@ -1,1 +1,0 @@
-opt-14 -analyze -scalar-evolution -enable-new-pm=0 examples/nestedloop_2.ll

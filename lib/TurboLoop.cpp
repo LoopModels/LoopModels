@@ -3,11 +3,14 @@
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include "llvm/Analysis/LoopCacheAnalysis.h"
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/LoopNestAnalysis.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+#include <llvm/Analysis/Delinearization.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
@@ -25,6 +28,47 @@
 #include <llvm/Transforms/Utils/LoopSimplify.h>
 #include <llvm/Transforms/Utils/LoopUtils.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+
+
+/*
+    Poly: coeff * var^deg + residual
+
+    coeff: a Poly
+    var  : one variable from x1..xn
+    deg  : Integer
+    residual: a Poly
+
+    x,y
+
+    x^2y + x^2 + x*y + 1
+
+    (y + 1)*x^2 + { (y)*x + { 1 } }
+*/
+
+/*
+
+
+*/
+
+struct ParsedLoop {
+    // Loop - 
+    //  loop bounds - somehow related to other loop bounds -
+    // 
+
+    
+    
+};
+
+//
+//
+//
+struct ParsedFunction {
+    
+    // Assumptions here ?
+
+    llvm::SmallVector<ParsedLoop, 4> nested;
+    
+};
 
 // The TurboLoopPass represents each loop in function `F` using its own loop
 // representation, suitable for more aggressive analysis. However, the remaining
@@ -225,11 +269,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-    
-    for (llvm::Loop *LP : *LI) {
-        
-        printLoopDebugInfo(LP, LI, SE);
 
+    for (llvm::Loop *LP : *LI) {
         for (llvm::BasicBlock *block : LP->getBlocks()) {
         llvm::outs() << "BasicBlock: " << "\n";
         for (auto inst = block->begin(); inst != block->end(); inst ++) {
@@ -277,11 +318,23 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                 // 
                 auto GEP = inst->getOperand(0);
                 llvm::outs() << "GEP: " << *GEP << "\n";
+                llvm::outs() << "..or not GEP: " << (dyn_cast<llvm::Instruction>(GEP)->getOpcode() == llvm::Instruction::GetElementPtr) << "\n";
 
                 auto idx = static_cast<llvm::Instruction*>(GEP)->getOperand(1);
 
                 llvm::outs() << "idx: " << *idx << "\n";
                 llvm::outs() << "idx scev: " << *SE->getSCEV(idx) << "\n";
+
+                // llvm::SmallVector<
+                // llvm::delinearize(*SE, SE->getSCEV(idx),);
+            
+                auto IR = llvm::IndexedReference(*inst, *LI, *SE);
+
+                llvm::outs() << "valid IndexedReference: " << IR.isValid() << "\n";
+                llvm::outs() << "\tNum subscripts: " << IR.getNumSubscripts() << "\n";
+                llvm::outs() << "\tFirst subscript: " << *IR.getFirstSubscript() << "\n";
+                llvm::outs() << "\tLast  subscript: " << *IR.getLastSubscript() << "\n";
+
             }
 
         }
@@ -311,6 +364,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         //     }
         // }
 
+        printLoopDebugInfo(LP, LI, SE);
 
         for (auto SubLP = ++df_begin(LP); SubLP != df_end(LP); SubLP++) {
             printLoopDebugInfo(*SubLP, LI, SE);
