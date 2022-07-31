@@ -4,7 +4,7 @@
 
 template <typename T>
 concept HasEltype = requires(T) {
-    std::is_scalar_v<typename T::eltype>;
+    std::is_scalar_v<typename std::remove_reference_t<T>::eltype>;
 };
 
 template <typename A> struct GetEltype {};

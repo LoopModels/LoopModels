@@ -322,12 +322,25 @@ template <typename T>
 concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
     { t(i) } -> std::convertible_to<typename T::eltype>;
     { t.size() } -> std::convertible_to<size_t>;
+    {t.view()};
 };
+// template <typename T>
+// concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
+//     { t(i, i) } -> std::convertible_to<typename T::eltype>;
+//     { t.numRow() } -> std::convertible_to<size_t>;
+//     { t.numCol() } -> std::convertible_to<size_t>;
+// };
 template <typename T>
-concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
-    { t(i, i) } -> std::convertible_to<typename T::eltype>;
+concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
+    {
+        t(i, i)
+        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.numRow() } -> std::convertible_to<size_t>;
     { t.numCol() } -> std::convertible_to<size_t>;
+};
+template <typename T>
+concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t) {
+    { t.view() } -> AbstractMatrixCore;
 };
 
 struct Add {
@@ -353,6 +366,7 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     size_t size() { return a.size(); }
     size_t numRow() { return a.numRow(); }
     size_t numCol() { return a.numCol(); }
+    inline auto view() const { return *this; };
 };
 // scalars broadcast
 inline auto get(const std::integral auto A, size_t) { return A; }
@@ -431,6 +445,7 @@ template <typename Op, typename A, typename B> struct ElementwiseBinaryOp {
         }
         return 1;
     }
+    auto &view() const { return *this; };
 };
 
 template <typename A> struct Transpose {
@@ -438,6 +453,7 @@ template <typename A> struct Transpose {
     auto operator()(size_t i, size_t j) const { return a(j, i); }
     size_t numRow() const { return a.numCol(); }
     size_t numCol() const { return a.numRow(); }
+    auto &view() const { return *this; };
 };
 template <typename A, typename B> struct MatMul {
     const A a;
@@ -457,6 +473,7 @@ template <typename A, typename B> struct MatMul {
     size_t size() const { return a.numRow(); }
     size_t numRow() const { return a.numRow(); }
     size_t numCol() const { return b.numCol(); }
+    inline auto view() const { return *this; };
 };
 
 struct Begin {
@@ -515,8 +532,12 @@ template <typename T, typename V> struct BaseVector {
         return true;
     }
     V &view(Begin, End) { return *static_cast<V *>(this); }
-    auto view(Begin, size_t i) { return static_cast<V *>(this)->view(0, i); }
-    auto view(size_t i, End) { return static_cast<V *>(this)->view(i, size()); }
+    inline auto view(Begin, size_t i) {
+        return static_cast<V *>(this)->view(0, i);
+    }
+    inline auto view(size_t i, End) {
+        return static_cast<V *>(this)->view(i, size());
+    }
 };
 
 //
@@ -550,6 +571,8 @@ struct PtrVector : BaseVector<T, PtrVector<T, M>> {
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
     constexpr size_t size() const { return M; }
+    PtrVector<T, M> view() { return *this; };
+    PtrVector<const T, M> view() const { return *this; };
 };
 template <typename T> struct PtrVector<T, 0> {
     T *ptr;
@@ -573,9 +596,11 @@ template <typename T> struct PtrVector<T, 0> {
     bool operator==(const llvm::ArrayRef<T> x) const {
         return this->arrayref() == x;
     }
+    PtrVector<T, 0> view() { return *this; };
+    PtrVector<const T, 0> view() const { return *this; };
 };
 template <typename T> struct Vector<T, 0> {
-    llvm::SmallVector<T> data;
+    llvm::SmallVector<T, 16> data;
     Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
 
     Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
@@ -596,6 +621,12 @@ template <typename T> struct Vector<T, 0> {
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
+    PtrVector<T, 0> view() {
+        return PtrVector<T, 0>{.ptr = data.data(), .M = data.size()};
+    };
+    PtrVector<const T, 0> view() const {
+        return PtrVector<const T, 0>{.ptr = data.data(), .M = data.size()};
+    };
 };
 template <typename T, size_t M>
 bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
@@ -644,6 +675,8 @@ template <typename T> struct StridedVector {
     inline StridedVector<const T> view(size_t start, size_t stop) const {
         return StridedVector<const T>{*d + start * x, stop - start, x};
     }
+    StridedVector<T> view() { return *this; }
+    StridedVector<const T> view() const { return *this; }
 };
 
 template <typename T>
@@ -817,6 +850,7 @@ template <typename T> struct PtrMatrix {
                 (*this)(r, c) = B(r, c);
         return *this;
     }
+    inline auto view() const { return *this; };
     // inline StridedVector<T> viewCol(size_t rowStart, size_t rowEnd,
     //                                 size_t col) {
     //     return StridedVector<T>{data() + col + rowStart * rowStride(),
@@ -828,6 +862,10 @@ template <typename T> struct PtrMatrix {
     //                                   rowEnd - rowStart, rowStride()};
     // }
 };
+static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> is not trivially copyable!");
+static_assert(std::is_trivially_copyable_v<PtrVector<int64_t, 0>>,
+              "PtrVector<int64_t,0> is not trivially copyable!");
 static_assert(AbstractMatrix<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractMatrix failed");
 static_assert(AbstractMatrix<PtrMatrix<const int64_t>>,
@@ -2032,99 +2070,62 @@ template <AbstractMatrix T> std::ostream &operator<<(std::ostream &os, T &A) {
 //     return printMatrix(os, A);
 // }
 
-inline auto operator+(const AbstractMatrix auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Add{}, PtrMatrix{A}, b};
+template <typename T>
+concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
+
+template <TriviallyCopyable OP, TriviallyCopyable A, TriviallyCopyable B>
+inline auto binaryOp(const OP op, const A a, const B b){
+    return ElementwiseBinaryOp<OP, A, B>{
+        .op = op, .a = a, .b = b};
 }
-inline auto operator+(const std::integral auto a,
-                      const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Add{}, a, PtrMatrix{B}};
+template <TriviallyCopyable OP, typename A, TriviallyCopyable B>
+inline auto binaryOp(const OP op, const A &a, const B b){
+    auto AA{a.view()};
+    return ElementwiseBinaryOp<OP, decltype(AA), B>{
+        .op = op, .a = AA, .b = b};
 }
-inline auto operator+(const AbstractMatrix auto &A,
-                      const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Add{}, PtrMatrix{A}, PtrMatrix{B}};
+template <TriviallyCopyable OP, TriviallyCopyable A, typename B>
+inline auto binaryOp(const OP op, const A a, const B &b){
+    auto BB{b.view()};
+    return ElementwiseBinaryOp<OP, A, decltype(BB)>{
+        .op = op, .a = a, .b = BB};
 }
-inline auto operator+(const AbstractVector auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Add{}, PtrVector{A}, b};
-}
-inline auto operator+(const std::integral auto a,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Add{}, a, PtrVector{B}};
-}
-inline auto operator+(const AbstractVector auto &A,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Add{}, PtrVector{A}, PtrVector{B}};
+template <TriviallyCopyable OP, typename A, typename B>
+inline auto binaryOp(const OP op, const A &a, const B &b){
+    auto AA{a.view()};
+    auto BB{b.view()};
+    return ElementwiseBinaryOp<OP, decltype(AA), decltype(BB)>{
+        .op = op, .a = AA, .b = BB};
 }
 
-inline auto operator-(const AbstractMatrix auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Sub{}, PtrMatrix{A}, b};
+
+template <typename A, typename B>
+inline auto operator+(A&& a, B&& b){
+    return binaryOp(Add{}, std::forward<A>(a), std::forward<B>(b));
 }
-inline auto operator-(const std::integral auto a,
-                      const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Sub{}, a, PtrMatrix{B}};
+template <typename A, typename B>
+inline auto operator-(A&& a, B&& b){
+    return binaryOp(Sub{}, std::forward<A>(a), std::forward<B>(b));
 }
-inline auto operator-(const AbstractMatrix auto &A,
-                      const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Sub{}, PtrMatrix{A}, PtrMatrix{B}};
+template <typename A, typename B>
+inline auto operator*(A&& a, B&& b){
+    return binaryOp(Mul{}, std::forward<A>(a), std::forward<B>(b));
 }
-inline auto operator-(const AbstractVector auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Sub{}, PtrVector{A}, b};
-}
-inline auto operator-(const std::integral auto a,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Sub{}, a, PtrVector{B}};
-}
-inline auto operator-(const AbstractVector auto &A,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Sub{}, PtrVector{A}, PtrVector{B}};
+template <typename A, typename B>
+inline auto operator/(A&& a, B&& b){
+    return binaryOp(Div{}, std::forward<A>(a), std::forward<B>(b));
 }
 
 inline auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
-    return MatMul{PtrMatrix{A}, PtrVector{x}};
-}
-inline auto operator*(const AbstractMatrix auto &A,
-                      const AbstractMatrix auto &B) {
-    return MatMul{PtrMatrix{A}, PtrMatrix{B}};
-}
-// template <AbstractMatrix TA, std::integral TB>
-// inline auto operator*(const TA &A, const TB b) {
-//     auto op = Mul{};
-//     // PtrMatrix<typename TA::eltype> AA{PtrMatrix<typename TA::eltype>{A}};
-//     PtrMatrix<const typename TA::eltype> AA{A};
-//     auto bb = b;
-//     return ElementwiseBinaryOp<Mul, TA, TB>{.op = op, .a = AA, .b = bb};
-//     // return ElementwiseBinaryOp<Mul,TA,TB>{.op = Mul{}, .a = PtrMatrix{A},
-//     .b
-//     // = b};
-// }
-inline auto operator*(const AbstractMatrix auto &A,
-                      const std::integral auto b) {
-    // auto AA{PtrMatrix{A}};
     auto AA{A.view()};
-    return ElementwiseBinaryOp{Mul{}, AA, b};
+    auto xx{x.view()};
+    return MatMul<decltype(AA), decltype(xx)>{.a = AA, .b = xx};
 }
-inline auto operator*(const std::integral auto a,
+inline auto operator*(const AbstractMatrix auto &A,
                       const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Mul{}, a, PtrMatrix{B}};
-}
-// inline auto operator*(const AbstractMatrix auto &A, const AbstractMatrix auto
-// &B){
-//     return ElementwiseBinaryOp{Mul{}, PtrMatrix{A}, PtrMatrix{B}};
-// }
-inline auto operator*(const AbstractVector auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Mul{}, PtrVector{A}, b};
-}
-inline auto operator*(const std::integral auto a,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Mul{}, a, PtrVector{B}};
-}
-inline auto operator*(const AbstractVector auto &A,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Mul{}, PtrVector{A}, PtrVector{B}};
+    auto AA{A.view()};
+    auto BB{B.view()};
+    return MatMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }
 template <AbstractVector V>
 inline auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
@@ -2134,27 +2135,5 @@ inline auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
     return s;
 }
 
-inline auto operator/(const AbstractMatrix auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Div{}, PtrMatrix{A}, b};
-}
-inline auto operator/(const std::integral auto a,
-                      const AbstractMatrix auto &B) {
-    return ElementwiseBinaryOp{Div{}, a, PtrMatrix{B}};
-}
-// inline auto operator+(const AbstractMatrix auto &A, const AbstractMatrix auto
-// &B){
-//     return ElementwiseBinaryOp{Add{}, PtrMatrix{A}, PtrMatrix{B}};
-// }
-inline auto operator/(const AbstractVector auto &A,
-                      const std::integral auto b) {
-    return ElementwiseBinaryOp{Div{}, PtrVector{A}, b};
-}
-inline auto operator/(const std::integral auto a,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Div{}, a, PtrVector{B}};
-}
-inline auto operator/(const AbstractVector auto &A,
-                      const AbstractVector auto &B) {
-    return ElementwiseBinaryOp{Div{}, PtrVector{A}, PtrVector{B}};
-}
+
+
