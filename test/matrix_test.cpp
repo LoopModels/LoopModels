@@ -73,6 +73,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     auto A4{A * 4};
     IntMatrix C = A4;
     IntMatrix B = A * 4;
+    std::cout << "B = \n"<<B<<std::endl;
+    std::cout << "C = \n"<<C<<std::endl;
     // IntMatrix B;
     // B = A*4;
 }
