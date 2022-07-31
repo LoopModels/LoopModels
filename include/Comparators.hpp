@@ -307,10 +307,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
     IntMatrix V;
     llvm::Optional<llvm::SmallVector<int64_t, 16>> d;
-    size_t numRowDiff;
-    //llvm::SmallVector<int64_t, 16> sol;
+    size_t numRowDiff; // This variable stores the different row size of H matrix and truncated H matrix
     static LinearSymbolicComparator construct(IntMatrix Ap) {
-        // std::cout << "start Test = " << std::endl;
         const auto [numCon, numVar] = Ap.size();
         IntMatrix A(numVar + numCon, 2 * numCon);
         // A = [Ap' 0
@@ -323,35 +321,19 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numCon) = 1;
         }
-        // std::cout << "A = " << A << std::endl;
         // We will have query of the form Ax = q;
         auto [H, U] = NormalForm::hermite(std::move(A));
-        // auto NS2 = NormalForm::nullSpace(H);
-        // std::cout << "H = " << H << std::endl;
-        // std::cout << "NS = " << NS2.numRow() << std::endl;
         size_t R = H.numRow();
         size_t numRowPre = R;
         while ((R > 0) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
         size_t numRowDiff = numRowPre - R;
-        // std::cout << "H = " << H << std::endl;
-        // auto NS = NormalForm::nullSpace(H);
-        // std::cout << "NS = " << NS.numRow() << std::endl;
         if (H.isSquare())
             return LinearSymbolicComparator{.U = std::move(U), .V = std::move(H), .d = {}};
-        // std::cout << "H = " << H << std::endl;
-        // std::cout << "U = " << U << std::endl;
-        //std::cout << "U matrix:" << U << std::endl;
         auto Ht = H.transpose();
-        // std::cout << "Ht matrix:" << Ht << std::endl;
         auto Vt = IntMatrix::identity(Ht.numRow());
-        // Vt * Ht = D
-        // std::cout<< "Ht row size = " << Ht.numRow() <<std::endl;
         NormalForm::solveSystem(Ht, Vt);
-        // std::cout << "Vt =" << Vt << std::endl;
-        // H * V = Diagonal(d)
-        // std::cout <<"D = " << Ht << std::endl;
         auto d = Ht.diag();
         printVector(std::cout << "D matrix:", d) << std::endl;
         auto V = Vt.transpose();
@@ -359,26 +341,21 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     };
 
     bool greaterEqualZero(llvm::ArrayRef<int64_t> query) const {
-        std::cout << "----start testing greaterEqualZero-----"<< std::endl;
         auto nVars = query.size();
         auto nEqs = V.numCol() / 2;
+        //Full column rank case
         if (!d.hasValue()) {
             auto b = U.view(0, U.numRow(), 0, query.size()) * query;
-            // std::cout << "U =" << U << std::endl;
             for (size_t i = V.numRow(); i < b.size(); ++i) {
                 if (b[i] != 0)
                     return false;
             }       
             auto H = V;
-            // std::cout << "H = \n" << H << std::endl;
             auto oldn = H.numCol();
             H.resizeCols(oldn + 1);
-            // std::cout << "V = \n" << V << std::endl;
-            // std::cout << "H = \n" << H << std::endl;
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = b[i];
             NormalForm::solveSystem(H);
-            // std::cout <<"after solving:" << H << std::endl;
             for (size_t i = nEqs; i < H.numRow(); ++i) {
                 if (auto rhs = H(i, oldn))
                     if ((rhs > 0) != (H(i, i) > 0)) {
@@ -388,29 +365,20 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             }
             return true;
         }
+        //Column rank deficient case
         else{
-            // std::cout << "Col rank deficient" << std::endl;
-            //IntMatrix tmpU(U.numRow()-1, U.numCol());
-            // for (size_t i = 0; i < tmpU.numRow(); ++i)
-            //     for (size_t j = 0; j < tmpU.numCol(); ++j)
-            //         tmpU(i, j) = U(i, j);
             auto tmpU = U.view(0, U.numRow()-numRowDiff, 0, U.numCol());
             auto b = U.view(0, tmpU.numRow(), 0, query.size()) * query;
-            // std::cout << "b size 0= " << b.size() << std::endl;
-            IntMatrix J(nEqs, 2 * nEqs);
-            for (size_t i = 0; i < nEqs; ++i)
-                 J(i, i + nEqs) = 1;
             auto dinv = d.getValue();
             auto Dlcm = dinv[0];
+            // We represent D martix as a vector, and multiply the lcm to the linear equation
+            // to avoid store D^(-1) as rational type
             for (size_t i = 1; i < dinv.size(); ++i){
                 Dlcm = lcm(Dlcm, dinv[i]);
             }
             for (size_t i = 0; i < dinv.size(); ++i){
                 dinv[i] = Dlcm / dinv[i];
-                // std::cout << "d inv i= " << dinv[i] << std::endl;
             }
-            // std::cout << "d size = " << dinv.size() << std::endl;
-            // std::cout << "b size = " << b.size() << std::endl;
             for (size_t i = 0; i < b.size(); ++i){
                 b[i] *= dinv[i];
             }
@@ -418,24 +386,18 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < nEqs; ++i)
                 for (size_t j = 0; j < tmpU.numRow(); ++j)
                     JV1(i, j) = V(i + nEqs, j);
-            // std::cout <<"Dlcm = " << Dlcm << std::endl;
-            // auto JV1 = matmul(J, V.view(0, V.numRow(), 0, tmpU.numRow()));
-            // std::cout <<"JV1 = " << JV1 << std::endl;
-            // std::cout <<"V = " <<  V << std::endl;
             auto c = JV1 * b;
             auto NSdim = V.numRow() - tmpU.numRow();
+            //expand W stores [c -JV2 JV2]
+            // we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
+            //where y2 = y2+ - y2-
             IntMatrix expandW(nEqs, NSdim * 2 +1);
-            // auto JV2 = matmul(J, V.view(0, V.numRow(), tmpU.numRow(), V.numCol()));
-            // std::cout <<"JV2 = " << JV2 << std::endl;
-            // std::cout <<"V2 = " << V << std::endl;
             for (size_t i = 0; i < nEqs; ++i)
             {
                 expandW(i, 0) = c[i];
                 // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j){
                     auto val = V(i + nEqs, tmpU.numRow() + j) * Dlcm;
-                    //auto val = JV2(i, j) * Dlcm;
-                    // should change positive and negative?
                     expandW(i, j + 1) = -val;
                     expandW(i, j + NSdim + 1) = val;
                 }
