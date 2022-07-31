@@ -347,9 +347,9 @@ struct Div {
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
     Op op;
-    A a;
-    auto operator()(size_t i) const { return op(a(i)); }
-    auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
+    A *a;
+    auto operator()(size_t i) const { return op((*a)(i)); }
+    auto operator()(size_t i, size_t j) const { return op((*a)(i, j)); }
 };
 // scalars broadcast
 inline auto get(const std::integral auto A, size_t) { return A; }
@@ -360,30 +360,30 @@ inline auto &get(const AbstractMatrix auto &A, size_t i, size_t j) {
 }
 template <typename Op, typename A, typename B> struct ElementwiseBinaryOp {
     Op op;
-    A a;
-    B b;
-    auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
+    A *a;
+    B *b;
+    auto operator()(size_t i) const { return op(get(*a, i), get(*b, i)); }
     auto operator()(size_t i, size_t j) const {
-        return op(get(a, i, j), get(b, i, j));
+        return op(get(*a, i, j), get(*b, i, j));
     }
 };
 template <typename A> struct Transpose {
-    A a;
-    auto operator()(size_t i, size_t j) const { return a(j, i); }
+    A *a;
+    auto operator()(size_t i, size_t j) const { return (*a)(j, i); }
 };
 template <typename A, typename B> struct MatMul {
-    A a;
-    B b;
+    A *a;
+    B *b;
     auto operator()(size_t i) const {
         auto s = (a(i, 0) * b(0)) * 0;
-        for (size_t k = 0; k < a.numCol(); ++k)
-            s += a(i, k) * b(k);
+        for (size_t k = 0; k < a->numCol(); ++k)
+            s += (*a)(i, k) * (*b)(k);
         return s;
     }
     auto operator()(size_t i, size_t j) const {
         auto s = (a(i, 0) * b(0, j)) * 0;
-        for (size_t k = 0; k < a.numCol(); ++k)
-            s += a(i, k) * b(k, j);
+        for (size_t k = 0; k < a->numCol(); ++k)
+            s += (*a)(i, k) * (*b)(k, j);
         return s;
     }
 };
@@ -435,14 +435,8 @@ auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
 //
 template <typename T, size_t M> struct Vector : BaseVector<T, Vector<T, M>> {
     T data[M];
-
-    // Vector(T *ptr) : ptr(ptr){};
-    // Vector(Vector<T, M> &a) : data(a.data){};
-
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return data[i];
     }
     T &operator[](size_t i) { return data[i]; }
@@ -455,14 +449,9 @@ template <typename T, size_t M> struct Vector : BaseVector<T, Vector<T, M>> {
 template <typename T, size_t M>
 struct PtrVector : BaseVector<T, PtrVector<T, M>> {
     T *ptr;
-
     PtrVector(T *ptr) : ptr(ptr){};
-    // Vector(Vector<T, M> &a) : ptr(a.ptr){};
-
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -476,11 +465,8 @@ struct PtrVector : BaseVector<T, PtrVector<T, M>> {
 template <typename T> struct PtrVector<T, 0> {
     T *ptr;
     size_t M;
-    // PtrVector(llvm::ArrayRef<T> A) : ptr(A.data()), M(A.size()) {};
     T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < M);
-#endif
         return ptr[i];
     }
     T &operator[](size_t i) { return ptr[i]; }
@@ -507,15 +493,11 @@ template <typename T> struct Vector<T, 0> {
     Vector(llvm::SmallVector<T> &&A) : data(std::move(A)){};
 
     T &operator()(size_t i) {
-#ifndef DONOTBOUNDSCHECK
         assert(i < data.size());
-#endif
         return data[i];
     }
     const T &operator()(size_t i) const {
-#ifndef DONOTBOUNDSCHECK
         assert(i < data.size());
-#endif
         return data[i];
     }
     T &operator[](size_t i) { return data[i]; }
@@ -587,7 +569,6 @@ inline llvm::MutableArrayRef<T> view(llvm::MutableArrayRef<T> a, size_t start,
 
 template <typename T, typename A> struct BaseMatrix {
     using eltype = T;
-    // using leltype=std::add_lvalue_reference_t<T>;
     inline T &getLinearElement(size_t i) {
         return static_cast<A *>(this)->getLinearElement(i);
     }
@@ -616,6 +597,31 @@ template <typename T, typename A> struct BaseMatrix {
     T *data() { return static_cast<A *>(this)->data(); }
     const T *data() const { return static_cast<const A *>(this)->data(); }
 
+    void sizeExtend(size_t M, size_t N) {
+        if constexpr (static_cast<A *>(this)->fixedNumRow) {
+            assert(numRow() == M);
+        } else {
+            if (M > numRow())
+                static_cast<A *>(this)->resizeRows(M);
+        }
+        if constexpr (static_cast<A *>(this)->fixedNumCol) {
+            assert(numCol() == N);
+        } else {
+            if (N > numCol())
+                static_cast<A *>(this)->resizeCols(N);
+        }
+    }
+
+    A &operator=(const AbstractMatrix auto &B) {
+        const size_t M = B.numRow();
+        const size_t N = B.numCol();
+        sizeExtend(M, N);
+        for (size_t r = 0; r < M; ++r)
+            for (size_t c = 0; c < N; ++c)
+                (*this)(r, c) = B(r, c);
+        return *this;
+    }
+
     std::pair<size_t, size_t> size() const {
         return std::make_pair(numRow(), numCol());
     }
@@ -629,16 +635,8 @@ template <typename T, typename A> struct BaseMatrix {
     size_t length() const { return numRow() * numCol(); }
 
     T &operator()(size_t i, size_t j) {
-        // #ifndef NDEBUG
-        // 	if ((i >= numRow()) || (j >= numCol())){
-        //         std::cout << "Bounds Error! Accessed (" << numRow() << ", "
-        //         << numCol() << ") array at index (" << i << ", " << j <<
-        //         ").\n" <<
-        //             stacktrace::current() << std::endl;
         assert(i < numRow());
         assert(j < numCol());
-        //     }
-        // #endif
         return getLinearElement(i * rowStride() + j * colStride());
     }
     const T &operator()(size_t i, size_t j) const {
@@ -710,11 +708,17 @@ template <typename T, typename A> struct BaseMatrix {
     }
 };
 
+auto operator*(const AbstractMatrix auto &A, const AbstractMatrix auto &B){
+    return MatMul{A, B};
+}
+
 template <typename T> struct SmallSparseMatrix;
 template <typename T> struct PtrMatrix : BaseMatrix<T, PtrMatrix<T>> {
     T *mem;
     const size_t M, N, X;
 
+    static constexpr bool fixedNumRow = true;
+    static constexpr bool fixedNumCol = true;
     // PtrMatrix(T *mem, size_t M, size_t N, size_t X)
     //     : mem(mem), M(M), N(N), X(X){};
 
@@ -788,6 +792,8 @@ template <typename T, size_t M = 0, size_t N = 0,
 struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     static_assert(M * N == S,
                   "if specifying non-zero M and N, we should have M*N == S");
+    static constexpr bool fixedNumRow = M;
+    static constexpr bool fixedNumCol = N;
     T mem[S];
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -858,6 +864,8 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     T *mem;
     const size_t M;
     SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
+    static constexpr bool fixedNumCol = true;
+    static constexpr bool fixedNumRow = true;
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -888,6 +896,8 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
     llvm::SmallVector<T, TOTALSTORAGE> mem;
     size_t M;
+    static constexpr bool fixedNumCol = true;
+    static constexpr bool fixedNumRow = true;
 
     SquareMatrix(size_t m)
         : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
