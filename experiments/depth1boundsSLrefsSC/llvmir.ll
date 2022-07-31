@@ -3,7 +3,7 @@ source_filename = "foo"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define i64 @julia_foo_111({} addrspace(10)* nocapture nonnull readonly align 16 dereferenceable(40) %0) local_unnamed_addr #0 !dbg !5 {
+define i64 @julia_foo_153({} addrspace(10)* nocapture nonnull readonly align 16 dereferenceable(40) %0) local_unnamed_addr #0 !dbg !5 {
 top:
   %1 = tail call {}*** @julia.get_pgcstack()
   %2 = bitcast {} addrspace(10)* %0 to { i8 addrspace(13)*, i64, i16, i16, i32 } addrspace(10)*, !dbg !7
@@ -27,11 +27,11 @@ L28:                                              ; preds = %L13.preheader, %top
   ret i64 %value_phi6, !dbg !34
 }
 
-define nonnull {} addrspace(10)* @jfptr_foo_112({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
+define nonnull {} addrspace(10)* @jfptr_foo_154({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
 top:
   %3 = tail call {}*** @julia.get_pgcstack()
   %4 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !35, !align !36
-  %5 = tail call i64 @julia_foo_111({} addrspace(10)* %4) #0
+  %5 = tail call i64 @julia_foo_153({} addrspace(10)* %4) #0
   %6 = tail call nonnull {} addrspace(10)* @jl_box_int64(i64 signext %5)
   ret {} addrspace(10)* %6
 }
@@ -51,7 +51,7 @@ attributes #1 = { "probe-stack"="inline-asm" "thunk" }
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
 !3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/experiments/depth1boundsSLrefsSC/source.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "foo", linkageName: "julia_foo_111", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "foo", linkageName: "julia_foo_153", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !DILocation(line: 215, scope: !8, inlinedAt: !10)
 !8 = distinct !DISubprogram(name: "length;", linkageName: "length", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)

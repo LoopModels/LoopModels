@@ -1,0 +1,28 @@
+Printing analysis 'Delinearization' for function 'julia_foo_170':
+Delinearization on function julia_foo_170:
+
+Inst:  %23 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %22, !dbg !39
+In Loop with Header: L30
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %23 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %22, !dbg !39
+In Loop with Header: L14
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %24 = load i64, i64 addrspace(13)* %23, align 8, !dbg !39, !tbaa !41
+In Loop with Header: L30
+AccessFunction: (-8 + (8 * ({4,+,1}<nuw><nsw><%L30> smin {1,+,1}<nuw><nsw><%L14>)) + (8 * (-1 + ({4,+,1}<nuw><nsw><%L30> * ({3,+,1}<nuw><nsw><%L30> smax {1,+,1}<nuw><nsw><%L14>))) * %6))
+Base offset: %14
+ArrayDecl[UnknownSize][%6] with elements of 8 bytes.
+ArrayRef[(-1 + ({4,+,1}<nuw><nsw><%L30> * ({3,+,1}<nuw><nsw><%L30> smax {1,+,1}<nuw><nsw><%L14>)))][(-1 + ({4,+,1}<nuw><nsw><%L30> smin {1,+,1}<nuw><nsw><%L14>))<nsw>]
+
+Inst:  %24 = load i64, i64 addrspace(13)* %23, align 8, !dbg !39, !tbaa !41
+In Loop with Header: L14
+AccessFunction: (-8 + (8 * ({1,+,1}<nuw><nsw><%L14> smin (3 umax %9))) + (8 * (-1 + ((3 umax %9) * ((-1 + (3 umax %9))<nsw> smax {1,+,1}<nuw><nsw><%L14>))) * %6))
+Base offset: %14
+ArrayDecl[UnknownSize][%6] with elements of 8 bytes.
+ArrayRef[(-1 + ((3 umax %9) * ((-1 + (3 umax %9))<nsw> smax {1,+,1}<nuw><nsw><%L14>)))][(-1 + ({1,+,1}<nuw><nsw><%L14> smin (3 umax %9)))<nsw>]
+Printing analysis 'Delinearization' for function 'jfptr_foo_171':
+Delinearization on function jfptr_foo_171:
