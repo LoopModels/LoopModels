@@ -1,0 +1,82 @@
+Printing analysis 'Delinearization' for function 'japi1_foo_269':
+Delinearization on function japi1_foo_269:
+
+Inst:  %19 = load i64, i64 addrspace(11)* %15, align 8, !tbaa !13, !range !17, !invariant.load !4
+In Loop with Header: L14
+AccessFunction: 40
+failed to delinearize
+
+Inst:  %24 = load double addrspace(13)*, double addrspace(13)* addrspace(11)* %18, align 8
+In Loop with Header: L14
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %33 = getelementptr inbounds double, double addrspace(13)* %24, i64 %32, !dbg !32
+In Loop with Header: L44
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %33 = getelementptr inbounds double, double addrspace(13)* %24, i64 %32, !dbg !32
+In Loop with Header: L29
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %33 = getelementptr inbounds double, double addrspace(13)* %24, i64 %32, !dbg !32
+In Loop with Header: L14
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %34 = load double, double addrspace(13)* %33, align 8, !dbg !32, !tbaa !34
+In Loop with Header: L44
+AccessFunction: {{{(48 * %10),+,(24 * %10)}<%L14>,+,(8 * %10 * %13)}<%L29>,+,8}<%L44>
+Base offset: %24
+ArrayDecl[UnknownSize][%13][%10] with elements of 8 bytes.
+ArrayRef[{0,+,1}<nuw><nsw><%L29>][{6,+,3}<%L14>][{0,+,1}<nuw><%L44>]
+
+Inst:  %34 = load double, double addrspace(13)* %33, align 8, !dbg !32, !tbaa !34
+In Loop with Header: L29
+AccessFunction: {((8 * %19) + {(-8 + (48 * %10)),+,(24 * %10)}<%L14>),+,(8 * %10 * %13)}<%L29>
+Base offset: %24
+ArrayDecl[UnknownSize][%13][%10] with elements of 8 bytes.
+ArrayRef[{0,+,1}<nuw><nsw><%L29>][{6,+,3}<%L14>][(-1 + %19)<nsw>]
+
+Inst:  %34 = load double, double addrspace(13)* %33, align 8, !dbg !32, !tbaa !34
+In Loop with Header: L14
+AccessFunction: ((8 * %19) + {(-8 + ((48 + (8 * (-1 + %13)<nsw> * %13)) * %10)),+,(24 * %10)}<%L14>)
+Base offset: %24
+ArrayDecl[UnknownSize][%10] with elements of 8 bytes.
+ArrayRef[{(6 + ((-1 + %13)<nsw> * %13)),+,3}<%L14>][(-1 + %19)<nsw>]
+
+Inst:  %38 = getelementptr inbounds double, double addrspace(13)* %24, i64 %37, !dbg !37
+In Loop with Header: L44
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %38 = getelementptr inbounds double, double addrspace(13)* %24, i64 %37, !dbg !37
+In Loop with Header: L29
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %38 = getelementptr inbounds double, double addrspace(13)* %24, i64 %37, !dbg !37
+In Loop with Header: L14
+AccessFunction: 0
+failed to delinearize
+
+Inst:  store double %34, double addrspace(13)* %38, align 8, !dbg !37, !tbaa !34
+In Loop with Header: L44
+AccessFunction: {{{(-8 + (8 * (-2 + (8 * %13)) * %10)),+,8}<%L14>,+,(8 * %10)}<%L29>,+,(8 * %10 * %13)}<%L44>
+Base offset: %24
+ArrayDecl[UnknownSize][%13][%10] with elements of 8 bytes.
+ArrayRef[{8,+,1}<nuw><%L44>][{-2,+,1}<nsw><%L29>][{-1,+,1}<nw><%L14>]
+
+Inst:  store double %34, double addrspace(13)* %38, align 8, !dbg !37, !tbaa !34
+In Loop with Header: L29
+AccessFunction: {((8 * (-1 + %19)<nsw> * %10 * %13) + {(-8 + (8 * (-2 + (8 * %13)) * %10)),+,8}<%L14>),+,(8 * %10)}<%L29>
+Base offset: %24
+ArrayDecl[UnknownSize][%10] with elements of 8 bytes.
+ArrayRef[{(-2 + ((7 + %19)<nuw> * %13)),+,1}<%L29>][{-1,+,1}<nw><%L14>]
+
+Inst:  store double %34, double addrspace(13)* %38, align 8, !dbg !37, !tbaa !34
+In Loop with Header: L14
+AccessFunction: ((8 * (-1 + %19)<nsw> * %10 * %13) + {(-8 + ((-24 + (72 * %13)) * %10)),+,8}<%L14>)
+failed to delinearize

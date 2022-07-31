@@ -1,0 +1,33 @@
+Printing analysis 'Delinearization' for function 'japi1_foo_256':
+Delinearization on function japi1_foo_256:
+
+Inst:  %23 = getelementptr inbounds i64, i64 addrspace(13)* %19, i64 %22, !dbg !39
+In Loop with Header: L17
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %24 = load i64, i64 addrspace(13)* %23, align 8, !dbg !39, !tbaa !41
+In Loop with Header: L17
+AccessFunction: {(8 + (8 * %10)),+,(8 + (8 * %10))}<%L17>
+Base offset: %19
+ArrayDecl[UnknownSize][%10] with elements of 8 bytes.
+ArrayRef[{1,+,1}<%L17>][{1,+,1}<%L17>]
+
+Inst:  %28 = getelementptr inbounds i64, i64 addrspace(13)* %19, i64 %27, !dbg !39
+In Loop with Header: L17
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %29 = load i64, i64 addrspace(13)* %28, align 8, !dbg !39, !tbaa !41
+In Loop with Header: L17
+AccessFunction: {0,+,(8 + (8 * %10))}<%L17>
+Base offset: %19
+ArrayDecl[UnknownSize][%10] with elements of 8 bytes.
+ArrayRef[{0,+,1}<%L17>][{0,+,1}<%L17>]
+
+Inst:  store i64 %30, i64 addrspace(13)* %23, align 8, !dbg !46, !tbaa !41
+In Loop with Header: L17
+AccessFunction: {(8 + (8 * %10)),+,(8 + (8 * %10))}<%L17>
+Base offset: %19
+ArrayDecl[UnknownSize][%10] with elements of 8 bytes.
+ArrayRef[{1,+,1}<%L17>][{1,+,1}<%L17>]

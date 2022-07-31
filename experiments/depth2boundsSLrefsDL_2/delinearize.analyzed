@@ -1,0 +1,28 @@
+Printing analysis 'Delinearization' for function 'julia_foo_61':
+Delinearization on function julia_foo_61:
+
+Inst:  %20 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %19, !dbg !30
+In Loop with Header: L30
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %20 = getelementptr inbounds i64, i64 addrspace(13)* %14, i64 %19, !dbg !30
+In Loop with Header: L14
+AccessFunction: 0
+failed to delinearize
+
+Inst:  %21 = load i64, i64 addrspace(13)* %20, align 8, !dbg !30, !tbaa !32
+In Loop with Header: L30
+AccessFunction: {{(96 * %6),+,(8 + (8 * %6))}<%L14>,+,(8 * %6)}<%L30>
+Base offset: %14
+ArrayDecl[UnknownSize][%6] with elements of 8 bytes.
+ArrayRef[{{12,+,1}<nuw><%L14>,+,1}<nw><%L30>][{0,+,1}<nuw><nsw><%L14>]
+
+Inst:  %21 = load i64, i64 addrspace(13)* %20, align 8, !dbg !30, !tbaa !32
+In Loop with Header: L14
+AccessFunction: {((64 + (8 * (3 umax %9))) * %6),+,(8 + (8 * %6))}<%L14>
+Base offset: %14
+ArrayDecl[UnknownSize][%6] with elements of 8 bytes.
+ArrayRef[{(8 + (3 umax %9))<nuw>,+,1}<%L14>][{0,+,1}<nuw><nsw><%L14>]
+Printing analysis 'Delinearization' for function 'jfptr_foo_62':
+Delinearization on function jfptr_foo_62:

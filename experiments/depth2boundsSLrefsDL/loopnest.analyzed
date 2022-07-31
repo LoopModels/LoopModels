@@ -1,0 +1,2 @@
+Printing analysis 'Natural Loop Information' for function 'japi1_foo_256':
+Loop at depth 1 containing: %L17<header><latch><exiting>

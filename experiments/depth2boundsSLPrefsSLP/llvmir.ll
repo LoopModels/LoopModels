@@ -3,7 +3,7 @@ source_filename = "foo"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define nonnull {} addrspace(10)* @julia_foo_254({} addrspace(10)* nonnull readonly returned align 16 dereferenceable(40) %0, i64 signext %1, i64 signext %2, i64 signext %3, i64 signext %4, i64 signext %5, i64 signext %6) local_unnamed_addr #0 !dbg !5 {
+define nonnull {} addrspace(10)* @julia_foo_121({} addrspace(10)* nonnull readonly returned align 16 dereferenceable(40) %0, i64 signext %1, i64 signext %2, i64 signext %3, i64 signext %4, i64 signext %5, i64 signext %6) local_unnamed_addr #0 !dbg !5 {
 top:
   %7 = tail call {}*** @julia.get_pgcstack()
   %8 = shl i64 %3, 1, !dbg !7
@@ -73,7 +73,7 @@ L64:                                              ; preds = %L64.loopexit, %top
   ret {} addrspace(10)* %0, !dbg !49
 }
 
-define nonnull {} addrspace(10)* @jfptr_foo_255({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
+define nonnull {} addrspace(10)* @jfptr_foo_122({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** nocapture readonly %1, i32 %2) local_unnamed_addr #1 {
 top:
   %3 = tail call {}*** @julia.get_pgcstack()
   %4 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !50, !align !51
@@ -107,7 +107,7 @@ top:
   %32 = load i64 addrspace(10)*, i64 addrspace(10)** %31, align 8, !nonnull !4, !dereferenceable !52, !align !52
   %33 = addrspacecast i64 addrspace(10)* %32 to i64 addrspace(11)*
   %34 = load i64, i64 addrspace(11)* %33, align 8
-  %35 = tail call nonnull {} addrspace(10)* @julia_foo_254({} addrspace(10)* %4, i64 signext %9, i64 signext %14, i64 signext %19, i64 signext %24, i64 signext %29, i64 signext %34) #0
+  %35 = tail call nonnull {} addrspace(10)* @julia_foo_121({} addrspace(10)* %4, i64 signext %9, i64 signext %14, i64 signext %19, i64 signext %24, i64 signext %29, i64 signext %34) #0
   %36 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8
   ret {} addrspace(10)* %36
 }
@@ -125,7 +125,7 @@ attributes #1 = { "probe-stack"="inline-asm" "thunk" }
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
 !3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/experiments/depth2boundsSLPrefsSLP/source.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "foo", linkageName: "julia_foo_254", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "foo", linkageName: "julia_foo_121", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !DILocation(line: 88, scope: !8, inlinedAt: !10)
 !8 = distinct !DISubprogram(name: "*;", linkageName: "*", scope: !9, file: !9, type: !6, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)

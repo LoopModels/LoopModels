@@ -1,0 +1,2 @@
+Printing analysis 'Dominator Info Printer' for function 'japi1_foo_256':
+Pass::print not implemented for pass: 'Dominator Info Printer'!

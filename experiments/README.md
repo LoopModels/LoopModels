@@ -19,3 +19,4 @@ where
 
 For example, `depth2boundsSLrefsDLP` will contain a function with a loop of *depth 2*, *static linear* loop bounds, and *dynamic linear parametric* array accesses.
 
+Currently, all examples..

@@ -1,0 +1,103 @@
+Printing analysis 'Scalar Evolution Analysis' for function 'japi1_foo_269':
+Classifying expressions for: @japi1_foo_269
+  %3 = alloca {} addrspace(10)**, align 8
+  -->  %3 U: [0,-7) S: [-9223372036854775808,9223372036854775801)
+  %4 = tail call {}*** @julia.get_pgcstack()
+  -->  %4 U: full-set S: full-set
+  %5 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !7, !align !8
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %6 = bitcast {} addrspace(10)* %5 to {} addrspace(10)* addrspace(10)*, !dbg !9
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %7 = addrspacecast {} addrspace(10)* addrspace(10)* %6 to {} addrspace(10)* addrspace(11)*, !dbg !9
+  -->  %7 U: full-set S: full-set
+  %8 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %7, i64 3, !dbg !9
+  -->  (24 + %7)<nuw> U: [24,0) S: [24,0)
+  %9 = bitcast {} addrspace(10)* addrspace(11)* %8 to i64 addrspace(11)*, !dbg !9
+  -->  (24 + %7)<nuw> U: [24,0) S: [24,0)
+  %10 = load i64, i64 addrspace(11)* %9, align 8, !dbg !9, !tbaa !13, !range !17, !invariant.load !4
+  -->  %10 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %11 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %7, i64 4
+  -->  (32 + %7) U: full-set S: full-set
+  %12 = bitcast {} addrspace(10)* addrspace(11)* %11 to i64 addrspace(11)*
+  -->  (32 + %7) U: full-set S: full-set
+  %13 = load i64, i64 addrspace(11)* %12, align 8, !tbaa !13, !range !17, !invariant.load !4
+  -->  %13 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %14 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %7, i64 5
+  -->  (40 + %7) U: full-set S: full-set
+  %15 = bitcast {} addrspace(10)* addrspace(11)* %14 to i64 addrspace(11)*
+  -->  (40 + %7) U: full-set S: full-set
+  %16 = mul i64 %13, %10
+  -->  (%10 * %13) U: full-set S: full-set
+  %17 = bitcast {} addrspace(10)* %5 to double addrspace(13)* addrspace(10)*
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %18 = addrspacecast double addrspace(13)* addrspace(10)* %17 to double addrspace(13)* addrspace(11)*
+  -->  %18 U: full-set S: full-set
+  %value_phi3 = phi i64 [ %41, %L77 ], [ 1, %L14.preheader ]
+  -->  {1,+,1}<nuw><nsw><%L14> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %10		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %19 = load i64, i64 addrspace(11)* %15, align 8, !tbaa !13, !range !17, !invariant.load !4
+  -->  %19 U: [0,9223372036854775807) S: [0,9223372036854775807)		Exits: <<Unknown>>		LoopDispositions: { %L14: Variant, %L29: Invariant, %L44: Invariant }
+  %20 = mul i64 %value_phi3, 3
+  -->  {3,+,3}<%L14> U: full-set S: full-set		Exits: (3 * %10)		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %21 = add i64 %20, 3
+  -->  {6,+,3}<%L14> U: full-set S: full-set		Exits: (3 + (3 * %10))		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %22 = mul i64 %21, %10
+  -->  {(6 * %10),+,(3 * %10)}<%L14> U: full-set S: full-set		Exits: ((3 + (3 * %10)) * %10)		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %23 = add i64 %22, -1
+  -->  {(-1 + (6 * %10)),+,(3 * %10)}<%L14> U: full-set S: full-set		Exits: (-1 + ((3 + (3 * %10)) * %10))		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %24 = load double addrspace(13)*, double addrspace(13)* addrspace(11)* %18, align 8
+  -->  %24 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L14: Variant, %L29: Invariant, %L44: Invariant }
+  %25 = add nsw i64 %value_phi3, -2
+  -->  {-1,+,1}<nsw><%L14> U: [-1,9223372036854775805) S: [-1,9223372036854775805)		Exits: (-2 + %10)<nsw>		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+  %value_phi8 = phi i64 [ %40, %L65 ], [ 1, %L29.preheader ]
+  -->  {1,+,1}<nuw><nsw><%L29> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %13		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %26 = add nsw i64 %value_phi8, -1
+  -->  {0,+,1}<nuw><nsw><%L29> U: [0,9223372036854775806) S: [0,9223372036854775806)		Exits: (-1 + %13)<nsw>		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %27 = mul i64 %26, %16
+  -->  {0,+,(%10 * %13)}<%L29> U: full-set S: full-set		Exits: ((-1 + %13)<nsw> * %10 * %13)		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %28 = add i64 %23, %27
+  -->  {{(-1 + (6 * %10)),+,(3 * %10)}<%L14>,+,(%10 * %13)}<%L29> U: full-set S: full-set		Exits: {(-1 + ((6 + ((-1 + %13)<nsw> * %13)) * %10)),+,(3 * %10)}<%L14>		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %29 = add nsw i64 %value_phi8, -3
+  -->  {-2,+,1}<nsw><%L29> U: [-2,9223372036854775804) S: [-2,9223372036854775804)		Exits: (-3 + %13)<nsw>		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %30 = mul i64 %29, %10
+  -->  {(-2 * %10),+,%10}<%L29> U: full-set S: full-set		Exits: ((-3 + %13)<nsw> * %10)		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %31 = add i64 %25, %30
+  -->  {{(-1 + (-2 * %10)),+,1}<nw><%L14>,+,%10}<%L29> U: full-set S: full-set		Exits: {(-1 + ((-3 + %13)<nsw> * %10)),+,1}<nw><%L14>		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %value_phi13 = phi i64 [ %39, %L44 ], [ 1, %L44.preheader ]
+  -->  {1,+,1}<nuw><nsw><%L44> U: [1,9223372036854775807) S: [1,9223372036854775807)		Exits: %19		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %32 = add i64 %28, %value_phi13, !dbg !32
+  -->  {{{(6 * %10),+,(3 * %10)}<%L14>,+,(%10 * %13)}<%L29>,+,1}<nw><%L44> U: full-set S: full-set		Exits: {({(-1 + (6 * %10)),+,(3 * %10)}<%L14> + %19),+,(%10 * %13)}<%L29>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %33 = getelementptr inbounds double, double addrspace(13)* %24, i64 %32, !dbg !32
+  -->  {{({(48 * %10),+,(24 * %10)}<%L14> + %24),+,(8 * %10 * %13)}<%L29>,+,8}<%L44> U: full-set S: full-set		Exits: {((8 * %19) + {(-8 + (48 * %10)),+,(24 * %10)}<%L14> + %24),+,(8 * %10 * %13)}<%L29>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %35 = add nuw i64 %value_phi13, 7, !dbg !37
+  -->  {8,+,1}<nuw><%L44> U: [8,-9223372036854775802) S: [8,-9223372036854775802)		Exits: (7 + %19)<nuw>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %36 = mul i64 %35, %16, !dbg !37
+  -->  {(8 * %10 * %13),+,(%10 * %13)}<%L44> U: full-set S: full-set		Exits: ((7 + %19)<nuw> * %10 * %13)		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %37 = add i64 %31, %36, !dbg !37
+  -->  {{{(-1 + ((-2 + (8 * %13)) * %10)),+,1}<nw><%L14>,+,%10}<%L29>,+,(%10 * %13)}<%L44> U: full-set S: full-set		Exits: {(((-1 + %19)<nsw> * %10 * %13) + {(-1 + ((-2 + (8 * %13)) * %10)),+,1}<nw><%L14>),+,%10}<%L29>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %38 = getelementptr inbounds double, double addrspace(13)* %24, i64 %37, !dbg !37
+  -->  {{({(-8 + (8 * (-2 + (8 * %13)) * %10)),+,8}<%L14> + %24),+,(8 * %10)}<%L29>,+,(8 * %10 * %13)}<%L44> U: full-set S: full-set		Exits: {((8 * (-1 + %19)<nsw> * %10 * %13) + {(-8 + (8 * (-2 + (8 * %13)) * %10)),+,8}<%L14> + %24),+,(8 * %10)}<%L29>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %39 = add nuw nsw i64 %value_phi13, 1, !dbg !42
+  -->  {2,+,1}<nuw><nsw><%L44> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %19)<nuw><nsw>		LoopDispositions: { %L44: Computable, %L29: Variant, %L14: Variant }
+  %40 = add nuw nsw i64 %value_phi8, 1, !dbg !42
+  -->  {2,+,1}<nuw><nsw><%L29> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %13)<nuw><nsw>		LoopDispositions: { %L29: Computable, %L14: Variant, %L44: Invariant }
+  %41 = add nuw nsw i64 %value_phi3, 1, !dbg !42
+  -->  {2,+,1}<nuw><nsw><%L14> U: [2,-9223372036854775808) S: [2,-9223372036854775808)		Exits: (1 + %10)<nuw><nsw>		LoopDispositions: { %L14: Computable, %L29: Invariant, %L44: Invariant }
+Determining loop execution counts for: @japi1_foo_269
+Loop %L44: backedge-taken count is (-1 + %19)<nsw>
+Loop %L44: max backedge-taken count is 9223372036854775805
+Loop %L44: Predicated backedge-taken count is (-1 + %19)<nsw>
+ Predicates:
+
+Loop %L44: Trip multiple is 1
+Loop %L29: backedge-taken count is (-1 + %13)<nsw>
+Loop %L29: max backedge-taken count is 9223372036854775805
+Loop %L29: Predicated backedge-taken count is (-1 + %13)<nsw>
+ Predicates:
+
+Loop %L29: Trip multiple is 1
+Loop %L14: backedge-taken count is (-1 + %10)<nsw>
+Loop %L14: max backedge-taken count is 9223372036854775805
+Loop %L14: Predicated backedge-taken count is (-1 + %10)<nsw>
+ Predicates:
+
+Loop %L14: Trip multiple is 1

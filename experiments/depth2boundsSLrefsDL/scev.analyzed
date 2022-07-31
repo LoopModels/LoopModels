@@ -1,0 +1,67 @@
+Printing analysis 'Scalar Evolution Analysis' for function 'japi1_foo_256':
+Classifying expressions for: @japi1_foo_256
+  %3 = alloca {} addrspace(10)**, align 8
+  -->  %3 U: [0,-7) S: [-9223372036854775808,9223372036854775801)
+  %4 = tail call {}*** @julia.get_pgcstack()
+  -->  %4 U: full-set S: full-set
+  %5 = load {} addrspace(10)*, {} addrspace(10)** %1, align 8, !nonnull !4, !dereferenceable !7, !align !8
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %6 = bitcast {} addrspace(10)* %5 to {} addrspace(10)* addrspace(10)*, !dbg !9
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %7 = addrspacecast {} addrspace(10)* addrspace(10)* %6 to {} addrspace(10)* addrspace(11)*, !dbg !9
+  -->  %7 U: full-set S: full-set
+  %8 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %7, i64 3, !dbg !9
+  -->  (24 + %7)<nuw> U: [24,0) S: [24,0)
+  %9 = bitcast {} addrspace(10)* addrspace(11)* %8 to i64 addrspace(11)*, !dbg !9
+  -->  (24 + %7)<nuw> U: [24,0) S: [24,0)
+  %10 = load i64, i64 addrspace(11)* %9, align 8, !dbg !9, !tbaa !13, !range !17, !invariant.load !4
+  -->  %10 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %11 = getelementptr inbounds {} addrspace(10)*, {} addrspace(10)* addrspace(11)* %7, i64 4, !dbg !9
+  -->  (32 + %7)<nuw> U: [32,0) S: [32,0)
+  %12 = bitcast {} addrspace(10)* addrspace(11)* %11 to i64 addrspace(11)*, !dbg !9
+  -->  (32 + %7)<nuw> U: [32,0) S: [32,0)
+  %13 = load i64, i64 addrspace(11)* %12, align 8, !dbg !9, !tbaa !13, !range !17, !invariant.load !4
+  -->  %13 U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %14 = tail call i64 @llvm.umin.i64(i64 %13, i64 %10), !dbg !18
+  -->  (%13 umin %10) U: [0,9223372036854775807) S: [0,9223372036854775807)
+  %15 = tail call i64 @llvm.umax.i64(i64 %14, i64 1), !dbg !21
+  -->  (1 umax (%13 umin %10)) U: [1,9223372036854775807) S: [1,9223372036854775807)
+  %17 = bitcast {} addrspace(10)* %5 to i64 addrspace(13)* addrspace(10)*
+  -->  %5 U: [0,-15) S: [-9223372036854775808,9223372036854775793)
+  %18 = addrspacecast i64 addrspace(13)* addrspace(10)* %17 to i64 addrspace(13)* addrspace(11)*
+  -->  %18 U: full-set S: full-set
+  %19 = load i64 addrspace(13)*, i64 addrspace(13)* addrspace(11)* %18, align 8, !tbaa !13, !invariant.load !4, !nonnull !4
+  -->  %19 U: full-set S: full-set
+  %value_phi3 = phi i64 [ %31, %L17 ], [ 2, %L17.preheader ]
+  -->  {2,+,1}<%L17> U: full-set S: full-set		Exits: (1 umax (%13 umin %10))		LoopDispositions: { %L17: Computable }
+  %20 = add i64 %value_phi3, -1, !dbg !39
+  -->  {1,+,1}<%L17> U: full-set S: full-set		Exits: (-1 + (1 umax (%13 umin %10)))<nsw>		LoopDispositions: { %L17: Computable }
+  %21 = mul i64 %20, %10, !dbg !39
+  -->  {%10,+,%10}<%L17> U: full-set S: full-set		Exits: ((-1 + (1 umax (%13 umin %10)))<nsw> * %10)		LoopDispositions: { %L17: Computable }
+  %22 = add i64 %21, %20, !dbg !39
+  -->  {(1 + %10)<nuw><nsw>,+,(1 + %10)<nuw><nsw>}<%L17> U: full-set S: full-set		Exits: (1 + ((1 + %10)<nuw><nsw> * (-2 + (1 umax (%13 umin %10)))<nsw>) + %10)		LoopDispositions: { %L17: Computable }
+  %23 = getelementptr inbounds i64, i64 addrspace(13)* %19, i64 %22, !dbg !39
+  -->  {(8 + (8 * %10) + %19),+,(8 + (8 * %10))}<%L17> U: full-set S: full-set		Exits: (8 + (8 * %10) + ((8 + (8 * %10)) * (-2 + (1 umax (%13 umin %10)))<nsw>) + %19)		LoopDispositions: { %L17: Computable }
+  %24 = load i64, i64 addrspace(13)* %23, align 8, !dbg !39, !tbaa !41
+  -->  %24 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L17: Variant }
+  %25 = add i64 %value_phi3, -2, !dbg !39
+  -->  {0,+,1}<%L17> U: full-set S: full-set		Exits: (-2 + (1 umax (%13 umin %10)))<nsw>		LoopDispositions: { %L17: Computable }
+  %26 = mul i64 %25, %10, !dbg !39
+  -->  {0,+,%10}<%L17> U: full-set S: full-set		Exits: ((-2 + (1 umax (%13 umin %10)))<nsw> * %10)		LoopDispositions: { %L17: Computable }
+  %27 = add i64 %26, %25, !dbg !39
+  -->  {0,+,(1 + %10)<nuw><nsw>}<%L17> U: full-set S: full-set		Exits: ((1 + %10)<nuw><nsw> * (-2 + (1 umax (%13 umin %10)))<nsw>)		LoopDispositions: { %L17: Computable }
+  %28 = getelementptr inbounds i64, i64 addrspace(13)* %19, i64 %27, !dbg !39
+  -->  {%19,+,(8 + (8 * %10))}<%L17> U: full-set S: full-set		Exits: (((8 + (8 * %10)) * (-2 + (1 umax (%13 umin %10)))<nsw>) + %19)		LoopDispositions: { %L17: Computable }
+  %29 = load i64, i64 addrspace(13)* %28, align 8, !dbg !39, !tbaa !41
+  -->  %29 U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L17: Variant }
+  %30 = sub i64 %24, %29, !dbg !44
+  -->  ((-1 * %29) + %24) U: full-set S: full-set		Exits: <<Unknown>>		LoopDispositions: { %L17: Variant }
+  %31 = add i64 %value_phi3, 1, !dbg !50
+  -->  {3,+,1}<%L17> U: full-set S: full-set		Exits: (1 + (1 umax (%13 umin %10)))<nuw><nsw>		LoopDispositions: { %L17: Computable }
+Determining loop execution counts for: @japi1_foo_256
+Loop %L17: backedge-taken count is (-2 + (1 umax (%13 umin %10)))<nsw>
+Loop %L17: max backedge-taken count is -1
+Loop %L17: Predicated backedge-taken count is (-2 + (1 umax (%13 umin %10)))<nsw>
+ Predicates:
+
+Loop %L17: Trip multiple is 1

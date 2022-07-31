@@ -29,22 +29,6 @@
 #include <llvm/Transforms/Utils/LoopUtils.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
-
-/*
-    Poly: coeff * var^deg + residual
-
-    coeff: a Poly
-    var  : one variable from x1..xn
-    deg  : Integer
-    residual: a Poly
-
-    x,y
-
-    x^2y + x^2 + x*y + 1
-
-    (y + 1)*x^2 + { (y)*x + { 1 } }
-*/
-
 /*
 
 

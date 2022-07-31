@@ -3,7 +3,7 @@ source_filename = "foo"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128-ni:10:11:12:13"
 target triple = "x86_64-unknown-linux-gnu"
 
-define nonnull {} addrspace(10)* @japi1_foo_269({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** %1, i32 %2) local_unnamed_addr #0 !dbg !5 {
+define nonnull {} addrspace(10)* @japi1_foo_140({} addrspace(10)* nocapture readnone %0, {} addrspace(10)** %1, i32 %2) local_unnamed_addr #0 !dbg !5 {
 top:
   %3 = alloca {} addrspace(10)**, align 8
   store volatile {} addrspace(10)** %1, {} addrspace(10)*** %3, align 8
@@ -106,7 +106,7 @@ attributes #0 = { "probe-stack"="inline-asm" "thunk" }
 !2 = distinct !DICompileUnit(language: DW_LANG_Julia, file: !3, producer: "julia", isOptimized: true, runtimeVersion: 0, emissionKind: FullDebug, enums: !4, nameTableKind: GNU)
 !3 = !DIFile(filename: "/home/sumiya11/loops/try2/LoopModels/experiments/depth3boundsSLrefsSL/source.jl", directory: ".")
 !4 = !{}
-!5 = distinct !DISubprogram(name: "foo", linkageName: "japi1_foo_269", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
+!5 = distinct !DISubprogram(name: "foo", linkageName: "japi1_foo_140", scope: null, file: !3, line: 3, type: !6, scopeLine: 3, spFlags: DISPFlagDefinition | DISPFlagOptimized, unit: !2, retainedNodes: !4)
 !6 = !DISubroutineType(types: !4)
 !7 = !{i64 40}
 !8 = !{i64 16}
