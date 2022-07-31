@@ -13,9 +13,9 @@ TEST(HelloTest, BasicAssertions) {
     Asparse(2, 1) = 4;
     Asparse(2, 2) = -2;
     IntMatrix A = Asparse;
-    //std::cout << "A.size() = ("<<A.numRow()<<", "<<A.numCol()<<")\n";
-    //std::cout << "\nAsparse = \n" << Asparse << std::endl;
-    //std::cout << "\nA = \n" << A << std::endl << std::endl;
+    // std::cout << "A.size() = ("<<A.numRow()<<", "<<A.numCol()<<")\n";
+    // std::cout << "\nAsparse = \n" << Asparse << std::endl;
+    // std::cout << "\nA = \n" << A << std::endl << std::endl;
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 4; ++j)
             EXPECT_TRUE(A(i, j) == Asparse(i, j));
@@ -41,7 +41,7 @@ TEST(HelloTest, BasicAssertions) {
     B(3, 2) = 2;
     B(3, 3) = -3;
     B(3, 4) = 5;
-    IntMatrix C{3,5};
+    IntMatrix C{3, 5};
     C(0, 0) = -20;
     C(0, 1) = 25;
     C(0, 2) = -5;
@@ -64,10 +64,15 @@ TEST(HelloTest, BasicAssertions) {
     EXPECT_TRUE(C == matmultt(A.transpose(), B.transpose()));
 }
 
-TEST(ExpressionTemplateTest, BasicAssertions){
-    auto A{stringToIntMatrix("[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 -5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
+TEST(ExpressionTemplateTest, BasicAssertions) {
+    auto A{stringToIntMatrix(
+        "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+        "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
 
-    IntMatrix B{A*4};
-    
+    // IntMatrix B{A*4};
+    auto A4{A * 4};
+    IntMatrix C = A4;
+    IntMatrix B = A * 4;
+    // IntMatrix B;
+    // B = A*4;
 }
-
