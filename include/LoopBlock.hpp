@@ -261,7 +261,7 @@ struct LoopBlock {
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
-            IntMatrix A(IntMatrix::Uninitialized(numConstraints, numVar));
+            IntMatrix A(IntMatrix::uninitialized(numConstraints, numVar));
             for (size_t j = 0; j < numPeeled; ++j) {
                 for (size_t k = 0; k < numConstraints; ++k) {
                     A(k, j) = aln->A(k, j);

@@ -168,7 +168,7 @@ static std::string monomialTermStr(size_t id, size_t exponent) {
 
 namespace Polynomial {
 
-template <Integral I> static bool tryDiv(I &z, I x, I y) {
+template <std::integral I> static bool tryDiv(I &z, I x, I y) {
     I a(x);
     z = x / y;
     return (z * y) != a;

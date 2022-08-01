@@ -18,5 +18,14 @@
 */
 #define MULTIVERSION
 #define VECTORIZE
+// #define NOVECTORIZE
 // #endif
+
+#if defined(__clang__)
+#define NOVECTORIZE \
+     _Pragma("clang loop vectorize(disable)")	\
+     _Pragma("clang loop unroll(disable)")
+#else
+#define NOVECTORIZE
+#endif
 
