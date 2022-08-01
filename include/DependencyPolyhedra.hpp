@@ -27,7 +27,7 @@
 // 1 <= j_1 <= i_1
 // i_0 == i_1
 // j_0 == i_1
-struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
+struct DependencePolyhedra : SymbolicEqPolyhedra {
     size_t numDep0Var;
     llvm::SmallVector<int64_t, 2> nullStep;
     inline size_t getTimeDim() const { return nullStep.size(); }
@@ -47,9 +47,8 @@ struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
             size_t numDims = ar0.arrayDim();
             dims.reserve(numDims);
-            for (size_t i = 0; i < numDims; ++i) {
+            for (size_t i = 0; i < numDims; ++i) 
                 dims.emplace_back(i, i);
-            }
             return dims;
         }
         // Farkas: psi(x) >= 0 iff
@@ -148,12 +147,8 @@ struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
             PtrMatrix<const int64_t> indMatX = x.ref.indexMatrix();
             PtrMatrix<const int64_t> indMatY = y.ref.indexMatrix();
             for (size_t i = 0; i < numLoopsCommon; ++i) {
-                for (size_t j = 0; j < xDim; ++j) {
-                    A(i, j) = indMatX(i, j);
-                }
-                for (size_t j = 0; j < yDim; ++j) {
-                    A(i, j + xDim) = indMatY(i, j);
-                }
+		A(i,_(begin,xDim)) = indMatX(i,_);
+		A(i,_(xDim,end)) = indMatY(i,_);
             }
             // returns rank x num loops
             return orthogonalNullSpace(std::move(A));
@@ -181,7 +176,7 @@ struct DependencePolyhedra : Polyhedra<IntMatrix, SymbolicComparator> {
     // Where x = [inds0..., inds1..., time..]
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
-	: Polyhedra<IntMatrix, SymbolicComparator>{IntMatrix{},IntMatrix{},ma0.ref.loop.C} {
+	: Polyhedra<IntMatrix, SymbolicComparator>{} {
 	
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;

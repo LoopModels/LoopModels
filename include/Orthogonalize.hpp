@@ -10,7 +10,7 @@
 IntMatrix orthogonalize(IntMatrix A) {
     if ((A.numCol() < 2) || (A.numRow() == 0))
         return A;
-    normalizeByGCD(A.getRow(0));
+    normalizeByGCD(A(0,_));
     if (A.numRow() == 1)
         return A;
     llvm::SmallVector<Rational, 8> buff;
@@ -84,8 +84,9 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A*K')*J <= r
         llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
-            llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
-                                                      alnp.b, alnp.poset);
+	    AffineLoopNest::construct(alnp.A*K.transpose(), alnp.b, alnp.poset);
+            // llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
+            //                                           alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
         // matmultn(alnNew->A, K, alnp.A);
         // alnNew->b = alnp.aln->b;

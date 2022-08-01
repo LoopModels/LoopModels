@@ -964,6 +964,7 @@ struct Polyhedra {
 };
 
 typedef Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> SymbolicPolyhedra;
+typedef Polyhedra<IntMatrix, SymbolicComparator> SymbolicEqPolyhedra;
 
 /*
 template <MaybeMatrix I64Matrix>

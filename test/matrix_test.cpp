@@ -57,11 +57,17 @@ TEST(HelloTest, BasicAssertions) {
     C(2, 2) = 6;
     C(2, 3) = -3;
     C(2, 4) = -11;
-    IntMatrix C2{matmul(A, B)};
+    EXPECT_EQ(A.numRow(), (A*B).numRow());
+    EXPECT_EQ(B.numCol(), (A*B).numCol());
+    EXPECT_TRUE(C == A*B);
+    IntMatrix C2{A * B};
+    std::cout << "C=\n"<<C<<"\nC2=\n"<<C2<<std::endl;
     EXPECT_TRUE(C == C2);
-    EXPECT_TRUE(C == matmultn(A.transpose(), B));
-    EXPECT_TRUE(C == matmulnt(A, B.transpose()));
-    EXPECT_TRUE(C == matmultt(A.transpose(), B.transpose()));
+    IntMatrix At = A.transpose();
+    IntMatrix Bt = B.transpose();
+    EXPECT_TRUE(C == At.transpose() * B);
+    EXPECT_TRUE(C == A * Bt.transpose());
+    EXPECT_TRUE(C == At.transpose() * Bt.transpose());
 }
 
 TEST(ExpressionTemplateTest, BasicAssertions) {
@@ -69,23 +75,37 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
         "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
         "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
 
-    auto A4{stringToIntMatrix("[12 -20 4 40 -16 24 16 16; 16 24 12 -4 24 4 -16 0; -28 -8 0 0 -40 -8 12 28; 8 -28 -20 -20 -28 -20 4 -28; 8 -32 8 28 16 36 24 -12; -8 -32 -20 0 40 -16 20 -12]")};
+    auto A4{stringToIntMatrix(
+        "[12 -20 4 40 -16 24 16 16; 16 24 12 -4 24 4 -16 0; -28 -8 0 0 -40 -8 "
+        "12 28; 8 -28 -20 -20 -28 -20 4 -28; 8 -32 8 28 16 36 24 -12; -8 -32 "
+        "-20 0 40 -16 20 -12]")};
     // IntMatrix B{A*4};
     auto A4tmplate{A * 4};
     IntMatrix C = A4tmplate;
     IntMatrix B = A * 4;
     EXPECT_EQ(A4, B);
     EXPECT_EQ(A4, C);
-    IntMatrix Z = A*4 - A4;
+    IntMatrix Z = A * 4 - A4;
     for (auto z : Z)
-	EXPECT_FALSE(z);
-    auto D{stringToIntMatrix("[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 -7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 -10; 2 1 4 5 -7 0 -8]")};
-    auto ADref{stringToIntMatrix("[-38 -28 62 6 116 105 -138; -13 -22 -69 29 -10 -99 42; -1 54 91 45 -95 142 -36; -13 118 31 -91 78 8 151; 19 -74 15 26 153 31 -145; 86 -61 -18 -111 -22 -55 -135]")};
-    IntMatrix AD = A*D;
+        EXPECT_FALSE(z);
+    auto D{stringToIntMatrix(
+        "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
+        "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "
+        "-10; 2 1 4 5 -7 0 -8]")};
+    auto ADref{stringToIntMatrix(
+        "[-38 -28 62 6 116 105 -138; -13 -22 -69 29 -10 -99 42; -1 54 91 45 "
+        "-95 142 -36; -13 118 31 -91 78 8 151; 19 -74 15 26 153 31 -145; 86 "
+        "-61 -18 -111 -22 -55 -135]")};
+    IntMatrix AD = A * D;
     EXPECT_EQ(AD, ADref);
-    IntMatrix E{stringToIntMatrix("[-4 7 9 -4 2 9 -8; 3 -5 6 0 -1 8 7; -7 9 -1 1 -5 2 10; -3 10 -10 -3 6 5 5; -6 7 -4 -7 10 5 3; 9 -8 7 9 2 2 6]")};
-    IntMatrix ADm7E = A*D - 7*E;
-    auto ADm7Eref{stringToIntMatrix("[-10 -77 -1 34 102 42 -82; -34 13 -111 29 -3 -155 -7; 48 -9 98 38 -60 128 -106; 8 48 101 -70 36 -27 116; 61 -123 43 75 83 -4 -166; 23 -5 -67 -174 -36 -69 -177]")};
+    IntMatrix E{stringToIntMatrix(
+        "[-4 7 9 -4 2 9 -8; 3 -5 6 0 -1 8 7; -7 9 -1 1 -5 2 10; -3 10 -10 -3 6 "
+        "5 5; -6 7 -4 -7 10 5 3; 9 -8 7 9 2 2 6]")};
+    IntMatrix ADm7E = A * D - 7 * E;
+    auto ADm7Eref{stringToIntMatrix(
+        "[-10 -77 -1 34 102 42 -82; -34 13 -111 29 -3 -155 -7; 48 -9 98 38 -60 "
+        "128 -106; 8 48 101 -70 36 -27 116; 61 -123 43 75 83 -4 -166; 23 -5 "
+        "-67 -174 -36 -69 -177]")};
     EXPECT_EQ(ADm7E, ADm7Eref);
 
     Vector<int64_t> a;
