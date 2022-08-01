@@ -59,20 +59,16 @@ struct Simplex {
                                    numTableauCols(numVar), stride);
     }
     PtrMatrix<int64_t> getCostsAndConstraints() {
-        return tableau.view(numExtraRows - 1, tableau.numRow(), numExtraCols,
-                            tableau.numCol());
+        return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
     PtrMatrix<const int64_t> getCostsAndConstraints() const {
-        return tableau.view(numExtraRows - 1, tableau.numRow(), numExtraCols,
-                            tableau.numCol());
+        return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
     PtrMatrix<int64_t> getConstraints() {
-        return tableau.view(numExtraRows, tableau.numRow(), numExtraCols,
-                            tableau.numCol());
+        return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
     PtrMatrix<const int64_t> getConstraints() const {
-        return tableau.view(numExtraRows, tableau.numRow(), numExtraCols,
-                            tableau.numCol());
+        return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
     // note that this is 1 more than the actual number of variables
     // as it includes the constants
@@ -88,24 +84,18 @@ struct Simplex {
         eraseConstraintImpl(tableau, numTableauRows(c));
         --tableau.M;
     }
-    llvm::ArrayRef<int64_t> getTableauRow(size_t i) const {
-        return llvm::ArrayRef<int64_t>(tableau.data() + numExtraCols +
-                                           i * tableau.rowStride(),
-                                       getNumVar());
+    PtrVector<const int64_t> getTableauRow(size_t i) const {
+        return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
-    llvm::ArrayRef<int64_t> getBasicConstraints() const {
+    PtrVector<const int64_t> getBasicConstraints() const {
         return getTableauRow(0);
     }
-    llvm::ArrayRef<int64_t> getCost() const { return getTableauRow(1); }
-    llvm::MutableArrayRef<int64_t> getTableauRow(size_t i) {
-        return llvm::MutableArrayRef<int64_t>(tableau.data() + numExtraCols +
-                                                  i * tableau.rowStride(),
-                                              getNumVar());
+    PtrVector<const int64_t> getCost() const { return getTableauRow(1); }
+    PtrVector<int64_t> getTableauRow(size_t i) {
+        return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
-    llvm::MutableArrayRef<int64_t> getBasicConstraints() {
-        return getTableauRow(0);
-    }
-    llvm::MutableArrayRef<int64_t> getCost() { return getTableauRow(1); }
+    PtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
+    PtrVector<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<const int64_t> getTableauCol(size_t i) const {
         return StridedVector<const int64_t>{
             tableau.data() + i + numExtraRows * tableau.rowStride(),
@@ -140,7 +130,7 @@ struct Simplex {
         const size_t numVar = getNumVar();
         PtrMatrix<int64_t> C{getConstraints()};
         std::cout << "C=" << C << std::endl;
-        llvm::MutableArrayRef<int64_t> basicCons{getBasicConstraints()};
+        PtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
         // first pass, we make sure the equalities are >= 0
@@ -203,7 +193,7 @@ struct Simplex {
             addVars(augmentVars.size()); // NOTE: invalidates all refs
             PtrMatrix<int64_t> C{getConstraints()};
             auto basicVars{getBasicVariables()};
-            llvm::MutableArrayRef<int64_t> basicCons{getBasicConstraints()};
+            PtrVector<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
             for (auto &&c : costs)
                 c = 0;
@@ -216,6 +206,8 @@ struct Simplex {
                 basicCons[i + numVar] = a;
                 C(a, numVar + i) = 1;
                 // we now zero out the implicit cost of `1`
+                costs(_(begin, numVar)) -= C(a, _(begin, numVar));
+                costs(_(begin, numVar)) = C(a, _(begin, numVar));
                 for (size_t j = 0; j < numVar; ++j)
                     costs[j] -= C(a, j);
             }
@@ -232,7 +224,7 @@ struct Simplex {
         inCanonicalForm = true;
         return 0;
     }
-    static int getEnteringVariable(llvm::ArrayRef<int64_t> costs) {
+    static int getEnteringVariable(PtrVector<const int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
         printVector(std::cout << "costs = ", costs) << std::endl;
         for (int i = 1; i < int(costs.size()); ++i)
@@ -278,7 +270,7 @@ struct Simplex {
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
         basicVars[leavingVariable] = enteringVariable;
-        llvm::MutableArrayRef<int64_t> basicConstraints{getBasicConstraints()};
+        PtrVector<int64_t> basicConstraints{getBasicConstraints()};
         basicConstraints[oldBasicVar] = -1;
         basicConstraints[enteringVariable] = leavingVariable;
         return f;
@@ -289,10 +281,10 @@ struct Simplex {
         while (true) {
             // entering variable is the column
             std::cout << "C = \n" << C << std::endl;
-            int enteringVariable = getEnteringVariable(C.getRow(0));
+            int enteringVariable = getEnteringVariable(C(0, _));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
-                return C[0] / f;
+                return C(0,0) / f;
             f = makeBasic(C, f, enteringVariable);
             if (f == 0)
                 return std::numeric_limits<int64_t>::max(); // unbounded
@@ -335,8 +327,8 @@ struct Simplex {
         //   0 B ]
         // then drop the extra variables
         slackEqualityConstraints(
-            simplex.getConstraints().view(0, numCon, 1, numVar + numSlack),
-            A.view(0, numSlack, 1, numVar), B.view(0, numStrict, 1, numVar));
+            simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
+            A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
         std::cout << "simplex.tableau = \n" << simplex.tableau << std::endl;
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
@@ -355,7 +347,7 @@ struct Simplex {
             simplex = *this;
             PtrMatrix<int64_t> constraints = simplex.getConstraints();
             int64_t bumpedBound = ++constraints(c, 0);
-            llvm::MutableArrayRef<int64_t> cost = simplex.getCost();
+            PtrVector<int64_t> cost = simplex.getCost();
             for (size_t v = numSlackVar; v < cost.size(); ++v)
                 cost[v] = -constraints(c, v);
             if (simplex.run() != bumpedBound)
@@ -366,7 +358,7 @@ struct Simplex {
     void removeVariable(size_t i) {
         // We remove a variable by isolating it, and then dropping the
         // constraint. This allows us to preserve canonical form
-        llvm::MutableArrayRef<int64_t> basicConstraints{getBasicConstraints()};
+        PtrVector<int64_t> basicConstraints{getBasicConstraints()};
         PtrMatrix<int64_t> C{getConstraints()};
         // ensure sure `i` is basic
         if (basicConstraints[i] < 0)
@@ -383,7 +375,7 @@ struct Simplex {
             truncateVars(j);
         }
     }
-    static uint64_t toMask(llvm::ArrayRef<int64_t> x) {
+    static uint64_t toMask(PtrVector<const int64_t> x) {
         assert(x.size() <= 64);
         uint64_t m = 0;
         for (auto y : x)
@@ -394,7 +386,7 @@ struct Simplex {
         const size_t numVarTotal = getNumVar();
         assert(numVarTotal <= 64);
         uint64_t m = 0;
-        llvm::ArrayRef<int64_t> basicCons{getBasicConstraints()};
+        PtrVector<const int64_t> basicCons{getBasicConstraints()};
         for (size_t i = numSlackVar; i < numVarTotal; ++i)
             m = ((m << 1) | (basicCons[i] > 0));
         return m;
@@ -528,11 +520,11 @@ struct Simplex {
         }
         // the final block corresponds to the augments; first, we set Cons=-1
         // so that we can also set these at the same time.
-        llvm::MutableArrayRef<int64_t> basicCons{simplex.getBasicConstraints()};
+        PtrVector<int64_t> basicCons{simplex.getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -1;
         StridedVector<int64_t> basicVars{simplex.getBasicVariables()};
-        llvm::MutableArrayRef<int64_t> costs{simplex.getCost()};
+        PtrVector<int64_t> costs{simplex.getCost()};
         if (numTrueBasic) {
             uint64_t m = basicTrueVarMask;
             size_t k = 0;
@@ -583,7 +575,7 @@ struct Simplex {
         // we already set the augments, corresponding to old constraints
         // where true variables were basic.
         // Now we set those corresponding to slack variables.
-        llvm::ArrayRef<int64_t> basicConsOld{getBasicConstraints()};
+        PtrVector<const int64_t> basicConsOld{getBasicConstraints()};
         for (size_t i = 1; i <= numSlackVar; ++i) {
             int64_t j = basicConsOld[i];
             if (j >= 0) {
