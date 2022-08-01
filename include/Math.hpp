@@ -320,7 +320,9 @@ bool allZero(const auto &x) {
 
 template <typename T>
 concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
-    { t(i) } -> std::convertible_to<typename T::eltype>;
+    {
+        t(i)
+        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
 };
@@ -568,7 +570,9 @@ template <typename T, typename V> struct BaseVector {
 //
 // Vectors
 //
-template <typename T, size_t M> struct Vector : BaseVector<T, Vector<T, M>> {
+template <typename T, size_t M = 0>
+struct Vector : BaseVector<T, Vector<T, M>> {
+    using eltype = T;
     T data[M];
     T &operator()(size_t i) const {
         assert(i < M);
@@ -583,6 +587,7 @@ template <typename T, size_t M> struct Vector : BaseVector<T, Vector<T, M>> {
 };
 template <typename T, size_t M = 0>
 struct PtrVector : BaseVector<T, PtrVector<T, M>> {
+    using eltype = T;
     T *ptr;
     PtrVector(T *ptr) : ptr(ptr){};
     T &operator()(size_t i) const {
@@ -687,7 +692,11 @@ template <typename T> struct PtrVector<T, 0> {
             ptr[i] /= x;
         return *this;
     }
-
+    // PtrVector(T *data, size_t len) : ptr(data), M(len) {}
+    // PtrVector(llvm::MutableArrayRef<T> x) : ptr(x.data()), M(x.size()) {}
+    // PtrVector(llvm::ArrayRef<std::remove_const_t<T>> x)
+    //     : ptr(x.data()), M(x.size()) {}
+    operator PtrVector<const T>() { PtrVector<const T>{.ptr = ptr, .M = M}; }
     // PtrVector(const AbstractVector auto &A)
     //     : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
     //       X(A.numCol()) {
@@ -699,8 +708,10 @@ template <typename T> struct PtrVector<T, 0> {
 };
 
 template <typename T> struct Vector<T, 0> {
+    using eltype = T;
     llvm::SmallVector<T, 16> data;
-    Vector(size_t N) : data(llvm::SmallVector<T>(N)){};
+
+    Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
 
     Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
     Vector(llvm::SmallVector<T> &&A) : data(std::move(A)){};
@@ -709,24 +720,38 @@ template <typename T> struct Vector<T, 0> {
         assert(i < data.size());
         return data[i];
     }
-    const T &operator()(size_t i) const {
+    T operator()(size_t i) const {
         assert(i < data.size());
         return data[i];
     }
     T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
+    T operator[](size_t i) const { return data[i]; }
     // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
+    size_t size() const { return data.size(); }
     PtrVector<T, 0> view() {
         return PtrVector<T, 0>{.ptr = data.data(), .M = data.size()};
     };
     PtrVector<const T, 0> view() const {
         return PtrVector<const T, 0>{.ptr = data.data(), .M = data.size()};
     };
+    template <typename A> void push_back(A &&x) {
+        data.push_back(std::forward<A>(x));
+    }
+    template <typename... A> void emplace_back(A &&...x) {
+        data.emplace_back(std::forward<A>(x)...);
+    }
+    Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T>{}) {
+        const size_t N = x.size();
+        data.resize_for_overwrite(N);
+        for (size_t n = 0; n < N; ++n)
+            data[n] = x(n);
+    }
 };
+
 template <typename T, size_t M>
 bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
     return allMatch(x0, x1);
@@ -1648,7 +1673,7 @@ std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
 }
 
 template <typename T>
-std::ostream &printVector(std::ostream &os, llvm::ArrayRef<T> a) {
+std::ostream &printVector(std::ostream &os, PtrVector<const T> a) {
     os << "[ ";
     if (size_t M = a.size()) {
         os << a[0];
@@ -1661,28 +1686,25 @@ std::ostream &printVector(std::ostream &os, llvm::ArrayRef<T> a) {
 }
 template <typename T>
 std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
-    return printVector(os, llvm::ArrayRef<T>(a));
+    return printVector(os, PtrVector<const T>{a.data(), a.size()});
 }
 
-// template <typename T, size_t L>
-// std::ostream &operator<<(std::ostream &os, llvm::PtrVector<T, L> const
-// &A) {
-//     return printVector(os, A);
-// }
+template <typename T>
+std::ostream &operator<<(std::ostream &os, PtrVector<const T> const &A) {
+    return printVector(os, A);
+}
 // template <typename T>
 // std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
 //     return printMatrix(os, A);
 // }
 
-template <typename T0, typename T1> bool allMatch(T0 const &x0, T1 const &x1) {
-    size_t N = length(x0);
-    if (N != length(x1)) {
+bool allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1) {
+    size_t N = x0.size();
+    if (N != x1.size())
         return false;
-    }
-    for (size_t n = 0; n < N; ++n) {
-        if (x0[n] != x1[n])
+    for (size_t n = 0; n < N; ++n)
+        if (x0(n) != x1(n))
             return false;
-    }
     return true;
 }
 
@@ -1900,25 +1922,31 @@ inline auto _binaryOp(OP op, A a, B b) {
     return ElementwiseMatrixBinaryOp<OP, A, B>{.op = op, .a = a, .b = b};
 }
 
-template <TriviallyCopyable OP, TriviallyCopyable A, TriviallyCopyable B>
-inline auto binaryOp(const OP op, const A a, const B b) {
-    return _binaryOp(op, a, b);
-}
-template <TriviallyCopyable OP, typename A, TriviallyCopyable B>
-inline auto binaryOp(const OP op, const A &a, const B b) {
-    auto AA{a.view()};
-    return _binaryOp(op, AA, b);
-}
-template <TriviallyCopyable OP, TriviallyCopyable A, typename B>
-inline auto binaryOp(const OP op, const A a, const B &b) {
-    auto BB{b.view()};
-    return _binaryOp(op, a, BB);
-}
+// template <TriviallyCopyable OP, TriviallyCopyable A, TriviallyCopyable B>
+// inline auto binaryOp(const OP op, const A a, const B b) {
+//     return _binaryOp(op, a, b);
+// }
+// template <TriviallyCopyable OP, typename A, TriviallyCopyable B>
+// inline auto binaryOp(const OP op, const A &a, const B b) {
+//     return _binaryOp(op, a.view(), b);
+// }
+// template <TriviallyCopyable OP, TriviallyCopyable A, typename B>
+// inline auto binaryOp(const OP op, const A a, const B &b) {
+//     return _binaryOp(op, a, b.view());
+// }
 template <TriviallyCopyable OP, typename A, typename B>
 inline auto binaryOp(const OP op, const A &a, const B &b) {
-    auto AA{a.view()};
-    auto BB{b.view()};
-    return _binaryOp(op, AA, BB);
+    if constexpr (std::is_trivially_copyable_v<A>) {
+        if constexpr (std::is_trivially_copyable_v<B>) {
+            return _binaryOp(op, a, b);
+        } else {
+            return _binaryOp(op, a, b.view());
+        }
+    } else if constexpr (std::is_trivially_copyable_v<B>) {
+        return _binaryOp(op, a.view(), b);
+    } else {
+        return _binaryOp(op, a.view(), b.view());
+    }
 }
 
 inline auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
@@ -2429,3 +2457,9 @@ inline auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
         s += a.a(i) * b(i);
     return s;
 }
+
+static_assert(AbstractVector<Vector<int64_t>>);
+static_assert(AbstractVector<const Vector<int64_t>>);
+static_assert(AbstractVector<Vector<int64_t> &>);
+static_assert(AbstractMatrix<IntMatrix>);
+static_assert(AbstractMatrix<IntMatrix &>);

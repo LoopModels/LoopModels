@@ -121,9 +121,9 @@ struct Polyhedra {
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(llvm::MutableArrayRef<int64_t> a,
-                          llvm::ArrayRef<int64_t> la,
-                          llvm::ArrayRef<int64_t> ua, size_t i) {
+    static bool setBounds(PtrVector<int64_t> a,
+                          PtrVector<const int64_t> la,
+                          PtrVector<const int64_t> ua, size_t i) {
         int64_t cu_base = ua[i];
         int64_t cl_base = la[i];
         if ((cu_base > 0) && (cl_base < 0))
@@ -133,8 +133,9 @@ struct Polyhedra {
         int64_t cu = cu_base / g;
         int64_t cl = cl_base / g;
         size_t N = la.size();
-        for (size_t n = 0; n < N; ++n)
-            a[n] = cu * la[n] - cl * ua[n];
+	a = cu * la - cl * ua;
+        // for (size_t n = 0; n < N; ++n)
+        //     a[n] = cu * la[n] - cl * ua[n];
         g = 0;
         for (size_t n = 0; n < N; ++n) {
             int64_t an = a[n];
@@ -144,8 +145,9 @@ struct Polyhedra {
         }
         if (g <= 0)
             return g != 0;
-        for (size_t n = 0; n < N; ++n)
-            a[n] /= g;
+	a /= g;
+        // for (size_t n = 0; n < N; ++n)
+        //     a[n] /= g;
         return true;
     }
 

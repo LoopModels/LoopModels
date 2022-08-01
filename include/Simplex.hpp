@@ -226,7 +226,7 @@ struct Simplex {
     }
     static int getEnteringVariable(PtrVector<const int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
-        printVector(std::cout << "costs = ", costs) << std::endl;
+        std::cout << "costs = " << costs << std::endl;
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
@@ -284,7 +284,7 @@ struct Simplex {
             int enteringVariable = getEnteringVariable(C(0, _));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
-                return C(0,0) / f;
+                return C(0, 0) / f;
             f = makeBasic(C, f, enteringVariable);
             if (f == 0)
                 return std::numeric_limits<int64_t>::max(); // unbounded

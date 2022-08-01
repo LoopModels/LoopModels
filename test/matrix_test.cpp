@@ -87,8 +87,17 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     IntMatrix ADm7E = A*D - 7*E;
     auto ADm7Eref{stringToIntMatrix("[-10 -77 -1 34 102 42 -82; -34 13 -111 29 -3 -155 -7; 48 -9 98 38 -60 128 -106; 8 48 101 -70 36 -27 116; 61 -123 43 75 83 -4 -166; 23 -5 -67 -174 -36 -69 -177]")};
     EXPECT_EQ(ADm7E, ADm7Eref);
-    
-    
+
+    Vector<int64_t> a;
+    a.push_back(-8);
+    a.push_back(7);
+    a.push_back(3);
+    Vector<int64_t> b = a * 2;
+    Vector<int64_t> c;
+    c.push_back(-16);
+    c.push_back(14);
+    c.push_back(6);
+    EXPECT_EQ(b, c);
     // std::cout << "B = \n"<<B<<std::endl;
     // std::cout << "C = \n"<<C<<std::endl;
     // IntMatrix B;
