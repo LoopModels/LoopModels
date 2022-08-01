@@ -508,6 +508,10 @@ struct Begin {
 struct End {
 } end;
 struct Colon {
+    constexpr Range<size_t, size_t> operator()(std::integral auto i,
+                                               std::integral auto j) {
+        return Range<size_t, size_t>{size_t(i), size_t(j)};
+    }
     template <typename B, typename E>
     constexpr Range<B, E> operator()(B i, E j) {
         return Range<B, E>{i, j};
@@ -574,12 +578,22 @@ template <typename T, size_t M = 0>
 struct Vector : BaseVector<T, Vector<T, M>> {
     using eltype = T;
     T data[M];
-    T &operator()(size_t i) const {
+    T &operator()(size_t i) {
         assert(i < M);
         return data[i];
     }
-    T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
+    const T &operator()(size_t i) const {
+        assert(i < M);
+        return data[i];
+    }
+    T &operator[](size_t i) {
+        assert(i < M);
+        return data[i];
+    }
+    const T &operator[](size_t i) const {
+        assert(i < M);
+        return data[i];
+    }
     T *begin() { return data; }
     T *end() { return begin() + M; }
     const T *begin() const { return data; }
@@ -608,19 +622,30 @@ template <typename T> struct PtrVector<T, 0> {
     using eltype = T;
     T *ptr;
     size_t M;
-    T &operator[](size_t i) { return ptr[i]; }
-    T &operator()(size_t i) const {
+    T &operator[](size_t i) {
+        assert(i < M);
+        return ptr[i];
+    }
+    const T &operator[](size_t i) const {
+        assert(i < M);
+        return ptr[i];
+    }
+    T &operator()(size_t i) {
+        assert(i < M);
+        return ptr[i];
+    }
+    const T &operator()(size_t i) const {
         assert(i < M);
         return ptr[i];
     }
     PtrVector<T, 0> operator()(Range<size_t, size_t> i) {
         assert(i.begin <= i.end);
-        assert(i.end < M);
+        assert(i.end <= M);
         return PtrVector{.ptr = ptr + i.begin, .M = i.end - i.begin};
     }
     PtrVector<const T, 0> operator()(Range<size_t, size_t> i) const {
         assert(i.begin <= i.end);
-        assert(i.end < M);
+        assert(i.end <= M);
         return PtrVector{.ptr = ptr + i.begin, .M = i.end - i.begin};
     }
     template <typename F, typename L>
@@ -631,19 +656,21 @@ template <typename T> struct PtrVector<T, 0> {
     PtrVector<const T, 0> operator()(Range<F, L> i) const {
         return (*this)(canonicalizeRange(i, M));
     }
-    const T &operator[](size_t i) const { return ptr[i]; }
     T *begin() { return ptr; }
     T *end() { return ptr + M; }
     const T *begin() const { return ptr; }
     const T *end() const { return ptr + M; }
     size_t size() const { return M; }
-    operator llvm::ArrayRef<T>() { return llvm::ArrayRef<T>{ptr, M}; }
-    llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
-    bool operator==(const PtrVector<T, 0> x) const {
-        return this->arrayref() == x.arrayref();
+    operator llvm::ArrayRef<std::remove_const_t<T>>()const {
+        return llvm::ArrayRef<std::remove_const_t<T>>{ptr, M};
     }
-    bool operator==(const llvm::ArrayRef<T> x) const {
-        return this->arrayref() == x;
+    // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
+    bool operator==(const PtrVector<T, 0> x) const {
+        return llvm::ArrayRef<std::remove_const_t<T>>(*this) ==
+               llvm::ArrayRef<std::remove_const_t<T>>(x);
+    }
+    bool operator==(const llvm::ArrayRef<std::remove_const_t<T>> x) const {
+        return llvm::ArrayRef<std::remove_const_t<T>>(*this) == x;
     }
     PtrVector<T, 0> view() { return *this; };
     PtrVector<const T, 0> view() const { return *this; };
@@ -696,7 +723,10 @@ template <typename T> struct PtrVector<T, 0> {
     // PtrVector(llvm::MutableArrayRef<T> x) : ptr(x.data()), M(x.size()) {}
     // PtrVector(llvm::ArrayRef<std::remove_const_t<T>> x)
     //     : ptr(x.data()), M(x.size()) {}
-    operator PtrVector<const T>() { PtrVector<const T>{.ptr = ptr, .M = M}; }
+
+    operator PtrVector<const T>() {
+        return PtrVector<const T>{.ptr = ptr, .M = M};
+    }
     // PtrVector(const AbstractVector auto &A)
     //     : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
     //       X(A.numCol()) {
@@ -706,6 +736,19 @@ template <typename T> struct PtrVector<T, 0> {
     //             mem[m * X + n] = A(m, n);
     // }
 };
+
+template <typename T> inline auto view(llvm::SmallVectorImpl<T> &x) {
+    return PtrVector<T>{x.data(), x.size()};
+}
+template <typename T> inline auto view(const llvm::SmallVectorImpl<T> &x) {
+    return PtrVector<const T>{x.data(), x.size()};
+}
+template <typename T> inline auto view(llvm::MutableArrayRef<T> x) {
+    return PtrVector<T>{x.data(), x.size()};
+}
+template <typename T> inline auto view(const llvm::ArrayRef<T> x) {
+    return PtrVector<const T>{x.data(), x.size()};
+}
 
 template <typename T> struct Vector<T, 0> {
     using eltype = T;
@@ -720,12 +763,12 @@ template <typename T> struct Vector<T, 0> {
         assert(i < data.size());
         return data[i];
     }
-    T operator()(size_t i) const {
+    const T &operator()(size_t i) const {
         assert(i < data.size());
         return data[i];
     }
     T &operator[](size_t i) { return data[i]; }
-    T operator[](size_t i) const { return data[i]; }
+    const T &operator[](size_t i) const { return data[i]; }
     // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
     auto begin() { return data.begin(); }
     auto end() { return data.end(); }
@@ -749,6 +792,15 @@ template <typename T> struct Vector<T, 0> {
         data.resize_for_overwrite(N);
         for (size_t n = 0; n < N; ++n)
             data[n] = x(n);
+    }
+    void resize(size_t N) { data.resize(N); }
+    void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
+
+    operator PtrVector<T>() {
+        return PtrVector<T>{.ptr = data.data(), .M = data.size()};
+    }
+    operator PtrVector<const T>() const {
+        return PtrVector<const T>{.ptr = data.data(), .M = data.size()};
     }
 };
 
@@ -882,15 +934,15 @@ template <typename T> struct PtrMatrix {
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
-        return view(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
+        return (*this)(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return view(std::make_pair(0, M), canonicalizeRange(cols, N));
+        return (*this)(std::make_pair(0, M), canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return view(canonicalizeRange(rows, M), std::make_pair(0, N));
+        return (*this)(canonicalizeRange(rows, M), std::make_pair(0, N));
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -949,10 +1001,10 @@ template <typename T> struct PtrMatrix {
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
     inline PtrVector<T, 0> getRow(size_t i) {
-        return PtrVector<T, 0>{mem + i * X, N};
+        return PtrVector<T, 0>{.ptr = mem + i * X, .M = N};
     }
     inline PtrVector<const T, 0> getRow(size_t i) const {
-        return PtrVector<const T, 0>{mem + i * X, N};
+        return PtrVector<const T, 0>{.ptr = mem + i * X, .M = N};
     }
     // void copyRow(llvm::ArrayRef<T> x, size_t i) {
     //     for (size_t j = 0; j < numCol(); ++j)
@@ -1213,18 +1265,18 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
-        return view(canonicalizeRange(rows, numRow()),
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return view(std::make_pair(0, numRow()),
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(std::make_pair(0, numRow()),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return view(canonicalizeRange(rows, numRow()),
-                    std::make_pair(0, numCol()));
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       std::make_pair(0, numCol()));
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -1253,18 +1305,18 @@ template <typename T, typename A> struct BaseMatrix {
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows,
                                          Range<C0, C1> cols) const {
-        return view(canonicalizeRange(rows, numRow()),
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return view(std::make_pair(0, numRow()),
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(std::make_pair(0, numRow()),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, numRow()),
-                    std::make_pair(0, numCol()));
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       std::make_pair(0, numCol()));
     }
     inline PtrMatrix<const T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>
@@ -1692,6 +1744,10 @@ std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
 template <typename T>
 std::ostream &operator<<(std::ostream &os, PtrVector<const T> const &A) {
     return printVector(os, A);
+}
+template <typename T>
+std::ostream &operator<<(std::ostream &os, Vector<T> const &A) {
+    return printVector(os, A.view());
 }
 // template <typename T>
 // std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {

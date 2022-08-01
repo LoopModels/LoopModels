@@ -84,21 +84,19 @@ MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
         // eliminate `A(k,z)`
         if (int64_t Akz = A(z, k)) {
             // A(k, k) == 1, so A(k,z) -= Akz * 1;
-	    A(z,_) -= Akz * A(k,_);
-	    K(z,_) -= Akz * K(k,_);
-            // VECTORIZE
-            // for (size_t i = 0; i < std::min(M, N); ++i) {
-            //     A(z, i) -= Akz * A(k, i);
-            //     K(z, i) -= Akz * K(k, i);
-            // }
-            // VECTORIZE
-            // for (size_t i = N; i < M; ++i) {
-            //     K(z, i) -= Akz * K(k, i);
-            // }
-            // VECTORIZE
-            // for (size_t i = M; i < N; ++i) {
-            //     A(z, i) -= Akz * A(k, i);
-            // }
+	    // A(z,_) -= Akz * A(k,_);
+	    // K(z,_) -= Akz * K(k,_);
+            VECTORIZE
+            for (size_t i = 0; i < std::min(M, N); ++i) {
+                A(z, i) -= Akz * A(k, i);
+                K(z, i) -= Akz * K(k, i);
+            }
+            VECTORIZE
+            for (size_t i = N; i < M; ++i) 
+                K(z, i) -= Akz * K(k, i);
+            VECTORIZE
+            for (size_t i = M; i < N; ++i) 
+                A(z, i) -= Akz * A(k, i);
         }
     }
 }

@@ -77,36 +77,36 @@ struct Polyhedra {
         !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
     bool lessZero(const IntMatrix &A, const size_t r) const {
-        return C.less(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.less(A(r, _(begin, C.getNumConstTerms())));
     }
     bool lessEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.lessEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.lessEqual(A(r, _(begin, C.getNumConstTerms())));
     }
     bool greaterZero(const IntMatrix &A, const size_t r) const {
-        return C.greater(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.greater(A(r, _(begin, C.getNumConstTerms())));
     }
     bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.greaterEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
     }
     bool lessZero(const size_t r) const {
-        return C.less(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.less(A(r, _(begin, C.getNumConstTerms())));
     }
     bool lessEqualZero(const size_t r) const {
-        return C.lessEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.lessEqual(A(r, _(begin, C.getNumConstTerms())));
     }
     bool greaterZero(const size_t r) const {
-        return C.greater(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.greater(A(r, _(begin, C.getNumConstTerms())));
     }
     bool greaterEqualZero(const size_t r) const {
-        return C.greaterEqual(view(A.getRow(r), 0, C.getNumConstTerms()));
+        return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
     }
-    llvm::ArrayRef<int64_t> getSymbol(PtrMatrix<const int64_t> A,
-                                      size_t i) const {
-        return view(A.getRow(i), 0, C.getNumConstTerms());
+    PtrVector<const int64_t> getSymbol(PtrMatrix<const int64_t> A,
+                                       size_t i) const {
+        return A(i, _(begin, C.getNumConstTerms()));
     }
-    llvm::ArrayRef<int64_t> getNonSymbol(PtrMatrix<const int64_t> A,
-                                         size_t i) const {
-        return view(A.getRow(i), C.getNumConstTerms(), A.numCol());
+    PtrVector<const int64_t> getNonSymbol(PtrMatrix<const int64_t> A,
+                                          size_t i) const {
+        return A(i, _(C.getNumConstTerms(), A.numCol()));
     }
     bool equalNegative(const size_t i, const size_t j) const {
         return C.equalNegative(getSymbol(A, i), getSymbol(A, j));
@@ -121,8 +121,7 @@ struct Polyhedra {
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(PtrVector<int64_t> a,
-                          PtrVector<const int64_t> la,
+    static bool setBounds(PtrVector<int64_t> a, PtrVector<const int64_t> la,
                           PtrVector<const int64_t> ua, size_t i) {
         int64_t cu_base = ua[i];
         int64_t cl_base = la[i];
@@ -133,7 +132,7 @@ struct Polyhedra {
         int64_t cu = cu_base / g;
         int64_t cl = cl_base / g;
         size_t N = la.size();
-	a = cu * la - cl * ua;
+        a = cu * la - cl * ua;
         // for (size_t n = 0; n < N; ++n)
         //     a[n] = cu * la[n] - cl * ua[n];
         g = 0;
@@ -145,7 +144,7 @@ struct Polyhedra {
         }
         if (g <= 0)
             return g != 0;
-	a /= g;
+        a /= g;
         // for (size_t n = 0; n < N; ++n)
         //     a[n] /= g;
         return true;
@@ -458,8 +457,8 @@ struct Polyhedra {
         const size_t numVar = getNumVar();
         assert(numConst + numVar == numCol);
         int64_t dependencyToEliminate = -1;
-        llvm::SmallVector<int64_t> delta;
-        delta.resize_for_overwrite(C.getNumConstTerms());
+        Vector<int64_t> delta;
+        delta.resizeForOverwrite(C.getNumConstTerms());
         for (size_t i = 0; i < numAuxVar; ++i) {
             size_t c = boundDiffs[i];
             int64_t dte = -1;
@@ -471,7 +470,7 @@ struct Polyhedra {
             if (dte == -1) {
                 for (size_t j = 0; j < delta.size(); ++j)
                     delta[j] = Aold(c, j) - a[j];
-                printVector(std::cout << "delta = ", delta) << std::endl;
+                std::cout << "delta = " << delta << std::endl;
                 if (C.lessEqual(delta)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
@@ -572,7 +571,7 @@ struct Polyhedra {
     // and `b` render redundant.
     bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
                                     IntMatrix &E, IntMatrix &Aold,
-                                    llvm::ArrayRef<int64_t> a,
+                                    PtrVector<const int64_t> a,
                                     const size_t CC) const {
 
         const size_t numCol = A.numCol();
@@ -584,7 +583,7 @@ struct Polyhedra {
         llvm::SmallVector<unsigned, 16> boundDiffs;
         for (size_t c = 0; c < CC; ++c) {
             for (size_t v = 0; v < numVar; ++v) {
-                int64_t av = a[v + numConst];
+                int64_t av = a(v + numConst);
                 int64_t Avc = Aold(c, v + numConst);
                 if (((av > 0) == (Avc > 0)) && ((av != 0) & (Avc != 0))) {
                     boundDiffs.push_back(c);
@@ -616,7 +615,7 @@ struct Polyhedra {
         int64_t dependencyToEliminate =
             checkForTrivialRedundancies(colsToErase, boundDiffs, E, Aold, a);
         std::cout << "Aold =\n" << Aold << std::endl;
-        printVector(std::cout << "CC = " << CC << "; a = ", a) << std::endl;
+        std::cout << "CC = " << CC << "; a = " << a << std::endl;
         printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
         std::cout << "Initial eliminating: " << dependencyToEliminate
                   << std::endl;
@@ -900,14 +899,14 @@ struct Polyhedra {
         return removeVariable(A, i);
     }
     void removeVariableAndPrune(const size_t i) {
-        if constexpr (hasEqualities){
-	    removeVariable(A, E, i);
-	} else {
-	    removeVariable(A, i);
-	}
-	pruneBounds();
+        if constexpr (hasEqualities) {
+            removeVariable(A, E, i);
+        } else {
+            removeVariable(A, i);
+        }
+        pruneBounds();
     }
-    
+
     static void erasePossibleNonUniqueElements(
         IntMatrix &A, llvm::SmallVectorImpl<unsigned> &colsToErase) {
         // std::ranges::sort(colsToErase);

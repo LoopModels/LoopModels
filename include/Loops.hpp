@@ -25,7 +25,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
     // SymbolicComparator> {
 
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(const IntMatrix &A, llvm::ArrayRef<MPoly> b,
+    construct(const IntMatrix &A, PtrVector<const MPoly> b,
               PartiallyOrderedSet poset) {
         assert(b.size() == A.numRow());
         // IntMatrix B;
@@ -40,7 +40,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
                         monomials.push_back(t.exponent);
         const size_t numMonomials = monomials.size();
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
-	auto &B = ret->A;
+        auto &B = ret->A;
         B.resize(A.numRow(), A.numCol() + 1 + map.size());
         for (size_t r = 0; r < A.numRow(); ++r) {
             for (auto &t : b[r]) {
@@ -50,13 +50,17 @@ struct AffineLoopNest : SymbolicPolyhedra,
             for (size_t c = 0; c < A.numCol(); ++c)
                 B(r, c + 1 + numMonomials) = A(r, c);
         }
-	ret->C = SymbolicComparator::construct(b, std::move(poset));
-	return ret;
+        ret->C = SymbolicComparator::construct(b, std::move(poset));
+        return ret;
         // return llvm::makeIntrusiveRefCnt<AffineLoopNest>(
         //     std::move(B), EmptyMatrix<int64_t>{},
         //     SymbolicComparator::construct(b, std::move(poset)));
     }
-
+    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    construct(const IntMatrix &A, llvm::ArrayRef<MPoly> b,
+              PartiallyOrderedSet poset) {
+        return construct(A, view(b), poset);
+    }
     inline size_t getNumLoops() const { return getNumVar(); }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
@@ -67,7 +71,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         const auto [M, N] = A.size();
         assert(numConst + getNumLoops() == N);
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
-	ret->C =C;
+        ret->C = C;
         IntMatrix &B = ret->A;
         B.resizeForOverwrite(M, N);
         for (size_t m = 0; m < M; ++m) {
@@ -76,13 +80,14 @@ struct AffineLoopNest : SymbolicPolyhedra,
             for (size_t n = numConst; n < N; ++n)
                 B(m, n) = 0;
         }
-        matmul(B.view(0, M, numConst, N), A.view(0, M, numConst, N), R);
+        matmul(B(_(begin, M), _(numConst, N)), A(_(begin, M), _(numConst, N)),
+               R);
         std::cout << "A = \n" << A << std::endl;
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
-	return ret;
+        return ret;
         // return llvm::makeIntrusiveRefCnt<AffineLoopNest>(
-            // std::move(B), EmptyMatrix<int64_t>(), C);
+        // std::move(B), EmptyMatrix<int64_t>(), C);
     }
     // AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
     //                PartiallyOrderedSet posetin)
@@ -118,7 +123,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         return L;
     }
     llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>>
-    perm(llvm::ArrayRef<unsigned> x) {
+    perm(PtrVector<const unsigned> x) {
         llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>> ret;
         // llvm::SmallVector<AffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
@@ -146,7 +151,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         return ret;
     }
     llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0>
-    getBounds(llvm::ArrayRef<unsigned> x) {
+    getBounds(PtrVector<const unsigned> x) {
         llvm::SmallVector<std::pair<IntMatrix, IntMatrix>, 0> ret;
         size_t i = x.size();
         ret.resize_for_overwrite(i);
@@ -244,7 +249,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
             } else {
                 os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
             }
-            llvm::ArrayRef<int64_t> b = getSymbol(A, j);
+            PtrVector<const int64_t> b = getSymbol(A, j);
             bool printed = !allZero(b);
             if (printed)
                 C.printSymbol(os, b, -sign);
