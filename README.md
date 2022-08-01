@@ -148,3 +148,15 @@ Now that this is all set up, you just need to make sure the environmental variab
 
 If you need to wipe the build dir, you'll have to set the temporary environment variables such as the linkers and CXX flags again.
 
+###### Custom LLVM
+
+By default, meson uses llvm-config to find LLVM.
+If you have several LLVM distributives installed, you can use meson [native file](https://mesonbuild.com/Native-environments.html) to specify which LLVM is used when compiling LoopModels. The `.ini` file should override where to find llvm-config. For example, the contents of the `custom-llvm.ini` file specify the path to llvm-config
+```
+llvm-config = '/usr/local/bin/llvm/llvm-config'
+```
+
+Then meson is configured with
+```
+CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address --native-file custom-llvm.ini
+```
