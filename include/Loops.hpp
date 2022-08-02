@@ -248,15 +248,11 @@ struct AffineLoopNest : SymbolicPolyhedra,
             int64_t Aji = A(j, i + numConst) * sign;
             if (Aji <= 0)
                 continue;
-            if (A(j, i + numConst) == sign) {
-                if (sign < 0) {
-                    os << "i_" << i << " <= ";
-                } else {
-                    os << "i_" << i << " >= ";
-                }
-            } else {
+            if (A(j, i + numConst) != sign) {
                 os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
-            }
+	    } else {
+		os << "i_" << i << ((sign < 0) ? " <= " : " >= ");
+	    }
             PtrVector<const int64_t> b = getSymbol(A, j);
             bool printed = !allZero(b);
             if (printed)

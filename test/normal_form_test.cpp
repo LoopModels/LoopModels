@@ -45,7 +45,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
             }
             std::cout << "K=\n" << K << std::endl;
             std::cout << "A=\n" << A << std::endl;
-            EXPECT_TRUE(matmul(K, A) == I4);
+            EXPECT_TRUE(K * A == I4);
         } else {
             // std::cout << "K= " << K << "\nB= " << B << std::endl;
             printVector(std::cout << "included = ", included) << std::endl;
@@ -127,8 +127,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
             ++m;
         }
     }
-    std::cout << "A = " << A << "\nA * K = " << matmul(K, A) << std::endl;
-    EXPECT_TRUE(matmul(K, A) == I4);
+    IntMatrix KA{K * A};
+    std::cout << "A = " << A << "\nA * K = " << KA << std::endl;
+    EXPECT_TRUE(KA == I4);
 }
 
 bool isHNF(PtrMatrix<int64_t> A) {
@@ -179,7 +180,7 @@ TEST(Hermite, BasicAssertions) {
         std::cout << "H=\n" << H << "\nU=\n" << U << std::endl;
 
         EXPECT_TRUE(isHNF(H));
-        EXPECT_TRUE(H == matmul(U, A4x3));
+        EXPECT_TRUE(H == U * A4x3);
 
         for (size_t i = 0; i < 3; ++i) {
             A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
@@ -188,7 +189,7 @@ TEST(Hermite, BasicAssertions) {
         auto [H2, U2] = NormalForm::hermite(A4x3);
         std::cout << "H=\n" << H2 << "\nU=\n" << U2 << std::endl;
         EXPECT_TRUE(isHNF(H2));
-        EXPECT_TRUE(H2 == matmul(U2, A4x3));
+        EXPECT_TRUE(H2 == U2 * A4x3);
     }
     {
         SquareMatrix<int64_t> A(4);
@@ -211,7 +212,7 @@ TEST(Hermite, BasicAssertions) {
         auto [H3, U3] = NormalForm::hermite(A);
         std::cout << "\n\n\n====\n\nH=\n" << H3 << "\nU=\n" << U3 << std::endl;
         EXPECT_TRUE(isHNF(H3));
-        EXPECT_TRUE(H3 == matmul(U3, A));
+        EXPECT_TRUE(H3 == U3 * A);
     }
     {
         IntMatrix A(2, 3);
@@ -226,7 +227,7 @@ TEST(Hermite, BasicAssertions) {
         EXPECT_TRUE(B.hasValue());
         auto [H, U] = B.getValue();
         EXPECT_TRUE(isHNF(H));
-        EXPECT_TRUE(matmul(U, A) == H);
+        EXPECT_TRUE(U * A == H);
         std::cout << "A = \n"
                   << A << "\nH =\n"
                   << H << "\nU =\n"
@@ -271,7 +272,7 @@ TEST(Hermite, BasicAssertions) {
         A(2, 10) = -3;
         auto [H, U] = NormalForm::hermite(A);
         EXPECT_TRUE(isHNF(H));
-        EXPECT_TRUE(matmul(U, A) == H);
+        EXPECT_TRUE(U * A == H);
         std::cout << "A = \n"
                   << A << "\nH =\n"
                   << H << "\nU =\n"
@@ -298,7 +299,7 @@ TEST(NullSpaceTests, BasicAssertions) {
             }
             NS = NormalForm::nullSpace(B);
             nullDim += NS.numRow();
-            Z = matmul(NS, B);
+            Z = NS * B;
             for (size_t j = 0; j < Z.length(); ++j) {
                 EXPECT_EQ(Z[j], 0);
             }

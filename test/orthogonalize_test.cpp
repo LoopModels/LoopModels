@@ -30,28 +30,28 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     // Loop: A*i <= b
     llvm::SmallVector<MPoly, 8> b;
     // m <= M-1
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     b.push_back(M - 1);
     // m >= 0;
-    A(1, 0) = -1;
+    A(1, 0) = 1;
     b.push_back(Zero);
     // n <= N-1
-    A(2, 1) = 1;
+    A(2, 1) = -1;
     b.push_back(N - 1);
     // n >= 0;
-    A(3, 1) = -1;
+    A(3, 1) = 1;
     b.push_back(Zero);
     // i <= I-1
-    A(4, 2) = 1;
+    A(4, 2) = -1;
     b.push_back(I - 1);
     // i >= 0;
-    A(5, 2) = -1;
+    A(5, 2) = 1;
     b.push_back(Zero);
     // j <= J-1
-    A(6, 3) = 1;
+    A(6, 3) = -1;
     b.push_back(J - 1);
     // j >= 0;
-    A(7, 3) = -1;
+    A(7, 3) = 1;
     b.push_back(Zero);
     for (auto &b : b) {
         if (auto c = b.getCompileTimeConstant()) {
@@ -180,46 +180,43 @@ TEST(BadMul, BasicAssertions) {
     // Loop: A*i <= r
     llvm::SmallVector<MPoly, 8> r;
     // i <= M + N + O - 3
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     r.push_back(M + N + O - 3);
     // i >= 0;
-    A(1, 0) = -1;
+    A(1, 0) = 1;
     r.push_back(Zero);
     // l <= M + O - 2
-    A(2, 1) = 1;
+    A(2, 1) = -1;
     r.push_back(M + O - 2);
     // l >= 0;
-    A(3, 1) = -1;
+    A(3, 1) = 1;
     r.push_back(Zero);
     // l <= i
-    A(4, 0) = -1;
-    A(4, 1) = 1;
+    A(4, 0) = 1;
+    A(4, 1) = -1;
     r.push_back(Zero);
     // l >= i - (N - 1);
-    A(5, 0) = 1;
-    A(5, 1) = -1;
+    A(5, 0) = -1;
+    A(5, 1) = 1;
     r.push_back(N - 1);
     // j <= M - 1
-    A(6, 2) = 1;
+    A(6, 2) = -1;
     r.push_back(M - 1);
     // j >= 0;
-    A(7, 2) = -1;
+    A(7, 2) = 1;
     r.push_back(Zero);
     // j <= l
-    A(8, 1) = -1;
-    A(8, 2) = 1;
+    A(8, 1) = 1;
+    A(8, 2) = -1;
     r.push_back(Zero);
     // j >= l - (O - 1)
-    A(9, 1) = 1;
-    A(9, 2) = -1;
+    A(9, 1) = -1;
+    A(9, 2) = 1;
     r.push_back(O - 1);
-    for (auto &b : r) {
-        if (auto c = b.getCompileTimeConstant()) {
-            if (c.getValue() == 0) {
+    for (auto &b : r) 
+        if (auto c = b.getCompileTimeConstant()) 
+            if (c.getValue() == 0) 
                 assert(b.terms.size() == 0);
-            }
-        }
-    }
     PartiallyOrderedSet poset;
     llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp{
         AffineLoopNest::construct(A, r, poset)};
@@ -303,9 +300,8 @@ TEST(BadMul, BasicAssertions) {
     EXPECT_EQ(loop0Count.second, 1);
 
     std::cout << "New ArrayReferences:\n";
-    for (auto &ar : newArrayRefs) {
+    for (auto &ar : newArrayRefs) 
         std::cout << ar << std::endl << std::endl;
-    }
 }
 
 TEST(OrthogonalizeMatricesTest, BasicAssertions) {

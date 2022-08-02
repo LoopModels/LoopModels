@@ -36,9 +36,8 @@ static int64_t gcd(int64_t x, int64_t y) {
     assert(y != std::numeric_limits<int64_t>::min());
     int64_t a = std::abs(x);
     int64_t b = std::abs(y);
-    if ((a == 1) | (b == 1)) {
+    if ((a == 1) | (b == 1)) 
         return 1;
-    }
     int64_t az = std::countr_zero(uint64_t(x));
     int64_t bz = std::countr_zero(uint64_t(y));
     b >>= bz;
@@ -53,13 +52,11 @@ static int64_t gcd(int64_t x, int64_t y) {
     return b << k;
 }
 static int64_t lcm(int64_t x, int64_t y) {
-    if (std::abs(x) == 1) {
+    if (std::abs(x) == 1)
         return y;
-    } else if (std::abs(y) == 1) {
+    if (std::abs(y) == 1)
         return x;
-    } else {
-        return x * (y / gcd(x, y));
-    }
+    return x * (y / gcd(x, y));
 }
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 template <std::integral T> std::tuple<T, T, T> gcdx(T a, T b) {
@@ -127,9 +124,8 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) {
+    if (isOne(x)) 
         return T(One());
-    }
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
@@ -139,9 +135,8 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
         b = z;
         z *= b;
     }
-    if (i == 0) {
+    if (i == 0) 
         return z;
-    }
     T y(z);
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -190,9 +185,8 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) {
+    if (i == 0) 
         return;
-    }
     a = z;
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -224,9 +218,8 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) {
+    if (isOne(x)) 
         return T(One());
-    }
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
@@ -236,9 +229,8 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) {
+    if (i == 0) 
         return z;
-    }
     T y(z);
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -740,6 +732,13 @@ template <typename T> struct PtrVector<T, 0> {
     //             mem[m * X + n] = A(m, n);
     // }
 };
+
+int64_t gcd(PtrVector<const int64_t> x){
+    int64_t g = std::abs(x[0]);
+    for (size_t i = 1; i < x.size(); ++i)
+	g = gcd(g, x[i]);
+    return g;
+}
 
 template <typename T> inline auto view(llvm::SmallVectorImpl<T> &x) {
     return PtrVector<T>{x.data(), x.size()};
@@ -1602,7 +1601,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
         mem.resize_for_overwrite(M * N);
-        std::cout << "M = " << M << "; N = " << N << std::endl;
+        // std::cout << "M = " << M << "; N = " << N << std::endl;
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
                 mem[m * X + n] = A(m, n);
