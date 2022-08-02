@@ -36,9 +36,8 @@ static int64_t gcd(int64_t x, int64_t y) {
     assert(y != std::numeric_limits<int64_t>::min());
     int64_t a = std::abs(x);
     int64_t b = std::abs(y);
-    if ((a == 1) | (b == 1)) {
+    if ((a == 1) | (b == 1)) 
         return 1;
-    }
     int64_t az = std::countr_zero(uint64_t(x));
     int64_t bz = std::countr_zero(uint64_t(y));
     b >>= bz;
@@ -53,13 +52,11 @@ static int64_t gcd(int64_t x, int64_t y) {
     return b << k;
 }
 static int64_t lcm(int64_t x, int64_t y) {
-    if (std::abs(x) == 1) {
+    if (std::abs(x) == 1)
         return y;
-    } else if (std::abs(y) == 1) {
+    if (std::abs(y) == 1)
         return x;
-    } else {
-        return x * (y / gcd(x, y));
-    }
+    return x * (y / gcd(x, y));
 }
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 template <std::integral T> std::tuple<T, T, T> gcdx(T a, T b) {
@@ -127,9 +124,8 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) {
+    if (isOne(x)) 
         return T(One());
-    }
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
@@ -139,9 +135,8 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
         b = z;
         z *= b;
     }
-    if (i == 0) {
+    if (i == 0) 
         return z;
-    }
     T y(z);
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -190,9 +185,8 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) {
+    if (i == 0) 
         return;
-    }
     a = z;
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -224,9 +218,8 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) {
+    if (isOne(x)) 
         return T(One());
-    }
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
     // T z(std::move(x));
@@ -236,9 +229,8 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) {
+    if (i == 0) 
         return z;
-    }
     T y(z);
     while (i) {
         t = std::countr_zero(i) + 1;
@@ -741,6 +733,13 @@ template <typename T> struct PtrVector<T, 0> {
     // }
 };
 
+int64_t gcd(PtrVector<const int64_t> x){
+    int64_t g = std::abs(x[0]);
+    for (size_t i = 1; i < x.size(); ++i)
+	g = gcd(g, x[i]);
+    return g;
+}
+
 template <typename T> inline auto view(llvm::SmallVectorImpl<T> &x) {
     return PtrVector<T>{x.data(), x.size()};
 }
@@ -945,11 +944,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(std::make_pair(0, M), canonicalizeRange(cols, N));
+        return (*this)(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, M), std::make_pair(0, N));
+        return (*this)(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -986,11 +985,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return view(std::make_pair(0, M), canonicalizeRange(cols, N));
+        return view(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M), std::make_pair(0, N));
+        return view(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Colon) const {
@@ -1328,13 +1327,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(std::make_pair(0, numRow()),
+        return (*this)(Range<size_t,size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       std::make_pair(0, numCol()));
+                       Range<size_t,size_t>{0, numCol()});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -1368,13 +1367,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return (*this)(std::make_pair(0, numRow()),
+        return (*this)(Range<size_t,size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       std::make_pair(0, numCol()));
+                       Range<size_t,size_t>{0, numCol()});
     }
     inline PtrMatrix<const T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>
@@ -1609,7 +1608,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
         mem.resize_for_overwrite(M * N);
-        std::cout << "M = " << M << "; N = " << N << std::endl;
+        // std::cout << "M = " << M << "; N = " << N << std::endl;
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
                 mem[m * X + n] = A(m, n);
@@ -1866,107 +1865,6 @@ bool allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1) {
         if (x0(n) != x1(n))
             return false;
     return true;
-}
-
-MULTIVERSION void matmul(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
-                         PtrMatrix<const int64_t> B) {
-    unsigned M = A.numRow();
-    unsigned K = A.numCol();
-    unsigned N = B.numCol();
-    assert(K == B.numRow());
-    assert(M == C.numRow());
-    assert(N == C.numCol());
-    for (size_t m = 0; m < M; ++m) {
-        for (size_t k = 0; k < K; ++k) {
-            VECTORIZE
-            for (size_t n = 0; n < N; ++n) {
-                C(m, n) += A(m, k) * B(k, n);
-            }
-        }
-    }
-}
-MULTIVERSION IntMatrix matmul(PtrMatrix<const int64_t> A,
-                              PtrMatrix<const int64_t> B) {
-    unsigned M = A.numRow();
-    unsigned N = B.numCol();
-    IntMatrix C(M, N);
-    matmul(C, A, B);
-    return C;
-}
-MULTIVERSION void matmulnt(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
-                           PtrMatrix<const int64_t> B) {
-    unsigned M = A.numRow();
-    unsigned K = A.numCol();
-    unsigned N = B.numRow();
-    assert(K == B.numCol());
-    assert(M == C.numRow());
-    assert(N == C.numCol());
-    for (size_t m = 0; m < M; ++m) {
-        for (size_t k = 0; k < K; ++k) {
-            VECTORIZE
-            for (size_t n = 0; n < N; ++n) {
-                C(m, n) += A(m, k) * B(n, k);
-            }
-        }
-    }
-}
-MULTIVERSION IntMatrix matmulnt(PtrMatrix<const int64_t> A,
-                                PtrMatrix<const int64_t> B) {
-    unsigned M = A.numRow();
-    unsigned N = B.numRow();
-    IntMatrix C(M, N);
-    matmulnt(C, A, B);
-    return C;
-}
-MULTIVERSION void matmultn(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
-                           PtrMatrix<const int64_t> B) {
-    unsigned M = A.numCol();
-    unsigned K = A.numRow();
-    unsigned N = B.numCol();
-    assert(K == B.numRow());
-    assert(M == C.numRow());
-    assert(N == C.numCol());
-    for (size_t m = 0; m < M; ++m) {
-        for (size_t k = 0; k < K; ++k) {
-            VECTORIZE
-            for (size_t n = 0; n < N; ++n) {
-                C(m, n) += A(k, m) * B(k, n);
-            }
-        }
-    }
-}
-MULTIVERSION IntMatrix matmultn(PtrMatrix<const int64_t> A,
-                                PtrMatrix<const int64_t> B) {
-    unsigned M = A.numCol();
-    unsigned N = B.numCol();
-    IntMatrix C(M, N);
-    matmultn(C, A, B);
-    return C;
-}
-MULTIVERSION void matmultt(PtrMatrix<int64_t> C, PtrMatrix<const int64_t> A,
-                           PtrMatrix<const int64_t> B) {
-    unsigned M = A.numCol();
-    unsigned K = A.numRow();
-    unsigned N = B.numRow();
-    assert(K == B.numCol());
-    assert(M == C.numRow());
-    assert(N == C.numCol());
-    for (size_t m = 0; m < M; ++m) {
-        for (size_t k = 0; k < K; ++k) {
-            VECTORIZE
-            for (size_t n = 0; n < N; ++n) {
-                C(m, n) += A(k, m) * B(n, k);
-            }
-        }
-    }
-}
-MULTIVERSION IntMatrix matmultt(PtrMatrix<const int64_t> A,
-                                PtrMatrix<const int64_t> B) {
-    unsigned M = A.numCol();
-    unsigned N = B.numRow();
-    IntMatrix C(M, N);
-    matmultt(C, A, B);
-    return C;
 }
 
 MULTIVERSION inline void swapRows(PtrMatrix<int64_t> A, size_t i, size_t j) {

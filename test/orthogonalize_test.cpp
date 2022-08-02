@@ -1,6 +1,7 @@
 #include "../include/Math.hpp"
 #include "../include/Orthogonalize.hpp"
 #include "../include/Symbolics.hpp"
+#include "Loops.hpp"
 #include "llvm/ADT/SmallVector.h"
 #include <cstddef>
 #include <cstdint>
@@ -29,28 +30,28 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     // Loop: A*i <= b
     llvm::SmallVector<MPoly, 8> b;
     // m <= M-1
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     b.push_back(M - 1);
     // m >= 0;
-    A(1, 0) = -1;
+    A(1, 0) = 1;
     b.push_back(Zero);
     // n <= N-1
-    A(2, 1) = 1;
+    A(2, 1) = -1;
     b.push_back(N - 1);
     // n >= 0;
-    A(3, 1) = -1;
+    A(3, 1) = 1;
     b.push_back(Zero);
     // i <= I-1
-    A(4, 2) = 1;
+    A(4, 2) = -1;
     b.push_back(I - 1);
     // i >= 0;
-    A(5, 2) = -1;
+    A(5, 2) = 1;
     b.push_back(Zero);
     // j <= J-1
-    A(6, 3) = 1;
+    A(6, 3) = -1;
     b.push_back(J - 1);
     // j >= 0;
-    A(7, 3) = -1;
+    A(7, 3) = 1;
     b.push_back(Zero);
     for (auto &b : b) {
         if (auto c = b.getCompileTimeConstant()) {
@@ -60,8 +61,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         }
     }
     PartiallyOrderedSet poset;
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp(
-        llvm::makeIntrusiveRefCnt<AffineLoopNest>(A, b, poset));
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp{
+        AffineLoopNest::construct(A, b, poset)};
     EXPECT_FALSE(alnp->isEmpty());
 
     // we have three array refs
@@ -123,15 +124,26 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     EXPECT_EQ(newArrayRefs[2][1].rank(), 2);
     std::cout << "A=" << newAlnp->A << std::endl;
     // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
-    EXPECT_EQ(newAlnp->lowerb[1].size(), 1);
-    EXPECT_EQ(newAlnp->lowerb[2].size(), 2);
-    EXPECT_EQ(newAlnp->lowerb[3].size(), 2);
-    EXPECT_EQ(newAlnp->upperb[0].size(), 1);
-    EXPECT_EQ(newAlnp->upperb[1].size(), 1);
-    EXPECT_EQ(newAlnp->upperb[2].size(), 2);
-    EXPECT_EQ(newAlnp->upperb[3].size(), 2);
     std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
+    auto loop3Count =
+        newAlnp->countSigns(newAlnp->A, 3 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop3Count.first, 2);
+    EXPECT_EQ(loop3Count.second, 2);
+    newAlnp->removeLoop(3);
+    auto loop2Count =
+        newAlnp->countSigns(newAlnp->A, 2 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop2Count.first, 2);
+    EXPECT_EQ(loop2Count.second, 2);
+    newAlnp->removeLoop(2);
+    auto loop1Count =
+        newAlnp->countSigns(newAlnp->A, 1 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop1Count.first, 1);
+    EXPECT_EQ(loop1Count.second, 1);
+    newAlnp->removeLoop(1);
+    auto loop0Count =
+        newAlnp->countSigns(newAlnp->A, 0 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop0Count.first, 1);
+    EXPECT_EQ(loop0Count.second, 1);
     std::cout << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
         std::cout << ar << std::endl << std::endl;
@@ -168,49 +180,46 @@ TEST(BadMul, BasicAssertions) {
     // Loop: A*i <= r
     llvm::SmallVector<MPoly, 8> r;
     // i <= M + N + O - 3
-    A(0, 0) = 1;
+    A(0, 0) = -1;
     r.push_back(M + N + O - 3);
     // i >= 0;
-    A(1, 0) = -1;
+    A(1, 0) = 1;
     r.push_back(Zero);
     // l <= M + O - 2
-    A(2, 1) = 1;
+    A(2, 1) = -1;
     r.push_back(M + O - 2);
     // l >= 0;
-    A(3, 1) = -1;
+    A(3, 1) = 1;
     r.push_back(Zero);
     // l <= i
-    A(4, 0) = -1;
-    A(4, 1) = 1;
+    A(4, 0) = 1;
+    A(4, 1) = -1;
     r.push_back(Zero);
     // l >= i - (N - 1);
-    A(5, 0) = 1;
-    A(5, 1) = -1;
+    A(5, 0) = -1;
+    A(5, 1) = 1;
     r.push_back(N - 1);
     // j <= M - 1
-    A(6, 2) = 1;
+    A(6, 2) = -1;
     r.push_back(M - 1);
     // j >= 0;
-    A(7, 2) = -1;
+    A(7, 2) = 1;
     r.push_back(Zero);
     // j <= l
-    A(8, 1) = -1;
-    A(8, 2) = 1;
+    A(8, 1) = 1;
+    A(8, 2) = -1;
     r.push_back(Zero);
     // j >= l - (O - 1)
-    A(9, 1) = 1;
-    A(9, 2) = -1;
+    A(9, 1) = -1;
+    A(9, 2) = 1;
     r.push_back(O - 1);
-    for (auto &b : r) {
-        if (auto c = b.getCompileTimeConstant()) {
-            if (c.getValue() == 0) {
+    for (auto &b : r) 
+        if (auto c = b.getCompileTimeConstant()) 
+            if (c.getValue() == 0) 
                 assert(b.terms.size() == 0);
-            }
-        }
-    }
     PartiallyOrderedSet poset;
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp(
-        llvm::makeIntrusiveRefCnt<AffineLoopNest>(A, r, poset));
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp{
+        AffineLoopNest::construct(A, r, poset)};
     EXPECT_FALSE(alnp->isEmpty());
 
     // for i in 0:M+N+O-3, l in max(0,i+1-N):min(M+O-2,i), j in
@@ -274,17 +283,25 @@ TEST(BadMul, BasicAssertions) {
 
     std::cout << "A=" << newAlnp->A << std::endl;
     // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    EXPECT_EQ(newAlnp->lowerb[0].size(), 1);
-    EXPECT_EQ(newAlnp->lowerb[1].size(), 1);
-    EXPECT_EQ(newAlnp->lowerb[2].size(), 1);
-    EXPECT_EQ(newAlnp->upperb[0].size(), 1);
-    EXPECT_EQ(newAlnp->upperb[1].size(), 1);
-    EXPECT_EQ(newAlnp->upperb[2].size(), 1);
     std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
+    auto loop2Count =
+        newAlnp->countSigns(newAlnp->A, 2 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop2Count.first, 1);
+    EXPECT_EQ(loop2Count.second, 1);
+    newAlnp->removeLoop(2);
+    auto loop1Count =
+        newAlnp->countSigns(newAlnp->A, 1 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop1Count.first, 1);
+    EXPECT_EQ(loop1Count.second, 1);
+    newAlnp->removeLoop(1);
+    auto loop0Count =
+        newAlnp->countSigns(newAlnp->A, 0 + newAlnp->C.getNumConstTerms());
+    EXPECT_EQ(loop0Count.first, 1);
+    EXPECT_EQ(loop0Count.second, 1);
+
     std::cout << "New ArrayReferences:\n";
-    for (auto &ar : newArrayRefs) {
+    for (auto &ar : newArrayRefs) 
         std::cout << ar << std::endl << std::endl;
-    }
 }
 
 TEST(OrthogonalizeMatricesTest, BasicAssertions) {
@@ -297,19 +314,19 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     IntMatrix A(M, N);
     IntMatrix B(N, N);
     const size_t iters = 1000;
-    for (size_t i = 0; i < iters; ++i){
-	for (auto &&a : A)
-	    a = distrib(gen);
-	// std::cout << "Random A =\n" << A << std::endl;
-	A = orthogonalize(std::move(A));
-	// std::cout << "Orthogonal A =\n" << A << std::endl;
-	// note, A'A is not diagonal
-	// but AA' is
-	matmulnt(B, A, A);
-	// std::cout << "A'A =\n" << B << std::endl;
-	for (size_t m = 0; m < M; ++m)
-	    for (size_t n = 0; n < N; ++n)
-		if (m != n)
-		    EXPECT_EQ(B(m,n), 0);
+    for (size_t i = 0; i < iters; ++i) {
+        for (auto &&a : A)
+            a = distrib(gen);
+        // std::cout << "Random A =\n" << A << std::endl;
+        A = orthogonalize(std::move(A));
+        // std::cout << "Orthogonal A =\n" << A << std::endl;
+        // note, A'A is not diagonal
+        // but AA' is
+        B = A * A.transpose();
+        // std::cout << "A'A =\n" << B << std::endl;
+        for (size_t m = 0; m < M; ++m)
+            for (size_t n = 0; n < N; ++n)
+                if (m != n)
+                    EXPECT_EQ(B(m, n), 0);
     }
 }

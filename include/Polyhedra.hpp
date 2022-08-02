@@ -360,7 +360,24 @@ struct Polyhedra {
     //         }
     //     }
     // }
-    void pruneBounds() { pruneBounds(A); }
+    void pruneBounds() {
+        if constexpr (std::same_as<I64Matrix, EmptyMatrix<int64_t>>) {
+            pruneBounds(A);
+        } else {
+            pruneBounds(A, E);
+        }
+        for (size_t i = 0; i < A.numRow(); ++i) {
+            int64_t g = gcd(A(i, _));
+            if (g > 1)
+                A(i, _) /= g;
+        }
+        if constexpr (!std::same_as<I64Matrix, EmptyMatrix<int64_t>>)
+	    for (size_t i = 0; i < E.numRow(); ++i) {
+		int64_t g = gcd(E(i, _));
+		if (g > 1)
+		    E(i, _) /= g;
+	    }
+    }
     void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
                      IntMatrix &Aold) const {
 
@@ -370,7 +387,7 @@ struct Polyhedra {
             // std::cout << "trying to prune c = "<<c<<std::endl;
             if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, --c)) {
                 // drop `c`
-                std::cout << "ERASING c = " << c << std::endl;
+                // std::cout << "ERASING c = " << c << std::endl;
                 eraseConstraint(Aold, c);
             }
         }
@@ -470,7 +487,7 @@ struct Polyhedra {
             if (dte == -1) {
                 for (size_t j = 0; j < delta.size(); ++j)
                     delta[j] = Aold(c, j) - a[j];
-                std::cout << "delta = " << delta << std::endl;
+                // std::cout << "delta = " << delta << std::endl;
                 if (C.lessEqual(delta)) {
                     // bold[c] - b <= 0
                     // bold[c] <= b
@@ -614,15 +631,15 @@ struct Polyhedra {
         llvm::SmallVector<unsigned, 32> colsToErase;
         int64_t dependencyToEliminate =
             checkForTrivialRedundancies(colsToErase, boundDiffs, E, Aold, a);
-        std::cout << "Aold =\n" << Aold << std::endl;
-        std::cout << "CC = " << CC << "; a = " << a << std::endl;
-        printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
-        std::cout << "Initial eliminating: " << dependencyToEliminate
-                  << std::endl;
+        // std::cout << "Aold =\n" << Aold << std::endl;
+        // std::cout << "CC = " << CC << "; a = " << a << std::endl;
+        // printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
+        // std::cout << "Initial eliminating: " << dependencyToEliminate
+        //           << std::endl;
         if (dependencyToEliminate == -2)
             return true;
-        std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
-        std::cout << "E =\n" << E << std::endl;
+        // std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
+        // std::cout << "E =\n" << E << std::endl;
         // define variables as
         // (a-Aold) + delta = b - bold
         // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
@@ -632,23 +649,25 @@ struct Polyhedra {
         // and thus (bold - Aold) is the redundant constraint, and we eliminate
         // the associated column.
         while (dependencyToEliminate >= 0) {
-            std::cout << "eliminating: " << dependencyToEliminate << std::endl;
-            // eliminate dependencyToEliminate
+            // std::cout << "eliminating: " << dependencyToEliminate <<
+            // std::endl; eliminate dependencyToEliminate
             eliminateVarForRCElim(Atmp1, E, Atmp0,
                                   size_t(dependencyToEliminate));
             std::swap(Atmp0, Atmp1);
             dependencyToEliminate = -1;
             // iterate over the new bounds, search for constraints we can drop
-            std::cout << "Atmp0 = \n" << Atmp0 << "\nE =\n" << E << std::endl;
+            // std::cout << "Atmp0 = \n" << Atmp0 << "\nE =\n" << E <<
+            // std::endl;
             for (size_t c = 0; c < Atmp0.numRow(); ++c) {
                 llvm::ArrayRef<int64_t> Ac = Atmp0.getRow(c);
                 int64_t varInd = firstVarInd(Ac);
                 if (varInd == -1) {
                     int64_t auxInd = auxiliaryInd(Ac);
-                    printVector(std::cout << "sym = ", getSymbol(Atmp0, c))
-                        << std::endl;
-                    std::cout << "C.lessEqual(getSymbol(Atmp0, c)) = "
-                              << C.lessEqual(getSymbol(Atmp0, c)) << std::endl;
+                    // printVector(std::cout << "sym = ", getSymbol(Atmp0, c))
+                    //     << std::endl;
+                    // std::cout << "C.lessEqual(getSymbol(Atmp0, c)) = "
+                    //           << C.lessEqual(getSymbol(Atmp0, c)) <<
+                    //           std::endl;
                     if ((auxInd != -1) && (C.lessEqual(getSymbol(Atmp0, c)))) {
                         int64_t Axc = Atmp0(c, auxInd);
                         // -Axc*delta <= b <= 0
@@ -686,12 +705,12 @@ struct Polyhedra {
                                     llvm::ArrayRef<int64_t> a, const size_t CC,
                                     const bool AbIsEq) const {
 
-        printConstraints(
-            printConstraints(std::cout << "Constraints, eliminating C=" << CC
-                                       << ":\n",
-                             Aold, C.getNumConstTerms(), true),
-            Eold, C.getNumConstTerms(), false)
-            << std::endl;
+        // printConstraints(
+        //     printConstraints(std::cout << "Constraints, eliminating C=" << CC
+        //                                << ":\n",
+        //                      Aold, C.getNumConstTerms(), true),
+        //     Eold, C.getNumConstTerms(), false)
+        //     << std::endl;
         const size_t numVar = getNumVar();
         // simple mapping of `k` to particular bounds
         // we'll have C - other bound
@@ -785,16 +804,16 @@ struct Polyhedra {
                 std::swap(Etmp0, Etmp1);
             }
             // std::cout << "Atmp0 (2) =\n" << Atmp0 << std::endl;
-            for (auto &a : Atmp0.mem) {
+            for (auto &a : Atmp0.mem)
                 assert(std::abs(a) < 100);
-            }
-            printConstraints(
-                printConstraints(std::cout << "dependencyToEliminate = "
-                                           << dependencyToEliminate
-                                           << "; Temporary Constraints:\n",
-                                 Atmp0, C.getNumConstTerms(), true, numAuxVar),
-                Etmp0, C.getNumConstTerms(), false, numAuxVar)
-                << std::endl;
+            // printConstraints(
+            //     printConstraints(std::cout << "dependencyToEliminate = "
+            //                                << dependencyToEliminate
+            //                                << "; Temporary Constraints:\n",
+            //                      Atmp0, C.getNumConstTerms(), true,
+            //                      numAuxVar),
+            //     Etmp0, C.getNumConstTerms(), false, numAuxVar)
+            //     << std::endl;
             // std::cout << "dependencyToEliminate = " << dependencyToEliminate
             // << std::endl;
             // {

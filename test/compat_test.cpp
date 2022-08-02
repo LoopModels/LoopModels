@@ -1,6 +1,7 @@
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "MatrixStringParse.hpp"
+#include "Symbolics.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -11,7 +12,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     IntMatrix A(4, 1);
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     // auto N = Polynomial::Monomial(Polynomial::ID{2});
-    
+
     PartiallyOrderedSet poset;
     // ids 1 and 2 are >= 0;
     poset.push(0, 1, Interval::nonNegative());
@@ -31,24 +32,24 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     r.emplace_back(1);
     A(3, 0) = 1;
 
-    
     auto affp{AffineLoopNest::construct(A, r, poset)};
     affp->pruneBounds();
     affp->dump();
     EXPECT_EQ(affp->A.numRow(), 2);
     // assert(affp.A.numRow() == 2);
 }
-TEST(LessTrivialPruneBounds, BasicAssertions) {
+TEST(TrivialPruneBounds2, BasicAssertions) {
     auto A{stringToIntMatrix("[0 1 0; 0 0 0; 0 -1 0; 0 0 0]")};
-    // auto A{stringToIntMatrix("[1 0 0 0 1 -1; 1 -1 0 0 0 0; 1 0 -1 0 0 -1; 0 0 0 0 0 1; 1 0 -1 0 -1 0]")};
+    // auto A{stringToIntMatrix("[1 0 0 0 1 -1; 1 -1 0 0 0 0; 1 0 -1 0 0 -1; 0 0
+    // 0 0 0 1; 1 0 -1 0 -1 0]")};
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     llvm::SmallVector<MPoly, 8> b;
     b.emplace_back(-1);
-    b.emplace_back(M-1);
-    b.emplace_back(N-1);
+    b.emplace_back(M - 1);
+    b.emplace_back(N - 1);
     // b.emplace_back(0);
-    b.emplace_back(N-1);
+    b.emplace_back(N - 1);
     PartiallyOrderedSet poset;
     // ids 1 and 2 are >= 0;
     poset.push(0, 1, Interval::nonNegative());
@@ -57,9 +58,45 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
     affp->pruneBounds();
     affp->dump();
     EXPECT_EQ(affp->A.numRow(), 4);
-    
 }
+TEST(LessTrivialPruneBounds, BasicAssertions) {
+    auto M =
+        Polynomial::Term{int64_t(1), Polynomial::Monomial(Polynomial::ID{1})};
+    auto N = Polynomial::Monomial(Polynomial::ID{2});
+    auto O = Polynomial::Monomial(Polynomial::ID{3});
+    PartiallyOrderedSet poset;
 
+    // Ax * b >= 0
+    IntMatrix A{stringToIntMatrix("[-1 -1 -1; 1 1 1; -1 0 -1; 1 0 1; 0 1 0; 0 "
+                                  "-1 0; -1 0 0; 1 0 0; 0 0 1; 0 0 -1]")};
+    llvm::SmallVector<MPoly> b;
+    b.emplace_back(M + N + O - 3);
+    b.emplace_back(0);
+    b.emplace_back(M + O - 2);
+    b.emplace_back(0);
+    b.emplace_back(0);
+    b.emplace_back(N - 1);
+    b.emplace_back(M - 1);
+    b.emplace_back(0);
+    b.emplace_back(0);
+    b.emplace_back(O - 1);
+    llvm::IntrusiveRefCntPtr<AffineLoopNest> affp{
+        AffineLoopNest::construct(A, b, poset)};
+    affp->pruneBounds();
+    affp->dump();
+    EXPECT_EQ(affp->A.numRow(), 6);
+    auto loop2Count = affp->countSigns(affp->A, 2 + affp->C.getNumConstTerms());
+    EXPECT_EQ(loop2Count.first, 1);
+    EXPECT_EQ(loop2Count.second, 1);
+    affp->removeLoop(2);
+    auto loop1Count = affp->countSigns(affp->A, 1 + affp->C.getNumConstTerms());
+    EXPECT_EQ(loop1Count.first, 1);
+    EXPECT_EQ(loop1Count.second, 1);
+    affp->removeLoop(1);
+    auto loop0Count = affp->countSigns(affp->A, 0 + affp->C.getNumConstTerms());
+    EXPECT_EQ(loop0Count.first, 1);
+    EXPECT_EQ(loop0Count.second, 1);
+}
 
 TEST(AffineTest0, BasicAssertions) {
     std::cout << "Starting affine test 0" << std::endl;
@@ -267,4 +304,3 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
 
     EXPECT_FALSE(affp10->isEmpty());
 }
-
