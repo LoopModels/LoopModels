@@ -84,7 +84,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A*K')*J <= r
         llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
-	    AffineLoopNest::construct(alnp.A*K.transpose(), alnp.b, alnp.poset);
+	    AffineLoopNest::construct(alnp.A*K.transpose(), alnp.C);
             // llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
             //                                           alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
@@ -96,7 +96,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // S'*L = I
         // now, we have
         // (S'*K')*J = (K*S)'*J  = I
-        IntMatrix KS(matmul(K, S));
+        IntMatrix KS{K * S};
         // auto KS = matmul(K, S);
         // llvm::SmallVector<ArrayReference*> aiNew;
         llvm::SmallVector<ArrayReference, 0> newArrayRefs;

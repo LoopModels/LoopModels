@@ -61,6 +61,15 @@ struct AffineLoopNest : SymbolicPolyhedra,
               PartiallyOrderedSet poset) {
         return construct(A, view(b), poset);
     }
+    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    construct(const IntMatrix &A, const SymbolicComparator &C) {
+        llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
+            llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
+        ret->A = A;
+        ret->C = C;
+        return ret;
+    }
+
     inline size_t getNumLoops() const { return getNumVar(); }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
@@ -80,8 +89,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
             for (size_t n = numConst; n < N; ++n)
                 B(m, n) = 0;
         }
-        matmul(B(_(begin, M), _(numConst, N)), A(_(begin, M), _(numConst, N)),
-               R);
+        B(_(begin, M), _(numConst, N)) = A(_(begin, M), _(numConst, N)) * R;
         std::cout << "A = \n" << A << std::endl;
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
