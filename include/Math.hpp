@@ -945,11 +945,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(std::make_pair(0, M), canonicalizeRange(cols, N));
+        return (*this)(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, M), std::make_pair(0, N));
+        return (*this)(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -986,11 +986,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return view(std::make_pair(0, M), canonicalizeRange(cols, N));
+        return view(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M), std::make_pair(0, N));
+        return view(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Colon) const {
@@ -1321,13 +1321,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(std::make_pair(0, numRow()),
+        return (*this)(Range<size_t,size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       std::make_pair(0, numCol()));
+                       Range<size_t,size_t>{0, numCol()});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -1361,13 +1361,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return (*this)(std::make_pair(0, numRow()),
+        return (*this)(Range<size_t,size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       std::make_pair(0, numCol()));
+                       Range<size_t,size_t>{0, numCol()});
     }
     inline PtrMatrix<const T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>

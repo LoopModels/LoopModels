@@ -10,7 +10,7 @@
 IntMatrix orthogonalize(IntMatrix A) {
     if ((A.numCol() < 2) || (A.numRow() == 0))
         return A;
-    normalizeByGCD(A(0,_));
+    normalizeByGCD(A(0, _));
     if (A.numRow() == 1)
         return A;
     llvm::SmallVector<Rational, 8> buff;
@@ -58,7 +58,8 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // A*L = A*(B\^-1 * I) <= r
     // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
     const AffineLoopNest &alnp = *(ai[0]->loop);
-    size_t numLoops = alnp.getNumLoops();
+    const size_t numLoops = alnp.getNumLoops();
+    const size_t numSymbols = alnp.C.getNumConstTerms();
     size_t numRow = 0;
     for (auto a : ai) {
         numRow += a->arrayDim();
@@ -83,10 +84,13 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
         // A*L <= b
         // now, we have (A = alnp.aln->A, r = alnp.aln->r)
         // (A*K')*J <= r
+        IntMatrix AK{alnp.A};
+        AK(_, _(1 + numSymbols, end)) =
+            alnp.A(_, _(1 + numSymbols, end)) * K.transpose();
         llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
-	    AffineLoopNest::construct(alnp.A*K.transpose(), alnp.C);
-            // llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
-            //                                           alnp.b, alnp.poset);
+            AffineLoopNest::construct(std::move(AK), alnp.C);
+        // llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
+        //                                           alnp.b, alnp.poset);
         // auto alnNew = std::make_shared<AffineLoopNest>();
         // matmultn(alnNew->A, K, alnp.A);
         // alnNew->b = alnp.aln->b;
