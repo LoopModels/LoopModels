@@ -36,7 +36,7 @@ static int64_t gcd(int64_t x, int64_t y) {
     assert(y != std::numeric_limits<int64_t>::min());
     int64_t a = std::abs(x);
     int64_t b = std::abs(y);
-    if ((a == 1) | (b == 1)) 
+    if ((a == 1) | (b == 1))
         return 1;
     int64_t az = std::countr_zero(uint64_t(x));
     int64_t bz = std::countr_zero(uint64_t(y));
@@ -124,7 +124,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) 
+    if (isOne(x))
         return T(One());
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
@@ -135,7 +135,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
         b = z;
         z *= b;
     }
-    if (i == 0) 
+    if (i == 0)
         return z;
     T y(z);
     while (i) {
@@ -185,7 +185,7 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) 
+    if (i == 0)
         return;
     a = z;
     while (i) {
@@ -218,7 +218,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     default:
         break;
     }
-    if (isOne(x)) 
+    if (isOne(x))
         return T(One());
     int64_t t = std::countr_zero(i) + 1;
     i >>= t;
@@ -229,7 +229,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
         b.mul(z, z);
         std::swap(b, z);
     }
-    if (i == 0) 
+    if (i == 0)
         return z;
     T y(z);
     while (i) {
@@ -545,6 +545,38 @@ template <typename T, typename V> struct BaseVector {
             self(i) = x(i);
         return self;
     }
+    V &operator+=(AbstractVector auto &x) {
+        const size_t N = size();
+        V &self = *static_cast<V *>(this);
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            self(i) += x(i);
+        return self;
+    }
+    V &operator-=(AbstractVector auto &x) {
+        const size_t N = size();
+        V &self = *static_cast<V *>(this);
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            self(i) -= x(i);
+        return self;
+    }
+    V &operator*=(AbstractVector auto &x) {
+        const size_t N = size();
+        V &self = *static_cast<V *>(this);
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            self(i) *= x(i);
+        return self;
+    }
+    V &operator/=(AbstractVector auto &x) {
+        const size_t N = size();
+        V &self = *static_cast<V *>(this);
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            self(i) /= x(i);
+        return self;
+    }
     bool operator==(AbstractVector auto &x) {
         const size_t N = size();
         if (N != x.size())
@@ -733,10 +765,10 @@ template <typename T> struct PtrVector<T, 0> {
     // }
 };
 
-int64_t gcd(PtrVector<const int64_t> x){
+int64_t gcd(PtrVector<const int64_t> x) {
     int64_t g = std::abs(x[0]);
     for (size_t i = 1; i < x.size(); ++i)
-	g = gcd(g, x[i]);
+        g = gcd(g, x[i]);
     return g;
 }
 
@@ -805,6 +837,36 @@ template <typename T> struct Vector<T, 0> {
     operator PtrVector<const T>() const {
         return PtrVector<const T>{.ptr = data.data(), .M = data.size()};
     }
+    Vector<T> &operator+=(AbstractVector auto &x) {
+        const size_t N = size();
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            data[i] += x(i);
+        return *this;
+    }
+    Vector<T> &operator-=(AbstractVector auto &x) {
+        const size_t N = size();
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            data[i] -= x(i);
+        return *this;
+    }
+    Vector<T> &operator*=(AbstractVector auto &x) {
+        const size_t N = size();
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            data[i] *= x(i);
+        return *this;
+    }
+    Vector<T> &operator/=(AbstractVector auto &x) {
+        const size_t N = size();
+        assert(x.size() == N);
+        for (size_t i = 0; i < N; ++i)
+            data[i] /= x(i);
+        return *this;
+    }
+    template<typename ...Ts>
+    Vector(Ts... inputs) : data{inputs...} {};
 };
 
 template <typename T, size_t M>
@@ -944,11 +1006,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
+        return (*this)(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
+        return (*this)(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -985,11 +1047,11 @@ template <typename T> struct PtrMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return view(Range<size_t,size_t>{0, M}, canonicalizeRange(cols, N));
+        return view(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M), Range<size_t,size_t>{0, N});
+        return view(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Colon) const {
@@ -1082,6 +1144,15 @@ template <typename T> struct PtrMatrix {
                     return false;
         return true;
     }
+    bool isSquare() const { return M == N; }
+    Vector<T> diag() const {
+        size_t N = std::min(numRow(), numCol());
+        Vector<T> d;
+        d.resizeForOverwrite(N);
+        for (size_t n = 0; n < N; ++n)
+            d(n) = (*this)(n, n);
+        return d;
+    }
 };
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
@@ -1127,6 +1198,12 @@ static_assert(
 static_assert(
     AbstractMatrix<MatMatMul<PtrMatrix<const long>, PtrMatrix<const long>>>,
     "MatMul is not an AbstractMatrix!");
+
+template <typename T>
+concept IntVector = requires(T t, int64_t y) {
+    { t.size() } -> std::convertible_to<size_t>;
+    { t[y] } -> std::convertible_to<int64_t>;
+};
 
 template <typename T, typename A> struct BaseMatrix {
     using eltype = T;
@@ -1320,13 +1397,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(Range<size_t,size_t>{0, numRow()},
+        return (*this)(Range<size_t, size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       Range<size_t,size_t>{0, numCol()});
+                       Range<size_t, size_t>{0, numCol()});
     }
     inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
@@ -1360,13 +1437,13 @@ template <typename T, typename A> struct BaseMatrix {
     }
     template <typename C0, typename C1>
     inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return (*this)(Range<size_t,size_t>{0, numRow()},
+        return (*this)(Range<size_t, size_t>{0, numRow()},
                        canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
         return (*this)(canonicalizeRange(rows, numRow()),
-                       Range<size_t,size_t>{0, numCol()});
+                       Range<size_t, size_t>{0, numCol()});
     }
     inline PtrMatrix<const T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>
@@ -1402,6 +1479,16 @@ template <typename T, typename A> struct BaseMatrix {
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>{
             .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
+    }
+    bool isSquare() const { return numRow() == numCol(); }
+
+    Vector<T> diag() const {
+        size_t N = std::min(numRow(), numCol());
+        Vector<T> d;
+        d.resizeForOverwrite(N);
+        for (size_t n = 0; n < N; ++n)
+            d(n) = (*this)(n, n);
+        return d;
     }
 };
 
@@ -1508,6 +1595,7 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     operator SquarePtrMatrix<const T>() const {
         return SquarePtrMatrix<const T>(mem, M);
     }
+    constexpr bool isSquare() const { return true; }
 };
 
 template <typename T, unsigned STORAGE = 4>
@@ -1576,6 +1664,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     Transpose<PtrMatrix<const T>> transpose() const {
         return Transpose<PtrMatrix<const T>>{view()};
     }
+    constexpr bool isSquare() const { return true; }
 };
 
 static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
@@ -1651,10 +1740,13 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
         if (NN > X) {
-            for (size_t m = 1; m < std::min(M, MM); ++m) {
-                for (size_t n = 0; n < N; ++n) {
+            for (size_t m = std::min(M, MM) - 1; m > 0; --m) {
+                for (size_t n = N; n > 0;) {
+                    --n;
                     mem[m * NN + n] = mem[m * X + n];
                 }
+            }
+            for (size_t m = 1; m < std::min(M, MM); ++m) {
                 for (size_t n = N; n < NN; ++n) {
                     mem[m * NN + n] = 0;
                 }
@@ -1839,7 +1931,7 @@ std::ostream &operator<<(std::ostream &os, PtrVector<const T> const &A) {
     return printVector(os, A);
 }
 template <typename T>
-std::ostream &operator<<(std::ostream &os, Vector<T> const &A) {
+std::ostream &operator<<(std::ostream &os, const Vector<T> &A) {
     return printVector(os, A.view());
 }
 // template <typename T>
@@ -2404,7 +2496,8 @@ std::ostream &operator<<(std::ostream &os, const BaseMatrix<T, A> &B) {
     // {
     return printMatrix(os, PtrMatrix<T>(B));
 }
-template <AbstractMatrix T> std::ostream &operator<<(std::ostream &os, const T &A) {
+template <AbstractMatrix T>
+std::ostream &operator<<(std::ostream &os, const T &A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
     // {
     Matrix<std::remove_const_t<typename T::eltype>> B{A};

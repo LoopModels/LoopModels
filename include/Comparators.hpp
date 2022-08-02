@@ -3,7 +3,10 @@
 #include "./POSet.hpp"
 #include "Constraints.hpp"
 #include "Math.hpp"
+#include "NormalForm.hpp"
+#include "Simplex.hpp"
 #include "Symbolics.hpp"
+#include "llvm/ADT/Optional.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -319,6 +322,121 @@ concept Comparator = requires(T t, PtrVector<const int64_t> x, int64_t y) {
 };
 
 static_assert(Comparator<SymbolicComparator>);
+
+struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
+    IntMatrix U;
+    IntMatrix V;
+    llvm::Optional<Vector<int64_t>> d;
+    size_t numRowDiff; // This variable stores the different row size of H
+                       // matrix and truncated H matrix
+    static LinearSymbolicComparator construct(IntMatrix Ap) {
+        const auto [numCon, numVar] = Ap.size();
+        IntMatrix A(numVar + numCon, 2 * numCon);
+        // A = [Ap' 0
+        //      S   I]
+        for (size_t i = 0; i < numCon; ++i)
+            for (size_t j = 0; j < numVar; ++j)
+                A(j, i) = Ap(i, j);
+
+        for (size_t j = 0; j < numCon; ++j) {
+            A(j + numVar, j) = -1;
+            A(j + numVar, j + numCon) = 1;
+        }
+        // We will have query of the form Ax = q;
+        auto [H, U] = NormalForm::hermite(std::move(A));
+        size_t R = H.numRow();
+        size_t numRowPre = R;
+        while ((R > 0) && allZero(H.getRow(R - 1)))
+            --R;
+        H.truncateRows(R);
+        size_t numRowDiff = numRowPre - R;
+        if (H.isSquare())
+            return LinearSymbolicComparator{
+                .U = std::move(U), .V = std::move(H), .d = {}};
+        IntMatrix Ht = H.transpose();
+        auto Vt = IntMatrix::identity(Ht.numRow());
+        NormalForm::solveSystem(Ht, Vt);
+        auto d = Ht.diag();
+        std::cout << "D matrix:" << d << std::endl;
+        auto V = Vt.transpose();
+        return LinearSymbolicComparator{.U = std::move(U),
+                                        .V = std::move(V),
+                                        .d = std::move(d),
+                                        .numRowDiff = numRowDiff};
+    };
+
+    bool greaterEqualZero(PtrVector<const int64_t> query) const {
+        auto nVars = query.size();
+        auto nEqs = V.numCol() / 2;
+        // Full column rank case
+        if (!d.hasValue()) {
+            auto b = U(_, _(begin, query.size())) * query;
+            for (size_t i = V.numRow(); i < b.size(); ++i) {
+                if (b(i) != 0)
+                    return false;
+            }
+            auto H = V;
+            auto oldn = H.numCol();
+            H.resizeCols(oldn + 1);
+            for (size_t i = 0; i < H.numRow(); ++i)
+                H(i, oldn) = b(i);
+            NormalForm::solveSystem(H);
+            for (size_t i = nEqs; i < H.numRow(); ++i) {
+                if (auto rhs = H(i, oldn))
+                    if ((rhs > 0) != (H(i, i) > 0)) {
+                        std::cout << "Wow: " << i << std::endl;
+                        return false;
+                    }
+            }
+            return true;
+        }
+        // Column rank deficient case
+        else {
+            auto tmpU =
+                U(_(begin, U.numRow() - numRowDiff), _(begin, U.numCol()));
+            Vector<int64_t> b =
+                U(_(begin, tmpU.numRow()), _(begin, query.size())) * query;
+            Vector<int64_t> dinv = d.getValue();
+            auto Dlcm = dinv[0];
+            // We represent D martix as a vector, and multiply the lcm to the
+            // linear equation to avoid store D^(-1) as rational type
+            for (size_t i = 1; i < dinv.size(); ++i)
+                Dlcm = lcm(Dlcm, dinv(i));
+            for (size_t i = 0; i < dinv.size(); ++i)
+                dinv(i) = Dlcm / dinv(i);
+            b *= dinv;
+            // for (size_t i = 0; i < b.size(); ++i)
+            //     b(i) *= dinv(i);
+            IntMatrix JV1(nEqs, tmpU.numRow());
+            for (size_t i = 0; i < nEqs; ++i)
+                for (size_t j = 0; j < tmpU.numRow(); ++j)
+                    JV1(i, j) = V(i + nEqs, j);
+            auto c = JV1 * b;
+            auto NSdim = V.numRow() - tmpU.numRow();
+            // expand W stores [c -JV2 JV2]
+            //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
+            // where y2 = y2+ - y2-
+            IntMatrix expandW(nEqs, NSdim * 2 + 1);
+            for (size_t i = 0; i < nEqs; ++i) {
+                expandW(i, 0) = c(i);
+                // expandW(i, 0) *= Dlcm;
+                for (size_t j = 0; j < NSdim; ++j) {
+                    auto val = V(i + nEqs, tmpU.numRow() + j) * Dlcm;
+                    expandW(i, j + 1) = -val;
+                    expandW(i, j + NSdim + 1) = val;
+                }
+            }
+            // std::cout <<"expandW =" << expandW << std::endl;
+            IntMatrix Wcouple{0, expandW.numCol()};
+            llvm::Optional<Simplex> optS{
+                Simplex::positiveVariables(expandW, Wcouple)};
+            return optS.hasValue();
+        }
+
+        return true;
+        // return optS.hasValue();
+    }
+};
 
 static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,
                                      const Comparator auto &) {}

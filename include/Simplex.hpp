@@ -304,8 +304,8 @@ struct Simplex {
         }
         return runCore(f);
     }
-    // A(1:end,:)*x <= A(:,0)
-    // B(1:end,:)*x == B(:,0)
+    // A(:,1:end)*x <= A(:,0)
+    // B(:,1:end)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex>
     positiveVariables(PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B) {

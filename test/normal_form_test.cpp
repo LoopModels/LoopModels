@@ -307,6 +307,7 @@ TEST(NullSpaceTests, BasicAssertions) {
         }
         std::cout << "Average tested null dim = "
                   << double(nullDim) / double(numIters) << std::endl;
+
     }
 }
 
