@@ -68,6 +68,25 @@ struct Polyhedra {
     // static Polyhedra empty(size_t numIneq, size_t numVar) {
     // A(numIneq, numVar + 1)
     // 	};
+    void _pruneBounds() {
+        Vector<int64_t> diff{A.numRow()};
+        if constexpr (hasEqualities) {
+            NormalForm::simplifySystem(E, C.getNumConstTerms());
+            for (size_t i = 0; i < E.numRow(); ++i) {
+                for (size_t j = A.numRow(); j;) {
+                    diff = A(--j, _) - E(i, _);
+                    if (C.greaterEqual(diff)) {
+			eraseConstraint(A, j);
+                    } else {
+                        diff = A(j, _) + E(i, _);
+			if(C.greaterEqual(diff))
+			    eraseConstraint(A, j);
+                    }
+		    
+                }
+            }
+        }
+    }
 
     size_t getNumVar() const { return A.numCol() - C.getNumConstTerms(); }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
@@ -372,11 +391,11 @@ struct Polyhedra {
                 A(i, _) /= g;
         }
         if constexpr (!std::same_as<I64Matrix, EmptyMatrix<int64_t>>)
-	    for (size_t i = 0; i < E.numRow(); ++i) {
-		int64_t g = gcd(E(i, _));
-		if (g > 1)
-		    E(i, _) /= g;
-	    }
+            for (size_t i = 0; i < E.numRow(); ++i) {
+                int64_t g = gcd(E(i, _));
+                if (g > 1)
+                    E(i, _) /= g;
+            }
     }
     void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
                      IntMatrix &Aold) const {
