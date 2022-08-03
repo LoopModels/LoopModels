@@ -184,7 +184,7 @@ struct Simplex {
                 }
             }
         }
-        std::cout << "tableau = \n" << tableau << std::endl;
+        std::cout << "pre-tableau = \n" << tableau << std::endl;
         llvm::SmallVector<unsigned> augmentVars{};
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
@@ -195,8 +195,9 @@ struct Simplex {
             auto basicVars{getBasicVariables()};
             PtrVector<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
-            for (auto &&c : costs)
-                c = 0;
+            // for (auto &&c : costs)
+	    for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
+		c = 0;
             printVector(std::cout, augmentVars) << std::endl;
             std::cout << "tableau = \n" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
@@ -213,7 +214,7 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            std::cout << "tableau = \n" << tableau << std::endl;
+            std::cout << "about to run; tableau = \n" << tableau << std::endl;
             if (int64_t r = runCore())
                 return r;
             std::cout << "initialized tableau = \n" << tableau << std::endl;

@@ -865,8 +865,7 @@ template <typename T> struct Vector<T, 0> {
             data[i] /= x(i);
         return *this;
     }
-    template<typename ...Ts>
-    Vector(Ts... inputs) : data{inputs...} {};
+    template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
 };
 
 template <typename T, size_t M>
@@ -1739,26 +1738,29 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     }
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
-        if (NN > X) {
-            for (size_t m = std::min(M, MM) - 1; m > 0; --m) {
-                for (size_t n = N; n > 0;) {
-                    --n;
-                    mem[m * NN + n] = mem[m * X + n];
-                }
-            }
-            for (size_t m = 1; m < std::min(M, MM); ++m) {
-                for (size_t n = N; n < NN; ++n) {
-                    mem[m * NN + n] = 0;
-                }
-            }
-            X = NN;
-        }
+	size_t minMMM = std::min(M, MM);
+	if ((XX > X) && (M*N)) {
+	    // need to copy
+	    for (size_t m = minMMM - 1; m > 0; --m) {
+		for (size_t n = N; n > 0;) {
+		    --n;
+		    mem[m * XX + n] = mem[m * X + n];
+		}
+	    }
+	}
+	// zero
+	for (size_t m = 0; m < minMMM; ++m)
+	    for (size_t n = N; n < NN; ++n)
+		mem[m * XX + n] = 0;
+	for (size_t m = minMMM; m < MM; ++m)
+	    for (size_t n = 0; n < NN; ++n)
+		mem[m * XX + n] = 0;
+	X = XX;
         M = MM;
         N = NN;
     }
     void resize(size_t MM, size_t NN) {
-        size_t XX = NN > X ? NN : X;
-        resize(MM, NN, XX);
+        resize(MM, NN, std::max(NN,X));
     }
     void reserve(size_t MM, size_t NN) { mem.reserve(MM * std::max(X, NN)); }
     void resizeForOverwrite(size_t MM, size_t NN, size_t XX) {
