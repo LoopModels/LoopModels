@@ -9,6 +9,7 @@
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include "Orthogonalize.hpp"
+#include "Simplex.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/DenseMap.h>
@@ -28,14 +29,21 @@
 // i_0 == i_1
 // j_0 == i_1
 struct DependencePolyhedra : SymbolicEqPolyhedra {
-    size_t numDep0Var;
+    // size_t numLoops;
+    size_t numDep0Var; // loops dep 0
+    // size_t numDep1Var; // loops dep 1
     llvm::SmallVector<int64_t, 2> nullStep;
+    llvm::SmallVector<Polynomial::Monomial> symbols;
     inline size_t getTimeDim() const { return nullStep.size(); }
     inline size_t getDim0() const { return numDep0Var; }
+    inline size_t getNumSymbols() const { return 1 + symbols.size(); }
     inline size_t getDim1() const {
-        return getNumVar() - numDep0Var - nullStep.size();
+        return getNumVar() - numDep0Var - nullStep.size() - getNumSymbols();
     }
-    inline size_t getNumEqualityConstraints() const { return E.numRow(); }
+    inline size_t getNumScheduleCoefficients() const {
+        return getNumVar() - nullStep.size() + 1 - getNumSymbols();
+    }
+
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
@@ -47,7 +55,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
             size_t numDims = ar0.arrayDim();
             dims.reserve(numDims);
-            for (size_t i = 0; i < numDims; ++i) 
+            for (size_t i = 0; i < numDims; ++i)
                 dims.emplace_back(i, i);
             return dims;
         }
@@ -127,8 +135,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
 
     // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
-    static size_t findFirstNonEqualEven(llvm::ArrayRef<int64_t> x,
-                                        llvm::ArrayRef<int64_t> y) {
+    static size_t findFirstNonEqualEven(PtrVector<const int64_t> x,
+                                        PtrVector<const int64_t> y) {
         const size_t M = std::min(x.size(), y.size());
         for (size_t i = 0; i < M; i += 2)
             if (x[i] != y[i])
@@ -147,8 +155,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             PtrMatrix<const int64_t> indMatX = x.ref.indexMatrix();
             PtrMatrix<const int64_t> indMatY = y.ref.indexMatrix();
             for (size_t i = 0; i < numLoopsCommon; ++i) {
-		A(i,_(begin,xDim)) = indMatX(i,_);
-		A(i,_(xDim,end)) = indMatY(i,_);
+                A(i, _(begin, xDim)) = indMatX(i, _);
+                A(i, _(xDim, end)) = indMatY(i, _);
             }
             // returns rank x num loops
             return orthogonalNullSpace(std::move(A));
@@ -176,8 +184,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Where x = [inds0..., inds1..., time..]
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
-	: Polyhedra<IntMatrix, SymbolicComparator>{} {
-	
+        : Polyhedra<IntMatrix, SymbolicComparator>{} {
+
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;
         const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -189,12 +197,21 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
-        numDep0Var = nv0;
+        numDep0Var = ar0.loop->getNumLoops();
+        size_t numDep1Var = ar1.loop->getNumLoops();
+
+        std::pair<llvm::SmallVector<unsigned int>,
+                  llvm::SmallVector<unsigned int>>
+            oldToNewMaps{merge(symbols, ar0.loop->symbols, ar1.loop->symbols)};
+        auto &oldToNewMap0 = oldToNewMaps.first;
+        auto &oldToNewMap1 = oldToNewMaps.second;
+        assert(oldToNewMap0.size() == ar0.loop->symbols.size());
+        assert(oldToNewMap1.size() == ar1.loop->symbols.size());
         // numDep1Var = nv1;
         const size_t nc = nc0 + nc1;
-        IntMatrix NS(nullSpace(ma0, ma1));
-        const size_t nullDim(NS.numRow());
-        const size_t indexDim(dims.size());
+        IntMatrix NS{nullSpace(ma0, ma1)};
+        const size_t nullDim{NS.numRow()};
+        const size_t indexDim{dims.size()};
         nullStep.resize_for_overwrite(nullDim);
         for (size_t i = 0; i < nullDim; ++i) {
             int64_t s = 0;
@@ -202,25 +219,31 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 s += NS(i, j) * NS(i, j);
             nullStep[i] = s;
         }
-        A.resize(nc, nv0 + nv1 + nullDim);
-        E.resize(indexDim + nullDim, nv0 + nv1 + nullDim);
-        q.resize(indexDim + nullDim);
+        //           column meansing in in order
+        A.resize(nc, 1 + symbols.size() + numDep0Var + numDep1Var + nullDim);
+        E.resize(indexDim + nullDim, A.numCol());
+        const size_t numSymbols = getNumSymbols();
         // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
-            for (size_t j = 0; j < nv0; ++j) {
-                A(i, j) = ar0.loop->A(i, j);
-            }
-            b.push_back(ar0.loop->b[i]);
+            A(i, 0) = ar0.loop->A(i, 0);
+            for (size_t j = 0; j < oldToNewMap0.size(); ++j)
+                A(i, 1 + oldToNewMap0[j]) = ar0.loop->A(i, 1 + j);
+            for (size_t j = 0; j < numDep0Var; ++j)
+                A(i, j + numSymbols) =
+                    ar0.loop->A(i, j + ar0.loop->getNumSymbols());
         }
-        // ar1 loop
         for (size_t i = 0; i < nc1; ++i) {
-            for (size_t j = 0; j < nv1; ++j) {
-                A(nc0 + i, nv0 + j) = ar1.loop->A(i, j);
-            }
-            b.push_back(ar1.loop->b[i]);
+            A(nc0 + i, 0) = ar1.loop->A(i, 0);
+            for (size_t j = 0; j < oldToNewMap1.size(); ++j)
+                A(nc0 + i, 1 + oldToNewMap1[j]) = ar1.loop->A(i, 1 + j);
+            for (size_t j = 0; j < numDep1Var; ++j)
+                A(i, j + numSymbols + numDep0Var) =
+                    ar0.loop->A(i, j + ar1.loop->getNumSymbols());
         }
         auto A0 = ar0.indexMatrix();
         auto A1 = ar1.indexMatrix();
+        auto O0 = ar0.offsetMatrix();
+        auto O1 = ar1.offsetMatrix();
         // printMatrix(std::cout << "A0 =\n", A0);
         // printMatrix(std::cout << "\nA1 =\n", A1) << std::endl;
         // std::cout << "indexDim = " << indexDim << std::endl;
@@ -231,42 +254,33 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             auto [d0, d1] = dims[i];
             // std::cout << "d0 = " << d0 << "; d1 = " << d1 << std::endl;
             if (d0 >= 0) {
-                for (size_t j = 0; j < nv0; ++j) {
-                    E(i, j) = A0(j, d0);
+                for (size_t i = 0; i < nc0; ++i) {
+                    E(i, 0) = O0(i, 0);
+                    for (size_t j = 0; j < O0.numCol() - 1; ++j)
+                        E(i, 1 + oldToNewMap0[j]) = O0(d0, 1 + j);
+                    for (size_t j = 0; j < numDep0Var; ++j)
+                        E(i, j + numSymbols) = A0(j, d0);
                 }
-                q[i] = -ar0.stridesOffsets[d0].second;
             }
             if (d1 >= 0) {
-                for (size_t j = 0; j < nv1; ++j) {
-                    E(i, j + nv0) = -A1(j, d1);
+                for (size_t i = 0; i < nc1; ++i) {
+                    E(i, 0) -= O1(i, 0);
+                    for (size_t j = 0; j < O1.numCol() - 1; ++j)
+                        E(i, 1 + oldToNewMap1[j]) -= O1(d1, 1 + j);
+                    for (size_t j = 0; j < numDep0Var; ++j)
+                        E(i, j + numSymbols + numDep0Var) = -A1(j, d1);
                 }
-                q[i] += ar1.stridesOffsets[d1].second;
+            }
+            for (size_t i = 0; i < nullDim; ++i) {
+                for (size_t j = 0; j < NS.numCol(); ++j) {
+                    int64_t nsij = NS(i, j);
+                    E(indexDim + i, j + numSymbols) = nsij;
+                    E(indexDim + i, j + numSymbols + numDep0Var) = -nsij;
+                }
+                E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
             }
         }
-        for (size_t i = 0; i < nullDim; ++i) {
-            for (size_t j = 0; j < NS.numCol(); ++j) {
-                int64_t nsij = NS(i, j);
-                E(indexDim + i, j) = nsij;
-                E(indexDim + i, j + nv0) = -nsij;
-            }
-            E(indexDim + i, nv0 + nv1 + i) = 1;
-        }
-#ifndef NDEBUG
-        std::cout << "Assembling constraint matrices:" << std::endl;
-        printConstraints(printConstraints(std::cout, A, b, true), E, q, false)
-            << std::endl;
-        std::cout << "Done printing assembled, pre-pruned, matrices."
-                  << std::endl;
-#endif
-        if (pruneBounds()) {
-            A.clear();
-            b.clear();
-            E.clear();
-            q.clear();
-        }
-    }
-    inline size_t getNumScheduleCoefficients() const {
-        return 1 + getNumVar() - getTimeDim();
+        pruneBounds();
     }
     // `direction = true` means second dep follow first
     // order of variables:
@@ -279,7 +293,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // d) bound above eq
     //
     // Time parameters are carried over into farkas polys
-    std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> farkasPair() const {
+    std::pair<Simplex, Simplex> farkasPair() const {
 
         llvm::DenseMap<Polynomial::Monomial, unsigned> constantTerms;
         for (auto &bi : b) {
@@ -450,7 +464,8 @@ struct Dependence {
     //   for (i = 0; i < I; ++i)
     //     for (j = 0; j < J; ++j)
     //       for (l = 0; l < L; ++l)
-    //         A(i, j) = f(A(i+1, j), A(i, j-1), A(j, j), A(j, i), A(i, j - k))
+    //         A(i, j) = f(A(i+1, j), A(i, j-1), A(j, j), A(j, i), A(i, j -
+    //         k))
     // label:     0             1        2          3        4        5
     // We have...
     ////// 0 <-> 1 //////
@@ -482,8 +497,8 @@ struct Dependence {
     //           l_0 >= l_1
     //
     // i_0 = j_1, we essentially lose the `i` dimension.
-    // Thus, to get fwd/bwd, we take the intersection of nullspaces to get the
-    // time dimension?
+    // Thus, to get fwd/bwd, we take the intersection of nullspaces to get
+    // the time dimension?
     // TODO: try and come up with counter examples where this will fail.
     //
     ////// 0 <-> 4 //////
@@ -501,7 +516,8 @@ struct Dependence {
     //   backward: k_0 >= k_1
     //             l_0 >= l_1
     //
-    // Note that the dependency on `l` is broken when we can condition on `i_0
+    // Note that the dependency on `l` is broken when we can condition on
+    // `i_0
     // != j_0`, meaning that we can fully reorder interior loops when we can
     // break dependencies.
     //
@@ -609,9 +625,9 @@ struct Dependence {
             //   we're at the inner most loop, where one of the instructions
             //   must have appeared before the other.
             // } else {
-            //   the loop nests differ in depth, in which case the deeper loop
-            //   must appear either above or below the instructions present
-            //   at that level
+            //   the loop nests differ in depth, in which case the deeper
+            //   loop must appear either above or below the instructions
+            //   present at that level
             // }
             assert(i != numLoopsCommon);
             for (size_t j = 0; j < numLoopsX; ++j) {
@@ -661,7 +677,8 @@ struct Dependence {
         }
     }
 
-    // emplaces dependencies with repeat accesses to the same memory across time
+    // emplaces dependencies with repeat accesses to the same memory across
+    // time
     static void timeCheck(llvm::SmallVectorImpl<Dependence> &deps,
                           DependencePolyhedra dxy, MemoryAccess &x,
                           MemoryAccess &y) {
@@ -698,7 +715,8 @@ struct Dependence {
         // deps.back().depPoly.removeExtraVariables(numVar);
         assert(timeDim);
         // now we need to check the time direction for all times
-        // anything approaching 16 time dimensions would be absolutely insane
+        // anything approaching 16 time dimensions would be absolutely
+        // insane
         llvm::SmallVector<bool, 16> timeDirection(timeDim);
         size_t t = 0;
         do {
@@ -809,9 +827,9 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return 0;
-            // note that we set boundAbove=true, so we reverse the dependence
-            // direction for the dependency we week, we'll discard the program
-            // variables x then y
+            // note that we set boundAbove=true, so we reverse the
+            // dependence direction for the dependency we week, we'll
+            // discard the program variables x then y
 #ifndef NDEBUG
         std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
                   << dxy << std::endl;
@@ -825,8 +843,8 @@ struct Dependence {
         }
         // auto [R, nullDim] = transformationMatrix(x, y);
         // if (nullDim) {
-        //    return timeCheck(deps, std::move(dxy), std::move(R), nullDim, x,
-        //    y);
+        //    return timeCheck(deps, std::move(dxy), std::move(R), nullDim,
+        //    x, y);
         // } else {
 
         //}

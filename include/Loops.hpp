@@ -23,6 +23,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
                         llvm::RefCountedBase<AffineLoopNest> {
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
+    llvm::SmallVector<Polynomial::Monomial> symbols;
+    size_t getNumSymbols() const { return 1+symbols.size(); }
+    size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
     construct(const IntMatrix &A, PtrVector<const MPoly> b,
@@ -69,8 +72,6 @@ struct AffineLoopNest : SymbolicPolyhedra,
         ret->C = C;
         return ret;
     }
-
-    inline size_t getNumLoops() const { return getNumVar(); }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
     rotate(PtrMatrix<const int64_t> R) const {
@@ -250,9 +251,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
                 continue;
             if (A(j, i + numConst) != sign) {
                 os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
-	    } else {
-		os << "i_" << i << ((sign < 0) ? " <= " : " >= ");
-	    }
+            } else {
+                os << "i_" << i << ((sign < 0) ? " <= " : " >= ");
+            }
             PtrVector<const int64_t> b = getSymbol(A, j);
             bool printed = !allZero(b);
             if (printed)
