@@ -193,10 +193,7 @@ struct ArrayReference {
 
     void resize(size_t d) {
         strides.resize(d);
-        size_t len = d * getNumLoops() + (hasSymbolicOffsets ? loop->getNumSymbols());
-        // if (symbolicOffsets)
-        // symbolicOffsets.getValue().resize(d, loop->getNumSymbols());
-        indices.resize(d * getNumLoops());
+        indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
     ArrayReference(size_t arrayID,
                    llvm::IntrusiveRefCntPtr<AffineLoopNest> loop, size_t dim)
@@ -269,27 +266,29 @@ struct ArrayReference {
                     printPlus = true;
                 }
             }
-            if (ar.symbolicOffsets) {
-                auto &offs = ar.symbolicOffsets.getValue();
-                for (size_t j = 0; j < offs.numCol(); ++j) {
-                    if (int64_t offij = offs(i, j)) {
-                        if (printPlus) {
-                            if (offij > 0) {
-                                os << " + ";
-                            } else {
-                                offij *= -1;
-                                os << " - ";
-                            }
+            PtrMatrix<const int64_t> offs = ar.offsetMatrix();
+            for (size_t j = 0; j < offs.numCol(); ++j) {
+                if (int64_t offij = offs(i, j)) {
+                    if (printPlus) {
+                        if (offij > 0) {
+                            os << " + ";
+                        } else {
+                            offij *= -1;
+                            os << " - ";
                         }
-                        if (offij != 1)
-                            os << offij << '*';
-                        os << ar.loop->symbols[j];
-                        printPlus = true;
                     }
+		    if (j){
+			if (offij != 1)
+			    os << offij << '*';
+			os << ar.loop->symbols[j-1];
+		    } else {
+			os << offij;
+		    }
+                    printPlus = true;
                 }
-                if (!strideIsOne)
-                    os << " )";
             }
+            if (!strideIsOne)
+                os << " )";
         }
         return os;
     }
