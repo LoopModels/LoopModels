@@ -283,14 +283,14 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         pruneBounds();
     }
     // `direction = true` means second dep follow first
+    // lambda_0 + lambda*A*x = delta + c'x
+    // x = [s, i]
+    
     // order of variables:
-    // [ schedule coefs on loops, const schedule coef, bounding coefs ]
+    // [ schedule coefs on loops, const schedule coef, w, u ]
+    // 
     //
-    // Order of constraints:
-    // a) constant eq
-    // b) old vars eq
-    // c) constant terms eq
-    // d) bound above eq
+    // constraint order corresponds to old variables, will be in same order
     //
     // Time parameters are carried over into farkas polys
     std::pair<Simplex, Simplex> farkasPair() const {
