@@ -285,10 +285,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // `direction = true` means second dep follow first
     // lambda_0 + lambda*A*x = delta + c'x
     // x = [s, i]
-    
+
     // order of variables:
     // [ schedule coefs on loops, const schedule coef, w, u ]
-    // 
+    //
     //
     // constraint order corresponds to old variables, will be in same order
     //
@@ -322,14 +322,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t numInequalityConstraints = numBoundingCoefs + numLambda;
         const size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
 
-        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> pair(std::make_pair(
-            IntegerEqPolyhedra(numInequalityConstraints, numEqualityConstraints,
-                               numVarNew),
-            IntegerEqPolyhedra(numInequalityConstraints, numEqualityConstraints,
-                               numVarNew)));
-
-        IntegerEqPolyhedra &fw(pair.first);
-        IntegerEqPolyhedra &bw(pair.second);
+        std::pair<Simplex, Simplex> pair;
+        Simplex &fw(pair.first);
+        Simplex &bw(pair.second);
+        fw.resize(numEqualityConstraints, numVarNew);
+        bw.resize(numEqualityConstraints, numVarNew);
+	
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
         // lambda_0 + lambda' * (b - A*i) - psi <= 0
