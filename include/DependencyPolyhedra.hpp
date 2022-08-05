@@ -287,7 +287,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // x = [s, i]
 
     // order of variables:
-    // [ schedule coefs on loops, const schedule coef, w, u ]
+    // [ schedule coefs on loops, const schedule coef, w, u, lambda ]
     //
     //
     // constraint order corresponds to old variables, will be in same order
@@ -295,89 +295,46 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Time parameters are carried over into farkas polys
     std::pair<Simplex, Simplex> farkasPair() const {
 
-        llvm::DenseMap<Polynomial::Monomial, unsigned> constantTerms;
-        for (auto &bi : b) {
-            for (auto &t : bi) {
-                if (!t.isCompileTimeConstant()) {
-                    constantTerms.insert(
-                        std::make_pair(t.exponent, constantTerms.size()));
-                }
-            }
-        }
-        const auto [numInequalityConstraintsOld, numVarOld] = A.size();
-        // delta + 1 coef per
-        const size_t timeDim = getTimeDim();
-        const size_t numVar = numVarOld - timeDim;
-        const size_t numScheduleCoefs = 1 + numVar;
         const size_t numEqualityConstraintsOld = E.numRow();
+        const size_t numInequalityConstraintsOld = A.numRow();
+
         const size_t numLambda =
             1 + numInequalityConstraintsOld + 2 * numEqualityConstraintsOld;
-        const size_t numConstantTerms = constantTerms.size();
-        const size_t numBoundingCoefs = 1 + numConstantTerms;
-        const size_t numVarKeep = numScheduleCoefs + numBoundingCoefs;
-        const size_t numVarNew = numVarKeep + numLambda;
-        // constraint order
-        // t_0 = either -1, 0, or 1
-        // d + p_0*k_0 - p_1*k_1 = l_0 + l_1 * (k_0 - k_1 + t_0)
-        const size_t numInequalityConstraints = numBoundingCoefs + numLambda;
-        const size_t numEqualityConstraints = 1 + numVarOld + numConstantTerms;
+
+        const size_t numScheduleCoefs = getNumScheduleCoefficients();
+        const size_t numBoundingCoefs = getNumSymbols();
+
+        const size_t numConstraintsNew = A.numCol();
+        const size_t numVarInterest = numScheduleCoefs + numBoundingCoefs;
+        const size_t numVarNew = numVarInterest + numLambda;
 
         std::pair<Simplex, Simplex> pair;
         Simplex &fw(pair.first);
-        Simplex &bw(pair.second);
-        fw.resize(numEqualityConstraints, numVarNew);
-        bw.resize(numEqualityConstraints, numVarNew);
-	
+        // Simplex &bw(pair.second);
+        fw.resize(numConstraintsNew, numVarNew);
+        // bw.resize(numConstraintsNew, numVarNew);
+
+        PtrMatrix<int64_t> fC{fw.getCostsAndConstraints()};
+        // PtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
         // lambda_0 + lambda' * (b - A*i) == psi
         // we represent equal constraint as
         // lambda_0 + lambda' * (b - A*i) - psi <= 0
         // -lambda_0 - lambda' * (b - A*i) + psi <= 0
         // first, lambda_0:
-        fw.E(0, numVarKeep) = 1;
-        bw.E(0, numVarKeep) = 1;
-        for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-            size_t lambdaInd = numVarKeep + c + 1;
-            for (size_t v = 0; v < numVar; ++v) {
-                int64_t nAcv = -A(c, v);
-                fw.E(1 + v, lambdaInd) = nAcv;
-                bw.E(1 + v, lambdaInd) = nAcv;
-            }
-            for (auto &t : b[c]) {
-                if (auto c = t.getCompileTimeConstant()) {
-                    fw.E(0, lambdaInd) = c.getValue();
-                    bw.E(0, lambdaInd) = c.getValue();
-                } else {
-                    size_t constraintInd =
-                        constantTerms[t.exponent] + numVarOld + 1;
-                    fw.E(constraintInd, lambdaInd) = t.coefficient;
-                    bw.E(constraintInd, lambdaInd) = t.coefficient;
-                }
-            }
-        }
-        for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
-            // each of these actually represents 2 inds
-            size_t lambdaInd = numVarKeep + numInequalityConstraintsOld + 2 * c;
-            for (size_t v = 0; v < numVar; ++v) {
-                int64_t Ecv = E(c, v);
-                fw.E(1 + v, lambdaInd + 1) = -Ecv;
-                fw.E(1 + v, lambdaInd + 2) = Ecv;
-                bw.E(1 + v, lambdaInd + 1) = -Ecv;
-                bw.E(1 + v, lambdaInd + 2) = Ecv;
-            }
-            for (auto &t : q[c]) {
-                if (auto c = t.getCompileTimeConstant()) {
-                    fw.E(0, lambdaInd + 1) = c.getValue();
-                    fw.E(0, lambdaInd + 2) = -c.getValue();
-                    bw.E(0, lambdaInd + 1) = c.getValue();
-                    bw.E(0, lambdaInd + 2) = -c.getValue();
-                } else {
-                    size_t constraintInd =
-                        constantTerms[t.exponent] + numVarOld + 1;
-                    fw.E(constraintInd, lambdaInd + 1) = t.coefficient;
-                    fw.E(constraintInd, lambdaInd + 2) = -t.coefficient;
-                    bw.E(constraintInd, lambdaInd + 1) = t.coefficient;
-                    bw.E(constraintInd, lambdaInd + 2) = -t.coefficient;
-                }
+        const size_t ineqEnd = numVarInterest + numInequalityConstraintsOld;
+        const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
+        assert(numVarNew == posEqEnd + numEqualityConstraintsOld);
+        fC(_, _(numVarInterest, ineqEnd)) = A.transpose();
+        // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
+        // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
+	// loading from `E` is expensive
+	// NOTE: if optimizing expression templates, should also
+	// go through and optimize loops like this
+        for (size_t j = 0; j < numConstraintsNew; ++j) {
+            for (size_t i = 0; i < numEqualityConstraintsOld; ++i) {
+                int64_t Eji = E(j, i);
+                fC(j, i + ineqEnd) = Eji;
+                fC(j, i + posEqEnd) = -Eji;
             }
         }
         // schedule

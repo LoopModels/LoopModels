@@ -341,7 +341,7 @@ struct Add {
     constexpr auto operator()(auto x, auto y) const { return x + y; }
 };
 struct Sub {
-    constexpr auto operator()(auto x) { return -x; }
+    constexpr auto operator()(auto x) const { return -x; }
     constexpr auto operator()(auto x, auto y) const { return x - y; }
 };
 struct Mul {
@@ -352,6 +352,7 @@ struct Div {
 };
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
+    using eltype = typename A::eltype;
     const Op op;
     const A a;
     auto operator()(size_t i) const { return op(a(i)); }
@@ -1738,30 +1739,28 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     }
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
-	size_t minMMM = std::min(M, MM);
-	if ((XX > X) && (M*N)) {
-	    // need to copy
-	    for (size_t m = minMMM - 1; m > 0; --m) {
-		for (size_t n = N; n > 0;) {
-		    --n;
-		    mem[m * XX + n] = mem[m * X + n];
-		}
-	    }
-	}
-	// zero
-	for (size_t m = 0; m < minMMM; ++m)
-	    for (size_t n = N; n < NN; ++n)
-		mem[m * XX + n] = 0;
-	for (size_t m = minMMM; m < MM; ++m)
-	    for (size_t n = 0; n < NN; ++n)
-		mem[m * XX + n] = 0;
-	X = XX;
+        size_t minMMM = std::min(M, MM);
+        if ((XX > X) && (M * N)) {
+            // need to copy
+            for (size_t m = minMMM - 1; m > 0; --m) {
+                for (size_t n = N; n > 0;) {
+                    --n;
+                    mem[m * XX + n] = mem[m * X + n];
+                }
+            }
+        }
+        // zero
+        for (size_t m = 0; m < minMMM; ++m)
+            for (size_t n = N; n < NN; ++n)
+                mem[m * XX + n] = 0;
+        for (size_t m = minMMM; m < MM; ++m)
+            for (size_t n = 0; n < NN; ++n)
+                mem[m * XX + n] = 0;
+        X = XX;
         M = MM;
         N = NN;
     }
-    void resize(size_t MM, size_t NN) {
-        resize(MM, NN, std::max(NN,X));
-    }
+    void resize(size_t MM, size_t NN) { resize(MM, NN, std::max(NN, X)); }
     void reserve(size_t MM, size_t NN) { mem.reserve(MM * std::max(X, NN)); }
     void resizeForOverwrite(size_t MM, size_t NN, size_t XX) {
         assert(XX >= NN);
@@ -2514,12 +2513,13 @@ std::ostream &operator<<(std::ostream &os, const T &A) {
 
 inline auto operator-(const AbstractVector auto &a) {
     auto AA{a.view()};
-    return ElementwiseUnaryOp<Mul, decltype(AA)>{.op = Mul{}, .a = AA};
+    return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
 inline auto operator-(const AbstractMatrix auto &a) {
     auto AA{a.view()};
-    return ElementwiseUnaryOp<Mul, decltype(AA)>{.op = Mul{}, .a = AA};
+    return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
+static_assert(AbstractMatrix<ElementwiseUnaryOp<Sub, PtrMatrix<int64_t>>>);
 
 template <AbstractMatrix A, typename B> inline auto operator+(A &&a, B &&b) {
     return binaryOp(Add{}, std::forward<A>(a), std::forward<B>(b));
