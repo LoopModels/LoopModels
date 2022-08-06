@@ -310,9 +310,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
         std::pair<Simplex, Simplex> pair;
         Simplex &fw(pair.first);
-        // Simplex &bw(pair.second);
         fw.resize(numConstraintsNew, numVarNew);
-        // bw.resize(numConstraintsNew, numVarNew);
 
         PtrMatrix<int64_t> fC{fw.getCostsAndConstraints()};
         // PtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
@@ -327,9 +325,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         fC(_, _(numVarInterest, ineqEnd)) = A.transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
-	// loading from `E` is expensive
-	// NOTE: if optimizing expression templates, should also
-	// go through and optimize loops like this
+        // loading from `E` is expensive
+        // NOTE: if optimizing expression templates, should also
+        // go through and optimize loops like this
         for (size_t j = 0; j < numConstraintsNew; ++j) {
             for (size_t i = 0; i < numEqualityConstraintsOld; ++i) {
                 int64_t Eji = E(j, i);
@@ -359,41 +357,36 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         //   sign = -1
         // }
         //
-        // equality constraints get expanded into two inequalities
-        // a == 0 ->
-        // even row: a <= 0
-        // odd row: -a <= 0
-        for (size_t i = 0; i < numVarOld; ++i) {
-            int64_t s = (2 * (i < numDep0Var) - 1);
-            fw.E(1 + i, i) = s;
-            bw.E(1 + i, i) = -s;
-        }
-        // delta/constant coef at ind numVarOld
-        fw.E(0, numVarOld) = -1;
-        bw.E(0, numVarOld) = 1;
         // boundAbove
         // note we'll generally call this function twice, first with
         // 1. `boundAbove = false`
         // 2. `boundAbove = true`
         // boundAbove means we have
         // ... == w + u'*N + psi
-        fw.E(0, numScheduleCoefs) = -1;
-        fw.A(0, numScheduleCoefs) = -1;
-        bw.E(0, numScheduleCoefs) = -1;
-        bw.A(0, numScheduleCoefs) = -1;
-        for (size_t i = 0; i < numConstantTerms; ++i) {
-            size_t ip1 = i + 1;
-            size_t constraintInd = (ip1 + numVarOld);
-            fw.E(constraintInd, i + numScheduleCoefs + 1) = -1;
-            fw.A(ip1, numScheduleCoefs + ip1) = -1;
-            bw.E(constraintInd, i + numScheduleCoefs + 1) = -1;
-            bw.A(ip1, numScheduleCoefs + ip1) = -1;
+        for (size_t i = 0; i < numBoundingCoefs; ++i)
+            fC(i, i + numScheduleCoefs) = -1;
+
+        // so far, both have been identical
+        Simplex &bw(pair.second);
+        bw.resize(numConstraintsNew, numVarNew);
+        PtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
+        for (size_t i = 0; i < numConstraintsNew; ++i)
+            for (size_t j = 0; j < numVarNew; ++j)
+                bC(i, j) = fC(i, j);
+
+        // equality constraints get expanded into two inequalities
+        // a == 0 ->
+        // even row: a <= 0
+        // odd row: -a <= 0
+	// fw means x'Al = x'(depVar1 - depVar0)
+	// x'Al + x'(depVar0 - depVar1) = 0
+	// so, for fw, depVar0 is positive and depVar1 is negative
+        for (size_t i = 0; i < numScheduleCoefs; ++i) {
+            int64_t s = (2 * (i < numDep0Var) - 1);
+	    fC(i+numBoundingCoefs,i) = s;
+	    bC(i+numBoundingCoefs,i) = -s;
         }
-        // all lambda > 0
-        for (size_t i = 0; i < numLambda; ++i) {
-            fw.A(numBoundingCoefs + i, numVarKeep + i) = -1;
-            bw.A(numBoundingCoefs + i, numVarKeep + i) = -1;
-        }
+        // note that delta/constant coef is handled as last `s`
         return pair;
         // fw.removeExtraVariables(numVarKeep);
         // bw.removeExtraVariables(numVarKeep);
