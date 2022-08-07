@@ -76,13 +76,12 @@ struct Polyhedra {
                 for (size_t j = A.numRow(); j;) {
                     diff = A(--j, _) - E(i, _);
                     if (C.greaterEqual(diff)) {
-			eraseConstraint(A, j);
+                        eraseConstraint(A, j);
                     } else {
                         diff = A(j, _) + E(i, _);
-			if(C.greaterEqual(diff))
-			    eraseConstraint(A, j);
+                        if (C.greaterEqual(diff))
+                            eraseConstraint(A, j);
                     }
-		    
                 }
             }
         }
@@ -985,6 +984,12 @@ struct Polyhedra {
     bool isEmpty() const {
         auto B{*this};
         return B.isEmptyBang();
+    }
+    void truncateVars(size_t numVar) {
+        if constexpr (hasEqualities) {
+            E.truncateCols(numVar);
+        }
+        A.truncateCols(numVar);
     }
     // A*x >= 0
     // bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {

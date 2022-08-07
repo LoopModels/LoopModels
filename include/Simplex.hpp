@@ -393,7 +393,7 @@ struct Simplex {
         return m;
     }
     // check if a solution exists such that `x` can be true.
-    bool unSatisfiable(PtrVector<const int64_t> x) const {
+    bool unSatisfiable(PtrVector<const int64_t> x, size_t off) const {
         // is it a valid solution to set the first `x.size()` variables to `x`?
         // first, check that >= 0 constraint is satisfied
         for (auto y : x)
@@ -411,12 +411,13 @@ struct Simplex {
         auto sC{subSimp.getCostsAndConstraints()};
         sC(_, 0) = fC(_, 0);
         for (size_t i = 0; i < numFix; ++i)
-            sC(_, 0) -= x(i) * fC(_, i + 1);
-        sC(_, _(1, end)) = fC(_, _(1 + numFix, end));
+            sC(_, 0) -= x(i) * fC(_, i + 1 + off);
+        sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
+        sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
         return subSimp.initiateFeasible();
     }
-    bool satisfiable(PtrVector<const int64_t> x) const {
-        return !unSatisfiable(x);
+    bool satisfiable(PtrVector<const int64_t> x, size_t off) const {
+        return !unSatisfiable(x, off);
     }
     /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {
