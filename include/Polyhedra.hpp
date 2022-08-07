@@ -986,19 +986,19 @@ struct Polyhedra {
         auto B{*this};
         return B.isEmptyBang();
     }
-    // A*x <= b
-    bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
-        int64_t bc;
-        size_t numVar = std::min(x.size(), getNumVar());
-        for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
-            bc = A(c, 0);
-            for (size_t v = 0; v < numVar; ++v)
-                bc -= A(c, v + 1) * x[v];
-            if (bc < 0)
-                return false;
-        }
-        return true;
-    }
+    // A*x >= 0
+    // bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
+    //     int64_t bc;
+    //     size_t numVar = std::min(x.size(), getNumVar());
+    //     for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
+    //         bc = A(c, 0);
+    //         for (size_t v = 0; v < numVar; ++v)
+    //             bc -= A(c, v + 1) * x[v];
+    //         if (bc < 0)
+    //             return false;
+    //     }
+    //     return true;
+    // }
 };
 
 typedef Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> SymbolicPolyhedra;

@@ -196,8 +196,8 @@ struct Simplex {
             PtrVector<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
             // for (auto &&c : costs)
-	    for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
-		c = 0;
+            for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
+                c = 0;
             printVector(std::cout, augmentVars) << std::endl;
             std::cout << "tableau = \n" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
@@ -391,6 +391,32 @@ struct Simplex {
         for (size_t i = numSlackVar; i < numVarTotal; ++i)
             m = ((m << 1) | (basicCons[i] > 0));
         return m;
+    }
+    // check if a solution exists such that `x` can be true.
+    bool unSatisfiable(PtrVector<const int64_t> x) const {
+        // is it a valid solution to set the first `x.size()` variables to `x`?
+        // first, check that >= 0 constraint is satisfied
+        for (auto y : x)
+            if (y < 0)
+                return true;
+        // approach will be to move `x.size()` variables into the
+        // equality constraints, and then check if the remaining sub-problem is
+        // satisfiable.
+        Simplex subSimp;
+        const size_t numCon = getNumConstraints();
+        const size_t numVar = getNumVar();
+        const size_t numFix = x.size();
+        subSimp.resizeForOverwrite(numCon, numVar - numFix);
+        auto fC{getCostsAndConstraints()};
+        auto sC{subSimp.getCostsAndConstraints()};
+        sC(_, 0) = fC(_, 0);
+        for (size_t i = 0; i < numFix; ++i)
+            sC(_, 0) -= x(i) * fC(_, i + 1);
+        sC(_, _(1, end)) = fC(_, _(1 + numFix, end));
+        return subSimp.initiateFeasible();
+    }
+    bool satisfiable(PtrVector<const int64_t> x) const {
+        return !unSatisfiable(x);
     }
     /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {

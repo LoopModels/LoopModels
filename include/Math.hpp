@@ -532,7 +532,7 @@ template <typename T, typename V> struct BaseVector {
     using eltype = T;
     inline T &ref(size_t i) { return static_cast<V *>(this)(i); }
     inline T &size() { return static_cast<V *>(this)->size(); }
-    V &operator=(AbstractVector auto &x) {
+    V &operator=(const AbstractVector auto &x) {
         const size_t N = size();
         const size_t M = x.size();
         V &self = *static_cast<V *>(this);
@@ -877,6 +877,7 @@ static_assert(std::copyable<Vector<intptr_t, 4>>);
 static_assert(std::copyable<Vector<intptr_t, 0>>);
 
 template <typename T> struct StridedVector {
+    using eltype = T;
     T *d;
     size_t N;
     size_t x;
@@ -900,6 +901,8 @@ template <typename T> struct StridedVector {
     auto end() const { return StridedIterator{d + N * x, x}; }
     T &operator[](size_t i) { return d[i * x]; }
     const T &operator[](size_t i) const { return d[i * x]; }
+    T &operator()(size_t i) { return d[i * x]; }
+    const T &operator()(size_t i) const { return d[i * x]; }
     size_t size() const { return N; }
     bool operator==(StridedVector<T> x) const {
         if (size() != x.size())
@@ -918,6 +921,51 @@ template <typename T> struct StridedVector {
     }
     StridedVector<T> view() { return *this; }
     StridedVector<const T> view() const { return *this; }
+    StridedVector<T> &operator=(const AbstractVector auto &x) {
+        const size_t N = size();
+        const size_t M = x.size();
+        StridedVector<T> &self = *this;
+        assert(M == N);
+        for (size_t i = 0; i < M; ++i)
+            self(i) = x(i);
+        return self;
+    }
+    StridedVector<T> &operator+=(const AbstractVector auto &x) {
+        const size_t N = size();
+        const size_t M = x.size();
+        StridedVector<T> &self = *this;
+        assert(M == N);
+        for (size_t i = 0; i < M; ++i)
+            self(i) += x(i);
+        return self;
+    }
+    StridedVector<T> &operator-=(const AbstractVector auto &x) {
+        const size_t N = size();
+        const size_t M = x.size();
+        StridedVector<T> &self = *this;
+        assert(M == N);
+        for (size_t i = 0; i < M; ++i)
+            self(i) -= x(i);
+        return self;
+    }
+    StridedVector<T> &operator*=(const AbstractVector auto &x) {
+        const size_t N = size();
+        const size_t M = x.size();
+        StridedVector<T> &self = *this;
+        assert(M == N);
+        for (size_t i = 0; i < M; ++i)
+            self(i) *= x(i);
+        return self;
+    }
+    StridedVector<T> &operator/=(const AbstractVector auto &x) {
+        const size_t N = size();
+        const size_t M = x.size();
+        StridedVector<T> &self = *this;
+        assert(M == N);
+        for (size_t i = 0; i < M; ++i)
+            self(i) /= x(i);
+        return self;
+    }
 };
 
 // template <typename T>
@@ -967,7 +1015,7 @@ template <typename T> struct PtrMatrix {
     operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
     }
-    PtrMatrix<T> operator=(SmallSparseMatrix<T> &A) {
+    PtrMatrix<T> operator=(const SmallSparseMatrix<T> &A) {
         assert(M == A.numRow());
         assert(N == A.numCol());
         size_t k = 0;
@@ -1356,7 +1404,7 @@ template <typename T, typename A> struct BaseMatrix {
         return StridedVector<const T>{data() + n, numRow(), rowStride()};
     }
 
-    A &operator=(SmallSparseMatrix<T> &B) {
+    A &operator=(const SmallSparseMatrix<T> &B) {
         const size_t M = numRow();
         const size_t N = numCol();
         assert(M == B.numRow());

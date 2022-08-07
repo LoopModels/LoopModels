@@ -378,13 +378,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // a == 0 ->
         // even row: a <= 0
         // odd row: -a <= 0
-	// fw means x'Al = x'(depVar1 - depVar0)
-	// x'Al + x'(depVar0 - depVar1) = 0
-	// so, for fw, depVar0 is positive and depVar1 is negative
+        // fw means x'Al = x'(depVar1 - depVar0)
+        // x'Al + x'(depVar0 - depVar1) = 0
+        // so, for fw, depVar0 is positive and depVar1 is negative
         for (size_t i = 0; i < numScheduleCoefs; ++i) {
             int64_t s = (2 * (i < numDep0Var) - 1);
-	    fC(i+numBoundingCoefs,i) = s;
-	    bC(i+numBoundingCoefs,i) = -s;
+            fC(i + numBoundingCoefs, i) = s;
+            bC(i + numBoundingCoefs, i) = -s;
         }
         // note that delta/constant coef is handled as last `s`
         return pair;
@@ -477,19 +477,19 @@ struct Dependence {
     //
     //
     DependencePolyhedra depPoly;
-    IntegerEqPolyhedra dependenceSatisfaction;
-    IntegerEqPolyhedra dependenceBounding;
+    Simplex dependenceSatisfaction;
+    Simplex dependenceBounding;
     MemoryAccess *in;
     MemoryAccess *out;
     const bool forward;
-    Dependence(DependencePolyhedra depPoly,
-               IntegerEqPolyhedra dependenceSatisfaction,
-               IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
-               MemoryAccess *out, const bool forward)
-        : depPoly(std::move(depPoly)),
-          dependenceSatisfaction(std::move(dependenceSatisfaction)),
-          dependenceBounding(std::move(dependenceBounding)), in(in), out(out),
-          forward(forward){};
+    // Dependence(DependencePolyhedra depPoly,
+    //            IntegerEqPolyhedra dependenceSatisfaction,
+    //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
+    //            MemoryAccess *out, const bool forward)
+    //     : depPoly(std::move(depPoly)),
+    //       dependenceSatisfaction(std::move(dependenceSatisfaction)),
+    //       dependenceBounding(std::move(dependenceBounding)), in(in),
+    //       out(out), forward(forward){};
     // if there is no time dimension, it returns a 0xdim matrix and `R == 0`
     // else, it returns a square matrix, where the first `R` rows correspond
     // to time-axis.
@@ -548,11 +548,10 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
-    static bool
-    checkDirection(std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> &p,
-                   const MemoryAccess &x, const MemoryAccess &y) {
-        IntegerEqPolyhedra &fxy = p.first;
-        IntegerEqPolyhedra &fyx = p.second;
+    static bool checkDirection(std::pair<Simplex, Simplex> &p,
+                               const MemoryAccess &x, const MemoryAccess &y) {
+        Simplex &fxy = p.first;
+        Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
         const size_t numLoopsY = y.ref.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
@@ -561,8 +560,8 @@ struct Dependence {
         SquarePtrMatrix<const int64_t> yPhi = y.schedule.getPhi();
         llvm::ArrayRef<int64_t> xOmega = x.schedule.getOmega();
         llvm::ArrayRef<int64_t> yOmega = y.schedule.getOmega();
-        llvm::SmallVector<int64_t, 16> sch;
-        sch.resize_for_overwrite(numLoopsTotal + 1);
+        Vector<int64_t> sch;
+        sch.resizeForOverwrite(numLoopsTotal + 1);
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i])
                 return o2idiff > 0;
@@ -578,27 +577,18 @@ struct Dependence {
             //   present at that level
             // }
             assert(i != numLoopsCommon);
-            for (size_t j = 0; j < numLoopsX; ++j) {
+            for (size_t j = 0; j < numLoopsX; ++j)
                 sch[j] = xPhi(i, j);
-            }
-            for (size_t j = 0; j < numLoopsY; ++j) {
+            for (size_t j = 0; j < numLoopsY; ++j)
                 sch[j + numLoopsX] = yPhi(i, j);
-            }
             int64_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
             // forward means offset is 2nd - 1st
             sch[numLoopsTotal] = yO - xO;
-#ifndef NDEBUG
-            printVector(std::cout << "fxy =\n"
-                                  << fxy << "Schedule = ",
-                        sch)
-                << std::endl
-                << std::endl;
-#endif
-            if (!fxy.knownSatisfied(sch))
+            if (!fxy.satisfiable(sch))
                 return false;
             // backward means offset is 1st - 2nd
             sch[numLoopsTotal] = xO - yO;
-            if (!fyx.knownSatisfied(sch))
+            if (!fyx.satisfiable(sch))
                 return true;
         }
         assert(false);
@@ -607,8 +597,7 @@ struct Dependence {
     static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
                               DependencePolyhedra dxy, MemoryAccess &x,
                               MemoryAccess &y) {
-        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> pair(
-            dxy.farkasPair());
+        std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
         const size_t numVarKeep = pair.first.getNumVar() - numLambda;
@@ -630,10 +619,9 @@ struct Dependence {
     static void timeCheck(llvm::SmallVectorImpl<Dependence> &deps,
                           DependencePolyhedra dxy, MemoryAccess &x,
                           MemoryAccess &y) {
-        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> pair(
-            dxy.farkasPair());
+        std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         // copy backup
-        std::pair<IntegerEqPolyhedra, IntegerEqPolyhedra> farkasBackups = pair;
+        std::pair<Simplex, Simplex> farkasBackups = pair;
 
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
