@@ -329,14 +329,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     llvm::Optional<Vector<int64_t>> d;
     size_t numRowDiff; // This variable stores the different row size of H
                        // matrix and truncated H matrix
-    static LinearSymbolicComparator construct(IntMatrix Ap) {
+    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap) {
         const auto [numCon, numVar] = Ap.size();
         IntMatrix A(numVar + numCon, 2 * numCon);
         // A = [Ap' 0
         //      S   I]
-        for (size_t i = 0; i < numCon; ++i)
-            for (size_t j = 0; j < numVar; ++j)
-                A(j, i) = Ap(i, j);
+        A(_(begin, numVar), _(begin, numCon)) = Ap.transpose();
 
         for (size_t j = 0; j < numCon; ++j) {
             A(j + numVar, j) = -1;
@@ -364,9 +362,45 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                                         .d = std::move(d),
                                         .numRowDiff = numRowDiff};
     };
+    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap,
+                                              PtrMatrix<const int64_t> Ep) {
+        const auto [numInEqCon, numVar] = Ap.size();
+        const size_t numEqCon = Ep.numRow();
+        IntMatrix A(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        // A = [Ap' Ep' 0
+        //      S   0   I]
+        A(_(begin, numVar), _(begin, numInEqCon)) = Ap.transpose();
+        A(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) =
+            Ep.transpose();
+
+        for (size_t j = 0; j < numInEqCon; ++j) {
+            A(j + numVar, j) = -1;
+            A(j + numVar, j + numInEqCon) = 1;
+        }
+        // We will have query of the form Ax = q;
+        auto [H, U] = NormalForm::hermite(std::move(A));
+        size_t R = H.numRow();
+        size_t numRowPre = R;
+        while ((R > 0) && allZero(H.getRow(R - 1)))
+            --R;
+        H.truncateRows(R);
+        size_t numRowDiff = numRowPre - R;
+        if (H.isSquare())
+            return LinearSymbolicComparator{
+                .U = std::move(U), .V = std::move(H), .d = {}};
+        IntMatrix Ht = H.transpose();
+        auto Vt = IntMatrix::identity(Ht.numRow());
+        NormalForm::solveSystem(Ht, Vt);
+        auto d = Ht.diag();
+        std::cout << "D matrix:" << d << std::endl;
+        auto V = Vt.transpose();
+        return LinearSymbolicComparator{.U = std::move(U),
+                                        .V = std::move(V),
+                                        .d = std::move(d),
+                                        .numRowDiff = numRowDiff};
+    };
 
     bool greaterEqualZero(PtrVector<const int64_t> query) const {
-        auto nVars = query.size();
         auto nEqs = V.numCol() / 2;
         // Full column rank case
         if (!d.hasValue()) {

@@ -1201,6 +1201,9 @@ template <typename T> struct PtrMatrix {
             d(n) = (*this)(n, n);
         return d;
     }
+    Transpose<PtrMatrix<const T>> transpose() const {
+        return Transpose<PtrMatrix<const T>>{view()};
+    }
 };
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
