@@ -2,6 +2,7 @@
 
 #include "./POSet.hpp"
 #include "Constraints.hpp"
+#include "EmptyArrays.hpp"
 #include "Math.hpp"
 #include "NormalForm.hpp"
 #include "Simplex.hpp"
@@ -329,7 +330,47 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     llvm::Optional<Vector<int64_t>> d;
     size_t numRowDiff; // This variable stores the different row size of H
                        // matrix and truncated H matrix
-    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap) {
+    void construct(PtrMatrix<const int64_t> Ap,
+                   EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
+        const auto [numCon, numVar] = Ap.size();
+	auto &A = V;
+	A.resizeForOverwrite(numVar + numCon, 2 * numCon);
+	A = 0;
+        // A = [Ap' 0
+        //      S   I]
+        A(_(begin, numVar), _(begin, numCon)) = Ap.transpose();
+        for (size_t j = 0; j < numCon; ++j) {
+            A(j + numVar, j) = -1;
+            A(j + numVar, j + numCon) = 1;
+        }
+        U.resizeForOverwrite(numCon, numCon);
+        U = 0;
+	for (size_t i = 0; i < numCon;++i)
+	    U(i,i) = 1;
+        // We will have query of the form Ax = q;
+	NormalForm::simplifySystemImpl(A, U);
+	auto &H = A;
+        size_t R = H.numRow();
+        size_t numRowPre = R;
+        while ((R > 0) && allZero(H.getRow(R - 1)))
+            --R;
+        H.truncateRows(R);
+        size_t numRowDiff = numRowPre - R;
+        if (H.isSquare()) {
+            return LinearSymbolicComparator{
+                .U = std::move(U), .V = std::move(H), .d = {}};
+        }
+        IntMatrix Ht = H.transpose();
+        auto Vt = IntMatrix::identity(Ht.numRow());
+        NormalForm::solveSystem(Ht, Vt);
+        auto d = Ht.diag();
+        std::cout << "D matrix:" << d << std::endl;
+        auto V = Vt.transpose();
+    }
+
+    static LinearSymbolicComparator
+    construct(PtrMatrix<const int64_t> Ap,
+              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
         const auto [numCon, numVar] = Ap.size();
         IntMatrix A(numVar + numCon, 2 * numCon);
         // A = [Ap' 0

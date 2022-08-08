@@ -1310,6 +1310,14 @@ template <typename T, typename A> struct BaseMatrix {
                 (*this)(r, c) = B(r, c);
         return *this;
     }
+    A &operator=(T x) {
+        const size_t M = numRow();
+        const size_t N = numCol();
+        for (size_t r = 0; r < M; ++r)
+            for (size_t c = 0; c < N; ++c)
+                (*this)(r, c) = x;
+        return *this;
+    }
     // bool operator==(const BaseMatrix<T,A> &B) const {
     //     const size_t M = B.numRow();
     //     const size_t N = B.numCol();
@@ -1903,7 +1911,14 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                     return false;
         return true;
     }
-
+    Matrix<T, 0, 0, S> &operator=(T x) {
+        const size_t M = numRow();
+        const size_t N = numCol();
+        for (size_t r = 0; r < M; ++r)
+            for (size_t c = 0; c < N; ++c)
+                (*this)(r, c) = x;
+        return *this;
+    }
     // Matrix<T, 0, 0, S> A(Matrix<T, 0, 0, S>::Uninitialized(N, M));
     // for (size_t n = 0; n < N; ++n)
     //     for (size_t m = 0; m < M; ++m)

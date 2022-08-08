@@ -68,7 +68,7 @@ struct Polyhedra {
     // static Polyhedra empty(size_t numIneq, size_t numVar) {
     // A(numIneq, numVar + 1)
     // 	};
-    void _pruneBounds() {
+    void pruneBounds() {
         Vector<int64_t> diff{A.numRow()};
         if constexpr (hasEqualities) {
             NormalForm::simplifySystem(E, C.getNumConstTerms());
@@ -82,6 +82,19 @@ struct Polyhedra {
                         if (C.greaterEqual(diff))
                             eraseConstraint(A, j);
                     }
+                }
+            }
+        }
+        if (A.numRow() <= 1)
+	    return;
+	for (size_t i = A.numRow() - 1; i;) {
+	    --i;
+	    for (size_t j = A.numRow(); j != i;) {
+		diff = A(--j, _) - A(i, _);
+		if (C.greaterEqual(diff)) {
+		    eraseConstraint(A, j);
+		} else if (C.lessEqual(diff)) {
+		    eraseConstraint(A, i);
                 }
             }
         }
