@@ -159,6 +159,8 @@ TEST(AffineTest0, BasicAssertions) {
     auto affp{AffineLoopNest::construct(A, r, poset)};
     std::cout << "Constructed affine obj" << std::endl;
     std::cout << "About to run first compat test" << std::endl;
+    std::cout << "affp->A.size() = (" << affp->A.numRow() << ", "
+              << affp->A.numCol() << ")" << std::endl;
     EXPECT_FALSE(affp->zeroExtraIterationsUponExtending(0, false));
     EXPECT_FALSE(affp->zeroExtraIterationsUponExtending(0, true));
     EXPECT_TRUE(affp->zeroExtraIterationsUponExtending(1, false));

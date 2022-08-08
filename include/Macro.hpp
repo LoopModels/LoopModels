@@ -29,4 +29,4 @@
 #define NOVECTORIZE
 #endif
 
-
+#define SHOW(ex) std::cout << #ex << " = " << ex << std::endl;

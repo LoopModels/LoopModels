@@ -24,7 +24,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
     llvm::SmallVector<Polynomial::Monomial> symbols;
-    size_t getNumSymbols() const { return 1+symbols.size(); }
+    size_t getNumSymbols() const { return 1 + symbols.size(); }
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
@@ -32,7 +32,8 @@ struct AffineLoopNest : SymbolicPolyhedra,
               PartiallyOrderedSet poset) {
         assert(b.size() == A.numRow());
         // IntMatrix B;
-        llvm::SmallVector<Polynomial::Monomial> monomials;
+        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
+        llvm::SmallVector<Polynomial::Monomial> &monomials = ret->symbols;
         llvm::DenseMap<Polynomial::Monomial, unsigned> map;
 
         for (auto &p : b)
@@ -42,7 +43,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
                             .second)
                         monomials.push_back(t.exponent);
         const size_t numMonomials = monomials.size();
-        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
+        SHOW(numMonomials);
         auto &B = ret->A;
         B.resize(A.numRow(), A.numCol() + 1 + map.size());
         for (size_t r = 0; r < A.numRow(); ++r) {
@@ -81,6 +82,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         const auto [M, N] = A.size();
         assert(numConst + getNumLoops() == N);
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
+        ret->symbols = symbols;
         ret->C = C;
         IntMatrix &B = ret->A;
         B.resizeForOverwrite(M, N);
@@ -177,6 +179,10 @@ struct AffineLoopNest : SymbolicPolyhedra,
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         SymbolicPolyhedra tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
+        SHOW(getNumLoops());
+        SHOW(numPrevLoops);
+        SHOW(A.numRow());
+        SHOW(A.numCol());
         // for (size_t i = 0; i < numPrevLoops; ++i)
         // if (_i != i)
         // tmp.removeLoopBang(i);
