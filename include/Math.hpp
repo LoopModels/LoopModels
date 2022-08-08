@@ -2406,7 +2406,7 @@ std::ostream &printMatrix(std::ostream &os, PtrMatrix<const T> A) {
         if (i) {
             os << "  ";
         } else {
-            os << "[ ";
+            os << "\n[ ";
         }
         for (int64_t j = 0; j < int64_t(n) - 1; j++) {
             auto Aij = A(i, j);

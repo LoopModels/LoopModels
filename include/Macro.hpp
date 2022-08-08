@@ -29,4 +29,8 @@
 #define NOVECTORIZE
 #endif
 
-#define SHOW(ex) std::cout << #ex << " = " << ex << std::endl;
+#define SHOW(ex) std::cout << #ex << " = " << ex;
+#define CSHOW(ex) std::cout << "; " << #ex << " = " << ex;
+#define SHOWLN(ex) std::cout << #ex << " = " << ex << std::endl;
+#define CSHOWLN(ex) std::cout << "; " << #ex << " = " << ex << std::endl;
+

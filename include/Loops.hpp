@@ -179,10 +179,10 @@ struct AffineLoopNest : SymbolicPolyhedra,
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         SymbolicPolyhedra tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
-        SHOW(getNumLoops());
-        SHOW(numPrevLoops);
-        SHOW(A.numRow());
-        SHOW(A.numCol());
+        // SHOW(getNumLoops());
+        // SHOW(numPrevLoops);
+        // SHOW(A.numRow());
+        // SHOW(A.numCol());
         // for (size_t i = 0; i < numPrevLoops; ++i)
         // if (_i != i)
         // tmp.removeLoopBang(i);
