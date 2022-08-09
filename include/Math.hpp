@@ -756,6 +756,7 @@ template <typename T> struct PtrVector<T, 0> {
     operator PtrVector<const T>() {
         return PtrVector<const T>{.ptr = ptr, .M = M};
     }
+    void clear() { M = 0; }
     // PtrVector(const AbstractVector auto &A)
     //     : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
     //       X(A.numCol()) {
@@ -867,6 +868,7 @@ template <typename T> struct Vector<T, 0> {
         return *this;
     }
     template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
+    void clear() { data.clear(); }
 };
 
 template <typename T, size_t M>

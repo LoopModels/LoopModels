@@ -17,7 +17,7 @@ TEST(BasicCompare, BasicAssertions) {
     Vector<int64_t> query{-1, 0, 0, 1, 0};
     
     //llvm::SmallVector<int64_t, 16> query{1, 0, 0, -1, 0};
-    EXPECT_TRUE(comp.greaterEqualZero(query));
+    EXPECT_TRUE(comp.greaterEqual(query));
 
     //TEST column deficient rank case of A
     // We add two more constraints to the last example
@@ -26,8 +26,8 @@ TEST(BasicCompare, BasicAssertions) {
     auto comp2 = LinearSymbolicComparator::construct(std::move(A2));
     Vector<int64_t> query2{-1, 0, 0, 0, 1};
     Vector<int64_t> query3{0, 0, 0, -1, 1};
-    EXPECT_TRUE(comp2.greaterEqualZero(query2));
-    EXPECT_TRUE(!comp2.greaterEqualZero(query3));
+    EXPECT_TRUE(comp2.greaterEqual(query2));
+    EXPECT_TRUE(!comp2.greaterEqual(query3));
 
     //TEST on non identity diagonal case
     //We change the final constraint to x >= 2a + b
@@ -39,12 +39,12 @@ TEST(BasicCompare, BasicAssertions) {
     Vector<int64_t> query4{-3, 0, 0, 1, 0}; // x >= 3a is expected to be true
     Vector<int64_t> query5{0, 0, 0, 1, -1}; // we could not identity the relation between x and y
     Vector<int64_t> query6{0, -2, 0, 1, 0}; // we could not know whether x is larger than 2b or not
-    EXPECT_TRUE(comp3.greaterEqualZero(query2));
-    // std::cout <<  "comp3 wrong test " << comp3.greaterEqualZero(query3) <<std::endl;
-    EXPECT_TRUE(!comp3.greaterEqualZero(query3));
-    EXPECT_TRUE(!comp3.greaterEqualZero(query5));
-    EXPECT_TRUE(comp3.greaterEqualZero(query4));
-    EXPECT_TRUE(!comp3.greaterEqualZero(query6));
+    EXPECT_TRUE(comp3.greaterEqual(query2));
+    // std::cout <<  "comp3 wrong test " << comp3.greaterEqual(query3) <<std::endl;
+    EXPECT_TRUE(!comp3.greaterEqual(query3));
+    EXPECT_TRUE(!comp3.greaterEqual(query5));
+    EXPECT_TRUE(comp3.greaterEqual(query4));
+    EXPECT_TRUE(!comp3.greaterEqual(query6));
 }
 
 TEST(V2Matrix, BasicAssertions) {

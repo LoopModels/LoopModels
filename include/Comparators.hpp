@@ -327,84 +327,26 @@ static_assert(Comparator<SymbolicComparator>);
 struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
     IntMatrix V;
-    llvm::Optional<Vector<int64_t>> d;
+    Vector<int64_t> d;
     size_t numRowDiff; // This variable stores the different row size of H
                        // matrix and truncated H matrix
-    void construct(PtrMatrix<const int64_t> Ap,
-                   EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
-        const auto [numCon, numVar] = Ap.size();
-	auto &A = V;
-	A.resizeForOverwrite(numVar + numCon, 2 * numCon);
-	A = 0;
-        // A = [Ap' 0
-        //      S   I]
-        A(_(begin, numVar), _(begin, numCon)) = Ap.transpose();
-        for (size_t j = 0; j < numCon; ++j) {
-            A(j + numVar, j) = -1;
-            A(j + numVar, j + numCon) = 1;
-        }
-        U.resizeForOverwrite(numCon, numCon);
-        U = 0;
-	for (size_t i = 0; i < numCon;++i)
-	    U(i,i) = 1;
-        // We will have query of the form Ax = q;
-	NormalForm::simplifySystemImpl(A, U);
-	auto &H = A;
-        size_t R = H.numRow();
-        size_t numRowPre = R;
-        while ((R > 0) && allZero(H.getRow(R - 1)))
-            --R;
-        H.truncateRows(R);
-        size_t numRowDiff = numRowPre - R;
-        if (H.isSquare()) {
-            return LinearSymbolicComparator{
-                .U = std::move(U), .V = std::move(H), .d = {}};
-        }
-        IntMatrix Ht = H.transpose();
-        auto Vt = IntMatrix::identity(Ht.numRow());
-        NormalForm::solveSystem(Ht, Vt);
-        auto d = Ht.diag();
-        std::cout << "D matrix:" << d << std::endl;
-        auto V = Vt.transpose();
-    }
-
-    static LinearSymbolicComparator
-    construct(PtrMatrix<const int64_t> Ap,
+    using BaseComparator<LinearSymbolicComparator>::greaterEqual;
+    void init(PtrMatrix<const int64_t> Ap,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
         const auto [numCon, numVar] = Ap.size();
-        IntMatrix A(numVar + numCon, 2 * numCon);
+        auto &A = V;
+        A.resizeForOverwrite(numVar + numCon, 2 * numCon);
+        A = 0;
         // A = [Ap' 0
         //      S   I]
         A(_(begin, numVar), _(begin, numCon)) = Ap.transpose();
-
         for (size_t j = 0; j < numCon; ++j) {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numCon) = 1;
         }
-        // We will have query of the form Ax = q;
-        auto [H, U] = NormalForm::hermite(std::move(A));
-        size_t R = H.numRow();
-        size_t numRowPre = R;
-        while ((R > 0) && allZero(H.getRow(R - 1)))
-            --R;
-        H.truncateRows(R);
-        size_t numRowDiff = numRowPre - R;
-        if (H.isSquare())
-            return LinearSymbolicComparator{
-                .U = std::move(U), .V = std::move(H), .d = {}};
-        IntMatrix Ht = H.transpose();
-        auto Vt = IntMatrix::identity(Ht.numRow());
-        NormalForm::solveSystem(Ht, Vt);
-        auto d = Ht.diag();
-        std::cout << "D matrix:" << d << std::endl;
-        auto V = Vt.transpose();
-        return LinearSymbolicComparator{.U = std::move(U),
-                                        .V = std::move(V),
-                                        .d = std::move(d),
-                                        .numRowDiff = numRowDiff};
-    };
-    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap,
-                                              PtrMatrix<const int64_t> Ep) {
+        initCore();
+    }
+    void init(PtrMatrix<const int64_t> Ap, PtrMatrix<const int64_t> Ep) {
         const auto [numInEqCon, numVar] = Ap.size();
         const size_t numEqCon = Ep.numRow();
         IntMatrix A(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
@@ -418,33 +360,54 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numInEqCon) = 1;
         }
+	initCore();
+    }
+    void initCore() {
+        auto &A = V;
+	size_t numCon = A.numRow();
+        U.resizeForOverwrite(numCon, numCon);
+        U = 0;
+        for (size_t i = 0; i < numCon; ++i)
+            U(i, i) = 1;
         // We will have query of the form Ax = q;
-        auto [H, U] = NormalForm::hermite(std::move(A));
+        NormalForm::simplifySystemImpl(A, U);
+        auto &H = A;
         size_t R = H.numRow();
         size_t numRowPre = R;
         while ((R > 0) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
-        size_t numRowDiff = numRowPre - R;
-        if (H.isSquare())
-            return LinearSymbolicComparator{
-                .U = std::move(U), .V = std::move(H), .d = {}};
+        numRowDiff = numRowPre - R;
+        if (H.isSquare()) {
+            d.clear();
+            return;
+        }
         IntMatrix Ht = H.transpose();
         auto Vt = IntMatrix::identity(Ht.numRow());
         NormalForm::solveSystem(Ht, Vt);
-        auto d = Ht.diag();
+        d = Ht.diag();
         std::cout << "D matrix:" << d << std::endl;
-        auto V = Vt.transpose();
-        return LinearSymbolicComparator{.U = std::move(U),
-                                        .V = std::move(V),
-                                        .d = std::move(d),
-                                        .numRowDiff = numRowDiff};
+        V = Vt.transpose();
+    }
+
+    static LinearSymbolicComparator
+    construct(PtrMatrix<const int64_t> Ap,
+              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
+	LinearSymbolicComparator cmp;
+	cmp.init(Ap);
+	return cmp;
+    };
+    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap,
+                                              PtrMatrix<const int64_t> Ep) {
+	LinearSymbolicComparator cmp;
+	cmp.init(Ap, Ep);
+	return cmp;
     };
 
-    bool greaterEqualZero(PtrVector<const int64_t> query) const {
+    bool greaterEqual(PtrVector<const int64_t> query) const {
         auto nEqs = V.numCol() / 2;
         // Full column rank case
-        if (!d.hasValue()) {
+        if (d.size() == 0) {
             auto b = U(_, _(begin, query.size())) * query;
             for (size_t i = V.numRow(); i < b.size(); ++i) {
                 if (b(i) != 0)
@@ -471,7 +434,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 U(_(begin, U.numRow() - numRowDiff), _(begin, U.numCol()));
             Vector<int64_t> b =
                 U(_(begin, tmpU.numRow()), _(begin, query.size())) * query;
-            Vector<int64_t> dinv = d.getValue();
+            Vector<int64_t> dinv = d; // copy
             auto Dlcm = dinv[0];
             // We represent D martix as a vector, and multiply the lcm to the
             // linear equation to avoid store D^(-1) as rational type

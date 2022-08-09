@@ -69,7 +69,7 @@ struct Polyhedra {
     // A(numIneq, numVar + 1)
     // 	};
     void pruneBounds() {
-        Vector<int64_t> diff{A.numRow()};
+        Vector<int64_t> diff{A.numCol()};
         if constexpr (hasEqualities) {
             NormalForm::simplifySystem(E, C.getNumConstTerms());
             for (size_t i = 0; i < E.numRow(); ++i) {
