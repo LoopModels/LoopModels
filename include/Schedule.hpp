@@ -4,6 +4,7 @@
 #include "./Graphs.hpp"
 #include "./Math.hpp"
 #include "llvm/IR/User.h"
+#include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
@@ -74,6 +75,7 @@ struct Schedule {
     bool fusedThrough(const Schedule &y) const {
         return fusedThrough(y, std::min(numLoops, y.numLoops));
     }
+    size_t getNumLoops() const { return numLoops; }
 };
 
 // TODO:
@@ -105,4 +107,5 @@ struct MemoryAccess {
         // if (loop() != x.loop()){ return false; }
         return schedule.fusedThrough(x.schedule);
     }
+    size_t getNumLoops() const { return schedule.getNumLoops(); }
 };

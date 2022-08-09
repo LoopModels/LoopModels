@@ -6,10 +6,11 @@
 #include "./Math.hpp"
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
-#include "./Symbolics.hpp"
 #include "./Simplex.hpp"
+#include "./Symbolics.hpp"
 #include "LinearAlgebra.hpp"
 #include "Orthogonalize.hpp"
+#include <cstddef>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/User.h>
@@ -82,7 +83,8 @@ struct LoopBlock {
     llvm::SmallVector<Dependence, 0> edges;
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
-    Simplex simplex;
+    llvm::SmallVector<Polynomial::Monomial> symbols;
+    // Simplex simplex;
     // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
     // const ArrayReference &ref(const MemoryAccess &x) const {
@@ -107,7 +109,7 @@ struct LoopBlock {
         const SquarePtrMatrix<int64_t> outPhi = schOut.getPhi();
         llvm::ArrayRef<int64_t> inOmega = schIn.getOmega();
         llvm::ArrayRef<int64_t> outOmega = schOut.getOmega();
-	const size_t numLambda = e.getNumLambda();
+        const size_t numLambda = e.getNumLambda();
         // when i == numLoopsCommon, we've passed the last loop
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
@@ -276,7 +278,7 @@ struct LoopBlock {
             //         A(k, j) = Akj;
             //     }
             // }
-	    auto alshr = aln->rotate(K, numPeeled);
+            auto alshr = aln->rotate(K, numPeeled);
             // auto alshr = llvm::makeIntrusiveRefCnt<AffineLoopNest>(
             //     std::move(A), aln->b, aln->poset);
             map.insert(std::make_pair(aln, alshr));
@@ -374,7 +376,7 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-		IntMatrix KS{K*S};
+                IntMatrix KS{K * S};
                 llvm::DenseMap<const AffineLoopNest *,
                                llvm::IntrusiveRefCntPtr<AffineLoopNest>>
                     loopMap;
@@ -395,8 +397,8 @@ struct LoopBlock {
                     // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     auto indMatJ = oldRef.indexMatrix();
-                    for (size_t l = peelOuter; l < indMatJ.numRow(); ++l) 
-                        for (size_t k = 0; k < indMatJ.numCol(); ++k) 
+                    for (size_t l = peelOuter; l < indMatJ.numRow(); ++l)
+                        for (size_t k = 0; k < indMatJ.numCol(); ++k)
                             indMatJ(l, k) = KS(l - peelOuter, row + k);
                     row += indMatJ.numCol();
                     rowLoad = maj.isLoad ? row : rowLoad;
@@ -407,10 +409,47 @@ struct LoopBlock {
                     // otherwise, new schedule = old schedule * K
                     SquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
                     size_t phiDim = Phi.numCol();
-		    Phi = K(_(peelOuter,end),_(peelOuter,end));
+                    Phi = K(_(peelOuter, end), _(peelOuter, end));
                 }
             }
         }
+    }
+    size_t countNumScheduleCoefs() const {
+        size_t c = 0;
+        for (auto &x : memory)
+            c += x.getNumLoops();
+        return c + memory.size();
+    }
+    size_t countNumLambdas() const {
+        size_t c = 0;
+        for (auto &x : edges)
+            c += x.getNumLambda();
+        return c;
+    }
+    size_t countNumBoundingCoefs() const {
+        size_t c = 0;
+        for (auto &x : edges)
+            c += x.getNumSymbols();
+        return c;
+    }
+    std::tuple<size_t, size_t, size_t> countAuxParamsAndConstraints() const {
+        size_t a = 0, b = 0, c = 0;
+        for (auto &x : edges) {
+            a += x.getNumLambda();
+            b += x.getNumSymbols();
+            c += x.getNumConstraints();
+        }
+        return std::make_tuple(a, b, c);
+    }
+    // assemble simplex
+    Simplex omniSimplex() const {
+        const size_t numScheduleCoefs = countNumScheduleCoefs();
+        auto [numLambda, numBounding, numConstraints] =
+            countAuxParamsAndConstraints();
+        Simplex simplex;
+        simplex.resizeForOverwrite(numConstraints,
+                                   numBounding + numScheduleCoefs + numLambda);
+	
     }
 };
 

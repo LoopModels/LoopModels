@@ -317,7 +317,7 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
         } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
-    {std::remove_reference_t<T>::canResize} -> std::same_as<const bool&>;
+    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
 };
 // template <typename T>
 // concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
@@ -332,7 +332,7 @@ concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
         } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.numRow() } -> std::convertible_to<size_t>;
     { t.numCol() } -> std::convertible_to<size_t>;
-    {std::remove_reference_t<T>::canResize} -> std::same_as<const bool&>;
+    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
 };
 template <typename T>
 concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t) {
@@ -352,7 +352,8 @@ inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
         y(i) = x(i);
     return y;
 }
-inline auto &copyto(AbstractMatrixCore auto &A, const AbstractMatrixCore auto &B) {
+inline auto &copyto(AbstractMatrixCore auto &A,
+                    const AbstractMatrixCore auto &B) {
     const size_t M = B.numRow();
     const size_t N = B.numCol();
     if constexpr (A.canResize) {
@@ -568,9 +569,7 @@ template <typename T, typename V> struct BaseVector {
     using eltype = T;
     inline T &ref(size_t i) { return static_cast<V *>(this)(i); }
     inline T &size() { return static_cast<V *>(this)->size(); }
-    V &operator=(const AbstractVector auto &x) {
-	return copyto(*this, x);
-    }
+    V &operator=(const AbstractVector auto &x) { return copyto(*this, x); }
     V &operator+=(AbstractVector auto &x) {
         const size_t N = size();
         V &self = *static_cast<V *>(this);
@@ -733,7 +732,7 @@ template <typename T> struct PtrVector<T, 0> {
         return PtrVector<const T, 0>{.ptr = ptr, .M = M};
     };
     PtrVector<T, 0> operator=(const AbstractVector auto &x) {
-	return copyto(*this, x);
+        return copyto(*this, x);
     }
     PtrVector<T, 0> operator+=(const AbstractVector auto &x) {
         const size_t N = x.size();
@@ -932,6 +931,24 @@ template <typename T> struct StridedVector {
     const T &operator[](size_t i) const { return d[i * x]; }
     T &operator()(size_t i) { return d[i * x]; }
     const T &operator()(size_t i) const { return d[i * x]; }
+
+    StridedVector<T> &operator()(Range<size_t, size_t> i) {
+        return StridedVector<T>{
+            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+    }
+    StridedVector<const T> &operator()(Range<size_t, size_t> i) const {
+        return StridedVector<T>{
+            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+    }
+    template <typename F, typename L>
+    StridedVector<T> operator()(Range<F, L> i) {
+        return (*this)(canonicalizeRange(i, N));
+    }
+    template <typename F, typename L>
+    StridedVector<T> operator()(Range<F, L> i) const {
+        return (*this)(canonicalizeRange(i, N));
+    }
+
     size_t size() const { return N; }
     bool operator==(StridedVector<T> x) const {
         if (size() != x.size())
@@ -951,7 +968,7 @@ template <typename T> struct StridedVector {
     StridedVector<T> view() { return *this; }
     StridedVector<const T> view() const { return *this; }
     StridedVector<T> &operator=(const AbstractVector auto &x) {
-	return copyto(*this, x);
+        return copyto(*this, x);
     }
     StridedVector<T> &operator+=(const AbstractVector auto &x) {
         const size_t N = size();
@@ -1157,8 +1174,11 @@ template <typename T> struct PtrMatrix {
         return StridedVector<const T>{mem + n, M, X};
     }
     PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
-	return copyto(*this, B);
+        return copyto(*this, B);
     }
+    PtrMatrix<T> operator=(PtrMatrix<const T> B) { return copyto(*this, B); }
+    PtrMatrix() = default;
+    PtrMatrix(const PtrMatrix<T> &) = default;
 
     PtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
@@ -1323,9 +1343,7 @@ template <typename T, typename A> struct BaseMatrix {
         }
     }
 
-    A &operator=(const AbstractMatrix auto &B) {
-	return copyto(*this, B);
-    }
+    A &operator=(const AbstractMatrix auto &B) { return copyto(*this, B); }
     A &operator=(T x) {
         const size_t M = numRow();
         const size_t N = numCol();
@@ -1538,7 +1556,7 @@ template <typename T, typename A> struct BaseMatrix {
     };
 
     PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
-	return copyto(*this, B);
+        return copyto(*this, B);
     }
     operator PtrMatrix<T>() {
         return PtrMatrix<T>{
@@ -1668,6 +1686,9 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
         return SquarePtrMatrix<const T>(mem, M);
     }
     constexpr bool isSquare() const { return true; }
+    SquarePtrMatrix<T> operator=(const AbstractMatrix auto A) {
+        return copyto(*this, A);
+    }
 };
 
 template <typename T, unsigned STORAGE = 4>

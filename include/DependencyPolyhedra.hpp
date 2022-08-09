@@ -282,6 +282,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         }
         pruneBounds();
     }
+    static size_t getNumLambda(size_t numIneq, size_t numEq) {
+        return 1 + numIneq + 2 * numEq;
+    }
+    size_t getNumLambda() const { return getNumLambda(A.numRow(), E.numRow()); }
     // `direction = true` means second dep follow first
     // lambda_0 + lambda*A*x = delta + c'x
     // x = [s, i]
@@ -293,10 +297,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // constraint order corresponds to old variables, will be in same order
     //
     // Time parameters are carried over into farkas polys
-    static size_t getNumLambda(size_t numIneq, size_t numEq) {
-        return 1 + numIneq + 2 * numEq;
-    }
-    size_t getNumLambda() const { return getNumLambda(A.numRow(), E.numRow()); }
     std::pair<Simplex, Simplex> farkasPair() const {
 
         const size_t numEqualityConstraintsOld = E.numRow();
@@ -550,7 +550,31 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
-    size_t getNumLambda() const { return depPoly.getNumLambda(); }
+    size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
+    size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
+    size_t getNumConstraints() const {
+        return dependenceBounding.getNumConstraints() +
+               dependenceSatisfaction.getNumConstraints();
+    }
+    // order of variables:
+    // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
+    void copyLambda(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B,
+                    PtrMatrix<int64_t> C, StridedVector<int64_t> d) {
+        const size_t numBoundingConstraints =
+            dependenceBounding.getNumConstraints();
+        const size_t numSchedulingConstraints =
+            dependenceSatisfaction.getNumConstraints();
+        assert(A.numRow() == getNumConstraints());
+        assert(A.numCol() == getNumLambda());
+        auto sC{dependenceSatisfaction.getCostsAndConstraints()};
+        auto bC{dependenceBounding.getCostsAndConstraints()};
+        d(_(begin, numSchedulingConstraints)) =
+            sC(_(begin, numSchedulingConstraints), 0);
+        d(_(numSchedulingConstraints, end)) =
+            bC(_(numSchedulingConstraints, end), 0);
+        // A =
+    }
+
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
                                size_t numLambda) {
