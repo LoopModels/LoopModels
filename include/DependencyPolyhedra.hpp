@@ -296,6 +296,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
         return 1 + numIneq + 2 * numEq;
     }
+    size_t getNumLambda() const { return getNumLambda(A.numRow(), E.numRow()); }
     std::pair<Simplex, Simplex> farkasPair() const {
 
         const size_t numEqualityConstraintsOld = E.numRow();
@@ -549,6 +550,7 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
+    size_t getNumLambda() const { return depPoly.getNumLambda(); }
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
                                size_t numLambda) {
@@ -784,8 +786,8 @@ struct Dependence {
         } else {
             os << "y -> x:\n";
         }
-        return os << d.depPoly<<std::endl;
-	// << "\nSchedule Constraints:\n"
+        return os << d.depPoly << std::endl;
+        // << "\nSchedule Constraints:\n"
         //           << d.dependenceSatisfaction << "\nBounding Constraints:\n"
         //           << d.dependenceBounding << std::endl;
     }

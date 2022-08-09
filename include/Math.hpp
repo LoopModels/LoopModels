@@ -317,6 +317,7 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
         } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
+    {std::remove_reference_t<T>::canResize} -> std::same_as<const bool&>;
 };
 // template <typename T>
 // concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
@@ -331,11 +332,40 @@ concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
         } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
     { t.numRow() } -> std::convertible_to<size_t>;
     { t.numCol() } -> std::convertible_to<size_t>;
+    {std::remove_reference_t<T>::canResize} -> std::same_as<const bool&>;
 };
 template <typename T>
 concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t) {
     { t.view() } -> AbstractMatrixCore;
 };
+
+inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
+    const size_t N = y.size();
+    const size_t M = x.size();
+    if constexpr (y.canResize) {
+        if (M != N)
+            y.resizeForOverwrite(M);
+    } else {
+        assert(M == N);
+    }
+    for (size_t i = 0; i < M; ++i)
+        y(i) = x(i);
+    return y;
+}
+inline auto &copyto(AbstractMatrixCore auto &A, const AbstractMatrixCore auto &B) {
+    const size_t M = B.numRow();
+    const size_t N = B.numCol();
+    if constexpr (A.canResize) {
+        A.sizeExtend(M, N);
+    } else {
+        assert(M == A.numRow());
+        assert(N == A.numCol());
+    }
+    for (size_t r = 0; r < M; ++r)
+        for (size_t c = 0; c < N; ++c)
+            A(r, c) = B(r, c);
+    return A;
+}
 
 struct Add {
     constexpr auto operator()(auto x, auto y) const { return x + y; }
@@ -355,6 +385,7 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     using eltype = typename A::eltype;
     const Op op;
     const A a;
+    static constexpr bool canResize = false;
     auto operator()(size_t i) const { return op(a(i)); }
     auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
@@ -393,6 +424,7 @@ struct ElementwiseVectorBinaryOp {
     Op op;
     A a;
     B b;
+    static constexpr bool canResize = false;
     auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
     size_t size() const {
         if constexpr (AbstractVector<A> && AbstractVector<B>) {
@@ -414,6 +446,7 @@ struct ElementwiseMatrixBinaryOp {
     Op op;
     A a;
     B b;
+    static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const {
         return op(get(a, i, j), get(b, i, j));
     }
@@ -457,6 +490,7 @@ struct ElementwiseMatrixBinaryOp {
 template <typename A> struct Transpose {
     using eltype = typename A::eltype;
     A a;
+    static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const { return a(j, i); }
     size_t numRow() const { return a.numCol(); }
     size_t numCol() const { return a.numRow(); }
@@ -466,6 +500,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     using eltype = typename PromoteEltype<A, B>::eltype;
     A a;
     B b;
+    static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const {
         static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
         auto s = (a(i, 0) * b(0, j)) * 0;
@@ -481,6 +516,7 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
     using eltype = typename PromoteEltype<A, B>::eltype;
     A a;
     B b;
+    static constexpr bool canResize = false;
     auto operator()(size_t i) const {
         static_assert(AbstractVector<B>, "B should be an AbstractVector");
         auto s = (a(i, 0) * b(0)) * 0;
@@ -533,18 +569,7 @@ template <typename T, typename V> struct BaseVector {
     inline T &ref(size_t i) { return static_cast<V *>(this)(i); }
     inline T &size() { return static_cast<V *>(this)->size(); }
     V &operator=(const AbstractVector auto &x) {
-        const size_t N = size();
-        const size_t M = x.size();
-        V &self = *static_cast<V *>(this);
-        if constexpr (static_cast<V *>(this)->canResize()) {
-            if (M != N)
-                self.resizeForOverwrite(M);
-        } else {
-            assert(M == N);
-        }
-        for (size_t i = 0; i < M; ++i)
-            self(i) = x(i);
-        return self;
+	return copyto(*this, x);
     }
     V &operator+=(AbstractVector auto &x) {
         const size_t N = size();
@@ -603,6 +628,7 @@ template <typename T, size_t M = 0>
 struct Vector : BaseVector<T, Vector<T, M>> {
     using eltype = T;
     T data[M];
+    static constexpr bool canResize = false;
     T &operator()(size_t i) {
         assert(i < M);
         return data[i];
@@ -628,6 +654,7 @@ template <typename T, size_t M = 0>
 struct PtrVector : BaseVector<T, PtrVector<T, M>> {
     using eltype = T;
     T *ptr;
+    static constexpr bool canResize = false;
     PtrVector(T *ptr) : ptr(ptr){};
     T &operator()(size_t i) const {
         assert(i < M);
@@ -647,8 +674,10 @@ struct PtrVector : BaseVector<T, PtrVector<T, M>> {
 };
 template <typename T> struct PtrVector<T, 0> {
     using eltype = T;
+    // using eltype = std::remove_const_t<T>;
     T *ptr;
     size_t M;
+    static constexpr bool canResize = false;
     T &operator[](size_t i) {
         assert(i < M);
         return ptr[i];
@@ -704,11 +733,7 @@ template <typename T> struct PtrVector<T, 0> {
         return PtrVector<const T, 0>{.ptr = ptr, .M = M};
     };
     PtrVector<T, 0> operator=(const AbstractVector auto &x) {
-        const size_t N = x.size();
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] = x(i);
-        return *this;
+	return copyto(*this, x);
     }
     PtrVector<T, 0> operator+=(const AbstractVector auto &x) {
         const size_t N = x.size();
@@ -790,11 +815,12 @@ template <typename T> inline auto view(const llvm::ArrayRef<T> x) {
 template <typename T> struct Vector<T, 0> {
     using eltype = T;
     llvm::SmallVector<T, 16> data;
+    static constexpr bool canResize = true;
 
     Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
 
-    Vector(const llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
-    Vector(llvm::SmallVector<T> &&A) : data(std::move(A)){};
+    // Vector(llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
+    Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
     T &operator()(size_t i) {
         assert(i < data.size());
@@ -883,6 +909,7 @@ template <typename T> struct StridedVector {
     T *d;
     size_t N;
     size_t x;
+    static constexpr bool canResize = false;
     struct StridedIterator {
         T *d;
         size_t x;
@@ -924,13 +951,7 @@ template <typename T> struct StridedVector {
     StridedVector<T> view() { return *this; }
     StridedVector<const T> view() const { return *this; }
     StridedVector<T> &operator=(const AbstractVector auto &x) {
-        const size_t N = size();
-        const size_t M = x.size();
-        StridedVector<T> &self = *this;
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            self(i) = x(i);
-        return self;
+	return copyto(*this, x);
     }
     StridedVector<T> &operator+=(const AbstractVector auto &x) {
         const size_t N = size();
@@ -987,6 +1008,7 @@ template <typename T> struct PtrMatrix {
     using eltype = T;
     T *mem;
     const size_t M, N, X;
+    static constexpr bool canResize = false;
 
     static constexpr bool fixedNumRow = true;
     static constexpr bool fixedNumCol = true;
@@ -1135,12 +1157,7 @@ template <typename T> struct PtrMatrix {
         return StridedVector<const T>{mem + n, M, X};
     }
     PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
-        assert(M == B.numRow());
-        assert(N == B.numCol());
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) = B(r, c);
-        return *this;
+	return copyto(*this, B);
     }
 
     PtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
@@ -1233,6 +1250,9 @@ static_assert(AbstractVector<PtrVector<const int64_t>>,
 static_assert(AbstractVector<const PtrVector<const int64_t>>,
               "PtrVector<const int64_t> isa AbstractVector failed");
 
+static_assert(AbstractVector<Vector<int64_t>>,
+              "PtrVector<int64_t> isa AbstractVector failed");
+
 static_assert(!AbstractMatrix<PtrVector<int64_t>>,
               "PtrVector<int64_t> isa AbstractMatrix succeeded");
 static_assert(!AbstractMatrix<PtrVector<const int64_t>>,
@@ -1304,13 +1324,7 @@ template <typename T, typename A> struct BaseMatrix {
     }
 
     A &operator=(const AbstractMatrix auto &B) {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        sizeExtend(M, N);
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) = B(r, c);
-        return *this;
+	return copyto(*this, B);
     }
     A &operator=(T x) {
         const size_t M = numRow();
@@ -1524,14 +1538,7 @@ template <typename T, typename A> struct BaseMatrix {
     };
 
     PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
-        const size_t M = numRow();
-        const size_t N = numCol();
-        assert(M == B.numRow());
-        assert(N == B.numCol());
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) = B(r, c);
-        return *this;
+	return copyto(*this, B);
     }
     operator PtrMatrix<T>() {
         return PtrMatrix<T>{
@@ -1562,6 +1569,7 @@ struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     //               "if specifying non-zero M and N, we should have M*N == S");
     static constexpr bool fixedNumRow = M;
     static constexpr bool fixedNumCol = N;
+    static constexpr bool canResize = false;
     T mem[S];
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -1584,6 +1592,7 @@ template <typename T, size_t M, size_t S>
 struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> mem;
     size_t N, X;
+    static constexpr bool canResize = true;
 
     Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
 
@@ -1607,6 +1616,7 @@ template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     llvm::SmallVector<T, S> mem;
     size_t M;
+    static constexpr bool canResize = true;
 
     Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
 
@@ -1634,6 +1644,7 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
+    static constexpr bool canResize = false;
 
     inline T &getLinearElement(size_t i) { return mem[i]; }
     inline const T &getLinearElement(size_t i) const { return mem[i]; }
@@ -1650,7 +1661,7 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
 
     T *data() { return mem; }
     const T *data() const { return mem; }
-    explicit operator PtrMatrix<const T>() const {
+    operator PtrMatrix<const T>() const {
         return PtrMatrix<const T>(mem, M, M, M);
     }
     operator SquarePtrMatrix<const T>() const {
@@ -1667,6 +1678,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
+    static constexpr bool canResize = false;
 
     SquareMatrix(size_t m)
         : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
@@ -1735,6 +1747,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     llvm::SmallVector<T, S> mem;
 
     size_t M, N, X;
+    static constexpr bool canResize = true;
 
     Matrix(llvm::SmallVector<T, S> content, size_t m, size_t n)
         : mem(std::move(content)), M(m), N(n), X(n){};
@@ -2458,6 +2471,7 @@ template <typename T> struct SmallSparseMatrix {
     static constexpr size_t maxElemPerRow = 24;
     llvm::SmallVector<uint32_t> rows;
     size_t col;
+    static constexpr bool canResize = false;
     size_t numRow() const { return rows.size(); }
     size_t numCol() const { return col; }
     SmallSparseMatrix(size_t numRows, size_t numCols)

@@ -92,7 +92,7 @@ struct LoopBlock {
     //     return refs[x->ref];
     // }
     bool isSatisfied(const Dependence &e) const {
-        const IntegerEqPolyhedra &sat = e.dependenceSatisfaction;
+        const Simplex &sat = e.dependenceSatisfaction;
         Schedule &schIn = e.in->schedule;
         Schedule &schOut = e.out->schedule;
         const ArrayReference &refIn = e.in->ref;
@@ -101,13 +101,13 @@ struct LoopBlock {
         size_t numLoopsOut = refOut.getNumLoops();
         size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
         size_t numLoopsTotal = numLoopsIn + numLoopsOut;
-        llvm::SmallVector<int64_t, 16> schv;
-        schv.resize_for_overwrite(sat.getNumVar());
+        Vector<int64_t> schv;
+        schv.resizeForOverwrite(sat.getNumVar());
         const SquarePtrMatrix<int64_t> inPhi = schIn.getPhi();
         const SquarePtrMatrix<int64_t> outPhi = schOut.getPhi();
         llvm::ArrayRef<int64_t> inOmega = schIn.getOmega();
         llvm::ArrayRef<int64_t> outOmega = schOut.getOmega();
-
+	const size_t numLambda = e.getNumLambda();
         // when i == numLoopsCommon, we've passed the last loop
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
@@ -140,8 +140,8 @@ struct LoopBlock {
             // dependenceSatisfaction is phi_t - phi_s >= 0
             // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
             // we implicitly 0-out `w` and `u` here,
-            if (sat.knownSatisfied(schv)) {
-                if (!e.dependenceBounding.knownSatisfied(schv)) {
+            if (sat.satisfiable(schv, numLambda)) {
+                if (e.dependenceBounding.unSatisfiable(schv, numLambda)) {
                     // if zerod-out bounding not >= 0, then that means
                     // phi_t - phi_s > 0, so the dependence is satisfied
                     return true;
@@ -261,23 +261,24 @@ struct LoopBlock {
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
-            IntMatrix A(IntMatrix::uninitialized(numConstraints, numVar));
-            for (size_t j = 0; j < numPeeled; ++j) {
-                for (size_t k = 0; k < numConstraints; ++k) {
-                    A(k, j) = aln->A(k, j);
-                }
-            }
-            for (size_t j = numPeeled; j < numVar; ++j) {
-                for (size_t k = 0; k < numConstraints; ++k) {
-                    int64_t Akj = 0;
-                    for (size_t l = 0; l < numTransformed; ++l) {
-                        Akj += aln->A(k, l) * K(j - numPeeled, l);
-                    }
-                    A(k, j) = Akj;
-                }
-            }
-            auto alshr = llvm::makeIntrusiveRefCnt<AffineLoopNest>(
-                std::move(A), aln->b, aln->poset);
+            // IntMatrix A(IntMatrix::uninitialized(numConstraints, numVar));
+            // for (size_t j = 0; j < numPeeled; ++j) {
+            //     for (size_t k = 0; k < numConstraints; ++k) {
+            //         A(k, j) = aln->A(k, j);
+            //     }
+            // }
+            // for (size_t j = numPeeled; j < numVar; ++j) {
+            //     for (size_t k = 0; k < numConstraints; ++k) {
+            //         int64_t Akj = 0;
+            //         for (size_t l = 0; l < numTransformed; ++l) {
+            //             Akj += aln->A(k, l) * K(j - numPeeled, l);
+            //         }
+            //         A(k, j) = Akj;
+            //     }
+            // }
+	    auto alshr = aln->rotate(K, numPeeled);
+            // auto alshr = llvm::makeIntrusiveRefCnt<AffineLoopNest>(
+            //     std::move(A), aln->b, aln->poset);
             map.insert(std::make_pair(aln, alshr));
             return alshr;
         }
@@ -373,7 +374,7 @@ struct LoopBlock {
                 // S*L = (S*K)*J
                 // Schedule:
                 // Phi*L = (Phi*K)*J
-                IntMatrix KS(matmul(K, S));
+		IntMatrix KS{K*S};
                 llvm::DenseMap<const AffineLoopNest *,
                                llvm::IntrusiveRefCntPtr<AffineLoopNest>>
                     loopMap;
@@ -394,11 +395,9 @@ struct LoopBlock {
                     // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
                     auto indMatJ = oldRef.indexMatrix();
-                    for (size_t l = peelOuter; l < indMatJ.numRow(); ++l) {
-                        for (size_t k = 0; k < indMatJ.numCol(); ++k) {
+                    for (size_t l = peelOuter; l < indMatJ.numRow(); ++l) 
+                        for (size_t k = 0; k < indMatJ.numCol(); ++k) 
                             indMatJ(l, k) = KS(l - peelOuter, row + k);
-                        }
-                    }
                     row += indMatJ.numCol();
                     rowLoad = maj.isLoad ? row : rowLoad;
                     rowStore = maj.isLoad ? rowStore : row;
@@ -408,11 +407,7 @@ struct LoopBlock {
                     // otherwise, new schedule = old schedule * K
                     SquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
                     size_t phiDim = Phi.numCol();
-                    for (size_t n = 0; n < phiDim; ++n) {
-                        for (size_t m = 0; m < phiDim; ++m) {
-                            Phi(m, n) = K(peelOuter + m, peelOuter + n);
-                        }
-                    }
+		    Phi = K(_(peelOuter,end),_(peelOuter,end));
                 }
             }
         }

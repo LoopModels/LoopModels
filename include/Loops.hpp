@@ -75,24 +75,19 @@ struct AffineLoopNest : SymbolicPolyhedra,
     }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    rotate(PtrMatrix<const int64_t> R) const {
-        assert(R.numCol() == getNumLoops());
-        assert(R.numRow() == getNumLoops());
-        const size_t numConst = C.getNumConstTerms();
+    rotate(PtrMatrix<const int64_t> R, size_t numPeeled = 0) const {
+        assert(R.numCol() + numPeeled == getNumLoops());
+        assert(R.numRow() + numPeeled == getNumLoops());
+        assert(numPeeled < getNumLoops());
+        const size_t numConst = C.getNumConstTerms() + numPeeled;
         const auto [M, N] = A.size();
-        assert(numConst + getNumLoops() == N);
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
         ret->symbols = symbols;
         ret->C = C;
         IntMatrix &B = ret->A;
         B.resizeForOverwrite(M, N);
-        for (size_t m = 0; m < M; ++m) {
-            for (size_t n = 0; n < numConst; ++n)
-                B(m, n) = A(m, n);
-            for (size_t n = numConst; n < N; ++n)
-                B(m, n) = 0;
-        }
-        B(_(begin, M), _(numConst, N)) = A(_(begin, M), _(numConst, N)) * R;
+        B(_, _(begin, numConst)) = A(_, _(begin, numConst));
+        B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
         std::cout << "A = \n" << A << std::endl;
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
