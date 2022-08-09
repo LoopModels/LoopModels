@@ -416,28 +416,28 @@ struct LoopBlock {
     }
     size_t countNumScheduleCoefs() const {
         size_t c = 0;
-        for (auto &x : memory)
-            c += x.getNumLoops();
+        for (auto &m : memory)
+            c += m.getNumLoops();
         return c + memory.size();
     }
     size_t countNumLambdas() const {
         size_t c = 0;
-        for (auto &x : edges)
-            c += x.getNumLambda();
+        for (auto &e : edges)
+            c += e.getNumLambda();
         return c;
     }
     size_t countNumBoundingCoefs() const {
         size_t c = 0;
-        for (auto &x : edges)
-            c += x.getNumSymbols();
+        for (auto &e : edges)
+            c += e.getNumSymbols();
         return c;
     }
     std::tuple<size_t, size_t, size_t> countAuxParamsAndConstraints() const {
         size_t a = 0, b = 0, c = 0;
-        for (auto &x : edges) {
-            a += x.getNumLambda();
-            b += x.getNumSymbols();
-            c += x.getNumConstraints();
+        for (auto &e : edges) {
+            a += e.getNumLambda();
+            b += e.getNumSymbols();
+            c += e.getNumConstraints();
         }
         return std::make_tuple(a, b, c);
     }
@@ -447,9 +447,30 @@ struct LoopBlock {
         auto [numLambda, numBounding, numConstraints] =
             countAuxParamsAndConstraints();
         Simplex simplex;
-        simplex.resizeForOverwrite(numConstraints,
-                                   numBounding + numScheduleCoefs + numLambda);
-	
+        simplex.resize(numConstraints,
+                       numBounding + numScheduleCoefs + numLambda);
+        auto C{simplex.getCostsAndConstraints()};
+        size_t c = 0, b = 0, s = numBounding,
+               l = numBounding + numScheduleCoefs;
+        llvm::SmallVector<bool, 512> visited(edges.size());
+        for (size_t m = 0; m < memory.size(); ++m) {
+            auto &mem = memory[m];
+            for (auto e : mem.edgesIn) {
+                if (visited[e])
+                    continue;
+                visited[e] = true;
+                auto &edge = edges[e];
+		size_t numConstraint = edge.getNumConstraints();
+		for (size_t i = 0; i < numConstraint; ++i){
+		    
+		}
+                c += numConstraint;
+                b += edge.getNumSymbols();
+                l += edge.getNumLambda();
+            }
+            s += 1 + mem.getNumLoops();
+        }
+        return simplex;
     }
 };
 

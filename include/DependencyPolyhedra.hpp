@@ -564,14 +564,18 @@ struct Dependence {
             dependenceBounding.getNumConstraints();
         const size_t numSchedulingConstraints =
             dependenceSatisfaction.getNumConstraints();
+        const size_t halfLambda = depPoly.getNumLambda();
+        const size_t numLambda = halfLambda << 1;
         assert(A.numRow() == getNumConstraints());
         assert(A.numCol() == getNumLambda());
         auto sC{dependenceSatisfaction.getCostsAndConstraints()};
         auto bC{dependenceBounding.getCostsAndConstraints()};
-        d(_(begin, numSchedulingConstraints)) =
-            sC(_(begin, numSchedulingConstraints), 0);
-        d(_(numSchedulingConstraints, end)) =
-            bC(_(numSchedulingConstraints, end), 0);
+        auto rS = _(begin, numSchedulingConstraints);
+        auto rB = _(numSchedulingConstraints, end);
+        d(rS) = sC(_, 0);
+        d(rB) = bC(_, 0);
+        A(rS, _(begin, halfLambda)) = sC(_, _(1, halfLambda + 1));
+        A(rB, _(halfLambda, end)) = bC(_, _(1, halfLambda + 1));
         // A =
     }
 
