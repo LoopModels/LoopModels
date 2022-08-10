@@ -9,7 +9,7 @@ TEST(SimplexTest, BasicAssertions){
     llvm::Optional<Simplex> optS{Simplex::positiveVariables(A, B)};
     EXPECT_TRUE(optS.hasValue());
     Simplex &S{optS.getValue()};
-    llvm::MutableArrayRef<int64_t> C{S.getCost()};
+    auto C{S.getCost()};
     C[0] = 0;
     C[1] = 0;
     C[2] = 0;

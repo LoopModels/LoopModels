@@ -152,8 +152,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t yDim = y.ref.arrayDim();
         IntMatrix A(numLoopsCommon, xDim + yDim);
         if (numLoopsCommon) {
-            PtrMatrix<const int64_t> indMatX = x.ref.indexMatrix();
-            PtrMatrix<const int64_t> indMatY = y.ref.indexMatrix();
+            PtrMatrix<int64_t> indMatX = x.ref.indexMatrix();
+            PtrMatrix<int64_t> indMatY = y.ref.indexMatrix();
             for (size_t i = 0; i < numLoopsCommon; ++i) {
                 A(i, _(begin, xDim)) = indMatX(i, _);
                 A(i, _(xDim, end)) = indMatY(i, _);
@@ -322,7 +322,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         std::pair<Simplex, Simplex> pair;
         Simplex &fw(pair.first);
         fw.resize(numConstraintsNew, numVarNew);
-        PtrMatrix<int64_t> fC{fw.getCostsAndConstraints()};
+        MutPtrMatrix<int64_t> fC{fw.getCostsAndConstraints()};
         fC(0, 0) = 1; // lambda_0
         fC(_, _(1, ineqEnd)) = A.transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();

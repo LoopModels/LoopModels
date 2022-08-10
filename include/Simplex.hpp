@@ -58,16 +58,16 @@ struct Simplex {
         tableau.resizeForOverwrite(numTableauRows(numCon),
                                    numTableauCols(numVar), stride);
     }
-    PtrMatrix<int64_t> getCostsAndConstraints() {
+    MutPtrMatrix<int64_t> getCostsAndConstraints() {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    PtrMatrix<const int64_t> getCostsAndConstraints() const {
+    PtrMatrix<int64_t> getCostsAndConstraints() const {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    PtrMatrix<int64_t> getConstraints() {
+    MutPtrMatrix<int64_t> getConstraints() {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
-    PtrMatrix<const int64_t> getConstraints() const {
+    PtrMatrix<int64_t> getConstraints() const {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
     // note that this is 1 more than the actual number of variables
@@ -128,7 +128,7 @@ struct Simplex {
         //
         // original number of variables
         const size_t numVar = getNumVar();
-        PtrMatrix<int64_t> C{getConstraints()};
+        MutPtrMatrix<int64_t> C{getConstraints()};
         std::cout << "C=" << C << std::endl;
         PtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
@@ -191,7 +191,7 @@ struct Simplex {
                 augmentVars.push_back(i);
         if (augmentVars.size()) {
             addVars(augmentVars.size()); // NOTE: invalidates all refs
-            PtrMatrix<int64_t> C{getConstraints()};
+            MutPtrMatrix<int64_t> C{getConstraints()};
             auto basicVars{getBasicVariables()};
             PtrVector<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
@@ -233,7 +233,7 @@ struct Simplex {
                 return i;
         return -1;
     }
-    static int getLeavingVariable(PtrMatrix<int64_t> C,
+    static int getLeavingVariable(MutPtrMatrix<int64_t> C,
                                   size_t enteringVariable) {
         // inits guarantee first valid is selected
         int64_t n = -1;
@@ -253,7 +253,7 @@ struct Simplex {
         }
         return --j;
     }
-    int64_t makeBasic(PtrMatrix<int64_t> C, int64_t f, int enteringVariable) {
+    int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f, int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
         std::cout << "leavingVariable = " << leavingVariable << std::endl;
         if (leavingVariable == -1)
@@ -266,7 +266,7 @@ struct Simplex {
                 if (i == 0)
                     f = m;
             }
-        std::cout << "post-removal C = \n" << C << std::endl;
+        std::cout << "post-removal C =" << C << std::endl;
         // update baisc vars and constraints
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -278,10 +278,10 @@ struct Simplex {
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     int64_t runCore(int64_t f = 1) {
-        PtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-            std::cout << "C = \n" << C << std::endl;
+            std::cout << "C =" << C << std::endl;
             int enteringVariable = getEnteringVariable(C(0, _));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
@@ -294,7 +294,7 @@ struct Simplex {
     // set basicVar's costs to 0, and then runCore()
     int64_t run() {
         StridedVector<int64_t> basicVars = getBasicVariables();
-        PtrMatrix<int64_t> C = getCostsAndConstraints();
+        MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
@@ -309,7 +309,7 @@ struct Simplex {
     // B(:,1:end)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex>
-    positiveVariables(PtrMatrix<const int64_t> A, PtrMatrix<const int64_t> B) {
+    positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -330,13 +330,13 @@ struct Simplex {
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
-        std::cout << "simplex.tableau = \n" << simplex.tableau << std::endl;
+        std::cout << "simplex.tableau =" << simplex.tableau << std::endl;
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
             consts[i] = A(i, 0);
         for (size_t i = 0; i < numStrict; ++i)
             consts[i + numSlack] = B(i, 0);
-        std::cout << "simplex.tableau = \n" << simplex.tableau << std::endl;
+        std::cout << "simplex.tableau =" << simplex.tableau << std::endl;
         if (simplex.initiateFeasible())
             return {};
         return simplex;
@@ -346,7 +346,7 @@ struct Simplex {
         Simplex simplex;
         for (size_t c = 0; c < getNumConstraints(); ++c) {
             simplex = *this;
-            PtrMatrix<int64_t> constraints = simplex.getConstraints();
+            MutPtrMatrix<int64_t> constraints = simplex.getConstraints();
             int64_t bumpedBound = ++constraints(c, 0);
             PtrVector<int64_t> cost = simplex.getCost();
             for (size_t v = numSlackVar; v < cost.size(); ++v)
@@ -360,7 +360,7 @@ struct Simplex {
         // We remove a variable by isolating it, and then dropping the
         // constraint. This allows us to preserve canonical form
         PtrVector<int64_t> basicConstraints{getBasicConstraints()};
-        PtrMatrix<int64_t> C{getConstraints()};
+        MutPtrMatrix<int64_t> C{getConstraints()};
         // ensure sure `i` is basic
         if (basicConstraints[i] < 0)
             makeBasic(C, 0, i);
