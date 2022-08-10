@@ -371,7 +371,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // so far, both have been identical
         Simplex &bw(pair.second);
         bw.resize(numConstraintsNew, numVarNew);
-        PtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
+        MutPtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
         for (size_t i = 0; i < numConstraintsNew; ++i)
             for (size_t j = 0; j < numVarNew; ++j)
                 bC(i, j) = fC(i, j);
@@ -558,8 +558,8 @@ struct Dependence {
     }
     // order of variables:
     // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
-    void copyLambda(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B,
-                    PtrMatrix<int64_t> C, StridedVector<int64_t> d) {
+    void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
+                    MutPtrMatrix<int64_t> C, StridedVector<int64_t> d) const {
         const size_t numBoundingConstraints =
             dependenceBounding.getNumConstraints();
         const size_t numSchedulingConstraints =
@@ -567,14 +567,14 @@ struct Dependence {
         const size_t halfLambda = depPoly.getNumLambda();
         assert(A.numRow() == getNumConstraints());
         assert(A.numCol() == getNumLambda());
-        auto sC{dependenceSatisfaction.getCostsAndConstraints()};
-        auto bC{dependenceBounding.getCostsAndConstraints()};
+        PtrMatrix<int64_t> sC{dependenceSatisfaction.getCostsAndConstraints()};
+        PtrMatrix<int64_t> bC{dependenceBounding.getCostsAndConstraints()};
         auto rS = _(begin, numSchedulingConstraints);
         auto rB = _(numSchedulingConstraints, end);
         d(rS) = sC(_, 0);
         d(rB) = bC(_, 0);
         const size_t i = 1 + halfLambda;
-	// copyto(A(rS, _(begin, halfLambda)), sC(_, _(1, i)));
+        // copyto(A(rS, _(begin, halfLambda)), sC(_, _(1, i)));
         A(rS, _(begin, halfLambda)) = sC(_, _(1, i));
         A(rB, _(halfLambda, end)) = bC(_, _(1, i));
         const size_t numScheduleCoefs = depPoly.getNumScheduleCoefficients();
@@ -587,7 +587,6 @@ struct Dependence {
         assert(k == bC.numCol());
         C(rS, _(begin, numSym)) = sC(_, _(j, k));
         C(rB, _(numSym, end)) = bC(_, _(j, k));
-	
     }
 
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
