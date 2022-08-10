@@ -157,31 +157,31 @@ struct ArrayReference {
     // indexMatrix() returns a getNumLoops() x arrayDim() matrix.
     // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     // getNumLoops() x arrayDim()
-    PtrMatrix<int64_t> indexMatrix() {
+    MutPtrMatrix<int64_t> indexMatrix() {
+        const size_t d = arrayDim();
+        return MutPtrMatrix<int64_t>{
+            .mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+    }
+    PtrMatrix<int64_t> indexMatrix() const {
         const size_t d = arrayDim();
         return PtrMatrix<int64_t>{
             .mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
     }
-    PtrMatrix<const int64_t> indexMatrix() const {
+    MutPtrMatrix<int64_t> offsetMatrix() {
         const size_t d = arrayDim();
-        return PtrMatrix<const int64_t>{
-            .mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+        const size_t numSymbols = getNumSymbols();
+        return MutPtrMatrix<int64_t>{.mem = indexMatrix().end(),
+                                     .M = d,
+                                     .N = numSymbols,
+                                     .X = numSymbols};
     }
-    PtrMatrix<int64_t> offsetMatrix() {
+    PtrMatrix<int64_t> offsetMatrix() const {
         const size_t d = arrayDim();
         const size_t numSymbols = getNumSymbols();
         return PtrMatrix<int64_t>{.mem = indexMatrix().end(),
                                   .M = d,
                                   .N = numSymbols,
                                   .X = numSymbols};
-    }
-    PtrMatrix<const int64_t> offsetMatrix() const {
-        const size_t d = arrayDim();
-        const size_t numSymbols = getNumSymbols();
-        return PtrMatrix<const int64_t>{.mem = indexMatrix().end(),
-                                        .M = d,
-                                        .N = numSymbols,
-                                        .X = numSymbols};
     }
 
     ArrayReference(size_t arrayID,
@@ -266,7 +266,7 @@ struct ArrayReference {
                     printPlus = true;
                 }
             }
-            PtrMatrix<const int64_t> offs = ar.offsetMatrix();
+            PtrMatrix<int64_t> offs = ar.offsetMatrix();
             for (size_t j = 0; j < offs.numCol(); ++j) {
                 if (int64_t offij = offs(i, j)) {
                     if (printPlus) {
@@ -277,13 +277,13 @@ struct ArrayReference {
                             os << " - ";
                         }
                     }
-		    if (j){
-			if (offij != 1)
-			    os << offij << '*';
-			os << ar.loop->symbols[j-1];
-		    } else {
-			os << offij;
-		    }
+                    if (j) {
+                        if (offij != 1)
+                            os << offij << '*';
+                        os << ar.loop->symbols[j - 1];
+                    } else {
+                        os << offij;
+                    }
                     printPlus = true;
                 }
             }

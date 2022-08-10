@@ -86,8 +86,9 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     EXPECT_EQ(A4, B);
     EXPECT_EQ(A4, C);
     IntMatrix Z = A * 4 - A4;
-    for (auto z : Z)
-        EXPECT_FALSE(z);
+    for (size_t i = 0; i < Z.numRow(); ++i)
+	for (size_t j = 0; j < Z.numCol(); ++j)
+	    EXPECT_FALSE(Z(i,j));
     auto D{stringToIntMatrix(
         "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
         "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "

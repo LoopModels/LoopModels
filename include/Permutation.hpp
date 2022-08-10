@@ -15,16 +15,16 @@ struct Permutation {
         return data.getRow(0) == y.data.getRow(0);
     }
     size_t getNumLoops() const { return data.numCol(); }
-    size_t length() const { return data.length(); }
+    // size_t length() const { return data.length(); }
 
     // llvm::MutableArrayRef<unsigned> inv() { return data.getCol(1); }
     llvm::ArrayRef<unsigned> inv() { return data.getRow(1); }
 
     unsigned &inv(size_t j) { return data(1, j); }
-    auto begin() { return data.begin(); }
-    auto end() { return data.begin() + data.numCol(); }
-    auto begin() const { return data.begin(); }
-    auto end() const { return data.begin() + data.numCol(); }
+    auto begin() { return data.data(); }
+    auto end() { return data.data() + data.numCol(); }
+    auto begin() const { return data.data(); }
+    auto end() const { return data.data() + data.numCol(); }
 
     void init() {
         size_t numloops = getNumLoops();

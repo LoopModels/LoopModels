@@ -356,12 +356,7 @@ inline auto &copyto(AbstractMatrixCore auto &A,
                     const AbstractMatrixCore auto &B) {
     const size_t M = B.numRow();
     const size_t N = B.numCol();
-    if constexpr (A.canResize) {
-        A.sizeExtend(M, N);
-    } else {
-        assert(M == A.numRow());
-        assert(N == A.numCol());
-    }
+    A.extendOrAssertSize(M, N);
     for (size_t r = 0; r < M; ++r)
         for (size_t c = 0; c < N; ++c)
             A(r, c) = B(r, c);
@@ -1008,55 +1003,173 @@ template <typename T> struct StridedVector {
     }
 };
 
-// template <typename T>
-// inline llvm::ArrayRef<T> view(llvm::ArrayRef<T> a, size_t start, size_t stop)
-// {
-//     return llvm::ArrayRef<T>{a.data() + start, stop - start};
-// }
-// template <typename T>
-// inline llvm::MutableArrayRef<T> view(llvm::MutableArrayRef<T> a, size_t
-// start,
-//                                      size_t stop) {
-//     return llvm::MutableArrayRef<T>{a.data() + start, stop - start};
-// }
+template <typename T>
+concept DerivedMatrix = requires(T t, const T ct) {
+    {
+        t.data()
+        } -> std::convertible_to<typename std::add_pointer_t<
+            typename std::add_const_t<typename T::eltype>>>;
+    {
+        ct.data()
+        } -> std::same_as<typename std::add_pointer_t<
+            typename std::add_const_t<typename T::eltype>>>;
+    { t.numRow() } -> std::convertible_to<size_t>;
+    { t.numCol() } -> std::convertible_to<size_t>;
+    { t.rowStride() } -> std::convertible_to<size_t>;
+};
 
 template <typename T> struct SmallSparseMatrix;
 template <typename T> struct PtrMatrix {
-    using eltype = T;
-    T *mem;
+    using eltype = std::remove_reference_t<T>;
+    static_assert(!std::is_const_v<T>, "const T is redundant");
+    static constexpr bool canResize = false;
+    const T *const mem;
+    const size_t M, N, X;
+
+    inline const T *data() const { return mem; }
+    inline size_t numRow() const { return M; }
+    inline size_t numCol() const { return N; }
+    inline size_t rowStride() const { return X; }
+
+    inline std::pair<size_t, size_t> size() const {
+        return std::make_pair(M, N);
+    }
+    inline auto &operator()(size_t row, size_t col) const {
+        assert(row < M);
+        assert(col < N);
+        return *(data() + col + row * X);
+    }
+    inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
+                                   Range<size_t, size_t> cols) {
+        assert(rows.end >= rows.begin);
+        assert(cols.end >= cols.begin);
+        assert(rows.end <= M);
+        assert(cols.end <= numCol());
+        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
+                            .M = rows.end - rows.begin,
+                            .N = cols.end - cols.begin,
+                            .X = X};
+    }
+    template <typename R0, typename R1, typename C0, typename C1>
+    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
+        return (*this)(canonicalizeRange(rows, M),
+                       canonicalizeRange(cols, numCol()));
+    }
+    template <typename C0, typename C1>
+    inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
+        return (*this)(Range<size_t, size_t>{0, M},
+                       canonicalizeRange(cols, numCol()));
+    }
+    template <typename R0, typename R1>
+    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
+        return (*this)(canonicalizeRange(rows, M),
+                       Range<size_t, size_t>{0, numCol()});
+    }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, size_t col) {
+        return getCol(col)(canonicalizeRange(rows, M));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(size_t row, Range<C0, C1> cols) {
+        return getRow(row)(canonicalizeRange(cols, numCol()));
+    }
+    inline auto operator()(Colon, size_t col) { return getCol(col); }
+    inline auto operator()(size_t row, Colon) { return getRow(row); }
+
+    inline auto operator()(Range<size_t, size_t> rows,
+                           Range<size_t, size_t> cols) const {
+        assert(rows.end >= rows.begin);
+        assert(cols.end >= cols.begin);
+        assert(rows.end <= M);
+        assert(cols.end <= numCol());
+        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
+                            .M = rows.end - rows.begin,
+                            .N = cols.end - cols.begin,
+                            .X = X};
+    }
+    template <typename R0, typename R1, typename C0, typename C1>
+    inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) const {
+        return view(canonicalizeRange(rows, M),
+                    canonicalizeRange(cols, numCol()));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(Colon, Range<C0, C1> cols) const {
+        return view(Range<size_t, size_t>{0, M},
+                    canonicalizeRange(cols, numCol()));
+    }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, Colon) const {
+        return view(canonicalizeRange(rows, M),
+                    Range<size_t, size_t>{0, numCol()});
+    }
+    inline const PtrMatrix<T> operator()(Colon, Colon) const { return *this; }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, size_t col) const {
+        return getCol(col)(canonicalizeRange(rows, M));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(size_t row, Range<C0, C1> cols) const {
+        return getRow(row)(canonicalizeRange(cols, numCol()));
+    }
+    inline auto operator()(Colon, size_t col) const { return getCol(col); }
+    inline auto operator()(size_t row, Colon) const { return getRow(row); }
+
+    inline PtrVector<const T, 0> getRow(size_t i) const {
+        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(), .M = M};
+    }
+    inline StridedVector<const T> getCol(size_t n) const {
+        return StridedVector<const T>{data() + n, M, rowStride()};
+    }
+
+    bool operator==(const AbstractMatrix auto &B) const {
+        const size_t M = B.numRow();
+        const size_t N = B.numCol();
+        if ((M != numRow()) || (N != numCol()))
+            return false;
+        for (size_t r = 0; r < M; ++r)
+            for (size_t c = 0; c < N; ++c)
+                if ((*this)(r, c) != B(r, c))
+                    return false;
+        return true;
+    }
+    bool isSquare() const { return M == N; }
+    Vector<T> diag() const {
+        size_t K = std::min(M, N);
+        Vector<T> d;
+        d.resizeForOverwrite(K);
+        for (size_t k = 0; k < K; ++k)
+            d(k) = mem[k * (1 + X)];
+        return d;
+    }
+    inline PtrMatrix<T> view() const { return *this; };
+    Transpose<PtrMatrix<T>> transpose() const {
+        return Transpose<PtrMatrix<T>>{*this};
+    }
+    void extendOrAssertSize(size_t MM, size_t NN) const {
+        assert(MM == M);
+        assert(NN == N);
+    }
+};
+template <typename T> struct MutPtrMatrix {
+    using eltype = std::remove_reference_t<T>;
+    static_assert(!std::is_const_v<T>,
+                  "MutPtrMatrix should never have const T");
+    T *const mem;
     const size_t M, N, X;
     static constexpr bool canResize = false;
 
     static constexpr bool fixedNumRow = true;
     static constexpr bool fixedNumCol = true;
-    // PtrMatrix(T *mem, size_t M, size_t N, size_t X)
-    //     : mem(mem), M(M), N(N), X(X){};
-
-    T *begin() { return mem; }
-    T *end() { return mem + (M * N); }
-    const T *begin() const { return mem; }
-    const T *end() const { return mem + (M * N); }
-
     inline size_t numRow() const { return M; }
     inline size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
-    static constexpr size_t colStride() { return 1; }
-    static constexpr size_t getConstCol() { return 0; }
-
-    inline std::pair<size_t, size_t> size() const {
-        return std::make_pair(M, N);
-    }
-    inline PtrMatrix<const T> view() const {
-        return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
+    inline T *data() { return mem; }
+    inline const T *data() const { return mem; }
+    inline PtrMatrix<T> view() const {
+        return PtrMatrix<T>{.mem = data(), .M = M, .N = N, .X = X};
     };
 
-    T *data() { return mem; }
-    const T *data() const { return mem; }
-
-    operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem, .M = M, .N = N, .X = X};
-    }
-    PtrMatrix<T> operator=(const SmallSparseMatrix<T> &A) {
+    MutPtrMatrix<T> operator=(const SmallSparseMatrix<T> &A) {
         assert(M == A.numRow());
         assert(N == A.numCol());
         size_t k = 0;
@@ -1073,114 +1186,115 @@ template <typename T> struct PtrMatrix {
         assert(k == A.nonZeros.size());
         return *this;
     }
-    inline T &operator()(size_t row, size_t col) {
-        assert(row <= M);
-        assert(col <= N);
-        return *(mem + col + row * X);
+
+    inline std::pair<size_t, size_t> size() const {
+        return std::make_pair(M, N);
     }
-    inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
-                                   Range<size_t, size_t> cols) {
+
+    inline auto &operator()(size_t row, size_t col) {
+        assert(row < M);
+        assert(col < numCol());
+        return *(data() + col + row * rowStride());
+    }
+    inline auto &operator()(size_t row, size_t col) const {
+        assert(row < M);
+        assert(col < numCol());
+        return *(data() + col + row * rowStride());
+    }
+    inline auto operator()(Range<size_t, size_t> rows,
+                           Range<size_t, size_t> cols) {
         assert(rows.end >= rows.begin);
         assert(cols.end >= cols.begin);
         assert(rows.end <= M);
-        assert(cols.end <= N);
-        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
-                            .X = X};
+        assert(cols.end <= numCol());
+        return MutPtrMatrix<T>{.mem = data() + cols.begin +
+                                      rows.begin * rowStride(),
+                               .M = rows.end - rows.begin,
+                               .N = cols.end - cols.begin,
+                               .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
-    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
-        return (*this)(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
+    inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
+        return (*this)(canonicalizeRange(rows, M),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename C0, typename C1>
-    inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
+    inline MutPtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
+        return (*this)(Range<size_t, size_t>{0, M},
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
-    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
+    inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
+        return (*this)(canonicalizeRange(rows, M),
+                       Range<size_t, size_t>{0, numCol()});
     }
-    inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
     template <typename R0, typename R1>
-    inline auto operator()(Range<R0, R1> rows, size_t col) {
+    inline StridedVector<T> operator()(Range<R0, R1> rows, size_t col) {
         return getCol(col)(canonicalizeRange(rows, M));
     }
     template <typename C0, typename C1>
-    inline auto operator()(size_t row, Range<C0, C1> cols) {
-        return getRow(row)(canonicalizeRange(cols, N));
+    inline PtrVector<T> operator()(size_t row, Range<C0, C1> cols) {
+        return getRow(row)(canonicalizeRange(cols, numCol()));
     }
     inline auto operator()(Colon, size_t col) { return getCol(col); }
     inline auto operator()(size_t row, Colon) { return getRow(row); }
 
-    inline T operator()(size_t row, size_t col) const {
-        assert(row <= M);
-        assert(col <= N);
-        return *(mem + col + row * X);
-    }
-    inline PtrMatrix<const T> operator()(Range<size_t, size_t> rows,
-                                         Range<size_t, size_t> cols) const {
+    inline auto operator()(Range<size_t, size_t> rows,
+                           Range<size_t, size_t> cols) const {
         assert(rows.end >= rows.begin);
         assert(cols.end >= cols.begin);
         assert(rows.end <= M);
-        assert(cols.end <= N);
-        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
+        assert(cols.end <= numCol());
+        return PtrMatrix<T>{.mem =
+                                data() + cols.begin + rows.begin * rowStride(),
                             .M = rows.end - rows.begin,
                             .N = cols.end - cols.begin,
-                            .X = X};
+                            .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
-    inline PtrMatrix<const T> operator()(Range<R0, R1> rows,
-                                         Range<C0, C1> cols) const {
-        return view(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
+    inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) const {
+        return view(canonicalizeRange(rows, M),
+                    canonicalizeRange(cols, numCol()));
     }
     template <typename C0, typename C1>
-    inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return view(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
+    inline auto operator()(Colon, Range<C0, C1> cols) const {
+        return view(Range<size_t, size_t>{0, M},
+                    canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
-    inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
+    inline auto operator()(Range<R0, R1> rows, Colon) const {
+        return view(canonicalizeRange(rows, M),
+                    Range<size_t, size_t>{0, numCol()});
     }
-    template <typename R0, typename R1, typename C0, typename C1>
-    inline PtrMatrix<const T> operator()(Colon, Colon) const {
-        return *this;
-    }
+    inline MutPtrMatrix<T> operator()(Colon, Colon) { return *this; }
+    inline PtrMatrix<T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>
     inline auto operator()(Range<R0, R1> rows, size_t col) const {
         return getCol(col)(canonicalizeRange(rows, M));
     }
     template <typename C0, typename C1>
     inline auto operator()(size_t row, Range<C0, C1> cols) const {
-        return getRow(row)(canonicalizeRange(cols, N));
+        return getRow(row)(canonicalizeRange(cols, numCol()));
     }
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
     inline PtrVector<T, 0> getRow(size_t i) {
-        return PtrVector<T, 0>{.ptr = mem + i * X, .M = N};
+        return PtrVector<T, 0>{.ptr = data() + i * rowStride(), .M = M};
     }
     inline PtrVector<const T, 0> getRow(size_t i) const {
-        return PtrVector<const T, 0>{.ptr = mem + i * X, .M = N};
+        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(), .M = M};
     }
-    // void copyRow(llvm::ArrayRef<T> x, size_t i) {
-    //     for (size_t j = 0; j < numCol(); ++j)
-    //         (*this)(i, j) = x[j];
-    // }
     inline StridedVector<T> getCol(size_t n) {
-        return StridedVector<T>{mem + n, M, X};
+        return StridedVector<T>{data() + n, M, rowStride()};
     }
     inline StridedVector<const T> getCol(size_t n) const {
-        return StridedVector<const T>{mem + n, M, X};
+        return StridedVector<const T>{data() + n, M, rowStride()};
     }
-    PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
+    MutPtrMatrix<T> operator=(const AbstractMatrix auto &B) {
         return copyto(*this, B);
     }
-    PtrMatrix<T> operator=(PtrMatrix<const T> B) { return copyto(*this, B); }
-    PtrMatrix() = default;
-    PtrMatrix(const PtrMatrix<T> &) = default;
-
-    PtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
+    MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
         for (size_t r = 0; r < M; ++r)
@@ -1188,7 +1302,7 @@ template <typename T> struct PtrMatrix {
                 (*this)(r, c) += B(r, c);
         return *this;
     }
-    PtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
+    MutPtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
         for (size_t r = 0; r < M; ++r)
@@ -1196,13 +1310,15 @@ template <typename T> struct PtrMatrix {
                 (*this)(r, c) -= B(r, c);
         return *this;
     }
-    PtrMatrix<T> operator*=(const std::integral auto b) {
+    MutPtrMatrix<T> operator*=(const std::integral auto b) {
         for (size_t r = 0; r < M; ++r)
             for (size_t c = 0; c < N; ++c)
                 (*this)(r, c) *= b;
         return *this;
     }
-    PtrMatrix<T> operator/=(const std::integral auto b) {
+    MutPtrMatrix<T> operator/=(const std::integral auto b) {
+        const size_t M = numRow();
+        const size_t N = numCol();
         for (size_t r = 0; r < M; ++r)
             for (size_t c = 0; c < N; ++c)
                 (*this)(r, c) /= b;
@@ -1220,30 +1336,240 @@ template <typename T> struct PtrMatrix {
                     return false;
         return true;
     }
-    bool operator==(PtrMatrix<T> B) const {
+    bool isSquare() const { return M == N; }
+    Vector<T> diag() const {
+        size_t K = std::min(M, N);
+        Vector<T> d;
+        d.resizeForOverwrite(N);
+        for (size_t k = 0; k < K; ++k)
+            d(k) = mem[k * (1 + X)];
+        return d;
+    }
+    Transpose<PtrMatrix<T>> transpose() const {
+        return Transpose<PtrMatrix<T>>{view()};
+    }
+    void extendOrAssertSize(size_t M, size_t N) {
+        assert(numRow() == M);
+        assert(numCol() == N);
+    }
+    operator PtrMatrix<T>() {
+        PtrMatrix<T>{.mem = mem, .M = M, .N = N, .X = X};
+    }
+};
+template <typename T, typename P> struct BaseMatrix {
+    using eltype = std::remove_reference_t<T>;
+    inline T *data() { return static_cast<P *>(this)->data(); }
+    inline const T *data() const {
+        return static_cast<const P *>(this)->data();
+    }
+    inline size_t numRow() const {
+        return static_cast<const P *>(this)->numRow();
+    }
+    inline size_t numCol() const {
+        return static_cast<const P *>(this)->numCol();
+    }
+    inline size_t rowStride() const {
+        return static_cast<const P *>(this)->rowStride();
+    }
+    static constexpr size_t colStride() { return 1; }
+    static constexpr size_t getConstCol() { return 0; }
+
+    inline std::pair<size_t, size_t> size() const {
+        return std::make_pair(numRow(), numCol());
+    }
+
+    inline auto &operator()(size_t row, size_t col) {
+        assert(row < numRow());
+        assert(col < numCol());
+        return *(data() + col + row * rowStride());
+    }
+    inline auto &operator()(size_t row, size_t col) const {
+        assert(row < numRow());
+        assert(col < numCol());
+        return *(data() + col + row * rowStride());
+    }
+    inline MutPtrMatrix<T> operator()(Range<size_t, size_t> rows,
+                                      Range<size_t, size_t> cols) {
+        assert(rows.end >= rows.begin);
+        assert(cols.end >= cols.begin);
+        assert(rows.end <= numRow());
+        assert(cols.end <= numCol());
+        return MutPtrMatrix<T>{.mem = data() + cols.begin +
+                                      rows.begin * rowStride(),
+                               .M = rows.end - rows.begin,
+                               .N = cols.end - cols.begin,
+                               .X = rowStride()};
+    }
+    template <typename R0, typename R1, typename C0, typename C1>
+    inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       canonicalizeRange(cols, numCol()));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(Colon, Range<C0, C1> cols) {
+        return (*this)(Range<size_t, size_t>{0, numRow()},
+                       canonicalizeRange(cols, numCol()));
+    }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, Colon) {
+        return (*this)(canonicalizeRange(rows, numRow()),
+                       Range<size_t, size_t>{0, numCol()});
+    }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, size_t col) {
+        return getCol(col)(canonicalizeRange(rows, numRow()));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(size_t row, Range<C0, C1> cols) {
+        return getRow(row)(canonicalizeRange(cols, numCol()));
+    }
+    inline auto operator()(Colon, size_t col) { return getCol(col); }
+    inline auto operator()(size_t row, Colon) { return getRow(row); }
+
+    inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
+                                   Range<size_t, size_t> cols) const {
+        assert(rows.end >= rows.begin);
+        assert(cols.end >= cols.begin);
+        assert(rows.end <= numRow());
+        assert(cols.end <= numCol());
+        return PtrMatrix<T>{.mem =
+                                data() + cols.begin + rows.begin * rowStride(),
+                            .M = rows.end - rows.begin,
+                            .N = cols.end - cols.begin,
+                            .X = rowStride()};
+    }
+    template <typename R0, typename R1, typename C0, typename C1>
+    inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) const {
+        return view(canonicalizeRange(rows, numRow()),
+                    canonicalizeRange(cols, numCol()));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(Colon, Range<C0, C1> cols) const {
+        return view(Range<size_t, size_t>{0, numRow()},
+                    canonicalizeRange(cols, numCol()));
+    }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, Colon) const {
+        return view(canonicalizeRange(rows, numRow()),
+                    Range<size_t, size_t>{0, numCol()});
+    }
+    inline P &self() { return *static_cast<P *>(this); }
+    inline const P &self() const { return *static_cast<const P *>(this); }
+    inline P &operator()(Colon, Colon) { return self(); }
+    inline const P &operator()(Colon, Colon) const { return self(); }
+    template <typename R0, typename R1>
+    inline auto operator()(Range<R0, R1> rows, size_t col) const {
+        return getCol(col)(canonicalizeRange(rows, numRow()));
+    }
+    template <typename C0, typename C1>
+    inline auto operator()(size_t row, Range<C0, C1> cols) const {
+        return getRow(row)(canonicalizeRange(cols, numCol()));
+    }
+    inline auto operator()(Colon, size_t col) const { return getCol(col); }
+    inline auto operator()(size_t row, Colon) const { return getRow(row); }
+
+    inline PtrVector<T, 0> getRow(size_t i) {
+        return PtrVector<T, 0>{.ptr = data() + i * rowStride(), .M = numRow()};
+    }
+    inline PtrVector<const T, 0> getRow(size_t i) const {
+        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(),
+                                     .M = numRow()};
+    }
+    // void copyRow(llvm::ArrayRef<T> x, size_t i) {
+    //     for (size_t j = 0; j < numCol(); ++j)
+    //         (*this)(i, j) = x[j];
+    // }
+    inline StridedVector<T> getCol(size_t n) {
+        return StridedVector<T>{data() + n, numRow(), rowStride()};
+    }
+    inline StridedVector<const T> getCol(size_t n) const {
+        return StridedVector<const T>{data() + n, numRow(), rowStride()};
+    }
+    operator MutPtrMatrix<T>() {
+        return MutPtrMatrix<T>{
+            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
+    }
+    operator PtrMatrix<T>() const {
+        return PtrMatrix<T>{
+            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
+    }
+    MutPtrMatrix<T> operator=(const AbstractMatrix auto &B) {
+        MutPtrMatrix<T> A{*this};
+        return copyto(A, B);
+    }
+    MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
+        MutPtrMatrix<T> A{*this};
+        return A += B;
+    }
+    MutPtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
+        MutPtrMatrix<T> A{*this};
+        return A -= B;
+    }
+    MutPtrMatrix<T> operator*=(const std::integral auto b) {
+        MutPtrMatrix<T> A{*this};
+        return A *= b;
+    }
+    MutPtrMatrix<T> operator/=(const std::integral auto b) {
+        MutPtrMatrix<T> A{*this};
+        return A /= b;
+    }
+
+    bool operator==(const AbstractMatrix auto &B) const {
         const size_t M = B.numRow();
         const size_t N = B.numCol();
         if ((M != numRow()) || (N != numCol()))
             return false;
+        const P &A = self();
         for (size_t r = 0; r < M; ++r)
             for (size_t c = 0; c < N; ++c)
-                if ((*this)(r, c) != B(r, c))
+                if (A(r, c) != B(r, c))
                     return false;
         return true;
     }
-    bool isSquare() const { return M == N; }
+    bool isSquare() const { return numRow() == numCol(); }
     Vector<T> diag() const {
         size_t N = std::min(numRow(), numCol());
         Vector<T> d;
         d.resizeForOverwrite(N);
+        P &A = self();
         for (size_t n = 0; n < N; ++n)
-            d(n) = (*this)(n, n);
+            d(n) = A(n, n);
         return d;
     }
-    Transpose<PtrMatrix<const T>> transpose() const {
-        return Transpose<PtrMatrix<const T>>{view()};
+    inline PtrMatrix<T> view() const {
+        return PtrMatrix<T>{
+            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
+    };
+    Transpose<PtrMatrix<T>> transpose() const {
+        return Transpose<PtrMatrix<T>>{view()};
+    }
+    void extendOrAssertSize(size_t M, size_t N) {
+        if constexpr (P::fixedNumRow) {
+            assert(numRow() == M);
+            if constexpr (P::fixedNumCol) {
+                assert(numCol() == N);
+            } else if (N != numCol())
+                static_cast<P *>(this)->resizeColsForOverwrite(N);
+        } else if constexpr (P::fixedNumCol) {
+            assert(numCol() == N);
+            if (M != numRow())
+                static_cast<P *>(this)->resizeRowsForOverwrite(M);
+        } else if ((M != numRow()) || (N != numCol()))
+            static_cast<P *>(this)->resizeForOverwrite(M, N);
     }
 };
+
+template <typename T>
+inline auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {
+    if constexpr (std::is_const_v<T>) {
+        return PtrMatrix<std::remove_const_t<T>>{
+            .mem = ptr, .M = numRow, .N = numCol, .X = stride};
+    } else {
+        return MutPtrMatrix<T>{
+            .mem = ptr, .M = numRow, .N = numCol, .X = stride};
+    }
+}
+
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
 static_assert(std::is_trivially_copyable_v<PtrVector<int64_t, 0>>,
@@ -1251,17 +1577,19 @@ static_assert(std::is_trivially_copyable_v<PtrVector<int64_t, 0>>,
 
 static_assert(!AbstractVector<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractVector succeeded");
-static_assert(!AbstractVector<PtrMatrix<const int64_t>>,
-              "PtrMatrix<const int64_t> isa AbstractVector succeeded");
-static_assert(!AbstractVector<const PtrMatrix<const int64_t>>,
-              "PtrMatrix<const int64_t> isa AbstractVector succeeded");
+static_assert(!AbstractVector<MutPtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> isa AbstractVector succeeded");
+static_assert(!AbstractVector<const PtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> isa AbstractVector succeeded");
 
 static_assert(AbstractMatrix<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractMatrix failed");
-static_assert(AbstractMatrix<PtrMatrix<const int64_t>>,
-              "PtrMatrix<const int64_t> isa AbstractMatrix failed");
-static_assert(AbstractMatrix<const PtrMatrix<const int64_t>>,
-              "PtrMatrix<const int64_t> isa AbstractMatrix failed");
+static_assert(AbstractMatrix<MutPtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> isa AbstractMatrix failed");
+static_assert(AbstractMatrix<const PtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> isa AbstractMatrix failed");
+static_assert(AbstractMatrix<const MutPtrMatrix<int64_t>>,
+              "PtrMatrix<int64_t> isa AbstractMatrix failed");
 
 static_assert(AbstractVector<PtrVector<int64_t>>,
               "PtrVector<int64_t> isa AbstractVector failed");
@@ -1281,301 +1609,19 @@ static_assert(!AbstractMatrix<const PtrVector<const int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
 
 static_assert(
-    AbstractMatrix<
-        ElementwiseMatrixBinaryOp<Mul, PtrMatrix<const long int>, int>>,
+    AbstractMatrix<ElementwiseMatrixBinaryOp<Mul, PtrMatrix<int64_t>, int>>,
     "ElementwiseBinaryOp isa AbstractMatrix failed");
 
 static_assert(
-    !AbstractVector<MatMatMul<PtrMatrix<const long>, PtrMatrix<const long>>>,
+    !AbstractVector<MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>,
     "MatMul should not be an AbstractVector!");
-static_assert(
-    AbstractMatrix<MatMatMul<PtrMatrix<const long>, PtrMatrix<const long>>>,
-    "MatMul is not an AbstractMatrix!");
+static_assert(AbstractMatrix<MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>,
+              "MatMul is not an AbstractMatrix!");
 
 template <typename T>
 concept IntVector = requires(T t, int64_t y) {
     { t.size() } -> std::convertible_to<size_t>;
     { t[y] } -> std::convertible_to<int64_t>;
-};
-
-template <typename T, typename A> struct BaseMatrix {
-    using eltype = T;
-    inline T &getLinearElement(size_t i) {
-        return static_cast<A *>(this)->getLinearElement(i);
-    }
-    inline const T &getLinearElement(size_t i) const {
-        return static_cast<const A *>(this)->getLinearElement(i);
-    }
-    inline T &operator[](size_t i) { return getLinearElement(i); }
-    inline const T &operator[](size_t i) const { return getLinearElement(i); }
-    inline size_t numCol() const {
-        return static_cast<const A *>(this)->numCol();
-    }
-    inline size_t numRow() const {
-        return static_cast<const A *>(this)->numRow();
-    }
-    inline size_t rowStride() const {
-        return static_cast<const A *>(this)->rowStride();
-    }
-    inline size_t colStride() const {
-        return static_cast<const A *>(this)->colStride();
-    }
-    auto begin() { return static_cast<A *>(this)->begin(); }
-    auto end() { return static_cast<A *>(this)->end(); }
-    auto begin() const { return static_cast<const A *>(this)->begin(); }
-    auto end() const { return static_cast<const A *>(this)->end(); }
-
-    T *data() { return static_cast<A *>(this)->data(); }
-    const T *data() const { return static_cast<const A *>(this)->data(); }
-
-    void sizeExtend(size_t M, size_t N) {
-        if constexpr (static_cast<A *>(this)->fixedNumRow) {
-            assert(numRow() == M);
-        } else {
-            if (M > numRow())
-                static_cast<A *>(this)->resizeRows(M);
-        }
-        if constexpr (static_cast<A *>(this)->fixedNumCol) {
-            assert(numCol() == N);
-        } else {
-            if (N > numCol())
-                static_cast<A *>(this)->resizeCols(N);
-        }
-    }
-
-    A &operator=(const AbstractMatrix auto &B) { return copyto(*this, B); }
-    A &operator=(T x) {
-        const size_t M = numRow();
-        const size_t N = numCol();
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) = x;
-        return *this;
-    }
-    // bool operator==(const BaseMatrix<T,A> &B) const {
-    //     const size_t M = B.numRow();
-    //     const size_t N = B.numCol();
-    // 	if ((M != numRow()) || (N != numCol()))
-    // 	    return false;
-    //     for (size_t r = 0; r < M; ++r)
-    //         for (size_t c = 0; c < N; ++c)
-    //             if ((*this)(r, c) != B(r, c))
-    // 		    return false;
-    //     return true;
-    // }
-    bool operator==(const AbstractMatrix auto &B) const {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        if ((M != numRow()) || (N != numCol()))
-            return false;
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                if ((*this)(r, c) != B(r, c))
-                    return false;
-        return true;
-    }
-
-    std::pair<size_t, size_t> size() const {
-        return std::make_pair(numRow(), numCol());
-    }
-    size_t size(size_t i) const {
-        if (i) {
-            return numCol();
-        } else {
-            return numRow();
-        }
-    }
-    size_t length() const { return numRow() * numCol(); }
-
-    T &operator()(size_t i, size_t j) {
-        assert(i < numRow());
-        assert(j < numCol());
-        return getLinearElement(i * rowStride() + j * colStride());
-    }
-    const T &operator()(size_t i, size_t j) const {
-        const size_t M = numRow();
-        assert(i < M);
-        assert(j < numCol());
-        return getLinearElement(i * rowStride() + j * colStride());
-    }
-
-    template <typename C> bool operator==(const BaseMatrix<T, C> &B) const {
-        const size_t M = numRow();
-        const size_t N = numCol();
-        if ((N != B.numCol()) || M != B.numRow()) {
-            return false;
-        }
-        for (size_t i = 0; i < M * N; ++i) {
-            if (getLinearElement(i) != B[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static constexpr size_t getConstCol() { return A::getConstCol(); }
-    inline auto getRow(size_t i) {
-        constexpr size_t N = getConstCol();
-        if constexpr (N) {
-            return PtrVector<T, N>{data() + i * N};
-            // } else if constexpr (std::is_const_v<T>) {
-            //     const size_t _N = numCol();
-            //     return PtrVector<T, 0>(data() + i * rowStride(), _N);
-        } else {
-            const size_t _N = numCol();
-            // return llvm::MutableArrayRef<T>(data() + i * rowStride(), _N);
-            return PtrVector<T, 0>{data() + i * rowStride(), _N};
-        }
-    }
-    inline auto getRow(size_t i) const {
-        constexpr size_t N = getConstCol();
-        if constexpr (N) {
-            return PtrVector<const T, N>{data() + i * N};
-        } else {
-            const size_t _N = numCol();
-            return PtrVector<const T, 0>{data() + i * rowStride(), _N};
-            // return llvm::ArrayRef<T>(data() + i * rowStride(), _N);
-            // return PtrVector<const T, 0>{
-        }
-    }
-    void copyRow(llvm::ArrayRef<T> x, size_t i) {
-        for (size_t j = 0; j < numCol(); ++j)
-            (*this)(i, j) = x[j];
-    }
-    inline StridedVector<T> getCol(size_t n) {
-        return StridedVector<T>{data() + n, numRow(), rowStride()};
-    }
-    inline StridedVector<const T> getCol(size_t n) const {
-        return StridedVector<const T>{data() + n, numRow(), rowStride()};
-    }
-
-    A &operator=(const SmallSparseMatrix<T> &B) {
-        const size_t M = numRow();
-        const size_t N = numCol();
-        assert(M == B.numRow());
-        assert(N == B.numCol());
-        const size_t X = rowStride();
-        T *mem = data();
-        size_t k = 0;
-        for (size_t i = 0; i < M; ++i) {
-            uint32_t m = B.rows[i] & 0x00ffffff;
-            size_t j = 0;
-            while (m) {
-                uint32_t tz = std::countr_zero(m);
-                m >>= tz + 1;
-                j += tz;
-                mem[i * X + (j++)] = B.nonZeros[k++];
-            }
-        }
-        assert(k == B.nonZeros.size());
-        return *this;
-    }
-
-    inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
-                                   Range<size_t, size_t> cols) {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= numRow());
-        assert(cols.end <= numCol());
-        return PtrMatrix<T>{.mem =
-                                data() + cols.begin + rows.begin * rowStride(),
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
-                            .X = rowStride()};
-    }
-    template <typename R0, typename R1, typename C0, typename C1>
-    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
-        return (*this)(canonicalizeRange(rows, numRow()),
-                       canonicalizeRange(cols, numCol()));
-    }
-    template <typename C0, typename C1>
-    inline PtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(Range<size_t, size_t>{0, numRow()},
-                       canonicalizeRange(cols, numCol()));
-    }
-    template <typename R0, typename R1>
-    inline PtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, numRow()),
-                       Range<size_t, size_t>{0, numCol()});
-    }
-    inline PtrMatrix<T> operator()(Colon, Colon) { return *this; }
-    template <typename R0, typename R1>
-    inline auto operator()(Range<R0, R1> rows, size_t col) {
-        return getCol(col)(canonicalizeRange(rows, numRow()));
-    }
-    template <typename C0, typename C1>
-    inline auto operator()(size_t row, Range<C0, C1> cols) {
-        return getRow(row)(canonicalizeRange(cols, numCol()));
-    }
-    inline auto operator()(Colon, size_t col) { return getCol(col); }
-    inline auto operator()(size_t row, Colon) { return getRow(row); }
-
-    inline PtrMatrix<const T> operator()(Range<size_t, size_t> rows,
-                                         Range<size_t, size_t> cols) const {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= numRow());
-        assert(cols.end <= numCol());
-        return PtrMatrix<const T>{.mem = data() + cols.begin +
-                                         rows.begin * rowStride(),
-                                  .M = rows.end - rows.begin,
-                                  .N = cols.end - cols.begin,
-                                  .X = rowStride()};
-    }
-    template <typename R0, typename R1, typename C0, typename C1>
-    inline PtrMatrix<const T> operator()(Range<R0, R1> rows,
-                                         Range<C0, C1> cols) const {
-        return (*this)(canonicalizeRange(rows, numRow()),
-                       canonicalizeRange(cols, numCol()));
-    }
-    template <typename C0, typename C1>
-    inline PtrMatrix<const T> operator()(Colon, Range<C0, C1> cols) const {
-        return (*this)(Range<size_t, size_t>{0, numRow()},
-                       canonicalizeRange(cols, numCol()));
-    }
-    template <typename R0, typename R1>
-    inline PtrMatrix<const T> operator()(Range<R0, R1> rows, Colon) const {
-        return (*this)(canonicalizeRange(rows, numRow()),
-                       Range<size_t, size_t>{0, numCol()});
-    }
-    inline PtrMatrix<const T> operator()(Colon, Colon) const { return *this; }
-    template <typename R0, typename R1>
-    inline auto operator()(Range<R0, R1> rows, size_t col) const {
-        return getCol(col)(canonicalizeRange(rows, numRow()));
-    }
-    template <typename C0, typename C1>
-    inline auto operator()(size_t row, Range<C0, C1> cols) const {
-        return getRow(row)(canonicalizeRange(cols, numCol()));
-    }
-    inline auto operator()(Colon, size_t col) const { return getCol(col); }
-    inline auto operator()(size_t row, Colon) const { return getRow(row); }
-
-    inline PtrMatrix<const T> view() const {
-        return PtrMatrix<const T>{
-            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
-    };
-
-    PtrMatrix<T> operator=(const AbstractMatrix auto &B) {
-        return copyto(*this, B);
-    }
-    operator PtrMatrix<T>() {
-        return PtrMatrix<T>{
-            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
-    }
-    operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{
-            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
-    }
-    bool isSquare() const { return numRow() == numCol(); }
-
-    Vector<T> diag() const {
-        size_t N = std::min(numRow(), numCol());
-        Vector<T> d;
-        d.resizeForOverwrite(N);
-        for (size_t n = 0; n < N; ++n)
-            d(n) = (*this)(n, n);
-        return d;
-    }
 };
 
 //
@@ -1589,16 +1635,9 @@ struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     static constexpr bool fixedNumCol = N;
     static constexpr bool canResize = false;
     T mem[S];
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    T *begin() { return mem; }
-    T *end() { return begin() + M; }
-    const T *begin() const { return mem; }
-    const T *end() const { return begin() + M; }
     static constexpr size_t numRow() { return M; }
     static constexpr size_t numCol() { return N; }
     static constexpr size_t rowStride() { return N; }
-    static constexpr size_t colStride() { return 1; }
 
     T *data() { return mem; }
     const T *data() const { return mem; }
@@ -1614,21 +1653,26 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
 
     Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
 
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    auto begin() { return mem.begin(); }
-    auto end() { return mem.end(); }
-    auto begin() const { return mem.begin(); }
-    auto end() const { return mem.end(); }
-    size_t numRow() const { return M; }
-    size_t numCol() const { return N; }
+    // inline T &getLinearElement(size_t i) { return mem[i]; }
+    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    // auto begin() { return mem.begin(); }
+    // auto end() { return mem.end(); }
+    // auto begin() const { return mem.begin(); }
+    // auto end() const { return mem.end(); }
+    inline size_t numRow() const { return M; }
+    inline size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
-    static constexpr size_t colStride() { return 1; }
-
-    static constexpr size_t getConstCol() { return 0; }
+    // static constexpr size_t colStride() { return 1; }
+    // static constexpr size_t getConstCol() { return 0; }
 
     T *data() { return mem.data(); }
     const T *data() const { return mem.data(); }
+    void resizeColsForOverwrite(size_t NN, size_t XX) {
+        N = NN;
+        X = XX;
+        mem.resize_for_overwrite(M * XX);
+    }
+    void resizeColsForOverwrite(size_t NN) { resizeColsForOverwrite(NN, NN); }
 };
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
@@ -1638,17 +1682,17 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
 
     Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
 
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    auto begin() { return mem.begin(); }
-    auto end() { return mem.end(); }
-    auto begin() const { return mem.begin(); }
-    auto end() const { return mem.end(); }
+    // inline T &getLinearElement(size_t i) { return mem[i]; }
+    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    // auto begin() { return mem.begin(); }
+    // auto end() { return mem.end(); }
+    // auto begin() const { return mem.begin(); }
+    // auto end() const { return mem.end(); }
 
     inline size_t numRow() const { return M; }
     static constexpr size_t numCol() { return N; }
     static constexpr size_t rowStride() { return N; }
-    static constexpr size_t colStride() { return 1; }
+    // static constexpr size_t colStride() { return 1; }
     static constexpr size_t getConstCol() { return N; }
 
     T *data() { return mem.data(); }
@@ -1664,36 +1708,30 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
 
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    T *begin() { return mem; }
-    T *end() { return mem + (M * M); }
-    const T *begin() const { return mem; }
-    const T *end() const { return mem + (M * M); }
+    // inline T &getLinearElement(size_t i) { return mem[i]; }
+    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    // T *begin() { return mem; }
+    // T *end() { return mem + (M * M); }
+    // const T *begin() const { return mem; }
+    // const T *end() const { return mem + (M * M); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     inline size_t rowStride() const { return M; }
-    static constexpr size_t colStride() { return 1; }
-    static constexpr size_t getConstCol() { return 0; }
+    // static constexpr size_t colStride() { return 1; }
+    // static constexpr size_t getConstCol() { return 0; }
 
     T *data() { return mem; }
     const T *data() const { return mem; }
-    operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>(mem, M, M, M);
-    }
+    // operator PtrMatrix<T>() const { return PtrMatrix<T>(mem, M, M, M); }
     operator SquarePtrMatrix<const T>() const {
         return SquarePtrMatrix<const T>(mem, M);
     }
     constexpr bool isSquare() const { return true; }
-    SquarePtrMatrix<T> operator=(const AbstractMatrix auto A) {
-        return copyto(*this, A);
-    }
 };
 
-template <typename T, unsigned STORAGE = 4>
+template <typename T, unsigned STORAGE = 8>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
-    typedef T eltype;
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
     llvm::SmallVector<T, TOTALSTORAGE> mem;
     size_t M;
@@ -1704,35 +1742,19 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     SquareMatrix(size_t m)
         : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
 
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    auto begin() { return mem.begin(); }
-    auto end() { return mem.end(); }
-    auto begin() const { return mem.begin(); }
-    auto end() const { return mem.end(); }
-
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     inline size_t rowStride() const { return M; }
-    static constexpr size_t colStride() { return 1; }
-    static constexpr size_t getConstCol() { return 0; }
 
     T *data() { return mem.data(); }
     const T *data() const { return mem.data(); }
-    void copyRow(llvm::ArrayRef<T> a, size_t j) {
-        for (size_t m = 0; m < M; ++m) {
-            (*this)(j, m) = a[m];
-        }
-    }
-    void copyCol(llvm::ArrayRef<T> a, size_t j) {
-        for (size_t m = 0; m < M; ++m) {
-            (*this)(m, j) = a[m];
-        }
-    }
-    void copyCol(const SquareMatrix<T> &A, size_t j) {
-        copyCol(A.getCol(j), j);
-    }
-    // returns the inverse, followed by bool where true means failure
+
+    T *begin() { return data(); }
+    T *end() { return data() + M * M; }
+    const T *begin() const { return data(); }
+    const T *end() const { return data() + M * M; }
+    T &operator[](size_t i) { return mem[i]; }
+    const T &operator[](size_t i) const { return mem[i]; }
 
     static SquareMatrix<T> identity(size_t N) {
         SquareMatrix<T> A(N);
@@ -1740,28 +1762,14 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             A(r, r) = 1;
         return A;
     }
-    operator PtrMatrix<T>() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M};
-    }
-    operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
-    }
     operator SquarePtrMatrix<T>() {
-        return SquarePtrMatrix(mem.data(), size_t(M));
+        return SquarePtrMatrix<T>{.mem = mem.data(), .M = size_t(M)};
     }
-    PtrMatrix<T> view() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = M, .X = M};
+    operator SquarePtrMatrix<const T>() const {
+        return SquarePtrMatrix<const T>{mem.data(), size_t(M)};
     }
-    PtrMatrix<const T> view() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = M, .X = M};
-    }
-    Transpose<PtrMatrix<const T>> transpose() const {
-        return Transpose<PtrMatrix<const T>>{view()};
-    }
-    constexpr bool isSquare() const { return true; }
+    static constexpr bool isSquare() { return true; }
 };
-
-static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
 
 template <typename T, size_t S>
 struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
@@ -1769,6 +1777,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
 
     size_t M, N, X;
     static constexpr bool canResize = true;
+
+    T *data() { return mem.data(); }
+    const T *data() const { return mem.data(); }
 
     Matrix(llvm::SmallVector<T, S> content, size_t m, size_t n)
         : mem(std::move(content)), M(m), N(n), X(n){};
@@ -1791,28 +1802,25 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 mem[m * X + n] = A(m, n);
     }
 
-    operator PtrMatrix<const T>() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    }
-    operator PtrMatrix<T>() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    }
+    // operator PtrMatrix<T>() const {
+    //     return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
+    // }
+    // operator MutPtrMatrix<T>() {
+    //     return MutPtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
+    // }
 
-    inline T &getLinearElement(size_t i) { return mem[i]; }
-    inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    auto begin() { return mem.begin(); }
-    auto end() { return mem.end(); }
-    auto begin() const { return mem.begin(); }
-    auto end() const { return mem.end(); }
+    // inline T &getLinearElement(size_t i) { return mem[i]; }
+    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
+    // auto begin() { return mem.begin(); }
+    // auto end() { return mem.end(); }
+    // auto begin() const { return mem.begin(); }
+    // auto end() const { return mem.end(); }
 
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
-    static constexpr size_t colStride() { return 1; }
-    static constexpr size_t getConstCol() { return 0; }
-
-    T *data() { return mem.data(); }
-    const T *data() const { return mem.data(); }
+    // static constexpr size_t colStride() { return 1; }
+    // static constexpr size_t getConstCol() { return 0; }
 
     static Matrix<T, 0, 0, S> uninitialized(size_t MM, size_t NN) {
         Matrix<T, 0, 0, S> A(0, 0);
@@ -1918,11 +1926,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     PtrMatrix<T> view() {
         return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
-    PtrMatrix<const T> view() const {
-        return PtrMatrix<const T>{.mem = mem.data(), .M = M, .N = N, .X = X};
+    PtrMatrix<T> view() const {
+        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
-    Transpose<PtrMatrix<const T>> transpose() const {
-        return Transpose<PtrMatrix<const T>>{view()};
+    Transpose<PtrMatrix<T>> transpose() const {
+        return Transpose<PtrMatrix<T>>{view()};
     }
     bool operator==(const AbstractMatrix auto &B) const {
         const size_t M = B.numRow();
@@ -1955,62 +1963,11 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 (*this)(r, c) = x;
         return *this;
     }
-    // Matrix<T, 0, 0, S> A(Matrix<T, 0, 0, S>::Uninitialized(N, M));
-    // for (size_t n = 0; n < N; ++n)
-    //     for (size_t m = 0; m < M; ++m)
-    //         A(n, m) = (*this)(m, n);
-    // return A;
-    // }
-
-    // inline PtrMatrix<T> view(size_t rowStart, size_t rowEnd, size_t colStart,
-    //                          size_t colEnd) {
-    //     assert(rowEnd > rowStart);
-    //     assert(colEnd > colStart);
-    //     return PtrMatrix<T>{.mem = mem.data() + colStart + rowStart * X,
-    //                         .M = rowEnd - rowStart,
-    //                         .N = colEnd - colStart,
-    //                         .X = X};
-    // }
-    // inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) {
-    //     return view(0, rowEnd, 0, colEnd);
-    // }
-    // inline PtrMatrix<const T> view(size_t rowStart, size_t rowEnd,
-    //                                size_t colStart, size_t colEnd) const {
-    //     assert(rowEnd > rowStart);
-    //     assert(colEnd > colStart);
-    //     return PtrMatrix<const T>{.mem = mem.data() + colStart + rowStart *
-    //     X,
-    //                               .M = rowEnd - rowStart,
-    //                               .N = colEnd - colStart,
-    //                               .X = X};
-    // }
-    // inline PtrMatrix<T> view(size_t rowEnd, size_t colEnd) const {
-    //     return view(0, rowEnd, 0, colEnd);
-    // }
-
-    // PtrMatrix<T> operator=(PtrMatrix<T> A) {
-    //     assert(M == A.numRow());
-    //     assert(N == A.numCol());
-    //     for (size_t m = 0; m < M; ++m)
-    //         for (size_t n = 0; n < N; ++n)
-    //             mem[n + m * X] = A(m, n);
-    //     return *this;
-    // }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
 static_assert(std::same_as<DynamicMatrix<int64_t>, Matrix<int64_t>>,
               "DynamicMatrix should be identical to Matrix");
 typedef DynamicMatrix<int64_t> IntMatrix;
-static_assert(std::copyable<Matrix<int64_t, 4, 4>>);
-static_assert(std::copyable<Matrix<int64_t, 4, 0>>);
-static_assert(std::copyable<Matrix<int64_t, 0, 4>>);
-static_assert(std::copyable<Matrix<int64_t, 0, 0>>);
-static_assert(std::copyable<SquareMatrix<int64_t>>);
-
-template <typename T, typename P>
-std::pair<size_t, size_t> size(BaseMatrix<T, P> const &A) {
-    return std::make_pair(A.numRow(), A.numCol());
-}
 
 template <typename T>
 std::ostream &printVector(std::ostream &os, PtrVector<const T> a) {
@@ -2037,10 +1994,6 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, const Vector<T> &A) {
     return printVector(os, A.view());
 }
-// template <typename T>
-// std::ostream &operator<<(std::ostream &os, SquareMatrix<T> const &A) {
-//     return printMatrix(os, A);
-// }
 
 bool allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1) {
     size_t N = x0.size();
@@ -2052,18 +2005,17 @@ bool allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1) {
     return true;
 }
 
-MULTIVERSION inline void swapRows(PtrMatrix<int64_t> A, size_t i, size_t j) {
+MULTIVERSION inline void swapRows(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
     if (i == j)
         return;
     const unsigned int M = A.numRow();
     const unsigned int N = A.numCol();
     assert((i < M) & (j < M));
     VECTORIZE
-    for (size_t n = 0; n < N; ++n) {
+    for (size_t n = 0; n < N; ++n)
         std::swap(A(i, n), A(j, n));
-    }
 }
-MULTIVERSION inline void swapCols(PtrMatrix<int64_t> A, size_t i, size_t j) {
+MULTIVERSION inline void swapCols(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
@@ -2071,9 +2023,8 @@ MULTIVERSION inline void swapCols(PtrMatrix<int64_t> A, size_t i, size_t j) {
     const unsigned int N = A.numCol();
     assert((i < N) & (j < N));
     VECTORIZE
-    for (size_t m = 0; m < M; ++m) {
+    for (size_t m = 0; m < M; ++m)
         std::swap(A(m, i), A(m, j));
-    }
 }
 template <typename T>
 void swapCols(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
@@ -2146,13 +2097,16 @@ template <typename T>
 concept TriviallyCopyableMatrixOrScalar =
     std::is_trivially_copyable_v<T> && MatrixOrScalar<T>;
 
-static_assert(TriviallyCopyableMatrixOrScalar<PtrMatrix<const long>>);
+static_assert(std::copy_constructible<PtrMatrix<int64_t>>);
+static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>);
+static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>);
+static_assert(TriviallyCopyableMatrixOrScalar<PtrMatrix<int64_t>>);
 static_assert(TriviallyCopyableMatrixOrScalar<int>);
 static_assert(TriviallyCopyable<Mul>);
 static_assert(TriviallyCopyableMatrixOrScalar<
-              ElementwiseMatrixBinaryOp<Mul, PtrMatrix<const long>, int>>);
+              ElementwiseMatrixBinaryOp<Mul, PtrMatrix<int64_t>, int>>);
 static_assert(TriviallyCopyableMatrixOrScalar<
-              MatMatMul<PtrMatrix<const long>, PtrMatrix<const long>>>);
+              MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>);
 
 template <TriviallyCopyable OP, TriviallyCopyableVectorOrScalar A,
           TriviallyCopyableVectorOrScalar B>
@@ -2437,23 +2391,23 @@ template <std::integral I> struct PromoteType<Rational, I> {
     using eltype = Rational;
 };
 
-static void normalizeByGCD(PtrVector<int64_t> x) {
-    if (size_t N = x.size()) {
-        if (N == 1) {
-            x[0] = 1;
-            return;
-        }
-        int64_t g = gcd(x[0], x[1]);
-        for (size_t n = 2; (n < N) & (g != 1); ++n)
-            g = gcd(g, x[n]);
-        if (g > 1)
-            for (auto &&a : x)
-                a /= g;
-    }
-}
+// static void normalizeByGCD(PtrVector<int64_t> x) {
+//     if (size_t N = x.size()) {
+//         if (N == 1) {
+//             x[0] = 1;
+//             return;
+//         }
+//         int64_t g = gcd(x[0], x[1]);
+//         for (size_t n = 2; (n < N) & (g != 1); ++n)
+//             g = gcd(g, x[n]);
+//         if (g > 1)
+//             for (auto &&a : x)
+//                 a /= g;
+//     }
+// }
 
 template <typename T>
-std::ostream &printMatrix(std::ostream &os, PtrMatrix<const T> A) {
+std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     auto [m, n] = A.size();
     for (size_t i = 0; i < m; i++) {
@@ -2589,7 +2543,7 @@ std::ostream &operator<<(std::ostream &os, SmallSparseMatrix<T> const &A) {
     assert(k == A.nonZeros.size());
 }
 
-std::ostream &operator<<(std::ostream &os, PtrMatrix<const int64_t> A) {
+std::ostream &operator<<(std::ostream &os, PtrMatrix<int64_t> A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
     // {
     return printMatrix(os, A);
@@ -2605,7 +2559,7 @@ std::ostream &operator<<(std::ostream &os, const T &A) {
     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
     // {
     Matrix<std::remove_const_t<typename T::eltype>> B{A};
-    return printMatrix(os, PtrMatrix<const typename T::eltype>(B));
+    return printMatrix(os, PtrMatrix<typename T::eltype>(B));
 }
 // template <typename T>
 // std::ostream &operator<<(std::ostream &os, PtrMatrix<const T> &A) {
@@ -2731,3 +2685,20 @@ static_assert(AbstractVector<const Vector<int64_t>>);
 static_assert(AbstractVector<Vector<int64_t> &>);
 static_assert(AbstractMatrix<IntMatrix>);
 static_assert(AbstractMatrix<IntMatrix &>);
+
+static_assert(std::copyable<Matrix<int64_t, 4, 4>>);
+static_assert(std::copyable<Matrix<int64_t, 4, 0>>);
+static_assert(std::copyable<Matrix<int64_t, 0, 4>>);
+static_assert(std::copyable<Matrix<int64_t, 0, 0>>);
+static_assert(std::copyable<SquareMatrix<int64_t>>);
+
+static_assert(DerivedMatrix<Matrix<int64_t, 4, 4>>);
+static_assert(DerivedMatrix<Matrix<int64_t, 4, 0>>);
+static_assert(DerivedMatrix<Matrix<int64_t, 0, 4>>);
+static_assert(DerivedMatrix<Matrix<int64_t, 0, 0>>);
+static_assert(DerivedMatrix<IntMatrix>);
+static_assert(DerivedMatrix<IntMatrix>);
+static_assert(DerivedMatrix<IntMatrix>);
+
+static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
+static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);

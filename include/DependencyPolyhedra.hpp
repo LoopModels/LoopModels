@@ -565,7 +565,6 @@ struct Dependence {
         const size_t numSchedulingConstraints =
             dependenceSatisfaction.getNumConstraints();
         const size_t halfLambda = depPoly.getNumLambda();
-        const size_t numLambda = halfLambda << 1;
         assert(A.numRow() == getNumConstraints());
         assert(A.numCol() == getNumLambda());
         auto sC{dependenceSatisfaction.getCostsAndConstraints()};
@@ -574,9 +573,21 @@ struct Dependence {
         auto rB = _(numSchedulingConstraints, end);
         d(rS) = sC(_, 0);
         d(rB) = bC(_, 0);
-        A(rS, _(begin, halfLambda)) = sC(_, _(1, halfLambda + 1));
-        A(rB, _(halfLambda, end)) = bC(_, _(1, halfLambda + 1));
-        // A =
+        const size_t i = 1 + halfLambda;
+	// copyto(A(rS, _(begin, halfLambda)), sC(_, _(1, i)));
+        A(rS, _(begin, halfLambda)) = sC(_, _(1, i));
+        A(rB, _(halfLambda, end)) = bC(_, _(1, i));
+        const size_t numScheduleCoefs = depPoly.getNumScheduleCoefficients();
+        const size_t j = i + numScheduleCoefs;
+        B(rS, _) = sC(_, _(i, j));
+        B(rB, _) = bC(_, _(i, j));
+        const size_t numSym = getNumSymbols();
+        const size_t k = j + numSym;
+        assert(k == sC.numCol());
+        assert(k == bC.numCol());
+        C(rS, _(begin, numSym)) = sC(_, _(j, k));
+        C(rB, _(numSym, end)) = bC(_, _(j, k));
+	
     }
 
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,

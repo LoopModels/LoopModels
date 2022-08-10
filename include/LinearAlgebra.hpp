@@ -5,7 +5,7 @@ struct LU {
     SquareMatrix<Rational> F;
     llvm::SmallVector<unsigned> ipiv;
 
-    bool ldiv(PtrMatrix<Rational> rhs) const {
+    bool ldiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
         auto FM = F.numRow();
         assert(FM == M);
@@ -69,7 +69,7 @@ struct LU {
         return false;
     }
 
-    bool rdiv(PtrMatrix<Rational> rhs) const {
+    bool rdiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
         auto FN = F.numCol();
         assert(FN == N);

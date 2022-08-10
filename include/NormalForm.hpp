@@ -21,7 +21,7 @@ inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
     return std::make_tuple(p, q, a / g, b / g);
 }
 // zero out below diagonal
-MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
+MULTIVERSION void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
                                   SquareMatrix<int64_t> &K, size_t i, size_t M,
                                   size_t N) {
     // std::cout << "M = " << M << "; N = " << N << "; i = " << i << std::endl;
@@ -70,13 +70,15 @@ MULTIVERSION void zeroSupDiagonal(PtrMatrix<int64_t> A,
 }
 // This method is only called by orthogonalize, hence we can assume
 // (Akk == 1) || (Akk == -1)
-MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
+MULTIVERSION void zeroSubDiagonal(MutPtrMatrix<int64_t> A,
                                   SquareMatrix<int64_t> &K, size_t k, size_t M,
                                   size_t N) {
     int64_t Akk = A(k, k);
     if (Akk == -1) {
-	A(k,_) *= -1;
-	K(k,_) *= -1;
+	for (size_t m = 0; m < N; ++m)
+	    A(k, m) *= -1;
+	for (size_t m = 0; m < M; ++m)
+	    K(k, m) *= -1;
     } else {
         assert(Akk == 1);
     }
@@ -84,25 +86,26 @@ MULTIVERSION void zeroSubDiagonal(PtrMatrix<int64_t> A,
         // eliminate `A(k,z)`
         if (int64_t Akz = A(z, k)) {
             // A(k, k) == 1, so A(k,z) -= Akz * 1;
-	    // A(z,_) -= Akz * A(k,_);
-	    // K(z,_) -= Akz * K(k,_);
+            // A(z,_) -= Akz * A(k,_);
+            // K(z,_) -= Akz * K(k,_);
             VECTORIZE
             for (size_t i = 0; i < std::min(M, N); ++i) {
                 A(z, i) -= Akz * A(k, i);
                 K(z, i) -= Akz * K(k, i);
             }
             VECTORIZE
-            for (size_t i = N; i < M; ++i) 
+            for (size_t i = N; i < M; ++i)
                 K(z, i) -= Akz * K(k, i);
             VECTORIZE
-            for (size_t i = M; i < N; ++i) 
+            for (size_t i = M; i < N; ++i)
                 A(z, i) -= Akz * A(k, i);
         }
     }
 }
 
-MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, PtrMatrix<int64_t> K,
-                                   size_t i, size_t M, size_t piv) {
+MULTIVERSION inline bool pivotRows(MutPtrMatrix<int64_t> A,
+                                   MutPtrMatrix<int64_t> K, size_t i, size_t M,
+                                   size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
@@ -120,11 +123,11 @@ MULTIVERSION inline bool pivotRows(PtrMatrix<int64_t> A, PtrMatrix<int64_t> K,
     }
     return false;
 }
-inline bool pivotRows(PtrMatrix<int64_t> A, SquareMatrix<int64_t> &K, size_t i,
-                      size_t M) {
+inline bool pivotRows(MutPtrMatrix<int64_t> A, SquareMatrix<int64_t> &K,
+                      size_t i, size_t M) {
     return pivotRows(A, K, i, M, i);
 }
-inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
+inline bool pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
@@ -133,26 +136,24 @@ inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
         swapRows(A, j, piv);
     return false;
 }
-inline bool pivotRows(PtrMatrix<int64_t> A, size_t i, size_t N) {
+inline bool pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t N) {
     return pivotRows(A, i, N, i);
 }
 
-MULTIVERSION void dropCol(PtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
+MULTIVERSION void dropCol(MutPtrMatrix<int64_t> A, size_t i, size_t M,
+                          size_t N) {
     // if any rows are left, we shift them up to replace it
-    if (i < N) {
-        // std::cout << "A.numRow() = " << A.numRow()
-        //           << "; A.numCol() = " << A.numCol() << "; M = " << M
-        //           << "; N = " << N << std::endl;
-        for (size_t m = 0; m < M; ++m) {
-            VECTORIZE
-            for (size_t n = i; n < N; ++n)
-                A(m, n) = A(m, n + 1);
-        }
+    if (i >= N)
+        return;
+    for (size_t m = 0; m < M; ++m) {
+        VECTORIZE
+        for (size_t n = i; n < N; ++n)
+            A(m, n) = A(m, n + 1);
     }
 }
 
 MULTIVERSION std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>>
-orthogonalizeBang(PtrMatrix<int64_t> A) {
+orthogonalizeBang(MutPtrMatrix<int64_t> A) {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
@@ -169,6 +170,9 @@ orthogonalizeBang(PtrMatrix<int64_t> A) {
         } else {
             zeroSupDiagonal(A, K, i, M, N);
             int64_t Aii = A(i, i);
+	    SHOW(Aii);
+	    CSHOW(j);
+	    CSHOWLN(i);
             if (std::abs(Aii) != 1) {
                 // including this row renders the matrix not unimodular!
                 // therefore, we drop the row.
@@ -187,7 +191,7 @@ orthogonalize(IntMatrix A) {
     return orthogonalizeBang(A);
 }
 
-MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A, size_t r,
+MULTIVERSION inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A, size_t r,
                                          size_t c) {
     auto [M, N] = A.size();
     for (size_t j = c + 1; j < M; ++j) {
@@ -204,8 +208,8 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A, size_t r,
         }
     }
 }
-MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
-                                         PtrMatrix<int64_t> B, size_t r,
+MULTIVERSION inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
+                                         MutPtrMatrix<int64_t> B, size_t r,
                                          size_t c) {
     auto [M, N] = A.size();
     const size_t K = B.numCol();
@@ -231,15 +235,13 @@ MULTIVERSION inline void zeroSupDiagonal(PtrMatrix<int64_t> A,
         }
     }
 }
-MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A, size_t r,
+MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, size_t r,
                                            size_t c) {
     const size_t N = A.numCol();
     int64_t Akk = A(c, r);
     if (Akk < 0) {
         Akk = -Akk;
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i)
-            A(c, i) *= -1;
+        A(c, _) *= -1;
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
@@ -269,20 +271,16 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A, size_t r,
     }
 }
 
-MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
-                                           PtrMatrix<int64_t> B, size_t r,
+MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
+                                           MutPtrMatrix<int64_t> B, size_t r,
                                            size_t c) {
     const size_t N = A.numCol();
     const size_t K = B.numCol();
     int64_t Akk = A(c, r);
     if (Akk < 0) {
         Akk = -Akk;
-        VECTORIZE
-        for (size_t i = 0; i < N; ++i)
-            A(c, i) *= -1;
-        VECTORIZE
-        for (size_t i = 0; i < K; ++i)
-            B(c, i) *= -1;
+        A(c, _) *= -1;
+        B(c, _) *= -1;
     }
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
@@ -317,11 +315,11 @@ MULTIVERSION inline void reduceSubDiagonal(PtrMatrix<int64_t> A,
     }
 }
 
-void reduceColumn(PtrMatrix<int64_t> A, size_t c, size_t r) {
+void reduceColumn(MutPtrMatrix<int64_t> A, size_t c, size_t r) {
     zeroSupDiagonal(A, c, r);
     reduceSubDiagonal(A, c, r);
 }
-MULTIVERSION size_t simplifySystemImpl(PtrMatrix<int64_t> A,
+MULTIVERSION size_t simplifySystemImpl(MutPtrMatrix<int64_t> A,
                                        size_t colInit = 0) {
     auto [M, N] = A.size();
     for (size_t r = 0, c = colInit; c < N && r < M; ++c)
@@ -337,13 +335,13 @@ static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
     size_t Mnew = simplifySystemImpl(E, colInit);
     E.truncateRows(Mnew);
 }
-void reduceColumn(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B, size_t c,
+void reduceColumn(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B, size_t c,
                   size_t r) {
     zeroSupDiagonal(A, B, c, r);
     reduceSubDiagonal(A, B, c, r);
 }
-MULTIVERSION static void simplifySystemImpl(PtrMatrix<int64_t> A,
-                                            PtrMatrix<int64_t> B) {
+MULTIVERSION static void simplifySystemImpl(MutPtrMatrix<int64_t> A,
+                                            MutPtrMatrix<int64_t> B) {
     auto [M, N] = A.size();
     for (size_t r = 0, c = 0; c < N && r < M; ++c)
         if (!pivotRows(A, B, c, M, r))
@@ -363,8 +361,7 @@ MULTIVERSION static void simplifySystem(IntMatrix &A, IntMatrix &B) {
     }
     return;
 }
-std::pair<IntMatrix, SquareMatrix<int64_t>>
-hermite(IntMatrix A) {
+std::pair<IntMatrix, SquareMatrix<int64_t>> hermite(IntMatrix A) {
     auto [M, N] = A.size();
     SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(M)};
     simplifySystemImpl(A, U);
@@ -372,7 +369,7 @@ hermite(IntMatrix A) {
 }
 
 // zero A(i,k) with A(j,k)
-inline int64_t zeroWithRowOperation(PtrMatrix<int64_t> A, size_t i, size_t j,
+inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
                                     size_t k, size_t f) {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
@@ -474,7 +471,7 @@ MULTIVERSION static void zeroColumn(IntMatrix &A, size_t c, size_t r) {
     }
 }
 
-MULTIVERSION int pivotRows2(PtrMatrix<int64_t> A, size_t i, size_t M,
+MULTIVERSION int pivotRows2(MutPtrMatrix<int64_t> A, size_t i, size_t M,
                             size_t piv) {
     size_t j = piv;
     while (A(piv, i) == 0)
@@ -560,20 +557,20 @@ MULTIVERSION void solveSystem(IntMatrix &A, size_t K) {
 // diagonals contain denominators.
 // Assumes the last column is the vector to solve for.
 MULTIVERSION void solveSystem(IntMatrix &A) { solveSystem(A, A.numCol() - 1); }
-MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
-    const auto [M, N] = A.size();
-    for (size_t r = 0, c = 0; c < M && r < M; ++c)
-        if (!pivotRows(A, c, M, r)) {
-            zeroSupDiagonal(A, c, r++);
-            reduceSubDiagonal(A, c, r++);
-        }
-    size_t R = M;
-    while ((R > 0) && allZero(A.getRow(R - 1))) {
-        --R;
-    }
-    A.truncateRows(R);
-    return A;
-}
+// MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
+//     const auto [M, N] = A.size();
+//     for (size_t r = 0, c = 0; c < M && r < M; ++c)
+//         if (!pivotRows(A, c, M, r)) {
+//             zeroSupDiagonal(A, c, r++);
+//             reduceSubDiagonal(A, c, r++);
+//         }
+//     size_t R = M;
+//     while ((R > 0) && allZero(A.getRow(R - 1))) {
+//         --R;
+//     }
+//     A.truncateRows(R);
+//     return A;
+// }
 
 MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
     const size_t M = A.numRow();
@@ -591,7 +588,7 @@ MULTIVERSION IntMatrix nullSpace(IntMatrix A) {
         // we keep `D` columns
         VECTORIZE
         for (size_t d = 0; d < D * M; ++d)
-            B[d] = B[d + o];
+            B.mem[d] = B.mem[d + o];
         B.truncateRows(D);
     }
     return B;

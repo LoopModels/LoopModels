@@ -75,7 +75,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
     }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    rotate(PtrMatrix<const int64_t> R, size_t numPeeled = 0) const {
+    rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
         assert(R.numCol() + numPeeled == getNumLoops());
         assert(R.numRow() + numPeeled == getNumLoops());
         assert(numPeeled < getNumLoops());
