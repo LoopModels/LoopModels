@@ -2,6 +2,7 @@
 #include "./Constraints.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include "Macro.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -208,16 +209,13 @@ struct Simplex {
                 C(a, numVar + i) = 1;
                 // we now zero out the implicit cost of `1`
                 costs(_(begin, numVar)) -= C(a, _(begin, numVar));
-                costs(_(begin, numVar)) = C(a, _(begin, numVar));
-                for (size_t j = 0; j < numVar; ++j)
-                    costs[j] -= C(a, j);
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            std::cout << "about to run; tableau = \n" << tableau << std::endl;
+            std::cout << "about to run; tableau =" << tableau << std::endl;
             if (int64_t r = runCore())
                 return r;
-            std::cout << "initialized tableau = \n" << tableau << std::endl;
+            std::cout << "initialized tableau =" << tableau << std::endl;
             // all augment vars are now 0
             truncateVars(numVar);
         }
@@ -310,6 +308,7 @@ struct Simplex {
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex>
     positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
+	std::cout << "Entering positive variables!"<<std::endl;
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -330,13 +329,13 @@ struct Simplex {
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
-        std::cout << "simplex.tableau =" << simplex.tableau << std::endl;
+        std::cout << "before costs simplex.tableau =" << simplex.tableau << std::endl;
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
             consts[i] = A(i, 0);
         for (size_t i = 0; i < numStrict; ++i)
             consts[i + numSlack] = B(i, 0);
-        std::cout << "simplex.tableau =" << simplex.tableau << std::endl;
+        std::cout << "about to initialize simplex.tableau =" << simplex.tableau << std::endl;
         if (simplex.initiateFeasible())
             return {};
         return simplex;

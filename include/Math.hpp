@@ -833,24 +833,24 @@ template <typename T> struct Vector {
     }
     // MutPtrVector<T> operator=(AbstractVector auto &x) {
     Vector<T> &operator=(AbstractVector auto &x) {
-        MutPtrVector<T> y{x};
+        MutPtrVector<T> y{*this};
         y = x;
         return *this;
     }
     MutPtrVector<T> operator+=(AbstractVector auto &x) {
-        MutPtrVector<T> y{x};
+        MutPtrVector<T> y{*this};
         return y += x;
     }
     MutPtrVector<T> operator-=(AbstractVector auto &x) {
-        MutPtrVector<T> y{x};
+        MutPtrVector<T> y{*this};
         return y -= x;
     }
     MutPtrVector<T> operator*=(AbstractVector auto &x) {
-        MutPtrVector<T> y{x};
+        MutPtrVector<T> y{*this};
         return y *= x;
     }
     MutPtrVector<T> operator/=(AbstractVector auto &x) {
-        MutPtrVector<T> y{x};
+        MutPtrVector<T> y{*this};
         return y /= x;
     }
     template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
@@ -2384,6 +2384,8 @@ template <typename T>
 std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     auto [m, n] = A.size();
+    if (m == 0)
+	return os << "[ ]";
     for (size_t i = 0; i < m; i++) {
         if (i) {
             os << "  ";
