@@ -5,8 +5,7 @@ bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
                     llvm::SmallVectorImpl<bool> &seen,
                     llvm::SmallVectorImpl<int> &matchR) {
     // Try every job one by one
-    size_t N = bpGraph.size(0);
-    for (size_t v = 0; v < N; v++) {
+    for (size_t v = 0; v < bpGraph.numRow(); v++) {
         // If applicant u is interested in
         // job v and v is not visited
         if (bpGraph(v, u) && !seen[v]) {

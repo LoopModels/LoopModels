@@ -331,7 +331,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     size_t numRowDiff; // This variable stores the different row size of H
                        // matrix and truncated H matrix
     using BaseComparator<LinearSymbolicComparator>::greaterEqual;
-    void init(PtrMatrix<const int64_t> Ap,
+    void init(PtrMatrix<int64_t> Ap,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
         const auto [numCon, numVar] = Ap.size();
         auto &A = V;
@@ -346,7 +346,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         initCore();
     }
-    void init(PtrMatrix<const int64_t> Ap, PtrMatrix<const int64_t> Ep) {
+    void init(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep) {
         const auto [numInEqCon, numVar] = Ap.size();
         const size_t numEqCon = Ep.numRow();
         IntMatrix A(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
@@ -391,14 +391,14 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
 
     static LinearSymbolicComparator
-    construct(PtrMatrix<const int64_t> Ap,
+    construct(PtrMatrix<int64_t> Ap,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
 	LinearSymbolicComparator cmp;
 	cmp.init(Ap);
 	return cmp;
     };
-    static LinearSymbolicComparator construct(PtrMatrix<const int64_t> Ap,
-                                              PtrMatrix<const int64_t> Ep) {
+    static LinearSymbolicComparator construct(PtrMatrix<int64_t> Ap,
+                                              PtrMatrix<int64_t> Ep) {
 	LinearSymbolicComparator cmp;
 	cmp.init(Ap, Ep);
 	return cmp;

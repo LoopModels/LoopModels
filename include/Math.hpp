@@ -1537,7 +1537,7 @@ template <typename T, typename P> struct BaseMatrix {
         size_t N = std::min(numRow(), numCol());
         Vector<T> d;
         d.resizeForOverwrite(N);
-        P &A = self();
+        const P &A = self();
         for (size_t n = 0; n < N; ++n)
             d(n) = A(n, n);
         return d;
