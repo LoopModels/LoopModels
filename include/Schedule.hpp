@@ -55,13 +55,13 @@ struct Schedule {
         // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
         return SquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
-    PtrVector<int64_t> getOmega() {
+    MutPtrVector<int64_t> getOmega() {
         return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
     }
     SquarePtrMatrix<const int64_t> getPhi() const {
         return SquarePtrMatrix<const int64_t>{data.data(), numLoops};
     }
-    PtrVector<const int64_t> getOmega() const {
+    PtrVector<int64_t> getOmega() const {
         return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {

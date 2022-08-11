@@ -442,6 +442,10 @@ struct LoopBlock {
         return std::make_tuple(a, b, c);
     }
     // assemble simplex
+    // we want to order variables
+    // bounding, scheduled coefs, lambda
+    // matches lexicographical ordering of minimization
+    // bounding, however, is to be favoring minimizing `u` over `w`
     Simplex omniSimplex() const {
         const size_t numScheduleCoefs = countNumScheduleCoefs();
         auto [numLambda, numBounding, numConstraints] =
@@ -461,9 +465,10 @@ struct LoopBlock {
                 visited[e] = true;
                 auto &edge = edges[e];
 		size_t numConstraint = edge.getNumConstraints();
-		for (size_t i = 0; i < numConstraint; ++i){
+		// edge.copyLambda(, , , );
+		// for (size_t i = 0; i < numConstraint; ++i){
 		    
-		}
+		// }
                 c += numConstraint;
                 b += edge.getNumSymbols();
                 l += edge.getNumLambda();

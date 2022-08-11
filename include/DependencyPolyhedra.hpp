@@ -135,8 +135,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
 
     // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
-    static size_t findFirstNonEqualEven(PtrVector<const int64_t> x,
-                                        PtrVector<const int64_t> y) {
+    static size_t findFirstNonEqualEven(PtrVector<int64_t> x,
+                                        PtrVector<int64_t> y) {
         const size_t M = std::min(x.size(), y.size());
         for (size_t i = 0; i < M; i += 2)
             if (x[i] != y[i])
@@ -560,8 +560,8 @@ struct Dependence {
     // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
     void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
                     MutPtrMatrix<int64_t> C, StridedVector<int64_t> d) const {
-        const size_t numBoundingConstraints =
-            dependenceBounding.getNumConstraints();
+        // const size_t numBoundingConstraints =
+        //     dependenceBounding.getNumConstraints();
         const size_t numSchedulingConstraints =
             dependenceSatisfaction.getNumConstraints();
         const size_t halfLambda = depPoly.getNumLambda();
@@ -600,8 +600,8 @@ struct Dependence {
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
         SquarePtrMatrix<const int64_t> xPhi = x.schedule.getPhi();
         SquarePtrMatrix<const int64_t> yPhi = y.schedule.getPhi();
-        llvm::ArrayRef<int64_t> xOmega = x.schedule.getOmega();
-        llvm::ArrayRef<int64_t> yOmega = y.schedule.getOmega();
+        PtrVector<int64_t> xOmega = x.schedule.getOmega();
+        PtrVector<int64_t> yOmega = y.schedule.getOmega();
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 1);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
