@@ -131,11 +131,11 @@ struct Polyhedra {
     bool greaterEqualZero(const size_t r) const {
         return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
     }
-    PtrVector<const int64_t> getSymbol(PtrMatrix<const int64_t> A,
+    PtrVector<int64_t> getSymbol(PtrMatrix<int64_t> A,
                                        size_t i) const {
         return A(i, _(begin, C.getNumConstTerms()));
     }
-    PtrVector<const int64_t> getNonSymbol(PtrMatrix<const int64_t> A,
+    PtrVector<int64_t> getNonSymbol(PtrMatrix<int64_t> A,
                                           size_t i) const {
         return A(i, _(C.getNumConstTerms(), A.numCol()));
     }
@@ -152,8 +152,8 @@ struct Polyhedra {
     // `ua` and `ub` correspond to the upper bound of `i`
     // Eliminate `i`, and set `a` and `b` appropriately.
     // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(PtrVector<int64_t> a, PtrVector<const int64_t> la,
-                          PtrVector<const int64_t> ua, size_t i) {
+    static bool setBounds(MutPtrVector<int64_t> a, PtrVector<int64_t> la,
+                          PtrVector<int64_t> ua, size_t i) {
         int64_t cu_base = ua[i];
         int64_t cl_base = la[i];
         if ((cu_base > 0) && (cl_base < 0))
@@ -181,7 +181,7 @@ struct Polyhedra {
         return true;
     }
 
-    static bool uniqueConstraint(PtrMatrix<const int64_t> A, size_t C) {
+    static bool uniqueConstraint(PtrMatrix<int64_t> A, size_t C) {
         for (size_t c = 0; c < C; ++c) {
             bool allEqual = true;
             for (size_t r = 0; r < A.numCol(); ++r)
@@ -284,7 +284,7 @@ struct Polyhedra {
     // method for when we do not match `Ex=q` constraints with themselves
     // e.g., for removeRedundantConstraints
     void eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E,
-                               PtrMatrix<int64_t> Asrc, const size_t i) const {
+                               MutPtrMatrix<int64_t> Asrc, const size_t i) const {
 
         auto [numExclude, c, _] = eliminateVarForRCElimCore(Adst, E, Asrc, i);
         for (size_t u = E.numRow(); u != 0;)
@@ -293,7 +293,7 @@ struct Polyhedra {
         if (Adst.numRow() != c)
             Adst.resize(c, Asrc.numCol());
     }
-    static std::pair<size_t, size_t> countSigns(PtrMatrix<const int64_t> A,
+    static std::pair<size_t, size_t> countSigns(PtrMatrix<int64_t> A,
                                                 size_t i) {
         size_t numNeg = 0;
         size_t numPos = 0;
@@ -306,7 +306,7 @@ struct Polyhedra {
     }
     std::tuple<size_t, size_t, size_t>
     eliminateVarForRCElimCore(IntMatrix &Adst, IntMatrix &E,
-                              PtrMatrix<int64_t> Asrc, const size_t i) const {
+                              MutPtrMatrix<int64_t> Asrc, const size_t i) const {
         // eliminate variable `i` according to original order
         const auto [numCon, numVar] = Asrc.size();
         const auto [numNeg, numPos] = countSigns(Asrc, i);
@@ -373,7 +373,7 @@ struct Polyhedra {
     // takes `A'x <= b`, and seperates into lower and upper bound equations w/
     // respect to `i`th variable
     // static void categorizeBounds(IntMatrix &lA, IntMatrix &uA,
-    //                              PtrMatrix<const int64_t> A, size_t i) {
+    //                              PtrMatrix<int64_t> A, size_t i) {
     //     auto [numConstraints, numLoops] = A.size();
     //     const auto [numNeg, numPos] = countNonZeroSign(A, i);
     //     lA.resize(numNeg, numLoops);
@@ -619,7 +619,7 @@ struct Polyhedra {
     // and `b` render redundant.
     bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
                                     IntMatrix &E, IntMatrix &Aold,
-                                    PtrVector<const int64_t> a,
+                                    PtrVector<int64_t> a,
                                     const size_t CC) const {
 
         const size_t numCol = A.numCol();

@@ -116,7 +116,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     i = 0;
     for (auto a : ai) {
         newArrayRefs.emplace_back(a->arrayID, alnNew, a->arrayDim());
-        PtrMatrix<int64_t> A = newArrayRefs.back().indexMatrix();
+        MutPtrMatrix<int64_t> A = newArrayRefs.back().indexMatrix();
         for (size_t j = 0; j < numLoops; ++j)
             for (size_t k = 0; k < A.numCol(); ++k)
                 A(j, k) = KS(j, k + i);

@@ -84,18 +84,18 @@ struct Simplex {
         eraseConstraintImpl(tableau, numTableauRows(c));
         --tableau.M;
     }
-    PtrVector<const int64_t> getTableauRow(size_t i) const {
+    PtrVector<int64_t> getTableauRow(size_t i) const {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
-    PtrVector<const int64_t> getBasicConstraints() const {
+    PtrVector<int64_t> getBasicConstraints() const {
         return getTableauRow(0);
     }
-    PtrVector<const int64_t> getCost() const { return getTableauRow(1); }
-    PtrVector<int64_t> getTableauRow(size_t i) {
+    PtrVector<int64_t> getCost() const { return getTableauRow(1); }
+    MutPtrVector<int64_t> getTableauRow(size_t i) {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
-    PtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
-    PtrVector<int64_t> getCost() { return getTableauRow(1); }
+    MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
+    MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<const int64_t> getTableauCol(size_t i) const {
         return StridedVector<const int64_t>{
             tableau.data() + i + numExtraRows * tableau.rowStride(),
@@ -130,7 +130,7 @@ struct Simplex {
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
         std::cout << "C=" << C << std::endl;
-        PtrVector<int64_t> basicCons{getBasicConstraints()};
+        MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
         // first pass, we make sure the equalities are >= 0
@@ -193,7 +193,7 @@ struct Simplex {
             addVars(augmentVars.size()); // NOTE: invalidates all refs
             MutPtrMatrix<int64_t> C{getConstraints()};
             auto basicVars{getBasicVariables()};
-            PtrVector<int64_t> basicCons{getBasicConstraints()};
+            MutPtrVector<int64_t> basicCons{getBasicConstraints()};
             auto costs{getCost()};
             // for (auto &&c : costs)
             for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
@@ -225,7 +225,7 @@ struct Simplex {
         inCanonicalForm = true;
         return 0;
     }
-    static int getEnteringVariable(PtrVector<const int64_t> costs) {
+    static int getEnteringVariable(PtrVector<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
         std::cout << "costs = " << costs << std::endl;
         for (int i = 1; i < int(costs.size()); ++i)
@@ -271,7 +271,7 @@ struct Simplex {
         StridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
         basicVars[leavingVariable] = enteringVariable;
-        PtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         basicConstraints[oldBasicVar] = -1;
         basicConstraints[enteringVariable] = leavingVariable;
         return f;
@@ -348,7 +348,7 @@ struct Simplex {
             simplex = *this;
             MutPtrMatrix<int64_t> constraints = simplex.getConstraints();
             int64_t bumpedBound = ++constraints(c, 0);
-            PtrVector<int64_t> cost = simplex.getCost();
+            MutPtrVector<int64_t> cost = simplex.getCost();
             for (size_t v = numSlackVar; v < cost.size(); ++v)
                 cost[v] = -constraints(c, v);
             if (simplex.run() != bumpedBound)
@@ -359,7 +359,7 @@ struct Simplex {
     void removeVariable(size_t i) {
         // We remove a variable by isolating it, and then dropping the
         // constraint. This allows us to preserve canonical form
-        PtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         MutPtrMatrix<int64_t> C{getConstraints()};
         // ensure sure `i` is basic
         if (basicConstraints[i] < 0)
@@ -376,7 +376,7 @@ struct Simplex {
             truncateVars(j);
         }
     }
-    static uint64_t toMask(PtrVector<const int64_t> x) {
+    static uint64_t toMask(PtrVector<int64_t> x) {
         assert(x.size() <= 64);
         uint64_t m = 0;
         for (auto y : x)
@@ -387,13 +387,13 @@ struct Simplex {
         const size_t numVarTotal = getNumVar();
         assert(numVarTotal <= 64);
         uint64_t m = 0;
-        PtrVector<const int64_t> basicCons{getBasicConstraints()};
+        PtrVector<int64_t> basicCons{getBasicConstraints()};
         for (size_t i = numSlackVar; i < numVarTotal; ++i)
             m = ((m << 1) | (basicCons[i] > 0));
         return m;
     }
     // check if a solution exists such that `x` can be true.
-    bool unSatisfiable(PtrVector<const int64_t> x, size_t off) const {
+    bool unSatisfiable(PtrVector<int64_t> x, size_t off) const {
         // is it a valid solution to set the first `x.size()` variables to `x`?
         // first, check that >= 0 constraint is satisfied
         for (auto y : x)
@@ -416,7 +416,7 @@ struct Simplex {
         sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
         return subSimp.initiateFeasible();
     }
-    bool satisfiable(PtrVector<const int64_t> x, size_t off) const {
+    bool satisfiable(PtrVector<int64_t> x, size_t off) const {
         return !unSatisfiable(x, off);
     }
     /*

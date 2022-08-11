@@ -560,7 +560,7 @@ template <typename T> struct PtrVector {
     using eltype = T;
     const T *const mem;
     const size_t N;
-
+    static constexpr bool canResize = false;
     bool operator==(AbstractVector auto &x) {
         if (N != x.size())
             return false;
@@ -570,7 +570,7 @@ template <typename T> struct PtrVector {
         return true;
     }
 
-    T &operator[](size_t i) {
+    const T &operator[](size_t i) {
         assert(i < N);
         return mem[i];
     }
@@ -578,7 +578,7 @@ template <typename T> struct PtrVector {
         assert(i < N);
         return mem[i];
     }
-    T &operator()(size_t i) {
+    const T &operator()(size_t i) {
         assert(i < N);
         return mem[i];
     }
@@ -589,7 +589,7 @@ template <typename T> struct PtrVector {
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.begin <= i.end);
         assert(i.end <= N);
-        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+        return PtrVector<T>{.mem = mem + i.begin, .N = i.end - i.begin};
     }
     template <typename F, typename L>
     PtrVector<T> operator()(Range<F, L> i) const {
@@ -617,6 +617,7 @@ template <typename T> struct MutPtrVector {
     // using eltype = std::remove_const_t<T>;
     T *const mem;
     const size_t N;
+    static constexpr bool canResize = false;
     T &operator[](size_t i) {
         assert(i < N);
         return mem[i];
@@ -633,15 +634,19 @@ template <typename T> struct MutPtrVector {
         assert(i < N);
         return mem[i];
     }
+    // copy constructor
+    // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
+    MutPtrVector(const MutPtrVector<T> &x) = default;
+    MutPtrVector(T *mem, size_t N) : mem(mem), N(N) {}
     MutPtrVector<T> operator()(Range<size_t, size_t> i) {
         assert(i.begin <= i.end);
         assert(i.end <= N);
-        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+        return MutPtrVector<T>{mem + i.begin, i.end - i.begin};
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.begin <= i.end);
         assert(i.end <= N);
-        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+        return PtrVector<T>{.mem = mem + i.begin, .N = i.end - i.begin};
     }
     template <typename F, typename L>
     MutPtrVector<T> operator()(Range<F, L> i) {
@@ -662,6 +667,9 @@ template <typename T> struct MutPtrVector {
         return llvm::MutableArrayRef<T>{mem, N};
     }
     // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
+    bool operator==(const MutPtrVector<T> x) const {
+        return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+    }
     bool operator==(const PtrVector<T> x) const {
         return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
     }
@@ -672,6 +680,8 @@ template <typename T> struct MutPtrVector {
     // PtrVector<T> view() const {
     //     return PtrVector<T>{.mem = mem, .N = N};
     // };
+    MutPtrVector<T> operator=(PtrVector<T> x) { return copyto(*this, x); }
+    MutPtrVector<T> operator=(MutPtrVector<T> x) { return copyto(*this, x); }
     MutPtrVector<T> operator=(const AbstractVector auto &x) {
         return copyto(*this, x);
     }
@@ -734,16 +744,16 @@ int64_t gcd(PtrVector<int64_t> x) {
 }
 
 template <typename T> inline auto view(llvm::SmallVectorImpl<T> &x) {
-    return PtrVector<T>{x.data(), x.size()};
+    return MutPtrVector<T>{x.data(), x.size()};
 }
 template <typename T> inline auto view(const llvm::SmallVectorImpl<T> &x) {
-    return PtrVector<const T>{x.data(), x.size()};
+    return PtrVector<T>{.mem = x.data(), .N = x.size()};
 }
 template <typename T> inline auto view(llvm::MutableArrayRef<T> x) {
-    return PtrVector<T>{x.data(), x.size()};
+    return MutPtrVector<T>{x.data(), x.size()};
 }
-template <typename T> inline auto view(const llvm::ArrayRef<T> x) {
-    return PtrVector<const T>{x.data(), x.size()};
+template <typename T> inline auto view(llvm::ArrayRef<T> x) {
+    return PtrVector<T>{.mem = x.data(), .N = x.size()};
 }
 
 template <typename T> struct Vector {
@@ -765,12 +775,12 @@ template <typename T> struct Vector {
     MutPtrVector<T> operator()(Range<size_t, size_t> i) {
         assert(i.begin <= i.end);
         assert(i.end <= data.size());
-        return PtrVector{.mem = data.data() + i.begin, .N = i.end - i.begin};
+        return MutPtrVector<T>{data.data() + i.begin, i.end - i.begin};
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.begin <= i.end);
         assert(i.end <= data.size());
-        return PtrVector{.mem = data.data() + i.begin, .N = i.end - i.begin};
+        return PtrVector<T>{.mem = data.data() + i.begin, .N = i.end - i.begin};
     }
     template <typename F, typename L>
     MutPtrVector<T> operator()(Range<F, L> i) {
@@ -810,14 +820,22 @@ template <typename T> struct Vector {
     void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
 
     operator MutPtrVector<T>() {
-        return MutPtrVector<T>{.mem = data.data(), .N = data.size()};
+        return MutPtrVector<T>{data.data(), data.size()};
     }
     operator PtrVector<T>() const {
         return PtrVector<T>{.mem = data.data(), .N = data.size()};
     }
-    MutPtrVector<T> operator=(AbstractVector auto &x) {
+    operator llvm::MutableArrayRef<T>() {
+        return llvm::MutableArrayRef<T>{data.data(), data.size()};
+    }
+    operator llvm::ArrayRef<T>() const {
+        return llvm::ArrayRef<T>{data.data(), data.size()};
+    }
+    // MutPtrVector<T> operator=(AbstractVector auto &x) {
+    Vector<T> &operator=(AbstractVector auto &x) {
         MutPtrVector<T> y{x};
-        return y = x;
+        y = x;
+        return *this;
     }
     MutPtrVector<T> operator+=(AbstractVector auto &x) {
         MutPtrVector<T> y{x};
@@ -1066,8 +1084,8 @@ template <typename T> struct PtrMatrix {
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
-    inline PtrVector<const T, 0> getRow(size_t i) const {
-        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(), .M = N};
+    inline PtrVector<T> getRow(size_t i) const {
+        return PtrVector<T>{.mem = data() + i * rowStride(), .N = N};
     }
     inline StridedVector<const T> getCol(size_t n) const {
         return StridedVector<const T>{data() + n, M, rowStride()};
@@ -1185,7 +1203,7 @@ template <typename T> struct MutPtrMatrix {
         return getCol(col)(canonicalizeRange(rows, M));
     }
     template <typename C0, typename C1>
-    inline PtrVector<T> operator()(size_t row, Range<C0, C1> cols) {
+    inline MutPtrVector<T> operator()(size_t row, Range<C0, C1> cols) {
         return getRow(row)(canonicalizeRange(cols, numCol()));
     }
     inline auto operator()(Colon, size_t col) { return getCol(col); }
@@ -1231,11 +1249,11 @@ template <typename T> struct MutPtrMatrix {
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
-    inline PtrVector<T, 0> getRow(size_t i) {
-        return PtrVector<T, 0>{.ptr = data() + i * rowStride(), .M = N};
+    inline MutPtrVector<T> getRow(size_t i) {
+        return MutPtrVector<T>{data() + i * rowStride(), N};
     }
-    inline PtrVector<const T, 0> getRow(size_t i) const {
-        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(), .M = N};
+    inline PtrVector<T> getRow(size_t i) const {
+        return PtrVector<T>{.mem = data() + i * rowStride(), .N = N};
     }
     inline StridedVector<T> getCol(size_t n) {
         return StridedVector<T>{data() + n, M, rowStride()};
@@ -1421,12 +1439,11 @@ template <typename T, typename P> struct BaseMatrix {
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
-    inline PtrVector<T, 0> getRow(size_t i) {
-        return PtrVector<T, 0>{.ptr = data() + i * rowStride(), .M = numCol()};
+    inline MutPtrVector<T> getRow(size_t i) {
+        return MutPtrVector<T>{data() + i * rowStride(), numCol()};
     }
-    inline PtrVector<const T, 0> getRow(size_t i) const {
-        return PtrVector<const T, 0>{.ptr = data() + i * rowStride(),
-                                     .M = numCol()};
+    inline PtrVector<T> getRow(size_t i) const {
+        return PtrVector<T>{.mem = data() + i * rowStride(), .N = numCol()};
     }
     // void copyRow(llvm::ArrayRef<T> x, size_t i) {
     //     for (size_t j = 0; j < numCol(); ++j)
@@ -1525,7 +1542,7 @@ inline auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {
 
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
-static_assert(std::is_trivially_copyable_v<PtrVector<int64_t, 0>>,
+static_assert(std::is_trivially_copyable_v<PtrVector<int64_t>>,
               "PtrVector<int64_t,0> is not trivially copyable!");
 
 static_assert(!AbstractVector<PtrMatrix<int64_t>>,
@@ -1544,21 +1561,25 @@ static_assert(AbstractMatrix<const PtrMatrix<int64_t>>,
 static_assert(AbstractMatrix<const MutPtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> isa AbstractMatrix failed");
 
-static_assert(AbstractVector<PtrVector<int64_t>>,
+static_assert(AbstractVector<MutPtrVector<int64_t>>,
               "PtrVector<int64_t> isa AbstractVector failed");
-static_assert(AbstractVector<PtrVector<const int64_t>>,
+static_assert(AbstractVector<PtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractVector failed");
-static_assert(AbstractVector<const PtrVector<const int64_t>>,
+static_assert(AbstractVector<const PtrVector<int64_t>>,
+              "PtrVector<const int64_t> isa AbstractVector failed");
+static_assert(AbstractVector<const MutPtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractVector failed");
 
 static_assert(AbstractVector<Vector<int64_t>>,
               "PtrVector<int64_t> isa AbstractVector failed");
 
-static_assert(!AbstractMatrix<PtrVector<int64_t>>,
+static_assert(!AbstractMatrix<MutPtrVector<int64_t>>,
               "PtrVector<int64_t> isa AbstractMatrix succeeded");
-static_assert(!AbstractMatrix<PtrVector<const int64_t>>,
+static_assert(!AbstractMatrix<PtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
-static_assert(!AbstractMatrix<const PtrVector<const int64_t>>,
+static_assert(!AbstractMatrix<const PtrVector<int64_t>>,
+              "PtrVector<const int64_t> isa AbstractMatrix succeeded");
+static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
               "PtrVector<const int64_t> isa AbstractMatrix succeeded");
 
 static_assert(
@@ -1923,7 +1944,7 @@ static_assert(std::same_as<DynamicMatrix<int64_t>, Matrix<int64_t>>,
 typedef DynamicMatrix<int64_t> IntMatrix;
 
 template <typename T>
-std::ostream &printVector(std::ostream &os, PtrVector<const T> a) {
+std::ostream &printVector(std::ostream &os, PtrVector<T> a) {
     os << "[ ";
     if (size_t M = a.size()) {
         os << a[0];
@@ -1936,11 +1957,11 @@ std::ostream &printVector(std::ostream &os, PtrVector<const T> a) {
 }
 template <typename T>
 std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
-    return printVector(os, PtrVector<const T>{a.data(), a.size()});
+    return printVector(os, PtrVector<T>{a.data(), a.size()});
 }
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, PtrVector<const T> const &A) {
+std::ostream &operator<<(std::ostream &os, PtrVector<T> const &A) {
     return printVector(os, A);
 }
 template <typename T>
@@ -2344,20 +2365,20 @@ template <std::integral I> struct PromoteType<Rational, I> {
     using eltype = Rational;
 };
 
-// static void normalizeByGCD(PtrVector<int64_t> x) {
-//     if (size_t N = x.size()) {
-//         if (N == 1) {
-//             x[0] = 1;
-//             return;
-//         }
-//         int64_t g = gcd(x[0], x[1]);
-//         for (size_t n = 2; (n < N) & (g != 1); ++n)
-//             g = gcd(g, x[n]);
-//         if (g > 1)
-//             for (auto &&a : x)
-//                 a /= g;
-//     }
-// }
+static void normalizeByGCD(MutPtrVector<int64_t> x) {
+    if (size_t N = x.size()) {
+        if (N == 1) {
+            x[0] = 1;
+            return;
+        }
+        int64_t g = gcd(x[0], x[1]);
+        for (size_t n = 2; (n < N) & (g != 1); ++n)
+            g = gcd(g, x[n]);
+        if (g > 1)
+            for (auto &&a : x)
+                a /= g;
+    }
+}
 
 template <typename T>
 std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {

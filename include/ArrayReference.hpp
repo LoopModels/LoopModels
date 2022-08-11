@@ -170,7 +170,7 @@ struct ArrayReference {
     MutPtrMatrix<int64_t> offsetMatrix() {
         const size_t d = arrayDim();
         const size_t numSymbols = getNumSymbols();
-        return MutPtrMatrix<int64_t>{.mem = indexMatrix().end(),
+        return MutPtrMatrix<int64_t>{.mem = indices.data() + getNumLoops() * d,
                                      .M = d,
                                      .N = numSymbols,
                                      .X = numSymbols};
@@ -178,7 +178,7 @@ struct ArrayReference {
     PtrMatrix<int64_t> offsetMatrix() const {
         const size_t d = arrayDim();
         const size_t numSymbols = getNumSymbols();
-        return PtrMatrix<int64_t>{.mem = indexMatrix().end(),
+        return PtrMatrix<int64_t>{.mem = indices.data() + getNumLoops() * d,
                                   .M = d,
                                   .N = numSymbols,
                                   .X = numSymbols};
