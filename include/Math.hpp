@@ -555,237 +555,178 @@ inline Range<size_t, size_t> canonicalizeRange(Range<Begin, End>, size_t M) {
 inline Range<size_t, size_t> canonicalizeRange(Colon, size_t M) {
     return Range<size_t, size_t>{0, M};
 }
-
-template <typename T, typename V> struct BaseVector {
+template <typename T> struct PtrVector {
+    static_assert(!std::is_const_v<T>, "const T is redundant");
     using eltype = T;
-    inline T &ref(size_t i) { return static_cast<V *>(this)(i); }
-    inline T &size() { return static_cast<V *>(this)->size(); }
-    V &operator=(const AbstractVector auto &x) { return copyto(*this, x); }
-    V &operator+=(AbstractVector auto &x) {
-        const size_t N = size();
-        V &self = *static_cast<V *>(this);
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            self(i) += x(i);
-        return self;
-    }
-    V &operator-=(AbstractVector auto &x) {
-        const size_t N = size();
-        V &self = *static_cast<V *>(this);
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            self(i) -= x(i);
-        return self;
-    }
-    V &operator*=(AbstractVector auto &x) {
-        const size_t N = size();
-        V &self = *static_cast<V *>(this);
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            self(i) *= x(i);
-        return self;
-    }
-    V &operator/=(AbstractVector auto &x) {
-        const size_t N = size();
-        V &self = *static_cast<V *>(this);
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            self(i) /= x(i);
-        return self;
-    }
+    const T *const mem;
+    const size_t N;
+
     bool operator==(AbstractVector auto &x) {
-        const size_t N = size();
         if (N != x.size())
             return false;
         for (size_t n = 0; n < N; ++n)
-            if (ref(n) != x(n))
+            if (mem[n] != x(n))
                 return false;
         return true;
     }
-    V &view(Begin, End) { return *static_cast<V *>(this); }
-    inline auto view(Begin, size_t i) {
-        return static_cast<V *>(this)->view(0, i);
+
+    T &operator[](size_t i) {
+        assert(i < N);
+        return mem[i];
     }
-    inline auto view(size_t i, End) {
-        return static_cast<V *>(this)->view(i, size());
+    const T &operator[](size_t i) const {
+        assert(i < N);
+        return mem[i];
     }
+    T &operator()(size_t i) {
+        assert(i < N);
+        return mem[i];
+    }
+    const T &operator()(size_t i) const {
+        assert(i < N);
+        return mem[i];
+    }
+    PtrVector<T> operator()(Range<size_t, size_t> i) const {
+        assert(i.begin <= i.end);
+        assert(i.end <= N);
+        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+    }
+    template <typename F, typename L>
+    PtrVector<T> operator()(Range<F, L> i) const {
+        return (*this)(canonicalizeRange(i, N));
+    }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + N; }
+    size_t size() const { return N; }
+    operator llvm::ArrayRef<T>() const { return llvm::ArrayRef<T>{mem, N}; }
+    // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
+    bool operator==(const PtrVector<T> x) const {
+        return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+    }
+    bool operator==(const llvm::ArrayRef<std::remove_const_t<T>> x) const {
+        return llvm::ArrayRef<std::remove_const_t<T>>(*this) == x;
+    }
+    PtrVector<T> view() const { return *this; };
+
+    operator PtrVector<T>() { return *this; }
+    void extendOrAssertSize(size_t M) const { assert(M == N); }
+};
+template <typename T> struct MutPtrVector {
+    static_assert(!std::is_const_v<T>, "T shouldn't be const");
+    using eltype = T;
+    // using eltype = std::remove_const_t<T>;
+    T *const mem;
+    const size_t N;
+    T &operator[](size_t i) {
+        assert(i < N);
+        return mem[i];
+    }
+    const T &operator[](size_t i) const {
+        assert(i < N);
+        return mem[i];
+    }
+    T &operator()(size_t i) {
+        assert(i < N);
+        return mem[i];
+    }
+    const T &operator()(size_t i) const {
+        assert(i < N);
+        return mem[i];
+    }
+    MutPtrVector<T> operator()(Range<size_t, size_t> i) {
+        assert(i.begin <= i.end);
+        assert(i.end <= N);
+        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+    }
+    PtrVector<T> operator()(Range<size_t, size_t> i) const {
+        assert(i.begin <= i.end);
+        assert(i.end <= N);
+        return PtrVector{.mem = mem + i.begin, .N = i.end - i.begin};
+    }
+    template <typename F, typename L>
+    MutPtrVector<T> operator()(Range<F, L> i) {
+        return (*this)(canonicalizeRange(i, N));
+    }
+    template <typename F, typename L>
+    PtrVector<T> operator()(Range<F, L> i) const {
+        return (*this)(canonicalizeRange(i, N));
+    }
+    T *begin() { return mem; }
+    T *end() { return mem + N; }
+    const T *begin() const { return mem; }
+    const T *end() const { return mem + N; }
+    size_t size() const { return N; }
+    operator PtrVector<T>() const { return PtrVector<T>{.mem = mem, .N = N}; }
+    operator llvm::ArrayRef<T>() const { return llvm::ArrayRef<T>{mem, N}; }
+    operator llvm::MutableArrayRef<T>() {
+        return llvm::MutableArrayRef<T>{mem, N};
+    }
+    // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
+    bool operator==(const PtrVector<T> x) const {
+        return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+    }
+    bool operator==(const llvm::ArrayRef<T> x) const {
+        return llvm::ArrayRef<T>(*this) == x;
+    }
+    PtrVector<T> view() const { return *this; };
+    // PtrVector<T> view() const {
+    //     return PtrVector<T>{.mem = mem, .N = N};
+    // };
+    MutPtrVector<T> operator=(const AbstractVector auto &x) {
+        return copyto(*this, x);
+    }
+    MutPtrVector<T> operator+=(const AbstractVector auto &x) {
+        assert(N == x.size());
+        for (size_t i = 0; i < N; ++i)
+            mem[i] += x(i);
+        return *this;
+    }
+    MutPtrVector<T> operator-=(const AbstractVector auto &x) {
+        assert(N == x.size());
+        for (size_t i = 0; i < N; ++i)
+            mem[i] -= x(i);
+        return *this;
+    }
+    MutPtrVector<T> operator*=(const AbstractVector auto &x) {
+        assert(N == x.size());
+        for (size_t i = 0; i < N; ++i)
+            mem[i] *= x(i);
+        return *this;
+    }
+    MutPtrVector<T> operator/=(const AbstractVector auto &x) {
+        assert(N == x.size());
+        for (size_t i = 0; i < N; ++i)
+            mem[i] /= x(i);
+        return *this;
+    }
+    MutPtrVector<T> operator+=(const std::integral auto x) {
+        for (size_t i = 0; i < N; ++i)
+            mem[i] += x;
+        return *this;
+    }
+    MutPtrVector<T> operator-=(const std::integral auto x) {
+        for (size_t i = 0; i < N; ++i)
+            mem[i] -= x;
+        return *this;
+    }
+    MutPtrVector<T> operator*=(const std::integral auto x) {
+        for (size_t i = 0; i < N; ++i)
+            mem[i] *= x;
+        return *this;
+    }
+    MutPtrVector<T> operator/=(const std::integral auto x) {
+        for (size_t i = 0; i < N; ++i)
+            mem[i] /= x;
+        return *this;
+    }
+    void extendOrAssertSize(size_t M) const { assert(M == N); }
 };
 
 //
 // Vectors
 //
-template <typename T, size_t M = 0>
-struct Vector : BaseVector<T, Vector<T, M>> {
-    using eltype = T;
-    T data[M];
-    static constexpr bool canResize = false;
-    T &operator()(size_t i) {
-        assert(i < M);
-        return data[i];
-    }
-    const T &operator()(size_t i) const {
-        assert(i < M);
-        return data[i];
-    }
-    T &operator[](size_t i) {
-        assert(i < M);
-        return data[i];
-    }
-    const T &operator[](size_t i) const {
-        assert(i < M);
-        return data[i];
-    }
-    T *begin() { return data; }
-    T *end() { return begin() + M; }
-    const T *begin() const { return data; }
-    const T *end() const { return begin() + M; }
-    void extendOrAssertSize(size_t N) const { assert(M == N); }
-};
-template <typename T, size_t M = 0>
-struct PtrVector : BaseVector<T, PtrVector<T, M>> {
-    using eltype = T;
-    T *ptr;
-    static constexpr bool canResize = false;
-    PtrVector(T *ptr) : ptr(ptr){};
-    T &operator()(size_t i) const {
-        assert(i < M);
-        return ptr[i];
-    }
-    T &operator[](size_t i) { return ptr[i]; }
-    const T &operator[](size_t i) const { return ptr[i]; }
-    T *begin() { return ptr; }
-    T *end() { return ptr + M; }
-    const T *begin() const { return ptr; }
-    const T *end() const { return ptr + M; }
-    constexpr size_t size() const { return M; }
-    PtrVector<T, M> view() { return *this; };
-    PtrVector<const T, M> view() const {
-        return PtrVector<const T, M>{.ptr = ptr};
-    };
-    void extendOrAssertSize(size_t N) const { assert(M == N); }
-};
-template <typename T> struct PtrVector<T, 0> {
-    using eltype = T;
-    // using eltype = std::remove_const_t<T>;
-    T *ptr;
-    size_t M;
-    static constexpr bool canResize = false;
-    T &operator[](size_t i) {
-        assert(i < M);
-        return ptr[i];
-    }
-    const T &operator[](size_t i) const {
-        assert(i < M);
-        return ptr[i];
-    }
-    T &operator()(size_t i) {
-        assert(i < M);
-        return ptr[i];
-    }
-    const T &operator()(size_t i) const {
-        assert(i < M);
-        return ptr[i];
-    }
-    PtrVector<T, 0> operator()(Range<size_t, size_t> i) {
-        assert(i.begin <= i.end);
-        assert(i.end <= M);
-        return PtrVector{.ptr = ptr + i.begin, .M = i.end - i.begin};
-    }
-    PtrVector<const T, 0> operator()(Range<size_t, size_t> i) const {
-        assert(i.begin <= i.end);
-        assert(i.end <= M);
-        return PtrVector{.ptr = ptr + i.begin, .M = i.end - i.begin};
-    }
-    template <typename F, typename L>
-    PtrVector<T, 0> operator()(Range<F, L> i) {
-        return (*this)(canonicalizeRange(i, M));
-    }
-    template <typename F, typename L>
-    PtrVector<const T, 0> operator()(Range<F, L> i) const {
-        return (*this)(canonicalizeRange(i, M));
-    }
-    T *begin() { return ptr; }
-    T *end() { return ptr + M; }
-    const T *begin() const { return ptr; }
-    const T *end() const { return ptr + M; }
-    size_t size() const { return M; }
-    operator llvm::ArrayRef<std::remove_const_t<T>>() const {
-        return llvm::ArrayRef<std::remove_const_t<T>>{ptr, M};
-    }
-    // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
-    bool operator==(const PtrVector<T, 0> x) const {
-        return llvm::ArrayRef<std::remove_const_t<T>>(*this) ==
-               llvm::ArrayRef<std::remove_const_t<T>>(x);
-    }
-    bool operator==(const llvm::ArrayRef<std::remove_const_t<T>> x) const {
-        return llvm::ArrayRef<std::remove_const_t<T>>(*this) == x;
-    }
-    PtrVector<T, 0> view() { return *this; };
-    PtrVector<const T, 0> view() const {
-        return PtrVector<const T, 0>{.ptr = ptr, .M = M};
-    };
-    PtrVector<T, 0> operator=(const AbstractVector auto &x) {
-        return copyto(*this, x);
-    }
-    PtrVector<T, 0> operator+=(const AbstractVector auto &x) {
-        const size_t N = x.size();
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] += x(i);
-        return *this;
-    }
-    PtrVector<T, 0> operator-=(const AbstractVector auto &x) {
-        const size_t N = x.size();
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] -= x(i);
-        return *this;
-    }
-    PtrVector<T, 0> operator*=(const AbstractVector auto &x) {
-        const size_t N = x.size();
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] *= x(i);
-        return *this;
-    }
-    PtrVector<T, 0> operator/=(const AbstractVector auto &x) {
-        const size_t N = x.size();
-        assert(M == N);
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] /= x(i);
-        return *this;
-    }
-    PtrVector<T, 0> operator*=(const std::integral auto x) {
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] *= x;
-        return *this;
-    }
-    PtrVector<T, 0> operator/=(const std::integral auto x) {
-        for (size_t i = 0; i < M; ++i)
-            ptr[i] /= x;
-        return *this;
-    }
-    // PtrVector(T *data, size_t len) : ptr(data), M(len) {}
-    // PtrVector(llvm::MutableArrayRef<T> x) : ptr(x.data()), M(x.size()) {}
-    // PtrVector(llvm::ArrayRef<std::remove_const_t<T>> x)
-    //     : ptr(x.data()), M(x.size()) {}
 
-    operator PtrVector<const T>() {
-        return PtrVector<const T>{.ptr = ptr, .M = M};
-    }
-    void clear() { M = 0; }
-    void extendOrAssertSize(size_t N) const { assert(M == N); }
-    // PtrVector(const AbstractVector auto &A)
-    //     : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
-    //       X(A.numCol()) {
-    //     mem.resize_for_overwrite(M * N);
-    //     for (size_t m = 0; m < M; ++m)
-    //         for (size_t n = 0; n < N; ++n)
-    //             mem[m * X + n] = A(m, n);
-    // }
-};
-
-int64_t gcd(PtrVector<const int64_t> x) {
+int64_t gcd(PtrVector<int64_t> x) {
     int64_t g = std::abs(x[0]);
     for (size_t i = 1; i < x.size(); ++i)
         g = gcd(g, x[i]);
@@ -805,14 +746,12 @@ template <typename T> inline auto view(const llvm::ArrayRef<T> x) {
     return PtrVector<const T>{x.data(), x.size()};
 }
 
-template <typename T> struct Vector<T, 0> {
+template <typename T> struct Vector {
     using eltype = T;
     llvm::SmallVector<T, 16> data;
     static constexpr bool canResize = true;
 
     Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
-
-    // Vector(llvm::SmallVector<T> &A) : data(A.begin(), A.end()){};
     Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
     T &operator()(size_t i) {
@@ -823,6 +762,24 @@ template <typename T> struct Vector<T, 0> {
         assert(i < data.size());
         return data[i];
     }
+    MutPtrVector<T> operator()(Range<size_t, size_t> i) {
+        assert(i.begin <= i.end);
+        assert(i.end <= data.size());
+        return PtrVector{.mem = data.data() + i.begin, .N = i.end - i.begin};
+    }
+    PtrVector<T> operator()(Range<size_t, size_t> i) const {
+        assert(i.begin <= i.end);
+        assert(i.end <= data.size());
+        return PtrVector{.mem = data.data() + i.begin, .N = i.end - i.begin};
+    }
+    template <typename F, typename L>
+    MutPtrVector<T> operator()(Range<F, L> i) {
+        return (*this)(canonicalizeRange(i, data.size()));
+    }
+    template <typename F, typename L>
+    PtrVector<T> operator()(Range<F, L> i) const {
+        return (*this)(canonicalizeRange(i, data.size()));
+    }
     T &operator[](size_t i) { return data[i]; }
     const T &operator[](size_t i) const { return data[i]; }
     // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
@@ -831,11 +788,11 @@ template <typename T> struct Vector<T, 0> {
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
     size_t size() const { return data.size(); }
-    PtrVector<T, 0> view() {
-        return PtrVector<T, 0>{.ptr = data.data(), .M = data.size()};
+    MutPtrVector<T> view() {
+        return PtrVector<T>{.mem = data.data(), .N = data.size()};
     };
-    PtrVector<const T, 0> view() const {
-        return PtrVector<const T, 0>{.ptr = data.data(), .M = data.size()};
+    PtrVector<T> view() const {
+        return PtrVector<T>{.mem = data.data(), .N = data.size()};
     };
     template <typename A> void push_back(A &&x) {
         data.push_back(std::forward<A>(x));
@@ -852,39 +809,31 @@ template <typename T> struct Vector<T, 0> {
     void resize(size_t N) { data.resize(N); }
     void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
 
-    operator PtrVector<T>() {
-        return PtrVector<T>{.ptr = data.data(), .M = data.size()};
+    operator MutPtrVector<T>() {
+        return MutPtrVector<T>{.mem = data.data(), .N = data.size()};
     }
-    operator PtrVector<const T>() const {
-        return PtrVector<const T>{.ptr = data.data(), .M = data.size()};
+    operator PtrVector<T>() const {
+        return PtrVector<T>{.mem = data.data(), .N = data.size()};
     }
-    Vector<T> &operator+=(AbstractVector auto &x) {
-        const size_t N = size();
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            data[i] += x(i);
-        return *this;
+    MutPtrVector<T> operator=(AbstractVector auto &x) {
+        MutPtrVector<T> y{x};
+        return y = x;
     }
-    Vector<T> &operator-=(AbstractVector auto &x) {
-        const size_t N = size();
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            data[i] -= x(i);
-        return *this;
+    MutPtrVector<T> operator+=(AbstractVector auto &x) {
+        MutPtrVector<T> y{x};
+        return y += x;
     }
-    Vector<T> &operator*=(AbstractVector auto &x) {
-        const size_t N = size();
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            data[i] *= x(i);
-        return *this;
+    MutPtrVector<T> operator-=(AbstractVector auto &x) {
+        MutPtrVector<T> y{x};
+        return y -= x;
     }
-    Vector<T> &operator/=(AbstractVector auto &x) {
-        const size_t N = size();
-        assert(x.size() == N);
-        for (size_t i = 0; i < N; ++i)
-            data[i] /= x(i);
-        return *this;
+    MutPtrVector<T> operator*=(AbstractVector auto &x) {
+        MutPtrVector<T> y{x};
+        return y *= x;
+    }
+    MutPtrVector<T> operator/=(AbstractVector auto &x) {
+        MutPtrVector<T> y{x};
+        return y /= x;
     }
     template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
     void clear() { data.clear(); }
@@ -893,14 +842,12 @@ template <typename T> struct Vector<T, 0> {
         if (N != data.size())
             data.resize_for_overwrite(N);
     }
+    bool operator==(const Vector<T> &x) const {
+        return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+    }
 };
 
-template <typename T, size_t M>
-bool operator==(Vector<T, M> const &x0, Vector<T, M> const &x1) {
-    return allMatch(x0, x1);
-}
-static_assert(std::copyable<Vector<intptr_t, 4>>);
-static_assert(std::copyable<Vector<intptr_t, 0>>);
+static_assert(std::copyable<Vector<intptr_t>>);
 
 template <typename T> struct StridedVector {
     using eltype = T;
