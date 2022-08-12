@@ -68,33 +68,95 @@ struct Polyhedra {
     // static Polyhedra empty(size_t numIneq, size_t numVar) {
     // A(numIneq, numVar + 1)
     // 	};
-    void _pruneBounds() {
+    // TODO: formatter
+    // construct right comparator
+    // void pruneBounds() {
+    //     Vector<int64_t> diff{A.numRow()};
+    //     // std::cout<< E <<std::endl;
+    //     // std::cout<< A <<std::endl;
+    //     // if constexpr (hasEqualities) { // False for affine, true for dependency
+    //     //     // std::cout<< E <<std::endl;
+    //     //     NormalForm::simplifySystem(E, 1); // A.numCol() - numLoops);
+    //     //     // std::cout<< E <<std::endl;
+    //     //     for (size_t i = 0; i < E.numRow(); ++i) {
+    //     //         for (size_t j = A.numRow(); j;) {
+    //     //             diff = A(--j, _) - E(i, _);
+    //     //             if (C.greaterEqual(diff)) {
+    //     //                 eraseConstraint(A, j);
+    //     //             } else {
+    //     //                 diff = A(j, _) + E(i, _);
+    //     //                 if (C.greaterEqual(diff))
+    //     //                     eraseConstraint(A, j);
+    //     //             }
+    //     //         }
+    //     //     }
+    //     // }
+    //     //
+    //     for (size_t j = A.numRow(); j;) {
+    //         for (size_t i = j-1; ; ) {
+    //             --j;
+    //             std::cout<< "--------------Start new--------------" <<std::endl;
+    //             std::cout<< i << std::endl;
+    //             if (A.numRow() <= 1){
+    //                 break;
+    //             }
+    //             std::cout<< "Now i, j are " << i << " "<< j <<std::endl;
+    //             diff = A(--i, _) - A(j, _);
+    //             // diff = A(j, _) - A(--i, _);
+
+    //             std::cout<< "print diff first:" <<std::endl;
+    //             std::cout<< diff << std::endl;
+    //             std::cout<< "print whether greater equal:" <<std::endl;
+    //             std::cout<< C.greaterEqual(diff) << std::endl;
+
+
+    //             if (C.greaterEqual(diff)) {
+    //                 eraseConstraint(A, i);
+    //                 std::cout<<"i: " << i<<" greater Equal returns true" <<std::endl;
+    //                 std::cout<< A <<std::endl;
+    //             } else {
+    //                 diff *= (-1);
+    //                 if (C.greaterEqual(diff)) {
+    //                     eraseConstraint(A, j);
+    //                     std::cout<< "i: " << i <<" greater Equal returns false" <<std::endl;
+    //                     std::cout<< A <<std::endl;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
-        if constexpr (hasEqualities) {
-            NormalForm::simplifySystem(E, C.getNumConstTerms());
-            for (size_t i = 0; i < E.numRow(); ++i) {
-                for (size_t j = A.numRow(); j;) {
-                    diff = A(--j, _) - E(i, _);
+        for (size_t j = A.numRow(); j;) {
+            for (size_t i = j-1; i != 0; ) {
+                --j;
+                std::cout<< "--------------Start new--------------" <<std::endl;
+                std::cout<< i << std::endl;
+                if (A.numRow() <= 1){
+                    break;
+                }
+                diff = A(--i, _) - A(j, _);
+                std::cout<< "Now i, j are " << i << " "<< j <<std::endl;
+                // diff = A(j, _) - A(--i, _);
+
+                std::cout<< "print diff first:" <<std::endl;
+                std::cout<< diff << std::endl;
+                std::cout<< "print whether greater equal:" <<std::endl;
+                std::cout<< C.greaterEqual(diff) << std::endl;
+
+
+                if (C.greaterEqual(diff)) {
+                    eraseConstraint(A, i);
+                    std::cout<<"i: " << i<<" greater Equal returns true" <<std::endl;
+                    std::cout<< A <<std::endl;
+                } else {
+                    diff *= (-1);
                     if (C.greaterEqual(diff)) {
                         eraseConstraint(A, j);
-                    } else {
-                        diff = A(j, _) + E(i, _);
-                        if (C.greaterEqual(diff))
-                            eraseConstraint(A, j);
+                        std::cout<< "i: " << i <<" greater Equal returns false" <<std::endl;
+                        std::cout<< A <<std::endl;
                     }
-                }
-            }
-        }
-        if (A.numRow() <= 1)
-	    return;
-	for (size_t i = A.numRow() - 1; i;) {
-	    --i;
-	    for (size_t j = A.numRow(); j != i;) {
-		diff = A(--j, _) - A(i, _);
-		if (C.greaterEqual(diff)) {
-		    eraseConstraint(A, j);
-		} else if (C.lessEqual(diff)) {
-		    eraseConstraint(A, i);
                 }
             }
         }
@@ -131,54 +193,13 @@ struct Polyhedra {
     bool greaterEqualZero(const size_t r) const {
         return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
     }
-    PtrVector<int64_t> getSymbol(PtrMatrix<int64_t> A,
-                                       size_t i) const {
-        return A(i, _(begin, C.getNumConstTerms()));
-    }
-    PtrVector<int64_t> getNonSymbol(PtrMatrix<int64_t> A,
-                                          size_t i) const {
-        return A(i, _(C.getNumConstTerms(), A.numCol()));
-    }
+    
     bool equalNegative(const size_t i, const size_t j) const {
-        return C.equalNegative(getSymbol(A, i), getSymbol(A, j));
+        return C.equalNegative(A(i, _), A(j, _));
     }
     bool equalNegative(const IntMatrix &A, const size_t i,
                        const size_t j) const {
-        return C.equalNegative(getSymbol(A, i), getSymbol(A, j));
-    }
-
-    // setBounds(a, b, la, lb, ua, ub, i)
-    // `la` and `lb` correspond to the lower bound of `i`
-    // `ua` and `ub` correspond to the upper bound of `i`
-    // Eliminate `i`, and set `a` and `b` appropriately.
-    // Returns `true` if `a` still depends on another variable.
-    static bool setBounds(MutPtrVector<int64_t> a, PtrVector<int64_t> la,
-                          PtrVector<int64_t> ua, size_t i) {
-        int64_t cu_base = ua[i];
-        int64_t cl_base = la[i];
-        if ((cu_base > 0) && (cl_base < 0))
-            // if cu_base > 0, then it is an lower bound, so swap
-            return setBounds(a, ua, la, i);
-        int64_t g = gcd(cu_base, cl_base);
-        int64_t cu = cu_base / g;
-        int64_t cl = cl_base / g;
-        size_t N = la.size();
-        a = cu * la - cl * ua;
-        // for (size_t n = 0; n < N; ++n)
-        //     a[n] = cu * la[n] - cl * ua[n];
-        g = 0;
-        for (size_t n = 0; n < N; ++n) {
-            int64_t an = a[n];
-            if (std::abs(an) == 1)
-                return true;
-            g = g ? (an ? gcd(g, an) : g) : an;
-        }
-        if (g <= 0)
-            return g != 0;
-        a /= g;
-        // for (size_t n = 0; n < N; ++n)
-        //     a[n] /= g;
-        return true;
+        return C.equalNegative(A(i, _), A(j, _));
     }
 
     static bool uniqueConstraint(PtrMatrix<int64_t> A, size_t C) {
@@ -191,108 +212,7 @@ struct Polyhedra {
         }
         return true;
     }
-    // independentOfInner(a, i)
-    // checks if any `a[j] != 0`, such that `j != i`.
-    // I.e., if this vector defines a hyper plane otherwise independent of `i`.
-    static inline bool independentOfInner(llvm::ArrayRef<int64_t> a, size_t i) {
-        for (size_t j = 0; j < a.size(); ++j)
-            if ((a[j] != 0) & (i != j))
-                return false;
-        return true;
-    }
-    // -1 indicates no auxiliary variable
-    inline int64_t auxiliaryInd(llvm::ArrayRef<int64_t> a) const {
-        for (size_t i = A.numCol(); i < a.size(); ++i)
-            if (a[i])
-                return i;
-        return -1;
-    }
-    static inline bool auxMisMatch(int64_t x, int64_t y) {
-        return ((x >= 0) && (y >= 0)) && (x != y);
-    }
-    // static size_t
 
-    // eliminateVarForRCElim(&Adst, &bdst, E1, q1, Asrc, bsrc, E0, q0, i)
-    // For `Asrc' * x <= bsrc` and `E0'* x = q0`, eliminates `i`
-    // using Fourier–Motzkin elimination, storing the updated equations in
-    // `Adst`, `bdst`, `E1`, and `q1`.
-    bool eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E1, IntMatrix &Asrc,
-                               IntMatrix &E0, const size_t i) const {
-        const size_t numConst = C.getNumConstTerms();
-        const size_t numCol = A.numCol();
-        // std::cout << "Asrc0 =\n" << Asrc << std::endl;
-        if (!substituteEquality(Asrc, E0, i)) {
-            // std::cout << "Asrc1 =\n" << Asrc << std::endl;
-            // const size_t numAuxVar = Asrc.numCol() - getNumVar();
-            size_t c = Asrc.numRow();
-            while (c--) {
-                size_t s = 0;
-                for (size_t j = numCol; j < Asrc.numCol(); ++j)
-                    s += (Asrc(c, j) != 0);
-                if (s > 1)
-                    eraseConstraint(Asrc, c);
-            }
-            if (E0.numRow() > 1)
-                NormalForm::simplifySystem(E0, numConst);
-            return false;
-        }
-        // eliminate variable `i` according to original order
-        auto [numExclude, c, numNonZero] =
-            eliminateVarForRCElimCore(Adst, E0, Asrc, i);
-        Adst.resize(c, Asrc.numCol());
-        auto [Ce, Re] = E0.size();
-        size_t numReserve =
-            Ce - numNonZero + ((numNonZero * (numNonZero - 1)) >> 1);
-        E1.resizeForOverwrite(numReserve, Re);
-        // auxInds are kept sorted
-        // TODO: take advantage of the sorting to make iterating&checking more
-        // efficient
-        size_t k = 0;
-        for (size_t u = 0; u < E0.numRow(); ++u) {
-            auto Eu = E0.getRow(u);
-            int64_t Eiu = Eu[i];
-            if (Eiu == 0) {
-                for (size_t v = 0; v < Re; ++v)
-                    E1(k, v) = Eu[v];
-                ++k;
-                continue;
-            }
-            if (u == 0)
-                continue;
-            int64_t auxInd = auxiliaryInd(Eu);
-            bool independentOfInnerU = independentOfInner(Eu, i);
-            for (size_t l = 0; l < u; ++l) {
-                auto El = E0.getRow(l);
-                int64_t Eil = El[i];
-                if ((Eil == 0) ||
-                    (independentOfInnerU && independentOfInner(El, i)) ||
-                    auxMisMatch(auxInd, auxiliaryInd(El)))
-                    continue;
-
-                int64_t g = gcd(Eiu, Eil);
-                int64_t Eiug = Eiu / g;
-                int64_t Eilg = Eil / g;
-                for (size_t v = 0; v < Re; ++v)
-                    E1(k, v) = Eiug * E0(l, v) - Eilg * E0(u, v);
-                ++k;
-            }
-        }
-        E1.resizeRows(k);
-        NormalForm::simplifySystem(E1, numConst);
-        return true;
-    }
-    // method for when we do not match `Ex=q` constraints with themselves
-    // e.g., for removeRedundantConstraints
-    void eliminateVarForRCElim(IntMatrix &Adst, IntMatrix &E,
-                               MutPtrMatrix<int64_t> Asrc, const size_t i) const {
-
-        auto [numExclude, c, _] = eliminateVarForRCElimCore(Adst, E, Asrc, i);
-        for (size_t u = E.numRow(); u != 0;)
-            if (E(--u, i))
-                eraseConstraint(E, u);
-        if (Adst.numRow() != c)
-            Adst.resize(c, Asrc.numCol());
-    }
     static std::pair<size_t, size_t> countSigns(PtrMatrix<int64_t> A,
                                                 size_t i) {
         size_t numNeg = 0;
@@ -303,67 +223,6 @@ struct Polyhedra {
             numPos += (Aij > 0);
         }
         return std::make_pair(numNeg, numPos);
-    }
-    std::tuple<size_t, size_t, size_t>
-    eliminateVarForRCElimCore(IntMatrix &Adst, IntMatrix &E,
-                              MutPtrMatrix<int64_t> Asrc, const size_t i) const {
-        // eliminate variable `i` according to original order
-        const auto [numCon, numVar] = Asrc.size();
-        const auto [numNeg, numPos] = countSigns(Asrc, i);
-        const size_t numECol = E.numRow();
-        size_t numNonZero = 0;
-        for (size_t j = 0; j < numECol; ++j)
-            numNonZero += E(j, i) != 0;
-        const size_t numExclude = numCon - numNeg - numPos;
-        const size_t numColA = numNeg * numPos + numExclude +
-                               numNonZero * (numNeg + numPos) +
-                               ((numNonZero * (numNonZero - 1)) >> 1);
-        Adst.resizeForOverwrite(numColA, numVar);
-        // assign to `A = Aold[:,exlcuded]`
-        for (size_t j = 0, c = 0; c < numExclude; ++j) {
-            if (Asrc(j, i))
-                continue;
-            for (size_t k = 0; k < numVar; ++k)
-                Adst(c, k) = Asrc(j, k);
-            ++c;
-        }
-        size_t c = numExclude;
-        assert(numCon <= 500);
-        // TODO: drop independentOfInner?
-        for (size_t u = 0; u < numCon; ++u) {
-            auto Au = Asrc.getRow(u);
-            int64_t Aiu = Au[i];
-            if (Aiu == 0)
-                continue;
-            int64_t auxInd = auxiliaryInd(Au);
-            bool independentOfInnerU = independentOfInner(Au, i);
-            for (size_t l = 0; l < u; ++l) {
-                auto Al = Asrc.getRow(l);
-                if ((Al[i] == 0) || ((Al[i] > 0) == (Aiu > 0)) ||
-                    (independentOfInnerU && independentOfInner(Al, i)) ||
-                    (auxMisMatch(auxInd, auxiliaryInd(Al))))
-                    continue;
-                if (setBounds(Adst.getRow(c), Al, Au, i))
-                    if (uniqueConstraint(Adst, c))
-                        ++c;
-            }
-            for (size_t l = 0; l < numECol; ++l) {
-                auto El = E.getRow(l);
-                int64_t Eil = El[i];
-                if ((Eil == 0) ||
-                    (independentOfInnerU && independentOfInner(El, i)) ||
-                    (auxMisMatch(auxInd, auxiliaryInd(El))))
-                    continue;
-                if ((Eil > 0) == (Aiu > 0))
-                    // need to flip constraint in E
-                    for (size_t v = 0; v < E.numCol(); ++v)
-                        negate(El[v]);
-                if (setBounds(Adst.getRow(c), El, Au, i))
-                    if (uniqueConstraint(Adst, c))
-                        ++c;
-            }
-        }
-        return std::make_tuple(numExclude, c, numNonZero);
     }
     void moveEqualities(IntMatrix &Aold, I64Matrix &Eold) const {
         ::moveEqualities(Aold, Eold, C);
@@ -391,43 +250,6 @@ struct Polyhedra {
     //         }
     //     }
     // }
-    void pruneBounds() {
-        if constexpr (std::same_as<I64Matrix, EmptyMatrix<int64_t>>) {
-            pruneBounds(A);
-        } else {
-            pruneBounds(A, E);
-        }
-        for (size_t i = 0; i < A.numRow(); ++i) {
-            int64_t g = gcd(A(i, _));
-            if (g > 1)
-                A(i, _) /= g;
-        }
-        if constexpr (!std::same_as<I64Matrix, EmptyMatrix<int64_t>>)
-            for (size_t i = 0; i < E.numRow(); ++i) {
-                int64_t g = gcd(E(i, _));
-                if (g > 1)
-                    E(i, _) /= g;
-            }
-    }
-    void pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &E,
-                     IntMatrix &Aold) const {
-
-        // for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
-        // size_t c = Aold.numRow() - 1 - i;
-        for (size_t c = Aold.numRow(); c;) {
-            // std::cout << "trying to prune c = "<<c<<std::endl;
-            if (removeRedundantConstraints(Atmp0, Atmp1, E, Aold, --c)) {
-                // drop `c`
-                // std::cout << "ERASING c = " << c << std::endl;
-                eraseConstraint(Aold, c);
-            }
-        }
-    }
-    void pruneBounds(IntMatrix &Aold) const {
-
-        IntMatrix Atmp0, Atmp1, E;
-        pruneBounds(Atmp0, Atmp1, E, Aold);
-    }
     inline static bool equalsNegative(llvm::ArrayRef<int64_t> x,
                                       llvm::ArrayRef<int64_t> y) {
         assert(x.size() == y.size());
@@ -437,473 +259,6 @@ struct Polyhedra {
         return true;
     }
     // returns `false` if not violated, `true` if violated
-    bool pruneBounds(IntMatrix &Aold, I64Matrix &Eold) const {
-        IntMatrix Atmp0, Atmp1, Etmp0;
-        if constexpr (!hasEqualities) {
-            pruneBounds(Atmp0, Atmp1, Etmp0, Aold);
-            return false;
-        }
-        IntMatrix Etmp1;
-        return pruneBounds(Atmp0, Atmp1, Etmp0, Etmp1, Aold, Eold);
-    }
-    bool pruneBounds(IntMatrix &Atmp0, IntMatrix &Atmp1, IntMatrix &Etmp0,
-                     IntMatrix &Etmp1, IntMatrix &Aold, IntMatrix &Eold) const {
-        moveEqualities(Aold, Eold);
-        NormalForm::simplifySystem(Eold);
-        // printConstraints(
-        //     printConstraints(std::cout << "Constraints post-simplify:\n",
-        //     Aold,
-        //                      bold, true),
-        //     Eold, qold, false)
-        //     << std::endl;
-        for (size_t i = 0; i < Eold.numRow(); ++i) {
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
-                                           Eold, Eold.getRow(i),
-                                           Aold.numRow() + i, true))
-                // if Eold's constraint is redundant, that means there was a
-                // stricter one, and the constraint is violated
-                return true;
-            // flip
-            for (auto &&e : Eold.getRow(i))
-                e *= -1;
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
-                                           Eold, Eold.getRow(i),
-                                           Aold.numRow() + i, true))
-                // if Eold's constraint is redundant, that means there was a
-                // stricter one, and the constraint is violated
-                return true;
-        }
-        for (size_t i = 0; i + 1 <= Aold.numRow(); ++i) {
-            size_t c = Aold.numRow() - 1 - i;
-            if (removeRedundantConstraints(Atmp0, Atmp1, Etmp0, Etmp1, Aold,
-                                           Eold, Aold.getRow(c), c, false))
-                eraseConstraint(Aold, c); // drop `c`
-        }
-        return false;
-    }
-    bool removeRedundantConstraints(IntMatrix &A, const size_t c) const {
-        IntMatrix A0, A1, E;
-        return removeRedundantConstraints(A0, A1, E, A, c);
-    }
-    bool removeRedundantConstraints(IntMatrix &A0, IntMatrix &A1, IntMatrix &E,
-                                    IntMatrix &A, const size_t c) const {
-        return removeRedundantConstraints(A0, A1, E, A, A.getRow(c), c);
-    }
-    int64_t firstVarInd(llvm::ArrayRef<int64_t> a) const {
-        for (size_t i = 0; i < A.numCol(); ++i)
-            if (a[i])
-                return i;
-        return -1;
-    }
-    int64_t checkForTrivialRedundancies(
-        llvm::SmallVector<unsigned, 32> &constraintsToErase,
-        llvm::SmallVector<unsigned, 16> &boundDiffs, IntMatrix &Etmp,
-        IntMatrix &Aold, llvm::ArrayRef<int64_t> a) const {
-        const size_t numConst = C.getNumConstTerms();
-        const size_t numCol = Aold.numCol();
-        const size_t numAuxVar = Etmp.numCol() - numCol;
-        const size_t numVar = getNumVar();
-        assert(numConst + numVar == numCol);
-        int64_t dependencyToEliminate = -1;
-        Vector<int64_t> delta;
-        delta.resizeForOverwrite(C.getNumConstTerms());
-        for (size_t i = 0; i < numAuxVar; ++i) {
-            size_t c = boundDiffs[i];
-            int64_t dte = -1;
-            for (size_t v = 0; v < numCol; ++v) {
-                int64_t Evi = a[v] + Aold(c, v);
-                Etmp(i, v) = Evi;
-                dte = (Evi & (v >= numConst)) ? v : dte;
-            }
-            if (dte == -1) {
-                for (size_t j = 0; j < delta.size(); ++j)
-                    delta[j] = Aold(c, j) - a[j];
-                // std::cout << "delta = " << delta << std::endl;
-                if (C.lessEqual(delta)) {
-                    // bold[c] - b <= 0
-                    // bold[c] <= b
-                    // thus, bound `c` will always trigger before `b`
-                    return -2;
-                } else if (C.greaterEqual(delta)) {
-                    // bound `b` triggers first
-                    // normally we insert `c`, but if inserting here
-                    // we also want to erase elements from boundDiffs
-                    constraintsToErase.push_back(i);
-                }
-            } else {
-                dependencyToEliminate = dte;
-            }
-            for (size_t j = 0; j < numAuxVar; ++j)
-                Etmp(i, j + numCol) = (j == i);
-        }
-        if (constraintsToErase.size()) {
-            for (auto it = constraintsToErase.rbegin();
-                 it != constraintsToErase.rend(); ++it) {
-                size_t i = *it;
-                size_t c = boundDiffs[i];
-                boundDiffs.erase(boundDiffs.begin() + i);
-                eraseConstraint(Aold, c);
-                eraseConstraint(Etmp, i);
-            }
-            constraintsToErase.clear();
-        }
-        return dependencyToEliminate;
-    }
-    int64_t checkForTrivialRedundancies(
-        llvm::SmallVector<unsigned, 32> &constraintsToErase,
-        llvm::SmallVector<int, 16> &boundDiffs, IntMatrix &Etmp,
-        IntMatrix &Aold, I64Matrix &Eold, llvm::ArrayRef<int64_t> a,
-        bool AbIsEq) const {
-        const size_t numCol = Aold.numCol();
-        const size_t numConst = C.getNumConstTerms();
-        const size_t numAuxVar = Etmp.numCol() - numCol;
-        int64_t dependencyToEliminate = -1;
-        llvm::SmallVector<int64_t> delta;
-        delta.resize_for_overwrite(C.getNumConstTerms());
-        for (size_t i = 0; i < numAuxVar; ++i) {
-            int c = boundDiffs[i];
-            int64_t dte = -1;
-            llvm::ArrayRef<int64_t> bc;
-            int64_t sign = (c > 0) ? 1 : -1;
-            if ((0 <= c) && (size_t(c) < Aold.numRow())) {
-                for (size_t v = 0; v < numCol; ++v) {
-                    int64_t Evi = a[v] + Aold(c, v);
-                    Etmp(i, v) = Evi;
-                    dte = (Evi & (v >= numConst)) ? v : dte;
-                }
-                bc = getSymbol(Aold, c);
-            } else {
-                size_t cc = std::abs(c) - A.numRow();
-                for (size_t v = 0; v < numCol; ++v) {
-                    int64_t Evi = a[v] - sign * Eold(cc, v);
-                    Etmp(i, v) = Evi;
-                    dte = (Evi & (v >= numConst)) ? v : dte;
-                }
-                bc = getSymbol(Eold, cc);
-            }
-            if (dte == -1) {
-                for (size_t j = 0; j < delta.size(); ++j)
-                    delta[j] = bc[j] * sign - a[j];
-                if (C.lessEqual(delta, AbIsEq))
-                    // bold[c] - b <= 0
-                    // bold[c] <= b
-                    // thus, bound `c` will always trigger before `b`
-                    return -2;
-                if (C.greaterEqual(delta))
-                    // bound `b` triggers first
-                    // normally we insert `c`, but if inserting here
-                    // we also want to erase elements from boundDiffs
-                    constraintsToErase.push_back(i);
-            } else {
-                dependencyToEliminate = dte;
-            }
-            for (size_t j = 0; j < numAuxVar; ++j)
-                Etmp(i, j + numCol) = (j == i);
-        }
-        if (constraintsToErase.size()) {
-            for (auto it = constraintsToErase.rbegin();
-                 it != constraintsToErase.rend(); ++it) {
-                size_t i = *it;
-                size_t c = std::abs(boundDiffs[i]);
-                boundDiffs.erase(boundDiffs.begin() + i);
-                if (c < Aold.numRow())
-                    eraseConstraint(Aold, c);
-                eraseConstraint(Etmp, i);
-            }
-            constraintsToErase.clear();
-        }
-        return dependencyToEliminate;
-    }
-    // returns `true` if `a` and `b` should be eliminated as redundant,
-    // otherwise it eliminates all variables from `Atmp0` and `btmp0` that `a`
-    // and `b` render redundant.
-    bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
-                                    IntMatrix &E, IntMatrix &Aold,
-                                    PtrVector<int64_t> a,
-                                    const size_t CC) const {
-
-        const size_t numCol = A.numCol();
-        const size_t numVar = getNumVar();
-        const size_t numConst = C.getNumConstTerms();
-        assert(numConst + numVar == numCol);
-        // simple mapping of `k` to particular bounds
-        // we'll have C - other bound
-        llvm::SmallVector<unsigned, 16> boundDiffs;
-        for (size_t c = 0; c < CC; ++c) {
-            for (size_t v = 0; v < numVar; ++v) {
-                int64_t av = a(v + numConst);
-                int64_t Avc = Aold(c, v + numConst);
-                if (((av > 0) == (Avc > 0)) && ((av != 0) & (Avc != 0))) {
-                    boundDiffs.push_back(c);
-                    break;
-                }
-            }
-        }
-        // std::cout << "A =\n" << A << std::endl;
-        // printVector(std::cout << "a = ", a) << std::endl;
-        // printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
-        const size_t numAuxVar = boundDiffs.size();
-        // std::cout << "numAuxVar = " << numAuxVar << std::endl;
-        if (numAuxVar == 0)
-            return false;
-        const size_t numColAugment = numCol + numAuxVar;
-        Atmp0.resizeForOverwrite(Aold.numRow() - (CC < Aold.numRow()),
-                                 numColAugment);
-        E.resizeForOverwrite(numAuxVar, numColAugment);
-        for (size_t i = 0; i < Aold.numRow(); ++i) {
-            if (i == CC)
-                continue;
-            size_t j = i - (i > CC);
-            for (size_t v = 0; v < numCol; ++v)
-                Atmp0(j, v) = Aold(i, v);
-            for (size_t v = numCol; v < numColAugment; ++v)
-                Atmp0(j, v) = 0;
-        }
-        llvm::SmallVector<unsigned, 32> colsToErase;
-        int64_t dependencyToEliminate =
-            checkForTrivialRedundancies(colsToErase, boundDiffs, E, Aold, a);
-        // std::cout << "Aold =\n" << Aold << std::endl;
-        // std::cout << "CC = " << CC << "; a = " << a << std::endl;
-        // printVector(std::cout << "boundDiffs = ", boundDiffs) << std::endl;
-        // std::cout << "Initial eliminating: " << dependencyToEliminate
-        //           << std::endl;
-        if (dependencyToEliminate == -2)
-            return true;
-        // std::cout << "Atmp0 =\n" << Atmp0 << std::endl;
-        // std::cout << "E =\n" << E << std::endl;
-        // define variables as
-        // (a-Aold) + delta = b - bold
-        // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
-        // if we prove delta >= 0, then (b - a) >= (bold - Aold)
-        // and thus (b - a) is the redundant constraint, and we return `true`.
-        // else if we prove delta <= 0, then (b - a) <= (bold - Aold)
-        // and thus (bold - Aold) is the redundant constraint, and we eliminate
-        // the associated column.
-        while (dependencyToEliminate >= 0) {
-            // std::cout << "eliminating: " << dependencyToEliminate <<
-            // std::endl; eliminate dependencyToEliminate
-            eliminateVarForRCElim(Atmp1, E, Atmp0,
-                                  size_t(dependencyToEliminate));
-            std::swap(Atmp0, Atmp1);
-            dependencyToEliminate = -1;
-            // iterate over the new bounds, search for constraints we can drop
-            // std::cout << "Atmp0 = \n" << Atmp0 << "\nE =\n" << E <<
-            // std::endl;
-            for (size_t c = 0; c < Atmp0.numRow(); ++c) {
-                llvm::ArrayRef<int64_t> Ac = Atmp0.getRow(c);
-                int64_t varInd = firstVarInd(Ac);
-                if (varInd == -1) {
-                    int64_t auxInd = auxiliaryInd(Ac);
-                    // printVector(std::cout << "sym = ", getSymbol(Atmp0, c))
-                    //     << std::endl;
-                    // std::cout << "C.lessEqual(getSymbol(Atmp0, c)) = "
-                    //           << C.lessEqual(getSymbol(Atmp0, c)) <<
-                    //           std::endl;
-                    if ((auxInd != -1) && (C.lessEqual(getSymbol(Atmp0, c)))) {
-                        int64_t Axc = Atmp0(c, auxInd);
-                        // -Axc*delta <= b <= 0
-                        // if (Axc > 0): (upper bound)
-                        // delta <= b/Axc <= 0
-                        // else if (Axc < 0): (lower bound)
-                        // delta >= -b/Axc >= 0
-                        if (Axc <= 0)
-                            // lower bound
-                            return true;
-                        // upper bound
-                        colsToErase.push_back(boundDiffs[auxInd - numCol]);
-                    }
-                } else {
-                    dependencyToEliminate = varInd;
-                }
-            }
-            if (dependencyToEliminate >= 0)
-                continue;
-            for (size_t c = 0; c < E.numRow(); ++c) {
-                int64_t varInd = firstVarInd(E.getRow(c));
-                if (varInd != -1) {
-                    dependencyToEliminate = varInd;
-                    break;
-                }
-            }
-        }
-        if (colsToErase.size())
-            eraseConstraint(Aold, colsToErase.front());
-        return false;
-    }
-    bool removeRedundantConstraints(IntMatrix &Atmp0, IntMatrix &Atmp1,
-                                    IntMatrix &Etmp0, IntMatrix &Etmp1,
-                                    IntMatrix &Aold, I64Matrix &Eold,
-                                    llvm::ArrayRef<int64_t> a, const size_t CC,
-                                    const bool AbIsEq) const {
-
-        // printConstraints(
-        //     printConstraints(std::cout << "Constraints, eliminating C=" << CC
-        //                                << ":\n",
-        //                      Aold, C.getNumConstTerms(), true),
-        //     Eold, C.getNumConstTerms(), false)
-        //     << std::endl;
-        const size_t numVar = getNumVar();
-        // simple mapping of `k` to particular bounds
-        // we'll have C - other bound
-        llvm::SmallVector<int, 16> boundDiffs;
-        for (size_t c = 0; c < Aold.numRow(); ++c) {
-            if (c == CC)
-                continue;
-            for (size_t v = 0; v < numVar; ++v) {
-                int64_t av = a[v];
-                int64_t Avc = Aold(c, v);
-                if (((av > 0) == (Avc > 0)) && ((av != 0) & (Avc != 0))) {
-                    boundDiffs.push_back(c);
-                    break;
-                }
-            }
-        }
-        if (!AbIsEq) {
-            // if AbIsEq, would be eliminated via GaussianElimination
-            for (int64_t c = 0; c < int64_t(Eold.numRow()); ++c) {
-                int cc = c + Aold.numRow();
-                if (cc == int(CC))
-                    continue;
-                unsigned mask = 3;
-                for (size_t v = 0; v < numVar; ++v) {
-                    int64_t av = a[v];
-                    int64_t Evc = Eold(c, v);
-                    if ((av != 0) & (Evc != 0)) {
-                        if (((av > 0) == (Evc > 0)) && (mask & 1)) {
-                            boundDiffs.push_back(cc);
-                            mask &= 2;
-                        } else if (mask & 2) {
-                            boundDiffs.push_back(-cc);
-                            mask &= 1;
-                        }
-                        if (mask == 0)
-                            break;
-                    }
-                }
-            }
-        }
-        const size_t numAuxVar = boundDiffs.size();
-        const size_t numVarAugment = numVar + numAuxVar;
-        bool CinA = CC < Aold.numRow();
-        size_t AtmpC = Aold.numRow() - CinA;
-        size_t EtmpC = Eold.numRow() - (!CinA);
-        Atmp0.resizeForOverwrite(AtmpC, numVarAugment);
-        Etmp0.reserve(EtmpC + numAuxVar, numVarAugment);
-        Etmp0.resizeForOverwrite(numAuxVar, numVarAugment);
-        for (size_t i = 0; i < Aold.numRow(); ++i) {
-            if (i == CC)
-                continue;
-            size_t j = i - (i > CC);
-            for (size_t v = 0; v < numAuxVar; ++v)
-                Atmp0(j, v) = 0;
-            for (size_t v = 0; v < numVar; ++v)
-                Atmp0(j, v + numAuxVar) = Aold(i, v);
-        }
-        llvm::SmallVector<unsigned, 32> constraintsToErase;
-        int64_t dependencyToEliminate = checkForTrivialRedundancies(
-            constraintsToErase, boundDiffs, Etmp0, Aold, Eold, a, AbIsEq);
-        if (dependencyToEliminate == -2)
-            return true;
-        size_t numEtmpAuxVar = Etmp0.numRow();
-        Etmp0.resize(EtmpC + numEtmpAuxVar, numVarAugment);
-        // fill Etmp0 with Eold
-        for (size_t i = 0; i < Eold.numRow(); ++i) {
-            if (i + Aold.numRow() == CC)
-                continue;
-            size_t j = i - ((i + Aold.numRow() > CC) && (CC >= Aold.numRow())) +
-                       numEtmpAuxVar;
-            for (size_t v = 0; v < numAuxVar; ++v)
-                Etmp0(j, v) = 0;
-            for (size_t v = 0; v < numVar; ++v)
-                Etmp0(j, v + numAuxVar) = Eold(i, v);
-        }
-        // fill Etmp0 with bound diffs
-        // define variables as
-        // (a-Aold) + delta = b - bold
-        // delta = b - bold - (a-Aold) = (b - a) - (bold - Aold)
-        // if we prove delta >= 0, then (b - a) >= (bold - Aold)
-        // and thus (b - a) is the redundant constraint, and we return
-        // `true`. else if we prove delta <= 0, then (b - a) <= (bold -
-        // Aold) and thus (bold - Aold) is the redundant constraint, and we
-        // eliminate the associated column.
-        while (dependencyToEliminate >= 0) {
-            // eliminate dependencyToEliminate
-            // std::cout << "Atmp0 (1) =\n" << Atmp0 << std::endl;
-            if (eliminateVarForRCElim(Atmp1, Etmp1, Atmp0, Etmp0,
-                                      size_t(dependencyToEliminate))) {
-                std::swap(Atmp0, Atmp1);
-                std::swap(Etmp0, Etmp1);
-            }
-            // std::cout << "Atmp0 (2) =\n" << Atmp0 << std::endl;
-            for (auto &a : Atmp0.mem)
-                assert(std::abs(a) < 100);
-            // printConstraints(
-            //     printConstraints(std::cout << "dependencyToEliminate = "
-            //                                << dependencyToEliminate
-            //                                << "; Temporary Constraints:\n",
-            //                      Atmp0, C.getNumConstTerms(), true,
-            //                      numAuxVar),
-            //     Etmp0, C.getNumConstTerms(), false, numAuxVar)
-            //     << std::endl;
-            // std::cout << "dependencyToEliminate = " << dependencyToEliminate
-            // << std::endl;
-            // {
-            //     int64_t lastAux = -1;
-            //     for (size_t c = 0; c < Etmp0.numRow(); ++c) {
-            //         int64_t auxInd = auxiliaryInd(Etmp0.getRow(c));
-            //         assert(auxInd >= lastAux);
-            //         lastAux = auxInd;
-            //     }
-            // }
-            dependencyToEliminate = -1;
-            // iterate over the new bounds, search for constraints we can
-            // drop
-            for (size_t c = 0; c < Atmp0.numRow(); ++c) {
-                llvm::ArrayRef<int64_t> Ac = Atmp0.getRow(c);
-                int64_t varInd = firstVarInd(Ac);
-                if (varInd == -1) {
-                    int64_t auxInd = auxiliaryInd(Ac);
-                    // FIXME: does (btmp0[c]<=0) always
-                    // return `true` when `allZero(bold)`???
-                    if ((auxInd != -1) && (C.lessEqual(getSymbol(Atmp0, c)))) {
-                        int64_t Axc = Atmp0(c, auxInd);
-                        // Axc*delta <= b <= 0
-                        // if (Axc > 0): (upper bound)
-                        // delta <= b/Axc <= 0
-                        // else if (Axc < 0): (lower bound)
-                        // delta >= b/Axc >= 0
-                        if (Axc > 0) {
-                            // upper bound
-                            size_t c = std::abs(boundDiffs[auxInd]);
-                            if (c < Aold.numRow())
-                                constraintsToErase.push_back(c);
-                        } else if ((!AbIsEq) ||
-                                   (C.lessEqual(getSymbol(Atmp0, c), 1))) {
-                            // lower bound
-                            return true;
-                        }
-                    }
-                } else {
-                    dependencyToEliminate = varInd;
-                }
-            }
-            if (dependencyToEliminate >= 0)
-                continue;
-            for (size_t c = 0; c < Etmp0.numRow(); ++c) {
-                int64_t varInd = firstVarInd(Etmp0.getRow(c));
-                if (varInd != -1) {
-                    dependencyToEliminate = varInd;
-                    break;
-                }
-            }
-        }
-        if (constraintsToErase.size())
-            // std::cout << "Erasing Inequality Constraint c = " << c <<
-            // std::endl;
-            eraseConstraint(Aold, constraintsToErase.front());
-        return false;
-    }
-
     void deleteBounds(IntMatrix &A, size_t i) const {
         for (size_t j = A.numRow(); j != 0;)
             if (A(--j, i))
@@ -912,7 +267,7 @@ struct Polyhedra {
     // returns `true` if empty, `false` otherwise
     bool checkZeros() {
         for (size_t c = A.numRow(); c != 0;)
-            if (allZero(getNonSymbol(A, --c))) {
+            if (allZero(A(--c, _))) {
                 // std::cout << "checkZeros c = " << c << std::endl;
                 // dump();
                 if (lessZero(c))
@@ -968,7 +323,7 @@ struct Polyhedra {
     }
     void dropEmptyConstraints(IntMatrix &A) const {
         for (size_t c = A.numRow(); c != 0;)
-            if (allZero(getNonSymbol(A, --c)))
+            if (allZero(A(--c, _)))
                 eraseConstraint(A, c);
     }
     void dropEmptyConstraints() {
@@ -1019,8 +374,8 @@ struct Polyhedra {
     // }
 };
 
-typedef Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator> SymbolicPolyhedra;
-typedef Polyhedra<IntMatrix, SymbolicComparator> SymbolicEqPolyhedra;
+typedef Polyhedra<EmptyMatrix<int64_t>,  LinearSymbolicComparator> SymbolicPolyhedra;
+typedef Polyhedra<IntMatrix,  LinearSymbolicComparator> SymbolicEqPolyhedra;
 
 /*
 template <MaybeMatrix I64Matrix>

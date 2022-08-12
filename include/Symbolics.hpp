@@ -3066,6 +3066,15 @@ termToPolyCoeff(Term<C, PackedMonomial<L, E>> const &t, size_t i) {
     a.exponent.removeTerm(i);
     return a;
 }
+std::ostream &printSymbol(std::ostream &os, PtrVector<const int64_t> x, llvm::ArrayRef<Polynomial::Monomial> monomials,
+                            int64_t mul = 1) {
+    os << mul * x[0];
+    for (size_t i = 1; i < x.size(); ++i)
+        if (int64_t xi = x[i] * mul)
+            os << (xi > 0 ? " + " : " - ")
+                << Polynomial::Term{std::abs(xi), monomials[i - 1]};
+    return os;
+}
 /* commented out, because probably broken
 template <typename C>
 Term<C, M> termToPolyCoeff(Term<C, M> &&t, size_t i) {

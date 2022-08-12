@@ -454,6 +454,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
 };
 
+static_assert(Comparator<LinearSymbolicComparator>);
+
 static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,
                                      const Comparator auto &) {}
 static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
