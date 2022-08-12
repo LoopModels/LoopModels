@@ -97,28 +97,28 @@ struct Simplex {
     }
     MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
     MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
-    StridedVector<const int64_t> getTableauCol(size_t i) const {
-        return StridedVector<const int64_t>{
+    StridedVector<int64_t> getTableauCol(size_t i) const {
+        return StridedVector<int64_t>{
             tableau.data() + i + numExtraRows * tableau.rowStride(),
             getNumConstraints(), tableau.rowStride()};
     }
-    StridedVector<const int64_t> getBasicVariables() const {
+    StridedVector<int64_t> getBasicVariables() const {
         return getTableauCol(0);
     }
-    // StridedVector<const int64_t> getDenominators() const {
+    // StridedVector<int64_t> getDenominators() const {
     //     return getTableauCol(1);
     // }
-    StridedVector<const int64_t> getConstants() const {
+    StridedVector<int64_t> getConstants() const {
         return getTableauCol(numExtraCols);
     }
-    StridedVector<int64_t> getTableauCol(size_t i) {
-        return StridedVector<int64_t>{tableau.data() + i +
+    MutStridedVector<int64_t> getTableauCol(size_t i) {
+        return MutStridedVector<int64_t>{tableau.data() + i +
                                           numExtraRows * tableau.rowStride(),
                                       getNumConstraints(), tableau.rowStride()};
     }
-    StridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
-    // StridedVector<int64_t> getDenominators() { return getTableauCol(1); }
-    StridedVector<int64_t> getConstants() {
+    MutStridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
+    // MutStridedVector<int64_t> getDenominators() { return getTableauCol(1); }
+    MutStridedVector<int64_t> getConstants() {
         return getTableauCol(numExtraCols);
     }
     bool initiateFeasible() {
@@ -266,7 +266,7 @@ struct Simplex {
             }
         std::cout << "post-removal C =" << C << std::endl;
         // update baisc vars and constraints
-        StridedVector<int64_t> basicVars{getBasicVariables()};
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
         basicVars[leavingVariable] = enteringVariable;
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
@@ -291,7 +291,7 @@ struct Simplex {
     }
     // set basicVar's costs to 0, and then runCore()
     int64_t run() {
-        StridedVector<int64_t> basicVars = getBasicVariables();
+        MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
         for (size_t c = 0; c < basicVars.size();) {
@@ -550,7 +550,7 @@ struct Simplex {
         PtrVector<int64_t> basicCons{simplex.getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -1;
-        StridedVector<int64_t> basicVars{simplex.getBasicVariables()};
+        MutStridedVector<int64_t> basicVars{simplex.getBasicVariables()};
         PtrVector<int64_t> costs{simplex.getCost()};
         if (numTrueBasic) {
             uint64_t m = basicTrueVarMask;

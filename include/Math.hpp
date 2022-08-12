@@ -608,7 +608,6 @@ template <typename T> struct PtrVector {
     }
     PtrVector<T> view() const { return *this; };
 
-    operator PtrVector<T>() { return *this; }
     void extendOrAssertSize(size_t M) const { assert(M == N); }
 };
 template <typename T> struct MutPtrVector {
@@ -868,10 +867,59 @@ template <typename T> struct Vector {
 static_assert(std::copyable<Vector<intptr_t>>);
 
 template <typename T> struct StridedVector {
+    static_assert(!std::is_const_v<T>, "const T is redundant");
     using eltype = T;
-    T *d;
-    size_t N;
-    size_t x;
+    const T *const d;
+    const size_t N;
+    const size_t x;
+    static constexpr bool canResize = false;
+    struct StridedIterator {
+        const T *d;
+        size_t x;
+        auto operator++() {
+            d += x;
+            return *this;
+        }
+        auto operator--() {
+            d -= x;
+            return *this;
+        }
+        T &operator*() { return *d; }
+        bool operator==(const StridedIterator y) const { return d == y.d; }
+    };
+    auto begin() const { return StridedIterator{d, x}; }
+    auto end() const { return StridedIterator{d + N * x, x}; }
+    const T &operator[](size_t i) const { return d[i * x]; }
+    const T &operator()(size_t i) const { return d[i * x]; }
+
+    StridedVector<T> &operator()(Range<size_t, size_t> i) const {
+        return StridedVector<T>{
+            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+    }
+    template <typename F, typename L>
+    StridedVector<T> operator()(Range<F, L> i) const {
+        return (*this)(canonicalizeRange(i, N));
+    }
+
+    size_t size() const { return N; }
+    bool operator==(StridedVector<T> x) const {
+        if (size() != x.size())
+            return false;
+        for (size_t i = 0; i < size(); ++i) {
+            if ((*this)[i] != x[i])
+                return false;
+        }
+        return true;
+    }
+    StridedVector<T> view() const { return *this; }
+    void extendOrAssertSize(size_t M) const { assert(N == M); }
+};
+template <typename T> struct MutStridedVector {
+    static_assert(!std::is_const_v<T>, "T should not be const");
+    using eltype = T;
+    T *const d;
+    const size_t N;
+    const size_t x;
     static constexpr bool canResize = false;
     struct StridedIterator {
         T *d;
@@ -896,16 +944,16 @@ template <typename T> struct StridedVector {
     T &operator()(size_t i) { return d[i * x]; }
     const T &operator()(size_t i) const { return d[i * x]; }
 
-    StridedVector<T> &operator()(Range<size_t, size_t> i) {
-        return StridedVector<T>{
+    MutStridedVector<T> &operator()(Range<size_t, size_t> i) {
+        return MutStridedVector<T>{
             .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
     }
-    StridedVector<const T> &operator()(Range<size_t, size_t> i) const {
+    StridedVector<T> &operator()(Range<size_t, size_t> i) const {
         return StridedVector<T>{
             .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
     }
     template <typename F, typename L>
-    StridedVector<T> operator()(Range<F, L> i) {
+    MutStridedVector<T> operator()(Range<F, L> i) {
         return (*this)(canonicalizeRange(i, N));
     }
     template <typename F, typename L>
@@ -914,57 +962,49 @@ template <typename T> struct StridedVector {
     }
 
     size_t size() const { return N; }
-    bool operator==(StridedVector<T> x) const {
-        if (size() != x.size())
-            return false;
-        for (size_t i = 0; i < size(); ++i) {
-            if ((*this)[i] != x[i])
-                return false;
-        }
-        return true;
+    // bool operator==(StridedVector<T> x) const {
+    //     if (size() != x.size())
+    //         return false;
+    //     for (size_t i = 0; i < size(); ++i) {
+    //         if ((*this)[i] != x[i])
+    //             return false;
+    //     }
+    //     return true;
+    // }
+    operator StridedVector<T>() {
+        return StridedVector<T>{.d = d, .N = N, .x = x};
     }
-    inline StridedVector<T> view(size_t start, size_t stop) {
-        return StridedVector<T>{*d + start * x, stop - start, x};
-    }
-    inline StridedVector<const T> view(size_t start, size_t stop) const {
-        return StridedVector<const T>{*d + start * x, stop - start, x};
-    }
-    StridedVector<T> view() { return *this; }
-    StridedVector<const T> view() const { return *this; }
-    StridedVector<T> &operator=(const AbstractVector auto &x) {
+    StridedVector<T> view() const { return *this; }
+    MutStridedVector<T> &operator=(const AbstractVector auto &x) {
         return copyto(*this, x);
     }
-    StridedVector<T> &operator+=(const AbstractVector auto &x) {
-        const size_t N = size();
+    MutStridedVector<T> &operator+=(const AbstractVector auto &x) {
         const size_t M = x.size();
-        StridedVector<T> &self = *this;
+        MutStridedVector<T> &self = *this;
         assert(M == N);
         for (size_t i = 0; i < M; ++i)
             self(i) += x(i);
         return self;
     }
-    StridedVector<T> &operator-=(const AbstractVector auto &x) {
-        const size_t N = size();
+    MutStridedVector<T> &operator-=(const AbstractVector auto &x) {
         const size_t M = x.size();
-        StridedVector<T> &self = *this;
+        MutStridedVector<T> &self = *this;
         assert(M == N);
         for (size_t i = 0; i < M; ++i)
             self(i) -= x(i);
         return self;
     }
-    StridedVector<T> &operator*=(const AbstractVector auto &x) {
-        const size_t N = size();
+    MutStridedVector<T> &operator*=(const AbstractVector auto &x) {
         const size_t M = x.size();
-        StridedVector<T> &self = *this;
+        MutStridedVector<T> &self = *this;
         assert(M == N);
         for (size_t i = 0; i < M; ++i)
             self(i) *= x(i);
         return self;
     }
-    StridedVector<T> &operator/=(const AbstractVector auto &x) {
-        const size_t N = size();
+    MutStridedVector<T> &operator/=(const AbstractVector auto &x) {
         const size_t M = x.size();
-        StridedVector<T> &self = *this;
+        MutStridedVector<T> &self = *this;
         assert(M == N);
         for (size_t i = 0; i < M; ++i)
             self(i) /= x(i);
@@ -1087,8 +1127,8 @@ template <typename T> struct PtrMatrix {
     inline PtrVector<T> getRow(size_t i) const {
         return PtrVector<T>{.mem = data() + i * rowStride(), .N = N};
     }
-    inline StridedVector<const T> getCol(size_t n) const {
-        return StridedVector<const T>{data() + n, M, rowStride()};
+    inline StridedVector<T> getCol(size_t n) const {
+        return StridedVector<T>{data() + n, M, rowStride()};
     }
 
     bool operator==(const AbstractMatrix auto &B) const {
@@ -1199,7 +1239,7 @@ template <typename T> struct MutPtrMatrix {
                        Range<size_t, size_t>{0, numCol()});
     }
     template <typename R0, typename R1>
-    inline StridedVector<T> operator()(Range<R0, R1> rows, size_t col) {
+    inline MutStridedVector<T> operator()(Range<R0, R1> rows, size_t col) {
         return getCol(col)(canonicalizeRange(rows, M));
     }
     template <typename C0, typename C1>
@@ -1255,11 +1295,11 @@ template <typename T> struct MutPtrMatrix {
     inline PtrVector<T> getRow(size_t i) const {
         return PtrVector<T>{.mem = data() + i * rowStride(), .N = N};
     }
-    inline StridedVector<T> getCol(size_t n) {
-        return StridedVector<T>{data() + n, M, rowStride()};
+    inline MutStridedVector<T> getCol(size_t n) {
+        return MutStridedVector<T>{data() + n, M, rowStride()};
     }
-    inline StridedVector<const T> getCol(size_t n) const {
-        return StridedVector<const T>{data() + n, M, rowStride()};
+    inline StridedVector<T> getCol(size_t n) const {
+        return StridedVector<T>{data() + n, M, rowStride()};
     }
     MutPtrMatrix<T> operator=(const AbstractMatrix auto &B) {
         return copyto(*this, B);
@@ -1449,11 +1489,11 @@ template <typename T, typename P> struct BaseMatrix {
     //     for (size_t j = 0; j < numCol(); ++j)
     //         (*this)(i, j) = x[j];
     // }
-    inline StridedVector<T> getCol(size_t n) {
-        return StridedVector<T>{data() + n, numRow(), rowStride()};
+    inline MutStridedVector<T> getCol(size_t n) {
+        return MutStridedVector<T>{data() + n, numRow(), rowStride()};
     }
-    inline StridedVector<const T> getCol(size_t n) const {
-        return StridedVector<const T>{data() + n, numRow(), rowStride()};
+    inline StridedVector<T> getCol(size_t n) const {
+        return StridedVector<T>{data() + n, numRow(), rowStride()};
     }
     operator MutPtrMatrix<T>() {
         return MutPtrMatrix<T>{
@@ -1675,32 +1715,35 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
 
 template <typename T>
 struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
-    T *mem;
+    static_assert(!std::is_const_v<T>, "const T is redundant");
+    const T *const mem;
     const size_t M;
-    SquarePtrMatrix(T *data, size_t M) : mem(data), M(M){};
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
 
-    // inline T &getLinearElement(size_t i) { return mem[i]; }
-    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    // T *begin() { return mem; }
-    // T *end() { return mem + (M * M); }
-    // const T *begin() const { return mem; }
-    // const T *end() const { return mem + (M * M); }
+    size_t numRow() const { return M; }
+    size_t numCol() const { return M; }
+    inline size_t rowStride() const { return M; }
+    const T *data() const { return mem; }
+    constexpr bool isSquare() const { return true; }
+};
+template <typename T>
+struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
+    static_assert(!std::is_const_v<T>, "T should not be const");
+    T *const mem;
+    const size_t M;
+    static constexpr bool fixedNumCol = true;
+    static constexpr bool fixedNumRow = true;
+    static constexpr bool canResize = false;
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     inline size_t rowStride() const { return M; }
-    // static constexpr size_t colStride() { return 1; }
-    // static constexpr size_t getConstCol() { return 0; }
 
     T *data() { return mem; }
     const T *data() const { return mem; }
-    // operator PtrMatrix<T>() const { return PtrMatrix<T>(mem, M, M, M); }
-    operator SquarePtrMatrix<const T>() const {
-        return SquarePtrMatrix<const T>(mem, M);
-    }
+    operator SquarePtrMatrix<T>() const { return SquarePtrMatrix<T>(mem, M); }
     constexpr bool isSquare() const { return true; }
 };
 
@@ -1736,11 +1779,11 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
             A(r, r) = 1;
         return A;
     }
-    operator SquarePtrMatrix<T>() {
-        return SquarePtrMatrix<T>{.mem = mem.data(), .M = size_t(M)};
+    operator MutSquarePtrMatrix<T>() {
+        return MutSquarePtrMatrix<T>{.mem = mem.data(), .M = size_t(M)};
     }
-    operator SquarePtrMatrix<const T>() const {
-        return SquarePtrMatrix<const T>{mem.data(), size_t(M)};
+    operator SquarePtrMatrix<T>() const {
+        return SquarePtrMatrix<T>{mem.data(), size_t(M)};
     }
     static constexpr bool isSquare() { return true; }
 };
@@ -1776,25 +1819,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 mem[m * X + n] = A(m, n);
     }
 
-    // operator PtrMatrix<T>() const {
-    //     return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    // }
-    // operator MutPtrMatrix<T>() {
-    //     return MutPtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    // }
-
-    // inline T &getLinearElement(size_t i) { return mem[i]; }
-    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    // auto begin() { return mem.begin(); }
-    // auto end() { return mem.end(); }
-    // auto begin() const { return mem.begin(); }
-    // auto end() const { return mem.end(); }
-
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
-    // static constexpr size_t colStride() { return 1; }
-    // static constexpr size_t getConstCol() { return 0; }
 
     static Matrix<T, 0, 0, S> uninitialized(size_t MM, size_t NN) {
         Matrix<T, 0, 0, S> A(0, 0);
@@ -1897,8 +1924,8 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         assert(MM <= M);
         M = MM;
     }
-    PtrMatrix<T> view() {
-        return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
+    MutPtrMatrix<T> view() {
+        return MutPtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
     PtrMatrix<T> view() const {
         return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
@@ -1907,12 +1934,12 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         return Transpose<PtrMatrix<T>>{view()};
     }
     bool operator==(const AbstractMatrix auto &B) const {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        if ((M != numRow()) || (N != numCol()))
+        const size_t R = B.numRow();
+        const size_t C = B.numCol();
+        if ((M != R) || (N != C))
             return false;
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
+        for (size_t r = 0; r < R; ++r)
+            for (size_t c = 0; c < C; ++c)
                 if ((*this)(r, c) != B(r, c))
                     return false;
         return true;
@@ -2385,7 +2412,7 @@ std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {
     // std::ostream &printMatrix(std::ostream &os, T const &A) {
     auto [m, n] = A.size();
     if (m == 0)
-	return os << "[ ]";
+        return os << "[ ]";
     for (size_t i = 0; i < m; i++) {
         if (i) {
             os << "  ";

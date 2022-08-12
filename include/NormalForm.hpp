@@ -22,8 +22,8 @@ inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
 }
 // zero out below diagonal
 MULTIVERSION void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
-                                  SquareMatrix<int64_t> &K, size_t i, size_t M,
-                                  size_t N) {
+                                  MutSquarePtrMatrix<int64_t> K, size_t i,
+                                  size_t M, size_t N) {
     // std::cout << "M = " << M << "; N = " << N << "; i = " << i << std::endl;
     // printMatrix(std::cout, A) << std::endl;
     for (size_t j = i + 1; j < M; ++j) {
@@ -71,14 +71,14 @@ MULTIVERSION void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
 // This method is only called by orthogonalize, hence we can assume
 // (Akk == 1) || (Akk == -1)
 MULTIVERSION void zeroSubDiagonal(MutPtrMatrix<int64_t> A,
-                                  SquareMatrix<int64_t> &K, size_t k, size_t M,
-                                  size_t N) {
+                                  MutSquarePtrMatrix<int64_t> K, size_t k,
+                                  size_t M, size_t N) {
     int64_t Akk = A(k, k);
     if (Akk == -1) {
-	for (size_t m = 0; m < N; ++m)
-	    A(k, m) *= -1;
-	for (size_t m = 0; m < M; ++m)
-	    K(k, m) *= -1;
+        for (size_t m = 0; m < N; ++m)
+            A(k, m) *= -1;
+        for (size_t m = 0; m < M; ++m)
+            K(k, m) *= -1;
     } else {
         assert(Akk == 1);
     }
@@ -123,7 +123,7 @@ MULTIVERSION inline bool pivotRows(MutPtrMatrix<int64_t> A,
     }
     return false;
 }
-inline bool pivotRows(MutPtrMatrix<int64_t> A, SquareMatrix<int64_t> &K,
+inline bool pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
                       size_t i, size_t M) {
     return pivotRows(A, K, i, M, i);
 }
@@ -170,9 +170,9 @@ orthogonalizeBang(MutPtrMatrix<int64_t> A) {
         } else {
             zeroSupDiagonal(A, K, i, M, N);
             int64_t Aii = A(i, i);
-	    SHOW(Aii);
-	    CSHOW(j);
-	    CSHOWLN(i);
+            SHOW(Aii);
+            CSHOW(j);
+            CSHOWLN(i);
             if (std::abs(Aii) != 1) {
                 // including this row renders the matrix not unimodular!
                 // therefore, we drop the row.
