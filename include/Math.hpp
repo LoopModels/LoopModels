@@ -702,6 +702,13 @@ template <typename T> struct MutPtrVector {
             mem[i] *= x(i);
         return *this;
     }
+    // MutPtrVector<T> &operator*=(int64_t x) {
+    //     const size_t N = size();
+    //     MutPtrVector<T> &self = *static_cast<MutPtrVector<T> *>(this);
+    //     for (size_t i = 0; i < N; ++i)
+    //         self(i) *= x;
+    //     return self;
+    // }
     MutPtrVector<T> operator/=(const AbstractVector auto &x) {
         assert(N == x.size());
         for (size_t i = 0; i < N; ++i)
