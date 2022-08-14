@@ -74,7 +74,8 @@ struct Polyhedra {
     //     Vector<int64_t> diff{A.numRow()};
     //     // std::cout<< E <<std::endl;
     //     // std::cout<< A <<std::endl;
-    //     // if constexpr (hasEqualities) { // False for affine, true for dependency
+    //     // if constexpr (hasEqualities) { // False for affine, true for
+    //     dependency
     //     //     // std::cout<< E <<std::endl;
     //     //     NormalForm::simplifySystem(E, 1); // A.numCol() - numLoops);
     //     //     // std::cout<< E <<std::endl;
@@ -95,9 +96,9 @@ struct Polyhedra {
     //     for (size_t j = A.numRow(); j;) {
     //         for (size_t i = j-1; ; ) {
     //             --j;
-    //             std::cout<< "--------------Start new--------------" <<std::endl;
-    //             std::cout<< i << std::endl;
-    //             if (A.numRow() <= 1){
+    //             std::cout<< "--------------Start new--------------"
+    //             <<std::endl; std::cout<< i << std::endl; if (A.numRow() <=
+    //             1){
     //                 break;
     //             }
     //             std::cout<< "Now i, j are " << i << " "<< j <<std::endl;
@@ -109,17 +110,16 @@ struct Polyhedra {
     //             std::cout<< "print whether greater equal:" <<std::endl;
     //             std::cout<< C.greaterEqual(diff) << std::endl;
 
-
     //             if (C.greaterEqual(diff)) {
     //                 eraseConstraint(A, i);
-    //                 std::cout<<"i: " << i<<" greater Equal returns true" <<std::endl;
-    //                 std::cout<< A <<std::endl;
+    //                 std::cout<<"i: " << i<<" greater Equal returns true"
+    //                 <<std::endl; std::cout<< A <<std::endl;
     //             } else {
     //                 diff *= (-1);
     //                 if (C.greaterEqual(diff)) {
     //                     eraseConstraint(A, j);
-    //                     std::cout<< "i: " << i <<" greater Equal returns false" <<std::endl;
-    //                     std::cout<< A <<std::endl;
+    //                     std::cout<< "i: " << i <<" greater Equal returns
+    //                     false" <<std::endl; std::cout<< A <<std::endl;
     //                 }
     //             }
     //         }
@@ -129,33 +129,36 @@ struct Polyhedra {
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
         for (size_t j = A.numRow(); j;) {
-            for (size_t i = j-1; i != 0; ) {
-                --j;
-                std::cout<< "--------------Start new--------------" <<std::endl;
-                std::cout<< i << std::endl;
-                if (A.numRow() <= 1){
-                    break;
-                }
+            for (size_t i = --j; i;) {
+                std::cout << "--------------Start new--------------"
+                          << std::endl;
+                std::cout << i << std::endl;
+                if (A.numRow() <= 1)
+                    return;
                 diff = A(--i, _) - A(j, _);
-                std::cout<< "Now i, j are " << i << " "<< j <<std::endl;
+                std::cout << "Now i, j are " << i << " " << j << std::endl;
                 // diff = A(j, _) - A(--i, _);
 
-                std::cout<< "print diff first:" <<std::endl;
-                std::cout<< diff << std::endl;
-                std::cout<< "print whether greater equal:" <<std::endl;
-                std::cout<< C.greaterEqual(diff) << std::endl;
-
+                std::cout << "print diff first:" << std::endl;
+                std::cout << diff << std::endl;
+                std::cout << "print whether greater equal:" << std::endl;
+                std::cout << C.greaterEqual(diff) << std::endl;
 
                 if (C.greaterEqual(diff)) {
                     eraseConstraint(A, i);
-                    std::cout<<"i: " << i<<" greater Equal returns true" <<std::endl;
-                    std::cout<< A <<std::endl;
+		    --j; // `i < j`, and `i` has been removed
+                    std::cout << "i: " << i << " greater Equal returns true"
+                              << std::endl;
+                    std::cout << A << std::endl;
                 } else {
                     diff *= (-1);
                     if (C.greaterEqual(diff)) {
                         eraseConstraint(A, j);
-                        std::cout<< "i: " << i <<" greater Equal returns false" <<std::endl;
-                        std::cout<< A <<std::endl;
+			break; // `j` is gone
+                        std::cout << "i: " << i
+                                  << " greater Equal returns false"
+                                  << std::endl;
+                        std::cout << A << std::endl;
                     }
                 }
             }
@@ -193,7 +196,7 @@ struct Polyhedra {
     bool greaterEqualZero(const size_t r) const {
         return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
     }
-    
+
     bool equalNegative(const size_t i, const size_t j) const {
         return C.equalNegative(A(i, _), A(j, _));
     }
@@ -374,8 +377,9 @@ struct Polyhedra {
     // }
 };
 
-typedef Polyhedra<EmptyMatrix<int64_t>,  LinearSymbolicComparator> SymbolicPolyhedra;
-typedef Polyhedra<IntMatrix,  LinearSymbolicComparator> SymbolicEqPolyhedra;
+typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator>
+    SymbolicPolyhedra;
+typedef Polyhedra<IntMatrix, LinearSymbolicComparator> SymbolicEqPolyhedra;
 
 /*
 template <MaybeMatrix I64Matrix>

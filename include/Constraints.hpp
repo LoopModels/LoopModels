@@ -83,13 +83,10 @@ MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
 */
 MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
                                              size_t i) {
-    const auto [M, N] = A.size();
-    const size_t lastRow = M - 1;
-    if (lastRow != i) {
-        VECTORIZE
-        for (size_t n = 0; n < N; ++n)
-            A(i, n) = A(lastRow, n);
-    }
+    const size_t lastRow = A.numRow() - 1;
+    assert(i <= lastRow);
+    if (lastRow != i)
+        A(i, _) = A(lastRow, _);
 }
 /*
 MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
@@ -128,7 +125,6 @@ static void eraseConstraint(IntMatrix &A, size_t i) {
     eraseConstraintImpl(A, i);
     A.truncateRows(A.numRow() - 1);
 }
-
 static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
     assert(_i != _j);
     size_t i = std::min(_i, _j);
@@ -139,14 +135,12 @@ static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
     if (j == penuRow) {
         // then we only need to copy one column (i to lastCol)
         eraseConstraint(A, i);
-    } else if (i != penuRow) {
+    } else if ((i != penuRow) && (i != lastRow)) {
         // if i == penuCol, then j == lastCol
         // and we thus don't need to copy
-        if (lastRow != i) {
-            for (size_t n = 0; n < N; ++n) {
-                A(i, n) = A(penuRow, n);
-                A(j, n) = A(lastRow, n);
-            }
+	for (size_t n = 0; n < N; ++n) {
+	    A(i, n) = A(penuRow, n);
+	    A(j, n) = A(lastRow, n);
         }
     }
     A.truncateRows(penuRow);

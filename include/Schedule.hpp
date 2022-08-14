@@ -46,23 +46,24 @@ struct Schedule {
         : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops) {
-        SquarePtrMatrix<int64_t> Phi(getPhi());
+        MutSquarePtrMatrix<int64_t> Phi(getPhi());
         for (size_t i = 0; i < nLoops; ++i) {
             Phi(i, i) = 1;
         }
     };
-    SquarePtrMatrix<int64_t> getPhi() {
-        // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
-        return SquarePtrMatrix<int64_t>{data.data(), numLoops};
+    MutSquarePtrMatrix<int64_t> getPhi() {
+        // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
+        return MutSquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
     }
     MutPtrVector<int64_t> getOmega() {
         return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
     }
-    SquarePtrMatrix<const int64_t> getPhi() const {
-        return SquarePtrMatrix<const int64_t>{data.data(), numLoops};
+    SquarePtrMatrix<int64_t> getPhi() const {
+        return SquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
     }
     PtrVector<int64_t> getOmega() const {
-        return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
+        return {.mem = data.data() + numLoops * numLoops,
+                .N = 2 * size_t(numLoops) + 1};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
         llvm::ArrayRef<int64_t> o0 = getOmega();

@@ -454,6 +454,10 @@ struct LoopBlock {
         simplex.resize(numConstraints,
                        numBounding + numScheduleCoefs + numLambda);
         auto C{simplex.getCostsAndConstraints()};
+	// layout of large simplex:
+	// all : C, u, w, schedule coefs, lambdas
+	// rows give constraints; each edge gets its own
+	size_t u = 0, w = 0;
         size_t c = 0, b = 0, s = numBounding,
                l = numBounding + numScheduleCoefs;
         llvm::SmallVector<bool, 512> visited(edges.size());

@@ -559,7 +559,8 @@ struct Dependence {
     // order of variables:
     // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
     void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
-                    MutPtrMatrix<int64_t> C, StridedVector<int64_t> d) const {
+                    MutPtrMatrix<int64_t> C,
+                    MutStridedVector<int64_t> d) const {
         // const size_t numBoundingConstraints =
         //     dependenceBounding.getNumConstraints();
         const size_t numSchedulingConstraints =
@@ -598,8 +599,8 @@ struct Dependence {
         const size_t numLoopsY = y.ref.getNumLoops();
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
-        SquarePtrMatrix<const int64_t> xPhi = x.schedule.getPhi();
-        SquarePtrMatrix<const int64_t> yPhi = y.schedule.getPhi();
+        SquarePtrMatrix<int64_t> xPhi = x.schedule.getPhi();
+        SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
         PtrVector<int64_t> xOmega = x.schedule.getOmega();
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
         Vector<int64_t> sch;

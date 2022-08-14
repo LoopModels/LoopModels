@@ -7,32 +7,33 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-TEST(TrivialPruneBoundsNew, BasicAssertions){
-    //A(5, 3) [1, M, m] constants, symbolic vars, loop vars
+TEST(TrivialPruneBoundsNew, BasicAssertions) {
+    // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
     //[0 1 0;
-    // -1 1 -1;
-    // 0 0 1;
-    // -2 1 -1;
-    //1 0 1;]
-    // query = [1 0 0];
-    //Constraints: {
-    // 0 <= M; (0)
-    // -1 + M - m >= 0; (1)
-    // m >= 0; (2)
+    //  -1 1 -1;
+    //  0 0 1;
+    //  -2 1 -1;
+    // 1 0 1;]
+    //  query = [1 0 0];
+    // Constraints: {
+    //  0 <= M; (0)
+    //  -1 + M - m >= 0; (1)
+    //  m >= 0; (2)
     //-2 + M - m >= 0 (3)
-    //1 + m >= 0;(4)
-    // diff = (3) - （4）
-    //}
-    //Our test: whether we could erase (1) or (3). query = (1) - (3)
-    //auto affp{AffineLoopNest::construct(A)};
-    //swap and eliminate
+    // 1 + m >= 0;(4)
+    //  diff = (3) - （4）
+    // }
+    // Our test: whether we could erase (1) or (3). query = (1) - (3)
+    // auto affp{AffineLoopNest::construct(A)};
+    // swap and eliminate
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
     Vector<int64_t> query2{1, 0, 0};
-    llvm::SmallVector<Polynomial::Monomial> symbols{Polynomial::Monomial(Polynomial::ID{1})};
+    llvm::SmallVector<Polynomial::Monomial> symbols{
+        Polynomial::Monomial(Polynomial::ID{1})};
     auto affp{AffineLoopNest::construct(A, symbols)};
     affp->pruneBounds();
+    std::cout << *affp << std::endl;
     // EXPECT_EQ(affp->A.numRow(), 2);
-
 }
 
 // TEST(TrivialPruneBounds, BasicAssertions) {
@@ -68,7 +69,8 @@ TEST(TrivialPruneBoundsNew, BasicAssertions){
 // }
 // TEST(TrivialPruneBounds2, BasicAssertions) {
 //     auto A{stringToIntMatrix("[0 1 0; 0 0 0; 0 -1 0; 0 0 0]")};
-//     // auto A{stringToIntMatrix("[1 0 0 0 1 -1; 1 -1 0 0 0 0; 1 0 -1 0 0 -1; 0 0
+//     // auto A{stringToIntMatrix("[1 0 0 0 1 -1; 1 -1 0 0 0 0; 1 0 -1 0 0 -1;
+//     0 0
 //     // 0 0 0 1; 1 0 -1 0 -1 0]")};
 //     auto M = Polynomial::Monomial(Polynomial::ID{1});
 //     auto N = Polynomial::Monomial(Polynomial::ID{2});
@@ -89,13 +91,15 @@ TEST(TrivialPruneBoundsNew, BasicAssertions){
 // }
 // TEST(LessTrivialPruneBounds, BasicAssertions) {
 //     auto M =
-//         Polynomial::Term{int64_t(1), Polynomial::Monomial(Polynomial::ID{1})};
+//         Polynomial::Term{int64_t(1),
+//         Polynomial::Monomial(Polynomial::ID{1})};
 //     auto N = Polynomial::Monomial(Polynomial::ID{2});
 //     auto O = Polynomial::Monomial(Polynomial::ID{3});
 //     PartiallyOrderedSet poset;
 
 //     // Ax * b >= 0
-//     IntMatrix A{stringToIntMatrix("[-1 -1 -1; 1 1 1; -1 0 -1; 1 0 1; 0 1 0; 0 "
+//     IntMatrix A{stringToIntMatrix("[-1 -1 -1; 1 1 1; -1 0 -1; 1 0 1; 0 1 0; 0
+//     "
 //                                   "-1 0; -1 0 0; 1 0 0; 0 0 1; 0 0 -1]")};
 //     llvm::SmallVector<MPoly> b;
 //     b.emplace_back(M + N + O - 3);
@@ -113,16 +117,16 @@ TEST(TrivialPruneBoundsNew, BasicAssertions){
 //     affp->pruneBounds();
 //     affp->dump();
 //     EXPECT_EQ(affp->A.numRow(), 6);
-//     auto loop2Count = affp->countSigns(affp->A, 2 + affp->C.getNumConstTerms());
-//     EXPECT_EQ(loop2Count.first, 1);
+//     auto loop2Count = affp->countSigns(affp->A, 2 +
+//     affp->C.getNumConstTerms()); EXPECT_EQ(loop2Count.first, 1);
 //     EXPECT_EQ(loop2Count.second, 1);
 //     affp->removeLoop(2);
-//     auto loop1Count = affp->countSigns(affp->A, 1 + affp->C.getNumConstTerms());
-//     EXPECT_EQ(loop1Count.first, 1);
+//     auto loop1Count = affp->countSigns(affp->A, 1 +
+//     affp->C.getNumConstTerms()); EXPECT_EQ(loop1Count.first, 1);
 //     EXPECT_EQ(loop1Count.second, 1);
 //     affp->removeLoop(1);
-//     auto loop0Count = affp->countSigns(affp->A, 0 + affp->C.getNumConstTerms());
-//     EXPECT_EQ(loop0Count.first, 1);
+//     auto loop0Count = affp->countSigns(affp->A, 0 +
+//     affp->C.getNumConstTerms()); EXPECT_EQ(loop0Count.first, 1);
 //     EXPECT_EQ(loop0Count.second, 1);
 // }
 

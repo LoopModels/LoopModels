@@ -28,20 +28,21 @@ struct AffineLoopNest : SymbolicPolyhedra,
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(const IntMatrix &A, llvm::SmallVector<Polynomial::Monomial> symbols) {
+    construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
         llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
             llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = A;
-        ret->C = LinearSymbolicComparator::construct(A);
+        ret->A = std::move(A);
+        ret->C = LinearSymbolicComparator::construct(ret->A);
         ret->symbols = std::move(symbols);
         return ret;
     }
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(const IntMatrix &A, const LinearSymbolicComparator &C, llvm::SmallVector<Polynomial::Monomial> symbols) {
+    construct(IntMatrix A, LinearSymbolicComparator C,
+              llvm::SmallVector<Polynomial::Monomial> symbols) {
         llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
             llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = A;
-        ret->C = C;
+        ret->A = std::move(A);
+        ret->C = std::move(C);
         ret->symbols = std::move(symbols);
         return ret;
     }
@@ -64,25 +65,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
         return ret;
-        // return llvm::makeIntrusiveRefCnt<AffineLoopNest>(
-        // std::move(B), EmptyMatrix<int64_t>(), C);
     }
-    // AffineLoopNest(const IntMatrix &Ain, llvm::ArrayRef<MPoly> b,
-    //                PartiallyOrderedSet posetin)
-    //     : Polyhedra{symbolicPolyhedra(Ain, b, std::move(posetin))} {
-    //     pruneBounds();
-    // }
-    // AffineLoopNest(IntMatrix Ain, SymbolicComparator C)
-    //     : Polyhedra<EmptyMatrix<int64_t>, SymbolicComparator>{
-    //           .A = std::move(Ain),
-    //           .E = EmptyMatrix<int64_t>{},
-    //           .C = std::move(C)} {
-    //     pruneBounds();
-    // }
-    // PtrVector<const int64_t> getProgVars(size_t j) const {
-    //     return A(j, _(0, getNumSymbols()));
-    // }
-    PtrVector<const int64_t> getProgVars(size_t j) const {
+
+    PtrVector<int64_t> getProgVars(size_t j) const {
         return A(j, _(0, getNumSymbols()));
     }
     void removeLoopBang(size_t i) {
@@ -233,7 +218,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
             } else {
                 os << "i_" << i << ((sign < 0) ? " <= " : " >= ");
             }
-            PtrVector<const int64_t> b = getProgVars(j);
+            PtrVector<int64_t> b = getProgVars(j);
             bool printed = !allZero(b);
             if (printed)
                 printSymbol(os, b, symbols, -sign);

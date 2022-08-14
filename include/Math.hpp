@@ -702,13 +702,6 @@ template <typename T> struct MutPtrVector {
             mem[i] *= x(i);
         return *this;
     }
-    // MutPtrVector<T> &operator*=(int64_t x) {
-    //     const size_t N = size();
-    //     MutPtrVector<T> &self = *static_cast<MutPtrVector<T> *>(this);
-    //     for (size_t i = 0; i < N; ++i)
-    //         self(i) *= x;
-    //     return self;
-    // }
     MutPtrVector<T> operator/=(const AbstractVector auto &x) {
         assert(N == x.size());
         for (size_t i = 0; i < N; ++i)
@@ -843,21 +836,45 @@ template <typename T> struct Vector {
         y = x;
         return *this;
     }
-    MutPtrVector<T> operator+=(AbstractVector auto &x) {
+    Vector<T> &operator+=(AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
-        return y += x;
+        y += x;
+        return *this;
     }
-    MutPtrVector<T> operator-=(AbstractVector auto &x) {
+    Vector<T> &operator-=(AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
-        return y -= x;
+        y -= x;
+        return *this;
     }
-    MutPtrVector<T> operator*=(AbstractVector auto &x) {
+    Vector<T> &operator*=(AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
-        return y *= x;
+        y *= x;
+        return *this;
     }
-    MutPtrVector<T> operator/=(AbstractVector auto &x) {
+    Vector<T> &operator/=(AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
-        return y /= x;
+        y /= x;
+        return *this;
+    }
+    Vector<T> &operator+=(const std::integral auto x) {
+        for (auto &&y : data)
+            y += x;
+        return *this;
+    }
+    Vector<T> &operator-=(const std::integral auto x) {
+        for (auto &&y : data)
+            y -= x;
+        return *this;
+    }
+    Vector<T> &operator*=(const std::integral auto x) {
+        for (auto &&y : data)
+            y *= x;
+        return *this;
+    }
+    Vector<T> &operator/=(const std::integral auto x) {
+        for (auto &&y : data)
+            y /= x;
+        return *this;
     }
     template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
     void clear() { data.clear(); }
@@ -1758,7 +1775,7 @@ template <typename T, unsigned STORAGE = 8>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
     llvm::SmallVector<T, TOTALSTORAGE> mem;
-    size_t M;
+    const size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;

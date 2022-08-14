@@ -91,7 +91,7 @@ struct LiteralComparator {
 // therefore, `a > b -> false` does not imply `a <= b`
 template <typename T> struct BaseComparator {
     inline size_t getNumConstTerms() const {
-        return static_cast<const T *>(this)->getNumConstTerms();
+        return static_cast<const T *>(this)->getNumConstTermsImpl();
     }
     inline bool greaterEqual(MutPtrVector<int64_t> delta, PtrVector<int64_t> x,
                              PtrVector<int64_t> y) const {
@@ -247,7 +247,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
                     addTerm(sc.monomials, t.exponent);
         return sc;
     }
-    size_t getNumConstTerms() const { return 1 + monomials.size(); }
+    size_t getNumConstTermsImpl() const { return 1 + monomials.size(); }
     MPoly getPoly(PtrVector<int64_t> x) const {
         MPoly delta;
         assert(x.size() >= 1 + monomials.size());
@@ -285,7 +285,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
 
 template <typename T>
 concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
-    { t.getNumConstTerms() } -> std::convertible_to<size_t>;
+    // { t.getNumConstTerms() } -> std::convertible_to<size_t>;
     { t.greaterEqual(x) } -> std::convertible_to<bool>;
     { t.lessEqual(x) } -> std::convertible_to<bool>;
     { t.greater(x) } -> std::convertible_to<bool>;
@@ -342,17 +342,16 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
     void initCore() {
         auto &A = V;
-        size_t numCon = A.numRow();
-        U.resizeForOverwrite(numCon, numCon);
+        size_t R = A.numRow();
+        U.resizeForOverwrite(R, R);
         U = 0;
-        for (size_t i = 0; i < numCon; ++i)
+        for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
-        size_t R = H.numRow();
         size_t numRowPre = R;
-        while ((R > 0) && allZero(H.getRow(R - 1)))
+        while ((R) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
         numRowDiff = numRowPre - R;
@@ -388,7 +387,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         if (d.size() == 0) {
             auto b = U(_, _(begin, query.size())) * query;
             for (size_t i = V.numRow(); i < b.size(); ++i) {
-                if (b(i) != 0)
+                if (b(i))
                     return false;
             }
             auto H = V;

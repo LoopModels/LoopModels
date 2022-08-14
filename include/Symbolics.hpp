@@ -519,16 +519,16 @@ merge(llvm::SmallVectorImpl<Monomial> &z, llvm::ArrayRef<Monomial> x,
                                     llvm::SmallVector<unsigned>(y.size()))};
     while ((ix != ixe) && (iy != iye)) {
         if ((ix->termsMatch(*iy))) {
-	    oldToNewMaps.first.push_back(z.size());
-	    oldToNewMaps.second.push_back(z.size());
+            oldToNewMaps.first.push_back(z.size());
+            oldToNewMaps.second.push_back(z.size());
             z.push_back(*iy);
             ++ix;
             ++iy;
         } else if (ix->lexGreater(*iy)) {
-	    oldToNewMaps.first.push_back(z.size());
+            oldToNewMaps.first.push_back(z.size());
             z.push_back(*(ix++));
         } else {
-	    oldToNewMaps.second.push_back(z.size());
+            oldToNewMaps.second.push_back(z.size());
             z.push_back(*(iy++));
         }
     }
@@ -3066,13 +3066,14 @@ termToPolyCoeff(Term<C, PackedMonomial<L, E>> const &t, size_t i) {
     a.exponent.removeTerm(i);
     return a;
 }
-std::ostream &printSymbol(std::ostream &os, PtrVector<const int64_t> x, llvm::ArrayRef<Polynomial::Monomial> monomials,
-                            int64_t mul = 1) {
+std::ostream &printSymbol(std::ostream &os, PtrVector<int64_t> x,
+                          llvm::ArrayRef<Polynomial::Monomial> monomials,
+                          int64_t mul = 1) {
     os << mul * x[0];
     for (size_t i = 1; i < x.size(); ++i)
         if (int64_t xi = x[i] * mul)
             os << (xi > 0 ? " + " : " - ")
-                << Polynomial::Term{std::abs(xi), monomials[i - 1]};
+               << Polynomial::Term{std::abs(xi), monomials[i - 1]};
     return os;
 }
 /* commented out, because probably broken
