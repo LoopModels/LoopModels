@@ -122,14 +122,14 @@ struct Simplex {
     bool initiateFeasible() {
         tableau(0, 0) = 0;
         // remove trivially redundant constraints
-        std::cout << "constraints=\n" << getConstraints() << std::endl;
+        // std::cout << "constraints=\n" << getConstraints() << std::endl;
         hermiteNormalForm();
         // [ I;  X ; b ]
         //
         // original number of variables
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
-        std::cout << "C=" << C << std::endl;
+        // std::cout << "C=" << C << std::endl;
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
@@ -184,7 +184,7 @@ struct Simplex {
                 }
             }
         }
-        std::cout << "pre-tableau = \n" << tableau << std::endl;
+        // std::cout << "pre-tableau = \n" << tableau << std::endl;
         llvm::SmallVector<unsigned> augmentVars{};
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
@@ -198,11 +198,11 @@ struct Simplex {
             // for (auto &&c : costs)
             for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
                 c = 0;
-            printVector(std::cout, augmentVars) << std::endl;
-            printVector(std::cout << "costs: ", PtrVector<int64_t>(costs))
-                << std::endl;
-            std::cout << "tableau =" << tableau << std::endl;
-            std::cout << "numVar = " << numVar << std::endl;
+            // std::cout << augmentVars << std::endl;
+            // std::cout << "costs: " << PtrVector<int64_t>(costs)
+            // << std::endl;
+            // std::cout << "tableau =" << tableau << std::endl;
+            // std::cout << "numVar = " << numVar << std::endl;
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
                 basicVars[a] = i + numVar;
@@ -213,22 +213,21 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            printVector(std::cout << "costs: ", PtrVector<int64_t>(costs))
-                << std::endl;
-            std::cout << "about to run; tableau =" << tableau << std::endl;
+            // std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
+            // std::cout << "about to run; tableau =" << tableau << std::endl;
             if (runCore() != 0)
                 return 1;
-            std::cout << "initialized tableau =" << tableau << std::endl;
+            // std::cout << "initialized tableau =" << tableau << std::endl;
             // all augment vars are now 0
             truncateVars(numVar);
         }
-        std::cout << "final tableau =" << tableau << std::endl;
+        // std::cout << "final tableau =" << tableau << std::endl;
         inCanonicalForm = true;
         return 0;
     }
     static int getEnteringVariable(PtrVector<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
-        std::cout << "costs = " << costs << std::endl;
+        // std::cout << "costs = " << costs << std::endl;
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
@@ -257,7 +256,7 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
-        std::cout << "leavingVariable = " << leavingVariable << std::endl;
+        // std::cout << "leavingVariable = " << leavingVariable << std::endl;
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -268,7 +267,7 @@ struct Simplex {
                 if (i == 0)
                     f = m;
             }
-        std::cout << "post-removal C =" << C << std::endl;
+        // std::cout << "post-removal C =" << C << std::endl;
         // update baisc vars and constraints
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -283,12 +282,14 @@ struct Simplex {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-            std::cout << "C =" << C << std::endl;
+            // std::cout << "C =" << C << std::endl;
             int enteringVariable = getEnteringVariable(C(0, _));
-            std::cout << "enteringVariable = " << enteringVariable << std::endl;
+            // std::cout << "enteringVariable = " << enteringVariable <<
+            // std::endl;
             if (enteringVariable == -1)
-                std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
-                          << f << std::endl;
+                // std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " /
+                // "
+                // << f << std::endl;
             if (enteringVariable == -1)
                 return Rational::create(C(0, 0), f);
             f = makeBasic(C, f, enteringVariable);
@@ -303,8 +304,8 @@ struct Simplex {
         int64_t f = 1;
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
-            std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
-                      << "; C.numCol()  = " << C.numCol() << std::endl;
+            // std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
+            // << "; C.numCol()  = " << C.numCol() << std::endl;
             if (int64_t cost = C(0, v))
                 f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
@@ -315,7 +316,7 @@ struct Simplex {
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex> positiveVariables(PtrMatrix<int64_t> A,
                                                      PtrMatrix<int64_t> B) {
-        std::cout << "Entering positive variables!" << std::endl;
+        // std::cout << "Entering positive variables!" << std::endl;
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -336,15 +337,16 @@ struct Simplex {
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
-        std::cout << "before costs simplex.tableau =" << simplex.tableau
-                  << std::endl;
+        // std::cout << "before costs simplex.tableau =" << simplex.tableau
+        // << std::endl;
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
             consts[i] = A(i, 0);
         for (size_t i = 0; i < numStrict; ++i)
             consts[i + numSlack] = B(i, 0);
-        std::cout << "about to initialize simplex.tableau =" << simplex.tableau
-                  << std::endl;
+        // std::cout << "about to initialize simplex.tableau =" <<
+        // simplex.tableau
+        // << std::endl;
         if (simplex.initiateFeasible())
             return {};
         return simplex;
@@ -430,17 +432,17 @@ struct Simplex {
     void printResult() {
         auto C{getConstraints()};
         auto basicVars{getBasicVariables()};
-        std::cout << "Simplex solution:" << std::endl;
+        // std::cout << "Simplex solution:" << std::endl;
         for (size_t i = 0; i < basicVars.size(); ++i) {
             size_t v = basicVars(i);
             if (v <= numSlackVar)
                 continue;
             if (C(i, 0)) {
                 if (v < C.numCol()) {
-                    std::cout << "v_" << v << " = " << C(i, 0) << " / "
-                              << C(i, v) << std::endl;
+                    // std::cout << "v_" << v << " = " << C(i, 0) << " / "
+                    // << C(i, v) << std::endl;
                 } else {
-                    std::cout << "v_" << v << " = " << C(i, 0) << std::endl;
+                    // std::cout << "v_" << v << " = " << C(i, 0) << std::endl;
                     assert(false);
                 }
             }

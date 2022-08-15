@@ -130,31 +130,31 @@ struct Polyhedra {
         Vector<int64_t> diff{A.numCol()};
         for (size_t j = A.numRow(); j;) {
             for (size_t i = --j; i;) {
-                std::cout << "--------------Start new--------------"
+                std::cout << "--------------Start new " << i << "--------------"
                           << std::endl;
-                std::cout << i << std::endl;
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
                 std::cout << "Now i, j are " << i << " " << j << std::endl;
                 // diff = A(j, _) - A(--i, _);
 
-                std::cout << "print diff first:" << std::endl;
-                std::cout << diff << std::endl;
-                std::cout << "print whether greater equal:" << std::endl;
-                std::cout << C.greaterEqual(diff) << std::endl;
+                std::cout << "print diff first:" << diff << std::endl;
+                std::cout << "print whether greater equal: "
+                          << C.greaterEqual(diff) << std::endl;
 
                 if (C.greaterEqual(diff)) {
-                    eraseConstraint(A, i);
                     std::cout << "i: " << i << "; j: " << j
-                              << " greater Equal returns true" << std::endl;
-                    std::cout << A << std::endl;
+                              << " greater Equal returns true" << A
+                              << std::endl;
+                    eraseConstraint(A, i);
+                    C.init(A, E);
                     --j; // `i < j`, and `i` has been removed
                 } else if (C.greaterEqual(diff *= -1)) {
-                    eraseConstraint(A, j);
                     std::cout << "i: " << i << "; j : " << j
-                              << " greater Equal returns false" << std::endl;
-                    std::cout << A << std::endl;
+                              << " greater Equal returns false" << A
+                              << std::endl;
+                    eraseConstraint(A, j);
+                    C.init(A, E);
                     break; // `j` is gone
                 }
             }

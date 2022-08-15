@@ -375,7 +375,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         auto Vt = IntMatrix::identity(Ht.numRow());
         NormalForm::solveSystem(Ht, Vt);
         d = Ht.diag();
-        std::cout << "D matrix:" << d << std::endl;
+        std::cout << "D matrix: " << d << std::endl;
         V = Vt.transpose();
     }
 
@@ -414,10 +414,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             NormalForm::solveSystem(H);
             for (size_t i = nEqs; i < H.numRow(); ++i) {
                 if (auto rhs = H(i, oldn))
-                    if ((rhs > 0) != (H(i, i) > 0)) {
-                        std::cout << "Wow: " << i << std::endl;
+                    if ((rhs > 0) != (H(i, i) > 0))
                         return false;
-                    }
             }
             return true;
         }
@@ -461,8 +459,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
-	    if (optS.hasValue())
-		optS->printResult();
+            if (optS.hasValue())
+                optS->printResult();
             return optS.hasValue();
         }
 

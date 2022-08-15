@@ -383,7 +383,7 @@ inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
             A(i, l) = Ail;
             g = gcd(Ail, g);
         }
-        std::cout << "g = " << g << std::endl;
+        // std::cout << "g = " << g << std::endl;
         if (g > 1) {
             for (size_t l = 0; l < A.numCol(); ++l)
                 if (int64_t Ail = A(i, l))
