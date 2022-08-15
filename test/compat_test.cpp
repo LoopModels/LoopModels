@@ -34,7 +34,11 @@ TEST(TrivialPruneBoundsNew, BasicAssertions) {
     affp->pruneBounds();
     std::cout << *affp << std::endl;
     SHOWLN(affp->A);
-    EXPECT_EQ(affp->A.numRow(), 3);
+    // M >= 0 is redundant
+    // because M -1 >= m >= 0
+    // hence, we should be left with 2 bounds
+    EXPECT_EQ(affp->A.numRow(), 2);
+    EXPECT_EQ(affp->A, stringToIntMatrix("[0 0 1; -2 1 -1]"));
 }
 
 // TEST(TrivialPruneBounds, BasicAssertions) {
