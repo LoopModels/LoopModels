@@ -1,5 +1,6 @@
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
+#include "Macro.hpp"
 #include "MatrixStringParse.hpp"
 #include "Symbolics.hpp"
 #include <cstdint>
@@ -27,13 +28,13 @@ TEST(TrivialPruneBoundsNew, BasicAssertions) {
     // auto affp{AffineLoopNest::construct(A)};
     // swap and eliminate
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
-    Vector<int64_t> query2{1, 0, 0};
     llvm::SmallVector<Polynomial::Monomial> symbols{
         Polynomial::Monomial(Polynomial::ID{1})};
     auto affp{AffineLoopNest::construct(A, symbols)};
     affp->pruneBounds();
     std::cout << *affp << std::endl;
-    // EXPECT_EQ(affp->A.numRow(), 2);
+    SHOWLN(affp->A);
+    EXPECT_EQ(affp->A.numRow(), 3);
 }
 
 // TEST(TrivialPruneBounds, BasicAssertions) {

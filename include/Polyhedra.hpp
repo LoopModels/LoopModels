@@ -146,26 +146,22 @@ struct Polyhedra {
 
                 if (C.greaterEqual(diff)) {
                     eraseConstraint(A, i);
-		    --j; // `i < j`, and `i` has been removed
-                    std::cout << "i: " << i << " greater Equal returns true"
-                              << std::endl;
+                    std::cout << "i: " << i << "; j: " << j
+                              << " greater Equal returns true" << std::endl;
                     std::cout << A << std::endl;
-                } else {
-                    diff *= (-1);
-                    if (C.greaterEqual(diff)) {
-                        eraseConstraint(A, j);
-			break; // `j` is gone
-                        std::cout << "i: " << i
-                                  << " greater Equal returns false"
-                                  << std::endl;
-                        std::cout << A << std::endl;
-                    }
+                    --j; // `i < j`, and `i` has been removed
+                } else if (C.greaterEqual(diff *= -1)) {
+                    eraseConstraint(A, j);
+                    std::cout << "i: " << i << "; j : " << j
+                              << " greater Equal returns false" << std::endl;
+                    std::cout << A << std::endl;
+                    break; // `j` is gone
                 }
             }
         }
     }
 
-    size_t getNumVar() const { return A.numCol() - C.getNumConstTerms(); }
+    size_t getNumVar() const { return A.numCol() - 1; }
     size_t getNumInequalityConstraints() const { return A.numRow(); }
     size_t getNumEqualityConstraints() const { return E.numRow(); }
 
@@ -173,28 +169,22 @@ struct Polyhedra {
         !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
     bool lessZero(const IntMatrix &A, const size_t r) const {
-        return C.less(A(r, _(begin, C.getNumConstTerms())));
+        return C.less(A(r, _));
     }
     bool lessEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.lessEqual(A(r, _(begin, C.getNumConstTerms())));
+        return C.lessEqual(A(r, _));
     }
     bool greaterZero(const IntMatrix &A, const size_t r) const {
-        return C.greater(A(r, _(begin, C.getNumConstTerms())));
+        return C.greater(A(r, _));
     }
     bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
+        return C.greaterEqual(A(r, _));
     }
-    bool lessZero(const size_t r) const {
-        return C.less(A(r, _(begin, C.getNumConstTerms())));
-    }
-    bool lessEqualZero(const size_t r) const {
-        return C.lessEqual(A(r, _(begin, C.getNumConstTerms())));
-    }
-    bool greaterZero(const size_t r) const {
-        return C.greater(A(r, _(begin, C.getNumConstTerms())));
-    }
+    bool lessZero(const size_t r) const { return C.less(A(r, _)); }
+    bool lessEqualZero(const size_t r) const { return C.lessEqual(A(r, _)); }
+    bool greaterZero(const size_t r) const { return C.greater(A(r, _)); }
     bool greaterEqualZero(const size_t r) const {
-        return C.greaterEqual(A(r, _(begin, C.getNumConstTerms())));
+        return C.greaterEqual(A(r, _));
     }
 
     bool equalNegative(const size_t i, const size_t j) const {
@@ -343,15 +333,15 @@ struct Polyhedra {
     }
     void dump() const { std::cout << *this; }
 
-    bool isEmptyBang() {
+    bool isEmptyBang(size_t numConst = 1) {
         const size_t numVar = getNumVar();
-        const size_t numConst = C.getNumConstTerms();
         for (size_t i = 0; i < numVar; ++i)
             if (!allZero(A.getCol(numConst + i)))
                 if (removeVariable(numConst + i))
                     return true;
         return false;
     }
+
     bool isEmpty() const {
         auto B{*this};
         return B.isEmptyBang();

@@ -285,7 +285,7 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
 
 template <typename T>
 concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
-    // { t.getNumConstTerms() } -> std::convertible_to<size_t>;
+    { t.getNumConstTerms() } -> std::convertible_to<size_t>;
     { t.greaterEqual(x) } -> std::convertible_to<bool>;
     { t.lessEqual(x) } -> std::convertible_to<bool>;
     { t.greater(x) } -> std::convertible_to<bool>;
@@ -306,37 +306,49 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
     IntMatrix V;
     Vector<int64_t> d;
+    size_t numVar;
     size_t numRowDiff; // This variable stores the different row size of H
                        // matrix and truncated H matrix
     using BaseComparator<LinearSymbolicComparator>::greaterEqual;
+    size_t getNumConstTermsImpl() const { return numVar; }
     void init(PtrMatrix<int64_t> Ap,
-              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
-        const auto [numCon, numVar] = Ap.size();
+              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
+        const size_t numCon = Ap.numRow() + pos0;
+        numVar = Ap.numCol();
         auto &A = V;
         A.resizeForOverwrite(numVar + numCon, 2 * numCon);
         A = 0;
+        if (pos0)
+            A(0, 0) = pos0;
         // A = [Ap' 0
         //      S   I]
-        A(_(begin, numVar), _(begin, numCon)) = Ap.transpose();
+        A(_(begin, numVar), _(pos0, numCon)) = Ap.transpose();
         for (size_t j = 0; j < numCon; ++j) {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numCon) = 1;
         }
         initCore();
     }
-    void init(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep) {
-        const auto [numInEqCon, numVar] = Ap.size();
+    void init(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0 = true) {
+        const size_t numInEqCon = Ap.numRow() + pos0;
+        numVar = Ap.numCol();
         const size_t numEqCon = Ep.numRow();
-        IntMatrix A(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        auto &A = V;
+        A.resizeForOverwrite(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        A = 0;
         // A = [Ap' Ep' 0
         //      S   0   I]
-        A(_(begin, numVar), _(begin, numInEqCon)) = Ap.transpose();
+        // if pos0
+        if (pos0)
+            A(0, 0) = pos0;
+        A(_(begin, numVar), _(pos0, numInEqCon)) = Ap.transpose();
+        // Ap(_, _(pos0, end)).transpose();
         A(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) =
             Ep.transpose();
 
         for (size_t j = 0; j < numInEqCon; ++j) {
             A(j + numVar, j) = -1;
-            A(j + numVar, j + numInEqCon) = 1;
+            A(j + numVar, j + numInEqCon + numEqCon) = 1;
         }
         initCore();
     }
@@ -369,15 +381,19 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
 
     static LinearSymbolicComparator
     construct(PtrMatrix<int64_t> Ap,
-              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}) {
+              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
         LinearSymbolicComparator cmp;
-        cmp.init(Ap);
+        cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
         return cmp;
     };
     static LinearSymbolicComparator construct(PtrMatrix<int64_t> Ap,
-                                              PtrMatrix<int64_t> Ep) {
+                                              bool pos0) {
+        return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
+    };
+    static LinearSymbolicComparator
+    construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0 = true) {
         LinearSymbolicComparator cmp;
-        cmp.init(Ap, Ep);
+        cmp.init(Ap, Ep, pos0);
         return cmp;
     };
 
@@ -445,6 +461,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
+	    if (optS.hasValue())
+		optS->printResult();
             return optS.hasValue();
         }
 

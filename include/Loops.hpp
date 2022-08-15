@@ -8,6 +8,7 @@
 #include "Comparators.hpp"
 #include "Constraints.hpp"
 #include "EmptyArrays.hpp"
+#include "Macro.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
@@ -52,7 +53,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         assert(R.numCol() + numPeeled == getNumLoops());
         assert(R.numRow() + numPeeled == getNumLoops());
         assert(numPeeled < getNumLoops());
-        const size_t numConst = C.getNumConstTerms() + numPeeled;
+        const size_t numConst = getNumSymbols() + numPeeled;
         const auto [M, N] = A.size();
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
         ret->symbols = symbols;
@@ -71,19 +72,10 @@ struct AffineLoopNest : SymbolicPolyhedra,
         return A(j, _(0, getNumSymbols()));
     }
     void removeLoopBang(size_t i) {
-        // for (size_t i = 0; i < A.numRow(); ++i)
-        // assert(!allZero(A.getRow(i)));
-        // std::cout << "removing i = " << i << "; A=\n" << A << std::endl;
-        fourierMotzkin(A, i + C.getNumConstTerms());
-        // std::cout << "removed i = " << i << "; A=\n" << A << std::endl;
-        // for (size_t i = 0; i < A.numRow(); ++i)
-        // assert(!allZero(A.getRow(i)));
+	SHOW(i);
+	CSHOWLN(getNumSymbols());
+        fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
-        // // std::cout << "After prune bounds i = " << i << "; A =\n"<< A <<
-        // // std::endl;
-        // for (size_t i = 0; i < A.numRow(); ++i)
-        //     assert(!allZero(A.getRow(i)));
-        // assert(allZero(A.getCol(i + C.getNumConstTerms())));
     }
     llvm::IntrusiveRefCntPtr<AffineLoopNest> removeLoop(size_t i) {
         auto L{llvm::makeIntrusiveRefCnt<AffineLoopNest>(*this)};
@@ -149,9 +141,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
         // tmp.removeLoopBang(i);
         for (size_t i = 0; i < numPrevLoops; ++i)
             if (i != _i)
-                tmp.removeVariableAndPrune(i + C.getNumConstTerms());
+                tmp.removeVariableAndPrune(i + getNumSymbols());
         bool indep = true;
-        const size_t numConst = C.getNumConstTerms();
+        const size_t numConst = getNumSymbols();
         for (size_t n = 0; n < tmp.A.numRow(); ++n)
             if ((tmp.A(n, _i + numConst) != 0) &&
                 (tmp.A(n, numPrevLoops + numConst) != 0))
@@ -159,7 +151,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         if (indep)
             return false;
         SymbolicPolyhedra margi{tmp};
-        margi.removeVariableAndPrune(numPrevLoops + C.getNumConstTerms());
+        margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
         SymbolicPolyhedra tmp2;
         std::cout << "\nmargi=" << std::endl;
         margi.dump();
@@ -206,8 +198,11 @@ struct AffineLoopNest : SymbolicPolyhedra,
 
     // void printBound(std::ostream &os, const IntMatrix &A, size_t i,
     void printBound(std::ostream &os, size_t i, int64_t sign) const {
-        const size_t numVar = getNumVar();
-        const size_t numConst = C.getNumConstTerms();
+        const size_t numVar = getNumLoops();
+        const size_t numConst = getNumSymbols();
+	SHOW(numVar);
+	CSHOW(numConst);
+	CSHOWLN(A.numCol());
         // printVector(std::cout << "A.getRow(i) = ", A.getRow(i)) << std::endl;
         for (size_t j = 0; j < A.numRow(); ++j) {
             int64_t Aji = A(j, i + numConst) * sign;
@@ -253,7 +248,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
     friend std::ostream &operator<<(std::ostream &os,
                                     const AffineLoopNest &alnb) {
         AffineLoopNest aln{alnb};
-        size_t i = aln.getNumVar();
+        size_t i = aln.getNumLoops();
+	SHOWLN(alnb.getNumLoops());
+	SHOWLN(aln.getNumLoops());
         while (true) {
             os << "Loop " << --i << " lower bounds: " << std::endl;
             aln.printLowerBound(os, i);

@@ -88,9 +88,7 @@ struct Simplex {
     PtrVector<int64_t> getTableauRow(size_t i) const {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
-    PtrVector<int64_t> getBasicConstraints() const {
-        return getTableauRow(0);
-    }
+    PtrVector<int64_t> getBasicConstraints() const { return getTableauRow(0); }
     PtrVector<int64_t> getCost() const { return getTableauRow(1); }
     MutPtrVector<int64_t> getTableauRow(size_t i) {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
@@ -98,9 +96,9 @@ struct Simplex {
     MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
     MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<int64_t> getTableauCol(size_t i) const {
-        return StridedVector<int64_t>{
-            tableau.data() + i + numExtraRows * tableau.rowStride(),
-            getNumConstraints(), tableau.rowStride()};
+        return StridedVector<int64_t>{tableau.data() + i +
+                                          numExtraRows * tableau.rowStride(),
+                                      getNumConstraints(), tableau.rowStride()};
     }
     StridedVector<int64_t> getBasicVariables() const {
         return getTableauCol(0);
@@ -112,9 +110,9 @@ struct Simplex {
         return getTableauCol(numExtraCols);
     }
     MutStridedVector<int64_t> getTableauCol(size_t i) {
-        return MutStridedVector<int64_t>{tableau.data() + i +
-                                          numExtraRows * tableau.rowStride(),
-                                      getNumConstraints(), tableau.rowStride()};
+        return MutStridedVector<int64_t>{
+            tableau.data() + i + numExtraRows * tableau.rowStride(),
+            getNumConstraints(), tableau.rowStride()};
     }
     MutStridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
     // MutStridedVector<int64_t> getDenominators() { return getTableauCol(1); }
@@ -122,6 +120,7 @@ struct Simplex {
         return getTableauCol(numExtraCols);
     }
     bool initiateFeasible() {
+        tableau(0, 0) = 0;
         // remove trivially redundant constraints
         std::cout << "constraints=\n" << getConstraints() << std::endl;
         hermiteNormalForm();
@@ -195,12 +194,14 @@ struct Simplex {
             MutPtrMatrix<int64_t> C{getConstraints()};
             auto basicVars{getBasicVariables()};
             MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-            auto costs{getCost()};
+            MutPtrVector<int64_t> costs{getCost()};
             // for (auto &&c : costs)
             for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
                 c = 0;
             printVector(std::cout, augmentVars) << std::endl;
-            std::cout << "tableau = \n" << tableau << std::endl;
+            printVector(std::cout << "costs: ", PtrVector<int64_t>(costs))
+                << std::endl;
+            std::cout << "tableau =" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
@@ -212,14 +213,16 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
+            printVector(std::cout << "costs: ", PtrVector<int64_t>(costs))
+                << std::endl;
             std::cout << "about to run; tableau =" << tableau << std::endl;
-            if (int64_t r = runCore())
-                return r;
+            if (runCore() != 0)
+                return 1;
             std::cout << "initialized tableau =" << tableau << std::endl;
             // all augment vars are now 0
             truncateVars(numVar);
         }
-        std::cout << "initialized tableau = \n" << tableau << std::endl;
+        std::cout << "final tableau =" << tableau << std::endl;
         inCanonicalForm = true;
         return 0;
     }
@@ -251,7 +254,8 @@ struct Simplex {
         }
         return --j;
     }
-    int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f, int enteringVariable) {
+    int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
+                      int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
         std::cout << "leavingVariable = " << leavingVariable << std::endl;
         if (leavingVariable == -1)
@@ -275,7 +279,7 @@ struct Simplex {
         return f;
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
-    int64_t runCore(int64_t f = 1) {
+    Rational runCore(int64_t f = 1) {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
@@ -283,14 +287,17 @@ struct Simplex {
             int enteringVariable = getEnteringVariable(C(0, _));
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
-                return C(0, 0) / f;
+                std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
+                          << f << std::endl;
+            if (enteringVariable == -1)
+                return Rational::create(C(0, 0), f);
             f = makeBasic(C, f, enteringVariable);
             if (f == 0)
                 return std::numeric_limits<int64_t>::max(); // unbounded
         }
     }
     // set basicVar's costs to 0, and then runCore()
-    int64_t run() {
+    Rational run() {
         MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
@@ -306,9 +313,9 @@ struct Simplex {
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
-    static llvm::Optional<Simplex>
-    positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B) {
-	std::cout << "Entering positive variables!"<<std::endl;
+    static llvm::Optional<Simplex> positiveVariables(PtrMatrix<int64_t> A,
+                                                     PtrMatrix<int64_t> B) {
+        std::cout << "Entering positive variables!" << std::endl;
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -329,13 +336,15 @@ struct Simplex {
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
-        std::cout << "before costs simplex.tableau =" << simplex.tableau << std::endl;
+        std::cout << "before costs simplex.tableau =" << simplex.tableau
+                  << std::endl;
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
             consts[i] = A(i, 0);
         for (size_t i = 0; i < numStrict; ++i)
             consts[i + numSlack] = B(i, 0);
-        std::cout << "about to initialize simplex.tableau =" << simplex.tableau << std::endl;
+        std::cout << "about to initialize simplex.tableau =" << simplex.tableau
+                  << std::endl;
         if (simplex.initiateFeasible())
             return {};
         return simplex;
@@ -417,6 +426,25 @@ struct Simplex {
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
         return !unSatisfiable(x, off);
+    }
+    void printResult() {
+        auto C{getConstraints()};
+        auto basicVars{getBasicVariables()};
+        std::cout << "Simplex solution:" << std::endl;
+        for (size_t i = 0; i < basicVars.size(); ++i) {
+            size_t v = basicVars(i);
+            if (v <= numSlackVar)
+                continue;
+            if (C(i, 0)) {
+                if (v < C.numCol()) {
+                    std::cout << "v_" << v << " = " << C(i, 0) << " / "
+                              << C(i, v) << std::endl;
+                } else {
+                    std::cout << "v_" << v << " = " << C(i, 0) << std::endl;
+                    assert(false);
+                }
+            }
+        }
     }
     /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {

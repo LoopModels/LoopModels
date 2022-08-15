@@ -13,7 +13,7 @@ TEST(BasicCompare, BasicAssertions) {
     // Move all the variables to one side of the inequality and make it larger than zero
     // and represent them in a matrix A, such that we could have assembled Ax >= 0
     IntMatrix A = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]");
-    auto comp = LinearSymbolicComparator::construct(std::move(A));
+    auto comp = LinearSymbolicComparator::construct(std::move(A),false);
     Vector<int64_t> query{-1, 0, 0, 1, 0};
     
     //llvm::SmallVector<int64_t, 16> query{1, 0, 0, -1, 0};
@@ -23,7 +23,7 @@ TEST(BasicCompare, BasicAssertions) {
     // We add two more constraints to the last example
     // we add x >= a; b >= a
     IntMatrix A2 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1; -1 1 0 0 0; -1 0 0 1 0]");
-    auto comp2 = LinearSymbolicComparator::construct(std::move(A2));
+    auto comp2 = LinearSymbolicComparator::construct(std::move(A2),false);
     Vector<int64_t> query2{-1, 0, 0, 0, 1};
     Vector<int64_t> query3{0, 0, 0, -1, 1};
     EXPECT_TRUE(comp2.greaterEqual(query2));
@@ -33,7 +33,7 @@ TEST(BasicCompare, BasicAssertions) {
     //We change the final constraint to x >= 2a + b
     //Vector representation of the diagonal matrix will become [1, ... , 1, 2]
     IntMatrix A3 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1; -1 1 0 0 0; -2 -1 0 1 0]");
-    auto comp3 = LinearSymbolicComparator::construct(std::move(A3));
+    auto comp3 = LinearSymbolicComparator::construct(std::move(A3),false);
     //Vector<int64_t> query2{-1, 0, 0, 1, 0};
     // Vector<int64_t> query3{0, 0, 0, -1, 1};
     Vector<int64_t> query4{-3, 0, 0, 1, 0}; // x >= 3a is expected to be true
@@ -50,7 +50,7 @@ TEST(BasicCompare, BasicAssertions) {
 TEST(V2Matrix, BasicAssertions) {
     IntMatrix A = stringToIntMatrix("[0 -1 0 1 0 0; 0 0 -1 1 0 0; 0 0 0 1 -1 0; 0 0 0 1 0 -1]");
     //IntMatrix A = stringToIntMatrix(" [1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]");
-    auto comp = LinearSymbolicComparator::construct(A);
+    auto comp = LinearSymbolicComparator::construct(A, false);
     auto [H, U] = NormalForm::hermite(std::move(A));
     IntMatrix Ht = H.transpose();
     //std::cout << "Ht matrix:" << Ht << std::endl;
@@ -69,8 +69,26 @@ TEST(V2Matrix, BasicAssertions) {
             EXPECT_EQ(NS(i, j), Vt(offset+i, j));}
 }
 
-TEST(TmpTest, BasicAssertions){
-    IntMatrix A = stringToIntMatrix("[1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]");
-    auto NS = NormalForm::nullSpace(A);
-    std::cout<< NS <<std::endl;
+TEST(ConstantTest, BasicAssertions){
+    auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+    auto comp = LinearSymbolicComparator::construct(A);
+    SHOWLN(comp.U);
+    SHOWLN(comp.V);
+    SHOWLN(comp.d);
+    Vector<int64_t> query0{-1, 0, 0};
+    Vector<int64_t> query1{1, 0, 0};
+    EXPECT_FALSE(comp.greaterEqual(query0));
+    EXPECT_TRUE(comp.greaterEqual(query1));
+}
+
+TEST(ConstantTest2, BasicAssertions){
+    auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+    auto comp = LinearSymbolicComparator::construct(A,false);
+    SHOWLN(comp.U);
+    SHOWLN(comp.V);
+    SHOWLN(comp.d);
+    Vector<int64_t> query0{-1, 0, 0};
+    Vector<int64_t> query1{1, 0, 0};
+    EXPECT_FALSE(comp.greaterEqual(query0));
+    EXPECT_FALSE(comp.greaterEqual(query1));
 }

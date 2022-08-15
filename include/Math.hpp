@@ -1775,7 +1775,7 @@ template <typename T, unsigned STORAGE = 8>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
     llvm::SmallVector<T, TOTALSTORAGE> mem;
-    const size_t M;
+    size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
