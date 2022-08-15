@@ -57,11 +57,11 @@ struct AffineLoopNest : SymbolicPolyhedra,
         const auto [M, N] = A.size();
         auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
         ret->symbols = symbols;
-        ret->C = C;
         IntMatrix &B = ret->A;
         B.resizeForOverwrite(M, N);
         B(_, _(begin, numConst)) = A(_, _(begin, numConst));
         B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
+        ret->C = LinearSymbolicComparator::construct(B);
         std::cout << "A = \n" << A << std::endl;
         std::cout << "R = \n" << R << std::endl;
         std::cout << "B = \n" << B << std::endl;
@@ -72,8 +72,8 @@ struct AffineLoopNest : SymbolicPolyhedra,
         return A(j, _(0, getNumSymbols()));
     }
     void removeLoopBang(size_t i) {
-	SHOW(i);
-	CSHOWLN(getNumSymbols());
+        SHOW(i);
+        CSHOWLN(getNumSymbols());
         fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
@@ -126,6 +126,14 @@ struct AffineLoopNest : SymbolicPolyhedra,
         }
         return ret;
     }
+    // bool isEmpty(size_t numConst) const {
+    //     return static_cast<const SymbolicPolyhedra *>(this)->isEmpty(
+    //         getNumSymbols());
+    // }
+    // bool isEmptyBang(size_t numConst) {
+    //     return static_cast<SymbolicPolyhedra *>(this)->isEmptyBang(
+    //         getNumSymbols());
+    // }
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         SymbolicPolyhedra tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
@@ -200,9 +208,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
     void printBound(std::ostream &os, size_t i, int64_t sign) const {
         const size_t numVar = getNumLoops();
         const size_t numConst = getNumSymbols();
-	SHOW(numVar);
-	CSHOW(numConst);
-	CSHOWLN(A.numCol());
+        SHOW(numVar);
+        CSHOW(numConst);
+        CSHOWLN(A.numCol());
         // printVector(std::cout << "A.getRow(i) = ", A.getRow(i)) << std::endl;
         for (size_t j = 0; j < A.numRow(); ++j) {
             int64_t Aji = A(j, i + numConst) * sign;
@@ -249,8 +257,8 @@ struct AffineLoopNest : SymbolicPolyhedra,
                                     const AffineLoopNest &alnb) {
         AffineLoopNest aln{alnb};
         size_t i = aln.getNumLoops();
-	SHOWLN(alnb.getNumLoops());
-	SHOWLN(aln.getNumLoops());
+        SHOWLN(alnb.getNumLoops());
+        SHOWLN(aln.getNumLoops());
         while (true) {
             os << "Loop " << --i << " lower bounds: " << std::endl;
             aln.printLowerBound(os, i);

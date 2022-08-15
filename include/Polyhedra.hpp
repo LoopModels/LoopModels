@@ -138,7 +138,7 @@ struct Polyhedra {
                 std::cout << "Now i, j are " << i << " " << j << std::endl;
                 // diff = A(j, _) - A(--i, _);
 
-                std::cout << "print diff first:" << diff << std::endl;
+                std::cout << "print diff first: " << diff << std::endl;
                 std::cout << "print whether greater equal: "
                           << C.greaterEqual(diff) << std::endl;
 
@@ -258,15 +258,15 @@ struct Polyhedra {
                 eraseConstraint(A, j);
     }
     // returns `true` if empty, `false` otherwise
-    bool checkZeros() {
-        for (size_t c = A.numRow(); c != 0;)
-            if (allZero(A(--c, _))) {
-                // std::cout << "checkZeros c = " << c << std::endl;
-                // dump();
-                if (lessZero(c))
-                    return true;
-                eraseConstraint(A, c);
-            }
+    bool checkZeros() const {
+        // for (size_t c = A.numRow(); c != 0;)
+        //     if (lessZero(A(--c, _))) {
+        //         // std::cout << "checkZeros c = " << c << std::endl;
+        //         // dump();
+        //         if (lessZero(c))
+        //             return true;
+        //         eraseConstraint(A, c);
+        //     }
         return false;
     }
     // A'x <= b
@@ -280,21 +280,18 @@ struct Polyhedra {
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
-    bool removeVariable(IntMatrix &A, IntMatrix &E, const size_t i) {
+    void removeVariable(IntMatrix &A, IntMatrix &E, const size_t i) {
         if (substituteEquality(A, E, i))
             fourierMotzkin(A, i);
         if (E.numRow() > 1)
             NormalForm::simplifySystem(E);
-        if (checkZeros())
-            return true;
         pruneBounds(A, E);
-        return false;
     }
 
-    bool removeVariable(const size_t i) {
+    void removeVariable(const size_t i) {
         if constexpr (hasEqualities)
             return removeVariable(A, E, i);
-        return removeVariable(A, i);
+	removeVariable(A, i);
     }
     void removeVariableAndPrune(const size_t i) {
         if constexpr (hasEqualities) {
@@ -305,15 +302,6 @@ struct Polyhedra {
         pruneBounds();
     }
 
-    static void erasePossibleNonUniqueElements(
-        IntMatrix &A, llvm::SmallVectorImpl<unsigned> &colsToErase) {
-        // std::ranges::sort(colsToErase);
-        std::sort(colsToErase.begin(), colsToErase.end());
-        for (auto it = std::unique(colsToErase.begin(), colsToErase.end());
-             it != colsToErase.begin();) {
-            eraseConstraint(A, *(--it));
-        }
-    }
     void dropEmptyConstraints(IntMatrix &A) const {
         for (size_t c = A.numRow(); c != 0;)
             if (allZero(A(--c, _)))
@@ -332,19 +320,11 @@ struct Polyhedra {
         return os2;
     }
     void dump() const { std::cout << *this; }
-
-    bool isEmptyBang(size_t numConst = 1) {
-        const size_t numVar = getNumVar();
-        for (size_t i = 0; i < numVar; ++i)
-            if (!allZero(A.getCol(numConst + i)))
-                if (removeVariable(numConst + i))
-                    return true;
-        return false;
-    }
-
     bool isEmpty() const {
-        auto B{*this};
-        return B.isEmptyBang();
+	for (size_t r = 0; r < A.numRow(); ++r)
+	    if (C.less(A(r,_)))
+		return true;
+	return false;
     }
     void truncateVars(size_t numVar) {
         if constexpr (hasEqualities) {

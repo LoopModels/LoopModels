@@ -407,10 +407,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // Full column rank case
         if (d.size() == 0) {
             auto b = U(_, _(begin, query.size())) * query;
-            for (size_t i = V.numRow(); i < b.size(); ++i) {
+            for (size_t i = V.numRow(); i < b.size(); ++i) 
                 if (b(i))
-                    return false;
-            }
+                    return false;            
             auto H = V;
             auto oldn = H.numCol();
             H.resizeCols(oldn + 1);
@@ -463,7 +462,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 optS->printResult();
             return optS.hasValue();
         }
-
         return true;
         // return optS.hasValue();
     }
