@@ -8,57 +8,57 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-TEST(TrivialPruneBounds, BasicAssertions) {
-    // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
-    //[0 1 0;
-    //  -1 1 -1;
-    //  0 0 1;
-    //  -2 1 -1;
-    // 1 0 1;]
-    //  query = [1 0 0];
-    // Constraints: {
-    //  0 <= M; (0)
-    //  -1 + M - m >= 0; (1)
-    //  m >= 0; (2)
-    //-2 + M - m >= 0 (3)
-    // 1 + m >= 0;(4)
-    //  diff = (3) - （4）
-    // }
-    // Our test: whether we could erase (1) or (3). query = (1) - (3)
-    // auto affp{AffineLoopNest::construct(A)};
-    // swap and eliminate
-    //
-    // M >= 0
-    // -1 + M - m >= 0
-    // m >= 0
-    // -2 + M -m >= 0
-    // 1 + m >= 0
-    auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
-    llvm::SmallVector<Polynomial::Monomial> symbols{
-        Polynomial::Monomial(Polynomial::ID{1})};
-    auto affp{AffineLoopNest::construct(A, symbols)};
-    affp->pruneBounds();
-    std::cout << *affp << std::endl;
-    SHOWLN(affp->A);
-    // M >= 0 is redundant
-    // because M -1 >= m >= 0
-    // hence, we should be left with 2 bounds
-    EXPECT_EQ(affp->A.numRow(), 2);
-    EXPECT_EQ(affp->A, stringToIntMatrix("[0 0 1; -2 1 -1]"));
-}
+// TEST(TrivialPruneBounds, BasicAssertions) {
+//     // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
+//     //[0 1 0;
+//     //  -1 1 -1;
+//     //  0 0 1;
+//     //  -2 1 -1;
+//     // 1 0 1;]
+//     //  query = [1 0 0];
+//     // Constraints: {
+//     //  0 <= M; (0)
+//     //  -1 + M - m >= 0; (1)
+//     //  m >= 0; (2)
+//     //-2 + M - m >= 0 (3)
+//     // 1 + m >= 0;(4)
+//     //  diff = (3) - （4）
+//     // }
+//     // Our test: whether we could erase (1) or (3). query = (1) - (3)
+//     // auto affp{AffineLoopNest::construct(A)};
+//     // swap and eliminate
+//     //
+//     // M >= 0
+//     // -1 + M - m >= 0
+//     // m >= 0
+//     // -2 + M -m >= 0
+//     // 1 + m >= 0
+//     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+//     llvm::SmallVector<Polynomial::Monomial> symbols{
+//         Polynomial::Monomial(Polynomial::ID{1})};
+//     auto affp{AffineLoopNest::construct(A, symbols)};
+//     affp->pruneBounds();
+//     std::cout << *affp << std::endl;
+//     SHOWLN(affp->A);
+//     // M >= 0 is redundant
+//     // because M -1 >= m >= 0
+//     // hence, we should be left with 2 bounds
+//     EXPECT_EQ(affp->A.numRow(), 2);
+//     EXPECT_EQ(affp->A, stringToIntMatrix("[0 0 1; -2 1 -1]"));
+// }
 
-TEST(TrivialPruneBounds2, BasicAssertions) {
-    auto A{stringToIntMatrix(
-        "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
-    llvm::SmallVector<Polynomial::Monomial> symbols{
-        Polynomial::Monomial(Polynomial::ID{1}),
-        Polynomial::Monomial(Polynomial::ID{2})};
-    auto affp{AffineLoopNest::construct(A, symbols)};
-    affp->pruneBounds();
-    affp->dump();
-    SHOWLN(affp->A);
-    EXPECT_EQ(affp->A.numRow(), 3);
-}
+// TEST(TrivialPruneBounds2, BasicAssertions) {
+//     auto A{stringToIntMatrix(
+//         "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
+//     llvm::SmallVector<Polynomial::Monomial> symbols{
+//         Polynomial::Monomial(Polynomial::ID{1}),
+//         Polynomial::Monomial(Polynomial::ID{2})};
+//     auto affp{AffineLoopNest::construct(A, symbols)};
+//     affp->pruneBounds();
+//     affp->dump();
+//     SHOWLN(affp->A);
+//     EXPECT_EQ(affp->A.numRow(), 3);
+// }
 TEST(LessTrivialPruneBounds, BasicAssertions) {
 
     // Ax * b >= 0

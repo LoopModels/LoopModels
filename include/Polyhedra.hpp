@@ -130,11 +130,11 @@ struct Polyhedra {
         Vector<int64_t> diff{A.numCol()};
         for (size_t j = A.numRow(); j;) {
             for (size_t i = --j; i;) {
-                std::cout << "--------------Start new " << i << "--------------"
-                          << std::endl;
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
+                std::cout << "--------------Start new " << i << "--------------"
+                          << std::endl;
                 std::cout << "Now i, j are " << i << " " << j << std::endl;
                 // diff = A(j, _) - A(--i, _);
 

@@ -360,12 +360,16 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
+	std::cout << "A before simplifySystemImp" << std::endl;
+	SHOWLN(A);
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
         size_t numRowPre = R;
         while ((R) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
+	SHOWLN(H);
+	SHOWLN(R);
         numRowDiff = numRowPre - R;
         if (H.isSquare()) {
             d.clear();
@@ -399,6 +403,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
 
     bool greaterEqual(PtrVector<int64_t> query) const {
         auto nEqs = V.numCol() / 2;
+	SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
             auto b = U(_, _(begin, query.size())) * query;
@@ -412,19 +417,17 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = b(i);
             NormalForm::solveSystem(H);
-            for (size_t i = nEqs; i < H.numRow(); ++i) {
+            for (size_t i = nEqs; i < H.numRow(); ++i)
                 if (auto rhs = H(i, oldn))
                     if ((rhs > 0) != (H(i, i) > 0))
                         return false;
-            }
             return true;
         }
         // Column rank deficient case
         else {
-            auto tmpU =
-                U(_(begin, U.numRow() - numRowDiff), _(begin, U.numCol()));
+	    const size_t numRow = U.numRow() - numRowDiff;
             Vector<int64_t> b =
-                U(_(begin, tmpU.numRow()), _(begin, query.size())) * query;
+                U(_(begin, numRow), _(begin, query.size())) * query;
             Vector<int64_t> dinv = d; // copy
             auto Dlcm = dinv[0];
             // We represent D martix as a vector, and multiply the lcm to the
@@ -434,23 +437,20 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < dinv.size(); ++i)
                 dinv(i) = Dlcm / dinv(i);
             b *= dinv;
-            // for (size_t i = 0; i < b.size(); ++i)
-            //     b(i) *= dinv(i);
-            IntMatrix JV1(nEqs, tmpU.numRow());
-            for (size_t i = 0; i < nEqs; ++i)
-                for (size_t j = 0; j < tmpU.numRow(); ++j)
-                    JV1(i, j) = V(i + nEqs, j);
-            auto c = JV1 * b;
-            auto NSdim = V.numRow() - tmpU.numRow();
+	    Vector<int64_t> c = V(_(nEqs,end),_(begin,numRow)) * b;
+            auto NSdim = V.numRow() - numRow;
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
+	    SHOWLN(V);
+	    SHOWLN(U);
+	    SHOWLN(c);
             IntMatrix expandW(nEqs, NSdim * 2 + 1);
             for (size_t i = 0; i < nEqs; ++i) {
                 expandW(i, 0) = c(i);
                 // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j) {
-                    auto val = V(i + nEqs, tmpU.numRow() + j) * Dlcm;
+                    auto val = V(i + nEqs, numRow + j) * Dlcm;
                     expandW(i, j + 1) = -val;
                     expandW(i, j + NSdim + 1) = val;
                 }

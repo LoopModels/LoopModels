@@ -2015,8 +2015,8 @@ template <typename T>
 std::ostream &operator<<(std::ostream &os, PtrVector<T> const &A) {
     return printVector(os, A);
 }
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const Vector<T> &A) {
+inline std::ostream &operator<<(std::ostream &os,
+                                const AbstractVector auto &A) {
     return printVector(os, A.view());
 }
 

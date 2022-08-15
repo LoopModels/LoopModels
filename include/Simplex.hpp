@@ -129,7 +129,7 @@ struct Simplex {
         // original number of variables
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
-        // std::cout << "C=" << C << std::endl;
+        std::cout << "C=" << C << std::endl;
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
@@ -198,11 +198,10 @@ struct Simplex {
             // for (auto &&c : costs)
             for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
                 c = 0;
-            // std::cout << augmentVars << std::endl;
-            // std::cout << "costs: " << PtrVector<int64_t>(costs)
-            // << std::endl;
-            // std::cout << "tableau =" << tableau << std::endl;
-            // std::cout << "numVar = " << numVar << std::endl;
+            printVector(std::cout << "augmentVars: ", augmentVars) << std::endl;
+            std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
+            std::cout << "tableau =" << tableau << std::endl;
+            std::cout << "numVar = " << numVar << std::endl;
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
                 basicVars[a] = i + numVar;
@@ -213,15 +212,15 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-            // std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
-            // std::cout << "about to run; tableau =" << tableau << std::endl;
+            std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
+            std::cout << "about to run; tableau =" << tableau << std::endl;
             if (runCore() != 0)
                 return 1;
-            // std::cout << "initialized tableau =" << tableau << std::endl;
+            std::cout << "initialized tableau =" << tableau << std::endl;
             // all augment vars are now 0
             truncateVars(numVar);
         }
-        // std::cout << "final tableau =" << tableau << std::endl;
+        std::cout << "final tableau =" << tableau << std::endl;
         inCanonicalForm = true;
         return 0;
     }
@@ -243,8 +242,10 @@ struct Simplex {
             int64_t Civ = C(i, enteringVariable);
             if (Civ > 0) {
                 int64_t Ci0 = C(i, 0);
-                assert(Ci0 >= 0);
-                if (n * Ci0 < Civ * d) {
+		if (Ci0 == 0)
+		    return --i;
+                assert(Ci0 > 0);
+                if ((n * Ci0) < (Civ * d)) {
                     n = Civ;
                     d = Ci0;
                     j = i;
@@ -256,7 +257,7 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
-        // std::cout << "leavingVariable = " << leavingVariable << std::endl;
+        std::cout << "leavingVariable = " << leavingVariable << std::endl;
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -282,14 +283,12 @@ struct Simplex {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-            // std::cout << "C =" << C << std::endl;
+            std::cout << "C =" << C << std::endl;
             int enteringVariable = getEnteringVariable(C(0, _));
-            // std::cout << "enteringVariable = " << enteringVariable <<
-            // std::endl;
+            std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
-                // std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " /
-                // "
-                // << f << std::endl;
+                std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
+                          << f << std::endl;
             if (enteringVariable == -1)
                 return Rational::create(C(0, 0), f);
             f = makeBasic(C, f, enteringVariable);
@@ -439,10 +438,10 @@ struct Simplex {
                 continue;
             if (C(i, 0)) {
                 if (v < C.numCol()) {
-                    // std::cout << "v_" << v << " = " << C(i, 0) << " / "
-                    // << C(i, v) << std::endl;
+                    std::cout << "v_" << v - numSlackVar << " = " << C(i, 0)
+                              << " / " << C(i, v) << std::endl;
                 } else {
-                    // std::cout << "v_" << v << " = " << C(i, 0) << std::endl;
+                    std::cout << "v_" << v << " = " << C(i, 0) << std::endl;
                     assert(false);
                 }
             }
