@@ -125,7 +125,6 @@ struct Polyhedra {
     //         }
     //     }
     // }
-
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
         for (size_t j = A.numRow(); j;) {

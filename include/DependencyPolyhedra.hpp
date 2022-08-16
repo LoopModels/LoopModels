@@ -43,6 +43,18 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     inline size_t getNumScheduleCoefficients() const {
         return getNumVar() - nullStep.size() + 1 - getNumSymbols();
     }
+    MutPtrVector<int64_t> getSymbols(size_t i) {
+        return A(i, _(begin, getNumSymbols()));
+    }
+    PtrVector<int64_t> getSymbols(size_t i) const {
+        return A(i, _(begin, getNumSymbols()));
+    }
+    llvm::Optional<int64_t> getCompTimeOffset(size_t i) const {
+        for (size_t j = 1; j < getNumSymbols(); ++j)
+            if (A(i, j))
+                return {};
+        return A(i, 0);
+    }
 
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
@@ -184,7 +196,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Where x = [inds0..., inds1..., time..]
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
-        : Polyhedra<IntMatrix, SymbolicComparator>{} {
+        : Polyhedra<IntMatrix, LinearSymbolicComparator>{} {
 
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;
@@ -650,13 +662,13 @@ struct Dependence {
         if (checkDirection(pair, x, y, numLambda)) {
             pair.first.truncateVars(numLambda +
                                     dxy.getNumScheduleCoefficients());
-            deps.emplace_back(std::move(dxy), std::move(pair.first),
-                              std::move(pair.second), &x, &y, true);
+            deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
+                                         std::move(pair.second), &x, &y, true});
         } else {
             pair.second.truncateVars(numLambda +
                                      dxy.getNumScheduleCoefficients());
-            deps.emplace_back(std::move(dxy), std::move(pair.second),
-                              std::move(pair.first), &y, &x, false);
+            deps.emplace_back(Dependence{std::move(dxy), std::move(pair.second),
+                                         std::move(pair.first), &y, &x, false});
         }
     }
 
@@ -689,8 +701,8 @@ struct Dependence {
         }
         pair.first.truncateVars(numLambda + numScheduleCoefs);
         // pair.first.removeExtraVariables(numScheduleCoefs);
-        deps.emplace_back(dxy, std::move(pair.first), std::move(pair.second),
-                          in, out, isFwd);
+        deps.emplace_back(Dependence{dxy, std::move(pair.first),
+                                     std::move(pair.second), in, out, isFwd});
         // pair is invalid
         const size_t timeDim = dxy.getTimeDim();
         assert(timeDim);
@@ -781,8 +793,9 @@ struct Dependence {
         std::cout << "after 0ing, time dxy = \n" << dxy << std::endl;
 #endif
         farkasBackups.first.truncateVars(numLambda + numScheduleCoefs);
-        deps.emplace_back(std::move(dxy), std::move(farkasBackups.first),
-                          std::move(farkasBackups.second), out, in, !isFwd);
+        deps.emplace_back(
+            Dependence{std::move(dxy), std::move(farkasBackups.first),
+                       std::move(farkasBackups.second), out, in, !isFwd});
     }
 
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,

@@ -259,7 +259,6 @@ struct LoopBlock {
             return p->second;
         } else {
             const size_t numVar = aln->getNumVar();
-            const size_t numConstraints = aln->getNumInequalityConstraints();
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
@@ -407,8 +406,8 @@ struct LoopBlock {
                     // phi * L = (phi * K) * J
                     // NOTE: we're assuming the schedule is the identity
                     // otherwise, new schedule = old schedule * K
-                    SquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
-                    size_t phiDim = Phi.numCol();
+                    MutSquarePtrMatrix<int64_t> Phi = maj.schedule.getPhi();
+                    // size_t phiDim = Phi.numCol();
                     Phi = K(_(peelOuter, end), _(peelOuter, end));
                 }
             }
@@ -446,6 +445,7 @@ struct LoopBlock {
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
+    /*
     Simplex omniSimplex() const {
         const size_t numScheduleCoefs = countNumScheduleCoefs();
         auto [numLambda, numBounding, numConstraints] =
@@ -481,6 +481,7 @@ struct LoopBlock {
         }
         return simplex;
     }
+    */
 };
 
 std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {

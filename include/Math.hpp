@@ -576,21 +576,17 @@ template <typename T> struct PtrVector {
         return true;
     }
 
-    const T &operator[](size_t i) {
-        assert(i < N);
-        return mem[i];
-    }
     const T &operator[](size_t i) const {
-        assert(i < N);
-        return mem[i];
-    }
-    const T &operator()(size_t i) {
         assert(i < N);
         return mem[i];
     }
     const T &operator()(size_t i) const {
         assert(i < N);
         return mem[i];
+    }
+    const T &operator()(End) const {
+        assert(N);
+        return mem[N - 1];
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.begin <= i.end);
@@ -638,6 +634,14 @@ template <typename T> struct MutPtrVector {
     const T &operator()(size_t i) const {
         assert(i < N);
         return mem[i];
+    }
+    T &operator()(End) {
+        assert(N);
+        return mem[N - 1];
+    }
+    const T &operator()(End) const {
+        assert(N);
+        return mem[N - 1];
     }
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
@@ -974,11 +978,11 @@ template <typename T> struct MutStridedVector {
     T &operator()(size_t i) { return d[i * x]; }
     const T &operator()(size_t i) const { return d[i * x]; }
 
-    MutStridedVector<T> &operator()(Range<size_t, size_t> i) {
+    MutStridedVector<T> operator()(Range<size_t, size_t> i) {
         return MutStridedVector<T>{
             .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
     }
-    StridedVector<T> &operator()(Range<size_t, size_t> i) const {
+    StridedVector<T> operator()(Range<size_t, size_t> i) const {
         return StridedVector<T>{
             .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
     }
@@ -1398,8 +1402,17 @@ template <typename T> struct MutPtrMatrix {
 };
 template <typename T, typename P> struct BaseMatrix {
     using eltype = std::remove_reference_t<T>;
-    inline T *data() { return static_cast<P *>(this)->data(); }
-    inline const T *data() const {
+    inline T *mutdata() { return static_cast<P *>(this)->data(); }
+    inline auto *data() {
+        if constexpr (P::isMutable) {
+            return mutdata();
+        } else {
+            return static_cast<P *>(this)->data();
+            // const T* p = static_cast<P *>(this)->data();
+            // return p;
+        }
+    }
+    inline const auto *data() const {
         return static_cast<const P *>(this)->data();
     }
     inline size_t numRow() const {
@@ -1678,6 +1691,7 @@ struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
     static constexpr bool fixedNumRow = M;
     static constexpr bool fixedNumCol = N;
     static constexpr bool canResize = false;
+    static constexpr bool isMutable = true;
     T mem[S];
     static constexpr size_t numRow() { return M; }
     static constexpr size_t numCol() { return N; }
@@ -1694,6 +1708,7 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> mem;
     size_t N, X;
     static constexpr bool canResize = true;
+    static constexpr bool isMutable = true;
 
     Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
 
@@ -1723,6 +1738,7 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     llvm::SmallVector<T, S> mem;
     size_t M;
     static constexpr bool canResize = true;
+    static constexpr bool isMutable = true;
 
     Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
 
@@ -1751,10 +1767,12 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
+    static constexpr bool isMutable = false;
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
     inline size_t rowStride() const { return M; }
+    const T *data() { return mem; }
     const T *data() const { return mem; }
     constexpr bool isSquare() const { return true; }
 };
@@ -1766,6 +1784,7 @@ struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
+    static constexpr bool isMutable = true;
 
     size_t numRow() const { return M; }
     size_t numCol() const { return M; }
@@ -1773,8 +1792,13 @@ struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
 
     T *data() { return mem; }
     const T *data() const { return mem; }
-    operator SquarePtrMatrix<T>() const { return SquarePtrMatrix<T>(mem, M); }
+    operator SquarePtrMatrix<T>() const {
+        return SquarePtrMatrix<T>{.mem = mem, .M = M};
+    }
     constexpr bool isSquare() const { return true; }
+    MutSquarePtrMatrix<T> operator=(const AbstractMatrix auto &B) {
+        return copyto(*this, B);
+    }
 };
 
 template <typename T, unsigned STORAGE = 8>
@@ -1785,6 +1809,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
+    static constexpr bool isMutable = true;
 
     SquareMatrix(size_t m)
         : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
@@ -1813,7 +1838,7 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         return MutSquarePtrMatrix<T>{.mem = mem.data(), .M = size_t(M)};
     }
     operator SquarePtrMatrix<T>() const {
-        return SquarePtrMatrix<T>{mem.data(), size_t(M)};
+        return SquarePtrMatrix<T>{.mem = mem.data(), .M = M};
     }
     static constexpr bool isSquare() { return true; }
 };
@@ -1824,6 +1849,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
 
     size_t M, N, X;
     static constexpr bool canResize = true;
+    static constexpr bool isMutable = true;
 
     T *data() { return mem.data(); }
     const T *data() const { return mem.data(); }
