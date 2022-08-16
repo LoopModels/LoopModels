@@ -16,6 +16,6 @@ TEST(SimplexTest, BasicAssertions){
     C[3] = -2;
     C[4] = -3;
     C[5] = -4;
-    std::cout << "S.tableau = \n" << S.tableau << std::endl;
+    std::cout << "S.tableau =" << S.tableau << std::endl;
     EXPECT_EQ(S.run(), 20);
 }

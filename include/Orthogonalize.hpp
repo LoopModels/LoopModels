@@ -59,7 +59,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
     const AffineLoopNest &alnp = *(ai[0]->loop);
     const size_t numLoops = alnp.getNumLoops();
-    const size_t numSymbols = alnp.C.getNumConstTerms();
+    const size_t numSymbols = alnp.getNumSymbols();
     size_t numRow = 0;
     for (auto a : ai)
         numRow += a->arrayDim();
@@ -91,8 +91,10 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     std::cout << "K.size() = (" << K.numRow() << ", " << K.numCol()
               << "); K.transpose().size() = (" << K.transpose().numRow()
               << ",  " << K.transpose().numCol() << ")" << std::endl;
-    std::cout << "K = \n" << K << "\nK' =\n" << K.transpose() << std::endl;
+    std::cout << "K =" << K << "\nK' =" << K.transpose() << std::endl;
     AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
+    SHOWLN(alnp.A(_, _(numSymbols, end)));
+    SHOWLN(AK(_, _(numSymbols, end)));
     llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
         AffineLoopNest::construct(std::move(AK), alnp.symbols);
     alnNew->pruneBounds();
@@ -114,16 +116,8 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     newArrayRefs.reserve(numRow);
     i = 0;
     for (auto a : ai) {
-        newArrayRefs.emplace_back(a->arrayID, alnNew, a->arrayDim());
-        MutPtrMatrix<int64_t> A = newArrayRefs.back().indexMatrix();
-        for (size_t j = 0; j < numLoops; ++j)
-            for (size_t k = 0; k < A.numCol(); ++k)
-                A(j, k) = KS(j, k + i);
-        i += A.numCol();
-        llvm::SmallVector<std::pair<MPoly, MPoly>> &stridesOffsets =
-            newArrayRefs.back().stridesOffsets;
-        for (size_t d = 0; d < A.numCol(); ++d)
-            stridesOffsets[d] = a->stridesOffsets[d];
+	newArrayRefs.emplace_back(*a, alnNew, KS(_,_(i,i+a->arrayDim())));
+	i += a->arrayDim();
     }
     return newArrayRefs;
 }

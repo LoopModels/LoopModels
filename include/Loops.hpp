@@ -77,7 +77,8 @@ struct AffineLoopNest : SymbolicPolyhedra,
         fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> removeLoop(size_t i) {
+    [[nodiscard]] llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    removeLoop(size_t i) const {
         auto L{llvm::makeIntrusiveRefCnt<AffineLoopNest>(*this)};
         // AffineLoopNest L = *this;
         L->removeLoopBang(i);
@@ -97,7 +98,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
         }
         return ret;
     }
-    std::pair<IntMatrix, IntMatrix> bounds(size_t i) {
+    std::pair<IntMatrix, IntMatrix> bounds(size_t i) const {
         const auto [numNeg, numPos] = countSigns(A, i);
         std::pair<IntMatrix, IntMatrix> ret;
         ret.first.resizeForOverwrite(numNeg, A.numCol());

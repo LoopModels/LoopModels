@@ -360,16 +360,16 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
-	std::cout << "A before simplifySystemImp" << std::endl;
-	SHOWLN(A);
+	// std::cout << "A before simplifySystemImp" << std::endl;
+	// SHOWLN(A);
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
         size_t numRowPre = R;
         while ((R) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
-	SHOWLN(H);
-	SHOWLN(R);
+	// SHOWLN(H);
+	// SHOWLN(R);
         numRowDiff = numRowPre - R;
         if (H.isSquare()) {
             d.clear();
@@ -379,7 +379,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         auto Vt = IntMatrix::identity(Ht.numRow());
         NormalForm::solveSystem(Ht, Vt);
         d = Ht.diag();
-        std::cout << "D matrix: " << d << std::endl;
+        // std::cout << "D matrix: " << d << std::endl;
         V = Vt.transpose();
     }
 
@@ -403,7 +403,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
 
     bool greaterEqual(PtrVector<int64_t> query) const {
         auto nEqs = V.numCol() / 2;
-	SHOWLN(d.size());
+	// SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
             auto b = U(_, _(begin, query.size())) * query;
@@ -441,9 +441,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-	    SHOWLN(V);
-	    SHOWLN(U);
-	    SHOWLN(c);
+	    // SHOWLN(V);
+	    // SHOWLN(U);
+	    // SHOWLN(c);
             IntMatrix expandW(nEqs, NSdim * 2 + 1);
             for (size_t i = 0; i < nEqs; ++i) {
                 expandW(i, 0) = c(i);

@@ -303,11 +303,17 @@ std::ostream &operator<<(std::ostream &os, VarID s) {
 
 inline bool isZero(auto x) { return x == 0; }
 
-bool allZero(const auto &x) {
+static bool allZero(const auto &x) {
     for (auto &a : x)
         if (!isZero(a))
             return false;
     return true;
+}
+static size_t countNonZero(const auto &x) {
+    size_t i = 0;
+    for (auto &a : x)
+        i += (a != 0);
+    return i;
 }
 
 template <typename T>
@@ -1387,7 +1393,7 @@ template <typename T> struct MutPtrMatrix {
         assert(numCol() == N);
     }
     operator PtrMatrix<T>() {
-        PtrMatrix<T>{.mem = mem, .M = M, .N = N, .X = X};
+        return PtrMatrix<T>{.mem = mem, .M = M, .N = N, .X = X};
     }
 };
 template <typename T, typename P> struct BaseMatrix {
@@ -1842,7 +1848,10 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             for (size_t n = 0; n < N; ++n)
                 mem[m * X + n] = A(m, n);
     }
-
+    auto begin() { return mem.begin(); }
+    auto end() { return mem.end(); }
+    auto begin() const { return mem.begin(); }
+    auto end() const { return mem.end(); }
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
@@ -2647,19 +2656,19 @@ inline auto operator*(const AbstractMatrix auto &a,
                       const AbstractMatrix auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
-    std::cout << "a.numRow() = " << a.numRow()
-              << "; AA.numRow() = " << AA.numRow() << std::endl;
-    std::cout << "b.numRow() = " << b.numRow()
-              << "; BB.numRow() = " << BB.numRow() << std::endl;
-    std::cout << "a.numCol() = " << a.numCol()
-              << "; AA.numCol() = " << AA.numCol() << std::endl;
-    std::cout << "b.numCol() = " << b.numCol()
-              << "; BB.numCol() = " << BB.numCol() << std::endl;
-    std::cout << "a = \n"
-              << a << "\nAA = \n"
-              << AA << "\nb =\n"
-              << b << "\nBB =\n"
-              << BB << std::endl;
+    // std::cout << "a.numRow() = " << a.numRow()
+    //           << "; AA.numRow() = " << AA.numRow() << std::endl;
+    // std::cout << "b.numRow() = " << b.numRow()
+    //           << "; BB.numRow() = " << BB.numRow() << std::endl;
+    // std::cout << "a.numCol() = " << a.numCol()
+    //           << "; AA.numCol() = " << AA.numCol() << std::endl;
+    // std::cout << "b.numCol() = " << b.numCol()
+    //           << "; BB.numCol() = " << BB.numCol() << std::endl;
+    // std::cout << "a ="
+    //           << a << "\nAA ="
+    //           << AA << "\nb ="
+    //           << b << "\nBB ="
+    //           << BB << std::endl;
     assert(AA.numCol() == BB.numRow());
     return MatMatMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }

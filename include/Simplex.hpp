@@ -10,6 +10,8 @@
 #include <llvm/ADT/SmallVector.h>
 #include <tuple>
 
+// #define VERBOSESIMPLEX
+
 // The goal here:
 // this Simplex struct will orchestrate search through the solution space
 // it will add constraints as it goes, e.g. corresponding to desired properties
@@ -122,14 +124,15 @@ struct Simplex {
     bool initiateFeasible() {
         tableau(0, 0) = 0;
         // remove trivially redundant constraints
-        // std::cout << "constraints=\n" << getConstraints() << std::endl;
         hermiteNormalForm();
         // [ I;  X ; b ]
         //
         // original number of variables
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
-        std::cout << "C=" << C << std::endl;
+#ifdef VERBOSESIMPLEX
+	std::cout << "C=" << C << std::endl;
+#endif
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
             x = -2;
@@ -198,10 +201,12 @@ struct Simplex {
             // for (auto &&c : costs)
             for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
                 c = 0;
+#ifdef VERBOSESIMPLEX
             printVector(std::cout << "augmentVars: ", augmentVars) << std::endl;
             std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
             std::cout << "tableau =" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
+#endif
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
                 basicVars[a] = i + numVar;
@@ -212,15 +217,21 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
+#ifdef VERBOSESIMPLEX
             std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
             std::cout << "about to run; tableau =" << tableau << std::endl;
+#endif
             if (runCore() != 0)
                 return 1;
+#ifdef VERBOSESIMPLEX
             std::cout << "initialized tableau =" << tableau << std::endl;
+#endif
             // all augment vars are now 0
             truncateVars(numVar);
         }
+#ifdef VERBOSESIMPLEX
         std::cout << "final tableau =" << tableau << std::endl;
+#endif
         inCanonicalForm = true;
         return 0;
     }
@@ -257,7 +268,9 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
+#ifdef VERBOSESIMPLEX
         std::cout << "leavingVariable = " << leavingVariable << std::endl;
+#endif
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -283,12 +296,16 @@ struct Simplex {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
+#ifdef VERBOSESIMPLEX
             std::cout << "C =" << C << std::endl;
+#endif
             int enteringVariable = getEnteringVariable(C(0, _));
+#ifdef VERBOSESIMPLEX
             std::cout << "enteringVariable = " << enteringVariable << std::endl;
             if (enteringVariable == -1)
                 std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
                           << f << std::endl;
+#endif
             if (enteringVariable == -1)
                 return Rational::create(C(0, 0), f);
             f = makeBasic(C, f, enteringVariable);
