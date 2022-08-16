@@ -8,124 +8,6 @@
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
 
-// Stride terms are sorted based on VarID
-// NOTE: we require all Const sources be folded into the Affine, and their ids
-// set identically. thus, `getCount(VarType::Constant)` must always return
-// either `0` or `1`.
-// struct Stride {
-//     const std::pair<MPoly, MPoly> *strideAndOffset;
-//     const int64_t *inds;
-//     const size_t dim;
-//     const size_t memStride;
-
-//     inline size_t size() const { return dim; }
-//     inline auto begin() { return indices().begin(); }
-//     inline auto end() { return indices().end(); }
-//     inline auto begin() const { return indices().begin(); }
-//     inline auto end() const { return indices().end(); }
-//     inline auto cbegin() const { return indices().begin(); }
-//     inline auto cend() const { return indices().end(); }
-//     size_t rank() const {
-//         size_t r = 0;
-//         for (size_t i = 0; i < dim * memStride; i += memStride)
-//             r += (inds[i] != 0);
-//         return r;
-//     }
-//     // int64_t &operator[](size_t i) { return inds[i]; }
-//     int64_t operator[](size_t i) const { return inds[i * memStride]; }
-//     // llvm::MutableArrayRef<int64_t> indices() {
-//     //     return llvm::MutableArrayRef{inds, dim};
-//     // }
-//     StridedVector<const int64_t> indices() const {
-//         return StridedVector<const int64_t>{inds, dim, memStride};
-//     }
-//     bool isLoopIndependent() const { return allZero(indices()); }
-//     // MPoly &stride() { return strideAndOffset->first; }
-//     // MPoly &offset() { return strideAndOffset->second; }
-//     const MPoly &stride() const { return strideAndOffset->first; }
-//     const MPoly &offset() const { return strideAndOffset->second; }
-//     bool operator==(Stride x) {
-//         return indices() == x.indices() && stride() == x.stride() &&
-//                x.offset() == x.offset();
-//     }
-// };
-// struct StrideIterator {
-//     Stride x;
-//     StrideIterator operator++() {
-//         x.strideAndOffset++;
-//         x.inds++;
-//         return *this;
-//     }
-//     StrideIterator operator--() {
-//         x.strideAndOffset--;
-//         x.inds--;
-//         return *this;
-//     }
-//     bool operator==(StrideIterator y) {
-//         return x.strideAndOffset == y.x.strideAndOffset;
-//     }
-//     Stride operator*() { return x; }
-// };
-
-// std::ostream &operator<<(std::ostream &os, Stride const &axis) {
-//     bool strideIsOne = isOne(axis.stride());
-//     if (!strideIsOne) {
-//         os << axis.stride() << " * ( ";
-//     }
-//     bool printPlus = false;
-//     for (size_t i = 0; i < axis.dim; ++i) {
-//         int64_t c = axis[i];
-//         if (c) {
-//             if (printPlus) {
-//                 if (c < 0) {
-//                     c *= -1;
-//                     os << " - ";
-//                 } else {
-//                     os << " + ";
-//                 }
-//             }
-//             if (c == 1) {
-//                 os << "i_" << i << " ";
-//             } else {
-//                 os << c << " * i_" << i << " ";
-//             }
-//             printPlus = true;
-//         }
-//     }
-//     if (!isZero(axis.offset())) {
-//         if (printPlus) {
-//             os << " + ";
-//         }
-//         os << axis.offset();
-//     }
-//     if (!strideIsOne) {
-//         os << " )";
-//     }
-//     return os;
-// }
-
-// static constexpr unsigned ArrayRefPreAllocSize = 2;
-
-// M*N*i + M*j + i
-// [M*N + 1]*i, [M]*j
-// M*N
-//
-// x = i1 * (M*N) + j1 * M + i1 * 1 = i2 * (M*N) + j2 * M + i2 * 1
-//
-// MN * [ i1 ] = MN * [ i2 ]
-// M  * [ j1 ] = M  * [ j2 ]
-// 1  * [ i1 ] = M  * [ i2 ]
-//
-// divrem(x, MN) = (i1, j1 * M + i1) == (i2, j2 * M + i2)
-// i1 == i2
-// j1 * M + ...
-
-// struct ArrayReferenceFlat {
-//     size_t arrayID;
-//     std::shared_ptr<AffineLoopNest> loop;
-//     llvm::SmallVector<std::pair<MPoly, VarID>, ArrayRefPreAllocSize>
-//     inds;
-// };
 
 // `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
 // `baz` needs its own (of depth 2):
@@ -205,31 +87,9 @@ struct ArrayReference {
           loop(llvm::IntrusiveRefCntPtr<AffineLoopNest>(&loop)) {
         resize(dim);
     };
-    // StrideIterator begin() {
-    //     return StrideIterator{
-    //         Stride{stridesOffsets.data(), indices.data(),
-    //         getNumLoops()}};
-    // }
-    // StrideIterator end() {
-    //     return StrideIterator{Stride{stridesOffsets.end(),
-    //                                  indices.data() + indices.size(),
-    //                                  getNumLoops()}};
-    // }
-    // StrideIterator begin() const {
-    //     return {stridesOffsets.data(), indices.data(), getNumLoops(),
-    //             arrayDim()};
-    // }
-    // StrideIterator end() const {
-    //     return {stridesOffsets.end(), indices.data() + arrayDim(),
-    //             getNumLoops(), arrayDim()};
-    // }
-    // Stride operator[](size_t i) const {
-    //     return {stridesOffsets.data() + i, indices.data() + i, getNumLoops(),
-    //             arrayDim()};
-    // }
     bool isLoopIndependent() const { return allZero(indices); }
     bool allConstantIndices() const { return !hasSymbolicOffsets; }
-    // Assumes stridesOffsets are sorted
+    // Assumes strides and offsets are sorted
     bool stridesMatch(const ArrayReference &x) const {
         if (arrayDim() != x.arrayDim())
             return false;

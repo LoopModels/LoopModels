@@ -26,9 +26,8 @@ IntMatrix orthogonalize(IntMatrix A) {
                 n += A(i, k) * A(j, k);
                 d += A(j, k) * A(j, k);
             }
-            for (size_t k = 0; k < A.numCol(); ++k) {
+            for (size_t k = 0; k < A.numCol(); ++k)
                 buff[k] -= Rational::createPositiveDenominator(A(j, k) * n, d);
-            }
         }
         int64_t lm = 1;
         for (size_t k = 0; k < A.numCol(); ++k)
@@ -95,7 +94,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     std::cout << "K = \n" << K << "\nK' =\n" << K.transpose() << std::endl;
     AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
     llvm::IntrusiveRefCntPtr<AffineLoopNest> alnNew =
-        AffineLoopNest::construct(std::move(AK), alnp.C);
+        AffineLoopNest::construct(std::move(AK), alnp.symbols);
     alnNew->pruneBounds();
     // llvm::makeIntrusiveRefCnt<AffineLoopNest>(matmulnt(alnp.A, K),
     //                                           alnp.b, alnp.poset);
