@@ -197,7 +197,9 @@ template <typename T> struct BaseComparator {
         llvm::SmallVector<int64_t, 8> xm{x.begin(), x.begin() + N};
         return greater(view(xm));
     }
-    inline bool greater(Vector<int64_t> &x) const { return greater(x.view()); }
+    inline bool greater(Vector<int64_t> &x) const {
+        return greater(MutPtrVector<int64_t>(x));
+    }
     inline bool less(Vector<int64_t> &x) const { return less(x.view()); }
     inline bool lessEqual(Vector<int64_t> &x) const {
         return lessEqual(x.view());
@@ -307,8 +309,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix V;
     Vector<int64_t> d;
     size_t numVar;
-    size_t numRowDiff; // This variable stores the different row size of H
-                       // matrix and truncated H matrix
+    size_t numEquations;
     using BaseComparator<LinearSymbolicComparator>::greaterEqual;
     size_t getNumConstTermsImpl() const { return numVar; }
     void init(PtrMatrix<int64_t> Ap,
@@ -327,6 +328,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numCon) = 1;
         }
+        numEquations = numCon;
         initCore();
     }
     void init(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0 = true) {
@@ -350,6 +352,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             A(j + numVar, j) = -1;
             A(j + numVar, j + numInEqCon + numEqCon) = 1;
         }
+        numEquations = numInEqCon + numEqCon;
         initCore();
     }
     void initCore() {
@@ -360,17 +363,17 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
-	// std::cout << "A before simplifySystemImp" << std::endl;
-	// SHOWLN(A);
+        // std::cout << "A before simplifySystemImp" << std::endl;
+        // SHOWLN(A);
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
-        size_t numRowPre = R;
         while ((R) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
-	// SHOWLN(H);
-	// SHOWLN(R);
-        numRowDiff = numRowPre - R;
+        U.truncateRows(R);
+        // SHOWLN(H);
+        // SHOWLN(R);
+        // numRowTrunc = R;
         if (H.isSquare()) {
             d.clear();
             return;
@@ -379,7 +382,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         auto Vt = IntMatrix::identity(Ht.numRow());
         NormalForm::solveSystem(Ht, Vt);
         d = Ht.diag();
-        // std::cout << "D matrix: " << d << std::endl;
+        // std::cout << "D = " << d << std::endl;
         V = Vt.transpose();
     }
 
@@ -402,21 +405,22 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     };
 
     bool greaterEqual(PtrVector<int64_t> query) const {
-        auto nEqs = V.numCol() / 2;
-	// SHOWLN(d.size());
+        // SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
+            // SHOWLN(U.numCol());
+            // SHOWLN(query.size());
             auto b = U(_, _(begin, query.size())) * query;
-            for (size_t i = V.numRow(); i < b.size(); ++i) 
+            for (size_t i = V.numRow(); i < b.size(); ++i)
                 if (b(i))
-                    return false;            
+                    return false;
             auto H = V;
             auto oldn = H.numCol();
             H.resizeCols(oldn + 1);
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = b(i);
             NormalForm::solveSystem(H);
-            for (size_t i = nEqs; i < H.numRow(); ++i)
+            for (size_t i = numEquations; i < H.numRow(); ++i)
                 if (auto rhs = H(i, oldn))
                     if ((rhs > 0) != (H(i, i) > 0))
                         return false;
@@ -424,9 +428,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         // Column rank deficient case
         else {
-	    const size_t numRow = U.numRow() - numRowDiff;
+            size_t numSlack = V.numRow() - numEquations;
             Vector<int64_t> b =
-                U(_(begin, numRow), _(begin, query.size())) * query;
+                U(_, _(begin, query.size())) * query;
             Vector<int64_t> dinv = d; // copy
             auto Dlcm = dinv[0];
             // We represent D martix as a vector, and multiply the lcm to the
@@ -436,25 +440,27 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < dinv.size(); ++i)
                 dinv(i) = Dlcm / dinv(i);
             b *= dinv;
-	    Vector<int64_t> c = V(_(nEqs,end),_(begin,numRow)) * b;
-            auto NSdim = V.numRow() - numRow;
+	    size_t numRowTrunc = U.numRow();
+            Vector<int64_t> c =
+                V(_(numEquations, end), _(begin, numRowTrunc)) * b;
+            auto NSdim = V.numCol() - numRowTrunc;
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-	    // SHOWLN(V);
-	    // SHOWLN(U);
-	    // SHOWLN(c);
-            IntMatrix expandW(nEqs, NSdim * 2 + 1);
-            for (size_t i = 0; i < nEqs; ++i) {
+            // SHOWLN(V);
+            // SHOWLN(U);
+            // SHOWLN(c);
+            IntMatrix expandW(numSlack, NSdim * 2 + 1);
+            for (size_t i = 0; i < numSlack; ++i) {
                 expandW(i, 0) = c(i);
                 // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j) {
-                    auto val = V(i + nEqs, numRow + j) * Dlcm;
+                    auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
                     expandW(i, j + 1) = -val;
                     expandW(i, j + NSdim + 1) = val;
                 }
             }
-            // std::cout <<"expandW =" << expandW << std::endl;
+	    // SHOWLN(expandW);
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};

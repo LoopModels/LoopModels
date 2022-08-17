@@ -1,7 +1,9 @@
+#include <cstdint>
 #include <iostream>
 #include <gtest/gtest.h>
 #include <memory>
 #include "Comparators.hpp"
+#include "Math.hpp"
 #include "MatrixStringParse.hpp"
 //#include "../include/NormalForm.hpp"
 #include "llvm/ADT/SmallVector.h"
@@ -92,3 +94,17 @@ TEST(ConstantTest2, BasicAssertions){
     EXPECT_FALSE(comp.greaterEqual(query0));
     EXPECT_FALSE(comp.greaterEqual(query1));
 }
+
+TEST(EqTest, BasicAssertions){
+    IntMatrix A{stringToIntMatrix("[-2 1 0 -1 0 0 0; 0 0 0 1 0 0 0; -2 0 1 0 -1 0 0; 0 0 0 0 1 0 0; -2 1 0 0 0 -1 0; 0 0 0 0 0 1 0; -2 0 1 0 0 0 -1; 0 0 0 0 0 0 1]")};
+    IntMatrix E{stringToIntMatrix("[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]")};
+    auto comp = LinearSymbolicComparator::construct(A,E);
+    Vector<int64_t> diff = A(7,_) - A(3,_);
+    SHOWLN(comp.greaterEqual(diff));
+    SHOWLN(comp.greater(diff));
+    EXPECT_TRUE(comp.greaterEqual(diff));
+    EXPECT_TRUE(comp.greater(diff));
+    diff*=-1;
+    EXPECT_FALSE(comp.greaterEqual(diff));
+}
+

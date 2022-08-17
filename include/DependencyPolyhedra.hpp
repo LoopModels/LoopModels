@@ -249,13 +249,14 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             for (size_t j = 0; j < oldToNewMap1.size(); ++j)
                 A(nc0 + i, 1 + oldToNewMap1[j]) = ar1.loop->A(i, 1 + j);
             for (size_t j = 0; j < numDep1Var; ++j)
-                A(i, j + numSymbols + numDep0Var) =
+                A(nc0 + i, j + numSymbols + numDep0Var) =
                     ar0.loop->A(i, j + ar1.loop->getNumSymbols());
         }
-        auto A0 = ar0.indexMatrix();
-        auto A1 = ar1.indexMatrix();
-        auto O0 = ar0.offsetMatrix();
-        auto O1 = ar1.offsetMatrix();
+        PtrMatrix<int64_t> A0 = ar0.indexMatrix();
+        PtrMatrix<int64_t> A1 = ar1.indexMatrix();
+        PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
+        PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
+        SHOWLN(O0.numRow());
         // printMatrix(std::cout << "A0 =\n", A0);
         // printMatrix(std::cout << "\nA1 =\n", A1) << std::endl;
         // std::cout << "indexDim = " << indexDim << std::endl;
@@ -266,32 +267,32 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             auto [d0, d1] = dims[i];
             // std::cout << "d0 = " << d0 << "; d1 = " << d1 << std::endl;
             if (d0 >= 0) {
-                for (size_t i = 0; i < nc0; ++i) {
-                    E(i, 0) = O0(i, 0);
-                    for (size_t j = 0; j < O0.numCol() - 1; ++j)
-                        E(i, 1 + oldToNewMap0[j]) = O0(d0, 1 + j);
-                    for (size_t j = 0; j < numDep0Var; ++j)
-                        E(i, j + numSymbols) = A0(j, d0);
-                }
+                E(i, 0) = O0(i, 0);
+                for (size_t j = 0; j < O0.numCol() - 1; ++j)
+                    E(i, 1 + oldToNewMap0[j]) = O0(d0, 1 + j);
+                for (size_t j = 0; j < numDep0Var; ++j)
+                    E(i, j + numSymbols) = A0(j, d0);
             }
             if (d1 >= 0) {
-                for (size_t i = 0; i < nc1; ++i) {
-                    E(i, 0) -= O1(i, 0);
-                    for (size_t j = 0; j < O1.numCol() - 1; ++j)
-                        E(i, 1 + oldToNewMap1[j]) -= O1(d1, 1 + j);
-                    for (size_t j = 0; j < numDep0Var; ++j)
-                        E(i, j + numSymbols + numDep0Var) = -A1(j, d1);
-                }
-            }
-            for (size_t i = 0; i < nullDim; ++i) {
-                for (size_t j = 0; j < NS.numCol(); ++j) {
-                    int64_t nsij = NS(i, j);
-                    E(indexDim + i, j + numSymbols) = nsij;
-                    E(indexDim + i, j + numSymbols + numDep0Var) = -nsij;
-                }
-                E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
+                E(i, 0) -= O1(i, 0);
+                for (size_t j = 0; j < O1.numCol() - 1; ++j)
+                    E(i, 1 + oldToNewMap1[j]) -= O1(d1, 1 + j);
+                for (size_t j = 0; j < numDep0Var; ++j)
+                    E(i, j + numSymbols + numDep0Var) = -A1(j, d1);
             }
         }
+        for (size_t i = 0; i < nullDim; ++i) {
+            for (size_t j = 0; j < NS.numCol(); ++j) {
+                int64_t nsij = NS(i, j);
+                E(indexDim + i, j + numSymbols) = nsij;
+                E(indexDim + i, j + numSymbols + numDep0Var) = -nsij;
+            }
+            E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
+        }
+        SHOWLN(A);
+        SHOWLN(E);
+        C.init(A, E);
+        SHOWLN(*this);
         pruneBounds();
     }
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
@@ -407,6 +408,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // assert(fw.E.numRow() == fw.q.size());
         // assert(bw.E.numRow() == bw.q.size());
         // return pair;
+    }
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const DependencePolyhedra &p) {
+        return printConstraints(
+            printConstraints(os << "\n", p.A, p.getNumSymbols()), p.E,
+            p.getNumSymbols(), false);
     }
 
 }; // namespace DependencePolyhedra

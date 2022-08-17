@@ -807,9 +807,9 @@ template <typename T> struct Vector {
     auto begin() const { return data.begin(); }
     auto end() const { return data.end(); }
     size_t size() const { return data.size(); }
-    MutPtrVector<T> view() {
-        return PtrVector<T>{.mem = data.data(), .N = data.size()};
-    };
+    // MutPtrVector<T> view() {
+    //     return MutPtrVector<T>{.mem = data.data(), .N = data.size()};
+    // };
     PtrVector<T> view() const {
         return PtrVector<T>{.mem = data.data(), .N = data.size()};
     };
@@ -886,7 +886,7 @@ template <typename T> struct Vector {
             y /= x;
         return *this;
     }
-    template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {};
+    template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {}
     void clear() { data.clear(); }
     void extendOrAssertSize(size_t N) const { assert(N == data.size()); }
     void extendOrAssertSize(size_t N) {
@@ -1903,7 +1903,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
         size_t minMMM = std::min(M, MM);
-        if ((XX > X) && (M * N)) {
+        if ((XX > X) && M && N) {
             // need to copy
             for (size_t m = minMMM - 1; m > 0; --m) {
                 for (size_t n = N; n > 0;) {

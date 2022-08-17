@@ -322,7 +322,7 @@ struct Simplex {
             int64_t v = basicVars[c++];
             // std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
             // << "; C.numCol()  = " << C.numCol() << std::endl;
-            if (int64_t cost = C(0, v))
+            if (C(0, v))
                 f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
         return runCore(f);

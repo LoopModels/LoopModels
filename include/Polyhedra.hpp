@@ -64,93 +64,55 @@ struct Polyhedra {
     I64Matrix E;
     CmptrType C;
 
-    // Polyhedra(const IntMatrix A, I64Matrix E) : A(std::move(A)), E(E){};
-    // static Polyhedra empty(size_t numIneq, size_t numVar) {
-    // A(numIneq, numVar + 1)
-    // 	};
-    // TODO: formatter
-    // construct right comparator
-    // void pruneBounds() {
-    //     Vector<int64_t> diff{A.numRow()};
-    //     // std::cout<< E <<std::endl;
-    //     // std::cout<< A <<std::endl;
-    //     // if constexpr (hasEqualities) { // False for affine, true for
-    //     dependency
-    //     //     // std::cout<< E <<std::endl;
-    //     //     NormalForm::simplifySystem(E, 1); // A.numCol() - numLoops);
-    //     //     // std::cout<< E <<std::endl;
-    //     //     for (size_t i = 0; i < E.numRow(); ++i) {
-    //     //         for (size_t j = A.numRow(); j;) {
-    //     //             diff = A(--j, _) - E(i, _);
-    //     //             if (C.greaterEqual(diff)) {
-    //     //                 eraseConstraint(A, j);
-    //     //             } else {
-    //     //                 diff = A(j, _) + E(i, _);
-    //     //                 if (C.greaterEqual(diff))
-    //     //                     eraseConstraint(A, j);
-    //     //             }
-    //     //         }
-    //     //     }
-    //     // }
-    //     //
-    //     for (size_t j = A.numRow(); j;) {
-    //         for (size_t i = j-1; ; ) {
-    //             --j;
-    //             std::cout<< "--------------Start new--------------"
-    //             <<std::endl; std::cout<< i << std::endl; if (A.numRow() <=
-    //             1){
-    //                 break;
-    //             }
-    //             std::cout<< "Now i, j are " << i << " "<< j <<std::endl;
-    //             diff = A(--i, _) - A(j, _);
-    //             // diff = A(j, _) - A(--i, _);
-
-    //             std::cout<< "print diff first:" <<std::endl;
-    //             std::cout<< diff << std::endl;
-    //             std::cout<< "print whether greater equal:" <<std::endl;
-    //             std::cout<< C.greaterEqual(diff) << std::endl;
-
-    //             if (C.greaterEqual(diff)) {
-    //                 eraseConstraint(A, i);
-    //                 std::cout<<"i: " << i<<" greater Equal returns true"
-    //                 <<std::endl; std::cout<< A <<std::endl;
-    //             } else {
-    //                 diff *= (-1);
-    //                 if (C.greaterEqual(diff)) {
-    //                     eraseConstraint(A, j);
-    //                     std::cout<< "i: " << i <<" greater Equal returns
-    //                     false" <<std::endl; std::cout<< A <<std::endl;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
+        // if constexpr (hasEqualities) { // False for affine, true for
+        // dependency
+        //     // std::cout<< E <<std::endl;
+        //     NormalForm::simplifySystem(E, 1);
+        //     for (size_t i = 0; i < E.numRow(); ++i) {
+        //         for (size_t j = A.numRow(); j;) {
+        //             diff = A(--j, _) - E(i, _);
+        //             if (C.greaterEqual(diff)) {
+        //                 std::cout << "A(" << j << ", _) >= E(" << i << ", _)"
+        //                           << std::endl;
+        //                 eraseConstraint(A, j);
+        //                 C.init(A, E);
+        //             } else {
+        //                 std::cout << "A(" << j << ", _) >= -E(" << i << ",
+        //                 _)"
+        //                           << std::endl;
+        //                 diff = A(j, _) + E(i, _);
+        //                 if (C.greaterEqual(diff)) {
+        //                     eraseConstraint(A, j);
+        //                     C.init(A, E);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+        //
         for (size_t j = A.numRow(); j;) {
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
-                // std::cout << "--------------Start new " << i <<
-                // "--------------"
-                //           << std::endl;
-                // std::cout << "Now i, j are " << i << " " << j << std::endl;
-                // std::cout << "print diff first: " << diff << std::endl;
-                // std::cout << "print whether greater equal: "
-                //           << C.greaterEqual(diff) << std::endl;
+                std::cout << "--------------Start new " << i << "--------------"
+                          << std::endl;
+                std::cout << "Now i, j are " << i << " " << j << std::endl;
+                std::cout << "print diff first: " << diff << std::endl;
 
                 if (C.greaterEqual(diff)) {
-                    // std::cout << "i: " << i << "; j: " << j
-                    //           << " greater Equal returns true" << A
-                    //           << std::endl;
+                    std::cout << "i: " << i << "; j: " << j
+                              << " greater Equal returns true" << A
+                              << std::endl;
                     eraseConstraint(A, i);
                     C.init(A, E);
                     --j; // `i < j`, and `i` has been removed
                 } else if (C.greaterEqual(diff *= -1)) {
-                    // std::cout << "i: " << i << "; j : " << j
-                    //           << " greater Equal returns false" << A
-                    //           << std::endl;
+                    std::cout << "i: " << i << "; j : " << j
+                              << " greater Equal returns false" << A
+                              << std::endl;
                     eraseConstraint(A, j);
                     C.init(A, E);
                     break; // `j` is gone
@@ -255,25 +217,12 @@ struct Polyhedra {
             if (A(--j, i))
                 eraseConstraint(A, j);
     }
-    // returns `true` if empty, `false` otherwise
-    bool checkZeros() const {
-        // for (size_t c = A.numRow(); c != 0;)
-        //     if (lessZero(A(--c, _))) {
-        //         // std::cout << "checkZeros c = " << c << std::endl;
-        //         // dump();
-        //         if (lessZero(c))
-        //             return true;
-        //         eraseConstraint(A, c);
-        //     }
-        return false;
-    }
     // A'x <= b
     // removes variable `i` from system
-    bool removeVariable(IntMatrix &A, const size_t i) {
+    void removeVariable(IntMatrix &A, const size_t i) {
         fourierMotzkin(A, i);
         // std::cout << "removed i = " << i << "\nA=\n"<<A <<std::endl;
         // dump();
-        return checkZeros();
     }
     // A'x <= b
     // E'x = q
@@ -312,9 +261,9 @@ struct Polyhedra {
     }
 
     friend std::ostream &operator<<(std::ostream &os, const Polyhedra &p) {
-        auto &&os2 = printConstraints(os, p.A, p.C.getNumConstTerms());
+        auto &&os2 = printConstraints(os << "\n", p.A, p.C.getNumConstTerms());
         if constexpr (hasEqualities)
-            return printConstraints(os2, p.E, p.C.getNumConstTerms());
+            return printConstraints(os2, p.E, p.C.getNumConstTerms(), false);
         return os2;
     }
     void dump() const { std::cout << *this; }
@@ -325,9 +274,8 @@ struct Polyhedra {
         return false;
     }
     void truncateVars(size_t numVar) {
-        if constexpr (hasEqualities) {
+        if constexpr (hasEqualities)
             E.truncateCols(numVar);
-        }
         A.truncateCols(numVar);
     }
     // A*x >= 0

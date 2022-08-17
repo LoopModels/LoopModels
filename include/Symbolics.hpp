@@ -515,8 +515,9 @@ merge(llvm::SmallVectorImpl<Monomial> &z, llvm::ArrayRef<Monomial> x,
     auto ixe = x.end();
     auto iye = y.end();
     std::pair<llvm::SmallVector<unsigned>, llvm::SmallVector<unsigned>>
-        oldToNewMaps{std::make_pair(llvm::SmallVector<unsigned>(x.size()),
-                                    llvm::SmallVector<unsigned>(y.size()))};
+        oldToNewMaps;
+    oldToNewMaps.first.reserve(x.size());
+    oldToNewMaps.second.reserve(y.size());
     while ((ix != ixe) && (iy != iye)) {
         if ((ix->termsMatch(*iy))) {
             oldToNewMaps.first.push_back(z.size());

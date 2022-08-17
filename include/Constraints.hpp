@@ -15,8 +15,7 @@
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
 static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
-                                      size_t numSyms, bool inequality = true,
-                                      size_t numAuxVar = 0) {
+                                      size_t numSyms, bool inequality = true) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
     for (size_t c = 0; c < numConstraints; ++c) {
@@ -38,11 +37,7 @@ static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
                         os << Acv;
                     }
                 }
-                if (v >= numAuxVar) {
-                    os << "v_" << v - numAuxVar;
-                } else {
-                    os << "d_" << v;
-                }
+                os << "v_" << v - numSyms;
                 hasPrinted = true;
             }
         }
@@ -54,8 +49,15 @@ static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
             os << " == ";
         }
         os << A(c, 0);
-        for (size_t v = 1; v < numSyms; ++v)
-            os << " + " << A(c, v) << "*" << monomialTermStr(v - 1, 1);
+        for (size_t v = 1; v < numSyms; ++v) {
+            if (int64_t Acv = A(c, v)) {
+                os << (Acv > 0 ? " + " : " - ");
+                Acv = std::abs(Acv);
+                if (Acv != 1)
+                    os << Acv << "*";
+                os << monomialTermStr(v - 1, 1);
+            }
+        }
         os << std::endl;
     }
     return os;
@@ -138,9 +140,9 @@ static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
     } else if ((i != penuRow) && (i != lastRow)) {
         // if i == penuCol, then j == lastCol
         // and we thus don't need to copy
-	for (size_t n = 0; n < N; ++n) {
-	    A(i, n) = A(penuRow, n);
-	    A(j, n) = A(lastRow, n);
+        for (size_t n = 0; n < N; ++n) {
+            A(i, n) = A(penuRow, n);
+            A(j, n) = A(lastRow, n);
         }
     }
     A.truncateRows(penuRow);
