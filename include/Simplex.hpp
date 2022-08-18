@@ -121,6 +121,8 @@ struct Simplex {
     MutStridedVector<int64_t> getConstants() {
         return getTableauCol(numExtraCols);
     }
+    // returns `true` if infeasible
+    // `false ` if feasible
     bool initiateFeasible() {
         tableau(0, 0) = 0;
         // remove trivially redundant constraints
@@ -131,7 +133,7 @@ struct Simplex {
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
 #ifdef VERBOSESIMPLEX
-	std::cout << "C=" << C << std::endl;
+        std::cout << "C=" << C << std::endl;
 #endif
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         for (auto &&x : basicCons)
@@ -253,8 +255,8 @@ struct Simplex {
             int64_t Civ = C(i, enteringVariable);
             if (Civ > 0) {
                 int64_t Ci0 = C(i, 0);
-		if (Ci0 == 0)
-		    return --i;
+                if (Ci0 == 0)
+                    return --i;
                 assert(Ci0 > 0);
                 if ((n * Ci0) < (Civ * d)) {
                     n = Civ;
@@ -392,8 +394,8 @@ struct Simplex {
             makeBasic(C, 0, i);
         size_t ind = basicConstraints[i];
         size_t lastRow = C.numRow() - 1;
-	SHOWLN(ind);
-	SHOWLN(C.numRow());
+        SHOWLN(ind);
+        SHOWLN(C.numRow());
         if (lastRow != ind)
             swapRows(C, ind, lastRow);
         truncateConstraints(lastRow);
@@ -435,13 +437,17 @@ struct Simplex {
         const size_t numVar = getNumVar();
         const size_t numFix = x.size();
         subSimp.resizeForOverwrite(numCon, numVar - numFix);
+        subSimp.tableau(0, 0) = 0;
+        subSimp.tableau(0, 1) = 0;
         auto fC{getCostsAndConstraints()};
         auto sC{subSimp.getCostsAndConstraints()};
-        sC(_, 0) = fC(_, 0);
-        for (size_t i = 0; i < numFix; ++i)
-            sC(_, 0) -= x(i) * fC(_, i + 1 + off);
+        sC(_, 0) = fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;
+        // sC(_, 0) = fC(_, 0);
+        // for (size_t i = 0; i < numFix; ++i)
+        //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
         sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
+        SHOWLN(subSimp);
         return subSimp.initiateFeasible();
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
@@ -465,6 +471,9 @@ struct Simplex {
                 }
             }
         }
+    }
+    friend std::ostream &operator<<(std::ostream &os, Simplex &s) {
+        return os << "\nSimplex; tableau:" << s.tableau;
     }
     /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {

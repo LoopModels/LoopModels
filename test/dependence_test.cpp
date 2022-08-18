@@ -22,7 +22,7 @@ TEST(DependenceTest, BasicAssertions) {
     // }
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     auto J = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I,J};
+    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
     // A*x >= 0;
     // [ -2  1  0 -1  0    [ 1
     //    0  0  0  1  0  *   I   >= 0
@@ -30,9 +30,9 @@ TEST(DependenceTest, BasicAssertions) {
     //    0  0  0  0  1 ]    i
     //                       j ]
     IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
-				  "0 0 0 1 0; "
-				  "-2 0 1 0 -1; "
-				  "0 0 0 0 1]")};
+                                      "0 0 0 1 0; "
+                                      "-2 0 1 0 -1; "
+                                      "0 0 0 0 1]")};
     auto loop{AffineLoopNest::construct(Aloop, symbols)};
 
     // we have three array refs
@@ -43,8 +43,8 @@ TEST(DependenceTest, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-	OffMat(0,0) = 1;
-	OffMat(1,0) = 1;
+        OffMat(0, 0) = 1;
+        OffMat(1, 0) = 1;
         Asrc.strides[0] = 1;
         Asrc.strides[1] = I;
     }
@@ -56,7 +56,7 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-	Asrc.offsetMatrix()(0,0) = 1;
+        Asrc.offsetMatrix()(0, 0) = 1;
         Atgt0.strides[0] = 1;
         Atgt0.strides[1] = I;
     }
@@ -68,7 +68,7 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-	Asrc.offsetMatrix()(1,0) = 1;
+        Asrc.offsetMatrix()(1, 0) = 1;
         Atgt1.strides[0] = 1;
         Atgt1.strides[1] = I;
     }
@@ -82,8 +82,8 @@ TEST(DependenceTest, BasicAssertions) {
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
     DependencePolyhedra dep0(msrc, mtgt0);
-    dep0.pruneBounds();
     EXPECT_FALSE(dep0.isEmpty());
+    dep0.pruneBounds();
     std::cout << "Dep0 = \n" << dep0 << std::endl;
 
     EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
@@ -95,8 +95,8 @@ TEST(DependenceTest, BasicAssertions) {
     schLoad1.getOmega()[4] = 1;
     MemoryAccess mtgt1{Atgt1, nullptr, schLoad1, true};
     DependencePolyhedra dep1(msrc, mtgt1);
-    dep1.pruneBounds();
     EXPECT_FALSE(dep1.isEmpty());
+    dep1.pruneBounds();
     std::cout << "Dep1 = \n" << dep1 << std::endl;
     EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
@@ -109,6 +109,9 @@ TEST(DependenceTest, BasicAssertions) {
     Dependence &d(dc.front());
     EXPECT_TRUE(d.forward);
     std::cout << d << std::endl;
+    assert(d.forward);
+    assert(!allZero(d.dependenceSatisfaction.tableau(
+        d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 }
 
 TEST(IndependentTest, BasicAssertions) {
@@ -121,9 +124,9 @@ TEST(IndependentTest, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     llvm::SmallVector<Polynomial::Monomial> symbols{I};
     IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
-				      "0 0 1 0; "
-				      "-1 0 1 -1; "
-				      "0 0 0 1]")};
+                                      "0 0 1 0; "
+                                      "-1 0 1 -1; "
+                                      "0 0 0 1]")};
 
     auto loop{AffineLoopNest::construct(Aloop, symbols)};
     // we have three array refs
@@ -181,18 +184,18 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{M,N};
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
     // Construct the loops
     IntMatrix AMN{(stringToIntMatrix("[-1 1 0 -1 0; "
-				     "0 0 0 1 0; "
-				     "-1 0 1 0 -1; "
-				     "0 0 0 0 1]"))};
+                                     "0 0 0 1 0; "
+                                     "-1 0 1 0 -1; "
+                                     "0 0 0 0 1]"))};
     IntMatrix AMNK{(stringToIntMatrix("[-1 1 0 -1 0 0; "
-				     "0 0 0 1 0 0; "
-				     "-1 0 1 0 -1 0; "
-				     "0 0 0 0 1 0; "
-				      "-1 0 1 0 0 -1; "
-				      "-1 0 0 0 -1 1]"))};
+                                      "0 0 0 1 0 0; "
+                                      "-1 0 1 0 -1 0; "
+                                      "0 0 0 0 1 0; "
+                                      "-1 0 1 0 0 -1; "
+                                      "-1 0 0 0 -1 1]"))};
 
     auto loopMN = AffineLoopNest::construct(AMN, symbols);
     auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
@@ -496,18 +499,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_EQ(d.size(), 16);
     EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
     EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
-    // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(), 2);
-    // EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(), 1);
-    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(), 1);
-    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(), 1);
-    EXPECT_TRUE(allZero(forward.depPoly.A(_,0)));
-    EXPECT_FALSE(allZero(reverse.depPoly.A(_,0)));
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    EXPECT_TRUE(allZero(forward.depPoly.A(_, 0)));
+    EXPECT_FALSE(allZero(reverse.depPoly.A(_, 0)));
     int nonZeroInd = -1;
     for (unsigned i = 0; i < reverse.depPoly.A.numRow(); ++i) {
-	bool notZero = !allZero(reverse.depPoly.getSymbols(i));
+        bool notZero = !allZero(reverse.depPoly.getSymbols(i));
         // we should only find 1 non-zero
         EXPECT_FALSE((nonZeroInd != -1) & notZero);
-        if (notZero) 
+        if (notZero)
             nonZeroInd = i;
     }
     // v_1 is `n` for the load
@@ -523,7 +528,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), -1);
     } else {
         // -v_1 + v_4 == -1
-	EXPECT_EQ(nonZero.getValue(), -1);
+        EXPECT_EQ(nonZero.getValue(), -1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), -1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), 1);
     }
@@ -549,16 +554,16 @@ TEST(ConvReversePass, BasicAssertions) {
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
-    llvm::SmallVector<Polynomial::Monomial> symbols{M,N,I,J};
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N, I, J};
     // Construct the loops
     IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
-				      "0 0 0 0 0 1 0 0 0; "
-				      "-1 1 0 0 0 0 -1 0 0; "
-				      "0 0 0 0 0 0 1 0 0; "
-				      "-1 0 0 0 1 0 0 -1 0; "
-				      "0 0 0 0 0 0 0 1 0; "
-				      "-1 0 0 1 0 0 0 0 -1; "
-				      "0 0 0 0 0 0 0 0 1]")};
+                                      "0 0 0 0 0 1 0 0 0; "
+                                      "-1 1 0 0 0 0 -1 0 0; "
+                                      "0 0 0 0 0 0 1 0 0; "
+                                      "-1 0 0 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 0 0 1]")};
     auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // construct indices
@@ -649,9 +654,9 @@ TEST(RankDeficientLoad, BasicAssertions) {
     //   0  -1 ]               0     ]
     //
     IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
-				      "0 0 1 0; "
-				      "0 0 1 -1; "
-				      "0 0 0 1]")};
+                                      "0 0 1 0; "
+                                      "0 0 1 -1; "
+                                      "0 0 0 1]")};
     auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // we have three array refs
@@ -701,7 +706,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     auto J = Polynomial::Monomial(Polynomial::ID{2});
     auto K = Polynomial::Monomial(Polynomial::ID{3});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I,J,K};
+    llvm::SmallVector<Polynomial::Monomial> symbols{I, J, K};
     // A*x <= b
     // [ 1   0  0     [i        [ I - 1
     //  -1   0  0   *  j          0
@@ -711,11 +716,11 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     //   0   0 -1 ]               0     ]
     //
     IntMatrix Aloop{stringToIntMatrix("[-1 1 0 0 -1 0 0; "
-				      "0 0 0 0 1 0 0; "
-				      "-1 0 1 0 0 -1 0; "
-				      "0 0 0 0 0 1 0; "
-				      "-1 0 0 1 0 0 -1; "
-				      "0 0 0 0 0 0 1]")};
+                                      "0 0 0 0 1 0 0; "
+                                      "-1 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 -1; "
+                                      "0 0 0 0 0 0 1]")};
     auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // we have three array refs

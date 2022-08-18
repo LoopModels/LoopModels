@@ -1019,10 +1019,15 @@ template <typename T> struct MutStridedVector {
     //     return true;
     // }
     operator StridedVector<T>() {
-	const T *const p = d;
+        const T *const p = d;
         return StridedVector<T>{.d = p, .N = N, .x = x};
     }
     StridedVector<T> view() const { return *this; }
+    MutStridedVector<T> &operator=(const T &x) {
+        for (auto &&y : *this)
+            y = x;
+        return *this;
+    }
     MutStridedVector<T> &operator=(const AbstractVector auto &x) {
         return copyto(*this, x);
     }

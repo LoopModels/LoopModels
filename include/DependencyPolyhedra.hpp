@@ -251,8 +251,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 A(nc0 + i, 1 + oldToNewMap1[j]) = ar1.loop->A(i, 1 + j);
             for (size_t j = 0; j < numDep1Var; ++j)
                 A(nc0 + i, j + numSymbols + numDep0Var) =
-                    ar0.loop->A(i, j + ar1.loop->getNumSymbols());
+                    ar1.loop->A(i, j + ar1.loop->getNumSymbols());
         }
+        // L254: Assertion `col < numCol()` failed
         PtrMatrix<int64_t> A0 = ar0.indexMatrix();
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
         PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
@@ -294,7 +295,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         SHOWLN(E);
         C.init(A, E);
         SHOWLN(*this);
-        pruneBounds();
+        // pruneBounds();
     }
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
         return 1 + numIneq + 2 * numEq;
@@ -336,12 +337,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         Simplex &fw(pair.first);
         fw.resize(numConstraintsNew, numVarNew);
         MutPtrMatrix<int64_t> fC{fw.getConstraints()};
+        fC(_, 0) = 0;
         fC(0, 0) = 1; // lambda_0
-	SHOWLN(A.numRow());
-	SHOWLN(A.numCol());
-	SHOWLN(fC.numRow());
-	SHOWLN(fC.numCol());
-	SHOWLN(ineqEnd-1);
+        SHOWLN(A.numRow());
+        SHOWLN(A.numCol());
+        SHOWLN(fC.numRow());
+        SHOWLN(fC.numCol());
+        SHOWLN(ineqEnd - 1);
         fC(_, _(1, ineqEnd)) = A.transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
@@ -699,10 +701,10 @@ struct Dependence {
         const size_t ineqEnd = 1 + numInequalityConstraintsOld;
         const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
         const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-        const size_t numVarKeep = pair.first.getNumVar() - numLambda;
+        // const size_t numVarKeep = pair.first.getNumVar() - numLambda;
         const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
-        pair.first.removeExtraVariables(numVarKeep);
-        pair.second.removeExtraVariables(numVarKeep);
+        // pair.first.removeExtraVariables(numVarKeep);
+        // pair.second.removeExtraVariables(numVarKeep);
         MemoryAccess *in = &x, *out = &y;
         const bool isFwd = checkDirection(pair, x, y, numLambda);
         if (isFwd) {
@@ -754,8 +756,8 @@ struct Dependence {
                 sE(0, c + posEqEnd) += Ecv;
             }
             pair = farkasBackups;
-            pair.first.removeExtraVariables(numVarKeep);
-            pair.second.removeExtraVariables(numVarKeep);
+            // pair.first.removeExtraVariables(numVarKeep);
+            // pair.second.removeExtraVariables(numVarKeep);
             // farkasBackups is swapped with respect to
             // checkDirection(..., *in, *out);
             timeDirection[t] = checkDirection(pair, *out, *in, numLambda);
@@ -820,9 +822,10 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return 0;
-            // note that we set boundAbove=true, so we reverse the
-            // dependence direction for the dependency we week, we'll
-            // discard the program variables x then y
+        dxy.pruneBounds();
+        // note that we set boundAbove=true, so we reverse the
+        // dependence direction for the dependency we week, we'll
+        // discard the program variables x then y
 #ifndef NDEBUG
         std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
                   << dxy << std::endl;
@@ -846,13 +849,13 @@ struct Dependence {
     friend std::ostream &operator<<(std::ostream &os, Dependence &d) {
         os << "Dependence Poly ";
         if (d.forward) {
-            os << "x -> y:\n";
+            os << "x -> y:";
         } else {
-            os << "y -> x:\n";
+            os << "y -> x:";
         }
-        return os << d.depPoly << std::endl;
-        // << "\nSchedule Constraints:\n"
-        //           << d.dependenceSatisfaction << "\nBounding Constraints:\n"
-        //           << d.dependenceBounding << std::endl;
+        return os << d.depPoly
+                  << "\nSchedule Constraints:" << d.dependenceSatisfaction
+                  << "\nBounding Constraints:" << d.dependenceBounding
+                  << std::endl;
     }
 };
