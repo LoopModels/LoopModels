@@ -403,14 +403,79 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         cmp.init(Ap, Ep, pos0);
         return cmp;
     };
-
+    // Note that this is only valid when the comparator was constructed
+    // with index `0` referring to >= 0 constants (i.e., the default).
+    bool isEmpty() {
+        StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
+        if (d.size() == 0) {
+            // SHOWLN(U.numCol());
+            // SHOWLN(query.size());
+            for (size_t i = V.numRow(); i < b.size(); ++i)
+                if (b(i))
+                    return false;
+            auto H = V;
+            auto oldn = H.numCol();
+            H.resizeCols(oldn + 1);
+            for (size_t i = 0; i < H.numRow(); ++i)
+                H(i, oldn) = -b(i);
+            NormalForm::solveSystem(H);
+            for (size_t i = numEquations; i < H.numRow(); ++i)
+                if (auto rhs = H(i, oldn))
+                    if ((rhs > 0) != (H(i, i) > 0))
+                        return false;
+            return true;
+        }
+        // Column rank deficient case
+        else {
+            size_t numSlack = V.numRow() - numEquations;
+            // Vector<int64_t> dinv = d; // copy
+            auto Dlcm = d[0];
+            // We represent D martix as a vector, and multiply the lcm to the
+            // linear equation to avoid store D^(-1) as rational type
+            for (size_t i = 1; i < d.size(); ++i)
+                Dlcm = lcm(Dlcm, d(i));
+	    Vector<int64_t> b2;
+	    b2.resizeForOverwrite(d.size());
+            for (size_t i = 0; i < d.size(); ++i)
+                b2(i) = -b(i) * Dlcm / d(i);
+            size_t numRowTrunc = U.numRow();
+            Vector<int64_t> c =
+                V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
+            auto NSdim = V.numCol() - numRowTrunc;
+            // expand W stores [c -JV2 JV2]
+            //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
+            // where y2 = y2+ - y2-
+            // SHOWLN(V);
+            // SHOWLN(U);
+            // SHOWLN(c);
+            IntMatrix expandW(numSlack, NSdim * 2 + 1);
+            for (size_t i = 0; i < numSlack; ++i) {
+                expandW(i, 0) = c(i);
+                // expandW(i, 0) *= Dlcm;
+                for (size_t j = 0; j < NSdim; ++j) {
+                    auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
+                    expandW(i, j + 1) = -val;
+                    expandW(i, j + NSdim + 1) = val;
+                }
+            }
+            // SHOWLN(expandW);
+            IntMatrix Wcouple{0, expandW.numCol()};
+            llvm::Optional<Simplex> optS{
+                Simplex::positiveVariables(expandW, Wcouple)};
+            if (optS.hasValue())
+                optS->printResult();
+            return optS.hasValue();
+        }
+        return true;
+    }
     bool greaterEqual(PtrVector<int64_t> query) const {
+	Vector<int64_t> b = U(_, _(begin, query.size())) * query;
+	// SHOWLN(b);
         // SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
             // SHOWLN(U.numCol());
             // SHOWLN(query.size());
-            auto b = U(_, _(begin, query.size())) * query;
             for (size_t i = V.numRow(); i < b.size(); ++i)
                 if (b(i))
                     return false;
@@ -429,8 +494,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // Column rank deficient case
         else {
             size_t numSlack = V.numRow() - numEquations;
-            Vector<int64_t> b =
-                U(_, _(begin, query.size())) * query;
             Vector<int64_t> dinv = d; // copy
             auto Dlcm = dinv[0];
             // We represent D martix as a vector, and multiply the lcm to the
@@ -440,7 +503,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < dinv.size(); ++i)
                 dinv(i) = Dlcm / dinv(i);
             b *= dinv;
-	    size_t numRowTrunc = U.numRow();
+            size_t numRowTrunc = U.numRow();
             Vector<int64_t> c =
                 V(_(numEquations, end), _(begin, numRowTrunc)) * b;
             auto NSdim = V.numCol() - numRowTrunc;
@@ -460,7 +523,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                     expandW(i, j + NSdim + 1) = val;
                 }
             }
-	    // SHOWLN(expandW);
+            // SHOWLN(expandW);
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
@@ -468,8 +531,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 optS->printResult();
             return optS.hasValue();
         }
-        return true;
-        // return optS.hasValue();
     }
 };
 

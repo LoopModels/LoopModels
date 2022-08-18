@@ -1019,7 +1019,8 @@ template <typename T> struct MutStridedVector {
     //     return true;
     // }
     operator StridedVector<T>() {
-        return StridedVector<T>{.d = d, .N = N, .x = x};
+	const T *const p = d;
+        return StridedVector<T>{.d = p, .N = N, .x = x};
     }
     StridedVector<T> view() const { return *this; }
     MutStridedVector<T> &operator=(const AbstractVector auto &x) {

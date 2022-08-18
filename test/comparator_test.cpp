@@ -81,6 +81,7 @@ TEST(ConstantTest, BasicAssertions){
     Vector<int64_t> query1{1, 0, 0};
     EXPECT_FALSE(comp.greaterEqual(query0));
     EXPECT_TRUE(comp.greaterEqual(query1));
+    EXPECT_FALSE(comp.isEmpty());
 }
 
 TEST(ConstantTest2, BasicAssertions){
@@ -106,5 +107,32 @@ TEST(EqTest, BasicAssertions){
     EXPECT_TRUE(comp.greater(diff));
     diff*=-1;
     EXPECT_FALSE(comp.greaterEqual(diff));
+    EXPECT_FALSE(comp.isEmpty());
 }
+
+TEST(TestEmpty, BasicAssertions){
+    IntMatrix A{stringToIntMatrix("[0 0 1 0 0 0; -1 1 -1 0 0 0; 0 0 0 1 0 0; -1 0 1 -1 0 0; 0 0 0 0 1 0; -1 1 0 0 -1 0; 0 0 0 0 0 1; -1 0 0 0 1 -1]")};
+    // Empty
+    IntMatrix E0{stringToIntMatrix("[0 0 1 0 0 -1; 0 0 0 1 -1 0]")};
+    // not Empty
+    IntMatrix E1{stringToIntMatrix("[0 0 1 0 -1 0; 0 0 0 1 0 -1]")};
+    Vector<int64_t> zeros{0,0,0,0,0,0};
+    auto compEmpty = LinearSymbolicComparator::construct(A,E0);
+    // contradiction, 0 can't be less than 0
+    EXPECT_TRUE(compEmpty.greater(zeros));
+    // contradiction, 0 can't be greater than 0
+    EXPECT_TRUE(compEmpty.less(zeros));
+    EXPECT_TRUE(compEmpty.greaterEqual(zeros));
+    EXPECT_TRUE(compEmpty.lessEqual(zeros));
+    EXPECT_TRUE(compEmpty.isEmpty());
+    auto compNonEmpty = LinearSymbolicComparator::construct(A,E1);
+    // contradiction, 0 can't be less than 0
+    EXPECT_FALSE(compNonEmpty.greater(zeros));
+    // contradiction, 0 can't be greater than 0
+    EXPECT_FALSE(compNonEmpty.less(zeros));
+    EXPECT_TRUE(compNonEmpty.greaterEqual(zeros));
+    EXPECT_TRUE(compNonEmpty.lessEqual(zeros));
+    EXPECT_FALSE(compNonEmpty.isEmpty());
+}
+
 
