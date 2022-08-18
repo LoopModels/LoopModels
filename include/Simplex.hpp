@@ -392,6 +392,8 @@ struct Simplex {
             makeBasic(C, 0, i);
         size_t ind = basicConstraints[i];
         size_t lastRow = C.numRow() - 1;
+	SHOWLN(ind);
+	SHOWLN(C.numRow());
         if (lastRow != ind)
             swapRows(C, ind, lastRow);
         truncateConstraints(lastRow);

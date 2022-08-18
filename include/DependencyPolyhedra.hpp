@@ -8,6 +8,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
+#include "Macro.hpp"
 #include "Orthogonalize.hpp"
 #include "Simplex.hpp"
 #include <cstddef>
@@ -331,12 +332,16 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
         const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
         const size_t numVarNew = numVarInterest + numLambda;
-        assert(numVarNew == posEqEnd + numEqualityConstraintsOld);
         std::pair<Simplex, Simplex> pair;
         Simplex &fw(pair.first);
         fw.resize(numConstraintsNew, numVarNew);
-        MutPtrMatrix<int64_t> fC{fw.getCostsAndConstraints()};
+        MutPtrMatrix<int64_t> fC{fw.getConstraints()};
         fC(0, 0) = 1; // lambda_0
+	SHOWLN(A.numRow());
+	SHOWLN(A.numCol());
+	SHOWLN(fC.numRow());
+	SHOWLN(fC.numCol());
+	SHOWLN(ineqEnd-1);
         fC(_, _(1, ineqEnd)) = A.transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
@@ -345,7 +350,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // go through and optimize loops like this
         for (size_t j = 0; j < numConstraintsNew; ++j) {
             for (size_t i = 0; i < numEqualityConstraintsOld; ++i) {
-                int64_t Eji = E(j, i);
+                int64_t Eji = E(i, j);
                 fC(j, i + ineqEnd) = Eji;
                 fC(j, i + posEqEnd) = -Eji;
             }
@@ -663,9 +668,9 @@ struct Dependence {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
-        const size_t numVarKeep = pair.first.getNumVar() - numLambda;
-        pair.first.removeExtraVariables(numVarKeep);
-        pair.second.removeExtraVariables(numVarKeep);
+        // const size_t numVarKeep = pair.first.getNumVar() - numLambda;
+        // pair.first.removeExtraVariables(numVarKeep);
+        // pair.second.removeExtraVariables(numVarKeep);
         if (checkDirection(pair, x, y, numLambda)) {
             pair.first.truncateVars(numLambda +
                                     dxy.getNumScheduleCoefficients());

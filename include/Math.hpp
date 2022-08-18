@@ -309,6 +309,19 @@ static bool allZero(const auto &x) {
             return false;
     return true;
 }
+static bool allGEZero(const auto &x) {
+    for (auto &a : x)
+        if (a < 0)
+            return false;
+    return true;
+}
+static bool allLEZero(const auto &x) {
+    for (auto &a : x)
+        if (a > 0)
+            return false;
+    return true;
+}
+
 static size_t countNonZero(const auto &x) {
     size_t i = 0;
     for (auto &a : x)

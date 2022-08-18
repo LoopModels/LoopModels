@@ -4,6 +4,7 @@
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include "Loops.hpp"
+#include "Macro.hpp"
 #include "MatrixStringParse.hpp"
 #include <cassert>
 #include <cstddef>
@@ -155,6 +156,8 @@ TEST(IndependentTest, BasicAssertions) {
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
     DependencePolyhedra dep(msrc, mtgt);
     std::cout << "Dep = \n" << dep << std::endl;
+    SHOWLN(dep.A);
+    SHOWLN(dep.E);
     EXPECT_TRUE(dep.isEmpty());
     assert(dep.isEmpty());
     //

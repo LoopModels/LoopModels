@@ -20,8 +20,10 @@ static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
     const unsigned numVar = A.numCol();
     for (size_t c = 0; c < numConstraints; ++c) {
         bool hasPrinted = false;
+        bool allVarNonNegative = allGEZero(A(c, _(numSyms, numVar)));
+        int64_t sign = allVarNonNegative ? 1 : -1;
         for (size_t v = numSyms; v < numVar; ++v) {
-            if (int64_t Acv = A(c, v)) {
+            if (int64_t Acv = sign * A(c, v)) {
                 if (hasPrinted) {
                     if (Acv > 0) {
                         os << " + ";
@@ -44,7 +46,7 @@ static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
         if (!hasPrinted)
             os << '0';
         if (inequality) {
-            os << " <= ";
+            os << (allVarNonNegative ? " >= " : " <= ");
         } else {
             os << " == ";
         }
