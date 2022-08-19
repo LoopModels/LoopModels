@@ -42,7 +42,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         return getNumVar() - numDep0Var - nullStep.size() - getNumSymbols();
     }
     inline size_t getNumScheduleCoefficients() const {
-        return getNumVar() - nullStep.size() + 1 - getNumSymbols();
+        return getNumVar() - nullStep.size() + 3 - getNumSymbols();
     }
     MutPtrVector<int64_t> getSymbols(size_t i) {
         return A(i, _(begin, getNumSymbols()));
@@ -335,8 +335,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t numVarNew = numVarInterest + numLambda;
         std::pair<Simplex, Simplex> pair;
         Simplex &fw(pair.first);
-        fw.resize(numConstraintsNew, numVarNew);
-        MutPtrMatrix<int64_t> fC{fw.getConstraints()};
+        fw.resize(numConstraintsNew, numVarNew + 1);
+        MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
         fC(_, 0) = 0;
         fC(0, 0) = 1; // lambda_0
         SHOWLN(A.numRow());
@@ -390,8 +390,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
         // so far, both have been identical
         Simplex &bw(pair.second);
-        bw.resize(numConstraintsNew, numVarNew);
-        MutPtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
+        bw.resize(numConstraintsNew, numVarNew + 1);
+        MutPtrMatrix<int64_t> bC{bw.getConstraints()(_, _(1, end))};
         for (size_t i = 0; i < numConstraintsNew; ++i)
             for (size_t j = 0; j < numVarNew; ++j)
                 bC(i, j) = fC(i, j);
@@ -403,11 +403,17 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // fw means x'Al = x'(depVar1 - depVar0)
         // x'Al + x'(depVar0 - depVar1) = 0
         // so, for fw, depVar0 is positive and depVar1 is negative
-        for (size_t i = 0; i < numScheduleCoefs; ++i) {
+        for (size_t i = 0; i < numScheduleCoefs - 2; ++i) {
             int64_t s = (2 * (i < numDep0Var) - 1);
             fC(i + numBoundingCoefs, i + numLambda) = s;
             bC(i + numBoundingCoefs, i + numLambda) = -s;
         }
+        fC(0, numScheduleCoefs - 2 + numLambda) = 1;
+        fC(0, numScheduleCoefs - 1 + numLambda) = -1;
+        bC(0, numScheduleCoefs - 2 + numLambda) = -1;
+        bC(0, numScheduleCoefs - 1 + numLambda) = 1;
+        SHOWLN(pair.first.tableau);
+        SHOWLN(pair.second.tableau);
         // note that delta/constant coef is handled as last `s`
         return pair;
         // fw.removeExtraVariables(numVarKeep);
@@ -630,7 +636,7 @@ struct Dependence {
         PtrVector<int64_t> xOmega = x.schedule.getOmega();
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
         Vector<int64_t> sch;
-        sch.resizeForOverwrite(numLoopsTotal + 1);
+        sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i])
@@ -647,18 +653,13 @@ struct Dependence {
             //   present at that level
             // }
             assert(i != numLoopsCommon);
-            for (size_t j = 0; j < numLoopsX; ++j)
-                sch[j] = xPhi(i, j);
-            for (size_t j = 0; j < numLoopsY; ++j)
-                sch[j + numLoopsX] = yPhi(i, j);
-            int64_t yO = yOmega[2 * i + 1], xO = xOmega[2 * i + 1];
-            // forward means offset is 2nd - 1st
-            sch[numLoopsTotal] = yO - xO;
-            if (fxy.unSatisfiable(sch, numLambda))
+            sch(_(begin, numLoopsX)) = xPhi(i, _);
+            sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
+            sch(numLoopsTotal) = xOmega[2 * i + 1];
+            sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
+            if (fxy.unSatisfiableZeroRem(sch, numLambda))
                 return false;
-            // backward means offset is 1st - 2nd
-            sch[numLoopsTotal] = xO - yO;
-            if (fyx.unSatisfiable(sch, numLambda))
+            if (fyx.unSatisfiableZeroRem(sch, numLambda))
                 return true;
         }
         assert(false);
@@ -670,9 +671,6 @@ struct Dependence {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
-        // const size_t numVarKeep = pair.first.getNumVar() - numLambda;
-        // pair.first.removeExtraVariables(numVarKeep);
-        // pair.second.removeExtraVariables(numVarKeep);
         if (checkDirection(pair, x, y, numLambda)) {
             pair.first.truncateVars(numLambda +
                                     dxy.getNumScheduleCoefficients());
@@ -701,10 +699,7 @@ struct Dependence {
         const size_t ineqEnd = 1 + numInequalityConstraintsOld;
         const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
         const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
-        // const size_t numVarKeep = pair.first.getNumVar() - numLambda;
         const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
-        // pair.first.removeExtraVariables(numVarKeep);
-        // pair.second.removeExtraVariables(numVarKeep);
         MemoryAccess *in = &x, *out = &y;
         const bool isFwd = checkDirection(pair, x, y, numLambda);
         if (isFwd) {

@@ -447,11 +447,47 @@ struct Simplex {
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
         sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
+        SHOWLN(off);
+        SHOWLN(fC);
+        SHOWLN(sC);
+        SHOWLN(x);
         SHOWLN(subSimp);
         return subSimp.initiateFeasible();
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
         return !unSatisfiable(x, off);
+    } // check if a solution exists such that `x` can be true.
+    bool unSatisfiableZeroRem(PtrVector<int64_t> x, size_t off) const {
+        // is it a valid solution to set the first `x.size()` variables to `x`?
+        // first, check that >= 0 constraint is satisfied
+        for (auto y : x)
+            if (y < 0)
+                return true;
+        // approach will be to move `x.size()` variables into the
+        // equality constraints, and then check if the remaining sub-problem is
+        // satisfiable.
+        Simplex subSimp;
+        const size_t numCon = getNumConstraints();
+        const size_t numFix = x.size();
+        subSimp.resizeForOverwrite(numCon, 1 + off);
+        subSimp.tableau(0, 0) = 0;
+        subSimp.tableau(0, 1) = 0;
+        auto fC{getCostsAndConstraints()};
+        auto sC{subSimp.getCostsAndConstraints()};
+        sC(_, 0) = fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;
+        // sC(_, 0) = fC(_, 0);
+        // for (size_t i = 0; i < numFix; ++i)
+        //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
+        sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
+        SHOWLN(off);
+        SHOWLN(fC);
+        SHOWLN(sC);
+        SHOWLN(x);
+        SHOWLN(subSimp);
+        return subSimp.initiateFeasible();
+    }
+    bool satisfiableZeroRem(PtrVector<int64_t> x, size_t off) const {
+        return !unSatisfiableZeroRem(x, off);
     }
     void printResult() {
         auto C{getConstraints()};

@@ -539,14 +539,49 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
     inline auto view() const { return *this; };
 };
 
-template <typename B, typename E> struct Range {
-    B begin;
-    E end;
-};
 struct Begin {
 } begin;
 struct End {
 } end;
+template <typename B, typename E> struct Range {
+    B b;
+    E e;
+};
+// template <> struct Range<Begin, int> {
+//     static constexpr Begin b = begin;
+//     int e;
+//     operator Range<Begin, size_t>() {
+//         return Range<Begin, size_t>{b, size_t(e)};
+//     }
+// };
+// template <> struct Range<int, End> {
+//     int b;
+//     static constexpr End e = end;
+//     operator Range<size_t, End>() { return Range<size_t, End>{size_t(b), e};
+//     }
+// };
+// template <> struct Range<int, int> {
+//     int b;
+//     int e;
+//     operator Range<size_t, size_t>() {
+//         return Range<size_t, size_t>{.b = size_t(b), .e = size_t(e)};
+//     }
+// };
+// template <> struct Range<Begin, size_t> {
+//     static constexpr Begin b = begin;
+//     size_t e;
+//     Range(Range<Begin, int> r) : e(r.e){};
+// };
+// template <> struct Range<size_t, End> {
+//     size_t b;
+//     static constexpr End e = end;
+//     Range(Range<int, End> r) : b(r.b){};
+// };
+// template <> struct Range<size_t,size_t> {
+//     size_t b;
+//     size_t e;
+//     Range(Range<int, int> r) : b(r.b), e(r.e) {};
+// };
 struct Colon {
     constexpr Range<size_t, size_t> operator()(std::integral auto i,
                                                std::integral auto j) {
@@ -558,22 +593,38 @@ struct Colon {
     }
 } _;
 
-inline Range<size_t, size_t> canonicalizeRange(Range<size_t, size_t> r,
-                                               size_t) {
+constexpr Range<size_t, size_t> canonicalizeRange(Range<size_t, size_t> r,
+                                                  size_t) {
     return r;
 }
-inline Range<size_t, size_t> canonicalizeRange(Range<Begin, size_t> r, size_t) {
-    return Range<size_t, size_t>{0, r.end};
+constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, size_t> r,
+                                                  size_t) {
+    return Range<size_t, size_t>{0, r.e};
 }
-inline Range<size_t, size_t> canonicalizeRange(Range<size_t, End> r, size_t M) {
-    return Range<size_t, size_t>{r.begin, M};
+constexpr Range<size_t, size_t> canonicalizeRange(Range<size_t, End> r,
+                                                  size_t M) {
+    return Range<size_t, size_t>{r.b, M};
 }
-inline Range<size_t, size_t> canonicalizeRange(Range<Begin, End>, size_t M) {
+constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, End>, size_t M) {
     return Range<size_t, size_t>{0, M};
 }
-inline Range<size_t, size_t> canonicalizeRange(Colon, size_t M) {
+constexpr Range<size_t, size_t> canonicalizeRange(Colon, size_t M) {
     return Range<size_t, size_t>{0, M};
 }
+
+template <std::integral B, std::integral E>
+constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t) {
+    return Range<size_t, size_t>{.b = size_t(r.b), .e = size_t(r.e)};
+}
+template <std::integral E>
+constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, E> r, size_t) {
+    return Range<size_t, size_t>{0, size_t(r.e)};
+}
+template <std::integral B>
+constexpr Range<size_t, size_t> canonicalizeRange(Range<B, End> r, size_t M) {
+    return Range<size_t, size_t>{size_t(r.b), M};
+}
+
 template <typename T> struct PtrVector {
     static_assert(!std::is_const_v<T>, "const T is redundant");
     using eltype = T;
@@ -602,9 +653,9 @@ template <typename T> struct PtrVector {
         return mem[N - 1];
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
-        assert(i.begin <= i.end);
-        assert(i.end <= N);
-        return PtrVector<T>{.mem = mem + i.begin, .N = i.end - i.begin};
+        assert(i.b <= i.e);
+        assert(i.e <= N);
+        return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
     }
     template <typename F, typename L>
     PtrVector<T> operator()(Range<F, L> i) const {
@@ -661,14 +712,14 @@ template <typename T> struct MutPtrVector {
     MutPtrVector(const MutPtrVector<T> &x) = default;
     MutPtrVector(T *mem, size_t N) : mem(mem), N(N) {}
     MutPtrVector<T> operator()(Range<size_t, size_t> i) {
-        assert(i.begin <= i.end);
-        assert(i.end <= N);
-        return MutPtrVector<T>{mem + i.begin, i.end - i.begin};
+        assert(i.b <= i.e);
+        assert(i.e <= N);
+        return MutPtrVector<T>{mem + i.b, i.e - i.b};
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
-        assert(i.begin <= i.end);
-        assert(i.end <= N);
-        return PtrVector<T>{.mem = mem + i.begin, .N = i.end - i.begin};
+        assert(i.b <= i.e);
+        assert(i.e <= N);
+        return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
     }
     template <typename F, typename L>
     MutPtrVector<T> operator()(Range<F, L> i) {
@@ -795,14 +846,14 @@ template <typename T> struct Vector {
         return data[i];
     }
     MutPtrVector<T> operator()(Range<size_t, size_t> i) {
-        assert(i.begin <= i.end);
-        assert(i.end <= data.size());
-        return MutPtrVector<T>{data.data() + i.begin, i.end - i.begin};
+        assert(i.b <= i.e);
+        assert(i.e <= data.size());
+        return MutPtrVector<T>{data.data() + i.b, i.e - i.b};
     }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
-        assert(i.begin <= i.end);
-        assert(i.end <= data.size());
-        return PtrVector<T>{.mem = data.data() + i.begin, .N = i.end - i.begin};
+        assert(i.b <= i.e);
+        assert(i.e <= data.size());
+        return PtrVector<T>{.mem = data.data() + i.b, .N = i.e - i.b};
     }
     template <typename F, typename L>
     MutPtrVector<T> operator()(Range<F, L> i) {
@@ -940,8 +991,7 @@ template <typename T> struct StridedVector {
     const T &operator()(size_t i) const { return d[i * x]; }
 
     StridedVector<T> &operator()(Range<size_t, size_t> i) const {
-        return StridedVector<T>{
-            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+        return StridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
     }
     template <typename F, typename L>
     StridedVector<T> operator()(Range<F, L> i) const {
@@ -992,12 +1042,10 @@ template <typename T> struct MutStridedVector {
     const T &operator()(size_t i) const { return d[i * x]; }
 
     MutStridedVector<T> operator()(Range<size_t, size_t> i) {
-        return MutStridedVector<T>{
-            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+        return MutStridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
     }
     StridedVector<T> operator()(Range<size_t, size_t> i) const {
-        return StridedVector<T>{
-            .d = d + i.begin * x, .N = i.end - i.begin, .x = x};
+        return StridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
     }
     template <typename F, typename L>
     MutStridedVector<T> operator()(Range<F, L> i) {
@@ -1104,13 +1152,13 @@ template <typename T> struct PtrMatrix {
     }
     inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
                                    Range<size_t, size_t> cols) {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= M);
-        assert(cols.end <= numCol());
-        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= M);
+        assert(cols.e <= numCol());
+        return PtrMatrix<T>{.mem = mem + cols.b + rows.b * X,
+                            .M = rows.e - rows.b,
+                            .N = cols.e - cols.b,
                             .X = X};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1141,13 +1189,13 @@ template <typename T> struct PtrMatrix {
 
     inline auto operator()(Range<size_t, size_t> rows,
                            Range<size_t, size_t> cols) const {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= M);
-        assert(cols.end <= numCol());
-        return PtrMatrix<T>{.mem = mem + cols.begin + rows.begin * X,
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= M);
+        assert(cols.e <= numCol());
+        return PtrMatrix<T>{.mem = mem + cols.b + rows.b * X,
+                            .M = rows.e - rows.b,
+                            .N = cols.e - cols.b,
                             .X = X};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1266,14 +1314,13 @@ template <typename T> struct MutPtrMatrix {
     }
     inline auto operator()(Range<size_t, size_t> rows,
                            Range<size_t, size_t> cols) {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= M);
-        assert(cols.end <= numCol());
-        return MutPtrMatrix<T>{.mem = data() + cols.begin +
-                                      rows.begin * rowStride(),
-                               .M = rows.end - rows.begin,
-                               .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= M);
+        assert(cols.e <= numCol());
+        return MutPtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
+                               .M = rows.e - rows.b,
+                               .N = cols.e - cols.b,
                                .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1304,14 +1351,13 @@ template <typename T> struct MutPtrMatrix {
 
     inline auto operator()(Range<size_t, size_t> rows,
                            Range<size_t, size_t> cols) const {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= M);
-        assert(cols.end <= numCol());
-        return PtrMatrix<T>{.mem =
-                                data() + cols.begin + rows.begin * rowStride(),
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= M);
+        assert(cols.e <= numCol());
+        return PtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
+                            .M = rows.e - rows.b,
+                            .N = cols.e - cols.b,
                             .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1419,6 +1465,14 @@ template <typename T> struct MutPtrMatrix {
         return PtrMatrix<T>{.mem = mem, .M = M, .N = N, .X = X};
     }
 };
+template <typename T> inline auto ptrVector(T *p, size_t M) {
+    if constexpr (std::is_const_v<T>) {
+        return PtrVector<std::remove_const_t<T>>{.mem = p, .N = M};
+    } else {
+        return MutPtrVector<T>{p, M};
+    }
+}
+
 template <typename T, typename P> struct BaseMatrix {
     using eltype = std::remove_reference_t<T>;
     inline T *mutdata() { return static_cast<P *>(this)->data(); }
@@ -1462,14 +1516,13 @@ template <typename T, typename P> struct BaseMatrix {
     }
     inline MutPtrMatrix<T> operator()(Range<size_t, size_t> rows,
                                       Range<size_t, size_t> cols) {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= numRow());
-        assert(cols.end <= numCol());
-        return MutPtrMatrix<T>{.mem = data() + cols.begin +
-                                      rows.begin * rowStride(),
-                               .M = rows.end - rows.begin,
-                               .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= numRow());
+        assert(cols.e <= numCol());
+        return MutPtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
+                               .M = rows.e - rows.b,
+                               .N = cols.e - cols.b,
                                .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1500,14 +1553,13 @@ template <typename T, typename P> struct BaseMatrix {
 
     inline PtrMatrix<T> operator()(Range<size_t, size_t> rows,
                                    Range<size_t, size_t> cols) const {
-        assert(rows.end >= rows.begin);
-        assert(cols.end >= cols.begin);
-        assert(rows.end <= numRow());
-        assert(cols.end <= numCol());
-        return PtrMatrix<T>{.mem =
-                                data() + cols.begin + rows.begin * rowStride(),
-                            .M = rows.end - rows.begin,
-                            .N = cols.end - cols.begin,
+        assert(rows.e >= rows.b);
+        assert(cols.e >= cols.b);
+        assert(rows.e <= numRow());
+        assert(cols.e <= numCol());
+        return PtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
+                            .M = rows.e - rows.b,
+                            .N = cols.e - cols.b,
                             .X = rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
@@ -1541,8 +1593,9 @@ template <typename T, typename P> struct BaseMatrix {
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
 
-    inline MutPtrVector<T> getRow(size_t i) {
-        return MutPtrVector<T>{data() + i * rowStride(), numCol()};
+    inline auto getRow(size_t i) {
+        return ptrVector(data() + i * rowStride(), numCol());
+        //     return MutPtrVector<T>{data() + i * rowStride(), numCol()};
     }
     inline PtrVector<T> getRow(size_t i) const {
         return PtrVector<T>{.mem = data() + i * rowStride(), .N = numCol()};

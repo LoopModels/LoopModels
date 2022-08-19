@@ -56,7 +56,7 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.offsetMatrix()(0, 0) = 1;
+        Atgt0.offsetMatrix()(0, 0) = 1;
         Atgt0.strides[0] = 1;
         Atgt0.strides[1] = I;
     }
@@ -68,7 +68,7 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.offsetMatrix()(1, 0) = 1;
+        Atgt1.offsetMatrix()(1, 0) = 1;
         Atgt1.strides[0] = 1;
         Atgt1.strides[1] = I;
     }
