@@ -492,8 +492,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     std::cout << "dep#" << d.size() << std::endl;
     auto &forward = d[d.size() - 2];
     auto &reverse = d[d.size() - 1];
-    std::cout << "forward dependence:\n" << forward;
-    std::cout << "reverse dependence:\n" << reverse;
+    std::cout << "\nforward dependence:" << forward;
+    std::cout << "\nreverse dependence:" << reverse;
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);

@@ -479,6 +479,7 @@ struct Simplex {
         // for (size_t i = 0; i < numFix; ++i)
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
+	assert(sC(_, _(1, 1 + off)) == fC(_, _(1, 1 + off)));
         SHOWLN(off);
         SHOWLN(fC);
         SHOWLN(sC);

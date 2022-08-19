@@ -638,9 +638,16 @@ struct Dependence {
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
-        for (size_t i = 0; i <= numLoopsCommon; ++i) {
-            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i])
+	SHOWLN(xPhi);
+	SHOWLN(yPhi);
+	SHOWLN(xOmega);
+	SHOWLN(yOmega);
+        for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+	    SHOWLN(i);
+            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]){
+		SHOWLN(o2idiff);
                 return o2idiff > 0;
+	    }
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
             // should be different, because either:
@@ -657,6 +664,7 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
+	    SHOWLN(sch);
             if (fxy.unSatisfiableZeroRem(sch, numLambda))
                 return false;
             if (fyx.unSatisfiableZeroRem(sch, numLambda))
@@ -702,6 +710,7 @@ struct Dependence {
         const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
         MemoryAccess *in = &x, *out = &y;
         const bool isFwd = checkDirection(pair, x, y, numLambda);
+        SHOWLN(isFwd);
         if (isFwd) {
             std::swap(farkasBackups.first, farkasBackups.second);
         } else {
@@ -795,11 +804,11 @@ struct Dependence {
             }
         } while (++t < timeDim);
 #ifndef NDEBUG
-        std::cout << "time dxy = \n" << dxy << std::endl;
+        std::cout << "time dxy =" << dxy << std::endl;
 #endif
         dxy.truncateVars(numVar);
 #ifndef NDEBUG
-        std::cout << "after 0ing, time dxy = \n" << dxy << std::endl;
+        std::cout << "after zeroing, time dxy =" << dxy << std::endl;
 #endif
         farkasBackups.first.truncateVars(numLambda + numScheduleCoefs);
         deps.emplace_back(
@@ -822,8 +831,8 @@ struct Dependence {
         // dependence direction for the dependency we week, we'll
         // discard the program variables x then y
 #ifndef NDEBUG
-        std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy = \n"
-                  << dxy << std::endl;
+        std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy =" << dxy
+                  << std::endl;
 #endif
         if (dxy.getTimeDim()) {
             timeCheck(deps, std::move(dxy), x, y);
