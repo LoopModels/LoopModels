@@ -207,7 +207,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         assert(maybeDims.hasValue());
         const llvm::SmallVector<std::pair<int, int>, 4> &dims =
             maybeDims.getValue();
-
+        printVector(std::cout << "dims = ", dims) << std::endl;
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = ar0.loop->getNumLoops();
@@ -220,6 +220,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         auto &oldToNewMap1 = oldToNewMaps.second;
         assert(oldToNewMap0.size() == ar0.loop->symbols.size());
         assert(oldToNewMap1.size() == ar1.loop->symbols.size());
+	
         // numDep1Var = nv1;
         const size_t nc = nc0 + nc1;
         IntMatrix NS{nullSpace(ma0, ma1)};
@@ -624,7 +625,7 @@ struct Dependence {
 
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
-                               size_t numLambda) {
+                               size_t numLambda, size_t nonTimeDim) {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -638,16 +639,16 @@ struct Dependence {
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
-	SHOWLN(xPhi);
-	SHOWLN(yPhi);
-	SHOWLN(xOmega);
-	SHOWLN(yOmega);
+        SHOWLN(xPhi);
+        SHOWLN(yPhi);
+        SHOWLN(xOmega);
+        SHOWLN(yOmega);
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-	    SHOWLN(i);
-            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]){
-		SHOWLN(o2idiff);
+            SHOWLN(i);
+            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
+                SHOWLN(o2idiff);
                 return o2idiff > 0;
-	    }
+            }
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
             // should be different, because either:
@@ -664,10 +665,12 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
-	    SHOWLN(sch);
-            if (fxy.unSatisfiableZeroRem(sch, numLambda))
+            SHOWLN(sch);
+            if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
                 return false;
-            if (fyx.unSatisfiableZeroRem(sch, numLambda))
+            }
+            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim))
                 return true;
         }
         assert(false);
@@ -679,7 +682,8 @@ struct Dependence {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
                                  2 * dxy.getNumEqualityConstraints();
-        if (checkDirection(pair, x, y, numLambda)) {
+        if (checkDirection(pair, x, y, numLambda,
+                           dxy.A.numCol() - dxy.getTimeDim())) {
             pair.first.truncateVars(numLambda +
                                     dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
@@ -709,7 +713,8 @@ struct Dependence {
         const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
         const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
         MemoryAccess *in = &x, *out = &y;
-        const bool isFwd = checkDirection(pair, x, y, numLambda);
+        const bool isFwd = checkDirection(pair, x, y, numLambda,
+                                          dxy.A.numCol() - dxy.getTimeDim());
         SHOWLN(isFwd);
         if (isFwd) {
             std::swap(farkasBackups.first, farkasBackups.second);
@@ -764,7 +769,8 @@ struct Dependence {
             // pair.second.removeExtraVariables(numVarKeep);
             // farkasBackups is swapped with respect to
             // checkDirection(..., *in, *out);
-            timeDirection[t] = checkDirection(pair, *out, *in, numLambda);
+            timeDirection[t] = checkDirection(
+                pair, *out, *in, numLambda, dxy.A.numCol() - dxy.getTimeDim());
             // fix
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 int64_t Acv = dxy.A(c, v);
@@ -826,13 +832,21 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return 0;
+#ifndef NDEBUG
+        std::cout << "Pre prune-bounds" << std::endl;
+        SHOWLN(dxy.A);
+        SHOWLN(dxy.E);
+#endif
         dxy.pruneBounds();
         // note that we set boundAbove=true, so we reverse the
         // dependence direction for the dependency we week, we'll
         // discard the program variables x then y
 #ifndef NDEBUG
+        std::cout << "Post prune-bounds" << std::endl;
         std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy =" << dxy
                   << std::endl;
+        SHOWLN(dxy.A);
+        SHOWLN(dxy.E);
 #endif
         if (dxy.getTimeDim()) {
             timeCheck(deps, std::move(dxy), x, y);

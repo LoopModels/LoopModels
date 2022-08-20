@@ -543,6 +543,25 @@ struct Begin {
 } begin;
 struct End {
 } end;
+struct OffsetBegin {
+    size_t offset;
+};
+inline OffsetBegin operator+(size_t x, Begin) { return OffsetBegin{x}; }
+inline OffsetBegin operator+(Begin, size_t x) { return OffsetBegin{x}; }
+inline OffsetBegin operator+(size_t x, OffsetBegin y) {
+    return OffsetBegin{x + y.offset};
+}
+inline OffsetBegin operator+(OffsetBegin y, size_t x) {
+    return OffsetBegin{x + y.offset};
+}
+struct OffsetEnd {
+    size_t offset;
+};
+inline OffsetEnd operator-(End, size_t x) { return OffsetEnd{x}; }
+inline OffsetEnd operator-(OffsetEnd y, size_t x) {
+    return OffsetEnd{y.offset + x};
+}
+
 template <typename B, typename E> struct Range {
     B b;
     E e;
@@ -990,7 +1009,7 @@ template <typename T> struct StridedVector {
     const T &operator[](size_t i) const { return d[i * x]; }
     const T &operator()(size_t i) const { return d[i * x]; }
 
-    StridedVector<T> &operator()(Range<size_t, size_t> i) const {
+    StridedVector<T> operator()(Range<size_t, size_t> i) const {
         return StridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
     }
     template <typename F, typename L>
