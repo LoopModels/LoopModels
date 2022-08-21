@@ -28,10 +28,7 @@ TEST(LinearAlgebraTest, BasicAssertions) {
     auto LUFopt = LU::fact(A);
     EXPECT_TRUE(LUFopt.hasValue());
     auto LUF = LUFopt.getValue();
-    Matrix<Rational, 0, 0> B(4);
-    for (size_t i = 0; i < 16; ++i) {
-        B[i] = A[i];
-    }
+    Matrix<Rational, 0, 0> B = A;
     std::cout << "A = \n" << A << "\nB = \n" << B << std::endl;
     printVector(std::cout << "F = \n"
                           << LUF.F << "\nperm = \n",

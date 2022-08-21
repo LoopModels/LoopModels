@@ -43,112 +43,104 @@ bool isZero(int64_t x) { return x == 0; }
 bool isZero(size_t x) { return x == 0; }
 
 template <typename T, typename S> static void addTerm(T &a, S &&x) {
-    if (!isZero(x)) {
-        for (auto it = a.begin(); it != a.end(); ++it) {
-            if ((it->termsMatch(x))) {
-                if (it->addCoef(x)) {
-                    a.erase(it);
-                }
-                return;
-            } else if (x.lexGreater(*it)) {
-                a.insert(it, std::forward<S>(x));
-                return;
-            }
+    if (isZero(x))
+        return;
+    for (auto it = a.begin(); it != a.end(); ++it) {
+        if ((it->termsMatch(x))) {
+            if (it->addCoef(x))
+                a.erase(it);
+            return;
+        } else if (x.lexGreater(*it)) {
+            a.insert(it, std::forward<S>(x));
+            return;
         }
-        a.push_back(std::forward<S>(x));
     }
-    return;
+    a.push_back(std::forward<S>(x));
 }
 template <typename T, typename S>
 static size_t addTerm(T &a, S &&x, size_t offset) {
-    if (!isZero(x)) {
-        for (auto itb = a.begin(); offset != a.size(); ++offset) {
-            auto it = itb + offset;
-            if ((it->termsMatch(x))) {
-                if (it->addCoef(x)) {
-                    a.erase(it);
-                }
-                return offset;
-            } else if (x.lexGreater(*it)) {
-                a.insert(it, std::forward<S>(x));
-                return offset;
-            }
+    if (isZero(x))
+        return offset;
+    for (auto itb = a.begin(); offset != a.size(); ++offset) {
+        auto it = itb + offset;
+        if ((it->termsMatch(x))) {
+            if (it->addCoef(x))
+                a.erase(it);
+            return offset;
+        } else if (x.lexGreater(*it)) {
+            a.insert(it, std::forward<S>(x));
+            return offset;
         }
-        a.push_back(std::forward<S>(x));
     }
+    a.push_back(std::forward<S>(x));
     return offset;
 }
 template <typename T, typename S, typename I>
 static I addTerm(T &a, S &&x, I it) {
-    if (!isZero(x)) {
-        for (; it != a.end(); ++it) {
-            if ((it->termsMatch(x))) {
-                if (it->addCoef(x)) {
-                    a.erase(it);
-                }
-                return it;
-            } else if (x.lexGreater(*it)) {
-                a.insert(it, std::forward<S>(x));
-                return it;
-            }
+    if (isZero(x))
+        return it;
+    for (; it != a.end(); ++it) {
+        if ((it->termsMatch(x))) {
+            if (it->addCoef(x))
+                a.erase(it);
+            return it;
+        } else if (x.lexGreater(*it)) {
+            a.insert(it, std::forward<S>(x));
+            return it;
         }
-        a.push_back(std::forward<S>(x));
     }
+    a.push_back(std::forward<S>(x));
     return it;
 }
 template <typename T, typename S> static void subTerm(T &a, S &&x) {
-    if (!isZero(x)) {
-        for (auto it = a.begin(); it != a.end(); ++it) {
-            if ((it->termsMatch(x))) {
-                if (it->subCoef(x)) {
-                    a.erase(it);
-                }
-                return;
-            } else if (x.lexGreater(*it)) {
-                a.insert(it, cnegate(std::forward<S>(x)));
-                return;
-            }
+    if (isZero(x))
+        return;
+    for (auto it = a.begin(); it != a.end(); ++it) {
+        if ((it->termsMatch(x))) {
+            if (it->subCoef(x))
+                a.erase(it);
+            return;
+        } else if (x.lexGreater(*it)) {
+            a.insert(it, cnegate(std::forward<S>(x)));
+            return;
         }
-        a.push_back(cnegate(std::forward<S>(x)));
     }
-    return;
+    a.push_back(cnegate(std::forward<S>(x)));
 }
 template <typename T, typename S>
 static size_t subTerm(T &a, S &&x, size_t offset) {
-    if (!isZero(x)) {
-        // for (auto it = a.begin() + offset; it != a.end(); ++it) {
-        for (auto itb = a.begin(); offset != a.size(); ++offset) {
-            auto it = itb + offset;
-            if ((it->termsMatch(x))) {
-                if (it->subCoef(x)) {
-                    a.erase(it);
-                }
-                return offset;
-            } else if (x.lexGreater(*it)) {
-                a.insert(it, cnegate(std::forward<S>(x)));
-                return offset;
-            }
+    if (isZero(x))
+        return offset;
+    // for (auto it = a.begin() + offset; it != a.end(); ++it) {
+    for (auto itb = a.begin(); offset != a.size(); ++offset) {
+        auto it = itb + offset;
+        if ((it->termsMatch(x))) {
+            if (it->subCoef(x))
+                a.erase(it);
+            return offset;
+        } else if (x.lexGreater(*it)) {
+            a.insert(it, cnegate(std::forward<S>(x)));
+            return offset;
         }
-        a.push_back(cnegate(std::forward<S>(x)));
     }
+    a.push_back(cnegate(std::forward<S>(x)));
     return offset;
 }
 template <typename T, typename S>
 inline size_t subTermReverseScan(T &a, S &&x, size_t offset) {
-    if (!isZero(x)) {
-        auto it = a.begin();
-        while (offset != 0) {
-            --offset;
-            auto ito = it + offset;
-            if ((ito->termsMatch(x))) {
-                if (ito->subCoef(x)) {
-                    a.erase(ito);
-                }
-                return offset;
-            } else if ((offset == 0) || ((ito - 1)->lexGreater(x))) {
-                a.insert(ito, cnegate(std::forward<S>(x)));
-                return ++offset;
-            }
+    if (isZero(x))
+        return offset;
+    auto it = a.begin();
+    while (offset != 0) {
+        --offset;
+        auto ito = it + offset;
+        if ((ito->termsMatch(x))) {
+            if (ito->subCoef(x))
+                a.erase(ito);
+            return offset;
+        } else if ((offset == 0) || ((ito - 1)->lexGreater(x))) {
+            a.insert(ito, cnegate(std::forward<S>(x)));
+            return ++offset;
         }
     }
     return offset;
@@ -168,7 +160,7 @@ static std::string monomialTermStr(size_t id, size_t exponent) {
 
 namespace Polynomial {
 
-template <Integral I> static bool tryDiv(I &z, I x, I y) {
+template <std::integral I> static bool tryDiv(I &z, I x, I y) {
     I a(x);
     z = x / y;
     return (z * y) != a;
@@ -291,7 +283,7 @@ struct Monomial {
     inline auto rend() { return prodIDs.rend(); }
     inline auto rbegin() const { return prodIDs.rbegin(); }
     inline auto rend() const { return prodIDs.rend(); }
-
+    static constexpr bool addCoef(const Monomial &) { return false; }
     void addTerm(VarID v) {
         for (auto it = begin(); it != end(); ++it) {
             if (v <= *it) {
@@ -514,6 +506,41 @@ bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
     return false;
 }
 
+static std::pair<llvm::SmallVector<unsigned>, llvm::SmallVector<unsigned>>
+merge(llvm::SmallVectorImpl<Monomial> &z, llvm::ArrayRef<Monomial> x,
+      llvm::ArrayRef<Monomial> y) {
+    // llvm::SmallVector<Monomial> z;
+    auto ix = x.begin();
+    auto iy = y.begin();
+    auto ixe = x.end();
+    auto iye = y.end();
+    std::pair<llvm::SmallVector<unsigned>, llvm::SmallVector<unsigned>>
+        oldToNewMaps;
+    oldToNewMaps.first.reserve(x.size());
+    oldToNewMaps.second.reserve(y.size());
+    while ((ix != ixe) && (iy != iye)) {
+        if ((ix->termsMatch(*iy))) {
+            oldToNewMaps.first.push_back(z.size());
+            oldToNewMaps.second.push_back(z.size());
+            z.push_back(*iy);
+            ++ix;
+            ++iy;
+        } else if (ix->lexGreater(*iy)) {
+            oldToNewMaps.first.push_back(z.size());
+            z.push_back(*(ix++));
+        } else {
+            oldToNewMaps.second.push_back(z.size());
+            z.push_back(*(iy++));
+        }
+    }
+    for (; ix != ixe; ++ix)
+        z.push_back(*ix);
+    for (; iy != iye; ++iy)
+        z.push_back(*iy);
+    // return z;
+    return oldToNewMaps;
+}
+
 template <size_t N> struct Val {};
 constexpr uint64_t checkZeroMask(Val<7>) { return 0x8080808080808080; }
 constexpr uint64_t checkZeroMask(Val<15>) { return 0x8000800080008000; }
@@ -705,8 +732,8 @@ template <size_t L = 15, size_t E = 7> struct PackedMonomial {
     //     }
     //     const uint64_t *xp = this->bits;
     //     const uint64_t *yp = y.bits;
-    //     return std::lexicographical_compare_three_way(xp, xp + K, yp, yp +
-    //     K);
+    //     return std::lexicographical_compare_three_way(xp, xp + K, yp, yp
+    //     + K);
     // }
     friend bool isOne(PackedMonomial const &x) { return (x.degree() == 0); }
     friend bool isZero(PackedMonomial const &) { return false; }
@@ -912,8 +939,8 @@ template <typename C, IsMonomial M> struct Term {
     M exponent;
     Term() = default;
     // Term(Uninomial u) : coefficient(1), exponent(u){};
-    // Term(Term const &x) = default;//: coefficient(x.coefficient), u(x.u){};
-    // Term(C coef, Uninomial u) : coefficient(coef), u(u){};
+    // Term(Term const &x) = default;//: coefficient(x.coefficient),
+    // u(x.u){}; Term(C coef, Uninomial u) : coefficient(coef), u(u){};
     Term(C c) : coefficient(c), exponent(One()){};
     Term(M m) : coefficient(One()), exponent(m){};
     Term(C const &c, M const &m) : coefficient(c), exponent(m){};
@@ -3040,6 +3067,16 @@ termToPolyCoeff(Term<C, PackedMonomial<L, E>> const &t, size_t i) {
     a.exponent.removeTerm(i);
     return a;
 }
+std::ostream &printSymbol(std::ostream &os, PtrVector<int64_t> x,
+                          llvm::ArrayRef<Polynomial::Monomial> monomials,
+                          int64_t mul = 1) {
+    os << mul * x[0];
+    for (size_t i = 1; i < x.size(); ++i)
+        if (int64_t xi = x[i] * mul)
+            os << (xi > 0 ? " + " : " - ")
+               << Polynomial::Term{std::abs(xi), monomials[i - 1]};
+    return os;
+}
 /* commented out, because probably broken
 template <typename C>
 Term<C, M> termToPolyCoeff(Term<C, M> &&t, size_t i) {
@@ -3214,13 +3251,9 @@ static Multivariate<C, M> gcd(Multivariate<C, M> const &x,
 }
 /*
 template <typename C>
-Multivariate<C,M> gcd(Multivariate<C,M> const &x, Multivariate<C,M> const &y) {
-if (isZero(x) || isOne(y)) {
-    return y;
-} else if ((isZero(y) || isOne(x)) || (x == y)) {
-    return x;
-} else {
-    return gcdimpl(x, y);
+Multivariate<C,M> gcd(Multivariate<C,M> const &x, Multivariate<C,M> const
+&y) { if (isZero(x) || isOne(y)) { return y; } else if ((isZero(y) ||
+isOne(x)) || (x == y)) { return x; } else { return gcdimpl(x, y);
 }
 }
 template <typename C>

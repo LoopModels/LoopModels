@@ -3,6 +3,9 @@
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
+#include "Loops.hpp"
+#include "Macro.hpp"
+#include "MatrixStringParse.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -19,64 +22,55 @@ TEST(DependenceTest, BasicAssertions) {
     // }
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     auto J = Polynomial::Monomial(Polynomial::ID{2});
-    // A*x <= b
-    // [ 1   0     [i        [ I - 2
-    //  -1   0   *  j ]        0
-    //   0   1           <=    J - 2
-    //   0  -1 ]               0     ]
-    IntMatrix Aloop(4, 2);
-    llvm::SmallVector<MPoly, 8> bloop;
-
-    // i <= I-2
-    Aloop(0, 0) = 1;
-    bloop.push_back(I - 2);
-    // i >= 0
-    Aloop(1, 0) = -1;
-    bloop.push_back(0);
-
-    // j <= J-2
-    Aloop(2, 1) = 1;
-    bloop.push_back(J - 2);
-    // j >= 0
-    Aloop(3, 1) = -1;
-    bloop.push_back(0);
-
-    PartiallyOrderedSet poset;
-    assert(poset.delta.size() == 0);
-    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
-    assert(loop->poset.delta.size() == 0);
+    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
+    // A*x >= 0;
+    // [ -2  1  0 -1  0    [ 1
+    //    0  0  0  1  0  *   I   >= 0
+    //   -2  0  1  0 -1      J
+    //    0  0  0  0  1 ]    i
+    //                       j ]
+    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
+                                      "0 0 0 1 0; "
+                                      "-2 0 1 0 -1; "
+                                      "0 0 0 0 1]")};
+    auto loop{AffineLoopNest::construct(Aloop, symbols)};
 
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
     ArrayReference Asrc(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(1));
-        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(1));
+        MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
+        OffMat(0, 0) = 1;
+        OffMat(1, 0) = 1;
+        Asrc.strides[0] = 1;
+        Asrc.strides[1] = I;
     }
     std::cout << "AaxesSrc = " << Asrc << std::endl;
 
     // A[i+1, j]
     ArrayReference Atgt0(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Atgt0.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(1));
-        Atgt0.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Atgt0.offsetMatrix()(0, 0) = 1;
+        Atgt0.strides[0] = 1;
+        Atgt0.strides[1] = I;
     }
     std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
 
     // A[i, j+1]
     ArrayReference Atgt1(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Atgt1.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Atgt1.stridesOffsets[1] = std::make_pair(I, MPoly(1));
+        Atgt1.offsetMatrix()(1, 0) = 1;
+        Atgt1.strides[0] = 1;
+        Atgt1.strides[1] = I;
     }
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
@@ -88,7 +82,8 @@ TEST(DependenceTest, BasicAssertions) {
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
     DependencePolyhedra dep0(msrc, mtgt0);
-    EXPECT_FALSE(dep0.pruneBounds());
+    EXPECT_FALSE(dep0.isEmpty());
+    dep0.pruneBounds();
     std::cout << "Dep0 = \n" << dep0 << std::endl;
 
     EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
@@ -100,21 +95,13 @@ TEST(DependenceTest, BasicAssertions) {
     schLoad1.getOmega()[4] = 1;
     MemoryAccess mtgt1{Atgt1, nullptr, schLoad1, true};
     DependencePolyhedra dep1(msrc, mtgt1);
-    EXPECT_FALSE(dep1.pruneBounds());
+    EXPECT_FALSE(dep1.isEmpty());
+    dep1.pruneBounds();
     std::cout << "Dep1 = \n" << dep1 << std::endl;
     EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
     assert(dep1.getNumInequalityConstraints() == 4);
     assert(dep1.getNumEqualityConstraints() == 2);
-
-    std::cout << "Poset contents: ";
-    for (auto &d : loop->poset.delta) {
-        std::cout << d << ", ";
-    }
-    std::cout << std::endl;
-    EXPECT_FALSE(dep0.isEmpty());
-    EXPECT_FALSE(dep1.isEmpty());
-
     // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
     EXPECT_EQ(dc.size(), 0);
     EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
@@ -122,62 +109,46 @@ TEST(DependenceTest, BasicAssertions) {
     Dependence &d(dc.front());
     EXPECT_TRUE(d.forward);
     std::cout << d << std::endl;
+    assert(d.forward);
+    assert(!allZero(d.dependenceSatisfaction.tableau(
+        d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 }
 
 TEST(IndependentTest, BasicAssertions) {
     // symmetric copy
-    // for(i = 0:I-1){
-    //   for(j = 0:i-1){
+    // for(i = 0:I-1)
+    //   for(j = 0:i-1)
     //     A(j,i) = A(i,j)
-    //   }
-    // }
     //
     std::cout << "\n\n#### Starting Symmetric Copy Test ####" << std::endl;
     auto I = Polynomial::Monomial(Polynomial::ID{1});
+    llvm::SmallVector<Polynomial::Monomial> symbols{I};
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
+                                      "0 0 1 0; "
+                                      "-1 0 1 -1; "
+                                      "0 0 0 1]")};
 
-    IntMatrix Aloop(4, 2);
-    llvm::SmallVector<MPoly, 8> bloop;
-
-    // i <= I-1
-    Aloop(0, 0) = 1;
-    bloop.push_back(I - 1);
-    // i >= 0
-    Aloop(1, 0) = -1;
-    bloop.push_back(0);
-
-    // j <= i-1
-    Aloop(2, 0) = -1;
-    Aloop(2, 1) = 1;
-    bloop.push_back(-1);
-    // j >= 0
-    Aloop(3, 1) = -1;
-    bloop.push_back(0);
-
-    PartiallyOrderedSet poset;
-    assert(poset.delta.size() == 0);
-    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
-    assert(loop->poset.delta.size() == 0);
-
+    auto loop{AffineLoopNest::construct(Aloop, symbols)};
     // we have three array refs
     // A[i, j]
     ArrayReference Asrc(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Asrc.strides[0] = 1;
+        Asrc.strides[1] = I;
     }
     std::cout << "Asrc = " << Asrc << std::endl;
 
     // A[j, i]
     ArrayReference Atgt(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(1, 0) = 1; // j
         IndMat(0, 1) = 1; // i
-        Atgt.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Atgt.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Atgt.strides[0] = 1;
+        Atgt.strides[1] = I;
     }
     std::cout << "Atgt = " << Atgt << std::endl;
 
@@ -188,6 +159,8 @@ TEST(IndependentTest, BasicAssertions) {
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
     DependencePolyhedra dep(msrc, mtgt);
     std::cout << "Dep = \n" << dep << std::endl;
+    SHOWLN(dep.A);
+    SHOWLN(dep.E);
     EXPECT_TRUE(dep.isEmpty());
     assert(dep.isEmpty());
     //
@@ -211,45 +184,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
     // Construct the loops
-    IntMatrix AMN(4, 2);
-    llvm::SmallVector<MPoly, 8> bMN;
-    IntMatrix AMNK(6, 3);
-    llvm::SmallVector<MPoly, 8> bMNK;
+    IntMatrix AMN{(stringToIntMatrix("[-1 1 0 -1 0; "
+                                     "0 0 0 1 0; "
+                                     "-1 0 1 0 -1; "
+                                     "0 0 0 0 1]"))};
+    IntMatrix AMNK{(stringToIntMatrix("[-1 1 0 -1 0 0; "
+                                      "0 0 0 1 0 0; "
+                                      "-1 0 1 0 -1 0; "
+                                      "0 0 0 0 1 0; "
+                                      "-1 0 1 0 0 -1; "
+                                      "-1 0 0 0 -1 1]"))};
 
-    // m <= M-1
-    AMN(0, 0) = 1;
-    bMN.push_back(M - 1);
-    AMNK(0, 0) = 1;
-    bMNK.push_back(M - 1);
-    // m >= 0
-    AMN(1, 0) = -1;
-    bMN.push_back(0);
-    AMNK(1, 0) = -1;
-    bMNK.push_back(0);
-
-    // n <= N-1
-    AMN(2, 1) = 1;
-    bMN.push_back(N - 1);
-    AMNK(2, 1) = 1;
-    bMNK.push_back(N - 1);
-    // n >= 0
-    AMN(3, 1) = -1;
-    bMN.push_back(0);
-    AMNK(3, 1) = -1;
-    bMNK.push_back(0);
-
-    // k <= N-1
-    AMNK(4, 2) = 1;
-    bMNK.push_back(N - 1);
-    // k >= n+1 -> n - k <= -1
-    AMNK(5, 1) = 1;
-    AMNK(5, 2) = -1;
-    bMNK.push_back(-1);
-
-    PartiallyOrderedSet poset;
-    auto loopMN = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMN, bMN, poset);
-    auto loopMNK = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMNK, bMNK, poset);
+    auto loopMN = AffineLoopNest::construct(AMN, symbols);
+    auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
 
     // construct indices
 
@@ -257,61 +206,61 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // B[m, n]
     ArrayReference BmnInd{0, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        BmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        BmnInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        BmnInd.strides[0] = 1;
+        BmnInd.strides[1] = M;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Amn2Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Amn2Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        Amn2Ind.strides[0] = 1;
+        Amn2Ind.strides[1] = M;
     }
     std::cout << "Amn2 = " << Amn2Ind << std::endl;
     // A[m, n]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Amn3Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Amn3Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        Amn3Ind.strides[0] = 1;
+        Amn3Ind.strides[1] = M;
     }
     std::cout << "Amn3 = " << Amn3Ind << std::endl;
     // A[m, k]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(2, 1) = 1; // k
-        AmkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        AmkInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        AmkInd.strides[0] = 1;
+        AmkInd.strides[1] = M;
     }
     std::cout << "Amk = " << AmkInd << std::endl;
     // U[n, k]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         IndMat(1, 0) = 1; // n
         IndMat(2, 1) = 1; // k
-        UnkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        UnkInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+        UnkInd.strides[0] = 1;
+        UnkInd.strides[1] = N;
     }
     std::cout << "Unk = " << UnkInd << std::endl;
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         IndMat(1, 0) = 1; // n
         IndMat(1, 1) = 1; // k
-        UnnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        UnnInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+        UnnInd.strides[0] = 1;
+        UnnInd.strides[1] = N;
     }
     std::cout << "Unn = " << UnnInd << std::endl;
 
@@ -543,40 +492,49 @@ TEST(TriangularExampleTest, BasicAssertions) {
     std::cout << "dep#" << d.size() << std::endl;
     auto &forward = d[d.size() - 2];
     auto &reverse = d[d.size() - 1];
-    std::cout << "forward dependence:\n" << forward;
-    std::cout << "reverse dependence:\n" << reverse;
+    std::cout << "\nforward dependence:" << forward;
+    std::cout << "\nreverse dependence:" << reverse;
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
-    EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(), 2);
-    EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(), 1);
-    EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(), 1);
-    EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(), 1);
-    EXPECT_TRUE(allZero(forward.depPoly.q));
-    EXPECT_FALSE(allZero(reverse.depPoly.q));
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    EXPECT_TRUE(allZero(forward.depPoly.E(_, 0)));
+    EXPECT_FALSE(allZero(reverse.depPoly.E(_, 0)));
     int nonZeroInd = -1;
-    for (unsigned i = 0; i < reverse.depPoly.q.size(); ++i) {
-        bool notZero = !isZero(reverse.depPoly.q[i]);
+    for (unsigned i = 0; i < reverse.depPoly.E.numRow(); ++i) {
+        bool notZero = !allZero(reverse.depPoly.getEqSymbols(i));
         // we should only find 1 non-zero
         EXPECT_FALSE((nonZeroInd != -1) & notZero);
-        if (notZero) {
+        if (notZero)
             nonZeroInd = i;
-        }
     }
     // v_1 is `n` for the load
     // v_4 is `n` for the store
     // thus, we expect v_1 = v_4 + 1
     // that is, the load depends on the store from the previous iteration
     // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
-    if (reverse.depPoly.q[nonZeroInd] == 1) {
+    auto nonZero = reverse.depPoly.getCompTimeEqOffset(nonZeroInd);
+    const size_t numSymbols = reverse.depPoly.getNumSymbols();
+    EXPECT_EQ(numSymbols, 3);
+    EXPECT_TRUE(nonZero.hasValue());
+    if (nonZero.getValue() == 1) {
         // v_1 - v_4 == 1
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), 1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), -1);
+        // 1 - v_1 + v_4 == 0
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), 1);
     } else {
         // -v_1 + v_4 == -1
-        EXPECT_TRUE(reverse.depPoly.q[nonZeroInd] == -1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), -1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), 1);
+        // -1 + v_1 - v_4 == 0
+        EXPECT_EQ(nonZero.getValue(), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
     //
     // lblock.fillEdges();
@@ -600,37 +558,17 @@ TEST(ConvReversePass, BasicAssertions) {
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     auto I = Polynomial::Monomial(Polynomial::ID{3});
     auto J = Polynomial::Monomial(Polynomial::ID{4});
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N, I, J};
     // Construct the loops
-    IntMatrix Aloop(8, 4);
-    llvm::SmallVector<MPoly, 8> bloop;
-
-    // n <= N-1
-    Aloop(0, 0) = 1;
-    bloop.push_back(N - 1);
-    // n >= 0
-    Aloop(1, 0) = -1;
-    bloop.push_back(0);
-    // m <= M-1
-    Aloop(2, 1) = 1;
-    bloop.push_back(M - 1);
-    // m >= 0
-    Aloop(3, 1) = -1;
-    bloop.push_back(0);
-    // j <= J-1
-    Aloop(4, 2) = 1;
-    bloop.push_back(J - 1);
-    // j >= 0
-    Aloop(5, 2) = -1;
-    bloop.push_back(0);
-    // i <= I-1
-    Aloop(6, 3) = 1;
-    bloop.push_back(I - 1);
-    // i >= 0
-    Aloop(7, 3) = -1;
-    bloop.push_back(0);
-
-    PartiallyOrderedSet poset;
-    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
+    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
+                                      "0 0 0 0 0 1 0 0 0; "
+                                      "-1 1 0 0 0 0 -1 0 0; "
+                                      "0 0 0 0 0 0 1 0 0; "
+                                      "-1 0 0 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 0 0 1]")};
+    auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // construct indices
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
@@ -646,32 +584,32 @@ TEST(ConvReversePass, BasicAssertions) {
     // B[m, n]
     ArrayReference BmnInd{0, loop, 2};
     {
-        PtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         IndMat(1, 0) = 1; // m
         IndMat(0, 1) = 1; // n
-        BmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        BmnInd.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        BmnInd.strides[0] = 1;
+        BmnInd.strides[1] = I;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
     ArrayReference AmnInd{1, loop, 2};
     {
-        PtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
         IndMat(1, 0) = 1; // m
         IndMat(0, 1) = 1; // n
-        AmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        AmnInd.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        AmnInd.strides[0] = 1;
+        AmnInd.strides[1] = I;
     }
     // C[m+i, n+j]
     ArrayReference CmijnInd{1, loop, 2};
     {
-        PtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
         IndMat(1, 0) = 1; // m
         IndMat(3, 0) = 1; // i
         IndMat(0, 1) = 1; // n
         IndMat(2, 1) = 1; // j
-        CmijnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        CmijnInd.stridesOffsets[1] = std::make_pair(M + I - 1, MPoly(0));
+        CmijnInd.strides[0] = 1;
+        CmijnInd.strides[1] = M + I - 1;
     }
 
     // for (n = 0; n < N; ++n){
@@ -712,56 +650,39 @@ TEST(RankDeficientLoad, BasicAssertions) {
     //   }
     // }
     auto I = Polynomial::Monomial(Polynomial::ID{1});
-    auto J = Polynomial::Monomial(Polynomial::ID{2});
+    llvm::SmallVector<Polynomial::Monomial> symbols{I};
     // A*x <= b
     // [ 1   0     [i        [ I - 1
     //  -1   0   *  j ]        0
     //  -1   1           <=    0
     //   0  -1 ]               0     ]
     //
-    IntMatrix Aloop(4, 2);
-    llvm::SmallVector<MPoly, 8> bloop;
-
-    // i <= I-1
-    Aloop(0, 0) = 1;
-    bloop.push_back(I - 1);
-    // i >= 0
-    Aloop(1, 0) = -1;
-    bloop.push_back(0);
-
-    // j <= i
-    Aloop(2, 0) = -1;
-    Aloop(2, 1) = 1;
-    bloop.push_back(0);
-    // j >= 0
-    Aloop(3, 1) = -1;
-    bloop.push_back(0);
-
-    PartiallyOrderedSet poset;
-    assert(poset.delta.size() == 0);
-    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
-    assert(loop->poset.delta.size() == 0);
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
+                                      "0 0 1 0; "
+                                      "0 0 1 -1; "
+                                      "0 0 0 1]")};
+    auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // we have three array refs
     // A[i, j] // i*stride(A,1) + j*stride(A,2);
     ArrayReference Asrc(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Asrc.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Asrc.strides[0] = 1;
+        Asrc.strides[1] = I;
     }
     std::cout << "AaxesSrc = " << Asrc << std::endl;
 
     // A[i, i]
     ArrayReference Atgt(0, loop, 2);
     {
-        PtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(0, 1) = 1; // i
-        Atgt.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Atgt.stridesOffsets[1] = std::make_pair(I, MPoly(0));
+        Atgt.strides[0] = 1;
+        Atgt.strides[1] = I;
     }
     std::cout << "AaxesTgt = \n" << Atgt << std::endl;
 
@@ -773,7 +694,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
 
     llvm::SmallVector<Dependence, 1> deps;
     EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
-
+    EXPECT_FALSE(deps.back().forward); // load -> store
     std::cout << "Blog post example:\n" << deps[0] << std::endl;
 }
 
@@ -789,6 +710,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     auto I = Polynomial::Monomial(Polynomial::ID{1});
     auto J = Polynomial::Monomial(Polynomial::ID{2});
     auto K = Polynomial::Monomial(Polynomial::ID{3});
+    llvm::SmallVector<Polynomial::Monomial> symbols{I, J, K};
     // A*x <= b
     // [ 1   0  0     [i        [ I - 1
     //  -1   0  0   *  j          0
@@ -797,55 +719,34 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     //   0   0  1 ]               K - 1
     //   0   0 -1 ]               0     ]
     //
-    IntMatrix Aloop(6, 3);
-    llvm::SmallVector<MPoly, 8> bloop;
-
-    // i <= I-1
-    Aloop(0, 0) = 1;
-    bloop.push_back(I - 1);
-    // i >= 0
-    Aloop(1, 0) = -1;
-    bloop.push_back(0);
-
-    // j <= J - 1
-    Aloop(2, 1) = 1;
-    bloop.push_back(J - 1);
-    // j >= 0
-    Aloop(3, 1) = -1;
-    bloop.push_back(0);
-
-    // k <= K - 1
-    Aloop(4, 2) = 1;
-    bloop.push_back(K - 1);
-    // k >= 0
-    Aloop(5, 2) = -1;
-    bloop.push_back(0);
-
-    PartiallyOrderedSet poset;
-    assert(poset.delta.size() == 0);
-    auto loop = llvm::makeIntrusiveRefCnt<AffineLoopNest>(Aloop, bloop, poset);
-    assert(loop->poset.delta.size() == 0);
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 0 0 -1 0 0; "
+                                      "0 0 0 0 1 0 0; "
+                                      "-1 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 -1; "
+                                      "0 0 0 0 0 0 1]")};
+    auto loop = AffineLoopNest::construct(Aloop, symbols);
 
     // we have three array refs
     // A[i+j, j+k, i - k]
     ArrayReference Aref(0, loop, 3);
     {
-        PtrMatrix<int64_t> IndMat = Aref.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Aref.indexMatrix();
         IndMat(0, 0) = 1;  // i
         IndMat(1, 0) = 1;  // + j
         IndMat(1, 1) = 1;  // j
         IndMat(2, 1) = 1;  // + k
         IndMat(0, 2) = 1;  // i
         IndMat(2, 2) = -1; // -k
-        Aref.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Aref.stridesOffsets[1] = std::make_pair(I, MPoly(0));
-        Aref.stridesOffsets[2] = std::make_pair(I * J, MPoly(0));
+        Aref.strides[0] = 1;
+        Aref.strides[1] = I;
+        Aref.strides[2] = I * J;
     }
     std::cout << "Aref = " << Aref << std::endl;
 
     Schedule schLoad(3);
     Schedule schStore(3);
-    schStore.getOmega().back() = 1;
+    schStore.getOmega()(end) = 1;
     MemoryAccess msrc{Aref, nullptr, schStore, false};
     MemoryAccess mtgt{Aref, nullptr, schLoad, true};
 

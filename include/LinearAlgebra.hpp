@@ -5,7 +5,7 @@ struct LU {
     SquareMatrix<Rational> F;
     llvm::SmallVector<unsigned> ipiv;
 
-    bool ldiv(PtrMatrix<Rational> rhs) const {
+    bool ldiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
         auto FM = F.numRow();
         assert(FM == M);
@@ -18,11 +18,9 @@ struct LU {
         // permute rhs
         for (size_t i = 0; i < M; ++i) {
             unsigned ip = ipiv[i];
-            if (i != ip) {
-                for (size_t j = 0; j < M; ++j) {
+            if (i != ip)
+                for (size_t j = 0; j < M; ++j)
                     std::swap(rhs(ip, j), rhs(i, j));
-                }
-            }
         }
         // printMatrix(std::cout << "Permuted =\n", rhs) << std::endl;
         // LU x = rhs
@@ -30,11 +28,9 @@ struct LU {
         for (size_t n = 0; n < N; ++n) {
             for (size_t m = 0; m < M; ++m) {
                 Rational Ymn = rhs(m, n);
-                for (size_t k = 0; k < m; ++k) {
-                    if (Ymn.fnmadd(F(m, k), rhs(k, n))) {
+                for (size_t k = 0; k < m; ++k)
+                    if (Ymn.fnmadd(F(m, k), rhs(k, n)))
                         return true;
-                    }
-                }
                 rhs(m, n) = Ymn;
             }
         }
@@ -53,11 +49,9 @@ struct LU {
         for (size_t n = 0; n < N; ++n) {
             for (int64_t m = M - 1; m >= 0; --m) {
                 Rational Ymn = rhs(m, n);
-                for (size_t k = m + 1; k < M; ++k) {
-                    if (Ymn.fnmadd(F(m, k), rhs(k, n))) {
+                for (size_t k = m + 1; k < M; ++k)
+                    if (Ymn.fnmadd(F(m, k), rhs(k, n)))
                         return true;
-                    }
-                }
                 if (auto div = Ymn / F(m, m)) {
                     rhs(m, n) = div.getValue();
                 } else {
@@ -69,7 +63,7 @@ struct LU {
         return false;
     }
 
-    bool rdiv(PtrMatrix<Rational> rhs) const {
+    bool rdiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
         auto FN = F.numCol();
         assert(FN == N);
@@ -85,11 +79,9 @@ struct LU {
         for (size_t n = 0; n < N; ++n) {
             for (size_t m = 0; m < M; ++m) {
                 Rational Ymn = rhs(m, n);
-                for (size_t k = 0; k < n; ++k) {
-                    if (Ymn.fnmadd(rhs(m, k), F(k, n))) {
+                for (size_t k = 0; k < n; ++k)
+                    if (Ymn.fnmadd(rhs(m, k), F(k, n)))
                         return true;
-                    }
-                }
                 if (auto div = Ymn / F(n, n)) {
                     rhs(m, n) = div.getValue();
                 } else {
@@ -102,21 +94,18 @@ struct LU {
             // for (size_t n = 0; n < N; ++n) {
             for (size_t m = 0; m < M; ++m) {
                 Rational Xmn = rhs(m, n);
-                for (size_t k = n + 1; k < N; ++k) {
-                    if (Xmn.fnmadd(rhs(m, k), F(k, n))) {
+                for (size_t k = n + 1; k < N; ++k)
+                    if (Xmn.fnmadd(rhs(m, k), F(k, n)))
                         return true;
-                    }
-                }
                 rhs(m, n) = Xmn;
             }
         }
         // permute rhs
         for (int64_t j = N - 1; j >= 0; --j) {
             unsigned jp = ipiv[j];
-            if (j != jp) {
+            if (j != jp)
                 for (size_t i = 0; i < M; ++i)
                     std::swap(rhs(i, jp), rhs(i, j));
-            }
         }
 
         return false;

@@ -4,6 +4,7 @@
 #include "./Graphs.hpp"
 #include "./Math.hpp"
 #include "llvm/IR/User.h"
+#include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
@@ -45,36 +46,37 @@ struct Schedule {
         : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops) {
-        SquarePtrMatrix<int64_t> Phi(getPhi());
+        MutSquarePtrMatrix<int64_t> Phi(getPhi());
         for (size_t i = 0; i < nLoops; ++i) {
             Phi(i, i) = 1;
         }
     };
-    SquarePtrMatrix<int64_t> getPhi() {
-        // return SquarePtrMatrix<int64_t>(data.data(), numLoops);
-        return SquarePtrMatrix<int64_t>{data.data(), numLoops};
+    MutSquarePtrMatrix<int64_t> getPhi() {
+        // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
+        return MutSquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
     }
-    llvm::MutableArrayRef<int64_t> getOmega() {
+    MutPtrVector<int64_t> getOmega() {
         return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
     }
-    SquarePtrMatrix<const int64_t> getPhi() const {
-        return SquarePtrMatrix<const int64_t>{data.data(), numLoops};
+    SquarePtrMatrix<int64_t> getPhi() const {
+        return SquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
     }
-    llvm::ArrayRef<int64_t> getOmega() const {
-        return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
+    PtrVector<int64_t> getOmega() const {
+        return {.mem = data.data() + numLoops * numLoops,
+                .N = 2 * size_t(numLoops) + 1};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
         llvm::ArrayRef<int64_t> o0 = getOmega();
         llvm::ArrayRef<int64_t> o1 = y.getOmega();
         bool allEqual = true;
-        for (size_t n = 0; n < numLoopsCommon; ++n) {
+        for (size_t n = 0; n < numLoopsCommon; ++n)
             allEqual &= (o0[2 * n] == o1[2 * n]);
-        }
         return allEqual;
     }
     bool fusedThrough(const Schedule &y) const {
         return fusedThrough(y, std::min(numLoops, y.numLoops));
     }
+    size_t getNumLoops() const { return numLoops; }
 };
 
 // TODO:
@@ -106,4 +108,5 @@ struct MemoryAccess {
         // if (loop() != x.loop()){ return false; }
         return schedule.fusedThrough(x.schedule);
     }
+    size_t getNumLoops() const { return schedule.getNumLoops(); }
 };

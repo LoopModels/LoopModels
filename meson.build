@@ -25,6 +25,7 @@ if gtest_dep.found()
   test_files = [
     'bitset_test',
     'cost_modeling_test',
+    'comparator_test',
     'compat_test',
     #'dependence_test2',
     'dependence_test',
@@ -36,6 +37,8 @@ if gtest_dep.found()
     'normal_form_test',
     'orthogonalize_test',
     'poset_test',
+    'simplex_test',
+    'string_to_intmat_test',
     'symbolics_test',
     'unimodularization_test',
   ]

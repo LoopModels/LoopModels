@@ -18,5 +18,19 @@
 */
 #define MULTIVERSION
 #define VECTORIZE
+// #define NOVECTORIZE
 // #endif
+
+#if defined(__clang__)
+#define NOVECTORIZE \
+     _Pragma("clang loop vectorize(disable)")	\
+     _Pragma("clang loop unroll(disable)")
+#else
+#define NOVECTORIZE
+#endif
+
+#define SHOW(ex) std::cout << #ex << " = " << ex;
+#define CSHOW(ex) std::cout << "; " << #ex << " = " << ex;
+#define SHOWLN(ex) std::cout << #ex << " = " << ex << std::endl;
+#define CSHOWLN(ex) std::cout << "; " << #ex << " = " << ex << std::endl;
 

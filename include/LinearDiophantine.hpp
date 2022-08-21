@@ -26,15 +26,12 @@ llvm::Optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
     int64_t a0 = std::get<0>(a);
     if (d == 0) {
         return std::make_tuple(int64_t(0));
-    } else if (a0 == 0) {
-        return {};
+    } else if (a0) {
+        int64_t x = d / a0;
+        if (a0 * x == d)
+            return std::make_tuple(x);
     }
-    int64_t x = d / a0;
-    if (a0 * x == d) {
-        return std::make_tuple(x);
-    } else {
-        return {};
-    }
+    return {};
 }
 // d = a[0]*x + a[1]*y;
 llvm::Optional<std::tuple<int64_t, int64_t>>
@@ -60,29 +57,21 @@ llvm::Optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
     int64_t a1 = std::get<1>(a);
     auto aRem = pop_front(a, Val<2>());
     if ((a0 | a1) == 0) {
-        auto opt = linearDiophantine(d, aRem);
-        if (opt.hasValue()) {
+        if (auto opt = linearDiophantine(d, aRem))
             return std::tuple_cat(std::make_tuple(int64_t(0), int64_t(0)),
                                   opt.getValue());
-        } else {
-            return {};
-        }
+        return {};
     }
     int64_t q = gcd(a0, a1);
     // d == q*((a/q)*x + (b/q)*y) + ... == q*w + ...
     // solve the rest
-    auto dio_dqc =
-        linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem));
-    if (!dio_dqc.hasValue()) {
-        return {};
+    if (auto dio_dqc =
+        linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))){
+        auto t = dio_dqc.getValue();
+        int64_t w = std::get<0>(t);
+        // w == ((a0/q)*x + (a1/q)*y)
+        if (auto o = linearDiophantine(w, a0 / q, a1 / q))
+            return std::tuple_cat(o.getValue(), pop_front(t, Val<1>()));
     }
-    auto t = dio_dqc.getValue();
-    int64_t w = std::get<0>(t);
-    // w == ((a0/q)*x + (a1/q)*y)
-    auto o = linearDiophantine(w, a0 / q, a1 / q);
-    if (!o.hasValue()) {
-        return {};
-    }
-    auto [x, y] = o.getValue();
-    return std::tuple_cat(std::make_tuple(x, y), pop_front(t, Val<1>()));
+    return {};
 }

@@ -65,12 +65,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                 // 1 - 0
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
+		[[fallthrough]];
             case llvm::CmpInst::ICMP_SLT:
                 poset.push(op0posID, op1posID, Interval::positive());
                 break;
             case llvm::CmpInst::ICMP_ULE:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
+		[[fallthrough]];
             case llvm::CmpInst::ICMP_SLE:
                 poset.push(op0posID, op1posID, Interval::nonNegative());
                 break;
@@ -80,12 +82,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             case llvm::CmpInst::ICMP_UGT:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
+		[[fallthrough]];
             case llvm::CmpInst::ICMP_SGT:
                 poset.push(op0posID, op1posID, Interval::negative());
                 break;
             case llvm::CmpInst::ICMP_UGE:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
+		[[fallthrough]];
             case llvm::CmpInst::ICMP_SGE:
                 poset.push(op0posID, op1posID, Interval::nonPositive());
                 break;
