@@ -237,7 +237,6 @@ MULTIVERSION inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
 }
 MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, size_t r,
                                            size_t c) {
-    const size_t N = A.numCol();
     int64_t Akk = A(c, r);
     if (Akk < 0) {
         Akk = -Akk;
@@ -246,7 +245,7 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, size_t r,
     for (size_t z = 0; z < c; ++z) {
         // try to eliminate `A(k,z)`
         // if Akk == 1, then this zeros out Akz
-        if (int64_t Akz = A(z, r)) {
+        if (int64_t Azr = A(z, r)) {
             // we want positive but smaller subdiagonals
             // e.g., `Akz = 5, Akk = 2`, then in the loop below when `i=k`, we
             // set A(k,z) = A(k,z) - (A(k,z)/Akk) * Akk
@@ -260,22 +259,44 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A, size_t r,
             // or if `Akz = -7, Akk = 39`, then in the loop below we get
             // A(k,z) = A(k,z) - ((A(k,z)/Akk) - ((A(k,z) % Akk) != 0) * Akk
             //        =  -7 - ((-7/39) - 1)*39 = = 6 - 5 = 1
+            int64_t AzrOld = Azr;
+            Azr /= Akk;
+            if (AzrOld < 0)
+                Azr -= (AzrOld != (Azr * Akk));
+            A(z, _) -= Azr * A(c, _);
+        }
+    }
+}
+MULTIVERSION inline void reduceSubDiagonalStack(MutPtrMatrix<int64_t> A,
+                                                MutPtrMatrix<int64_t> B,
+                                                size_t r, size_t c) {
+    int64_t Akk = A(c, r);
+    if (Akk < 0) {
+        Akk = -Akk;
+        A(c, _) *= -1;
+    }
+    for (size_t z = 0; z < c; ++z) {
+        if (int64_t Akz = A(z, r)) {
             int64_t AkzOld = Akz;
             Akz /= Akk;
             if (AkzOld < 0)
                 Akz -= (AkzOld != (Akz * Akk));
-            VECTORIZE
-            for (size_t i = 0; i < N; ++i)
-                A(z, i) -= Akz * A(c, i);
+            A(z, _) -= Akz * A(c, _);
+        }
+    }
+    for (size_t z = 0; z < B.numRow(); ++z) {
+        if (int64_t Bzr = B(z, r)) {
+            int64_t BzrOld = Bzr;
+            Bzr /= Akk;
+            if (BzrOld < 0)
+                Bzr -= (BzrOld != (Bzr * Akk));
+            B(z, _) -= Bzr * A(c, _);
         }
     }
 }
-
 MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
                                            MutPtrMatrix<int64_t> B, size_t r,
                                            size_t c) {
-    const size_t N = A.numCol();
-    const size_t K = B.numCol();
     int64_t Akk = A(c, r);
     if (Akk < 0) {
         Akk = -Akk;
@@ -305,12 +326,8 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
                 if (AkzOld < 0)
                     Akz -= (AkzOld != (Akz * Akk));
             }
-            VECTORIZE
-            for (size_t i = 0; i < N; ++i)
-                A(z, i) -= Akz * A(c, i);
-            VECTORIZE
-            for (size_t i = 0; i < K; ++i)
-                B(z, i) -= Akz * B(c, i);
+            A(z, _) -= Akz * A(c, _);
+            B(z, _) -= Akz * B(c, _);
         }
     }
 }
@@ -319,21 +336,33 @@ void reduceColumn(MutPtrMatrix<int64_t> A, size_t c, size_t r) {
     zeroSupDiagonal(A, c, r);
     reduceSubDiagonal(A, c, r);
 }
+// treats A as stacked on top of B
+void reduceColumnStack(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
+                       size_t c, size_t r) {
+    zeroSupDiagonal(B, c, r);
+    reduceSubDiagonalStack(B, A, c, r);
+}
+// NormalForm version assumes sorted
+static size_t numNonZeroRows(PtrMatrix<int64_t> A) {
+    size_t Mnew = A.numRow();
+    while (allZero(A.getRow(Mnew - 1)))
+        --Mnew;
+    return Mnew;
+}
+// NormalForm version assumes zero rows are sorted to end due to pivoting
+static void removeZeroRows(IntMatrix &A) { A.truncateRows(numNonZeroRows(A)); }
+
 MULTIVERSION size_t simplifySystemImpl(MutPtrMatrix<int64_t> A,
                                        size_t colInit = 0) {
     auto [M, N] = A.size();
     for (size_t r = 0, c = colInit; c < N && r < M; ++c)
         if (!pivotRows(A, c, M, r))
             reduceColumn(A, c, r++);
-    size_t Mnew = M;
-    while (allZero(A.getRow(Mnew - 1)))
-        --Mnew;
-    return Mnew;
+    return numNonZeroRows(A);
 }
 constexpr static void simplifySystem(EmptyMatrix<int64_t>, size_t = 0) {}
 static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
-    size_t Mnew = simplifySystemImpl(E, colInit);
-    E.truncateRows(Mnew);
+    E.truncateRows(simplifySystemImpl(E, colInit));
 }
 void reduceColumn(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B, size_t c,
                   size_t r) {

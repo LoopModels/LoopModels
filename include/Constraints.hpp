@@ -401,6 +401,24 @@ static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
     if (substituteEquality(A, E, v))
         fourierMotzkin(A, v);
 }
+static void removeZeroRows(IntMatrix &A) {
+    for (size_t i = A.numRow(); i;)
+        if (allZero(A(--i, _)))
+            eraseConstraint(A, i);
+}
+
+// A is an inequality matrix, A*x >= 0
+// B is an equality matrix, E*x == 0
+// Use the equality matrix B to remove redundant constraints both matrices
+//
+static void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
+    auto [M, N] = B.size();
+    for (size_t r = 0, c = 0; c < N && r < M; ++c)
+        if (!NormalForm::pivotRows(B, c, M, r))
+            NormalForm::reduceColumnStack(A, B, c, r++);
+    removeZeroRows(A);
+    NormalForm::removeZeroRows(B);
+}
 
 /*
 IntMatrix slackEqualityConstraints(PtrMatrix<int64_t> A,

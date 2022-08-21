@@ -497,19 +497,19 @@ TEST(TriangularExampleTest, BasicAssertions) {
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
-    EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
-    EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
     // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
     // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
     // 1);
     // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
     // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
     // 1);
-    EXPECT_TRUE(allZero(forward.depPoly.A(_, 0)));
-    EXPECT_FALSE(allZero(reverse.depPoly.A(_, 0)));
+    EXPECT_TRUE(allZero(forward.depPoly.E(_, 0)));
+    EXPECT_FALSE(allZero(reverse.depPoly.E(_, 0)));
     int nonZeroInd = -1;
-    for (unsigned i = 0; i < reverse.depPoly.A.numRow(); ++i) {
-        bool notZero = !allZero(reverse.depPoly.getSymbols(i));
+    for (unsigned i = 0; i < reverse.depPoly.E.numRow(); ++i) {
+        bool notZero = !allZero(reverse.depPoly.getEqSymbols(i));
         // we should only find 1 non-zero
         EXPECT_FALSE((nonZeroInd != -1) & notZero);
         if (notZero)
@@ -520,17 +520,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // thus, we expect v_1 = v_4 + 1
     // that is, the load depends on the store from the previous iteration
     // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
-    auto nonZero = reverse.depPoly.getCompTimeOffset(nonZeroInd);
+    auto nonZero = reverse.depPoly.getCompTimeEqOffset(nonZeroInd);
+    const size_t numSymbols = reverse.depPoly.getNumSymbols();
+    EXPECT_EQ(numSymbols, 3);
     EXPECT_TRUE(nonZero.hasValue());
     if (nonZero.getValue() == 1) {
         // v_1 - v_4 == 1
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), 1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), -1);
+        // 1 - v_1 + v_4 == 0
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), 1);
     } else {
         // -v_1 + v_4 == -1
+        // -1 + v_1 - v_4 == 0
         EXPECT_EQ(nonZero.getValue(), -1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 1), -1);
-        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, 4), 1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
     //
     // lblock.fillEdges();
@@ -690,7 +694,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
 
     llvm::SmallVector<Dependence, 1> deps;
     EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
-
+    EXPECT_FALSE(deps.back().forward); // load -> store
     std::cout << "Blog post example:\n" << deps[0] << std::endl;
 }
 

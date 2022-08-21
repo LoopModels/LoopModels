@@ -47,14 +47,23 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     MutPtrVector<int64_t> getSymbols(size_t i) {
         return A(i, _(begin, getNumSymbols()));
     }
-    PtrVector<int64_t> getSymbols(size_t i) const {
+    PtrVector<int64_t> getInEqSymbols(size_t i) const {
         return A(i, _(begin, getNumSymbols()));
     }
-    llvm::Optional<int64_t> getCompTimeOffset(size_t i) const {
+    PtrVector<int64_t> getEqSymbols(size_t i) const {
+        return E(i, _(begin, getNumSymbols()));
+    }
+    llvm::Optional<int64_t> getCompTimeInEqOffset(size_t i) const {
         for (size_t j = 1; j < getNumSymbols(); ++j)
             if (A(i, j))
                 return {};
         return A(i, 0);
+    }
+    llvm::Optional<int64_t> getCompTimeEqOffset(size_t i) const {
+        for (size_t j = 1; j < getNumSymbols(); ++j)
+            if (E(i, j))
+                return {};
+        return E(i, 0);
     }
 
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
@@ -207,7 +216,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         assert(maybeDims.hasValue());
         const llvm::SmallVector<std::pair<int, int>, 4> &dims =
             maybeDims.getValue();
-        printVector(std::cout << "dims = ", dims) << std::endl;
+        std::cout << "dims = [";
+        for (auto &d : dims)
+            std::cout << "(" << d.first << ", " << d.second << "), ";
+        std::cout << "]" << std::endl;
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = ar0.loop->getNumLoops();
@@ -220,7 +232,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         auto &oldToNewMap1 = oldToNewMaps.second;
         assert(oldToNewMap0.size() == ar0.loop->symbols.size());
         assert(oldToNewMap1.size() == ar1.loop->symbols.size());
-	
+
         // numDep1Var = nv1;
         const size_t nc = nc0 + nc1;
         IntMatrix NS{nullSpace(ma0, ma1)};
@@ -259,7 +271,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
         PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
         PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
-        SHOWLN(O0.numRow());
+        SHOWLN(A0);
+        SHOWLN(A1);
+        SHOWLN(O0);
+        SHOWLN(O1);
         // printMatrix(std::cout << "A0 =\n", A0);
         // printMatrix(std::cout << "\nA1 =\n", A1) << std::endl;
         // std::cout << "indexDim = " << indexDim << std::endl;
@@ -280,7 +295,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 E(i, 0) -= O1(i, 0);
                 for (size_t j = 0; j < O1.numCol() - 1; ++j)
                     E(i, 1 + oldToNewMap1[j]) -= O1(d1, 1 + j);
-                for (size_t j = 0; j < numDep0Var; ++j)
+                for (size_t j = 0; j < numDep1Var; ++j)
                     E(i, j + numSymbols + numDep0Var) = -A1(j, d1);
             }
         }
@@ -740,19 +755,23 @@ struct Dependence {
         // insane
         llvm::SmallVector<bool, 16> timeDirection(timeDim);
         size_t t = 0;
-        auto fE{farkasBackups.first.getCostsAndConstraints()};
-        auto sE{farkasBackups.second.getCostsAndConstraints()};
+        auto fE{farkasBackups.first.getConstraints()};
+        auto sE{farkasBackups.second.getConstraints()};
+        std::cout << "Time check; ";
+        SHOWLN(dxy.A);
+        SHOWLN(dxy.E);
         do {
             // set `t`th timeDim to +1/-1
+            int64_t step = dxy.nullStep[t];
             size_t v = numVar + t;
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-                int64_t Acv = dxy.A(c, v);
+                int64_t Acv = dxy.A(c, v) * step;
                 fE(0, 1 + c) -= Acv; // *1
                 sE(0, 1 + c) -= Acv; // *1
             }
             for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
                 // each of these actually represents 2 inds
-                int64_t Ecv = dxy.E(c, v);
+                int64_t Ecv = dxy.E(c, v) * step;
 #ifndef NDEBUG
                 if (Ecv) {
                     std::cout << "Found non-0: E(" << c << ", " << v
@@ -773,13 +792,13 @@ struct Dependence {
                 pair, *out, *in, numLambda, dxy.A.numCol() - dxy.getTimeDim());
             // fix
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
-                int64_t Acv = dxy.A(c, v);
+                int64_t Acv = dxy.A(c, v) * step;
                 fE(0, c + 1) += Acv;
                 sE(0, c + 1) += Acv;
             }
             for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
                 // each of these actually represents 2 inds
-                int64_t Ecv = dxy.E(c, v);
+                int64_t Ecv = dxy.E(c, v) * step;
                 fE(0, c + ineqEnd) += Ecv;
                 fE(0, c + posEqEnd) -= Ecv;
                 sE(0, c + ineqEnd) += Ecv;

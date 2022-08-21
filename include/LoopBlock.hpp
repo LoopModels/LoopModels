@@ -258,7 +258,7 @@ struct LoopBlock {
         if (p != map.end()) {
             return p->second;
         } else {
-            const size_t numVar = aln->getNumVar();
+            const size_t numVar = aln->getNumLoops();
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';

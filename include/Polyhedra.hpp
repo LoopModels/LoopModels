@@ -66,32 +66,9 @@ struct Polyhedra {
 
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
-        // if constexpr (hasEqualities) { // False for affine, true for
-        // dependency
-        //     // std::cout<< E <<std::endl;
-        //     NormalForm::simplifySystem(E, 1);
-        //     for (size_t i = 0; i < E.numRow(); ++i) {
-        //         for (size_t j = A.numRow(); j;) {
-        //             diff = A(--j, _) - E(i, _);
-        //             if (C.greaterEqual(diff)) {
-        //                 std::cout << "A(" << j << ", _) >= E(" << i << ", _)"
-        //                           << std::endl;
-        //                 eraseConstraint(A, j);
-        //                 C.init(A, E);
-        //             } else {
-        //                 std::cout << "A(" << j << ", _) >= -E(" << i << ",
-        //                 _)"
-        //                           << std::endl;
-        //                 diff = A(j, _) + E(i, _);
-        //                 if (C.greaterEqual(diff)) {
-        //                     eraseConstraint(A, j);
-        //                     C.init(A, E);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-        //
+        if constexpr (hasEqualities)
+	    removeRedundantRows(A, E);
+            // NormalForm::simplifySystem(E, 1);
         for (size_t j = A.numRow(); j;) {
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
