@@ -3,6 +3,7 @@
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
+#include "MatrixStringParse.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -111,47 +112,24 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
 
+
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
     // Construct the loops
-    IntMatrix AMN(4, 2);
-    llvm::SmallVector<MPoly, 8> bMN;
-    IntMatrix AMNK(6, 3);
-    llvm::SmallVector<MPoly, 8> bMNK;
+    IntMatrix AMN{stringToIntMatrix("[-1 1 0 -1 0; "
+                                     "0 0 0 1 0; "
+                                     "-1 0 1 0 -1; "
+                                     "0 0 0 0 1]")};
+    IntMatrix AMNK{stringToIntMatrix("[-1 1 0 -1 0 0; "
+                                      "0 0 0 1 0 0; "
+                                      "-1 0 1 0 -1 0; "
+                                      "0 0 0 0 1 0; "
+                                      "-1 0 1 0 0 -1; "
+                                      "-1 0 0 0 -1 1]")};
 
-    // m <= M-1
-    AMN(0, 0) = 1;
-    bMN.push_back(M - 1);
-    AMNK(0, 0) = 1;
-    bMNK.push_back(M - 1);
-    // m >= 0
-    AMN(1, 0) = -1;
-    bMN.push_back(0);
-    AMNK(1, 0) = -1;
-    bMNK.push_back(0);
-
-    // n <= N-1
-    AMN(2, 1) = 1;
-    bMN.push_back(N - 1);
-    AMNK(2, 1) = 1;
-    bMNK.push_back(N - 1);
-    // n >= 0
-    AMN(3, 1) = -1;
-    bMN.push_back(0);
-    AMNK(3, 1) = -1;
-    bMNK.push_back(0);
-
-    // k <= N-1
-    AMNK(4, 2) = 1;
-    bMNK.push_back(N - 1);
-    // k >= n+1 -> n - k <= -1
-    AMNK(5, 1) = 1;
-    AMNK(5, 2) = -1;
-    bMNK.push_back(-1);
-
-    PartiallyOrderedSet poset;
-    auto loopMN = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMN, bMN, poset);
-    auto loopMNK = llvm::makeIntrusiveRefCnt<AffineLoopNest>(AMNK, bMNK, poset);
+    auto loopMN = AffineLoopNest::construct(AMN, symbols);
+    auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
 
     // construct indices
 
@@ -159,61 +137,61 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // B[m, n]
     ArrayReference BmnInd{0, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        BmnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        BmnInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        BmnInd.strides[0] = 1;
+        BmnInd.strides[1] = M;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Amn2Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Amn2Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        Amn2Ind.strides[0] = 1;
+        Amn2Ind.strides[1] = M;
     }
     std::cout << "Amn2 = " << Amn2Ind << std::endl;
     // A[m, n]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Amn3Ind.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        Amn3Ind.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        Amn3Ind.strides[0] = 1;
+        Amn3Ind.strides[1] = M;
     }
     std::cout << "Amn3 = " << Amn3Ind << std::endl;
     // A[m, k]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(2, 1) = 1; // k
-        AmkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        AmkInd.stridesOffsets[1] = std::make_pair(M, MPoly(0));
+        AmkInd.strides[0] = 1;
+        AmkInd.strides[1] = M;
     }
     std::cout << "Amk = " << AmkInd << std::endl;
     // U[n, k]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
-        PtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         IndMat(1, 0) = 1; // n
         IndMat(2, 1) = 1; // k
-        UnkInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        UnkInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+        UnkInd.strides[0] = 1;
+        UnkInd.strides[1] = N;
     }
     std::cout << "Unk = " << UnkInd << std::endl;
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
-        PtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         IndMat(1, 0) = 1; // n
         IndMat(1, 1) = 1; // k
-        UnnInd.stridesOffsets[0] = std::make_pair(MPoly(1), MPoly(0));
-        UnnInd.stridesOffsets[1] = std::make_pair(N, MPoly(0));
+        UnnInd.strides[0] = 1;
+        UnnInd.strides[1] = N;
     }
     std::cout << "Unn = " << UnnInd << std::endl;
 
@@ -237,14 +215,11 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch2_0_0(2);
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
-    // a load points to the loaded instruction
-
     lblock.memory.emplace_back(BmnInd, Bload, sch2_0_0, true);
     // MemoryAccess &mSch2_0_0 = lblock.memory.back();
     sch2_0_1.getOmega()[4] = 1;
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
-    // a store points to the stored instruction
     lblock.memory.emplace_back(Amn2Ind, Astore0, sch2_0_1, false);
     // std::cout << "Amn2Ind.loop->poset.delta.size() = "
     //           << Amn2Ind.loop->poset.delta.size() << std::endl;
@@ -263,7 +238,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, Aload0, sch2_1_0, true);
+    lblock.memory.emplace_back(Amn2Ind, Aload1mn, sch2_1_0, true);
     // std::cout << "\nPushing back" << std::endl;
     // std::cout << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << std::endl;
     // std::cout << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
@@ -446,16 +421,50 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
     std::cout << "dep#" << d.size() << std::endl;
-    std::cout << "forward dependence:\n" << d[d.size() - 2];
-    std::cout << "reverse dependence:\n" << d[d.size() - 1];
-    assert(d[d.size() - 2].forward);
-    assert(!d[d.size() - 1].forward);
+    auto &forward = d[d.size() - 2];
+    auto &reverse = d[d.size() - 1];
+    std::cout << "\nforward dependence:" << forward;
+    std::cout << "\nreverse dependence:" << reverse;
+    assert(forward.forward);
+    assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
-    //
-    // lblock.fillEdges();
-    // std::cout << "Number of edges found: " << lblock.edges.size() <<
-    // std::endl; EXPECT_EQ(lblock.edges.size(), 12); for (auto &e :
-    // lblock.edges) {
-    //    std::cout << "Edge:\n" << e << "\n" << std::endl;
-    //}
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
+    // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
+    // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
+    // 1);
+    EXPECT_TRUE(allZero(forward.depPoly.E(_, 0)));
+    EXPECT_FALSE(allZero(reverse.depPoly.E(_, 0)));
+    int nonZeroInd = -1;
+    for (unsigned i = 0; i < reverse.depPoly.E.numRow(); ++i) {
+        bool notZero = !allZero(reverse.depPoly.getEqSymbols(i));
+        // we should only find 1 non-zero
+        EXPECT_FALSE((nonZeroInd != -1) & notZero);
+        if (notZero)
+            nonZeroInd = i;
+    }
+    // v_1 is `n` for the load
+    // v_4 is `n` for the store
+    // thus, we expect v_1 = v_4 + 1
+    // that is, the load depends on the store from the previous iteration
+    // (e.g., store when `v_4 = 0` is loaded when `v_1 = 1`.
+    auto nonZero = reverse.depPoly.getCompTimeEqOffset(nonZeroInd);
+    const size_t numSymbols = reverse.depPoly.getNumSymbols();
+    EXPECT_EQ(numSymbols, 3);
+    EXPECT_TRUE(nonZero.hasValue());
+    if (nonZero.getValue() == 1) {
+        // v_1 - v_4 == 1
+        // 1 - v_1 + v_4 == 0
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), 1);
+    } else {
+        // -v_1 + v_4 == -1
+        // -1 + v_1 - v_4 == 0
+        EXPECT_EQ(nonZero.getValue(), -1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
+        EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
+    }
 }
