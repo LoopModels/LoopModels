@@ -26,7 +26,7 @@
 //     std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
 // #endif
 
-static int64_t gcd(int64_t x, int64_t y) {
+[[maybe_unused]] static int64_t gcd(int64_t x, int64_t y) {
     if (x == 0) {
         return std::abs(y);
     } else if (y == 0) {
@@ -51,7 +51,7 @@ static int64_t gcd(int64_t x, int64_t y) {
     }
     return b << k;
 }
-static int64_t lcm(int64_t x, int64_t y) {
+[[maybe_unused]] static int64_t lcm(int64_t x, int64_t y) {
     if (std::abs(x) == 1)
         return y;
     if (std::abs(y) == 1)
@@ -303,26 +303,26 @@ std::ostream &operator<<(std::ostream &os, VarID s) {
 
 inline bool isZero(auto x) { return x == 0; }
 
-static bool allZero(const auto &x) {
+[[maybe_unused]] static bool allZero(const auto &x) {
     for (auto &a : x)
         if (!isZero(a))
             return false;
     return true;
 }
-static bool allGEZero(const auto &x) {
+[[maybe_unused]] static bool allGEZero(const auto &x) {
     for (auto &a : x)
         if (a < 0)
             return false;
     return true;
 }
-static bool allLEZero(const auto &x) {
+[[maybe_unused]] static bool allLEZero(const auto &x) {
     for (auto &a : x)
         if (a > 0)
             return false;
     return true;
 }
 
-static size_t countNonZero(const auto &x) {
+[[maybe_unused]] static size_t countNonZero(const auto &x) {
     size_t i = 0;
     for (auto &a : x)
         i += (a != 0);
@@ -780,6 +780,7 @@ template <typename T> struct MutPtrVector {
     MutPtrVector<T> operator=(std::integral auto x) {
         for (auto &&y : *this)
             y = x;
+        return *this;
     }
     MutPtrVector<T> operator+=(const AbstractVector auto &x) {
         assert(N == x.size());
@@ -2546,7 +2547,7 @@ template <std::integral I> struct PromoteType<Rational, I> {
     using eltype = Rational;
 };
 
-static void normalizeByGCD(MutPtrVector<int64_t> x) {
+[[maybe_unused]] static void normalizeByGCD(MutPtrVector<int64_t> x) {
     if (size_t N = x.size()) {
         if (N == 1) {
             x[0] = 1;

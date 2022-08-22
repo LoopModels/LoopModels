@@ -14,7 +14,7 @@
 // in which case, we have to remove `currentToOriginalPerm`,
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
-static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
+[[maybe_unused]] static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
                                       size_t numSyms, bool inequality = true) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
@@ -64,7 +64,7 @@ static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
     }
     return os;
 }
-static std::ostream &printConstraints(std::ostream &os, EmptyMatrix<int64_t>,
+[[maybe_unused]] static std::ostream &printConstraints(std::ostream &os, EmptyMatrix<int64_t>,
                                       size_t, bool = true, size_t = 0) {
     return os;
 }
@@ -85,7 +85,7 @@ MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
     }
 }
 */
-MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
+MULTIVERSION [[maybe_unused]] static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
                                              size_t i) {
     const size_t lastRow = A.numRow() - 1;
     assert(i <= lastRow);
@@ -124,12 +124,12 @@ static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     b.truncate(lastRow);
 }
 */
-static void eraseConstraint(IntMatrix &A, size_t i) {
+[[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t i) {
     // std::cout << "erase constraint i = " << i <<" of A =\n" <<A<< std::endl;
     eraseConstraintImpl(A, i);
     A.truncateRows(A.numRow() - 1);
 }
-static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
+[[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
     assert(_i != _j);
     size_t i = std::min(_i, _j);
     size_t j = std::max(_i, _j);
@@ -150,7 +150,7 @@ static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
     A.truncateRows(penuRow);
 }
 
-MULTIVERSION static size_t substituteEqualityImpl(IntMatrix &E,
+MULTIVERSION [[maybe_unused]] static size_t substituteEqualityImpl(IntMatrix &E,
                                                   const size_t i) {
     const auto [numConstraints, numVar] = E.size();
     size_t minNonZero = numVar + 1;
@@ -191,7 +191,7 @@ MULTIVERSION static size_t substituteEqualityImpl(IntMatrix &E,
     }
     return rowMinNonZero;
 }
-static bool substituteEquality(IntMatrix &E, const size_t i) {
+[[maybe_unused]] static bool substituteEquality(IntMatrix &E, const size_t i) {
     size_t rowMinNonZero = substituteEqualityImpl(E, i);
     if (rowMinNonZero == E.numRow())
         return true;
@@ -256,7 +256,7 @@ constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t) {
     return false;
 }
 
-MULTIVERSION static bool substituteEquality(IntMatrix &A, IntMatrix &E,
+MULTIVERSION [[maybe_unused]] static bool substituteEquality(IntMatrix &A, IntMatrix &E,
                                             const size_t i) {
 
     size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
@@ -291,7 +291,7 @@ void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
 }
 // counts how many negative and positive elements there are in row `i`.
 // A row corresponds to a particular variable in `A'x <= b`.
-static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<int64_t> A,
+[[maybe_unused]] static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<int64_t> A,
                                                   size_t i) {
     size_t numNeg = 0;
     size_t numPos = 0;
@@ -304,7 +304,7 @@ static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<int64_t> A,
     return std::make_pair(numNeg, numPos);
 }
 
-static void fourierMotzkin(IntMatrix &A, size_t v) {
+[[maybe_unused]] static void fourierMotzkin(IntMatrix &A, size_t v) {
     assert(v < A.numCol());
     const auto [numNeg, numPos] = countNonZeroSign(A, v);
     const size_t numRowsOld = A.numRow();
@@ -366,18 +366,18 @@ static void fourierMotzkin(IntMatrix &A, size_t v) {
     }
     // assert(numRows == (numRowsNew+1));
 }
-// static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>,
+// [[maybe_unused]] static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>,
 // size_t){
 //     return true;
 // }
-static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
+[[maybe_unused]] static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
     fourierMotzkin(A, v);
 }
-static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
+[[maybe_unused]] static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
     if (substituteEquality(A, E, v))
         fourierMotzkin(A, v);
 }
-static void removeZeroRows(IntMatrix &A) {
+[[maybe_unused]] static void removeZeroRows(IntMatrix &A) {
     for (size_t i = A.numRow(); i;)
         if (allZero(A(--i, _)))
             eraseConstraint(A, i);
@@ -387,7 +387,7 @@ static void removeZeroRows(IntMatrix &A) {
 // B is an equality matrix, E*x == 0
 // Use the equality matrix B to remove redundant constraints both matrices
 //
-static void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
+[[maybe_unused]] static void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
     auto [M, N] = B.size();
     for (size_t r = 0, c = 0; c < N && r < M; ++c)
         if (!NormalForm::pivotRows(B, c, M, r))
@@ -396,7 +396,7 @@ static void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
     NormalForm::removeZeroRows(B);
 }
 
-static void dropEmptyConstraints(IntMatrix &A) {
+[[maybe_unused]] static void dropEmptyConstraints(IntMatrix &A) {
     for (size_t c = A.numRow(); c != 0;)
         if (allZero(A.getRow(--c)))
             eraseConstraint(A, c);

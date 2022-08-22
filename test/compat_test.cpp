@@ -86,11 +86,11 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
     auto loop2Count = affp->countSigns(affp->A, 2 + affp->getNumSymbols());
     EXPECT_EQ(loop2Count.first, 1);
     EXPECT_EQ(loop2Count.second, 1);
-    affp->removeLoop(2);
+    affp->removeLoopBang(2);
     auto loop1Count = affp->countSigns(affp->A, 1 + affp->getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
     EXPECT_EQ(loop1Count.second, 1);
-    affp->removeLoop(1);
+    affp->removeLoopBang(1);
     auto loop0Count = affp->countSigns(affp->A, 0 + affp->getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
     EXPECT_EQ(loop0Count.second, 1);
