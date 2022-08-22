@@ -176,11 +176,8 @@ MULTIVERSION static size_t substituteEqualityImpl(IntMatrix &E,
         for (size_t j = 0; j < numConstraints; ++j) {
             if (j == rowMinNonZero)
                 continue;
-            if (int64_t Eij = E(j, i)) {
-                VECTORIZE
-                for (size_t v = 0; v < numVar; ++v)
-                    E(j, v) = Eis * E(j, v) - Eij * Es[v];
-            }
+            if (int64_t Eij = E(j, i))
+                E(j, _) = Eis * E(j, _) - Eij * Es;
         }
     } else {
         for (size_t j = 0; j < numConstraints; ++j) {
@@ -188,11 +185,7 @@ MULTIVERSION static size_t substituteEqualityImpl(IntMatrix &E,
                 continue;
             if (int64_t Eij = E(j, i)) {
                 int64_t g = gcd(Eij, Eis);
-                int64_t Ag = Eij / g;
-                int64_t Eg = Eis / g;
-                VECTORIZE
-                for (size_t v = 0; v < numVar; ++v)
-                    E(j, v) = Eg * E(j, v) - Ag * Es[v];
+                E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
             }
         }
     }
@@ -231,20 +224,13 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
     // of terms.
     if (std::abs(Eis) == 1) {
         for (size_t j = 0; j < A.numRow(); ++j)
-            if (int64_t Aij = A(j, i)) {
-                // `A` contains inequalities; flipping signs is illegal
-                int64_t Ag = (s * Aij);
-                int64_t Eg = (s * Eis);
-                for (size_t v = 0; v < numVar; ++v)
-                    A(j, v) = Eg * A(j, v) - Ag * Es[v];
-                // TODO: check if should drop
-            }
+            if (int64_t Aij = A(j, i))
+                A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
         for (size_t j = 0; j < numConstraints; ++j) {
             if (j == rowMinNonZero)
                 continue;
             if (int64_t Eij = E(j, i))
-                for (size_t v = 0; v < numVar; ++v)
-                    E(j, v) = Eis * E(j, v) - Eij * Es[v];
+                E(j, _) = Eis * E(j, _) - Eij * Es;
         }
     } else {
         for (size_t j = 0; j < A.numRow(); ++j) {
@@ -252,11 +238,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
                 int64_t g = gcd(Aij, Eis);
                 assert(g > 0);
                 // `A` contains inequalities; flipping signs is illegal
-                int64_t Ag = (s * Aij) / g;
-                int64_t Eg = (s * Eis) / g;
-                for (size_t v = 0; v < numVar; ++v)
-                    A(j, v) = Eg * A(j, v) - Ag * Es[v];
-                // TODO: check if should drop
+                A(j, _) = ((s * Eis) / g) * A(j, _) - ((s * Aij) / g) * Es;
             }
         }
         for (size_t j = 0; j < numConstraints; ++j) {
@@ -264,10 +246,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
                 continue;
             if (int64_t Eij = E(j, i)) {
                 int64_t g = gcd(Eij, Eis);
-                int64_t Ag = Eij / g;
-                int64_t Eg = Eis / g;
-                for (size_t v = 0; v < numVar; ++v)
-                    E(j, v) = Eg * E(j, v) - Ag * Es[v];
+                E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
             }
         }
     }
@@ -299,18 +278,15 @@ void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
     assert(C.numCol() == numSlack + numVar);
     // [I A]
     for (size_t s = 0; s < numSlack; ++s) {
-        for (size_t i = 0; i < numSlack; ++i)
-            C(s, i) = 0;
+        C(s, _(begin, numSlack)) = 0;
         C(s, s) = 1;
-        for (size_t i = 0; i < numVar; ++i)
-            C(s, i + numSlack) = A(s, i);
+        C(s, _(numSlack, numSlack + numVar)) = A(s, _(begin, numVar));
     }
     // [0 B]
     for (size_t s = 0; s < numStrict; ++s) {
-        for (size_t i = 0; i < numSlack; ++i)
-            C(s + numSlack, i) = 0;
-        for (size_t i = 0; i < numVar; ++i)
-            C(s + numSlack, i + numSlack) = B(s, i);
+        C(s + numSlack, _(begin, numSlack)) = 0;
+        C(s + numSlack, _(numSlack, numSlack + numVar)) =
+            B(s, _(begin, numVar));
     }
 }
 // counts how many negative and positive elements there are in row `i`.

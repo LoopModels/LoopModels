@@ -777,6 +777,10 @@ template <typename T> struct MutPtrVector {
     MutPtrVector<T> operator=(const AbstractVector auto &x) {
         return copyto(*this, x);
     }
+    MutPtrVector<T> operator=(std::integral auto x) {
+        for (auto &&y : *this)
+            y = x;
+    }
     MutPtrVector<T> operator+=(const AbstractVector auto &x) {
         assert(N == x.size());
         for (size_t i = 0; i < N; ++i)
