@@ -53,13 +53,13 @@ struct Schedule {
     };
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
-        return MutSquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
+        return MutSquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
     }
     MutPtrVector<int64_t> getOmega() {
         return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
     }
     SquarePtrMatrix<int64_t> getPhi() const {
-        return SquarePtrMatrix<int64_t>{.mem = data.data(), .M = numLoops};
+        return SquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
     }
     PtrVector<int64_t> getOmega() const {
         return {.mem = data.data() + numLoops * numLoops,

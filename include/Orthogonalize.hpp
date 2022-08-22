@@ -8,7 +8,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <ostream>
 
-IntMatrix orthogonalize(IntMatrix A) {
+[[maybe_unused]] static IntMatrix orthogonalize(IntMatrix A) {
     if ((A.numCol() < 2) || (A.numRow() == 0))
         return A;
     normalizeByGCD(A(0, _));
@@ -38,7 +38,7 @@ IntMatrix orthogonalize(IntMatrix A) {
     return A;
 }
 
-IntMatrix orthogonalNullSpace(IntMatrix A) {
+[[maybe_unused]] static IntMatrix orthogonalNullSpace(IntMatrix A) {
     return orthogonalize(NormalForm::nullSpace(std::move(A)));
     // IntMatrix NS{NormalForm::nullSpace(std::move(A))};
     // std::cout << "Pre-Orth NS =\n" << NS << std::endl;
@@ -47,7 +47,7 @@ IntMatrix orthogonalNullSpace(IntMatrix A) {
     // return ONS;
 }
 
-llvm::Optional<llvm::SmallVector<ArrayReference, 0>>
+[[maybe_unused]] static llvm::Optional<llvm::SmallVector<ArrayReference, 0>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I

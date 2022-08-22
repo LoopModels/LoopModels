@@ -257,7 +257,8 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
         // std::cout << "A'A =\n" << B << std::endl;
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
-                if (m != n)
+                if (m != n){
                     EXPECT_EQ(B(m, n), 0);
+		}
     }
 }

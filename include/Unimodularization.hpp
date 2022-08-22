@@ -12,7 +12,7 @@
 // end
 
 // if `A` can be unimodularized, returns the inverse of the unimodularized `A`
-llvm::Optional<SquareMatrix<int64_t>> unimodularize(IntMatrix A) {
+[[maybe_unused]] static llvm::Optional<SquareMatrix<int64_t>> unimodularize(IntMatrix A) {
     llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> OHNF =
         NormalForm::hermite(std::move(A));
     if (!OHNF.hasValue()) {

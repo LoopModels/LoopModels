@@ -1889,7 +1889,7 @@ struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
     T *data() { return mem; }
     const T *data() const { return mem; }
     operator SquarePtrMatrix<T>() const {
-        return SquarePtrMatrix<T>{.mem = mem, .M = M};
+        return SquarePtrMatrix<T>{{}, mem, M};
     }
     constexpr bool isSquare() const { return true; }
     MutSquarePtrMatrix<T> operator=(const AbstractMatrix auto &B) {
@@ -1931,10 +1931,10 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
         return A;
     }
     operator MutSquarePtrMatrix<T>() {
-        return MutSquarePtrMatrix<T>{.mem = mem.data(), .M = size_t(M)};
+        return MutSquarePtrMatrix<T>{{}, mem.data(), size_t(M)};
     }
     operator SquarePtrMatrix<T>() const {
-        return SquarePtrMatrix<T>{.mem = mem.data(), .M = M};
+        return SquarePtrMatrix<T>{{}, mem.data(), M};
     }
     static constexpr bool isSquare() { return true; }
 };

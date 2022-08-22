@@ -234,9 +234,8 @@ struct SymbolicComparator : BaseComparator<SymbolicComparator> {
     PartiallyOrderedSet POSet;
     llvm::SmallVector<Polynomial::Monomial> monomials;
     static SymbolicComparator construct(PartiallyOrderedSet poset) {
-        SymbolicComparator sc{.POSet = std::move(poset),
-                              .monomials =
-                                  llvm::SmallVector<Polynomial::Monomial>(0)};
+        SymbolicComparator sc{
+            {}, std::move(poset), llvm::SmallVector<Polynomial::Monomial>(0)};
 
         return sc;
     }
@@ -434,8 +433,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // linear equation to avoid store D^(-1) as rational type
             for (size_t i = 1; i < d.size(); ++i)
                 Dlcm = lcm(Dlcm, d(i));
-	    Vector<int64_t> b2;
-	    b2.resizeForOverwrite(d.size());
+            Vector<int64_t> b2;
+            b2.resizeForOverwrite(d.size());
             for (size_t i = 0; i < d.size(); ++i)
                 b2(i) = -b(i) * Dlcm / d(i);
             size_t numRowTrunc = U.numRow();
@@ -469,8 +468,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         return true;
     }
     bool greaterEqual(PtrVector<int64_t> query) const {
-	Vector<int64_t> b = U(_, _(begin, query.size())) * query;
-	// SHOWLN(b);
+        Vector<int64_t> b = U(_, _(begin, query.size())) * query;
+        // SHOWLN(b);
         // SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
