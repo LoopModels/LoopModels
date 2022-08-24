@@ -19,6 +19,14 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "./Math.hpp"
+#include <hwy/foreach_target.h> 
+#include <hwy/highway.h>
+
+// using namespace hwy::HWY_NAMESPACE;
+namespace hn = hwy::HWY_NAMESPACE;
+// #ifndef NDEBUGWY_NAMESPACE;
 // #ifndef NDEBUG
 // #include <memory>
 // #include <stacktrace>
@@ -782,34 +790,75 @@ template <typename T> struct MutPtrVector {
             y = x;
         return *this;
     }
+    // MutPtrVector<T> operator+=(const AbstractVector auto &x) {
+    //     assert(N == x.size());
+    //     for (size_t i = 0; i < N; ++i)
+    //         mem[i] += x(i);
+    //     return *this;
+    // }
     MutPtrVector<T> operator+=(const AbstractVector auto &x) {
         assert(N == x.size());
-        for (size_t i = 0; i < N; ++i)
-            mem[i] += x(i);
-        return *this;
+        const hn::ScalableTag<T> d;
+        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+            const auto mem_vec = hn::Load(d, mem + i);
+            auto x_vec = hn::Load(d, x + i);
+            x_vec = mem_vec + x_vec;
+            hn::Store(x_vec, d, mem + i);
+        }
+            // mem[i] += x(i);
+        // return *this;
     }
     MutPtrVector<T> operator-=(const AbstractVector auto &x) {
         assert(N == x.size());
-        for (size_t i = 0; i < N; ++i)
-            mem[i] -= x(i);
-        return *this;
+        const hn::ScalableTag<T> d;
+        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+            const auto mem_vec = hn::Load(d, mem + i);
+            auto x_vec = hn::Load(d, x + i);
+            x_vec = mem_vec - x_vec;
+            hn::Store(x_vec, d, mem + i);
+        }
+        // for (size_t i = 0; i < N; ++i)
+        //     mem[i] -= x(i);
+        // return *this;
     }
     MutPtrVector<T> operator*=(const AbstractVector auto &x) {
         assert(N == x.size());
-        for (size_t i = 0; i < N; ++i)
-            mem[i] *= x(i);
-        return *this;
+        const hn::ScalableTag<T> d;
+        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+            const auto mem_vec = hn::Load(d, mem + i);
+            auto x_vec = hn::Load(d, x + i);
+            x_vec = mem_vec * x_vec;
+            hn::Store(x_vec, d, mem + i);
+        }
+        // for (size_t i = 0; i < N; ++i)
+        //     mem[i] *= x(i);
+        // return *this;
     }
     MutPtrVector<T> operator/=(const AbstractVector auto &x) {
-        assert(N == x.size());
+        // assert(N == x.size());
+        // const hn::ScalableVector<T> d;
+        // for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        //     const auto mem_vec = hn::Load(d, mem + i);
+        //     auto x_vec = hn::Load(d, x + i);
+        //     x_vec = mem_vec / x_vec;
+        //     hn::Store(x_vec, d, mem + i);
+        // }
         for (size_t i = 0; i < N; ++i)
             mem[i] /= x(i);
         return *this;
     }
     MutPtrVector<T> operator+=(const std::integral auto x) {
-        for (size_t i = 0; i < N; ++i)
-            mem[i] += x;
-        return *this;
+        
+        // const hn::ScalableVector<T> d;
+        // for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        //     const auto mem_vec = hn::Load(d, mem + i);
+        //     auto x_vec = hn::Load(d, x + i);
+        //     x_vec = mem_vec / x_vec;
+        //     hn::Store(x_vec, d, mem + i);
+        // }
+        // for (size_t i = 0; i < N; ++i)
+        //     mem[i] += x;
+        // return *this;
     }
     MutPtrVector<T> operator-=(const std::integral auto x) {
         for (size_t i = 0; i < N; ++i)
@@ -1285,6 +1334,12 @@ template <typename T> struct PtrMatrix {
         assert(NN == N);
     }
 };
+
+// HWY_BEFORE_NAMESPACE();  // required if not using HWY_ATTR
+// // namespace project{
+// namespace HWY_NAMESPACE {
+// // namespace hn = hwy::HWY_NAMESPACE;
+
 template <typename T> struct MutPtrMatrix {
     using eltype = std::remove_reference_t<T>;
     static_assert(!std::is_const_v<T>,
@@ -1430,11 +1485,18 @@ template <typename T> struct MutPtrMatrix {
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
+// HWY_BEFORE_NAMESPACE();  // required if not using HWY_ATTR
+// namespace project{
+// namespace HWY_NAMESPACE {
+// namespace hn = hwy::HWY_NAMESPACE;
         for (size_t r = 0; r < M; ++r)
             for (size_t c = 0; c < N; ++c)
                 (*this)(r, c) += B(r, c);
         return *this;
     }
+// }
+// HWY_AFTER_NAMESPACE();
+    // }
     MutPtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
@@ -1646,10 +1708,10 @@ template <typename T, typename P> struct BaseMatrix {
         MutPtrMatrix<T> A{*this};
         return copyto(A, B);
     }
-    MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
-        MutPtrMatrix<T> A{*this};
-        return A += B;
-    }
+    // MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
+    //     MutPtrMatrix<T> A{*this};
+    //     return A += B;
+    // }
     MutPtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
         MutPtrMatrix<T> A{*this};
         return A -= B;
@@ -1707,6 +1769,10 @@ template <typename T, typename P> struct BaseMatrix {
             static_cast<P *>(this)->resizeForOverwrite(M, N);
     }
 };
+
+// }
+// }
+// HWY_AFTER_NAMESPACE();
 
 template <typename T>
 inline auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {

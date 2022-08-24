@@ -124,3 +124,13 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     // IntMatrix B;
     // B = A*4;
 }
+
+TEST(SIMDTEST, BasicAssertions) {
+    auto A{stringToIntMatrix(
+        "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+        "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
+    auto A2{stringToIntMatrix(
+        "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+        "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
+    A2 += A;
+}
