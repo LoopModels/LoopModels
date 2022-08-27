@@ -44,6 +44,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     inline size_t getNumScheduleCoefficients() const {
         return getNumVar() - nullStep.size() + 3 - getNumSymbols();
     }
+    inline size_t getNumPhiCoefficients() const {
+        return getNumVar() - nullStep.size() + 1 - getNumSymbols();
+    }
+    static constexpr size_t getNumOmegaCoefficients() { return 2; }
     MutPtrVector<int64_t> getSymbols(size_t i) {
         return A(i, _(begin, getNumSymbols()));
     }
@@ -600,42 +604,82 @@ struct Dependence {
     // returns
     size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
     size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
+    size_t getNumPhiCoefficients() const {
+        return depPoly.getNumPhiCoefficients();
+    }
+    static constexpr size_t getNumOmegaCoefficients() {
+        return DependencePolyhedra::getNumOmegaCoefficients();
+    }
     size_t getNumConstraints() const {
         return dependenceBounding.getNumConstraints() +
                dependenceSatisfaction.getNumConstraints();
     }
-    // order of variables:
-    // [ lambda, schedule coefs on loops, const schedule coef, w, u ]
+    PtrMatrix<int64_t> getSatLambda() const {
+        return dependenceSatisfaction.getConstraints()(
+            _, _(begin, getNumLambda()));
+    }
+    PtrMatrix<int64_t> getBndLambda() const {
+        return dependenceBounding.getConstraints()(_, _(begin, getNumLambda()));
+    }
+    PtrMatrix<int64_t> getSatPhiCoefs() const {
+        return dependenceSatisfaction.getConstraints()(
+            _, _(getNumLambda(), getNumLambda() + getNumPhiCoefficients()));
+    }
+    PtrMatrix<int64_t> getBndPhiCoefs() const {
+        return dependenceBounding.getConstraints()(
+            _, _(getNumLambda(), getNumLambda() + getNumPhiCoefficients()));
+    }
+    PtrMatrix<int64_t> getSatOmegaCoefs() const {
+        return dependenceSatisfaction.getConstraints()(
+            _, _(getNumLambda() + getNumPhiCoefficients(),
+                 getNumLambda() + getNumPhiCoefficients() +
+                     getNumOmegaCoefficients()));
+    }
+    PtrMatrix<int64_t> getBndOmegaCoefs() const {
+        return dependenceBounding.getConstraints()(
+            _, _(getNumLambda() + getNumPhiCoefficients(),
+                 getNumLambda() + getNumPhiCoefficients() +
+                     getNumOmegaCoefficients()));
+    }
+    PtrMatrix<int64_t> getBndCoefs() const {
+        return dependenceBounding.getConstraints()(
+            _, _(getNumLambda() + getNumPhiCoefficients() +
+                     getNumOmegaCoefficients(),
+                 end));
+    }
+
+    // order of variables from Farkas:
+    // [ lambda, Phi coefs, omega coefs, w, u ]
+    // that is thus the order of arguments here
+    // Note: we have two different sets of lambdas, so we store
+    // A = [lambda_sat, lambda_bound]
     void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
-                    MutPtrMatrix<int64_t> C,
-                    MutStridedVector<int64_t> d) const {
+                    MutPtrMatrix<int64_t> C, MutPtrMatrix<int64_t> D,
+                    MutStridedVector<int64_t> e) const {
         // const size_t numBoundingConstraints =
         //     dependenceBounding.getNumConstraints();
-        const size_t numSchedulingConstraints =
-            dependenceSatisfaction.getNumConstraints();
-        const size_t halfLambda = depPoly.getNumLambda();
-        assert(A.numRow() == getNumConstraints());
-        assert(A.numCol() == getNumLambda());
-        PtrMatrix<int64_t> sC{dependenceSatisfaction.getCostsAndConstraints()};
-        PtrMatrix<int64_t> bC{dependenceBounding.getCostsAndConstraints()};
-        auto rS = _(begin, numSchedulingConstraints);
-        auto rB = _(numSchedulingConstraints, end);
-        d(rS) = sC(_, 0);
-        d(rB) = bC(_, 0);
-        const size_t i = 1 + halfLambda;
-        // copyto(A(rS, _(begin, halfLambda)), sC(_, _(1, i)));
-        A(rS, _(begin, halfLambda)) = sC(_, _(1, i));
-        A(rB, _(halfLambda, end)) = bC(_, _(1, i));
-        const size_t numScheduleCoefs = depPoly.getNumScheduleCoefficients();
-        const size_t j = i + numScheduleCoefs;
-        B(rS, _) = sC(_, _(i, j));
-        B(rB, _) = bC(_, _(i, j));
-        const size_t numSym = getNumSymbols();
-        const size_t k = j + numSym;
-        assert(k == sC.numCol());
-        assert(k == bC.numCol());
-        C(rS, _(begin, numSym)) = sC(_, _(j, k));
-        C(rB, _(numSym, end)) = bC(_, _(j, k));
+        const auto satLambda = getSatLambda();
+        const auto bndLambda = getBndLambda();
+        const size_t satConstraints = satLambda.numRow();
+        const size_t numSatLambda = satLambda.numCol();
+        assert(numSatLambda + bndLambda.numCol() == A.numCol());
+
+        e(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
+        e(_(satConstraints, end)) = dependenceBounding.getConstants();
+
+        A(_(begin, satConstraints), _(begin, numSatLambda)) = satLambda;
+        A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
+        A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
+        A(_(satConstraints, end), _(numSatLambda, end)) = bndLambda;
+
+        B(_(begin, satConstraints), _) = getSatPhiCoefs();
+        B(_(satConstraints, end), _) = getBndPhiCoefs();
+
+        C(_(begin, satConstraints), _) = getSatOmegaCoefs();
+        C(_(satConstraints, end), _) = getBndOmegaCoefs();
+
+        D(_(begin, satConstraints), _) = 0;
+        D(_(satConstraints, end), _) = getBndCoefs();
     }
 
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,

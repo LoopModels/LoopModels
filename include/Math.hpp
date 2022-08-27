@@ -1427,6 +1427,12 @@ template <typename T> struct MutPtrMatrix {
     MutPtrMatrix<T> operator=(const AbstractMatrix auto &B) {
         return copyto(*this, B);
     }
+    MutPtrMatrix<T> operator=(const std::integral auto b) {
+        for (size_t r = 0; r < M; ++r)
+            for (size_t c = 0; c < N; ++c)
+                (*this)(r, c) = b;
+        return *this;
+    }
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
@@ -1645,6 +1651,10 @@ template <typename T, typename P> struct BaseMatrix {
     MutPtrMatrix<T> operator=(const AbstractMatrix auto &B) {
         MutPtrMatrix<T> A{*this};
         return copyto(A, B);
+    }
+    MutPtrMatrix<T> operator=(const std::integral auto b) {
+        MutPtrMatrix<T> A{*this};
+	return A = b;
     }
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         MutPtrMatrix<T> A{*this};

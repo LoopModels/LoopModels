@@ -440,12 +440,14 @@ struct LoopBlock {
         }
         return std::make_tuple(a, b, c);
     }
-    // assemble simplex
-    // we want to order variables
+    // assemble omni-simplex
+    // we want to order variables to be
+    // us, ws, Phi coefs, omega coefs, lambdas
+    
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
-    /*
+
     Simplex omniSimplex() const {
         const size_t numScheduleCoefs = countNumScheduleCoefs();
         auto [numLambda, numBounding, numConstraints] =
@@ -454,8 +456,8 @@ struct LoopBlock {
         simplex.resize(numConstraints,
                        numBounding + numScheduleCoefs + numLambda);
         auto C{simplex.getCostsAndConstraints()};
-	// layout of large simplex:
-	// all : C, u, w, schedule coefs, lambdas
+        // layout of large simplex:
+	// all : C, u, w, Phis, omegas, lambdas
 	// rows give constraints; each edge gets its own
 	size_t u = 0, w = 0;
         size_t c = 0, b = 0, s = numBounding,
@@ -481,7 +483,7 @@ struct LoopBlock {
         }
         return simplex;
     }
-    */
+
 };
 
 std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
