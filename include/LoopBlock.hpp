@@ -84,6 +84,7 @@ struct LoopBlock {
     llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
+    Simplex omniSimplex;
     // Simplex simplex;
     // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
@@ -443,56 +444,74 @@ struct LoopBlock {
     // assemble omni-simplex
     // we want to order variables to be
     // us, ws, Phi coefs, omega coefs, lambdas
-    
+
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
 
-    Simplex omniSimplex() const {
+    void instantiateOmniSimplex() {
         const size_t numScheduleCoefs = countNumScheduleCoefs();
         auto [numLambda, numBounding, numConstraints] =
             countAuxParamsAndConstraints();
-        Simplex simplex;
-        simplex.resize(numConstraints,
-                       numBounding + numScheduleCoefs + numLambda);
-        auto C{simplex.getCostsAndConstraints()};
-        // layout of large simplex:
-	// all : C, u, w, Phis, omegas, lambdas
-	// rows give constraints; each edge gets its own
-	size_t u = 0, w = 0;
-        size_t c = 0, b = 0, s = numBounding,
-               l = numBounding + numScheduleCoefs;
+        omniSimplex.resize(numConstraints,
+                           numBounding + numScheduleCoefs + numLambda);
+        auto C{omniSimplex.getConstraints()};
+        // layout of omniSimplex:
+        // Order: C, then priority to minimize
+        // all : C, u, w, Phis^-, Phis^+, omegas, lambdas
+        // rows give constraints; each edge gets its own
+        constexpr size_t numOmega =
+            DependencePolyhedra::getNumOmegaCoefficients();
+        size_t u = 0, w = numBounding - edges.size();
+        size_t c = 0, p = numBounding,
+               o = numBounding + 2 * numScheduleCoefs,
+               l = numBounding + 2 * numScheduleCoefs + numOmega * edges.size();
         llvm::SmallVector<bool, 512> visited(edges.size());
+        // TODO: develop actual map going from
         for (size_t m = 0; m < memory.size(); ++m) {
             auto &mem = memory[m];
             for (auto e : mem.edgesIn) {
                 if (visited[e])
                     continue;
                 visited[e] = true;
-                auto &edge = edges[e];
-		size_t numConstraint = edge.getNumConstraints();
-		// edge.copyLambda(, , , );
-		// for (size_t i = 0; i < numConstraint; ++i){
-		    
-		// }
-                c += numConstraint;
-                b += edge.getNumSymbols();
-                l += edge.getNumLambda();
-            }
-            s += 1 + mem.getNumLoops();
-        }
-        return simplex;
-    }
+                Dependence &edge = edges[e];
+                size_t numConstraint = edge.getNumConstraints();
+                size_t numPhi = edge.getNumPhiCoefficients();
+                size_t cc = c + numConstraint;
+                size_t ll = l + edge.getNumLambda();
+                size_t pp = p + numPhi;
+                size_t ppp = pp + numPhi;
+                size_t oo = o + numOmega;
+                size_t uu = u + 0;
+                auto L{C(_(c, cc), _(l, ll))};
+                auto Pm{C(_(c, cc), _(p, pp))};
+                auto Pp{C(_(c, cc), _(pp, ppp))};
+                auto O{C(_(c, cc), _(o, oo))};
+                auto W{C(_(c, cc), w++)};
+                auto U{C(_(c, cc), _(u, uu))};
+                edge.copyLambda(L, Pp, Pm, O, W, U, C(_(c, cc), 0));
+                Pm = -Pp;
+                // edge.copyLambda(, , , );
+                // for (size_t i = 0; i < numConstraint; ++i){
 
+                // }
+                c = cc;
+                l = ll;
+                p = ppp;
+                o = oo;
+                u = uu;
+                // b += edge.getNumSymbols();
+            }
+        }
+        // return omniSimplex.initiateFeasible();
+    }
 };
 
 std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
-    if (m.isLoad) {
+    if (m.isLoad)
         os << "= ";
-    }
     os << "ArrayReference:\n" << m.ref;
-    if (!m.isLoad) {
+    if (!m.isLoad)
         os << " =";
-    }
     return os;
 }

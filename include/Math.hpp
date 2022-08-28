@@ -400,9 +400,9 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     auto operator()(size_t i) const { return op(a(i)); }
     auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
-    size_t size() { return a.size(); }
-    size_t numRow() { return a.numRow(); }
-    size_t numCol() { return a.numCol(); }
+    size_t size() const { return a.size(); }
+    size_t numRow() const { return a.numRow(); }
+    size_t numCol() const { return a.numCol(); }
     inline auto view() const { return *this; };
 };
 // scalars broadcast
@@ -1654,7 +1654,7 @@ template <typename T, typename P> struct BaseMatrix {
     }
     MutPtrMatrix<T> operator=(const std::integral auto b) {
         MutPtrMatrix<T> A{*this};
-	return A = b;
+        return A = b;
     }
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         MutPtrMatrix<T> A{*this};

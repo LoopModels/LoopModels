@@ -616,34 +616,37 @@ struct Dependence {
     }
     PtrMatrix<int64_t> getSatLambda() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(begin, getNumLambda()));
+            _, _(begin, depPoly.getNumLambda()));
     }
     PtrMatrix<int64_t> getBndLambda() const {
-        return dependenceBounding.getConstraints()(_, _(begin, getNumLambda()));
+        return dependenceBounding.getConstraints()(
+            _, _(begin, depPoly.getNumLambda()));
     }
     PtrMatrix<int64_t> getSatPhiCoefs() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(getNumLambda(), getNumLambda() + getNumPhiCoefficients()));
+            _, _(depPoly.getNumLambda(),
+                 depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getBndPhiCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(getNumLambda(), getNumLambda() + getNumPhiCoefficients()));
+            _, _(depPoly.getNumLambda(),
+                 depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getSatOmegaCoefs() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(getNumLambda() + getNumPhiCoefficients(),
-                 getNumLambda() + getNumPhiCoefficients() +
+            _, _(depPoly.getNumLambda() + getNumPhiCoefficients(),
+                 depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
     PtrMatrix<int64_t> getBndOmegaCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(getNumLambda() + getNumPhiCoefficients(),
-                 getNumLambda() + getNumPhiCoefficients() +
+            _, _(depPoly.getNumLambda() + getNumPhiCoefficients(),
+                 depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
     PtrMatrix<int64_t> getBndCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(getNumLambda() + getNumPhiCoefficients() +
+            _, _(depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients(),
                  end));
     }
@@ -653,9 +656,10 @@ struct Dependence {
     // that is thus the order of arguments here
     // Note: we have two different sets of lambdas, so we store
     // A = [lambda_sat, lambda_bound]
-    void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
-                    MutPtrMatrix<int64_t> C, MutPtrMatrix<int64_t> D,
-                    MutStridedVector<int64_t> e) const {
+    void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> Bp,
+                    MutPtrMatrix<int64_t> Bm, MutPtrMatrix<int64_t> C,
+                    MutStridedVector<int64_t> W, MutPtrMatrix<int64_t> U,
+                    MutStridedVector<int64_t> c) const {
         // const size_t numBoundingConstraints =
         //     dependenceBounding.getNumConstraints();
         const auto satLambda = getSatLambda();
@@ -664,22 +668,55 @@ struct Dependence {
         const size_t numSatLambda = satLambda.numCol();
         assert(numSatLambda + bndLambda.numCol() == A.numCol());
 
-        e(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
-        e(_(satConstraints, end)) = dependenceBounding.getConstants();
+        c(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
+        c(_(satConstraints, end)) = dependenceBounding.getConstants();
 
         A(_(begin, satConstraints), _(begin, numSatLambda)) = satLambda;
-        A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
-        A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
+        // A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
+        // A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
         A(_(satConstraints, end), _(numSatLambda, end)) = bndLambda;
 
-        B(_(begin, satConstraints), _) = getSatPhiCoefs();
-        B(_(satConstraints, end), _) = getBndPhiCoefs();
+        // TODO: develop and suport fusion of statements like
+        // Bp(_(begin, satConstraints), _) = getSatPhiCoefs();
+        // Bm(_(begin, satConstraints), _) = -getSatPhiCoefs();
+        // Bp(_(satConstraints, end), _) = getBndPhiCoefs();
+        // Bm(_(satConstraints, end), _) = -getBndPhiCoefs();
+        // perhaps something like:
+        // std::make_pair(
+        //   Bp(_(begin, satConstraints), _),
+        //   Bm(_(begin, satConstraints), _)) =
+        //     elementwiseMap(
+        //       std::make_pair(Plus{},Minus{}),
+        //       getSatPhiCoefs()
+        //     );
+        auto SP{getSatPhiCoefs()};
+        assert(Bp.numCol() == SP.numCol());
+        assert(Bm.numCol() == SP.numCol());
+        assert(Bp.numRow() == Bm.numRow());
+        for (size_t i = 0; i < satConstraints; ++i) {
+            for (size_t j = 0; j < SP.numCol(); ++j) {
+                int64_t SOij = SP(i, j);
+                Bp(i, j) = SOij;
+                Bm(i, j) = -SOij;
+            }
+        }
+        auto BP{getBndPhiCoefs()};
+        assert(Bp.numCol() == BP.numCol());
+        for (size_t i = satConstraints; i < Bp.numRow(); ++i) {
+            for (size_t j = 0; j < BP.numCol(); ++j) {
+                int64_t BOij = BP(i - satConstraints, j);
+                Bp(i, j) = BOij;
+                Bm(i, j) = -BOij;
+            }
+        }
 
         C(_(begin, satConstraints), _) = getSatOmegaCoefs();
         C(_(satConstraints, end), _) = getBndOmegaCoefs();
 
-        D(_(begin, satConstraints), _) = 0;
-        D(_(satConstraints, end), _) = getBndCoefs();
+        // D(_(begin, satConstraints), _) = 0;
+        auto BC{getBndCoefs()};
+        W(_(satConstraints, end)) = BC(_, 0);
+        U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
 
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
@@ -689,7 +726,9 @@ struct Dependence {
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
         const size_t numLoopsY = y.ref.getNumLoops();
+#ifndef NDEBUG
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+#endif
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
         SquarePtrMatrix<int64_t> xPhi = x.schedule.getPhi();
         SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
@@ -732,8 +771,8 @@ struct Dependence {
             if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim))
                 return true;
         }
-        assert(false);
-        return false;
+        // assert(false);
+        // return false;
     }
     static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
                               const DependencePolyhedra &dxy, MemoryAccess &x,
