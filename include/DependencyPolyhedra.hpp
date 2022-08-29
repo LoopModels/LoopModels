@@ -73,9 +73,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
-#ifndef NDEBUG
-        std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
-#endif
+// #ifndef NDEBUG
+//         std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
+// #endif
         // fast path; most common case
         if (ar0.stridesMatch(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
@@ -220,10 +220,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         assert(maybeDims.hasValue());
         const llvm::SmallVector<std::pair<int, int>, 4> &dims =
             maybeDims.getValue();
-        std::cout << "dims = [";
-        for (auto &d : dims)
-            std::cout << "(" << d.first << ", " << d.second << "), ";
-        std::cout << "]" << std::endl;
+        // std::cout << "dims = [";
+        // for (auto &d : dims)
+        //     std::cout << "(" << d.first << ", " << d.second << "), ";
+        // std::cout << "]" << std::endl;
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = ar0.loop->getNumLoops();
@@ -275,10 +275,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
         PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
         PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
-        SHOWLN(A0);
-        SHOWLN(A1);
-        SHOWLN(O0);
-        SHOWLN(O1);
+        // SHOWLN(A0);
+        // SHOWLN(A1);
+        // SHOWLN(O0);
+        // SHOWLN(O1);
         // printMatrix(std::cout << "A0 =\n", A0);
         // printMatrix(std::cout << "\nA1 =\n", A1) << std::endl;
         // std::cout << "indexDim = " << indexDim << std::endl;
@@ -311,10 +311,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             }
             E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
         }
-        SHOWLN(A);
-        SHOWLN(E);
+        // SHOWLN(A);
+        // SHOWLN(E);
         C.init(A, E);
-        SHOWLN(*this);
+        // SHOWLN(*this);
         // pruneBounds();
     }
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
@@ -359,11 +359,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
         fC(_, 0) = 0;
         fC(0, 0) = 1; // lambda_0
-        SHOWLN(A.numRow());
-        SHOWLN(A.numCol());
-        SHOWLN(fC.numRow());
-        SHOWLN(fC.numCol());
-        SHOWLN(ineqEnd - 1);
+        // SHOWLN(A.numRow());
+        // SHOWLN(A.numCol());
+        // SHOWLN(fC.numRow());
+        // SHOWLN(fC.numCol());
+        // SHOWLN(ineqEnd - 1);
         fC(_, _(1, ineqEnd)) = A.transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
@@ -432,8 +432,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         fC(0, numScheduleCoefs - 1 + numLambda) = -1;
         bC(0, numScheduleCoefs - 2 + numLambda) = -1;
         bC(0, numScheduleCoefs - 1 + numLambda) = 1;
-        SHOWLN(pair.first.tableau);
-        SHOWLN(pair.second.tableau);
+        // SHOWLN(pair.first.tableau);
+        // SHOWLN(pair.second.tableau);
         // note that delta/constant coef is handled as last `s`
         return pair;
         // fw.removeExtraVariables(numVarKeep);
@@ -737,14 +737,14 @@ struct Dependence {
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
-        SHOWLN(xPhi);
-        SHOWLN(yPhi);
-        SHOWLN(xOmega);
-        SHOWLN(yOmega);
+        // SHOWLN(xPhi);
+        // SHOWLN(yPhi);
+        // SHOWLN(xOmega);
+        // SHOWLN(yOmega);
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-            SHOWLN(i);
+            // SHOWLN(i);
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-                SHOWLN(o2idiff);
+                // SHOWLN(o2idiff);
                 return o2idiff > 0;
             }
             // we should not be able to reach `numLoopsCommon`
@@ -763,7 +763,7 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
-            SHOWLN(sch);
+            // SHOWLN(sch);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
                 return false;
@@ -813,7 +813,7 @@ struct Dependence {
         MemoryAccess *in = &x, *out = &y;
         const bool isFwd = checkDirection(pair, x, y, numLambda,
                                           dxy.A.numCol() - dxy.getTimeDim());
-        SHOWLN(isFwd);
+        // SHOWLN(isFwd);
         if (isFwd) {
             std::swap(farkasBackups.first, farkasBackups.second);
         } else {
@@ -840,9 +840,9 @@ struct Dependence {
         size_t t = 0;
         auto fE{farkasBackups.first.getConstraints()};
         auto sE{farkasBackups.second.getConstraints()};
-        std::cout << "Time check; ";
-        SHOWLN(dxy.A);
-        SHOWLN(dxy.E);
+        // std::cout << "Time check; ";
+        // SHOWLN(dxy.A);
+        // SHOWLN(dxy.E);
         do {
             // set `t`th timeDim to +1/-1
             int64_t step = dxy.nullStep[t];
@@ -855,12 +855,12 @@ struct Dependence {
             for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
                 // each of these actually represents 2 inds
                 int64_t Ecv = dxy.E(c, v) * step;
-#ifndef NDEBUG
-                if (Ecv) {
-                    std::cout << "Found non-0: E(" << c << ", " << v
-                              << ") = " << Ecv << std::endl;
-                }
-#endif
+// #ifndef NDEBUG
+//                 if (Ecv) {
+//                     std::cout << "Found non-0: E(" << c << ", " << v
+//                               << ") = " << Ecv << std::endl;
+//                 }
+// #endif
                 fE(0, c + ineqEnd) -= Ecv;
                 fE(0, c + posEqEnd) += Ecv;
                 sE(0, c + ineqEnd) -= Ecv;
@@ -911,13 +911,13 @@ struct Dependence {
                 sE(0, c + posEqEnd) += Ecv;
             }
         } while (++t < timeDim);
-#ifndef NDEBUG
-        std::cout << "time dxy =" << dxy << std::endl;
-#endif
+// #ifndef NDEBUG
+//         std::cout << "time dxy =" << dxy << std::endl;
+// #endif
         dxy.truncateVars(numVar);
-#ifndef NDEBUG
-        std::cout << "after zeroing, time dxy =" << dxy << std::endl;
-#endif
+// #ifndef NDEBUG
+//         std::cout << "after zeroing, time dxy =" << dxy << std::endl;
+// #endif
         farkasBackups.first.truncateVars(numLambda + numScheduleCoefs);
         deps.emplace_back(
             Dependence{std::move(dxy), std::move(farkasBackups.first),
@@ -934,22 +934,22 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return 0;
-#ifndef NDEBUG
-        std::cout << "Pre prune-bounds" << std::endl;
-        SHOWLN(dxy.A);
-        SHOWLN(dxy.E);
-#endif
+// #ifndef NDEBUG
+//         std::cout << "Pre prune-bounds" << std::endl;
+//         // SHOWLN(dxy.A);
+//         // SHOWLN(dxy.E);
+// #endif
         dxy.pruneBounds();
         // note that we set boundAbove=true, so we reverse the
         // dependence direction for the dependency we week, we'll
         // discard the program variables x then y
-#ifndef NDEBUG
-        std::cout << "Post prune-bounds" << std::endl;
-        std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy =" << dxy
-                  << std::endl;
-        SHOWLN(dxy.A);
-        SHOWLN(dxy.E);
-#endif
+// #ifndef NDEBUG
+        // std::cout << "Post prune-bounds" << std::endl;
+        // std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy =" << dxy
+        //           << std::endl;
+        // SHOWLN(dxy.A);
+        // SHOWLN(dxy.E);
+// #endif
         if (dxy.getTimeDim()) {
             timeCheck(deps, std::move(dxy), x, y);
             return 2;

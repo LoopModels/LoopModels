@@ -368,6 +368,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
     //           << std::endl;
     MemoryAccess &mSch3_3 = lblock.memory.back();
+    EXPECT_EQ(lblock.memory.size(), 9);
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -383,7 +384,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // First, comparisons of store to `A(m,n) = B(m,n)` versus...
     llvm::SmallVector<Dependence, 0> d;
-    d.reserve(15);
+    d.reserve(16);
+    llvm::SmallVector<Dependence, 0> r;
+    r.reserve(16);
     // std::cout << "lblock.memory[1].ref.loop->poset.delta.size() = "
     //           << lblock.memory[1].ref.loop->poset.delta.size() << std::endl;
     // std::cout << "&mSch2_0_1 = " << &mSch2_0_1 << std::endl;
@@ -397,13 +400,17 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //           << std::endl;
     // // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
+    EXPECT_EQ(Dependence::check(r, mSch2_1_0, mSch2_0_1), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     //
     //
     // store in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_2), 1);
+    EXPECT_EQ(Dependence::check(r, mSch2_1_2, mSch2_0_1), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     //
@@ -411,38 +418,55 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
 
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_1), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_1, mSch2_0_1), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     //
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_0), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_0, mSch2_0_1), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_3), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_3, mSch2_0_1), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    EXPECT_EQ(d.size(), 5);
+    EXPECT_EQ(r.size(), 5);
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
     // store in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch2_1_2), 1);
+    EXPECT_EQ(Dependence::check(r, mSch2_1_2, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-
     //
     // sch3_               3        0         1     2
     // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_1), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_0), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_0, mSch2_1_0), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    // NOTE: these are two load-load comparisons!
+    // Hence, `fillEdges()` will currently not add these!!
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_3), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_3, mSch2_1_0), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
@@ -450,15 +474,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // sch3_               3        0         1     2
     // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_1), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_1, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
+    EXPECT_FALSE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_0), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_0, mSch2_1_2), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_3), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_3, mSch2_1_2), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Fourth, comparisons of load `A(m,n)` in
@@ -467,11 +497,17 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // with...
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_0), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_0, mSch3_1), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    // NOTE: this is another load-load comparison that fillEdges
+    // will not add currently!
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_3), 1);
+    EXPECT_EQ(Dependence::check(r, mSch3_3, mSch3_1), 1);
     EXPECT_FALSE(d.back().forward);
+    EXPECT_TRUE(r.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Fifth, comparisons of load `A(m,k)` in
@@ -487,8 +523,11 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // std::endl; printVector(std::cout << "mSch3_3.schedule.getOmega() = ",
     // mSch3_3.schedule.getOmega()) << std::endl;
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
+    EXPECT_EQ(Dependence::check(r, mSch3_3, mSch3_0), 2);
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
+    EXPECT_FALSE(r[r.size() - 2].forward);
+    EXPECT_TRUE(r[r.size() - 1].forward);
     std::cout << "dep#" << d.size() << std::endl;
     auto &forward = d[d.size() - 2];
     auto &reverse = d[d.size() - 1];
@@ -497,6 +536,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
+    EXPECT_EQ(r.size(), 16);
     // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
     // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
     // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
@@ -537,7 +577,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
     //
-    // lblock.fillEdges();
+    lblock.fillEdges();
+    // -3 comes from the fact we did 3 load-load comparisons above
+    // in the future, we may have `fillEdges` make load-load comparisons
+    // so that we can add bounding constraints to the objective, to
+    // favor putting repeated loads close together.
+    // However, we would not add the scheduling constraints.
+    EXPECT_EQ(lblock.edges.size(), d.size()-3);
     // std::cout << "Number of edges found: " << lblock.edges.size() <<
     // std::endl; EXPECT_EQ(lblock.edges.size(), 12); for (auto &e :
     // lblock.edges) {

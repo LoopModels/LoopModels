@@ -394,8 +394,8 @@ struct Simplex {
             makeBasic(C, 0, i);
         size_t ind = basicConstraints[i];
         size_t lastRow = C.numRow() - 1;
-        SHOWLN(ind);
-        SHOWLN(C.numRow());
+        // SHOWLN(ind);
+        // SHOWLN(C.numRow());
         if (lastRow != ind)
             swapRows(C, ind, lastRow);
         truncateConstraints(lastRow);
@@ -447,11 +447,11 @@ struct Simplex {
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
         sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
-        SHOWLN(off);
-        SHOWLN(fC);
-        SHOWLN(sC);
-        SHOWLN(x);
-        SHOWLN(subSimp);
+        // SHOWLN(off);
+        // SHOWLN(fC);
+        // SHOWLN(sC);
+        // SHOWLN(x);
+        // SHOWLN(subSimp);
         return subSimp.initiateFeasible();
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
@@ -484,11 +484,11 @@ struct Simplex {
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_(begin, numRow), _(1, 1 + off));
         assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
-        SHOWLN(off);
-        SHOWLN(fC);
-        SHOWLN(sC);
-        SHOWLN(x);
-        SHOWLN(subSimp);
+        // SHOWLN(off);
+        // SHOWLN(fC);
+        // SHOWLN(sC);
+        // SHOWLN(x);
+        // SHOWLN(subSimp);
         return subSimp.initiateFeasible();
     }
     bool satisfiableZeroRem(PtrVector<int64_t> x, size_t off,

@@ -74,22 +74,22 @@ struct Polyhedra {
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
-                std::cout << "--------------Start new " << i << "--------------"
-                          << std::endl;
-                std::cout << "Now i, j are " << i << " " << j << std::endl;
-                std::cout << "print diff first: " << diff << std::endl;
+                // std::cout << "--------------Start new " << i << "--------------"
+                //           << std::endl;
+                // std::cout << "Now i, j are " << i << " " << j << std::endl;
+                // std::cout << "print diff first: " << diff << std::endl;
 
                 if (C.greaterEqual(diff)) {
-                    std::cout << "i: " << i << "; j: " << j
-                              << " greater Equal returns true" << A
-                              << std::endl;
+                    // std::cout << "i: " << i << "; j: " << j
+                    //           << " greater Equal returns true" << A
+                    //           << std::endl;
                     eraseConstraint(A, i);
                     C.init(A, E);
                     --j; // `i < j`, and `i` has been removed
                 } else if (C.greaterEqual(diff *= -1)) {
-                    std::cout << "i: " << i << "; j : " << j
-                              << " greater Equal returns false" << A
-                              << std::endl;
+                    // std::cout << "i: " << i << "; j : " << j
+                    //           << " greater Equal returns false" << A
+                    //           << std::endl;
                     eraseConstraint(A, j);
                     C.init(A, E);
                     break; // `j` is gone

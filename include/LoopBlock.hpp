@@ -9,6 +9,7 @@
 #include "./Simplex.hpp"
 #include "./Symbolics.hpp"
 #include "LinearAlgebra.hpp"
+#include "Macro.hpp"
 #include "Orthogonalize.hpp"
 #include <cstddef>
 #include <llvm/ADT/DenseMap.h>
@@ -240,13 +241,23 @@ struct LoopBlock {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
             ArrayReference &refI = mai.ref;
+	    SHOWLN(i);
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
+		CSHOW(j);
+		CSHOW(refI.arrayID);
+		CSHOW(refJ.arrayID);
+		CSHOW(mai.isLoad);
+		CSHOW(maj.isLoad);
+                if ((refI.arrayID != refJ.arrayID) ||
+                    ((mai.isLoad) && (maj.isLoad)))
+		    std::cout << std::endl;
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 addEdge(mai, maj);
+		CSHOWLN(edges.size());
             }
         }
     }
