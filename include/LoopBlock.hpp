@@ -86,6 +86,11 @@ struct LoopBlock {
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
+    Simplex activeSimplex;
+    size_t numScheduleCoefs{0};
+    size_t numLambda{0};
+    size_t numBounding{0};
+    size_t numConstraints{0};
     // Simplex simplex;
     // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
@@ -241,26 +246,28 @@ struct LoopBlock {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
             ArrayReference &refI = mai.ref;
-	    SHOWLN(i);
+            SHOWLN(i);
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
-		CSHOW(j);
-		CSHOW(refI.arrayID);
-		CSHOW(refJ.arrayID);
-		CSHOW(mai.isLoad);
-		CSHOW(maj.isLoad);
+                CSHOW(j);
+                CSHOW(refI.arrayID);
+                CSHOW(refJ.arrayID);
+                CSHOW(mai.isLoad);
+                CSHOW(maj.isLoad);
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
-		    std::cout << std::endl;
+                    std::cout << std::endl;
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 addEdge(mai, maj);
-		CSHOWLN(edges.size());
+                CSHOWLN(edges.size());
             }
         }
     }
+    // TODO: we need to rotate via setting the schedule, not instantiating
+    // the rotated array!
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
     getBang(llvm::DenseMap<const AffineLoopNest *,
                            llvm::IntrusiveRefCntPtr<AffineLoopNest>> &map,
@@ -425,11 +432,11 @@ struct LoopBlock {
             }
         }
     }
-    size_t countNumScheduleCoefs() const {
+    void countNumScheduleCoefs() {
         size_t c = 0;
         for (auto &m : memory)
             c += m.getNumLoops();
-        return c + memory.size();
+        numScheduleCoefs = c + memory.size();
     }
     size_t countNumLambdas() const {
         size_t c = 0;
@@ -443,14 +450,20 @@ struct LoopBlock {
             c += e.getNumSymbols();
         return c;
     }
-    std::tuple<size_t, size_t, size_t> countAuxParamsAndConstraints() const {
+    void countAuxParamsAndConstraints() {
         size_t a = 0, b = 0, c = 0;
         for (auto &e : edges) {
             a += e.getNumLambda();
             b += e.getNumSymbols();
             c += e.getNumConstraints();
         }
-        return std::make_tuple(a, b, c);
+        numLambda = a;
+        numBounding = b;
+        numConstraints = c;
+    }
+    void countNumParams() {
+        countNumScheduleCoefs();
+        countAuxParamsAndConstraints();
     }
     // assemble omni-simplex
     // we want to order variables to be
@@ -461,9 +474,8 @@ struct LoopBlock {
     // bounding, however, is to be favoring minimizing `u` over `w`
 
     void instantiateOmniSimplex() {
-        const size_t numScheduleCoefs = countNumScheduleCoefs();
-        auto [numLambda, numBounding, numConstraints] =
-            countAuxParamsAndConstraints();
+        // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
+        countNumParams();
         omniSimplex.resize(numConstraints,
                            numBounding + numScheduleCoefs + numLambda);
         auto C{omniSimplex.getConstraints()};
@@ -474,8 +486,7 @@ struct LoopBlock {
         constexpr size_t numOmega =
             DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 0, w = numBounding - edges.size();
-        size_t c = 0, p = numBounding,
-               o = numBounding + 2 * numScheduleCoefs,
+        size_t c = 0, p = numBounding, o = numBounding + 2 * numScheduleCoefs,
                l = numBounding + 2 * numScheduleCoefs + numOmega * edges.size();
         llvm::SmallVector<bool, 512> visited(edges.size());
         // TODO: develop actual map going from
@@ -515,6 +526,14 @@ struct LoopBlock {
             }
         }
         // return omniSimplex.initiateFeasible();
+    }
+    void optimize(){
+	fillEdges();
+	instantiateOmniSimplex();
+	// first, we try orthogonalization and check feasibility
+	// if that fails, we try again
+	
+	
     }
 };
 

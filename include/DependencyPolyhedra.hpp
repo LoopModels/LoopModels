@@ -41,13 +41,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     inline size_t getDim1() const {
         return getNumVar() - numDep0Var - nullStep.size() - getNumSymbols();
     }
-    inline size_t getNumScheduleCoefficients() const {
-        return getNumVar() - nullStep.size() + 3 - getNumSymbols();
-    }
     inline size_t getNumPhiCoefficients() const {
         return getNumVar() - nullStep.size() + 1 - getNumSymbols();
     }
     static constexpr size_t getNumOmegaCoefficients() { return 2; }
+    inline size_t getNumScheduleCoefficients() const {
+        return getNumPhiCoefficients() + getNumOmegaCoefficients();
+    }
     MutPtrVector<int64_t> getSymbols(size_t i) {
         return A(i, _(begin, getNumSymbols()));
     }
@@ -337,7 +337,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t numEqualityConstraintsOld = E.numRow();
         const size_t numInequalityConstraintsOld = A.numRow();
 
-        const size_t numScheduleCoefs = getNumScheduleCoefficients();
+        const size_t numPhiCoefs = getNumPhiCoefficients();
+        const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoefficients();
         const size_t numBoundingCoefs = getNumSymbols();
 
         const size_t numConstraintsNew = A.numCol();
@@ -423,7 +424,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // fw means x'Al = x'(depVar1 - depVar0)
         // x'Al + x'(depVar0 - depVar1) = 0
         // so, for fw, depVar0 is positive and depVar1 is negative
-        for (size_t i = 0; i < numScheduleCoefs - 2; ++i) {
+        for (size_t i = 0; i < numPhiCoefs; ++i) {
             int64_t s = (2 * (i < numDep0Var) - 1);
             fC(i + numBoundingCoefs, i + numLambda) = s;
             bC(i + numBoundingCoefs, i + numLambda) = -s;
