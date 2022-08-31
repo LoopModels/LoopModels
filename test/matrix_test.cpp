@@ -149,16 +149,16 @@ TEST(SIMDTEST, BasicAssertions) {
     c(2) = 18;
     EXPECT_EQ(b, c);
     
-    a.push_back(1);
-    b.push_back(1);
-    c.push_back(1);
+    // a.push_back(1);
+    // b.push_back(1);
+    // c.push_back(1);
     std::cout << a << std::endl;
     std::cout << b << std::endl;
     b /= a;
     c(0) = -16;
     c(1) = 14;
     c(2) = 6;
-    c(3) = 1;
+    // c(3) = 1;
     EXPECT_EQ(b, c);
 
     b += 2;

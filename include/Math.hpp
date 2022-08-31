@@ -804,50 +804,66 @@ template <typename T> struct MutPtrVector {
     MutPtrVector<T> operator+=(const AbstractVector auto &x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        // std::cout << "Lane: " << Lane << std::endl;
+        // std::cout << "remainder: " << remainder<< std::endl;
+        for (size_t i = 0; i < N - remainder; i += Lane){
             const auto mem_vec = hn::Load(d, mem + i);
             // auto x_vec = hn::Load(d, x.data.data() + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = mem_vec + x_vec;
             hn::Store(x_vec, d, mem + i);
         }
-            // mem[i] += x(i);
-        // return *this;
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] += x(i);
+        }
+        return *this; //?
     }
     MutPtrVector<T> operator-=(const AbstractVector auto &x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){ const auto mem_vec = hn::Load(d, mem + i);
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = mem_vec - x_vec;
             hn::Store(x_vec, d, mem + i);
         }
-        // for (size_t i = 0; i < N; ++i)
-        //     mem[i] -= x(i);
-        // return *this;
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] -= x(i);
+        }
+        return *this;
     }
     MutPtrVector<T> operator*=(const AbstractVector auto &x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
-            const auto mem_vec = hn::Load(d, mem + i);
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = mem_vec * x_vec;
             hn::Store(x_vec, d, mem + i);
         }
-        // for (size_t i = 0; i < N; ++i)
-        //     mem[i] *= x(i);
-        // return *this;
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] *= x(i);
+        }
+        return *this;
     }
     MutPtrVector<T> operator/=(const AbstractVector auto &x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
-            const auto mem_vec = hn::Load(d, mem + i);
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = mem_vec / x_vec;
             hn::Store(x_vec, d, mem + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] /= x(i);
+        }
+        return *this;
         // for (size_t i = 0; i < N; ++i)
         //     mem[i] /= x(i);
         // return *this;
@@ -855,46 +871,66 @@ template <typename T> struct MutPtrVector {
     MutPtrVector<T> operator+=(const std::integral auto x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
-            std::cout << "iiiiiiiiiiiiiiii" << std::endl;
-            // auto x_vec = hn::Load(d, x.data.data() + i);
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
-            x_vec = const_vec + x_vec;
+            x_vec = x_vec + const_vec;
             hn::Store(x_vec, d, mem + i);
         }
-        
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] += x;
+        }
+        return *this;
     }
     MutPtrVector<T> operator-=(const std::integral auto x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
-            // auto x_vec = hn::Load(d, x.data.data() + i);
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = x_vec - const_vec;
             hn::Store(x_vec, d, mem + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] -= x;
+        }
+        return *this;
     }
     MutPtrVector<T> operator*=(const std::integral auto x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
-            x_vec = const_vec * x_vec;
+            x_vec = x_vec * const_vec;
             hn::Store(x_vec, d, mem + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] *= x;
+        }
+        return *this;
     }
     MutPtrVector<T> operator/=(const std::integral auto x) {
         assert(N == x.size());
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
             auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = x_vec / const_vec;
             hn::Store(x_vec, d, mem + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            mem[i] /= x;
+        }
+        return *this;
     }
     void extendOrAssertSize(size_t M) const { assert(M == N); }
 };
@@ -1027,15 +1063,21 @@ template <typename T> struct Vector {
         return *this;
     }
     Vector<T> &operator+=(const std::integral auto x) {
+
         auto && y = data;
         size_t N = data.size();
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){
             // auto x_vec = hn::Load(d, x.data.data() + i);
             auto x_vec = hn::Load(d, data.data() + i);
             x_vec = x_vec + const_vec;
             hn::Store(x_vec, d, y.data() + i);
+        }
+        for (size_t i = N - remainder; i < N; ++i){
+            y[i] += x;
         }
         // for (auto &&y : data)
         //     y += x;
@@ -1045,46 +1087,58 @@ template <typename T> struct Vector {
         auto && y = data;
         size_t N = data.size();
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){
             // auto x_vec = hn::Load(d, x.data.data() + i);
             auto x_vec = hn::Load(d, data.data() + i);
             x_vec = x_vec - const_vec;
             hn::Store(x_vec, d, y.data() + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            y[i] -= x;
+        }
         // for (auto &&y : data)
-        //     y -= x;
+        //     y += x;
         return *this;
     }
     Vector<T> &operator*=(const std::integral auto x) {
         auto && y = data;
         size_t N = data.size();
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){
             // auto x_vec = hn::Load(d, x.data.data() + i);
             auto x_vec = hn::Load(d, data.data() + i);
             x_vec = x_vec * const_vec;
             hn::Store(x_vec, d, y.data() + i);
         }
+        for (size_t i = N - remainder; i < N; ++i){
+            y[i] *= x;
+        }
         // for (auto &&y : data)
-        //     y *= x;
+        //     y += x;
         return *this;
-            // mem[i] += x(i);
     }
     Vector<T> &operator/=(const std::integral auto x) {
         auto && y = data;
         size_t N = data.size();
         const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
-        for (size_t i = 0; i < N; i += hn::Lanes(d)){
+        for (size_t i = 0; i < N - remainder; i += Lane){
             // auto x_vec = hn::Load(d, x.data.data() + i);
             auto x_vec = hn::Load(d, data.data() + i);
             x_vec = x_vec / const_vec;
             hn::Store(x_vec, d, y.data() + i);
         }
-        // for (auto &&y : data)
-        //     y /= x;
+        for (size_t i = N - remainder; i < N; ++i){
+            y[i] /= x;
+        }
         return *this;
     }
     template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {}
