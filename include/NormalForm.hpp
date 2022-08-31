@@ -371,6 +371,9 @@ simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) {
 [[maybe_unused]] static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
     E.truncateRows(simplifySystemImpl(E, colInit));
 }
+[[maybe_unused]] static size_t rank(IntMatrix E){
+    return simplifySystemImpl(E, 0);
+}
 [[maybe_unused]] static void reduceColumn(MutPtrMatrix<int64_t> A,
                                           MutPtrMatrix<int64_t> B, size_t c,
                                           size_t r) {
@@ -399,7 +402,7 @@ MULTIVERSION [[maybe_unused]] static void simplifySystem(IntMatrix &A,
     }
     return;
 }
-[[maybe_unused]] static std::pair<IntMatrix, SquareMatrix<int64_t>>
+[[nodiscard, maybe_unused]] static std::pair<IntMatrix, SquareMatrix<int64_t>>
 hermite(IntMatrix A) {
     SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(A.numRow())};
     simplifySystemImpl(A, U);

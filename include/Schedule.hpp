@@ -6,8 +6,10 @@
 #include "llvm/IR/User.h"
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <utility>
 
 // We represent a schedule as
 // Phi_s'*i + omega_s <_{lex} Phi_t'*s + Omega_t
@@ -91,6 +93,7 @@ struct MemoryAccess {
     Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
+    unsigned phiOffset{std::numeric_limits<unsigned>::max()}; // used in LoopBlock
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
@@ -109,4 +112,16 @@ struct MemoryAccess {
         return schedule.fusedThrough(x.schedule);
     }
     size_t getNumLoops() const { return schedule.getNumLoops(); }
+    auto indexMatrix() { return ref.indexMatrix(); }
+    auto indexMatrix() const { return ref.indexMatrix(); }
+    size_t updatePhiOffset(size_t p){
+	if (phiOffset == std::numeric_limits<unsigned>::max()){
+	    phiOffset = p;
+	    p += getNumLoops();
+	}
+	return p;
+    }
+    Range<size_t,size_t> getPhiOffset(){
+	return _(phiOffset, phiOffset+getNumLoops());
+    }
 };

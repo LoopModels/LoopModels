@@ -16,6 +16,7 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <tuple>
 #include <utility>
 
 // for i = 1:N, j = 1:i
@@ -73,9 +74,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
     matchingStrideConstraintPairs(const ArrayReference &ar0,
                                   const ArrayReference &ar1) {
-// #ifndef NDEBUG
-//         std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 << std::endl;
-// #endif
+        // #ifndef NDEBUG
+        //         std::cout << "ar0 = \n" << ar0 << "\nar1 = " << ar1 <<
+        //         std::endl;
+        // #endif
         // fast path; most common case
         if (ar0.stridesMatch(ar1)) {
             llvm::SmallVector<std::pair<int, int>, 4> dims;
@@ -615,43 +617,89 @@ struct Dependence {
         return dependenceBounding.getNumConstraints() +
                dependenceSatisfaction.getNumConstraints();
     }
+    StridedVector<int64_t> getSatConstants() const {
+        return dependenceSatisfaction.getConstants();
+    }
+    StridedVector<int64_t> getBndConstants() const {
+        return dependenceBounding.getConstants();
+    }
     PtrMatrix<int64_t> getSatLambda() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(begin, depPoly.getNumLambda()));
+            _, _(1, 1 + depPoly.getNumLambda()));
     }
     PtrMatrix<int64_t> getBndLambda() const {
         return dependenceBounding.getConstraints()(
-            _, _(begin, depPoly.getNumLambda()));
+            _, _(1, 1 + depPoly.getNumLambda()));
     }
     PtrMatrix<int64_t> getSatPhiCoefs() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(depPoly.getNumLambda(),
-                 depPoly.getNumLambda() + getNumPhiCoefficients()));
+            _, _(1 + depPoly.getNumLambda(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
+    }
+    PtrMatrix<int64_t> getSatPhi0Coefs() const {
+        return dependenceSatisfaction.getConstraints()(
+            _, _(1 + depPoly.getNumLambda(),
+                 1 + depPoly.getNumLambda() + depPoly.getDim0()));
+    }
+    PtrMatrix<int64_t> getSatPhi1Coefs() const {
+        return dependenceSatisfaction.getConstraints()(
+            _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getBndPhiCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(depPoly.getNumLambda(),
-                 depPoly.getNumLambda() + getNumPhiCoefficients()));
+            _, _(1 + depPoly.getNumLambda(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
+    }
+    PtrMatrix<int64_t> getBndPhi0Coefs() const {
+        return dependenceBounding.getConstraints()(
+            _, _(1 + depPoly.getNumLambda(),
+                 1 + depPoly.getNumLambda() + depPoly.getDim0()));
+    }
+    PtrMatrix<int64_t> getBndPhi1Coefs() const {
+        return dependenceBounding.getConstraints()(
+            _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getSatOmegaCoefs() const {
         return dependenceSatisfaction.getConstraints()(
-            _, _(depPoly.getNumLambda() + getNumPhiCoefficients(),
-                 depPoly.getNumLambda() + getNumPhiCoefficients() +
+            _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
     PtrMatrix<int64_t> getBndOmegaCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(depPoly.getNumLambda() + getNumPhiCoefficients(),
-                 depPoly.getNumLambda() + getNumPhiCoefficients() +
+            _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
+                 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
     PtrMatrix<int64_t> getBndCoefs() const {
         return dependenceBounding.getConstraints()(
-            _, _(depPoly.getNumLambda() + getNumPhiCoefficients() +
+            _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients(),
                  end));
     }
 
+    std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
+               PtrMatrix<int64_t>, PtrMatrix<int64_t>>
+    splitSatisfaction() const {
+        PtrMatrix<int64_t> phiCoefsIn =
+            forward ? getSatPhi0Coefs() : getSatPhi1Coefs();
+        PtrMatrix<int64_t> phiCoefsOut =
+            forward ? getSatPhi1Coefs() : getSatPhi0Coefs();
+        return std::make_tuple(getSatConstants(), getSatLambda(), phiCoefsIn,
+                               phiCoefsOut, getSatOmegaCoefs());
+    }
+    std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
+               PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>>
+    splitBounding() const {
+        PtrMatrix<int64_t> phiCoefsIn =
+            forward ? getBndPhi0Coefs() : getBndPhi1Coefs();
+        PtrMatrix<int64_t> phiCoefsOut =
+            forward ? getBndPhi1Coefs() : getBndPhi0Coefs();
+        return std::make_tuple(getBndConstants(), getBndLambda(), phiCoefsIn,
+                               phiCoefsOut, getBndOmegaCoefs(), getBndCoefs());
+    }
     // order of variables from Farkas:
     // [ lambda, Phi coefs, omega coefs, w, u ]
     // that is thus the order of arguments here
@@ -856,12 +904,13 @@ struct Dependence {
             for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
                 // each of these actually represents 2 inds
                 int64_t Ecv = dxy.E(c, v) * step;
-// #ifndef NDEBUG
-//                 if (Ecv) {
-//                     std::cout << "Found non-0: E(" << c << ", " << v
-//                               << ") = " << Ecv << std::endl;
-//                 }
-// #endif
+                // #ifndef NDEBUG
+                //                 if (Ecv) {
+                //                     std::cout << "Found non-0: E(" << c << ",
+                //                     " << v
+                //                               << ") = " << Ecv << std::endl;
+                //                 }
+                // #endif
                 fE(0, c + ineqEnd) -= Ecv;
                 fE(0, c + posEqEnd) += Ecv;
                 sE(0, c + ineqEnd) -= Ecv;
@@ -912,13 +961,13 @@ struct Dependence {
                 sE(0, c + posEqEnd) += Ecv;
             }
         } while (++t < timeDim);
-// #ifndef NDEBUG
-//         std::cout << "time dxy =" << dxy << std::endl;
-// #endif
+        // #ifndef NDEBUG
+        //         std::cout << "time dxy =" << dxy << std::endl;
+        // #endif
         dxy.truncateVars(numVar);
-// #ifndef NDEBUG
-//         std::cout << "after zeroing, time dxy =" << dxy << std::endl;
-// #endif
+        // #ifndef NDEBUG
+        //         std::cout << "after zeroing, time dxy =" << dxy << std::endl;
+        // #endif
         farkasBackups.first.truncateVars(numLambda + numScheduleCoefs);
         deps.emplace_back(
             Dependence{std::move(dxy), std::move(farkasBackups.first),
@@ -935,22 +984,22 @@ struct Dependence {
         DependencePolyhedra dxy(x, y);
         if (dxy.isEmpty())
             return 0;
-// #ifndef NDEBUG
-//         std::cout << "Pre prune-bounds" << std::endl;
-//         // SHOWLN(dxy.A);
-//         // SHOWLN(dxy.E);
-// #endif
+        // #ifndef NDEBUG
+        //         std::cout << "Pre prune-bounds" << std::endl;
+        //         // SHOWLN(dxy.A);
+        //         // SHOWLN(dxy.E);
+        // #endif
         dxy.pruneBounds();
         // note that we set boundAbove=true, so we reverse the
         // dependence direction for the dependency we week, we'll
         // discard the program variables x then y
-// #ifndef NDEBUG
+        // #ifndef NDEBUG
         // std::cout << "Post prune-bounds" << std::endl;
         // std::cout << "x = " << x.ref << "\ny = " << y.ref << "\ndxy =" << dxy
         //           << std::endl;
         // SHOWLN(dxy.A);
         // SHOWLN(dxy.E);
-// #endif
+        // #endif
         if (dxy.getTimeDim()) {
             timeCheck(deps, std::move(dxy), x, y);
             return 2;
