@@ -126,11 +126,54 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
 }
 
 TEST(SIMDTEST, BasicAssertions) {
-    auto A{stringToIntMatrix(
-        "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
-        "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
-    auto A2{stringToIntMatrix(
-        "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
-        "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
-    A2 += A;
+    Vector<int64_t> a;
+    a.push_back(-8);
+    a.push_back(7);
+    a.push_back(3);
+    Vector<int64_t> b = a * 2;
+    b += a;
+    Vector<int64_t> c;
+    c.push_back(-24);
+    c.push_back(21);
+    c.push_back(9);    
+    std::cout<< "b = "<<b<<std::endl;
+    b -= a;
+    c(0) = -16;
+    c(1) = 14;
+    c(2) = 6;
+    std::cout<< "c = "<<c<<std::endl;
+    EXPECT_EQ(b, c);
+    b *= a;
+    c(0) = 128;
+    c(1) = 98;
+    c(2) = 18;
+    EXPECT_EQ(b, c);
+    
+    a.push_back(1);
+    b.push_back(1);
+    c.push_back(1);
+    std::cout << a << std::endl;
+    std::cout << b << std::endl;
+    b /= a;
+    c(0) = -16;
+    c(1) = 14;
+    c(2) = 6;
+    c(3) = 1;
+    EXPECT_EQ(b, c);
+
+    b += 2;
+    b -= 2;
+    b *= 2;
+    b /= 2;
+    std::cout << b << std::endl;
+    EXPECT_EQ(b, c);
+    // b *= a;
+    // std::cout<< "b = "<<b<<std::endl;
+    // auto A{stringToIntMatrix(
+    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    //     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
+    // auto A2{stringToIntMatrix(
+    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    //     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
+    // A2 += A;
 }
