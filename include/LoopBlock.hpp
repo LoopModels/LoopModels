@@ -89,7 +89,7 @@ struct LoopBlock {
     Simplex omniSimplex;
     Simplex activeSimplex;
     llvm::SmallVector<bool, 256> scheduled;
-    size_t numScheduleCoefs{0};
+    size_t numPhiCoefs{0};
     size_t numLambda{0};
     size_t numBounding{0};
     size_t numConstraints{0};
@@ -473,11 +473,11 @@ struct LoopBlock {
             }
         }
     }
-    void countNumScheduleCoefs() {
+    void countNumPhiCoefs() {
         size_t c = 0;
         for (auto &m : memory)
-            c += m.getNumLoops();
-        numScheduleCoefs = c + memory.size();
+            c += (m.phiIsScheduled() ? m.getNumLoops() : 0);
+        numPhiCoefs = c;
     }
     size_t countNumLambdas() const {
         size_t c = 0;
@@ -503,7 +503,7 @@ struct LoopBlock {
         numConstraints = c;
     }
     void countNumParams() {
-        countNumScheduleCoefs();
+        countNumPhiCoefs();
         countAuxParamsAndConstraints();
     }
     // assemble omni-simplex
@@ -517,20 +517,21 @@ struct LoopBlock {
     void instantiateOmniSimplex() {
         assert(countedNumParams);
         // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
-        omniSimplex.resizeForOverwrite(
-            numConstraints, numBounding + numScheduleCoefs + numLambda);
+        const size_t numOmegaCoefs = memory.size();
+        omniSimplex.resizeForOverwrite(numConstraints,
+                                       numBounding + numPhiCoefs +
+                                           numOmegaCoefs + numLambda);
         auto C{omniSimplex.getConstraints()};
         C = 0;
         // layout of omniSimplex:
         // Order: C, then priority to minimize
         // all : C, u, w, Phis^-, Phis^+, omegas, lambdas
         // rows give constraints; each edge gets its own
-        constexpr size_t numOmega =
-            DependencePolyhedra::getNumOmegaCoefficients();
+        // constexpr size_t numOmega =
+        //     DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 0, w = numBounding - edges.size();
-        size_t c = 0, pBase = numBounding, p = pBase,
-               o = numBounding + 2 * numScheduleCoefs,
-               l = numBounding + 2 * numScheduleCoefs + numOmega * edges.size();
+        size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
+               l = numBounding + 2 * numPhiCoefs + numOmegaCoefs;
         llvm::SmallVector<bool, 512> visited(edges.size());
         // TODO: develop actual map going from
         for (size_t m = 0; m < memory.size(); ++m) {
@@ -538,7 +539,7 @@ struct LoopBlock {
             p = mem.updatePhiOffset(p);
             o = mem.updateOmegaOffset(o);
             auto phiChild = mem.getPhiOffset();
-	    // size_t numPhiChild = mem.getNumLoops();
+            // size_t numPhiChild = mem.getNumLoops();
             // iterate over parents
             for (auto e : mem.edgesIn) {
                 if (visited[e])
@@ -547,9 +548,9 @@ struct LoopBlock {
                 Dependence &edge = edges[e];
                 assert(&mem == edge.out);
                 p = edge.in->updatePhiOffset(p);
-		o = edge.in->updateOmegaOffset(o);
+                o = edge.in->updateOmegaOffset(o);
                 auto phiParent = edge.in->getPhiOffset();
-		// size_t numPhiParent = edge.in->getNumLoops();
+                // size_t numPhiParent = edge.in->getNumLoops();
                 const auto [satC, satL, satPp, satPc, satO] =
                     edge.splitSatisfaction();
                 const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
@@ -599,13 +600,13 @@ struct LoopBlock {
                     C(_(cc, ccc), phiParent) = bndPp;
                     C(_(cc, ccc), phiParent + bndPp.numCol()) = -bndPp;
                 }
-		// Omegas are included regardless of rotation
-		C(_(c,cc), mem.omegaOffset) = satO(_,!edge.forward); 
-		C(_(cc,ccc), mem.omegaOffset) = bndO(_,!edge.forward);
-		C(_(c,cc), edge.in->omegaOffset) = satO(_,edge.forward);
-		C(_(cc,ccc), edge.in->omegaOffset) = bndO(_,edge.forward);
-		
-		c = ccc;
+                // Omegas are included regardless of rotation
+                C(_(c, cc), mem.omegaOffset) = satO(_, !edge.forward);
+                C(_(cc, ccc), mem.omegaOffset) = bndO(_, !edge.forward);
+                C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
+                C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
+
+                c = ccc;
             }
         }
 #ifndef NDEBUG

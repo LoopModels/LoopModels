@@ -97,7 +97,7 @@ struct MemoryAccess {
         std::numeric_limits<uint32_t>::max();
     // schedule indicated by `1` top bit, remainder indicates loop
     static constexpr uint32_t PHISCHEDULEDFLAG = 0x80000000;
-    uint32_t phiOffset{OFFSETNOTSETFLAG}; // used in LoopBlock
+    uint32_t phiOffset{OFFSETNOTSETFLAG};   // used in LoopBlock
     uint32_t omegaOffset{OFFSETNOTSETFLAG}; // used in LoopBlock
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
@@ -120,9 +120,12 @@ struct MemoryAccess {
     auto indexMatrix() { return ref.indexMatrix(); }
     auto indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset
-    bool phiIsScheduled() const { return phiOffset & PHISCHEDULEDFLAG; }
+    bool phiIsScheduled() const {
+        return (phiOffset != OFFSETNOTSETFLAG) &&
+               (phiOffset & PHISCHEDULEDFLAG);
+    }
     llvm::Optional<PtrVector<int64_t>> getActiveSchedule() const {
-        if ((phiOffset == PHISCHEDULEDFLAG) || (!phiIsScheduled()))
+        if (!phiIsScheduled())
             return {};
         size_t loop = phiOffset & (~PHISCHEDULEDFLAG);
         return schedule.getPhi()(loop, _);
