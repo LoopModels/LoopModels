@@ -88,6 +88,9 @@ struct LoopBlock {
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
     Simplex activeSimplex;
+    // we may turn off edges because we've exceeded its loop depth
+    // or because the dependence has already been satisfied at an
+    // earlier level.
     llvm::SmallVector<bool, 256> doNotAddEdge;
     llvm::SmallVector<bool, 256> scheduled;
     size_t numPhiCoefs{0};
@@ -606,6 +609,22 @@ struct LoopBlock {
             c = ccc;
         }
         // return omniSimplex.initiateFeasible();
+    }
+    void updateSchedules(size_t depth) {
+        const size_t numOmegaCoefs = memory.size();
+        size_t u = 0, w = numBounding - edges.size();
+        size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
+               l = numBounding + 2 * numPhiCoefs + numOmegaCoefs;
+        auto sol = omniSimplex.getSolution();
+        // TODO: develop actual map going from
+        for (auto &&mem : memory) {
+            if (depth >= mem.getNumLoops())
+                continue;
+            mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
+            if (mem.scheduleFlag())
+                continue;
+            mem.schedule.getPhi()(_, depth) = sol(mem.getPhiOffset());
+        }
     }
     void resetPhiOffsets() {
         for (auto &&mem : memory)

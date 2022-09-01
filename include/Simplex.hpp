@@ -121,6 +121,29 @@ struct Simplex {
     MutStridedVector<int64_t> getConstants() {
         return getTableauCol(numExtraCols);
     }
+    struct Solution {
+        using eltype = Rational;
+        static constexpr bool canResize = false;
+        // view of tableau dropping const column
+        PtrMatrix<int64_t> tableauView;
+        StridedVector<int64_t> consts;
+        Rational operator()(size_t i) {
+            int64_t j = tableauView(0, i);
+            if (j < 0)
+                return 0;
+            return Rational::create(tableauView(j + numExtraRows, i),
+                                    consts(j));
+        }
+        template <typename B, typename E> Solution operator()(Range<B, E> r) {
+            return Solution{tableauView(_, r), consts};
+        }
+        size_t size() const { return tableauView.numCol(); }
+        auto &view() const { return *this; };
+    };
+    Solution getSolution() const {
+        return Solution{tableau(_, _(numExtraCols, end)), getConstants()};
+    }
+
     // returns `true` if infeasible
     // `false ` if feasible
     bool initiateFeasible() {
