@@ -88,6 +88,7 @@ struct LoopBlock {
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
     Simplex activeSimplex;
+    llvm::SmallVector<bool, 256> doNotAddEdge;
     llvm::SmallVector<bool, 256> scheduled;
     size_t numPhiCoefs{0};
     size_t numLambda{0};
@@ -505,10 +506,14 @@ struct LoopBlock {
     void countNumParams() {
         countNumPhiCoefs();
         countAuxParamsAndConstraints();
+#ifndef NDEBUG
+        countedNumParams = true;
+#endif
     }
     // assemble omni-simplex
     // we want to order variables to be
-    // us, ws, Phi coefs, omega coefs, lambdas
+    // us, ws, Phi^-, Phi^+, omega, lambdas
+    // this gives priority for minimization
 
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
@@ -532,86 +537,74 @@ struct LoopBlock {
         size_t u = 0, w = numBounding - edges.size();
         size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
                l = numBounding + 2 * numPhiCoefs + numOmegaCoefs;
-        llvm::SmallVector<bool, 512> visited(edges.size());
         // TODO: develop actual map going from
-        for (size_t m = 0; m < memory.size(); ++m) {
-            auto &mem = memory[m];
-            p = mem.updatePhiOffset(p);
-            o = mem.updateOmegaOffset(o);
-            auto phiChild = mem.getPhiOffset();
-            // size_t numPhiChild = mem.getNumLoops();
-            // iterate over parents
-            for (auto e : mem.edgesIn) {
-                if (visited[e])
-                    continue;
-                visited[e] = true;
-                Dependence &edge = edges[e];
-                assert(&mem == edge.out);
-                p = edge.in->updatePhiOffset(p);
-                o = edge.in->updateOmegaOffset(o);
-                auto phiParent = edge.in->getPhiOffset();
-                // size_t numPhiParent = edge.in->getNumLoops();
-                const auto [satC, satL, satPp, satPc, satO] =
-                    edge.splitSatisfaction();
-                const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
-                    edge.splitBounding();
+        for (size_t e = 0; e < edges.size(); ++e) {
+            if (doNotAddEdge[e])
+                continue;
+            Dependence &edge = edges[e];
+            p = edge.out->updatePhiOffset(p);
+            o = edge.out->updateOmegaOffset(o);
+            p = edge.in->updatePhiOffset(p);
+            o = edge.in->updateOmegaOffset(o);
+            auto phiChild = edge.out->getPhiOffset();
+            auto phiParent = edge.in->getPhiOffset();
+            const auto [satC, satL, satPp, satPc, satO] =
+                edge.splitSatisfaction();
+            const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
+                edge.splitBounding();
 
-                const size_t numSatConstraints = satC.size();
-                const size_t numBndConstraints = bndC.size();
-                size_t cc = c + numSatConstraints;
-                size_t ccc = cc + numBndConstraints;
+            const size_t numSatConstraints = satC.size();
+            const size_t numBndConstraints = bndC.size();
+            size_t cc = c + numSatConstraints;
+            size_t ccc = cc + numBndConstraints;
 
-                size_t ll = l + satL.numCol();
-                size_t lll = ll + bndL.numCol();
-                C(_(c, cc), _(l, ll)) = satL;
-                C(_(cc, ccc), _(ll, lll)) = bndL;
-                l = lll;
+            size_t ll = l + satL.numCol();
+            size_t lll = ll + bndL.numCol();
+            C(_(c, cc), _(l, ll)) = satL;
+            C(_(cc, ccc), _(ll, lll)) = bndL;
+            l = lll;
 
-                // bounding
-                C(_(cc, ccc), w++) = bndWU(_, 0);
-                size_t uu = u + bndWU.numCol() - 1;
-                C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
-                u = uu;
+            // bounding
+            C(_(cc, ccc), w++) = bndWU(_, 0);
+            size_t uu = u + bndWU.numCol() - 1;
+            C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
+            u = uu;
 
-                C(_(c, cc), 0) = satC;
-                C(_(cc, ccc), 0) = bndC;
-                // now, handle Phi and Omega
-                if (auto osch = mem.getActiveSchedule()) {
-                    // add it constants
-                    auto sch = osch.getValue();
-                    C(_(c, cc), 0) -= satPc * sch;
-                    C(_(cc, ccc), 0) -= bndPc * sch;
-                } else {
-                    // add it to C
-                    C(_(c, cc), phiChild) = satPc;
-                    C(_(c, cc), phiChild + satPc.numCol()) = -satPc;
-                    C(_(cc, ccc), phiChild) = bndPc;
-                    C(_(cc, ccc), phiChild + bndPc.numCol()) = -bndPc;
-                }
-                if (auto osch = edge.in->getActiveSchedule()) {
-                    // add it to constants
-                    auto sch = osch.getValue();
-                    C(_(c, cc), 0) -= satPp * sch;
-                    C(_(cc, ccc), 0) -= bndPp * sch;
-                } else {
-                    // add it to C
-                    C(_(c, cc), phiParent) = satPp;
-                    C(_(c, cc), phiParent + satPp.numCol()) = -satPp;
-                    C(_(cc, ccc), phiParent) = bndPp;
-                    C(_(cc, ccc), phiParent + bndPp.numCol()) = -bndPp;
-                }
-                // Omegas are included regardless of rotation
-                C(_(c, cc), mem.omegaOffset) = satO(_, !edge.forward);
-                C(_(cc, ccc), mem.omegaOffset) = bndO(_, !edge.forward);
-                C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
-                C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
-
-                c = ccc;
+            C(_(c, cc), 0) = satC;
+            C(_(cc, ccc), 0) = bndC;
+            // now, handle Phi and Omega
+            if (auto osch = edge.out->getActiveSchedule()) {
+                // add it constants
+                auto sch = osch.getValue();
+                C(_(c, cc), 0) -= satPc * sch;
+                C(_(cc, ccc), 0) -= bndPc * sch;
+            } else {
+                // add it to C
+                C(_(c, cc), phiChild) = -satPc;
+                C(_(c, cc), phiChild + satPc.numCol()) = satPc;
+                C(_(cc, ccc), phiChild) = -bndPc;
+                C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
             }
+            if (auto osch = edge.in->getActiveSchedule()) {
+                // add it to constants
+                auto sch = osch.getValue();
+                C(_(c, cc), 0) -= satPp * sch;
+                C(_(cc, ccc), 0) -= bndPp * sch;
+            } else {
+                // add it to C
+                C(_(c, cc), phiParent) = -satPp;
+                C(_(c, cc), phiParent + satPp.numCol()) = satPp;
+                C(_(cc, ccc), phiParent) = -bndPp;
+                C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
+            }
+            // Omegas are included regardless of rotation
+            C(_(c, cc), edge.out->omegaOffset) = satO(_, !edge.forward);
+            C(_(cc, ccc), edge.out->omegaOffset) = bndO(_, !edge.forward);
+            C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
+            C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
+
+            c = ccc;
         }
-#ifndef NDEBUG
-        countedNumParams = true;
-#endif
         // return omniSimplex.initiateFeasible();
     }
     void resetPhiOffsets() {
@@ -621,6 +614,8 @@ struct LoopBlock {
     void optimize() {
         fillEdges();
         countNumParams();
+        doNotAddEdge.clear();
+        doNotAddEdge.resize(edges.size());
         instantiateOmniSimplex();
         // first, we try orthogonalization and check feasibility
         // if that fails, we try again

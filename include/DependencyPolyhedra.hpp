@@ -402,10 +402,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         //   sign = -1
         // }
         //
-        // boundAbove
-        // note we'll generally call this function twice, first with
-        // 1. `boundAbove = false`
-        // 2. `boundAbove = true`
         // boundAbove means we have
         // ... == w + u'*N + psi
         for (size_t i = 0; i < numBoundingCoefs; ++i)
@@ -426,10 +422,25 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // fw means x'Al = x'(depVar1 - depVar0)
         // x'Al + x'(depVar0 - depVar1) = 0
         // so, for fw, depVar0 is positive and depVar1 is negative
+        // note that we order the coefficients inner->outer
+        // this is a reversal of the ordering we use elsewhere
+        // so that the ILP minimizing coefficients
+        // will tend to preserve the initial order (which is
+        // probably better than tending to reverse the initial order).
         for (size_t i = 0; i < numPhiCoefs; ++i) {
             int64_t s = (2 * (i < numDep0Var) - 1);
             fC(i + numBoundingCoefs, i + numLambda) = s;
             bC(i + numBoundingCoefs, i + numLambda) = -s;
+        }
+        for (size_t i = 0; i < numDep0Var; ++i) {
+            fC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = 1;
+            bC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = -1;
+        }
+        for (size_t i = 0; i < numPhiCoefs - numDep0Var; ++i) {
+            fC(numPhiCoefs - 1 - i + numBoundingCoefs,
+               i + numDep0Var + numLambda) = -1;
+            bC(numPhiCoefs - 1 - i + numBoundingCoefs,
+               i + numDep0Var + numLambda) = 1;
         }
         fC(0, numScheduleCoefs - 2 + numLambda) = 1;
         fC(0, numScheduleCoefs - 1 + numLambda) = -1;
