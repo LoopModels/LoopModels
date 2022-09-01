@@ -762,7 +762,6 @@ struct Dependence {
         C(_(begin, satConstraints), _) = getSatOmegaCoefs();
         C(_(satConstraints, end), _) = getBndOmegaCoefs();
 
-        // D(_(begin, satConstraints), _) = 0;
         auto BC{getBndCoefs()};
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));

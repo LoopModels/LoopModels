@@ -566,6 +566,7 @@ template <typename B, typename E> struct Range {
     B b;
     E e;
 };
+
 // template <> struct Range<Begin, int> {
 //     static constexpr Begin b = begin;
 //     int e;
@@ -642,6 +643,13 @@ constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, E> r, size_t) {
 template <std::integral B>
 constexpr Range<size_t, size_t> canonicalizeRange(Range<B, End> r, size_t M) {
     return Range<size_t, size_t>{size_t(r.b), M};
+}
+
+template <typename B, typename E> auto operator+(Range<B, E> r, size_t x) {
+    return _(r.b + x, r.e + x);
+}
+template <typename B, typename E> auto operator-(Range<B, E> r, size_t x) {
+    return _(r.b - x, r.e - x);
 }
 
 template <typename T> struct PtrVector {
@@ -1224,18 +1232,18 @@ template <typename T> struct PtrMatrix {
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) const {
-        return view(canonicalizeRange(rows, M),
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(canonicalizeRange(rows, M),
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename C0, typename C1>
     inline auto operator()(Colon, Range<C0, C1> cols) const {
-        return view(Range<size_t, size_t>{0, M},
-                    canonicalizeRange(cols, numCol()));
+        return (*this)(Range<size_t, size_t>{0, numRow()},
+                       canonicalizeRange(cols, numCol()));
     }
     template <typename R0, typename R1>
     inline auto operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M),
-                    Range<size_t, size_t>{0, numCol()});
+        return (*this)(canonicalizeRange(rows, M),
+                       Range<size_t, size_t>{0, numCol()});
     }
     inline const PtrMatrix<T> operator()(Colon, Colon) const { return *this; }
     template <typename R0, typename R1>

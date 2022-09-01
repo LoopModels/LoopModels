@@ -93,7 +93,12 @@ struct MemoryAccess {
     Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
-    unsigned phiOffset{std::numeric_limits<unsigned>::max()}; // used in LoopBlock
+    static constexpr uint32_t OFFSETNOTSETFLAG =
+        std::numeric_limits<uint32_t>::max();
+    // schedule indicated by `1` top bit, remainder indicates loop
+    static constexpr uint32_t PHISCHEDULEDFLAG = 0x80000000;
+    uint32_t phiOffset{OFFSETNOTSETFLAG}; // used in LoopBlock
+    uint32_t omegaOffset{OFFSETNOTSETFLAG}; // used in LoopBlock
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
@@ -114,14 +119,27 @@ struct MemoryAccess {
     size_t getNumLoops() const { return schedule.getNumLoops(); }
     auto indexMatrix() { return ref.indexMatrix(); }
     auto indexMatrix() const { return ref.indexMatrix(); }
-    size_t updatePhiOffset(size_t p){
-	if (phiOffset == std::numeric_limits<unsigned>::max()){
-	    phiOffset = p;
-	    p += getNumLoops();
-	}
-	return p;
+    // note returns true if unset
+    bool phiIsScheduled() const { return phiOffset & PHISCHEDULEDFLAG; }
+    llvm::Optional<PtrVector<int64_t>> getActiveSchedule() const {
+        if ((phiOffset == PHISCHEDULEDFLAG) || (!phiIsScheduled()))
+            return {};
+        size_t loop = phiOffset & (~PHISCHEDULEDFLAG);
+        return schedule.getPhi()(loop, _);
     }
-    Range<size_t,size_t> getPhiOffset(){
-	return _(phiOffset, phiOffset+getNumLoops());
+    size_t updatePhiOffset(size_t p) {
+        if (phiOffset == OFFSETNOTSETFLAG) {
+            phiOffset = p;
+            p += getNumLoops();
+        }
+        return p;
+    }
+    size_t updateOmegaOffset(size_t o) {
+        if (omegaOffset == OFFSETNOTSETFLAG)
+            omegaOffset = o++;
+        return o;
+    }
+    Range<size_t, size_t> getPhiOffset() {
+        return _(phiOffset, phiOffset + getNumLoops());
     }
 };
