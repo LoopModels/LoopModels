@@ -124,7 +124,7 @@ struct MemoryAccess {
         return (phiOffset != OFFSETNOTSETFLAG) &&
                (phiOffset & PHISCHEDULEDFLAG);
     }
-    bool scheduleFlag() const { return phiOffset & PHISCHEDULEDFLAG;}
+    bool scheduleFlag() const { return phiOffset & PHISCHEDULEDFLAG; }
     llvm::Optional<PtrVector<int64_t>> getActiveSchedule() const {
         if (!phiIsScheduled())
             return {};

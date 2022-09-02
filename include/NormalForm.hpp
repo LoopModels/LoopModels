@@ -371,7 +371,7 @@ simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) {
 [[maybe_unused]] static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
     E.truncateRows(simplifySystemImpl(E, colInit));
 }
-[[maybe_unused]] static size_t rank(IntMatrix E){
+[[maybe_unused]] static size_t rank(IntMatrix E) {
     return simplifySystemImpl(E, 0);
 }
 [[maybe_unused]] static void reduceColumn(MutPtrMatrix<int64_t> A,
@@ -619,9 +619,12 @@ MULTIVERSION [[maybe_unused]] static void solveSystem(IntMatrix &A) {
 //     return A;
 // }
 
-MULTIVERSION [[maybe_unused]] static IntMatrix nullSpace(IntMatrix A) {
+MULTIVERSION [[maybe_unused]] static void nullSpace11(IntMatrix &B,
+                                                      IntMatrix &A) {
     const size_t M = A.numRow();
-    IntMatrix B(IntMatrix::identity(M));
+    B.resizeForOverwrite(M, M);
+    B = 0;
+    B.diag() = 1;
     solveSystem(A, B);
     size_t R = M;
     while ((R > 0) && allZero(A.getRow(R - 1)))
@@ -638,6 +641,11 @@ MULTIVERSION [[maybe_unused]] static IntMatrix nullSpace(IntMatrix A) {
             B.mem[d] = B.mem[d + o];
         B.truncateRows(D);
     }
+}
+MULTIVERSION [[nodiscard, maybe_unused]] static IntMatrix
+nullSpace(IntMatrix A) {
+    IntMatrix B;
+    nullSpace11(B, A);
     return B;
 }
 

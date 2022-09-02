@@ -10,6 +10,7 @@
 #include "./Symbolics.hpp"
 #include "LinearAlgebra.hpp"
 #include "Macro.hpp"
+#include "NormalForm.hpp"
 #include "Orthogonalize.hpp"
 #include <cstddef>
 #include <limits>
@@ -611,12 +612,7 @@ struct LoopBlock {
         // return omniSimplex.initiateFeasible();
     }
     void updateSchedules(size_t depth) {
-        const size_t numOmegaCoefs = memory.size();
-        size_t u = 0, w = numBounding - edges.size();
-        size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
-               l = numBounding + 2 * numPhiCoefs + numOmegaCoefs;
         auto sol = omniSimplex.getSolution();
-        // TODO: develop actual map going from
         for (auto &&mem : memory) {
             if (depth >= mem.getNumLoops())
                 continue;
@@ -624,6 +620,41 @@ struct LoopBlock {
             if (mem.scheduleFlag())
                 continue;
             mem.schedule.getPhi()(_, depth) = sol(mem.getPhiOffset());
+        }
+    }
+    static int64_t lexSign(PtrVector<int64_t> x) {
+        for (auto y : x)
+            if (y)
+                return 2 * (y > 0) - 1;
+        return 0;
+    }
+    void addIndependentSolutionConstraints(size_t depth) {
+        omniSimplex.reserveExtraRows(memory.size());
+        if (depth == 0) {
+            // add ones >= 0
+            for (auto &&mem : memory) {
+                if (mem.phiIsScheduled())
+                    continue;
+                auto c{omniSimplex.addConstraint()};
+                c(0) = 1;
+                c(mem.getPhiOffset() + 1) = 1;
+                c(end) = -1; // for >=
+            }
+            return;
+        }
+        IntMatrix A, N;
+        for (auto &&mem : memory) {
+            if (mem.phiIsScheduled() || (depth >= mem.getNumLoops()))
+                continue;
+            A = mem.schedule.getPhi()(_(0, depth - 1), _).transpose();
+            NormalForm::nullSpace11(N, A);
+            auto c{omniSimplex.addConstraintAndVar()};
+            c(0) = 1;
+            auto cc{c(mem.getPhiOffset() + 1)};
+            // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
+            for (size_t m = 0; m < N.numRow(); ++m)
+                cc += N(m, _) * lexSign(N(m, _));
+            c(end) = -1; // for >=
         }
     }
     void resetPhiOffsets() {

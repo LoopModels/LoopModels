@@ -47,6 +47,34 @@ struct Simplex {
         tableau.resize(tableau.numRow(), numCol,
                        std::max(numCol, tableau.rowStride()));
     }
+    MutPtrVector<int64_t> addConstraint() {
+        tableau.resize(tableau.numRow() + 1, tableau.numCol(),
+                       tableau.rowStride());
+        tableau(end, _) = 0;
+        return tableau(end, _(numExtraCols, end));
+    }
+    MutPtrVector<int64_t> addConstraintAndVar() {
+        tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
+        tableau(end, _) = 0;
+        return tableau(end, _(numExtraCols, end));
+    }
+    void reserveExtraRows(size_t additionalRows) {
+        tableau.reserve(tableau.numRow() + additionalRows, tableau.rowStride());
+    }
+    void reserveExtra(size_t additionalRows, size_t additionalCols) {
+        size_t newStride =
+            std::max(tableau.rowStride(), tableau.numCol() + additionalCols);
+        tableau.reserve(tableau.numRow() + additionalRows, newStride);
+        if (newStride == tableau.rowStride())
+            return;
+        // copy memory, so that incrementally adding columns is cheap later.
+        size_t nC = tableau.numCol();
+        tableau.resize(tableau.numRow(), newStride, newStride);
+        tableau.truncateCols(nC);
+    }
+    void reserveExtra(size_t additional) {
+        reserveExtra(additional, additional);
+    }
     void truncateVars(size_t numVars) {
         tableau.truncateCols(numTableauCols(numVars));
     }
