@@ -1187,7 +1187,7 @@ template <typename T> struct PtrMatrix {
         assert(rows.e >= rows.b);
         assert(cols.e >= cols.b);
         assert(rows.e <= M);
-        assert(cols.e <= numCol());
+        assert(cols.e <= N);
         return PtrMatrix<T>{.mem = mem + cols.b + rows.b * X,
                             .M = rows.e - rows.b,
                             .N = cols.e - cols.b,

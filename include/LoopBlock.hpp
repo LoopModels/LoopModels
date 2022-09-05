@@ -598,7 +598,7 @@ struct LoopBlock {
                     C(_(cc, ccc), 0) -= bndPc * sch;
                 } else {
                     // add it to C
-		    p = edge.out->updatePhiOffset(p);
+                    p = edge.out->updatePhiOffset(p);
                     auto phiChild = edge.out->getPhiOffset();
                     C(_(c, cc), phiChild) = -satPc;
                     C(_(c, cc), phiChild + satPc.numCol()) = satPc;
@@ -613,7 +613,7 @@ struct LoopBlock {
                     C(_(cc, ccc), 0) -= bndPp * sch;
                 } else {
                     // add it to C
-		    p = edge.in->updatePhiOffset(p);
+                    p = edge.in->updatePhiOffset(p);
                     auto phiParent = edge.in->getPhiOffset();
                     C(_(c, cc), phiParent) = -satPp;
                     C(_(c, cc), phiParent + satPp.numCol()) = satPp;
@@ -637,7 +637,8 @@ struct LoopBlock {
             mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
             if (mem.scheduleFlag())
                 continue;
-            mem.schedule.getPhi()(_, depth) = sol(mem.getPhiOffset());
+            if (depth & 1)
+                mem.schedule.getPhi()(_, depth >> 1) = sol(mem.getPhiOffset());
         }
     }
     static int64_t lexSign(PtrVector<int64_t> x) {
@@ -690,11 +691,14 @@ struct LoopBlock {
             if (d & 1)
                 countNumPhiCoefs(d);
             instantiateOmniSimplex(d);
-            addIndependentSolutionConstraints(d);
+            if (d & 1)
+                addIndependentSolutionConstraints(d >> 1);
             if (omniSimplex.initiateFeasible())
                 return true;
             omniSimplex.lexMinimize(sol, getLambdaOffset());
             // TODO: deactivate edges of satisfied dependencies
+	    // FIXME: phiOffsets are not set correctly;
+	    // depth=0, i=4294967295
             updateSchedules(sol, d);
         }
         return false;

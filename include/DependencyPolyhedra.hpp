@@ -40,10 +40,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     inline size_t getDim0() const { return numDep0Var; }
     inline size_t getNumSymbols() const { return 1 + symbols.size(); }
     inline size_t getDim1() const {
-        return getNumVar() - numDep0Var - nullStep.size() - getNumSymbols();
+        return getNumVar() - numDep0Var - nullStep.size() - symbols.size();
     }
     inline size_t getNumPhiCoefficients() const {
-        return getNumVar() - nullStep.size() + 1 - getNumSymbols();
+        return getNumVar() - nullStep.size() - symbols.size();
     }
     static constexpr size_t getNumOmegaCoefficients() { return 2; }
     inline size_t getNumScheduleCoefficients() const {
@@ -676,6 +676,11 @@ struct Dependence {
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getSatOmegaCoefs() const {
+        SHOWLN(dependenceSatisfaction.getConstraints().numRow());
+        SHOWLN(dependenceSatisfaction.getConstraints().numCol());
+        SHOW(depPoly.getNumLambda());
+        CSHOW(getNumPhiCoefficients());
+        CSHOWLN(getNumOmegaCoefficients());
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
@@ -840,16 +845,15 @@ struct Dependence {
                               const DependencePolyhedra &dxy, MemoryAccess &x,
                               MemoryAccess &y) {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
-        const size_t numLambda = 1 + dxy.getNumInequalityConstraints() +
-                                 2 * dxy.getNumEqualityConstraints();
+        const size_t numLambda = dxy.getNumLambda();
         if (checkDirection(pair, x, y, numLambda,
                            dxy.A.numCol() - dxy.getTimeDim())) {
-            pair.first.truncateVars(numLambda +
+            pair.first.truncateVars(1 + numLambda +
                                     dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
                                          std::move(pair.second), &x, &y, true});
         } else {
-            pair.second.truncateVars(numLambda +
+            pair.second.truncateVars(1 + numLambda +
                                      dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.second),
                                          std::move(pair.first), &y, &x, false});

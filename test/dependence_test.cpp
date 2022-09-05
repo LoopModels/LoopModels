@@ -78,7 +78,6 @@ TEST(DependenceTest, BasicAssertions) {
     Schedule schLoad0(2);
     Schedule schStore(2);
     schStore.getOmega()[4] = 2;
-    llvm::SmallVector<Dependence, 1> dc;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
     DependencePolyhedra dep0(msrc, mtgt0);
@@ -103,12 +102,21 @@ TEST(DependenceTest, BasicAssertions) {
     assert(dep1.getNumInequalityConstraints() == 4);
     assert(dep1.getNumEqualityConstraints() == 2);
     // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
+    llvm::SmallVector<Dependence, 1> dc;
     EXPECT_EQ(dc.size(), 0);
     EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
     EXPECT_EQ(dc.size(), 1);
     Dependence &d(dc.front());
     EXPECT_TRUE(d.forward);
     std::cout << d << std::endl;
+    SHOWLN(d.getNumPhiCoefficients());
+    SHOWLN(d.getNumOmegaCoefficients());
+    SHOWLN(d.depPoly.getDim0());
+    SHOWLN(d.depPoly.getDim1());
+    SHOWLN(d.depPoly.getNumVar());
+    SHOWLN(d.depPoly.nullStep.size());
+    SHOWLN(d.depPoly.getNumSymbols());
+    SHOWLN(d.depPoly.A.numCol());
     assert(d.forward);
     assert(!allZero(d.dependenceSatisfaction.tableau(
         d.dependenceSatisfaction.tableau.numRow() - 1, _)));
@@ -577,7 +585,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
     //
-    lblock.fillEdges();
+    // lblock.fillEdges();
+    lblock.optimize();
     // -3 comes from the fact we did 3 load-load comparisons above
     // in the future, we may have `fillEdges` make load-load comparisons
     // so that we can add bounding constraints to the objective, to
