@@ -1276,14 +1276,17 @@ template <typename T> struct PtrMatrix {
         return true;
     }
     bool isSquare() const { return M == N; }
-    Vector<T> diag() const {
-        size_t K = std::min(M, N);
-        Vector<T> d;
-        d.resizeForOverwrite(K);
-        for (size_t k = 0; k < K; ++k)
-            d(k) = mem[k * (1 + X)];
-        return d;
+    StridedVector<T> diag() const {
+        return StridedVector<T>{data(), std::min(M, N), rowStride() + 1};
     }
+    // Vector<T> diag() const {
+    //     size_t K = std::min(M, N);
+    //     Vector<T> d;
+    //     d.resizeForOverwrite(K);
+    //     for (size_t k = 0; k < K; ++k)
+    //         d(k) = mem[k * (1 + X)];
+    //     return d;
+    // }
     inline PtrMatrix<T> view() const { return *this; };
     Transpose<PtrMatrix<T>> transpose() const {
         return Transpose<PtrMatrix<T>>{*this};
@@ -1484,14 +1487,20 @@ template <typename T> struct MutPtrMatrix {
         return true;
     }
     bool isSquare() const { return M == N; }
-    Vector<T> diag() const {
-        size_t K = std::min(M, N);
-        Vector<T> d;
-        d.resizeForOverwrite(N);
-        for (size_t k = 0; k < K; ++k)
-            d(k) = mem[k * (1 + X)];
-        return d;
+    MutStridedVector<T> diag() {
+        return MutStridedVector<T>{data(), std::min(M, N), rowStride() + 1};
     }
+    StridedVector<T> diag() const {
+        return StridedVector<T>{data(), std::min(M, N), rowStride() + 1};
+    }
+    // Vector<T> diag() const {
+    //     size_t K = std::min(M, N);
+    //     Vector<T> d;
+    //     d.resizeForOverwrite(N);
+    //     for (size_t k = 0; k < K; ++k)
+    //         d(k) = mem[k * (1 + X)];
+    //     return d;
+    // }
     Transpose<PtrMatrix<T>> transpose() const {
         return Transpose<PtrMatrix<T>>{view()};
     }
@@ -1702,15 +1711,23 @@ template <typename T, typename P> struct BaseMatrix {
         return true;
     }
     bool isSquare() const { return numRow() == numCol(); }
-    Vector<T> diag() const {
-        size_t N = std::min(numRow(), numCol());
-        Vector<T> d;
-        d.resizeForOverwrite(N);
-        const P &A = self();
-        for (size_t n = 0; n < N; ++n)
-            d(n) = A(n, n);
-        return d;
+    MutStridedVector<T> diag() {
+        return MutStridedVector<T>{data(), std::min(numRow(), numCol()),
+                                   rowStride() + 1};
     }
+    StridedVector<T> diag() const {
+        return StridedVector<T>{data(), std::min(numRow(), numCol()),
+                                rowStride() + 1};
+    }
+    // Vector<T> diag() const {
+    //     size_t N = std::min(numRow(), numCol());
+    //     Vector<T> d;
+    //     d.resizeForOverwrite(N);
+    //     const P &A = self();
+    //     for (size_t n = 0; n < N; ++n)
+    //         d(n) = A(n, n);
+    //     return d;
+    // }
     inline PtrMatrix<T> view() const {
         return PtrMatrix<T>{
             .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
@@ -2331,8 +2348,8 @@ inline auto binaryOp(const OP op, const A &a, const B &b) {
 inline auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
 struct Rational {
-    int64_t numerator;
-    int64_t denominator;
+    int64_t numerator{0};
+    int64_t denominator{1};
 
     Rational() : numerator(0), denominator(1){};
     Rational(int64_t coef) : numerator(coef), denominator(1){};

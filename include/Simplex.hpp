@@ -118,11 +118,13 @@ struct Simplex {
     PtrVector<int64_t> getTableauRow(size_t i) const {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
+    // 1-indexed, 0 returns value for const col
     PtrVector<int64_t> getBasicConstraints() const { return getTableauRow(0); }
     PtrVector<int64_t> getCost() const { return getTableauRow(1); }
     MutPtrVector<int64_t> getTableauRow(size_t i) {
         return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
     }
+    // 1-indexed, 0 returns value for const col
     MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
     MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<int64_t> getTableauCol(size_t i) const {
@@ -130,6 +132,7 @@ struct Simplex {
                                           numExtraRows * tableau.rowStride(),
                                       getNumConstraints(), tableau.rowStride()};
     }
+    // 0-indexed
     StridedVector<int64_t> getBasicVariables() const {
         return getTableauCol(0);
     }
@@ -149,13 +152,14 @@ struct Simplex {
     MutStridedVector<int64_t> getConstants() {
         return getTableauCol(numExtraCols);
     }
+    // AbstractVector
     struct Solution {
         using eltype = Rational;
         static constexpr bool canResize = false;
         // view of tableau dropping const column
         PtrMatrix<int64_t> tableauView;
         StridedVector<int64_t> consts;
-        Rational operator()(size_t i) {
+        Rational operator()(size_t i) const {
             int64_t j = tableauView(0, i);
             if (j < 0)
                 return 0;
@@ -288,6 +292,7 @@ struct Simplex {
         inCanonicalForm = true;
         return 0;
     }
+    // 1 based to match getBasicConstraints
     static int getEnteringVariable(PtrVector<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
         // std::cout << "costs = " << costs << std::endl;
@@ -346,7 +351,10 @@ struct Simplex {
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     Rational runCore(int64_t f = 1) {
-        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        //     return runCore(getCostsAndConstraints(), f);
+        // }
+        // Rational runCore(MutPtrMatrix<int64_t> C, int64_t f = 1) {
+        auto C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
 #ifdef VERBOSESIMPLEX
@@ -371,6 +379,7 @@ struct Simplex {
         MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
+        // zero cost of basic variables to put in canonical form
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
             // std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
@@ -379,6 +388,59 @@ struct Simplex {
                 f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
         return runCore(f);
+    }
+    // lexicographically minimize vars [0, numVars)
+    // false means no problems, true means there was a problem
+    void lexMinimize(Vector<Rational> &sol, size_t numVars) {
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+
+        sol.resizeForOverwrite(numVars);
+        for (auto &&r : sol)
+            r = Rational{0, 1};
+        for (size_t v = 1; v <= numVars; ++v) {
+            // if it is already zero (not basic), we can move to the next
+            int64_t c = basicConstraints(v);
+            if (c < 0)
+                continue;
+            // C(0, _(v, end)) = 0;
+            // we try to zero `v` or at least minimize it.
+            // implicitly, set cost to -1, and then see if we can make it
+            // basic
+            // C(_,0) = C(_,_(1,end)) * vars
+            C(0, 0) = C(c, 0);
+            C(0, _(v, end)) = C(c, _(v, end));
+            // C(0, v) = -1;
+            while (true) {
+                // get new entering variable
+                int enteringVariable = getEnteringVariable(C(0, _(v, end)));
+                if (enteringVariable == -1)
+                    break;
+                enteringVariable += v;
+                int leavingVariable = getLeavingVariable(C, enteringVariable);
+                if (leavingVariable == -1)
+                    break;
+                for (size_t i = 0; i < C.numRow(); ++i)
+                    if (i != size_t(leavingVariable + 1))
+                        NormalForm::zeroWithRowOperation(
+                            C, i, leavingVariable + 1, enteringVariable,
+                            _(1, v));
+                // std::cout << "post-removal C =" << C << std::endl;
+                // update baisc vars and constraints
+                int64_t oldBasicVar = basicVars[leavingVariable];
+                basicVars[leavingVariable] = enteringVariable;
+                basicConstraints[oldBasicVar] = -1;
+                basicConstraints[enteringVariable] = leavingVariable;
+            }
+            c = basicConstraints(v);
+            if (c >= 0) {
+                // C(_,0) = C(_,_(1,end)) * vars
+                // we now make `vars[v-1]` a constant
+                sol(v - 1) = Rational::create(C(c, 0), C(c, v));
+                C(c, 0) = 0;
+            }
+        }
     }
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)

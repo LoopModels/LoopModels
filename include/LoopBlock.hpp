@@ -88,19 +88,16 @@ struct LoopBlock {
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
-    Simplex activeSimplex;
+    // Simplex activeSimplex;
     // we may turn off edges because we've exceeded its loop depth
     // or because the dependence has already been satisfied at an
     // earlier level.
-    llvm::SmallVector<bool, 256> doNotAddEdge;
+    // llvm::SmallVector<bool, 256> doNotAddEdge;
     llvm::SmallVector<bool, 256> scheduled;
     size_t numPhiCoefs{0};
     size_t numLambda{0};
     size_t numBounding{0};
     size_t numConstraints{0};
-#ifndef NDEBUG
-    bool countedNumParams{false};
-#endif
     // Simplex simplex;
     // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
     // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
@@ -110,6 +107,12 @@ struct LoopBlock {
     // const ArrayReference &ref(const MemoryAccess *x) const {
     //     return refs[x->ref];
     // }
+    [[nodiscard]] size_t calcMaxDepth() const {
+        size_t d = 0;
+        for (auto &mem : memory)
+            d = std::max(d, mem.getNumLoops());
+        return d;
+    }
     bool isSatisfied(const Dependence &e) const {
         const Simplex &sat = e.dependenceSatisfaction;
         Schedule &schIn = e.in->schedule;
@@ -313,42 +316,8 @@ struct LoopBlock {
             return alshr;
         }
     }
-    bool ilpOpt() { return false; }
-    // NOTE: requires omniSimplex to be instantiated
-    bool orthogonalizeStores() {
-        assert(countedNumParams);
-        // as a first optimization, we just look for stores with lower
-        // access rank than the associated loop nest depth
-        // Note that we can handle loads later, e.g. once we
-        // hit the rank (and things have been feasible)
-        // we can try adding extra constraints to
-        // orthogonalize loads with respect to stores
-        //
-        // stores id, rank pairs
-        llvm::SmallVector<std::pair<unsigned, unsigned>> orthCandidates;
-        scheduled.clear();
-        scheduled.resize(memory.size()); // should be all `false`
-        // iterate over stores
-        for (unsigned i = 0; i < unsigned(memory.size()); ++i) {
-            MemoryAccess &mai = memory[i];
-            if (mai.isLoad)
-                continue;
-            unsigned r = NormalForm::rank(mai.indexMatrix());
-            if (r < mai.getNumLoops())
-                orthCandidates.emplace_back(i, r);
-        }
-        if (orthCandidates.size() == 0)
-            return false;
-        // now, the approach for orthogonalizing is to
-        // first try orthogonalizing all, then, if that fails
-        // we (as a first implementation) don't orthogonalize.
-        // in the future, we could try stepwise, perhaps
-        // using some cost model to prioritize.
-        constexpr size_t numOmega =
-            DependencePolyhedra::getNumOmegaCoefficients();
+    //    bool ilpOpt() { return false; }
 
-        return false;
-    }
     void orthogonalizeStoresOld() {
         llvm::SmallVector<bool, 256> visited(memory.size());
         for (size_t i = 0; i < memory.size(); ++i) {
@@ -478,27 +447,74 @@ struct LoopBlock {
             }
         }
     }
-    void countNumPhiCoefs() {
+    // NOTE: requires omniSimplex to be instantiated
+    bool orthogonalizeStores() {
+        // as a first optimization, we just look for stores with lower
+        // access rank than the associated loop nest depth
+        // Note that we can handle loads later, e.g. once we
+        // hit the rank (and things have been feasible)
+        // we can try adding extra constraints to
+        // orthogonalize loads with respect to stores
+        //
+        // stores id, rank pairs
+        llvm::SmallVector<unsigned> orthCandidates;
+        scheduled.clear();
+        scheduled.resize(memory.size()); // should be all `false`
+        // iterate over stores
+        for (unsigned i = 0; i < unsigned(memory.size()); ++i) {
+            MemoryAccess &mai = memory[i];
+            if (mai.isLoad)
+                continue;
+            mai.ref.rank = NormalForm::rank(mai.indexMatrix());
+            if (mai.ref.rank < mai.getNumLoops())
+                orthCandidates.emplace_back(i);
+        }
+        if (orthCandidates.size() == 0)
+            return false;
+        // now, the approach for orthogonalizing is to
+        // first try orthogonalizing all, then, if that fails
+        // we (as a first implementation) don't orthogonalize.
+        // in the future, we could try stepwise, perhaps
+        // using some cost model to prioritize.
+        for (auto i : orthCandidates) {
+            MemoryAccess &mem = memory[i];
+            // now we set the schedule to the memory accesses
+            auto indMat = mem.indexMatrix(); // numLoops x arrayDim
+            auto phi = mem.schedule.getPhi();
+            // we flip order, to try and place higher stride
+            // dimensions in the outer loops
+            for (size_t r = 0; r < mem.ref.rank; ++r)
+                phi(r, _) = indMat(_, mem.ref.rank - 1 - r);
+        }
+        // TODO: probably have this be a separate driver instead?
+        return false;
+    }
+
+    void countNumPhiCoefs(size_t depth) {
         size_t c = 0;
         for (auto &m : memory)
-            c += (m.phiIsScheduled() ? m.getNumLoops() : 0);
+            c += ((m.phiIsScheduled() && (m.getNumLoops() > depth))
+                      ? m.getNumLoops()
+                      : 0);
         numPhiCoefs = c;
     }
     size_t countNumLambdas() const {
         size_t c = 0;
         for (auto &e : edges)
-            c += e.getNumLambda();
+            c += (e.isInactive() ? 0 : e.getNumLambda());
         return c;
     }
     size_t countNumBoundingCoefs() const {
         size_t c = 0;
         for (auto &e : edges)
-            c += e.getNumSymbols();
+            c += (e.isInactive() ? 0 : e.getNumSymbols());
         return c;
     }
     void countAuxParamsAndConstraints() {
         size_t a = 0, b = 0, c = 0;
         for (auto &e : edges) {
+            if (e.isInactive())
+                continue;
             a += e.getNumLambda();
             b += e.getNumSymbols();
             c += e.getNumConstraints();
@@ -507,12 +523,9 @@ struct LoopBlock {
         numBounding = b;
         numConstraints = c;
     }
-    void countNumParams() {
-        countNumPhiCoefs();
+    void countNumParams(size_t depth) {
+        countNumPhiCoefs(depth);
         countAuxParamsAndConstraints();
-#ifndef NDEBUG
-        countedNumParams = true;
-#endif
     }
     // assemble omni-simplex
     // we want to order variables to be
@@ -522,9 +535,10 @@ struct LoopBlock {
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
-
-    void instantiateOmniSimplex() {
-        assert(countedNumParams);
+    size_t getLambdaOffset() const {
+        return numBounding + 2 * numPhiCoefs + memory.size();
+    }
+    void instantiateOmniSimplex(size_t depth) {
         // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
         const size_t numOmegaCoefs = memory.size();
         omniSimplex.resizeForOverwrite(numConstraints,
@@ -540,18 +554,14 @@ struct LoopBlock {
         //     DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 0, w = numBounding - edges.size();
         size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
-               l = numBounding + 2 * numPhiCoefs + numOmegaCoefs;
+               l = getLambdaOffset();
         // TODO: develop actual map going from
         for (size_t e = 0; e < edges.size(); ++e) {
-            if (doNotAddEdge[e])
-                continue;
             Dependence &edge = edges[e];
-            p = edge.out->updatePhiOffset(p);
+            if (edge.isInactive())
+                continue;
             o = edge.out->updateOmegaOffset(o);
-            p = edge.in->updatePhiOffset(p);
             o = edge.in->updateOmegaOffset(o);
-            auto phiChild = edge.out->getPhiOffset();
-            auto phiParent = edge.in->getPhiOffset();
             const auto [satC, satL, satPp, satPc, satO] =
                 edge.splitSatisfaction();
             const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
@@ -577,29 +587,39 @@ struct LoopBlock {
             C(_(c, cc), 0) = satC;
             C(_(cc, ccc), 0) = bndC;
             // now, handle Phi and Omega
-            if (auto osch = edge.out->getActiveSchedule()) {
-                // add it constants
-                auto sch = osch.getValue();
-                C(_(c, cc), 0) -= satPc * sch;
-                C(_(cc, ccc), 0) -= bndPc * sch;
-            } else {
-                // add it to C
-                C(_(c, cc), phiChild) = -satPc;
-                C(_(c, cc), phiChild + satPc.numCol()) = satPc;
-                C(_(cc, ccc), phiChild) = -bndPc;
-                C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
-            }
-            if (auto osch = edge.in->getActiveSchedule()) {
-                // add it to constants
-                auto sch = osch.getValue();
-                C(_(c, cc), 0) -= satPp * sch;
-                C(_(cc, ccc), 0) -= bndPp * sch;
-            } else {
-                // add it to C
-                C(_(c, cc), phiParent) = -satPp;
-                C(_(c, cc), phiParent + satPp.numCol()) = satPp;
-                C(_(cc, ccc), phiParent) = -bndPp;
-                C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
+            if (depth & 1) {
+                size_t d = depth >> 1;
+                // phis are not constrained to be 0
+                if (d >= edge.out->getNumLoops()) {
+                } else if (edge.out->phiIsScheduled()) {
+                    // add it constants
+                    auto sch = edge.out->getSchedule(d);
+                    C(_(c, cc), 0) -= satPc * sch;
+                    C(_(cc, ccc), 0) -= bndPc * sch;
+                } else {
+                    // add it to C
+		    p = edge.out->updatePhiOffset(p);
+                    auto phiChild = edge.out->getPhiOffset();
+                    C(_(c, cc), phiChild) = -satPc;
+                    C(_(c, cc), phiChild + satPc.numCol()) = satPc;
+                    C(_(cc, ccc), phiChild) = -bndPc;
+                    C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
+                }
+                if (d >= edge.in->getNumLoops()) {
+                } else if (edge.in->phiIsScheduled()) {
+                    // add it to constants
+                    auto sch = edge.in->getSchedule(d);
+                    C(_(c, cc), 0) -= satPp * sch;
+                    C(_(cc, ccc), 0) -= bndPp * sch;
+                } else {
+                    // add it to C
+		    p = edge.in->updatePhiOffset(p);
+                    auto phiParent = edge.in->getPhiOffset();
+                    C(_(c, cc), phiParent) = -satPp;
+                    C(_(c, cc), phiParent + satPp.numCol()) = satPp;
+                    C(_(cc, ccc), phiParent) = -bndPp;
+                    C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
+                }
             }
             // Omegas are included regardless of rotation
             C(_(c, cc), edge.out->omegaOffset) = satO(_, !edge.forward);
@@ -609,10 +629,8 @@ struct LoopBlock {
 
             c = ccc;
         }
-        // return omniSimplex.initiateFeasible();
     }
-    void updateSchedules(size_t depth) {
-        auto sol = omniSimplex.getSolution();
+    void updateSchedules(PtrVector<Rational> sol, size_t depth) {
         for (auto &&mem : memory) {
             if (depth >= mem.getNumLoops())
                 continue;
@@ -661,14 +679,25 @@ struct LoopBlock {
         for (auto &&mem : memory)
             mem.phiOffset = std::numeric_limits<unsigned>::max();
     }
-    void optimize() {
+    // returns true on failure
+    bool optimize() {
         fillEdges();
-        countNumParams();
-        doNotAddEdge.clear();
-        doNotAddEdge.resize(edges.size());
-        instantiateOmniSimplex();
-        // first, we try orthogonalization and check feasibility
-        // if that fails, we try again
+        const size_t maxDepth = calcMaxDepth();
+        Vector<Rational> sol;
+        for (size_t d = 0; d < 2 * maxDepth + 1; ++d) {
+            countAuxParamsAndConstraints();
+            numPhiCoefs = 0;
+            if (d & 1)
+                countNumPhiCoefs(d);
+            instantiateOmniSimplex(d);
+            addIndependentSolutionConstraints(d);
+            if (omniSimplex.initiateFeasible())
+                return true;
+            omniSimplex.lexMinimize(sol, getLambdaOffset());
+            // TODO: deactivate edges of satisfied dependencies
+            updateSchedules(sol, d);
+        }
+        return false;
     }
 };
 

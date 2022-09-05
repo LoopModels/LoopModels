@@ -311,7 +311,8 @@ TEST(NullSpaceTests, BasicAssertions) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(-10, 100);
 
-    size_t numIters = 1000;
+    // size_t numIters = 1000;
+    size_t numIters = 1;
     for (size_t numCol = 2; numCol < 11; numCol += 2) {
         IntMatrix B(8, numCol);
         size_t nullDim = 0;

@@ -27,6 +27,7 @@ struct ArrayReference {
     // llvm::Optional<IntMatrix>
     //     offsets; // symbolicOffsets * (loop->symbols)
     llvm::SmallVector<int64_t, 16> indices;
+    unsigned rank;
     bool hasSymbolicOffsets; // normal case is not to
 
     size_t arrayDim() const { return strides.size(); }

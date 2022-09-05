@@ -435,6 +435,35 @@ inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
     }
     return f;
 }
+inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
+                                 size_t k, Range<size_t, size_t> skip) {
+    if (int64_t Aik = A(i, k)) {
+        int64_t Ajk = A(j, k);
+        int64_t g = gcd(Aik, Ajk);
+        Aik /= g;
+        Ajk /= g;
+        g = 0;
+        for (size_t l = 0; l < skip.b; ++l) {
+            int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+            A(i, l) = Ail;
+            g = gcd(Ail, g);
+        }
+        for (size_t l = skip.e; l < A.numCol(); ++l) {
+            int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+            A(i, l) = Ail;
+            g = gcd(Ail, g);
+        }
+        // std::cout << "g = " << g << std::endl;
+        if (g > 1) {
+            for (size_t l = 0; l < skip.b; ++l)
+                if (int64_t Ail = A(i, l))
+                    A(i, l) = Ail / g;
+            for (size_t l = skip.e; l < A.numCol(); ++l)
+                if (int64_t Ail = A(i, l))
+                    A(i, l) = Ail / g;
+        }
+    }
+}
 
 // use row `r` to zero the remaining rows of column `c`
 MULTIVERSION [[maybe_unused]] static void zeroColumn(IntMatrix &A, IntMatrix &B,

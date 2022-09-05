@@ -550,6 +550,7 @@ struct Dependence {
     MemoryAccess *in;
     MemoryAccess *out;
     const bool forward;
+    bool inactive{false};
     // Dependence(DependencePolyhedra depPoly,
     //            IntegerEqPolyhedra dependenceSatisfaction,
     //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
@@ -616,6 +617,8 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
+    bool isInactive() const { return inactive; }
+    // bool isActive() const { return !inactive; }
     size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
     size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
     size_t getNumPhiCoefficients() const {
