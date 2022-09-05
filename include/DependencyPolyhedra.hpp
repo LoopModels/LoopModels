@@ -411,9 +411,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         Simplex &bw(pair.second);
         bw.resize(numConstraintsNew, numVarNew + 1);
         MutPtrMatrix<int64_t> bC{bw.getConstraints()(_, _(1, end))};
-        for (size_t i = 0; i < numConstraintsNew; ++i)
-            for (size_t j = 0; j < numVarNew; ++j)
-                bC(i, j) = fC(i, j);
+
+        bC(_, _(begin, numVarNew)) =
+            PtrMatrix<int64_t>(fC(_, _(begin, numVarNew)));
+        // for (size_t i = 0; i < numConstraintsNew; ++i)
+        //     for (size_t j = 0; j < numVarNew; ++j)
+        //         bC(i, j) = fC(i, j);
 
         // equality constraints get expanded into two inequalities
         // a == 0 ->
@@ -427,11 +430,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // so that the ILP minimizing coefficients
         // will tend to preserve the initial order (which is
         // probably better than tending to reverse the initial order).
-        for (size_t i = 0; i < numPhiCoefs; ++i) {
-            int64_t s = (2 * (i < numDep0Var) - 1);
-            fC(i + numBoundingCoefs, i + numLambda) = s;
-            bC(i + numBoundingCoefs, i + numLambda) = -s;
-        }
+        // for (size_t i = 0; i < numPhiCoefs; ++i) {
+        //     int64_t s = (2 * (i < numDep0Var) - 1);
+        //     fC(i + numBoundingCoefs, i + numLambda) = s;
+        //     bC(i + numBoundingCoefs, i + numLambda) = -s;
+        // }
         for (size_t i = 0; i < numDep0Var; ++i) {
             fC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = 1;
             bC(numDep0Var - 1 - i + numBoundingCoefs, i + numLambda) = -1;
@@ -886,10 +889,15 @@ struct Dependence {
             std::swap(in, out);
             std::swap(pair.first, pair.second);
         }
-        pair.first.truncateVars(numLambda + numScheduleCoefs);
+        pair.first.truncateVars(1 + numLambda + numScheduleCoefs);
         // pair.first.removeExtraVariables(numScheduleCoefs);
         deps.emplace_back(Dependence{dxy, std::move(pair.first),
                                      std::move(pair.second), in, out, isFwd});
+        // SHOW(out->getNumLoops());
+        // CSHOW(in->getNumLoops());
+        // CSHOWLN(deps.back().getNumPhiCoefficients());
+        assert(out->getNumLoops() + in->getNumLoops() ==
+               deps.back().getNumPhiCoefficients());
         // pair is invalid
         const size_t timeDim = dxy.getTimeDim();
         assert(timeDim);
@@ -898,6 +906,9 @@ struct Dependence {
         // const size_t numBoundingCoefs = numVarKeep - numLambda;
         // remove the time dims from the deps
         deps.back().depPoly.truncateVars(numVar);
+        deps.back().depPoly.nullStep.clear();
+        assert(out->getNumLoops() + in->getNumLoops() ==
+               deps.back().getNumPhiCoefficients());
         // deps.back().depPoly.removeExtraVariables(numVar);
         // now we need to check the time direction for all times
         // anything approaching 16 time dimensions would be absolutely
@@ -982,13 +993,19 @@ struct Dependence {
         //         std::cout << "time dxy =" << dxy << std::endl;
         // #endif
         dxy.truncateVars(numVar);
+        dxy.nullStep.clear();
         // #ifndef NDEBUG
         //         std::cout << "after zeroing, time dxy =" << dxy << std::endl;
         // #endif
-        farkasBackups.first.truncateVars(numLambda + numScheduleCoefs);
+        farkasBackups.first.truncateVars(1 + numLambda + numScheduleCoefs);
         deps.emplace_back(
             Dependence{std::move(dxy), std::move(farkasBackups.first),
                        std::move(farkasBackups.second), out, in, !isFwd});
+        // SHOW(out->getNumLoops());
+        // CSHOW(in->getNumLoops());
+        // CSHOWLN(deps.back().getNumPhiCoefficients());
+        assert(out->getNumLoops() + in->getNumLoops() ==
+               deps.back().getNumPhiCoefficients());
     }
 
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
@@ -999,6 +1016,10 @@ struct Dependence {
         if (x.ref.gcdKnownIndependent(y.ref))
             return 0;
         DependencePolyhedra dxy(x, y);
+        assert(x.getNumLoops() == dxy.getDim0());
+        assert(y.getNumLoops() == dxy.getDim1());
+        assert(x.getNumLoops() + y.getNumLoops() ==
+               dxy.getNumPhiCoefficients());
         if (dxy.isEmpty())
             return 0;
         // #ifndef NDEBUG

@@ -1279,6 +1279,10 @@ template <typename T> struct PtrMatrix {
     StridedVector<T> diag() const {
         return StridedVector<T>{data(), std::min(M, N), rowStride() + 1};
     }
+    StridedVector<T> antiDiag() const {
+        return StridedVector<T>{data() + N - 1, std::min(M, N),
+                                rowStride() - 1};
+    }
     // Vector<T> diag() const {
     //     size_t K = std::min(M, N);
     //     Vector<T> d;
@@ -1492,6 +1496,14 @@ template <typename T> struct MutPtrMatrix {
     }
     StridedVector<T> diag() const {
         return StridedVector<T>{data(), std::min(M, N), rowStride() + 1};
+    }
+    MutStridedVector<T> antiDiag() {
+        return MutStridedVector<T>{data() + N - 1, std::min(M, N),
+                                   rowStride() - 1};
+    }
+    StridedVector<T> antiDiag() const {
+        return StridedVector<T>{data() + N - 1, std::min(M, N),
+                                rowStride() - 1};
     }
     // Vector<T> diag() const {
     //     size_t K = std::min(M, N);
@@ -1718,6 +1730,15 @@ template <typename T, typename P> struct BaseMatrix {
     StridedVector<T> diag() const {
         return StridedVector<T>{data(), std::min(numRow(), numCol()),
                                 rowStride() + 1};
+    }
+    MutStridedVector<T> antiDiag() {
+        return MutStridedVector<T>{data() + numCol() - 1,
+                                   std::min(numRow(), numCol()),
+                                   rowStride() - 1};
+    }
+    StridedVector<T> antiDiag() const {
+        return StridedVector<T>{data() + numCol() - 1,
+                                std::min(numRow(), numCol()), rowStride() - 1};
     }
     // Vector<T> diag() const {
     //     size_t N = std::min(numRow(), numCol());

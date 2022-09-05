@@ -49,9 +49,7 @@ struct Schedule {
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops) {
         MutSquarePtrMatrix<int64_t> Phi(getPhi());
-        for (size_t i = 0; i < nLoops; ++i) {
-            Phi(i, i) = 1;
-        }
+	Phi.antiDiag() = 1;
     };
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);

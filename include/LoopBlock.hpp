@@ -538,6 +538,35 @@ struct LoopBlock {
     size_t getLambdaOffset() const {
         return numBounding + 2 * numPhiCoefs + memory.size();
     }
+    void setScheduleMemoryOffsets(size_t depth) {
+        size_t p = numBounding, o = numBounding + 2 * numPhiCoefs;
+        if (depth & 1) {
+            size_t d = depth >> 1;
+            for (auto &&mem : memory) {
+                o = mem.updateOmegaOffset(o);
+                if ((d < mem.getNumLoops()) && !mem.phiIsScheduled())
+                    p = mem.updatePhiOffset(p);
+            }
+        } else {
+            for (auto &&mem : memory)
+                o = mem.updateOmegaOffset(o);
+        }
+    }
+    void validateMemory() {
+        for (auto &mem : memory)
+            assert(mem.ref.getNumLoops() == mem.schedule.getNumLoops());
+    }
+    void validateEdges() {
+        for (auto &edge : edges) {
+	    SHOWLN(edge);
+            assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
+                   edge.getNumPhiCoefficients());
+            assert(1 + edge.depPoly.getNumLambda() +
+                       edge.getNumPhiCoefficients() +
+                       edge.getNumOmegaCoefficients() ==
+                   edge.dependenceSatisfaction.getConstraints().numCol());
+        }
+    }
     void instantiateOmniSimplex(size_t depth) {
         // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
         const size_t numOmegaCoefs = memory.size();
@@ -553,15 +582,12 @@ struct LoopBlock {
         // constexpr size_t numOmega =
         //     DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 0, w = numBounding - edges.size();
-        size_t c = 0, p = numBounding, o = numBounding + 2 * numPhiCoefs,
-               l = getLambdaOffset();
+        size_t c = 0, l = getLambdaOffset();
         // TODO: develop actual map going from
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
             if (edge.isInactive())
                 continue;
-            o = edge.out->updateOmegaOffset(o);
-            o = edge.in->updateOmegaOffset(o);
             const auto [satC, satL, satPp, satPc, satO] =
                 edge.splitSatisfaction();
             const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
@@ -586,6 +612,7 @@ struct LoopBlock {
 
             C(_(c, cc), 0) = satC;
             C(_(cc, ccc), 0) = bndC;
+
             // now, handle Phi and Omega
             if (depth & 1) {
                 size_t d = depth >> 1;
@@ -594,11 +621,14 @@ struct LoopBlock {
                 } else if (edge.out->phiIsScheduled()) {
                     // add it constants
                     auto sch = edge.out->getSchedule(d);
+                    SHOWLN(edge.out->getNumLoops());
+                    SHOW(satPc.numRow());
+                    CSHOW(satPc.numCol());
+                    CSHOWLN(sch.size());
                     C(_(c, cc), 0) -= satPc * sch;
                     C(_(cc, ccc), 0) -= bndPc * sch;
                 } else {
                     // add it to C
-                    p = edge.out->updatePhiOffset(p);
                     auto phiChild = edge.out->getPhiOffset();
                     C(_(c, cc), phiChild) = -satPc;
                     C(_(c, cc), phiChild + satPc.numCol()) = satPc;
@@ -609,11 +639,14 @@ struct LoopBlock {
                 } else if (edge.in->phiIsScheduled()) {
                     // add it to constants
                     auto sch = edge.in->getSchedule(d);
+                    SHOWLN(edge.in->getNumLoops());
+                    SHOW(satPp.numRow());
+                    CSHOW(satPp.numCol());
+                    CSHOWLN(sch.size());
                     C(_(c, cc), 0) -= satPp * sch;
                     C(_(cc, ccc), 0) -= bndPp * sch;
                 } else {
                     // add it to C
-                    p = edge.in->updatePhiOffset(p);
                     auto phiParent = edge.in->getPhiOffset();
                     C(_(c, cc), phiParent) = -satPp;
                     C(_(c, cc), phiParent + satPp.numCol()) = satPp;
@@ -683,6 +716,10 @@ struct LoopBlock {
     // returns true on failure
     bool optimize() {
         fillEdges();
+#ifndef NDEBUG
+        validateMemory();
+        validateEdges();
+#endif
         const size_t maxDepth = calcMaxDepth();
         Vector<Rational> sol;
         for (size_t d = 0; d < 2 * maxDepth + 1; ++d) {
@@ -690,6 +727,7 @@ struct LoopBlock {
             numPhiCoefs = 0;
             if (d & 1)
                 countNumPhiCoefs(d);
+            setScheduleMemoryOffsets(d);
             instantiateOmniSimplex(d);
             if (d & 1)
                 addIndependentSolutionConstraints(d >> 1);
@@ -697,8 +735,8 @@ struct LoopBlock {
                 return true;
             omniSimplex.lexMinimize(sol, getLambdaOffset());
             // TODO: deactivate edges of satisfied dependencies
-	    // FIXME: phiOffsets are not set correctly;
-	    // depth=0, i=4294967295
+            // FIXME: phiOffsets are not set correctly;
+            // depth=0, i=4294967295
             updateSchedules(sol, d);
         }
         return false;
