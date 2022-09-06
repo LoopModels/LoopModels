@@ -598,6 +598,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // lblock.edges) {
     //    std::cout << "Edge:\n" << e << "\n" << std::endl;
     //}
+    for (auto &mem : lblock.memory){
+	SHOWLN(mem.ref);
+	SHOWLN(mem.schedule.getPhi());
+	SHOWLN(mem.schedule.getOmega());
+	std::cout << std::endl;
+    }
 }
 TEST(ConvReversePass, BasicAssertions) {
     // for (n = 0; n < N; ++n){

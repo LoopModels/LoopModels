@@ -410,7 +410,8 @@ struct Simplex {
             // basic
             // C(_,0) = C(_,_(1,end)) * vars
             C(0, 0) = C(c, 0);
-            C(0, _(v, end)) = C(c, _(v, end));
+            C(0, v) = 0;
+            C(0, _(v + 1, end)) = C(c, _(v + 1, end));
             // C(0, v) = -1;
             while (true) {
                 // get new entering variable
@@ -437,8 +438,14 @@ struct Simplex {
             if (c >= 0) {
                 // C(_,0) = C(_,_(1,end)) * vars
                 // we now make `vars[v-1]` a constant
-                sol(v - 1) = Rational::create(C(c, 0), C(c, v));
-                C(c, 0) = 0;
+                if ((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)) {
+                    SHOWLN(tableau);
+                    SHOW(c + 1);
+                    CSHOWLN(v);
+                }
+                assert(!((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)));
+                sol(v - 1) = Rational::create(C(c + 1, 0), C(c + 1, v));
+                C(c + 1, 0) = 0;
             }
         }
     }

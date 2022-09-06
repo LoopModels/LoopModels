@@ -664,6 +664,8 @@ struct LoopBlock {
         }
     }
     void updateSchedules(PtrVector<Rational> sol, size_t depth) {
+	SHOW(depth);
+	CSHOWLN(sol);
         for (auto &&mem : memory) {
             if (depth >= mem.getNumLoops())
                 continue;
