@@ -1216,8 +1216,8 @@ template <typename T> struct PtrMatrix {
     inline auto operator()(size_t row, Range<C0, C1> cols) {
         return getRow(row)(canonicalizeRange(cols, numCol()));
     }
-    inline auto operator()(Colon, size_t col) { return getCol(col); }
-    inline auto operator()(size_t row, Colon) { return getRow(row); }
+    inline auto operator()(Colon, Begin) const { return getCol(0); }
+    inline auto operator()(Colon, End) const { return getCol(N - 1); }
 
     inline auto operator()(Range<size_t, size_t> rows,
                            Range<size_t, size_t> cols) const {
@@ -1387,6 +1387,10 @@ template <typename T> struct MutPtrMatrix {
     }
     inline auto operator()(Colon, size_t col) { return getCol(col); }
     inline auto operator()(size_t row, Colon) { return getRow(row); }
+    inline auto operator()(Colon, Begin) { return getCol(0); }
+    inline auto operator()(Colon, End) { return getCol(N - 1); }
+    inline auto operator()(Colon, Begin) const { return getCol(0); }
+    inline auto operator()(Colon, End) const { return getCol(N - 1); }
 
     inline auto operator()(Range<size_t, size_t> rows,
                            Range<size_t, size_t> cols) const {
@@ -1613,6 +1617,11 @@ template <typename T, typename P> struct BaseMatrix {
     inline auto operator()(End, Colon) { return getRow(numRow() - 1); }
     inline auto operator()(Begin, Colon) const { return getRow(0); }
     inline auto operator()(End, Colon) const { return getRow(numRow() - 1); }
+    inline auto operator()(Colon, Begin) { return getCol(0); }
+    inline auto operator()(Colon, End) { return getCol(numCol() - 1); }
+    inline auto operator()(Colon, Begin) const { return getCol(0); }
+    inline auto operator()(Colon, End) const { return getCol(numCol() - 1); }
+
     template <typename C0, typename C1>
     inline auto operator()(End, Range<C0, C1> cols) {
         return getRow(numRow() - 1)(canonicalizeRange(cols, numCol()));

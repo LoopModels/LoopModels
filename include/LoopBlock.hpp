@@ -490,13 +490,13 @@ struct LoopBlock {
         return false;
     }
 
-    void countNumPhiCoefs(size_t depth) {
+    [[nodiscard]] size_t countNumPhiCoefs(size_t depth) const {
         size_t c = 0;
         for (auto &m : memory)
-            c += ((m.phiIsScheduled() && (m.getNumLoops() > depth))
-                      ? m.getNumLoops()
-                      : 0);
-        numPhiCoefs = c;
+            c += ((m.phiIsScheduled() || ((depth >> 1) >= m.getNumLoops()))
+                      ? 0
+                      : m.getNumLoops());
+        return c + c;
     }
     size_t countNumLambdas() const {
         size_t c = 0;
@@ -524,7 +524,7 @@ struct LoopBlock {
         numConstraints = c;
     }
     void countNumParams(size_t depth) {
-        countNumPhiCoefs(depth);
+        numPhiCoefs = countNumPhiCoefs(depth);
         countAuxParamsAndConstraints();
     }
     // assemble omni-simplex
@@ -535,11 +535,11 @@ struct LoopBlock {
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
-    size_t getLambdaOffset() const {
-        return numBounding + 2 * numPhiCoefs + memory.size();
+    [[nodiscard]] size_t getLambdaOffset() const {
+        return 1 + numBounding + numPhiCoefs + memory.size();
     }
     void setScheduleMemoryOffsets(size_t depth) {
-        size_t p = numBounding, o = numBounding + 2 * numPhiCoefs;
+        size_t p = numBounding + 1, o = p + numPhiCoefs;
         if (depth & 1) {
             size_t d = depth >> 1;
             for (auto &&mem : memory) {
@@ -558,7 +558,7 @@ struct LoopBlock {
     }
     void validateEdges() {
         for (auto &edge : edges) {
-	    SHOWLN(edge);
+            SHOWLN(edge);
             assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
                    edge.getNumPhiCoefficients());
             assert(1 + edge.depPoly.getNumLambda() +
@@ -570,8 +570,11 @@ struct LoopBlock {
     void instantiateOmniSimplex(size_t depth) {
         // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
         const size_t numOmegaCoefs = memory.size();
+        omniSimplex.reserve(numConstraints + numOmegaCoefs,
+                            1 + numBounding + numPhiCoefs + 2 * numOmegaCoefs +
+                                numLambda);
         omniSimplex.resizeForOverwrite(numConstraints,
-                                       numBounding + numPhiCoefs +
+                                       1 + numBounding + numPhiCoefs +
                                            numOmegaCoefs + numLambda);
         auto C{omniSimplex.getConstraints()};
         C = 0;
@@ -581,7 +584,7 @@ struct LoopBlock {
         // rows give constraints; each edge gets its own
         // constexpr size_t numOmega =
         //     DependencePolyhedra::getNumOmegaCoefficients();
-        size_t u = 0, w = numBounding - edges.size();
+        size_t u = 1, w = 1 + numBounding - edges.size();
         size_t c = 0, l = getLambdaOffset();
         // TODO: develop actual map going from
         for (size_t e = 0; e < edges.size(); ++e) {
@@ -600,6 +603,13 @@ struct LoopBlock {
 
             size_t ll = l + satL.numCol();
             size_t lll = ll + bndL.numCol();
+            SHOW(C.numRow());
+            CSHOW(C.numCol());
+            CSHOW(c);
+            CSHOW(cc);
+            CSHOW(l);
+            CSHOW(ll);
+            CSHOWLN(lll);
             C(_(c, cc), _(l, ll)) = satL;
             C(_(cc, ccc), _(ll, lll)) = bndL;
             l = lll;
@@ -662,10 +672,73 @@ struct LoopBlock {
 
             c = ccc;
         }
+#ifndef NDEBUG
+        assert(!allZero(C(_, end)));
+        size_t nonZeroC = 0;
+        for (size_t j = 0; j < C.numRow(); ++j)
+            for (size_t i = 0; i < C.numCol(); ++i)
+                nonZeroC += (C(j, i) != 0);
+        size_t nonZeroEdges = 0;
+        for (auto &e : edges) {
+            auto edb = e.dependenceBounding.getConstraints();
+            for (size_t j = 0; j < edb.numRow(); ++j) {
+                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i) {
+                    nonZeroEdges += (edb(j, i) != 0);
+                }
+                if (depth & 1) {
+                    for (size_t i = 1 + e.depPoly.getNumLambda();
+                         i < 1 + e.depPoly.getNumLambda() +
+                                 e.getNumPhiCoefficients();
+                         ++i) {
+                        nonZeroEdges += 2 * (edb(j, i) != 0);
+                    }
+                }
+                for (size_t i = 1 + e.depPoly.getNumLambda() +
+                                e.getNumPhiCoefficients();
+                     i < edb.numCol(); ++i) {
+                    nonZeroEdges += (edb(j, i) != 0);
+                }
+            }
+            auto eds = e.dependenceSatisfaction.getConstraints();
+            for (size_t j = 0; j < eds.numRow(); ++j) {
+                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i) {
+                    nonZeroEdges += (eds(j, i) != 0);
+                }
+                if (depth & 1) {
+                    for (size_t i = 1 + e.depPoly.getNumLambda();
+                         i < 1 + e.depPoly.getNumLambda() +
+                                 e.getNumPhiCoefficients();
+                         ++i) {
+                        nonZeroEdges += 2 * (eds(j, i) != 0);
+                    }
+                }
+                for (size_t i = 1 + e.depPoly.getNumLambda() +
+                                e.getNumPhiCoefficients();
+                     i < eds.numCol(); ++i) {
+                    nonZeroEdges += (eds(j, i) != 0);
+                }
+            }
+        }
+        SHOW(nonZeroC);
+        CSHOWLN(nonZeroEdges);
+        assert(nonZeroC == nonZeroEdges);
+
+#endif
     }
     void updateSchedules(PtrVector<Rational> sol, size_t depth) {
-	SHOW(depth);
-	CSHOWLN(sol);
+        SHOW(depth);
+        CSHOWLN(sol);
+#ifndef NDEBUG
+        if (depth & 1) {
+            bool allZero = true;
+            for (auto &s : sol) {
+                allZero &= (s == 0);
+            }
+            if (allZero)
+                SHOWLN(omniSimplex);
+            assert(!allZero);
+        }
+#endif
         for (auto &&mem : memory) {
             if (depth >= mem.getNumLoops())
                 continue;
@@ -683,6 +756,8 @@ struct LoopBlock {
         return 0;
     }
     void addIndependentSolutionConstraints(size_t depth) {
+        std::cout << "addIndependentSolutionConstraints(depth = " << depth
+                  << ")" << std::endl;
         omniSimplex.reserveExtraRows(memory.size());
         if (depth == 0) {
             // add ones >= 0
@@ -691,7 +766,7 @@ struct LoopBlock {
                     continue;
                 auto c{omniSimplex.addConstraint()};
                 c(0) = 1;
-                c(mem.getPhiOffset() + 1) = 1;
+                c(mem.getPhiOffset()) = 1;
                 c(end) = -1; // for >=
             }
             return;
@@ -704,7 +779,7 @@ struct LoopBlock {
             NormalForm::nullSpace11(N, A);
             auto c{omniSimplex.addConstraintAndVar()};
             c(0) = 1;
-            auto cc{c(mem.getPhiOffset() + 1)};
+            auto cc{c(mem.getPhiOffset())};
             // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
             for (size_t m = 0; m < N.numRow(); ++m)
                 cc += N(m, _) * lexSign(N(m, _));
@@ -726,16 +801,31 @@ struct LoopBlock {
         Vector<Rational> sol;
         for (size_t d = 0; d < 2 * maxDepth + 1; ++d) {
             countAuxParamsAndConstraints();
-            numPhiCoefs = 0;
-            if (d & 1)
-                countNumPhiCoefs(d);
+            numPhiCoefs = (d & 1) ? countNumPhiCoefs(d) : 0;
+            SHOW(d);
+            CSHOWLN(numPhiCoefs);
             setScheduleMemoryOffsets(d);
             instantiateOmniSimplex(d);
             if (d & 1)
                 addIndependentSolutionConstraints(d >> 1);
+            for (auto &e : edges) {
+                SHOW(e.depPoly.getNumLambda());
+                CSHOW(e.depPoly.getDim0());
+                CSHOW(e.depPoly.getDim1());
+                CSHOWLN(e.getNumPhiCoefficients());
+                SHOWLN(e.dependenceSatisfaction);
+                SHOWLN(e.dependenceBounding);
+            }
+            SHOWLN(omniSimplex);
+            SHOW(numPhiCoefs);
+            CSHOW(numLambda);
+            CSHOW(numBounding);
+            CSHOW(numConstraints);
+            CSHOWLN(memory.size());
             if (omniSimplex.initiateFeasible())
                 return true;
-            omniSimplex.lexMinimize(sol, getLambdaOffset());
+            sol.resizeForOverwrite(getLambdaOffset());
+            omniSimplex.lexMinimize(sol);
             // TODO: deactivate edges of satisfied dependencies
             // FIXME: phiOffsets are not set correctly;
             // depth=0, i=4294967295

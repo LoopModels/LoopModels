@@ -120,7 +120,7 @@ struct MemoryAccess {
     auto indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset
     bool phiIsScheduled() const {
-	return phiOffset < PHISCHEDULEDFLAG;
+	return phiOffset == PHISCHEDULEDFLAG;
         // return (phiOffset != OFFSETNOTSETFLAG) &&
         //        (phiOffset & PHISCHEDULEDFLAG);
     }
