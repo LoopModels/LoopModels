@@ -91,13 +91,10 @@ struct MemoryAccess {
     Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
-    static constexpr uint32_t OFFSETNOTSETFLAG =
-        std::numeric_limits<uint32_t>::max();
     // schedule indicated by `1` top bit, remainder indicates loop
-    static constexpr uint32_t PHISCHEDULEDFLAG = OFFSETNOTSETFLAG-1;
-    // static constexpr uint32_t PHISCHEDULEDFLAG = 0x80000000;
-    uint32_t phiOffset{OFFSETNOTSETFLAG};   // used in LoopBlock
-    uint32_t omegaOffset{OFFSETNOTSETFLAG}; // used in LoopBlock
+    static constexpr uint32_t PHISCHEDULEDFLAG = std::numeric_limits<uint32_t>::max();
+    uint32_t phiOffset;   // used in LoopBlock
+    uint32_t omegaOffset; // used in LoopBlock
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
@@ -121,30 +118,17 @@ struct MemoryAccess {
     // note returns true if unset
     bool phiIsScheduled() const {
 	return phiOffset == PHISCHEDULEDFLAG;
-        // return (phiOffset != OFFSETNOTSETFLAG) &&
-        //        (phiOffset & PHISCHEDULEDFLAG);
     }
-    bool scheduleFlag() const { return phiOffset & PHISCHEDULEDFLAG; }
-    // llvm::Optional<PtrVector<int64_t>> getActiveSchedule() const {
-    //     if (!phiIsScheduled())
-    //         return {};
-    //     size_t loop = phiOffset & (~PHISCHEDULEDFLAG);
-    //     return schedule.getPhi()(loop, _);
-    // }
     PtrVector<int64_t> getSchedule(size_t loop) const {
         return schedule.getPhi()(loop, _);
     }
     size_t updatePhiOffset(size_t p) {
-        if (phiOffset == OFFSETNOTSETFLAG) {
-            phiOffset = p;
-            p += getNumLoops();
-        }
-        return p;
+	phiOffset = p;
+	return p + 2*getNumLoops();
     }
     size_t updateOmegaOffset(size_t o) {
-        if (omegaOffset == OFFSETNOTSETFLAG)
-            omegaOffset = o++;
-        return o;
+	omegaOffset = o;
+        return ++o;
     }
     Range<size_t, size_t> getPhiOffset() {
         return _(phiOffset, phiOffset + getNumLoops());
