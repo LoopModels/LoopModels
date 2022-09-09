@@ -2413,7 +2413,8 @@ struct Rational {
             return Rational{0, 1};
         }
     }
-    llvm::Optional<Rational> operator+(Rational y) const {
+
+    llvm::Optional<Rational> safeAdd(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
         bool o1 = __builtin_mul_overflow(numerator, yd, &a);
@@ -2429,13 +2430,14 @@ struct Rational {
             return Rational{0, 1};
         }
     }
+    Rational operator+(Rational y) const { return safeAdd(y).getValue(); }
     Rational &operator+=(Rational y) {
         llvm::Optional<Rational> a = *this + y;
         assert(a.hasValue());
         *this = a.getValue();
         return *this;
     }
-    llvm::Optional<Rational> operator-(Rational y) const {
+    llvm::Optional<Rational> safeSub(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
         bool o1 = __builtin_mul_overflow(numerator, yd, &a);
@@ -2451,13 +2453,14 @@ struct Rational {
             return Rational{0, 1};
         }
     }
+    Rational operator-(Rational y) const { return safeSub(y).getValue(); }
     Rational &operator-=(Rational y) {
         llvm::Optional<Rational> a = *this - y;
         assert(a.hasValue());
         *this = a.getValue();
         return *this;
     }
-    llvm::Optional<Rational> operator*(int64_t y) const {
+    llvm::Optional<Rational> safeMul(int64_t y) const {
         auto [xd, yn] = divgcd(denominator, y);
         int64_t n;
         if (__builtin_mul_overflow(numerator, yn, &n)) {
@@ -2466,7 +2469,7 @@ struct Rational {
             return Rational{n, xd};
         }
     }
-    llvm::Optional<Rational> operator*(Rational y) const {
+    llvm::Optional<Rational> safeMul(Rational y) const {
         if ((numerator != 0) & (y.numerator != 0)) {
             auto [xn, yd] = divgcd(numerator, y.denominator);
             auto [xd, yn] = divgcd(denominator, y.numerator);
@@ -2481,6 +2484,12 @@ struct Rational {
         } else {
             return Rational{0, 1};
         }
+    }
+    Rational operator*(int64_t y) const {
+        return safeMul(y).getValue();
+    }
+    Rational operator*(Rational y) const {
+        return safeMul(y).getValue();
     }
     Rational &operator*=(Rational y) {
         if ((numerator != 0) & (y.numerator != 0)) {
@@ -2933,3 +2942,7 @@ static_assert(DerivedMatrix<IntMatrix>);
 
 static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
 static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
+
+static_assert(AbstractVector<PtrVector<Rational>>);
+static_assert(AbstractVector<ElementwiseVectorBinaryOp<Sub, PtrVector<Rational>,
+                                                       PtrVector<Rational>>>);

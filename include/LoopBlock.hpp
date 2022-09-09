@@ -13,6 +13,7 @@
 #include "NormalForm.hpp"
 #include "Orthogonalize.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
@@ -824,20 +825,28 @@ struct LoopBlock {
             assert(!allZero);
         }
 #endif
+        const size_t d = depth >> 1;
+        const size_t dcmp = d + (depth & 1);
         for (auto &&mem : memory) {
-            if (depth >= mem.getNumLoops())
+            if (dcmp > mem.getNumLoops())
                 continue;
             if (!hasActiveEdges(mem)) {
                 mem.schedule.getOmega()(depth) =
                     std::numeric_limits<int64_t>::min();
                 if ((!mem.phiIsScheduled()) && (depth & 1))
-                    mem.schedule.getPhi()(_, depth >> 1) =
+                    mem.schedule.getPhi()(d, _) =
                         std::numeric_limits<int64_t>::min();
                 continue;
             }
             mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
+            if ((!mem.phiIsScheduled()) && (depth & 1)){
+		SHOWLN(sol(mem.getPhiOffset() + mem.getNumLoops()));
+		SHOWLN(sol(mem.getPhiOffset()));
+	    }
             if ((!mem.phiIsScheduled()) && (depth & 1))
-                mem.schedule.getPhi()(_, depth >> 1) = sol(mem.getPhiOffset());
+                mem.schedule.getPhi()(d, _) =
+                    sol(mem.getPhiOffset() + mem.getNumLoops()) -
+                    sol(mem.getPhiOffset());
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
@@ -855,7 +864,7 @@ struct LoopBlock {
             for (auto &&mem : memory) {
                 if (mem.phiIsScheduled() || (!hasActiveEdges(mem)))
                     continue;
-                auto c{omniSimplex.addConstraint()};
+                auto c{omniSimplex.addConstraintAndVar()};
                 c(0) = 1;
                 c(mem.getPhiOffset()) = 1;
                 c(end) = -1; // for >=
@@ -867,14 +876,19 @@ struct LoopBlock {
             if (mem.phiIsScheduled() || (depth >= mem.getNumLoops()) ||
                 (!hasActiveEdges(mem)))
                 continue;
-            A = mem.schedule.getPhi()(_(0, depth - 1), _).transpose();
+            A = mem.schedule.getPhi()(_(0, depth), _).transpose();
+            std::cout << "indep constraint; ";
+            SHOW(depth);
+            CSHOWLN(A);
             NormalForm::nullSpace11(N, A);
+            SHOWLN(N);
             auto c{omniSimplex.addConstraintAndVar()};
             c(0) = 1;
-            auto cc{c(mem.getPhiOffset())};
+            MutPtrVector<int64_t> cc{c(mem.getPhiOffset() + mem.getNumLoops())};
             // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
             for (size_t m = 0; m < N.numRow(); ++m)
                 cc += N(m, _) * lexSign(N(m, _));
+            SHOWLN(cc);
             c(end) = -1; // for >=
         }
     }
@@ -907,7 +921,7 @@ struct LoopBlock {
                 SHOWLN(e.dependenceSatisfaction);
                 SHOWLN(e.dependenceBounding);
             }
-            SHOWLN(omniSimplex);
+            // SHOWLN(omniSimplex);
             SHOW(d);
             CSHOW(numBounding);
             CSHOW(numActiveEdges);

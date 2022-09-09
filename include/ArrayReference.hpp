@@ -125,6 +125,8 @@ struct ArrayReference {
             auto &stride = ar.strides[i];
             assert(!isZero(stride));
             bool strideIsOne = isOne(stride);
+	    if (i)
+		os << "+";
             if (!strideIsOne)
                 os << stride << " * ( ";
             bool printPlus = false;

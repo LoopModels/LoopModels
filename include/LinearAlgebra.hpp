@@ -124,7 +124,7 @@ struct LU {
     llvm::Optional<Rational> det() {
         Rational d = F(0, 0);
         for (size_t i = 1; i < F.numCol(); ++i) {
-            if (auto di = d * F(i, i)) {
+            if (auto di = d.safeMul(F(i, i))) {
                 d = di.getValue();
             } else {
                 return {};
