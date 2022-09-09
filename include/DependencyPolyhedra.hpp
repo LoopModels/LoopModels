@@ -679,11 +679,11 @@ struct Dependence {
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getSatOmegaCoefs() const {
-        SHOWLN(dependenceSatisfaction.getConstraints().numRow());
-        SHOWLN(dependenceSatisfaction.getConstraints().numCol());
-        SHOW(depPoly.getNumLambda());
-        CSHOW(getNumPhiCoefficients());
-        CSHOWLN(getNumOmegaCoefficients());
+        // SHOWLN(dependenceSatisfaction.getConstraints().numRow());
+        // SHOWLN(dependenceSatisfaction.getConstraints().numCol());
+        // SHOW(depPoly.getNumLambda());
+        // CSHOW(getNumPhiCoefficients());
+        // CSHOWLN(getNumOmegaCoefficients());
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +

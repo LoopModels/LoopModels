@@ -95,6 +95,7 @@ struct LoopBlock {
     // llvm::SmallVector<bool, 256> doNotAddEdge;
     llvm::SmallVector<bool, 256> scheduled;
     size_t numPhiCoefs{0};
+    size_t numOmegaCoefs{0};
     size_t numLambda{0};
     size_t numBounding{0};
     size_t numConstraints{0};
@@ -114,7 +115,7 @@ struct LoopBlock {
             d = std::max(d, mem.getNumLoops());
         return d;
     }
-    bool isSatisfied(const Dependence &e) const {
+    [[nodiscard]] bool isSatisfied(const Dependence &e) const {
         const Simplex &sat = e.dependenceSatisfaction;
         Schedule &schIn = e.in->schedule;
         Schedule &schOut = e.out->schedule;
@@ -282,7 +283,7 @@ struct LoopBlock {
     }
     // TODO: we need to rotate via setting the schedule, not instantiating
     // the rotated array!
-    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    [[nodiscard]] static llvm::IntrusiveRefCntPtr<AffineLoopNest>
     getBang(llvm::DenseMap<const AffineLoopNest *,
                            llvm::IntrusiveRefCntPtr<AffineLoopNest>> &map,
             SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
@@ -491,21 +492,21 @@ struct LoopBlock {
         return false;
     }
 
-    [[nodiscard]] size_t countNumPhiCoefs(size_t depth) const {
-        size_t c = 0;
-        for (auto &m : memory)
-            c += ((m.phiIsScheduled() || ((depth >> 1) >= m.getNumLoops()))
-                      ? 0
-                      : m.getNumLoops());
-        return c + c;
-    }
-    size_t countNumLambdas() const {
+    // [[nodiscard]] size_t countNumPhiCoefs(size_t depth) const {
+    //     size_t c = 0;
+    //     for (auto &m : memory)
+    //         c += ((m.phiIsScheduled() || ((depth >> 1) >= m.getNumLoops()))
+    //                   ? 0
+    //                   : m.getNumLoops());
+    //     return c + c;
+    // }
+    [[nodiscard]] size_t countNumLambdas() const {
         size_t c = 0;
         for (auto &e : edges)
             c += (e.isInactive() ? 0 : e.getNumLambda());
         return c;
     }
-    size_t countNumBoundingCoefs() const {
+    [[nodiscard]] size_t countNumBoundingCoefs() const {
         size_t c = 0;
         for (auto &e : edges)
             c += (e.isInactive() ? 0 : e.getNumSymbols());
@@ -517,7 +518,7 @@ struct LoopBlock {
             if (e.isInactive())
                 continue;
             a += e.getNumLambda();
-            b += e.getNumSymbols();
+            b += e.depPoly.symbols.size();
             c += e.getNumConstraints();
             ++ae;
         }
@@ -527,7 +528,7 @@ struct LoopBlock {
         numActiveEdges = ae;
     }
     void countNumParams(size_t depth) {
-        numPhiCoefs = countNumPhiCoefs(depth);
+        setScheduleMemoryOffsets(depth);
         countAuxParamsAndConstraints();
     }
     // assemble omni-simplex
@@ -541,19 +542,34 @@ struct LoopBlock {
     [[nodiscard]] size_t getLambdaOffset() const {
         return 1 + numBounding + numActiveEdges + numPhiCoefs + memory.size();
     }
+    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem) {
+        for (auto &e : mem.edgesIn)
+            if (!edges[e].isInactive())
+                return true;
+        for (auto &e : mem.edgesOut)
+            if (!edges[e].isInactive())
+                return true;
+        return false;
+    }
     void setScheduleMemoryOffsets(size_t depth) {
-        size_t p = numBounding + numActiveEdges + 1, o = p + numPhiCoefs;
+        size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
+        size_t d = (depth + 1) >> 1;
         if (depth & 1) {
-            size_t d = depth >> 1;
             for (auto &&mem : memory) {
-                o = mem.updateOmegaOffset(o);
-                if ((d < mem.getNumLoops()) && !mem.phiIsScheduled())
+                if ((d > mem.getNumLoops()) || (!hasActiveEdges(mem)))
+                    continue;
+                if (!mem.phiIsScheduled())
                     p = mem.updatePhiOffset(p);
             }
-        } else {
-            for (auto &&mem : memory)
-                o = mem.updateOmegaOffset(o);
         }
+        numPhiCoefs = p - pInit;
+        size_t o = p;
+        for (auto &&mem : memory) {
+            if ((d > mem.getNumLoops()) || (!hasActiveEdges(mem)))
+                continue;
+            o = mem.updateOmegaOffset(o);
+        }
+        numOmegaCoefs = o - p;
     }
     void validateMemory() {
         for (auto &mem : memory)
@@ -595,6 +611,8 @@ struct LoopBlock {
         size_t maxPhiCoefInd = 0;
         size_t maxOmegaCoefInd = 0;
 #endif
+        const size_t d = (depth + 1) >> 1;
+
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
             if (edge.isInactive())
@@ -630,12 +648,10 @@ struct LoopBlock {
 
             C(_(c, cc), 0) = satC;
             C(_(cc, ccc), 0) = bndC;
-
             // now, handle Phi and Omega
             if (depth & 1) {
-                size_t d = depth >> 1;
                 // phis are not constrained to be 0
-                if (d >= edge.out->getNumLoops()) {
+                if (d > edge.out->getNumLoops()) {
                 } else if (edge.out->phiIsScheduled()) {
                     // add it constants
                     auto sch = edge.out->getSchedule(d);
@@ -659,7 +675,7 @@ struct LoopBlock {
                         std::max(maxPhiCoefInd, phiChild.e + satPc.numCol());
 #endif
                 }
-                if (d >= edge.in->getNumLoops()) {
+                if (d > edge.in->getNumLoops()) {
                 } else if (edge.in->phiIsScheduled()) {
                     // add it to constants
                     auto sch = edge.in->getSchedule(d);
@@ -685,28 +701,43 @@ struct LoopBlock {
                 }
             }
             // Omegas are included regardless of rotation
-            C(_(c, cc), edge.out->omegaOffset) = satO(_, !edge.forward);
-            C(_(cc, ccc), edge.out->omegaOffset) = bndO(_, !edge.forward);
-            C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
-            C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
+            if (d <= edge.out->getNumLoops()) {
+                C(_(c, cc), edge.out->omegaOffset) = satO(_, !edge.forward);
+                C(_(cc, ccc), edge.out->omegaOffset) = bndO(_, !edge.forward);
 #ifndef NDEBUG
-            minOmegaCoefInd = std::min(
-                minOmegaCoefInd,
-                size_t(std::min(edge.in->omegaOffset, edge.out->omegaOffset)));
-            maxOmegaCoefInd = std::max(
-                maxOmegaCoefInd,
-                size_t(std::max(edge.in->omegaOffset, edge.out->omegaOffset)));
+                minOmegaCoefInd =
+                    std::min(minOmegaCoefInd, size_t(edge.out->omegaOffset));
+                maxOmegaCoefInd =
+                    std::max(maxOmegaCoefInd, size_t(edge.out->omegaOffset));
 #endif
+            }
+            if (d <= edge.in->getNumLoops()) {
+                C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
+                C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
+#ifndef NDEBUG
+                minOmegaCoefInd =
+                    std::min(minOmegaCoefInd, size_t(edge.in->omegaOffset));
+                maxOmegaCoefInd =
+                    std::max(maxOmegaCoefInd, size_t(edge.in->omegaOffset));
+#endif
+            }
 
             c = ccc;
         }
 #ifndef NDEBUG
-	
-	SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
-	CSHOWLN(minOmegaCoefInd);
-        assert(minOmegaCoefInd >= 1 + numBounding + numActiveEdges + numPhiCoefs);
-	SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-	CSHOWLN(maxOmegaCoefInd);
+
+        SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
+        CSHOWLN(minOmegaCoefInd);
+        SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
+        CSHOWLN(maxOmegaCoefInd);
+        SHOW(depth);
+        CSHOW(numBounding);
+        CSHOW(numActiveEdges);
+        CSHOW(numPhiCoefs);
+        CSHOW(numOmegaCoefs);
+        CSHOWLN(numLambda);
+        assert(minOmegaCoefInd >=
+               1 + numBounding + numActiveEdges + numPhiCoefs);
         assert(maxOmegaCoefInd <=
                numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
         if (depth & 1) {
@@ -722,42 +753,55 @@ struct LoopBlock {
         size_t nonZeroEdges = 0;
         for (auto &e : edges) {
             auto edb = e.dependenceBounding.getConstraints();
+            bool firstEdgeActive = d <= e.out->getNumLoops();
+            bool secondEdgeActive = d <= e.in->getNumLoops();
+            // forward means [in, out], !forward means [out, in]
+            if (e.forward)
+                std::swap(firstEdgeActive, secondEdgeActive);
             for (size_t j = 0; j < edb.numRow(); ++j) {
-                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i) {
+                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
                     nonZeroEdges += (edb(j, i) != 0);
-                }
+                size_t bound = 1 + e.depPoly.getNumLambda();
                 if (depth & 1) {
-                    for (size_t i = 1 + e.depPoly.getNumLambda();
-                         i < 1 + e.depPoly.getNumLambda() +
-                                 e.getNumPhiCoefficients();
-                         ++i) {
-                        nonZeroEdges += 2 * (edb(j, i) != 0);
-                    }
+                    size_t ub0 = bound + e.depPoly.getDim0();
+                    if (firstEdgeActive)
+                        for (size_t i = bound; i < ub0; ++i)
+                            nonZeroEdges += 2 * (edb(j, i) != 0);
+                    size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
+                    if (secondEdgeActive)
+                        for (size_t i = ub0; i < ub1; ++i)
+                            nonZeroEdges += 2 * (edb(j, i) != 0);
                 }
-                for (size_t i = 1 + e.depPoly.getNumLambda() +
-                                e.getNumPhiCoefficients();
-                     i < edb.numCol(); ++i) {
+                bound += e.getNumPhiCoefficients();
+                if (firstEdgeActive)
+                    nonZeroEdges += (edb(j, bound) != 0);
+                if (secondEdgeActive)
+                    nonZeroEdges += (edb(j, bound + 1) != 0);
+                for (size_t i = bound + 2; i < edb.numCol(); ++i)
                     nonZeroEdges += (edb(j, i) != 0);
-                }
             }
             auto eds = e.dependenceSatisfaction.getConstraints();
             for (size_t j = 0; j < eds.numRow(); ++j) {
-                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i) {
+                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
                     nonZeroEdges += (eds(j, i) != 0);
-                }
+                size_t bound = 1 + e.depPoly.getNumLambda();
                 if (depth & 1) {
-                    for (size_t i = 1 + e.depPoly.getNumLambda();
-                         i < 1 + e.depPoly.getNumLambda() +
-                                 e.getNumPhiCoefficients();
-                         ++i) {
-                        nonZeroEdges += 2 * (eds(j, i) != 0);
-                    }
+                    size_t ub0 = bound + e.depPoly.getDim0();
+                    if (firstEdgeActive)
+                        for (size_t i = bound; i < ub0; ++i)
+                            nonZeroEdges += 2 * (eds(j, i) != 0);
+                    size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
+                    if (secondEdgeActive)
+                        for (size_t i = ub0; i < ub1; ++i)
+                            nonZeroEdges += 2 * (eds(j, i) != 0);
                 }
-                for (size_t i = 1 + e.depPoly.getNumLambda() +
-                                e.getNumPhiCoefficients();
-                     i < eds.numCol(); ++i) {
+                bound += e.getNumPhiCoefficients();
+                if (firstEdgeActive)
+                    nonZeroEdges += (eds(j, bound) != 0);
+                if (secondEdgeActive)
+                    nonZeroEdges += (eds(j, bound + 1) != 0);
+                for (size_t i = bound + 2; i < eds.numCol(); ++i)
                     nonZeroEdges += (eds(j, i) != 0);
-                }
             }
         }
         SHOW(nonZeroC);
@@ -783,14 +827,20 @@ struct LoopBlock {
         for (auto &&mem : memory) {
             if (depth >= mem.getNumLoops())
                 continue;
-            mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
-            if (mem.phiIsScheduled())
+            if (!hasActiveEdges(mem)) {
+                mem.schedule.getOmega()(depth) =
+                    std::numeric_limits<int64_t>::min();
+                if ((!mem.phiIsScheduled()) && (depth & 1))
+                    mem.schedule.getPhi()(_, depth >> 1) =
+                        std::numeric_limits<int64_t>::min();
                 continue;
-            if (depth & 1)
+            }
+            mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
+            if ((!mem.phiIsScheduled()) && (depth & 1))
                 mem.schedule.getPhi()(_, depth >> 1) = sol(mem.getPhiOffset());
         }
     }
-    static int64_t lexSign(PtrVector<int64_t> x) {
+    [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
         for (auto y : x)
             if (y)
                 return 2 * (y > 0) - 1;
@@ -803,7 +853,7 @@ struct LoopBlock {
         if (depth == 0) {
             // add ones >= 0
             for (auto &&mem : memory) {
-                if (mem.phiIsScheduled())
+                if (mem.phiIsScheduled() || (!hasActiveEdges(mem)))
                     continue;
                 auto c{omniSimplex.addConstraint()};
                 c(0) = 1;
@@ -814,7 +864,8 @@ struct LoopBlock {
         }
         IntMatrix A, N;
         for (auto &&mem : memory) {
-            if (mem.phiIsScheduled() || (depth >= mem.getNumLoops()))
+            if (mem.phiIsScheduled() || (depth >= mem.getNumLoops()) ||
+                (!hasActiveEdges(mem)))
                 continue;
             A = mem.schedule.getPhi()(_(0, depth - 1), _).transpose();
             NormalForm::nullSpace11(N, A);
@@ -842,10 +893,9 @@ struct LoopBlock {
         Vector<Rational> sol;
         for (size_t d = 0; d < 2 * maxDepth + 1; ++d) {
             countAuxParamsAndConstraints();
-            numPhiCoefs = (d & 1) ? countNumPhiCoefs(d) : 0;
             SHOW(d);
-            CSHOWLN(numPhiCoefs);
             setScheduleMemoryOffsets(d);
+            CSHOWLN(numPhiCoefs);
             instantiateOmniSimplex(d);
             if (d & 1)
                 addIndependentSolutionConstraints(d >> 1);
@@ -858,11 +908,13 @@ struct LoopBlock {
                 SHOWLN(e.dependenceBounding);
             }
             SHOWLN(omniSimplex);
-            SHOW(numPhiCoefs);
-            CSHOW(numLambda);
+            SHOW(d);
             CSHOW(numBounding);
-            CSHOW(numConstraints);
-            CSHOWLN(memory.size());
+            CSHOW(numActiveEdges);
+            CSHOW(numPhiCoefs);
+            CSHOW(memory.size());
+            CSHOW(numLambda);
+            CSHOWLN(numConstraints);
             if (omniSimplex.initiateFeasible())
                 return true;
             sol.resizeForOverwrite(getLambdaOffset());
