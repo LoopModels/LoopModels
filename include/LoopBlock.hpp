@@ -541,7 +541,7 @@ struct LoopBlock {
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
     [[nodiscard]] size_t getLambdaOffset() const {
-        return 1 + numBounding + numActiveEdges + numPhiCoefs + memory.size();
+        return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
     }
     [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem) {
         for (auto &e : mem.edgesIn)
@@ -589,7 +589,6 @@ struct LoopBlock {
     }
     void instantiateOmniSimplex(size_t depth) {
         // defines numScheduleCoefs, numLambda, numBounding, and numConstraints
-        const size_t numOmegaCoefs = memory.size();
         omniSimplex.reserve(numConstraints + numOmegaCoefs,
                             1 + numBounding + numActiveEdges + numPhiCoefs +
                                 2 * numOmegaCoefs + numLambda);
@@ -666,14 +665,13 @@ struct LoopBlock {
                     assert(satPc.numCol() == bndPc.numCol());
                     // add it to C
                     auto phiChild = edge.out->getPhiOffset();
-                    C(_(c, cc), phiChild) = -satPc;
-                    C(_(c, cc), phiChild + satPc.numCol()) = satPc;
-                    C(_(cc, ccc), phiChild) = -bndPc;
-                    C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
+                    C(_(c, cc), phiChild) = satPc;
+                    // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
+                    C(_(cc, ccc), phiChild) = bndPc;
+                    // C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
 #ifndef NDEBUG
                     minPhiCoefInd = std::min(minPhiCoefInd, phiChild.b);
-                    maxPhiCoefInd =
-                        std::max(maxPhiCoefInd, phiChild.e + satPc.numCol());
+                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiChild.e);
 #endif
                 }
                 if (d > edge.in->getNumLoops()) {
@@ -690,14 +688,13 @@ struct LoopBlock {
                     assert(satPp.numCol() == bndPp.numCol());
                     // add it to C
                     auto phiParent = edge.in->getPhiOffset();
-                    C(_(c, cc), phiParent) = -satPp;
-                    C(_(c, cc), phiParent + satPp.numCol()) = satPp;
-                    C(_(cc, ccc), phiParent) = -bndPp;
-                    C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
+                    C(_(c, cc), phiParent) = satPp;
+                    // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
+                    C(_(cc, ccc), phiParent) = bndPp;
+                    // C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
 #ifndef NDEBUG
                     minPhiCoefInd = std::min(minPhiCoefInd, phiParent.b);
-                    maxPhiCoefInd =
-                        std::max(maxPhiCoefInd, phiParent.e + satPp.numCol());
+                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiParent.e);
 #endif
                 }
             }
@@ -767,11 +764,11 @@ struct LoopBlock {
                     size_t ub0 = bound + e.depPoly.getDim0();
                     if (firstEdgeActive)
                         for (size_t i = bound; i < ub0; ++i)
-                            nonZeroEdges += 2 * (edb(j, i) != 0);
+                            nonZeroEdges += (edb(j, i) != 0);
                     size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
                     if (secondEdgeActive)
                         for (size_t i = ub0; i < ub1; ++i)
-                            nonZeroEdges += 2 * (edb(j, i) != 0);
+                            nonZeroEdges += (edb(j, i) != 0);
                 }
                 bound += e.getNumPhiCoefficients();
                 if (firstEdgeActive)
@@ -790,11 +787,11 @@ struct LoopBlock {
                     size_t ub0 = bound + e.depPoly.getDim0();
                     if (firstEdgeActive)
                         for (size_t i = bound; i < ub0; ++i)
-                            nonZeroEdges += 2 * (eds(j, i) != 0);
+                            nonZeroEdges += (eds(j, i) != 0);
                     size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
                     if (secondEdgeActive)
                         for (size_t i = ub0; i < ub1; ++i)
-                            nonZeroEdges += 2 * (eds(j, i) != 0);
+                            nonZeroEdges += (eds(j, i) != 0);
                 }
                 bound += e.getNumPhiCoefficients();
                 if (firstEdgeActive)
@@ -838,15 +835,12 @@ struct LoopBlock {
                         std::numeric_limits<int64_t>::min();
                 continue;
             }
-            mem.schedule.getOmega()(depth) = sol(mem.omegaOffset);
-            if ((!mem.phiIsScheduled()) && (depth & 1)){
-		SHOWLN(sol(mem.getPhiOffset() + mem.getNumLoops()));
-		SHOWLN(sol(mem.getPhiOffset()));
-	    }
+            mem.schedule.getOmega()(depth) = sol(mem.omegaOffset - 1);
+            if ((!mem.phiIsScheduled()) && (depth & 1)) {
+                SHOWLN(sol(mem.getPhiOffset() - 1));
+            }
             if ((!mem.phiIsScheduled()) && (depth & 1))
-                mem.schedule.getPhi()(d, _) =
-                    sol(mem.getPhiOffset() + mem.getNumLoops()) -
-                    sol(mem.getPhiOffset());
+                mem.schedule.getPhi()(d, _) = sol(mem.getPhiOffset() - 1);
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
@@ -884,7 +878,7 @@ struct LoopBlock {
             SHOWLN(N);
             auto c{omniSimplex.addConstraintAndVar()};
             c(0) = 1;
-            MutPtrVector<int64_t> cc{c(mem.getPhiOffset() + mem.getNumLoops())};
+            MutPtrVector<int64_t> cc{c(mem.getPhiOffset())};
             // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
             for (size_t m = 0; m < N.numRow(); ++m)
                 cc += N(m, _) * lexSign(N(m, _));
@@ -921,12 +915,12 @@ struct LoopBlock {
                 SHOWLN(e.dependenceSatisfaction);
                 SHOWLN(e.dependenceBounding);
             }
-            // SHOWLN(omniSimplex);
+            SHOWLN(omniSimplex);
             SHOW(d);
             CSHOW(numBounding);
             CSHOW(numActiveEdges);
             CSHOW(numPhiCoefs);
-            CSHOW(memory.size());
+            CSHOW(numOmegaCoefs);
             CSHOW(numLambda);
             CSHOWLN(numConstraints);
             if (omniSimplex.initiateFeasible())
@@ -934,8 +928,6 @@ struct LoopBlock {
             sol.resizeForOverwrite(getLambdaOffset());
             omniSimplex.lexMinimize(sol);
             // TODO: deactivate edges of satisfied dependencies
-            // FIXME: phiOffsets are not set correctly;
-            // depth=0, i=4294967295
             updateSchedules(sol, d);
         }
         return false;

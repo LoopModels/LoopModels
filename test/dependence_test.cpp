@@ -586,7 +586,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     //
     // lblock.fillEdges();
-    EXPECT_FALSE(lblock.optimize());
+    bool optFail = lblock.optimize();
+    EXPECT_FALSE(optFail);
+    assert(!optFail);
+    // EXPECT_FALSE(lblock.optimize());
     // -3 comes from the fact we did 3 load-load comparisons above
     // in the future, we may have `fillEdges` make load-load comparisons
     // so that we can add bounding constraints to the objective, to

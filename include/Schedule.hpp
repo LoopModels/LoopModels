@@ -124,7 +124,7 @@ struct MemoryAccess {
     }
     size_t updatePhiOffset(size_t p) {
 	phiOffset = p;
-	return p + 2*getNumLoops();
+	return p + getNumLoops();
     }
     size_t updateOmegaOffset(size_t o) {
 	omegaOffset = o;
