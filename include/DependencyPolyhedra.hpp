@@ -621,6 +621,10 @@ struct Dependence {
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
     bool isInactive() const { return inactive; }
+    bool isInactive(size_t depth) const {
+        return inactive ||
+               (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
+    }
     // bool isActive() const { return !inactive; }
     size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
     size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
