@@ -8,6 +8,7 @@
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "./Symbolics.hpp"
+#include "Graphs.hpp"
 #include "LinearAlgebra.hpp"
 #include "Macro.hpp"
 #include "NormalForm.hpp"
@@ -72,7 +73,7 @@
 // for (i = eachindex(y)){
 //   f(m, ...); // Omega = [2, _, 0]
 // }
-struct LoopBlock {
+struct LoopBlock : BaseGraph<LoopBlock> {
     // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -110,6 +111,17 @@ struct LoopBlock {
     // const ArrayReference &ref(const MemoryAccess *x) const {
     //     return refs[x->ref];
     // }
+    size_t numVerticies() const { return memory.size(); }
+    // struct OutNeighbors{
+    // 	llvm::SmallVector<unsigned> &edgesOut;
+	
+    // };
+    llvm::SmallVector<unsigned> &edgesOut(size_t idx) {
+        return memory[idx].edgesOut;
+    }
+    const llvm::SmallVector<unsigned> &edgesOut(size_t idx) const {
+        return memory[idx].edgesOut;
+    }
     [[nodiscard]] size_t calcMaxDepth() const {
         size_t d = 0;
         for (auto &mem : memory)
@@ -906,7 +918,7 @@ struct LoopBlock {
                               << e.dependenceSatisfaction.tableau << "\ndBnd_"
                               << i << " = " << e.dependenceBounding.tableau
                               << std::endl;
-		    ++i;
+                    ++i;
                 }
             }
             SHOWLN(omniSimplex);

@@ -4,10 +4,10 @@
 #include <llvm/ADT/SmallVector.h>
 #include <tuple>
 
-//
-template <typename G> struct BaseGraph {
-    llvm::SmallVector<bool, 256> visited;
-
+// graph uses vertex type V rather than indices
+// because our Dependence contains pointers rather than indices
+// and we need to go MemoryAccess* -> Edge (Dependnece) -> MemoryAccess*
+template <typename G, typename V> struct BaseGraph {
     // API
     auto &outNeighbors(size_t idx) {
         return static_cast<G *>(this)->outNeighbors(idx);
@@ -15,29 +15,42 @@ template <typename G> struct BaseGraph {
     auto &outNeighbors(size_t idx) const {
         return static_cast<const G *>(this)->outNeighbors(idx);
     }
-    size_t nv() const { return static_cast<const G *>(this)->nv(); }
-
+    auto &getVertices() { return static_cast<G *>(this)->getVertices(); }
+    auto &getVertices() const {
+        return static_cast<const G *>(this)->getVertices();
+    }
+    size_t numVerticies() const {
+        return static_cast<const G *>(this)->getVertices().size();
+    }
+    bool isVisited(size_t j) const{
+	return static_cast<const G *>(this)->getVertices()[j].isVisited();
+    }
+    // V &getNode(size_t idx) { return static_cast<G *>(this)->getNode(idx); }
+    // V &getNode(size_t idx) const {
+    //     return static_cast<const G *>(this)->getNode(idx);
+    // }
     void clearVisited() {
-        for (auto &&b : visited)
-            b = false;
+        for (auto &&v : getVertices())
+            v.unVisit();
     }
 
-    void visit(llvm::SmallVectorImpl<unsigned> &sorted, size_t idx) {
-        auto &outs = outNeighbors(idx);
-        visited[idx] = true;
+    void visit(llvm::SmallVectorImpl<V *> &sorted, V *v) {
+        auto &outs = outNeighbors(v);
+        v->visit();
         for (size_t j = 0; j < outs.size(); ++j)
-            if (!visited[j])
-                visit(sorted, outs[j]);
-        sorted.push_back(idx);
+            if (!isVisited(j))
+                visit(sorted, outs[j]); // no, we really need idx
+        sorted.push_back(v);
     }
 
-    llvm::SmallVector<llvm::SmallVector<unsigned>> weaklyConnectedComponents() {
-        llvm::SmallVector<llvm::SmallVector<unsigned>> components(nv());
+    llvm::SmallVector<llvm::SmallVector<V *>> weaklyConnectedComponents() {
+        llvm::SmallVector<llvm::SmallVector<V *>> components;
         clearVisited();
-        for (size_t j = 0; j < nv(); ++j) {
-            if (visited[j])
+        for (size_t j = 0; j < numVerticies(); ++j) {
+            if (isVisited(j))
                 continue;
-            llvm::SmallVector<unsigned> &sorted = components[j];
+            components.emplace_back();
+            llvm::SmallVector<V *> &sorted = components.back();
             visit(sorted, j);
             std::reverse(sorted.begin(), sorted.end());
         }
@@ -53,9 +66,9 @@ template <typename G> struct BaseGraph {
         indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
         ++index;
         stack.push_back(v);
-        auto outN = outNeighbors(v);
+        auto &outN = outNeighbors(v);
         for (size_t w = 0; w < outN.size(); ++w) {
-            if (visited[w]) {
+            if (isVisited(w)) {
                 auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
                 if (wOnStack) {
                     auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
@@ -91,14 +104,14 @@ template <typename G> struct BaseGraph {
     llvm::SmallVector<llvm::SmallVector<unsigned>>
     stronglyConnectedComponents() {
         llvm::SmallVector<llvm::SmallVector<unsigned>> components;
-        size_t nVertex = nv();
+        size_t nVertex = numVerticies();
         llvm::SmallVector<std::tuple<unsigned, unsigned, bool>>
             indexLowLinkOnStack(nVertex);
         llvm::SmallVector<unsigned> stack;
         size_t index = 0;
         clearVisited();
         for (size_t v = 0; v < nVertex; ++v) {
-            if (!visited[v])
+            if (!isVisited(v))
                 index = strongConnect(components, stack, indexLowLinkOnStack,
                                       index, v);
         }
