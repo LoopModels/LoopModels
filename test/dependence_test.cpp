@@ -185,7 +185,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   for (n = 0; n < N; ++n){
     //     A(m,n) /= U(n,n);
     //     for (k = n+1; k < N; ++k){
-    //       A(m,k) -= A(m,n)*U(n,k);
+    //       A(m,k) = A(m,k) - A(m,n)*U(n,k);
     //     }
     //   }
     // }

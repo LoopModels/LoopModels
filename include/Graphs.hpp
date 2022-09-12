@@ -3,15 +3,15 @@
 #include "./Math.hpp"
 #include <tuple>
 
+
+
 template <typename G>
-void visit(llvm::SmallVector<int64_t> sorted, G &graph, size_t idx) {
+void visit(llvm::SmallVectorImpl<unsigned> &sorted, G &graph, size_t idx) {
     auto outs = outNeighbors(graph, idx);
     visited(graph, idx) = true;
-    for (size_t j = 0; j < length(outs); ++j) {
-        if (!visited(graph, j)) {
+    for (size_t j = 0; j < outs.size(); ++j)
+        if (!visited(graph, j)) 
             visit(sorted, graph, outs(j));
-        }
-    }
     sorted.push_back(idx);
 }
 
@@ -45,17 +45,16 @@ weaklyConnectedComponents(G &graph) {
 // ref:
 // https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
 template <typename G>
-void strongConnect(
-    llvm::SmallVector<llvm::SmallVector<int64_t>> &components,
-    llvm::SmallVector<size_t> &stack,
-    llvm::SmallVector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack,
-    size_t &index, G &graph, size_t v) {
+size_t strongConnect(llvm::SmallVector<llvm::SmallVector<unsigned>> &components,
+                     llvm::SmallVector<unsigned> &stack,
+                     llvm::SmallVector<std::tuple<unsigned, unsigned, bool>>
+                         &indexLowLinkOnStack,
+                     size_t index, G &graph, size_t v) {
     indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
-    index += 1;
+    ++index;
     stack.push_back(v);
-
     auto outN = outNeighbors(graph, v);
-    for (size_t w = 0; w < length(outN); ++w) {
+    for (size_t w = 0; w < outN.size(); ++w) {
         if (visited(graph, w)) {
             auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
             if (wOnStack) {
@@ -74,8 +73,8 @@ void strongConnect(
     }
     auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
     if (vIndex == vLowLink) {
-        size_t w;
-        llvm::SmallVector<int64_t> component;
+        unsigned w;
+        llvm::SmallVector<unsigned> component;
         do {
             w = stack[stack.size() - 1];
             stack.pop_back();
@@ -85,22 +84,23 @@ void strongConnect(
         } while (w != v);
         components.emplace_back(component);
     }
+    return index;
 }
 
 template <typename G>
-llvm::SmallVector<llvm::SmallVector<int64_t>>
+llvm::SmallVector<llvm::SmallVector<unsigned>>
 stronglyConnectedComponents(G &graph) {
-    llvm::SmallVector<llvm::SmallVector<int64_t>> components;
+    llvm::SmallVector<llvm::SmallVector<unsigned>> components;
     size_t nVertex = nv(graph);
-    llvm::SmallVector<std::tuple<size_t, size_t, bool>> indexLowLinkOnStack(
+    llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
         nVertex);
-    llvm::SmallVector<size_t> stack;
+    llvm::SmallVector<unsigned> stack;
     size_t index = 0;
     clearVisited(graph);
     for (size_t v = 0; v < nVertex; ++v) {
         if (!visited(graph, v))
-            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
-                          v);
+            index = strongConnect(components, stack, indexLowLinkOnStack, index,
+                                  graph, v);
     }
     return components;
 }
