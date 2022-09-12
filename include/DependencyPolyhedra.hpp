@@ -343,14 +343,17 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoefficients();
         const size_t numBoundingCoefs = getNumSymbols();
 
-        const size_t numConstraintsNew = A.numCol();
+        const size_t numConstraintsNew = A.numCol() - getTimeDim();
         const size_t numVarInterest = numScheduleCoefs + numBoundingCoefs;
 
-        // PtrMatrix<int64_t> bC{bw.getCostsAndConstraints()};
-        // lambda_0 + lambda' * (b - A*i) == psi
+        // lambda_0 + lambda'*A*i == psi'i
         // we represent equal constraint as
-        // lambda_0 + lambda' * (b - A*i) - psi <= 0
-        // -lambda_0 - lambda' * (b - A*i) + psi <= 0
+        // lambda_0 + lambda'*A*i - psi'i == 0
+        // lambda_0 + (lambda'*A* - psi')i == 0
+        // forward (0 -> 1, i.e. 1 >= 0):
+        // psi'i = Phi_1'i_1 - Phi_0'i_0
+        // backward (1 -> 0, i.e. 0 >= 1):
+        // psi'i = Phi_0'i_0 - Phi_1'i_1
         // first, lambda_0:
         const size_t ineqEnd = 1 + numInequalityConstraintsOld;
         const size_t posEqEnd = ineqEnd + numEqualityConstraintsOld;
@@ -367,7 +370,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // SHOWLN(fC.numRow());
         // SHOWLN(fC.numCol());
         // SHOWLN(ineqEnd - 1);
-        fC(_, _(1, ineqEnd)) = A.transpose();
+        fC(_, _(1, ineqEnd)) = A(_, _(begin, numConstraintsNew)).transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
         // loading from `E` is expensive
@@ -404,6 +407,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         //
         // boundAbove means we have
         // ... == w + u'*N + psi
+        // -1 as we flip sign
         for (size_t i = 0; i < numBoundingCoefs; ++i)
             fC(i, i + numScheduleCoefs + numLambda) = -1;
 
@@ -948,13 +952,14 @@ struct Dependence {
                 sE(0, c + ineqEnd) -= Ecv;
                 sE(0, c + posEqEnd) += Ecv;
             }
-            pair = farkasBackups;
+            // pair = farkasBackups;
             // pair.first.removeExtraVariables(numVarKeep);
             // pair.second.removeExtraVariables(numVarKeep);
             // farkasBackups is swapped with respect to
             // checkDirection(..., *in, *out);
-            timeDirection[t] = checkDirection(
-                pair, *out, *in, numLambda, dxy.A.numCol() - dxy.getTimeDim());
+            timeDirection[t] =
+                checkDirection(farkasBackups, *out, *in, numLambda,
+                               dxy.A.numCol() - dxy.getTimeDim());
             // fix
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 int64_t Acv = dxy.A(c, v) * step;
@@ -1014,9 +1019,6 @@ struct Dependence {
 
     static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
                         MemoryAccess &x, MemoryAccess &y) {
-        // static void check(llvm::SmallVectorImpl<Dependence> deps,
-        //                   const ArrayReference &x, const Schedule &sx,
-        //                   const ArrayReference &y, const Schedule &sy) {
         if (x.ref.gcdKnownIndependent(y.ref))
             return 0;
         DependencePolyhedra dxy(x, y);
@@ -1065,7 +1067,8 @@ struct Dependence {
         } else {
             os << "y -> x:";
         }
-        return os << d.depPoly
+        return os << d.depPoly << "\nA = " << d.depPoly.A
+                  << "\nE = " << d.depPoly.E
                   << "\nSchedule Constraints:" << d.dependenceSatisfaction
                   << "\nBounding Constraints:" << d.dependenceBounding
                   << std::endl;

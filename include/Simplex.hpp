@@ -429,7 +429,8 @@ struct Simplex {
                 // update baisc vars and constraints
                 int64_t oldBasicVar = basicVars[leavingVariable];
                 basicVars[leavingVariable] = enteringVariable;
-                basicConstraints[oldBasicVar] = -1;
+		if (size_t(oldBasicVar) < basicConstraints.size())
+		    basicConstraints[oldBasicVar] = -1;
                 basicConstraints[enteringVariable] = leavingVariable;
             }
             c = basicConstraints(v);
