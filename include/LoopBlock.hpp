@@ -904,8 +904,9 @@ struct LoopBlock {
                     CSHOWLN(e.getNumPhiCoefficients());
                     std::cout << "constraints:\ndSat_" << i << " = "
                               << e.dependenceSatisfaction.tableau << "\ndBnd_"
-                              << i++ << " = " << e.dependenceBounding.tableau
+                              << i << " = " << e.dependenceBounding.tableau
                               << std::endl;
+		    ++i;
                 }
             }
             SHOWLN(omniSimplex);
