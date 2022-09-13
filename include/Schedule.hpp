@@ -86,15 +86,13 @@ struct MemoryAccess {
     ArrayReference ref;
     // unsigned ref; // index to ArrayReference
     llvm::User *user;
+    Schedule schedule;
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
+    llvm::SmallVector<unsigned> groups;
     // schedule indicated by `1` top bit, remainder indicates loop
-    static constexpr uint32_t PHISCHEDULEDFLAG = std::numeric_limits<uint32_t>::max();
-    uint32_t phiOffset;   // used in LoopBlock
-    uint32_t omegaOffset; // used in LoopBlock
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
@@ -116,21 +114,7 @@ struct MemoryAccess {
     auto indexMatrix() { return ref.indexMatrix(); }
     auto indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset
-    bool phiIsScheduled() const {
-	return phiOffset == PHISCHEDULEDFLAG;
-    }
     PtrVector<int64_t> getSchedule(size_t loop) const {
         return schedule.getPhi()(loop, _);
-    }
-    size_t updatePhiOffset(size_t p) {
-	phiOffset = p;
-	return p + getNumLoops();
-    }
-    size_t updateOmegaOffset(size_t o) {
-	omegaOffset = o;
-        return ++o;
-    }
-    Range<size_t, size_t> getPhiOffset() {
-        return _(phiOffset, phiOffset + getNumLoops());
     }
 };

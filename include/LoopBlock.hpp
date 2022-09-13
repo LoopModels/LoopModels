@@ -13,12 +13,50 @@
 #include "Macro.hpp"
 #include "NormalForm.hpp"
 #include "Orthogonalize.hpp"
+#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/User.h>
+
+struct ScheduledNode {
+    llvm::SmallVector<unsigned> parentNodes;
+    llvm::SmallVector<unsigned> childNodes;
+    llvm::SmallVector<unsigned> memory;
+    static constexpr uint32_t PHISCHEDULEDFLAG =
+        std::numeric_limits<uint32_t>::max();
+    uint32_t phiOffset;   // used in LoopBlock
+    uint32_t omegaOffset; // used in LoopBlock
+    uint8_t numLoops;
+    bool visited;
+    bool isVisited() const { return visited; }
+    void unVisit() { visited = false; }
+
+    bool phiIsScheduled() const { return phiOffset == PHISCHEDULEDFLAG; }
+
+    size_t updatePhiOffset(size_t p) {
+        phiOffset = p;
+        return p + numLoops;
+    }
+    size_t updateOmegaOffset(size_t o) {
+        omegaOffset = o;
+        return ++o;
+    }
+    Range<size_t, size_t> getPhiOffset() {
+        return _(phiOffset, phiOffset + numLoops);
+    }
+
+    void merge(const ScheduledNode s) {
+        llvm::SmallVector<unsigned> memoryNew;
+        memoryNew.reserve(memory.size() + s.memory.size());
+        std::ranges::set_union(memory, s.memory, std::back_inserter(memoryNew));
+        std::swap(memory, memoryNew);
+        numLoops = std::max(numLoops, s.numLoops);
+    }
+};
 
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
@@ -73,7 +111,7 @@
 // for (i = eachindex(y)){
 //   f(m, ...); // Omega = [2, _, 0]
 // }
-struct LoopBlock : BaseGraph<LoopBlock> {
+struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
     // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -114,7 +152,7 @@ struct LoopBlock : BaseGraph<LoopBlock> {
     size_t numVerticies() const { return memory.size(); }
     // struct OutNeighbors{
     // 	llvm::SmallVector<unsigned> &edgesOut;
-	
+
     // };
     llvm::SmallVector<unsigned> &edgesOut(size_t idx) {
         return memory[idx].edgesOut;
