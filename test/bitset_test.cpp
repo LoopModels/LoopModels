@@ -11,12 +11,13 @@ TEST(BitSetTest, BasicAssertions) {
     bs[117] = true;
     bs[87] = true;
     bs[991] = true;
+    bs[0] = true;
     std::cout << bs << std::endl;
-    llvm::SmallVector<size_t> bsc{4, 10, 87, 117, 200, 991};
+    llvm::SmallVector<size_t> bsc{0, 4, 10, 87, 117, 200, 991};
     size_t j = 0;
     for (auto I = bs.begin(); I != bs.end(); ++I) {
         EXPECT_EQ(*I, bsc[j]);
-	EXPECT_TRUE(bs[*I]);
+        EXPECT_TRUE(bs[*I]);
         printf("We get: %zu\n", *I);
         ++j;
     }

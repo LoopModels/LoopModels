@@ -3,6 +3,7 @@
 #include "./Math.hpp"
 #include <llvm/ADT/SmallVector.h>
 #include <tuple>
+#include <type_traits>
 
 // graph uses vertex type V rather than indices
 // because our Dependence contains pointers rather than indices
@@ -22,8 +23,8 @@ template <typename G, typename V> struct BaseGraph {
     size_t numVerticies() const {
         return static_cast<const G *>(this)->getVertices().size();
     }
-    bool isVisited(size_t j) const{
-	return static_cast<const G *>(this)->getVertices()[j].isVisited();
+    bool isVisited(size_t j) const {
+        return static_cast<const G *>(this)->getVertices()[j].isVisited();
     }
     // V &getNode(size_t idx) { return static_cast<G *>(this)->getNode(idx); }
     // V &getNode(size_t idx) const {
@@ -86,8 +87,9 @@ template <typename G, typename V> struct BaseGraph {
         }
         auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
         if (vIndex == vLowLink) {
+            components.emplace_back(llvm::SmallVector<unsigned>());
+            llvm::SmallVector<unsigned> &component = components.back();
             unsigned w;
-            llvm::SmallVector<unsigned> component;
             do {
                 w = stack.back();
                 stack.pop_back();
@@ -96,7 +98,6 @@ template <typename G, typename V> struct BaseGraph {
                     std::make_tuple(wIndex, wLowLink, false);
                 component.push_back(w);
             } while (w != v);
-            components.emplace_back(component);
         }
         return index;
     }
@@ -118,6 +119,13 @@ template <typename G, typename V> struct BaseGraph {
         return components;
     }
 };
+
+// template <typename G>
+// concept Graph = requires(G g) {
+//     {
+//         g.getVertices()
+//         } -> std::same_as<typename std::remove_reference<G>::nodetype>;
+// };
 
 // Naive algorithm that looks like it may work to identify cycles:
 // 0 -> 1 -> 3 -> 5

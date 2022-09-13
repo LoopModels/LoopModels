@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -22,14 +23,7 @@ struct BitSet {
     //     return data[i];
     // } // allow `getindex` but not `setindex`
 
-    BitSet(size_t N) : length(0) {
-        size_t len = (N + 63) >> 6;
-        data.resize(len);
-        for (size_t i = 0; i < len; ++i) {
-            data[i] = 0;
-        }
-        // data = std::vector<std::uint64_t>(0, (N + 63) >> 6);
-    }
+    BitSet(size_t N) : length(0) { data.resize((N + 63) >> 6); }
     struct Iterator {
         // TODO: is this safe?
         llvm::ArrayRef<uint64_t> set;
@@ -39,15 +33,13 @@ struct BitSet {
         size_t count;
 
         size_t operator*() { return offset + 64 * didx; }
-        BitSet::Iterator &operator++() {
+        Iterator &operator++() {
             ++count;
             while (state == 0) {
-                ++didx;
-                if (didx >= set.size())
+                if (++didx >= set.size())
                     return *this;
                 state = set[didx];
                 offset = std::numeric_limits<uint64_t>::max();
-                // offset = 0xffffffffffffffff;
             }
             size_t tzp1 = std::countr_zero(state) + 1;
             offset += tzp1;
@@ -66,7 +58,7 @@ struct BitSet {
                         std::numeric_limits<uint64_t>::max()};
     }
 
-    Iterator begin() const { return ++construct(this->data); }
+    Iterator begin() const { return ++construct(data); }
     size_t end() const { return length; };
 
     static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
@@ -132,6 +124,20 @@ struct BitSet {
         return Reference{llvm::MutableArrayRef<uint64_t>(data), i, length};
     }
     size_t size() const { return length; }
+
+    void setUnion(const BitSet &bs) {
+        size_t O = bs.data.size(), T = data.size();
+        length = 0;
+        if (O > T)
+            data.resize(O);
+        for (size_t i = 0; i < O; ++i) {
+            uint64_t d = data[i] | bs.data[i];
+            length += std::popcount(d);
+            data[i] = d;
+        }
+        for (size_t i = O; i < T; ++i)
+            length += std::popcount(data[i]);
+    }
 };
 
 std::ostream &operator<<(std::ostream &os, BitSet const &x) {
