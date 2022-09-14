@@ -585,10 +585,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
     //
-    // lblock.fillEdges();
-    bool optFail = lblock.optimize();
-    EXPECT_FALSE(optFail);
-    assert(!optFail);
+    lblock.fillEdges();
     // EXPECT_FALSE(lblock.optimize());
     // -3 comes from the fact we did 3 load-load comparisons above
     // in the future, we may have `fillEdges` make load-load comparisons

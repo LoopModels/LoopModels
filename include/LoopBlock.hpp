@@ -20,12 +20,28 @@
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/User.h>
+#include <llvm/Support/Casting.h>
+
+template <std::integral I>
+[[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
+                                                const I &x) {
+    for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
+        if (*it < x)
+            continue;
+        if (*it > x)
+            v.insert(it, x);
+        return;
+    }
+    v.push_back(x);
+}
 
 struct ScheduledNode {
-    llvm::SmallVector<unsigned> parentNodes;
-    llvm::SmallVector<unsigned> childNodes;
+    // llvm::SmallVector<unsigned> parentNodes;
+    // llvm::SmallVector<unsigned> childNodes;
     llvm::SmallVector<unsigned> memory;
+    // llvm::SmallVector<MemoryAccess*> memory;
     static constexpr uint32_t PHISCHEDULEDFLAG =
         std::numeric_limits<uint32_t>::max();
     uint32_t phiOffset;   // used in LoopBlock
@@ -111,7 +127,7 @@ struct ScheduledNode {
 // for (i = eachindex(y)){
 //   f(m, ...); // Omega = [2, _, 0]
 // }
-struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
+struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -122,9 +138,10 @@ struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
     // and all other other shared schedule parameters are aliases (i.e.,
     // identical)?
     llvm::SmallVector<MemoryAccess, 0> memory;
-
+    llvm::SmallVector<ScheduledNode, 0> nodes;
+    // llvm::SmallVector<unsigned> memoryToNodeMap;
     llvm::SmallVector<Dependence, 0> edges;
-    llvm::SmallVector<bool> visited; // visited, for traversing graph
+    // llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
@@ -149,17 +166,23 @@ struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
     // const ArrayReference &ref(const MemoryAccess *x) const {
     //     return refs[x->ref];
     // }
-    size_t numVerticies() const { return memory.size(); }
-    // struct OutNeighbors{
-    // 	llvm::SmallVector<unsigned> &edgesOut;
-
-    // };
-    llvm::SmallVector<unsigned> &edgesOut(size_t idx) {
-        return memory[idx].edgesOut;
+    size_t numVerticies() const { return nodes.size(); }
+    llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
+    llvm::ArrayRef<ScheduledNode> getVerticies() const { return nodes; }
+    struct OutNeighbors {
+        LoopBlock &loopBlock;
+        ScheduledNode &node;
+        // size_t size()const{return node.num
+    };
+    OutNeighbors outNeighbors(size_t idx) {
+        return OutNeighbors{*this, nodes[idx]};
     }
-    const llvm::SmallVector<unsigned> &edgesOut(size_t idx) const {
-        return memory[idx].edgesOut;
-    }
+    // llvm::SmallVector<unsigned> &edgesOut(size_t idx) {
+    //     return memory[idx].edgesOut;
+    // }
+    // const llvm::SmallVector<unsigned> &edgesOut(size_t idx) const {
+    //     return memory[idx].edgesOut;
+    // }
     [[nodiscard]] size_t calcMaxDepth() const {
         size_t d = 0;
         for (auto &mem : memory)
@@ -312,15 +335,15 @@ struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
             ArrayReference &refI = mai.ref;
-            SHOWLN(i);
+            // SHOWLN(i);
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
-                CSHOW(j);
-                CSHOW(refI.arrayID);
-                CSHOW(refJ.arrayID);
-                CSHOW(mai.isLoad);
-                CSHOW(maj.isLoad);
+                // CSHOW(j);
+                // CSHOW(refI.arrayID);
+                // CSHOW(refJ.arrayID);
+                // CSHOW(mai.isLoad);
+                // CSHOW(maj.isLoad);
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     std::cout << std::endl;
@@ -328,9 +351,65 @@ struct LoopBlock : BaseGraph<LoopBlock, ScheduledNode> {
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 addEdge(mai, maj);
-                CSHOWLN(edges.size());
+                // CSHOWLN(edges.size());
             }
         }
+    }
+    void searchUsesForStores(llvm::User *u, unsigned nodeIndex) {
+        for (auto &use : u->uses()) {
+            if (llvm::StoreInst *str = llvm::dyn_cast<llvm::StoreInst>(use)) {
+                auto memAccess = userToMemory.find(str);
+                if (memAccess != userToMemory.end()) {
+                    unsigned oldNodeIndex = memAccess->getSecond()->nodeIndex;
+                    if ((oldNodeIndex !=
+                         std::numeric_limits<unsigned>::max()) &&
+                        oldNodeIndex != nodeIndex) {
+                        // merge nodeIndex and oldNodeIndex
+                        if (oldNodeIndex < nodeIndex)
+                            std::swap(nodeIndex, oldNodeIndex);
+                        // delete oldNodeIndex
+                        for (auto &&mem : memory) {
+                            if (mem.nodeIndex == oldNodeIndex) {
+                                mem.nodeIndex = nodeIndex;
+                            } else if ((mem.nodeIndex > oldNodeIndex) &&
+                                       (mem.nodeIndex !=
+                                        std::numeric_limits<unsigned>::max())) {
+                                --mem.nodeIndex;
+                            }
+                        }
+                    }
+                } else {
+                    memAccess->getSecond()->nodeIndex = nodeIndex;
+                }
+            } else if (llvm::User *user = llvm::dyn_cast<llvm::User>(use)) {
+                searchUsesForStores(user, nodeIndex);
+            }
+        }
+    }
+    void buildGraph() {
+
+        // llvm::SmallVector<unsigned> map(memory.size(),
+        // std::numeric_limits<unsigned>::max());
+        // pair is <memory index, node index>
+        // llvm::DenseMap<MemoryAccess *, unsigned> memAccessPtrToIndex;
+        // memoryToNodeMap.resize(memory.size(),
+        //                        std::numeric_limits<unsigned>::max());
+        for (unsigned i = 0; i < memory.size(); ++i)
+            memory[i].index = i;
+        // assembles direct connections in node graph
+        for (unsigned i = 0, j = 0; i < memory.size(); ++i) {
+            MemoryAccess &mai = memory[i];
+            if (mai.nodeIndex == std::numeric_limits<unsigned>::max())
+                mai.nodeIndex = j++;
+            if (mai.isLoad)
+                // if load, we search all uses, looking for stores
+                // we search loads, because that probably has a smaller set
+                // (i.e., we only search users, avoiding things like constants)
+                searchUsesForStores(mai.user, mai.nodeIndex);
+        }
+
+        // now that we've assigned each MemoryAccess to a NodeIndex, we build
+        // the actual graph
     }
     // TODO: we need to rotate via setting the schedule, not instantiating
     // the rotated array!

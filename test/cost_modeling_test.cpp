@@ -467,4 +467,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
+    
+    bool optFail = lblock.optimize();
+    EXPECT_FALSE(optFail);
+    // assert(!optFail);
 }
