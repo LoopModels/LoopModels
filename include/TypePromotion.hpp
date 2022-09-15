@@ -48,5 +48,5 @@ template <typename A, typename B> struct PromoteEltype {
                                         typename GetEltype<B>::eltype>::eltype;
 };
 template <typename T> struct VType{
-    using type = hn::Vec<hn::ScalableTag<T>()>;
+    using type = hn::VFromD<hn::ScalableTag<T>>;
 };
