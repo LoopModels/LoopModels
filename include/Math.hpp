@@ -376,6 +376,10 @@ template <typename T> inline auto svreference(T *ptr, size_t i, size_t stride) {
 struct VIndex {
     size_t i;
 };
+static_assert(!std::convertible_to<size_t, VIndex>);
+static_assert(!std::convertible_to<int64_t, VIndex>);
+static_assert(!std::convertible_to<int, VIndex>);
+static_assert(!std::integral<VIndex>);
 
 template <typename T>
 concept AbstractVector = HasEltype<T> && requires(T t, size_t i, VIndex vi) {
@@ -430,15 +434,48 @@ inline auto &copyto(AbstractMatrixCore auto &A,
     return A;
 }
 
+template <typename V>
+concept HWVec = requires(V v){
+    {v+v} -> std::same_as<hn::VFromD<hn::DFromV<V>>>;
+};
+
 struct Add {
     constexpr auto operator()(auto x, auto y) const { return x + y; }
+    template <HWVec V>
+    constexpr auto operator()(std::integral auto x, V y) const {
+	V vx = Set(hn::DFromV<V>(), x);
+	return vx + y;
+    }
 };
 struct Sub {
     constexpr auto operator()(auto x) const { return -x; }
     constexpr auto operator()(auto x, auto y) const { return x - y; }
+    template <HWVec V>
+    constexpr auto operator()(std::integral auto x, V y) const {
+	V vx = Set(hn::DFromV<V>(), x);
+	return vx - y;
+    }
+    template <HWVec V>
+    constexpr auto operator()(V x, std::integral auto y) const {
+	V vy = Set(hn::DFromV<V>(), y);
+	return x - vy;
+    }
+
+    
 };
 struct Mul {
     constexpr auto operator()(auto x, auto y) const { return x * y; }
+    template <HWVec V>
+    constexpr auto operator()(std::integral auto x, V y) const {
+	V vx = Set(hn::DFromV<V>(), x);
+	return vx * y;
+    }
+    template <HWVec V>
+    constexpr auto operator()(V x, std::integral auto y) const {
+	V vy = Set(hn::DFromV<V>(), y);
+	return x * vy;
+    }
+    
 };
 struct Div {
     constexpr auto operator()(auto x, auto y) const { return x / y; }
@@ -459,6 +496,18 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
 };
 // scalars broadcast
 inline auto get(const std::integral auto A, auto) { return A; }
+
+//template <typename T> struct Broadcast {
+//    T x;
+//    template <typename V> operator V() const {
+//	return hn::Set(hn::DFromV<V>(), x);
+//    }
+//};
+
+//inline auto get(std::integral auto A, VIndex) {
+//    return Broadcast<decltype(A)>{A};
+//}
+
 inline auto get(const std::floating_point auto A, auto) { return A; }
 inline auto get(const std::integral auto A, auto, auto) { return A; }
 inline auto get(const std::floating_point auto A, auto, auto) { return A; }
@@ -467,15 +516,19 @@ inline auto get(const AbstractVector auto &A, size_t i) { return A(i); }
 inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
     return A(i, j);
 }
-inline auto get(const AbstractVector auto &A, auto i) {
+inline auto get(const AbstractVector auto &A, VIndex i) {
     // using V = hn::VFromD<hn::ScalableTag<decltype(A)::eltype>()>;
-    using V = hn::VFromD<hn::ScalableTag<
-        typename std::remove_reference_t<decltype(A)>::eltype>>;
+    using V = hn::VFromD<
+        hn::ScalableTag<typename std::remove_reference_t<decltype(A)>::eltype>>;
 
     V v(A(i));
     return v;
 }
 
+inline auto get(const AbstractMatrix auto &A, std::integral auto i,
+                std::integral auto j) {
+    return A(i, j);
+}
 inline auto get(const AbstractMatrix auto &A, auto i, auto j) {
     // std::cout << decltype(A) <<std::endl;
     using V = typename VType<typename decltype(A)::eltype>::type;
@@ -3128,6 +3181,9 @@ static_assert(DerivedMatrix<IntMatrix>);
 
 static_assert(std::is_same_v<SquareMatrix<int64_t>::eltype, int64_t>);
 static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
+
+static_assert(AbstractVector<
+              ElementwiseVectorBinaryOp<Mul, PtrVector<int64_t>, int64_t>>);
 
 // }  // namespace HWY_NAMESPACE
 // }  // namespace project - optional

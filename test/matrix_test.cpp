@@ -57,11 +57,11 @@ TEST(HelloTest, BasicAssertions) {
     C(2, 2) = 6;
     C(2, 3) = -3;
     C(2, 4) = -11;
-    EXPECT_EQ(A.numRow(), (A*B).numRow());
-    EXPECT_EQ(B.numCol(), (A*B).numCol());
-    EXPECT_TRUE(C == A*B);
+    EXPECT_EQ(A.numRow(), (A * B).numRow());
+    EXPECT_EQ(B.numCol(), (A * B).numCol());
+    EXPECT_TRUE(C == A * B);
     IntMatrix C2{A * B};
-    std::cout << "C=\n"<<C<<"\nC2=\n"<<C2<<std::endl;
+    std::cout << "C=\n" << C << "\nC2=\n" << C2 << std::endl;
     EXPECT_TRUE(C == C2);
     IntMatrix At = A.transpose();
     IntMatrix Bt = B.transpose();
@@ -87,8 +87,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     EXPECT_EQ(A4, C);
     IntMatrix Z = A * 4 - A4;
     for (size_t i = 0; i < Z.numRow(); ++i)
-	for (size_t j = 0; j < Z.numCol(); ++j)
-	    EXPECT_FALSE(Z(i,j));
+        for (size_t j = 0; j < Z.numCol(); ++j)
+            EXPECT_FALSE(Z(i, j));
     auto D{stringToIntMatrix(
         "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
         "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "
@@ -113,7 +113,25 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     a.push_back(-8);
     a.push_back(7);
     a.push_back(3);
-    Vector<int64_t> b = a * 2;
+    ElementwiseVectorBinaryOp<Mul, PtrVector<int64_t>, int64_t> a2 = a * int64_t(2);
+    int64_t a2_0_a = get(a2.a, size_t(0));
+    int64_t a2_0_b = get(a2.b, size_t(0));
+    int64_t a2_0 = a2.op(a2_0_a, a2_0_b);
+    auto a2_0_direct_size_t = a2(size_t(0));
+    
+    int64_t a2_0_a_int_index = a2.a(0);
+    int64_t a2_0_a_int_get = get(a2.a, 0);
+    int64_t a2_0_b_int = get(a2.b, 0);
+    int64_t a2_0_int = a2.op(a2_0_a, a2_0_b);
+    int64_t a2_0_direct_int = a2(0);
+    const ElementwiseVectorBinaryOp<Mul, PtrVector<int64_t>, int64_t> a2const = a * int64_t(2);
+    int64_t a2c_0_direct_int = a2const(0);
+    int64_t a2c_0_direct_size_t = a2const(size_t(0));
+    auto a0v = a2(VIndex{0});
+    
+    Vector<int64_t> btest;
+    copyto(btest, a2);
+    Vector<int64_t> b = a2;
     Vector<int64_t> c;
     c.push_back(-16);
     c.push_back(14);
@@ -135,20 +153,20 @@ TEST(SIMDTEST, BasicAssertions) {
     Vector<int64_t> c;
     c.push_back(-24);
     c.push_back(21);
-    c.push_back(9);    
-    std::cout<< "b = "<<b<<std::endl;
+    c.push_back(9);
+    std::cout << "b = " << b << std::endl;
     b -= a;
     c(0) = -16;
     c(1) = 14;
     c(2) = 6;
-    std::cout<< "c = "<<c<<std::endl;
+    std::cout << "c = " << c << std::endl;
     EXPECT_EQ(b, c);
     b *= a;
     c(0) = 128;
     c(1) = 98;
     c(2) = 18;
     EXPECT_EQ(b, c);
-    
+
     // a.push_back(1);
     // b.push_back(1);
     // c.push_back(1);
@@ -170,10 +188,12 @@ TEST(SIMDTEST, BasicAssertions) {
     // b *= a;
     // std::cout<< "b = "<<b<<std::endl;
     // auto A{stringToIntMatrix(
-    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7
+    //     -5 "
     //     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
     // auto A2{stringToIntMatrix(
-    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    //     "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7
+    //     -5 "
     //     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
     // A2 += A;
 }
