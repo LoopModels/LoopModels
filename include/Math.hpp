@@ -342,11 +342,52 @@ inline bool isZero(auto x) { return x == 0; }
     return i;
 }
 
+template<typename T>
+struct VReference{
+   T* ptr;
+   //operator T() const { return *ptr;}
+    template<typename V>
+    operator V() const {
+        return hn::Load(hn::ScalableTag<T>(), ptr);
+    }
+//    void operator=(T x){
+//     *ptr = x;
+//    }
+   void operator=(auto v){
+    hn::Store(v, hn::ScalableTag<T>(), ptr);
+   }
+
+};
+
+template<typename T, typename VI>
+struct SVReference{
+   T* ptr;
+   VI vi;
+   
+   //operator T() const { return *ptr;}
+    template<typename V>
+    operator V() const {
+        return hn::GatherIndex(hn::ScalableTag<T>(), ptr, vi);
+    }
+   void operator=(auto v){
+    hn::ScatterIndex(v, hn::ScalableTag<T>(), ptr, vi);
+   }
+
+};
+template<typename T>
+inline auto svreference(T* ptr, size_t i, size_t stride){
+    auto vi{hn::Iota(hn::ScalableTag<T>(), 0)*int(stride) + int(i)};
+    return SVReference<T,decltype(vi)>{ptr, vi};
+}
+
+struct VIndex{
+    size_t i;
+};
+
 template <typename T>
-concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+concept AbstractVector = HasEltype<T> && requires(T t, size_t i, VIndex vi) {
+    { t(i)} -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+    { t(vi)} -> std::convertible_to<typename VType<typename std::remove_reference_t<T>::eltype>::type>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
     { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
@@ -410,8 +451,8 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     const Op op;
     const A a;
     static constexpr bool canResize = false;
-    auto operator()(size_t i) const { return op(a(i)); }
-    auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
+    auto operator()(auto i) const { return op(a(i)); }
+    auto operator()(auto i, auto j) const { return op(a(i, j)); }
 
     size_t size() { return a.size(); }
     size_t numRow() { return a.numRow(); }
@@ -419,13 +460,27 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
     inline auto view() const { return *this; };
 };
 // scalars broadcast
-inline auto get(const std::integral auto A, size_t) { return A; }
-inline auto get(const std::floating_point auto A, size_t) { return A; }
-inline auto get(const std::integral auto A, size_t, size_t) { return A; }
-inline auto get(const std::floating_point auto A, size_t, size_t) { return A; }
+inline auto get(const std::integral auto A, auto) { return A; }
+inline auto get(const std::floating_point auto A, auto) { return A; }
+inline auto get(const std::integral auto A, auto, auto) { return A; }
+inline auto get(const std::floating_point auto A, auto, auto) { return A; }
+
 inline auto get(const AbstractVector auto &A, size_t i) { return A(i); }
 inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
     return A(i, j);
+}
+inline auto get(const AbstractVector auto &A, auto i) {
+    // using V = hn::VFromD<hn::ScalableTag<decltype(A)::eltype>()>;
+    using V = hn::Vec<hn::ScalableTag<typename decltype(A)::eltype>()>;
+    V v(A(i));
+    return v;
+}
+
+inline auto get(const AbstractMatrix auto &A, auto i, auto j) {
+    // std::cout << decltype(A) <<std::endl;
+    using V = VType<typename decltype(A)::eltype>::type;
+    V v(A(i,j));
+    return v;
 }
 
 constexpr size_t size(const std::integral auto) { return 1; }
@@ -449,7 +504,7 @@ struct ElementwiseVectorBinaryOp {
     A a;
     B b;
     static constexpr bool canResize = false;
-    auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
+    auto operator()(auto i) const { return op(get(a, i), get(b, i)); }
     size_t size() const {
         if constexpr (AbstractVector<A> && AbstractVector<B>) {
             const size_t N = a.size();
@@ -684,6 +739,9 @@ template <typename T> struct PtrVector {
         assert(N);
         return mem[N - 1];
     }
+    auto operator()(VIndex i) const{
+        return hn::Load(hn::ScalableTag<T>(), mem + i.i);
+    }
     PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.b <= i.e);
         assert(i.e <= N);
@@ -738,6 +796,12 @@ template <typename T> struct MutPtrVector {
     const T &operator()(End) const {
         assert(N);
         return mem[N - 1];
+    }
+    VReference<T> operator()(VIndex i){
+        return VReference<T>{mem + i.i};
+    }
+    auto operator()(VIndex i)const{
+        return hn::Load(hn::ScalableTag<T>(), mem + i.i);
     }
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
@@ -825,8 +889,9 @@ template <typename T> struct MutPtrVector {
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
-        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+        for (size_t i = 0; i < N - remainder; i += Lane){ 
+            const auto mem_vec = hn::Load(d, mem + i);
+            auto x_vec = hn::Load(d, x.data.data() + i);//x.getPtr(i));
             x_vec = mem_vec - x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -837,11 +902,15 @@ template <typename T> struct MutPtrVector {
     }
     MutPtrVector<T> operator*=(const AbstractVector auto &x) {
         assert(N == x.size());
+        // for (size_t i = 0; i < N; ++i)
+        //     mem[i] *= x.data.data()[i];
+        // return *this;
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
-        for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+        for (size_t i = 0; i < N - remainder; i += Lane){
+            const auto mem_vec = hn::Load(d, mem + i);
+            auto x_vec = hn::Load(d, x.data.data() + i);
             x_vec = mem_vec * x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -901,13 +970,12 @@ template <typename T> struct MutPtrVector {
         return *this;
     }
     MutPtrVector<T> operator*=(const std::integral auto x) {
-        assert(N == x.size());
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane){ const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = hn::Load(d, mem + i);
             x_vec = x_vec * const_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -968,6 +1036,7 @@ template <typename T> struct Vector {
     Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
     const T* getPtr(size_t i) const { return data.data() + i; }
+    T* getPtr(size_t i) { return data.data() + i; }
 
     T &operator()(size_t i) {
         assert(i < data.size());
@@ -1015,6 +1084,8 @@ template <typename T> struct Vector {
     template <typename... A> void emplace_back(A &&...x) {
         data.emplace_back(std::forward<A>(x)...);
     }
+    // auto x = (a - b) * c - (d/4);
+    // Vector e(x);
     Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T>{}) {
         const size_t N = x.size();
         data.resize_for_overwrite(N);
@@ -1129,6 +1200,7 @@ template <typename T> struct Vector {
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
+        std::cout << "q2222222222" << std::endl;
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane){
             // auto x_vec = hn::Load(d, x.data.data() + i);
@@ -1201,6 +1273,10 @@ template <typename T> struct StridedVector {
     }
     StridedVector<T> view() const { return *this; }
     void extendOrAssertSize(size_t M) const { assert(N == M); }
+
+    auto operator()(VIndex i) const {
+        return svreference(d, i.i, x);
+    }
 };
 template <typename T> struct MutStridedVector {
     static_assert(!std::is_const_v<T>, "T should not be const");

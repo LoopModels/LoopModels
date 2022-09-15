@@ -37,4 +37,4 @@ static void BM_LoopHighway2(benchmark::State &state) {
     }
 }
 // Register the function as a benchmark
-BENCHMARK(BM_LoopHighway2);
+// BENCHMARK(BM_LoopHighway2);

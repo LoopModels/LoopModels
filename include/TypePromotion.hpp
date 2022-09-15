@@ -2,6 +2,12 @@
 #include <concepts>
 #include <type_traits>
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "./TypePromotion.hpp"
+#include <hwy/foreach_target.h> 
+#include <hwy/highway.h>
+namespace hn = hwy::HWY_NAMESPACE;
+
 template <typename T>
 concept HasEltype = requires(T) {
     std::is_scalar_v<typename std::remove_reference_t<T>::eltype>;
@@ -37,8 +43,10 @@ template <std::floating_point A, std::integral B> struct PromoteType<A, B> {
 template <std::integral A, std::floating_point B> struct PromoteType<A, B> {
     using eltype = B;
 };
-
 template <typename A, typename B> struct PromoteEltype {
     using eltype = typename PromoteType<typename GetEltype<A>::eltype,
                                         typename GetEltype<B>::eltype>::eltype;
+};
+template <typename T> struct VType{
+    using type = hn::Vec<hn::ScalableTag<T>()>;
 };
