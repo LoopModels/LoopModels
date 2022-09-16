@@ -32,7 +32,7 @@ struct Schedule {
         maxStackLoops * (maxStackLoops + 2) + 1;
     // 3*3+ 2*3+1 = 16
     llvm::SmallVector<int64_t, maxStackStorage> data;
-    const uint8_t numLoops;
+    uint8_t numLoops;
     // -1 indicates not vectorized
     int8_t vectorized = -1;
     // -1 indicates not unrolled
@@ -44,12 +44,18 @@ struct Schedule {
     int8_t unrolledInner = -1;
     // -1 indicates not unrolled
     int8_t unrolledOuter = -1;
+    void init(size_t nLoops) {
+        numLoops = nLoops;
+        data.resize(nLoops * (nLoops + 2) + 1);
+        getPhi().antiDiag() = 1;
+    }
+    Schedule() = default;
     Schedule(size_t nLoops)
         : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops) {
         MutSquarePtrMatrix<int64_t> Phi(getPhi());
-	Phi.antiDiag() = 1;
+        Phi.antiDiag() = 1;
     };
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);

@@ -41,16 +41,17 @@ struct ScheduledNode {
     // llvm::SmallVector<unsigned> parentNodes;
     // llvm::SmallVector<unsigned> childNodes;
     llvm::SmallVector<unsigned> memory;
+    Schedule schedule;
     // llvm::SmallVector<MemoryAccess*> memory;
     static constexpr uint32_t PHISCHEDULEDFLAG =
         std::numeric_limits<uint32_t>::max();
     uint32_t phiOffset;   // used in LoopBlock
     uint32_t omegaOffset; // used in LoopBlock
-    uint8_t numLoops;
-    bool visited;
+    uint8_t numLoops{0};
+    bool visited{false};
     bool isVisited() const { return visited; }
     void unVisit() { visited = false; }
-
+    size_t getNumLoops() const { return numLoops; }
     bool phiIsScheduled() const { return phiOffset == PHISCHEDULEDFLAG; }
 
     size_t updatePhiOffset(size_t p) {
@@ -61,7 +62,7 @@ struct ScheduledNode {
         omegaOffset = o;
         return ++o;
     }
-    Range<size_t, size_t> getPhiOffset() {
+    Range<size_t, size_t> getPhiOffset() const {
         return _(phiOffset, phiOffset + numLoops);
     }
 
@@ -355,7 +356,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
         }
     }
-    void searchUsesForStores(llvm::User *u, unsigned nodeIndex) {
+    unsigned searchUsesForStores(llvm::User *u, unsigned nodeIndex,
+                                 unsigned maxNode) {
         for (auto &use : u->uses()) {
             if (llvm::StoreInst *str = llvm::dyn_cast<llvm::StoreInst>(use)) {
                 auto memAccess = userToMemory.find(str);
@@ -377,14 +379,16 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                                 --mem.nodeIndex;
                             }
                         }
+                        --maxNode;
                     }
                 } else {
                     memAccess->getSecond()->nodeIndex = nodeIndex;
                 }
             } else if (llvm::User *user = llvm::dyn_cast<llvm::User>(use)) {
-                searchUsesForStores(user, nodeIndex);
+                maxNode = searchUsesForStores(user, nodeIndex, maxNode);
             }
         }
+        return maxNode;
     }
     void buildGraph() {
 
@@ -394,10 +398,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // llvm::DenseMap<MemoryAccess *, unsigned> memAccessPtrToIndex;
         // memoryToNodeMap.resize(memory.size(),
         //                        std::numeric_limits<unsigned>::max());
-        for (unsigned i = 0; i < memory.size(); ++i)
-            memory[i].index = i;
         // assembles direct connections in node graph
-        for (unsigned i = 0, j = 0; i < memory.size(); ++i) {
+        unsigned j = 0;
+        for (unsigned i = 0; i < memory.size(); ++i) {
             MemoryAccess &mai = memory[i];
             if (mai.nodeIndex == std::numeric_limits<unsigned>::max())
                 mai.nodeIndex = j++;
@@ -405,9 +408,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 // if load, we search all uses, looking for stores
                 // we search loads, because that probably has a smaller set
                 // (i.e., we only search users, avoiding things like constants)
-                searchUsesForStores(mai.user, mai.nodeIndex);
+                j = searchUsesForStores(mai.user, mai.nodeIndex, j);
         }
-
+        nodes.resize(j);
+        for (unsigned i = 0; i < memory.size(); ++i) {
+            MemoryAccess &mem = memory[i];
+            mem.index = i;
+            // for (auto &&mem : memory){
+            ScheduledNode &node = nodes[mem.nodeIndex];
+            node.memory.push_back(i);
+            node.numLoops = std::max(node.numLoops, uint8_t(mem.getNumLoops()));
+        }
+	for (auto &&node : nodes)
+	    node.schedule.init(node.getNumLoops());
         // now that we've assigned each MemoryAccess to a NodeIndex, we build
         // the actual graph
     }
@@ -664,7 +677,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     [[nodiscard]] size_t getLambdaOffset() const {
         return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
     }
-    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem) {
+    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem) const {
         for (auto &e : mem.edgesIn)
             if (!edges[e].isInactive())
                 return true;
@@ -673,29 +686,42 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 return true;
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem, size_t d) {
+    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem, size_t d) const {
         for (auto &e : mem.edgesIn)
             if (!edges[e].isInactive(d))
                 return true;
         for (auto &e : mem.edgesOut)
             if (!edges[e].isInactive(d))
+                return true;
+        return false;
+    }
+    [[nodiscard]] bool hasActiveEdges(const ScheduledNode &node,
+                                      size_t d) const {
+        for (auto memId : node.memory)
+            if (hasActiveEdges(memory[memId], d))
+                return true;
+        return false;
+    }
+    [[nodiscard]] bool hasActiveEdges(const ScheduledNode &node) const {
+        for (auto memId : node.memory)
+            if (hasActiveEdges(memory[memId]))
                 return true;
         return false;
     }
     void setScheduleMemoryOffsets(size_t d) {
         size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
-        for (auto &&mem : memory) {
-            if ((d >= mem.getNumLoops()) || (!hasActiveEdges(mem, d)))
+        for (auto &&node : nodes) {
+            if ((d >= node.getNumLoops()) || (!hasActiveEdges(node, d)))
                 continue;
-            if (!mem.phiIsScheduled())
-                p = mem.updatePhiOffset(p);
+            if (!node.phiIsScheduled())
+                p = node.updatePhiOffset(p);
         }
         numPhiCoefs = p - pInit;
         size_t o = p;
-        for (auto &&mem : memory) {
-            if ((d > mem.getNumLoops()) || (!hasActiveEdges(mem, d)))
+        for (auto &&node : nodes) {
+            if ((d > node.getNumLoops()) || (!hasActiveEdges(node, d)))
                 continue;
-            o = mem.updateOmegaOffset(o);
+            o = node.updateOmegaOffset(o);
         }
         numOmegaCoefs = o - p;
     }
@@ -743,6 +769,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             Dependence &edge = edges[e];
             if (edge.isInactive(d))
                 continue;
+            unsigned outNodeIndex = edge.out->nodeIndex;
+            unsigned inNodeIndex = edge.in->nodeIndex;
+            if (outNodeIndex == inNodeIndex)
+                continue;
+            const ScheduledNode &outNode = nodes[outNodeIndex];
+            const ScheduledNode &inNode = nodes[inNodeIndex];
             const auto [satC, satL, satPp, satPc, satO] =
                 edge.splitSatisfaction();
             const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
@@ -777,7 +809,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             // now, handle Phi and Omega
             // phis are not constrained to be 0
             if (d >= edge.out->getNumLoops()) {
-            } else if (edge.out->phiIsScheduled()) {
+            } else if (outNode.phiIsScheduled()) {
                 // add it constants
                 auto sch = edge.out->getSchedule(d);
                 SHOWLN(edge.out->getNumLoops());
@@ -789,7 +821,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             } else {
                 assert(satPc.numCol() == bndPc.numCol());
                 // add it to C
-                auto phiChild = edge.out->getPhiOffset();
+                auto phiChild = outNode.getPhiOffset();
                 C(_(c, cc), phiChild) = satPc;
                 // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
                 C(_(cc, ccc), phiChild) = bndPc;
@@ -800,7 +832,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 #endif
             }
             if (d >= edge.in->getNumLoops()) {
-            } else if (edge.in->phiIsScheduled()) {
+            } else if (inNode.phiIsScheduled()) {
                 // add it to constants
                 auto sch = edge.in->getSchedule(d);
                 SHOWLN(edge.in->getNumLoops());
@@ -812,7 +844,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             } else {
                 assert(satPp.numCol() == bndPp.numCol());
                 // add it to C
-                auto phiParent = edge.in->getPhiOffset();
+                auto phiParent = inNode.getPhiOffset();
                 C(_(c, cc), phiParent) = satPp;
                 // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
                 C(_(cc, ccc), phiParent) = bndPp;
@@ -824,30 +856,29 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             // Omegas are included regardless of rotation
             if (d < edge.out->getNumLoops()) {
-                C(_(c, cc), edge.out->omegaOffset) = satO(_, !edge.forward);
-                C(_(cc, ccc), edge.out->omegaOffset) = bndO(_, !edge.forward);
+                C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
+                C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
 #ifndef NDEBUG
                 minOmegaCoefInd =
-                    std::min(minOmegaCoefInd, size_t(edge.out->omegaOffset));
+                    std::min(minOmegaCoefInd, size_t(outNode.omegaOffset));
                 maxOmegaCoefInd =
-                    std::max(maxOmegaCoefInd, size_t(edge.out->omegaOffset));
+                    std::max(maxOmegaCoefInd, size_t(outNode.omegaOffset));
 #endif
             }
             if (d < edge.in->getNumLoops()) {
-                C(_(c, cc), edge.in->omegaOffset) = satO(_, edge.forward);
-                C(_(cc, ccc), edge.in->omegaOffset) = bndO(_, edge.forward);
+                C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
+                C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
 #ifndef NDEBUG
                 minOmegaCoefInd =
-                    std::min(minOmegaCoefInd, size_t(edge.in->omegaOffset));
+                    std::min(minOmegaCoefInd, size_t(inNode.omegaOffset));
                 maxOmegaCoefInd =
-                    std::max(maxOmegaCoefInd, size_t(edge.in->omegaOffset));
+                    std::max(maxOmegaCoefInd, size_t(inNode.omegaOffset));
 #endif
             }
 
             c = ccc;
         }
 #ifndef NDEBUG
-
         SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
         CSHOWLN(minOmegaCoefInd);
         SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
@@ -941,22 +972,22 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             assert(!allZero);
         }
 #endif
-        for (auto &&mem : memory) {
-            if (depth >= mem.getNumLoops())
+        for (auto &&node : nodes) {
+            if (depth >= node.getNumLoops())
                 continue;
-            if (!hasActiveEdges(mem)) {
-                mem.schedule.getOmega()(2 * depth + 1) =
+            if (!hasActiveEdges(node)) {
+                node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
-                if (!mem.phiIsScheduled())
-                    mem.schedule.getPhi()(depth, _) =
+                if (!node.phiIsScheduled())
+                    node.schedule.getPhi()(depth, _) =
                         std::numeric_limits<int64_t>::min();
                 continue;
             }
-            mem.schedule.getOmega()(2 * depth + 1) = sol(mem.omegaOffset - 1);
-            if (!mem.phiIsScheduled())
-                SHOWLN(sol(mem.getPhiOffset() - 1));
-            if (!mem.phiIsScheduled())
-                mem.schedule.getPhi()(depth, _) = sol(mem.getPhiOffset() - 1);
+            node.schedule.getOmega()(2 * depth + 1) = sol(node.omegaOffset - 1);
+            if (!node.phiIsScheduled())
+                SHOWLN(sol(node.getPhiOffset() - 1));
+            if (!node.phiIsScheduled())
+                node.schedule.getPhi()(depth, _) = sol(node.getPhiOffset() - 1);
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
@@ -971,22 +1002,22 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         omniSimplex.reserveExtraRows(memory.size());
         if (depth == 0) {
             // add ones >= 0
-            for (auto &&mem : memory) {
-                if (mem.phiIsScheduled() || (!hasActiveEdges(mem)))
+            for (auto &&node : nodes) {
+                if (node.phiIsScheduled() || (!hasActiveEdges(node)))
                     continue;
                 auto c{omniSimplex.addConstraintAndVar()};
                 c(0) = 1;
-                c(mem.getPhiOffset()) = 1;
+                c(node.getPhiOffset()) = 1;
                 c(end) = -1; // for >=
             }
             return;
         }
         IntMatrix A, N;
-        for (auto &&mem : memory) {
-            if (mem.phiIsScheduled() || (depth >= mem.getNumLoops()) ||
-                (!hasActiveEdges(mem)))
+        for (auto &&node : nodes) {
+            if (node.phiIsScheduled() || (depth >= node.getNumLoops()) ||
+                (!hasActiveEdges(node)))
                 continue;
-            A = mem.schedule.getPhi()(_(0, depth), _).transpose();
+            A = node.schedule.getPhi()(_(0, depth), _).transpose();
             std::cout << "indep constraint; ";
             SHOW(depth);
             CSHOWLN(A);
@@ -994,7 +1025,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             SHOWLN(N);
             auto c{omniSimplex.addConstraintAndVar()};
             c(0) = 1;
-            MutPtrVector<int64_t> cc{c(mem.getPhiOffset())};
+            MutPtrVector<int64_t> cc{c(node.getPhiOffset())};
             // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
             for (size_t m = 0; m < N.numRow(); ++m)
                 cc += N(m, _) * lexSign(N(m, _));
@@ -1003,8 +1034,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
     }
     void resetPhiOffsets() {
-        for (auto &&mem : memory)
-            mem.phiOffset = std::numeric_limits<unsigned>::max();
+        for (auto &&node : nodes)
+            node.phiOffset = std::numeric_limits<unsigned>::max();
     }
     // returns true on failure
     bool optimize() {
