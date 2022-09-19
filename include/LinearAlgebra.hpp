@@ -124,7 +124,7 @@ struct LU {
     llvm::Optional<Rational> det() {
         Rational d = F(0, 0);
         for (size_t i = 1; i < F.numCol(); ++i) {
-            if (auto di = d * F(i, i)) {
+            if (auto di = d.safeMul(F(i, i))) {
                 d = di.getValue();
             } else {
                 return {};
@@ -171,7 +171,7 @@ struct LU {
             // std::cout << "1/A(k=" << k << ",k=" << k << ") = " << Akkinv
             // << std::endl;
             for (size_t i = k + 1; i < M; ++i) {
-                if (llvm::Optional<Rational> Aik = A(i, k) * Akkinv) {
+                if (llvm::Optional<Rational> Aik = A(i, k).safeMul(Akkinv)) {
                     A(i, k) = Aik.getValue();
                     // std::cout << "A(i=" << i << ",k=" << k << ") = " << A(i,
                     // k)
@@ -183,9 +183,10 @@ struct LU {
             }
             for (size_t j = k + 1; j < M; ++j) {
                 for (size_t i = k + 1; i < M; ++i) {
-                    if (llvm::Optional<Rational> Aikj = A(i, k) * A(k, j)) {
+                    if (llvm::Optional<Rational> Aikj =
+                            A(i, k).safeMul(A(k, j))) {
                         if (llvm::Optional<Rational> Aij =
-                                A(i, j) - Aikj.getValue()) {
+                                A(i, j).safeSub(Aikj.getValue())) {
                             A(i, j) = Aij.getValue();
                             continue;
                         }

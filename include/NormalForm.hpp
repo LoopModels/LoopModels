@@ -371,6 +371,9 @@ simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) {
 [[maybe_unused]] static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
     E.truncateRows(simplifySystemImpl(E, colInit));
 }
+[[maybe_unused]] static size_t rank(IntMatrix E) {
+    return simplifySystemImpl(E, 0);
+}
 [[maybe_unused]] static void reduceColumn(MutPtrMatrix<int64_t> A,
                                           MutPtrMatrix<int64_t> B, size_t c,
                                           size_t r) {
@@ -399,7 +402,7 @@ MULTIVERSION [[maybe_unused]] static void simplifySystem(IntMatrix &A,
     }
     return;
 }
-[[maybe_unused]] static std::pair<IntMatrix, SquareMatrix<int64_t>>
+[[nodiscard, maybe_unused]] static std::pair<IntMatrix, SquareMatrix<int64_t>>
 hermite(IntMatrix A) {
     SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(A.numRow())};
     simplifySystemImpl(A, U);
@@ -431,6 +434,35 @@ inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
         return ret;
     }
     return f;
+}
+inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
+                                 size_t k, Range<size_t, size_t> skip) {
+    if (int64_t Aik = A(i, k)) {
+        int64_t Ajk = A(j, k);
+        int64_t g = gcd(Aik, Ajk);
+        Aik /= g;
+        Ajk /= g;
+        g = 0;
+        for (size_t l = 0; l < skip.b; ++l) {
+            int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+            A(i, l) = Ail;
+            g = gcd(Ail, g);
+        }
+        for (size_t l = skip.e; l < A.numCol(); ++l) {
+            int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+            A(i, l) = Ail;
+            g = gcd(Ail, g);
+        }
+        // std::cout << "g = " << g << std::endl;
+        if (g > 1) {
+            for (size_t l = 0; l < skip.b; ++l)
+                if (int64_t Ail = A(i, l))
+                    A(i, l) = Ail / g;
+            for (size_t l = skip.e; l < A.numCol(); ++l)
+                if (int64_t Ail = A(i, l))
+                    A(i, l) = Ail / g;
+        }
+    }
 }
 
 // use row `r` to zero the remaining rows of column `c`
@@ -616,9 +648,12 @@ MULTIVERSION [[maybe_unused]] static void solveSystem(IntMatrix &A) {
 //     return A;
 // }
 
-MULTIVERSION [[maybe_unused]] static IntMatrix nullSpace(IntMatrix A) {
+MULTIVERSION [[maybe_unused]] static void nullSpace11(IntMatrix &B,
+                                                      IntMatrix &A) {
     const size_t M = A.numRow();
-    IntMatrix B(IntMatrix::identity(M));
+    B.resizeForOverwrite(M, M);
+    B = 0;
+    B.diag() = 1;
     solveSystem(A, B);
     size_t R = M;
     while ((R > 0) && allZero(A.getRow(R - 1)))
@@ -635,6 +670,11 @@ MULTIVERSION [[maybe_unused]] static IntMatrix nullSpace(IntMatrix A) {
             B.mem[d] = B.mem[d + o];
         B.truncateRows(D);
     }
+}
+MULTIVERSION [[nodiscard, maybe_unused]] static IntMatrix
+nullSpace(IntMatrix A) {
+    IntMatrix B;
+    nullSpace11(B, A);
     return B;
 }
 

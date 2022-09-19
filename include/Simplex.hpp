@@ -25,8 +25,10 @@ struct Simplex {
     //           and if so which one
     // column 1: constraint values
     Matrix<int64_t, 0, 0, 0> tableau;
-    size_t numSlackVar;
-    bool inCanonicalForm;
+    size_t numSlackVar{0};
+#ifndef NDEBUG
+    bool inCanonicalForm{false};
+#endif
     static constexpr size_t numExtraRows = 2;
     static constexpr size_t numExtraCols = 1;
     static constexpr size_t numTableauRows(size_t i) {
@@ -46,6 +48,37 @@ struct Simplex {
         size_t numCol = tableau.numCol() + numVars;
         tableau.resize(tableau.numRow(), numCol,
                        std::max(numCol, tableau.rowStride()));
+    }
+    MutPtrVector<int64_t> addConstraint() {
+        tableau.resize(tableau.numRow() + 1, tableau.numCol(),
+                       tableau.rowStride());
+        tableau(end, _) = 0;
+        return tableau(end, _(numExtraCols, end));
+    }
+    MutPtrVector<int64_t> addConstraintAndVar() {
+        tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
+        tableau(end, _) = 0;
+        return tableau(end, _(numExtraCols, end));
+    }
+    void reserve(size_t numVar, size_t numCon) {
+        tableau.reserve(numVar, std::max(numCon, tableau.rowStride()));
+    }
+    void reserveExtraRows(size_t additionalRows) {
+        tableau.reserve(tableau.numRow() + additionalRows, tableau.rowStride());
+    }
+    void reserveExtra(size_t additionalRows, size_t additionalCols) {
+        size_t newStride =
+            std::max(tableau.rowStride(), tableau.numCol() + additionalCols);
+        tableau.reserve(tableau.numRow() + additionalRows, newStride);
+        if (newStride == tableau.rowStride())
+            return;
+        // copy memory, so that incrementally adding columns is cheap later.
+        size_t nC = tableau.numCol();
+        tableau.resize(tableau.numRow(), newStride, newStride);
+        tableau.truncateCols(nC);
+    }
+    void reserveExtra(size_t additional) {
+        reserveExtra(additional, additional);
     }
     void truncateVars(size_t numVars) {
         tableau.truncateCols(numTableauCols(numVars));
@@ -79,7 +112,9 @@ struct Simplex {
     size_t getNumConstraints() const { return tableau.numRow() - numExtraRows; }
 
     void hermiteNormalForm() {
+#ifndef NDEBUG
         inCanonicalForm = false;
+#endif
         truncateConstraints(
             NormalForm::simplifySystemImpl(getConstraints(), 1));
     }
@@ -88,13 +123,15 @@ struct Simplex {
         --tableau.M;
     }
     PtrVector<int64_t> getTableauRow(size_t i) const {
-        return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
+        return tableau(i, _(numExtraCols, end));
     }
+    // 1-indexed, 0 returns value for const col
     PtrVector<int64_t> getBasicConstraints() const { return getTableauRow(0); }
     PtrVector<int64_t> getCost() const { return getTableauRow(1); }
     MutPtrVector<int64_t> getTableauRow(size_t i) {
-        return tableau(i, _(numExtraCols, numExtraCols + getNumVar()));
+        return tableau(i, _(numExtraCols, end));
     }
+    // 1-indexed, 0 returns value for const col
     MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
     MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
     StridedVector<int64_t> getTableauCol(size_t i) const {
@@ -102,6 +139,7 @@ struct Simplex {
                                           numExtraRows * tableau.rowStride(),
                                       getNumConstraints(), tableau.rowStride()};
     }
+    // 0-indexed
     StridedVector<int64_t> getBasicVariables() const {
         return getTableauCol(0);
     }
@@ -121,6 +159,30 @@ struct Simplex {
     MutStridedVector<int64_t> getConstants() {
         return getTableauCol(numExtraCols);
     }
+    // AbstractVector
+    struct Solution {
+        using eltype = Rational;
+        static constexpr bool canResize = false;
+        // view of tableau dropping const column
+        PtrMatrix<int64_t> tableauView;
+        StridedVector<int64_t> consts;
+        Rational operator()(size_t i) const {
+            int64_t j = tableauView(0, i);
+            if (j < 0)
+                return 0;
+            return Rational::create(consts(j),
+                                    tableauView(j + numExtraRows, i));
+        }
+        template <typename B, typename E> Solution operator()(Range<B, E> r) {
+            return Solution{tableauView(_, r), consts};
+        }
+        size_t size() const { return tableauView.numCol(); }
+        auto &view() const { return *this; };
+    };
+    Solution getSolution() const {
+        return Solution{tableau(_, _(numExtraCols, end)), getConstants()};
+    }
+
     // returns `true` if infeasible
     // `false ` if feasible
     bool initiateFeasible() {
@@ -136,8 +198,7 @@ struct Simplex {
         std::cout << "C=" << C << std::endl;
 #endif
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-        for (auto &&x : basicCons)
-            x = -2;
+        basicCons = -2;
         // first pass, we make sure the equalities are >= 0
         // and we eagerly try and find columns with
         // only a single non-0 element.
@@ -173,8 +234,7 @@ struct Simplex {
         // fill basicVars.
         //
         auto basicVars{getBasicVariables()};
-        for (auto &&x : basicVars)
-            x = -1;
+        basicVars = -1;
         for (size_t v = 1; v < numVar; ++v) {
             int64_t r = basicCons[v];
             if (r >= 0) {
@@ -190,6 +250,9 @@ struct Simplex {
             }
         }
         // std::cout << "pre-tableau = \n" << tableau << std::endl;
+#ifndef NDEBUG
+        inCanonicalForm = true;
+#endif
         llvm::SmallVector<unsigned> augmentVars{};
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
@@ -200,12 +263,11 @@ struct Simplex {
             auto basicVars{getBasicVariables()};
             MutPtrVector<int64_t> basicCons{getBasicConstraints()};
             MutPtrVector<int64_t> costs{getCost()};
-            // for (auto &&c : costs)
-            for (auto &&c : tableau(1, _(0, numExtraCols + getNumVar())))
-                c = 0;
+            tableau(1, _) = 0;
 #ifdef VERBOSESIMPLEX
-            printVector(std::cout << "augmentVars: ", augmentVars) << std::endl;
-            std::cout << "costs: " << PtrVector<int64_t>(costs) << std::endl;
+            printVector(std::cout << "augmentVars = ", augmentVars)
+                << std::endl;
+            std::cout << "costs = " << PtrVector<int64_t>(costs) << std::endl;
             std::cout << "tableau =" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
 #endif
@@ -224,7 +286,7 @@ struct Simplex {
             std::cout << "about to run; tableau =" << tableau << std::endl;
 #endif
             if (runCore() != 0)
-                return 1;
+                return true;
 #ifdef VERBOSESIMPLEX
             std::cout << "initialized tableau =" << tableau << std::endl;
 #endif
@@ -234,9 +296,9 @@ struct Simplex {
 #ifdef VERBOSESIMPLEX
         std::cout << "final tableau =" << tableau << std::endl;
 #endif
-        inCanonicalForm = true;
-        return 0;
+        return false;
     }
+    // 1 based to match getBasicConstraints
     static int getEnteringVariable(PtrVector<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
         // std::cout << "costs = " << costs << std::endl;
@@ -270,9 +332,10 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
-#ifdef VERBOSESIMPLEX
-        std::cout << "leavingVariable = " << leavingVariable << std::endl;
-#endif
+        // #ifdef VERBOSESIMPLEX
+        //         std::cout << "leavingVariable = " << leavingVariable <<
+        //         std::endl;
+        // #endif
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -295,15 +358,22 @@ struct Simplex {
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     Rational runCore(int64_t f = 1) {
-        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+#endif
+        //     return runCore(getCostsAndConstraints(), f);
+        // }
+        // Rational runCore(MutPtrMatrix<int64_t> C, int64_t f = 1) {
+        auto C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-#ifdef VERBOSESIMPLEX
-            std::cout << "C =" << C << std::endl;
-#endif
+            // #ifdef VERBOSESIMPLEX
+            //             std::cout << "C =" << C << std::endl;
+            // #endif
             int enteringVariable = getEnteringVariable(C(0, _));
 #ifdef VERBOSESIMPLEX
-            std::cout << "enteringVariable = " << enteringVariable << std::endl;
+            // std::cout << "enteringVariable = " << enteringVariable <<
+            // std::endl;
             if (enteringVariable == -1)
                 std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
                           << f << std::endl;
@@ -317,9 +387,13 @@ struct Simplex {
     }
     // set basicVar's costs to 0, and then runCore()
     Rational run() {
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+#endif
         MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
+        // zero cost of basic variables to put in canonical form
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
             // std::cout << "v = " << v << "; C.numRow() = " << C.numRow()
@@ -328,6 +402,96 @@ struct Simplex {
                 f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
         return runCore(f);
+    }
+    // lexicographically minimize vars [0, numVars)
+    // false means no problems, true means there was a problem
+    void lexMinimize(Vector<Rational> &sol) {
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+#endif
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+
+        for (auto &&r : sol)
+            r = Rational{0, 1};
+        for (size_t v = 0; v < sol.size();) {
+            // if it is already zero (not basic), we can move to the next
+            int64_t c = basicConstraints(++v);
+            if (c < 0)
+                continue;
+            // C(0, _(v, end)) = 0;
+            // we try to zero `v` or at least minimize it.
+            // implicitly, set cost to -1, and then see if we can make it
+            // basic
+            // C(_,0) = C(_,_(1,end)) * vars
+            C(0, 0) = C(c, 0);
+            C(0, v) = 0;
+            C(0, _(v + 1, end)) = C(c, _(v + 1, end));
+            // C(0, v) = -1;
+            while (true) {
+                // get new entering variable
+                int enteringVariable = getEnteringVariable(C(0, _(v, end)));
+                // SHOW(v);
+                // if (enteringVariable == -1) {
+                //     CSHOWLN(enteringVariable);
+                // }
+                if (enteringVariable == -1)
+                    break;
+                enteringVariable += v;
+                int leavingVariable = getLeavingVariable(C, enteringVariable);
+                // if (leavingVariable == -1){
+                //     CSHOWLN(enteringVariable);
+                // } else {
+                //     CSHOW(enteringVariable);
+                // }
+                if (leavingVariable == -1)
+                    break;
+
+                for (size_t i = 0; i < C.numRow(); ++i)
+                    if (i != size_t(leavingVariable + 1))
+                        NormalForm::zeroWithRowOperation(
+                            C, i, leavingVariable + 1, enteringVariable, 0);
+                // std::cout << "post-removal C =" << C << std::endl;
+                // update baisc vars and constraints
+                int64_t oldBasicVar = basicVars[leavingVariable];
+                basicVars[leavingVariable] = enteringVariable;
+                // CSHOWLN(oldBasicVar);
+                if (size_t(oldBasicVar) < basicConstraints.size())
+                    basicConstraints[oldBasicVar] = -1;
+                basicConstraints[enteringVariable] = leavingVariable;
+            }
+            c = basicConstraints(v);
+            // SHOW(v);
+            // CSHOW(c);
+            // if (c < 0) {
+            //     size_t x = 0;
+            //     CSHOWLN(x);
+            // } else {
+            //     size_t x = Rational::create(C(c + 1, 0), C(c + 1, v));
+            //     CSHOWLN(x);
+            // }
+#ifndef NDEBUG
+            if (c >= 0) {
+                // C(_,0) = C(_,_(1,end)) * vars
+                // we now make `vars[v-1]` a constant
+                // if ((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)) {
+                //     SHOWLN(tableau);
+                //     SHOW(c + 1);
+                //     CSHOWLN(v);
+                // }
+                assert(!((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)));
+                // sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
+                // C(c + 1, 0) = 0;
+            }
+#endif
+        }
+        for (size_t v = 0; v < sol.size();) {
+            size_t sv = v++;
+            int64_t c = basicConstraints(v);
+            if (c >= 0)
+                sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
+        }
     }
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)
@@ -515,7 +679,7 @@ struct Simplex {
         }
     }
     friend std::ostream &operator<<(std::ostream &os, Simplex &s) {
-        return os << "\nSimplex; tableau:" << s.tableau;
+        return os << "\nSimplex; tableau = " << s.tableau;
     }
     /*
     std::tuple<Simplex, IntMatrix, uint64_t> rotate(const IntMatrix &A) const {

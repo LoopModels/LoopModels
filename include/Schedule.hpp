@@ -6,8 +6,10 @@
 #include "llvm/IR/User.h"
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <utility>
 
 // We represent a schedule as
 // Phi_s'*i + omega_s <_{lex} Phi_t'*s + Omega_t
@@ -20,17 +22,20 @@
 // then "i_0" for schedule "S_0" happens before
 // "i_1" for schedule "S_1"
 //
+constexpr unsigned requiredScheduleStorage(unsigned n) { return n * (n + 2) + 1; }
+// n^2 + 2n + 1-s = 0
+// -1 + sqrt(1 - (1-s))
+// -1 + sqrt(s)
 struct Schedule {
     // given `N` loops, `P` is `N+1 x 2*N+1`
     // even rows give offsets indicating fusion (0-indexed)
     // However, all odd columns of `Phi` are structually zero,
     // so we represent it with an `N x N` matrix instead.
     static constexpr unsigned maxStackLoops = 3;
-    static constexpr unsigned maxStackStorage =
-        maxStackLoops * (maxStackLoops + 2) + 1;
+    static constexpr unsigned maxStackStorage = requiredScheduleStorage(maxStackLoops);
     // 3*3+ 2*3+1 = 16
     llvm::SmallVector<int64_t, maxStackStorage> data;
-    const uint8_t numLoops;
+    uint8_t numLoops;
     // -1 indicates not vectorized
     int8_t vectorized = -1;
     // -1 indicates not unrolled
@@ -42,14 +47,18 @@ struct Schedule {
     int8_t unrolledInner = -1;
     // -1 indicates not unrolled
     int8_t unrolledOuter = -1;
+    void init(size_t nLoops) {
+        numLoops = nLoops;
+        data.resize(nLoops * (nLoops + 2) + 1);
+        getPhi().antiDiag() = 1;
+    }
+    Schedule() = default;
     Schedule(size_t nLoops)
         : data(llvm::SmallVector<int64_t, maxStackStorage>(
               nLoops * (nLoops + 2) + 1)),
           numLoops(nLoops) {
         MutSquarePtrMatrix<int64_t> Phi(getPhi());
-        for (size_t i = 0; i < nLoops; ++i) {
-            Phi(i, i) = 1;
-        }
+        Phi.antiDiag() = 1;
     };
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
@@ -86,11 +95,15 @@ struct MemoryAccess {
     ArrayReference ref;
     // unsigned ref; // index to ArrayReference
     llvm::User *user;
+    Schedule schedule;
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
-    Schedule schedule;
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
+    llvm::SmallVector<unsigned> groups;
+    unsigned index{std::numeric_limits<unsigned>::max()};
+    unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
+    // schedule indicated by `1` top bit, remainder indicates loop
     const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
@@ -109,4 +122,10 @@ struct MemoryAccess {
         return schedule.fusedThrough(x.schedule);
     }
     size_t getNumLoops() const { return schedule.getNumLoops(); }
+    auto indexMatrix() { return ref.indexMatrix(); }
+    auto indexMatrix() const { return ref.indexMatrix(); }
+    // note returns true if unset
+    PtrVector<int64_t> getSchedule(size_t loop) const {
+        return schedule.getPhi()(loop, _);
+    }
 };

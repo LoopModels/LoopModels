@@ -1,109 +1,131 @@
 #pragma once
 
 #include "./Math.hpp"
+#include <llvm/ADT/SmallVector.h>
 #include <tuple>
+#include <type_traits>
 
-template <typename G>
-void visit(llvm::SmallVector<int64_t> sorted, G &graph, size_t idx) {
-    auto outs = outNeighbors(graph, idx);
-    visited(graph, idx) = true;
-    for (size_t j = 0; j < length(outs); ++j) {
-        if (!visited(graph, j)) {
-            visit(sorted, graph, outs(j));
+// graph uses vertex type V rather than indices
+// because our Dependence contains pointers rather than indices
+// and we need to go MemoryAccess* -> Edge (Dependnece) -> MemoryAccess*
+template <typename G, typename V> struct BaseGraph {
+    // API
+    auto &outNeighbors(size_t idx) {
+        return static_cast<G *>(this)->outNeighbors(idx);
+    }
+    auto &outNeighbors(size_t idx) const {
+        return static_cast<const G *>(this)->outNeighbors(idx);
+    }
+    auto &getVertices() { return static_cast<G *>(this)->getVertices(); }
+    auto &getVertices() const {
+        return static_cast<const G *>(this)->getVertices();
+    }
+    size_t numVerticies() const {
+        return static_cast<const G *>(this)->getVertices().size();
+    }
+    bool isVisited(size_t j) const {
+        return static_cast<const G *>(this)->getVertices()[j].isVisited();
+    }
+    // V &getNode(size_t idx) { return static_cast<G *>(this)->getNode(idx); }
+    // V &getNode(size_t idx) const {
+    //     return static_cast<const G *>(this)->getNode(idx);
+    // }
+    void clearVisited() {
+        for (auto &&v : getVertices())
+            v.unVisit();
+    }
+
+    void visit(llvm::SmallVectorImpl<V *> &sorted, V *v) {
+        auto &outs = outNeighbors(v);
+        v->visit();
+        for (size_t j = 0; j < outs.size(); ++j)
+            if (!isVisited(j))
+                visit(sorted, outs[j]); // no, we really need idx
+        sorted.push_back(v);
+    }
+
+    llvm::SmallVector<llvm::SmallVector<V *>> weaklyConnectedComponents() {
+        llvm::SmallVector<llvm::SmallVector<V *>> components;
+        clearVisited();
+        for (size_t j = 0; j < numVerticies(); ++j) {
+            if (isVisited(j))
+                continue;
+            components.emplace_back();
+            llvm::SmallVector<V *> &sorted = components.back();
+            visit(sorted, j);
+            std::reverse(sorted.begin(), sorted.end());
         }
+        return components;
     }
-    sorted.push_back(idx);
-}
 
-template <typename G> llvm::SmallVector<int64_t> topologicalSort(G &graph) {
-    llvm::SmallVector<int64_t> sorted;
-    clearVisited(graph);
-    for (size_t j = 0; j < nv(graph); j++) {
-        if (!visited(graph, j))
-            visit(sorted, graph, j);
-    }
-    std::reverse(sorted.begin(), sorted.end());
-    return sorted;
-}
-
-template <typename G>
-llvm::SmallVector<llvm::SmallVector<int64_t>>
-weaklyConnectedComponents(G &graph) {
-    llvm::SmallVector<llvm::SmallVector<int64_t>> components;
-    clearVisited(graph);
-    for (size_t j = 0; j < nv(graph); ++j) {
-        if (visited(graph, j))
-            continue;
-        llvm::SmallVector<int64_t> sorted;
-        visit(sorted, graph, j);
-        std::reverse(sorted.begin(), sorted.end());
-        components.emplace_back(sorted);
-    }
-    return components;
-}
-
-// ref:
-// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#The_algorithm_in_pseudocode
-template <typename G>
-void strongConnect(
-    llvm::SmallVector<llvm::SmallVector<int64_t>> &components,
-    llvm::SmallVector<size_t> &stack,
-    llvm::SmallVector<std::tuple<size_t, size_t, bool>> &indexLowLinkOnStack,
-    size_t &index, G &graph, size_t v) {
-    indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
-    index += 1;
-    stack.push_back(v);
-
-    auto outN = outNeighbors(graph, v);
-    for (size_t w = 0; w < length(outN); ++w) {
-        if (visited(graph, w)) {
-            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
-            if (wOnStack) {
+    size_t
+    strongConnect(llvm::SmallVector<llvm::SmallVector<unsigned>> &components,
+                  llvm::SmallVector<unsigned> &stack,
+                  llvm::SmallVector<std::tuple<unsigned, unsigned, bool>>
+                      &indexLowLinkOnStack,
+                  size_t index, size_t v) {
+        indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
+        ++index;
+        stack.push_back(v);
+        auto &outN = outNeighbors(v);
+        for (size_t w = 0; w < outN.size(); ++w) {
+            if (isVisited(w)) {
+                auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
+                if (wOnStack) {
+                    auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+                    indexLowLinkOnStack[v] = std::make_tuple(
+                        vIndex, std::min(vLowLink, wIndex), vOnStack);
+                }
+            } else { // not visited
+                strongConnect(components, stack, indexLowLinkOnStack, index, w);
                 auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
                 indexLowLinkOnStack[v] = std::make_tuple(
-                    vIndex, std::min(vLowLink, wIndex), vOnStack);
+                    vIndex,
+                    std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])),
+                    vOnStack);
             }
-        } else { // not visited
-            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
-                          w);
-            auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
-            indexLowLinkOnStack[v] = std::make_tuple(
-                vIndex, std::min(vLowLink, std::get<1>(indexLowLinkOnStack[w])),
-                vOnStack);
         }
+        auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
+        if (vIndex == vLowLink) {
+            components.emplace_back(llvm::SmallVector<unsigned>());
+            llvm::SmallVector<unsigned> &component = components.back();
+            unsigned w;
+            do {
+                w = stack.back();
+                stack.pop_back();
+                auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
+                indexLowLinkOnStack[w] =
+                    std::make_tuple(wIndex, wLowLink, false);
+                component.push_back(w);
+            } while (w != v);
+        }
+        return index;
     }
-    auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
-    if (vIndex == vLowLink) {
-        size_t w;
-        llvm::SmallVector<int64_t> component;
-        do {
-            w = stack[stack.size() - 1];
-            stack.pop_back();
-            auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
-            indexLowLinkOnStack[w] = std::make_tuple(wIndex, wLowLink, false);
-            component.push_back(w);
-        } while (w != v);
-        components.emplace_back(component);
-    }
-}
 
-template <typename G>
-llvm::SmallVector<llvm::SmallVector<int64_t>>
-stronglyConnectedComponents(G &graph) {
-    llvm::SmallVector<llvm::SmallVector<int64_t>> components;
-    size_t nVertex = nv(graph);
-    llvm::SmallVector<std::tuple<size_t, size_t, bool>> indexLowLinkOnStack(
-        nVertex);
-    llvm::SmallVector<size_t> stack;
-    size_t index = 0;
-    clearVisited(graph);
-    for (size_t v = 0; v < nVertex; ++v) {
-        if (!visited(graph, v))
-            strongConnect(components, stack, indexLowLinkOnStack, index, graph,
-                          v);
+    llvm::SmallVector<llvm::SmallVector<unsigned>>
+    stronglyConnectedComponents() {
+        llvm::SmallVector<llvm::SmallVector<unsigned>> components;
+        size_t nVertex = numVerticies();
+        llvm::SmallVector<std::tuple<unsigned, unsigned, bool>>
+            indexLowLinkOnStack(nVertex);
+        llvm::SmallVector<unsigned> stack;
+        size_t index = 0;
+        clearVisited();
+        for (size_t v = 0; v < nVertex; ++v) {
+            if (!isVisited(v))
+                index = strongConnect(components, stack, indexLowLinkOnStack,
+                                      index, v);
+        }
+        return components;
     }
-    return components;
-}
+};
+
+// template <typename G>
+// concept Graph = requires(G g) {
+//     {
+//         g.getVertices()
+//         } -> std::same_as<typename std::remove_reference<G>::nodetype>;
+// };
 
 // Naive algorithm that looks like it may work to identify cycles:
 // 0 -> 1 -> 3 -> 5

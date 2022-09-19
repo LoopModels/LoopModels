@@ -45,8 +45,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         llvm::errs() << "Value id: " << val->getValueID() << "\n";
         llvm::errs() << "Value name: " << val->getValueName() << "\n";
         llvm::errs() << "name: " << val->getName() << "\n";
-        llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(val);
-        if (icmp) {
+        if (llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(val)) {
             llvm::errs() << "icmp: " << *icmp << "\n";
             llvm::Value *op0 = icmp->getOperand(0);
             llvm::Value *op1 = icmp->getOperand(1);

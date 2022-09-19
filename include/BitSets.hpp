@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -13,100 +14,131 @@
 #include <ostream>
 #include <string>
 
-
-
 // A set of `size_t` elements.
 // Initially constructed
 struct BitSet {
-    llvm::SmallVector<std::uint64_t> data;
+    llvm::SmallVector<uint64_t> data;
     size_t length;
-    size_t operator[](size_t i) const {
-        return data[i];
-    } // allow `getindex` but not `setindex`
+    // size_t operator[](size_t i) const {
+    //     return data[i];
+    // } // allow `getindex` but not `setindex`
 
-    BitSet(size_t N) : length(0) {
-        size_t len = (N + 63) >> 6;
-        data.resize(len);
-        for (size_t i = 0; i < len; ++i) {
-            data[i] = 0;
+    BitSet(size_t N) : length(0) { data.resize((N + 63) >> 6); }
+    struct Iterator {
+        // TODO: is this safe?
+        llvm::ArrayRef<uint64_t> set;
+        size_t didx;
+        uint64_t offset; // offset with 64 bit block
+        uint64_t state;
+        size_t count;
+
+        size_t operator*() { return offset + 64 * didx; }
+        Iterator &operator++() {
+            ++count;
+            while (state == 0) {
+                if (++didx >= set.size())
+                    return *this;
+                state = set[didx];
+                offset = std::numeric_limits<uint64_t>::max();
+            }
+            size_t tzp1 = std::countr_zero(state) + 1;
+            offset += tzp1;
+            state >>= tzp1;
+            return *this;
         }
-        // data = std::vector<std::uint64_t>(0, (N + 63) >> 6);
+        bool operator!=(size_t x) { return count != x; }
+        bool operator==(size_t x) { return count == x; }
+        bool operator!=(BitSet::Iterator x) { return count != x.count; }
+        bool operator==(BitSet::Iterator x) { return count == x.count; }
+    };
+    // BitSet::Iterator(std::vector<std::uint64_t> &seta)
+    //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
+    static Iterator construct(llvm::ArrayRef<uint64_t> const &seta) {
+        return Iterator{seta, 0, std::numeric_limits<uint64_t>::max(), seta[0],
+                        std::numeric_limits<uint64_t>::max()};
     }
-    struct Iterator;
-    Iterator begin() const;
+
+    Iterator begin() const { return ++construct(data); }
     size_t end() const { return length; };
-};
 
-struct BitSet::Iterator {
-    // TODO: is this safe?
-    llvm::ArrayRef<std::uint64_t> set;
-    size_t didx;
-    uint64_t offset; // offset with 64 bit block
-    uint64_t state;
-    size_t count;
+    static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        return (data[d] & (mask));
+    }
 
-    size_t operator*() { return offset + 64 * didx; }
-    BitSet::Iterator &operator++() {
-        ++count;
-        while (state == 0) {
-            ++didx;
-            if (didx >= set.size())
-                return *this;
-            state = set[didx];
-            offset = std::numeric_limits<uint64_t>::max();
-            // offset = 0xffffffffffffffff;
+    bool push(size_t x) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        bool contained = ((data[d] & mask) != 0);
+        if (!contained) {
+            data[d] |= (mask);
+            ++(length);
         }
-        size_t tzp1 = std::countr_zero(state) + 1;
-        offset += tzp1;
-        state >>= tzp1;
-        return *this;
+        return contained;
     }
-    bool operator!=(size_t x) { return count != x; }
-    bool operator==(size_t x) { return count == x; }
-    bool operator!=(BitSet::Iterator x) { return count != x.count; }
-    bool operator==(BitSet::Iterator x) { return count == x.count; }
+
+    bool remove(size_t x) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        bool contained = ((data[d] & mask) != 0);
+        if (contained) {
+            data[d] &= (~mask);
+            --(length);
+        }
+        return contained;
+    }
+    static void set(llvm::MutableArrayRef<uint64_t> data, size_t x, bool b,
+                    size_t &length) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        uint64_t dd = data[d];
+        if (b == ((dd & mask) != 0))
+            return;
+        if (b) {
+            data[d] = dd | mask;
+            ++length;
+        } else {
+            data[d] = dd & (~mask);
+            --(length);
+        }
+    }
+
+    struct Reference {
+        llvm::MutableArrayRef<uint64_t> data;
+        size_t i;
+        size_t &length;
+        operator bool() const { return contains(data, i); }
+        void operator=(bool b) {
+            BitSet::set(data, i, b, length);
+            return;
+        }
+    };
+
+    bool operator[](size_t i) const { return contains(data, i); }
+    Reference operator[](size_t i) {
+        return Reference{llvm::MutableArrayRef<uint64_t>(data), i, length};
+    }
+    size_t size() const { return length; }
+
+    void setUnion(const BitSet &bs) {
+        size_t O = bs.data.size(), T = data.size();
+        length = 0;
+        if (O > T)
+            data.resize(O);
+        for (size_t i = 0; i < O; ++i) {
+            uint64_t d = data[i] | bs.data[i];
+            length += std::popcount(d);
+            data[i] = d;
+        }
+        for (size_t i = O; i < T; ++i)
+            length += std::popcount(data[i]);
+    }
 };
-// BitSet::Iterator(std::vector<std::uint64_t> &seta)
-//     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-BitSet::Iterator construct(llvm::ArrayRef<std::uint64_t> const &seta) {
-    return BitSet::Iterator{seta, 0, std::numeric_limits<uint64_t>::max(),
-                            seta[0], std::numeric_limits<uint64_t>::max()};
-}
-
-BitSet::Iterator BitSet::begin() const { return ++construct(this->data); }
-
-uint64_t contains(BitSet &s, size_t x) {
-    size_t d = x >> size_t(6);
-    uint64_t r = uint64_t(x) & uint64_t(63);
-    uint64_t mask = uint64_t(1) << r;
-    return (s.data[d] & (mask));
-}
-
-size_t length(BitSet s) { return s.length; }
-
-bool push(BitSet &s, size_t x) {
-    size_t d = x >> size_t(6);
-    uint64_t r = uint64_t(x) & uint64_t(63);
-    uint64_t mask = uint64_t(1) << r;
-    bool contained = ((s.data[d] & mask) != 0);
-    if (!contained) {
-        s.data[d] |= (mask);
-        ++(s.length);
-    }
-    return contained;
-}
-
-bool remove(BitSet &s, size_t x) {
-    size_t d = x >> size_t(6);
-    uint64_t r = uint64_t(x) & uint64_t(63);
-    uint64_t mask = uint64_t(1) << r;
-    bool contained = ((s.data[d] & mask) != 0);
-    if (contained) {
-        s.data[d] &= (~mask);
-        --(s.length);
-    }
-    return contained;
-}
 
 std::ostream &operator<<(std::ostream &os, BitSet const &x) {
     os << "BitSet[";
