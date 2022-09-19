@@ -440,21 +440,29 @@ concept HWVec = requires(V v){
 };
 
 struct Add {
-    constexpr auto operator()(auto x, auto y) const { return x + y; }
+    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
+	return x + y;
+    }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
 	V vx = Set(hn::DFromV<V>(), x);
-    return vx + y;
+	return vx + y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
 	V vy = Set(hn::DFromV<V>(), y);
 	return x + vy;
     }
+    template <HWVec V>
+    constexpr auto operator()(V x, V y) const {
+	return x + y;
+    }
 };
 struct Sub {
     constexpr auto operator()(auto x) const { return -x; }
-    constexpr auto operator()(auto x, auto y) const { return x - y; }
+    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
+	return x - y;
+    }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
 	V vx = Set(hn::DFromV<V>(), x);
@@ -465,13 +473,13 @@ struct Sub {
 	V vy = Set(hn::DFromV<V>(), y);
 	return x - vy;
     }
+    template <HWVec V>
+    constexpr auto operator()(V x, V y) const {
+	return x - y;
+    }
 };
 struct Mul {
-    // constexpr auto operator()(auto x, auto y) const { return x * y; }
-    // template <HWVec V>
     constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-	// auto vx = Set(hn::DFromV<decltype(x)>(), x);
-	// auto vy = Set(hn::DFromV<decltype(y)>(), y);
 	return x * y;
     }
     template <HWVec V>
@@ -490,7 +498,9 @@ struct Mul {
     }
 };
 struct Div {
-    constexpr auto operator()(auto x, auto y) const { return x / y; }
+    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
+	return x / y;
+    }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
 	V vx = Set(hn::DFromV<V>(), x);
@@ -498,10 +508,13 @@ struct Div {
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
-	V vy= Set(hn::DFromV<V>(), y);
+	V vy = Set(hn::DFromV<V>(), y);
 	return x / vy;
     }
-    // constexpr auto operator()(auto x, auto y) const { return x / y; }
+    template <HWVec V>
+    constexpr auto operator()(V x, V y) const {
+	return x / y;
+    }
 };
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {

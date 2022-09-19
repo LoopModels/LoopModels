@@ -192,12 +192,18 @@ TEST(SIMDTEST, BasicAssertions) {
     d.push_back(4);
     d.push_back(4);
     Vector<int64_t> e;
-    e = 8 / d;
+    // e = 8 / d;
+    size_t x = -4;
+    e = x - d;
+    e = e + d;
+    e = e / d;
+    e = e * x;
     Vector<int64_t> f;
-    f.push_back(2);
-    f.push_back(2);
-    f.push_back(2);
-    f.push_back(2);
+    f.push_back(4);
+    f.push_back(4);
+    f.push_back(4);
+    f.push_back(4);
+    std::cout << e << std::endl;
     EXPECT_EQ(e, f);
 
     

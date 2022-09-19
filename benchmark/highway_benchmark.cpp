@@ -37,9 +37,9 @@ static void BM_LoopHighway2(benchmark::State &state) {
     // NormalForm::nullSpace(B) << std::endl;
     // x = a * y;
     // x = y * a;
-    for (auto _ : state) {
-        x = a * x - b * y;
-    }
+    // for (auto _ : state) {
+    //     x = a * x - b * y;
+    // }
     // for (auto _ : state) {
     //     x = x * a - y * b;
     // }
