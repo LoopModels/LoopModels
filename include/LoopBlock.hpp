@@ -785,7 +785,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         C = 0;
         // layout of omniSimplex:
         // Order: C, then priority to minimize
-        // all : C, u, w, Phis^-, Phis^+, omegas, lambdas
+        // all : C, u, w, Phis, omegas, lambdas
         // rows give constraints; each edge gets its own
         // constexpr size_t numOmega =
         //     DependencePolyhedra::getNumOmegaCoefficients();
@@ -930,7 +930,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
         assert(minPhiCoefInd >= 1 + numBounding + numActiveEdges);
         assert(maxPhiCoefInd <= 1 + numBounding + numActiveEdges + numPhiCoefs);
-        SHOWLN(C);
+        // SHOWLN(C);
         assert(!allZero(C(_, end)));
         size_t nonZeroC = 0;
         for (size_t j = 0; j < C.numRow(); ++j)
@@ -1133,7 +1133,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                         ++i;
                     }
                 }
-                // SHOWLN(omniSimplex);
+                SHOWLN(omniSimplex);
                 SHOW(d);
                 CSHOW(numBounding);
                 CSHOW(numActiveEdges);
@@ -1143,7 +1143,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 CSHOWLN(numConstraints);
                 if (omniSimplex.initiateFeasible())
                     return true;
-                sol.resizeForOverwrite(getLambdaOffset());
+                sol.resizeForOverwrite(getLambdaOffset()-1);
                 omniSimplex.lexMinimize(sol);
                 updateSchedules(sol, d);
                 // TODO: deactivate edges of satisfied dependencies
