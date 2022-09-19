@@ -613,36 +613,18 @@ struct Colon {
     }
 } _;
 
-constexpr Range<size_t, size_t> canonicalizeRange(Range<size_t, size_t> r,
-                                                  size_t) {
-    return r;
-}
-constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, size_t> r,
-                                                  size_t) {
-    return Range<size_t, size_t>{0, r.e};
-}
-constexpr Range<size_t, size_t> canonicalizeRange(Range<size_t, End> r,
-                                                  size_t M) {
-    return Range<size_t, size_t>{r.b, M};
-}
-constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, End>, size_t M) {
-    return Range<size_t, size_t>{0, M};
-}
-constexpr Range<size_t, size_t> canonicalizeRange(Colon, size_t M) {
-    return Range<size_t, size_t>{0, M};
-}
+constexpr size_t canonicalizeBegin(size_t b) { return b; }
+constexpr size_t canonicalizeBegin(Begin) { return 0; }
+constexpr size_t canonicalizeBegin(OffsetBegin b) { return b.offset; }
 
-template <std::integral B, std::integral E>
-constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t) {
-    return Range<size_t, size_t>{.b = size_t(r.b), .e = size_t(r.e)};
-}
-template <std::integral E>
-constexpr Range<size_t, size_t> canonicalizeRange(Range<Begin, E> r, size_t) {
-    return Range<size_t, size_t>{0, size_t(r.e)};
-}
-template <std::integral B>
-constexpr Range<size_t, size_t> canonicalizeRange(Range<B, End> r, size_t M) {
-    return Range<size_t, size_t>{size_t(r.b), M};
+constexpr size_t canonicalizeEnd(size_t e, size_t) { return e; }
+constexpr size_t canonicalizeEnd(End, size_t M) { return M; }
+constexpr size_t canonicalizeEnd(OffsetEnd e, size_t M) { return M - e.offset; }
+
+template <typename B, typename E>
+constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t M) {
+    return Range<size_t, size_t>{canonicalizeBegin(r.b),
+                                 canonicalizeEnd(r.e, M)};
 }
 
 template <typename B, typename E> auto operator+(Range<B, E> r, size_t x) {
@@ -1573,10 +1555,45 @@ template <typename T, typename P> struct BaseMatrix {
         return *(data() + col + row * rowStride());
     }
     inline auto &operator()(size_t row, size_t col) const {
-        assert(row < numRow());
-        assert(col < numCol());
         return *(data() + col + row * rowStride());
     }
+    inline auto &operator()(size_t row, End) {
+        assert(row < numRow());
+        return *(data() + (numCol() - 1) + row * rowStride());
+    }
+    inline auto &operator()(End, size_t col) {
+        assert(col < numCol());
+        return *(data() + col + (numRow() - 1) * rowStride());
+    }
+    inline auto &operator()(size_t row, End) const {
+        assert(row < numRow());
+        return *(data() + (numCol() - 1) + row * rowStride());
+    }
+    inline auto &operator()(End, size_t col) const {
+        assert(col < numCol());
+        return *(data() + col + (numRow() - 1) * rowStride());
+    }
+    inline auto &operator()(size_t row, OffsetEnd oe) {
+        assert(row < numRow());
+        assert(oe.offset < numCol());
+        return *(data() + (numCol() - 1 - oe.offset) + row * rowStride());
+    }
+    inline auto &operator()(OffsetEnd oe, size_t col) {
+        assert(col < numCol());
+        assert(oe.offset < numRow());
+        return *(data() + col + (numRow() - 1 - oe.offset) * rowStride());
+    }
+    inline auto &operator()(size_t row, OffsetEnd oe) const {
+        assert(row < numRow());
+        assert(oe.offset < numCol());
+        return *(data() + (numCol() - 1 - oe.offset) + row * rowStride());
+    }
+    inline auto &operator()(OffsetEnd oe, size_t col) const {
+        assert(col < numCol());
+        assert(oe.offset < numRow());
+        return *(data() + col + (numRow() - 1 - oe.offset) * rowStride());
+    }
+
     inline MutPtrMatrix<T> operator()(Range<size_t, size_t> rows,
                                       Range<size_t, size_t> cols) {
         assert(rows.e >= rows.b);
@@ -2485,12 +2502,8 @@ struct Rational {
             return Rational{0, 1};
         }
     }
-    Rational operator*(int64_t y) const {
-        return safeMul(y).getValue();
-    }
-    Rational operator*(Rational y) const {
-        return safeMul(y).getValue();
-    }
+    Rational operator*(int64_t y) const { return safeMul(y).getValue(); }
+    Rational operator*(Rational y) const { return safeMul(y).getValue(); }
     Rational &operator*=(Rational y) {
         if ((numerator != 0) & (y.numerator != 0)) {
             auto [xn, yd] = divgcd(numerator, y.denominator);

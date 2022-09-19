@@ -15,6 +15,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Operator.h>
+#include <llvm/Support/Casting.h>
 
 TEST(TriangularExampleTest, BasicAssertions) {
 
@@ -99,6 +100,16 @@ TEST(TriangularExampleTest, BasicAssertions) {
         builder.CreateFSub(Aload1mk, builder.CreateFMul(Aload1mn, Uloadnk)),
         Ageped0, llvm::MaybeAlign(8));
 
+    SHOWLN(Aload1mk);
+    for (auto &use : Aload1mk->uses())
+	SHOWLN(use.getUser());
+    SHOWLN(Aload1mn);
+    for (auto &use : Aload1mn->uses())
+	SHOWLN(use.getUser());
+    SHOWLN(Uloadnk);
+    for (auto &use : Uloadnk->uses())
+	SHOWLN(use.getUser());
+    SHOWLN(Astore2mk);
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -238,7 +249,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, Aload1mn, sch2_1_0, true);
+    lblock.memory.emplace_back(Amn2Ind, Aload0, sch2_1_0, true);
     // std::cout << "\nPushing back" << std::endl;
     // std::cout << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << std::endl;
     // std::cout << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
@@ -471,4 +482,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
     bool optFail = lblock.optimize();
     EXPECT_FALSE(optFail);
     // assert(!optFail);
+    for (auto &mem : lblock.memory){
+	SHOW(mem.nodeIndex);
+	CSHOWLN(mem.ref);
+	SHOWLN(lblock.nodes[mem.nodeIndex].schedule.getPhi());
+	SHOWLN(lblock.nodes[mem.nodeIndex].schedule.getOmega());
+	// SHOWLN(mem.schedule.getPhi());
+	// SHOWLN(mem.schedule.getOmega());
+	std::cout << std::endl;
+    }
+
 }
