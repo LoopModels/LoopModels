@@ -25,8 +25,10 @@ struct Simplex {
     //           and if so which one
     // column 1: constraint values
     Matrix<int64_t, 0, 0, 0> tableau;
-    size_t numSlackVar;
-    bool inCanonicalForm;
+    size_t numSlackVar{0};
+#ifndef NDEBUG
+    bool inCanonicalForm{false};
+#endif
     static constexpr size_t numExtraRows = 2;
     static constexpr size_t numExtraCols = 1;
     static constexpr size_t numTableauRows(size_t i) {
@@ -110,7 +112,9 @@ struct Simplex {
     size_t getNumConstraints() const { return tableau.numRow() - numExtraRows; }
 
     void hermiteNormalForm() {
+#ifndef NDEBUG
         inCanonicalForm = false;
+#endif
         truncateConstraints(
             NormalForm::simplifySystemImpl(getConstraints(), 1));
     }
@@ -246,6 +250,9 @@ struct Simplex {
             }
         }
         // std::cout << "pre-tableau = \n" << tableau << std::endl;
+#ifndef NDEBUG
+        inCanonicalForm = true;
+#endif
         llvm::SmallVector<unsigned> augmentVars{};
         for (unsigned i = 0; i < basicVars.size(); ++i)
             if (basicVars[i] == -1)
@@ -288,7 +295,6 @@ struct Simplex {
 #ifdef VERBOSESIMPLEX
         std::cout << "final tableau =" << tableau << std::endl;
 #endif
-        inCanonicalForm = true;
         return false;
     }
     // 1 based to match getBasicConstraints
@@ -350,6 +356,9 @@ struct Simplex {
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     Rational runCore(int64_t f = 1) {
+#ifndef NDEBUG
+	assert(inCanonicalForm);
+#endif
         //     return runCore(getCostsAndConstraints(), f);
         // }
         // Rational runCore(MutPtrMatrix<int64_t> C, int64_t f = 1) {
@@ -375,6 +384,9 @@ struct Simplex {
     }
     // set basicVar's costs to 0, and then runCore()
     Rational run() {
+#ifndef NDEBUG
+	assert(inCanonicalForm);
+#endif
         MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
         int64_t f = 1;
@@ -391,6 +403,9 @@ struct Simplex {
     // lexicographically minimize vars [0, numVars)
     // false means no problems, true means there was a problem
     void lexMinimize(Vector<Rational> &sol) {
+#ifndef NDEBUG
+	assert(inCanonicalForm);
+#endif
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};

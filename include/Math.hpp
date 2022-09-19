@@ -848,6 +848,7 @@ template <typename T> struct Vector {
     llvm::SmallVector<T, 16> data;
     static constexpr bool canResize = true;
 
+    Vector(int N) : data(llvm::SmallVector<T>(N)){};
     Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
     Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
