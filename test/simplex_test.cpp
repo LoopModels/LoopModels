@@ -2,7 +2,9 @@
 #include "Macro.hpp"
 #include "Math.hpp"
 #include "MatrixStringParse.hpp"
+#include <cstddef>
 #include <gtest/gtest.h>
+#include <numeric>
 
 TEST(SimplexTest, BasicAssertions) {
     IntMatrix A{stringToIntMatrix("[10 3 2 1; 15 2 5 3]")};
@@ -943,10 +945,50 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     EXPECT_FALSE(simp.initiateFeasible());
     simp.lexMinimize(sol);
     size_t solSum = 0;
-    for (auto s : sol){
-	solSum += s.numerator;
-	EXPECT_TRUE(s.denominator==1);
+    for (auto s : sol) {
+        solSum += s.numerator;
+	EXPECT_EQ(s.denominator, 1);
     }
     EXPECT_EQ(solSum, 3);
     SHOWLN(sol);
+
+    {
+	// test that we didn't invalidate the simplex
+        auto C{simp.getCost()};
+        C(0) = 0;
+        C(_(1, 37)) = 1;
+        C(_(37, end)) = 0;
+        EXPECT_EQ(simp.run(), -3);
+        Vector<Rational> sol2 = simp.getSolution();
+        SHOWLN(sol2(_(begin, 38)));
+        size_t sum = 0;
+	for (size_t i = 0; i < 38; ++i){
+	    Rational r = sol2(i);
+            sum += r.numerator;
+	    EXPECT_EQ(r.denominator, 1);
+	}
+        EXPECT_EQ(sum, 3);
+    }
+    {
+	// test new simplex
+        Simplex simp2{tableau};
+        EXPECT_FALSE(simp2.initiateFeasible());
+        auto C{simp2.getCost()};
+        C(0) = 0;
+        C(_(1, 37)) = 1;
+        C(_(37, end)) = 0;
+        EXPECT_EQ(simp2.run(), -3);
+        Vector<Rational> sol2 = simp2.getSolution();
+        SHOWLN(sol2(_(begin, 38)));
+        size_t sum = 0;
+	Rational rsum = 0; // test summing rationals
+	for (size_t i = 0; i < 38; ++i){
+	    Rational r = sol2(i);
+            sum += r.numerator;
+	    EXPECT_EQ(r.denominator, 1);
+	    rsum += r;
+	}
+        EXPECT_EQ(sum, 3);
+        EXPECT_EQ(rsum, 3);
+    }
 }

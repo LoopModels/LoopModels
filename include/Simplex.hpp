@@ -170,8 +170,8 @@ struct Simplex {
             int64_t j = tableauView(0, i);
             if (j < 0)
                 return 0;
-            return Rational::create(tableauView(j + numExtraRows, i),
-                                    consts(j));
+            return Rational::create(consts(j),
+                                    tableauView(j + numExtraRows, i));
         }
         template <typename B, typename E> Solution operator()(Range<B, E> r) {
             return Solution{tableauView(_, r), consts};
@@ -198,7 +198,7 @@ struct Simplex {
         std::cout << "C=" << C << std::endl;
 #endif
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-	basicCons = -2;
+        basicCons = -2;
         // first pass, we make sure the equalities are >= 0
         // and we eagerly try and find columns with
         // only a single non-0 element.
@@ -232,10 +232,10 @@ struct Simplex {
         // basicCons should now contain either `-1` or an integer >= 0
         // indicating which row contains the only non-zero element; we'll now
         // fill basicVars.
-        // 
-       auto basicVars{getBasicVariables()};
-       basicVars = -1;
-       for (size_t v = 1; v < numVar; ++v) {
+        //
+        auto basicVars{getBasicVariables()};
+        basicVars = -1;
+        for (size_t v = 1; v < numVar; ++v) {
             int64_t r = basicCons[v];
             if (r >= 0) {
                 if (basicVars[r] == -1) {
@@ -263,9 +263,10 @@ struct Simplex {
             auto basicVars{getBasicVariables()};
             MutPtrVector<int64_t> basicCons{getBasicConstraints()};
             MutPtrVector<int64_t> costs{getCost()};
-	    tableau(1, _) = 0;
+            tableau(1, _) = 0;
 #ifdef VERBOSESIMPLEX
-            printVector(std::cout << "augmentVars = ", augmentVars) << std::endl;
+            printVector(std::cout << "augmentVars = ", augmentVars)
+                << std::endl;
             std::cout << "costs = " << PtrVector<int64_t>(costs) << std::endl;
             std::cout << "tableau =" << tableau << std::endl;
             std::cout << "numVar = " << numVar << std::endl;
@@ -331,9 +332,10 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
-// #ifdef VERBOSESIMPLEX
-//         std::cout << "leavingVariable = " << leavingVariable << std::endl;
-// #endif
+        // #ifdef VERBOSESIMPLEX
+        //         std::cout << "leavingVariable = " << leavingVariable <<
+        //         std::endl;
+        // #endif
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -357,7 +359,7 @@ struct Simplex {
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
     Rational runCore(int64_t f = 1) {
 #ifndef NDEBUG
-	assert(inCanonicalForm);
+        assert(inCanonicalForm);
 #endif
         //     return runCore(getCostsAndConstraints(), f);
         // }
@@ -365,12 +367,13 @@ struct Simplex {
         auto C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-// #ifdef VERBOSESIMPLEX
-//             std::cout << "C =" << C << std::endl;
-// #endif
+            // #ifdef VERBOSESIMPLEX
+            //             std::cout << "C =" << C << std::endl;
+            // #endif
             int enteringVariable = getEnteringVariable(C(0, _));
 #ifdef VERBOSESIMPLEX
-            // std::cout << "enteringVariable = " << enteringVariable << std::endl;
+            // std::cout << "enteringVariable = " << enteringVariable <<
+            // std::endl;
             if (enteringVariable == -1)
                 std::cout << "runCore() ret: C(0,0) / f = " << C(0, 0) << " / "
                           << f << std::endl;
@@ -385,7 +388,7 @@ struct Simplex {
     // set basicVar's costs to 0, and then runCore()
     Rational run() {
 #ifndef NDEBUG
-	assert(inCanonicalForm);
+        assert(inCanonicalForm);
 #endif
         MutStridedVector<int64_t> basicVars = getBasicVariables();
         MutPtrMatrix<int64_t> C = getCostsAndConstraints();
@@ -404,7 +407,7 @@ struct Simplex {
     // false means no problems, true means there was a problem
     void lexMinimize(Vector<Rational> &sol) {
 #ifndef NDEBUG
-	assert(inCanonicalForm);
+        assert(inCanonicalForm);
 #endif
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
@@ -412,9 +415,9 @@ struct Simplex {
 
         for (auto &&r : sol)
             r = Rational{0, 1};
-        for (size_t v = 1; v <= sol.size(); ++v) {
+        for (size_t v = 0; v < sol.size();) {
             // if it is already zero (not basic), we can move to the next
-            int64_t c = basicConstraints(v);
+            int64_t c = basicConstraints(++v);
             if (c < 0)
                 continue;
             // C(0, _(v, end)) = 0;
@@ -429,38 +432,65 @@ struct Simplex {
             while (true) {
                 // get new entering variable
                 int enteringVariable = getEnteringVariable(C(0, _(v, end)));
+                // SHOW(v);
+                // if (enteringVariable == -1) {
+                //     CSHOWLN(enteringVariable);
+                // }
                 if (enteringVariable == -1)
                     break;
                 enteringVariable += v;
                 int leavingVariable = getLeavingVariable(C, enteringVariable);
+                // if (leavingVariable == -1){
+                //     CSHOWLN(enteringVariable);
+                // } else {
+                //     CSHOW(enteringVariable);
+                // }
                 if (leavingVariable == -1)
                     break;
+
                 for (size_t i = 0; i < C.numRow(); ++i)
                     if (i != size_t(leavingVariable + 1))
                         NormalForm::zeroWithRowOperation(
-                            C, i, leavingVariable + 1, enteringVariable,
-                            _(1, v));
+                            C, i, leavingVariable + 1, enteringVariable, 0);
                 // std::cout << "post-removal C =" << C << std::endl;
                 // update baisc vars and constraints
                 int64_t oldBasicVar = basicVars[leavingVariable];
                 basicVars[leavingVariable] = enteringVariable;
-		if (size_t(oldBasicVar) < basicConstraints.size())
-		    basicConstraints[oldBasicVar] = -1;
+                // CSHOWLN(oldBasicVar);
+                if (size_t(oldBasicVar) < basicConstraints.size())
+                    basicConstraints[oldBasicVar] = -1;
                 basicConstraints[enteringVariable] = leavingVariable;
             }
             c = basicConstraints(v);
+            // SHOW(v);
+            // CSHOW(c);
+            // if (c < 0) {
+            //     size_t x = 0;
+            //     CSHOWLN(x);
+            // } else {
+            //     size_t x = Rational::create(C(c + 1, 0), C(c + 1, v));
+            //     CSHOWLN(x);
+            // }
+#ifndef NDEBUG
             if (c >= 0) {
                 // C(_,0) = C(_,_(1,end)) * vars
                 // we now make `vars[v-1]` a constant
-                if ((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)) {
-                    SHOWLN(tableau);
-                    SHOW(c + 1);
-                    CSHOWLN(v);
-                }
+                // if ((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)) {
+                //     SHOWLN(tableau);
+                //     SHOW(c + 1);
+                //     CSHOWLN(v);
+                // }
                 assert(!((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)));
-                sol(v - 1) = Rational::create(C(c + 1, 0), C(c + 1, v));
-                C(c + 1, 0) = 0;
+                // sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
+                // C(c + 1, 0) = 0;
             }
+#endif
+        }
+        for (size_t v = 0; v < sol.size();) {
+            size_t sv = v++;
+            int64_t c = basicConstraints(v);
+            if (c >= 0)
+                sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
         }
     }
     // A(:,1:end)*x <= A(:,0)
