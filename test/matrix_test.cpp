@@ -148,7 +148,7 @@ TEST(SIMDTEST, BasicAssertions) {
     a.push_back(-8);
     a.push_back(7);
     a.push_back(3);
-    Vector<int64_t> b = a * 2;
+    Vector<int64_t> b = a * size_t(2);
     b += a;
     Vector<int64_t> c;
     c.push_back(-24);
@@ -185,6 +185,22 @@ TEST(SIMDTEST, BasicAssertions) {
     b /= 2;
     std::cout << b << std::endl;
     EXPECT_EQ(b, c);
+
+    Vector<int64_t> d;
+    d.push_back(4);
+    d.push_back(4);
+    d.push_back(4);
+    d.push_back(4);
+    Vector<int64_t> e;
+    e = 8 / d;
+    Vector<int64_t> f;
+    f.push_back(2);
+    f.push_back(2);
+    f.push_back(2);
+    f.push_back(2);
+    EXPECT_EQ(e, f);
+
+    
     // b *= a;
     // std::cout<< "b = "<<b<<std::endl;
     // auto A{stringToIntMatrix(

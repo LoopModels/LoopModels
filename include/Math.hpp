@@ -444,7 +444,12 @@ struct Add {
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
 	V vx = Set(hn::DFromV<V>(), x);
-	return vx + y;
+    return vx + y;
+    }
+    template <HWVec V>
+    constexpr auto operator()(V x, std::integral auto y) const {
+	V vy = Set(hn::DFromV<V>(), y);
+	return x + vy;
     }
 };
 struct Sub {
@@ -460,11 +465,15 @@ struct Sub {
 	V vy = Set(hn::DFromV<V>(), y);
 	return x - vy;
     }
-
-    
 };
 struct Mul {
-    constexpr auto operator()(auto x, auto y) const { return x * y; }
+    // constexpr auto operator()(auto x, auto y) const { return x * y; }
+    // template <HWVec V>
+    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
+	// auto vx = Set(hn::DFromV<decltype(x)>(), x);
+	// auto vy = Set(hn::DFromV<decltype(y)>(), y);
+	return x * y;
+    }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
 	V vx = Set(hn::DFromV<V>(), x);
@@ -475,10 +484,24 @@ struct Mul {
 	V vy = Set(hn::DFromV<V>(), y);
 	return x * vy;
     }
-    
+    template <HWVec V>
+    constexpr auto operator()(V x, V y) const {
+	return x * y;
+    }
 };
 struct Div {
     constexpr auto operator()(auto x, auto y) const { return x / y; }
+    template <HWVec V>
+    constexpr auto operator()(std::integral auto x, V y) const {
+	V vx = Set(hn::DFromV<V>(), x);
+	return vx / y;
+    }
+    template <HWVec V>
+    constexpr auto operator()(V x, std::integral auto y) const {
+	V vy= Set(hn::DFromV<V>(), y);
+	return x / vy;
+    }
+    // constexpr auto operator()(auto x, auto y) const { return x / y; }
 };
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
@@ -516,6 +539,7 @@ inline auto get(const AbstractVector auto &A, size_t i) { return A(i); }
 inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
     return A(i, j);
 }
+// inline auto get(const AbstractVector auto &A,  i) { return A(i); }
 inline auto get(const AbstractVector auto &A, VIndex i) {
     // using V = hn::VFromD<hn::ScalableTag<decltype(A)::eltype>()>;
     using V = hn::VFromD<

@@ -59,7 +59,7 @@ if bench_dep.found()
   benchmark_files = [
     'constraint_pruning_benchmark',
     'polynomial_benchmark',
-    'highway_benchmark'
+    'highway_benchmark',
   ]
   benchmarkdeps = [bench_dep, llvm_dep]
   #bench_args = ['-O3', '-DNDEBUG', '-march=native']
