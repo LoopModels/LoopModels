@@ -951,7 +951,8 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     }
     EXPECT_EQ(solSum, 3);
     SHOWLN(sol);
-
+    for (size_t i = 0; i < 37; ++i)
+	EXPECT_EQ(sol(i), (i == 28) || (i == 30) || (i == 33));
     {
 	// test that we didn't invalidate the simplex
         auto C{simp.getCost()};
@@ -968,6 +969,8 @@ TEST(LexMinSimplexTest, BasicAssertions) {
 	    EXPECT_EQ(r.denominator, 1);
 	}
         EXPECT_EQ(sum, 3);
+	for (size_t i = 0; i < 37; ++i)
+	    EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
     }
     {
 	// test new simplex
@@ -990,5 +993,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
 	}
         EXPECT_EQ(sum, 3);
         EXPECT_EQ(rsum, 3);
+	for (size_t i = 0; i < 37; ++i)
+	    EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
     }
 }
