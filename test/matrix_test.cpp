@@ -143,7 +143,7 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     // B = A*4;
 }
 
-TEST(SIMDTEST, BasicAssertions) {
+TEST(SIMDVecTEST, BasicAssertions) {
     Vector<int64_t> a;
     a.push_back(-8);
     a.push_back(7);
@@ -206,6 +206,39 @@ TEST(SIMDTEST, BasicAssertions) {
     std::cout << e << std::endl;
     EXPECT_EQ(e, f);
 
+    // Test MutPtrVector
+    Matrix<int64_t>  A(6, 8);
+    for (size_t i = 0; i < 6; i++) {
+        for (size_t j = 0; j < 8; j++) {
+            A(i, j) = 1;
+        }
+    }
+    auto Amutvec = A(0, _);
+    Amutvec *= size_t(2);
+    Amutvec /= 2;
+    auto Bmutvec = 2 - Amutvec;
+    auto Cmutvec = Bmutvec + Amutvec;
+    for (size_t i = 0; i < 8; i++) {
+        std::cout << Cmutvec(i) <<std::endl;
+    }
+
+    //Test StridedVector
+    auto Astridedvec = A(_, 0);
+    auto Bstridedvec = A(_, 1);
+    Astridedvec += Bstridedvec;
+    Astridedvec *= Bstridedvec;
+    Astridedvec /= Bstridedvec;
+    Astridedvec -= Bstridedvec;
+    auto Cstridedvec = 2 - Astridedvec;
+    // f /= 2;
+    // std::cout << Cmutvec << std::endl;
+    // Amutvec *= 2;
+    // EXPECT_EQ(Cmutvec, Amutvec);
+
+
+    // auto StridedA = A(_, 0);
+    // StridedA *= 2;
+
     
     // b *= a;
     // std::cout<< "b = "<<b<<std::endl;
@@ -218,4 +251,22 @@ TEST(SIMDTEST, BasicAssertions) {
     //     -5 "
     //     "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]")};
     // A2 += A;
+}
+
+TEST(SIMDMatTEST, BasicAssertions) {
+    IntMatrix A(6, 6);
+    for (size_t i = 0; i < 6; i++) {
+        for (size_t j = 0; j < 6; j++) {
+            A(i, j) = 1;
+        }
+    }
+    IntMatrix  B(6, 6);
+    for (size_t i = 0; i < 6; i++) {
+        for (size_t j = 0; j < 6; j++) {
+            B(i, j) = 2;
+        }
+    }
+    // auto C = A * B ;
+    auto C = A * 2;
+    // A *= 2;
 }

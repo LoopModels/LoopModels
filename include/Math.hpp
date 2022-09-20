@@ -369,7 +369,11 @@ template <typename T, typename VI> struct SVReference {
     }
 };
 template <typename T> inline auto svreference(T *ptr, size_t i, size_t stride) {
-    auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * int(stride) + int(i)};
+    const hn::ScalableTag<T> d;
+    auto vec_stride = hn::Set(d, int(stride));
+    auto vec_i = hn::Set(d, int(i));
+    auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * vec_stride + vec_i};
+    // auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * int(stride) + int(i)};
     return SVReference<T, decltype(vi)>{ptr, vi};
 }
 
@@ -1034,7 +1038,7 @@ template <typename T> struct MutPtrVector {
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = hn::Load(d, mem + i);
             x_vec = x_vec + const_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1051,7 +1055,7 @@ template <typename T> struct MutPtrVector {
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = hn::Load(d, mem + i);
             x_vec = x_vec - const_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1077,14 +1081,13 @@ template <typename T> struct MutPtrVector {
         return *this;
     }
     MutPtrVector<T> operator/=(const std::integral auto x) {
-        assert(N == x.size());
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = hn::Load(d, mem + i);
             x_vec = x_vec / const_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1299,7 +1302,6 @@ template <typename T> struct Vector {
         const hn::ScalableTag<T> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
-        std::cout << "q2222222222" << std::endl;
         const auto const_vec = hn::Set(d, x);
         for (size_t i = 0; i < N - remainder; i += Lane) {
             // auto x_vec = hn::Load(d, x.data.data() + i);
@@ -1405,6 +1407,14 @@ template <typename T> struct MutStridedVector {
     T &operator()(size_t i) { return d[i * x]; }
     const T &operator()(size_t i) const { return d[i * x]; }
 
+    auto operator()(VIndex i) { return svreference(d, i.i, x); }
+    auto operator()(VIndex i) const {
+        const hn::ScalableTag<T> d;
+        auto vec_x = hn::Set(d, int(x));
+        auto vec_i = hn::Set(d, int(i.i));
+        auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * vec_x + vec_i};
+        return hn::GatherIndex(hn::ScalableTag<T>(), d, vi);
+    }
     MutStridedVector<T> operator()(Range<size_t, size_t> i) {
         return MutStridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
     }
