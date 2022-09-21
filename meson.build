@@ -4,7 +4,9 @@ llvm_dep = dependency('llvm', version : '>=14.0')
 incdir = include_directories('include')
 
 if meson.get_compiler('cpp').get_id() == 'gcc'
-  add_global_arguments('-fno-semantic-interposition', language : 'cpp')
+  add_global_arguments('-fno-semantic-interposition -fmax-errors=1', language : 'cpp')
+else
+  add_global_arguments('-ferror-limit=1', language : 'cpp')
 endif
 
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
@@ -30,6 +32,7 @@ if gtest_dep.found()
     #'dependence_test2',
     'dependence_test',
     #'edge_detection_test',
+    'graph_test',
     'ir_test',
     'linear_algebra_test',
     'linear_diophantine_test',

@@ -822,7 +822,10 @@ struct Dependence {
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
             // SHOWLN(i);
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
-                // SHOWLN(o2idiff);
+#ifndef NDEBUG
+                std::cout << "Dependence decided by order with i = " << i
+                          << std::endl;
+#endif
                 return o2idiff > 0;
             }
             // we should not be able to reach `numLoopsCommon`
@@ -844,10 +847,20 @@ struct Dependence {
             // SHOWLN(sch);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
+#ifndef NDEBUG
+                std::cout << "Dependence decided by forward violation with i = "
+                          << i << std::endl;
+#endif
                 return false;
             }
-            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim))
+            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+#ifndef NDEBUG
+                std::cout
+                    << "Dependence decided by backward violation with i = " << i
+                    << std::endl;
+#endif
                 return true;
+            }
         }
         // assert(false);
         // return false;

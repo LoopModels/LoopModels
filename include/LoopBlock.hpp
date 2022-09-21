@@ -25,9 +25,9 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 
-template <std::integral I>
-[[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
-                                                const I &x) {
+    template <std::integral I>
+    [[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
+                                                    const I &x) {
     for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
         if (*it < x)
             continue;
@@ -432,10 +432,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         for (auto &&node : nodes)
             node.schedule.init(node.getNumLoops());
+#ifndef NDEBUG
         for (auto &mem : memory) {
             SHOW(mem.nodeIndex);
             CSHOWLN(mem.ref);
         }
+#endif
         // now that we've assigned each MemoryAccess to a NodeIndex, we
         // build the actual graph
     }
@@ -1143,7 +1145,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 CSHOWLN(numConstraints);
                 if (omniSimplex.initiateFeasible())
                     return true;
-                sol.resizeForOverwrite(getLambdaOffset()-1);
+                sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
                 updateSchedules(sol, d);
                 // TODO: deactivate edges of satisfied dependencies
