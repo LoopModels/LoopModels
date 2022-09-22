@@ -140,6 +140,14 @@ struct BitSet {
             data[i] &= bs.data[i];
         return *this;
     }
+    // &!
+    BitSet &operator-=(const BitSet &bs) {
+        if (bs.data.size() < data.size())
+            data.resize(bs.data.size());
+        for (size_t i = 0; i < data.size(); ++i)
+            data[i] &= (~bs.data[i]);
+        return *this;
+    }
     BitSet &operator|=(const BitSet &bs) {
         if (bs.data.size() > data.size())
             data.resize(bs.data.size());
