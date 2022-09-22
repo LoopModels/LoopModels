@@ -9,17 +9,20 @@
 
 static void BM_LoopHighway(benchmark::State &state) {
 
-    const size_t n = 1600;
-    Vector<int64_t> x(n);
-    Vector<int64_t> y(n);
+    // const size_t n = 1600;
+    Vector<int64_t> x(1263);
+    Vector<int64_t> y(1263);
     int64_t a = 2;
     int64_t b = 3;
+    for (size_t i = 0; i < x.size(); ++i)
+        y(2) = 2;
     // fourth row is 0
     // std::cout << "B=\n" << B << "\nnullSpace(B) =\n" <<
     // NormalForm::nullSpace(B) << std::endl;
     for (auto _ : state) {
         for (size_t i = 0; i < x.size(); ++i)
-            x[i] = a * x[i] - b * y[i];
+            // x[i] = a * x[i] - 4;//- b * y[i];
+            x(i) *= (a * y(i) - 4);
     }
     // std::cout << "x[0] = " << x(0) << std::endl;
 }
@@ -28,9 +31,18 @@ BENCHMARK(BM_LoopHighway);
 
 static void BM_LoopHighway2(benchmark::State &state) {
 
-    const size_t n = 1600;
-    Vector<int64_t> x(n);
-    Vector<int64_t> y(n);
+    // const size_t n = 1600;
+    Vector<int64_t> x(1263);
+    Vector<int64_t> y(1263);
+    // y = 6;
+    // std::cout << y(2) << std::endl;
+    for (size_t i = 0; i < x.size(); ++i)
+        y(2) = 2;
+    // std::cout << y(2) << std::endl;
+    // for (size_t i = 0; i < n; ++i) {
+    //     x(i) = 1;
+    //     y(i) = 2;
+    // }
     // Vector<int64_t> x(63);
     // Vector<int64_t> y(63);
     int64_t a = 2;
@@ -43,8 +55,10 @@ static void BM_LoopHighway2(benchmark::State &state) {
     // x = a * y;
     // x = y * a;
     for (auto _ : state) {
-        x = a * x - b * y;
+        // x = a * x - b * y
+        x *= (a * y - 4);
     }
+    // std::cout << x(2) << std::endl;
     // for (auto _ : state) {
     //     x = x * a - y * b;
     // }

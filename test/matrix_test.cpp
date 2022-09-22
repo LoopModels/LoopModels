@@ -192,7 +192,7 @@ TEST(SIMDVecTEST, BasicAssertions) {
     d.push_back(4);
     d.push_back(4);
     Vector<int64_t> e;
-    // e = 8 / d;
+    e = 8 / d;
     size_t x = -4;
     e = x - d;
     e = e + d;
@@ -214,13 +214,24 @@ TEST(SIMDVecTEST, BasicAssertions) {
         }
     }
     auto Amutvec = A(0, _);
-    Amutvec *= size_t(2);
+    Amutvec *= size_t(4);
     Amutvec /= 2;
-    auto Bmutvec = 2 - Amutvec;
+    auto Bmutvec = 10 - Amutvec;
     auto Cmutvec = Bmutvec + Amutvec;
-    for (size_t i = 0; i < 8; i++) {
-        std::cout << Cmutvec(i) <<std::endl;
-    }
+    // std::cout << "Amutvec = " << Amutvec << std::endl;
+    // std::cout << "Bmutvec = " << Bmutvec << std::endl;
+    // for (size_t i = 0; i < 8; i++){
+    //     std::cout << Amutvec(i) <<std::endl;
+    // }
+    // for (size_t i = 0; i < 8; i++){
+    //     std::cout << Bmutvec(i) <<std::endl;
+    // }
+    Amutvec *= Bmutvec;
+    // std::cout << "Amutvec = " << Amutvec << std::endl;
+    // for (size_t i = 0; i < 8; i++){
+    //     std::cout << Amutvec(i) <<std::endl;
+    // }
+
 
     //Test StridedVector
     auto Astridedvec = A(_, 0);
@@ -267,6 +278,25 @@ TEST(SIMDMatTEST, BasicAssertions) {
         }
     }
     // auto C = A * B ;
-    auto C = A * 2;
-    // A *= 2;
+    // auto C = A * 2;
+    A *= 2;
+}
+
+TEST(OperatorTEST, BasicAssertions) {
+    Vector<int64_t> x(6,3,1,2,7);
+    Vector<int64_t> y(6,3,1,2,7);
+    int64_t a = 2;
+    int64_t b = 3;
+    for (size_t i = 0; i < y.size(); ++i)
+    {
+        y(i) = 6;
+        x(i) = 1;
+    }
+    for (size_t i = 0; i < x.size(); ++i)
+        x(i) *= (a * y(i) - 4);
+    x *= (a * y - 4 + b);
+    x /= (a * y - 4);
+    Vector<int64_t> z(11,11,11,11,11);
+    // std::cout << "xxxxxxxxxx" << x << std::endl;
+    EXPECT_EQ(x, z);
 }

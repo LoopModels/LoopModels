@@ -967,7 +967,8 @@ template <typename T> struct MutPtrVector {
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
             // auto x_vec = hn::Load(d, x.data.data() + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            // auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = x(VIndex{i});
             x_vec = mem_vec + x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -983,7 +984,8 @@ template <typename T> struct MutPtrVector {
         size_t remainder = N % Lane;
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.data.data() + i); // x.getPtr(i));
+            auto x_vec = x(VIndex{i});
+            // auto x_vec = hn::Load(d, x.data.data() + i); // x.getPtr(i));
             x_vec = mem_vec - x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1002,7 +1004,8 @@ template <typename T> struct MutPtrVector {
         size_t remainder = N % Lane;
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.data.data() + i);
+            auto x_vec = x(VIndex{i});
+            // auto x_vec = hn::Load(d, x.data.data() + i);
             x_vec = mem_vec * x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1018,7 +1021,8 @@ template <typename T> struct MutPtrVector {
         size_t remainder = N % Lane;
         for (size_t i = 0; i < N - remainder; i += Lane) {
             const auto mem_vec = hn::Load(d, mem + i);
-            auto x_vec = hn::Load(d, x.getPtr(i));
+            auto x_vec = x(VIndex{i});
+            // auto x_vec = hn::Load(d, x.getPtr(i));
             x_vec = mem_vec / x_vec;
             hn::Store(x_vec, d, mem + i);
         }
@@ -1215,22 +1219,22 @@ template <typename T> struct Vector {
         y = x;
         return *this;
     }
-    Vector<T> &operator+=(AbstractVector auto &x) {
+    Vector<T> &operator+=(const AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
         y += x;
         return *this;
     }
-    Vector<T> &operator-=(AbstractVector auto &x) {
+    Vector<T> &operator-=(const AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
         y -= x;
         return *this;
     }
-    Vector<T> &operator*=(AbstractVector auto &x) {
+    Vector<T> &operator*=(const AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
         y *= x;
         return *this;
     }
-    Vector<T> &operator/=(AbstractVector auto &x) {
+    Vector<T> &operator/=(const AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
         y /= x;
         return *this;
@@ -2018,7 +2022,7 @@ template <typename T, typename P> struct BaseMatrix {
         return A -= B;
     }
     MutPtrMatrix<T> operator*=(const std::integral auto b) {
-        MutPtrMatrix<T> A{*this};
+        MutPtrMatrix<T> A = *this;
         return A *= b;
     }
     MutPtrMatrix<T> operator/=(const std::integral auto b) {
