@@ -21,7 +21,7 @@ struct BitSet {
     // size_t operator[](size_t i) const {
     //     return data[i];
     // } // allow `getindex` but not `setindex`
-
+    BitSet() = default;
     BitSet(size_t N) : data(llvm::SmallVector<uint64_t>((N + 63) >> 6)) {}
     struct Iterator {
 	llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator it;
@@ -68,10 +68,12 @@ struct BitSet {
         return (data[d] & (mask));
     }
 
-    bool push(size_t x) {
+    bool insert(size_t x) {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
+	if (d >= data.size())
+	    data.resize(d+1);
         bool contained = ((data[d] & mask) != 0);
         if (!contained) 
             data[d] |= (mask);
@@ -136,6 +138,13 @@ struct BitSet {
             data.resize(bs.data.size());
         for (size_t i = 0; i < data.size(); ++i)
             data[i] &= bs.data[i];
+        return *this;
+    }
+    BitSet &operator|=(const BitSet &bs) {
+        if (bs.data.size() > data.size())
+            data.resize(bs.data.size());
+        for (size_t i = 0; i < bs.data.size(); ++i)
+            data[i] |= bs.data[i];
         return *this;
     }
 };

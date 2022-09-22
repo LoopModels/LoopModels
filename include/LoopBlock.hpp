@@ -1,18 +1,19 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
+#include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
+#include "./Graphs.hpp"
+#include "./LinearAlgebra.hpp"
 #include "./Loops.hpp"
+#include "./Macro.hpp"
 #include "./Math.hpp"
+#include "./NormalForm.hpp"
+#include "./Orthogonalize.hpp"
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "./Symbolics.hpp"
-#include "Graphs.hpp"
-#include "LinearAlgebra.hpp"
-#include "Macro.hpp"
-#include "NormalForm.hpp"
-#include "Orthogonalize.hpp"
 #include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
@@ -41,7 +42,9 @@ template <std::integral I>
 struct ScheduledNode {
     // llvm::SmallVector<unsigned> parentNodes;
     // llvm::SmallVector<unsigned> childNodes;
-    llvm::SmallVector<unsigned> memory;
+    // llvm::SmallVector<unsigned> memory;
+    BitSet memory;
+    BitSet outNeighbors;
     Schedule schedule;
     // llvm::SmallVector<MemoryAccess*> memory;
     static constexpr uint32_t PHISCHEDULEDFLAG =
@@ -68,12 +71,17 @@ struct ScheduledNode {
     }
 
     void merge(const ScheduledNode s) {
-        llvm::SmallVector<unsigned> memoryNew;
-        memoryNew.reserve(memory.size() + s.memory.size());
-        std::ranges::set_union(memory, s.memory, std::back_inserter(memoryNew));
-        std::swap(memory, memoryNew);
+        memory |= s.memory;
+        outNeighbors |= s.outNeighbors;
         numLoops = std::max(numLoops, s.numLoops);
     }
+    // void merge(const ScheduledNode s) {
+    //     llvm::SmallVector<unsigned> memoryNew;
+    //     memoryNew.reserve(memory.size() + s.memory.size());
+    //     std::ranges::set_union(memory, s.memory,
+    //     std::back_inserter(memoryNew)); std::swap(memory, memoryNew);
+    //     numLoops = std::max(numLoops, s.numLoops);
+    // }
 };
 
 // A loop block is a block of the program that may include multiple loops.
@@ -403,63 +411,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     struct Graph {
         // a subset of Nodes
+        BitSet nodeIds;
         llvm::MutableArrayRef<ScheduledNode> nodes;
         llvm::MutableArrayRef<MemoryAccess> mem;
         llvm::ArrayRef<Dependence> edges;
-        // SliceView<MemoryAccess, unsigned> outNeighbors(size_t i) {
-        //     return SliceView<MemoryAccess, unsigned>{mem, nodes[i].memory};
-        // }
-
-        struct OutNeighbors {
-            llvm::MutableArrayRef<ScheduledNode> nodes;
-            llvm::ArrayRef<Dependence> edges;
-            SliceView<MemoryAccess, unsigned> mem;
-            unsigned nodeId;
-            struct Iterator {
-                SliceView<MemoryAccess, unsigned>::Iterator memIter;
-                const SliceView<MemoryAccess, unsigned>::Iterator memEnd;
-                llvm::ArrayRef<Dependence> edges;
-                unsigned edgeOut;
-                unsigned nodeId;
-
-                bool operator==(Iterator it) {
-                    return (memIter == it.memIter) && (edgeOut == it.edgeOut);
-                }
-                Iterator &operator++() {
-                    // increment
-                    if (++edgeOut == memIter->edgesOut.size()) {
-                        edgeOut = 0;
-                        ++memIter;
-                    }
-                    while (incomplete() && selfReferencial()) {
-                        ++(*this);
-                    }
-                    return *this;
-                }
-                bool selfReferencial() const { return nodeId == (*(*this)); }
-                bool incomplete() const {
-                    return (memIter != memEnd) ||
-                           (edgeOut != memEnd->edgesOut.size());
-                }
-                unsigned operator*() const {
-                    return edges[memIter->edgesOut[edgeOut]].out->nodeIndex;
-                }
-            };
-            Iterator begin() {
-                return Iterator{mem.begin(), mem.end(), edges, 0, nodeId};
-            }
-            Iterator end() {
-                auto mit = mem.end();
-                return Iterator{mit, mit, edges, unsigned(mit->edgesOut.size()),
-                                nodeId};
-            }
-        };
-        OutNeighbors outNeighbors(size_t i) {
-            return OutNeighbors{
-                nodes, edges,
-                SliceView<MemoryAccess, unsigned>{mem, nodes[i].memory},
-                unsigned(i)};
-        }
+        BitSet &outNeighbors(size_t i) { return nodes[i].outNeighbors; }
     };
     void connectGraph() {
 
@@ -488,9 +444,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             mem.index = i;
             // for (auto &&mem : memory){
             ScheduledNode &node = nodes[mem.nodeIndex];
-            node.memory.push_back(i);
+            node.memory.insert(i);
             node.numLoops = std::max(node.numLoops, uint8_t(mem.getNumLoops()));
         }
+        for (auto &e : edges)
+            if (e.in->nodeIndex != e.out->nodeIndex)
+                nodes[e.in->nodeIndex].outNeighbors.insert(e.out->nodeIndex);
         for (auto &&node : nodes)
             node.schedule.init(node.getNumLoops());
 #ifndef NDEBUG
