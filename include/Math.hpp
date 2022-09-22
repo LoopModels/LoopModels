@@ -719,6 +719,7 @@ template <typename T> struct MutPtrVector {
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
     MutPtrVector(const MutPtrVector<T> &x) = default;
+    MutPtrVector(llvm::MutableArrayRef<T> x) : mem(x.data()), N(x.size()) {}
     MutPtrVector(T *mem, size_t N) : mem(mem), N(N) {}
     MutPtrVector<T> operator()(Range<size_t, size_t> i) {
         assert(i.b <= i.e);
@@ -2960,3 +2961,32 @@ static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
 static_assert(AbstractVector<PtrVector<Rational>>);
 static_assert(AbstractVector<ElementwiseVectorBinaryOp<Sub, PtrVector<Rational>,
                                                        PtrVector<Rational>>>);
+
+template <typename T, typename I> struct SliceView {
+    using eltype = T;
+    static constexpr bool canResize = false;
+    MutPtrVector<T> a;
+    llvm::ArrayRef<I> i;
+    struct Iterator {
+        MutPtrVector<T> a;
+        llvm::ArrayRef<I> i;
+        size_t j;
+        bool operator==(const Iterator &k) const { return j == k.j; }
+        Iterator &operator++() {
+            ++j;
+            return *this;
+        }
+        T &operator*() { return a[i[j]]; }
+        const T &operator*() const { return a[i[j]]; }
+        T *operator->() { return &a[i[j]]; }
+        const T *operator->() const { return &a[i[j]]; }
+    };
+    Iterator begin() { return Iterator{a, i, 0}; }
+    Iterator end() { return Iterator{a, i, i.size()}; }
+    T &operator()(size_t j) { return a[i[j]]; }
+    const T &operator()(size_t j) const { return a[i[j]]; }
+    size_t size() const { return i.size(); }
+    SliceView<T, I> view() { return *this; }
+};
+
+static_assert(AbstractVector<SliceView<int64_t, unsigned>>);

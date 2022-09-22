@@ -25,9 +25,9 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 
-    template <std::integral I>
-    [[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
-                                                    const I &x) {
+template <std::integral I>
+[[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
+                                                const I &x) {
     for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
         if (*it < x)
             continue;
@@ -139,6 +139,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // E.g., the `dstOmega[numLoopsCommon-1] > srcOmega[numLoopsCommon-1]`,
     // and all other other shared schedule parameters are aliases (i.e.,
     // identical)?
+    // using VertexType = ScheduledNode;
     llvm::SmallVector<MemoryAccess, 0> memory;
     llvm::SmallVector<ScheduledNode, 0> nodes;
     // llvm::SmallVector<unsigned> memoryToNodeMap;
@@ -400,7 +401,67 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return maxNode;
     }
-    void buildGraph() {
+    struct Graph {
+        // a subset of Nodes
+        llvm::MutableArrayRef<ScheduledNode> nodes;
+        llvm::MutableArrayRef<MemoryAccess> mem;
+        llvm::ArrayRef<Dependence> edges;
+        // SliceView<MemoryAccess, unsigned> outNeighbors(size_t i) {
+        //     return SliceView<MemoryAccess, unsigned>{mem, nodes[i].memory};
+        // }
+
+        struct OutNeighbors {
+            llvm::MutableArrayRef<ScheduledNode> nodes;
+            llvm::ArrayRef<Dependence> edges;
+            SliceView<MemoryAccess, unsigned> mem;
+            unsigned nodeId;
+            struct Iterator {
+                SliceView<MemoryAccess, unsigned>::Iterator memIter;
+                const SliceView<MemoryAccess, unsigned>::Iterator memEnd;
+                llvm::ArrayRef<Dependence> edges;
+                unsigned edgeOut;
+                unsigned nodeId;
+
+                bool operator==(Iterator it) {
+                    return (memIter == it.memIter) && (edgeOut == it.edgeOut);
+                }
+                Iterator &operator++() {
+                    // increment
+                    if (++edgeOut == memIter->edgesOut.size()) {
+                        edgeOut = 0;
+                        ++memIter;
+                    }
+                    while (incomplete() && selfReferencial()) {
+                        ++(*this);
+                    }
+                    return *this;
+                }
+                bool selfReferencial() const { return nodeId == (*(*this)); }
+                bool incomplete() const {
+                    return (memIter != memEnd) ||
+                           (edgeOut != memEnd->edgesOut.size());
+                }
+                unsigned operator*() const {
+                    return edges[memIter->edgesOut[edgeOut]].out->nodeIndex;
+                }
+            };
+            Iterator begin() {
+                return Iterator{mem.begin(), mem.end(), edges, 0, nodeId};
+            }
+            Iterator end() {
+                auto mit = mem.end();
+                return Iterator{mit, mit, edges, unsigned(mit->edgesOut.size()),
+                                nodeId};
+            }
+        };
+        OutNeighbors outNeighbors(size_t i) {
+            return OutNeighbors{
+                nodes, edges,
+                SliceView<MemoryAccess, unsigned>{mem, nodes[i].memory},
+                unsigned(i)};
+        }
+    };
+    void connectGraph() {
 
         // llvm::SmallVector<unsigned> map(memory.size(),
         // std::numeric_limits<unsigned>::max());
@@ -441,6 +502,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // now that we've assigned each MemoryAccess to a NodeIndex, we
         // build the actual graph
     }
+
     void fillUserToMemoryMap() {
         for (auto &mem : memory)
             userToMemory.insert(std::make_pair(mem.user, &mem));
@@ -1104,7 +1166,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     bool optimize() {
         fillEdges();
         fillUserToMemoryMap();
-        buildGraph();
+        connectGraph();
 #ifndef NDEBUG
         validateMemory();
         validateEdges();

@@ -18,48 +18,48 @@
 // Initially constructed
 struct BitSet {
     llvm::SmallVector<uint64_t> data;
-    size_t length;
     // size_t operator[](size_t i) const {
     //     return data[i];
     // } // allow `getindex` but not `setindex`
 
-    BitSet(size_t N) : length(0) { data.resize((N + 63) >> 6); }
+    BitSet(size_t N) : data(llvm::SmallVector<uint64_t>((N + 63) >> 6)) {}
     struct Iterator {
-        // TODO: is this safe?
-        llvm::ArrayRef<uint64_t> set;
-        size_t didx;
-        uint64_t offset; // offset with 64 bit block
-        uint64_t state;
-        size_t count;
-
-        size_t operator*() { return offset + 64 * didx; }
+	llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator it;
+	llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator end;
+	uint64_t istate;
+	size_t cstate0{std::numeric_limits<size_t>::max()};
+	size_t cstate1{0};
+        size_t operator*() { return cstate0+cstate1; }
         Iterator &operator++() {
-            ++count;
-            while (state == 0) {
-                if (++didx >= set.size())
-                    return *this;
-                state = set[didx];
-                offset = std::numeric_limits<uint64_t>::max();
-            }
-            size_t tzp1 = std::countr_zero(state) + 1;
-            offset += tzp1;
-            state >>= tzp1;
+	    while (istate == 0){
+		++it;
+		if (it == end)
+		    return *this;
+		istate = *it;
+		cstate0 = std::numeric_limits<size_t>::max();
+		cstate1 += 64;
+	    }
+	    size_t tzp1 = std::countr_zero(istate) + 1;
+	    cstate0 += tzp1;
+	    istate >>= tzp1;
             return *this;
         }
-        bool operator!=(size_t x) { return count != x; }
-        bool operator==(size_t x) { return count == x; }
-        bool operator!=(BitSet::Iterator x) { return count != x.count; }
-        bool operator==(BitSet::Iterator x) { return count == x.count; }
+	struct End{};
+	bool operator==(End){
+	    return it == end && (istate == 0);
+	}
+	bool operator!=(End){
+	    return it != end || (istate != 0);
+	}
     };
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-    static Iterator construct(llvm::ArrayRef<uint64_t> const &seta) {
-        return Iterator{seta, 0, std::numeric_limits<uint64_t>::max(), seta[0],
-                        std::numeric_limits<uint64_t>::max()};
+    Iterator begin() const {
+	Iterator it{data.begin(), data.end(), *(data.begin())};
+	++it;
+	return it;
     }
-
-    Iterator begin() const { return ++construct(data); }
-    size_t end() const { return length; };
+    Iterator::End end() const { return Iterator::End{}; };
 
     static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
         size_t d = x >> size_t(6);
@@ -73,10 +73,8 @@ struct BitSet {
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
         bool contained = ((data[d] & mask) != 0);
-        if (!contained) {
+        if (!contained) 
             data[d] |= (mask);
-            ++(length);
-        }
         return contained;
     }
 
@@ -85,14 +83,11 @@ struct BitSet {
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
         bool contained = ((data[d] & mask) != 0);
-        if (contained) {
+        if (contained) 
             data[d] &= (~mask);
-            --(length);
-        }
         return contained;
     }
-    static void set(llvm::MutableArrayRef<uint64_t> data, size_t x, bool b,
-                    size_t &length) {
+    static void set(llvm::MutableArrayRef<uint64_t> data, size_t x, bool b) {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
@@ -101,54 +96,57 @@ struct BitSet {
             return;
         if (b) {
             data[d] = dd | mask;
-            ++length;
         } else {
             data[d] = dd & (~mask);
-            --(length);
         }
     }
 
     struct Reference {
         llvm::MutableArrayRef<uint64_t> data;
         size_t i;
-        size_t &length;
         operator bool() const { return contains(data, i); }
         void operator=(bool b) {
-            BitSet::set(data, i, b, length);
+            BitSet::set(data, i, b);
             return;
         }
     };
 
     bool operator[](size_t i) const { return contains(data, i); }
     Reference operator[](size_t i) {
-        return Reference{llvm::MutableArrayRef<uint64_t>(data), i, length};
+        return Reference{llvm::MutableArrayRef<uint64_t>(data), i};
     }
-    size_t size() const { return length; }
+    size_t size() const {
+        size_t s = 0;
+        for (auto u : data)
+            s += std::popcount(u);
+        return s;
+    }
 
     void setUnion(const BitSet &bs) {
         size_t O = bs.data.size(), T = data.size();
-        length = 0;
         if (O > T)
             data.resize(O);
         for (size_t i = 0; i < O; ++i) {
             uint64_t d = data[i] | bs.data[i];
-            length += std::popcount(d);
             data[i] = d;
         }
-        for (size_t i = O; i < T; ++i)
-            length += std::popcount(data[i]);
+    }
+    BitSet &operator&=(const BitSet &bs) {
+        if (bs.data.size() < data.size())
+            data.resize(bs.data.size());
+        for (size_t i = 0; i < data.size(); ++i)
+            data[i] &= bs.data[i];
+        return *this;
     }
 };
 
 std::ostream &operator<<(std::ostream &os, BitSet const &x) {
     os << "BitSet[";
-    if (x.length) {
-        auto it = x.begin();
-        os << std::to_string(*it);
-        ++it;
-        for (; it != x.end(); ++it) {
-            os << ", " << *it;
-        }
+    auto it = x.begin();
+    os << std::to_string(*it);
+    ++it;
+    for (; it != x.end(); ++it) {
+	os << ", " << *it;
     }
     os << "]";
     return os;

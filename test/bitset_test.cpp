@@ -21,6 +21,13 @@ TEST(BitSetTest, BasicAssertions) {
         printf("We get: %zu\n", *I);
         ++j;
     }
+    j = 0;
+    for (auto i : bs) {
+        EXPECT_EQ(i, bsc[j]);
+        EXPECT_TRUE(bs[i]);
+        printf("We get: %zu\n", i);
+        ++j;
+    }
     EXPECT_EQ(j, bsc.size());
     EXPECT_EQ(j, bs.size());
 }
