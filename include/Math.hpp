@@ -2531,13 +2531,16 @@ struct Rational {
         // return Rational{positive ? denominator : -denominator,
         //                 positive ? numerator : -numerator};
     }
-    llvm::Optional<Rational> operator/(Rational y) const {
+    llvm::Optional<Rational> safeDiv(Rational y) const {
         return (*this) * y.inv();
+    }
+    Rational operator/(Rational y) const {
+        return safeDiv(y).getValue();
     }
     // *this -= a*b
     bool fnmadd(Rational a, Rational b) {
-        if (llvm::Optional<Rational> ab = a * b) {
-            if (llvm::Optional<Rational> c = *this - ab.getValue()) {
+        if (llvm::Optional<Rational> ab = a.safeMul(b)) {
+            if (llvm::Optional<Rational> c = safeSub(ab.getValue())) {
                 *this = c.getValue();
                 return false;
             }
@@ -2545,7 +2548,7 @@ struct Rational {
         return true;
     }
     bool div(Rational a) {
-        if (llvm::Optional<Rational> d = *this / a) {
+        if (llvm::Optional<Rational> d = safeDiv(a)) {
             *this = d.getValue();
             return false;
         }

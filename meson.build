@@ -4,7 +4,8 @@ llvm_dep = dependency('llvm', version : '>=14.0')
 incdir = include_directories('include')
 
 if meson.get_compiler('cpp').get_id() == 'gcc'
-  add_global_arguments('-fno-semantic-interposition -fmax-errors=1', language : 'cpp')
+  add_global_arguments('-fno-semantic-interposition', language : 'cpp')
+  add_global_arguments('-fmax-errors=1', language : 'cpp')
 else
   add_global_arguments('-ferror-limit=1', language : 'cpp')
 endif
