@@ -2534,9 +2534,7 @@ struct Rational {
     llvm::Optional<Rational> safeDiv(Rational y) const {
         return (*this) * y.inv();
     }
-    Rational operator/(Rational y) const {
-        return safeDiv(y).getValue();
-    }
+    Rational operator/(Rational y) const { return safeDiv(y).getValue(); }
     // *this -= a*b
     bool fnmadd(Rational a, Rational b) {
         if (llvm::Optional<Rational> ab = a.safeMul(b)) {

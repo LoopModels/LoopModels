@@ -52,7 +52,7 @@ struct LU {
                 for (size_t k = m + 1; k < M; ++k)
                     if (Ymn.fnmadd(F(m, k), rhs(k, n)))
                         return true;
-                if (auto div = Ymn / F(m, m)) {
+                if (auto div = Ymn.safeDiv(F(m, m))) {
                     rhs(m, n) = div.getValue();
                 } else {
                     return true;
@@ -82,7 +82,7 @@ struct LU {
                 for (size_t k = 0; k < n; ++k)
                     if (Ymn.fnmadd(rhs(m, k), F(k, n)))
                         return true;
-                if (auto div = Ymn / F(n, n)) {
+                if (auto div = Ymn.safeDiv(F(n, n))) {
                     rhs(m, n) = div.getValue();
                 } else {
                     return true;

@@ -409,14 +409,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return maxNode;
     }
-    struct Graph {
-        // a subset of Nodes
-        BitSet nodeIds;
-        llvm::MutableArrayRef<ScheduledNode> nodes;
-        llvm::MutableArrayRef<MemoryAccess> mem;
-        llvm::ArrayRef<Dependence> edges;
-        BitSet &outNeighbors(size_t i) { return nodes[i].outNeighbors; }
-    };
+
     void connectGraph() {
 
         // llvm::SmallVector<unsigned> map(memory.size(),
@@ -461,7 +454,25 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // now that we've assigned each MemoryAccess to a NodeIndex, we
         // build the actual graph
     }
-
+    struct Graph {
+        // a subset of Nodes
+        BitSet nodeIds;
+        llvm::MutableArrayRef<MemoryAccess> mem;
+        llvm::MutableArrayRef<ScheduledNode> nodes;
+        llvm::ArrayRef<Dependence> edges;
+        BitSet &outNeighbors(size_t i) { return nodes[i].outNeighbors; }
+        bool containsNode(size_t i) const { return nodeIds.contains(i); }
+        bool missingNode(size_t i) const { return !containsNode(i); }
+        bool missingNode(size_t i, size_t j) const {
+            return !(containsNode(i) && containsNode(j));
+        }
+        bool missingNode(const Dependence &e) const {
+            return missingNode(e.in->nodeIndex, e.out->nodeIndex);
+        }
+    };
+    Graph fullGraph() {
+        return {BitSet::dense(nodes.size()), memory, nodes, edges};
+    }
     void fillUserToMemoryMap() {
         for (auto &mem : memory)
             userToMemory.insert(std::make_pair(mem.user, &mem));
@@ -677,22 +688,23 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return false;
     }
 
-    [[nodiscard]] size_t countNumLambdas(size_t d) const {
+    [[nodiscard]] size_t countNumLambdas(const Graph &g, size_t d) const {
         size_t c = 0;
         for (auto &e : edges)
-            c += (e.isInactive(d) ? 0 : e.getNumLambda());
+            c += ((e.isInactive(d), g.missingNode(e)) ? 0 : e.getNumLambda());
         return c;
     }
-    [[nodiscard]] size_t countNumBoundingCoefs(size_t d) const {
+    [[nodiscard]] size_t countNumBoundingCoefs(const Graph &g, size_t d) const {
         size_t c = 0;
         for (auto &e : edges)
-            c += (e.isInactive(d) ? 0 : e.getNumSymbols());
+            c +=
+                ((e.isInactive(d) || g.missingNode(e)) ? 0 : e.getNumSymbols());
         return c;
     }
-    void countAuxParamsAndConstraints(size_t d) {
+    void countAuxParamsAndConstraints(const Graph &g, size_t d) {
         size_t a = 0, b = 0, c = 0, ae = 0;
         for (auto &e : edges) {
-            if (isInactive(e, d))
+            if (isInactive(g, e, d))
                 continue;
             a += e.getNumLambda();
             b += e.depPoly.symbols.size();
@@ -704,9 +716,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         numConstraints = c;
         numActiveEdges = ae;
     }
-    void countNumParams(size_t depth) {
-        setScheduleMemoryOffsets(depth);
-        countAuxParamsAndConstraints(depth);
+    void countNumParams(const Graph &g, size_t depth) {
+        setScheduleMemoryOffsets(g, depth);
+        countAuxParamsAndConstraints(g, depth);
     }
     // assemble omni-simplex
     // we want to order variables to be
@@ -719,54 +731,62 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     [[nodiscard]] size_t getLambdaOffset() const {
         return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
     }
-    [[nodiscard]] static bool isInactive(const Dependence &edge, size_t d) {
+    [[nodiscard]] static bool isInactive(const Graph &g, const Dependence &edge,
+                                         size_t d) {
         return edge.isInactive(d) ||
-               (edge.out->nodeIndex == edge.in->nodeIndex);
+               (edge.out->nodeIndex == edge.in->nodeIndex) ||
+               g.missingNode(edge);
     }
-    [[nodiscard]] bool isInactive(size_t e, size_t d) const {
-        return isInactive(edges[e], d);
+    [[nodiscard]] bool isInactive(const Graph &g, size_t e, size_t d) const {
+        return isInactive(g, edges[e], d);
     }
-    [[nodiscard]] static bool isInactive(const Dependence &edge) {
-        return edge.isInactive() || (edge.out->nodeIndex == edge.in->nodeIndex);
+    [[nodiscard]] static bool isInactive(const Graph &g,
+                                         const Dependence &edge) {
+        return edge.isInactive() ||
+               (edge.out->nodeIndex == edge.in->nodeIndex) ||
+               g.missingNode(edge);
     }
-    [[nodiscard]] bool isInactive(size_t e) const {
-        return isInactive(edges[e]);
+    [[nodiscard]] bool isInactive(const Graph &g, size_t e) const {
+        return isInactive(g, edges[e]);
     }
-    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem) const {
+    [[nodiscard]] bool hasActiveEdges(const Graph &g,
+                                      const MemoryAccess &mem) const {
         for (auto &e : mem.edgesIn)
-            if (!isInactive(e))
+            if (!isInactive(g, e))
                 return true;
         for (auto &e : mem.edgesOut)
-            if (!isInactive(e))
+            if (!isInactive(g, e))
                 return true;
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const MemoryAccess &mem, size_t d) const {
+    [[nodiscard]] bool hasActiveEdges(const Graph &g, const MemoryAccess &mem,
+                                      size_t d) const {
         for (auto &e : mem.edgesIn)
-            if (!isInactive(e, d))
+            if (!isInactive(g, e, d))
                 return true;
         for (auto &e : mem.edgesOut)
-            if (!isInactive(e, d))
+            if (!isInactive(g, e, d))
                 return true;
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const ScheduledNode &node,
+    [[nodiscard]] bool hasActiveEdges(const Graph &g, const ScheduledNode &node,
                                       size_t d) const {
         for (auto memId : node.memory)
-            if (hasActiveEdges(memory[memId], d))
+            if (hasActiveEdges(g, memory[memId], d))
                 return true;
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const ScheduledNode &node) const {
+    [[nodiscard]] bool hasActiveEdges(const Graph &g,
+                                      const ScheduledNode &node) const {
         for (auto memId : node.memory)
-            if (hasActiveEdges(memory[memId]))
+            if (hasActiveEdges(g, memory[memId]))
                 return true;
         return false;
     }
-    void setScheduleMemoryOffsets(size_t d) {
+    void setScheduleMemoryOffsets(const Graph &g, size_t d) {
         size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
         for (auto &&node : nodes) {
-            if ((d >= node.getNumLoops()) || (!hasActiveEdges(node, d)))
+            if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
                 continue;
             if (!node.phiIsScheduled())
                 p = node.updatePhiOffset(p);
@@ -774,7 +794,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         numPhiCoefs = p - pInit;
         size_t o = p;
         for (auto &&node : nodes) {
-            if ((d > node.getNumLoops()) || (!hasActiveEdges(node, d)))
+            if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
                 continue;
             o = node.updateOmegaOffset(o);
         }
@@ -795,7 +815,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                    edge.dependenceSatisfaction.getConstraints().numCol());
         }
     }
-    void instantiateOmniSimplex(size_t d) {
+    void instantiateOmniSimplex(const Graph &g, size_t d) {
         // defines numScheduleCoefs, numLambda, numBounding, and
         // numConstraints
         omniSimplex.reserve(numConstraints + numOmegaCoefs,
@@ -829,7 +849,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             unsigned inNodeIndex = edge.in->nodeIndex;
             // SHOW(outNodeIndex);
             // CSHOWLN(inNodeIndex);
-            if (outNodeIndex == inNodeIndex)
+            if (outNodeIndex == inNodeIndex ||
+                g.missingNode(outNodeIndex, inNodeIndex))
                 continue;
             const ScheduledNode &outNode = nodes[outNodeIndex];
             const ScheduledNode &inNode = nodes[inNodeIndex];
@@ -961,7 +982,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 nonZeroC += (C(j, i) != 0);
         size_t nonZeroEdges = 0;
         for (auto &e : edges) {
-            if (isInactive(e, d))
+            if (isInactive(g, e, d))
                 continue;
             auto edb = e.dependenceBounding.getConstraints();
             bool firstEdgeActive = d < e.out->getNumLoops();
@@ -1017,7 +1038,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 
 #endif
     }
-    void updateSchedules(PtrVector<Rational> sol, size_t depth) {
+    void updateSchedules(const Graph &g, PtrVector<Rational> sol,
+                         size_t depth) {
         SHOW(depth);
         CSHOWLN(sol);
 #ifndef NDEBUG
@@ -1034,7 +1056,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &&node : nodes) {
             if (depth >= node.getNumLoops())
                 continue;
-            if (!hasActiveEdges(node)) {
+            if (!hasActiveEdges(g, node)) {
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled())
@@ -1055,14 +1077,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 return 2 * (y > 0) - 1;
         return 0;
     }
-    void addIndependentSolutionConstraints(size_t depth) {
+    void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
         std::cout << "addIndependentSolutionConstraints(depth = " << depth
                   << ")" << std::endl;
         omniSimplex.reserveExtraRows(memory.size());
         if (depth == 0) {
             // add ones >= 0
             for (auto &&node : nodes) {
-                if (node.phiIsScheduled() || (!hasActiveEdges(node)))
+                if (node.phiIsScheduled() || (!hasActiveEdges(g, node)))
                     continue;
                 auto c{omniSimplex.addConstraintAndVar()};
                 c(0) = 1;
@@ -1074,7 +1096,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         IntMatrix A, N;
         for (auto &&node : nodes) {
             if (node.phiIsScheduled() || (depth >= node.getNumLoops()) ||
-                (!hasActiveEdges(node)))
+                (!hasActiveEdges(g, node)))
                 continue;
             A = node.schedule.getPhi()(_(0, depth), _).transpose();
             std::cout << "indep constraint; ";
@@ -1092,12 +1114,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             c(end) = -1; // for >=
         }
     }
-    void setSchedulesIndependent(size_t depth) {
+    void setSchedulesIndependent(const Graph &g, size_t depth) {
         IntMatrix A, N;
         for (auto &&node : nodes) {
             if ((depth >= node.getNumLoops()) || node.phiIsScheduled())
                 continue;
-            if (!hasActiveEdges(node)) {
+            if (!hasActiveEdges(g, node)) {
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled())
@@ -1122,24 +1144,16 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             node.phiOffset = std::numeric_limits<unsigned>::max();
     }
     // returns true on failure
-    bool optimize() {
-        fillEdges();
-        fillUserToMemoryMap();
-        connectGraph();
-#ifndef NDEBUG
-        validateMemory();
-        validateEdges();
-#endif
-        const size_t maxDepth = calcMaxDepth();
-        Vector<Rational> sol;
+    bool optimize(Graph &g, Vector<Rational> &sol, size_t maxDepth) {
         for (size_t d = 0; d < maxDepth; ++d) {
-            countAuxParamsAndConstraints(d);
+            countAuxParamsAndConstraints(g, d);
             SHOW(d);
-            setScheduleMemoryOffsets(d);
+            setScheduleMemoryOffsets(g, d);
             CSHOWLN(numPhiCoefs);
             if (numPhiCoefs) {
-                instantiateOmniSimplex(d);
-                addIndependentSolutionConstraints(d);
+                instantiateOmniSimplex(g, d);
+                addIndependentSolutionConstraints(g, d);
+#ifndef NDEBUG
                 {
                     size_t i = 0;
                     for (auto &e : edges) {
@@ -1164,18 +1178,32 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 CSHOW(numOmegaCoefs);
                 CSHOW(numLambda);
                 CSHOWLN(numConstraints);
+#endif
                 if (omniSimplex.initiateFeasible())
                     return true;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
-                updateSchedules(sol, d);
+                updateSchedules(g, sol, d);
                 // TODO: deactivate edges of satisfied dependencies
             } else {
                 // TODO: something
-                setSchedulesIndependent(d);
+                setSchedulesIndependent(g, d);
             }
         }
         return false;
+    }
+    bool optimize() {
+        fillEdges();
+        fillUserToMemoryMap();
+        connectGraph();
+#ifndef NDEBUG
+        validateMemory();
+        validateEdges();
+#endif
+        const size_t maxDepth = calcMaxDepth();
+        Vector<Rational> sol;
+        Graph g{fullGraph()};
+        return optimize(g, sol, maxDepth);
     }
 };
 
