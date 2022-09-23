@@ -36,6 +36,10 @@ struct BitSet {
             b.data.back() = (size_t(1) << rem) - 1;
         return b;
     }
+    size_t maxValue() const {
+        size_t N = data.size();
+        return N ? (64 * N - std::countl_zero(data[N - 1])) : 0;
+    }
     struct Iterator {
         llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator it;
         llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator end;
@@ -73,7 +77,7 @@ struct BitSet {
         };
         bool operator==(End) const { return it == end && (istate == 0); }
         bool operator!=(End) const { return it != end || (istate != 0); }
-        bool operator==(Iterator j) {
+        bool operator==(Iterator j) const {
             return (it == j.it) && (istate == j.istate);
         }
     };
@@ -290,6 +294,23 @@ template <> struct std::iterator_traits<BitSliceView<int64_t>::ConstIterator> {
     using reference_type = int64_t &;
     using pointer_type = int64_t *;
 };
+struct ScheduledNode;
+template <> struct std::iterator_traits<BitSliceView<ScheduledNode>::Iterator> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ScheduledNode;
+    using reference_type = ScheduledNode &;
+    using pointer_type = ScheduledNode *;
+};
+template <>
+struct std::iterator_traits<BitSliceView<ScheduledNode>::ConstIterator> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ScheduledNode;
+    using reference_type = ScheduledNode &;
+    using pointer_type = ScheduledNode *;
+};
+
 // typedef
 // std::iterator_traits<BitSliceView<int64_t>::Iterator>::iterator_category;
 

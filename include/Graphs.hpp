@@ -7,24 +7,24 @@
 
 namespace Graph {
 template <typename G>
-concept Graph = requires(G g, size_t i) {
-    // { g.outNeighbors(i) } -> AbstractVector;
-    { g.getVertices() } -> std::ranges::range;
-    // {
-    //     g.getVertices()(i)
-    //     } -> std::same_as<typename std::remove_reference_t<G>::VertexType>;
-    // { g.outNeighbors(i)(i) } -> std::convertible_to<unsigned>;
+concept Graph = std::ranges::range<G> && requires(G g, size_t i) {
+    { g.vertexIds() } -> std::ranges::range;
+    { *std::ranges::begin(g.vertexIds()) } -> std::convertible_to<unsigned>;
+    { g.outNeighbors(i) } -> std::ranges::range;
+    { *std::ranges::begin(g.outNeighbors(i)) } -> std::convertible_to<unsigned>;
+    { g.inNeighbors(i) } -> std::ranges::range;
+    { *std::ranges::begin(g.inNeighbors(i)) } -> std::convertible_to<unsigned>;
     { g.wasVisited(i) } -> std::same_as<bool>;
-    { g.getVertices()(i).wasVisited() } -> std::same_as<bool>;
-    {g.getVertices()(i).visit()};
-    {g.getVertices()(i).unVisit()};
-    { g.numVertices() } -> std::convertible_to<size_t>;
+    { g.begin()->wasVisited() } -> std::same_as<bool>;
+    {g.begin()->visit()};
+    {g.begin()->unVisit()};
     {g.visit(i)};
-    { g.numVertices } -> std::convertible_to<unsigned>;
+    { g.numVertices() } -> std::convertible_to<unsigned>;
+    { g.maxVertexId() } -> std::convertible_to<size_t>;
 };
 
 [[maybe_unused]] static void clearVisited(Graph auto &g) {
-    for (auto &&v : g.getVertices())
+    for (auto &&v : g)
         v.unVisit();
 }
 
@@ -41,7 +41,7 @@ template <Graph G>
 [[maybe_unused]] static auto weaklyConnectedComponents(G &g) {
     llvm::SmallVector<llvm::SmallVector<unsigned>> components;
     g.clearVisited();
-    for (unsigned j = 0; j < g.numVerticies(); ++j) {
+    for (auto j : g.vertexIds()) {
         if (g.wasVisited(j))
             continue;
         components.emplace_back();
@@ -66,13 +66,13 @@ strongConnect(Graph auto &g,
         if (g.wasVisited(w)) {
             auto [wIndex, wLowLink, wOnStack] = indexLowLinkOnStack[w];
             if (wOnStack) {
-		unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
-		vll = std::min(vll, wIndex);
+                unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
+                vll = std::min(vll, wIndex);
             }
         } else { // not visited
             strongConnect(g, components, stack, indexLowLinkOnStack, index, w);
             unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
-	    vll = std::min(vll, std::get<1>(indexLowLinkOnStack[w]));
+            vll = std::min(vll, std::get<1>(indexLowLinkOnStack[w]));
         }
     }
     auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
@@ -83,7 +83,7 @@ strongConnect(Graph auto &g,
         do {
             w = stack.back();
             stack.pop_back();
-	    std::get<2>(indexLowLinkOnStack[w]) = false;
+            std::get<2>(indexLowLinkOnStack[w]) = false;
             component.push_back(w);
         } while (w != v);
     }
@@ -93,14 +93,14 @@ strongConnect(Graph auto &g,
 [[maybe_unused]] static llvm::SmallVector<llvm::SmallVector<unsigned>>
 stronglyConnectedComponents(Graph auto &g) {
     llvm::SmallVector<llvm::SmallVector<unsigned>> components;
-    size_t nVertex = g.numVerticies();
-    components.reserve(nVertex);
+    size_t maxId = g.maxVertexId();
+    components.reserve(maxId);
     llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
-        nVertex);
+        maxId);
     llvm::SmallVector<unsigned> stack;
     size_t index = 0;
     g.clearVisited();
-    for (size_t v = 0; v < nVertex; ++v) {
+    for (auto v : g.vertexIds()) {
         if (!g.wasVisited(v))
             index = strongConnect(g, components, stack, indexLowLinkOnStack,
                                   index, v);

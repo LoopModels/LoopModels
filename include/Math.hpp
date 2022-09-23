@@ -333,7 +333,7 @@ template <typename T>
 concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
     {
         t(i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+    } -> std::convertible_to<eltype_t<T>>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
     { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
@@ -349,7 +349,7 @@ template <typename T>
 concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
     {
         t(i, i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+    } -> std::convertible_to<eltype_t<T>>;
     { t.numRow() } -> std::convertible_to<size_t>;
     { t.numCol() } -> std::convertible_to<size_t>;
     { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
@@ -431,7 +431,7 @@ concept MatrixOrScalar = AbstractMatrix<T> || Scalar<T>;
 
 template <typename Op, VectorOrScalar A, VectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     Op op;
     A a;
     B b;
@@ -453,7 +453,7 @@ struct ElementwiseVectorBinaryOp {
 
 template <typename Op, MatrixOrScalar A, MatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     Op op;
     A a;
     B b;
@@ -499,7 +499,7 @@ struct ElementwiseMatrixBinaryOp {
 };
 
 template <typename A> struct Transpose {
-    using eltype = typename A::eltype;
+    using eltype = eltype_t<A>;
     A a;
     static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const { return a(j, i); }
@@ -508,7 +508,7 @@ template <typename A> struct Transpose {
     auto &view() const { return *this; };
 };
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     A a;
     B b;
     static constexpr bool canResize = false;
@@ -524,7 +524,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     inline auto view() const { return *this; };
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     A a;
     B b;
     static constexpr bool canResize = false;

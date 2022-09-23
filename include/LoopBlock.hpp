@@ -44,6 +44,7 @@ struct ScheduledNode {
     // llvm::SmallVector<unsigned> childNodes;
     // llvm::SmallVector<unsigned> memory;
     BitSet memory;
+    BitSet inNeighbors;
     BitSet outNeighbors;
     Schedule schedule;
     // llvm::SmallVector<MemoryAccess*> memory;
@@ -53,7 +54,8 @@ struct ScheduledNode {
     uint32_t omegaOffset; // used in LoopBlock
     uint8_t numLoops{0};
     bool visited{false};
-    bool isVisited() const { return visited; }
+    bool wasVisited() const { return visited; }
+    void visit() { visited = true; }
     void unVisit() { visited = false; }
     size_t getNumLoops() const { return numLoops; }
     bool phiIsScheduled() const { return phiOffset == PHISCHEDULEDFLAG; }
@@ -70,7 +72,7 @@ struct ScheduledNode {
         return _(phiOffset, phiOffset + numLoops);
     }
 
-    void merge(const ScheduledNode s) {
+    void merge(const ScheduledNode &s) {
         memory |= s.memory;
         outNeighbors |= s.outNeighbors;
         numLoops = std::max(numLoops, s.numLoops);
@@ -409,7 +411,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return maxNode;
     }
-
+    void connect(unsigned inIndex, unsigned outIndex) {
+        nodes[inIndex].outNeighbors.insert(outIndex);
+        nodes[outIndex].inNeighbors.insert(inIndex);
+    }
+    void connect(const Dependence &e) {
+        if (e.in->nodeIndex != e.out->nodeIndex)
+            connect(e.in->nodeIndex, e.out->nodeIndex);
+    }
     void connectGraph() {
 
         // llvm::SmallVector<unsigned> map(memory.size(),
@@ -441,8 +450,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             node.numLoops = std::max(node.numLoops, uint8_t(mem.getNumLoops()));
         }
         for (auto &e : edges)
-            if (e.in->nodeIndex != e.out->nodeIndex)
-                nodes[e.in->nodeIndex].outNeighbors.insert(e.out->nodeIndex);
+            connect(e.in->nodeIndex, e.out->nodeIndex);
         for (auto &&node : nodes)
             node.schedule.init(node.getNumLoops());
 #ifndef NDEBUG
@@ -460,6 +468,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         llvm::MutableArrayRef<MemoryAccess> mem;
         llvm::MutableArrayRef<ScheduledNode> nodes;
         llvm::ArrayRef<Dependence> edges;
+        [[nodiscard]] BitSet &inNeighbors(size_t i) {
+            return nodes[i].inNeighbors;
+        }
         [[nodiscard]] BitSet &outNeighbors(size_t i) {
             return nodes[i].outNeighbors;
         }
@@ -492,7 +503,21 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         [[nodiscard]] bool isInactive(size_t e) const {
             return isInactive(edges[e]);
         }
-	
+        BitSliceView<ScheduledNode>::Iterator begin() {
+            return BitSliceView<ScheduledNode>{nodes, nodeIds}.begin();
+        }
+        BitSliceView<ScheduledNode>::ConstIterator begin() const {
+            const BitSliceView<ScheduledNode> bsv{nodes, nodeIds};
+            return bsv.begin();
+        }
+        BitSet::Iterator::End end() const { return {}; }
+        bool wasVisited(size_t i) const { return nodes[i].visited; }
+        void visit(size_t i) { nodes[i].visit(); }
+        void unVisit(size_t i) { nodes[i].unVisit(); }
+        size_t numVertices() const { return nodeIds.size(); }
+        size_t maxVertexId() const { return nodeIds.maxValue(); }
+        BitSet &vertexIds() { return nodeIds; }
+        const BitSet &vertexIds() const { return nodeIds; }
     };
     Graph fullGraph() {
         return {BitSet::dense(nodes.size()), memory, nodes, edges};
@@ -1220,5 +1245,12 @@ std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
         os << " =";
     return os;
 }
-
-// static_assert(Graph::Graph<LoopBlock::Graph>);
+template <> struct std::iterator_traits<LoopBlock::Graph> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ScheduledNode;
+    using reference_type = ScheduledNode &;
+    using pointer_type = ScheduledNode *;
+};
+static_assert(std::ranges::range<LoopBlock::Graph>);
+static_assert(Graph::Graph<LoopBlock::Graph>);
