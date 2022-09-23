@@ -8,9 +8,17 @@
 #include <hwy/highway.h>
 namespace hn = hwy::HWY_NAMESPACE;
 
+struct Rational;
+template <typename T>
+concept Scalar =
+    std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
+
+template<typename T>
+using eltype_t = typename std::remove_reference_t<T>::eltype;
+
 template <typename T>
 concept HasEltype = requires(T) {
-    std::is_scalar_v<typename std::remove_reference_t<T>::eltype>;
+    std::is_scalar_v<eltype_t<T>>;
 };
 
 template <typename A> struct GetEltype {};
@@ -50,3 +58,4 @@ template <typename A, typename B> struct PromoteEltype {
 template <typename T> struct VType{
     using type = hn::VFromD<hn::ScalableTag<T>>;
 };
+template <typename T> using vtype_t = typename VType<T>::type;

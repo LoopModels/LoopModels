@@ -571,7 +571,8 @@ inline auto get(const AbstractMatrix auto &A, std::integral auto i,
 }
 inline auto get(const AbstractMatrix auto &A, auto i, auto j) {
     // std::cout << decltype(A) <<std::endl;
-    using V = typename VType<typename decltype(A)::eltype>::type;
+    // using V = typename VType<typename decltype(A)::eltype>::type;
+    using V = typename VType<eltype_t<decltype(A)>>::type;
     V v(A(i, j));
     return v;
 }
@@ -579,11 +580,6 @@ inline auto get(const AbstractMatrix auto &A, auto i, auto j) {
 constexpr size_t size(const std::integral auto) { return 1; }
 constexpr size_t size(const std::floating_point auto) { return 1; }
 inline size_t size(const AbstractVector auto &x) { return x.size(); }
-
-struct Rational;
-template <typename T>
-concept Scalar =
-    std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
 
 template <typename T>
 concept VectorOrScalar = AbstractVector<T> || Scalar<T>;
