@@ -9,10 +9,10 @@ namespace Graph {
 template <typename G>
 concept Graph = requires(G g, size_t i) {
     // { g.outNeighbors(i) } -> AbstractVector;
-    { g.getVertices() } -> AbstractVector;
-    {
-        g.getVertices()(i)
-        } -> std::same_as<typename std::remove_reference_t<G>::VertexType>;
+    { g.getVertices() } -> std::ranges::range;
+    // {
+    //     g.getVertices()(i)
+    //     } -> std::same_as<typename std::remove_reference_t<G>::VertexType>;
     // { g.outNeighbors(i)(i) } -> std::convertible_to<unsigned>;
     { g.wasVisited(i) } -> std::same_as<bool>;
     { g.getVertices()(i).wasVisited() } -> std::same_as<bool>;

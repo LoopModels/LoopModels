@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <ios>
 #include <iostream>
 #include <istream>
@@ -41,7 +42,7 @@ struct BitSet {
         uint64_t istate;
         size_t cstate0{std::numeric_limits<size_t>::max()};
         size_t cstate1{0};
-        size_t operator*() { return cstate0 + cstate1; }
+        size_t operator*() const { return cstate0 + cstate1; }
         Iterator &operator++() {
             while (istate == 0) {
                 ++it;
@@ -56,16 +57,31 @@ struct BitSet {
             istate >>= tzp1;
             return *this;
         }
-        struct End {};
-        bool operator==(End) { return it == end && (istate == 0); }
-        bool operator!=(End) { return it != end || (istate != 0); }
+        Iterator operator++(int) {
+            Iterator temp = *this;
+            ++*this;
+            return temp;
+        }
+        struct End {
+            ptrdiff_t operator-(Iterator it) {
+                ptrdiff_t i = 0;
+                for (; it != End{}; ++it, ++i) {
+                }
+                return i;
+            }
+            constexpr bool operator==(End) const { return true; }
+        };
+        bool operator==(End) const { return it == end && (istate == 0); }
+        bool operator!=(End) const { return it != end || (istate != 0); }
+        bool operator==(Iterator j) {
+            return (it == j.it) && (istate == j.istate);
+        }
     };
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
     Iterator begin() const {
         Iterator it{data.begin(), data.end(), *(data.begin())};
-        ++it;
-        return it;
+        return ++it;
     }
     Iterator::End end() const { return Iterator::End{}; };
 
@@ -195,3 +211,103 @@ struct BitSet64 {
         u = (u & mLower) | ((u + mUpper) >> 1);
     }
 };
+
+template <typename T> struct BitSliceView {
+    llvm::MutableArrayRef<T> a;
+    const BitSet &i;
+    struct Iterator {
+        llvm::MutableArrayRef<T> a;
+        BitSet::Iterator it;
+        bool operator==(BitSet::Iterator::End) const {
+            return it == BitSet::Iterator::End{};
+        }
+        Iterator &operator++() {
+            ++it;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator temp = *this;
+            ++it;
+            return temp;
+        }
+        T &operator*() { return a[*it]; }
+        const T &operator*() const { return a[*it]; }
+        T *operator->() { return &a[*it]; }
+        const T *operator->() const { return &a[*it]; }
+    };
+    Iterator begin() { return {a, i.begin()}; }
+    struct ConstIterator {
+        llvm::ArrayRef<T> a;
+        BitSet::Iterator it;
+        bool operator==(BitSet::Iterator::End) const {
+            return it == BitSet::Iterator::End{};
+        }
+        bool operator==(ConstIterator c) const {
+            return (it == c.it) && (a.data() == c.a.data());
+        }
+        ConstIterator &operator++() {
+            ++it;
+            return *this;
+        }
+        ConstIterator operator++(int) {
+            ConstIterator temp = *this;
+            ++it;
+            return temp;
+        }
+        const T &operator*() const { return a[*it]; }
+        const T *operator->() const { return &a[*it]; }
+    };
+    ConstIterator begin() const { return {a, i.begin()}; }
+    BitSet::Iterator::End end() const { return {}; }
+    size_t size() const { return i.size(); }
+};
+ptrdiff_t operator-(BitSet::Iterator::End, BitSliceView<int64_t>::Iterator v) {
+    return BitSet::Iterator::End{} - v.it;
+}
+ptrdiff_t operator-(BitSet::Iterator::End,
+                    BitSliceView<int64_t>::ConstIterator v) {
+    return BitSet::Iterator::End{} - v.it;
+}
+
+template <> struct std::iterator_traits<BitSet::Iterator> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = size_t;
+    using reference_type = size_t &;
+    using pointer_type = size_t *;
+};
+template <> struct std::iterator_traits<BitSliceView<int64_t>::Iterator> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = int64_t;
+    using reference_type = int64_t &;
+    using pointer_type = int64_t *;
+};
+template <> struct std::iterator_traits<BitSliceView<int64_t>::ConstIterator> {
+    using difference_type = ptrdiff_t;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = int64_t;
+    using reference_type = int64_t &;
+    using pointer_type = int64_t *;
+};
+// typedef
+// std::iterator_traits<BitSliceView<int64_t>::Iterator>::iterator_category;
+
+static_assert(std::movable<BitSliceView<int64_t>::Iterator>);
+static_assert(std::movable<BitSliceView<int64_t>::ConstIterator>);
+
+static_assert(std::weakly_incrementable<BitSliceView<int64_t>::Iterator>);
+static_assert(std::weakly_incrementable<BitSliceView<int64_t>::ConstIterator>);
+static_assert(std::input_or_output_iterator<BitSliceView<int64_t>::Iterator>);
+static_assert(
+    std::input_or_output_iterator<BitSliceView<int64_t>::ConstIterator>);
+// static_assert(std::indirectly_readable<BitSliceView<int64_t>::Iterator>);
+static_assert(std::indirectly_readable<BitSliceView<int64_t>::ConstIterator>);
+// static_assert(std::input_iterator<BitSliceView<int64_t>::Iterator>);
+static_assert(std::input_iterator<BitSliceView<int64_t>::ConstIterator>);
+static_assert(std::ranges::range<BitSliceView<int64_t>>);
+static_assert(std::ranges::range<const BitSliceView<int64_t>>);
+// static_assert(std::ranges::forward_range<BitSliceView<int64_t>>);
+static_assert(std::ranges::forward_range<const BitSliceView<int64_t>>);
+
+static_assert(std::ranges::range<BitSet>);

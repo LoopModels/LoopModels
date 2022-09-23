@@ -460,15 +460,39 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         llvm::MutableArrayRef<MemoryAccess> mem;
         llvm::MutableArrayRef<ScheduledNode> nodes;
         llvm::ArrayRef<Dependence> edges;
-        BitSet &outNeighbors(size_t i) { return nodes[i].outNeighbors; }
-        bool containsNode(size_t i) const { return nodeIds.contains(i); }
-        bool missingNode(size_t i) const { return !containsNode(i); }
-        bool missingNode(size_t i, size_t j) const {
+        [[nodiscard]] BitSet &outNeighbors(size_t i) {
+            return nodes[i].outNeighbors;
+        }
+        [[nodiscard]] bool containsNode(size_t i) const {
+            return nodeIds.contains(i);
+        }
+        [[nodiscard]] bool missingNode(size_t i) const {
+            return !containsNode(i);
+        }
+        [[nodiscard]] bool missingNode(size_t i, size_t j) const {
             return !(containsNode(i) && containsNode(j));
         }
-        bool missingNode(const Dependence &e) const {
+        [[nodiscard]] bool missingNode(const Dependence &e) const {
             return missingNode(e.in->nodeIndex, e.out->nodeIndex);
         }
+
+        [[nodiscard]] bool isInactive(const Dependence &edge, size_t d) const {
+            return edge.isInactive(d) ||
+                   (edge.out->nodeIndex == edge.in->nodeIndex) ||
+                   missingNode(edge);
+        }
+        [[nodiscard]] bool isInactive(const Dependence &edge) const {
+            return edge.isInactive() ||
+                   (edge.out->nodeIndex == edge.in->nodeIndex) ||
+                   missingNode(edge);
+        }
+        [[nodiscard]] bool isInactive(size_t e, size_t d) const {
+            return isInactive(edges[e], d);
+        }
+        [[nodiscard]] bool isInactive(size_t e) const {
+            return isInactive(edges[e]);
+        }
+	
     };
     Graph fullGraph() {
         return {BitSet::dense(nodes.size()), memory, nodes, edges};
@@ -691,20 +715,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     [[nodiscard]] size_t countNumLambdas(const Graph &g, size_t d) const {
         size_t c = 0;
         for (auto &e : edges)
-            c += ((e.isInactive(d), g.missingNode(e)) ? 0 : e.getNumLambda());
+            c += ((g.isInactive(e, d)) ? 0 : e.getNumLambda());
         return c;
     }
     [[nodiscard]] size_t countNumBoundingCoefs(const Graph &g, size_t d) const {
         size_t c = 0;
         for (auto &e : edges)
-            c +=
-                ((e.isInactive(d) || g.missingNode(e)) ? 0 : e.getNumSymbols());
+            c += (g.isInactive(e, d) ? 0 : e.getNumSymbols());
         return c;
     }
     void countAuxParamsAndConstraints(const Graph &g, size_t d) {
         size_t a = 0, b = 0, c = 0, ae = 0;
         for (auto &e : edges) {
-            if (isInactive(g, e, d))
+            if (g.isInactive(e, d))
                 continue;
             a += e.getNumLambda();
             b += e.depPoly.symbols.size();
@@ -731,41 +754,23 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     [[nodiscard]] size_t getLambdaOffset() const {
         return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
     }
-    [[nodiscard]] static bool isInactive(const Graph &g, const Dependence &edge,
-                                         size_t d) {
-        return edge.isInactive(d) ||
-               (edge.out->nodeIndex == edge.in->nodeIndex) ||
-               g.missingNode(edge);
-    }
-    [[nodiscard]] bool isInactive(const Graph &g, size_t e, size_t d) const {
-        return isInactive(g, edges[e], d);
-    }
-    [[nodiscard]] static bool isInactive(const Graph &g,
-                                         const Dependence &edge) {
-        return edge.isInactive() ||
-               (edge.out->nodeIndex == edge.in->nodeIndex) ||
-               g.missingNode(edge);
-    }
-    [[nodiscard]] bool isInactive(const Graph &g, size_t e) const {
-        return isInactive(g, edges[e]);
-    }
     [[nodiscard]] bool hasActiveEdges(const Graph &g,
                                       const MemoryAccess &mem) const {
         for (auto &e : mem.edgesIn)
-            if (!isInactive(g, e))
+            if (!g.isInactive(e))
                 return true;
         for (auto &e : mem.edgesOut)
-            if (!isInactive(g, e))
+            if (!g.isInactive(e))
                 return true;
         return false;
     }
     [[nodiscard]] bool hasActiveEdges(const Graph &g, const MemoryAccess &mem,
                                       size_t d) const {
         for (auto &e : mem.edgesIn)
-            if (!isInactive(g, e, d))
+            if (!g.isInactive(e, d))
                 return true;
         for (auto &e : mem.edgesOut)
-            if (!isInactive(g, e, d))
+            if (!g.isInactive(e, d))
                 return true;
         return false;
     }
@@ -982,7 +987,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 nonZeroC += (C(j, i) != 0);
         size_t nonZeroEdges = 0;
         for (auto &e : edges) {
-            if (isInactive(g, e, d))
+            if (g.isInactive(e, d))
                 continue;
             auto edb = e.dependenceBounding.getConstraints();
             bool firstEdgeActive = d < e.out->getNumLoops();
@@ -1157,7 +1162,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 {
                     size_t i = 0;
                     for (auto &e : edges) {
-                        if (e.isInactive(d))
+                        if (g.isInactive(e, d))
                             continue;
                         SHOW(e.depPoly.getNumLambda());
                         CSHOW(e.depPoly.getDim0());
@@ -1215,3 +1220,5 @@ std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
         os << " =";
     return os;
 }
+
+// static_assert(Graph::Graph<LoopBlock::Graph>);
