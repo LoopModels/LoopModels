@@ -236,7 +236,16 @@ TEST(SIMDVecTEST, BasicAssertions) {
     //Test StridedVector
     auto Astridedvec = A(_, 0);
     auto Bstridedvec = A(_, 1);
+    for (size_t i = 0; i < Astridedvec.size(); i++) {
+        std::cout <<"Astridedvec:" <<Astridedvec(i) << std::endl;
+    }
+    for (size_t i = 0; i < Bstridedvec.size(); i++) {
+        std::cout <<"Bstridedvec:" <<Bstridedvec(i) << std::endl;
+    }
     Astridedvec += Bstridedvec;
+    for (size_t i = 0; i < Astridedvec.size(); i++) {
+        std::cout <<"Astridedvec:" <<Astridedvec(i) << std::endl;
+    }
     Astridedvec *= Bstridedvec;
     Astridedvec /= Bstridedvec;
     Astridedvec -= Bstridedvec;
