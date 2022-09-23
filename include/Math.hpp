@@ -372,8 +372,7 @@ template <typename T> inline auto svreference(T *ptr, size_t i, size_t stride) {
     const hn::ScalableTag<T> d;
     auto vec_stride = hn::Set(d, int(stride));
     auto vec_i = hn::Set(d, int(i));
-    auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * vec_stride + vec_i};
-    // auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * int(stride) + int(i)};
+    auto vi{(hn::Iota(hn::ScalableTag<T>(), 0) + vec_i) * vec_stride};
     return SVReference<T, decltype(vi)>{ptr, vi};
 }
 
@@ -1416,7 +1415,7 @@ template <typename T> struct MutStridedVector {
         const hn::ScalableTag<T> dtag;
         auto vec_x = hn::Set(dtag, int(x));
         auto vec_i = hn::Set(dtag, int(i.i));
-        auto vi{hn::Iota(hn::ScalableTag<T>(), 0) * vec_x + vec_i};
+        auto vi{(hn::Iota(hn::ScalableTag<T>(), 0) + vec_i) * vec_x};
         return hn::GatherIndex(hn::ScalableTag<T>(), d, vi);
     }
     MutStridedVector<T> operator()(Range<size_t, size_t> i) {
@@ -1464,30 +1463,28 @@ template <typename T> struct MutStridedVector {
         const hn::ScalableTag<T> dtag;
         size_t Lane = hn::Lanes(dtag);
         size_t remainder = N % Lane;
-        std::cout << "remainder " << remainder << std::endl;
-        std::cout << "N " << N << std::endl;
-        std::cout << "Lane " << Lane << std::endl;
         for (size_t i = 0; i < N - remainder; i += Lane) {
             auto vec_x = x(VIndex{i});
-            // std::cout <<"x(i)" << x(i) << std::endl;
             decltype(vec_x) vcol = self(VIndex{i});
-            // std::cout <<"vcol" << self(i) << std::endl;
-            // self() = vcol + x(VIndex{i});
             self(VIndex{i}) = vcol + vec_x;
-        
         }
         for (size_t i = N - remainder; i < N; ++i)
             self(i) += x(i);
         return self;
-        // for (size_t i = 0; i < M; ++i)
-        //     self(i) += x(i);
-        // return self;
     }
     MutStridedVector<T> &operator-=(const AbstractVector auto &x) {
         const size_t M = x.size();
         MutStridedVector<T> &self = *this;
         assert(M == N);
-        for (size_t i = 0; i < M; ++i)
+        const hn::ScalableTag<T> dtag;
+        size_t Lane = hn::Lanes(dtag);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane) {
+            auto vec_x = x(VIndex{i});
+            decltype(vec_x) vcol = self(VIndex{i});
+            self(VIndex{i}) = vcol - vec_x;
+        }
+        for (size_t i = N - remainder; i < N; ++i)
             self(i) -= x(i);
         return self;
     }
@@ -1495,7 +1492,15 @@ template <typename T> struct MutStridedVector {
         const size_t M = x.size();
         MutStridedVector<T> &self = *this;
         assert(M == N);
-        for (size_t i = 0; i < M; ++i)
+        const hn::ScalableTag<T> dtag;
+        size_t Lane = hn::Lanes(dtag);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane) {
+            auto vec_x = x(VIndex{i});
+            decltype(vec_x) vcol = self(VIndex{i});
+            self(VIndex{i}) = vcol * vec_x;
+        }
+        for (size_t i = N - remainder; i < N; ++i)
             self(i) *= x(i);
         return self;
     }
@@ -1503,7 +1508,15 @@ template <typename T> struct MutStridedVector {
         const size_t M = x.size();
         MutStridedVector<T> &self = *this;
         assert(M == N);
-        for (size_t i = 0; i < M; ++i)
+        const hn::ScalableTag<T> dtag;
+        size_t Lane = hn::Lanes(dtag);
+        size_t remainder = N % Lane;
+        for (size_t i = 0; i < N - remainder; i += Lane) {
+            auto vec_x = x(VIndex{i});
+            decltype(vec_x) vcol = self(VIndex{i});
+            self(VIndex{i}) = vcol / vec_x;
+        }
+        for (size_t i = N - remainder; i < N; ++i)
             self(i) /= x(i);
         return self;
     }

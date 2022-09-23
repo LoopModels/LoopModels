@@ -243,13 +243,16 @@ TEST(SIMDVecTEST, BasicAssertions) {
         std::cout <<"Bstridedvec:" <<Bstridedvec(i) << std::endl;
     }
     Astridedvec += Bstridedvec;
-    for (size_t i = 0; i < Astridedvec.size(); i++) {
-        std::cout <<"Astridedvec:" <<Astridedvec(i) << std::endl;
-    }
     Astridedvec *= Bstridedvec;
     Astridedvec /= Bstridedvec;
     Astridedvec -= Bstridedvec;
-    auto Cstridedvec = 2 - Astridedvec;
+    for (size_t i = 0; i < Astridedvec.size(); i++) {
+        std::cout <<"Astridedvec:" <<Astridedvec(i) << std::endl;
+    }
+    auto Cstridedvec = 20 - Astridedvec;
+    for (size_t i = 0; i < Cstridedvec.size(); i++) {
+        std::cout <<"Cstridedvec:" <<Cstridedvec(i) << std::endl;
+    }
     // f /= 2;
     // std::cout << Cmutvec << std::endl;
     // Amutvec *= 2;
