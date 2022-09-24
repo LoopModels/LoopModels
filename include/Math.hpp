@@ -26,6 +26,12 @@
 //     std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
 // #endif
 
+template <typename R>
+concept AbstractRange = requires(R r) {
+    {r.begin()};
+    {r.end()};
+};
+
 [[maybe_unused]] static int64_t gcd(int64_t x, int64_t y) {
     if (x == 0) {
         return std::abs(y);
@@ -331,9 +337,7 @@ inline bool isZero(auto x) { return x == 0; }
 
 template <typename T>
 concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i)
-    } -> std::convertible_to<eltype_t<T>>;
+    { t(i) } -> std::convertible_to<eltype_t<T>>;
     { t.size() } -> std::convertible_to<size_t>;
     {t.view()};
     { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
@@ -347,9 +351,7 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
 // };
 template <typename T>
 concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i, i)
-    } -> std::convertible_to<eltype_t<T>>;
+    { t(i, i) } -> std::convertible_to<eltype_t<T>>;
     { t.numRow() } -> std::convertible_to<size_t>;
     { t.numCol() } -> std::convertible_to<size_t>;
     { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
@@ -566,6 +568,47 @@ template <typename B, typename E> struct Range {
     B b;
     E e;
 };
+template <std::integral B, std::integral E> struct Range<B, E> {
+    B b;
+    E e;
+    struct Iterator {
+        B i;
+        bool operator==(E e) { return i == e; }
+        B &operator++() {
+            ++i;
+            return *this;
+        }
+        B operator++(int) {
+            Iterator t = *this;
+            ++*this;
+            return t;
+        }
+        B &operator--() {
+            --i;
+            return *this;
+        }
+        B operator--(int) {
+            Iterator t = *this;
+            --*this;
+            return t;
+        }
+        B operator*() { return i; }
+    };
+    Iterator begin() const { return b; }
+    E end() const { return e; }
+};
+// template <typename B, typename E>
+// constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
+
+// template <> struct std::iterator_traits<Range<size_t,size_t>> {
+//     using difference_type = ptrdiff_t;
+//     using iterator_category = std::forward_iterator_tag;
+//     using value_type = size_t;
+//     using reference_type = void;
+//     using pointer_type = void;
+// };
+
+// static_assert(std::ranges::range<Range<size_t, size_t>>);
 
 // template <> struct Range<Begin, int> {
 //     static constexpr Begin b = begin;

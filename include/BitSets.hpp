@@ -184,6 +184,10 @@ struct BitSet {
             data[i] |= bs.data[i];
         return *this;
     }
+    BitSet operator|(const BitSet &bs) const {
+        BitSet r = *this;
+        return r |= bs;
+    }
 };
 
 std::ostream &operator<<(std::ostream &os, BitSet const &x) {

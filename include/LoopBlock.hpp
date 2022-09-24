@@ -50,8 +50,8 @@ struct ScheduledNode {
     // llvm::SmallVector<MemoryAccess*> memory;
     static constexpr uint32_t PHISCHEDULEDFLAG =
         std::numeric_limits<uint32_t>::max();
-    uint32_t phiOffset;   // used in LoopBlock
-    uint32_t omegaOffset; // used in LoopBlock
+    uint32_t phiOffset{0};   // used in LoopBlock
+    uint32_t omegaOffset{0}; // used in LoopBlock
     uint8_t numLoops{0};
     bool visited{false};
     bool wasVisited() const { return visited; }
@@ -72,18 +72,22 @@ struct ScheduledNode {
         return _(phiOffset, phiOffset + numLoops);
     }
 
-    void merge(const ScheduledNode &s) {
+    ScheduledNode operator|(const ScheduledNode &s) const {
+        uint8_t nL = std::max(numLoops, s.numLoops);
+        return {memory | s.memory,
+                (inNeighbors | s.inNeighbors),
+                (outNeighbors | s.outNeighbors),
+                Schedule(nL),
+                0,
+                0,
+                nL};
+    }
+    ScheduledNode &operator|=(const ScheduledNode &s) {
         memory |= s.memory;
         outNeighbors |= s.outNeighbors;
         numLoops = std::max(numLoops, s.numLoops);
+        return *this;
     }
-    // void merge(const ScheduledNode s) {
-    //     llvm::SmallVector<unsigned> memoryNew;
-    //     memoryNew.reserve(memory.size() + s.memory.size());
-    //     std::ranges::set_union(memory, s.memory,
-    //     std::back_inserter(memoryNew)); std::swap(memory, memoryNew);
-    //     numLoops = std::max(numLoops, s.numLoops);
-    // }
 };
 
 // A loop block is a block of the program that may include multiple loops.
@@ -468,6 +472,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         llvm::MutableArrayRef<MemoryAccess> mem;
         llvm::MutableArrayRef<ScheduledNode> nodes;
         llvm::ArrayRef<Dependence> edges;
+        // llvm::SmallVector<bool> visited;
+        // BitSet visited;
         [[nodiscard]] BitSet &inNeighbors(size_t i) {
             return nodes[i].inNeighbors;
         }
@@ -514,7 +520,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         bool wasVisited(size_t i) const { return nodes[i].visited; }
         void visit(size_t i) { nodes[i].visit(); }
         void unVisit(size_t i) { nodes[i].unVisit(); }
-        size_t numVertices() const { return nodeIds.size(); }
+        size_t getNumVertices() const { return nodeIds.size(); }
         size_t maxVertexId() const { return nodeIds.maxValue(); }
         BitSet &vertexIds() { return nodeIds; }
         const BitSet &vertexIds() const { return nodeIds; }

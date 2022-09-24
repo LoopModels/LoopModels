@@ -5,21 +5,27 @@
 #include <tuple>
 #include <type_traits>
 
+// TODO: when we have better std::ranges support in compilers, use it?
 namespace Graph {
 template <typename G>
-concept Graph = std::ranges::range<G> && requires(G g, size_t i) {
-    { g.vertexIds() } -> std::ranges::range;
-    { *std::ranges::begin(g.vertexIds()) } -> std::convertible_to<unsigned>;
-    { g.outNeighbors(i) } -> std::ranges::range;
-    { *std::ranges::begin(g.outNeighbors(i)) } -> std::convertible_to<unsigned>;
-    { g.inNeighbors(i) } -> std::ranges::range;
-    { *std::ranges::begin(g.inNeighbors(i)) } -> std::convertible_to<unsigned>;
+concept Graph = AbstractRange<G> && requires(G g, size_t i) {
+    { g.vertexIds() } -> AbstractRange;
+    // { *std::ranges::begin(g.vertexIds()) } -> std::convertible_to<unsigned>;
+    { *g.vertexIds().begin() } -> std::convertible_to<unsigned>;
+    { g.outNeighbors(i) } -> AbstractRange;
+    // { *std::ranges::begin(g.outNeighbors(i)) } ->
+    // std::convertible_to<unsigned>;
+    { *g.outNeighbors(i).begin() } -> std::convertible_to<unsigned>;
+    { g.inNeighbors(i) } -> AbstractRange;
+    // { *std::ranges::begin(g.inNeighbors(i)) } ->
+    // std::convertible_to<unsigned>;
+    { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;
     { g.wasVisited(i) } -> std::same_as<bool>;
     { g.begin()->wasVisited() } -> std::same_as<bool>;
     {g.begin()->visit()};
     {g.begin()->unVisit()};
     {g.visit(i)};
-    { g.numVertices() } -> std::convertible_to<unsigned>;
+    { g.getNumVertices() } -> std::convertible_to<unsigned>;
     { g.maxVertexId() } -> std::convertible_to<size_t>;
 };
 
