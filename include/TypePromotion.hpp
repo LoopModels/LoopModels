@@ -2,10 +2,19 @@
 #include <concepts>
 #include <type_traits>
 
+// #undef HWY_TARGET_INCLUDE
+// #define HWY_TARGET_INCLUDE "./TypePromotion.hpp"
+// #include <hwy/foreach_target.h> 
+// #include <hwy/highway.h>
+// namespace hn = hwy::HWY_NAMESPACE;
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "./TypePromotion.hpp"
-#include <hwy/foreach_target.h> 
+#include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+// namespace hn = hwy::HWY_NAMESPACE;
+HWY_BEFORE_NAMESPACE();
+// namespace project {  // optional
+namespace HWY_NAMESPACE {
 namespace hn = hwy::HWY_NAMESPACE;
 
 struct Rational;
@@ -55,7 +64,15 @@ template <typename A, typename B> struct PromoteEltype {
     using eltype = typename PromoteType<typename GetEltype<A>::eltype,
                                         typename GetEltype<B>::eltype>::eltype;
 };
-template <typename T> struct VType{
+template <typename T, typename = void> struct VType;
+template <typename T> struct VType<T,std::enable_if_t<std::is_scalar_v<T>>>{
     using type = hn::VFromD<hn::ScalableTag<T>>;
 };
+template <typename T> struct VType<T,std::enable_if_t<HasEltype<T>>>{
+    using type = hn::VFromD<hn::ScalableTag<eltype_t<T>>>;
+};
 template <typename T> using vtype_t = typename VType<T>::type;
+
+}  // namespace HWY_NAMESPACE
+// }  // namespace project - optional
+HWY_AFTER_NAMESPACE();

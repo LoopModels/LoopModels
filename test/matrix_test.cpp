@@ -3,6 +3,12 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "./matrix_test.cpp"
+#include <hwy/foreach_target.h>
+#include <hwy/highway.h>
+HWY_BEFORE_NAMESPACE();
+namespace HWY_NAMESPACE {
 // Demonstrate some basic assertions.
 TEST(HelloTest, BasicAssertions) {
     SmallSparseMatrix<int64_t> Asparse(3, 4);
@@ -312,3 +318,5 @@ TEST(OperatorTEST, BasicAssertions) {
     // std::cout << "xxxxxxxxxx" << x << std::endl;
     EXPECT_EQ(x, z);
 }
+}
+HWY_AFTER_NAMESPACE();

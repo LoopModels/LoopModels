@@ -30,6 +30,10 @@
 #define HWY_TARGET_INCLUDE "./Math.hpp"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+// namespace hn = hwy::HWY_NAMESPACE;
+HWY_BEFORE_NAMESPACE();
+// namespace project {  // optional
+namespace HWY_NAMESPACE {
 namespace hn = hwy::HWY_NAMESPACE;
 // #ifndef NDEBUGWY_NAMESPACE;
 // #ifndef NDEBUG
@@ -422,8 +426,14 @@ concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t, size_t i) {
 inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
     const size_t M = x.size();
     y.extendOrAssertSize(M);
-    for (size_t i = 0; i < M; ++i)
+    size_t Lane = hn::Lanes(hn::ScalableTag<vtype_t<decltype(x)>>());
+    size_t remainder = M % Lane;
+    for (size_t i = 0; i < M - remainder; i += Lane) {
+        y(VIndex{i}) = x(VIndex{i});
+    }
+    for (size_t i = M - remainder; i < M; ++i) {
         y(i) = x(i);
+    }
     return y;
 }
 inline auto &copyto(AbstractMatrixCore auto &A,
@@ -558,10 +568,7 @@ inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
 // inline auto get(const AbstractVector auto &A,  i) { return A(i); }
 inline auto get(const AbstractVector auto &A, VIndex i) {
     // using V = hn::VFromD<hn::ScalableTag<decltype(A)::eltype>()>;
-    using V = hn::VFromD<
-        hn::ScalableTag<typename std::remove_reference_t<decltype(A)>::eltype>>;
-
-    V v(A(i));
+    vtype_t<decltype(A)> v(A(i));
     return v;
 }
 
@@ -572,8 +579,7 @@ inline auto get(const AbstractMatrix auto &A, std::integral auto i,
 inline auto get(const AbstractMatrix auto &A, auto i, auto j) {
     // std::cout << decltype(A) <<std::endl;
     // using V = typename VType<typename decltype(A)::eltype>::type;
-    using V = typename VType<eltype_t<decltype(A)>>::type;
-    V v(A(i, j));
+    vtype_t<decltype(A)> v(A(i, j));
     return v;
 }
 
@@ -3263,6 +3269,6 @@ static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
 static_assert(AbstractVector<
               ElementwiseVectorBinaryOp<Mul, PtrVector<int64_t>, int64_t>>);
 
-// }  // namespace HWY_NAMESPACE
+}  // namespace HWY_NAMESPACE
 // }  // namespace project - optional
-// HWY_AFTER_NAMESPACE();
+HWY_AFTER_NAMESPACE();

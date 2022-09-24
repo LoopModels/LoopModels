@@ -7,6 +7,7 @@ if meson.get_compiler('cpp').get_id() == 'gcc'
   add_global_arguments('-fno-semantic-interposition', language : 'cpp')
 endif
 
+#add_global_arguments('-march=native', language : 'cpp')
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 

@@ -6,6 +6,16 @@
 #include <cstddef>
 #include <string>
 
+#undef HWY_TARGET_INCLUDE
+#define HWY_TARGET_INCLUDE "./MatrixStringParse.hpp"
+#include <hwy/foreach_target.h>
+#include <hwy/highway.h>
+// namespace hn = hwy::HWY_NAMESPACE;
+HWY_BEFORE_NAMESPACE();
+// namespace project {  // optional
+namespace HWY_NAMESPACE {
+namespace hn = hwy::HWY_NAMESPACE;
+
 IntMatrix stringToIntMatrix(const std::string &s) {
     assert(s.starts_with('['));
     assert(s.ends_with(']'));
@@ -34,3 +44,7 @@ IntMatrix stringToIntMatrix(const std::string &s) {
     IntMatrix A(std::move(content), numRows, numCols);
     return A;
 }
+
+}  // namespace HWY_NAMESPACE
+// }  // namespace project - optional
+HWY_AFTER_NAMESPACE();
