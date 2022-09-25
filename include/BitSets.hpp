@@ -84,8 +84,12 @@ struct BitSet {
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
     Iterator begin() const {
-        Iterator it{data.begin(), data.end(), *(data.begin())};
-        return ++it;
+	auto b{data.begin()};
+	auto e{data.end()};
+        Iterator it{b, e, *b};
+	if (b != e)
+	    ++it;
+        return it;
     }
     Iterator::End end() const { return Iterator::End{}; };
 

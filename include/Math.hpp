@@ -31,6 +31,18 @@ concept AbstractRange = requires(R r) {
     {r.begin()};
     {r.end()};
 };
+std::ostream &printRange(std::ostream &os, AbstractRange auto &r) {
+    os << "[ ";
+    bool needComma = false;
+    for (auto x : r) {
+        if (needComma)
+            os << ", ";
+        os << x;
+        needComma = true;
+    }
+    os << " ]";
+    return os;
+}
 
 [[maybe_unused]] static int64_t gcd(int64_t x, int64_t y) {
     if (x == 0) {
@@ -574,27 +586,27 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     struct Iterator {
         B i;
         bool operator==(E e) { return i == e; }
-        B &operator++() {
+        Iterator &operator++() {
             ++i;
             return *this;
         }
-        B operator++(int) {
+        Iterator operator++(int) {
             Iterator t = *this;
             ++*this;
             return t;
         }
-        B &operator--() {
+        Iterator &operator--() {
             --i;
             return *this;
         }
-        B operator--(int) {
+        Iterator operator--(int) {
             Iterator t = *this;
             --*this;
             return t;
         }
         B operator*() { return i; }
     };
-    Iterator begin() const { return b; }
+    Iterator begin() const { return Iterator{b}; }
     E end() const { return e; }
 };
 // template <typename B, typename E>
