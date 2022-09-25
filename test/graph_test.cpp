@@ -90,14 +90,15 @@ TEST(GraphTest, BasicAssertions) {
     EXPECT_EQ(scc0, scc1);
     SHOWLN(scc0.size());
     for (auto &v : scc0)
-        printVector(std::cout << "SCC: ", v) << std::endl;
+        std::cout << "SCC: " << v << std::endl;
     // NOTE: currently using inNeighbors instead of outNeighbors, so in
     // topological order.
     EXPECT_EQ(scc0[0].size(), 1);
     EXPECT_EQ(scc0[1].size(), 3);
     EXPECT_EQ(scc0[2].size(), 3);
 
-    EXPECT_EQ(scc0[0][0], 0);
+    EXPECT_TRUE(scc0[0][0]);
+    EXPECT_TRUE(std::ranges::any_of(scc0[0], equals(0)));
 
     EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(2)));
     EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(5)));

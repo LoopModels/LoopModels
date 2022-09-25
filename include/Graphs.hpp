@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./BitSets.hpp"
 #include "./Math.hpp"
 #include <iostream>
 #include <istream>
@@ -63,8 +64,7 @@ template <Graph G>
 }
 
 [[maybe_unused]] static size_t
-strongConnect(Graph auto &g,
-              llvm::SmallVector<llvm::SmallVector<unsigned>> &components,
+strongConnect(Graph auto &g, llvm::SmallVector<BitSet> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                   indexLowLinkOnStack,
@@ -89,21 +89,21 @@ strongConnect(Graph auto &g,
     auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
     if (vIndex == vLowLink) {
         components.emplace_back();
-        llvm::SmallVector<unsigned> &component = components.back();
+        BitSet &component = components.back();
         unsigned w;
         do {
             w = stack.back();
             stack.pop_back();
             std::get<2>(indexLowLinkOnStack[w]) = false;
-            component.push_back(w);
+            component.insert(w);
         } while (w != v);
     }
     return index;
 }
 
-[[maybe_unused]] static llvm::SmallVector<llvm::SmallVector<unsigned>>
+[[maybe_unused]] static llvm::SmallVector<BitSet>
 stronglyConnectedComponents(Graph auto &g) {
-    llvm::SmallVector<llvm::SmallVector<unsigned>> components;
+    llvm::SmallVector<BitSet> components;
     size_t maxId = g.maxVertexId();
     components.reserve(maxId);
     llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
