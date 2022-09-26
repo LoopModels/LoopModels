@@ -301,16 +301,19 @@ TEST(SIMDMatTEST, BasicAssertions) {
     IntMatrix  C(6, 6);
     for (size_t i = 0; i < 6; i++) {
         for (size_t j = 0; j < 6; j++) {
-            C(i, j) = 5;
+            C(i, j) = 3;
         }
     }
     // auto C = A * B ;
     // auto C = A * 2;
     // A *= 2;
     A = A + B;
-    // A += B;
+    A += B;
+    A -= B;
+    A *= 2;
+    A /= 2;
     std::cout << A << std::endl;
-    // EXPECT_EQ(A, C);
+    EXPECT_EQ(A, C);
 }
 
 TEST(OperatorTEST, BasicAssertions) {

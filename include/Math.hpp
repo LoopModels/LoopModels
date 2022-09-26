@@ -1800,9 +1800,16 @@ template <typename T> struct MutPtrMatrix {
         return *this = *this - B;
     }
     MutPtrMatrix<T> operator*=(const std::integral auto b) {
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) *= b;
+        const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        const auto const_vec = hn::Set(d, b);
+        for (size_t i = 0; i < M; ++i)
+            for (size_t j = 0; j < N - remainder; j += Lane)
+            {
+                decltype(const_vec) vec_row = (*this)(i, VIndex{j});
+                (*this)(i, VIndex{j}) = vec_row * const_vec;
+            }
         return *this;
     }
     MutPtrMatrix<T> operator/=(const std::integral auto b) {
@@ -2019,11 +2026,12 @@ template <typename T, typename P> struct BaseMatrix {
     // }
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         // MutPtrMatrix<T> A{*this};
+        // TODO?
         MutPtrMatrix<T> A = *this;
         return A += B;
     }
     MutPtrMatrix<T> operator-=(const AbstractMatrix auto &B) {
-        MutPtrMatrix<T> A{*this};
+        MutPtrMatrix<T> A = *this;
         return A -= B;
     }
     MutPtrMatrix<T> operator*=(const std::integral auto b) {
@@ -2031,7 +2039,7 @@ template <typename T, typename P> struct BaseMatrix {
         return A *= b;
     }
     MutPtrMatrix<T> operator/=(const std::integral auto b) {
-        MutPtrMatrix<T> A{*this};
+        MutPtrMatrix<T> A = *this;
         return A /= b;
     }
 
