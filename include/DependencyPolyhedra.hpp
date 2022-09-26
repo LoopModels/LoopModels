@@ -3,6 +3,7 @@
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./MemoryAccess.hpp"
 #include "./NormalForm.hpp"
 #include "./POSet.hpp"
 #include "./Polyhedra.hpp"
@@ -796,7 +797,23 @@ struct Dependence {
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
-
+    bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) {
+        const size_t numLambda = depPoly.getNumLambda();
+        const size_t numLoopsX = sx.getNumLoops();
+        const size_t numLoopsY = sy.getNumLoops();
+        const size_t numLoopsTotal = numLoopsX + numLoopsY;
+        Vector<int64_t> sch;
+        sch.resizeForOverwrite(numLoopsTotal + 2);
+        sch(_(begin, numLoopsX)) = sx.getPhi()(d, _);
+        sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _);
+        sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
+        sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
+        return dependenceSatisfaction.unSatisfiable(sch, numLambda);
+    }
+    bool isSatisfied(size_t d) {
+        return forward ? isSatisfied(in->schedule, out->schedule, d)
+                       : isSatisfied(out->schedule, in->schedule, d);
+    }
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
                                size_t numLambda, size_t nonTimeDim) {
@@ -870,8 +887,8 @@ struct Dependence {
                               MemoryAccess &y) {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = dxy.getNumLambda();
-        if (checkDirection(pair, x, y, numLambda,
-                           dxy.A.numCol() - dxy.getTimeDim())) {
+        assert(dxy.getTimeDim() == 0);
+        if (checkDirection(pair, x, y, numLambda, dxy.A.numCol())) {
             pair.first.truncateVars(1 + numLambda +
                                     dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),

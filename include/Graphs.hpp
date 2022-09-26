@@ -9,38 +9,49 @@
 #include <type_traits>
 
 // TODO: when we have better std::ranges support in compilers, use it?
-namespace Graph {
+namespace Graphs {
 template <typename G>
-concept Graph = AbstractRange<G> && requires(G g, const G cg, size_t i) {
-    { g.vertexIds() } -> AbstractRange;
-    // { *std::ranges::begin(g.vertexIds()) } -> std::convertible_to<unsigned>;
-    { *g.vertexIds().begin() } -> std::convertible_to<unsigned>;
-    { g.outNeighbors(i) } -> AbstractRange;
-    { cg.outNeighbors(i) } -> AbstractRange;
-    // { *std::ranges::begin(g.outNeighbors(i)) } ->
-    // std::convertible_to<unsigned>;
-    { *g.outNeighbors(i).begin() } -> std::convertible_to<unsigned>;
-    { g.inNeighbors(i) } -> AbstractRange;
-    { cg.inNeighbors(i) } -> AbstractRange;
-    // { *std::ranges::begin(g.inNeighbors(i)) } ->
-    // std::convertible_to<unsigned>;
-    { *g.inNeighbors(i).begin() } -> std::convertible_to<unsigned>;
-    { g.wasVisited(i) } -> std::same_as<bool>;
-    { g.begin()->wasVisited() } -> std::same_as<bool>;
-    {g.begin()->visit()};
-    {g.begin()->unVisit()};
-    {g.visit(i)};
-    { g.getNumVertices() } -> std::convertible_to<unsigned>;
-    { g.maxVertexId() } -> std::convertible_to<size_t>;
-};
+concept AbstractGraph =
+    AbstractRange<G> && requires(G g, const G cg, size_t i) {
+                            { g.vertexIds() } -> AbstractRange;
+                            // { *std::ranges::begin(g.vertexIds()) } ->
+                            // std::convertible_to<unsigned>;
+                            {
+                                *g.vertexIds().begin()
+                                } -> std::convertible_to<unsigned>;
+                            { g.outNeighbors(i) } -> AbstractRange;
+                            { cg.outNeighbors(i) } -> AbstractRange;
+                            // { *std::ranges::begin(g.outNeighbors(i)) } ->
+                            // std::convertible_to<unsigned>;
+                            {
+                                *g.outNeighbors(i).begin()
+                                } -> std::convertible_to<unsigned>;
+                            { g.inNeighbors(i) } -> AbstractRange;
+                            { cg.inNeighbors(i) } -> AbstractRange;
+                            // { *std::ranges::begin(g.inNeighbors(i)) } ->
+                            // std::convertible_to<unsigned>;
+                            {
+                                *g.inNeighbors(i).begin()
+                                } -> std::convertible_to<unsigned>;
+                            { g.wasVisited(i) } -> std::same_as<bool>;
+                            { g.begin()->wasVisited() } -> std::same_as<bool>;
+                            { g.begin()->visit() };
+                            { g.begin()->unVisit() };
+                            { g.visit(i) };
+                            {
+                                g.getNumVertices()
+                                } -> std::convertible_to<unsigned>;
+                            { g.maxVertexId() } -> std::convertible_to<size_t>;
+                        };
 
-[[maybe_unused]] static void clearVisited(Graph auto &g) {
+[[maybe_unused]] static void clearVisited(AbstractGraph auto &g) {
     for (auto &&v : g)
         v.unVisit();
 }
 
-[[maybe_unused]] static void
-weakVisit(Graph auto &g, llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
+[[maybe_unused]] static void weakVisit(AbstractGraph auto &g,
+                                       llvm::SmallVectorImpl<unsigned> &sorted,
+                                       unsigned v) {
     g.visit(v);
     for (auto j : g.outNeighbors(v))
         if (!g.wasVisited(j))
@@ -48,8 +59,7 @@ weakVisit(Graph auto &g, llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
     sorted.push_back(v);
 }
 
-template <Graph G>
-[[maybe_unused]] static auto weaklyConnectedComponents(G &g) {
+[[maybe_unused]] static auto weaklyConnectedComponents(AbstractGraph auto &g) {
     llvm::SmallVector<llvm::SmallVector<unsigned>> components;
     g.clearVisited();
     for (auto j : g.vertexIds()) {
@@ -64,7 +74,7 @@ template <Graph G>
 }
 
 [[maybe_unused]] static size_t
-strongConnect(Graph auto &g, llvm::SmallVector<BitSet> &components,
+strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                   indexLowLinkOnStack,
@@ -102,7 +112,7 @@ strongConnect(Graph auto &g, llvm::SmallVector<BitSet> &components,
 }
 
 [[maybe_unused]] static llvm::SmallVector<BitSet>
-stronglyConnectedComponents(Graph auto &g) {
+stronglyConnectedComponents(AbstractGraph auto &g) {
     llvm::SmallVector<BitSet> components;
     size_t maxId = g.maxVertexId();
     components.reserve(maxId);
@@ -119,7 +129,7 @@ stronglyConnectedComponents(Graph auto &g) {
     return components;
 }
 
-std::ostream &print(const Graph auto &g, std::ostream &os = std::cout) {
+std::ostream &print(const AbstractGraph auto &g, std::ostream &os = std::cout) {
     for (auto i : g.vertexIds()) {
         os << "Vertex " << i << ":";
         printRange(os << "\ninNeighbors: ", g.inNeighbors(i));
@@ -128,7 +138,7 @@ std::ostream &print(const Graph auto &g, std::ostream &os = std::cout) {
     return os;
 }
 
-} // namespace Graph
+} // namespace Graphs
 
 // template <typename G>
 // concept Graph = requires(G g) {

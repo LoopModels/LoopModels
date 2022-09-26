@@ -55,7 +55,7 @@ template <> struct std::iterator_traits<MockGraph> {
     using pointer_type = MockVertex *;
 };
 
-static_assert(Graph::Graph<MockGraph>);
+static_assert(Graphs::AbstractGraph<MockGraph>);
 
 template <typename T> struct Equal {
     T x;
@@ -84,9 +84,9 @@ TEST(GraphTest, BasicAssertions) {
     G.connect(4, 1);
     G.connect(5, 6);
     G.connect(6, 2);
-    Graph::print(G);
-    auto scc0 = Graph::stronglyConnectedComponents(G);
-    auto scc1 = Graph::stronglyConnectedComponents(G);
+    Graphs::print(G);
+    auto scc0 = Graphs::stronglyConnectedComponents(G);
+    auto scc1 = Graphs::stronglyConnectedComponents(G);
     EXPECT_EQ(scc0, scc1);
     SHOWLN(scc0.size());
     for (auto &v : scc0)

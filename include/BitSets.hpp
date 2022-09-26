@@ -188,6 +188,10 @@ struct BitSet {
             data[i] |= bs.data[i];
         return *this;
     }
+    BitSet operator&(const BitSet &bs) const {
+        BitSet r = *this;
+        return r &= bs;
+    }
     BitSet operator|(const BitSet &bs) const {
         BitSet r = *this;
         return r |= bs;
