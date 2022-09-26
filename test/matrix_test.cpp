@@ -176,8 +176,8 @@ TEST(SIMDVecTEST, BasicAssertions) {
     // a.push_back(1);
     // b.push_back(1);
     // c.push_back(1);
-    std::cout << a << std::endl;
-    std::cout << b << std::endl;
+    std::cout << "a = " << a << std::endl;
+    std::cout << "b = " << b << std::endl;
     b /= a;
     c(0) = -16;
     c(1) = 14;
@@ -189,16 +189,19 @@ TEST(SIMDVecTEST, BasicAssertions) {
     b -= 2;
     b *= 2;
     b /= 2;
-    std::cout << b << std::endl;
+    std::cout << "test arithmetic opeartor b = " << b << std::endl;
     EXPECT_EQ(b, c);
+    std::cout << "-----------TEST general arithmetic-----------" << std::endl;
+    c = b * a;
+    std::cout << "-----------TEST ends-----------------" << std::endl;
 
     Vector<int64_t> d;
     d.push_back(4);
     d.push_back(4);
     d.push_back(4);
     d.push_back(4);
-    Vector<int64_t> e;
-    e = 8 / d;
+    Vector<int64_t> e = 8 / d;
+    // e = 8 / d; #TODO: Wrong?
     size_t x = -4;
     e = x - d;
     e = e + d;
@@ -295,9 +298,19 @@ TEST(SIMDMatTEST, BasicAssertions) {
             B(i, j) = 2;
         }
     }
+    IntMatrix  C(6, 6);
+    for (size_t i = 0; i < 6; i++) {
+        for (size_t j = 0; j < 6; j++) {
+            C(i, j) = 5;
+        }
+    }
     // auto C = A * B ;
     // auto C = A * 2;
-    A *= 2;
+    // A *= 2;
+    A = A + B;
+    // A += B;
+    std::cout << A << std::endl;
+    // EXPECT_EQ(A, C);
 }
 
 TEST(OperatorTEST, BasicAssertions) {

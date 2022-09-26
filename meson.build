@@ -65,6 +65,7 @@ if bench_dep.found()
   benchmarkdeps = [bench_dep, llvm_dep]
   #bench_args = ['-O3', '-DNDEBUG', '-march=native']
   #bench_args = ['-O3', '-DNDEBUG']
+  #bench_args = ['-DNDEBUG', '-S - o output.s', '-masm=intel']
   bench_args = ['-DNDEBUG']
   # https://github.com/mesonbuild/meson/issues/5920
   # TODO: add 'buildtype=release' when issue resolved
