@@ -464,7 +464,7 @@ concept HWVec = requires(V v){
 
 struct Add {
     constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-    std::cout << "doing add in a scalar way" << std::endl;
+	std::cout << "doing add in a scalar way" << std::endl;
 	return x + y;
     }
     template <HWVec V>
@@ -2188,6 +2188,8 @@ template <typename T, size_t M, size_t S>
 struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
     llvm::SmallVector<T, S> mem;
     size_t N, X;
+    static constexpr bool fixedNumRow = M;
+    static constexpr bool fixedNumCol = 0;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -2218,6 +2220,8 @@ template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
     llvm::SmallVector<T, S> mem;
     size_t M;
+    static constexpr bool fixedNumRow = 0;
+    static constexpr bool fixedNumCol = N;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -2329,6 +2333,8 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     llvm::SmallVector<T, S> mem;
 
     size_t M, N, X;
+    static constexpr bool fixedNumRow = 0;
+    static constexpr bool fixedNumCol = 0;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -2350,10 +2356,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
         mem.resize_for_overwrite(M * N);
-        // std::cout << "M = " << M << "; N = " << N << std::endl;
-        for (size_t m = 0; m < M; ++m)
-            for (size_t n = 0; n < N; ++n)
-                mem[m * X + n] = A(m, n);
+	copyto(*this,A);
     }
     auto begin() { return mem.begin(); }
     auto end() { return mem.end(); }
