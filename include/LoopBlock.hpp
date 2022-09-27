@@ -555,6 +555,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 graphs.push_back(subGraph(c));
             return graphs;
         }
+	[[nodiscard]] size_t calcMaxDepth() const {
+	    size_t d = 0;
+	    for (auto n : nodeIds)
+		d = std::max(d, nodes[n].getNumLoops());
+	    return d;
+    }
+
     };
     bool connects(const Dependence &e, Graph &g0, Graph &g1) {
         size_t nodeIn = e.in->nodeIndex;
@@ -1142,6 +1149,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 SHOWLN(sol(node.getPhiOffset() - 1));
             if (!node.phiIsScheduled())
                 node.schedule.getPhi()(depth, _) = sol(node.getPhiOffset() - 1);
+            SHOW(depth);
+            CSHOWLN(node.schedule.getPhi()(depth, _));
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
@@ -1240,6 +1249,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // allow it.
         auto graphs = g.split(components);
         for (auto &sg : graphs) {
+	    if (d >= sg.calcMaxDepth())
+		continue;
+            setScheduleMemoryOffsets(g, d);
             if (optimizeLevel(sg, sol, d))
                 return true; // give up
         }
@@ -1271,16 +1283,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             v.schedule.getOmega()[2 * d] = unfusedOffset;
         ++d;
         for (auto i : baseGraphs)
-            if (optimize(graphs[i], sol, d))
+            if (optimize(graphs[i], sol, d, graphs[i].calcMaxDepth()))
                 return true;
         // remove
         return false;
     }
     [[nodiscard]] bool optimizeLevel(Graph &g, Vector<Rational> &sol,
                                      size_t d) {
-        SHOW(d);
-        setScheduleMemoryOffsets(g, d);
-        CSHOWLN(numPhiCoefs);
         if (numPhiCoefs) {
             instantiateOmniSimplex(g, d);
             addIndependentSolutionConstraints(g, d);
@@ -1323,15 +1332,18 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return false;
     }
     // optimize at depth `d`
-    [[nodiscard]] bool optimize(Graph &g, Vector<Rational> &sol, size_t d = 0) {
+    [[nodiscard]] bool optimize(Graph &g, Vector<Rational> &sol, size_t d, size_t maxDepth) {
+	if (d >= maxDepth)
+	    return false;
         countAuxParamsAndConstraints(g, d);
-        if (numActiveEdges == 0)
-            return false; // we're done
+        setScheduleMemoryOffsets(g, d);
+        SHOW(d);
+        CSHOWLN(numPhiCoefs);
         // if we fail on this level, break the graph
         if (optimizeLevel(g, sol, d))
             return breakGraph(g, sol, d);
         // if we fail on some future level, break graph here
-        if (optimize(g, sol, d + 1))
+        if (optimize(g, sol, d + 1, maxDepth))
             return breakGraph(g, sol, d);
         // give up
         return false;
@@ -1347,7 +1359,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 #endif
         Vector<Rational> sol;
         Graph g{fullGraph()};
-        return optimize(g, sol);
+        return optimize(g, sol, 0, calcMaxDepth());
     }
 };
 
