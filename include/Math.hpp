@@ -984,7 +984,7 @@ template <typename T> struct MutPtrVector {
     }
     MutPtrVector<T> operator=(std::integral auto x) {
         auto &&y = *this;
-        const hn::ScalableTag<vtype_t<decltype(x)>> d;
+        const hn::ScalableTag<eltype_t<decltype(x)>> d;
         size_t Lane = hn::Lanes(d);
         size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, x);
