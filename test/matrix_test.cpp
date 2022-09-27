@@ -208,12 +208,17 @@ TEST(SIMDVecTEST, BasicAssertions) {
     d.push_back(4);
     d.push_back(4);
     Vector<int64_t> e = 8 / d;
+    SHOWLN(e);
     // e = 8 / d; #TODO: Wrong?
     size_t x = -4;
     e = x - d;
+    SHOWLN(e);
     e = e + d;
+    SHOWLN(e);
     e = e / d;
+    SHOWLN(e);
     e = e * x;
+    SHOWLN(e);
     Vector<int64_t> f;
     f.push_back(4);
     f.push_back(4);

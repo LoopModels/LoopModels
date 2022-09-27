@@ -432,7 +432,7 @@ concept AbstractMatrix =
 inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
     const size_t M = x.size();
     y.extendOrAssertSize(M);
-    size_t Lane = hn::Lanes(hn::ScalableTag<vtype_t<decltype(x)>>());
+    size_t Lane = hn::Lanes(hn::ScalableTag<eltype_t<decltype(x)>>());
     size_t remainder = M % Lane;
     std::cout << "Vec Laneeeeeeeee:" << Lane << std::endl;
     for (size_t i = 0; i < M - remainder; i += Lane) {
@@ -449,7 +449,7 @@ inline auto &copyto(AbstractMatrixCore auto &A,
     const size_t N = B.numCol();
     A.extendOrAssertSize(M, N);
     // std::cout << "Mat Laneeeeeeeee:" << Lane << std::endl;
-    size_t Lane = hn::Lanes(hn::ScalableTag<vtype_t<decltype(B)>>());
+    size_t Lane = hn::Lanes(hn::ScalableTag<eltype_t<decltype(B)>>());
     size_t remainder = M % Lane;
     for (size_t i = 0; i < M; ++i) {
         for (size_t j = 0; j < N - remainder; j += Lane)
