@@ -1186,8 +1186,7 @@ template <typename T> struct Vector {
     Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T>{}) {
         const size_t N = x.size();
         data.resize_for_overwrite(N);
-        for (size_t n = 0; n < N; ++n)
-            data[n] = x(n);
+	copyto(*this, x);
     }
     void resize(size_t N) { data.resize(N); }
     void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
