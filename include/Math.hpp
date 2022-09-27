@@ -512,20 +512,23 @@ struct Sub {
 struct Mul {
     constexpr auto operator()(std::integral auto x,
                               std::integral auto y) const {
-        std::cout << "doing mul in a scalar way" << std::endl;
+        std::cout << "S * S" << std::endl;
         return x * y;
     }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
+        std::cout << "S * V" << std::endl;
         V vx = Set(hn::DFromV<V>(), x);
         return vx * y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
+        std::cout << "V * S" << std::endl;
         V vy = Set(hn::DFromV<V>(), y);
         return x * vy;
     }
     template <HWVec V> constexpr auto operator()(V x, V y) const {
+        std::cout << "V * V" << std::endl;
         return x * y;
     }
 };
@@ -1186,7 +1189,7 @@ template <typename T> struct Vector {
     Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T>{}) {
         const size_t N = x.size();
         data.resize_for_overwrite(N);
-	copyto(*this, x);
+        copyto(*this, x);
     }
     void resize(size_t N) { data.resize(N); }
     void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
@@ -1513,7 +1516,7 @@ template <typename T> struct PtrMatrix {
     auto operator()(VIndex row, size_t col) const {
         assert(row.i < M);
         assert(col < N);
-        auto sv = svreference(data(), row.i * rowStride() + col, rowStride());
+        auto sv = svreference(data() + col, row.i, rowStride());
         // vtype_t<std::add_const_t<T>> v = sv;
         vtype_t<std::remove_const_t<T>> v = sv;
         return v;
@@ -1707,12 +1710,12 @@ template <typename T> struct MutPtrMatrix {
     auto operator()(VIndex row, size_t col) {
         assert(row.i < M);
         assert(col < N);
-        return svreference(data(), row.i * rowStride() + col, rowStride());
+        return svreference(data() + col, row.i, rowStride());
     }
     auto operator()(VIndex row, size_t col) const {
         assert(row.i < M);
         assert(col < N);
-        auto sv = svreference(data(), row.i * rowStride() + col, rowStride());
+        auto sv = svreference(data() + col, row.i, rowStride());
         vtype_t<T> v = sv;
         return v;
     }

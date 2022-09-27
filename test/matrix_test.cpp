@@ -1,4 +1,5 @@
 #include "../include/Math.hpp"
+#include "Macro.hpp"
 #include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -74,6 +75,12 @@ TEST(HelloTest, BasicAssertions) {
     EXPECT_TRUE(C == At.transpose() * B);
     EXPECT_TRUE(C == A * Bt.transpose());
     EXPECT_TRUE(C == At.transpose() * Bt.transpose());
+    IntMatrix C3 = At.transpose() * B;
+    EXPECT_EQ(C, C3);
+    IntMatrix C4 = A * Bt.transpose();
+    EXPECT_EQ(C, C4);
+    IntMatrix C5 = At.transpose() * Bt.transpose();
+    EXPECT_EQ(C, C5);
 }
 
 TEST(ExpressionTemplateTest, BasicAssertions) {
