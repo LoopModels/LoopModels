@@ -364,17 +364,18 @@ template <typename T, typename VI> struct SVReference {
 
     // operator T() const { return *ptr;}
     template <typename V> operator V() const {
-        return hn::GatherIndex(hn::ScalableTag<T>(), ptr, vi);
+        return hn::GatherIndex(hn::ScalableTag<std::remove_const_t<T>>(), ptr,
+                               vi);
     }
     void operator=(auto v) {
-        hn::ScatterIndex(v, hn::ScalableTag<T>(), ptr, vi);
+        hn::ScatterIndex(v, hn::ScalableTag<std::remove_const_t<T>>(), ptr, vi);
     }
 };
 template <typename T> inline auto svreference(T *ptr, size_t i, size_t stride) {
-    const hn::ScalableTag<T> d;
+    const hn::ScalableTag<std::remove_const_t<T>> d;
     auto vec_stride = hn::Set(d, int(stride));
     auto vec_i = hn::Set(d, int(i));
-    auto vi{(hn::Iota(hn::ScalableTag<T>(), 0) + vec_i) * vec_stride};
+    auto vi{(hn::Iota(d, 0) + vec_i) * vec_stride};
     return SVReference<T, decltype(vi)>{ptr, vi};
 }
 
@@ -688,7 +689,7 @@ template <typename A> struct Transpose {
     using eltype = typename A::eltype;
     A a;
     static constexpr bool canResize = false;
-    auto operator()(size_t i, size_t j) const { return a(j, i); }
+    auto operator()(auto i, auto j) const { return a(j, i); }
     size_t numRow() const { return a.numCol(); }
     size_t numCol() const { return a.numRow(); }
     auto &view() const { return *this; };
@@ -698,11 +699,12 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     A a;
     B b;
     static constexpr bool canResize = false;
-    auto operator()(size_t i, size_t j) const {
+    auto operator()(auto i, auto j) const {
         static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
-        auto s = (a(i, 0) * b(0, j)) * 0;
+        Mul m;
+        auto s = m(m(a(i, 0), b(0, j)), 0);
         for (size_t k = 0; k < a.numCol(); ++k)
-            s += a(i, k) * b(k, j);
+            s += m(a(i, k), b(k, j));
         return s;
     }
     size_t numRow() const { return a.numRow(); }
@@ -714,11 +716,12 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
     A a;
     B b;
     static constexpr bool canResize = false;
-    auto operator()(size_t i) const {
+    auto operator()(auto i) const {
         static_assert(AbstractVector<B>, "B should be an AbstractVector");
-        auto s = (a(i, 0) * b(0)) * 0;
+        Mul m;
+        auto s = m(m(a(i, 0), b(0)), 0);
         for (size_t k = 0; k < a.numCol(); ++k)
-            s += a(i, k) * b(k);
+            s += m(a(i, k), b(k));
         return s;
     }
     size_t size() const { return a.numRow(); }
@@ -1508,6 +1511,15 @@ template <typename T> struct PtrMatrix {
         return hn::Load(hn::ScalableTag<T>(),
                         data() + col.i + row * rowStride());
     }
+    auto operator()(VIndex row, size_t col) const {
+        assert(row.i < M);
+        assert(col < N);
+        auto sv = svreference(data(), row.i * rowStride() + col, rowStride());
+        // vtype_t<std::add_const_t<T>> v = sv;
+        vtype_t<std::remove_const_t<T>> v = sv;
+        return v;
+    }
+
     // inline auto &operator()(size_t row, VIndex col) const {
     //     assert(row < M);
     //     assert(col.i < N);
