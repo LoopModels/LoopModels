@@ -102,13 +102,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     SHOWLN(Aload1mk);
     for (auto &use : Aload1mk->uses())
-	SHOWLN(use.getUser());
+        SHOWLN(use.getUser());
     SHOWLN(Aload1mn);
     for (auto &use : Aload1mn->uses())
-	SHOWLN(use.getUser());
+        SHOWLN(use.getUser());
     SHOWLN(Uloadnk);
     for (auto &use : Uloadnk->uses())
-	SHOWLN(use.getUser());
+        SHOWLN(use.getUser());
     SHOWLN(Astore2mk);
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
@@ -123,21 +123,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
 
-
     auto M = Polynomial::Monomial(Polynomial::ID{1});
     auto N = Polynomial::Monomial(Polynomial::ID{2});
     llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
     // Construct the loops
     IntMatrix AMN{stringToIntMatrix("[-1 1 0 -1 0; "
-                                     "0 0 0 1 0; "
-                                     "-1 0 1 0 -1; "
-                                     "0 0 0 0 1]")};
+                                    "0 0 0 1 0; "
+                                    "-1 0 1 0 -1; "
+                                    "0 0 0 0 1]")};
     IntMatrix AMNK{stringToIntMatrix("[-1 1 0 -1 0 0; "
-                                      "0 0 0 1 0 0; "
-                                      "-1 0 1 0 -1 0; "
-                                      "0 0 0 0 1 0; "
-                                      "-1 0 1 0 0 -1; "
-                                      "-1 0 0 0 -1 1]")};
+                                     "0 0 0 1 0 0; "
+                                     "-1 0 1 0 -1 0; "
+                                     "0 0 0 0 1 0; "
+                                     "-1 0 1 0 0 -1; "
+                                     "-1 0 0 0 -1 1]")};
 
     auto loopMN = AffineLoopNest::construct(AMN, symbols);
     auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
@@ -478,18 +477,27 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
-    
+
     bool optFail = lblock.optimize();
     EXPECT_FALSE(optFail);
+    IntMatrix optPhi2(2, 2);
+    optPhi2.antiDiag() = 1;
+    IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
     // assert(!optFail);
-    for (auto &mem : lblock.memory){
-	SHOW(mem.nodeIndex);
-	CSHOWLN(mem.ref);
-	SHOWLN(lblock.nodes[mem.nodeIndex].schedule.getPhi());
-	SHOWLN(lblock.nodes[mem.nodeIndex].schedule.getOmega());
-	// SHOWLN(mem.schedule.getPhi());
-	// SHOWLN(mem.schedule.getOmega());
-	std::cout << std::endl;
+    for (auto &mem : lblock.memory) {
+        SHOW(mem.nodeIndex);
+        CSHOWLN(mem.ref);
+        Schedule &s = lblock.nodes[mem.nodeIndex].schedule;
+        SHOWLN(s.getPhi());
+        SHOWLN(s.getOmega());
+        if (mem.getNumLoops() == 2) {
+            EXPECT_EQ(s.getPhi(), optPhi2);
+        } else {
+            assert(mem.getNumLoops() == 3);
+            EXPECT_EQ(s.getPhi(), optPhi3);
+        }
+        // SHOWLN(mem.schedule.getPhi());
+        // SHOWLN(mem.schedule.getOmega());
+        std::cout << std::endl;
     }
-
 }
