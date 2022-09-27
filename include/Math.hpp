@@ -168,9 +168,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
 }
 
 template <typename T>
-concept HasMul = requires(T t) {
-    t.mul(t, t);
-};
+concept HasMul = requires(T t) { t.mul(t, t); };
 
 // a and b are temporary, z stores the final results.
 template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
@@ -389,19 +387,22 @@ static_assert(!std::convertible_to<int, VIndex>);
 static_assert(!std::integral<VIndex>);
 
 template <typename T>
-concept AbstractVector = HasEltype<T> && requires(T t, size_t i, VIndex vi) {
-    {
-        t(i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
-    {
-        t(vi)
-        } -> std::convertible_to<
-            typename VType<typename std::remove_reference_t<T>::eltype>::type>;
-    { t.size() } -> std::convertible_to<size_t>;
-    {t.view()};
-    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
-    // {t.extendOrAssertSize(i)};
-};
+concept AbstractVector =
+    HasEltype<T> &&
+    requires(T t, size_t i, VIndex vi) {
+        {
+            t(i)
+            }
+            -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+        {
+            t(vi)
+            } -> std::convertible_to<typename VType<
+                typename std::remove_reference_t<T>::eltype>::type>;
+        { t.size() } -> std::convertible_to<size_t>;
+        { t.view() };
+        { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
+        // {t.extendOrAssertSize(i)};
+    };
 // template <typename T>
 // concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
 //     { t(i, i) } -> std::convertible_to<typename T::eltype>;
@@ -409,19 +410,23 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i, VIndex vi) {
 //     { t.numCol() } -> std::convertible_to<size_t>;
 // };
 template <typename T>
-concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i, i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
-    { t.numRow() } -> std::convertible_to<size_t>;
-    { t.numCol() } -> std::convertible_to<size_t>;
-    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
-    // {t.extendOrAssertSize(i, i)};
-};
+concept AbstractMatrixCore =
+    HasEltype<T> &&
+    requires(T t, size_t i) {
+        {
+            t(i, i)
+            }
+            -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
+        { t.numRow() } -> std::convertible_to<size_t>;
+        { t.numCol() } -> std::convertible_to<size_t>;
+        { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
+        // {t.extendOrAssertSize(i, i)};
+    };
 template <typename T>
-concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t, size_t i) {
-    { t.view() } -> AbstractMatrixCore;
-};
+concept AbstractMatrix =
+    AbstractMatrixCore<T> && requires(T t, size_t i) {
+                                 { t.view() } -> AbstractMatrixCore;
+                             };
 
 inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
     const size_t M = x.size();
@@ -445,9 +450,9 @@ inline auto &copyto(AbstractMatrixCore auto &A,
     // std::cout << "Mat Laneeeeeeeee:" << Lane << std::endl;
     size_t Lane = hn::Lanes(hn::ScalableTag<vtype_t<decltype(B)>>());
     size_t remainder = M % Lane;
-    for (size_t i = 0; i < M; ++i){
+    for (size_t i = 0; i < M; ++i) {
         for (size_t j = 0; j < N - remainder; j += Lane)
-            A(i,VIndex{j}) = B(i,VIndex{j});
+            A(i, VIndex{j}) = B(i, VIndex{j});
         for (size_t j = N - remainder; j < N; j++)
             A(i, j) = B(i, j);
     }
@@ -458,89 +463,89 @@ inline auto &copyto(AbstractMatrixCore auto &A,
 }
 
 template <typename V>
-concept HWVec = requires(V v){
-    {v+v} -> std::same_as<hn::VFromD<hn::DFromV<V>>>;
-};
+concept HWVec = requires(V v) {
+                    { v + v } -> std::same_as<hn::VFromD<hn::DFromV<V>>>;
+                };
 
 struct Add {
-    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-	std::cout << "doing add in a scalar way" << std::endl;
-	return x + y;
+    constexpr auto operator()(std::integral auto x,
+                              std::integral auto y) const {
+        std::cout << "doing add in a scalar way" << std::endl;
+        return x + y;
     }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
-	V vx = Set(hn::DFromV<V>(), x);
-	return vx + y;
+        V vx = Set(hn::DFromV<V>(), x);
+        return vx + y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
-	V vy = Set(hn::DFromV<V>(), y);
-	return x + vy;
+        V vy = Set(hn::DFromV<V>(), y);
+        return x + vy;
     }
-    template <HWVec V>
-    constexpr auto operator()(V x, V y) const {
-	return x + y;
+    template <HWVec V> constexpr auto operator()(V x, V y) const {
+        return x + y;
     }
 };
 struct Sub {
     constexpr auto operator()(auto x) const { return -x; }
-    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-    std::cout << "doing sub in a scalar way" << std::endl;
-	return x - y;
+    constexpr auto operator()(std::integral auto x,
+                              std::integral auto y) const {
+        std::cout << "doing sub in a scalar way" << std::endl;
+        return x - y;
     }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
-	V vx = Set(hn::DFromV<V>(), x);
-	return vx - y;
+        V vx = Set(hn::DFromV<V>(), x);
+        return vx - y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
-	V vy = Set(hn::DFromV<V>(), y);
-	return x - vy;
+        V vy = Set(hn::DFromV<V>(), y);
+        return x - vy;
     }
-    template <HWVec V>
-    constexpr auto operator()(V x, V y) const {
-	return x - y;
+    template <HWVec V> constexpr auto operator()(V x, V y) const {
+        return x - y;
     }
 };
 struct Mul {
-    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-    std::cout << "doing mul in a scalar way" << std::endl;
-	return x * y;
+    constexpr auto operator()(std::integral auto x,
+                              std::integral auto y) const {
+        std::cout << "doing mul in a scalar way" << std::endl;
+        return x * y;
     }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
-	V vx = Set(hn::DFromV<V>(), x);
-	return vx * y;
+        V vx = Set(hn::DFromV<V>(), x);
+        return vx * y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
-	V vy = Set(hn::DFromV<V>(), y);
-	return x * vy;
+        V vy = Set(hn::DFromV<V>(), y);
+        return x * vy;
     }
-    template <HWVec V>
-    constexpr auto operator()(V x, V y) const {
-	return x * y;
+    template <HWVec V> constexpr auto operator()(V x, V y) const {
+        return x * y;
     }
 };
 struct Div {
-    constexpr auto operator()(std::integral auto x, std::integral auto y) const {
-    std::cout << "doing div in a scalar way" << std::endl;
-	return x / y;
+    constexpr auto operator()(std::integral auto x,
+                              std::integral auto y) const {
+        std::cout << "doing div in a scalar way" << std::endl;
+        return x / y;
     }
     template <HWVec V>
     constexpr auto operator()(std::integral auto x, V y) const {
-	V vx = Set(hn::DFromV<V>(), x);
-	return vx / y;
+        V vx = Set(hn::DFromV<V>(), x);
+        return vx / y;
     }
     template <HWVec V>
     constexpr auto operator()(V x, std::integral auto y) const {
-	V vy = Set(hn::DFromV<V>(), y);
-	return x / vy;
+        V vy = Set(hn::DFromV<V>(), y);
+        return x / vy;
     }
-    template <HWVec V>
-    constexpr auto operator()(V x, V y) const {
-	return x / y;
+    template <HWVec V> constexpr auto operator()(V x, V y) const {
+        return x / y;
     }
 };
 
@@ -560,16 +565,16 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
 // scalars broadcast
 inline auto get(const std::integral auto A, auto) { return A; }
 
-//template <typename T> struct Broadcast {
-//    T x;
-//    template <typename V> operator V() const {
+// template <typename T> struct Broadcast {
+//     T x;
+//     template <typename V> operator V() const {
 //	return hn::Set(hn::DFromV<V>(), x);
-//    }
-//};
+//     }
+// };
 
-//inline auto get(std::integral auto A, VIndex) {
-//    return Broadcast<decltype(A)>{A};
-//}
+// inline auto get(std::integral auto A, VIndex) {
+//     return Broadcast<decltype(A)>{A};
+// }
 
 inline auto get(const std::floating_point auto A, auto) { return A; }
 inline auto get(const std::integral auto A, auto, auto) { return A; }
@@ -960,8 +965,14 @@ template <typename T> struct MutPtrVector {
     // PtrVector<T> view() const {
     //     return PtrVector<T>{.mem = mem, .N = N};
     // };
-    MutPtrVector<T> operator=(PtrVector<T> x) { std::cout<< "1111111"<< std::endl; return copyto(*this, x); }
-    MutPtrVector<T> operator=(MutPtrVector<T> x) {std::cout<< "22222222"<< std::endl; return copyto(*this, x); }
+    MutPtrVector<T> operator=(PtrVector<T> x) {
+        std::cout << "1111111" << std::endl;
+        return copyto(*this, x);
+    }
+    MutPtrVector<T> operator=(MutPtrVector<T> x) {
+        std::cout << "22222222" << std::endl;
+        return copyto(*this, x);
+    }
     MutPtrVector<T> operator=(const AbstractVector auto &x) {
         return copyto(*this, x);
     }
@@ -992,7 +1003,6 @@ template <typename T> struct MutPtrVector {
         *this = *this + x;
         return *this;
         // return *this = *this + x;
-
 
         // return *this; //?
     }
@@ -1075,7 +1085,10 @@ template <typename T> struct MutPtrVector {
         }
         return *this;
     }
-    void extendOrAssertSize(size_t M) const { std::cout << "MMMMMMM: " << M <<"NNNNNN: " << N <<std::endl;  assert(M == N); }
+    void extendOrAssertSize(size_t M) const {
+        std::cout << "MMMMMMM: " << M << "NNNNNN: " << N << std::endl;
+        assert(M == N);
+    }
 };
 
 //
@@ -1448,19 +1461,20 @@ template <typename T> struct MutStridedVector {
 };
 
 template <typename T>
-concept DerivedMatrix = requires(T t, const T ct) {
-    {
-        t.data()
-        } -> std::convertible_to<typename std::add_pointer_t<
-            typename std::add_const_t<typename T::eltype>>>;
-    {
-        ct.data()
-        } -> std::same_as<typename std::add_pointer_t<
-            typename std::add_const_t<typename T::eltype>>>;
-    { t.numRow() } -> std::convertible_to<size_t>;
-    { t.numCol() } -> std::convertible_to<size_t>;
-    { t.rowStride() } -> std::convertible_to<size_t>;
-};
+concept DerivedMatrix =
+    requires(T t, const T ct) {
+        {
+            t.data()
+            } -> std::convertible_to<typename std::add_pointer_t<
+                typename std::add_const_t<typename T::eltype>>>;
+        {
+            ct.data()
+            } -> std::same_as<typename std::add_pointer_t<
+                typename std::add_const_t<typename T::eltype>>>;
+        { t.numRow() } -> std::convertible_to<size_t>;
+        { t.numCol() } -> std::convertible_to<size_t>;
+        { t.rowStride() } -> std::convertible_to<size_t>;
+    };
 
 template <typename T> struct SmallSparseMatrix;
 template <typename T> struct PtrMatrix {
@@ -1483,7 +1497,7 @@ template <typename T> struct PtrMatrix {
         assert(col < N);
         return *(data() + col + row * X);
     }
-    VReference<T> operator()(size_t row, VIndex col){
+    VReference<T> operator()(size_t row, VIndex col) {
         assert(row < M);
         assert(col.i < numCol());
         return VReference<T>{data() + col.i + row * rowStride()};
@@ -1491,7 +1505,8 @@ template <typename T> struct PtrMatrix {
     auto operator()(size_t row, VIndex col) const {
         assert(row < M);
         assert(col.i < numCol());
-        return hn::Load(hn::ScalableTag<T>(), data() + col.i + row * rowStride());
+        return hn::Load(hn::ScalableTag<T>(),
+                        data() + col.i + row * rowStride());
     }
     // inline auto &operator()(size_t row, VIndex col) const {
     //     assert(row < M);
@@ -1658,24 +1673,37 @@ template <typename T> struct MutPtrMatrix {
 
     inline auto &operator()(size_t row, size_t col) {
         assert(row < M);
-        assert(col < numCol());
+        assert(col < N);
         return *(data() + col + row * rowStride());
     }
     inline auto &operator()(size_t row, size_t col) const {
         assert(row < M);
-        assert(col < numCol());
+        assert(col < N);
         return *(data() + col + row * rowStride());
     }
-    //TODO
-    VReference<T> operator()(size_t row, VIndex col){
+    // TODO
+    VReference<T> operator()(size_t row, VIndex col) {
         assert(row < M);
-        assert(col.i < numCol());
+        assert(col.i < N);
         return VReference<T>{data() + col.i + row * rowStride()};
     }
     auto operator()(size_t row, VIndex col) const {
         assert(row < M);
-        assert(col.i < numCol());
-        return hn::Load(hn::ScalableTag<T>(), data() + col.i + row * rowStride());
+        assert(col.i < N);
+        return hn::Load(hn::ScalableTag<T>(),
+                        data() + col.i + row * rowStride());
+    }
+    auto operator()(VIndex row, size_t col) {
+        assert(row.i < M);
+        assert(col < N);
+        return svreference(data(), row.i * rowStride() + col, rowStride());
+    }
+    auto operator()(VIndex row, size_t col) const {
+        assert(row.i < M);
+        assert(col < N);
+        auto sv = svreference(data(), row.i * rowStride() + col, rowStride());
+        vtype_t<T> v = sv;
+        return v;
     }
 
     inline auto operator()(Range<size_t, size_t> rows,
@@ -1683,7 +1711,7 @@ template <typename T> struct MutPtrMatrix {
         assert(rows.e >= rows.b);
         assert(cols.e >= cols.b);
         assert(rows.e <= M);
-        assert(cols.e <= numCol());
+        assert(cols.e <= N);
         return MutPtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
                                .M = rows.e - rows.b,
                                .N = cols.e - cols.b,
@@ -1691,18 +1719,15 @@ template <typename T> struct MutPtrMatrix {
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
-        return (*this)(canonicalizeRange(rows, M),
-                       canonicalizeRange(cols, numCol()));
+        return (*this)(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
     }
     template <typename C0, typename C1>
     inline MutPtrMatrix<T> operator()(Colon, Range<C0, C1> cols) {
-        return (*this)(Range<size_t, size_t>{0, M},
-                       canonicalizeRange(cols, numCol()));
+        return (*this)(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Colon) {
-        return (*this)(canonicalizeRange(rows, M),
-                       Range<size_t, size_t>{0, numCol()});
+        return (*this)(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
     }
     template <typename R0, typename R1>
     inline MutStridedVector<T> operator()(Range<R0, R1> rows, size_t col) {
@@ -1710,7 +1735,7 @@ template <typename T> struct MutPtrMatrix {
     }
     template <typename C0, typename C1>
     inline MutPtrVector<T> operator()(size_t row, Range<C0, C1> cols) {
-        return getRow(row)(canonicalizeRange(cols, numCol()));
+        return getRow(row)(canonicalizeRange(cols, N));
     }
     inline auto operator()(Colon, size_t col) { return getCol(col); }
     inline auto operator()(size_t row, Colon) { return getRow(row); }
@@ -1720,7 +1745,7 @@ template <typename T> struct MutPtrMatrix {
         assert(rows.e >= rows.b);
         assert(cols.e >= cols.b);
         assert(rows.e <= M);
-        assert(cols.e <= numCol());
+        assert(cols.e <= N);
         return PtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
                             .M = rows.e - rows.b,
                             .N = cols.e - cols.b,
@@ -1728,18 +1753,15 @@ template <typename T> struct MutPtrMatrix {
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline auto operator()(Range<R0, R1> rows, Range<C0, C1> cols) const {
-        return view(canonicalizeRange(rows, M),
-                    canonicalizeRange(cols, numCol()));
+        return view(canonicalizeRange(rows, M), canonicalizeRange(cols, N));
     }
     template <typename C0, typename C1>
     inline auto operator()(Colon, Range<C0, C1> cols) const {
-        return view(Range<size_t, size_t>{0, M},
-                    canonicalizeRange(cols, numCol()));
+        return view(Range<size_t, size_t>{0, M}, canonicalizeRange(cols, N));
     }
     template <typename R0, typename R1>
     inline auto operator()(Range<R0, R1> rows, Colon) const {
-        return view(canonicalizeRange(rows, M),
-                    Range<size_t, size_t>{0, numCol()});
+        return view(canonicalizeRange(rows, M), Range<size_t, size_t>{0, N});
     }
     inline MutPtrMatrix<T> operator()(Colon, Colon) { return *this; }
     inline PtrMatrix<T> operator()(Colon, Colon) const { return *this; }
@@ -1749,7 +1771,7 @@ template <typename T> struct MutPtrMatrix {
     }
     template <typename C0, typename C1>
     inline auto operator()(size_t row, Range<C0, C1> cols) const {
-        return getRow(row)(canonicalizeRange(cols, numCol()));
+        return getRow(row)(canonicalizeRange(cols, N));
     }
     inline auto operator()(Colon, size_t col) const { return getCol(col); }
     inline auto operator()(size_t row, Colon) const { return getRow(row); }
@@ -1779,8 +1801,9 @@ template <typename T> struct MutPtrMatrix {
         //     for (size_t j = 0; j < N - remainder; j += Lane)
 
         //          row_vec = (*this)(i, VIndex{j});
-        //         (*this)(i, VIndex{j}) = (*this)(i, VIndex{j}) + B(i, VIndex{j});
-                // B(i, VIndex{j});
+        //         (*this)(i, VIndex{j}) = (*this)(i, VIndex{j}) + B(i,
+        //         VIndex{j});
+        // B(i, VIndex{j});
 
         // HWY_BEFORE_NAMESPACE();  // required if not using HWY_ATTR
         // namespace project{
@@ -1805,8 +1828,7 @@ template <typename T> struct MutPtrMatrix {
         size_t remainder = N % Lane;
         const auto const_vec = hn::Set(d, b);
         for (size_t i = 0; i < M; ++i)
-            for (size_t j = 0; j < N - remainder; j += Lane)
-            {
+            for (size_t j = 0; j < N - remainder; j += Lane) {
                 decltype(const_vec) vec_row = (*this)(i, VIndex{j});
                 (*this)(i, VIndex{j}) = vec_row * const_vec;
             }
@@ -1901,7 +1923,7 @@ template <typename T, typename P> struct BaseMatrix {
         assert(col < numCol());
         return *(data() + col + row * rowStride());
     }
-    VReference<T> operator()(size_t row, VIndex col){
+    VReference<T> operator()(size_t row, VIndex col) {
         assert(row < numRow());
         assert(col.i < numCol());
         return VReference<T>{data() + col.i + row * rowStride()};
@@ -1909,7 +1931,8 @@ template <typename T, typename P> struct BaseMatrix {
     auto operator()(size_t row, VIndex col) const {
         assert(row < numRow());
         assert(col.i < numCol());
-        return hn::Load(hn::ScalableTag<T>(), data() + col.i + row * rowStride());
+        return hn::Load(hn::ScalableTag<T>(),
+                        data() + col.i + row * rowStride());
     }
     inline MutPtrMatrix<T> operator()(Range<size_t, size_t> rows,
                                       Range<size_t, size_t> cols) {
@@ -2019,11 +2042,11 @@ template <typename T, typename P> struct BaseMatrix {
         MutPtrMatrix<T> A{*this};
         return copyto(A, B);
     }
-    //Mark
-    // MutPtrMatrix<T>& operator=(const AbstractMatrix auto &B) {
-    //     MutPtrMatrix<T> A{*this};
-    //     return copyto(A, B);
-    // }
+    // Mark
+    //  MutPtrMatrix<T>& operator=(const AbstractMatrix auto &B) {
+    //      MutPtrMatrix<T> A{*this};
+    //      return copyto(A, B);
+    //  }
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         // MutPtrMatrix<T> A{*this};
         // TODO?
@@ -2158,9 +2181,9 @@ static_assert(AbstractMatrix<MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>,
 
 template <typename T>
 concept IntVector = requires(T t, int64_t y) {
-    { t.size() } -> std::convertible_to<size_t>;
-    { t[y] } -> std::convertible_to<int64_t>;
-};
+                        { t.size() } -> std::convertible_to<size_t>;
+                        { t[y] } -> std::convertible_to<int64_t>;
+                    };
 
 //
 // Matrix
@@ -2356,7 +2379,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
         mem.resize_for_overwrite(M * N);
-	copyto(*this,A);
+        copyto(*this, A);
     }
     auto begin() { return mem.begin(); }
     auto end() { return mem.end(); }
@@ -2580,35 +2603,62 @@ void swapRows(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
 }
 
 template <int Bits, class T>
-constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
-                           !std::is_signed_v<T>;
+constexpr bool is_uint_v =
+    sizeof(T) == (Bits / 8) && std::is_integral_v<T> && !std::is_signed_v<T>;
 
-template <class T> inline T zeroUpper(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<16, T>
+{
     return x & 0x00ff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<16, T>
+{
     return x & 0xff00;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<16, T>
+{
     return x >> 8;
 }
 
-template <class T> inline T zeroUpper(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<32, T>
+{
     return x & 0x0000ffff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<32, T>
+{
     return x & 0xffff0000;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<32, T>
+{
     return x >> 16;
 }
-template <class T> inline T zeroUpper(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<64, T>
+{
     return x & 0x00000000ffffffff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<64, T>
+{
     return x & 0xffffffff00000000;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<64, T>
+{
     return x >> 32;
 }
 
@@ -2926,8 +2976,12 @@ llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{gcd(x.numerator, y.numerator),
                     lcm(x.denominator, y.denominator)};
 }
-template <> struct GetEltype<Rational> { using eltype = Rational; };
-template <> struct PromoteType<Rational, Rational> { using eltype = Rational; };
+template <> struct GetEltype<Rational> {
+    using eltype = Rational;
+};
+template <> struct PromoteType<Rational, Rational> {
+    using eltype = Rational;
+};
 template <std::integral I> struct PromoteType<I, Rational> {
     using eltype = Rational;
 };
@@ -3252,6 +3306,6 @@ static_assert(std::is_same_v<IntMatrix::eltype, int64_t>);
 static_assert(AbstractVector<
               ElementwiseVectorBinaryOp<Mul, PtrVector<int64_t>, int64_t>>);
 
-}  // namespace HWY_NAMESPACE
+} // namespace HWY_NAMESPACE
 // }  // namespace project - optional
 HWY_AFTER_NAMESPACE();
