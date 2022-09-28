@@ -555,13 +555,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 graphs.push_back(subGraph(c));
             return graphs;
         }
-	[[nodiscard]] size_t calcMaxDepth() const {
-	    size_t d = 0;
-	    for (auto n : nodeIds)
-		d = std::max(d, nodes[n].getNumLoops());
-	    return d;
-    }
-
+        [[nodiscard]] size_t calcMaxDepth() const {
+            size_t d = 0;
+            for (auto n : nodeIds)
+                d = std::max(d, nodes[n].getNumLoops());
+            return d;
+        }
     };
     bool connects(const Dependence &e, Graph &g0, Graph &g1) {
         size_t nodeIn = e.in->nodeIndex;
@@ -1249,8 +1248,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // allow it.
         auto graphs = g.split(components);
         for (auto &sg : graphs) {
-	    if (d >= sg.calcMaxDepth())
-		continue;
+            if (d >= sg.calcMaxDepth())
+                continue;
             setScheduleMemoryOffsets(g, d);
             if (optimizeLevel(sg, sol, d))
                 return true; // give up
@@ -1332,9 +1331,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return false;
     }
     // optimize at depth `d`
-    [[nodiscard]] bool optimize(Graph &g, Vector<Rational> &sol, size_t d, size_t maxDepth) {
-	if (d >= maxDepth)
-	    return false;
+    [[nodiscard]] bool optimize(Graph &g, Vector<Rational> &sol, size_t d,
+                                size_t maxDepth) {
+        if (d >= maxDepth)
+            return false;
         countAuxParamsAndConstraints(g, d);
         setScheduleMemoryOffsets(g, d);
         SHOW(d);
