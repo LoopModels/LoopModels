@@ -769,6 +769,26 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     bool optFail = iOuterLoopNest.optimize();
     EXPECT_FALSE(optFail);
+    for (auto &e : iOuterLoopNest.edges) {
+        std::cout << "\nEdge:\nIn" << *e.in << "\nOut" << *e.out << std::endl;
+    }
+    for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
+        const auto &v = iOuterLoopNest.nodes[i];
+        std::cout << "v_" << i << ":\nmem = ";
+        for (auto m : v.memory) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\ninNeighbors = ";
+        for (auto m : v.inNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\noutNeighbors = ";
+        for (auto m : v.outNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << std::endl;
+    }
+    // Graphs::print(iOuterLoopNest.fullGraph());
     for (auto &mem : iOuterLoopNest.memory) {
         SHOW(mem.nodeIndex);
         CSHOWLN(mem.ref);

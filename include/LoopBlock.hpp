@@ -562,7 +562,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             return d;
         }
     };
-    // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const {
+    // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
+    // {
     //     return ((e.in->getNumLoops() > d) && (e.out->getNumLoops() > d)) &&
     //            connects(e, g0, g1);
     // }
@@ -1248,13 +1249,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return e.isSatisfied(*first, *second, d);
     }
     bool canFuse(Graph &g0, Graph &g1, size_t d) {
-        for (auto &e : edges){
-	    if ((e.in->getNumLoops() <= d) || (e.out->getNumLoops() <= d))
-		return false;
+        for (auto &e : edges) {
+            if ((e.in->getNumLoops() <= d) || (e.out->getNumLoops() <= d))
+                return false;
             if (connects(e, g0, g1))
                 if (!isSatisfied(e, d))
                     return false;
-	}
+        }
         return true;
     }
     [[nodiscard]] bool breakGraph(Graph &g, Vector<Rational> &sol, size_t d) {
@@ -1302,7 +1303,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // set omegas for gp
         for (auto &&v : *gp)
             v.schedule.getOmega()[2 * d] = unfusedOffset;
-	SHOWLN(unfusedOffset);
+        SHOWLN(unfusedOffset);
         ++d;
         for (auto i : baseGraphs)
             if (optimize(graphs[i], sol, d, graphs[i].calcMaxDepth()))
