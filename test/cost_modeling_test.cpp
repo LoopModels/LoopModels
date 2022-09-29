@@ -769,5 +769,11 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     bool optFail = iOuterLoopNest.optimize();
     EXPECT_FALSE(optFail);
-
+    for (auto &mem : iOuterLoopNest.memory) {
+        SHOW(mem.nodeIndex);
+        CSHOWLN(mem.ref);
+        Schedule &s = iOuterLoopNest.nodes[mem.nodeIndex].schedule;
+        SHOWLN(s.getPhi());
+        SHOWLN(s.getOmega());
+    }
 }
