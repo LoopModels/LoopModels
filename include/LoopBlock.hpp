@@ -562,7 +562,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             return d;
         }
     };
-    bool connects(const Dependence &e, Graph &g0, Graph &g1) {
+    bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const {
+        return ((e.in->getNumLoops() > d) && (e.out->getNumLoops() > d)) &&
+               connects(e, g0, g1);
+    }
+    bool connects(const Dependence &e, Graph &g0, Graph &g1) const {
         size_t nodeIn = e.in->nodeIndex;
         size_t nodeOut = e.out->nodeIndex;
         return ((g0.nodeIds.contains(nodeIn) && g1.nodeIds.contains(nodeOut)) ||
@@ -918,19 +922,27 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         size_t minOmegaCoefInd = std::numeric_limits<size_t>::max();
         size_t maxPhiCoefInd = 0;
         size_t maxOmegaCoefInd = 0;
+        size_t numActiveCount = 0;
 #endif
-
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
-            if (edge.isInactive(d))
+#ifndef NDEBUG
+            std::cout << ";edge=" << e;
+#endif
+            if (g.isInactive(edge, d))
                 continue;
+#ifndef NDEBUG
+            std::cout << "; is active!";
+            ++numActiveCount;
+#endif
             unsigned outNodeIndex = edge.out->nodeIndex;
             unsigned inNodeIndex = edge.in->nodeIndex;
             // SHOW(outNodeIndex);
             // CSHOWLN(inNodeIndex);
-            if (outNodeIndex == inNodeIndex ||
-                g.missingNode(outNodeIndex, inNodeIndex))
-                continue;
+            // if (outNodeIndex == inNodeIndex ||
+            //     g.missingNode(outNodeIndex, inNodeIndex))
+            //     continue;
+            // std::cout<<"; is still active!";
             const ScheduledNode &outNode = nodes[outNodeIndex];
             const ScheduledNode &inNode = nodes[inNodeIndex];
             const auto [satC, satL, satPp, satPc, satO] =
@@ -945,6 +957,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 
             size_t ll = l + satL.numCol();
             size_t lll = ll + bndL.numCol();
+#ifndef NDEBUG
             SHOW(C.numRow());
             CSHOW(C.numCol());
             CSHOW(c);
@@ -952,6 +965,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             CSHOW(l);
             CSHOW(ll);
             CSHOWLN(lll);
+#endif
             C(_(c, cc), _(l, ll)) = satL;
             C(_(cc, ccc), _(ll, lll)) = bndL;
             l = lll;
@@ -1037,6 +1051,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             c = ccc;
         }
 #ifndef NDEBUG
+        std::cout << std::endl;
+        SHOWLN(numActiveCount);
         SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
         CSHOWLN(minOmegaCoefInd);
         SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
@@ -1053,7 +1069,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
         assert(minPhiCoefInd >= 1 + numBounding + numActiveEdges);
         assert(maxPhiCoefInd <= 1 + numBounding + numActiveEdges + numPhiCoefs);
-        // SHOWLN(C);
+        SHOWLN(C);
         assert(!allZero(C(_, end)));
         size_t nonZeroC = 0;
         for (size_t j = 0; j < C.numRow(); ++j)
@@ -1233,7 +1249,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     bool canFuse(Graph &g0, Graph &g1, size_t d) {
         for (auto &e : edges)
-            if (connects(e, g0, g1))
+            if (connects(e, g0, g1, d))
                 if (!isSatisfied(e, d))
                     return false;
         return true;
@@ -1247,10 +1263,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // and then try to fuse again after if/where optimal schedules
         // allow it.
         auto graphs = g.split(components);
+        assert(graphs.size() == components.size());
         for (auto &sg : graphs) {
             if (d >= sg.calcMaxDepth())
                 continue;
-            setScheduleMemoryOffsets(g, d);
+            std::cout << "About to opt level:" << std::endl;
+            countAuxParamsAndConstraints(sg, d);
+            setScheduleMemoryOffsets(sg, d);
             if (optimizeLevel(sg, sol, d))
                 return true; // give up
         }
@@ -1263,7 +1282,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         llvm::SmallVector<unsigned> baseGraphs;
         baseGraphs.push_back(0);
         for (size_t i = 1; i < components.size(); ++i) {
-            Graph &gi = graphs[i + 1];
+            Graph &gi = graphs[i];
             if (canFuse(*gp, gi, d)) {
                 // fuse
                 (*gp) |= gi;

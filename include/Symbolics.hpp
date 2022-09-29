@@ -539,10 +539,14 @@ merge(llvm::SmallVectorImpl<Monomial> &z, llvm::ArrayRef<Monomial> x,
             z.push_back(*(iy++));
         }
     }
-    for (; ix != ixe; ++ix)
+    for (; ix != ixe; ++ix){
+	oldToNewMaps.first.push_back(z.size());
         z.push_back(*ix);
-    for (; iy != iye; ++iy)
+    }
+    for (; iy != iye; ++iy){
+	oldToNewMaps.second.push_back(z.size());
         z.push_back(*iy);
+    }
     // return z;
     return oldToNewMaps;
 }

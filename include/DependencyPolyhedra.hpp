@@ -237,6 +237,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             oldToNewMaps{merge(symbols, ar0.loop->symbols, ar1.loop->symbols)};
         auto &oldToNewMap0 = oldToNewMaps.first;
         auto &oldToNewMap1 = oldToNewMaps.second;
+        SHOW(oldToNewMap0.size());
+        CSHOWLN(ar0.loop->symbols.size());
         assert(oldToNewMap0.size() == ar0.loop->symbols.size());
         assert(oldToNewMap1.size() == ar1.loop->symbols.size());
 
@@ -806,6 +808,15 @@ struct Dependence {
         sch.resizeForOverwrite(numLoopsTotal + 2);
         sch(_(begin, numLoopsX)) = sx.getPhi()(d, _);
         sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _);
+#ifndef NDEBUG
+        SHOW(sch.size());
+        CSHOW(numLoopsTotal);
+        CSHOW(sx.getOmega().size());
+        CSHOW(sy.getOmega().size());
+        CSHOWLN(2 * d + 1);
+        SHOWLN(sx.getOmega());
+        SHOWLN(sy.getOmega());
+#endif
         sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
         sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
         return dependenceSatisfaction.unSatisfiable(sch, numLambda);
@@ -836,6 +847,8 @@ struct Dependence {
         // SHOWLN(yPhi);
         // SHOWLN(xOmega);
         // SHOWLN(yOmega);
+        // SHOW(&xOmega);
+        // CSHOWLN(&yOmega);
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
             // SHOWLN(i);
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
