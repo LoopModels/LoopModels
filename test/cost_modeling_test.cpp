@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DataLayout.h>
@@ -490,6 +491,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     IntMatrix optPhi2(2, 2);
     optPhi2.antiDiag() = 1;
     IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    optPhi3(end,_) = std::numeric_limits<int64_t>::min();
     // assert(!optFail);
     for (auto &mem : lblock.memory) {
         SHOW(mem.nodeIndex);
