@@ -26,6 +26,24 @@
 //     std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
 // #endif
 
+template <typename R>
+concept AbstractRange = requires(R r) {
+                            { r.begin() };
+                            { r.end() };
+                        };
+std::ostream &printRange(std::ostream &os, AbstractRange auto &r) {
+    os << "[ ";
+    bool needComma = false;
+    for (auto x : r) {
+        if (needComma)
+            os << ", ";
+        os << x;
+        needComma = true;
+    }
+    os << " ]";
+    return os;
+}
+
 [[maybe_unused]] static int64_t gcd(int64_t x, int64_t y) {
     if (x == 0) {
         return std::abs(y);
@@ -151,9 +169,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
 }
 
 template <typename T>
-concept HasMul = requires(T t) {
-    t.mul(t, t);
-};
+concept HasMul = requires(T t) { t.mul(t, t); };
 
 // a and b are temporary, z stores the final results.
 template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
@@ -330,15 +346,16 @@ inline bool isZero(auto x) { return x == 0; }
 }
 
 template <typename T>
-concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
-    { t.size() } -> std::convertible_to<size_t>;
-    {t.view()};
-    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
-    // {t.extendOrAssertSize(i)};
-};
+concept AbstractVector =
+    HasEltype<T> && requires(T t, size_t i) {
+                        { t(i) } -> std::convertible_to<eltype_t<T>>;
+                        { t.size() } -> std::convertible_to<size_t>;
+                        { t.view() };
+                        {
+                            std::remove_reference_t<T>::canResize
+                            } -> std::same_as<const bool &>;
+                        // {t.extendOrAssertSize(i)};
+                    };
 // template <typename T>
 // concept AbstractMatrix = HasEltype<T> && requires(T t, size_t i) {
 //     { t(i, i) } -> std::convertible_to<typename T::eltype>;
@@ -346,19 +363,21 @@ concept AbstractVector = HasEltype<T> && requires(T t, size_t i) {
 //     { t.numCol() } -> std::convertible_to<size_t>;
 // };
 template <typename T>
-concept AbstractMatrixCore = HasEltype<T> && requires(T t, size_t i) {
-    {
-        t(i, i)
-        } -> std::convertible_to<typename std::remove_reference_t<T>::eltype>;
-    { t.numRow() } -> std::convertible_to<size_t>;
-    { t.numCol() } -> std::convertible_to<size_t>;
-    { std::remove_reference_t<T>::canResize } -> std::same_as<const bool &>;
-    // {t.extendOrAssertSize(i, i)};
-};
+concept AbstractMatrixCore =
+    HasEltype<T> && requires(T t, size_t i) {
+                        { t(i, i) } -> std::convertible_to<eltype_t<T>>;
+                        { t.numRow() } -> std::convertible_to<size_t>;
+                        { t.numCol() } -> std::convertible_to<size_t>;
+                        {
+                            std::remove_reference_t<T>::canResize
+                            } -> std::same_as<const bool &>;
+                        // {t.extendOrAssertSize(i, i)};
+                    };
 template <typename T>
-concept AbstractMatrix = AbstractMatrixCore<T> && requires(T t, size_t i) {
-    { t.view() } -> AbstractMatrixCore;
-};
+concept AbstractMatrix =
+    AbstractMatrixCore<T> && requires(T t, size_t i) {
+                                 { t.view() } -> AbstractMatrixCore;
+                             };
 
 inline auto &copyto(AbstractVector auto &y, const AbstractVector auto &x) {
     const size_t M = x.size();
@@ -431,7 +450,7 @@ concept MatrixOrScalar = AbstractMatrix<T> || Scalar<T>;
 
 template <typename Op, VectorOrScalar A, VectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     Op op;
     A a;
     B b;
@@ -453,7 +472,7 @@ struct ElementwiseVectorBinaryOp {
 
 template <typename Op, MatrixOrScalar A, MatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     Op op;
     A a;
     B b;
@@ -499,7 +518,7 @@ struct ElementwiseMatrixBinaryOp {
 };
 
 template <typename A> struct Transpose {
-    using eltype = typename A::eltype;
+    using eltype = eltype_t<A>;
     A a;
     static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const { return a(j, i); }
@@ -508,7 +527,7 @@ template <typename A> struct Transpose {
     auto &view() const { return *this; };
 };
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     A a;
     B b;
     static constexpr bool canResize = false;
@@ -524,7 +543,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     inline auto view() const { return *this; };
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
-    using eltype = typename PromoteEltype<A, B>::eltype;
+    using eltype = promote_eltype_t<A, B>;
     A a;
     B b;
     static constexpr bool canResize = false;
@@ -566,6 +585,47 @@ template <typename B, typename E> struct Range {
     B b;
     E e;
 };
+template <std::integral B, std::integral E> struct Range<B, E> {
+    B b;
+    E e;
+    struct Iterator {
+        B i;
+        bool operator==(E e) { return i == e; }
+        Iterator &operator++() {
+            ++i;
+            return *this;
+        }
+        Iterator operator++(int) {
+            Iterator t = *this;
+            ++*this;
+            return t;
+        }
+        Iterator &operator--() {
+            --i;
+            return *this;
+        }
+        Iterator operator--(int) {
+            Iterator t = *this;
+            --*this;
+            return t;
+        }
+        B operator*() { return i; }
+    };
+    Iterator begin() const { return Iterator{b}; }
+    E end() const { return e; }
+};
+// template <typename B, typename E>
+// constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
+
+// template <> struct std::iterator_traits<Range<size_t,size_t>> {
+//     using difference_type = ptrdiff_t;
+//     using iterator_category = std::forward_iterator_tag;
+//     using value_type = size_t;
+//     using reference_type = void;
+//     using pointer_type = void;
+// };
+
+// static_assert(std::ranges::range<Range<size_t, size_t>>);
 
 // template <> struct Range<Begin, int> {
 //     static constexpr Begin b = begin;
@@ -1048,6 +1108,7 @@ template <typename T> struct MutStridedVector {
         T &operator*() { return *d; }
         bool operator==(const StridedIterator y) const { return d == y.d; }
     };
+    // FIXME: if `x` == 0, then it will not iterate!
     auto begin() { return StridedIterator{d, x}; }
     auto end() { return StridedIterator{d + N * x, x}; }
     auto begin() const { return StridedIterator{d, x}; }
@@ -1086,10 +1147,12 @@ template <typename T> struct MutStridedVector {
         const T *const p = d;
         return StridedVector<T>{.d = p, .N = N, .x = x};
     }
-    StridedVector<T> view() const { return *this; }
-    MutStridedVector<T> &operator=(const T &x) {
-        for (auto &&y : *this)
-            y = x;
+    StridedVector<T> view() const {
+        return StridedVector<T>{.d = d, .N = N, .x = x};
+    }
+    MutStridedVector<T> &operator=(const T &y) {
+	for (size_t i = 0; i < N; ++i)
+	    d[i*x] = y;
         return *this;
     }
     MutStridedVector<T> &operator=(const AbstractVector auto &x) {
@@ -1131,19 +1194,20 @@ template <typename T> struct MutStridedVector {
 };
 
 template <typename T>
-concept DerivedMatrix = requires(T t, const T ct) {
-    {
-        t.data()
-        } -> std::convertible_to<typename std::add_pointer_t<
-            typename std::add_const_t<typename T::eltype>>>;
-    {
-        ct.data()
-        } -> std::same_as<typename std::add_pointer_t<
-            typename std::add_const_t<typename T::eltype>>>;
-    { t.numRow() } -> std::convertible_to<size_t>;
-    { t.numCol() } -> std::convertible_to<size_t>;
-    { t.rowStride() } -> std::convertible_to<size_t>;
-};
+concept DerivedMatrix =
+    requires(T t, const T ct) {
+        {
+            t.data()
+            } -> std::convertible_to<typename std::add_pointer_t<
+                typename std::add_const_t<typename T::eltype>>>;
+        {
+            ct.data()
+            } -> std::same_as<typename std::add_pointer_t<
+                typename std::add_const_t<typename T::eltype>>>;
+        { t.numRow() } -> std::convertible_to<size_t>;
+        { t.numCol() } -> std::convertible_to<size_t>;
+        { t.rowStride() } -> std::convertible_to<size_t>;
+    };
 
 template <typename T> struct SmallSparseMatrix;
 template <typename T> struct PtrMatrix {
@@ -1865,9 +1929,9 @@ static_assert(AbstractMatrix<MatMatMul<PtrMatrix<int64_t>, PtrMatrix<int64_t>>>,
 
 template <typename T>
 concept IntVector = requires(T t, int64_t y) {
-    { t.size() } -> std::convertible_to<size_t>;
-    { t[y] } -> std::convertible_to<int64_t>;
-};
+                        { t.size() } -> std::convertible_to<size_t>;
+                        { t[y] } -> std::convertible_to<int64_t>;
+                    };
 
 //
 // Matrix
@@ -2217,8 +2281,7 @@ static_assert(std::same_as<DynamicMatrix<int64_t>, Matrix<int64_t>>,
               "DynamicMatrix should be identical to Matrix");
 typedef DynamicMatrix<int64_t> IntMatrix;
 
-template <typename T>
-std::ostream &printVector(std::ostream &os, PtrVector<T> a) {
+std::ostream &printVectorImpl(std::ostream &os, const AbstractVector auto &a) {
     os << "[ ";
     if (size_t M = a.size()) {
         os << a[0];
@@ -2228,6 +2291,14 @@ std::ostream &printVector(std::ostream &os, PtrVector<T> a) {
     }
     os << " ]";
     return os;
+}
+template <typename T>
+std::ostream &printVector(std::ostream &os, PtrVector<T> a) {
+    return printVectorImpl(os, a);
+}
+template <typename T>
+std::ostream &printVector(std::ostream &os, StridedVector<T> a) {
+    return printVectorImpl(os, a);
 }
 template <typename T>
 std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
@@ -2284,35 +2355,62 @@ void swapRows(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
 }
 
 template <int Bits, class T>
-constexpr bool is_uint_v = sizeof(T) == (Bits / 8) && std::is_integral_v<T> &&
-                           !std::is_signed_v<T>;
+constexpr bool is_uint_v =
+    sizeof(T) == (Bits / 8) && std::is_integral_v<T> && !std::is_signed_v<T>;
 
-template <class T> inline T zeroUpper(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<16, T>
+{
     return x & 0x00ff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<16, T>
+{
     return x & 0xff00;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<16, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<16, T>
+{
     return x >> 8;
 }
 
-template <class T> inline T zeroUpper(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<32, T>
+{
     return x & 0x0000ffff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<32, T>
+{
     return x & 0xffff0000;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<32, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<32, T>
+{
     return x >> 16;
 }
-template <class T> inline T zeroUpper(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T zeroUpper(T x)
+requires is_uint_v<64, T>
+{
     return x & 0x00000000ffffffff;
 }
-template <class T> inline T zeroLower(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T zeroLower(T x)
+requires is_uint_v<64, T>
+{
     return x & 0xffffffff00000000;
 }
-template <class T> inline T upperHalf(T x) requires is_uint_v<64, T> {
+template <class T>
+inline T upperHalf(T x)
+requires is_uint_v<64, T>
+{
     return x >> 32;
 }
 
@@ -2531,13 +2629,14 @@ struct Rational {
         // return Rational{positive ? denominator : -denominator,
         //                 positive ? numerator : -numerator};
     }
-    llvm::Optional<Rational> operator/(Rational y) const {
+    llvm::Optional<Rational> safeDiv(Rational y) const {
         return (*this) * y.inv();
     }
+    Rational operator/(Rational y) const { return safeDiv(y).getValue(); }
     // *this -= a*b
     bool fnmadd(Rational a, Rational b) {
-        if (llvm::Optional<Rational> ab = a * b) {
-            if (llvm::Optional<Rational> c = *this - ab.getValue()) {
+        if (llvm::Optional<Rational> ab = a.safeMul(b)) {
+            if (llvm::Optional<Rational> c = safeSub(ab.getValue())) {
                 *this = c.getValue();
                 return false;
             }
@@ -2545,7 +2644,7 @@ struct Rational {
         return true;
     }
     bool div(Rational a) {
-        if (llvm::Optional<Rational> d = *this / a) {
+        if (llvm::Optional<Rational> d = safeDiv(a)) {
             *this = d.getValue();
             return false;
         }
@@ -2635,8 +2734,12 @@ llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{gcd(x.numerator, y.numerator),
                     lcm(x.denominator, y.denominator)};
 }
-template <> struct GetEltype<Rational> { using eltype = Rational; };
-template <> struct PromoteType<Rational, Rational> { using eltype = Rational; };
+template <> struct GetEltype<Rational> {
+    using eltype = Rational;
+};
+template <> struct PromoteType<Rational, Rational> {
+    using eltype = Rational;
+};
 template <std::integral I> struct PromoteType<I, Rational> {
     using eltype = Rational;
 };

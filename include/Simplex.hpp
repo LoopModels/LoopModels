@@ -620,7 +620,9 @@ struct Simplex {
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
         return !unSatisfiable(x, off);
-    } // check if a solution exists such that `x` can be true.
+    }
+    // check if a solution exists such that `x` can be true.
+    // zeros remaining rows
     bool unSatisfiableZeroRem(PtrVector<int64_t> x, size_t off,
                               size_t numRow) const {
         // is it a valid solution to set the first `x.size()` variables to `x`?
@@ -678,7 +680,7 @@ struct Simplex {
             }
         }
     }
-    friend std::ostream &operator<<(std::ostream &os, Simplex &s) {
+    friend std::ostream &operator<<(std::ostream &os, const Simplex &s) {
         return os << "\nSimplex; tableau = " << s.tableau;
     }
     /*

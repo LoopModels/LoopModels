@@ -3,6 +3,7 @@
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./MemoryAccess.hpp"
 #include "./NormalForm.hpp"
 #include "./POSet.hpp"
 #include "./Polyhedra.hpp"
@@ -236,6 +237,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             oldToNewMaps{merge(symbols, ar0.loop->symbols, ar1.loop->symbols)};
         auto &oldToNewMap0 = oldToNewMaps.first;
         auto &oldToNewMap1 = oldToNewMaps.second;
+        SHOW(oldToNewMap0.size());
+        CSHOWLN(ar0.loop->symbols.size());
         assert(oldToNewMap0.size() == ar0.loop->symbols.size());
         assert(oldToNewMap1.size() == ar1.loop->symbols.size());
 
@@ -796,7 +799,32 @@ struct Dependence {
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
-
+    bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) {
+        const size_t numLambda = depPoly.getNumLambda();
+        const size_t numLoopsX = sx.getNumLoops();
+        const size_t numLoopsY = sy.getNumLoops();
+        const size_t numLoopsTotal = numLoopsX + numLoopsY;
+        Vector<int64_t> sch;
+        sch.resizeForOverwrite(numLoopsTotal + 2);
+        sch(_(begin, numLoopsX)) = sx.getPhi()(d, _);
+        sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _);
+#ifndef NDEBUG
+        SHOW(sch.size());
+        CSHOW(numLoopsTotal);
+        CSHOW(sx.getOmega().size());
+        CSHOW(sy.getOmega().size());
+        CSHOWLN(2 * d + 1);
+        SHOWLN(sx.getOmega());
+        SHOWLN(sy.getOmega());
+#endif
+        sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
+        sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
+        return dependenceSatisfaction.unSatisfiable(sch, numLambda);
+    }
+    bool isSatisfied(size_t d) {
+        return forward ? isSatisfied(in->schedule, out->schedule, d)
+                       : isSatisfied(out->schedule, in->schedule, d);
+    }
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
                                size_t numLambda, size_t nonTimeDim) {
@@ -819,6 +847,8 @@ struct Dependence {
         // SHOWLN(yPhi);
         // SHOWLN(xOmega);
         // SHOWLN(yOmega);
+        // SHOW(&xOmega);
+        // CSHOWLN(&yOmega);
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
             // SHOWLN(i);
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i]) {
@@ -844,7 +874,11 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
-            // SHOWLN(sch);
+            SHOWLN(sch);
+	    SHOWLN(fxy);
+	    SHOWLN(fyx);
+	    SHOWLN(xPhi);
+	    SHOWLN(yPhi);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
 #ifndef NDEBUG
@@ -870,8 +904,8 @@ struct Dependence {
                               MemoryAccess &y) {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = dxy.getNumLambda();
-        if (checkDirection(pair, x, y, numLambda,
-                           dxy.A.numCol() - dxy.getTimeDim())) {
+        assert(dxy.getTimeDim() == 0);
+        if (checkDirection(pair, x, y, numLambda, dxy.A.numCol())) {
             pair.first.truncateVars(1 + numLambda +
                                     dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
