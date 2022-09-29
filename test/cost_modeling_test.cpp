@@ -510,7 +510,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 }
 
 TEST(MeanStDevTest0, BasicAssertions) {
-
+    // iOuter variant:
     // for (i = 0; i < I; ++i){
     //   x(i) = 0; // [0]
     //   for (j = 0; j < J; ++j)
@@ -524,7 +524,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     //   s(i) = sqrt(s(i) / (J-1));
     // }
 
-    // second variant:
+    // jOuter variant:
     //
     // for (i = 0; i < I; ++i){
     //    x(i) = 0;
@@ -667,7 +667,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
     auto loopI = AffineLoopNest::construct(OneLoopMat, {I});
     // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
     // LoopBlock jOuterLoopNest;
-    LoopBlock iOuterLoopNest;
     // Array IDs are:
     // A: 0
     // x: 1
@@ -707,49 +706,49 @@ TEST(MeanStDevTest0, BasicAssertions) {
         sInd2.strides[0] = 1;
     }
 
-    Schedule sch1_0(1);
-    Schedule sch2_1_0(2);
-    sch2_1_0.getOmega()(2) = 1;
-    Schedule sch2_1_1(2);
-    sch2_1_1.getOmega()(2) = 1;
-    sch2_1_1.getOmega()(4) = 1;
-    Schedule sch2_1_2(2);
-    sch2_1_2.getOmega()(2) = 1;
-    sch2_1_2.getOmega()(4) = 2;
-    Schedule sch1_2(1);
-    sch1_2.getOmega()(2) = 2;
-    Schedule sch1_3(1);
-    sch1_3.getOmega()(2) = 3;
-    Schedule sch1_4(1);
-    sch1_4.getOmega()(2) = 4;
-    Schedule sch2_5_0(2);
-    sch2_5_0.getOmega()(2) = 5;
-    Schedule sch2_5_1(2);
-    sch2_5_1.getOmega()(2) = 5;
-    sch2_5_1.getOmega()(4) = 1;
-    Schedule sch2_5_2(2);
-    sch2_5_2.getOmega()(2) = 5;
-    sch2_5_2.getOmega()(4) = 2;
-    Schedule sch2_5_3(2);
-    sch2_5_3.getOmega()(2) = 5;
-    sch2_5_3.getOmega()(4) = 3;
-    Schedule sch1_6(1);
-    sch1_6.getOmega()(2) = 6;
-    Schedule sch1_7(1);
-    sch1_7.getOmega()(2) = 7;
-    SHOWLN(sch1_0.getPhi());
-    SHOWLN(sch2_1_0.getPhi());
-    SHOWLN(sch2_1_1.getPhi());
-    SHOWLN(sch2_1_2.getPhi());
-    SHOWLN(sch1_2.getPhi());
-    SHOWLN(sch1_3.getPhi());
-    SHOWLN(sch1_4.getPhi());
-    SHOWLN(sch2_5_0.getPhi());
-    SHOWLN(sch2_5_1.getPhi());
-    SHOWLN(sch2_5_2.getPhi());
-    SHOWLN(sch2_5_3.getPhi());
-    SHOWLN(sch1_6.getPhi());
-    SHOWLN(sch1_7.getPhi());
+    Schedule sch0_0(1);
+    Schedule sch0_1_0(2);
+    sch0_1_0.getOmega()(2) = 1;
+    Schedule sch0_1_1(2);
+    sch0_1_1.getOmega()(2) = 1;
+    sch0_1_1.getOmega()(4) = 1;
+    Schedule sch0_1_2(2);
+    sch0_1_2.getOmega()(2) = 1;
+    sch0_1_2.getOmega()(4) = 2;
+    Schedule sch0_2(1);
+    sch0_2.getOmega()(2) = 2;
+    Schedule sch0_3(1);
+    sch0_3.getOmega()(2) = 3;
+    Schedule sch0_4(1);
+    sch0_4.getOmega()(2) = 4;
+    Schedule sch0_5_0(2);
+    sch0_5_0.getOmega()(2) = 5;
+    Schedule sch0_5_1(2);
+    sch0_5_1.getOmega()(2) = 5;
+    sch0_5_1.getOmega()(4) = 1;
+    Schedule sch0_5_2(2);
+    sch0_5_2.getOmega()(2) = 5;
+    sch0_5_2.getOmega()(4) = 2;
+    Schedule sch0_5_3(2);
+    sch0_5_3.getOmega()(2) = 5;
+    sch0_5_3.getOmega()(4) = 3;
+    Schedule sch0_6(1);
+    sch0_6.getOmega()(2) = 6;
+    Schedule sch0_7(1);
+    sch0_7.getOmega()(2) = 7;
+    // SHOWLN(sch1_0.getPhi());
+    // SHOWLN(sch2_1_0.getPhi());
+    // SHOWLN(sch2_1_1.getPhi());
+    // SHOWLN(sch2_1_2.getPhi());
+    // SHOWLN(sch1_2.getPhi());
+    // SHOWLN(sch1_3.getPhi());
+    // SHOWLN(sch1_4.getPhi());
+    // SHOWLN(sch2_5_0.getPhi());
+    // SHOWLN(sch2_5_1.getPhi());
+    // SHOWLN(sch2_5_2.getPhi());
+    // SHOWLN(sch2_5_3.getPhi());
+    // SHOWLN(sch1_6.getPhi());
+    // SHOWLN(sch1_7.getPhi());
     // SHOWLN(sch1_0.getOmega());
     // SHOWLN(sch2_1_0.getOmega());
     // SHOWLN(sch2_1_1.getOmega());
@@ -763,24 +762,25 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // SHOWLN(sch2_5_3.getOmega());
     // SHOWLN(sch1_6.getOmega());
     // SHOWLN(sch1_7.getOmega());
-    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch1_0, false); // 0
+    LoopBlock iOuterLoopNest;
+    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
 
-    iOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch2_1_0, true);  // 1
-    iOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch2_1_1, true); // 2
+    iOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch0_1_0, true);  // 1
+    iOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch0_1_1, true); // 2
 
-    iOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch2_1_2, false); // 3
+    iOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch0_1_2, false); // 3
 
-    iOuterLoopNest.memory.emplace_back(xInd1, Xload_1, sch1_2, true);   // 4
-    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_2, sch1_3, false); // 5
+    iOuterLoopNest.memory.emplace_back(xInd1, Xload_1, sch0_2, true);   // 4
+    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_2, sch0_3, false); // 5
 
-    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch1_4, false);   // 6
-    iOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch2_5_0, true);    // 7
-    iOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch2_5_1, true);   // 8
-    iOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch2_5_2, true);   // 9
-    iOuterLoopNest.memory.emplace_back(sInd2, Sstore_1, sch2_5_3, false); // 10
+    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch0_4, false);   // 6
+    iOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch0_5_0, true);    // 7
+    iOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch0_5_1, true);   // 8
+    iOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch0_5_2, true);   // 9
+    iOuterLoopNest.memory.emplace_back(sInd2, Sstore_1, sch0_5_3, false); // 10
 
-    iOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch1_6, true);   // 11
-    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch1_7, false); // 12
+    iOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch0_6, true);   // 11
+    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch0_7, false); // 12
 
     llvm::SmallVector<Dependence, 0> d;
     d.reserve(4);
@@ -791,7 +791,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Dependence::check(d, iOuterLoopNest.memory[4], iOuterLoopNest.memory[5]);
     EXPECT_TRUE(d.back().forward);
     Dependence::check(d, iOuterLoopNest.memory[5], iOuterLoopNest.memory[4]);
-    EXPECT_FALSE(d.back().forward);
+    EXPECT_FALSE(d.back().forward);    
 
     bool optFail = iOuterLoopNest.optimize();
     EXPECT_FALSE(optFail);
@@ -827,4 +827,79 @@ TEST(MeanStDevTest0, BasicAssertions) {
         SHOWLN(s.getPhi());
         SHOWLN(s.getOmega());
     }
+
+    LoopBlock jOuterLoopNest;
+    jOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
+    Schedule sch0_1(1);
+    sch0_1.getOmega()(2) = 1;
+    jOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch0_1, false);   // 6
+    Schedule sch1_0_0(2);
+    sch1_0_0.getOmega()(0) = 1;
+    Schedule sch1_0_1(2);
+    sch1_0_1.getOmega()(0) = 1;
+    sch1_0_1.getOmega()(4) = 1;
+    Schedule sch1_0_2(2);
+    sch1_0_2.getOmega()(0) = 1;
+    sch1_0_2.getOmega()(4) = 2;
+    jOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch1_0_0, true);  // 1
+    jOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch1_0_1, true); // 2
+    jOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch1_0_2, false); // 3
+
+    Schedule sch2_0(1);
+    sch2_0.getOmega()(0) = 2;
+    Schedule sch2_1(1);
+    sch2_1.getOmega()(0) = 2;
+    sch2_1.getOmega()(2) = 1;
+    jOuterLoopNest.memory.emplace_back(xInd1, Xload_1, sch2_0, true);   // 4
+    jOuterLoopNest.memory.emplace_back(xInd1, Xstore_2, sch2_1, false); // 5
+
+    Schedule sch3_0_0(2);
+    sch3_0_0.getOmega()(0) = 3;
+    Schedule sch3_0_1(2);
+    sch3_0_1.getOmega()(0) = 3;
+    sch3_0_1.getOmega()(4) = 1;
+    Schedule sch3_0_2(2);
+    sch3_0_2.getOmega()(0) = 3;
+    sch3_0_2.getOmega()(4) = 2;
+    Schedule sch3_0_3(2);
+    sch3_0_3.getOmega()(0) = 3;
+    sch3_0_3.getOmega()(4) = 3;
+    
+    jOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch3_0_0, true);    // 7
+    jOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch3_0_1, true);   // 8
+    jOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch3_0_2, true);   // 9
+    jOuterLoopNest.memory.emplace_back(sInd2, Sstore_1, sch3_0_3, false); // 10
+
+    Schedule sch4_0(1);
+    sch4_0.getOmega()(0) = 4;
+    Schedule sch4_1(1);
+    sch4_1.getOmega()(0) = 4;
+    sch4_1.getOmega()(2) = 1;
+    jOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
+    jOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
+    EXPECT_FALSE(jOuterLoopNest.optimize());
+    for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
+        const auto &v = jOuterLoopNest.nodes[i];
+        std::cout << "v_" << i << ":\nmem = ";
+        for (auto m : v.memory) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\ninNeighbors = ";
+        for (auto m : v.inNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\noutNeighbors = ";
+        for (auto m : v.outNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << std::endl;
+    }
+    for (auto &mem : jOuterLoopNest.memory) {
+        SHOW(mem.nodeIndex);
+        CSHOWLN(mem.ref);
+        Schedule &s = jOuterLoopNest.nodes[mem.nodeIndex].schedule;
+        SHOWLN(s.getPhi());
+        SHOWLN(s.getOmega());
+    }
+    
 }
