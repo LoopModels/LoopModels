@@ -4,7 +4,9 @@
 #include "../include/Math.hpp"
 #include "../include/Symbolics.hpp"
 #include "Loops.hpp"
+#include "Macro.hpp"
 #include "MatrixStringParse.hpp"
+#include "MemoryAccess.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -735,6 +737,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sch1_6.getOmega()(2) = 6;
     Schedule sch1_7(1);
     sch1_7.getOmega()(2) = 7;
+    SHOWLN(sch1_0.getPhi());
+    SHOWLN(sch2_1_0.getPhi());
+    SHOWLN(sch2_1_1.getPhi());
+    SHOWLN(sch2_1_2.getPhi());
+    SHOWLN(sch1_2.getPhi());
+    SHOWLN(sch1_3.getPhi());
+    SHOWLN(sch1_4.getPhi());
+    SHOWLN(sch2_5_0.getPhi());
+    SHOWLN(sch2_5_1.getPhi());
+    SHOWLN(sch2_5_2.getPhi());
+    SHOWLN(sch2_5_3.getPhi());
+    SHOWLN(sch1_6.getPhi());
+    SHOWLN(sch1_7.getPhi());
     // SHOWLN(sch1_0.getOmega());
     // SHOWLN(sch2_1_0.getOmega());
     // SHOWLN(sch2_1_1.getOmega());
@@ -748,29 +763,45 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // SHOWLN(sch2_5_3.getOmega());
     // SHOWLN(sch1_6.getOmega());
     // SHOWLN(sch1_7.getOmega());
-    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch1_0, false);
+    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch1_0, false); // 0
 
-    iOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch2_1_0, true);
-    iOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch2_1_1, true);
+    iOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch2_1_0, true);  // 1
+    iOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch2_1_1, true); // 2
 
-    iOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch2_1_2, false);
+    iOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch2_1_2, false); // 3
 
-    iOuterLoopNest.memory.emplace_back(xInd1, Xload_1, sch1_2, true);
-    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_2, sch1_3, false);
+    iOuterLoopNest.memory.emplace_back(xInd1, Xload_1, sch1_2, true);   // 4
+    iOuterLoopNest.memory.emplace_back(xInd1, Xstore_2, sch1_3, false); // 5
 
-    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch1_4, false);
-    iOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch2_5_0, true);
-    iOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch2_5_1, true);
-    iOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch2_5_2, true);
-    iOuterLoopNest.memory.emplace_back(sInd2, Sstore_1, sch2_5_3, false);
+    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch1_4, false);   // 6
+    iOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch2_5_0, true);    // 7
+    iOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch2_5_1, true);   // 8
+    iOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch2_5_2, true);   // 9
+    iOuterLoopNest.memory.emplace_back(sInd2, Sstore_1, sch2_5_3, false); // 10
 
-    iOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch1_6, true);
-    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch1_7, false);
+    iOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch1_6, true);   // 11
+    iOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch1_7, false); // 12
+
+    llvm::SmallVector<Dependence, 0> d;
+    d.reserve(4);
+    Dependence::check(d, iOuterLoopNest.memory[3], iOuterLoopNest.memory[5]);
+    EXPECT_TRUE(d.back().forward);
+    Dependence::check(d, iOuterLoopNest.memory[5], iOuterLoopNest.memory[3]);
+    EXPECT_FALSE(d.back().forward);
+    Dependence::check(d, iOuterLoopNest.memory[4], iOuterLoopNest.memory[5]);
+    EXPECT_TRUE(d.back().forward);
+    Dependence::check(d, iOuterLoopNest.memory[5], iOuterLoopNest.memory[4]);
+    EXPECT_FALSE(d.back().forward);
 
     bool optFail = iOuterLoopNest.optimize();
     EXPECT_FALSE(optFail);
+    llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+    for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
+        memAccessIds[&iOuterLoopNest.memory[i]] = i;
     for (auto &e : iOuterLoopNest.edges) {
-        std::cout << "\nEdge:\nIn" << *e.in << "\nOut" << *e.out << std::endl;
+        std::cout << "\nEdge for array " << e.out->ref.arrayID
+                  << ", in ID: " << memAccessIds[e.in]
+                  << "; out ID: " << memAccessIds[e.out] << std::endl;
     }
     for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
         const auto &v = iOuterLoopNest.nodes[i];

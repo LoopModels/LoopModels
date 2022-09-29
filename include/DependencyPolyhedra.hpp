@@ -874,7 +874,11 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
-            // SHOWLN(sch);
+            SHOWLN(sch);
+	    SHOWLN(fxy);
+	    SHOWLN(fyx);
+	    SHOWLN(xPhi);
+	    SHOWLN(yPhi);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
 #ifndef NDEBUG

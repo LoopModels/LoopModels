@@ -680,7 +680,7 @@ struct Simplex {
             }
         }
     }
-    friend std::ostream &operator<<(std::ostream &os, Simplex &s) {
+    friend std::ostream &operator<<(std::ostream &os, const Simplex &s) {
         return os << "\nSimplex; tableau = " << s.tableau;
     }
     /*

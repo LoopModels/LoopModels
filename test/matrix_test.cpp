@@ -57,11 +57,11 @@ TEST(HelloTest, BasicAssertions) {
     C(2, 2) = 6;
     C(2, 3) = -3;
     C(2, 4) = -11;
-    EXPECT_EQ(A.numRow(), (A*B).numRow());
-    EXPECT_EQ(B.numCol(), (A*B).numCol());
-    EXPECT_TRUE(C == A*B);
+    EXPECT_EQ(A.numRow(), (A * B).numRow());
+    EXPECT_EQ(B.numCol(), (A * B).numCol());
+    EXPECT_TRUE(C == A * B);
     IntMatrix C2{A * B};
-    std::cout << "C=\n"<<C<<"\nC2=\n"<<C2<<std::endl;
+    std::cout << "C=\n" << C << "\nC2=\n" << C2 << std::endl;
     EXPECT_TRUE(C == C2);
     IntMatrix At = A.transpose();
     IntMatrix Bt = B.transpose();
@@ -87,8 +87,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     EXPECT_EQ(A4, C);
     IntMatrix Z = A * 4 - A4;
     for (size_t i = 0; i < Z.numRow(); ++i)
-	for (size_t j = 0; j < Z.numCol(); ++j)
-	    EXPECT_FALSE(Z(i,j));
+        for (size_t j = 0; j < Z.numCol(); ++j)
+            EXPECT_FALSE(Z(i, j));
     auto D{stringToIntMatrix(
         "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
         "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "
@@ -123,4 +123,20 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     // std::cout << "C = \n"<<C<<std::endl;
     // IntMatrix B;
     // B = A*4;
+    IntMatrix A1x1(1, 1);
+    IntMatrix A2x2(2, 2);
+    A1x1.antiDiag() = 1;
+    EXPECT_EQ(A1x1(0, 0), 1);
+    A2x2.antiDiag() = 1;
+    EXPECT_EQ(A2x2(0, 0), 0);
+    EXPECT_EQ(A2x2(0, 1), 1);
+    EXPECT_EQ(A2x2(1, 0), 1);
+    EXPECT_EQ(A2x2(1, 1), 0);
+    for (size_t i = 1; i < 20; ++i) {
+        IntMatrix A(i, i);
+        A.antiDiag() = 1;
+        for (size_t j = 0; j < i; ++j)
+            for (size_t k = 0; k < i; ++k)
+                EXPECT_EQ(A(j, k), k + j == i - 1);
+    }
 }
