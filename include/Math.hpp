@@ -1808,24 +1808,6 @@ template <typename T> struct MutPtrMatrix {
     MutPtrMatrix<T> operator+=(const AbstractMatrix auto &B) {
         assert(M == B.numRow());
         assert(N == B.numCol());
-        // const hn::ScalableTag<T> d;
-        // size_t Lane = hn::Lanes(d);
-        // size_t remainder = N % Lane;
-        // for (size_t i = 0; i < M; ++i)
-        //     for (size_t j = 0; j < N - remainder; j += Lane)
-
-        //          row_vec = (*this)(i, VIndex{j});
-        //         (*this)(i, VIndex{j}) = (*this)(i, VIndex{j}) + B(i,
-        //         VIndex{j});
-        // B(i, VIndex{j});
-
-        // HWY_BEFORE_NAMESPACE();  // required if not using HWY_ATTR
-        // namespace project{
-        // namespace HWY_NAMESPACE {
-        // namespace hn = hwy::HWY_NAMESPACE;
-        // for (size_t r = 0; r < M; ++r)
-        //     for (size_t c = 0; c < N; ++c)
-        //         (*this)(r, c) += B(r, c);
         return *this = *this + B;
     }
     // }
@@ -1851,9 +1833,15 @@ template <typename T> struct MutPtrMatrix {
     MutPtrMatrix<T> operator/=(const std::integral auto b) {
         const size_t M = numRow();
         const size_t N = numCol();
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                (*this)(r, c) /= b;
+        const hn::ScalableTag<T> d;
+        size_t Lane = hn::Lanes(d);
+        size_t remainder = N % Lane;
+        const auto const_vec = hn::Set(d, b);
+        for (size_t i = 0; i < M; ++i)
+            for (size_t j = 0; j < N - remainder; j += Lane) {
+                decltype(const_vec) vec_row = (*this)(i, VIndex{j});
+                (*this)(i, VIndex{j}) = vec_row / const_vec;
+            }
         return *this;
     }
 
