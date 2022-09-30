@@ -426,51 +426,31 @@ struct Simplex {
             // basic
             // C(_,0) = C(_,_(1,end)) * vars
             C(0, 0) = C(c, 0);
-            C(0, v) = 0;
-            C(0, _(v + 1, end)) = C(c, _(v + 1, end));
+            C(0, _(1, v + 1)) = 0;
+            // C(c+1,_) because getCostsAndConstraints
+            C(0, _(v + 1, end)) = C(c + 1, _(v + 1, end));
             // C(0, v) = -1;
             while (true) {
                 // get new entering variable
                 int enteringVariable = getEnteringVariable(C(0, _(v, end)));
-                // SHOW(v);
-                // if (enteringVariable == -1) {
-                //     CSHOWLN(enteringVariable);
-                // }
                 if (enteringVariable == -1)
                     break;
                 enteringVariable += v;
                 int leavingVariable = getLeavingVariable(C, enteringVariable);
-                // if (leavingVariable == -1){
-                //     CSHOWLN(enteringVariable);
-                // } else {
-                //     CSHOW(enteringVariable);
-                // }
                 if (leavingVariable == -1)
                     break;
-
                 for (size_t i = 0; i < C.numRow(); ++i)
                     if (i != size_t(leavingVariable + 1))
                         NormalForm::zeroWithRowOperation(
                             C, i, leavingVariable + 1, enteringVariable, 0);
-                // std::cout << "post-removal C =" << C << std::endl;
                 // update baisc vars and constraints
                 int64_t oldBasicVar = basicVars[leavingVariable];
                 basicVars[leavingVariable] = enteringVariable;
-                // CSHOWLN(oldBasicVar);
                 if (size_t(oldBasicVar) < basicConstraints.size())
                     basicConstraints[oldBasicVar] = -1;
                 basicConstraints[enteringVariable] = leavingVariable;
             }
             c = basicConstraints(v);
-            // SHOW(v);
-            // CSHOW(c);
-            // if (c < 0) {
-            //     size_t x = 0;
-            //     CSHOWLN(x);
-            // } else {
-            //     size_t x = Rational::create(C(c + 1, 0), C(c + 1, v));
-            //     CSHOWLN(x);
-            // }
 #ifndef NDEBUG
             if (c >= 0) {
                 // C(_,0) = C(_,_(1,end)) * vars
