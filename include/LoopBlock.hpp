@@ -519,13 +519,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
 
         [[nodiscard]] bool isInactive(const Dependence &edge, size_t d) const {
-            return edge.isInactive(d) ||
-                   (edge.out->nodeIndex == edge.in->nodeIndex) ||
-                   missingNode(edge);
+            return edge.isInactive(d) || missingNode(edge);
         }
         [[nodiscard]] bool isInactive(const Dependence &edge) const {
-            return (edge.out->nodeIndex == edge.in->nodeIndex) ||
-                   missingNode(edge);
+            return missingNode(edge);
         }
         [[nodiscard]] bool isInactive(size_t e, size_t d) const {
             return !(activeEdges[e]) || isInactive(edges[e], d);
@@ -882,12 +879,17 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     void setScheduleMemoryOffsets(const Graph &g, size_t d) {
         size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
         for (auto &&node : nodes) {
+            SHOW(d);
+            CSHOW(node.getNumLoops());
+            CSHOWLN(hasActiveEdges(g, node, d));
             if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
                 continue;
             if (!node.phiIsScheduled())
                 p = node.updatePhiOffset(p);
         }
         numPhiCoefs = p - pInit;
+        std::cout << "\njust set schedule mem offsets";
+        CSHOWLN(numPhiCoefs);
         size_t o = p;
         for (auto &&node : nodes) {
             if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
@@ -993,159 +995,237 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             C(_(cc, ccc), 0) = bndC;
             // now, handle Phi and Omega
             // phis are not constrained to be 0
-            if (d >= edge.out->getNumLoops()) {
-            } else if (outNode.phiIsScheduled()) {
-                // add it constants
-                auto sch = edge.out->getSchedule(d);
-                SHOWLN(edge.out->getNumLoops());
-                SHOW(satPc.numRow());
-                CSHOW(satPc.numCol());
-                CSHOWLN(sch.size());
-                C(_(c, cc), 0) -= satPc * sch;
-                C(_(cc, ccc), 0) -= bndPc * sch;
+            if (outNodeIndex == inNodeIndex) {
+                if (d < outNode.getNumLoops()) {
+                    if (satPc.numCol() == satPp.numCol()) {
+                        if (outNode.phiIsScheduled()) {
+                            // add it constants
+                            auto sch = edge.out->getSchedule(d);
+                            C(_(c, cc), 0) -= satPc * sch + satPp * sch;
+                            C(_(cc, ccc), 0) -= bndPc * sch + bndPp * sch;
+                        } else {
+                            auto phiChild = outNode.getPhiOffset();
+                            C(_(c, cc), phiChild) = satPc + satPp;
+                            C(_(cc, ccc), phiChild) = bndPc + bndPp;
+                        }
+                    } else {
+                        if (outNode.phiIsScheduled()) {
+                            // add it constants
+                            // note that loop order in schedule goes
+                            // inner -> outer
+                            // so we need to drop inner most if one has less
+                            auto sch = edge.out->getSchedule(d);
+                            auto schP = sch(_(end - satPp.numCol(), end));
+                            auto schC = sch(_(end - satPc.numCol(), end));
+                            C(_(c, cc), 0) -= satPc * schC + satPp * schP;
+                            C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+                        } else if (satPc.numCol() < satPp.numCol()) {
+                            auto phiChild = outNode.getPhiOffset();
+                            size_t P = satPc.numCol();
+                            auto m = phiChild.e - P;
+                            C(_(c, cc), _(m, phiChild.e)) =
+                                satPc + satPp(_, _(end - P, end));
+                            C(_(cc, ccc), _(m, phiChild.e)) =
+                                bndPc + bndPp(_, _(end - P, end));
+                            C(_(c, cc), _(phiChild.b, m)) = satPp;
+                            C(_(cc, ccc), _(phiChild.b, m)) = bndPp;
+                        } else /* if (satPc.numCol() > satPp.numCol()) */ {
+                            auto phiChild = outNode.getPhiOffset();
+                            size_t P = satPp.numCol();
+                            auto m = phiChild.e - P;
+                            C(_(c, cc), _(m, phiChild.e)) =
+                                satPc(_, _(end - P, end)) + satPp;
+                            C(_(cc, ccc), _(m, phiChild.e)) =
+                                bndPc(_, _(end - P, end)) + bndPp;
+                            C(_(c, cc), _(phiChild.b, m)) = satPc;
+                            C(_(cc, ccc), _(phiChild.b, m)) = bndPc;
+                        }
+                    }
+                    C(_(c, cc), outNode.omegaOffset) = satO(_, 0) + satO(_, 1);
+                    C(_(cc, ccc), outNode.omegaOffset) =
+                        bndO(_, 0) + bndO(_, 1);
+                }
             } else {
-                assert(satPc.numCol() == bndPc.numCol());
-                // add it to C
-                auto phiChild = outNode.getPhiOffset();
-                C(_(c, cc), phiChild) = satPc;
-                // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
-                C(_(cc, ccc), phiChild) = bndPc;
-                // C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
+                if (d >= edge.out->getNumLoops()) {
+                } else if (outNode.phiIsScheduled()) {
+                    // add it constants
+                    auto sch = edge.out->getSchedule(d);
+                    SHOWLN(edge.out->getNumLoops());
+                    SHOW(satPc.numRow());
+                    CSHOW(satPc.numCol());
+                    CSHOWLN(sch.size());
+                    C(_(c, cc), 0) -= satPc * sch;
+                    C(_(cc, ccc), 0) -= bndPc * sch;
+                } else {
+                    assert(satPc.numCol() == bndPc.numCol());
+                    // add it to C
+                    auto phiChild = outNode.getPhiOffset();
+                    C(_(c, cc), phiChild) = satPc;
+                    // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
+                    C(_(cc, ccc), phiChild) = bndPc;
+                    // C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
 #ifndef NDEBUG
-                minPhiCoefInd = std::min(minPhiCoefInd, phiChild.b);
-                maxPhiCoefInd = std::max(maxPhiCoefInd, phiChild.e);
+                    minPhiCoefInd = std::min(minPhiCoefInd, phiChild.b);
+                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiChild.e);
 #endif
-            }
-            if (d >= edge.in->getNumLoops()) {
-            } else if (inNode.phiIsScheduled()) {
-                // add it to constants
-                auto sch = edge.in->getSchedule(d);
-                SHOWLN(edge.in->getNumLoops());
-                SHOW(satPp.numRow());
-                CSHOW(satPp.numCol());
-                CSHOWLN(sch.size());
-                C(_(c, cc), 0) -= satPp * sch;
-                C(_(cc, ccc), 0) -= bndPp * sch;
-            } else {
-                assert(satPp.numCol() == bndPp.numCol());
-                // add it to C
-                auto phiParent = inNode.getPhiOffset();
-                C(_(c, cc), phiParent) = satPp;
-                // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
-                C(_(cc, ccc), phiParent) = bndPp;
-                // C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
+                }
+                if (d >= edge.in->getNumLoops()) {
+                } else if (inNode.phiIsScheduled()) {
+                    // add it to constants
+                    auto sch = edge.in->getSchedule(d);
+                    SHOWLN(edge.in->getNumLoops());
+                    SHOW(satPp.numRow());
+                    CSHOW(satPp.numCol());
+                    CSHOWLN(sch.size());
+                    C(_(c, cc), 0) -= satPp * sch;
+                    C(_(cc, ccc), 0) -= bndPp * sch;
+                } else {
+                    assert(satPp.numCol() == bndPp.numCol());
+                    // add it to C
+                    auto phiParent = inNode.getPhiOffset();
+                    C(_(c, cc), phiParent) = satPp;
+                    // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
+                    C(_(cc, ccc), phiParent) = bndPp;
+                    // C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
 #ifndef NDEBUG
-                minPhiCoefInd = std::min(minPhiCoefInd, phiParent.b);
-                maxPhiCoefInd = std::max(maxPhiCoefInd, phiParent.e);
+                    minPhiCoefInd = std::min(minPhiCoefInd, phiParent.b);
+                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiParent.e);
 #endif
-            }
-            // Omegas are included regardless of rotation
-            if (d < edge.out->getNumLoops()) {
-                C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
-                C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
+                }
+                // Omegas are included regardless of rotation
+                if (d < edge.out->getNumLoops()) {
+                    C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
+                    C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
 #ifndef NDEBUG
-                minOmegaCoefInd =
-                    std::min(minOmegaCoefInd, size_t(outNode.omegaOffset));
-                maxOmegaCoefInd =
-                    std::max(maxOmegaCoefInd, size_t(outNode.omegaOffset));
+                    minOmegaCoefInd =
+                        std::min(minOmegaCoefInd, size_t(outNode.omegaOffset));
+                    maxOmegaCoefInd =
+                        std::max(maxOmegaCoefInd, size_t(outNode.omegaOffset));
 #endif
-            }
-            if (d < edge.in->getNumLoops()) {
-                C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
-                C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
+                }
+                if (d < edge.in->getNumLoops()) {
+                    C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
+                    C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
 #ifndef NDEBUG
-                minOmegaCoefInd =
-                    std::min(minOmegaCoefInd, size_t(inNode.omegaOffset));
-                maxOmegaCoefInd =
-                    std::max(maxOmegaCoefInd, size_t(inNode.omegaOffset));
+                    minOmegaCoefInd =
+                        std::min(minOmegaCoefInd, size_t(inNode.omegaOffset));
+                    maxOmegaCoefInd =
+                        std::max(maxOmegaCoefInd, size_t(inNode.omegaOffset));
 #endif
+                }
             }
-
             c = ccc;
         }
-#ifndef NDEBUG
-        std::cout << std::endl;
-        // SHOWLN(numActiveCount);
-        SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
-        CSHOWLN(minOmegaCoefInd);
-        SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-        CSHOWLN(maxOmegaCoefInd);
-        SHOW(d);
-        CSHOW(numBounding);
-        CSHOW(numActiveEdges);
-        CSHOW(numPhiCoefs);
-        CSHOW(numOmegaCoefs);
-        CSHOWLN(numLambda);
-        assert(minOmegaCoefInd >=
-               1 + numBounding + numActiveEdges + numPhiCoefs);
-        assert(maxOmegaCoefInd <=
-               numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-        assert(minPhiCoefInd >= 1 + numBounding + numActiveEdges);
-        assert(maxPhiCoefInd <= 1 + numBounding + numActiveEdges + numPhiCoefs);
-        SHOWLN(C);
-        assert(!allZero(C(_, end)));
-        size_t nonZeroC = 0;
-        for (size_t j = 0; j < C.numRow(); ++j)
-            for (size_t i = 0; i < C.numCol(); ++i)
-                nonZeroC += (C(j, i) != 0);
-        size_t nonZeroEdges = 0;
-        for (size_t eid = 0; eid < edges.size(); ++eid) {
-            const Dependence e = edges[eid];
-            if (g.isInactive(eid, d))
-                continue;
-            auto edb = e.dependenceBounding.getConstraints();
-            bool firstEdgeActive = d < e.out->getNumLoops();
-            bool secondEdgeActive = d < e.in->getNumLoops();
-            // forward means [in, out], !forward means [out, in]
-            if (e.forward)
-                std::swap(firstEdgeActive, secondEdgeActive);
-            for (size_t j = 0; j < edb.numRow(); ++j) {
-                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
-                    nonZeroEdges += (edb(j, i) != 0);
-                size_t bound = 1 + e.depPoly.getNumLambda();
-                size_t ub0 = bound + e.depPoly.getDim0();
-                if (firstEdgeActive)
-                    for (size_t i = bound; i < ub0; ++i)
-                        nonZeroEdges += (edb(j, i) != 0);
-                size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
-                if (secondEdgeActive)
-                    for (size_t i = ub0; i < ub1; ++i)
-                        nonZeroEdges += (edb(j, i) != 0);
-                bound += e.getNumPhiCoefficients();
-                if (firstEdgeActive)
-                    nonZeroEdges += (edb(j, bound) != 0);
-                if (secondEdgeActive)
-                    nonZeroEdges += (edb(j, bound + 1) != 0);
-                for (size_t i = bound + 2; i < edb.numCol(); ++i)
-                    nonZeroEdges += (edb(j, i) != 0);
-            }
-            auto eds = e.dependenceSatisfaction.getConstraints();
-            for (size_t j = 0; j < eds.numRow(); ++j) {
-                for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
-                    nonZeroEdges += (eds(j, i) != 0);
-                size_t bound = 1 + e.depPoly.getNumLambda();
-                size_t ub0 = bound + e.depPoly.getDim0();
-                if (firstEdgeActive)
-                    for (size_t i = bound; i < ub0; ++i)
-                        nonZeroEdges += (eds(j, i) != 0);
-                size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
-                if (secondEdgeActive)
-                    for (size_t i = ub0; i < ub1; ++i)
-                        nonZeroEdges += (eds(j, i) != 0);
-                bound += e.getNumPhiCoefficients();
-                if (firstEdgeActive)
-                    nonZeroEdges += (eds(j, bound) != 0);
-                if (secondEdgeActive)
-                    nonZeroEdges += (eds(j, bound + 1) != 0);
-                for (size_t i = bound + 2; i < eds.numCol(); ++i)
-                    nonZeroEdges += (eds(j, i) != 0);
-            }
-        }
-        SHOW(nonZeroC);
-        CSHOWLN(nonZeroEdges);
-        assert(nonZeroC == nonZeroEdges);
+// #ifndef NDEBUG
+//         std::cout << std::endl;
+//         // SHOWLN(numActiveCount);
+//         SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
+//         CSHOWLN(minOmegaCoefInd);
+//         SHOW(numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
+//         CSHOWLN(maxOmegaCoefInd);
+//         SHOW(d);
+//         CSHOW(numBounding);
+//         CSHOW(numActiveEdges);
+//         CSHOW(numPhiCoefs);
+//         CSHOW(numOmegaCoefs);
+//         CSHOWLN(numLambda);
+//         assert(minOmegaCoefInd >=
+//                1 + numBounding + numActiveEdges + numPhiCoefs);
+//         assert(maxOmegaCoefInd <=
+//                numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
+//         assert(minPhiCoefInd >= 1 + numBounding + numActiveEdges);
+//         assert(maxPhiCoefInd <= 1 + numBounding + numActiveEdges + numPhiCoefs);
+//         SHOWLN(C);
+//         assert(!allZero(C(_, end)));
+//         size_t nonZeroC = 0;
+//         for (size_t j = 0; j < C.numRow(); ++j)
+//             for (size_t i = 0; i < C.numCol(); ++i)
+//                 nonZeroC += (C(j, i) != 0);
+//         size_t nonZeroEdges = 0;
+//         for (size_t eid = 0; eid < edges.size(); ++eid) {
+//             const Dependence &e = edges[eid];
+//             if (g.isInactive(eid, d))
+//                 continue;
+//             auto edb = e.dependenceBounding.getConstraints();
+//             bool firstEdgeActive = d < e.out->getNumLoops();
+//             bool secondEdgeActive = d < e.in->getNumLoops();
+//             size_t nodeIn = e.in->nodeIndex;
+//             size_t nodeOut = e.out->nodeIndex;
+//             // forward means [in, out], !forward means [out, in]
+//             if (e.forward)
+//                 std::swap(firstEdgeActive, secondEdgeActive);
+//             for (size_t j = 0; j < edb.numRow(); ++j) {
+//                 for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
+//                     nonZeroEdges += (edb(j, i) != 0);
+//                 size_t bound = 1 + e.depPoly.getNumLambda();
+//                 size_t ub0 = bound + e.depPoly.getDim0();
+//                 if (nodeIn == nodeOut) {
+//                     if (firstEdgeActive || secondEdgeActive) {
+//                         size_t ub1 = e.depPoly.getNumPhiCoefficients();
+//                         for (size_t i = bound; i < ub0; ++i)
+//                             nonZeroEdges +=
+//                                 ((edb(j, i) + edb(j, i + ub1)) != 0);
+//                         bound += e.getNumPhiCoefficients();
+//                         nonZeroEdges +=
+//                             ((edb(j, bound) + edb(j, bound + 1)) != 0);
+//                     }
+//                 } else {
+//                     if (firstEdgeActive)
+//                         for (size_t i = bound; i < ub0; ++i)
+//                             nonZeroEdges += (edb(j, i) != 0);
+//                     size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
+//                     if (secondEdgeActive)
+//                         for (size_t i = ub0; i < ub1; ++i)
+//                             nonZeroEdges += (edb(j, i) != 0);
 
-#endif
+//                     bound += e.getNumPhiCoefficients();
+//                     if (firstEdgeActive)
+//                         nonZeroEdges += (edb(j, bound) != 0);
+//                     if (secondEdgeActive)
+//                         nonZeroEdges += (edb(j, bound + 1) != 0);
+//                 }
+//                 for (size_t i = bound + 2; i < edb.numCol(); ++i)
+//                     nonZeroEdges += (edb(j, i) != 0);
+//             }
+//             auto eds = e.dependenceSatisfaction.getConstraints();
+//             for (size_t j = 0; j < eds.numRow(); ++j) {
+//                 for (size_t i = 0; i < 1 + e.depPoly.getNumLambda(); ++i)
+//                     nonZeroEdges += (eds(j, i) != 0);
+//                 size_t bound = 1 + e.depPoly.getNumLambda();
+//                 size_t ub0 = bound + e.depPoly.getDim0();
+//                 if (nodeIn == nodeOut) {
+//                     if (firstEdgeActive || secondEdgeActive) {
+//                         size_t ub1 = e.depPoly.getNumPhiCoefficients();
+//                         for (size_t i = bound; i < ub0; ++i)
+//                             nonZeroEdges +=
+//                                 ((eds(j, i) + eds(j, i + ub1)) != 0);
+//                         bound += e.getNumPhiCoefficients();
+//                         nonZeroEdges +=
+//                             ((eds(j, bound) + eds(j, bound + 1)) != 0);
+//                     }
+//                 } else {
+//                     if (firstEdgeActive)
+//                         for (size_t i = bound; i < ub0; ++i)
+//                             nonZeroEdges += (eds(j, i) != 0);
+//                     size_t ub1 = bound + e.depPoly.getNumPhiCoefficients();
+//                     if (secondEdgeActive)
+//                         for (size_t i = ub0; i < ub1; ++i)
+//                             nonZeroEdges += (eds(j, i) != 0);
+//                     bound += e.getNumPhiCoefficients();
+//                     if (firstEdgeActive)
+//                         nonZeroEdges += (eds(j, bound) != 0);
+//                     if (secondEdgeActive)
+//                         nonZeroEdges += (eds(j, bound + 1) != 0);
+//                 }
+//                 for (size_t i = bound + 2; i < eds.numCol(); ++i)
+//                     nonZeroEdges += (eds(j, i) != 0);
+//             }
+//         }
+//         SHOW(nonZeroC);
+//         CSHOWLN(nonZeroEdges);
+//         assert(nonZeroC == nonZeroEdges);
+
+// #endif
     }
     void deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
                                   size_t d) const {
@@ -1164,9 +1244,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             CSHOW(w);
             CSHOW(u);
             CSHOWLN(uu);
-	    SHOW(sol(w));
-	    std::cout << "; ";
-	    CSHOWLN(sol(_(u, uu)));
+            SHOW(sol(w));
+            std::cout << "; ";
+            CSHOWLN(sol(_(u, uu)));
             if (sol(w++) || (!(allZero(sol(_(u, uu))))))
                 g.activeEdges.remove(e);
             u = uu;
@@ -1191,6 +1271,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if (depth >= node.getNumLoops())
                 continue;
             if (!hasActiveEdges(g, node)) {
+                // std::cout << "No active edges!!!!!!"<<std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled())
@@ -1256,6 +1337,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if ((depth >= node.getNumLoops()) || node.phiIsScheduled())
                 continue;
             if (!hasActiveEdges(g, node)) {
+                std::cout << "No active edges setIndep!!!!!!" << std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled())

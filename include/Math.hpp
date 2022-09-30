@@ -565,9 +565,9 @@ struct End {
 struct OffsetBegin {
     size_t offset;
 };
-inline OffsetBegin operator+(size_t x, Begin) { return OffsetBegin{x}; }
-inline OffsetBegin operator+(Begin, size_t x) { return OffsetBegin{x}; }
-inline OffsetBegin operator+(size_t x, OffsetBegin y) {
+constexpr OffsetBegin operator+(size_t x, Begin) { return OffsetBegin{x}; }
+constexpr OffsetBegin operator+(Begin, size_t x) { return OffsetBegin{x}; }
+constexpr OffsetBegin operator+(size_t x, OffsetBegin y) {
     return OffsetBegin{x + y.offset};
 }
 inline OffsetBegin operator+(OffsetBegin y, size_t x) {
@@ -576,9 +576,12 @@ inline OffsetBegin operator+(OffsetBegin y, size_t x) {
 struct OffsetEnd {
     size_t offset;
 };
-inline OffsetEnd operator-(End, size_t x) { return OffsetEnd{x}; }
-inline OffsetEnd operator-(OffsetEnd y, size_t x) {
+constexpr OffsetEnd operator-(End, size_t x) { return OffsetEnd{x}; }
+constexpr OffsetEnd operator-(OffsetEnd y, size_t x) {
     return OffsetEnd{y.offset + x};
+}
+constexpr OffsetEnd operator+(OffsetEnd y, size_t x) {
+    return OffsetEnd{y.offset - x};
 }
 
 template <typename B, typename E> struct Range {
@@ -611,8 +614,8 @@ template <std::integral B, std::integral E> struct Range<B, E> {
         }
         B operator*() { return i; }
     };
-    Iterator begin() const { return Iterator{b}; }
-    E end() const { return e; }
+    constexpr Iterator begin() const { return Iterator{b}; }
+    constexpr E end() const { return e; }
 };
 // template <typename B, typename E>
 // constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
@@ -673,18 +676,15 @@ struct Colon {
     }
 } _;
 
-constexpr size_t canonicalizeBegin(size_t b) { return b; }
-constexpr size_t canonicalizeBegin(Begin) { return 0; }
-constexpr size_t canonicalizeBegin(OffsetBegin b) { return b.offset; }
-
-constexpr size_t canonicalizeEnd(size_t e, size_t) { return e; }
-constexpr size_t canonicalizeEnd(End, size_t M) { return M; }
-constexpr size_t canonicalizeEnd(OffsetEnd e, size_t M) { return M - e.offset; }
+constexpr size_t canonicalize(size_t e, size_t) { return e; }
+constexpr size_t canonicalize(Begin, size_t) { return 0; }
+constexpr size_t canonicalize(OffsetBegin b, size_t) { return b.offset; }
+constexpr size_t canonicalize(End, size_t M) { return M; }
+constexpr size_t canonicalize(OffsetEnd e, size_t M) { return M - e.offset; }
 
 template <typename B, typename E>
 constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t M) {
-    return Range<size_t, size_t>{canonicalizeBegin(r.b),
-                                 canonicalizeEnd(r.e, M)};
+    return Range<size_t, size_t>{canonicalize(r.b, M), canonicalize(r.e, M)};
 }
 
 template <typename B, typename E> auto operator+(Range<B, E> r, size_t x) {
@@ -1151,8 +1151,8 @@ template <typename T> struct MutStridedVector {
         return StridedVector<T>{.d = d, .N = N, .x = x};
     }
     MutStridedVector<T> &operator=(const T &y) {
-	for (size_t i = 0; i < N; ++i)
-	    d[i*x] = y;
+        for (size_t i = 0; i < N; ++i)
+            d[i * x] = y;
         return *this;
     }
     MutStridedVector<T> &operator=(const AbstractVector auto &x) {
