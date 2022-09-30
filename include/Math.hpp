@@ -1058,7 +1058,7 @@ template <typename T> struct StridedVector {
             d -= x;
             return *this;
         }
-        T &operator*() { return *d; }
+        const T &operator*() { return *d; }
         bool operator==(const StridedIterator y) const { return d == y.d; }
     };
     auto begin() const { return StridedIterator{d, x}; }

@@ -296,6 +296,7 @@ struct Simplex {
 #ifdef VERBOSESIMPLEX
         std::cout << "final tableau =" << tableau << std::endl;
 #endif
+        assertCanonical();
         return false;
     }
     // 1 based to match getBasicConstraints
@@ -310,6 +311,7 @@ struct Simplex {
     static int getLeavingVariable(MutPtrMatrix<int64_t> C,
                                   size_t enteringVariable) {
         // inits guarantee first valid is selected
+        // we need
         int64_t n = -1;
         int64_t d = 0;
         int j = 0;
@@ -332,10 +334,6 @@ struct Simplex {
     int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                       int enteringVariable) {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
-        // #ifdef VERBOSESIMPLEX
-        //         std::cout << "leavingVariable = " << leavingVariable <<
-        //         std::endl;
-        // #endif
         if (leavingVariable == -1)
             return 0; // unbounded
         for (size_t i = 0; i < C.numRow(); ++i)
@@ -390,8 +388,9 @@ struct Simplex {
 #ifndef NDEBUG
         assert(inCanonicalForm);
 #endif
-        MutStridedVector<int64_t> basicVars = getBasicVariables();
-        MutPtrMatrix<int64_t> C = getCostsAndConstraints();
+        assertCanonical();
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         int64_t f = 1;
         // zero cost of basic variables to put in canonical form
         for (size_t c = 0; c < basicVars.size();) {
@@ -403,75 +402,160 @@ struct Simplex {
         }
         return runCore(f);
     }
+    void assertCanonical() const {
+#ifndef NDEBUG
+        PtrMatrix<int64_t> C{getCostsAndConstraints()};
+        StridedVector<int64_t> basicVars{getBasicVariables()};
+        PtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        for (size_t v = 1; v < C.numCol(); ++v) {
+            int64_t c = basicConstraints(v);
+            if (c < 0)
+                continue;
+            assert(allZero(C(_(1, 1 + c), v)));
+            assert(allZero(C(_(2 + c, end), v)));
+            assert(size_t(basicVars(c)) == v);
+        }
+        for (size_t c = 1; c < C.numRow(); ++c) {
+            int64_t v = basicVars(c - 1);
+	    if (size_t(v) < basicConstraints.size()){
+		assert(c - 1 == size_t(basicConstraints(v)));
+		assert(C(c, v) >= 0);
+	    }
+            assert(C(c, 0) >= 0);
+        }
+#endif
+    }
+    // Assumes all <v have already been lex-minimized
+    // v starts at 1
+    void lexMinimize(size_t v) {
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+#endif
+        assert(v >= 1);
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        int64_t c = basicConstraints(v);
+        if (c < 0)
+            return;
+        // C(0, _(v, end)) = 0;
+        // we try to zero `v` or at least minimize it.
+        // implicitly, set cost to -1, and then see if we can make it
+        // basic
+        // C(_,0) = C(_,_(1,end)) * vars
+        C(0, 0) = C(++c, 0);
+        // C(0, 0) = C(c + 1, 0);
+        C(0, _(1, v + 1)) = 0;
+        // C(c+1,_) because getCostsAndConstraints
+        C(0, _(v + 1, end)) = C(c, _(v + 1, end));
+        // C(0, _(v + 1, end)) = C(c + 1, _(v + 1, end));
+        // C(0, v) = -1;
+        assert((C(c, v) != 0) || (C(c, 0) == 0));
+        assert(allZero(C(_(1, c), v)));
+        assert(allZero(C(_(c + 1, end), v)));
+// #ifndef NDEBUG
+//         SHOW(c);
+//         CSHOWLN(C(0, _));
+// #endif
+        while (true) {
+            // get new entering variable
+            int enteringVariable = getEnteringVariable(C(0, _(v, end)));
+            // CSHOW(enteringVariable);
+            if (enteringVariable == -1)
+                break;
+            enteringVariable += v;
+            int _leavingVariable = getLeavingVariable(C, enteringVariable);
+            int leavingVariable = _leavingVariable++;
+// #ifndef NDEBUG
+//             CSHOW(leavingVariable);
+// #endif
+            if (_leavingVariable == 0)
+                break;
+            for (size_t i = 0; i < C.numRow(); ++i)
+                if (i != size_t(_leavingVariable))
+                    NormalForm::zeroWithRowOperation(C, i, _leavingVariable,
+                                                     enteringVariable, 0);
+            // update baisc vars and constraints
+            int64_t oldBasicVar = basicVars[leavingVariable];
+            basicVars[leavingVariable] = enteringVariable;
+            if (size_t(oldBasicVar) < basicConstraints.size())
+                basicConstraints[oldBasicVar] = -1;
+            basicConstraints[enteringVariable] = leavingVariable;
+        }
+// #ifndef NDEBUG
+//         std::cout << std::endl;
+// #endif
+        // #ifndef NDEBUG
+        //         std::cout << "initial summary(v=" << v << "):" << std::endl;
+        //         c = basicConstraints(v);
+        //         if (++c > 0)
+        //             assert(!((C(c, v) == 0) && (C(c, 0) != 0)));
+        //         SHOW(c);
+        //         for (size_t i = 0; i < v; ++i) {
+        //             size_t c = basicConstraints(i + 1);
+        //             std::cout << "; sol(" << i << ") = "
+        //                       << ((++c > 0) ? Rational::create(C(c, 0), C(c,
+        //                       i + 1))
+        //                                     : Rational{0, 1});
+        //         }
+        //         std::cout << std::endl;
+        // #endif
+        c = basicConstraints(v);
+        int64_t cc = c++;
+        if ((cc < 0) || (C(c, 0)))
+            return;
+        // search for entering variable
+        assertCanonical();
+        for (size_t ev = C.numCol(); ev > v + 1;) {
+            // search for a non-basic variable (basicConstraints<0)
+            if ((basicConstraints(--ev) >= 0) || (C(c, ev) <= 0))
+                continue;
+            for (size_t i = 1; i < C.numRow(); ++i)
+                if (i != size_t(c))
+                    NormalForm::zeroWithRowOperation(C, i, c, ev, 0);
+            int64_t oldBasicVar = basicVars[cc];
+            assert(oldBasicVar == int64_t(v));
+            basicVars[cc] = ev;
+            // if (size_t(oldBasicVar) < basicConstraints.size())
+            basicConstraints[oldBasicVar] = -1;
+            basicConstraints[ev] = cc;
+            break;
+        }
+        assertCanonical();
+// #ifndef NDEBUG
+//         std::cout << "final summary(v=" << v << "):" << std::endl;
+//         c = basicConstraints(v);
+//         if (++c > 0)
+//             assert(!((C(c, v) == 0) && (C(c, 0) != 0)));
+//         SHOW(c);
+//         for (size_t i = 0; i < v; ++i) {
+//             size_t c = basicConstraints(i + 1);
+//             std::cout << "; sol(" << i << ") = "
+//                       << ((++c > 0) ? Rational::create(C(c, 0), C(c, i + 1))
+//                                     : Rational{0, 1});
+//         }
+//         std::cout << std::endl;
+// #endif
+    }
+
     // lexicographically minimize vars [0, numVars)
     // false means no problems, true means there was a problem
     void lexMinimize(Vector<Rational> &sol) {
 #ifndef NDEBUG
         assert(inCanonicalForm);
 #endif
-        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
-        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        assertCanonical();
+        for (size_t v = 0; v < sol.size();)
+            lexMinimize(++v);
+        MutPtrMatrix<int64_t> C{getConstraints()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
-
-        for (auto &&r : sol)
-            r = Rational{0, 1};
-        for (size_t v = 0; v < sol.size();) {
-            // if it is already zero (not basic), we can move to the next
-            int64_t c = basicConstraints(++v);
-            if (c < 0)
-                continue;
-            // C(0, _(v, end)) = 0;
-            // we try to zero `v` or at least minimize it.
-            // implicitly, set cost to -1, and then see if we can make it
-            // basic
-            // C(_,0) = C(_,_(1,end)) * vars
-            C(0, 0) = C(c, 0);
-            C(0, _(1, v + 1)) = 0;
-            // C(c+1,_) because getCostsAndConstraints
-            C(0, _(v + 1, end)) = C(c + 1, _(v + 1, end));
-            // C(0, v) = -1;
-            while (true) {
-                // get new entering variable
-                int enteringVariable = getEnteringVariable(C(0, _(v, end)));
-                if (enteringVariable == -1)
-                    break;
-                enteringVariable += v;
-                int leavingVariable = getLeavingVariable(C, enteringVariable);
-                if (leavingVariable == -1)
-                    break;
-                for (size_t i = 0; i < C.numRow(); ++i)
-                    if (i != size_t(leavingVariable + 1))
-                        NormalForm::zeroWithRowOperation(
-                            C, i, leavingVariable + 1, enteringVariable, 0);
-                // update baisc vars and constraints
-                int64_t oldBasicVar = basicVars[leavingVariable];
-                basicVars[leavingVariable] = enteringVariable;
-                if (size_t(oldBasicVar) < basicConstraints.size())
-                    basicConstraints[oldBasicVar] = -1;
-                basicConstraints[enteringVariable] = leavingVariable;
-            }
-            c = basicConstraints(v);
-#ifndef NDEBUG
-            if (c >= 0) {
-                // C(_,0) = C(_,_(1,end)) * vars
-                // we now make `vars[v-1]` a constant
-                // if ((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)) {
-                //     SHOWLN(tableau);
-                //     SHOW(c + 1);
-                //     CSHOWLN(v);
-                // }
-                assert(!((C(c + 1, v) == 0) && (C(c + 1, 0) != 0)));
-                // sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
-                // C(c + 1, 0) = 0;
-            }
-#endif
-        }
         for (size_t v = 0; v < sol.size();) {
             size_t sv = v++;
             int64_t c = basicConstraints(v);
-            if (c >= 0)
-                sol(sv) = Rational::create(C(c + 1, 0), C(c + 1, v));
+            sol(sv) =
+                c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
         }
+        assertCanonical();
     }
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)

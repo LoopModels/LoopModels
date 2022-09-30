@@ -938,23 +938,26 @@ TEST(LexMinSimplexTest, BasicAssertions) {
         "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
         "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]")};
 
+    tableau(_(0,2),_) = -5859553999884210514;
     Simplex simp{tableau};
+    // SHOWLN(simp);
     Vector<Rational> sol(37);
     SHOWLN(sol);
     EXPECT_EQ(sol.size(), 37);
     EXPECT_FALSE(simp.initiateFeasible());
     simp.lexMinimize(sol);
+    SHOWLN(sol);
     size_t solSum = 0;
     for (auto s : sol) {
         solSum += s.numerator;
 	EXPECT_EQ(s.denominator, 1);
     }
     EXPECT_EQ(solSum, 3);
-    SHOWLN(sol);
     for (size_t i = 0; i < 37; ++i)
 	EXPECT_EQ(sol(i), (i == 28) || (i == 30) || (i == 33));
     {
 	// test that we didn't invalidate the simplex
+	// note that we do not initiate feasible
         auto C{simp.getCost()};
         C(0) = 0;
         C(_(1, 37)) = 1;
