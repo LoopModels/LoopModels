@@ -1503,7 +1503,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 ++i;
             }
         }
-        SHOWLN(omniSimplex);
+        // SHOWLN(omniSimplex);
         SHOW(d);
         CSHOW(numBounding);
         CSHOW(numActiveEdges);
@@ -1569,7 +1569,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 ++w;
                 u = uu;
             }
-            SHOWLN(C);
+            // SHOWLN(C);
             if (!omniSimplex.initiateFeasible()) {
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
