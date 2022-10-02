@@ -60,6 +60,11 @@ struct Simplex {
         tableau(end, _) = 0;
         return tableau(end, _(numExtraCols, end));
     }
+    MutPtrMatrix<int64_t> addConstraintsAndVars(size_t i) {
+        tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
+        tableau(_(end - i, end), _) = 0;
+        return tableau(_(end - i, end), _(numExtraCols, end));
+    }
     void reserve(size_t numVar, size_t numCon) {
         tableau.reserve(numVar, std::max(numCon, tableau.rowStride()));
     }
@@ -402,8 +407,8 @@ struct Simplex {
         }
         return runCore(f);
     }
-    void assertCanonical() const {
 #ifndef NDEBUG
+    void assertCanonical() const {
         PtrMatrix<int64_t> C{getCostsAndConstraints()};
         StridedVector<int64_t> basicVars{getBasicVariables()};
         PtrVector<int64_t> basicConstraints{getBasicConstraints()};
@@ -417,17 +422,20 @@ struct Simplex {
         }
         for (size_t c = 1; c < C.numRow(); ++c) {
             int64_t v = basicVars(c - 1);
-	    if (size_t(v) < basicConstraints.size()){
-		assert(c - 1 == size_t(basicConstraints(v)));
-		assert(C(c, v) >= 0);
-	    }
+            if (size_t(v) < basicConstraints.size()) {
+                assert(c - 1 == size_t(basicConstraints(v)));
+                assert(C(c, v) >= 0);
+            }
             assert(C(c, 0) >= 0);
         }
-#endif
     }
+#else
+    static constexpr void assertCanonical() {}
+#endif
     // Assumes all <v have already been lex-minimized
     // v starts at 1
-    void lexMinimize(size_t v) {
+    // returns `false` if `0`, `true` if not zero
+    bool lexMinimize(size_t v) {
 #ifndef NDEBUG
         assert(inCanonicalForm);
 #endif
@@ -437,7 +445,7 @@ struct Simplex {
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         int64_t c = basicConstraints(v);
         if (c < 0)
-            return;
+            return false;
         // C(0, _(v, end)) = 0;
         // we try to zero `v` or at least minimize it.
         // implicitly, set cost to -1, and then see if we can make it
@@ -453,10 +461,10 @@ struct Simplex {
         assert((C(c, v) != 0) || (C(c, 0) == 0));
         assert(allZero(C(_(1, c), v)));
         assert(allZero(C(_(c + 1, end), v)));
-// #ifndef NDEBUG
-//         SHOW(c);
-//         CSHOWLN(C(0, _));
-// #endif
+        // #ifndef NDEBUG
+        //         SHOW(c);
+        //         CSHOWLN(C(0, _));
+        // #endif
         while (true) {
             // get new entering variable
             int enteringVariable = getEnteringVariable(C(0, _(v, end)));
@@ -466,9 +474,9 @@ struct Simplex {
             enteringVariable += v;
             int _leavingVariable = getLeavingVariable(C, enteringVariable);
             int leavingVariable = _leavingVariable++;
-// #ifndef NDEBUG
-//             CSHOW(leavingVariable);
-// #endif
+            // #ifndef NDEBUG
+            //             CSHOW(leavingVariable);
+            // #endif
             if (_leavingVariable == 0)
                 break;
             for (size_t i = 0; i < C.numRow(); ++i)
@@ -482,28 +490,10 @@ struct Simplex {
                 basicConstraints[oldBasicVar] = -1;
             basicConstraints[enteringVariable] = leavingVariable;
         }
-// #ifndef NDEBUG
-//         std::cout << std::endl;
-// #endif
-        // #ifndef NDEBUG
-        //         std::cout << "initial summary(v=" << v << "):" << std::endl;
-        //         c = basicConstraints(v);
-        //         if (++c > 0)
-        //             assert(!((C(c, v) == 0) && (C(c, 0) != 0)));
-        //         SHOW(c);
-        //         for (size_t i = 0; i < v; ++i) {
-        //             size_t c = basicConstraints(i + 1);
-        //             std::cout << "; sol(" << i << ") = "
-        //                       << ((++c > 0) ? Rational::create(C(c, 0), C(c,
-        //                       i + 1))
-        //                                     : Rational{0, 1});
-        //         }
-        //         std::cout << std::endl;
-        // #endif
         c = basicConstraints(v);
         int64_t cc = c++;
         if ((cc < 0) || (C(c, 0)))
-            return;
+            return cc >= 0;
         // search for entering variable
         assertCanonical();
         for (size_t ev = C.numCol(); ev > v + 1;) {
@@ -522,20 +512,7 @@ struct Simplex {
             break;
         }
         assertCanonical();
-// #ifndef NDEBUG
-//         std::cout << "final summary(v=" << v << "):" << std::endl;
-//         c = basicConstraints(v);
-//         if (++c > 0)
-//             assert(!((C(c, v) == 0) && (C(c, 0) != 0)));
-//         SHOW(c);
-//         for (size_t i = 0; i < v; ++i) {
-//             size_t c = basicConstraints(i + 1);
-//             std::cout << "; sol(" << i << ") = "
-//                       << ((++c > 0) ? Rational::create(C(c, 0), C(c, i + 1))
-//                                     : Rational{0, 1});
-//         }
-//         std::cout << std::endl;
-// #endif
+        return false;
     }
 
     // lexicographically minimize vars [0, numVars)

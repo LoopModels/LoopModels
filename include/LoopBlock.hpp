@@ -162,6 +162,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
     Simplex omniSimplex;
+    Simplex augOmniSimplex;
     // Simplex activeSimplex;
     // we may turn off edges because we've exceeded its loop depth
     // or because the dependence has already been satisfied at an
@@ -1233,12 +1234,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 
         // #endif
     }
-    void deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
-                                  size_t d) const {
+    BitSet deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
+                                    size_t d) const {
         if (allZero(sol(_(begin, numBounding + numActiveEdges))))
-            return;
+            return {};
         size_t u = 0, w = numBounding;
         SHOWLN(sol);
+        BitSet deactivated;
         for (size_t e = 0; e < edges.size(); ++e) {
             if (g.isInactive(e, d))
                 continue;
@@ -1257,9 +1259,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if (sol(w++) || (!(allZero(sol(_(u, uu)))))) {
                 std::cout << "Removing edge = " << e << std::endl;
                 g.activeEdges.remove(e);
+                deactivated.insert(e);
             }
             u = uu;
         }
+        return deactivated;
     }
     void updateSchedules(const Graph &g, PtrVector<Rational> sol,
                          size_t depth) {
@@ -1387,24 +1391,29 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return true;
     }
-    [[nodiscard]] bool breakGraph(Graph &g, Vector<Rational> &sol, size_t d) {
+    [[nodiscard]] llvm::Optional<BitSet>
+    breakGraph(Graph g, Vector<Rational> &sol, size_t d) {
         auto components = Graphs::stronglyConnectedComponents(g);
         if (components.size() <= 1)
-            return true;
+            return {};
         // components are sorted in topological order.
         // We split all of them, solve independently,
         // and then try to fuse again after if/where optimal schedules
         // allow it.
         auto graphs = g.split(components);
         assert(graphs.size() == components.size());
+        BitSet satDeps;
         for (auto &sg : graphs) {
             if (d >= sg.calcMaxDepth())
                 continue;
             std::cout << "About to opt level:" << std::endl;
             countAuxParamsAndConstraints(sg, d);
             setScheduleMemoryOffsets(sg, d);
-            if (optimizeLevel(sg, sol, d))
-                return true; // give up
+            if (llvm::Optional<BitSet> sat = optimizeLevel(sg, sol, d)) {
+                satDeps |= *sat;
+            } else {
+                return {}; // give up
+            }
         }
         size_t unfusedOffset = 0;
         // For now, just greedily try and fuse from top down
@@ -1434,78 +1443,167 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             v.schedule.getOmega()[2 * d] = unfusedOffset;
         SHOWLN(unfusedOffset);
         ++d;
+        // size_t numSat = satDeps.size();
         for (auto i : baseGraphs)
-            if (optimize(graphs[i], sol, d, graphs[i].calcMaxDepth()))
-                return true;
-        // remove
-        return false;
-    }
-    [[nodiscard]] bool optimizeLevel(Graph &g, Vector<Rational> &sol,
-                                     size_t d) {
-        if (numPhiCoefs) {
-            instantiateOmniSimplex(g, d);
-            addIndependentSolutionConstraints(g, d);
-#ifndef NDEBUG
-            {
-                size_t i = 0;
-                for (size_t eid = 0; eid < edges.size(); ++eid) {
-                    // for (auto &e : edges) {
-                    if (g.isInactive(eid, d))
-                        continue;
-                    const Dependence &e = edges[eid];
-                    SHOW(e.depPoly.getNumLambda());
-                    CSHOW(e.depPoly.getDim0());
-                    CSHOW(e.depPoly.getDim1());
-                    CSHOWLN(e.getNumPhiCoefficients());
-                    std::cout << "constraints:\ndSat_" << i << " = "
-                              << e.dependenceSatisfaction.tableau << "\ndBnd_"
-                              << i << " = " << e.dependenceBounding.tableau
-                              << std::endl;
-                    ++i;
-                }
+            if (llvm::Optional<BitSet> sat = optimize(
+                    std::move(graphs[i]), sol, d, graphs[i].calcMaxDepth())) {
+                // TODO: try and satisfy extra dependences
+                // if ((numSat > 0) && (sat->size()>0)){}
+                satDeps |= *sat;
+            } else {
+                return {};
             }
-            SHOWLN(omniSimplex);
-            SHOW(d);
-            CSHOW(numBounding);
-            CSHOW(numActiveEdges);
-            CSHOW(numPhiCoefs);
-            CSHOW(numOmegaCoefs);
-            CSHOW(numLambda);
-            CSHOWLN(numConstraints);
-#endif
-            if (omniSimplex.initiateFeasible())
-                return true;
-            sol.resizeForOverwrite(getLambdaOffset() - 1);
-            omniSimplex.lexMinimize(sol);
-            updateSchedules(g, sol, d);
-            deactivateSatisfiedEdges(g, sol, d);
-            // TODO: deactivate edges of satisfied dependencies
-        } else {
-            // TODO: something
+        // remove
+        return satDeps;
+    }
+    // void satisfyDependencies(Vector<Rational> &sol, size_t v){
+
+    // }
+    // void lexMinimize(Vector<Rational> &sol){
+    // 	const size_t numDependenceVariables = numBounding + numActiveEdges;
+    // 	for (size_t v = 0; v < sol.size(); )
+    // 	    if (omniSimplex.lexMinimize(++v) && (v <= numDependenceVariables))
+    // 		return satisfyDependencies(sol, v);
+
+    //     MutPtrMatrix<int64_t> C{omniSimplex.getConstraints()};
+    //     MutPtrVector<int64_t>
+    //     basicConstraints{omniSimplex.getBasicConstraints()}; for (size_t v =
+    //     0; v < sol.size();) {
+    //         size_t sv = v++;
+    //         int64_t c = basicConstraints(v);
+    //         sol(sv) =
+    //             c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
+    //     }
+    // }
+    [[nodiscard]] llvm::Optional<BitSet>
+    optimizeLevel(Graph &g, Vector<Rational> &sol, size_t d) {
+        if (numPhiCoefs == 0) {
             setSchedulesIndependent(g, d);
+            return BitSet{};
         }
-        return false;
+        instantiateOmniSimplex(g, d);
+        addIndependentSolutionConstraints(g, d);
+#ifndef NDEBUG
+        {
+            size_t i = 0;
+            for (size_t eid = 0; eid < edges.size(); ++eid) {
+                // for (auto &e : edges) {
+                if (g.isInactive(eid, d))
+                    continue;
+                const Dependence &e = edges[eid];
+                SHOW(e.depPoly.getNumLambda());
+                CSHOW(e.depPoly.getDim0());
+                CSHOW(e.depPoly.getDim1());
+                CSHOWLN(e.getNumPhiCoefficients());
+                std::cout << "constraints:\ndSat_" << i << " = "
+                          << e.dependenceSatisfaction.tableau << "\ndBnd_" << i
+                          << " = " << e.dependenceBounding.tableau << std::endl;
+                ++i;
+            }
+        }
+        SHOWLN(omniSimplex);
+        SHOW(d);
+        CSHOW(numBounding);
+        CSHOW(numActiveEdges);
+        CSHOW(numPhiCoefs);
+        CSHOW(numOmegaCoefs);
+        CSHOW(numLambda);
+        CSHOWLN(numConstraints);
+#endif
+        if (omniSimplex.initiateFeasible())
+            return {};
+        sol.resizeForOverwrite(getLambdaOffset() - 1);
+        omniSimplex.lexMinimize(sol);
+        updateSchedules(g, sol, d);
+        return deactivateSatisfiedEdges(g, sol, d);
+    }
+    BitSet optimizeSatDep(Graph g, Vector<Rational> &sol, size_t d,
+                          size_t maxDepth, BitSet depSatLevel,
+                          BitSet depSatNest) {
+        // if we're here, there are satisfied deps in both
+        // depSatLevel and depSatNest
+        // what we want to know is, can we satisfy all the deps
+        // in depSatNest?
+        const size_t numSatNest = depSatNest.size();
+        if (numSatNest) {
+            // backup in case we fail
+            BitSet nodeIds = g.nodeIds;
+            llvm::SmallVector<Schedule, 0> oldSchedules;
+            for (auto &n : g)
+                oldSchedules.push_back(n.schedule);
+
+            size_t u = 1, w = 1 + numBounding;
+            size_t i = 0;
+            size_t v = omniSimplex.getNumVar();
+            MutPtrMatrix<int64_t> C{
+                omniSimplex.addConstraintsAndVars(numSatNest)};
+            assert(v + numSatNest == omniSimplex.getNumVar());
+            for (size_t e = 0; e < edges.size(); ++e) {
+                Dependence &edge = edges[e];
+                // #ifndef NDEBUG
+                //             std::cout << ";edge=" << e;
+                // #endif
+                if (g.isInactive(e, d))
+                    continue;
+                size_t uu = u +
+                            edge.dependenceBounding.getConstraints().numCol() -
+                            (2 + edge.depPoly.getNumLambda() +
+                             edge.getNumPhiCoefficients() +
+                             edge.getNumOmegaCoefficients());
+                if (depSatNest[e]) {
+                    // e was satisfied in a deeper level; try and satisfy it
+                    // here instead
+                    C(i, 0) = 1;
+                    C(i, _(u, uu)) = 1;
+                    C(i, w) = 1;
+                    C(i++, v++) = -1;
+                }
+                ++w;
+                u = uu;
+            }
+            if (!omniSimplex.initiateFeasible()) {
+                sol.resizeForOverwrite(getLambdaOffset() - 1);
+                omniSimplex.lexMinimize(sol);
+                updateSchedules(g, sol, d);
+                BitSet depSat = deactivateSatisfiedEdges(g, sol, d);
+                if (llvm::Optional<BitSet> depSatN =
+                        optimize(g, sol, d + 1, maxDepth))
+                    return depSat != *depSatN;
+            }
+            // we failed, so reset solved schedules
+            std::swap(g.nodeIds, nodeIds);
+            auto oldNodeIter = oldSchedules.begin();
+            for (auto &&n : g)
+                n.schedule = *(oldNodeIter++);
+        }
+        return depSatLevel |= depSatNest;
     }
     // optimize at depth `d`
-    [[nodiscard]] bool optimize(Graph &g, Vector<Rational> &sol, size_t d,
-                                size_t maxDepth) {
+    // receives graph by value, so that it is not invalidated when recursing
+    [[nodiscard]] llvm::Optional<BitSet>
+    optimize(Graph g, Vector<Rational> &sol, size_t d, size_t maxDepth) {
         if (d >= maxDepth)
-            return false;
+            return BitSet{};
         countAuxParamsAndConstraints(g, d);
         setScheduleMemoryOffsets(g, d);
         SHOW(d);
         CSHOWLN(numPhiCoefs);
         // if we fail on this level, break the graph
-        if (optimizeLevel(g, sol, d))
-            return breakGraph(g, sol, d);
-        // if we fail on some future level, break graph here
-        if (optimize(g, sol, d + 1, maxDepth))
-            return breakGraph(g, sol, d);
-        // give up
-        return false;
+        if (llvm::Optional<BitSet> depSat = optimizeLevel(g, sol, d)) {
+            const size_t numSat = depSat->size();
+            if (llvm::Optional<BitSet> depSatNest =
+                    optimize(g, sol, d + 1, maxDepth)) {
+                if (numSat && depSatNest->size())
+                    return optimizeSatDep(std::move(g), sol, d, maxDepth,
+                                          std::move(*depSat),
+                                          std::move(*depSatNest));
+                return *depSat |= *depSatNest;
+            }
+        }
+        return breakGraph(std::move(g), sol, d);
     }
     // returns true on failure
-    [[nodiscard]] bool optimize() {
+    [[nodiscard]] llvm::Optional<BitSet> optimize() {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();
@@ -1514,8 +1612,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         validateEdges();
 #endif
         Vector<Rational> sol;
-        Graph g{fullGraph()};
-        return optimize(g, sol, 0, calcMaxDepth());
+        return optimize(fullGraph(), sol, 0, calcMaxDepth());
     }
 };
 

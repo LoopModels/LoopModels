@@ -428,8 +428,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
 
-    bool optFail = lblock.optimize();
-    EXPECT_FALSE(optFail);
+    llvm::Optional<BitSet> optDeps = lblock.optimize();
+    EXPECT_TRUE(optDeps.hasValue());
+    // SHOWLN(optDeps.getValue());
     IntMatrix optPhi2(2, 2);
     optPhi2.antiDiag() = 1;
     IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
@@ -736,8 +737,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Dependence::check(d, iOuterLoopNest.memory[5], iOuterLoopNest.memory[4]);
     EXPECT_FALSE(d.back().forward);
 
-    bool optFail = iOuterLoopNest.optimize();
-    EXPECT_FALSE(optFail);
+    llvm::Optional<BitSet> optDeps = iOuterLoopNest.optimize();
+    EXPECT_TRUE(optDeps.hasValue());
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
         memAccessIds[&iOuterLoopNest.memory[i]] = i;
@@ -820,7 +821,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sch4_1.getOmega()(2) = 1;
     jOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
     jOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
-    EXPECT_FALSE(jOuterLoopNest.optimize());
+    EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
         const auto &v = jOuterLoopNest.nodes[i];
         std::cout << "v_" << i << ":\nmem = ";
@@ -1003,7 +1004,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     loopBlock.memory.emplace_back(Atgt1, Aload_i_jp1, schLoad1, true);
     loopBlock.memory.emplace_back(Asrc, Astore, schStore, false);
 
-    EXPECT_FALSE(loopBlock.optimize());
+    EXPECT_TRUE(loopBlock.optimize().hasValue());
     EXPECT_EQ(loopBlock.edges.size(), 2);
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
     for (size_t i = 0; i < loopBlock.memory.size(); ++i)
