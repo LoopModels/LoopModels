@@ -86,10 +86,10 @@ struct BitSet {
     Iterator begin() const {
         auto b{data.begin()};
         auto e{data.end()};
+	if (b == e)
+	    return Iterator{b, e, 0};
         Iterator it{b, e, *b};
-        if (b != e)
-            ++it;
-        return it;
+        return ++it;
     }
     Iterator::End end() const { return Iterator::End{}; };
 
@@ -201,11 +201,13 @@ struct BitSet {
 
 std::ostream &operator<<(std::ostream &os, BitSet const &x) {
     os << "BitSet[";
-    auto it = x.begin();
-    os << std::to_string(*it);
-    ++it;
-    for (; it != x.end(); ++it) {
-        os << ", " << *it;
+    if (x.data.size()){
+	auto it = x.begin();
+	os << std::to_string(*it);
+	++it;
+	for (; it != x.end(); ++it) {
+	    os << ", " << *it;
+	}
     }
     os << "]";
     return os;

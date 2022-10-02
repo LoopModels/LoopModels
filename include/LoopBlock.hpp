@@ -564,6 +564,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             return graphs;
         }
         [[nodiscard]] size_t calcMaxDepth() const {
+            if (nodeIds.data.size() == 0)
+                return 0;
             size_t d = 0;
             for (auto n : nodeIds)
                 d = std::max(d, nodes[n].getNumLoops());
@@ -1519,12 +1521,18 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     BitSet optimizeSatDep(Graph g, Vector<Rational> &sol, size_t d,
                           size_t maxDepth, BitSet depSatLevel,
-                          BitSet depSatNest) {
+                          BitSet depSatNest, BitSet activeEdges) {
         // if we're here, there are satisfied deps in both
         // depSatLevel and depSatNest
         // what we want to know is, can we satisfy all the deps
         // in depSatNest?
-        const size_t numSatNest = depSatNest.size();
+        SHOWLN(depSatLevel);
+        SHOWLN(depSatNest);
+        depSatLevel |= depSatNest;
+        SHOWLN(depSatLevel);
+	// activeEdges was the old original; swap it in
+        std::swap(g.activeEdges, activeEdges);
+	const size_t numSatNest = depSatLevel.size();
         if (numSatNest) {
             // backup in case we fail
             BitSet nodeIds = g.nodeIds;
@@ -1550,7 +1558,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                             (2 + edge.depPoly.getNumLambda() +
                              edge.getNumPhiCoefficients() +
                              edge.getNumOmegaCoefficients());
-                if (depSatNest[e]) {
+                if (depSatLevel[e]) {
                     // e was satisfied in a deeper level; try and satisfy it
                     // here instead
                     C(i, 0) = 1;
@@ -1561,22 +1569,27 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 ++w;
                 u = uu;
             }
+            SHOWLN(C);
             if (!omniSimplex.initiateFeasible()) {
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
                 updateSchedules(g, sol, d);
                 BitSet depSat = deactivateSatisfiedEdges(g, sol, d);
+                SHOWLN(depSat);
                 if (llvm::Optional<BitSet> depSatN =
-                        optimize(g, sol, d + 1, maxDepth))
-                    return depSat != *depSatN;
+                        optimize(g, sol, d + 1, maxDepth)) {
+                    SHOWLN(*depSatN);
+                    return depSat |= *depSatN;
+                }
             }
             // we failed, so reset solved schedules
+	    std::swap(g.activeEdges, activeEdges);
             std::swap(g.nodeIds, nodeIds);
             auto oldNodeIter = oldSchedules.begin();
             for (auto &&n : g)
                 n.schedule = *(oldNodeIter++);
         }
-        return depSatLevel |= depSatNest;
+        return depSatLevel;
     }
     // optimize at depth `d`
     // receives graph by value, so that it is not invalidated when recursing
@@ -1589,14 +1602,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         SHOW(d);
         CSHOWLN(numPhiCoefs);
         // if we fail on this level, break the graph
+        BitSet activeEdgesBackup = g.activeEdges;
         if (llvm::Optional<BitSet> depSat = optimizeLevel(g, sol, d)) {
             const size_t numSat = depSat->size();
             if (llvm::Optional<BitSet> depSatNest =
                     optimize(g, sol, d + 1, maxDepth)) {
                 if (numSat && depSatNest->size())
-                    return optimizeSatDep(std::move(g), sol, d, maxDepth,
-                                          std::move(*depSat),
-                                          std::move(*depSatNest));
+                    return optimizeSatDep(
+                        std::move(g), sol, d, maxDepth, std::move(*depSat),
+                        std::move(*depSatNest), std::move(activeEdgesBackup));
                 return *depSat |= *depSatNest;
             }
         }

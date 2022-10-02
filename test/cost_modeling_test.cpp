@@ -1030,12 +1030,16 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         }
         std::cout << std::endl;
     }
+    IntMatrix optPhi(2, 2);
+    optPhi(0, _) = 1;
+    optPhi(1, _) = std::numeric_limits<int64_t>::min();
     // Graphs::print(iOuterLoopNest.fullGraph());
     for (auto &mem : loopBlock.memory) {
         SHOW(mem.nodeIndex);
         CSHOWLN(mem.ref);
         Schedule &s = loopBlock.nodes[mem.nodeIndex].schedule;
         SHOWLN(s.getPhi());
+        EXPECT_EQ(s.getPhi(), optPhi);
         SHOWLN(s.getOmega());
     }
 }

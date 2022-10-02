@@ -32,4 +32,12 @@ TEST(BitSetTest, BasicAssertions) {
     }
     EXPECT_EQ(j, bsc.size());
     EXPECT_EQ(j, bs.size());
+    BitSet empty;
+    size_t c = 0, d = 0;
+    for (auto b : empty) {
+        ++c;
+        d += b;
+    }
+    EXPECT_FALSE(c);
+    EXPECT_FALSE(d);
 }
