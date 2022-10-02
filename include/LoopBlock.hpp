@@ -175,15 +175,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     size_t numBounding{0};
     size_t numConstraints{0};
     size_t numActiveEdges{0};
-    // Simplex simplex;
-    // ArrayReference &ref(MemoryAccess &x) { return refs[x.ref]; }
-    // ArrayReference &ref(MemoryAccess *x) { return refs[x->ref]; }
-    // const ArrayReference &ref(const MemoryAccess &x) const {
-    //     return refs[x.ref];
-    // }
-    // const ArrayReference &ref(const MemoryAccess *x) const {
-    //     return refs[x->ref];
-    // }
     size_t numVerticies() const { return nodes.size(); }
     llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
     llvm::ArrayRef<ScheduledNode> getVerticies() const { return nodes; }
@@ -195,12 +186,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     OutNeighbors outNeighbors(size_t idx) {
         return OutNeighbors{*this, nodes[idx]};
     }
-    // llvm::SmallVector<unsigned> &edgesOut(size_t idx) {
-    //     return memory[idx].edgesOut;
-    // }
-    // const llvm::SmallVector<unsigned> &edgesOut(size_t idx) const {
-    //     return memory[idx].edgesOut;
-    // }
     [[nodiscard]] size_t calcMaxDepth() const {
         size_t d = 0;
         for (auto &mem : memory)
@@ -322,29 +307,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 edges[e].in->addEdgeOut(e);
                 edges[e].out->addEdgeIn(e);
             } while (++e < numEdges);
-            //             Dependence &d(dep.getValue());
-            // #ifndef NDEBUG
-            //             if (d.isForward()) {
-            //                 std::cout << "dep direction: x -> y" <<
-            //                 std::endl;
-            //             } else {
-            //                 std::cout << "dep direction: y -> x" <<
-            //                 std::endl;
-            //             }
-            // #endif
-            //             MemoryAccess *pin, *pout;
-            //             if (d.isForward()) {
-            //                 pin = &mai;
-            //                 pout = &maj;
-            //             } else {
-            //                 pin = &maj;
-            //                 pout = &mai;
-            //             }
-            //             edges.emplace_back(std::move(d), pin, pout);
-            //             // input's out-edge goes to output's in-edge
-            //             pin->addEdgeOut(numEdges);
-            //             pout->addEdgeIn(numEdges);
-            //             // pushReductionEdges(mai, maj);
         }
     }
     // fills all the edges between memory accesses, checking for
@@ -426,12 +388,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     void connectGraph() {
 
-        // llvm::SmallVector<unsigned> map(memory.size(),
-        // std::numeric_limits<unsigned>::max());
-        // pair is <memory index, node index>
-        // llvm::DenseMap<MemoryAccess *, unsigned> memAccessPtrToIndex;
-        // memoryToNodeMap.resize(memory.size(),
-        //                        std::numeric_limits<unsigned>::max());
         // assembles direct connections in node graph
         unsigned j = 0;
         for (unsigned i = 0; i < memory.size(); ++i) {
@@ -606,29 +562,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
-            // IntMatrix A(IntMatrix::uninitialized(numConstraints,
-            // numVar)); for (size_t j = 0; j < numPeeled; ++j) {
-            //     for (size_t k = 0; k < numConstraints; ++k) {
-            //         A(k, j) = aln->A(k, j);
-            //     }
-            // }
-            // for (size_t j = numPeeled; j < numVar; ++j) {
-            //     for (size_t k = 0; k < numConstraints; ++k) {
-            //         int64_t Akj = 0;
-            //         for (size_t l = 0; l < numTransformed; ++l) {
-            //             Akj += aln->A(k, l) * K(j - numPeeled, l);
-            //         }
-            //         A(k, j) = Akj;
-            //     }
-            // }
             auto alshr = aln->rotate(K, numPeeled);
-            // auto alshr = llvm::makeIntrusiveRefCnt<AffineLoopNest>(
-            //     std::move(A), aln->b, aln->poset);
             map.insert(std::make_pair(aln, alshr));
             return alshr;
         }
     }
-    //    bool ilpOpt() { return false; }
 
     void orthogonalizeStoresOld() {
         llvm::SmallVector<bool, 256> visited(memory.size());
@@ -1119,122 +1057,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             c = ccc;
         }
-        // #ifndef NDEBUG
-        //         std::cout << std::endl;
-        //         // SHOWLN(numActiveCount);
-        //         SHOW(1 + numBounding + numActiveEdges + numPhiCoefs);
-        //         CSHOWLN(minOmegaCoefInd);
-        //         SHOW(numBounding + numActiveEdges + numPhiCoefs +
-        //         numOmegaCoefs); CSHOWLN(maxOmegaCoefInd); SHOW(d);
-        //         CSHOW(numBounding);
-        //         CSHOW(numActiveEdges);
-        //         CSHOW(numPhiCoefs);
-        //         CSHOW(numOmegaCoefs);
-        //         CSHOWLN(numLambda);
-        //         assert(minOmegaCoefInd >=
-        //                1 + numBounding + numActiveEdges + numPhiCoefs);
-        //         assert(maxOmegaCoefInd <=
-        //                numBounding + numActiveEdges + numPhiCoefs +
-        //                numOmegaCoefs);
-        //         assert(minPhiCoefInd >= 1 + numBounding + numActiveEdges);
-        //         assert(maxPhiCoefInd <= 1 + numBounding + numActiveEdges +
-        //         numPhiCoefs); SHOWLN(C); assert(!allZero(C(_, end))); size_t
-        //         nonZeroC = 0; for (size_t j = 0; j < C.numRow(); ++j)
-        //             for (size_t i = 0; i < C.numCol(); ++i)
-        //                 nonZeroC += (C(j, i) != 0);
-        //         size_t nonZeroEdges = 0;
-        //         for (size_t eid = 0; eid < edges.size(); ++eid) {
-        //             const Dependence &e = edges[eid];
-        //             if (g.isInactive(eid, d))
-        //                 continue;
-        //             auto edb = e.dependenceBounding.getConstraints();
-        //             bool firstEdgeActive = d < e.out->getNumLoops();
-        //             bool secondEdgeActive = d < e.in->getNumLoops();
-        //             size_t nodeIn = e.in->nodeIndex;
-        //             size_t nodeOut = e.out->nodeIndex;
-        //             // forward means [in, out], !forward means [out, in]
-        //             if (e.forward)
-        //                 std::swap(firstEdgeActive, secondEdgeActive);
-        //             for (size_t j = 0; j < edb.numRow(); ++j) {
-        //                 for (size_t i = 0; i < 1 + e.depPoly.getNumLambda();
-        //                 ++i)
-        //                     nonZeroEdges += (edb(j, i) != 0);
-        //                 size_t bound = 1 + e.depPoly.getNumLambda();
-        //                 size_t ub0 = bound + e.depPoly.getDim0();
-        //                 if (nodeIn == nodeOut) {
-        //                     if (firstEdgeActive || secondEdgeActive) {
-        //                         size_t ub1 =
-        //                         e.depPoly.getNumPhiCoefficients(); for
-        //                         (size_t i = bound; i < ub0; ++i)
-        //                             nonZeroEdges +=
-        //                                 ((edb(j, i) + edb(j, i + ub1)) != 0);
-        //                         bound += e.getNumPhiCoefficients();
-        //                         nonZeroEdges +=
-        //                             ((edb(j, bound) + edb(j, bound + 1)) !=
-        //                             0);
-        //                     }
-        //                 } else {
-        //                     if (firstEdgeActive)
-        //                         for (size_t i = bound; i < ub0; ++i)
-        //                             nonZeroEdges += (edb(j, i) != 0);
-        //                     size_t ub1 = bound +
-        //                     e.depPoly.getNumPhiCoefficients(); if
-        //                     (secondEdgeActive)
-        //                         for (size_t i = ub0; i < ub1; ++i)
-        //                             nonZeroEdges += (edb(j, i) != 0);
-
-        //                     bound += e.getNumPhiCoefficients();
-        //                     if (firstEdgeActive)
-        //                         nonZeroEdges += (edb(j, bound) != 0);
-        //                     if (secondEdgeActive)
-        //                         nonZeroEdges += (edb(j, bound + 1) != 0);
-        //                 }
-        //                 for (size_t i = bound + 2; i < edb.numCol(); ++i)
-        //                     nonZeroEdges += (edb(j, i) != 0);
-        //             }
-        //             auto eds = e.dependenceSatisfaction.getConstraints();
-        //             for (size_t j = 0; j < eds.numRow(); ++j) {
-        //                 for (size_t i = 0; i < 1 + e.depPoly.getNumLambda();
-        //                 ++i)
-        //                     nonZeroEdges += (eds(j, i) != 0);
-        //                 size_t bound = 1 + e.depPoly.getNumLambda();
-        //                 size_t ub0 = bound + e.depPoly.getDim0();
-        //                 if (nodeIn == nodeOut) {
-        //                     if (firstEdgeActive || secondEdgeActive) {
-        //                         size_t ub1 =
-        //                         e.depPoly.getNumPhiCoefficients(); for
-        //                         (size_t i = bound; i < ub0; ++i)
-        //                             nonZeroEdges +=
-        //                                 ((eds(j, i) + eds(j, i + ub1)) != 0);
-        //                         bound += e.getNumPhiCoefficients();
-        //                         nonZeroEdges +=
-        //                             ((eds(j, bound) + eds(j, bound + 1)) !=
-        //                             0);
-        //                     }
-        //                 } else {
-        //                     if (firstEdgeActive)
-        //                         for (size_t i = bound; i < ub0; ++i)
-        //                             nonZeroEdges += (eds(j, i) != 0);
-        //                     size_t ub1 = bound +
-        //                     e.depPoly.getNumPhiCoefficients(); if
-        //                     (secondEdgeActive)
-        //                         for (size_t i = ub0; i < ub1; ++i)
-        //                             nonZeroEdges += (eds(j, i) != 0);
-        //                     bound += e.getNumPhiCoefficients();
-        //                     if (firstEdgeActive)
-        //                         nonZeroEdges += (eds(j, bound) != 0);
-        //                     if (secondEdgeActive)
-        //                         nonZeroEdges += (eds(j, bound + 1) != 0);
-        //                 }
-        //                 for (size_t i = bound + 2; i < eds.numCol(); ++i)
-        //                     nonZeroEdges += (eds(j, i) != 0);
-        //             }
-        //         }
-        //         SHOW(nonZeroC);
-        //         CSHOWLN(nonZeroEdges);
-        //         assert(nonZeroC == nonZeroEdges);
-
-        // #endif
     }
     BitSet deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
                                     size_t d) const {
@@ -1458,25 +1280,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // remove
         return satDeps;
     }
-    // void satisfyDependencies(Vector<Rational> &sol, size_t v){
-
-    // }
-    // void lexMinimize(Vector<Rational> &sol){
-    // 	const size_t numDependenceVariables = numBounding + numActiveEdges;
-    // 	for (size_t v = 0; v < sol.size(); )
-    // 	    if (omniSimplex.lexMinimize(++v) && (v <= numDependenceVariables))
-    // 		return satisfyDependencies(sol, v);
-
-    //     MutPtrMatrix<int64_t> C{omniSimplex.getConstraints()};
-    //     MutPtrVector<int64_t>
-    //     basicConstraints{omniSimplex.getBasicConstraints()}; for (size_t v =
-    //     0; v < sol.size();) {
-    //         size_t sv = v++;
-    //         int64_t c = basicConstraints(v);
-    //         sol(sv) =
-    //             c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
-    //     }
-    // }
     [[nodiscard]] llvm::Optional<BitSet>
     optimizeLevel(Graph &g, Vector<Rational> &sol, size_t d) {
         if (numPhiCoefs == 0) {
@@ -1530,9 +1333,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         SHOWLN(depSatNest);
         depSatLevel |= depSatNest;
         SHOWLN(depSatLevel);
-	// activeEdges was the old original; swap it in
+        // activeEdges was the old original; swap it in
         std::swap(g.activeEdges, activeEdges);
-	const size_t numSatNest = depSatLevel.size();
+        const size_t numSatNest = depSatLevel.size();
         if (numSatNest) {
             // backup in case we fail
             BitSet nodeIds = g.nodeIds;
@@ -1583,7 +1386,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 }
             }
             // we failed, so reset solved schedules
-	    std::swap(g.activeEdges, activeEdges);
+            std::swap(g.activeEdges, activeEdges);
             std::swap(g.nodeIds, nodeIds);
             auto oldNodeIter = oldSchedules.begin();
             for (auto &&n : g)
