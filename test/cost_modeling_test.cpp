@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DataLayout.h>
@@ -237,45 +238,20 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
     lblock.memory.emplace_back(Amn2Ind, Astore0, sch2_0_1, false);
-    // std::cout << "Amn2Ind.loop->poset.delta.size() = "
-    //           << Amn2Ind.loop->poset.delta.size() << std::endl;
-    // std::cout << "lblock.memory.back().ref.loop->poset.delta.size() = "
-    //           << lblock.memory.back().ref.loop->poset.delta.size() <<
-    //           std::endl;
     MemoryAccess &mSch2_0_1 = lblock.memory.back();
-    // std::cout << "lblock.memory.back().ref.loop = "
-    //           << lblock.memory.back().ref.loop << std::endl;
-    // std::cout << "lblock.memory.back().ref.loop.get() = "
-    //           << lblock.memory.back().ref.loop.get() << std::endl;
-    // std::cout << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << std::endl;
-    // std::cout << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << std::endl;
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, Aload0, sch2_1_0, true);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << std::endl;
-    // std::cout << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << std::endl;
     MemoryAccess &mSch2_1_0 = lblock.memory.back();
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
     lblock.memory.emplace_back(UnnInd, Uloadnn, sch2_1_1, true);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
-    // MemoryAccess &mSch2_1_1 = lblock.memory.back();
     sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, AstoreFDiv, sch2_1_2, false);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
     MemoryAccess &mSch2_1_2 = lblock.memory.back();
 
     Schedule sch3_0(3);
@@ -284,36 +260,19 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
     lblock.memory.emplace_back(UnkInd, Uloadnk, sch3_0, true);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
-    // MemoryAccess &mSch3_2 = lblock.memory.back();
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
     lblock.memory.emplace_back(Amn3Ind, Aload1mn, sch3_1, true);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
     MemoryAccess &mSch3_1 = lblock.memory.back();
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
     lblock.memory.emplace_back(AmkInd, Aload1mk, sch3_2, true);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
     MemoryAccess &mSch3_0 = lblock.memory.back();
     sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
     lblock.memory.emplace_back(AmkInd, Astore2mk, sch3_3, false);
-    // std::cout << "\nPushing back" << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
     MemoryAccess &mSch3_3 = lblock.memory.back();
 
     // for (m = 0; m < M; ++m){
@@ -331,17 +290,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // First, comparisons of store to `A(m,n) = B(m,n)` versus...
     llvm::SmallVector<Dependence, 0> d;
     d.reserve(15);
-    // std::cout << "lblock.memory[1].ref.loop->poset.delta.size() = "
-    //           << lblock.memory[1].ref.loop->poset.delta.size() << std::endl;
-    // std::cout << "&mSch2_0_1 = " << &mSch2_0_1 << std::endl;
-    // std::cout << "&(mSch2_0_1.ref) = " << &(mSch2_0_1.ref) << std::endl;
-    // std::cout << "lblock.memory[1].ref.loop = " << lblock.memory[1].ref.loop
-    //           << std::endl;
-    // std::cout << "lblock.memory[1].ref.loop.get() = "
-    //           << lblock.memory[1].ref.loop.get() << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << std::endl;
-    // std::cout << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << std::endl;
     // // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
@@ -426,13 +374,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     // with...
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
-    // printMatrix(std::cout << "mSch3_0.schedule.getPhi() =\n", PtrMatrix<const
-    // int64_t>(mSch3_0.schedule.getPhi())) << std::endl; printMatrix(std::cout
-    // << "mSch3_3.schedule.getPhi() =\n", PtrMatrix<const
-    // int64_t>(mSch3_3.schedule.getPhi())) << std::endl; printVector(std::cout
-    // << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) <<
-    // std::endl; printVector(std::cout << "mSch3_3.schedule.getOmega() = ",
-    // mSch3_3.schedule.getOmega()) << std::endl;
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
@@ -446,9 +387,11 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_EQ(d.size(), 16);
     // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
     // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
+    //
     // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
     // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
     // 1);
+    //
     // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
     // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
     // 1);
@@ -485,11 +428,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
 
-    bool optFail = lblock.optimize();
-    EXPECT_FALSE(optFail);
+    llvm::Optional<BitSet> optDeps = lblock.optimize();
+    EXPECT_TRUE(optDeps.hasValue());
+    // SHOWLN(optDeps.getValue());
     IntMatrix optPhi2(2, 2);
     optPhi2.antiDiag() = 1;
     IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
     // assert(!optFail);
     for (auto &mem : lblock.memory) {
         SHOW(mem.nodeIndex);
@@ -639,7 +584,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
         builder.CreateGEP(Float64, ptrS,
                           llvm::SmallVector<llvm::Value *, 1>{iv}),
         llvm::MaybeAlign(8));
-
     llvm::Module M = llvm::Module("dummymod", ctx);
     // llvm::Module *M = builder.GetInsertBlock()->getParent()->getParent();
     llvm::Function *sqrt =
@@ -791,10 +735,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Dependence::check(d, iOuterLoopNest.memory[4], iOuterLoopNest.memory[5]);
     EXPECT_TRUE(d.back().forward);
     Dependence::check(d, iOuterLoopNest.memory[5], iOuterLoopNest.memory[4]);
-    EXPECT_FALSE(d.back().forward);    
+    EXPECT_FALSE(d.back().forward);
 
-    bool optFail = iOuterLoopNest.optimize();
-    EXPECT_FALSE(optFail);
+    llvm::Optional<BitSet> optDeps = iOuterLoopNest.optimize();
+    EXPECT_TRUE(optDeps.hasValue());
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
         memAccessIds[&iOuterLoopNest.memory[i]] = i;
@@ -832,7 +776,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     jOuterLoopNest.memory.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
     Schedule sch0_1(1);
     sch0_1.getOmega()(2) = 1;
-    jOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch0_1, false);   // 6
+    jOuterLoopNest.memory.emplace_back(sInd1, Sstore_0, sch0_1, false); // 6
     Schedule sch1_0_0(2);
     sch1_0_0.getOmega()(0) = 1;
     Schedule sch1_0_1(2);
@@ -841,8 +785,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Schedule sch1_0_2(2);
     sch1_0_2.getOmega()(0) = 1;
     sch1_0_2.getOmega()(4) = 2;
-    jOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch1_0_0, true);  // 1
-    jOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch1_0_1, true); // 2
+    jOuterLoopNest.memory.emplace_back(AInd, Aload_m, sch1_0_0, true);    // 1
+    jOuterLoopNest.memory.emplace_back(xInd2, Xload_0, sch1_0_1, true);   // 2
     jOuterLoopNest.memory.emplace_back(xInd2, Xstore_1, sch1_0_2, false); // 3
 
     Schedule sch2_0(1);
@@ -864,7 +808,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Schedule sch3_0_3(2);
     sch3_0_3.getOmega()(0) = 3;
     sch3_0_3.getOmega()(4) = 3;
-    
+
     jOuterLoopNest.memory.emplace_back(AInd, Aload_s, sch3_0_0, true);    // 7
     jOuterLoopNest.memory.emplace_back(xInd2, Xload_2, sch3_0_1, true);   // 8
     jOuterLoopNest.memory.emplace_back(sInd2, Sload_0, sch3_0_2, true);   // 9
@@ -877,7 +821,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sch4_1.getOmega()(2) = 1;
     jOuterLoopNest.memory.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
     jOuterLoopNest.memory.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
-    EXPECT_FALSE(jOuterLoopNest.optimize());
+    EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
         const auto &v = jOuterLoopNest.nodes[i];
         std::cout << "v_" << i << ":\nmem = ";
@@ -901,5 +845,201 @@ TEST(MeanStDevTest0, BasicAssertions) {
         SHOWLN(s.getPhi());
         SHOWLN(s.getOmega());
     }
-    
+}
+
+TEST(DoubleDependenceTest, BasicAssertions) {
+
+    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+                        "n8:16:32:64-S128");
+    llvm::TargetTransformInfo TTI{dl};
+    llvm::LLVMContext ctx = llvm::LLVMContext();
+    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
+    auto fmf = llvm::FastMathFlags();
+    fmf.set();
+    builder.setFastMathFlags(fmf);
+
+    // create arrays
+    llvm::Type *Float64 = builder.getDoubleTy();
+    llvm::Value *ptrA =
+        builder.CreateIntToPtr(builder.getInt64(16000), Float64);
+
+    llvm::ConstantInt *Jv = builder.getInt64(100);
+    auto zero = builder.getInt64(0);
+    auto one = builder.getInt64(1);
+    llvm::Value *iv = builder.CreateAdd(zero, one);
+    llvm::Value *jv = builder.CreateAdd(zero, one);
+
+    llvm::Value *A_ip1_jp1 =
+        builder.CreateAdd(builder.CreateAdd(jv, one),
+                          builder.CreateMul(builder.CreateAdd(iv, one), Jv));
+    llvm::Value *A_ip1_j = builder.CreateAdd(
+        jv, builder.CreateMul(builder.CreateAdd(iv, one), Jv));
+    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(jv, one),
+                                             builder.CreateMul(iv, Jv));
+
+    auto Aload_ip1_j = builder.CreateAlignedLoad(
+        Float64,
+        builder.CreateGEP(Float64, ptrA,
+                          llvm::SmallVector<llvm::Value *, 1>{A_ip1_j}),
+        llvm::MaybeAlign(8));
+    auto Aload_i_jp1 = builder.CreateAlignedLoad(
+        Float64,
+        builder.CreateGEP(Float64, ptrA,
+                          llvm::SmallVector<llvm::Value *, 1>{A_i_jp1}),
+        llvm::MaybeAlign(8));
+    auto Astore = builder.CreateAlignedStore(
+        builder.CreateFAdd(Aload_ip1_j, Aload_i_jp1),
+        builder.CreateGEP(Float64, ptrA,
+                          llvm::SmallVector<llvm::Value *, 1>{A_ip1_jp1}),
+        llvm::MaybeAlign(8));
+
+    // for (i = 0:I-2){
+    //   for (j = 0:J-2){
+    //     A(i+1,j+1) = A(i+1,j) + A(i,j+1);
+    //   }
+    // }
+    auto I = Polynomial::Monomial(Polynomial::ID{1});
+    auto J = Polynomial::Monomial(Polynomial::ID{2});
+    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
+    // A*x >= 0;
+    // [ -2  1  0 -1  0    [ 1
+    //    0  0  0  1  0  *   I   >= 0
+    //   -2  0  1  0 -1      J
+    //    0  0  0  0  1 ]    i
+    //                       j ]
+    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
+                                      "0 0 0 1 0; "
+                                      "-2 0 1 0 -1; "
+                                      "0 0 0 0 1]")};
+    auto loop{AffineLoopNest::construct(Aloop, symbols)};
+
+    // we have three array refs
+    // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
+    ArrayReference Asrc(0, loop, 2);
+    {
+        MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
+        OffMat(0, 0) = 1;
+        OffMat(1, 0) = 1;
+        Asrc.strides[0] = 1;
+        Asrc.strides[1] = I;
+    }
+    std::cout << "AaxesSrc = " << Asrc << std::endl;
+
+    // A[i+1, j]
+    ArrayReference Atgt0(0, loop, 2);
+    {
+        MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Atgt0.offsetMatrix()(0, 0) = 1;
+        Atgt0.strides[0] = 1;
+        Atgt0.strides[1] = I;
+    }
+    std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
+
+    // A[i, j+1]
+    ArrayReference Atgt1(0, loop, 2);
+    {
+        MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
+        IndMat(0, 0) = 1; // i
+        IndMat(1, 1) = 1; // j
+        Atgt1.offsetMatrix()(1, 0) = 1;
+        Atgt1.strides[0] = 1;
+        Atgt1.strides[1] = I;
+    }
+    std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
+
+    //
+    Schedule schLoad0(2);
+    Schedule schStore(2);
+    schStore.getOmega()[4] = 2;
+    MemoryAccess msrc{Asrc, Astore, schStore, false};
+    MemoryAccess mtgt0{Atgt0, Aload_ip1_j, schLoad0, true};
+    DependencePolyhedra dep0(msrc, mtgt0);
+    EXPECT_FALSE(dep0.isEmpty());
+    dep0.pruneBounds();
+    std::cout << "Dep0 = \n" << dep0 << std::endl;
+
+    EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
+    EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
+    assert(dep0.getNumInequalityConstraints() == 4);
+    assert(dep0.getNumEqualityConstraints() == 2);
+
+    Schedule schLoad1(2);
+    schLoad1.getOmega()[4] = 1;
+    MemoryAccess mtgt1{Atgt1, Aload_i_jp1, schLoad1, true};
+    DependencePolyhedra dep1(msrc, mtgt1);
+    EXPECT_FALSE(dep1.isEmpty());
+    dep1.pruneBounds();
+    std::cout << "Dep1 = \n" << dep1 << std::endl;
+    EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
+    EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
+    assert(dep1.getNumInequalityConstraints() == 4);
+    assert(dep1.getNumEqualityConstraints() == 2);
+    // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
+    llvm::SmallVector<Dependence, 1> dc;
+    EXPECT_EQ(dc.size(), 0);
+    EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
+    EXPECT_EQ(dc.size(), 1);
+    Dependence &d(dc.front());
+    EXPECT_TRUE(d.forward);
+    std::cout << d << std::endl;
+    SHOWLN(d.getNumPhiCoefficients());
+    SHOWLN(d.getNumOmegaCoefficients());
+    SHOWLN(d.depPoly.getDim0());
+    SHOWLN(d.depPoly.getDim1());
+    SHOWLN(d.depPoly.getNumVar());
+    SHOWLN(d.depPoly.nullStep.size());
+    SHOWLN(d.depPoly.getNumSymbols());
+    SHOWLN(d.depPoly.A.numCol());
+    assert(d.forward);
+    assert(!allZero(d.dependenceSatisfaction.tableau(
+        d.dependenceSatisfaction.tableau.numRow() - 1, _)));
+
+    LoopBlock loopBlock;
+    loopBlock.memory.emplace_back(Atgt0, Aload_ip1_j, schLoad0, true);
+    loopBlock.memory.emplace_back(Atgt1, Aload_i_jp1, schLoad1, true);
+    loopBlock.memory.emplace_back(Asrc, Astore, schStore, false);
+
+    EXPECT_TRUE(loopBlock.optimize().hasValue());
+    EXPECT_EQ(loopBlock.edges.size(), 2);
+    llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+    for (size_t i = 0; i < loopBlock.memory.size(); ++i)
+        memAccessIds[&loopBlock.memory[i]] = i;
+    for (auto &e : loopBlock.edges) {
+        std::cout << "\nEdge for array " << e.out->ref.arrayID
+                  << ", in ID: " << memAccessIds[e.in]
+                  << "; out ID: " << memAccessIds[e.out] << std::endl;
+    }
+    for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
+        const auto &v = loopBlock.nodes[i];
+        std::cout << "v_" << i << ":\nmem = ";
+        for (auto m : v.memory) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\ninNeighbors = ";
+        for (auto m : v.inNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << "\noutNeighbors = ";
+        for (auto m : v.outNeighbors) {
+            std::cout << m << ", ";
+        }
+        std::cout << std::endl;
+    }
+    IntMatrix optPhi(2, 2);
+    optPhi(0, _) = 1;
+    optPhi(1, _) = std::numeric_limits<int64_t>::min();
+    // Graphs::print(iOuterLoopNest.fullGraph());
+    for (auto &mem : loopBlock.memory) {
+        SHOW(mem.nodeIndex);
+        CSHOWLN(mem.ref);
+        Schedule &s = loopBlock.nodes[mem.nodeIndex].schedule;
+        SHOWLN(s.getPhi());
+        EXPECT_EQ(s.getPhi(), optPhi);
+        SHOWLN(s.getOmega());
+    }
 }

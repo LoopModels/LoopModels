@@ -560,7 +560,6 @@ struct Dependence {
     MemoryAccess *in;
     MemoryAccess *out;
     const bool forward;
-    bool inactive{false};
     // Dependence(DependencePolyhedra depPoly,
     //            IntegerEqPolyhedra dependenceSatisfaction,
     //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
@@ -627,12 +626,9 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
-    bool isInactive() const { return inactive; }
     bool isInactive(size_t depth) const {
-        return inactive ||
-               (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
+        return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
     }
-    // bool isActive() const { return !inactive; }
     size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
     size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
     size_t getNumPhiCoefficients() const {
@@ -875,10 +871,10 @@ struct Dependence {
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
             SHOWLN(sch);
-	    SHOWLN(fxy);
-	    SHOWLN(fyx);
-	    SHOWLN(xPhi);
-	    SHOWLN(yPhi);
+            SHOWLN(fxy);
+            SHOWLN(fyx);
+            SHOWLN(xPhi);
+            SHOWLN(yPhi);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
 #ifndef NDEBUG

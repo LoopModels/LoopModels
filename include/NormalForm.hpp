@@ -421,6 +421,10 @@ inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
         g = ret;
         for (size_t l = 0; l < A.numCol(); ++l) {
             int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
+	    // SHOW(i);
+	    // CSHOW(j);
+	    // CSHOW(l);
+	    // CSHOWLN(Ail);
             A(i, l) = Ail;
             g = gcd(Ail, g);
         }
