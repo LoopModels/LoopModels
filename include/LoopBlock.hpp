@@ -52,6 +52,7 @@ struct ScheduledNode {
         std::numeric_limits<uint32_t>::max();
     uint32_t phiOffset{0};   // used in LoopBlock
     uint32_t omegaOffset{0}; // used in LoopBlock
+    uint32_t carriedDependence{0};
     uint8_t numLoops{0};
     bool visited{false};
     bool wasVisited() const { return visited; }
@@ -89,6 +90,25 @@ struct ScheduledNode {
         return *this;
     }
 };
+
+struct CarriedDependencyFlag {
+    uint32_t flag{0};
+    constexpr bool carriesDependency(size_t d) { return (flag >> d) & 1; }
+    constexpr void setCarriedDependency(size_t d) {
+        flag |= (uint32_t(1) << uint32_t(d));
+    }
+    static constexpr uint32_t resetMaskFlag(size_t d) {
+        return ((uint32_t(1) << uint32_t(d)) - uint32_t(1));
+    }
+    // resets all but `d` deps
+    constexpr void resetDeepDeps(size_t d) { flag &= resetMaskFlag(d); }
+};
+[[maybe_unused]] static void
+resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
+    uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
+    for (auto &&x : v)
+        x.flag &= mask;
+}
 
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
@@ -158,6 +178,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     llvm::SmallVector<ScheduledNode, 0> nodes;
     // llvm::SmallVector<unsigned> memoryToNodeMap;
     llvm::SmallVector<Dependence, 0> edges;
+    llvm::SmallVector<CarriedDependencyFlag, 16> carriedDeps;
     // llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
     llvm::SmallVector<Polynomial::Monomial> symbols;
@@ -1059,7 +1080,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
     }
     BitSet deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
-                                    size_t d) const {
+                                    size_t d) {
         if (allZero(sol(_(begin, numBounding + numActiveEdges))))
             return {};
         size_t u = 0, w = numBounding;
@@ -1084,6 +1105,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 std::cout << "Removing edge = " << e << std::endl;
                 g.activeEdges.remove(e);
                 deactivated.insert(e);
+                carriedDeps[edge.in->nodeIndex].setCarriedDependency(d);
+                carriedDeps[edge.out->nodeIndex].setCarriedDependency(d);
             }
             u = uu;
         }
@@ -1333,16 +1356,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         SHOWLN(depSatNest);
         depSatLevel |= depSatNest;
         SHOWLN(depSatLevel);
-        // activeEdges was the old original; swap it in
-        std::swap(g.activeEdges, activeEdges);
         const size_t numSatNest = depSatLevel.size();
         if (numSatNest) {
             // backup in case we fail
+            // activeEdges was the old original; swap it in
+            std::swap(g.activeEdges, activeEdges);
             BitSet nodeIds = g.nodeIds;
             llvm::SmallVector<Schedule, 0> oldSchedules;
             for (auto &n : g)
                 oldSchedules.push_back(n.schedule);
-
+            llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps =
+                carriedDeps;
+	    resetDeepDeps(carriedDeps, d);
+	    
             size_t u = 1, w = 1 + numBounding;
             size_t i = 0;
             size_t v = omniSimplex.getNumVar();
@@ -1391,6 +1417,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             auto oldNodeIter = oldSchedules.begin();
             for (auto &&n : g)
                 n.schedule = *(oldNodeIter++);
+	    std::swap(carriedDeps, oldCarriedDeps);
         }
         return depSatLevel;
     }
@@ -1424,6 +1451,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();
+	carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
         validateMemory();
         validateEdges();
