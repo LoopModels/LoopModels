@@ -1542,7 +1542,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 return *depSat |= *depSatNest;
             }
         }
-        assert(false);
         return breakGraph(std::move(g), d);
     }
     // returns true on failure

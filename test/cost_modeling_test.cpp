@@ -54,8 +54,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = B(m,n);
-    //   }    auto Bload = builder.CreateLoad(
+    //     A(n,m) = B(n,m);
+    //   }
     auto Bload = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrB,
@@ -69,7 +69,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = A(m,n) / U(n,n);
+    //     A(n,m) = A(n,m) / U(n,n);
     llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
     auto Uloadnn = builder.CreateAlignedLoad(
         Float64,
@@ -85,7 +85,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // for (m = 0; m < M; ++m){
     //     for (k = n+1; k < N; ++k){
-    //       A(m,k) = A(m,k) - A(m,n)*U(n,k);
+    //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
     //     }
     llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
     auto Uloadnk = builder.CreateAlignedLoad(
@@ -120,12 +120,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // badly written triangular solve:
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = B(m,n);
+    //     A(n,m) = B(n,m);
     //   }
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = A(m,n) / U(n,n);
+    //     A(n,m) = A(n,m) / U(n,n);
     //     for (k = n+1; k < N; ++k){
-    //       A(m,k) = A(m,k) - A(m,n)*U(n,k);
+    //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
     //     }
     //   }
     // }
@@ -155,74 +155,80 @@ TEST(TriangularExampleTest, BasicAssertions) {
     ArrayReference BmnInd{0, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        BmnInd.strides[0] = 1;
-        BmnInd.strides[1] = M;
+	//     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        BmnInd.strides[0] = M;
+        BmnInd.strides[1] = 1;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
     // A[m, n]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        Amn2Ind.strides[0] = 1;
-        Amn2Ind.strides[1] = M;
+	//     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        Amn2Ind.strides[0] = M;
+        Amn2Ind.strides[1] = 1;
     }
     std::cout << "Amn2 = " << Amn2Ind << std::endl;
     // A[m, n]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        Amn3Ind.strides[0] = 1;
-        Amn3Ind.strides[1] = M;
+	//     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        Amn3Ind.strides[0] = M;
+        Amn3Ind.strides[1] = 1;
     }
     std::cout << "Amn3 = " << Amn3Ind << std::endl;
     // A[m, k]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(2, 1) = 1; // k
-        AmkInd.strides[0] = 1;
-        AmkInd.strides[1] = M;
+	//     l  d
+        IndMat(2, 0) = 1; // k
+        IndMat(0, 1) = 1; // m
+        AmkInd.strides[0] = M;
+        AmkInd.strides[1] = 1;
     }
     std::cout << "Amk = " << AmkInd << std::endl;
     // U[n, k]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
-        IndMat(1, 0) = 1; // n
-        IndMat(2, 1) = 1; // k
-        UnkInd.strides[0] = 1;
-        UnkInd.strides[1] = N;
+	//     l  d
+        IndMat(1, 1) = 1; // n
+        IndMat(2, 0) = 1; // k
+        UnkInd.strides[0] = N;
+        UnkInd.strides[1] = 1;
     }
     std::cout << "Unk = " << UnkInd << std::endl;
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
-        IndMat(1, 0) = 1; // n
-        IndMat(1, 1) = 1; // k
-        UnnInd.strides[0] = 1;
-        UnnInd.strides[1] = N;
+	//     l  d
+        IndMat(1, 1) = 1; // n
+        IndMat(1, 0) = 1; // k
+        UnnInd.strides[1] = 1;
+        UnnInd.strides[0] = N;
     }
     std::cout << "Unn = " << UnnInd << std::endl;
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     // sch.Omega = [ 0, _, 0, _, {0-1} ]
-    //     A(m,n) = B(m,n); // sch2_0_{0-1}
+    //     A(n,m) = B(n,m); // sch2_0_{0-1}
     //   }
     //   for (n = 0; n < N; ++n){
     //     // sch.Omega = [ 0, _, 1, _, {0-2} ]
-    //     A(m,n) = A(m,n) / U(n,n); // sch2_2_{0-2}
+    //     A(n,m) = A(n,m) / U(n,n); // sch2_2_{0-2}
     //     for (k = n+1; k < N; ++k){
     //       // sch.Omega = [ 0, _, 1, _, 3, _, {0-3} ]
-    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3_{0-3}
+    //       A(k,m) = A(k,m) - A(n,m)*U(k,n); // sch3_{0-3}
     //     }
     //   }
     //   foo(arg...) // [ 0, _, 2 ]
@@ -231,26 +237,26 @@ TEST(TriangularExampleTest, BasicAssertions) {
     lblock.memory.reserve(9);
     Schedule sch2_0_0(2);
     Schedule sch2_0_1 = sch2_0_0;
-    // A(m,n) = -> B(m,n) <-
+    // A(n,m) = -> B(n,m) <-
     lblock.memory.emplace_back(BmnInd, Bload, sch2_0_0, true);
     // MemoryAccess &mSch2_0_0 = lblock.memory.back();
     sch2_0_1.getOmega()[4] = 1;
     Schedule sch2_1_0 = sch2_0_1;
-    // -> A(m,n) <- = B(m,n)
+    // -> A(n,m) <- = B(n,m)
     lblock.memory.emplace_back(Amn2Ind, Astore0, sch2_0_1, false);
     MemoryAccess &mSch2_0_1 = lblock.memory.back();
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
-    // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
+    // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, Aload0, sch2_1_0, true);
     MemoryAccess &mSch2_1_0 = lblock.memory.back();
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
-    // A(m,n) = A(m,n) / -> U(n,n) <-;
+    // A(n,m) = A(n,m) / -> U(n,n) <-;
     lblock.memory.emplace_back(UnnInd, Uloadnn, sch2_1_1, true);
     sch2_1_2.getOmega()[4] = 2;
-    // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
+    // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
     lblock.memory.emplace_back(Amn2Ind, AstoreFDiv, sch2_1_2, false);
     MemoryAccess &mSch2_1_2 = lblock.memory.back();
 
@@ -258,84 +264,84 @@ TEST(TriangularExampleTest, BasicAssertions) {
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
     Schedule sch3_1 = sch3_0;
-    // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
+    // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
     lblock.memory.emplace_back(UnkInd, Uloadnk, sch3_0, true);
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
-    // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
+    // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
     lblock.memory.emplace_back(Amn3Ind, Aload1mn, sch3_1, true);
     MemoryAccess &mSch3_1 = lblock.memory.back();
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
-    // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
+    // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
     lblock.memory.emplace_back(AmkInd, Aload1mk, sch3_2, true);
     MemoryAccess &mSch3_0 = lblock.memory.back();
     sch3_3.getOmega()[6] = 3;
-    // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
+    // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
     lblock.memory.emplace_back(AmkInd, Astore2mk, sch3_3, false);
     MemoryAccess &mSch3_3 = lblock.memory.back();
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = B(m,n); // sch2_0_{0-1}
+    //     A(n,m) = B(n,m); // sch2_0_{0-1}
     //   }
     //   for (n = 0; n < N; ++n){
-    //     A(m,n) = A(m,n) / U(n,n); // sch2_2_{0-2}
+    //     A(n,m) = A(n,m) / U(n,n); // sch2_2_{0-2}
     //     for (k = n+1; k < N; ++k){
-    //       A(m,k) = A(m,k) - A(m,n)*U(n,k); // sch3_{0-3}
+    //       A(k,m) = A(k,m) - A(n,m)*U(k,n); // sch3_{0-3}
     //     }
     //   }
     // }
 
-    // First, comparisons of store to `A(m,n) = B(m,n)` versus...
+    // First, comparisons of store to `A(n,m) = B(n,m)` versus...
     llvm::SmallVector<Dependence, 0> d;
     d.reserve(15);
-    // // load in `A(m,n) = A(m,n) / U(n,n)`
+    // // load in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
     //
     //
-    // store in `A(m,n) = A(m,n) / U(n,n)`
+    // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     //
     // sch3_               3        0         1     2
-    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
 
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     //
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_0), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_3), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
-    // store in `A(m,n) = A(m,n) / U(n,n)`
+    // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     //
     // sch3_               3        0         1     2
-    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
@@ -343,37 +349,37 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
     // with...
     // sch3_               3        0         1     2
-    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Fourth, comparisons of load `A(m,n)` in
     // sch3_               3        0         1     2
-    // load `A(m,n)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     // with...
-    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
-    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
     std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
 
     // Fifth, comparisons of load `A(m,k)` in
     // sch3_               3        0         1     2
-    // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     // with...
-    // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
+    // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
@@ -453,17 +459,17 @@ TEST(TriangularExampleTest, BasicAssertions) {
         std::cout << std::endl;
     }
 }
-/*
+
 TEST(MeanStDevTest0, BasicAssertions) {
     // iOuter variant:
     // for (i = 0; i < I; ++i){
     //   x(i) = 0; // [0]
     //   for (j = 0; j < J; ++j)
-    //     x(i) += A(i,j) // [1,0:2]
+    //     x(i) += A(j,i) // [1,0:2]
     //   x(i) /= J;
     //   s(i) = 0;
     //   for (j = 0; j < J; ++j){
-    //     d = (A(i,j) - x(i));
+    //     d = (A(j,i) - x(i));
     //     s(i) += d*d;
     //   }
     //   s(i) = sqrt(s(i) / (J-1));
@@ -477,12 +483,12 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // }
     // for (j = 0; j < J; ++j){
     //   for (i = 0; i < I; ++i){
-    //      x(i) += A(i,j)
+    //      x(i) += A(j,i)
     // for (i = 0; i < I; ++i){
     //   x(i) /= J;
     // for (j = 0; j < J; ++j){
     //   for (i = 0; i < I; ++i){
-    //     d = (A(i,j) - x(i));
+    //     d = (A(j,i) - x(i));
     //     s(i) += d*d;
     //   }
     // }
@@ -514,10 +520,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::Value *jv = builder.CreateAdd(zero, one);
 
     llvm::Value *Aoffset = builder.CreateAdd(jv, builder.CreateMul(iv, Jv));
-    // for (m = 0; m < M; ++m){
-    //   for (n = 0; n < N; ++n){
-    //     A(m,n) = B(m,n);
-    //   }    auto Bload = builder.CreateLoad(
     auto Aload_m = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
@@ -618,10 +620,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     ArrayReference AInd{0, loopIJ, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AInd.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
-        AInd.strides[0] = J;
-        AInd.strides[1] = 1;
+        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // j
+        AInd.strides[1] = J;
+        AInd.strides[0] = 1;
     }
 
     ArrayReference xInd1{1, loopI, 1};
@@ -895,7 +897,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
     //   for (j = 0:J-2){
-    //     A(i+1,j+1) = A(i+1,j) + A(i,j+1);
+    //     A(j+1,i+1) = A(j,i+1) + A(j+1,i);
     //   }
     // }
     auto I = Polynomial::Monomial(Polynomial::ID{1});
@@ -918,13 +920,14 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Asrc(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+	//     l  d
+        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // j
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
-        Asrc.strides[0] = 1;
-        Asrc.strides[1] = I;
+        Asrc.strides[1] = 1;
+        Asrc.strides[0] = I;
     }
     std::cout << "AaxesSrc = " << Asrc << std::endl;
 
@@ -932,11 +935,13 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Atgt0(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
-        Atgt0.offsetMatrix()(0, 0) = 1;
-        Atgt0.strides[0] = 1;
-        Atgt0.strides[1] = I;
+	//     l  d
+        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // j
+	//                   d  s
+        Atgt0.offsetMatrix()(1, 0) = 1;
+        Atgt0.strides[1] = 1;
+        Atgt0.strides[0] = I;
     }
     std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
 
@@ -944,11 +949,12 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Atgt1(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
-        Atgt1.offsetMatrix()(1, 0) = 1;
-        Atgt1.strides[0] = 1;
-        Atgt1.strides[1] = I;
+	//     l  d
+        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // j
+        Atgt1.offsetMatrix()(0, 0) = 1;
+        Atgt1.strides[1] = 1;
+        Atgt1.strides[0] = I;
     }
     std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
 
@@ -1049,7 +1055,7 @@ TEST(ConvReversePass, BasicAssertions) {
     //   for (m = 0; n < M; ++m){
     //     for (j = 0; n < J; ++j){
     //       for (i = 0; n < I; ++i){
-    //         C[m+i,j+n] += A[m,n] * B[i,j];
+    //         C[j+n,m+i] += A[n,m] * B[j,i];
     //       }
     //     }
     //   }
@@ -1114,7 +1120,7 @@ TEST(ConvReversePass, BasicAssertions) {
     //   for (m = 0; n < M; ++m){
     //     for (j = 0; n < J; ++j){
     //       for (i = 0; n < I; ++i){
-    //         C[m+i,j+n] += A[m,n] * B[i,j];
+    //         C[n+j,m+i] += A[n,m] * B[j,i];
     //       }
     //     }
     //   }
@@ -1145,42 +1151,42 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
     j.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
 
-    // B[m, n]
+    // B[j, i]
     ArrayReference BmnInd{0, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
-        IndMat(1, 0) = 1; // m
-        IndMat(0, 1) = 1; // n
-        BmnInd.strides[0] = 1;
-        BmnInd.strides[1] = I;
+        IndMat(3, 1) = 1; // i
+        IndMat(2, 0) = 1; // j
+        BmnInd.strides[1] = 1;
+        BmnInd.strides[0] = I;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
-    // A[m, n]
+    // A[n, m]
     ArrayReference AmnInd{1, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
-        IndMat(1, 0) = 1; // m
-        IndMat(0, 1) = 1; // n
-        AmnInd.strides[0] = 1;
-        AmnInd.strides[1] = I;
+        IndMat(1, 1) = 1; // m
+        IndMat(0, 0) = 1; // n
+        AmnInd.strides[1] = 1;
+        AmnInd.strides[0] = I;
     }
     // C[m+i, n+j]
     ArrayReference CmijnInd{2, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
-        IndMat(1, 0) = 1; // m
-        IndMat(3, 0) = 1; // i
-        IndMat(0, 1) = 1; // n
-        IndMat(2, 1) = 1; // j
-        CmijnInd.strides[0] = 1;
-        CmijnInd.strides[1] = M + I - 1;
+        IndMat(1, 1) = 1; // m
+        IndMat(3, 1) = 1; // i
+        IndMat(0, 0) = 1; // n
+        IndMat(2, 0) = 1; // j
+        CmijnInd.strides[1] = 1;
+        CmijnInd.strides[0] = M + I - 1;
     }
 
     // for (n = 0; n < N; ++n){
     //   for (m = 0; n < M; ++m){
     //     for (j = 0; n < J; ++j){
     //       for (i = 0; n < I; ++i){
-    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * B[i,j];
+    //         C[n+j,m+i] = C[n+j,m+i] + A[n,m] * B[j,i];
     //       }
     //     }
     //   }
@@ -1213,4 +1219,4 @@ TEST(ConvReversePass, BasicAssertions) {
         SHOWLN(s.getOmega());
     }
 }
-*/
+
