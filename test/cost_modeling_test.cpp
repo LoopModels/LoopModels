@@ -453,7 +453,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         std::cout << std::endl;
     }
 }
-
+/*
 TEST(MeanStDevTest0, BasicAssertions) {
     // iOuter variant:
     // for (i = 0; i < I; ++i){
@@ -1212,6 +1212,5 @@ TEST(ConvReversePass, BasicAssertions) {
         // EXPECT_EQ(s.getPhi(), optPhi);
         SHOWLN(s.getOmega());
     }
-
-
 }
+*/
