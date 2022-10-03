@@ -1153,7 +1153,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 auto phi = node.schedule.getPhi()(depth, _);
                 auto s = sol(node.getPhiOffset() - 1);
                 int64_t l = denomLCM(s);
-		SHOWLN(l);
+                SHOWLN(l);
                 if (l == 1) {
                     for (size_t i = 0; i < phi.size(); ++i)
                         phi(i) = s(i).numerator;
@@ -1332,6 +1332,32 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // remove
         return satDeps;
     }
+    //     void lexMinimize(const Graph &g, Vector<Rational> &sol, size_t
+    //     depth){
+    // 	// omniSimplex.lexMinimize(sol);
+    // #ifndef NDEBUG
+    //         assert(omniSimplex.inCanonicalForm);
+    //         omniSimplex.assertCanonical();
+    //         // SHOWLN(omniSimplex);
+    // #endif
+    //         for (size_t v = 0; v < numActiveEdges + numBounding;)
+    //             omniSimplex.lexMinimize(++v);
+    // 	for (auto &&node : nodes) {
+    //             if (depth >= node.getNumLoops())
+    //                 continue;
+    //             if (!hasActiveEdges(g, node))
+    // 		continue;
+    // 	    omniSimplex.lexMinimize(node.getPhiOffset());
+    // 	}
+    // 	for (auto &&node : nodes) {
+    //             if (depth >= node.getNumLoops())
+    //                 continue;
+    //             if (!hasActiveEdges(g, node))
+    // 		continue;
+    // 	    omniSimplex.lexMinimize(node.omegaOffset);
+    // 	}
+    //         omniSimplex.copySolution(sol);
+    //     }
     [[nodiscard]] llvm::Optional<BitSet>
     optimizeLevel(Graph &g, Vector<Rational> &sol, size_t d) {
         if (numPhiCoefs == 0) {
@@ -1373,6 +1399,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             return {};
         sol.resizeForOverwrite(getLambdaOffset() - 1);
         omniSimplex.lexMinimize(sol);
+        // lexMinimize(g, sol, d);
         updateSchedules(g, sol, d);
         return deactivateSatisfiedEdges(g, sol, d);
     }
@@ -1443,8 +1470,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 std::cout << "SUCCESS initiateFeasible()" << std::endl;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
+                // lexMinimize(g, sol, d);
                 updateSchedules(g, sol, d);
                 BitSet depSat = deactivateSatisfiedEdges(g, sol, d);
+#ifndef NDEBUG
                 SHOW(d);
                 CSHOW(numBounding);
                 CSHOW(numActiveEdges);
@@ -1454,16 +1483,23 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 CSHOWLN(numConstraints);
                 SHOWLN(sol);
                 SHOWLN(depSat);
+#endif
                 if (llvm::Optional<BitSet> depSatN =
                         optimize(g, sol, d + 1, maxDepth)) {
+#ifndef NDEBUG
                     std::cout << "SUCCESS dep sat optimize()" << std::endl;
                     CSHOWLN(*depSatN);
+#endif
                     return depSat |= *depSatN;
+#ifndef NDEBUG
                 } else {
                     std::cout << "FAILED dep sat optimize()" << std::endl;
+#endif
                 }
+#ifndef NDEBUG
             } else {
                 std::cout << "FAILED initiateFeasible()" << std::endl;
+#endif
             }
             // we failed, so reset solved schedules
             std::swap(g.activeEdges, activeEdges);

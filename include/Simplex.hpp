@@ -577,8 +577,9 @@ struct Simplex {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         C(0, _) = 0;
-        for (size_t v = l; v < u; ++v)
-            C(0, v) = (u - l) + u - v;
+        // for (size_t v = l; v < u; ++v)
+        //     C(0, v) = (u - l) + u - v;
+        C(0, _(l, u)) = 1;
         for (size_t v = l; v < u; ++v) {
             int64_t c = basicConstraints(v);
             if (c >= 0)
@@ -599,6 +600,10 @@ struct Simplex {
 #endif
         for (size_t v = 0; v < sol.size();)
             lexMinimize(++v);
+        copySolution(sol);
+        assertCanonical();
+    }
+    void copySolution(Vector<Rational> &sol) {
         MutPtrMatrix<int64_t> C{getConstraints()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         for (size_t v = 0; v < sol.size();) {
@@ -607,7 +612,6 @@ struct Simplex {
             sol(sv) =
                 c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
         }
-        assertCanonical();
     }
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)
