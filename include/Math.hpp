@@ -2734,6 +2734,13 @@ llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{gcd(x.numerator, y.numerator),
                     lcm(x.denominator, y.denominator)};
 }
+int64_t denomLCM(PtrVector<Rational> x) {
+    int64_t l = 1;
+    for (auto r : x)
+        l = lcm(l, r.denominator);
+    return l;
+}
+
 template <> struct GetEltype<Rational> {
     using eltype = Rational;
 };

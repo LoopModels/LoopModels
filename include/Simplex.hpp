@@ -471,34 +471,12 @@ struct Simplex {
 #else
     static constexpr void assertCanonical() {}
 #endif
-    // Assumes all <v have already been lex-minimized
-    // v starts at 1
-    // returns `false` if `0`, `true` if not zero
-    bool lexMinimize(size_t v) {
-#ifndef NDEBUG
-        assert(inCanonicalForm);
-        assert(v >= 1);
-#endif
+
+    // don't touch variables lex < v
+    void lexCoreOpt(size_t v) {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
-        int64_t c = basicConstraints(v);
-        if (c < 0)
-            std::cout << std::endl;
-        if (c < 0)
-            return false;
-        // we try to zero `v` or at least minimize it.
-        // implicitly, set cost to -1, and then see if we can make it
-        // basic
-        C(0, 0) = -C(++c, 0);
-        C(0, _(1, v + 1)) = 0;
-        C(0, _(v + 1, end)) = -C(c, _(v + 1, end));
-        assert((C(c, v) != 0) || (C(c, 0) == 0));
-        assert(allZero(C(_(1, c), v)));
-        assert(allZero(C(_(c + 1, end), v)));
-#ifndef VERBOSESIMPLEX
-        CSHOW(c);
-#endif
         while (true) {
             // get new entering variable
             int enteringVariable = getEnteringVariable(C(0, _(v, end)));
@@ -527,7 +505,43 @@ struct Simplex {
                 basicConstraints[oldBasicVar] = -1;
             basicConstraints[enteringVariable] = leavingVariable;
         }
-        c = basicConstraints(v);
+    }
+    // Assumes all <v have already been lex-minimized
+    // v starts at 1
+    // returns `false` if `0`, `true` if not zero
+    // minimize v, not touching any variable lex < v
+    bool lexMinimize(size_t v) {
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+        assert(v >= 1);
+#endif
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        int64_t c = basicConstraints(v);
+        if (c < 0)
+            std::cout << std::endl;
+        if (c < 0)
+            return false;
+        // we try to zero `v` or at least minimize it.
+        // implicitly, set cost to -1, and then see if we can make it
+        // basic
+        C(0, 0) = -C(++c, 0);
+        C(0, _(1, v + 1)) = 0;
+        C(0, _(v + 1, end)) = -C(c, _(v + 1, end));
+        assert((C(c, v) != 0) || (C(c, 0) == 0));
+        assert(allZero(C(_(1, c), v)));
+        assert(allZero(C(_(c + 1, end), v)));
+#ifndef VERBOSESIMPLEX
+        CSHOW(c);
+#endif
+        lexCoreOpt(v);
+        return makeZeroBasic(v);
+    }
+    bool makeZeroBasic(size_t v) {
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutStridedVector<int64_t> basicVars{getBasicVariables()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        int64_t c = basicConstraints(v);
         int64_t cc = c++;
         if ((cc < 0) || (C(c, 0)))
             return cc >= 0;
@@ -553,7 +567,28 @@ struct Simplex {
         assertCanonical();
         return false;
     }
-
+    // lex min the range [l, u), not touching any variable lex < l
+    void lexMinimize(size_t l, size_t u) {
+#ifndef NDEBUG
+        assert(inCanonicalForm);
+        assert(l >= 1);
+        assert(u > l);
+#endif
+        MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
+        MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
+        C(0, _) = 0;
+        for (size_t v = l; v < u; ++v)
+            C(0, v) = (u - l) + u - v;
+        for (size_t v = l; v < u; ++v) {
+            int64_t c = basicConstraints(v);
+            if (c >= 0)
+                NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);
+        }
+        lexCoreOpt(l - 1);
+        for (size_t v = l; v < u; ++v)
+            makeZeroBasic(v);
+    }
+    void lexMinimize(Range<size_t, size_t> r) { lexMinimize(r.b, r.e); }
     // lexicographically minimize vars [0, numVars)
     // false means no problems, true means there was a problem
     void lexMinimize(Vector<Rational> &sol) {
