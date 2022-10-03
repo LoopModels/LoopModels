@@ -1043,3 +1043,175 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         SHOWLN(s.getOmega());
     }
 }
+
+TEST(ConvReversePass, BasicAssertions) {
+    // for (n = 0; n < N; ++n){
+    //   for (m = 0; n < M; ++m){
+    //     for (j = 0; n < J; ++j){
+    //       for (i = 0; n < I; ++i){
+    //         C[m+i,j+n] += A[m,n] * B[i,j];
+    //       }
+    //     }
+    //   }
+    // }
+    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+                        "n8:16:32:64-S128");
+    llvm::TargetTransformInfo TTI{dl};
+    llvm::LLVMContext ctx = llvm::LLVMContext();
+    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
+    auto fmf = llvm::FastMathFlags();
+    fmf.set();
+    builder.setFastMathFlags(fmf);
+
+    // create arrays
+    llvm::Type *Float64 = builder.getDoubleTy();
+    llvm::Value *ptrB =
+        builder.CreateIntToPtr(builder.getInt64(960000), Float64);
+    llvm::Value *ptrA =
+        builder.CreateIntToPtr(builder.getInt64(1920000), Float64);
+    llvm::Value *ptrC =
+        builder.CreateIntToPtr(builder.getInt64(2880000), Float64);
+
+    // llvm::ConstantInt *Jv = builder.getInt64(100);
+    llvm::ConstantInt *Iv = builder.getInt64(200);
+    llvm::ConstantInt *Mv = builder.getInt64(300);
+    // llvm::ConstantInt *Nv = builder.getInt64(400);
+    auto zero = builder.getInt64(0);
+    auto one = builder.getInt64(1);
+    llvm::Value *mv = builder.CreateAdd(zero, one);
+    llvm::Value *nv = builder.CreateAdd(zero, one);
+    llvm::Value *jv = builder.CreateAdd(zero, one);
+    llvm::Value *iv = builder.CreateAdd(zero, one);
+
+    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+    llvm::Value *Coffset = builder.CreateAdd(
+        builder.CreateAdd(mv, iv),
+        builder.CreateMul(builder.CreateAdd(nv, jv),
+                          builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
+    auto Aload = builder.CreateAlignedLoad(
+        Float64,
+        builder.CreateGEP(Float64, ptrA,
+                          llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+        llvm::MaybeAlign(8));
+    auto Bload = builder.CreateAlignedLoad(
+        Float64,
+        builder.CreateGEP(Float64, ptrB,
+                          llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+        llvm::MaybeAlign(8));
+    auto Cload = builder.CreateAlignedLoad(
+        Float64,
+        builder.CreateGEP(Float64, ptrC,
+                          llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+        llvm::MaybeAlign(8));
+    auto Cstore = builder.CreateAlignedStore(
+        builder.CreateFAdd(Cload, builder.CreateFMul(Aload, Bload)),
+        builder.CreateGEP(Float64, ptrC,
+                          llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+        llvm::MaybeAlign(8));
+
+    // for (n = 0; n < N; ++n){
+    //   for (m = 0; n < M; ++m){
+    //     for (j = 0; n < J; ++j){
+    //       for (i = 0; n < I; ++i){
+    //         C[m+i,j+n] += A[m,n] * B[i,j];
+    //       }
+    //     }
+    //   }
+    // }
+    auto M = Polynomial::Monomial(Polynomial::ID{1});
+    auto N = Polynomial::Monomial(Polynomial::ID{2});
+    auto I = Polynomial::Monomial(Polynomial::ID{3});
+    auto J = Polynomial::Monomial(Polynomial::ID{4});
+    llvm::SmallVector<Polynomial::Monomial> symbols{M, N, I, J};
+    // Construct the loops
+    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
+                                      "0 0 0 0 0 1 0 0 0; "
+                                      "-1 1 0 0 0 0 -1 0 0; "
+                                      "0 0 0 0 0 0 1 0 0; "
+                                      "-1 0 0 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 0 0 1]")};
+    auto loop = AffineLoopNest::construct(Aloop, symbols);
+
+    // construct indices
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
+    m.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
+    n.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
+    i.emplace_back(1, VarID(3, VarType::LoopInductionVariable));
+    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
+    j.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
+
+    // B[m, n]
+    ArrayReference BmnInd{0, loop, 2};
+    {
+        MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(0, 1) = 1; // n
+        BmnInd.strides[0] = 1;
+        BmnInd.strides[1] = I;
+    }
+    std::cout << "Bmn = " << BmnInd << std::endl;
+    // A[m, n]
+    ArrayReference AmnInd{1, loop, 2};
+    {
+        MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(0, 1) = 1; // n
+        AmnInd.strides[0] = 1;
+        AmnInd.strides[1] = I;
+    }
+    // C[m+i, n+j]
+    ArrayReference CmijnInd{2, loop, 2};
+    {
+        MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+        IndMat(1, 0) = 1; // m
+        IndMat(3, 0) = 1; // i
+        IndMat(0, 1) = 1; // n
+        IndMat(2, 1) = 1; // j
+        CmijnInd.strides[0] = 1;
+        CmijnInd.strides[1] = M + I - 1;
+    }
+
+    // for (n = 0; n < N; ++n){
+    //   for (m = 0; n < M; ++m){
+    //     for (j = 0; n < J; ++j){
+    //       for (i = 0; n < I; ++i){
+    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * B[i,j];
+    //       }
+    //     }
+    //   }
+    // }
+    LoopBlock loopBlock;
+    Schedule sch_0(4);
+    Schedule sch_1 = sch_0;
+    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
+    loopBlock.memory.emplace_back(BmnInd, Bload, sch_0, true);
+    sch_1.getOmega()[8] = 1;
+    Schedule sch_2 = sch_1;
+    //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
+    loopBlock.memory.emplace_back(AmnInd, Aload, sch_1, true);
+    sch_2.getOmega()[8] = 2;
+    Schedule sch_3 = sch_2;
+    //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
+    loopBlock.memory.emplace_back(CmijnInd, Cload, sch_2, true);
+    sch_3.getOmega()[8] = 3;
+    //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
+    loopBlock.memory.emplace_back(CmijnInd, Cstore, sch_3, false);
+
+    llvm::Optional<BitSet> optRes = loopBlock.optimize();
+    EXPECT_TRUE(optRes.hasValue());
+    for (auto &mem : loopBlock.memory) {
+        SHOW(mem.nodeIndex);
+        CSHOWLN(mem.ref);
+        Schedule &s = loopBlock.nodes[mem.nodeIndex].schedule;
+        SHOWLN(s.getPhi());
+        // EXPECT_EQ(s.getPhi(), optPhi);
+        SHOWLN(s.getOmega());
+    }
+
+
+}

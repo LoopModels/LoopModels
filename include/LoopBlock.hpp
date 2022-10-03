@@ -1337,6 +1337,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         CSHOW(numOmegaCoefs);
         CSHOW(numLambda);
         CSHOWLN(numConstraints);
+        if (d == 0)
+            SHOWLN(omniSimplex);
 #endif
         if (omniSimplex.initiateFeasible())
             return {};
@@ -1355,9 +1357,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         SHOWLN(depSatLevel);
         SHOWLN(depSatNest);
         depSatLevel |= depSatNest;
-        SHOWLN(depSatLevel);
         const size_t numSatNest = depSatLevel.size();
+        SHOW(numSatNest);
+        CSHOWLN(depSatLevel);
         if (numSatNest) {
+
             // backup in case we fail
             // activeEdges was the old original; swap it in
             std::swap(g.activeEdges, activeEdges);
@@ -1367,8 +1371,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 oldSchedules.push_back(n.schedule);
             llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps =
                 carriedDeps;
-	    resetDeepDeps(carriedDeps, d);
-	    
+            resetDeepDeps(carriedDeps, d);
+
+            countAuxParamsAndConstraints(g, d);
+            setScheduleMemoryOffsets(g, d);
+            instantiateOmniSimplex(g, d);
+            addIndependentSolutionConstraints(g, d);
+
             size_t u = 1, w = 1 + numBounding;
             size_t i = 0;
             size_t v = omniSimplex.getNumVar();
@@ -1398,18 +1407,33 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 ++w;
                 u = uu;
             }
+	    SHOWLN(omniSimplex);
             // SHOWLN(C);
             if (!omniSimplex.initiateFeasible()) {
+                std::cout << "SUCCESS initiateFeasible()" << std::endl;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
                 updateSchedules(g, sol, d);
                 BitSet depSat = deactivateSatisfiedEdges(g, sol, d);
+                SHOW(d);
+                CSHOW(numBounding);
+                CSHOW(numActiveEdges);
+                CSHOW(numPhiCoefs);
+                CSHOW(numOmegaCoefs);
+                CSHOW(numLambda);
+                CSHOWLN(numConstraints);
+                SHOWLN(sol);
                 SHOWLN(depSat);
                 if (llvm::Optional<BitSet> depSatN =
                         optimize(g, sol, d + 1, maxDepth)) {
-                    SHOWLN(*depSatN);
+                    std::cout << "SUCCESS dep sat optimize()" << std::endl;
+                    CSHOWLN(*depSatN);
                     return depSat |= *depSatN;
+                } else {
+                    std::cout << "FAILED dep sat optimize()" << std::endl;
                 }
+            } else {
+                std::cout << "FAILED initiateFeasible()" << std::endl;
             }
             // we failed, so reset solved schedules
             std::swap(g.activeEdges, activeEdges);
@@ -1417,7 +1441,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             auto oldNodeIter = oldSchedules.begin();
             for (auto &&n : g)
                 n.schedule = *(oldNodeIter++);
-	    std::swap(carriedDeps, oldCarriedDeps);
+            std::swap(carriedDeps, oldCarriedDeps);
         }
         return depSatLevel;
     }
@@ -1451,7 +1475,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();
-	carriedDeps.resize(nodes.size());
+        carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
         validateMemory();
         validateEdges();
