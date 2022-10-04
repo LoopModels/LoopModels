@@ -139,9 +139,10 @@ Now that all our dependencies are built, we can finally build `LoopModels` itsel
 cd $HOME/Documents/libraries
 git clone https://github.com/JuliaSIMD/LoopModels.git
 cd LoopModels
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir -Db_santize=address -Db_coverage=true
 cd builddir
 meson test
+meson compile coverage-html
 ```
 
 Now that this is all set up, you just need to make sure the environmental variables are defined, and can just reinvoke `meson test` and `meson compile` to build the test suite/project as needed.
