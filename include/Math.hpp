@@ -2332,9 +2332,8 @@ bool allMatch(const AbstractVector auto &x0, const AbstractVector auto &x1) {
 MULTIVERSION inline void swapRows(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
     if (i == j)
         return;
-    const unsigned int M = A.numRow();
-    const unsigned int N = A.numCol();
-    assert((i < M) & (j < M));
+    const size_t N = A.numCol();
+    assert((i < A.numRow()) && (j < A.numRow()));
     VECTORIZE
     for (size_t n = 0; n < N; ++n)
         std::swap(A(i, n), A(j, n));
@@ -2343,9 +2342,8 @@ MULTIVERSION inline void swapCols(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
     if (i == j) {
         return;
     }
-    const unsigned int M = A.numRow();
-    const unsigned int N = A.numCol();
-    assert((i < N) & (j < N));
+    const size_t M = A.numRow();
+    assert((i < A.numCol()) && (j < A.numCol()));
     VECTORIZE
     for (size_t m = 0; m < M; ++m)
         std::swap(A(m, i), A(m, j));

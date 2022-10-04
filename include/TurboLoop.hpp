@@ -3,6 +3,7 @@
 #include "./IntegerMap.hpp"
 #include "./Loops.hpp"
 #include "./POSet.hpp"
+#include "Schedule.hpp"
 // #include "Tree.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
@@ -22,7 +23,7 @@
 #include <llvm/Support/Casting.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 
-static bool isKnownOne(llvm::Value *x) {
+[[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
     if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
         return constInt->isOne();
     } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x)) {
@@ -65,6 +66,30 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             depth--;
         }
         return 0;
+    }
+
+    bool parseLoop(auto B, auto E, size_t depth) {
+        // Schedule sch(depth);
+        size_t omega = 0;
+        for (auto &&it = B; it != E; ++it, ++omega) {
+            llvm::Loop *LP = *it;
+            if (auto *inductOuter = LP->getInductionVariable(*SE)) {
+                llvm::errs()
+                    << "Outer InductionVariable: " << *inductOuter << "\n";
+                if (const llvm::SCEV *backEdgeTaken =
+                        SE->getBackedgeTakenCount(LP)) {
+                    llvm::errs() << "Back edge taken count: " << *backEdgeTaken
+                                 << "\n\ttrip count: "
+                                 << *(SE->getAddExpr(
+                                        backEdgeTaken,
+                                        SE->getOne(backEdgeTaken->getType())))
+                                 << "\n";
+                    continue;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     // // // we need unit step size

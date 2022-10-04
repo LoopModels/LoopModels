@@ -33,9 +33,9 @@ static void BM_NullSpace(benchmark::State &state) {
     // fourth row is 0
     // std::cout << "B=\n" << B << "\nnullSpace(B) =\n" <<
     // NormalForm::nullSpace(B) << std::endl;
-    for (auto _ : state) {
-        NormalForm::nullSpace(B);
-    }
+    IntMatrix A;
+    for (auto _ : state)
+        A = NormalForm::nullSpace(B);
 }
 // Register the function as a benchmark
 BENCHMARK(BM_NullSpace);
@@ -152,7 +152,7 @@ static void BM_Bareiss2000(benchmark::State &state) {
             }
         }
     }
-    //std::cout << A << std::endl;
+    // std::cout << A << std::endl;
 
     // fourth row is 0
     llvm::SmallVector<size_t, 16> pivots;

@@ -303,12 +303,11 @@ struct Simplex {
             for (size_t c = 0; c < C.numRow(); ++c) {
                 if (size_t(basicVars(c)) >= numVar) {
                     assert(C(c, 0) == 0);
-                    int64_t vv = basicVars(c);
-                    assert(c == size_t(basicCons(vv)));
-                    assert(C(c, vv) >= 0);
+                    assert(c == size_t(basicCons(basicVars(c))));
+                    assert(C(c, basicVars(c)) >= 0);
 #ifdef VERBOSESIMPLEX
                     SHOW(c);
-                    CSHOWLN(vv);
+                    CSHOWLN(basicVars(c));
 #endif
                     // find var to make basic in its place
                     for (size_t v = numVar; v != 0;) {

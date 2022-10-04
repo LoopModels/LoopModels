@@ -539,12 +539,12 @@ merge(llvm::SmallVectorImpl<Monomial> &z, llvm::ArrayRef<Monomial> x,
             z.push_back(*(iy++));
         }
     }
-    for (; ix != ixe; ++ix){
-	oldToNewMaps.first.push_back(z.size());
+    for (; ix != ixe; ++ix) {
+        oldToNewMaps.first.push_back(z.size());
         z.push_back(*ix);
     }
-    for (; iy != iye; ++iy){
-	oldToNewMaps.second.push_back(z.size());
+    for (; iy != iye; ++iy) {
+        oldToNewMaps.second.push_back(z.size());
         z.push_back(*iy);
     }
     // return z;
@@ -926,11 +926,11 @@ template <size_t L, size_t E>
 }
 
 template <typename M>
-concept IsMultivariateMonomial = requires(M a) {
-    { a.degree(0) } -> std::convertible_to<size_t>;
-    // { a.addTerm(0, 0) } -> std::same_as<void>;
-}
-&&std::same_as<M, typename std::remove_cvref<M>::type>;
+concept IsMultivariateMonomial =
+    requires(M a) {
+        { a.degree(0) } -> std::convertible_to<size_t>;
+        // { a.addTerm(0, 0) } -> std::same_as<void>;
+    } && std::same_as<M, typename std::remove_cvref<M>::type>;
 template <typename M>
 concept IsMonomial = std::same_as<M, Uninomial> || IsMultivariateMonomial<M>;
 // std::same_as<M, Monomial> || std::same_as<M, PackedMonomial<>>;
@@ -1591,8 +1591,8 @@ using Multivariate = Terms<C, M>;
 // P is Multivariate<C,M> for any C
 template <typename P>
 concept IsMPoly = requires(P p) {
-    { p.isPoly() } -> std::same_as<One>;
-};
+                      { p.isPoly() } -> std::same_as<One>;
+                  };
 
 template <typename C, IsMultivariateMonomial M>
 bool operator==(Multivariate<C, M> const &x, M const &y) {
@@ -2570,8 +2570,12 @@ template <typename C, IsMonomial M>
     Multivariate<C, M> q;
     Term<C, M> nx;
     while (p.terms.size()) {
+#ifndef NDEBUG
         bool fail = tryDiv(nx, p.leadingTerm(), d.leadingTerm());
         assert(!fail);
+#else
+        tryDiv(nx, p.leadingTerm(), d.leadingTerm());
+#endif
         fnmadd(p, d, nx);
         q += nx;
     }
@@ -2589,8 +2593,12 @@ template <typename C, IsMonomial M>
     }
     Term<C, M> nx;
     while (p.terms.size()) {
+#ifndef NDEBUG
         bool fail = tryDiv(nx, p.leadingTerm(), d.leadingTerm());
         assert(!fail);
+#else
+        tryDiv(nx, p.leadingTerm(), d.leadingTerm());
+#endif
         fnmadd(p, d, nx);
         q += nx;
     }

@@ -1,4 +1,5 @@
 #include "../include/TurboLoop.hpp"
+#include "LoopBlock.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/Statistic.h>
@@ -64,14 +65,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                 // 1 - 0
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
+                [[fallthrough]];
             case llvm::CmpInst::ICMP_SLT:
                 poset.push(op0posID, op1posID, Interval::positive());
                 break;
             case llvm::CmpInst::ICMP_ULE:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
+                [[fallthrough]];
             case llvm::CmpInst::ICMP_SLE:
                 poset.push(op0posID, op1posID, Interval::nonNegative());
                 break;
@@ -81,14 +82,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             case llvm::CmpInst::ICMP_UGT:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
+                [[fallthrough]];
             case llvm::CmpInst::ICMP_SGT:
                 poset.push(op0posID, op1posID, Interval::negative());
                 break;
             case llvm::CmpInst::ICMP_UGE:
                 poset.push(0, op0posID, Interval::nonNegative());
                 poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
+                [[fallthrough]];
             case llvm::CmpInst::ICMP_SGE:
                 poset.push(op0posID, op1posID, Interval::nonPositive());
                 break;
@@ -114,12 +115,50 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // ClassID 1: RegisterRC
     // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-    llvm::errs() << "DataLayout: " << F.getParent()->getDataLayout().getStringRepresentation() << "\n";
-    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0) << std::endl;
-    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1) << std::endl;
+    llvm::errs() << "DataLayout: "
+                 << F.getParent()->getDataLayout().getStringRepresentation()
+                 << "\n";
+    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0)
+              << std::endl;
+    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1)
+              << std::endl;
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+
+    // first, we try and parse the function to find sets of loop nests
+    // then we search for sets of fissile loops
+    llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
+    llvm::BasicBlock *BB = &F.getEntryBlock();
+    while(true){
+        if (llvm::Instruction *term = BB->getTerminator()) {
+	    
+	    
+        }
+        break;
+    }
+    LoopBlock lblock;
+    // for (llvm::BasicBlock &BB : F) {
+    //     if (auto *L = LI->getLoopFor(&BB)) {
+    //         // we're in an outer loop
+    //     } else {
+    //         // we're top level
+    //         for (llvm::Instruction &I : BB) {
+    //             if (I.mayReadFromMemory()) {
+    //                 if (I.mayWriteToMemory()) {
+    //                     // may read and write
+			
+    //                 } else {
+    //                     // may read
+    //                 }
+    //             } else if (I.mayWriteToMemory()) {
+    //                 // may write
+    //             } else {
+    //                 // may not read or write
+    //             }
+    //         }
+    //     }
+    // }
     // DL = &F.getParent()->getDataLayout();
 
     // llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
@@ -138,19 +177,20 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // If now, we continue parsing and adding until we get to branches.
     // Then, we need to classify them as either as acceptable loop guards, or
     // as indeterminate control flow that'd make fusion non-viable.
-    // In case of the latter, we can generate code, clear our internal representation,
-    // and then continue walking. We could also consider splitting.
+    // In case of the latter, we can generate code, clear our internal
+    // representation, and then continue walking. We could also consider
+    // splitting.
     //
     // Or, perhaps, have/use a graphical representation.
-    // Or, perhaps our tree type should include guard information, and we consider
-    // dominance between (guards present) ? loop guards : loop preheaders
+    // Or, perhaps our tree type should include guard information, and we
+    // consider dominance between (guards present) ? loop guards : loop
+    // preheaders
     //
     // I think for now, stick with the tree structure. No real reason to not add
     // all loops at once.
-    // You can make more decisions here when it comes time to start considering fusion.
-    // Just store the original Loop* within the tree.
-    // Then, we can use the basic blocks and DT for relevant CFG info.
-    // llvm::SmallVector<
+    // You can make more decisions here when it comes time to start considering
+    // fusion. Just store the original Loop* within the tree. Then, we can use
+    // the basic blocks and DT for relevant CFG info. llvm::SmallVector<
     //     std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
     //     outerLoops;
     // llvm::SmallVector<AffineCmp, 8> affs;
@@ -159,27 +199,29 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     outerLoops.clear();
     //     affs.clear();
     // }
-    
+
+    parseLoop(LI->begin(), LI->end(), 0);
+
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : *LI) {
         auto *inductOuter = LP->getInductionVariable(*SE);
-        const llvm::SCEV *backEdgeTaken = nullptr;
-        if (inductOuter) {
-            llvm::errs() << "Outer InductionVariable: " << *inductOuter << "\n";
-            backEdgeTaken = SE->getBackedgeTakenCount(LP);
-            if (backEdgeTaken) {
-                llvm::errs()
-                    << "Back edge taken count: " << *backEdgeTaken
-                    << "\n\ttrip count: "
-                    << *(SE->getAddExpr(backEdgeTaken,
-                                      SE->getOne(backEdgeTaken->getType())))
-                    << "\n";
-            } else {
-                std::cout << "couldn't find backedge taken?\n";
-            }
-        } else {
-            std::cout << "no outer induction variable" << std::endl;
-        }
+        // const llvm::SCEV *backEdgeTaken = nullptr;
+        // if (inductOuter) {
+        //     llvm::errs() << "Outer InductionVariable: " << *inductOuter <<
+        //     "\n"; backEdgeTaken = SE->getBackedgeTakenCount(LP); if
+        //     (backEdgeTaken) {
+        //         llvm::errs()
+        //             << "Back edge taken count: " << *backEdgeTaken
+        //             << "\n\ttrip count: "
+        //             << *(SE->getAddExpr(backEdgeTaken,
+        //                               SE->getOne(backEdgeTaken->getType())))
+        //             << "\n";
+        //     } else {
+        //         std::cout << "couldn't find backedge taken?\n";
+        //     }
+        // } else {
+        //     std::cout << "no outer induction variable" << std::endl;
+        // }
         auto obouter = LP->getBounds(*SE);
         if (obouter.hasValue()) {
             auto b = obouter.getValue();
@@ -280,7 +322,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             std::cout << "\n";
         }
     }
-    
+
     return llvm::PreservedAnalyses::none();
     // return llvm::PreservedAnalyses::all();
 }

@@ -568,8 +568,7 @@ bareiss(IntMatrix &A, llvm::SmallVectorImpl<size_t> &pivots) {
                 for (size_t j = c + 1; j < N; ++j) {
                     auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
                     auto Akj = Akj_u / prev;
-                    auto rr = Akj_u % prev;
-                    assert(rr == 0);
+                    assert(Akj_u % prev == 0);
                     A(k, j) = Akj;
                 }
                 A(k, r) = 0;
