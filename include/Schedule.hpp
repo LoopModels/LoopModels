@@ -37,16 +37,16 @@ struct Schedule {
     llvm::SmallVector<int64_t, maxStackStorage> data;
     uint8_t numLoops;
     // -1 indicates not vectorized
-    int8_t vectorized = -1;
+    int8_t vectorized{-1};
     // -1 indicates not unrolled
     // inner unroll means either the only unrolled loop, or if outer unrolled,
     // then the inner unroll is nested inside of the outer unroll.
     // if unrolledInner=3, unrolledOuter=2
     // x_0_0; x_1_0; x_2_0
     // x_0_1; x_1_1; x_2_1
-    int8_t unrolledInner = -1;
+    int8_t unrolledInner{-1};
     // -1 indicates not unrolled
-    int8_t unrolledOuter = -1;
+    int8_t unrolledOuter{-1};
     void init(size_t nLoops) {
         numLoops = nLoops;
         data.resize(nLoops * (nLoops + 2) + 1);

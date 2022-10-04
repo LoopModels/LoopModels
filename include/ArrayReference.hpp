@@ -19,6 +19,8 @@
 // for i = I, j = J, k = K
 //   bar(i,j,k,...)
 // end
+// NOTE: strides are in row major order!
+// this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
     size_t arrayID;
     llvm::IntrusiveRefCntPtr<AffineLoopNest> loop;

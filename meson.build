@@ -9,6 +9,8 @@ if meson.get_compiler('cpp').get_id() == 'gcc'
 else
   add_global_arguments('-ferror-limit=1', language : 'cpp')
 endif
+add_global_arguments('-fno-rtti', language : 'cpp')
+add_global_arguments('-fno-exceptions', language : 'cpp')
 
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']

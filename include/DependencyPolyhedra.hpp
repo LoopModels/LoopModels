@@ -702,6 +702,16 @@ struct Dependence {
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
+    StridedVector<int64_t> getSatW() const {
+        // SHOWLN(dependenceSatisfaction.getConstraints().numRow());
+        // SHOWLN(dependenceSatisfaction.getConstraints().numCol());
+        // SHOW(depPoly.getNumLambda());
+        // CSHOW(getNumPhiCoefficients());
+        // CSHOWLN(getNumOmegaCoefficients());
+        return dependenceSatisfaction.getConstraints()(
+            _, 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
+                   getNumOmegaCoefficients());
+    }
     PtrMatrix<int64_t> getBndCoefs() const {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
@@ -710,14 +720,14 @@ struct Dependence {
     }
 
     std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-               PtrMatrix<int64_t>, PtrMatrix<int64_t>>
+               PtrMatrix<int64_t>, PtrMatrix<int64_t>, StridedVector<int64_t>>
     splitSatisfaction() const {
         PtrMatrix<int64_t> phiCoefsIn =
             forward ? getSatPhi0Coefs() : getSatPhi1Coefs();
         PtrMatrix<int64_t> phiCoefsOut =
             forward ? getSatPhi1Coefs() : getSatPhi0Coefs();
         return std::make_tuple(getSatConstants(), getSatLambda(), phiCoefsIn,
-                               phiCoefsOut, getSatOmegaCoefs());
+                               phiCoefsOut, getSatOmegaCoefs(), getSatW());
     }
     std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>>
@@ -902,12 +912,16 @@ struct Dependence {
         const size_t numLambda = dxy.getNumLambda();
         assert(dxy.getTimeDim() == 0);
         if (checkDirection(pair, x, y, numLambda, dxy.A.numCol())) {
-            pair.first.truncateVars(1 + numLambda +
+            // pair.first.truncateVars(pair.first.getNumVar() -
+            //                         dxy.getNumSymbols());
+            pair.first.truncateVars(2 + numLambda +
                                     dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
                                          std::move(pair.second), &x, &y, true});
         } else {
-            pair.second.truncateVars(1 + numLambda +
+            // pair.second.truncateVars(pair.second.getNumVar() -
+                                     // dxy.getNumSymbols());
+            pair.second.truncateVars(2 + numLambda +
                                      dxy.getNumScheduleCoefficients());
             deps.emplace_back(Dependence{std::move(dxy), std::move(pair.second),
                                          std::move(pair.first), &y, &x, false});
@@ -940,7 +954,7 @@ struct Dependence {
             std::swap(in, out);
             std::swap(pair.first, pair.second);
         }
-        pair.first.truncateVars(1 + numLambda + numScheduleCoefs);
+        pair.first.truncateVars(2 + numLambda + numScheduleCoefs);
         // pair.first.removeExtraVariables(numScheduleCoefs);
         deps.emplace_back(Dependence{dxy, std::move(pair.first),
                                      std::move(pair.second), in, out, isFwd});
@@ -1049,7 +1063,7 @@ struct Dependence {
         // #ifndef NDEBUG
         //         std::cout << "after zeroing, time dxy =" << dxy << std::endl;
         // #endif
-        farkasBackups.first.truncateVars(1 + numLambda + numScheduleCoefs);
+        farkasBackups.first.truncateVars(2 + numLambda + numScheduleCoefs);
         deps.emplace_back(
             Dependence{std::move(dxy), std::move(farkasBackups.first),
                        std::move(farkasBackups.second), out, in, !isFwd});

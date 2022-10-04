@@ -616,6 +616,7 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     };
     constexpr Iterator begin() const { return Iterator{b}; }
     constexpr E end() const { return e; }
+    constexpr auto size() const { return e - b; }
 };
 // template <typename B, typename E>
 // constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
@@ -687,10 +688,12 @@ constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t M) {
     return Range<size_t, size_t>{canonicalize(r.b, M), canonicalize(r.e, M)};
 }
 
-template <typename B, typename E> auto operator+(Range<B, E> r, size_t x) {
+template <typename B, typename E>
+constexpr auto operator+(Range<B, E> r, size_t x) {
     return _(r.b + x, r.e + x);
 }
-template <typename B, typename E> auto operator-(Range<B, E> r, size_t x) {
+template <typename B, typename E>
+constexpr auto operator-(Range<B, E> r, size_t x) {
     return _(r.b - x, r.e - x);
 }
 
@@ -732,6 +735,8 @@ template <typename T> struct PtrVector {
     }
     const T *begin() const { return mem; }
     const T *end() const { return mem + N; }
+    auto rbegin() const { return std::reverse_iterator(mem + N); }
+    auto rend() const { return std::reverse_iterator(mem); }
     size_t size() const { return N; }
     operator llvm::ArrayRef<T>() const { return llvm::ArrayRef<T>{mem, N}; }
     // llvm::ArrayRef<T> arrayref() const { return llvm::ArrayRef<T>(ptr, M); }
@@ -884,23 +889,23 @@ template <typename T> struct MutPtrVector {
 // Vectors
 //
 
-int64_t gcd(PtrVector<int64_t> x) {
+[[maybe_unused]] static int64_t gcd(PtrVector<int64_t> x) {
     int64_t g = std::abs(x[0]);
     for (size_t i = 1; i < x.size(); ++i)
         g = gcd(g, x[i]);
     return g;
 }
 
-template <typename T> inline auto view(llvm::SmallVectorImpl<T> &x) {
+template <typename T> constexpr auto view(llvm::SmallVectorImpl<T> &x) {
     return MutPtrVector<T>{x.data(), x.size()};
 }
-template <typename T> inline auto view(const llvm::SmallVectorImpl<T> &x) {
+template <typename T> constexpr auto view(const llvm::SmallVectorImpl<T> &x) {
     return PtrVector<T>{.mem = x.data(), .N = x.size()};
 }
-template <typename T> inline auto view(llvm::MutableArrayRef<T> x) {
+template <typename T> constexpr auto view(llvm::MutableArrayRef<T> x) {
     return MutPtrVector<T>{x.data(), x.size()};
 }
-template <typename T> inline auto view(llvm::ArrayRef<T> x) {
+template <typename T> constexpr auto view(llvm::ArrayRef<T> x) {
     return PtrVector<T>{.mem = x.data(), .N = x.size()};
 }
 
@@ -1576,7 +1581,7 @@ template <typename T> struct MutPtrMatrix {
         return PtrMatrix<T>{.mem = mem, .M = M, .N = N, .X = X};
     }
 };
-template <typename T> inline auto ptrVector(T *p, size_t M) {
+template <typename T> constexpr auto ptrVector(T *p, size_t M) {
     if constexpr (std::is_const_v<T>) {
         return PtrVector<std::remove_const_t<T>>{.mem = p, .N = M};
     } else {
@@ -1864,16 +1869,16 @@ template <typename T, typename P> struct BaseMatrix {
     }
 };
 
-template <typename T>
-inline auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {
-    if constexpr (std::is_const_v<T>) {
-        return PtrMatrix<std::remove_const_t<T>>{
-            .mem = ptr, .M = numRow, .N = numCol, .X = stride};
-    } else {
-        return MutPtrMatrix<T>{
-            .mem = ptr, .M = numRow, .N = numCol, .X = stride};
-    }
-}
+// template <typename T>
+// constexpr auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {
+//     if constexpr (std::is_const_v<T>) {
+//         return PtrMatrix<std::remove_const_t<T>>{
+//             .mem = ptr, .M = numRow, .N = numCol, .X = stride};
+//     } else {
+//         return MutPtrMatrix<T>{
+//             .mem = ptr, .M = numRow, .N = numCol, .X = stride};
+//     }
+// }
 
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>,
               "PtrMatrix<int64_t> is not trivially copyable!");
@@ -2346,11 +2351,11 @@ MULTIVERSION inline void swapCols(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
         std::swap(A(m, i), A(m, j));
 }
 template <typename T>
-void swapCols(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
+[[maybe_unused]] static void swapCols(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
     std::swap(A[i], A[j]);
 }
 template <typename T>
-void swapRows(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
+[[maybe_unused]] static void swapRows(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
     std::swap(A[i], A[j]);
 }
 
@@ -2359,62 +2364,62 @@ constexpr bool is_uint_v =
     sizeof(T) == (Bits / 8) && std::is_integral_v<T> && !std::is_signed_v<T>;
 
 template <class T>
-inline T zeroUpper(T x)
+constexpr T zeroUpper(T x)
 requires is_uint_v<16, T>
 {
     return x & 0x00ff;
 }
 template <class T>
-inline T zeroLower(T x)
+constexpr T zeroLower(T x)
 requires is_uint_v<16, T>
 {
     return x & 0xff00;
 }
 template <class T>
-inline T upperHalf(T x)
+constexpr T upperHalf(T x)
 requires is_uint_v<16, T>
 {
     return x >> 8;
 }
 
 template <class T>
-inline T zeroUpper(T x)
+constexpr T zeroUpper(T x)
 requires is_uint_v<32, T>
 {
     return x & 0x0000ffff;
 }
 template <class T>
-inline T zeroLower(T x)
+constexpr T zeroLower(T x)
 requires is_uint_v<32, T>
 {
     return x & 0xffff0000;
 }
 template <class T>
-inline T upperHalf(T x)
+constexpr T upperHalf(T x)
 requires is_uint_v<32, T>
 {
     return x >> 16;
 }
 template <class T>
-inline T zeroUpper(T x)
+constexpr T zeroUpper(T x)
 requires is_uint_v<64, T>
 {
     return x & 0x00000000ffffffff;
 }
 template <class T>
-inline T zeroLower(T x)
+constexpr T zeroLower(T x)
 requires is_uint_v<64, T>
 {
     return x & 0xffffffff00000000;
 }
 template <class T>
-inline T upperHalf(T x)
+constexpr T upperHalf(T x)
 requires is_uint_v<64, T>
 {
     return x >> 32;
 }
 
-template <typename T> std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
+template <typename T> [[maybe_unused]] static std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
     size_t i = 0;
     T max = std::numeric_limits<T>::min();
     for (size_t j = 0; j < x.size(); ++j) {
@@ -2430,8 +2435,8 @@ template <typename T> std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
 template <class T, int Bits>
 concept is_int_v = std::signed_integral<T> && sizeof(T) == (Bits / 8);
 
-template <is_int_v<64> T> inline __int128_t widen(T x) { return x; }
-template <is_int_v<32> T> inline int64_t splitInt(T x) { return x; }
+template <is_int_v<64> T> constexpr __int128_t widen(T x) { return x; }
+template <is_int_v<32> T> constexpr int64_t splitInt(T x) { return x; }
 
 template <typename T>
 concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
@@ -2456,12 +2461,12 @@ static_assert(TriviallyCopyableMatrixOrScalar<
 
 template <TriviallyCopyable OP, TriviallyCopyableVectorOrScalar A,
           TriviallyCopyableVectorOrScalar B>
-inline auto _binaryOp(OP op, A a, B b) {
+constexpr auto _binaryOp(OP op, A a, B b) {
     return ElementwiseVectorBinaryOp<OP, A, B>{.op = op, .a = a, .b = b};
 }
 template <TriviallyCopyable OP, TriviallyCopyableMatrixOrScalar A,
           TriviallyCopyableMatrixOrScalar B>
-inline auto _binaryOp(OP op, A a, B b) {
+constexpr auto _binaryOp(OP op, A a, B b) {
     return ElementwiseMatrixBinaryOp<OP, A, B>{.op = op, .a = a, .b = b};
 }
 
@@ -2478,7 +2483,7 @@ inline auto _binaryOp(OP op, A a, B b) {
 //     return _binaryOp(op, a, b.view());
 // }
 template <TriviallyCopyable OP, typename A, typename B>
-inline auto binaryOp(const OP op, const A &a, const B &b) {
+constexpr auto binaryOp(const OP op, const A &a, const B &b) {
     if constexpr (std::is_trivially_copyable_v<A>) {
         if constexpr (std::is_trivially_copyable_v<B>) {
             return _binaryOp(op, a, b);
@@ -2492,7 +2497,7 @@ inline auto binaryOp(const OP op, const A &a, const B &b) {
     }
 }
 
-inline auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
+constexpr auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
 struct Rational {
     int64_t numerator{0};
@@ -2704,29 +2709,29 @@ struct Rational {
     }
     void dump() const { std::cout << *this << std::endl; }
 
-    template <AbstractMatrix B> inline auto operator+(B &&b) {
+    template <AbstractMatrix B> constexpr auto operator+(B &&b) {
         return binaryOp(Add{}, *this, std::forward<B>(b));
     }
-    template <AbstractVector B> inline auto operator+(B &&b) {
+    template <AbstractVector B> constexpr auto operator+(B &&b) {
         return binaryOp(Add{}, *this, std::forward<B>(b));
     }
-    template <AbstractMatrix B> inline auto operator-(B &&b) {
+    template <AbstractMatrix B> constexpr auto operator-(B &&b) {
         return binaryOp(Sub{}, *this, std::forward<B>(b));
     }
-    template <AbstractVector B> inline auto operator-(B &&b) {
+    template <AbstractVector B> constexpr auto operator-(B &&b) {
         return binaryOp(Sub{}, *this, std::forward<B>(b));
     }
-    template <AbstractMatrix B> inline auto operator/(B &&b) {
+    template <AbstractMatrix B> constexpr auto operator/(B &&b) {
         return binaryOp(Div{}, *this, std::forward<B>(b));
     }
-    template <AbstractVector B> inline auto operator/(B &&b) {
+    template <AbstractVector B> constexpr auto operator/(B &&b) {
         return binaryOp(Div{}, *this, std::forward<B>(b));
     }
 
-    template <AbstractVector B> inline auto operator*(B &&b) {
+    template <AbstractVector B> constexpr auto operator*(B &&b) {
         return binaryOp(Mul{}, *this, std::forward<B>(b));
     }
-    template <AbstractMatrix B> inline auto operator*(B &&b) {
+    template <AbstractMatrix B> constexpr auto operator*(B &&b) {
         return binaryOp(Mul{}, *this, std::forward<B>(b));
     }
 };
@@ -2734,6 +2739,13 @@ llvm::Optional<Rational> gcd(Rational x, Rational y) {
     return Rational{gcd(x.numerator, y.numerator),
                     lcm(x.denominator, y.denominator)};
 }
+int64_t denomLCM(PtrVector<Rational> x) {
+    int64_t l = 1;
+    for (auto r : x)
+        l = lcm(l, r.denominator);
+    return l;
+}
+
 template <> struct GetEltype<Rational> {
     using eltype = Rational;
 };
@@ -2824,7 +2836,7 @@ template <typename T> struct SmallSparseMatrix {
             return 0;
         }
     }
-    inline T operator()(size_t i, size_t j) const { return get(i, j); }
+    constexpr T operator()(size_t i, size_t j) const { return get(i, j); }
     void insert(T x, size_t i, size_t j) {
         assert(j < col);
         uint32_t r{rows[i]};
@@ -2926,55 +2938,55 @@ std::ostream &operator<<(std::ostream &os, const T &A) {
 //     return printMatrix(os, A);
 // }
 
-inline auto operator-(const AbstractVector auto &a) {
+constexpr auto operator-(const AbstractVector auto &a) {
     auto AA{a.view()};
     return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
-inline auto operator-(const AbstractMatrix auto &a) {
+constexpr auto operator-(const AbstractMatrix auto &a) {
     auto AA{a.view()};
     return ElementwiseUnaryOp<Sub, decltype(AA)>{.op = Sub{}, .a = AA};
 }
 static_assert(AbstractMatrix<ElementwiseUnaryOp<Sub, PtrMatrix<int64_t>>>);
 
-template <AbstractMatrix A, typename B> inline auto operator+(A &&a, B &&b) {
+template <AbstractMatrix A, typename B> constexpr auto operator+(A &&a, B &&b) {
     return binaryOp(Add{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractVector A, typename B> inline auto operator+(A &&a, B &&b) {
+template <AbstractVector A, typename B> constexpr auto operator+(A &&a, B &&b) {
     return binaryOp(Add{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> inline auto operator+(std::integral auto a, B &&b) {
+template <AbstractMatrix B> constexpr auto operator+(std::integral auto a, B &&b) {
     return binaryOp(Add{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> inline auto operator+(std::integral auto a, B &&b) {
+template <AbstractVector B> constexpr auto operator+(std::integral auto a, B &&b) {
     return binaryOp(Add{}, a, std::forward<B>(b));
 }
 
-template <AbstractMatrix A, typename B> inline auto operator-(A &&a, B &&b) {
+template <AbstractMatrix A, typename B> constexpr auto operator-(A &&a, B &&b) {
     return binaryOp(Sub{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractVector A, typename B> inline auto operator-(A &&a, B &&b) {
+template <AbstractVector A, typename B> constexpr auto operator-(A &&a, B &&b) {
     return binaryOp(Sub{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> inline auto operator-(std::integral auto a, B &&b) {
+template <AbstractMatrix B> constexpr auto operator-(std::integral auto a, B &&b) {
     return binaryOp(Sub{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> inline auto operator-(std::integral auto a, B &&b) {
+template <AbstractVector B> constexpr auto operator-(std::integral auto a, B &&b) {
     return binaryOp(Sub{}, a, std::forward<B>(b));
 }
 
-template <AbstractMatrix A, typename B> inline auto operator/(A &&a, B &&b) {
+template <AbstractMatrix A, typename B> constexpr auto operator/(A &&a, B &&b) {
     return binaryOp(Div{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractVector A, typename B> inline auto operator/(A &&a, B &&b) {
+template <AbstractVector A, typename B> constexpr auto operator/(A &&a, B &&b) {
     return binaryOp(Div{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> inline auto operator/(std::integral auto a, B &&b) {
+template <AbstractMatrix B> constexpr auto operator/(std::integral auto a, B &&b) {
     return binaryOp(Div{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> inline auto operator/(std::integral auto a, B &&b) {
+template <AbstractVector B> constexpr auto operator/(std::integral auto a, B &&b) {
     return binaryOp(Div{}, a, std::forward<B>(b));
 }
-inline auto operator*(const AbstractMatrix auto &a,
+constexpr auto operator*(const AbstractMatrix auto &a,
                       const AbstractMatrix auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
@@ -2994,44 +3006,44 @@ inline auto operator*(const AbstractMatrix auto &a,
     assert(AA.numCol() == BB.numRow());
     return MatMatMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }
-inline auto operator*(const AbstractMatrix auto &a,
+constexpr auto operator*(const AbstractMatrix auto &a,
                       const AbstractVector auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
     assert(AA.numCol() == BB.size());
     return MatVecMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }
-template <AbstractMatrix A> inline auto operator*(A &&a, std::integral auto b) {
+template <AbstractMatrix A> constexpr auto operator*(A &&a, std::integral auto b) {
     return binaryOp(Mul{}, std::forward<A>(a), b);
 }
-// template <AbstractMatrix A> inline auto operator*(A &&a, Rational b) {
+// template <AbstractMatrix A> constexpr auto operator*(A &&a, Rational b) {
 //     return binaryOp(Mul{}, std::forward<A>(a), b);
 // }
 template <AbstractVector A, AbstractVector B>
-inline auto operator*(A &&a, B &&b) {
+constexpr auto operator*(A &&a, B &&b) {
     return binaryOp(Mul{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractVector A> inline auto operator*(A &&a, std::integral auto b) {
+template <AbstractVector A> constexpr auto operator*(A &&a, std::integral auto b) {
     return binaryOp(Mul{}, std::forward<A>(a), b);
 }
-// template <AbstractVector A> inline auto operator*(A &&a, Rational b) {
+// template <AbstractVector A> constexpr auto operator*(A &&a, Rational b) {
 //     return binaryOp(Mul{}, std::forward<A>(a), b);
 // }
-template <AbstractMatrix B> inline auto operator*(std::integral auto a, B &&b) {
+template <AbstractMatrix B> constexpr auto operator*(std::integral auto a, B &&b) {
     return binaryOp(Mul{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> inline auto operator*(std::integral auto a, B &&b) {
+template <AbstractVector B> constexpr auto operator*(std::integral auto a, B &&b) {
     return binaryOp(Mul{}, a, std::forward<B>(b));
 }
 
-// inline auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
+// constexpr auto operator*(AbstractMatrix auto &A, AbstractVector auto &x) {
 //     auto AA{A.view()};
 //     auto xx{x.view()};
 //     return MatMul<decltype(AA), decltype(xx)>{.a = AA, .b = xx};
 // }
 
 template <AbstractVector V>
-inline auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
+constexpr auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
     typename V::eltype s = 0;
     for (size_t i = 0; i < b.size(); ++i)
         s += a.a(i) * b(i);

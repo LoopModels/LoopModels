@@ -48,18 +48,19 @@ struct ScheduledNode {
     BitSet outNeighbors;
     Schedule schedule;
     // llvm::SmallVector<MemoryAccess*> memory;
-    static constexpr uint32_t PHISCHEDULEDFLAG =
-        std::numeric_limits<uint32_t>::max();
+    // static constexpr uint32_t PHISCHEDULEDFLAG =
+    //     std::numeric_limits<uint32_t>::max();
     uint32_t phiOffset{0};   // used in LoopBlock
     uint32_t omegaOffset{0}; // used in LoopBlock
     uint32_t carriedDependence{0};
     uint8_t numLoops{0};
+    uint8_t rank{0};
     bool visited{false};
     bool wasVisited() const { return visited; }
     void visit() { visited = true; }
     void unVisit() { visited = false; }
     size_t getNumLoops() const { return numLoops; }
-    bool phiIsScheduled() const { return phiOffset == PHISCHEDULEDFLAG; }
+    bool phiIsScheduled(size_t d) const { return d < rank; }
 
     size_t updatePhiOffset(size_t p) {
         phiOffset = p;
@@ -88,6 +89,9 @@ struct ScheduledNode {
         outNeighbors |= s.outNeighbors;
         numLoops = std::max(numLoops, s.numLoops);
         return *this;
+    }
+    PtrVector<int64_t> getSchedule(size_t d) const {
+        return schedule.getPhi()(d, _);
     }
 };
 
@@ -188,8 +192,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // we may turn off edges because we've exceeded its loop depth
     // or because the dependence has already been satisfied at an
     // earlier level.
+    Vector<Rational> sol;
     // llvm::SmallVector<bool, 256> doNotAddEdge;
-    llvm::SmallVector<bool, 256> scheduled;
+    // llvm::SmallVector<bool, 256> scheduled;
     size_t numPhiCoefs{0};
     size_t numOmegaCoefs{0};
     size_t numLambda{0};
@@ -299,25 +304,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // happens after the load C(m,n) [ i = x-1, j = y], and
     // happens after the load C(m,n) [ i = x, j = y-1]
     //
-    // so, `pushReductionEdges` will...
-    // actually, probably better to put this into dependence checking
-    // so that it can add optionally 0, 1, or 2 dependencies
-    // void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
-    //     if (!x.fusedThrough(y)) {
-    //         return;
-    //     }
-    //     ArrayReference &refX = x.ref;
-    //     ArrayReference &refY = y.ref;
-    //     const size_t numLoopsX = refX.getNumLoops();
-    //     const size_t numLoopsY = refY.getNumLoops();
-    //     const size_t numAxes = refX.dim();
-    //     // we preprocess to delinearize all, including linear indexing
-    //     assert(numAxes == refY.dim());
-    //     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-    //     for (size_t i = numAxes; i < numLoopsCommon; ++i) {
-    //         // push both edge directions
-    //     }
-    // }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
         // as a result of preprocessing.
@@ -408,7 +394,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             connect(e.in->nodeIndex, e.out->nodeIndex);
     }
     void connectGraph() {
-
         // assembles direct connections in node graph
         unsigned j = 0;
         for (unsigned i = 0; i < memory.size(); ++i) {
@@ -718,49 +703,54 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
         }
     }
-    // NOTE: requires omniSimplex to be instantiated
-    bool orthogonalizeStores() {
-        // as a first optimization, we just look for stores with lower
-        // access rank than the associated loop nest depth
-        // Note that we can handle loads later, e.g. once we
-        // hit the rank (and things have been feasible)
-        // we can try adding extra constraints to
-        // orthogonalize loads with respect to stores
-        //
-        // stores id, rank pairs
-        llvm::SmallVector<unsigned> orthCandidates;
-        scheduled.clear();
-        scheduled.resize(memory.size()); // should be all `false`
-        // iterate over stores
-        for (unsigned i = 0; i < unsigned(memory.size()); ++i) {
-            MemoryAccess &mai = memory[i];
-            if (mai.isLoad)
-                continue;
-            mai.ref.rank = NormalForm::rank(mai.indexMatrix());
-            if (mai.ref.rank < mai.getNumLoops())
-                orthCandidates.emplace_back(i);
-        }
-        if (orthCandidates.size() == 0)
-            return false;
-        // now, the approach for orthogonalizing is to
-        // first try orthogonalizing all, then, if that fails
-        // we (as a first implementation) don't orthogonalize.
-        // in the future, we could try stepwise, perhaps
-        // using some cost model to prioritize.
-        for (auto i : orthCandidates) {
-            MemoryAccess &mem = memory[i];
-            // now we set the schedule to the memory accesses
-            auto indMat = mem.indexMatrix(); // numLoops x arrayDim
-            auto phi = mem.schedule.getPhi();
-            // we flip order, to try and place higher stride
-            // dimensions in the outer loops
-            for (size_t r = 0; r < mem.ref.rank; ++r)
-                phi(r, _) = indMat(_, mem.ref.rank - 1 - r);
-        }
-        // TODO: probably have this be a separate driver instead?
-        return false;
-    }
 
+    llvm::Optional<BitSet> optOrth(Graph g) {
+
+        const size_t maxDepth = calcMaxDepth();
+        // check for orthogonalization opportunities
+        bool tryOrth = false;
+        for (size_t e = 0; e < edges.size(); ++e) {
+            Dependence &edge = edges[e];
+            if ((edge.in->nodeIndex == edge.out->nodeIndex) &&
+                (edge.in->isLoad ^ edge.out->isLoad)) {
+                ScheduledNode &node = nodes[edge.in->nodeIndex];
+                if (node.phiIsScheduled(0) ||
+                    (edge.in->indexMatrix() != edge.out->indexMatrix()))
+                    continue;
+                PtrMatrix<int64_t> indMat = edge.in->indexMatrix();
+                size_t r = NormalForm::rank(indMat);
+                if (r == edge.in->getNumLoops())
+                    continue;
+                // TODO handle linearly dependent acceses, filtering them out
+                if (r == edge.in->ref.arrayDim()) {
+                    // indMat indvars are indexed from outside<->inside
+                    // phi indvars are indexed from inside<->outside
+                    // so, indMat is indvars[outside<->inside] x array dim
+                    // phi is loop[outside<->inside] x indvars[inside<->outside]
+                    MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
+                    const size_t indR = indMat.numRow();
+                    const size_t phiOffset = phi.numCol() - indR;
+                    for (size_t rr = 0; rr < r; ++rr) {
+                        phi(rr, _(begin, phiOffset)) = 0;
+                        for (size_t i = 0; i < indR; ++i)
+                            phi(rr, i + phiOffset) = indMat(indR - 1 - i, rr);
+                    }
+                    // node.schedule.getPhi()(_(0, r), _) = indMat.transpose();
+                    node.rank = r;
+                    std::cout << "orthogonalizing r = " << r
+                              << "; indMat =" << indMat << std::endl;
+                    tryOrth = true;
+                }
+            }
+        }
+        if (tryOrth) {
+            if (llvm::Optional<BitSet> opt = optimize(g, 0, maxDepth))
+                return opt;
+            for (auto &&n : nodes)
+                n.rank = 0;
+        }
+        return optimize(std::move(g), 0, maxDepth);
+    }
     [[nodiscard]] size_t countNumLambdas(const Graph &g, size_t d) const {
         size_t c = 0;
         for (size_t e = 0; e < edges.size(); ++e)
@@ -846,7 +836,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             CSHOWLN(hasActiveEdges(g, node, d));
             if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
                 continue;
-            if (!node.phiIsScheduled())
+            if (!node.phiIsScheduled(d))
                 p = node.updatePhiOffset(p);
         }
         numPhiCoefs = p - pInit;
@@ -869,13 +859,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             SHOWLN(edge);
             assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
                    edge.getNumPhiCoefficients());
-            assert(1 + edge.depPoly.getNumLambda() +
+            // 2 == 1 for const offset + 1 for w
+            SHOWLN(2 + edge.depPoly.getNumLambda() +
+                   edge.getNumPhiCoefficients() +
+                   edge.getNumOmegaCoefficients());
+            SHOWLN(edge.dependenceSatisfaction.getConstraints().numCol());
+            assert(2 + edge.depPoly.getNumLambda() +
                        edge.getNumPhiCoefficients() +
                        edge.getNumOmegaCoefficients() ==
                    edge.dependenceSatisfaction.getConstraints().numCol());
         }
     }
-    void instantiateOmniSimplex(const Graph &g, size_t d) {
+    void instantiateOmniSimplex(const Graph &g, size_t d,
+                                bool satisfyDeps = false) {
         // defines numScheduleCoefs, numLambda, numBounding, and
         // numConstraints
         omniSimplex.reserve(numConstraints + numOmegaCoefs,
@@ -894,13 +890,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         //     DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 1, w = 1 + numBounding;
         size_t c = 0, l = getLambdaOffset();
-#ifndef NDEBUG
-        size_t minPhiCoefInd = std::numeric_limits<size_t>::max();
-        size_t minOmegaCoefInd = std::numeric_limits<size_t>::max();
-        size_t maxPhiCoefInd = 0;
-        size_t maxOmegaCoefInd = 0;
-        // size_t numActiveCount = 0;
-#endif
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
             // #ifndef NDEBUG
@@ -922,7 +911,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             // std::cout<<"; is still active!";
             const ScheduledNode &outNode = nodes[outNodeIndex];
             const ScheduledNode &inNode = nodes[inNodeIndex];
-            const auto [satC, satL, satPp, satPc, satO] =
+            const auto [satC, satL, satPp, satPc, satO, satW] =
                 edge.splitSatisfaction();
             const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] =
                 edge.splitBounding();
@@ -952,17 +941,24 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             size_t uu = u + bndWU.numCol() - 1;
             C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
             u = uu;
-
-            C(_(c, cc), 0) = satC;
+            if (satisfyDeps) {
+                C(_(c, cc), 0) = satC + satW;
+            } else {
+                C(_(c, cc), 0) = satC;
+            }
             C(_(cc, ccc), 0) = bndC;
             // now, handle Phi and Omega
             // phis are not constrained to be 0
             if (outNodeIndex == inNodeIndex) {
                 if (d < outNode.getNumLoops()) {
                     if (satPc.numCol() == satPp.numCol()) {
-                        if (outNode.phiIsScheduled()) {
+                        if (outNode.phiIsScheduled(d)) {
+                            std::cout
+                                << "instantiate omniSimplex adding consts; d ="
+                                << d << std::endl;
                             // add it constants
-                            auto sch = edge.out->getSchedule(d);
+                            auto sch = outNode.getSchedule(d);
+                            SHOWLN(sch);
                             C(_(c, cc), 0) -= satPc * sch + satPp * sch;
                             C(_(cc, ccc), 0) -= bndPc * sch + bndPp * sch;
                         } else {
@@ -970,38 +966,36 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                             C(_(c, cc), phiChild) = satPc + satPp;
                             C(_(cc, ccc), phiChild) = bndPc + bndPp;
                         }
-                    } else {
-                        if (outNode.phiIsScheduled()) {
-                            // add it constants
-                            // note that loop order in schedule goes
-                            // inner -> outer
-                            // so we need to drop inner most if one has less
-                            auto sch = edge.out->getSchedule(d);
-                            auto schP = sch(_(end - satPp.numCol(), end));
-                            auto schC = sch(_(end - satPc.numCol(), end));
-                            C(_(c, cc), 0) -= satPc * schC + satPp * schP;
-                            C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
-                        } else if (satPc.numCol() < satPp.numCol()) {
-                            auto phiChild = outNode.getPhiOffset();
-                            size_t P = satPc.numCol();
-                            auto m = phiChild.e - P;
-                            C(_(c, cc), _(m, phiChild.e)) =
-                                satPc + satPp(_, _(end - P, end));
-                            C(_(cc, ccc), _(m, phiChild.e)) =
-                                bndPc + bndPp(_, _(end - P, end));
-                            C(_(c, cc), _(phiChild.b, m)) = satPp;
-                            C(_(cc, ccc), _(phiChild.b, m)) = bndPp;
-                        } else /* if (satPc.numCol() > satPp.numCol()) */ {
-                            auto phiChild = outNode.getPhiOffset();
-                            size_t P = satPp.numCol();
-                            auto m = phiChild.e - P;
-                            C(_(c, cc), _(m, phiChild.e)) =
-                                satPc(_, _(end - P, end)) + satPp;
-                            C(_(cc, ccc), _(m, phiChild.e)) =
-                                bndPc(_, _(end - P, end)) + bndPp;
-                            C(_(c, cc), _(phiChild.b, m)) = satPc;
-                            C(_(cc, ccc), _(phiChild.b, m)) = bndPc;
-                        }
+                    } else if (outNode.phiIsScheduled(d)) {
+                        // add it constants
+                        // note that loop order in schedule goes
+                        // inner -> outer
+                        // so we need to drop inner most if one has less
+                        auto sch = outNode.getSchedule(d);
+                        auto schP = sch(_(end - satPp.numCol(), end));
+                        auto schC = sch(_(end - satPc.numCol(), end));
+                        C(_(c, cc), 0) -= satPc * schC + satPp * schP;
+                        C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+                    } else if (satPc.numCol() < satPp.numCol()) {
+                        auto phiChild = outNode.getPhiOffset();
+                        size_t P = satPc.numCol();
+                        auto m = phiChild.e - P;
+                        C(_(c, cc), _(m, phiChild.e)) =
+                            satPc + satPp(_, _(end - P, end));
+                        C(_(cc, ccc), _(m, phiChild.e)) =
+                            bndPc + bndPp(_, _(end - P, end));
+                        C(_(c, cc), _(phiChild.b, m)) = satPp;
+                        C(_(cc, ccc), _(phiChild.b, m)) = bndPp;
+                    } else /* if (satPc.numCol() > satPp.numCol()) */ {
+                        auto phiChild = outNode.getPhiOffset();
+                        size_t P = satPp.numCol();
+                        auto m = phiChild.e - P;
+                        C(_(c, cc), _(m, phiChild.e)) =
+                            satPc(_, _(end - P, end)) + satPp;
+                        C(_(cc, ccc), _(m, phiChild.e)) =
+                            bndPc(_, _(end - P, end)) + bndPp;
+                        C(_(c, cc), _(phiChild.b, m)) = satPc;
+                        C(_(cc, ccc), _(phiChild.b, m)) = bndPc;
                     }
                     C(_(c, cc), outNode.omegaOffset) = satO(_, 0) + satO(_, 1);
                     C(_(cc, ccc), outNode.omegaOffset) =
@@ -1009,9 +1003,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 }
             } else {
                 if (d >= edge.out->getNumLoops()) {
-                } else if (outNode.phiIsScheduled()) {
+                } else if (outNode.phiIsScheduled(d)) {
                     // add it constants
-                    auto sch = edge.out->getSchedule(d);
+                    auto sch = outNode.getSchedule(d);
                     SHOWLN(edge.out->getNumLoops());
                     SHOW(satPc.numRow());
                     CSHOW(satPc.numCol());
@@ -1026,15 +1020,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
                     C(_(cc, ccc), phiChild) = bndPc;
                     // C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
-#ifndef NDEBUG
-                    minPhiCoefInd = std::min(minPhiCoefInd, phiChild.b);
-                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiChild.e);
-#endif
                 }
                 if (d >= edge.in->getNumLoops()) {
-                } else if (inNode.phiIsScheduled()) {
+                } else if (inNode.phiIsScheduled(d)) {
                     // add it to constants
-                    auto sch = edge.in->getSchedule(d);
+                    auto sch = inNode.getSchedule(d);
                     SHOWLN(edge.in->getNumLoops());
                     SHOW(satPp.numRow());
                     CSHOW(satPp.numCol());
@@ -1049,38 +1039,21 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
                     C(_(cc, ccc), phiParent) = bndPp;
                     // C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
-#ifndef NDEBUG
-                    minPhiCoefInd = std::min(minPhiCoefInd, phiParent.b);
-                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiParent.e);
-#endif
                 }
                 // Omegas are included regardless of rotation
                 if (d < edge.out->getNumLoops()) {
                     C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
                     C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
-#ifndef NDEBUG
-                    minOmegaCoefInd =
-                        std::min(minOmegaCoefInd, size_t(outNode.omegaOffset));
-                    maxOmegaCoefInd =
-                        std::max(maxOmegaCoefInd, size_t(outNode.omegaOffset));
-#endif
                 }
                 if (d < edge.in->getNumLoops()) {
                     C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
                     C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
-#ifndef NDEBUG
-                    minOmegaCoefInd =
-                        std::min(minOmegaCoefInd, size_t(inNode.omegaOffset));
-                    maxOmegaCoefInd =
-                        std::max(maxOmegaCoefInd, size_t(inNode.omegaOffset));
-#endif
                 }
             }
             c = ccc;
         }
     }
-    BitSet deactivateSatisfiedEdges(Graph &g, PtrVector<Rational> sol,
-                                    size_t d) {
+    BitSet deactivateSatisfiedEdges(Graph &g, size_t d) {
         if (allZero(sol(_(begin, numBounding + numActiveEdges))))
             return {};
         size_t u = 0, w = numBounding;
@@ -1112,8 +1085,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return deactivated;
     }
-    void updateSchedules(const Graph &g, PtrVector<Rational> sol,
-                         size_t depth) {
+    void updateSchedules(const Graph &g, size_t depth) {
         SHOW(depth);
         CSHOWLN(sol);
 #ifndef NDEBUG
@@ -1134,24 +1106,46 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 // std::cout << "No active edges!!!!!!"<<std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
-                if (!node.phiIsScheduled())
+                if (!node.phiIsScheduled(depth))
                     node.schedule.getPhi()(depth, _) =
                         std::numeric_limits<int64_t>::min();
                 continue;
             }
             node.schedule.getOmega()(2 * depth + 1) = sol(node.omegaOffset - 1);
-            if (!node.phiIsScheduled())
+            if (!node.phiIsScheduled(depth))
                 SHOWLN(sol(node.getPhiOffset() - 1));
-            if (!node.phiIsScheduled())
-                node.schedule.getPhi()(depth, _) = sol(node.getPhiOffset() - 1);
+            if (!node.phiIsScheduled(depth)) {
+                auto phi = node.schedule.getPhi()(depth, _);
+                auto s = sol(node.getPhiOffset() - 1);
+                int64_t l = denomLCM(s);
+                SHOWLN(l);
+                if (l == 1) {
+                    for (size_t i = 0; i < phi.size(); ++i)
+                        phi(i) = s(i).numerator;
+                } else {
+                    for (size_t i = 0; i < phi.size(); ++i)
+                        phi(i) = (s(i).numerator * l) / (s(i).denominator);
+                }
+                // node.schedule.getPhi()(depth, _) =
+                //     sol(node.getPhiOffset() - 1) *
+                //     denomLCM(sol(node.getPhiOffset() - 1));
+            }
             SHOW(depth);
             CSHOWLN(node.schedule.getPhi()(depth, _));
+#ifndef NDEBUG
+            if (!node.phiIsScheduled(depth)) {
+                int64_t l = denomLCM(sol(node.getPhiOffset() - 1));
+                for (size_t i = 0; i < node.schedule.getPhi().numCol(); ++i)
+                    assert(node.schedule.getPhi()(depth, i) ==
+                           sol(node.getPhiOffset() - 1)(i) * l);
+            }
+#endif
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
-        for (auto y : x)
-            if (y)
-                return 2 * (y > 0) - 1;
+        for (auto it = x.rbegin(); it != x.rend(); ++it)
+            if (*it)
+                return 2 * (*it > 0) - 1;
         return 0;
     }
     void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
@@ -1161,7 +1155,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         if (depth == 0) {
             // add ones >= 0
             for (auto &&node : nodes) {
-                if (node.phiIsScheduled() || (!hasActiveEdges(g, node)))
+                if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node)))
                     continue;
                 auto c{omniSimplex.addConstraintAndVar()};
                 c(0) = 1;
@@ -1172,7 +1166,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         IntMatrix A, N;
         for (auto &&node : nodes) {
-            if (node.phiIsScheduled() || (depth >= node.getNumLoops()) ||
+            if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
                 (!hasActiveEdges(g, node)))
                 continue;
             A = node.schedule.getPhi()(_(0, depth), _).transpose();
@@ -1194,13 +1188,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     void setSchedulesIndependent(const Graph &g, size_t depth) {
         IntMatrix A, N;
         for (auto &&node : nodes) {
-            if ((depth >= node.getNumLoops()) || node.phiIsScheduled())
+            if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
                 continue;
             if (!hasActiveEdges(g, node)) {
-                std::cout << "No active edges setIndep!!!!!!" << std::endl;
+                std::cout << "No active edges setIndep!!!!!!; depth = " << depth
+                          << std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
-                if (!node.phiIsScheduled())
+                if (!node.phiIsScheduled(depth))
                     node.schedule.getPhi()(depth, _) =
                         std::numeric_limits<int64_t>::min();
                 continue;
@@ -1238,8 +1233,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return true;
     }
-    [[nodiscard]] llvm::Optional<BitSet>
-    breakGraph(Graph g, Vector<Rational> &sol, size_t d) {
+    [[nodiscard]] llvm::Optional<BitSet> breakGraph(Graph g, size_t d) {
         auto components = Graphs::stronglyConnectedComponents(g);
         if (components.size() <= 1)
             return {};
@@ -1256,7 +1250,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             std::cout << "About to opt level:" << std::endl;
             countAuxParamsAndConstraints(sg, d);
             setScheduleMemoryOffsets(sg, d);
-            if (llvm::Optional<BitSet> sat = optimizeLevel(sg, sol, d)) {
+            if (llvm::Optional<BitSet> sat = optimizeLevel(sg, d)) {
                 satDeps |= *sat;
             } else {
                 return {}; // give up
@@ -1293,7 +1287,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // size_t numSat = satDeps.size();
         for (auto i : baseGraphs)
             if (llvm::Optional<BitSet> sat = optimize(
-                    std::move(graphs[i]), sol, d, graphs[i].calcMaxDepth())) {
+                    std::move(graphs[i]), d, graphs[i].calcMaxDepth())) {
                 // TODO: try and satisfy extra dependences
                 // if ((numSat > 0) && (sat->size()>0)){}
                 satDeps |= *sat;
@@ -1303,8 +1297,36 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // remove
         return satDeps;
     }
-    [[nodiscard]] llvm::Optional<BitSet>
-    optimizeLevel(Graph &g, Vector<Rational> &sol, size_t d) {
+    //     void lexMinimize(const Graph &g, Vector<Rational> &sol, size_t
+    //     depth){
+    // 	// omniSimplex.lexMinimize(sol);
+    // #ifndef NDEBUG
+    //         assert(omniSimplex.inCanonicalForm);
+    //         omniSimplex.assertCanonical();
+    //         // SHOWLN(omniSimplex);
+    // #endif
+    //         for (size_t v = 0; v < numActiveEdges + numBounding;)
+    //             omniSimplex.lexMinimize(++v);
+    // 	for (auto &&node : nodes) {
+    //             if (depth >= node.getNumLoops())
+    //                 continue;
+    //             if (!hasActiveEdges(g, node))
+    // 		continue;
+    // 	    omniSimplex.lexMinimize(node.getPhiOffset());
+    // 	}
+    // 	for (auto &&node : nodes) {
+    //             if (depth >= node.getNumLoops())
+    //                 continue;
+    //             if (!hasActiveEdges(g, node))
+    // 		continue;
+    // 	    omniSimplex.lexMinimize(node.omegaOffset);
+    // 	}
+    //         omniSimplex.copySolution(sol);
+    //     }
+    [[nodiscard]] llvm::Optional<BitSet> optimizeLevel(Graph &g, size_t d) {
+        std::cout << "Entering optimizeLevel";
+        CSHOW(numPhiCoefs);
+        CSHOWLN(d);
         if (numPhiCoefs == 0) {
             setSchedulesIndependent(g, d);
             return BitSet{};
@@ -1312,23 +1334,25 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         instantiateOmniSimplex(g, d);
         addIndependentSolutionConstraints(g, d);
 #ifndef NDEBUG
-        {
-            size_t i = 0;
-            for (size_t eid = 0; eid < edges.size(); ++eid) {
-                // for (auto &e : edges) {
-                if (g.isInactive(eid, d))
-                    continue;
-                const Dependence &e = edges[eid];
-                SHOW(e.depPoly.getNumLambda());
-                CSHOW(e.depPoly.getDim0());
-                CSHOW(e.depPoly.getDim1());
-                CSHOWLN(e.getNumPhiCoefficients());
-                std::cout << "constraints:\ndSat_" << i << " = "
-                          << e.dependenceSatisfaction.tableau << "\ndBnd_" << i
-                          << " = " << e.dependenceBounding.tableau << std::endl;
-                ++i;
-            }
-        }
+        // {
+        //     size_t i = 0;
+        //     for (size_t eid = 0; eid < edges.size(); ++eid) {
+        //         // for (auto &e : edges) {
+        //         if (g.isInactive(eid, d))
+        //             continue;
+        //         const Dependence &e = edges[eid];
+        //         SHOW(e.depPoly.getNumLambda());
+        //         CSHOW(e.depPoly.getDim0());
+        //         CSHOW(e.depPoly.getDim1());
+        //         CSHOWLN(e.getNumPhiCoefficients());
+        //         std::cout << "constraints:\ndSat_" << i << " = "
+        //                   << e.dependenceSatisfaction.tableau << "\ndBnd_" <<
+        //                   i
+        //                   << " = " << e.dependenceBounding.tableau <<
+        //                   std::endl;
+        //         ++i;
+        //     }
+        // }
         // SHOWLN(omniSimplex);
         SHOW(d);
         CSHOW(numBounding);
@@ -1342,12 +1366,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             return {};
         sol.resizeForOverwrite(getLambdaOffset() - 1);
         omniSimplex.lexMinimize(sol);
-        updateSchedules(g, sol, d);
-        return deactivateSatisfiedEdges(g, sol, d);
+        // lexMinimize(g, sol, d);
+        updateSchedules(g, d);
+        return deactivateSatisfiedEdges(g, d);
     }
-    BitSet optimizeSatDep(Graph g, Vector<Rational> &sol, size_t d,
-                          size_t maxDepth, BitSet depSatLevel,
-                          BitSet depSatNest, BitSet activeEdges) {
+    BitSet optimizeSatDep(Graph g, size_t d, size_t maxDepth,
+                          BitSet depSatLevel, BitSet depSatNest,
+                          BitSet activeEdges) {
         // if we're here, there are satisfied deps in both
         // depSatLevel and depSatNest
         // what we want to know is, can we satisfy all the deps
@@ -1355,9 +1380,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         SHOWLN(depSatLevel);
         SHOWLN(depSatNest);
         depSatLevel |= depSatNest;
-        SHOWLN(depSatLevel);
         const size_t numSatNest = depSatLevel.size();
+        SHOW(numSatNest);
+        CSHOWLN(depSatLevel);
         if (numSatNest) {
+
             // backup in case we fail
             // activeEdges was the old original; swap it in
             std::swap(g.activeEdges, activeEdges);
@@ -1367,49 +1394,46 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 oldSchedules.push_back(n.schedule);
             llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps =
                 carriedDeps;
-	    resetDeepDeps(carriedDeps, d);
-	    
-            size_t u = 1, w = 1 + numBounding;
-            size_t i = 0;
-            size_t v = omniSimplex.getNumVar();
-            MutPtrMatrix<int64_t> C{
-                omniSimplex.addConstraintsAndVars(numSatNest)};
-            assert(v + numSatNest == omniSimplex.getNumVar());
-            for (size_t e = 0; e < edges.size(); ++e) {
-                Dependence &edge = edges[e];
-                // #ifndef NDEBUG
-                //             std::cout << ";edge=" << e;
-                // #endif
-                if (g.isInactive(e, d))
-                    continue;
-                size_t uu = u +
-                            edge.dependenceBounding.getConstraints().numCol() -
-                            (2 + edge.depPoly.getNumLambda() +
-                             edge.getNumPhiCoefficients() +
-                             edge.getNumOmegaCoefficients());
-                if (depSatLevel[e]) {
-                    // e was satisfied in a deeper level; try and satisfy it
-                    // here instead
-                    C(i, 0) = 1;
-                    C(i, _(u, uu)) = 1;
-                    C(i, w) = 1;
-                    C(i++, v++) = -1;
-                }
-                ++w;
-                u = uu;
-            }
-            // SHOWLN(C);
+            resetDeepDeps(carriedDeps, d);
+
+            countAuxParamsAndConstraints(g, d);
+            setScheduleMemoryOffsets(g, d);
+            instantiateOmniSimplex(g, d, true);
+            addIndependentSolutionConstraints(g, d);
             if (!omniSimplex.initiateFeasible()) {
+                std::cout << "SUCCESS initiateFeasible()" << std::endl;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
-                updateSchedules(g, sol, d);
-                BitSet depSat = deactivateSatisfiedEdges(g, sol, d);
+                // lexMinimize(g, sol, d);
+                updateSchedules(g, d);
+                BitSet depSat = deactivateSatisfiedEdges(g, d);
+#ifndef NDEBUG
+                SHOW(d);
+                CSHOW(numBounding);
+                CSHOW(numActiveEdges);
+                CSHOW(numPhiCoefs);
+                CSHOW(numOmegaCoefs);
+                CSHOW(numLambda);
+                CSHOWLN(numConstraints);
+                SHOWLN(sol);
                 SHOWLN(depSat);
+#endif
                 if (llvm::Optional<BitSet> depSatN =
-                        optimize(g, sol, d + 1, maxDepth)) {
-                    SHOWLN(*depSatN);
+                        optimize(g, d + 1, maxDepth)) {
+#ifndef NDEBUG
+                    std::cout << "SUCCESS dep sat optimize()" << std::endl;
+                    CSHOWLN(*depSatN);
+#endif
                     return depSat |= *depSatN;
+#ifndef NDEBUG
+                } else {
+                    std::cout << "FAILED dep sat optimize()" << std::endl;
+#endif
                 }
+#ifndef NDEBUG
+            } else {
+                std::cout << "FAILED initiateFeasible()" << std::endl;
+#endif
             }
             // we failed, so reset solved schedules
             std::swap(g.activeEdges, activeEdges);
@@ -1417,14 +1441,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             auto oldNodeIter = oldSchedules.begin();
             for (auto &&n : g)
                 n.schedule = *(oldNodeIter++);
-	    std::swap(carriedDeps, oldCarriedDeps);
+            std::swap(carriedDeps, oldCarriedDeps);
         }
         return depSatLevel;
     }
     // optimize at depth `d`
     // receives graph by value, so that it is not invalidated when recursing
-    [[nodiscard]] llvm::Optional<BitSet>
-    optimize(Graph g, Vector<Rational> &sol, size_t d, size_t maxDepth) {
+    [[nodiscard]] llvm::Optional<BitSet> optimize(Graph g, size_t d,
+                                                  size_t maxDepth) {
         if (d >= maxDepth)
             return BitSet{};
         countAuxParamsAndConstraints(g, d);
@@ -1433,31 +1457,35 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         CSHOWLN(numPhiCoefs);
         // if we fail on this level, break the graph
         BitSet activeEdgesBackup = g.activeEdges;
-        if (llvm::Optional<BitSet> depSat = optimizeLevel(g, sol, d)) {
+        std::cout << "about to optimizeLevel(d = " << d << ") within optimize"
+                  << std::endl;
+        if (llvm::Optional<BitSet> depSat = optimizeLevel(g, d)) {
             const size_t numSat = depSat->size();
+            std::cout << "optimize; numSat = " << numSat
+                      << "; maxDepth = " << maxDepth << "; d = " << d
+                      << std::endl;
             if (llvm::Optional<BitSet> depSatNest =
-                    optimize(g, sol, d + 1, maxDepth)) {
+                    optimize(g, d + 1, maxDepth)) {
                 if (numSat && depSatNest->size())
                     return optimizeSatDep(
-                        std::move(g), sol, d, maxDepth, std::move(*depSat),
+                        std::move(g), d, maxDepth, std::move(*depSat),
                         std::move(*depSatNest), std::move(activeEdgesBackup));
                 return *depSat |= *depSatNest;
             }
         }
-        return breakGraph(std::move(g), sol, d);
+        return breakGraph(std::move(g), d);
     }
     // returns true on failure
     [[nodiscard]] llvm::Optional<BitSet> optimize() {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();
-	carriedDeps.resize(nodes.size());
+        carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
         validateMemory();
         validateEdges();
 #endif
-        Vector<Rational> sol;
-        return optimize(fullGraph(), sol, 0, calcMaxDepth());
+        return optOrth(fullGraph());
     }
 };
 
