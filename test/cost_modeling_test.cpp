@@ -149,57 +149,57 @@ TEST(TriangularExampleTest, BasicAssertions) {
     auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
 
     // construct indices
-
+    // ind mat, loops currently indexed from outside-in
     LoopBlock lblock;
-    // B[m, n]
+    // B[n, m]
     ArrayReference BmnInd{0, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
         BmnInd.strides[0] = M;
         BmnInd.strides[1] = 1;
     }
     std::cout << "Bmn = " << BmnInd << std::endl;
-    // A[m, n]
+    // A[n, m]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
         Amn2Ind.strides[0] = M;
         Amn2Ind.strides[1] = 1;
     }
     std::cout << "Amn2 = " << Amn2Ind << std::endl;
-    // A[m, n]
+    // A[n, m]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
         Amn3Ind.strides[0] = M;
         Amn3Ind.strides[1] = 1;
     }
     std::cout << "Amn3 = " << Amn3Ind << std::endl;
-    // A[m, k]
+    // A[k, m]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(2, 0) = 1; // k
         IndMat(0, 1) = 1; // m
         AmkInd.strides[0] = M;
         AmkInd.strides[1] = 1;
     }
     std::cout << "Amk = " << AmkInd << std::endl;
-    // U[n, k]
+    // U[k, n]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(2, 0) = 1; // k
         UnkInd.strides[0] = N;
@@ -210,7 +210,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     ArrayReference UnnInd{2, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(1, 0) = 1; // k
         UnnInd.strides[1] = 1;
@@ -438,8 +438,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_TRUE(optDeps.hasValue());
     // SHOWLN(optDeps.getValue());
     IntMatrix optPhi2(2, 2);
-    optPhi2.antiDiag() = 1;
-    IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    // phi2 loop order is [n, m]
+    // so the schedule bloe places `n` as the outermost loop, and `m` inside
+    optPhi2.diag() = 1;
+    // IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    // phi3 loop order is [k, n, m]
+    // so the schedule below places `k` as the outermost loop,
+    // followed by `m`, and `n` as innermost. `n` is the reduction loop.
+    IntMatrix optPhi3{stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]")};
     // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
     // assert(!optFail);
     for (auto &mem : lblock.memory) {
@@ -620,6 +626,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     ArrayReference AInd{0, loopIJ, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AInd.indexMatrix();
+        //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
         AInd.strides[1] = J;
@@ -629,12 +636,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
     ArrayReference xInd1{1, loopI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
+        //     l  d
         IndMat(0, 0) = 1; // i
         xInd1.strides[0] = 1;
     }
     ArrayReference xInd2{1, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd2.indexMatrix();
+        //     l  d
         IndMat(0, 0) = 1; // i
         xInd2.strides[0] = 1;
     }
@@ -642,12 +651,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
     ArrayReference sInd1{2, loopI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
+        //     l  d
         IndMat(0, 0) = 1; // i
         sInd1.strides[0] = 1;
     }
     ArrayReference sInd2{2, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd2.indexMatrix();
+        //     l  d
         IndMat(0, 0) = 1; // i
         sInd2.strides[0] = 1;
     }
@@ -840,12 +851,23 @@ TEST(MeanStDevTest0, BasicAssertions) {
         }
         std::cout << std::endl;
     }
+    IntMatrix optS(2);
+    optS.antiDiag() = 1;
+    IntMatrix optSinnerUndef = optS;
+    optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
     for (auto &mem : jOuterLoopNest.memory) {
         SHOW(mem.nodeIndex);
         CSHOWLN(mem.ref);
         Schedule &s = jOuterLoopNest.nodes[mem.nodeIndex].schedule;
         SHOWLN(s.getPhi());
         SHOWLN(s.getOmega());
+        if (s.getNumLoops() == 1) {
+            EXPECT_EQ(s.getPhi()(0, 0), 1);
+        } else if (s.getOmega()(2) < 3) {
+            EXPECT_EQ(s.getPhi(), optSinnerUndef);
+        } else {
+            EXPECT_EQ(s.getPhi(), optS);
+        }
     }
 }
 
@@ -920,7 +942,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Asrc(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
@@ -935,10 +957,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Atgt0(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
-	//                   d  s
+                          //                   d  s
         Atgt0.offsetMatrix()(1, 0) = 1;
         Atgt0.strides[1] = 1;
         Atgt0.strides[0] = I;
@@ -949,7 +971,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     ArrayReference Atgt1(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
-	//     l  d
+        //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
         Atgt1.offsetMatrix()(0, 0) = 1;
@@ -1155,6 +1177,7 @@ TEST(ConvReversePass, BasicAssertions) {
     ArrayReference BmnInd{0, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+        //     l  d
         IndMat(3, 1) = 1; // i
         IndMat(2, 0) = 1; // j
         BmnInd.strides[1] = 1;
@@ -1165,6 +1188,7 @@ TEST(ConvReversePass, BasicAssertions) {
     ArrayReference AmnInd{1, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+        //     l  d
         IndMat(1, 1) = 1; // m
         IndMat(0, 0) = 1; // n
         AmnInd.strides[1] = 1;
@@ -1174,6 +1198,7 @@ TEST(ConvReversePass, BasicAssertions) {
     ArrayReference CmijnInd{2, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+        //     l  d
         IndMat(1, 1) = 1; // m
         IndMat(3, 1) = 1; // i
         IndMat(0, 0) = 1; // n
@@ -1219,4 +1244,3 @@ TEST(ConvReversePass, BasicAssertions) {
         SHOWLN(s.getOmega());
     }
 }
-

@@ -304,25 +304,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // happens after the load C(m,n) [ i = x-1, j = y], and
     // happens after the load C(m,n) [ i = x, j = y-1]
     //
-    // so, `pushReductionEdges` will...
-    // actually, probably better to put this into dependence checking
-    // so that it can add optionally 0, 1, or 2 dependencies
-    // void pushReductionEdges(MemoryAccess &x, MemoryAccess &y) {
-    //     if (!x.fusedThrough(y)) {
-    //         return;
-    //     }
-    //     ArrayReference &refX = x.ref;
-    //     ArrayReference &refY = y.ref;
-    //     const size_t numLoopsX = refX.getNumLoops();
-    //     const size_t numLoopsY = refY.getNumLoops();
-    //     const size_t numAxes = refX.dim();
-    //     // we preprocess to delinearize all, including linear indexing
-    //     assert(numAxes == refY.dim());
-    //     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
-    //     for (size_t i = numAxes; i < numLoopsCommon; ++i) {
-    //         // push both edge directions
-    //     }
-    // }
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
         // as a result of preprocessing.
@@ -742,9 +723,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     continue;
                 // TODO handle linearly dependent acceses, filtering them out
                 if (r == edge.in->ref.arrayDim()) {
-                    node.schedule.getPhi()(_(0, r), _) = indMat.transpose();
-                    // for (size_t rr = 0; rr < r; ++rr)
-                    // node.schedule.getPhi()(rr, _) = indMat(_, r - rr - 1);
+                    // indMat indvars are indexed from outside<->inside
+                    // phi indvars are indexed from inside<->outside
+                    // so, indMat is indvars[outside<->inside] x array dim
+                    // phi is loop[outside<->inside] x indvars[inside<->outside]
+                    MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
+                    const size_t indR = indMat.numRow();
+                    const size_t phiOffset = phi.numCol() - indR;
+                    for (size_t rr = 0; rr < r; ++rr) {
+                        phi(rr, _(begin, phiOffset)) = 0;
+                        for (size_t i = 0; i < indR; ++i)
+                            phi(rr, i + phiOffset) = indMat(indR - 1 - i, rr);
+                    }
+                    // node.schedule.getPhi()(_(0, r), _) = indMat.transpose();
                     node.rank = r;
                     std::cout << "orthogonalizing r = " << r
                               << "; indMat =" << indMat << std::endl;
@@ -899,13 +890,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         //     DependencePolyhedra::getNumOmegaCoefficients();
         size_t u = 1, w = 1 + numBounding;
         size_t c = 0, l = getLambdaOffset();
-#ifndef NDEBUG
-        size_t minPhiCoefInd = std::numeric_limits<size_t>::max();
-        size_t minOmegaCoefInd = std::numeric_limits<size_t>::max();
-        size_t maxPhiCoefInd = 0;
-        size_t maxOmegaCoefInd = 0;
-        // size_t numActiveCount = 0;
-#endif
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
             // #ifndef NDEBUG
@@ -1036,10 +1020,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // C(_(c, cc), phiChild + satPc.numCol()) = satPc;
                     C(_(cc, ccc), phiChild) = bndPc;
                     // C(_(cc, ccc), phiChild + bndPc.numCol()) = bndPc;
-#ifndef NDEBUG
-                    minPhiCoefInd = std::min(minPhiCoefInd, phiChild.b);
-                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiChild.e);
-#endif
                 }
                 if (d >= edge.in->getNumLoops()) {
                 } else if (inNode.phiIsScheduled(d)) {
@@ -1059,31 +1039,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // C(_(c, cc), phiParent + satPp.numCol()) = satPp;
                     C(_(cc, ccc), phiParent) = bndPp;
                     // C(_(cc, ccc), phiParent + bndPp.numCol()) = bndPp;
-#ifndef NDEBUG
-                    minPhiCoefInd = std::min(minPhiCoefInd, phiParent.b);
-                    maxPhiCoefInd = std::max(maxPhiCoefInd, phiParent.e);
-#endif
                 }
                 // Omegas are included regardless of rotation
                 if (d < edge.out->getNumLoops()) {
                     C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
                     C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
-#ifndef NDEBUG
-                    minOmegaCoefInd =
-                        std::min(minOmegaCoefInd, size_t(outNode.omegaOffset));
-                    maxOmegaCoefInd =
-                        std::max(maxOmegaCoefInd, size_t(outNode.omegaOffset));
-#endif
                 }
                 if (d < edge.in->getNumLoops()) {
                     C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
                     C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
-#ifndef NDEBUG
-                    minOmegaCoefInd =
-                        std::min(minOmegaCoefInd, size_t(inNode.omegaOffset));
-                    maxOmegaCoefInd =
-                        std::max(maxOmegaCoefInd, size_t(inNode.omegaOffset));
-#endif
                 }
             }
             c = ccc;
@@ -1179,9 +1143,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
     }
     [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
-        for (auto y : x)
-            if (y)
-                return 2 * (y > 0) - 1;
+        for (auto it = x.rbegin(); it != x.rend(); ++it)
+            if (*it)
+                return 2 * (*it > 0) - 1;
         return 0;
     }
     void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
@@ -1389,7 +1353,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         //         ++i;
         //     }
         // }
-        SHOWLN(omniSimplex);
+        // SHOWLN(omniSimplex);
         SHOW(d);
         CSHOW(numBounding);
         CSHOW(numActiveEdges);
@@ -1436,39 +1400,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             setScheduleMemoryOffsets(g, d);
             instantiateOmniSimplex(g, d, true);
             addIndependentSolutionConstraints(g, d);
-
-            // size_t u = 1, w = 1 + numBounding;
-            // size_t i = 0;
-            // size_t v = omniSimplex.getNumVar();
-            // MutPtrMatrix<int64_t> C{
-            //     omniSimplex.addConstraintsAndVars(numSatNest)};
-            // assert(v + numSatNest == omniSimplex.getNumVar());
-            // for (size_t e = 0; e < edges.size(); ++e) {
-            //     Dependence &edge = edges[e];
-            //     // #ifndef NDEBUG
-            //     //             std::cout << ";edge=" << e;
-            //     // #endif
-            //     if (g.isInactive(e, d))
-            //         continue;
-            //     size_t uu = u +
-            //                 edge.dependenceBounding.getConstraints().numCol()
-            //                 - (2 + edge.depPoly.getNumLambda() +
-            //                  edge.getNumPhiCoefficients() +
-            //                  edge.getNumOmegaCoefficients());
-            //     assert(uu == u + edge.getNumSymbols()); // TODO replace
-            //     if (depSatLevel[e]) {
-            //         // e was satisfied in a deeper level; try and satisfy it
-            //         // here instead
-            //         C(i, 0) = 1;
-            //         C(i, _(u, uu)) = 1;
-            //         C(i, w) = 1;
-            //         C(i++, v++) = -1;
-            //     }
-            //     ++w;
-            //     u = uu;
-            // }
-            // SHOWLN(omniSimplex);
-            // SHOWLN(C);
             if (!omniSimplex.initiateFeasible()) {
                 std::cout << "SUCCESS initiateFeasible()" << std::endl;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
