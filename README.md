@@ -57,9 +57,10 @@ I did not start from a clean ubuntu or fedora, so some dependencies may be missi
 
 Then to build and run the test suite, simply run
 ```
-CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
+CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address -Db_coverage=true
 cd builddir
-time meson test
+meson test
+meson compile coverage-html
 ```
 Recompiling and rerunning tests simply requires rerunning `meson test`.
 The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.
