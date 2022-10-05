@@ -69,22 +69,41 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return 0;
     }
-    static bool visit(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs, llvm::BasicBlock *BB){
+    bool isLoopPreHeader(const llvm::BasicBlock *BB) const {
+        if (const llvm::Instruction *term = BB->getTerminator())
+            if (const llvm::BranchInst *BI =
+                    llvm::dyn_cast<llvm::BranchInst>(term))
+                if (!BI->isConditional())
+                    return LI->isLoopHeader(BI->getSuccessor(0));
+        return false;
+    }
+    static bool visit(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
+                      llvm::BasicBlock *BB) {
         if (visitedBBs.contains(BB))
             return true;
         visitedBBs.insert(BB);
-	return false;
+        return false;
+    }
+    std::pair<llvm::BasicBlock *, llvm::BasicBlock *> searchForFussileLoopSets(
+        llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
+        llvm::BasicBlock *BB, llvm::Loop *L) {
+        if (visit(visitedBBs, BB))
+            return std::pair<llvm::BasicBlock *, llvm::BasicBlock *>(nullptr,
+                                                                     nullptr);
+
+        return std::pair<llvm::BasicBlock *, llvm::BasicBlock *>(nullptr,
+                                                                 nullptr);
     }
     // do a depth first search, adding all basic block ranges with single
     // unconditional jumps of successive loops
     // TODO: handle loop guards?
-    bool searchForFissileLoopSets(
+    bool searchForFussileLoopSetsOld(
         llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
             &fissileSets,
         llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
         llvm::BasicBlock *BB, llvm::Loop *L) {
-	if (visit(visitedBBs, BB))
-	    return false;
+        if (visit(visitedBBs, BB))
+            return false;
         visitedBBs.insert(BB);
         llvm::BasicBlock *S = BB; // start
         while (true) {
@@ -98,8 +117,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                             if (L != BL) {
                                 if (llvm::BasicBlock *EB = BL->getExitBlock()) {
                                     BB = EB;
-				    if (visit(visitedBBs, BB))
-					return false;
+                                    if (visit(visitedBBs, BB))
+                                        return false;
                                     continue;
                                 }
                                 if (S != BB)
@@ -107,8 +126,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                                 llvm::SmallVector<llvm::BasicBlock *> exitBBs;
                                 BL->getExitBlocks(exitBBs);
                                 for (llvm::BasicBlock *S : exitBBs)
-                                    searchForFissileLoopSets(fissileSets,
-                                                             visitedBBs, S, L);
+                                    searchForFussileLoopSetsOld(
+                                        fissileSets, visitedBBs, S, L);
                                 return false; // continue to act like `else` for
                                               // both these `if`s
                             }
@@ -116,39 +135,48 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         // not a loop, but two descendents
                         if (S != BB)
                             fissileSets.emplace_back(S, BB);
-			bool search0 = searchForFissileLoopSets(fissileSets, visitedBBs,
-								BI->getSuccessor(0), L);
-			bool search1 = searchForFissileLoopSets(fissileSets, visitedBBs,
-								BI->getSuccessor(1), L);
-			
-                        if (search0){
-			    if (search1)
-				return true;
-			    // TODO: we need to handle this differently;
-			    // basically, we should continue the search along the other condition.
-			    // I think an approach would be to take more advantage of the `visitedBBs`
-			    // and start searches at each BB in the function, thus the job of
-			    // searchForFissileLoopSets is only to find either 0 or 1 fissile sets,
-			    // and we call it repeatedly while avoiding cycles
-			    // NOTE: Could have two fissile sets, where one touches the other and calls visited
-			    // in a manner such that we miss it following the approach suggested above?
-			    //
-			    // perhaps, it'd be good to start with a more formal definition of what we mean?
-			    // a sort of bidirectional dominance; for A->B, we want all paths to B to go through
-			    // A, but we also want all paths from A to go to B. Seems DominatorTrees only do the
-			    // former, but maybe we can reuse the infrastructure/maybe there's a way to build one
-			    // by reversing edges? DomTree assumes one entry and possibly multiple exits,
-			    // so constructing a reversed version may not be possible/may violate assumtions in the code
-			    //
-			    // Currently, I'm planning on replacing the current code here with the former approach.
-			    BB = BI->getSuccessor(1);
+                        bool search0 = searchForFussileLoopSetsOld(
+                            fissileSets, visitedBBs, BI->getSuccessor(0), L);
+                        bool search1 = searchForFussileLoopSetsOld(
+                            fissileSets, visitedBBs, BI->getSuccessor(1), L);
+
+                        if (search0) {
+                            if (search1)
+                                return true;
+                            // TODO: we need to handle this differently;
+                            // basically, we should continue the search along
+                            // the other condition. I think an approach would be
+                            // to take more advantage of the `visitedBBs` and
+                            // start searches at each BB in the function, thus
+                            // the job of searchForFissileLoopSets is only to
+                            // find either 0 or 1 fissile sets, and we call it
+                            // repeatedly while avoiding cycles NOTE: Could have
+                            // two fissile sets, where one touches the other and
+                            // calls visited in a manner such that we miss it
+                            // following the approach suggested above?
+                            //
+                            // perhaps, it'd be good to start with a more formal
+                            // definition of what we mean? a sort of
+                            // bidirectional dominance; for A->B, we want all
+                            // paths to B to go through A, but we also want all
+                            // paths from A to go to B. Seems DominatorTrees
+                            // only do the former, but maybe we can reuse the
+                            // infrastructure/maybe there's a way to build one
+                            // by reversing edges? DomTree assumes one entry and
+                            // possibly multiple exits, so constructing a
+                            // reversed version may not be possible/may violate
+                            // assumtions in the code
+                            //
+                            // Currently, I'm planning on replacing the current
+                            // code here with the former approach.
+                            BB = BI->getSuccessor(1);
                             continue;
-			}
-			if (search1){
-			    // TODO: as above
-			    BB = BI->getSuccessor(0);
-			    continue;
-			}
+                        }
+                        if (search1) {
+                            // TODO: as above
+                            BB = BI->getSuccessor(0);
+                            continue;
+                        }
                         // for (llvm::BasicBlock *S : BI->successors())
                         //     searchForFissileLoopSets(fissileSets, visitedBBs,
                         //     S,
@@ -156,8 +184,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         return false;
                     } else {
                         BB = BI->getSuccessor(0);
-			if (visit(visitedBBs, BB))
-			    return false;
+                        if (visit(visitedBBs, BB))
+                            return false;
                     }
                 } else if (llvm::ReturnInst *RI =
                                llvm::dyn_cast<llvm::ReturnInst>(term)) {
@@ -169,8 +197,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 } else {
                     // http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
                     // IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
-		    // TODO: maybe something else?
-		    return false;
+                    // TODO: maybe something else?
+                    return false;
                 }
             }
             break;

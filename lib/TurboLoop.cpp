@@ -132,7 +132,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
     llvm::SmallVector<std::pair<llvm::BasicBlock*,llvm::BasicBlock*>> fissileSets;
     llvm::SmallPtrSet<llvm::BasicBlock*,32> visitedBBs;
-    searchForFissileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(), nullptr);
+    searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(), nullptr);
     LoopBlock lblock;
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {
