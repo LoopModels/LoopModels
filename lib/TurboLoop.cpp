@@ -9,6 +9,7 @@
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
@@ -128,15 +129,10 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fissile loops
-    llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
-    llvm::BasicBlock *BB = &F.getEntryBlock();
-    while(true){
-        if (llvm::Instruction *term = BB->getTerminator()) {
-	    
-	    
-        }
-        break;
-    }
+    // llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
+    llvm::SmallVector<std::pair<llvm::BasicBlock*,llvm::BasicBlock*>> fissileSets;
+    llvm::SmallPtrSet<llvm::BasicBlock*,32> visitedBBs;
+    searchForFissileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(), nullptr);
     LoopBlock lblock;
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {
