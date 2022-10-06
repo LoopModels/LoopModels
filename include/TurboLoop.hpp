@@ -82,7 +82,101 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (visitedBBs.contains(BB))
             return true;
         visitedBBs.insert(BB);
+	
         return false;
+    }
+    enum class Chain{split, unreachable, returned, visited, unknown, loopexit};
+    std::pair<llvm::BasicBlock *,Chain>
+    searchForFusileEnd(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
+                       llvm::BasicBlock *BB, llvm::Loop *L=nullptr) {
+
+        if (visit(visitedBBs, BB))
+            return std::make_pair(nullptr,Chain::visited);
+	
+	if (llvm::Instruction *term = BB->getTerminator()) {
+	    if (llvm::BranchInst *BI =
+		llvm::dyn_cast<llvm::BranchInst>(term)) {
+		if (!BI->isConditional())
+		    return searchForFusileEnd(visitedBBs, BI->getSuccessor(0), L);
+		// conditional means it has two successors
+		// maybe BB is a new loop.
+		if (llvm::Loop *BL = LI->getLoopFor(BB)) {
+		    if (L != BL) {
+			// BL is a new loop;
+			auto [LE, EC] = searchForFusileEnd(visitedBBs, BB, BL);
+			if (EC==Chain::loopexit)
+			    return searchForFusileEnd(visitedBBs, LE, L);
+		    } else if (BB==BL->getExitingBlock()) {
+			if (llvm::BasicBlock* EB = BL->getExitBlock())
+			    return std::make_pair(EB, Chain::loopexit);
+		    }
+		    return std::make_pair(nullptr, Chain::unknown);
+		}
+		// not a loop, but two descendents
+	    // 	if (S != BB)
+	    // 	    fissileSets.emplace_back(S, BB);
+	    // 	bool search0 = searchForFussileLoopSetsOld(
+	    // 						   fissileSets, visitedBBs, BI->getSuccessor(0), L);
+	    // 	bool search1 = searchForFussileLoopSetsOld(
+	    // 						   fissileSets, visitedBBs, BI->getSuccessor(1), L);
+
+	    // 	if (search0) {
+	    // 	    if (search1)
+	    // 		return true;
+	    // 	    // TODO: we need to handle this differently;
+	    // 	    // basically, we should continue the search along
+	    // 	    // the other condition. I think an approach would be
+	    // 	    // to take more advantage of the `visitedBBs` and
+	    // 	    // start searches at each BB in the function, thus
+	    // 	    // the job of searchForFissileLoopSets is only to
+	    // 	    // find either 0 or 1 fissile sets, and we call it
+	    // 	    // repeatedly while avoiding cycles NOTE: Could have
+	    // 	    // two fissile sets, where one touches the other and
+	    // 	    // calls visited in a manner such that we miss it
+	    // 	    // following the approach suggested above?
+	    // 	    //
+	    // 	    // perhaps, it'd be good to start with a more formal
+	    // 	    // definition of what we mean? a sort of
+	    // 	    // bidirectional dominance; for A->B, we want all
+	    // 	    // paths to B to go through A, but we also want all
+	    // 	    // paths from A to go to B. Seems DominatorTrees
+	    // 	    // only do the former, but maybe we can reuse the
+	    // 	    // infrastructure/maybe there's a way to build one
+	    // 	    // by reversing edges? DomTree assumes one entry and
+	    // 	    // possibly multiple exits, so constructing a
+	    // 	    // reversed version may not be possible/may violate
+	    // 	    // assumtions in the code
+	    // 	    //
+	    // 	    // Currently, I'm planning on replacing the current
+	    // 	    // code here with the former approach.
+	    // 	    BB = BI->getSuccessor(1);
+	    // 	    continue;
+	    // 	}
+	    // 	if (search1) {
+	    // 	    // TODO: as above
+	    // 	    BB = BI->getSuccessor(0);
+	    // 	    continue;
+	    // 	}
+	    // 	// for (llvm::BasicBlock *S : BI->successors())
+	    // 	//     searchForFissileLoopSets(fissileSets, visitedBBs,
+	    // 	//     S,
+	    // 	//                              L);
+	    // 	return false;
+	    // } else if (llvm::ReturnInst *RI =
+		       llvm::dyn_cast<llvm::ReturnInst>(term)) {
+		return std::make_pair(BB, Chain::returned);
+	    } else if (llvm::UnreachableInst *UI =
+		       llvm::dyn_cast<llvm::UnreachableInst>(term)) {
+		// TODO: add option to allow moving earlier?
+		return std::make_pair(nullptr, Chain::unreachable);
+	    } else {
+		// http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
+		// IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
+		// TODO: maybe something else?
+		return false;
+	    }
+	}
+        return std::make_pair(nullptr, Chain::unknown);
     }
     std::pair<llvm::BasicBlock *, llvm::BasicBlock *> searchForFussileLoopSets(
         llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,

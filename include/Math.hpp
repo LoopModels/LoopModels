@@ -413,8 +413,8 @@ struct Div {
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
     using eltype = typename A::eltype;
-    const Op op;
-    const A a;
+    [[no_unique_address]] const Op op;
+    [[no_unique_address]] const A a;
     static constexpr bool canResize = false;
     auto operator()(size_t i) const { return op(a(i)); }
     auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
@@ -451,9 +451,9 @@ concept MatrixOrScalar = AbstractMatrix<T> || Scalar<T>;
 template <typename Op, VectorOrScalar A, VectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
     using eltype = promote_eltype_t<A, B>;
-    Op op;
-    A a;
-    B b;
+    [[no_unique_address]] Op op;
+    [[no_unique_address]] A a;
+    [[no_unique_address]] B b;
     static constexpr bool canResize = false;
     auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
     size_t size() const {
@@ -473,9 +473,9 @@ struct ElementwiseVectorBinaryOp {
 template <typename Op, MatrixOrScalar A, MatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
     using eltype = promote_eltype_t<A, B>;
-    Op op;
-    A a;
-    B b;
+    [[no_unique_address]] Op op;
+    [[no_unique_address]] A a;
+    [[no_unique_address]] B b;
     static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const {
         return op(get(a, i, j), get(b, i, j));
@@ -519,7 +519,7 @@ struct ElementwiseMatrixBinaryOp {
 
 template <typename A> struct Transpose {
     using eltype = eltype_t<A>;
-    A a;
+    [[no_unique_address]] A a;
     static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const { return a(j, i); }
     size_t numRow() const { return a.numCol(); }
@@ -528,8 +528,8 @@ template <typename A> struct Transpose {
 };
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     using eltype = promote_eltype_t<A, B>;
-    A a;
-    B b;
+    [[no_unique_address]] A a;
+    [[no_unique_address]] B b;
     static constexpr bool canResize = false;
     auto operator()(size_t i, size_t j) const {
         static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
@@ -544,8 +544,8 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
     using eltype = promote_eltype_t<A, B>;
-    A a;
-    B b;
+    [[no_unique_address]] A a;
+    [[no_unique_address]] B b;
     static constexpr bool canResize = false;
     auto operator()(size_t i) const {
         static_assert(AbstractVector<B>, "B should be an AbstractVector");
@@ -585,12 +585,12 @@ constexpr OffsetEnd operator+(OffsetEnd y, size_t x) {
 }
 
 template <typename B, typename E> struct Range {
-    B b;
-    E e;
+    [[no_unique_address]] B b;
+    [[no_unique_address]] E e;
 };
 template <std::integral B, std::integral E> struct Range<B, E> {
-    B b;
-    E e;
+    [[no_unique_address]] B b;
+    [[no_unique_address]] E e;
     struct Iterator {
         B i;
         bool operator==(E e) { return i == e; }
@@ -668,11 +668,11 @@ template <std::integral B, std::integral E> struct Range<B, E> {
 // };
 struct Colon {
     constexpr Range<size_t, size_t> operator()(std::integral auto i,
-                                               std::integral auto j) {
+                                               std::integral auto j) const {
         return Range<size_t, size_t>{size_t(i), size_t(j)};
     }
     template <typename B, typename E>
-    constexpr Range<B, E> operator()(B i, E j) {
+    constexpr Range<B, E> operator()(B i, E j) const {
         return Range<B, E>{i, j};
     }
 } _;
@@ -2349,11 +2349,13 @@ MULTIVERSION inline void swapCols(MutPtrMatrix<int64_t> A, size_t i, size_t j) {
         std::swap(A(m, i), A(m, j));
 }
 template <typename T>
-[[maybe_unused]] static void swapCols(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
+[[maybe_unused]] static void swapCols(llvm::SmallVectorImpl<T> &A, size_t i,
+                                      size_t j) {
     std::swap(A[i], A[j]);
 }
 template <typename T>
-[[maybe_unused]] static void swapRows(llvm::SmallVectorImpl<T> &A, size_t i, size_t j) {
+[[maybe_unused]] static void swapRows(llvm::SmallVectorImpl<T> &A, size_t i,
+                                      size_t j) {
     std::swap(A[i], A[j]);
 }
 
@@ -2417,7 +2419,8 @@ requires is_uint_v<64, T>
     return x >> 32;
 }
 
-template <typename T> [[maybe_unused]] static std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
+template <typename T>
+[[maybe_unused]] static std::pair<size_t, T> findMax(llvm::ArrayRef<T> x) {
     size_t i = 0;
     T max = std::numeric_limits<T>::min();
     for (size_t j = 0; j < x.size(); ++j) {
@@ -2952,10 +2955,12 @@ template <AbstractMatrix A, typename B> constexpr auto operator+(A &&a, B &&b) {
 template <AbstractVector A, typename B> constexpr auto operator+(A &&a, B &&b) {
     return binaryOp(Add{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> constexpr auto operator+(std::integral auto a, B &&b) {
+template <AbstractMatrix B>
+constexpr auto operator+(std::integral auto a, B &&b) {
     return binaryOp(Add{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> constexpr auto operator+(std::integral auto a, B &&b) {
+template <AbstractVector B>
+constexpr auto operator+(std::integral auto a, B &&b) {
     return binaryOp(Add{}, a, std::forward<B>(b));
 }
 
@@ -2965,10 +2970,12 @@ template <AbstractMatrix A, typename B> constexpr auto operator-(A &&a, B &&b) {
 template <AbstractVector A, typename B> constexpr auto operator-(A &&a, B &&b) {
     return binaryOp(Sub{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> constexpr auto operator-(std::integral auto a, B &&b) {
+template <AbstractMatrix B>
+constexpr auto operator-(std::integral auto a, B &&b) {
     return binaryOp(Sub{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> constexpr auto operator-(std::integral auto a, B &&b) {
+template <AbstractVector B>
+constexpr auto operator-(std::integral auto a, B &&b) {
     return binaryOp(Sub{}, a, std::forward<B>(b));
 }
 
@@ -2978,14 +2985,16 @@ template <AbstractMatrix A, typename B> constexpr auto operator/(A &&a, B &&b) {
 template <AbstractVector A, typename B> constexpr auto operator/(A &&a, B &&b) {
     return binaryOp(Div{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractMatrix B> constexpr auto operator/(std::integral auto a, B &&b) {
+template <AbstractMatrix B>
+constexpr auto operator/(std::integral auto a, B &&b) {
     return binaryOp(Div{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> constexpr auto operator/(std::integral auto a, B &&b) {
+template <AbstractVector B>
+constexpr auto operator/(std::integral auto a, B &&b) {
     return binaryOp(Div{}, a, std::forward<B>(b));
 }
 constexpr auto operator*(const AbstractMatrix auto &a,
-                      const AbstractMatrix auto &b) {
+                         const AbstractMatrix auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
     // std::cout << "a.numRow() = " << a.numRow()
@@ -3005,13 +3014,14 @@ constexpr auto operator*(const AbstractMatrix auto &a,
     return MatMatMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }
 constexpr auto operator*(const AbstractMatrix auto &a,
-                      const AbstractVector auto &b) {
+                         const AbstractVector auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
     assert(AA.numCol() == BB.size());
     return MatVecMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }
-template <AbstractMatrix A> constexpr auto operator*(A &&a, std::integral auto b) {
+template <AbstractMatrix A>
+constexpr auto operator*(A &&a, std::integral auto b) {
     return binaryOp(Mul{}, std::forward<A>(a), b);
 }
 // template <AbstractMatrix A> constexpr auto operator*(A &&a, Rational b) {
@@ -3021,16 +3031,19 @@ template <AbstractVector A, AbstractVector B>
 constexpr auto operator*(A &&a, B &&b) {
     return binaryOp(Mul{}, std::forward<A>(a), std::forward<B>(b));
 }
-template <AbstractVector A> constexpr auto operator*(A &&a, std::integral auto b) {
+template <AbstractVector A>
+constexpr auto operator*(A &&a, std::integral auto b) {
     return binaryOp(Mul{}, std::forward<A>(a), b);
 }
 // template <AbstractVector A> constexpr auto operator*(A &&a, Rational b) {
 //     return binaryOp(Mul{}, std::forward<A>(a), b);
 // }
-template <AbstractMatrix B> constexpr auto operator*(std::integral auto a, B &&b) {
+template <AbstractMatrix B>
+constexpr auto operator*(std::integral auto a, B &&b) {
     return binaryOp(Mul{}, a, std::forward<B>(b));
 }
-template <AbstractVector B> constexpr auto operator*(std::integral auto a, B &&b) {
+template <AbstractVector B>
+constexpr auto operator*(std::integral auto a, B &&b) {
     return binaryOp(Mul{}, a, std::forward<B>(b));
 }
 

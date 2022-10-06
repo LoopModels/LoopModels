@@ -33,10 +33,10 @@
 // j_0 == i_1
 struct DependencePolyhedra : SymbolicEqPolyhedra {
     // size_t numLoops;
-    size_t numDep0Var; // loops dep 0
+    [[no_unique_address]] size_t numDep0Var; // loops dep 0
     // size_t numDep1Var; // loops dep 1
-    llvm::SmallVector<int64_t, 2> nullStep;
-    llvm::SmallVector<Polynomial::Monomial> symbols;
+    [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
+    [[no_unique_address]] llvm::SmallVector<Polynomial::Monomial> symbols;
     inline size_t getTimeDim() const { return nullStep.size(); }
     inline size_t getDim0() const { return numDep0Var; }
     inline size_t getNumSymbols() const { return 1 + symbols.size(); }
@@ -554,12 +554,12 @@ struct Dependence {
     //
     //
     //
-    DependencePolyhedra depPoly;
-    Simplex dependenceSatisfaction;
-    Simplex dependenceBounding;
-    MemoryAccess *in;
-    MemoryAccess *out;
-    const bool forward;
+    [[no_unique_address]] DependencePolyhedra depPoly;
+    [[no_unique_address]] Simplex dependenceSatisfaction;
+    [[no_unique_address]] Simplex dependenceBounding;
+    [[no_unique_address]] MemoryAccess *in;
+    [[no_unique_address]] MemoryAccess *out;
+    [[no_unique_address]] const bool forward;
     // Dependence(DependencePolyhedra depPoly,
     //            IntegerEqPolyhedra dependenceSatisfaction,
     //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,

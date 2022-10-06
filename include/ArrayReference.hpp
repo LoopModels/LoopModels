@@ -25,12 +25,12 @@ struct ArrayReference {
     size_t arrayID;
     llvm::IntrusiveRefCntPtr<AffineLoopNest> loop;
     // std::shared_ptr<AffineLoopNest> loop;
-    llvm::SmallVector<MPoly, 3> strides;
+    [[no_unique_address]] llvm::SmallVector<MPoly, 3> strides;
     // llvm::Optional<IntMatrix>
     //     offsets; // symbolicOffsets * (loop->symbols)
-    llvm::SmallVector<int64_t, 16> indices;
-    unsigned rank;
-    bool hasSymbolicOffsets; // normal case is not to
+    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
+    [[no_unique_address]] unsigned rank;
+    [[no_unique_address]] bool hasSymbolicOffsets; // normal case is not to
 
     size_t arrayDim() const { return strides.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }

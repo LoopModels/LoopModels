@@ -60,9 +60,9 @@ struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
-    IntMatrix A;
-    I64Matrix E;
-    CmptrType C;
+    [[no_unique_address]] IntMatrix A;
+    [[no_unique_address]] I64Matrix E;
+    [[no_unique_address]] CmptrType C;
 
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
