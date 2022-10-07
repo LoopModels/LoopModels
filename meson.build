@@ -19,9 +19,11 @@ else
 endif
 
 # TESTS
+hwy_dep = dependency('libhwy')
 gtest_dep = dependency('gtest', main : true, required : false)
 if gtest_dep.found()
-  testdeps = [gtest_dep, llvm_dep]
+  testdeps = [gtest_dep, llvm_dep, hwy_dep]
+  #testdeps = [gtest_dep, llvm_dep]
 
   test_files = [
     'bitset_test',
