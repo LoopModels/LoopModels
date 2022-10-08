@@ -1049,10 +1049,7 @@ template <typename C, typename M> Term<C, M> operator-(Term<C, M> x) {
     x.coefficient = -x.coefficient;
     return x;
 }
-// template <typename C,typename M>
-// bool Term<C,M>::isOne() const { return ::isOne(coefficient) &
-// ::isOne(exponent); }
-
+    
 template <typename C, IsMonomial M> struct Terms {
     llvm::SmallVector<Term<C, M>, 1> terms;
     // std::vector<Term<C, M>> terms;

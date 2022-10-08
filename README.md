@@ -60,7 +60,7 @@ Then to build and run the test suite, simply run
 CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address -Db_coverage=true
 cd builddir
 meson test
-meson compile coverage-html
+cd .. && ninja coverage -C builddir
 ```
 Recompiling and rerunning tests simply requires rerunning `meson test`.
 The address sanitizer works for me on Fedora, but not Ubuntu (it has linking errors on Ubuntu, not unsanitary addresses ;) ), so you can remove it if it gives you trouble. Or find out how to actually get it working on Ubuntu and let me know.
@@ -143,7 +143,7 @@ cd LoopModels
 CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir -Db_santize=address -Db_coverage=true
 cd builddir
 meson test
-meson compile coverage-html
+cd .. && ninja coverage -C builddir
 ```
 
 Now that this is all set up, you just need to make sure the environmental variables are defined, and can just reinvoke `meson test` and `meson compile` to build the test suite/project as needed.
