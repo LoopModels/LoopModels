@@ -2,7 +2,6 @@
 
 #include "./Math.hpp"
 #include "./POSet.hpp"
-#include "./Permutation.hpp"
 #include "./Polyhedra.hpp"
 #include "./Symbolics.hpp"
 #include "Comparators.hpp"

@@ -2,6 +2,7 @@
 #include "LoopBlock.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
+#include <llvm/ADT/PostOrderIterator.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -130,9 +131,19 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fissile loops
     // llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
-    llvm::SmallVector<std::pair<llvm::BasicBlock*,llvm::BasicBlock*>> fissileSets;
-    llvm::SmallPtrSet<llvm::BasicBlock*,32> visitedBBs;
-    searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(), nullptr);
+    llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
+        fusileSets;
+    llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;
+    llvm::ReversePostOrderTraversal<llvm::Function *> RPOT(&F);
+
+    for (auto &BB : RPOT) {
+        auto [BBE, SC] = searchForFusileEnd(visitedBBs, BB);
+        if (BBE && (BBE != BB))
+            fusileSets.emplace_back(BB, BBE);
+    }
+
+    // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
+    // nullptr);
     LoopBlock lblock;
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {
@@ -143,7 +154,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //             if (I.mayReadFromMemory()) {
     //                 if (I.mayWriteToMemory()) {
     //                     // may read and write
-			
+
     //                 } else {
     //                     // may read
     //                 }

@@ -24,6 +24,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+#include <utility>
 
 [[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
     if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
@@ -82,221 +83,74 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (visitedBBs.contains(BB))
             return true;
         visitedBBs.insert(BB);
-	
         return false;
     }
-    enum class Chain{split, unreachable, returned, visited, unknown, loopexit};
-    std::pair<llvm::BasicBlock *,Chain>
+    enum class Chain {
+        split,
+        unreachable,
+        returned,
+        visited,
+        unknown,
+        loopexit
+    };
+    std::pair<llvm::BasicBlock *, Chain>
     searchForFusileEnd(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
-                       llvm::BasicBlock *BB, llvm::Loop *L=nullptr) {
+                       llvm::BasicBlock *BB, llvm::Loop *L = nullptr) {
 
         if (visit(visitedBBs, BB))
-            return std::make_pair(nullptr,Chain::visited);
-	
-	if (llvm::Instruction *term = BB->getTerminator()) {
-	    if (llvm::BranchInst *BI =
-		llvm::dyn_cast<llvm::BranchInst>(term)) {
-		if (!BI->isConditional())
-		    return searchForFusileEnd(visitedBBs, BI->getSuccessor(0), L);
-		// conditional means it has two successors
-		// maybe BB is a new loop.
-		if (llvm::Loop *BL = LI->getLoopFor(BB)) {
-		    if (L != BL) {
-			// BL is a new loop;
-			auto [LE, EC] = searchForFusileEnd(visitedBBs, BB, BL);
-			if (EC==Chain::loopexit)
-			    return searchForFusileEnd(visitedBBs, LE, L);
-		    } else if (BB==BL->getExitingBlock()) {
-			if (llvm::BasicBlock* EB = BL->getExitBlock())
-			    return std::make_pair(EB, Chain::loopexit);
-		    }
-		    return std::make_pair(nullptr, Chain::unknown);
-		}
-		// not a loop, but two descendents
-	    // 	if (S != BB)
-	    // 	    fissileSets.emplace_back(S, BB);
-	    // 	bool search0 = searchForFussileLoopSetsOld(
-	    // 						   fissileSets, visitedBBs, BI->getSuccessor(0), L);
-	    // 	bool search1 = searchForFussileLoopSetsOld(
-	    // 						   fissileSets, visitedBBs, BI->getSuccessor(1), L);
+            return std::make_pair(nullptr, Chain::visited);
 
-	    // 	if (search0) {
-	    // 	    if (search1)
-	    // 		return true;
-	    // 	    // TODO: we need to handle this differently;
-	    // 	    // basically, we should continue the search along
-	    // 	    // the other condition. I think an approach would be
-	    // 	    // to take more advantage of the `visitedBBs` and
-	    // 	    // start searches at each BB in the function, thus
-	    // 	    // the job of searchForFissileLoopSets is only to
-	    // 	    // find either 0 or 1 fissile sets, and we call it
-	    // 	    // repeatedly while avoiding cycles NOTE: Could have
-	    // 	    // two fissile sets, where one touches the other and
-	    // 	    // calls visited in a manner such that we miss it
-	    // 	    // following the approach suggested above?
-	    // 	    //
-	    // 	    // perhaps, it'd be good to start with a more formal
-	    // 	    // definition of what we mean? a sort of
-	    // 	    // bidirectional dominance; for A->B, we want all
-	    // 	    // paths to B to go through A, but we also want all
-	    // 	    // paths from A to go to B. Seems DominatorTrees
-	    // 	    // only do the former, but maybe we can reuse the
-	    // 	    // infrastructure/maybe there's a way to build one
-	    // 	    // by reversing edges? DomTree assumes one entry and
-	    // 	    // possibly multiple exits, so constructing a
-	    // 	    // reversed version may not be possible/may violate
-	    // 	    // assumtions in the code
-	    // 	    //
-	    // 	    // Currently, I'm planning on replacing the current
-	    // 	    // code here with the former approach.
-	    // 	    BB = BI->getSuccessor(1);
-	    // 	    continue;
-	    // 	}
-	    // 	if (search1) {
-	    // 	    // TODO: as above
-	    // 	    BB = BI->getSuccessor(0);
-	    // 	    continue;
-	    // 	}
-	    // 	// for (llvm::BasicBlock *S : BI->successors())
-	    // 	//     searchForFissileLoopSets(fissileSets, visitedBBs,
-	    // 	//     S,
-	    // 	//                              L);
-	    // 	return false;
-	    // } else if (llvm::ReturnInst *RI =
-		       llvm::dyn_cast<llvm::ReturnInst>(term)) {
-		return std::make_pair(BB, Chain::returned);
-	    } else if (llvm::UnreachableInst *UI =
-		       llvm::dyn_cast<llvm::UnreachableInst>(term)) {
-		// TODO: add option to allow moving earlier?
-		return std::make_pair(nullptr, Chain::unreachable);
-	    } else {
-		// http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
-		// IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
-		// TODO: maybe something else?
-		return false;
-	    }
-	}
-        return std::make_pair(nullptr, Chain::unknown);
-    }
-    std::pair<llvm::BasicBlock *, llvm::BasicBlock *> searchForFussileLoopSets(
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
-        llvm::BasicBlock *BB, llvm::Loop *L) {
-        if (visit(visitedBBs, BB))
-            return std::pair<llvm::BasicBlock *, llvm::BasicBlock *>(nullptr,
-                                                                     nullptr);
-
-        return std::pair<llvm::BasicBlock *, llvm::BasicBlock *>(nullptr,
-                                                                 nullptr);
-    }
-    // do a depth first search, adding all basic block ranges with single
-    // unconditional jumps of successive loops
-    // TODO: handle loop guards?
-    bool searchForFussileLoopSetsOld(
-        llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
-            &fissileSets,
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
-        llvm::BasicBlock *BB, llvm::Loop *L) {
-        if (visit(visitedBBs, BB))
-            return false;
-        visitedBBs.insert(BB);
-        llvm::BasicBlock *S = BB; // start
-        while (true) {
-            if (llvm::Instruction *term = BB->getTerminator()) {
-                if (llvm::BranchInst *BI =
-                        llvm::dyn_cast<llvm::BranchInst>(term)) {
-                    if (BI->isConditional()) {
-                        // conditional means it has two successors
-                        // maybe BB is a new loop.
-                        if (llvm::Loop *BL = LI->getLoopFor(BB)) {
-                            if (L != BL) {
-                                if (llvm::BasicBlock *EB = BL->getExitBlock()) {
-                                    BB = EB;
-                                    if (visit(visitedBBs, BB))
-                                        return false;
-                                    continue;
-                                }
-                                if (S != BB)
-                                    fissileSets.emplace_back(S, BB);
-                                llvm::SmallVector<llvm::BasicBlock *> exitBBs;
-                                BL->getExitBlocks(exitBBs);
-                                for (llvm::BasicBlock *S : exitBBs)
-                                    searchForFussileLoopSetsOld(
-                                        fissileSets, visitedBBs, S, L);
-                                return false; // continue to act like `else` for
-                                              // both these `if`s
-                            }
-                        }
-                        // not a loop, but two descendents
-                        if (S != BB)
-                            fissileSets.emplace_back(S, BB);
-                        bool search0 = searchForFussileLoopSetsOld(
-                            fissileSets, visitedBBs, BI->getSuccessor(0), L);
-                        bool search1 = searchForFussileLoopSetsOld(
-                            fissileSets, visitedBBs, BI->getSuccessor(1), L);
-
-                        if (search0) {
-                            if (search1)
-                                return true;
-                            // TODO: we need to handle this differently;
-                            // basically, we should continue the search along
-                            // the other condition. I think an approach would be
-                            // to take more advantage of the `visitedBBs` and
-                            // start searches at each BB in the function, thus
-                            // the job of searchForFissileLoopSets is only to
-                            // find either 0 or 1 fissile sets, and we call it
-                            // repeatedly while avoiding cycles NOTE: Could have
-                            // two fissile sets, where one touches the other and
-                            // calls visited in a manner such that we miss it
-                            // following the approach suggested above?
-                            //
-                            // perhaps, it'd be good to start with a more formal
-                            // definition of what we mean? a sort of
-                            // bidirectional dominance; for A->B, we want all
-                            // paths to B to go through A, but we also want all
-                            // paths from A to go to B. Seems DominatorTrees
-                            // only do the former, but maybe we can reuse the
-                            // infrastructure/maybe there's a way to build one
-                            // by reversing edges? DomTree assumes one entry and
-                            // possibly multiple exits, so constructing a
-                            // reversed version may not be possible/may violate
-                            // assumtions in the code
-                            //
-                            // Currently, I'm planning on replacing the current
-                            // code here with the former approach.
-                            BB = BI->getSuccessor(1);
-                            continue;
-                        }
-                        if (search1) {
-                            // TODO: as above
-                            BB = BI->getSuccessor(0);
-                            continue;
-                        }
-                        // for (llvm::BasicBlock *S : BI->successors())
-                        //     searchForFissileLoopSets(fissileSets, visitedBBs,
-                        //     S,
-                        //                              L);
-                        return false;
-                    } else {
-                        BB = BI->getSuccessor(0);
-                        if (visit(visitedBBs, BB))
-                            return false;
+        if (llvm::Instruction *term = BB->getTerminator()) {
+            if (llvm::BranchInst *BI = llvm::dyn_cast<llvm::BranchInst>(term)) {
+                if (!BI->isConditional())
+                    return searchForFusileEnd(visitedBBs, BI->getSuccessor(0),
+                                              L);
+                // conditional means it has two successors
+                // maybe BB is a new loop.
+                if (llvm::Loop *BL = LI->getLoopFor(BB)) {
+                    if (L != BL) {
+                        llvm::SmallPtrSet<llvm::BasicBlock *, 32> oldBBs =
+                            visitedBBs;
+                        // BL is a new loop;
+                        auto [LE, EC] = searchForFusileEnd(visitedBBs, BB, BL);
+                        if (EC == Chain::loopexit)
+                            return searchForFusileEnd(visitedBBs, LE, L);
+                        // didn't work out, lets switch to backup so that
+                        // we can still explore old BBs on a future call
+                        std::swap(oldBBs, visitedBBs);
+                    } else if (BB == BL->getExitingBlock()) {
+                        if (llvm::BasicBlock *EB = BL->getExitBlock())
+                            return std::make_pair(EB, Chain::loopexit);
                     }
-                } else if (llvm::ReturnInst *RI =
-                               llvm::dyn_cast<llvm::ReturnInst>(term)) {
-                    return false;
-                } else if (llvm::UnreachableInst *UI =
-                               llvm::dyn_cast<llvm::UnreachableInst>(term)) {
-                    // TODO: add option to allow moving earlier?
-                    return false;
-                } else {
-                    // http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
-                    // IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
-                    // TODO: maybe something else?
-                    return false;
+                    return std::make_pair(nullptr, Chain::unknown);
                 }
+                llvm::SmallPtrSet<llvm::BasicBlock *, 32> oldBBs = visitedBBs;
+                // not a loop, but two descendants
+                std::pair<llvm::BasicBlock *, Chain> search0 =
+                    searchForFusileEnd(visitedBBs, BI->getSuccessor(0), L);
+                std::pair<llvm::BasicBlock *, Chain> search1 =
+                    searchForFusileEnd(visitedBBs, BI->getSuccessor(1), L);
+                if (search0.second == Chain::unreachable)
+                    return search1;
+                if (search1.second == Chain::unreachable)
+                    return search0;
+                std::swap(oldBBs, visitedBBs);
+                return std::make_pair(BB, Chain::split);
+            } else if (llvm::ReturnInst *RI =
+                           llvm::dyn_cast<llvm::ReturnInst>(term)) {
+                return std::make_pair(BB, Chain::returned);
+            } else if (llvm::UnreachableInst *UI =
+                           llvm::dyn_cast<llvm::UnreachableInst>(term)) {
+                // TODO: add option to allow moving earlier?
+                return std::make_pair(nullptr, Chain::unreachable);
+            } else {
+                // http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
+                // IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
+                // TODO: maybe something else?
+                return std::make_pair(BB, Chain::unknown);
             }
-            break;
         }
+        return std::make_pair(nullptr, Chain::unknown);
     }
 
     bool parseLoop(auto B, auto E, size_t depth) {
