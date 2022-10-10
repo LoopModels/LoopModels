@@ -3,6 +3,8 @@
 #include "./IntegerMap.hpp"
 #include "./Loops.hpp"
 #include "./POSet.hpp"
+#include "ArrayReference.hpp"
+#include "MemoryAccess.hpp"
 #include "Schedule.hpp"
 // #include "Tree.hpp"
 #include <llvm/ADT/APInt.h>
@@ -21,6 +23,7 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
+#include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
@@ -152,8 +155,70 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return std::make_pair(nullptr, Chain::unknown);
     }
+    llvm::Optional<ArrayReference> arrayRef(llvm::Value *ptr, const llvm::SCEV* elSize) {
+        const llvm::SCEV *scev = SE->getSCEV(ptr);
+        llvm::SmallVector<const llvm::SCEV*> subscripts;
+	llvm::SmallVector<const llvm::SCEV*> sizes;
 
-    bool parseLoop(auto B, auto E, size_t depth) {
+// const SCEV *AccessFn = SE->getSCEVAtScope(getPointerOperand(&Inst), L);
+  
+//        const SCEVUnknown *BasePointer =
+//            dyn_cast<SCEVUnknown>(SE->getPointerBase(AccessFn));
+//        // Do not delinearize if we cannot find the base pointer.
+//        if (!BasePointer)
+//          break;
+//        AccessFn = SE->getMinusSCEV(AccessFn, BasePointer);
+  
+//        O << "\n";
+//        O << "Inst:" << Inst << "\n";
+//        O << "In Loop with Header: " << L->getHeader()->getName() << "\n";
+//        O << "AccessFunction: " << *AccessFn << "\n";
+  
+//        SmallVector<const SCEV *, 3> Subscripts, Sizes;
+//        delinearize(*SE, AccessFn, Subscripts, Sizes, SE->getElementSize(&Inst));
+	
+        return {};
+    }
+    llvm::Optional<MemoryAccess> memAccess(llvm::Instruction &I) {
+        bool isLoad;
+        llvm::Value *ptr;
+	llvm::Type *type;
+	const llvm::SCEV* elSize;
+        if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
+            isLoad = true;
+            ptr = LI->getPointerOperand();
+	    type = LI->getPointerOperandType();
+	    elSize = SE->getElementSize(LI);
+        } else if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
+            isLoad = false;
+            ptr = SI->getPointerOperand();
+	    type = SI->getPointerOperandType();
+	    elSize = SE->getElementSize(SI);
+        } else {
+            return {};
+        }
+        llvm::Optional<ArrayReference> re = arrayRef(ptr, elSize);
+        return {};
+    }
+    bool parseBB(llvm::BasicBlock *BB) {
+        for (llvm::Instruction &I : *BB) {
+            if (I.mayReadFromMemory()) {
+                if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
+                    continue;
+                }
+                return true;
+            } else if (I.mayWriteToMemory()) {
+                if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
+                    // MemoryAccess()
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool parseLoopPrint(auto B, auto E, size_t depth) {
         // Schedule sch(depth);
         size_t omega = 0;
         for (auto &&it = B; it != E; ++it, ++omega) {

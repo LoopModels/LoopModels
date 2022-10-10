@@ -56,7 +56,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = B(n,m);
     //   }
-    auto Bload = builder.CreateAlignedLoad(
+    llvm::LoadInst *Bload = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrB,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),

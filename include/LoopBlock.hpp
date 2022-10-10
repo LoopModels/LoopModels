@@ -346,7 +346,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                                  unsigned maxNode) {
         for (auto &use : u->uses()) {
             llvm::User *user = use.getUser();
-            if (llvm::dyn_cast<llvm::StoreInst>(user) != nullptr) {
+            if (llvm::isa<llvm::StoreInst>(user)) {
                 auto memAccess = userToMemory.find(user);
                 if (memAccess != userToMemory.end()) {
                     // already has a nodeIndex
