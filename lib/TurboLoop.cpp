@@ -5,6 +5,7 @@
 #include <llvm/ADT/PostOrderIterator.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/LoopNestAnalysis.h>
 #include <llvm/Analysis/ScalarEvolution.h>

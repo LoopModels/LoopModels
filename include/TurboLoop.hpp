@@ -1,16 +1,18 @@
 #pragma once
 
+#include "./ArrayReference.hpp"
 #include "./IntegerMap.hpp"
 #include "./Loops.hpp"
+#include "./MemoryAccess.hpp"
 #include "./POSet.hpp"
-#include "ArrayReference.hpp"
-#include "MemoryAccess.hpp"
-#include "Schedule.hpp"
+#include "./Schedule.hpp"
+#include "./UniqueIDMap.hpp"
 // #include "Tree.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
@@ -21,6 +23,7 @@
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/IR/Type.h>
@@ -45,6 +48,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                                 llvm::FunctionAnalysisManager &AM);
     ValueToPosetMap valueToPosetMap;
     PartiallyOrderedSet poset;
+    UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
     const llvm::TargetLibraryInfo *TLI;
@@ -155,45 +159,47 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return std::make_pair(nullptr, Chain::unknown);
     }
-    llvm::Optional<ArrayReference> arrayRef(llvm::Value *ptr, const llvm::SCEV* elSize) {
-        const llvm::SCEV *scev = SE->getSCEV(ptr);
-        llvm::SmallVector<const llvm::SCEV*> subscripts;
-	llvm::SmallVector<const llvm::SCEV*> sizes;
+    llvm::Optional<ArrayReference>
+    arrayRef(llvm::Loop *L, llvm::Instruction *ptr, const llvm::SCEV *elSize) {
+        // const llvm::SCEV *scev = SE->getSCEV(ptr);
+        // code modified from
+        // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
 
-// const SCEV *AccessFn = SE->getSCEVAtScope(getPointerOperand(&Inst), L);
-  
-//        const SCEVUnknown *BasePointer =
-//            dyn_cast<SCEVUnknown>(SE->getPointerBase(AccessFn));
-//        // Do not delinearize if we cannot find the base pointer.
-//        if (!BasePointer)
-//          break;
-//        AccessFn = SE->getMinusSCEV(AccessFn, BasePointer);
-  
-//        O << "\n";
-//        O << "Inst:" << Inst << "\n";
-//        O << "In Loop with Header: " << L->getHeader()->getName() << "\n";
-//        O << "AccessFunction: " << *AccessFn << "\n";
-  
-//        SmallVector<const SCEV *, 3> Subscripts, Sizes;
-//        delinearize(*SE, AccessFn, Subscripts, Sizes, SE->getElementSize(&Inst));
-	
+        const llvm::SCEV *accessFn =
+            SE->getSCEVAtScope(llvm::getPointerOperand(ptr), L);
+
+        const llvm::SCEVUnknown *basePointer =
+            dyn_cast<llvm::SCEVUnknown>(SE->getPointerBase(accessFn));
+        // Do not delinearize if we cannot find the base pointer.
+        if (!basePointer)
+            return {};
+        unsigned arrayID = ptrToArrayIDMap[basePointer];
+        accessFn = SE->getMinusSCEV(accessFn, basePointer);
+
+        llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
+        llvm::delinearize(*SE, accessFn, subscripts, sizes,
+                          SE->getElementSize(ptr));
+        assert(subscripts.size() == sizes.size());
+        for (size_t i = 0; i < subscripts.size(); ++i)
+            std::cout << "Array Dim " << i << ":\nSize: " << sizes[i]
+                      << "\nSubscript: " << subscripts[i];
         return {};
     }
     llvm::Optional<MemoryAccess> memAccess(llvm::Instruction &I) {
         bool isLoad;
         llvm::Value *ptr;
-	llvm::Type *type;
-	const llvm::SCEV* elSize;
+        llvm::Type *type;
+        const llvm::SCEV *elSize;
         if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
             isLoad = true;
             ptr = LI->getPointerOperand();
-	    type = LI->getPointerOperandType();
-	    elSize = SE->getElementSize(LI);
+            type = LI->getPointerOperandType();
+            elSize = SE->getElementSize(LI);
         } else if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
             isLoad = false;
             ptr = SI->getPointerOperand();
-	    type = SI->getPointerOperandType();
-	    elSize = SE->getElementSize(SI);
+            type = SI->getPointerOperandType();
+            elSize = SE->getElementSize(SI);
         } else {
             return {};
         }
