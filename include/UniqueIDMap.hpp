@@ -10,7 +10,7 @@ struct UniqueIDMap {
     unsigned operator[](const T& x){
 	auto c = map.find(x);
 	if (c != map.end())
-	    return *c;
+	    return c->second;
 	unsigned count = map.size();
 	map[x] = count;
 	return count;

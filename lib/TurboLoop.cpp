@@ -141,7 +141,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         auto [BBE, SC] = searchForFusileEnd(visitedBBs, BB);
         if (BBE && (BBE != BB))
             fusileSets.emplace_back(BB, BBE);
+	parseBB(BB);
     }
+    
 
     // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
     // nullptr);
@@ -208,7 +210,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     affs.clear();
     // }
 
-    parseLoop(LI->begin(), LI->end(), 0);
+    parseLoopPrint(LI->begin(), LI->end(), 0);
 
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : *LI) {

@@ -7,6 +7,7 @@
 #include "./POSet.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
+#include "Macro.hpp"
 // #include "Tree.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
@@ -29,6 +30,9 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/Debug.h>
+#include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/Utils/LoopUtils.h>
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 #include <utility>
 
@@ -164,13 +168,21 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // const llvm::SCEV *scev = SE->getSCEV(ptr);
         // code modified from
         // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-
-        const llvm::SCEV *accessFn =
-            SE->getSCEVAtScope(llvm::getPointerOperand(ptr), L);
-
+        llvm::errs() << "ptr: " << *ptr << "\n";
+	// llvm::Value *po = llvm::getPointerOperand(ptr);
+	// if (!po)
+	//     return {};
+	// llvm::errs() << "ptr operand: " << *po << "\n";
+        const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);;
+	llvm::errs() << "accessFn: " << *accessFn << "\n";
+        const llvm::SCEV *pb = SE->getPointerBase(accessFn);
+	llvm::errs() << "base pointer: " << *pb << "\n";
         const llvm::SCEVUnknown *basePointer =
-            dyn_cast<llvm::SCEVUnknown>(SE->getPointerBase(accessFn));
+            dyn_cast<llvm::SCEVUnknown>(pb);
         // Do not delinearize if we cannot find the base pointer.
+	llvm::errs() << "base pointer SCEVUnknown: " << *basePointer << "\n";
+        if (!basePointer)
+	    llvm::errs() << "!basePointer\n";
         if (!basePointer)
             return {};
         unsigned arrayID = ptrToArrayIDMap[basePointer];
@@ -180,48 +192,64 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::delinearize(*SE, accessFn, subscripts, sizes,
                           SE->getElementSize(ptr));
         assert(subscripts.size() == sizes.size());
+	SHOW(subscripts.size());
+	CSHOWLN(sizes.size());
         for (size_t i = 0; i < subscripts.size(); ++i)
             std::cout << "Array Dim " << i << ":\nSize: " << sizes[i]
                       << "\nSubscript: " << subscripts[i];
         return {};
     }
-    llvm::Optional<MemoryAccess> memAccess(llvm::Instruction &I) {
-        bool isLoad;
-        llvm::Value *ptr;
-        llvm::Type *type;
-        const llvm::SCEV *elSize;
-        if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
-            isLoad = true;
-            ptr = LI->getPointerOperand();
-            type = LI->getPointerOperandType();
-            elSize = SE->getElementSize(LI);
-        } else if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
-            isLoad = false;
-            ptr = SI->getPointerOperand();
-            type = SI->getPointerOperandType();
-            elSize = SE->getElementSize(SI);
-        } else {
-            return {};
+    llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
+        bool isLoad = true;
+        llvm::Value *ptr = I->getPointerOperand();
+        llvm::Type *type = I->getPointerOperandType();
+        const llvm::SCEV *elSize = SE->getElementSize(I);
+        if (L) {
+            if (llvm::Instruction *iptr =
+                    llvm::dyn_cast<llvm::Instruction>(ptr)) {
+                llvm::Optional<ArrayReference> re = arrayRef(L, iptr, elSize);
+                // } else {
+                // MemoryAccess
+            }
         }
-        llvm::Optional<ArrayReference> re = arrayRef(ptr, elSize);
         return {};
     }
-    bool parseBB(llvm::BasicBlock *BB) {
+    llvm::Optional<MemoryAccess> addStore(llvm::Loop *L, llvm::StoreInst *I) {
+        bool isLoad = false;
+        llvm::Value *ptr = I->getPointerOperand();
+        llvm::Type *type = I->getPointerOperandType();
+        const llvm::SCEV *elSize = SE->getElementSize(I);
+        if (L) {
+            if (llvm::Instruction *iptr =
+                    llvm::dyn_cast<llvm::Instruction>(ptr)) {
+                llvm::Optional<ArrayReference> re = arrayRef(L, iptr, elSize);
+                // } else {
+                // MemoryAccess
+            }
+        }
+        return {};
+    }
+
+    bool parseBB(llvm::Loop *L, llvm::BasicBlock *BB) {
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
+                    addLoad(L, LI);
                     continue;
                 }
                 return true;
             } else if (I.mayWriteToMemory()) {
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
-                    // MemoryAccess()
+                    addStore(L, SI);
                     continue;
                 }
                 return true;
             }
         }
         return false;
+    }
+    bool parseBB(llvm::BasicBlock *BB) {
+        return parseBB(LI->getLoopFor(BB), BB);
     }
 
     bool parseLoopPrint(auto B, auto E, size_t depth) {
