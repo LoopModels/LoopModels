@@ -169,34 +169,33 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // code modified from
         // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
         llvm::errs() << "ptr: " << *ptr << "\n";
-	// llvm::Value *po = llvm::getPointerOperand(ptr);
-	// if (!po)
-	//     return {};
-	// llvm::errs() << "ptr operand: " << *po << "\n";
-        const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);;
-	llvm::errs() << "accessFn: " << *accessFn << "\n";
+        // llvm::Value *po = llvm::getPointerOperand(ptr);
+        // if (!po)
+        //     return {};
+        // llvm::errs() << "ptr operand: " << *po << "\n";
+        const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
+        ;
+        llvm::errs() << "accessFn: " << *accessFn << "\n";
         const llvm::SCEV *pb = SE->getPointerBase(accessFn);
-	llvm::errs() << "base pointer: " << *pb << "\n";
-        const llvm::SCEVUnknown *basePointer =
-            dyn_cast<llvm::SCEVUnknown>(pb);
+        llvm::errs() << "base pointer: " << *pb << "\n";
+        const llvm::SCEVUnknown *basePointer = dyn_cast<llvm::SCEVUnknown>(pb);
         // Do not delinearize if we cannot find the base pointer.
-	llvm::errs() << "base pointer SCEVUnknown: " << *basePointer << "\n";
         if (!basePointer)
-	    llvm::errs() << "!basePointer\n";
+            llvm::errs() << "!basePointer\n";
         if (!basePointer)
             return {};
+        llvm::errs() << "base pointer SCEVUnknown: " << *basePointer << "\n";
         unsigned arrayID = ptrToArrayIDMap[basePointer];
         accessFn = SE->getMinusSCEV(accessFn, basePointer);
-
+        llvm::errs() << "diff accessFn: " << *accessFn << "\n";
         llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
-        llvm::delinearize(*SE, accessFn, subscripts, sizes,
-                          SE->getElementSize(ptr));
+        llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
         assert(subscripts.size() == sizes.size());
-	SHOW(subscripts.size());
-	CSHOWLN(sizes.size());
+        SHOW(subscripts.size());
+        CSHOWLN(sizes.size());
         for (size_t i = 0; i < subscripts.size(); ++i)
-            std::cout << "Array Dim " << i << ":\nSize: " << sizes[i]
-                      << "\nSubscript: " << subscripts[i];
+            llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
+                         << "\nSubscript: " << *subscripts[i] << "\n";
         return {};
     }
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
