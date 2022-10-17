@@ -1,16 +1,18 @@
-#include "../include/Math.hpp"
 #include "Macro.hpp"
 #include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 
 #undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "./matrix_test.cpp"
+#define HWY_TARGET_INCLUDE "test/matrix_test.cpp"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+
+#include "../include/Math.hpp"
 HWY_BEFORE_NAMESPACE();
 namespace HWY_NAMESPACE {
 // Demonstrate some basic assertions.
+#if HWY_ONCE
 TEST(HelloTest, BasicAssertions) {
     SmallSparseMatrix<int64_t> Asparse(3, 4);
     std::cout << "&Asparse = " << &Asparse << std::endl;
@@ -163,11 +165,15 @@ TEST(SIMDVecTEST, BasicAssertions) {
     a.push_back(3);
     Vector<int64_t> b = a * size_t(2);
     b += a;
+    // std::cout << "KKKKKKK" << std::endl;
+    // Add aop;
+    // // b = aop(b, a);
+    // b = HWY_DYNAMIC_DISPATCH(aop)(b,a);
+    std::cout << "b = " << b << std::endl;
     Vector<int64_t> c;
     c.push_back(-24);
     c.push_back(21);
     c.push_back(9);
-    std::cout << "b = " << b << std::endl;
     b -= a;
     c(0) = -16;
     c(1) = 14;
@@ -348,3 +354,4 @@ TEST(OperatorTEST, BasicAssertions) {
 }
 }
 HWY_AFTER_NAMESPACE();
+#endif

@@ -7,11 +7,20 @@
 // #include <hwy/foreach_target.h> 
 // #include <hwy/highway.h>
 // namespace hn = hwy::HWY_NAMESPACE;
-#undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "./TypePromotion.hpp"
-#include <hwy/foreach_target.h>
+
+// #undef HWY_TARGET_INCLUD
+// #define HWY_TARGET_INCLUDE "./TypePromotion.hpp"
+// #include <hwy/foreach_target.h>
+#if defined(TYPEPROMOTION_H) == defined(HWY_TARGET_TOGGLE)
+#ifdef TYPEPROMOTION_H
+#undef TYPEPROMOTION_H 
+#else
+#define TYPEPROMOTION_H 
+#endif
+
 #include <hwy/highway.h>
 // namespace hn = hwy::HWY_NAMESPACE;
+
 HWY_BEFORE_NAMESPACE();
 // namespace project {  // optional
 namespace HWY_NAMESPACE {
@@ -76,3 +85,5 @@ template <typename T> using vtype_t = typename VType<T>::type;
 }  // namespace HWY_NAMESPACE
 // }  // namespace project - optional
 HWY_AFTER_NAMESPACE();
+
+#endif

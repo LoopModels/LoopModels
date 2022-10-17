@@ -19,8 +19,8 @@ else
 endif
 
 # TESTS
-hwy_dep = dependency('libhwy')
 gtest_dep = dependency('gtest', main : true, required : false)
+hwy_dep = dependency('libhwy', version : '1.0.1')
 if gtest_dep.found()
   testdeps = [gtest_dep, llvm_dep, hwy_dep]
   #testdeps = [gtest_dep, llvm_dep]
@@ -65,7 +65,7 @@ if bench_dep.found()
     'highway_benchmark',
   ]
   benchmarkdeps = [bench_dep, llvm_dep]
-  #bench_args = ['-O3', '-DNDEBUG', '-march=native']
+  #bench_args = ['-DNDEBUG', '-march=native']
   #bench_args = ['-O3', '-DNDEBUG']
   #bench_args = ['-DNDEBUG', '-S - o output.s', '-masm=intel']
   bench_args = ['-DNDEBUG']

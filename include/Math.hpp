@@ -26,9 +26,15 @@
 #include <utility>
 
 // using namespace hwy::HWY_NAMESPACE;
-#undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "./Math.hpp"
-#include <hwy/foreach_target.h>
+// #undef HWY_TARGET_INCLUDE
+// #define HWY_TARGET_INCLUDE "./Math.hpp"
+#if defined(MATH_H_) == defined(HWY_TARGET_TOGGLE)
+#ifdef MATH_H_
+#undef MATH_H_
+#else
+#define MATH_H_
+#endif
+
 #include <hwy/highway.h>
 // namespace hn = hwy::HWY_NAMESPACE;
 HWY_BEFORE_NAMESPACE();
@@ -3311,3 +3317,5 @@ static_assert(AbstractVector<
 } // namespace HWY_NAMESPACE
 // }  // namespace project - optional
 HWY_AFTER_NAMESPACE();
+
+#endif

@@ -2,16 +2,19 @@
 // #include "../include/Polyhedra.hpp"
 // #include "Orthogonalize.hpp"
 #include "llvm/ADT/SmallVector.h"
-#include "../include/Math.hpp"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <cstdint>
 
 
 #undef HWY_TARGET_INCLUDE
-#define HWY_TARGET_INCLUDE "./highway_benchmark.cpp"
+// #define HWY_TARGET_INCLUDE "/home/junpeng/Desktop/projects/LoopModels/benchmark/highway_benchmark.cpp"
+#define HWY_TARGET_INCLUDE "benchmark/highway_benchmark.cpp"
+// #define HWY_TARGET_INCLUDE "./highway_benchmark.cpp"
 #include <hwy/foreach_target.h>
 #include <hwy/highway.h>
+#include "../include/Math.hpp"
+
 HWY_BEFORE_NAMESPACE();
 namespace HWY_NAMESPACE {
 
@@ -76,4 +79,7 @@ static void BM_LoopHighway2(benchmark::State &state) {
 BENCHMARK(BM_LoopHighway2);
 }
 HWY_AFTER_NAMESPACE();
+
+#if HWY_ONCE
 BENCHMARK_MAIN();
+#endif
