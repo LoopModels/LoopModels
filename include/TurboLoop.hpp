@@ -315,15 +315,19 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 break;
             }
         }
+        // check if it is loop invariant
+        for (auto &L : *LI)
+            if (!L->isLoopInvariant(v))
+                return true;
         accum += Polynomial::Term{
-            coef, Polynomial::Monomial{valueToPosetMap.getForward(v)}};
+            coef, Polynomial::Monomial{valueToPosetMap.push(v)}};
         return false;
     }
     bool mulUpdate(MPoly &accum, llvm::Value *a, llvm::Value *b, int64_t coef) {
-        MPoly L, R;
-        if (symbolify(R, b, 1) || symbolify(L, a, coef))
+        MPoly A, B;
+        if (symbolify(B, b, 1) || symbolify(A, a, coef))
             return true;
-        accum += L * R;
+        accum += A * B;
         return false;
     }
     llvm::Optional<MPoly> symbolify(llvm::Value *v, int64_t coef = 1) {
