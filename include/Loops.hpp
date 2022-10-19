@@ -27,6 +27,9 @@ struct AffineLoopNest : SymbolicPolyhedra,
     size_t getNumSymbols() const { return 1 + symbols.size(); }
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
+    // AffineLoopNest(AffineLoopNest &parent, MPoly &first, MPoly &step, MPoly &last){
+    // }
+    
     static llvm::IntrusiveRefCntPtr<AffineLoopNest>
     construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
         llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{

@@ -1,5 +1,6 @@
 #include "../include/TurboLoop.hpp"
 #include "LoopBlock.hpp"
+#include "Loops.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/PostOrderIterator.h>
@@ -9,9 +10,11 @@
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/LoopNestAnalysis.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
@@ -130,20 +133,67 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
 
     // first, we try and parse the function to find sets of loop nests
-    // then we search for sets of fissile loops
-    // llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock*,4>,1> fissileSets;
+    // then we search for sets of fusile loops
+    llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;
+
+    // first, we iterate over all loops to find those that are affine,
+    // constructing AffineLoopNest objects. We do this first, because our
+    // ArrayReference struct will hold pointers to these objects, and we only
+    // want to get pointers once we've finished filling the vector, so that
+    // these pointers won't later be invalidated.
+    llvm::SmallVector<llvm::Loop *, 4> loopsPreorder = LI->getLoopsInPreorder();
+    loops.reserve(loopsPreorder.size());
+    for (auto &L : loopsPreorder) {
+        if (!L->isLoopSimplifyForm())
+            continue;
+        auto b = L->getBounds(*SE);
+        if (!b)
+            continue;
+        auto step = b->getStepValue();
+        if (!step)
+            continue;
+        llvm::Value &init = b->getInitialIVValue();
+        llvm::Value &last = b->getFinalIVValue();
+        if (auto cStep = llvm::dyn_cast<llvm::ConstantInt>(step)) {
+            if (cStep->isOne()) {
+            }
+        } else {
+            // check all parent loops to check invariance of step
+            llvm::Loop *P = L;
+	    llvm::Loop *firstDependent=nullptr;
+	    bool dependentStep = false;
+            while ((P = P->getParentLoop())) {
+		dependentStep |= !(P->isLoopInvariant(step));
+		if (!dependentStep)
+		    continue;
+		if (!firstDependent)
+		    firstDependent=P;
+                // we must remove P and all outer loops
+		auto ap = loops.find(P);
+		if (ap != loops.end())
+		    loops.erase(ap);
+            }
+	    
+            // check if it is SCEVUnknown
+            // if it is not, then we do not optimize any loops exterior to this
+            // one so that we can make it a conditional constant.
+            // if (SE->getSCEV(step)->getSCEVType() != llvm::SCEVTypes::scUnknown)
+                // continue;
+        }
+    }
+    // for (auto &L : *LI){
+
+    // }
+
     llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
         fusileSets;
-    llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;
     llvm::ReversePostOrderTraversal<llvm::Function *> RPOT(&F);
-
     for (auto &BB : RPOT) {
         auto [BBE, SC] = searchForFusileEnd(visitedBBs, BB);
         if (BBE && (BBE != BB))
             fusileSets.emplace_back(BB, BBE);
-	parseBB(BB);
+        parseBB(BB);
     }
-    
 
     // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
     // nullptr);

@@ -1049,7 +1049,7 @@ template <typename C, typename M> Term<C, M> operator-(Term<C, M> x) {
     x.coefficient = -x.coefficient;
     return x;
 }
-    
+
 template <typename C, IsMonomial M> struct Terms {
     llvm::SmallVector<Term<C, M>, 1> terms;
     // std::vector<Term<C, M>> terms;
@@ -1403,9 +1403,8 @@ template <typename C, IsMonomial M> struct Terms {
             auto it = end() - 1;
             if (!(it->degree())) {
                 (it->coefficient) += x;
-                if (isZero(it->coefficient)) {
+                if (isZero(it->coefficient))
                     terms.erase(it);
-                }
                 return *this;
             }
         }

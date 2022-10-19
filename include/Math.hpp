@@ -2912,6 +2912,7 @@ std::ostream &operator<<(std::ostream &os, SmallSparseMatrix<T> const &A) {
     }
     os << " ]";
     assert(k == A.nonZeros.size());
+    return os;
 }
 
 std::ostream &operator<<(std::ostream &os, PtrMatrix<int64_t> A) {

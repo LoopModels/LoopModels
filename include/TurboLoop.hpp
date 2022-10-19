@@ -3,12 +3,14 @@
 #include "./ArrayReference.hpp"
 #include "./IntegerMap.hpp"
 #include "./Loops.hpp"
+#include "./Macro.hpp"
 #include "./MemoryAccess.hpp"
 #include "./POSet.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "Macro.hpp"
-// #include "Tree.hpp"
+#include "Symbolics.hpp"
+#include <cstdint>
+#include <limits>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
@@ -25,6 +27,7 @@
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PassManager.h>
@@ -52,6 +55,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
     ValueToPosetMap valueToPosetMap;
+    llvm::DenseMap<llvm::Loop *, AffineLoopNest> loops;
+    // llvm::SmallVector<, 0> loops;
     PartiallyOrderedSet poset;
     UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
     // Tree tree;
@@ -187,25 +192,27 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (!basePointer)
             return {};
         llvm::errs() << "base pointer SCEVUnknown: " << *basePointer << "\n";
-        unsigned arrayID = ptrToArrayIDMap[basePointer];
         accessFn = SE->getMinusSCEV(accessFn, basePointer);
         llvm::errs() << "diff accessFn: " << *accessFn << "\n";
         llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
         llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
         assert(subscripts.size() == sizes.size());
-        SHOW(subscripts.size());
-        CSHOWLN(sizes.size());
+        if (sizes.size() == 0)
+            return {};
+        unsigned arrayID = ptrToArrayIDMap[basePointer];
+        // ArrayReference ref(arrayID);
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";
             if (const llvm::SCEVUnknown *param =
                     llvm::dyn_cast<llvm::SCEVUnknown>(subscripts[i])) {
-		llvm::errs() << "SCEVUnknown\n";
+                llvm::errs() << "SCEVUnknown\n";
             } else if (const llvm::SCEVNAryExpr *param =
                            llvm::dyn_cast<llvm::SCEVNAryExpr>(subscripts[i])) {
-		llvm::errs() << "SCEVNAryExpr\n";
+                llvm::errs() << "SCEVNAryExpr\n";
             }
         }
+        // return ref;
         return {};
     }
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
@@ -283,6 +290,47 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             return true;
         }
         return false;
+    }
+    // returns true on failure
+    bool symbolify(MPoly &accum, llvm::Value *v, int64_t coef = 1) {
+        if (auto c = llvm::dyn_cast<llvm::ConstantInt>(v)) {
+            uint64_t val =
+                c->getLimitedValue(std::numeric_limits<int64_t>::max());
+            if (val == std::numeric_limits<int64_t>::max())
+                return true;
+            accum += int64_t(val) * coef;
+            return false;
+        } else if (auto binOp = llvm::dyn_cast<llvm::BinaryOperator>(v)) {
+            int64_t c1 = coef;
+            switch (binOp->getOpcode()) {
+            case llvm::Instruction::BinaryOps::Sub:
+                c1 = -c1;
+            case llvm::Instruction::BinaryOps::Add:
+                return (symbolify(accum, binOp->getOperand(0), coef) ||
+                        symbolify(accum, binOp->getOperand(1), c1));
+            case llvm::Instruction::BinaryOps::Mul:
+                return mulUpdate(accum, binOp->getOperand(0),
+                                 binOp->getOperand(1), coef);
+            default:
+                break;
+            }
+        }
+        accum += Polynomial::Term{
+            coef, Polynomial::Monomial{valueToPosetMap.getForward(v)}};
+        return false;
+    }
+    bool mulUpdate(MPoly &accum, llvm::Value *a, llvm::Value *b, int64_t coef) {
+        MPoly L, R;
+        if (symbolify(R, b, 1) || symbolify(L, a, coef))
+            return true;
+        accum += L * R;
+        return false;
+    }
+    llvm::Optional<MPoly> symbolify(llvm::Value *v, int64_t coef = 1) {
+        MPoly accum;
+        if (symbolify(accum, v, coef))
+            return {};
+        return accum;
     }
 
     // // // we need unit step size
