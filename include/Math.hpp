@@ -267,56 +267,6 @@ template <typename T, typename S> void divExact(T &x, S const &y) {
     x = d;
 }
 
-enum class VarType : uint32_t {
-    Constant = 0x0,
-    LoopInductionVariable = 0x1,
-    Memory = 0x2,
-    Term = 0x3
-};
-std::ostream &operator<<(std::ostream &os, VarType s) {
-    switch (s) {
-    case VarType::Constant:
-        os << "Constant";
-        break;
-    case VarType::LoopInductionVariable:
-        os << "Induction Variable";
-        break;
-    case VarType::Memory:
-        os << "Memory";
-        break;
-    case VarType::Term:
-        os << "Term";
-        break;
-    }
-    return os;
-}
-
-typedef uint32_t IDType;
-struct VarID {
-    IDType id;
-    VarID(IDType id) : id(id) {}
-    VarID(IDType i, VarType typ) : id((static_cast<IDType>(typ) << 30) | i) {}
-    bool operator<(VarID x) const { return id < x.id; }
-    bool operator<=(VarID x) const { return id <= x.id; }
-    bool operator==(VarID x) const { return id == x.id; }
-    bool operator>(VarID x) const { return id > x.id; }
-    bool operator>=(VarID x) const { return id >= x.id; }
-    std::strong_ordering operator<=>(VarID x) { return id <=> x.id; }
-    IDType getID() const { return id & 0x3fffffff; }
-    // IDType getID() const { return id & 0x3fff; }
-    VarType getType() const { return static_cast<VarType>(id >> 30); }
-    std::pair<VarType, IDType> getTypeAndId() const {
-        return std::make_pair(getType(), getID());
-    }
-    bool isIndVar() { return getType() == VarType::LoopInductionVariable; }
-    bool isLoopInductionVariable() const {
-        return getType() == VarType::LoopInductionVariable;
-    }
-};
-std::ostream &operator<<(std::ostream &os, VarID s) {
-    return os << s.getType() << ": " << s.getID();
-}
-
 inline bool isZero(auto x) { return x == 0; }
 
 [[maybe_unused]] static bool allZero(const auto &x) {

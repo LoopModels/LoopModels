@@ -42,6 +42,7 @@
 
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
+    // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
     llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
     std::cout << "Assumptions:" << std::endl;
     for (auto &a : AC.assumptions()) {
@@ -160,25 +161,25 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
         } else {
             // check all parent loops to check invariance of step
             llvm::Loop *P = L;
-	    llvm::Loop *firstDependent=nullptr;
-	    bool dependentStep = false;
+            llvm::Loop *firstDependent = nullptr;
+            bool dependentStep = false;
             while ((P = P->getParentLoop())) {
-		dependentStep |= !(P->isLoopInvariant(step));
-		if (!dependentStep)
-		    continue;
-		if (!firstDependent)
-		    firstDependent=P;
+                dependentStep |= !(P->isLoopInvariant(step));
+                if (!dependentStep)
+                    continue;
+                if (!firstDependent)
+                    firstDependent = P;
                 // we must remove P and all outer loops
-		auto ap = loops.find(P);
-		if (ap != loops.end())
-		    loops.erase(ap);
+                auto ap = loops.find(P);
+                if (ap != loops.end())
+                    loops.erase(ap);
             }
-	    
+
             // check if it is SCEVUnknown
             // if it is not, then we do not optimize any loops exterior to this
             // one so that we can make it a conditional constant.
-            // if (SE->getSCEV(step)->getSCEVType() != llvm::SCEVTypes::scUnknown)
-                // continue;
+            // if (SE->getSCEV(step)->getSCEVType() !=
+            // llvm::SCEVTypes::scUnknown) continue;
         }
     }
     // for (auto &L : *LI){

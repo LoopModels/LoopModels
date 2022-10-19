@@ -49,19 +49,19 @@ TEST(IRTest, BasicAssertions) {
         inds;
     inds.emplace_back(
         Polynomial::Multivariate<int64_t, Polynomial::Monomial>(1),
-        VarID(2, VarType::LoopInductionVariable));
+        VarID(2, VarID::VarType::LoopInductionVariable));
     inds.emplace_back(
         Polynomial::MultivariateTerm<int64_t, Polynomial::Monomial>(
             2, Polynomial::Monomial(Polynomial::ID{0})),
-        VarID(8, VarType::Memory));
+        VarID(8, VarID::VarType::Parameter));
     inds.emplace_back(
         Polynomial::MultivariateTerm<int64_t, Polynomial::Monomial>(
             3, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{1})),
-        VarID(18, VarType::Term));
+        VarID(18, VarID::VarType::LoopInductionVariable));
     Polynomial::Multivariate<int64_t, Polynomial::Monomial> p3(5);
     p3.addTerm(Polynomial::MultivariateTerm<int64_t, Polynomial::Monomial>(
         7, Polynomial::Monomial(Polynomial::ID{0})));
-    inds.emplace_back(p3, VarID(3, VarType::LoopInductionVariable));
+    inds.emplace_back(p3, VarID(3, VarID::VarType::LoopInductionVariable));
     Polynomial::Multivariate<int64_t, Polynomial::Monomial> p4(11);
     p4.addTerm(Polynomial::MultivariateTerm<int64_t, Polynomial::Monomial>(
         13, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{3})));
@@ -71,7 +71,7 @@ TEST(IRTest, BasicAssertions) {
     p4.addTerm(Polynomial::MultivariateTerm<int64_t, Polynomial::Monomial>(
         11, Polynomial::Monomial(Polynomial::ID{0}, Polynomial::ID{0},
                                  Polynomial::ID{2})));
-    inds.emplace_back(p4, VarID(0, VarType::LoopInductionVariable));
+    inds.emplace_back(p4, VarID(0, VarID::VarType::LoopInductionVariable));
 
     // ArrayReferenceFlat ar{.arrayID = 10, .inds = inds};
     // std::cout << ar << std::endl;

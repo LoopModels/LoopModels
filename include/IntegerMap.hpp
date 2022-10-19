@@ -1,4 +1,5 @@
 #pragma once
+#include "./VarTypes.hpp"
 #include <cstdint>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
@@ -44,24 +45,34 @@ struct IntegerMap {
         return -1;
     }
 };
-struct ValueToPosetMap {
+struct ValueToVarMap {
     // llvm::ValueMap<llvm::Value *, size_t> forward;
-    llvm::DenseMap<llvm::Value *, size_t> forward;
+    llvm::DenseMap<llvm::Value *, VarID> forward;
     llvm::SmallVector<llvm::Value *, 0> backward;
-    size_t push(llvm::Value *i) {
-        if (size_t j = forward.lookup(i))
-            return j;
+    VarID pushNewValue(llvm::Value *i) {
         backward.push_back(i);
-        size_t j = backward.size();
-        forward.insert(std::make_pair(i, j));
+        uint32_t j = backward.size();
+        forward.insert(std::make_pair(i, VarID{j}));
         return j;
     }
+    VarID push(llvm::Value *i) {
+	auto it = forward.find(i);
+	if (it != forward.end())
+	    return it->second;
+	return pushNewValue(i);
+    }
     // 0 is sentinal value for not found
-    size_t getForward(llvm::Value *i) { return forward.lookup(i); }
+    llvm::Optional<VarID> getForward(llvm::Value *i) {
+	auto it = forward.find(i);
+	if (it != forward.end())
+	    return it->second;
+	return {};
+    }
     // nullptr is sentinal value for not found
-    llvm::Value *getBackward(size_t j) {
-        if (--j <= backward.size())
-            return backward[j];
+    llvm::Value *getBackward(VarID vid) {
+	// if (vid.isParam() && (vid.id < backward.size()))
+	if (vid.id < backward.size())
+	    return backward[vid.id];
         return nullptr;
     }
 };

@@ -1165,13 +1165,13 @@ TEST(ConvReversePass, BasicAssertions) {
 
     // construct indices
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
-    m.emplace_back(1, VarID(1, VarType::LoopInductionVariable));
+    m.emplace_back(1, VarID(1, VarID::VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
-    n.emplace_back(1, VarID(0, VarType::LoopInductionVariable));
+    n.emplace_back(1, VarID(0, VarID::VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
-    i.emplace_back(1, VarID(3, VarType::LoopInductionVariable));
+    i.emplace_back(1, VarID(3, VarID::VarType::LoopInductionVariable));
     llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
-    j.emplace_back(1, VarID(2, VarType::LoopInductionVariable));
+    j.emplace_back(1, VarID(2, VarID::VarType::LoopInductionVariable));
 
     // B[j, i]
     ArrayReference BmnInd{0, loop, 2};

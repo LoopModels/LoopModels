@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "./VarTypes.hpp"
 #include "llvm/ADT/APInt.h" // for DenseMapInfo
 #include "llvm/ADT/Optional.h"
 #include <algorithm>
@@ -244,7 +245,7 @@ struct Uninomial {
 // [[maybe_unused]] static constexpr unsigned MonomialSmallVectorSize = 8;
 // typedef uint8_t VarID;
 struct ID {
-    IDType id;
+    VarID::IDType id;
     operator VarID() { return VarID(id); }
 };
 
@@ -317,9 +318,9 @@ struct Monomial {
         // prodIDs are sorted, so we can create sorted product in O(N)
         for (size_t k = 0; k < (n0 + n1); ++k) {
             VarID a =
-                (i < n0) ? x.prodIDs[i] : std::numeric_limits<IDType>::max();
+                (i < n0) ? x.prodIDs[i] : std::numeric_limits<VarID::IDType>::max();
             VarID b =
-                (j < n1) ? y.prodIDs[j] : std::numeric_limits<IDType>::max();
+                (j < n1) ? y.prodIDs[j] : std::numeric_limits<VarID::IDType>::max();
             bool aSmaller = a < b;
             aSmaller ? ++i : ++j;
             prodIDs.push_back(aSmaller ? a : b);
@@ -399,9 +400,9 @@ struct Monomial {
         size_t n1 = x.prodIDs.size();
         while ((i + j) < (n0 + n1)) {
             VarID a =
-                (i < n0) ? prodIDs[i] : std::numeric_limits<IDType>::max();
+                (i < n0) ? prodIDs[i] : std::numeric_limits<VarID::IDType>::max();
             VarID b =
-                (j < n1) ? x.prodIDs[j] : std::numeric_limits<IDType>::max();
+                (j < n1) ? x.prodIDs[j] : std::numeric_limits<VarID::IDType>::max();
             if (a < b) {
                 n.prodIDs.push_back(a);
                 ++i;
@@ -425,7 +426,7 @@ struct Monomial {
     friend bool isZero(Monomial const &) { return false; }
     bool isCompileTimeConstant() const { return prodIDs.size() == 0; }
     size_t degree() const { return prodIDs.size(); }
-    size_t degree(IDType i) const {
+    size_t degree(VarID::IDType i) const {
         size_t d = 0;
         for (auto it : prodIDs) {
             d += (it == VarID(i));
@@ -497,8 +498,8 @@ bool tryDiv(Monomial &z, Monomial const &x, Monomial const &y) {
     auto n0 = x.cend();
     auto n1 = y.cend();
     while ((i != n0) | (j != n1)) {
-        VarID a = (i != n0) ? *i : std::numeric_limits<IDType>::max();
-        VarID b = (j != n1) ? *j : std::numeric_limits<IDType>::max();
+        VarID a = (i != n0) ? *i : std::numeric_limits<VarID::IDType>::max();
+        VarID b = (j != n1) ? *j : std::numeric_limits<VarID::IDType>::max();
         ++i;
         if (a < b) {
             z.prodIDs.push_back(a);
@@ -3026,8 +3027,8 @@ template <typename C>
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<IDType>::max();
-        VarID yk = (iy != iye) ? *iy : std::numeric_limits<IDType>::max();
+        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<VarID::IDType>::max();
+        VarID yk = (iy != iye) ? *iy : std::numeric_limits<VarID::IDType>::max();
         if (xk == yk)
             g.prodIDs.push_back(xk);
         ix += (xk <= yk);
@@ -3103,8 +3104,8 @@ gcdd(Monomial const &x, Monomial const &y) {
     auto iy = y.cbegin();
     auto iye = y.cend();
     while ((ix != ixe) | (iy != iye)) {
-        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<IDType>::max();
-        VarID yk = (iy != iye) ? *iy : std::numeric_limits<IDType>::max();
+        VarID xk = (ix != ixe) ? *ix : std::numeric_limits<VarID::IDType>::max();
+        VarID yk = (iy != iye) ? *iy : std::numeric_limits<VarID::IDType>::max();
         if (xk < yk) {
             a.prodIDs.push_back(xk);
             ++ix;
@@ -3311,8 +3312,8 @@ template <typename T> [[maybe_unused]] static bool NOT_A_VAR(T x) {
 }
 
 template <typename C>
-[[maybe_unused]] static IDType pickVar(Multivariate<C, Monomial> const &x) {
-    IDType v = std::numeric_limits<IDType>::max();
+[[maybe_unused]] static VarID::IDType pickVar(Multivariate<C, Monomial> const &x) {
+    VarID::IDType v = std::numeric_limits<VarID::IDType>::max();
     for (auto &it : x) {
         if (it.degree()) {
             v = std::min(v, it.exponent.firstTermID().id);

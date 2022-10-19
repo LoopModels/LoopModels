@@ -2,14 +2,15 @@
 
 #include "./ArrayReference.hpp"
 #include "./IntegerMap.hpp"
+#include "./LoopForest.hpp"
 #include "./Loops.hpp"
 #include "./Macro.hpp"
+#include "./Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./POSet.hpp"
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include "./UniqueIDMap.hpp"
-#include "Math.hpp"
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/APInt.h>
@@ -41,21 +42,23 @@
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 #include <utility>
 
-[[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
-    if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
-        return constInt->isOne();
-    } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x)) {
-        return constVal->isOneValue();
-    }
-    return false;
-}
+// [[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
+//     if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
+//         return constInt->isOne();
+//     } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x))
+//     {
+//         return constVal->isOneValue();
+//     }
+//     return false;
+// }
 
 // requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
-    ValueToPosetMap valueToPosetMap;
+    ValueToVarMap valueToVarMap;
+    std::vector<LoopForest> loopForests;
     llvm::DenseMap<llvm::Loop *, AffineLoopNest> loops;
     // llvm::SmallVector<, 0> loops;
     PartiallyOrderedSet poset;
@@ -216,6 +219,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // return ref;
         return {};
     }
+    void initializeLoopForest(){
+	loopForests.resize(1);
+	auto &forest = loopForests.back();
+	for (auto &L : *LI)
+	    forest.pushBack(L, nullptr, SE);
+	
+    }
+    
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
         bool isLoad = true;
         llvm::Value *ptr = I->getPointerOperand();
@@ -304,23 +315,29 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 return true;
         return false;
     }
-    VarID getVarID(llvm::Value *v)  {
-	// TODO incorporate in valueToPosetMap, so that we can just lookup
-        for (auto &L : *LI){
-            if (!L->isLoopInvariant(v)){
-		if (auto phin = llvm::dyn_cast<llvm::PHINode>(v)){
-		    // TODO: check if it is a loop indvar
-		    // then get the depth of the corresponding loop
-		} else if (auto inst = llvm::dyn_cast<llvm::Instruction>(v)){
+    VarID getVar(llvm::Value *v) {
+        if (auto opt = valueToVarMap.getForward(v))
+            return opt.getValue();
+        auto inst = llvm::dyn_cast<llvm::Instruction>(v);
+        if (!inst) // must be loop invariant
+            return valueToVarMap.pushNewValue(v);
+        // TODO incorporate in valueToPosetMap, so that we can just lookup
+        for (auto &L : *LI) {
+            if (!L->isLoopInvariant(v)) {
+                if (auto phin = llvm::dyn_cast<llvm::PHINode>(v)) {
+                    // TODO: check if it is a loop indvar
+                    // then get the depth of the corresponding loop
+                } else if (auto inst = llvm::dyn_cast<llvm::Instruction>(v)) {
                     // llvm::BasicBlock *BB = inst->getParent();
-		    // I guess this means it is a term, and we probably don't
-		    // need to do much else.
+                    // I guess this means it is a term, and we probably don't
+                    // need to do much else.
                 }
                 // return VarType::Term;
-	    }
-	}
-	VarType vTyp = mayReadOrWriteMemory(v) ? VarType::Memory : VarType::Constant;
-	return VarID(valueToPosetMap.push(v), vTyp);
+            }
+        }
+        VarType vTyp =
+            mayReadOrWriteMemory(v) ? VarType::Memory : VarType::Constant;
+        return VarID(valueToVarMap.push(v), vTyp);
     }
     // returns true on failure
     bool symbolify(MPoly &iaccum, MPoly &laccum, llvm::Value *v,
@@ -349,12 +366,11 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         // check if it is loop invariant
         if (isLoopDependent(v)) {
-
             VarID vid;
             laccum += Polynomial::Term{coef, Polynomial::Monomial{vid}};
         } else {
             iaccum += Polynomial::Term{
-                coef, Polynomial::Monomial{valueToPosetMap.push(v)}};
+                coef, Polynomial::Monomial{valueToVarMap.push(v)}};
         }
         return false;
     }

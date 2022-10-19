@@ -339,7 +339,7 @@ struct PartiallyOrderedSet {
         if (isOne(m)) {
             return Interval{1, 1};
         }
-        assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarType::Constant);
+        assert(m.prodIDs[m.prodIDs.size() - 1].getType() == VarID::VarType::Parameter);
         size_t j = bin2(m.prodIDs[0].getID());
         Interval itv = j < delta.size() ? delta[j] : Interval::unconstrained();
 	// std::cout << "j = " << j << "; delta.size() = " << delta.size() << "; itv = " << itv;
