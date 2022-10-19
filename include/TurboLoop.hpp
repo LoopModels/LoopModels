@@ -16,6 +16,7 @@
 #include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
@@ -178,7 +179,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::errs() << "accessFn: " << *accessFn << "\n";
         const llvm::SCEV *pb = SE->getPointerBase(accessFn);
         llvm::errs() << "base pointer: " << *pb << "\n";
-        const llvm::SCEVUnknown *basePointer = dyn_cast<llvm::SCEVUnknown>(pb);
+        const llvm::SCEVUnknown *basePointer =
+            llvm::dyn_cast<llvm::SCEVUnknown>(pb);
         // Do not delinearize if we cannot find the base pointer.
         if (!basePointer)
             llvm::errs() << "!basePointer\n";
@@ -193,9 +195,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         assert(subscripts.size() == sizes.size());
         SHOW(subscripts.size());
         CSHOWLN(sizes.size());
-        for (size_t i = 0; i < subscripts.size(); ++i)
+        for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";
+            if (const llvm::SCEVUnknown *param =
+                    llvm::dyn_cast<llvm::SCEVUnknown>(subscripts[i])) {
+		llvm::errs() << "SCEVUnknown\n";
+            } else if (const llvm::SCEVNAryExpr *param =
+                           llvm::dyn_cast<llvm::SCEVNAryExpr>(subscripts[i])) {
+		llvm::errs() << "SCEVNAryExpr\n";
+            }
+        }
         return {};
     }
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
