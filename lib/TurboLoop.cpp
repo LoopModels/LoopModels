@@ -62,8 +62,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                          << "\nop1 valueID: " << op1->getValueID() << "\n";
             llvm::errs() << "op0 valueName: " << op0->getValueName()
                          << "\nop1 valueName: " << op1->getValueName() << "\n";
-            size_t op0posID = valueToPosetMap.push(op0);
-            size_t op1posID = valueToPosetMap.push(op1);
+            size_t op0posID = valueToVarMap.push(op0);
+            size_t op1posID = valueToVarMap.push(op1);
             llvm::errs() << "op0posID: " << op0posID
                          << "\nop1posID: " << op1posID << "\n";
             switch (icmp->getPredicate()) {

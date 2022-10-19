@@ -11,6 +11,7 @@
 #include "./Schedule.hpp"
 #include "./Symbolics.hpp"
 #include "./UniqueIDMap.hpp"
+#include "VarTypes.hpp"
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/APInt.h>
@@ -219,14 +220,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // return ref;
         return {};
     }
-    void initializeLoopForest(){
-	loopForests.resize(1);
-	auto &forest = loopForests.back();
-	for (auto &L : *LI)
-	    forest.pushBack(L, nullptr, SE);
-	
+    void initializeLoopForest() {
+        loopForests.resize(1);
+        auto &forest = loopForests.back();
+        for (auto &L : *LI)
+            forest.pushBack(L, nullptr, SE);
     }
-    
+
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
         bool isLoad = true;
         llvm::Value *ptr = I->getPointerOperand();
@@ -335,9 +335,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 // return VarType::Term;
             }
         }
-        VarType vTyp =
-            mayReadOrWriteMemory(v) ? VarType::Memory : VarType::Constant;
-        return VarID(valueToVarMap.push(v), vTyp);
+        return valueToVarMap.push(v);
     }
     // returns true on failure
     bool symbolify(MPoly &iaccum, MPoly &laccum, llvm::Value *v,
@@ -364,14 +362,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 break;
             }
         }
-        // check if it is loop invariant
-        if (isLoopDependent(v)) {
-            VarID vid;
-            laccum += Polynomial::Term{coef, Polynomial::Monomial{vid}};
-        } else {
-            iaccum += Polynomial::Term{
-                coef, Polynomial::Monomial{valueToVarMap.push(v)}};
+        if (llvm::Instruction *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
+            if (isLoopDependent(instr)) {
+                VarID vid(LI->getLoopFor(instr->getParent())->getLoopDepth(),
+                          VarID::VarType::LoopInductionVariable);
+                laccum += Polynomial::Term{coef, Polynomial::Monomial{vid}};
+                return false;
+            }
         }
+        // check if it is loop invariant
+        iaccum +=
+            Polynomial::Term{coef, Polynomial::Monomial{valueToVarMap.push(v)}};
         return false;
     }
 
@@ -380,8 +381,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         MPoly iA, lA, iB, lB;
         if (symbolify(iB, lB, b, 1) || symbolify(iA, lA, a, coef))
             return true;
-        iaccum += iA * iB;
-        laccum += iA * lB + lA * iB + lA * lB;
+	if (iA.size() && iB.size())
+	    iaccum += iA * iB;
+	if (iA.size() && lB.size())
+	    laccum += iA * lB;
+	if (lA.size() && iB.size())
+	    laccum += lA * iB;
+	if (lA.size() && lB.size())
+	    laccum += lA * lB;
         return false;
     }
     llvm::Optional<std::pair<MPoly, MPoly>> symbolify(llvm::Value *v,
