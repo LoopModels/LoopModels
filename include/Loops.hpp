@@ -19,8 +19,8 @@
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : SymbolicPolyhedra,
-                        llvm::RefCountedBase<AffineLoopNest> {
+struct AffineLoopNest : SymbolicPolyhedra{//,
+                        // llvm::RefCountedBase<AffineLoopNest> {
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
     llvm::SmallVector<Polynomial::Monomial> symbols;
@@ -29,26 +29,30 @@ struct AffineLoopNest : SymbolicPolyhedra,
 
     // AffineLoopNest(AffineLoopNest &parent, MPoly &first, MPoly &step, MPoly &last){
     // }
+    // AffineLoopNest() = default;
+    // AffineLoopNest(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) : SymbolicPolyhdra(A, symbols) {
+
+    // }
     
-    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-            llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = std::move(A);
-        ret->C = LinearSymbolicComparator::construct(ret->A);
-        ret->symbols = std::move(symbols);
-        return ret;
-    }
-    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(IntMatrix A, LinearSymbolicComparator C,
-              llvm::SmallVector<Polynomial::Monomial> symbols) {
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-            llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = std::move(A);
-        ret->C = std::move(C);
-        ret->symbols = std::move(symbols);
-        return ret;
-    }
+    // static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    // construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
+    //     llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
+    //         llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
+    //     ret->A = std::move(A);
+    //     ret->C = LinearSymbolicComparator::construct(ret->A);
+    //     ret->symbols = std::move(symbols);
+    //     return ret;
+    // }
+    // static llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    // construct(IntMatrix A, LinearSymbolicComparator C,
+    //           llvm::SmallVector<Polynomial::Monomial> symbols) {
+    //     llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
+    //         llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
+    //     ret->A = std::move(A);
+    //     ret->C = std::move(C);
+    //     ret->symbols = std::move(symbols);
+    //     return ret;
+    // }
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
     rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {

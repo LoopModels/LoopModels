@@ -12,10 +12,12 @@
 #include "./Symbolics.hpp"
 #include "./UniqueIDMap.hpp"
 #include "VarTypes.hpp"
+#include <algorithm>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/Delinearization.h>
@@ -72,6 +74,22 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::ScalarEvolution *SE;
     // const llvm::DataLayout *DL;
     unsigned registerCount;
+
+    // the process of building the LoopForest has the following steps:
+    // 1. build initial forest of trees
+    // 2. instantiate AffineLoopNests; any non-affine loops
+    //    are pruned, and their inner loops added as new, separate forests.
+    // 3. Existing forests are searched for indirect control flow between
+    //    successive loops. In all such cases, the loops at that level are
+    //    split into separate forests.
+    void initializeLoopForest() {
+        loopForests.resize(1);
+        auto &forest = loopForests.back();
+        // NOTE: LoopInfo stores loops in reverse program order (opposite of
+        // loops)
+        for (auto &L : llvm::reverse(*LI))
+            forest.pushBack(L, nullptr, SE);
+    }
 
     // returns index to the loop whose preheader we place it in.
     // if it equals depth, then we must place it into the inner most loop
@@ -220,13 +238,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // return ref;
         return {};
     }
-    void initializeLoopForest() {
-        loopForests.resize(1);
-        auto &forest = loopForests.back();
-        for (auto &L : *LI)
-            forest.pushBack(L, nullptr, SE);
-    }
-
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
         bool isLoad = true;
         llvm::Value *ptr = I->getPointerOperand();
@@ -381,14 +392,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         MPoly iA, lA, iB, lB;
         if (symbolify(iB, lB, b, 1) || symbolify(iA, lA, a, coef))
             return true;
-	if (iA.size() && iB.size())
-	    iaccum += iA * iB;
-	if (iA.size() && lB.size())
-	    laccum += iA * lB;
-	if (lA.size() && iB.size())
-	    laccum += lA * iB;
-	if (lA.size() && lB.size())
-	    laccum += lA * lB;
+        if (iA.size() && iB.size())
+            iaccum += iA * iB;
+        if (iA.size() && lB.size())
+            laccum += iA * lB;
+        if (lA.size() && iB.size())
+            laccum += lA * iB;
+        if (lA.size() && lB.size())
+            laccum += lA * lB;
         return false;
     }
     llvm::Optional<std::pair<MPoly, MPoly>> symbolify(llvm::Value *v,

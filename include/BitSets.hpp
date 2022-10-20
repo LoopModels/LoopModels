@@ -92,6 +92,12 @@ struct BitSet {
         return ++it;
     }
     Iterator::End end() const { return Iterator::End{}; };
+    size_t front() const {
+	for (size_t i = 0; i < data.size(); ++i)
+	    if (data[i])
+		return 64*i + std::countr_zero(data[i]);
+	return std::numeric_limits<size_t>::max();
+    }
 
     static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
         size_t d = x >> size_t(6);
@@ -111,6 +117,14 @@ struct BitSet {
         if (!contained)
             data[d] |= (mask);
         return contained;
+    }
+    void uncheckedInsert(size_t x) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        if (d >= data.size())
+            data.resize(d + 1);
+        data[d] |= (mask);
     }
 
     bool remove(size_t x) {
@@ -156,7 +170,12 @@ struct BitSet {
             s += std::popcount(u);
         return s;
     }
-
+    bool any() const {
+        for (auto u : data)
+            if (u)
+                return true;
+        return false;
+    }
     void setUnion(const BitSet &bs) {
         size_t O = bs.data.size(), T = data.size();
         if (O > T)
