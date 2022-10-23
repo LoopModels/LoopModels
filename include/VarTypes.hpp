@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <ostream>
+#include <llvm/Support/raw_ostream.h>
 
 struct VarID {
     typedef uint32_t IDType;
@@ -32,7 +32,7 @@ struct VarID {
     bool isParam() { return getType() == VarType::Parameter; }
     bool isIndVar() { return getType() == VarType::LoopInductionVariable; }
 };
-std::ostream &operator<<(std::ostream &os, VarID::VarType s) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VarID::VarType s) {
     switch (s) {
     case VarID::VarType::Parameter:
         os << "Constant";
@@ -50,6 +50,6 @@ std::ostream &operator<<(std::ostream &os, VarID::VarType s) {
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, VarID s) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, VarID s) {
     return os << s.getType() << ": " << s.getID();
 }

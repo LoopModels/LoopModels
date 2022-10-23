@@ -8,11 +8,11 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 // #include <mlir/Analysis/Presburger/Matrix.h>
 #include <numeric>
 #include <string>
@@ -31,7 +31,7 @@ concept AbstractRange = requires(R r) {
                             { r.begin() };
                             { r.end() };
                         };
-std::ostream &printRange(std::ostream &os, AbstractRange auto &r) {
+llvm::raw_ostream &printRange(llvm::raw_ostream &os, AbstractRange auto &r) {
     os << "[ ";
     bool needComma = false;
     for (auto x : r) {
@@ -2076,7 +2076,6 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
         mem.resize_for_overwrite(M * N);
-        // std::cout << "M = " << M << "; N = " << N << std::endl;
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
                 mem[m * X + n] = A(m, n);
@@ -2131,15 +2130,15 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         size_t NN = N + 1;
         size_t XX = std::max(X, NN);
         mem.resize(M * XX);
-	size_t nLower = (XX > X) ? 0 : i;
-        if (M && N) 
+        size_t nLower = (XX > X) ? 0 : i;
+        if (M && N)
             // need to copy
-            for (size_t m = M - 1; m > 0; --m) 
-                for (size_t n = N; n-- > nLower;) 
-                    mem[m * XX + n + (n>=i)] = mem[m * X + n];
+            for (size_t m = M - 1; m > 0; --m)
+                for (size_t n = N; n-- > nLower;)
+                    mem[m * XX + n + (n >= i)] = mem[m * X + n];
         // zero
         for (size_t m = 0; m < M; ++m)
-	    mem[m * XX + i] = 0;
+            mem[m * XX + i] = 0;
         X = XX;
         N = NN;
     }
@@ -2243,13 +2242,26 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 (*this)(r, c) = x;
         return *this;
     }
+    void moveColLast(size_t j) {
+        if (j == N)
+            return;
+        for (size_t m = 0; m < M; ++m) {
+            auto x = (*this)(m, j);
+            for (size_t n = j; n < N - 1;) {
+                size_t o = n++;
+                (*this)(m, o) = (*this)(m, n);
+            }
+            (*this)(m, N - 1) = x;
+        }
+    }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
 static_assert(std::same_as<DynamicMatrix<int64_t>, Matrix<int64_t>>,
               "DynamicMatrix should be identical to Matrix");
 typedef DynamicMatrix<int64_t> IntMatrix;
 
-std::ostream &printVectorImpl(std::ostream &os, const AbstractVector auto &a) {
+llvm::raw_ostream &printVectorImpl(llvm::raw_ostream &os,
+                                   const AbstractVector auto &a) {
     os << "[ ";
     if (size_t M = a.size()) {
         os << a[0];
@@ -2261,24 +2273,25 @@ std::ostream &printVectorImpl(std::ostream &os, const AbstractVector auto &a) {
     return os;
 }
 template <typename T>
-std::ostream &printVector(std::ostream &os, PtrVector<T> a) {
+llvm::raw_ostream &printVector(llvm::raw_ostream &os, PtrVector<T> a) {
     return printVectorImpl(os, a);
 }
 template <typename T>
-std::ostream &printVector(std::ostream &os, StridedVector<T> a) {
+llvm::raw_ostream &printVector(llvm::raw_ostream &os, StridedVector<T> a) {
     return printVectorImpl(os, a);
 }
 template <typename T>
-std::ostream &printVector(std::ostream &os, const llvm::SmallVectorImpl<T> &a) {
+llvm::raw_ostream &printVector(llvm::raw_ostream &os,
+                               const llvm::SmallVectorImpl<T> &a) {
     return printVector(os, PtrVector<T>{a.data(), a.size()});
 }
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, PtrVector<T> const &A) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, PtrVector<T> const &A) {
     return printVector(os, A);
 }
-inline std::ostream &operator<<(std::ostream &os,
-                                const AbstractVector auto &A) {
+inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                     const AbstractVector auto &A) {
     return printVector(os, A.view());
 }
 
@@ -2664,14 +2677,15 @@ struct Rational {
     void negate() { numerator = -numerator; }
     operator bool() const { return numerator != 0; }
 
-    friend std::ostream &operator<<(std::ostream &os, const Rational &x) {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const Rational &x) {
         os << x.numerator;
         if (x.denominator != 1) {
             os << " // " << x.denominator;
         }
         return os;
     }
-    void dump() const { std::cout << *this << std::endl; }
+    void dump() const { llvm::errs() << *this << "\n"; }
 
     template <AbstractMatrix B> constexpr auto operator+(B &&b) {
         return binaryOp(Add{}, *this, std::forward<B>(b));
@@ -2739,8 +2753,8 @@ template <std::integral I> struct PromoteType<Rational, I> {
 }
 
 template <typename T>
-std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {
-    // std::ostream &printMatrix(std::ostream &os, T const &A) {
+llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) {
+    // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
     auto [m, n] = A.size();
     if (m == 0)
         return os << "[ ]";
@@ -2765,7 +2779,7 @@ std::ostream &printMatrix(std::ostream &os, PtrMatrix<T> A) {
             os << Aij;
         }
         if (i != m - 1) {
-            os << std::endl;
+            os << "\n";
         }
     }
     os << " ]";
@@ -2848,7 +2862,8 @@ template <typename T> struct SmallSparseMatrix {
 };
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, SmallSparseMatrix<T> const &A) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                              SmallSparseMatrix<T> const &A) {
     size_t k = 0;
     os << "[ ";
     for (size_t i = 0; i < A.numRow(); ++i) {
@@ -2878,27 +2893,32 @@ std::ostream &operator<<(std::ostream &os, SmallSparseMatrix<T> const &A) {
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, PtrMatrix<int64_t> A) {
-    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, PtrMatrix<int64_t> A) {
+    // llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Matrix<T, M, N>
+    // const &A)
     // {
     return printMatrix(os, A);
 }
 template <typename T, typename A>
-std::ostream &operator<<(std::ostream &os, const BaseMatrix<T, A> &B) {
-    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                              const BaseMatrix<T, A> &B) {
+    // llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Matrix<T, M, N>
+    // const &A)
     // {
     return printMatrix(os, PtrMatrix<T>(B));
 }
 template <AbstractMatrix T>
-std::ostream &operator<<(std::ostream &os, const T &A) {
-    // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const T &A) {
+    // llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Matrix<T, M, N>
+    // const &A)
     // {
     Matrix<std::remove_const_t<typename T::eltype>> B{A};
     return printMatrix(os, PtrMatrix<typename T::eltype>(B));
 }
 // template <typename T>
-// std::ostream &operator<<(std::ostream &os, PtrMatrix<const T> &A) {
-//     // std::ostream &operator<<(std::ostream &os, Matrix<T, M, N> const &A)
+// llvm::raw_ostream &operator<<(llvm::raw_ostream &os, PtrMatrix<const T> &A) {
+//     // llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Matrix<T, M, N>
+//     const &A)
 //     // {
 //     return printMatrix(os, A);
 // }
@@ -2961,19 +2981,6 @@ constexpr auto operator*(const AbstractMatrix auto &a,
                          const AbstractMatrix auto &b) {
     auto AA{a.view()};
     auto BB{b.view()};
-    // std::cout << "a.numRow() = " << a.numRow()
-    //           << "; AA.numRow() = " << AA.numRow() << std::endl;
-    // std::cout << "b.numRow() = " << b.numRow()
-    //           << "; BB.numRow() = " << BB.numRow() << std::endl;
-    // std::cout << "a.numCol() = " << a.numCol()
-    //           << "; AA.numCol() = " << AA.numCol() << std::endl;
-    // std::cout << "b.numCol() = " << b.numCol()
-    //           << "; BB.numCol() = " << BB.numCol() << std::endl;
-    // std::cout << "a ="
-    //           << a << "\nAA ="
-    //           << AA << "\nb ="
-    //           << b << "\nBB ="
-    //           << BB << std::endl;
     assert(AA.numCol() == BB.numRow());
     return MatMatMul<decltype(AA), decltype(BB)>{.a = AA, .b = BB};
 }

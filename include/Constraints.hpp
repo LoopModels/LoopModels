@@ -1,12 +1,12 @@
 #pragma once
 
+#include "./EmptyArrays.hpp"
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "./Symbolics.hpp"
-#include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <llvm/Support/raw_ostream.h>
 #include <sys/types.h>
 
 // prints in current permutation order.
@@ -14,8 +14,9 @@
 // in which case, we have to remove `currentToOriginalPerm`,
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
-[[maybe_unused]] static std::ostream &printConstraints(std::ostream &os, PtrMatrix<int64_t> A,
-                                      size_t numSyms, bool inequality = true) {
+[[maybe_unused]] static llvm::raw_ostream &
+printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A, size_t numSyms,
+                 bool inequality = true) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
     for (size_t c = 0; c < numConstraints; ++c) {
@@ -57,79 +58,32 @@
                 Acv = std::abs(Acv);
                 if (Acv != 1)
                     os << Acv << "*";
-                os << monomialTermStr(v - 1, 1);
+                os << 'L' + v;
             }
         }
-        os << std::endl;
+        os << "\n";
     }
     return os;
 }
-[[maybe_unused]] static std::ostream &printConstraints(std::ostream &os, EmptyMatrix<int64_t>,
-                                      size_t, bool = true, size_t = 0) {
+[[maybe_unused]] static llvm::raw_ostream &
+printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>, size_t,
+                 bool = true, size_t = 0) {
     return os;
 }
 
-// does not preserve the order of columns, instead it swaps the `i`th column
-// to the last, and truncates.
-/*
-MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
-                                             llvm::MutableArrayRef<int64_t> b,
-                                             size_t i) {
-    const auto [M, N] = A.size();
-    const size_t lastRow = M - 1;
-    if (lastRow != i) {
-        VECTORIZE
-        for (size_t n = 0; n < N; ++n)
-            A(i, n) = A(lastRow, n);
-        b[i] = b[lastRow];
-    }
-}
-*/
-MULTIVERSION [[maybe_unused]] static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
-                                             size_t i) {
+MULTIVERSION [[maybe_unused]] static void
+eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
     const size_t lastRow = A.numRow() - 1;
     assert(i <= lastRow);
     if (lastRow != i)
         A(i, _) = A(lastRow, _);
 }
-/*
-MULTIVERSION static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
-                                             llvm::MutableArrayRef<MPoly> b,
-                                             size_t i) {
-    const auto [M, N] = A.size();
-    const size_t lastRow = M - 1;
-    if (lastRow != i) {
-        VECTORIZE
-        for (size_t n = 0; n < N; ++n) {
-            A(i, n) = A(lastRow, n);
-        }
-        b[i] = b[lastRow];
-    }
-}
-template <typename T>
-static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
-                            size_t i) {
-    // #ifndef NDEBUG
-    //     std::cout << "A0 (i = " << i << ") = \n" << A << std::endl;
-    // #endif
-    eraseConstraintImpl(A, llvm::MutableArrayRef<T>(b), i);
-    // #ifndef NDEBUG
-    //     std::cout << "A1=\n" << A << std::endl;
-    // #endif
-    const size_t lastRow = A.numRow() - 1;
-    A.truncateRows(lastRow);
-    // #ifndef NDEBUG
-    //     std::cout << "A2=\n" << A << std::endl;
-    // #endif
-    b.truncate(lastRow);
-}
-*/
 [[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t i) {
-    // std::cout << "erase constraint i = " << i <<" of A =\n" <<A<< std::endl;
     eraseConstraintImpl(A, i);
     A.truncateRows(A.numRow() - 1);
 }
-[[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
+[[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t _i,
+                                             size_t _j) {
     assert(_i != _j);
     size_t i = std::min(_i, _j);
     size_t j = std::max(_i, _j);
@@ -150,8 +104,8 @@ static void eraseConstraint(IntMatrix &A, llvm::SmallVectorImpl<T> &b,
     A.truncateRows(penuRow);
 }
 
-MULTIVERSION [[maybe_unused]] static size_t substituteEqualityImpl(IntMatrix &E,
-                                                  const size_t i) {
+MULTIVERSION [[maybe_unused]] static size_t
+substituteEqualityImpl(IntMatrix &E, const size_t i) {
     const auto [numConstraints, numVar] = E.size();
     size_t minNonZero = numVar + 1;
     size_t rowMinNonZero = numConstraints;
@@ -256,8 +210,8 @@ constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t) {
     return false;
 }
 
-MULTIVERSION [[maybe_unused]] static bool substituteEquality(IntMatrix &A, IntMatrix &E,
-                                            const size_t i) {
+MULTIVERSION [[maybe_unused]] static bool
+substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) {
 
     size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
     if (rowMinNonZero == E.numRow())
@@ -291,8 +245,8 @@ void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
 }
 // counts how many negative and positive elements there are in row `i`.
 // A row corresponds to a particular variable in `A'x <= b`.
-[[maybe_unused]] static std::pair<size_t, size_t> countNonZeroSign(PtrMatrix<int64_t> A,
-                                                  size_t i) {
+[[maybe_unused]] static std::pair<size_t, size_t>
+countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
     size_t numNeg = 0;
     size_t numPos = 0;
     size_t numRow = A.numRow();
@@ -337,9 +291,6 @@ void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
             // last posCount does not get overwritten
             --negCount;
             size_t c = posCount ? (negCount ? numRows++ : i) : j;
-            // std::cout << "c = " << c << "; posCount = " << posCount
-            //           << "; negCount = " << negCount << "; i = " << i
-            //           << "; j = " << j << std::endl;
             int64_t g = gcd(Aiv, Ajv);
             int64_t Ai = Aiv / g, Aj = Ajv / g;
             bool allZero = true;
@@ -366,14 +317,16 @@ void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
     }
     // assert(numRows == (numRowsNew+1));
 }
-// [[maybe_unused]] static constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>,
-// size_t){
+// [[maybe_unused]] static constexpr bool substituteEquality(IntMatrix &,
+// EmptyMatrix<int64_t>, size_t){
 //     return true;
 // }
-[[maybe_unused]] static void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
+[[maybe_unused]] static void eliminateVariable(IntMatrix &A,
+                                               EmptyMatrix<int64_t>, size_t v) {
     fourierMotzkin(A, v);
 }
-[[maybe_unused]] static void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
+[[maybe_unused]] static void eliminateVariable(IntMatrix &A, IntMatrix &E,
+                                               size_t v) {
     if (substituteEquality(A, E, v))
         fourierMotzkin(A, v);
 }
