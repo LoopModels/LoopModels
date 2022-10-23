@@ -2107,18 +2107,15 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         M = N = X = 0;
         mem.clear();
     }
+
     void resize(size_t MM, size_t NN, size_t XX) {
         mem.resize(MM * XX);
         size_t minMMM = std::min(M, MM);
-        if ((XX > X) && M && N) {
+        if ((XX > X) && M && N)
             // need to copy
-            for (size_t m = minMMM - 1; m > 0; --m) {
-                for (size_t n = N; n > 0;) {
-                    --n;
+            for (size_t m = minMMM - 1; m > 0; --m)
+                for (size_t n = N; n-- > 0;)
                     mem[m * XX + n] = mem[m * X + n];
-                }
-            }
-        }
         // zero
         for (size_t m = 0; m < minMMM; ++m)
             for (size_t n = N; n < NN; ++n)
@@ -2128,6 +2125,22 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 mem[m * XX + n] = 0;
         X = XX;
         M = MM;
+        N = NN;
+    }
+    void insertZeroColumn(size_t i) {
+        size_t NN = N + 1;
+        size_t XX = std::max(X, NN);
+        mem.resize(M * XX);
+	size_t nLower = (XX > X) ? 0 : i;
+        if (M && N) 
+            // need to copy
+            for (size_t m = M - 1; m > 0; --m) 
+                for (size_t n = N; n-- > nLower;) 
+                    mem[m * XX + n + (n>=i)] = mem[m * X + n];
+        // zero
+        for (size_t m = 0; m < M; ++m)
+	    mem[m * XX + i] = 0;
+        X = XX;
         N = NN;
     }
     void resize(size_t MM, size_t NN) { resize(MM, NN, std::max(NN, X)); }

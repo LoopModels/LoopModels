@@ -7,6 +7,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 #include <vector>
@@ -15,22 +16,27 @@ struct LoopTree;
 struct LoopForest {
     std::vector<LoopTree> loops;
     // definitions due to incomplete types
+    bool pushBack(llvm::Loop *, llvm::ScalarEvolution *,
+                  std::vector<LoopForest> &);
     bool pushBack(llvm::Loop *, LoopTree *, llvm::ScalarEvolution *,
                   std::vector<LoopForest> &);
     LoopForest() = default;
     LoopForest(std::vector<LoopTree> loops);
     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
     LoopForest(auto itb, auto ite) : loops(itb, ite){};
-    size_t size() const;
-    LoopTree &operator[](size_t);
-    auto begin() { return loops.begin(); }
-    auto begin() const { return loops.begin(); }
-    auto end() { return loops.end(); }
-    auto end() const { return loops.end(); }
-    auto rbegin() { return loops.rbegin(); }
-    auto rbegin() const { return loops.rbegin(); }
-    auto rend() { return loops.rend(); }
-    auto rend() const { return loops.rend(); }
+
+    inline size_t size() const;
+    static bool invalid(std::vector<LoopForest> &forests, LoopForest forest);
+    inline LoopTree &operator[](size_t);
+    inline auto begin() { return loops.begin(); }
+    inline auto begin() const { return loops.begin(); }
+    inline auto end() { return loops.end(); }
+    inline auto end() const { return loops.end(); }
+    inline auto rbegin() { return loops.rbegin(); }
+    inline auto rbegin() const { return loops.rbegin(); }
+    inline auto rend() { return loops.rend(); }
+    inline auto rend() const { return loops.rend(); }
+    inline void clear();
 };
 
 // TODO: should depth be stored in LoopForests instead?
@@ -40,20 +46,82 @@ struct LoopTree {
     LoopForest subLoops; // incomplete type, don't know size
     LoopTree *parentLoop;
     llvm::PHINode *indVar;
-    size_t depth;
+    llvm::Loop::LoopBounds bounds;
     bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
     llvm::Optional<llvm::Loop::LoopBounds>
     getBounds(llvm::ScalarEvolution *SE) {
         return loop->getBounds(*SE);
     }
+    LoopTree(llvm::Loop *L, LoopForest subLoops, llvm::PHINode *indVar,
+             llvm::Loop::LoopBounds bounds)
+        : loop(L), affineLoop({}), subLoops(std::move(subLoops)),
+          parentLoop(nullptr), indVar(indVar), bounds(std::move(bounds)) {
+        // initialize the AffineLoopNest
+    }
+    bool addOuterLoop(llvm::Loop *OL, const llvm::Loop::LoopBounds &LB,
+                      llvm::PHINode *indVar) {
+
+        return true;
+    }
 };
 
 LoopForest::LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
+void LoopForest::clear() { loops.clear(); }
+bool LoopForest::invalid(std::vector<LoopForest> &forests, LoopForest forest) {
+    if (forest.size())
+        forests.push_back(std::move(forest));
+    return true;
+}
 
+// try to add Loop L, as well as all of L's subLoops
+// if invalid, create a new LoopForest, and add it to forests instead
+[[nodiscard]] bool LoopForest::pushBack(llvm::Loop *L,
+                                        llvm::ScalarEvolution *SE,
+                                        std::vector<LoopForest> &forests) {
+    auto &subLoops{L->getSubLoops()};
+    LoopForest subForest;
+    if (subLoops.size()) {
+        bool anyFail = false;
+        for (size_t i = 0; i < subLoops.size(); ++i) {
+            if (subForest.pushBack(subLoops[i], SE, forests)) {
+                anyFail = true;
+                if (subForest.size()) {
+                    forests.push_back(std::move(subForest));
+                    subForest.clear();
+                }
+            }
+        }
+        if (anyFail)
+            return LoopForest::invalid(forests, std::move(subForest));
+        assert(subForest.size());
+    }
+
+    if (llvm::Optional<llvm::Loop::LoopBounds> LB = L->getBounds(*SE)) {
+        if (llvm::ConstantInt *step =
+                llvm::dyn_cast<llvm::ConstantInt>(LB->getStepValue())) {
+	    if (!step->isOne()) // TODO: canonicalize?
+		return LoopForest::invalid(forests, std::move(subForest));
+            if (llvm::PHINode *indVar = L->getInductionVariable(*SE)) {
+                if (subForest.size()) {
+                    LoopForest backupForest;
+                    for (auto &SLT : subForest)
+                        if (SLT.addOuterLoop(L, *LB, indVar)) {
+                            forests.push_back(std::move(backupForest));
+                            return true;
+                        }
+                }
+                loops.emplace_back(L, std::move(subForest), indVar, *LB);
+                return false;
+            }
+        }
+    }
+    return LoopForest::invalid(forests, std::move(subForest));
+}
 // if AffineLoopNest
 [[nodiscard]] bool LoopForest::pushBack(llvm::Loop *L, LoopTree *parentLoop,
                                         llvm::ScalarEvolution *SE,
                                         std::vector<LoopForest> &forests) {
+
     size_t d = parentLoop ? parentLoop->depth + 1 : 0;
     loops.push_back(
         LoopTree{L, {}, {}, parentLoop, L->getInductionVariable(*SE), d});
@@ -98,8 +166,7 @@ LoopForest::LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
         if (low)
             loops.erase(loops.begin(), loops.begin() + low);
         loops.resize(mid - low);
-        forests.push_back(LoopForest{std::move(loops)});
-        return true;
+        return invalid(forests);
     }
 
     // now that we have returned and all inner loops are valid,
@@ -108,10 +175,12 @@ LoopForest::LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
     // updating them and checking if they are still affine as a function
     // of this loop. If not, we salvage what we can, and return `true`
     // If still affine, we build this loops AffineLoopNest and return `false`.
-    if (!L->isLoopSimplifyForm()) {
-        forests.push_back(std::move(loops));
-        return true;
-    }
+    if (!L->isLoopSimplifyForm())
+        return invalid(forests);
+    llvm::Optional<llvm::Loop::LoopBounds> LB = L->getBounds(*SE);
+    if (!LB)
+        return invalid(forests);
+
     return false;
 }
 size_t LoopForest::size() const { return loops.size(); }

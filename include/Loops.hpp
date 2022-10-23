@@ -1,39 +1,98 @@
 #pragma once
 
+#include "./Comparators.hpp"
+#include "./Constraints.hpp"
+#include "./EmptyArrays.hpp"
+#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./POSet.hpp"
 #include "./Polyhedra.hpp"
 #include "./Symbolics.hpp"
-#include "Comparators.hpp"
-#include "Constraints.hpp"
-#include "EmptyArrays.hpp"
-#include "Macro.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Value.h>
 
 // A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : SymbolicPolyhedra{//,
-                        // llvm::RefCountedBase<AffineLoopNest> {
+struct AffineLoopNest : SymbolicPolyhedra { //,
+    // llvm::RefCountedBase<AffineLoopNest> {
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
-    llvm::SmallVector<Polynomial::Monomial> symbols;
+    llvm::SmallVector<llvm::Value *> symbols{};
+    // llvm::SmallVector<Polynomial::Monomial> symbols;
     size_t getNumSymbols() const { return 1 + symbols.size(); }
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
-    // AffineLoopNest(AffineLoopNest &parent, MPoly &first, MPoly &step, MPoly &last){
+    size_t findIndex(llvm::Value *v) {
+        for (size_t i = 0; i < symbols.size();)
+            if (symbols[i++] == v)
+                return i;
+        return 0;
+    }
+
+    // add a symbol to row `r` of A
+    // we try to break down value `v`, so that adding
+    // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
+    void addSymbol(llvm::Value *v, size_t r, int64_t multiplier) {
+        // first, we check if `v` in `Symbols`
+        if (size_t i = findIndex(v)) {
+            A(r, i) += multiplier;
+            return;
+        }
+        if (llvm::BinaryOperator *binOp =
+                llvm::dyn_cast<llvm::BinaryOperator>(v)) {
+            int64_t c1 = multiplier;
+            switch (binOp->getOpcode()) {
+            case llvm::Instruction::BinaryOps::Sub:
+                c1 = -c1;
+            case llvm::Instruction::BinaryOps::Add:
+                addSymbol(binOp->getOperand(0), r, multiplier);
+                addSymbol(binOp->getOperand(1), r, c1);
+                return;
+            default:
+                break;
+            }
+        } else if (llvm::ConstantInt *c =
+                       llvm::dyn_cast<llvm::ConstantInt>(v)) {
+            if (c->getBitWidth() <= 64) {
+                A(r, 0) += multiplier * c->getSExtValue();
+                return;
+            }
+        }
+        symbols.push_back(v);
+        A.insertZeroColumn(symbols.size());
+        A(r, symbols.size()) = multiplier;
+    }
+
+    void addBounds(llvm::Value &lower, llvm::Value &upper) {
+        size_t M = A.numRow();
+        A.resizeRows(M + 2);
+        addSymbol(&lower, M, -1);
+        addSymbol(&upper, M + 1, 1);
+    }
+
+    AffineLoopNest(llvm::Value &lower, llvm::Value &upper)
+        : SymbolicPolyhedra(), symbols() {
+        addBounds(lower, upper);
+    }
+
+    // AffineLoopNest(AffineLoopNest &parent, MPoly &first, MPoly &step, MPoly
+    // &last){
     // }
     // AffineLoopNest() = default;
-    // AffineLoopNest(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) : SymbolicPolyhdra(A, symbols) {
+    // AffineLoopNest(IntMatrix A, llvm::SmallVector<Polynomial::Monomial>
+    // symbols) : SymbolicPolyhdra(A, symbols) {
 
     // }
-    
+
     // static llvm::IntrusiveRefCntPtr<AffineLoopNest>
     // construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
     //     llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
@@ -56,9 +115,9 @@ struct AffineLoopNest : SymbolicPolyhedra{//,
 
     llvm::IntrusiveRefCntPtr<AffineLoopNest>
     rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
-	SHOW(R.numCol());
-	CSHOW(numPeeled);
-	CSHOWLN(getNumLoops());
+        SHOW(R.numCol());
+        CSHOW(numPeeled);
+        CSHOWLN(getNumLoops());
         assert(R.numCol() + numPeeled == getNumLoops());
         assert(R.numRow() + numPeeled == getNumLoops());
         assert(numPeeled < getNumLoops());

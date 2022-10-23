@@ -88,7 +88,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         for (auto &L : llvm::reverse(*LI))
-            forest.pushBack(L, nullptr, SE);
+            forest.pushBack(L, nullptr, SE, loopForests);
     }
 
     // returns index to the loop whose preheader we place it in.
