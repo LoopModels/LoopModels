@@ -9,7 +9,7 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "VarTypes.hpp"
+#include "./VarTypes.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <limits>

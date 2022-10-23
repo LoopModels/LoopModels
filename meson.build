@@ -42,10 +42,8 @@ if gtest_dep.found()
     'matrix_test',
     'normal_form_test',
     'orthogonalize_test',
-    'poset_test',
     'simplex_test',
     'string_to_intmat_test',
-    'symbolics_test',
     'unimodularization_test',
   ]
 
@@ -64,7 +62,6 @@ bench_dep = dependency('benchmark', required : false)
 if bench_dep.found()
   benchmark_files = [
     'constraint_pruning_benchmark',
-    'polynomial_benchmark'
   ]
   benchmarkdeps = [bench_dep, llvm_dep]
   #bench_args = ['-O3', '-DNDEBUG', '-march=native']
