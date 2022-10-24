@@ -4,7 +4,6 @@
 #include "./Math.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -23,7 +22,7 @@
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
     size_t arrayID;
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> loop;
+    AffineLoopNest *loop;
     // std::shared_ptr<AffineLoopNest> loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
     // [[no_unique_address]] llvm::SmallVector<MPoly, 3> strides;
@@ -76,34 +75,29 @@ struct ArrayReference {
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(const ArrayReference &a,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop,
+    ArrayReference(const ArrayReference &a, AffineLoopNest *loop,
                    PtrMatrix<int64_t> newInds)
         : arrayID(a.arrayID), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(size_t arrayID,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop)
+    ArrayReference(size_t arrayID, AffineLoopNest *loop)
         : arrayID(arrayID), loop(loop){};
     ArrayReference(size_t arrayID, AffineLoopNest &loop)
-        : arrayID(arrayID),
-          loop(llvm::IntrusiveRefCntPtr<AffineLoopNest>(&loop)){};
+        : arrayID(arrayID), loop(&loop){};
 
     void resize(size_t d) {
         sizes.resize(d);
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
-    ArrayReference(size_t arrayID,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop, size_t dim,
+    ArrayReference(size_t arrayID, AffineLoopNest *loop, size_t dim,
                    bool hasSymbolicOffsets = false)
         : arrayID(arrayID), loop(loop), hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
     ArrayReference(size_t arrayID, AffineLoopNest &loop, size_t dim,
                    bool hasSymbolicOffsets = false)
-        : arrayID(arrayID),
-          loop(llvm::IntrusiveRefCntPtr<AffineLoopNest>(&loop)),
+        : arrayID(arrayID), loop(&loop),
           hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
@@ -184,4 +178,3 @@ struct ArrayReference {
         return false;
     }
 };
-

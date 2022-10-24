@@ -36,7 +36,6 @@ if gtest_dep.found()
     'dependence_test',
     #'edge_detection_test',
     'graph_test',
-    'ir_test',
     'linear_algebra_test',
     'linear_diophantine_test',
     'matrix_test',

@@ -11,7 +11,6 @@
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -143,36 +142,11 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         addBounds(lower, upper, true);
     }
 
-    // AffineLoopNest(AffineLoopNest &parent, MPoly &first, MPoly &step, MPoly
-    // &last){
-    // }
-    // AffineLoopNest() = default;
-    // AffineLoopNest(IntMatrix A, llvm::SmallVector<Polynomial::Monomial>
-    // symbols) : SymbolicPolyhdra(A, symbols) {
+    AffineLoopNest(IntMatrix A, llvm::SmallVector<llvm::Value *> symbols)
+        : SymbolicPolyhedra(std::move(A)), symbols(std::move(symbols)){};
+    AffineLoopNest() = default;
 
-    // }
-
-    // static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    // construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
-    //     llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-    //         llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-    //     ret->A = std::move(A);
-    //     ret->C = LinearSymbolicComparator::construct(ret->A);
-    //     ret->symbols = std::move(symbols);
-    //     return ret;
-    // }
-    // static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    // construct(IntMatrix A, LinearSymbolicComparator C,
-    //           llvm::SmallVector<Polynomial::Monomial> symbols) {
-    //     llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-    //         llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-    //     ret->A = std::move(A);
-    //     ret->C = std::move(C);
-    //     ret->symbols = std::move(symbols);
-    //     return ret;
-    // }
-
-    llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    AffineLoopNest
     rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
         SHOW(R.numCol());
         CSHOW(numPeeled);
@@ -182,13 +156,13 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         assert(numPeeled < getNumLoops());
         const size_t numConst = getNumSymbols() + numPeeled;
         const auto [M, N] = A.size();
-        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
-        ret->symbols = symbols;
-        IntMatrix &B = ret->A;
+        AffineLoopNest ret;
+        ret.symbols = symbols;
+        IntMatrix &B = ret.A;
         B.resizeForOverwrite(M, N);
         B(_, _(begin, numConst)) = A(_, _(begin, numConst));
         B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
-        ret->C = LinearSymbolicComparator::construct(B);
+        ret.C = LinearSymbolicComparator::construct(B);
         llvm::errs() << "A = \n" << A << "\n";
         llvm::errs() << "R = \n" << R << "\n";
         llvm::errs() << "B = \n" << B << "\n";
@@ -204,24 +178,23 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
-    [[nodiscard]] llvm::IntrusiveRefCntPtr<AffineLoopNest>
+    [[nodiscard]] AffineLoopNest
     removeLoop(size_t i) const {
-        auto L{llvm::makeIntrusiveRefCnt<AffineLoopNest>(*this)};
+        AffineLoopNest L{*this};
         // AffineLoopNest L = *this;
-        L->removeLoopBang(i);
+        L.removeLoopBang(i);
         return L;
     }
-    llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>>
+    llvm::SmallVector<AffineLoopNest,0>
     perm(PtrVector<unsigned> x) {
-        llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>> ret;
+        llvm::SmallVector<AffineLoopNest,0> ret;
         // llvm::SmallVector<AffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
-        ret.back() = this;
+        ret.back() = *this;
         for (size_t i = x.size() - 1; i != 0;) {
-            llvm::IntrusiveRefCntPtr<AffineLoopNest> prev = ret[i];
-            // AffineLoopNest &prev = ret[i];
+            AffineLoopNest &prev = ret[i];
             size_t oldi = i;
-            ret[--i] = prev->removeLoop(x[oldi]);
+            ret[--i] = prev.removeLoop(x[oldi]);
         }
         return ret;
     }

@@ -25,9 +25,9 @@
 
 TEST(TriangularExampleTest, BasicAssertions) {
 
-    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-                        "n8:16:32:64-S128");
-    llvm::TargetTransformInfo TTI{dl};
+    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+    //                     "n8:16:32:64-S128");
+    // llvm::TargetTransformInfo TTI{dl};
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();
@@ -521,9 +521,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // }
     // for (i = 0; i < I; ++i)
     //   s(i) = sqrt(s(i) / (J-1));
-    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-                        "n8:16:32:64-S128");
-    llvm::TargetTransformInfo TTI{dl};
+    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+    //                     "n8:16:32:64-S128");
+    // llvm::TargetTransformInfo TTI{dl};
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();
@@ -897,9 +897,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
 TEST(DoubleDependenceTest, BasicAssertions) {
 
-    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-                        "n8:16:32:64-S128");
-    llvm::TargetTransformInfo TTI{dl};
+    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+    //                     "n8:16:32:64-S128");
+    // llvm::TargetTransformInfo TTI{dl};
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();
@@ -1114,9 +1114,9 @@ TEST(ConvReversePass, BasicAssertions) {
     //     }
     //   }
     // }
-    llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-                        "n8:16:32:64-S128");
-    llvm::TargetTransformInfo TTI{dl};
+    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
+    //                     "n8:16:32:64-S128");
+    // llvm::TargetTransformInfo TTI{dl};
     llvm::LLVMContext ctx = llvm::LLVMContext();
     llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
     auto fmf = llvm::FastMathFlags();

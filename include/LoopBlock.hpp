@@ -546,12 +546,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     // TODO: we need to rotate via setting the schedule, not instantiating
     // the rotated array!
-    [[nodiscard]] static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    getBang(llvm::DenseMap<const AffineLoopNest *,
-                           llvm::IntrusiveRefCntPtr<AffineLoopNest>> &map,
+    [[nodiscard]] static AffineLoopNest &
+    getBang(llvm::DenseMap<const AffineLoopNest *, AffineLoopNest> &map,
             SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> newp;
         if (p != map.end()) {
             return p->second;
         } else {
@@ -559,9 +557,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
-            auto alshr = aln->rotate(K, numPeeled);
-            map.insert(std::make_pair(aln, alshr));
-            return alshr;
+            map.insert(std::make_pair(aln, aln->rotate(K, numPeeled)));
+            return map.find(aln)->second;
         }
     }
 
@@ -657,9 +654,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 // Schedule:
                 // Phi*L = (Phi*K)*J
                 IntMatrix KS{K * S};
-                llvm::DenseMap<const AffineLoopNest *,
-                               llvm::IntrusiveRefCntPtr<AffineLoopNest>>
-                    loopMap;
+                llvm::DenseMap<const AffineLoopNest *, AffineLoopNest> loopMap;
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
@@ -672,7 +667,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // }
                     ArrayReference oldRef = std::move(maj.ref);
                     maj.ref = {oldRef.arrayID,
-                               getBang(loopMap, K, oldRef.loop.get())};
+                               getBang(loopMap, K, oldRef.loop)};
                     // refMap[oldRefID] = maj.ref = refs.size();
                     // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;

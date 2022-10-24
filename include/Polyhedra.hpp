@@ -62,6 +62,13 @@ struct Polyhedra {
     [[no_unique_address]] I64Matrix E;
     [[no_unique_address]] CmptrType C;
 
+    Polyhedra() = default;
+    Polyhedra(IntMatrix Ain)
+        : A(std::move(Ain)), E{}, C(LinearSymbolicComparator::construct(A)){};
+    Polyhedra(IntMatrix Ain, I64Matrix Ein)
+        : A(std::move(Ain)), E(std::move(Ein)),
+          C(LinearSymbolicComparator::construct(A)){};
+
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
         if constexpr (hasEqualities)
