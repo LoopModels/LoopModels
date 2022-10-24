@@ -6,16 +6,16 @@
 // Demonstrate some basic assertions.
 TEST(HelloTest, BasicAssertions) {
     SmallSparseMatrix<int64_t> Asparse(3, 4);
-    std::cout << "&Asparse = " << &Asparse << std::endl;
+    llvm::errs() << "&Asparse = " << &Asparse << "\n";
     Asparse(0, 1) = 5;
     Asparse(1, 3) = 3;
     Asparse(2, 0) = -1;
     Asparse(2, 1) = 4;
     Asparse(2, 2) = -2;
     IntMatrix A = Asparse;
-    // std::cout << "A.size() = ("<<A.numRow()<<", "<<A.numCol()<<")\n";
-    // std::cout << "\nAsparse = \n" << Asparse << std::endl;
-    // std::cout << "\nA = \n" << A << std::endl << std::endl;
+    // llvm::errs() << "A.size() = ("<<A.numRow()<<", "<<A.numCol()<<")\n";
+    // llvm::errs() << "\nAsparse = \n" << Asparse << "\n";
+    // llvm::errs() << "\nA = \n" << A << "\n" << "\n";
     for (size_t i = 0; i < 3; ++i)
         for (size_t j = 0; j < 4; ++j)
             EXPECT_TRUE(A(i, j) == Asparse(i, j));
@@ -61,7 +61,7 @@ TEST(HelloTest, BasicAssertions) {
     EXPECT_EQ(B.numCol(), (A * B).numCol());
     EXPECT_TRUE(C == A * B);
     IntMatrix C2{A * B};
-    std::cout << "C=\n" << C << "\nC2=\n" << C2 << std::endl;
+    llvm::errs() << "C=\n" << C << "\nC2=\n" << C2 << "\n";
     EXPECT_TRUE(C == C2);
     IntMatrix At = A.transpose();
     IntMatrix Bt = B.transpose();
@@ -119,8 +119,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     c.push_back(14);
     c.push_back(6);
     EXPECT_EQ(b, c);
-    // std::cout << "B = \n"<<B<<std::endl;
-    // std::cout << "C = \n"<<C<<std::endl;
+    // llvm::errs() << "B = \n"<<B<<"\n";
+    // llvm::errs() << "C = \n"<<C<<"\n";
     // IntMatrix B;
     // B = A*4;
     IntMatrix A1x1(1, 1);

@@ -335,6 +335,19 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         return true;
     }
 
+    void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
+                     int64_t mul) const {
+        os << mul * x[0];
+        for (size_t i = 1; i < x.size(); ++i)
+            if (int64_t xi = x[i] * mul) {
+                os << (xi > 0 ? " + " : " - ");
+                int64_t absxi = std::abs(xi);
+                if (absxi != 1)
+                    os << absxi << " * ";
+                os << symbols[i - 1];
+            }
+    }
+
     // void printBound(llvm::raw_ostream &os, const IntMatrix &A, size_t i,
     void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
         const size_t numVar = getNumLoops();
@@ -355,7 +368,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
             PtrVector<int64_t> b = getProgVars(j);
             bool printed = !allZero(b);
             if (printed)
-                printSymbol(os, b, symbols, -sign);
+                printSymbol(os, b, -sign);
             for (size_t k = 0; k < numVar; ++k) {
                 if (k == i)
                     continue;

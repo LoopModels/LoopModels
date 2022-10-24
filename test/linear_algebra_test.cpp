@@ -29,18 +29,18 @@ TEST(LinearAlgebraTest, BasicAssertions) {
     EXPECT_TRUE(LUFopt.hasValue());
     auto LUF = LUFopt.getValue();
     Matrix<Rational, 0, 0> B = A;
-    std::cout << "A = \n" << A << "\nB = \n" << B << std::endl;
-    printVector(std::cout << "F = \n"
-                          << LUF.F << "\nperm = \n",
+    llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
+    printVector(llvm::errs() << "F = \n"
+                             << LUF.F << "\nperm = \n",
                 LUF.ipiv)
-        << std::endl;
+        << "\n";
     auto Bcopy = B;
     EXPECT_FALSE(LUF.ldiv(Bcopy));
-    std::cout << "LUF.ldiv(B) = \n" << Bcopy << std::endl;
+    llvm::errs() << "LUF.ldiv(B) = \n" << Bcopy << "\n";
     EXPECT_TRUE(Bcopy == identity);
-    std::cout << "I = " << identity << std::endl;
+    llvm::errs() << "I = " << identity << "\n";
 
     EXPECT_FALSE(LUF.rdiv(B));
-    std::cout << "LUF.rdiv(B) = \n" << B << std::endl;
+    llvm::errs() << "LUF.rdiv(B) = \n" << B << "\n";
     EXPECT_TRUE(B == identity);
 }

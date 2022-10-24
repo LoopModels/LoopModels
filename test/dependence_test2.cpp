@@ -2,14 +2,13 @@
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
-#include "../include/Symbolics.hpp"
-#include "llvm/ADT/SmallVector.h"
+#include <llvm/ADT/SmallVector.h>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
-#include <iostream>
 #include <memory>
+#include <llvm/Support/raw_ostream.h>
 
 
 TEST(DependenceTest, BasicAssertions) {
@@ -65,7 +64,7 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::SmallVector<Stride, ArrayRefPreAllocSize> XaxesSrc;
     XaxesSrc.emplace_back(1, i);
     ArrayReference Xref(0, loop, XaxesSrc);
-    std::cout << "Xsrc = " << Xref << std::endl;
+    llvm::errs() << "Xsrc = " << Xref << "\n";
     
     Schedule schLoad(3);
     Schedule schStore(3);

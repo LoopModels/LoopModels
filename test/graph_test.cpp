@@ -90,7 +90,7 @@ TEST(GraphTest, BasicAssertions) {
     EXPECT_EQ(scc0, scc1);
     SHOWLN(scc0.size());
     for (auto &v : scc0)
-        std::cout << "SCC: " << v << std::endl;
+        llvm::errs() << "SCC: " << v << "\n";
     // NOTE: currently using inNeighbors instead of outNeighbors, so in
     // topological order.
     EXPECT_EQ(scc0[0].size(), 1);

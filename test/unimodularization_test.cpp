@@ -16,10 +16,10 @@ TEST(UnimodularizationTest, BasicAssertions) {
     VE(1, 1) = 0;
     VE(2, 1) = 1;
     VE(3, 1) = 0;
-    std::cout << "VE=\n" << VE << std::endl;
+    llvm::errs() << "VE=\n" << VE << "\n";
     auto VB = unimodularize(VE);
     EXPECT_TRUE(VB.hasValue());
-    std::cout << "VB:\n" << VB.getValue() << std::endl;
+    llvm::errs() << "VB:\n" << VB.getValue() << "\n";
 
     IntMatrix A23(3, 2);
     A23(0, 0) = 9;
@@ -30,7 +30,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
     A23(2, 1) = 0;
     auto B = unimodularize(A23);
     EXPECT_TRUE(B.hasValue());
-    std::cout << "B:\n" << B.getValue() << std::endl;
+    llvm::errs() << "B:\n" << B.getValue() << "\n";
     // EXPECT_EQ(j, length(bsc));
     // EXPECT_EQ(j, length(bs));
 
@@ -44,9 +44,9 @@ TEST(UnimodularizationTest, BasicAssertions) {
     //     auto [r1, r2] = test6_10_15.getValue();
     //     auto [A10, A11, A12] = r1;
     //     auto [A20, A21, A22] = r2;
-    //     std::cout << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ", "
+    //     llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ", "
     //               << A12 << " ]\n";
-    //     std::cout << "A(2,:): [ " << A20 << ", " << A21 << ", "
+    //     llvm::errs() << "A(2,:): [ " << A20 << ", " << A21 << ", "
     //               << A22 << " ]\n";
     // }
     A13(0, 0) = 102;
@@ -59,10 +59,10 @@ TEST(UnimodularizationTest, BasicAssertions) {
     //      auto [r1, r2] = test102_190_345.getValue();
     //      auto [A10, A11, A12] = r1;
     //      auto [A20, A21, A22] = r2;
-    //      std::cout << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ",
+    //      llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ",
     //      "
     //                << A12 << " ]\n";
-    //      std::cout << "A(2,:): [ " << A20 << ", " << A21 << ", "
+    //      llvm::errs() << "A(2,:): [ " << A20 << ", " << A21 << ", "
     //                << A22 << " ]\n";
     //  }
 }

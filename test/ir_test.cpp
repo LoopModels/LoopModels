@@ -9,11 +9,11 @@
 
 TEST(IRTest, BasicAssertions) {
     // Const a = Const{.NumType = Const::Int64, .i64 = 0};
-    // std::cout << a << std::endl;
+    // llvm::errs() << a << "\n";
     // a = Const{.NumType = Const::Float64, .d = 2.3};
-    // std::cout << a << std::endl;
+    // llvm::errs() << a << "\n";
     // a = Const{.NumType = Const::Float32, .f = 3.4f};
-    // std::cout << a << std::endl;
+    // llvm::errs() << a << "\n";
     // pretty print
     // We'll build an ArrayRef
     // i_2 (Induction Variable) +
@@ -34,8 +34,8 @@ TEST(IRTest, BasicAssertions) {
     // llvm::SmallVector<size_t> pvc_memory({0, 0, 1, 0, 0, 2, 0, 1, 2});
     // std::vector<size_t> innerOffsets({0, 0, 0, 1, 0, 2, 0, 0, 1, 0, 0, 2,
     // 5}); printf("innOff len: %d\n", innerOffsets.size()); std::vector<size_t>
-    // outerOffsets({0, 2, 4, 6, 9, 13}); std::cout <<
-    // toVector(llvm::ArrayRef<size_t>(innerOffsets)) << std::endl; size_t
+    // outerOffsets({0, 2, 4, 6, 9, 13}); llvm::errs() <<
+    // toVector(llvm::ArrayRef<size_t>(innerOffsets)) << "\n"; size_t
     // raw[16]; Vector<size_t, 0> memBuffer(raw, outerOffsets.size());
     // llvm::SmallVector<size_t> memBuffer().resize(outerOffsets.size());
     // VoVoV<size_t> pvc =
@@ -74,6 +74,6 @@ TEST(IRTest, BasicAssertions) {
     inds.emplace_back(p4, VarID(0, VarID::VarType::LoopInductionVariable));
 
     // ArrayReferenceFlat ar{.arrayID = 10, .inds = inds};
-    // std::cout << ar << std::endl;
-    // std::cout << "sizeof(TermBundle): " << sizeof(TermBundle) << std::endl;
+    // llvm::errs() << ar << "\n";
+    // llvm::errs() << "sizeof(TermBundle): " << sizeof(TermBundle) << "\n";
 }

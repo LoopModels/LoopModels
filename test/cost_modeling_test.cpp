@@ -2,11 +2,10 @@
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Math.hpp"
-#include "../include/Symbolics.hpp"
-#include "Loops.hpp"
-#include "Macro.hpp"
-#include "MatrixStringParse.hpp"
-#include "MemoryAccess.hpp"
+#include "../include/Loops.hpp"
+#include "../include/Macro.hpp"
+#include "../include/MatrixStringParse.hpp"
+#include "../include/MemoryAccess.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -161,7 +160,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         BmnInd.strides[0] = M;
         BmnInd.strides[1] = 1;
     }
-    std::cout << "Bmn = " << BmnInd << std::endl;
+    llvm::errs() << "Bmn = " << BmnInd << "
+";
     // A[n, m]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
@@ -172,7 +172,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         Amn2Ind.strides[0] = M;
         Amn2Ind.strides[1] = 1;
     }
-    std::cout << "Amn2 = " << Amn2Ind << std::endl;
+    llvm::errs() << "Amn2 = " << Amn2Ind << "
+";
     // A[n, m]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
@@ -183,7 +184,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         Amn3Ind.strides[0] = M;
         Amn3Ind.strides[1] = 1;
     }
-    std::cout << "Amn3 = " << Amn3Ind << std::endl;
+    llvm::errs() << "Amn3 = " << Amn3Ind << "
+";
     // A[k, m]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
@@ -194,7 +196,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         AmkInd.strides[0] = M;
         AmkInd.strides[1] = 1;
     }
-    std::cout << "Amk = " << AmkInd << std::endl;
+    llvm::errs() << "Amk = " << AmkInd << "
+";
     // U[k, n]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
@@ -205,7 +208,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         UnkInd.strides[0] = N;
         UnkInd.strides[1] = 1;
     }
-    std::cout << "Unk = " << UnkInd << std::endl;
+    llvm::errs() << "Unk = " << UnkInd << "
+";
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
@@ -216,7 +220,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         UnnInd.strides[1] = 1;
         UnnInd.strides[0] = N;
     }
-    std::cout << "Unn = " << UnnInd << std::endl;
+    llvm::errs() << "Unn = " << UnnInd << "
+";
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -299,13 +304,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // // load in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     //
     //
     // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     //
     // sch3_               3        0         1     2
@@ -313,38 +320,45 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     //
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_0), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_3), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
     // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     //
     // sch3_               3        0         1     2
     // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
     // with...
@@ -352,15 +366,18 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     // Fourth, comparisons of load `A(m,n)` in
     // sch3_               3        0         1     2
@@ -369,11 +386,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    std::cout << "dep#" << d.size() << ":\n" << d.back() << std::endl;
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
+";
 
     // Fifth, comparisons of load `A(m,k)` in
     // sch3_               3        0         1     2
@@ -383,11 +402,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
-    std::cout << "dep#" << d.size() << std::endl;
+    llvm::errs() << "dep#" << d.size() << "
+";
     auto &forward = d[d.size() - 2];
     auto &reverse = d[d.size() - 1];
-    std::cout << "\nforward dependence:" << forward;
-    std::cout << "\nreverse dependence:" << reverse;
+    llvm::errs() << "\nforward dependence:" << forward;
+    llvm::errs() << "\nreverse dependence:" << reverse;
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
@@ -462,7 +482,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
         }
         // SHOWLN(mem.schedule.getPhi());
         // SHOWLN(mem.schedule.getOmega());
-        std::cout << std::endl;
+        llvm::errs() << "
+";
     }
 }
 
@@ -756,25 +777,27 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
         memAccessIds[&iOuterLoopNest.memory[i]] = i;
     for (auto &e : iOuterLoopNest.edges) {
-        std::cout << "\nEdge for array " << e.out->ref.arrayID
+        llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
                   << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << std::endl;
+                  << "; out ID: " << memAccessIds[e.out] << "
+";
     }
     for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
         const auto &v = iOuterLoopNest.nodes[i];
-        std::cout << "v_" << i << ":\nmem = ";
+        llvm::errs() << "v_" << i << ":\nmem = ";
         for (auto m : v.memory) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\ninNeighbors = ";
+        llvm::errs() << "\ninNeighbors = ";
         for (auto m : v.inNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\noutNeighbors = ";
+        llvm::errs() << "\noutNeighbors = ";
         for (auto m : v.outNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << std::endl;
+        llvm::errs() << "
+";
     }
     // Graphs::print(iOuterLoopNest.fullGraph());
     for (auto &mem : iOuterLoopNest.memory) {
@@ -837,19 +860,20 @@ TEST(MeanStDevTest0, BasicAssertions) {
     EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
         const auto &v = jOuterLoopNest.nodes[i];
-        std::cout << "v_" << i << ":\nmem = ";
+        llvm::errs() << "v_" << i << ":\nmem = ";
         for (auto m : v.memory) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\ninNeighbors = ";
+        llvm::errs() << "\ninNeighbors = ";
         for (auto m : v.inNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\noutNeighbors = ";
+        llvm::errs() << "\noutNeighbors = ";
         for (auto m : v.outNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << std::endl;
+        llvm::errs() << "
+";
     }
     IntMatrix optS(2);
     optS.antiDiag() = 1;
@@ -951,7 +975,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         Asrc.strides[1] = 1;
         Asrc.strides[0] = I;
     }
-    std::cout << "AaxesSrc = " << Asrc << std::endl;
+    llvm::errs() << "AaxesSrc = " << Asrc << "
+";
 
     // A[i+1, j]
     ArrayReference Atgt0(0, loop, 2);
@@ -965,7 +990,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         Atgt0.strides[1] = 1;
         Atgt0.strides[0] = I;
     }
-    std::cout << "AaxesTgt0 = \n" << Atgt0 << std::endl;
+    llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "
+";
 
     // A[i, j+1]
     ArrayReference Atgt1(0, loop, 2);
@@ -978,7 +1004,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         Atgt1.strides[1] = 1;
         Atgt1.strides[0] = I;
     }
-    std::cout << "AaxesTgt1 = \n" << Atgt1 << std::endl;
+    llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "
+";
 
     //
     Schedule schLoad0(2);
@@ -989,7 +1016,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     DependencePolyhedra dep0(msrc, mtgt0);
     EXPECT_FALSE(dep0.isEmpty());
     dep0.pruneBounds();
-    std::cout << "Dep0 = \n" << dep0 << std::endl;
+    llvm::errs() << "Dep0 = \n" << dep0 << "
+";
 
     EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
@@ -1002,7 +1030,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     DependencePolyhedra dep1(msrc, mtgt1);
     EXPECT_FALSE(dep1.isEmpty());
     dep1.pruneBounds();
-    std::cout << "Dep1 = \n" << dep1 << std::endl;
+    llvm::errs() << "Dep1 = \n" << dep1 << "
+";
     EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
     assert(dep1.getNumInequalityConstraints() == 4);
@@ -1014,7 +1043,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     EXPECT_EQ(dc.size(), 1);
     Dependence &d(dc.front());
     EXPECT_TRUE(d.forward);
-    std::cout << d << std::endl;
+    llvm::errs() << d << "
+";
     SHOWLN(d.getNumPhiCoefficients());
     SHOWLN(d.getNumOmegaCoefficients());
     SHOWLN(d.depPoly.getDim0());
@@ -1038,25 +1068,27 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     for (size_t i = 0; i < loopBlock.memory.size(); ++i)
         memAccessIds[&loopBlock.memory[i]] = i;
     for (auto &e : loopBlock.edges) {
-        std::cout << "\nEdge for array " << e.out->ref.arrayID
+        llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
                   << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << std::endl;
+                  << "; out ID: " << memAccessIds[e.out] << "
+";
     }
     for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
         const auto &v = loopBlock.nodes[i];
-        std::cout << "v_" << i << ":\nmem = ";
+        llvm::errs() << "v_" << i << ":\nmem = ";
         for (auto m : v.memory) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\ninNeighbors = ";
+        llvm::errs() << "\ninNeighbors = ";
         for (auto m : v.inNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << "\noutNeighbors = ";
+        llvm::errs() << "\noutNeighbors = ";
         for (auto m : v.outNeighbors) {
-            std::cout << m << ", ";
+            llvm::errs() << m << ", ";
         }
-        std::cout << std::endl;
+        llvm::errs() << "
+";
     }
     IntMatrix optPhi(2, 2);
     optPhi(0, _) = 1;
@@ -1183,7 +1215,8 @@ TEST(ConvReversePass, BasicAssertions) {
         BmnInd.strides[1] = 1;
         BmnInd.strides[0] = I;
     }
-    std::cout << "Bmn = " << BmnInd << std::endl;
+    llvm::errs() << "Bmn = " << BmnInd << "
+";
     // A[n, m]
     ArrayReference AmnInd{1, loop, 2};
     {

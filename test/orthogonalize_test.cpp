@@ -1,13 +1,12 @@
 #include "../include/Math.hpp"
 #include "../include/Orthogonalize.hpp"
-#include "../include/Symbolics.hpp"
-#include "Loops.hpp"
-#include "MatrixStringParse.hpp"
-#include "llvm/ADT/SmallVector.h"
+#include "../include/Loops.hpp"
+#include "../include/MatrixStringParse.hpp"
+#include <llvm/ADT/SmallVector.h>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
-#include <iostream>
+#include <llvm/Support/raw_ostream.h>
 #include <memory>
 #include <random>
 
@@ -51,7 +50,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         War.strides[0] = 1;
         War.strides[1] = I + M - 1;
     }
-    std::cout << "War = " << War << std::endl;
+    llvm::errs() << "War = " << War << "\n";
 
     // B[i, j]
     ArrayReference Bar{1, alnp, 2};
@@ -62,7 +61,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         Bar.strides[0] = 1;
         Bar.strides[1] = I;
     }
-    std::cout << "Bar = " << Bar << std::endl;
+    llvm::errs() << "Bar = " << Bar << "\n";
 
     // C[m, n]
     ArrayReference Car{2, alnp, 2};
@@ -73,7 +72,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         Car.strides[0] = 1;
         Car.strides[1] = M;
     }
-    std::cout << "Car = " << Car << std::endl;
+    llvm::errs() << "Car = " << Car << "\n";
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
@@ -95,9 +94,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     EXPECT_EQ(countNonZero(newArrayRefs[1].indexMatrix()(_, 1)), 1);
     EXPECT_EQ(countNonZero(newArrayRefs[2].indexMatrix()(_, 0)), 2);
     EXPECT_EQ(countNonZero(newArrayRefs[2].indexMatrix()(_, 1)), 2);
-    std::cout << "A=" << newAlnp->A << std::endl;
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
+    llvm::errs() << "A=" << newAlnp->A << "\n";
+    // llvm::errs() << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
+    llvm::errs() << "Skewed loop nest:\n" << *newAlnp << "\n";
     auto loop3Count =
         newAlnp->countSigns(newAlnp->A, 3 + newAlnp->getNumSymbols());
     EXPECT_EQ(loop3Count.first, 2);
@@ -117,9 +116,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         newAlnp->countSigns(newAlnp->A, 0 + newAlnp->getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
     EXPECT_EQ(loop0Count.second, 1);
-    std::cout << "New ArrayReferences:\n";
+    llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
-        std::cout << ar << std::endl << std::endl;
+        llvm::errs() << ar << "\n" << "\n";
     }
 }
 
@@ -167,7 +166,7 @@ TEST(BadMul, BasicAssertions) {
         War.strides[0] = 1;
         War.strides[1] = M;
     }
-    std::cout << "War = " << War << std::endl;
+    llvm::errs() << "War = " << War << "\n";
 
     // B[j, l - j]
     ArrayReference Bar(1, alnp, 2); //, axes, indTo
@@ -179,7 +178,7 @@ TEST(BadMul, BasicAssertions) {
         Bar.strides[0] = 1;
         Bar.strides[1] = M;
     }
-    std::cout << "Bar = " << Bar << std::endl;
+    llvm::errs() << "Bar = " << Bar << "\n";
 
     // C[l-j,i-l]
     ArrayReference Car(2, alnp, 2); //, axes, indTo
@@ -192,7 +191,7 @@ TEST(BadMul, BasicAssertions) {
         Car.strides[0] = 1;
         Car.strides[1] = O;
     }
-    std::cout << "Car = " << Car << std::endl;
+    llvm::errs() << "Car = " << Car << "\n";
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
@@ -211,8 +210,8 @@ TEST(BadMul, BasicAssertions) {
 
     SHOWLN(alnp->A);
     SHOWLN(newAlnp->A);
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
+    // llvm::errs() << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
+    llvm::errs() << "Skewed loop nest:\n" << *newAlnp << "\n";
     auto loop2Count =
         newAlnp->countSigns(newAlnp->A, 2 + newAlnp->getNumSymbols());
     EXPECT_EQ(loop2Count.first, 1);
@@ -230,9 +229,9 @@ TEST(BadMul, BasicAssertions) {
     EXPECT_EQ(loop0Count.first, 1);
     EXPECT_EQ(loop0Count.second, 1);
 
-    std::cout << "New ArrayReferences:\n";
+    llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs)
-        std::cout << ar << std::endl << std::endl;
+        llvm::errs() << ar << "\n" << "\n";
 }
 
 TEST(OrthogonalizeMatricesTest, BasicAssertions) {
@@ -248,13 +247,13 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     for (size_t i = 0; i < iters; ++i) {
         for (auto &&a : A)
             a = distrib(gen);
-        // std::cout << "Random A =\n" << A << std::endl;
+        // llvm::errs() << "Random A =\n" << A << "\n";
         A = orthogonalize(std::move(A));
-        // std::cout << "Orthogonal A =\n" << A << std::endl;
+        // llvm::errs() << "Orthogonal A =\n" << A << "\n";
         // note, A'A is not diagonal
         // but AA' is
         B = A * A.transpose();
-        // std::cout << "A'A =\n" << B << std::endl;
+        // llvm::errs() << "A'A =\n" << B << "\n";
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
                 if (m != n){
