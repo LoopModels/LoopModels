@@ -80,11 +80,6 @@ struct ArrayReference {
         : arrayID(a.arrayID), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
-	llvm::errs() << "Post-Init: ";
-	SHOW(newInds.numRow());
-	CSHOW(newInds.numCol());
-	CSHOW(indexMatrix().numRow());
-	CSHOWLN(indexMatrix().numCol());
     }
     ArrayReference(size_t arrayID, AffineLoopNest *loop)
         : arrayID(arrayID), loop(loop){};
