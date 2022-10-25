@@ -1,10 +1,11 @@
 #include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
-#include "../include/Math.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Macro.hpp"
+#include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "../include/TestUtilities.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -19,9 +20,6 @@ TEST(DependenceTest, BasicAssertions) {
     //     A(i+1,j+1) = A(i+1,j) + A(i,j+1);
     //   }
     // }
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    auto J = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
     // A*x >= 0;
     // [ -2  1  0 -1  0    [ 1
     //    0  0  0  1  0  *   I   >= 0
@@ -32,8 +30,11 @@ TEST(DependenceTest, BasicAssertions) {
                                       "0 0 0 1 0; "
                                       "-2 0 1 0 -1; "
                                       "0 0 0 0 1]")};
-    auto loop{AffineLoopNest::construct(Aloop, symbols)};
-
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(Aloop), 2);
+    auto &loop = tlf.alns.front();
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type *Int64 = tlf.builder.getInt64Ty();
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
     ArrayReference Asrc(0, loop, 2);
@@ -44,8 +45,8 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
-        Asrc.strides[0] = 1;
-        Asrc.strides[1] = I;
+        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
@@ -56,8 +57,8 @@ TEST(DependenceTest, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
         Atgt0.offsetMatrix()(0, 0) = 1;
-        Atgt0.strides[0] = 1;
-        Atgt0.strides[1] = I;
+        Atgt0.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
@@ -68,8 +69,8 @@ TEST(DependenceTest, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
         Atgt1.offsetMatrix()(1, 0) = 1;
-        Atgt1.strides[0] = 1;
-        Atgt1.strides[1] = I;
+        Atgt1.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
@@ -127,15 +128,17 @@ TEST(IndependentTest, BasicAssertions) {
     //   for(j = 0:i-1)
     //     A(j,i) = A(i,j)
     //
-    llvm::errs() << "\n\n#### Starting Symmetric Copy Test ####" << "\n";
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I};
     IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
                                       "0 0 1 0; "
                                       "-1 0 1 -1; "
                                       "0 0 0 1]")};
 
-    auto loop{AffineLoopNest::construct(Aloop, symbols)};
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(Aloop), 2);
+    auto &loop = tlf.alns.front();
+
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type *Int64 = tlf.builder.getInt64Ty();
     // we have three array refs
     // A[i, j]
     ArrayReference Asrc(0, loop, 2);
@@ -143,8 +146,8 @@ TEST(IndependentTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.strides[0] = 1;
-        Asrc.strides[1] = I;
+        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Asrc = " << Asrc << "\n";
 
@@ -154,8 +157,8 @@ TEST(IndependentTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(1, 0) = 1; // j
         IndMat(0, 1) = 1; // i
-        Atgt.strides[0] = 1;
-        Atgt.strides[1] = I;
+        Atgt.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Atgt = " << Atgt << "\n";
 
@@ -189,9 +192,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
 
-    auto M = Polynomial::Monomial(Polynomial::ID{1});
-    auto N = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
     // Construct the loops
     IntMatrix AMN{(stringToIntMatrix("[-1 1 0 -1 0; "
                                      "0 0 0 1 0; "
@@ -204,70 +204,85 @@ TEST(TriangularExampleTest, BasicAssertions) {
                                       "-1 0 1 0 0 -1; "
                                       "-1 0 0 0 -1 1]"))};
 
-    auto loopMN = AffineLoopNest::construct(AMN, symbols);
-    auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(AMN), 2);
+    tlf.addLoop(std::move(AMNK), 3);
+    AffineLoopNest &loopMN = tlf.alns[0];
+    EXPECT_FALSE(loopMN.isEmpty());
+    AffineLoopNest &loopMNK = tlf.alns[1];
+    EXPECT_FALSE(loopMNK.isEmpty());
+    llvm::Value *M = loopMN.symbols[0];
+    llvm::Value *N = loopMN.symbols[1];
 
     // construct indices
 
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type *Int64 = tlf.builder.getInt64Ty();
     LoopBlock lblock;
     // B[m, n]
-    ArrayReference BmnInd{0, loopMN, 2};
+    ArrayReference BmnInd{0, &loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        BmnInd.strides[0] = 1;
-        BmnInd.strides[1] = M;
+        //     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        BmnInd.sizes[0] = SE.getSCEV(M);
+        BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
-    // A[m, n]
+    // A[n, m]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        Amn2Ind.strides[0] = 1;
-        Amn2Ind.strides[1] = M;
+        //     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        Amn2Ind.sizes[0] = SE.getSCEV(M);
+        Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
-    // A[m, n]
+    // A[n, m]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(1, 1) = 1; // n
-        Amn3Ind.strides[0] = 1;
-        Amn3Ind.strides[1] = M;
+        //     l  d
+        IndMat(1, 0) = 1; // n
+        IndMat(0, 1) = 1; // m
+        Amn3Ind.sizes[0] = SE.getSCEV(M);
+        Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
-    // A[m, k]
+    // A[k, m]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
-        IndMat(0, 0) = 1; // m
-        IndMat(2, 1) = 1; // k
-        AmkInd.strides[0] = 1;
-        AmkInd.strides[1] = M;
+        //     l  d
+        IndMat(2, 0) = 1; // k
+        IndMat(0, 1) = 1; // m
+        AmkInd.sizes[0] = SE.getSCEV(M);
+        AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amk = " << AmkInd << "\n";
-    // U[n, k]
+    // U[k, n]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
-        IndMat(1, 0) = 1; // n
-        IndMat(2, 1) = 1; // k
-        UnkInd.strides[0] = 1;
-        UnkInd.strides[1] = N;
+        //     l  d
+        IndMat(1, 1) = 1; // n
+        IndMat(2, 0) = 1; // k
+        UnkInd.sizes[0] = SE.getSCEV(N);
+        UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unk = " << UnkInd << "\n";
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
-        IndMat(1, 0) = 1; // n
-        IndMat(1, 1) = 1; // k
-        UnnInd.strides[0] = 1;
-        UnnInd.strides[1] = N;
+        //     l  d
+        IndMat(1, 1) = 1; // n
+        IndMat(1, 0) = 1; // k
+        UnnInd.sizes[0] = SE.getSCEV(N);
+        UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unn = " << UnnInd << "\n";
 
@@ -398,7 +413,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //           << lblock.memory[1].ref.loop->poset.delta.size() << "\n";
     // llvm::errs() << "&mSch2_0_1 = " << &mSch2_0_1 << "\n";
     // llvm::errs() << "&(mSch2_0_1.ref) = " << &(mSch2_0_1.ref) << "\n";
-    // llvm::errs() << "lblock.memory[1].ref.loop = " << lblock.memory[1].ref.loop
+    // llvm::errs() << "lblock.memory[1].ref.loop = " <<
+    // lblock.memory[1].ref.loop
     //           << "\n";
     // llvm::errs() << "lblock.memory[1].ref.loop.get() = "
     //           << lblock.memory[1].ref.loop.get() << "\n";
@@ -536,8 +552,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
     // with...
     // store `A(m,k)` in 'A(m,k) = A(m,k) - A(m,n)*U(n,k)'
-    // printMatrix(llvm::errs() << "mSch3_0.schedule.getPhi() =\n", PtrMatrix<const
-    // int64_t>(mSch3_0.schedule.getPhi())) << "\n"; printMatrix(llvm::errs()
+    // printMatrix(llvm::errs() << "mSch3_0.schedule.getPhi() =\n",
+    // PtrMatrix<const int64_t>(mSch3_0.schedule.getPhi())) << "\n";
+    // printMatrix(llvm::errs()
     // << "mSch3_3.schedule.getPhi() =\n", PtrMatrix<const
     // int64_t>(mSch3_3.schedule.getPhi())) << "\n"; printVector(llvm::errs()
     // << "mSch3_0.schedule.getOmega() = ", mSch3_0.schedule.getOmega()) <<
@@ -606,7 +623,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // so that we can add bounding constraints to the objective, to
     // favor putting repeated loads close together.
     // However, we would not add the scheduling constraints.
-    EXPECT_EQ(lblock.edges.size(), d.size()-3);
+    EXPECT_EQ(lblock.edges.size(), d.size() - 3);
     // llvm::errs() << "Number of edges found: " << lblock.edges.size() <<
     // "\n"; EXPECT_EQ(lblock.edges.size(), 12); for (auto &e :
     // lblock.edges) {
@@ -621,8 +638,6 @@ TEST(RankDeficientLoad, BasicAssertions) {
     //     A(i,j) = A(i,i);
     //   }
     // }
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I};
     // A*x <= b
     // [ 1   0     [i        [ I - 1
     //  -1   0   *  j ]        0
@@ -633,7 +648,11 @@ TEST(RankDeficientLoad, BasicAssertions) {
                                       "0 0 1 0; "
                                       "0 0 1 -1; "
                                       "0 0 0 1]")};
-    auto loop = AffineLoopNest::construct(Aloop, symbols);
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(Aloop), 2);
+    auto &loop = tlf.alns.front();
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type *Int64 = tlf.builder.getInt64Ty();
 
     // we have three array refs
     // A[i, j] // i*stride(A,1) + j*stride(A,2);
@@ -642,8 +661,8 @@ TEST(RankDeficientLoad, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.strides[0] = 1;
-        Asrc.strides[1] = I;
+        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
@@ -653,8 +672,8 @@ TEST(RankDeficientLoad, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(0, 1) = 1; // i
-        Atgt.strides[0] = 1;
-        Atgt.strides[1] = I;
+        Atgt.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt = \n" << Atgt << "\n";
 
@@ -679,10 +698,6 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     // Indexed by three LIVs, and three dimensional
     // but memory access pattern is only rank 2, leaving
     // a time dimension of repeated memory accesses.
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    auto J = Polynomial::Monomial(Polynomial::ID{2});
-    auto K = Polynomial::Monomial(Polynomial::ID{3});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I, J, K};
     // A*x <= b
     // [ 1   0  0     [i        [ I - 1
     //  -1   0  0   *  j          0
@@ -697,7 +712,15 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
                                       "0 0 0 0 0 1 0; "
                                       "-1 0 0 1 0 0 -1; "
                                       "0 0 0 0 0 0 1]")};
-    auto loop = AffineLoopNest::construct(Aloop, symbols);
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(Aloop), 3);
+    auto &loop = tlf.alns.front();
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type *Int64 = tlf.builder.getInt64Ty();
+
+    llvm::Value *I = loop.symbols[0];
+    llvm::Value *J = loop.symbols[1];
+    llvm::Value *K = loop.symbols[2];
 
     // we have three array refs
     // A[i+j, j+k, i - k]
@@ -710,9 +733,9 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
         IndMat(2, 1) = 1;  // + k
         IndMat(0, 2) = 1;  // i
         IndMat(2, 2) = -1; // -k
-        Aref.strides[0] = 1;
-        Aref.strides[1] = I;
-        Aref.strides[2] = I * J;
+        Aref.sizes[0] = SE.getAddExpr(SE.getSCEV(J), SE.getSCEV(K));
+        Aref.sizes[1] = SE.getAddExpr(SE.getSCEV(I), SE.getSCEV(K));
+        Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Aref = " << Aref << "\n";
 
@@ -726,6 +749,6 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 2);
     assert(deps.size() == 2);
     llvm::errs() << "Rank deficicient example:\nForward:\n"
-              << deps[0] << "\nReverse:\n"
-              << deps[1] << "\n";
+                 << deps[0] << "\nReverse:\n"
+                 << deps[1] << "\n";
 }
