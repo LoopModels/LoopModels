@@ -6,6 +6,7 @@
 #include "../include/Macro.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/MemoryAccess.hpp"
+#include "../include/TestUtilities.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -24,33 +25,47 @@
 #include <llvm/Support/Casting.h>
 
 TEST(TriangularExampleTest, BasicAssertions) {
+    IntMatrix AMN{stringToIntMatrix("[-1 1 0 -1 0; "
+                                    "0 0 0 1 0; "
+                                    "-1 0 1 0 -1; "
+                                    "0 0 0 0 1]")};
+    IntMatrix AMNK{stringToIntMatrix("[-1 1 0 -1 0 0; "
+                                     "0 0 0 1 0 0; "
+                                     "-1 0 1 0 -1 0; "
+                                     "0 0 0 0 1 0; "
+                                     "-1 0 1 0 0 -1; "
+                                     "-1 0 0 0 -1 1]")};
 
-    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-    //                     "n8:16:32:64-S128");
-    // llvm::TargetTransformInfo TTI{dl};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(AMN), 2);
+    tlf.addLoop(std::move(AMNK), 3);
+    AffineLoopNest &loopMN = tlf.alns[0];
+    EXPECT_FALSE(loopMN.isEmpty());
+    AffineLoopNest &loopMNK = tlf.alns[1];
+    EXPECT_FALSE(loopMNK.isEmpty());
+    EXPECT_EQ(loopMN.symbols.size(), loopMNK.symbols.size());
+    for (size_t i = 0; i < loopMN.symbols.size(); ++i)
+	EXPECT_EQ(loopMN.symbols[i], loopMNK.symbols[i]);
+    
+    llvm::ScalarEvolution &SE{tlf.SE};
+    auto &builder = tlf.builder;
+    llvm::IntegerType *Int64 = builder.getInt64Ty();
+    
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrB = builder.CreateIntToPtr(builder.getInt64(8000), Float64);
-    llvm::Value *ptrA =
-        builder.CreateIntToPtr(builder.getInt64(16000), Float64);
-    llvm::Value *ptrU =
-        builder.CreateIntToPtr(builder.getInt64(24000), Float64);
+    llvm::Value *ptrB = tlf.createArray();
+    llvm::Value *ptrA = tlf.createArray();
+    llvm::Value *ptrU = tlf.createArray();
 
-    llvm::ConstantInt *Mv = builder.getInt64(200);
-    llvm::ConstantInt *Nv = builder.getInt64(100);
-    auto zero = builder.getInt64(0);
-    auto one = builder.getInt64(1);
+    llvm::Value *M = loopMN.symbols[0];
+    llvm::Value *N = loopMN.symbols[1];
+    llvm::Value* zero = builder.getInt64(0);
+    llvm::Value *one = builder.getInt64(1);
     llvm::Value *mv = builder.CreateAdd(zero, one);
     llvm::Value *nv = builder.CreateAdd(zero, one);
     llvm::Value *kv = builder.CreateAdd(nv, one);
 
-    llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+    llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, M));
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = B(n,m);
@@ -69,7 +84,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = A(n,m) / U(n,n);
-    llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
+    llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, N));
     auto Uloadnn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
@@ -86,13 +101,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //     for (k = n+1; k < N; ++k){
     //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
     //     }
-    llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
+    llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, N));
     auto Uloadnk = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
                           llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}),
         llvm::MaybeAlign(8));
-    llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
+    llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, M));
     auto Ageped1mk = builder.CreateGEP(
         Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk});
     auto Aload1mk =
@@ -129,39 +144,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
 
-    auto M = Polynomial::Monomial(Polynomial::ID{1});
-    auto N = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{M, N};
-    // Construct the loops
-    IntMatrix AMN{stringToIntMatrix("[-1 1 0 -1 0; "
-                                    "0 0 0 1 0; "
-                                    "-1 0 1 0 -1; "
-                                    "0 0 0 0 1]")};
-    IntMatrix AMNK{stringToIntMatrix("[-1 1 0 -1 0 0; "
-                                     "0 0 0 1 0 0; "
-                                     "-1 0 1 0 -1 0; "
-                                     "0 0 0 0 1 0; "
-                                     "-1 0 1 0 0 -1; "
-                                     "-1 0 0 0 -1 1]")};
-
-    auto loopMN = AffineLoopNest::construct(AMN, symbols);
-    auto loopMNK = AffineLoopNest::construct(AMNK, symbols);
 
     // construct indices
     // ind mat, loops currently indexed from outside-in
     LoopBlock lblock;
     // B[n, m]
-    ArrayReference BmnInd{0, loopMN, 2};
+    ArrayReference BmnInd{0, &loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        BmnInd.strides[0] = M;
-        BmnInd.strides[1] = 1;
+        BmnInd.sizes[0] = SE.getSCEV(M);
+        BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Bmn = " << BmnInd << "
-";
+    llvm::errs() << "Bmn = " << BmnInd << "\n";
     // A[n, m]
     ArrayReference Amn2Ind{1, loopMN, 2};
     {
@@ -169,11 +166,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn2Ind.strides[0] = M;
-        Amn2Ind.strides[1] = 1;
+        Amn2Ind.sizes[0] = SE.getSCEV(M);
+        Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Amn2 = " << Amn2Ind << "
-";
+    llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
     // A[n, m]
     ArrayReference Amn3Ind{1, loopMNK, 2};
     {
@@ -181,11 +177,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn3Ind.strides[0] = M;
-        Amn3Ind.strides[1] = 1;
+        Amn3Ind.sizes[0] = SE.getSCEV(M);
+        Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Amn3 = " << Amn3Ind << "
-";
+    llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
     // A[k, m]
     ArrayReference AmkInd{1, loopMNK, 2};
     {
@@ -193,11 +188,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(2, 0) = 1; // k
         IndMat(0, 1) = 1; // m
-        AmkInd.strides[0] = M;
-        AmkInd.strides[1] = 1;
+        AmkInd.sizes[0] = SE.getSCEV(M);
+        AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Amk = " << AmkInd << "
-";
+    llvm::errs() << "Amk = " << AmkInd << "\n";
     // U[k, n]
     ArrayReference UnkInd{2, loopMNK, 2};
     {
@@ -205,11 +199,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(2, 0) = 1; // k
-        UnkInd.strides[0] = N;
-        UnkInd.strides[1] = 1;
+        UnkInd.sizes[0] = SE.getSCEV(N);
+        UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Unk = " << UnkInd << "
-";
+    llvm::errs() << "Unk = " << UnkInd << "\n";
     // U[n, n]
     ArrayReference UnnInd{2, loopMN, 2};
     {
@@ -217,11 +210,10 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(1, 0) = 1; // k
-        UnnInd.strides[1] = 1;
-        UnnInd.strides[0] = N;
+        UnnInd.sizes[0] = SE.getSCEV(N);
+        UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Unn = " << UnnInd << "
-";
+    llvm::errs() << "Unn = " << UnnInd << "\n";
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -304,15 +296,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // // load in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     //
     //
     // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     //
     // sch3_               3        0         1     2
@@ -320,45 +310,38 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     //
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_0), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch3_3), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     // Second, comparisons of load in `A(m,n) = A(m,n) / U(n,n)`
     // with...
     // store in `A(n,m) = A(n,m) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch2_1_2), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     //
     // sch3_               3        0         1     2
     // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_0, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     // Third, comparisons of store in `A(m,n) = A(m,n) / U(n,n)`
     // with...
@@ -366,18 +349,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(n,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_1), 1);
     EXPECT_TRUE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch2_1_2, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     // Fourth, comparisons of load `A(m,n)` in
     // sch3_               3        0         1     2
@@ -386,13 +366,11 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // load `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_0), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
     // store `A(k,m)` in 'A(k,m) = A(k,m) - A(n,m)*U(k,n)'
     EXPECT_EQ(Dependence::check(d, mSch3_1, mSch3_3), 1);
     EXPECT_FALSE(d.back().forward);
-    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "
-";
+    llvm::errs() << "dep#" << d.size() << ":\n" << d.back() << "\n";
 
     // Fifth, comparisons of load `A(m,k)` in
     // sch3_               3        0         1     2
@@ -402,8 +380,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_EQ(Dependence::check(d, mSch3_0, mSch3_3), 2);
     EXPECT_TRUE(d[d.size() - 2].forward);
     EXPECT_FALSE(d[d.size() - 1].forward);
-    llvm::errs() << "dep#" << d.size() << "
-";
+    llvm::errs() << "dep#" << d.size() << "\n";
     auto &forward = d[d.size() - 2];
     auto &reverse = d[d.size() - 1];
     llvm::errs() << "\nforward dependence:" << forward;
@@ -482,8 +459,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         }
         // SHOWLN(mem.schedule.getPhi());
         // SHOWLN(mem.schedule.getOmega());
-        llvm::errs() << "
-";
+        llvm::errs() << "\n";
     }
 }
 
@@ -521,32 +497,38 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // }
     // for (i = 0; i < I; ++i)
     //   s(i) = sqrt(s(i) / (J-1));
-    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-    //                     "n8:16:32:64-S128");
-    // llvm::TargetTransformInfo TTI{dl};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
+    TestLoopFunction tlf;
+    IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 -1 0; "
+                                            "0 0 0 1 0; "
+                                            "-1 0 1 0 -1; "
+                                            "0 0 0 0 1]")};
+    tlf.addLoop(std::move(TwoLoopsMat), 2);
+    IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
+                                           "0 0 1]")};
+    tlf.addLoop(std::move(OneLoopMat), 1);
+
+    AffineLoopNest &loopIJ = tlf.alns[0];
+    AffineLoopNest &loopI = tlf.alns[1];
+
+    llvm::IRBuilder<> &builder = tlf.builder;
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrX = builder.CreateIntToPtr(builder.getInt64(8000), Float64);
-    llvm::Value *ptrA =
-        builder.CreateIntToPtr(builder.getInt64(16000), Float64);
-    llvm::Value *ptrS =
-        builder.CreateIntToPtr(builder.getInt64(24000), Float64);
+    llvm::Value *ptrX = tlf.createArray();
+    llvm::Value *ptrA = tlf.createArray();
+    llvm::Value *ptrS = tlf.createArray();
 
+    
     // llvm::ConstantInt *Iv = builder.getInt64(200);
-    llvm::ConstantInt *Jv = builder.getInt64(100);
-    auto Jfp = builder.CreateUIToFP(Jv, Float64);
+    llvm::Value* I = loopIJ.symbols[0];
+    llvm::Value* J = loopIJ.symbols[1];
+    auto Jfp = builder.CreateUIToFP(J, Float64);
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
     llvm::Value *iv = builder.CreateAdd(zero, one);
     llvm::Value *jv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(jv, builder.CreateMul(iv, Jv));
+    llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, I));
     auto Aload_m = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
@@ -613,12 +595,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
         builder.CreateGEP(Float64, ptrS,
                           llvm::SmallVector<llvm::Value *, 1>{iv}),
         llvm::MaybeAlign(8));
-    llvm::Module M = llvm::Module("dummymod", ctx);
-    // llvm::Module *M = builder.GetInsertBlock()->getParent()->getParent();
     llvm::Function *sqrt =
-        llvm::Intrinsic::getDeclaration(&M, llvm::Intrinsic::sqrt, Float64);
+        llvm::Intrinsic::getDeclaration(&tlf.mod, llvm::Intrinsic::sqrt, Float64);
     llvm::FunctionType *sqrtTyp =
-        llvm::Intrinsic::getType(ctx, llvm::Intrinsic::sqrt, {Float64});
+        llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
 
     auto Sstore_2 = builder.CreateAlignedStore(
         builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
@@ -627,31 +607,22 @@ TEST(MeanStDevTest0, BasicAssertions) {
         llvm::MaybeAlign(8));
 
     // Now, create corresponding schedules
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    auto J = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
-    IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 -1 0; "
-                                            "0 0 0 1 0; "
-                                            "-1 0 1 0 -1; "
-                                            "0 0 0 0 1]")};
-    auto loopIJ = AffineLoopNest::construct(TwoLoopsMat, symbols);
-    IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
-                                           "0 0 1]")};
-    auto loopI = AffineLoopNest::construct(OneLoopMat, {I});
     // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
     // LoopBlock jOuterLoopNest;
     // Array IDs are:
     // A: 0
     // x: 1
     // s: 2
+    llvm::Type* Int64 = builder.getInt64Ty();
+    llvm::ScalarEvolution &SE{tlf.SE};
     ArrayReference AInd{0, loopIJ, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AInd.indexMatrix();
         //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
-        AInd.strides[1] = J;
-        AInd.strides[0] = 1;
+        AInd.sizes[0] = SE.getSCEV(I);
+        AInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     ArrayReference xInd1{1, loopI, 1};
@@ -659,14 +630,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        xInd1.strides[0] = 1;
+        xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     ArrayReference xInd2{1, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd2.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        xInd2.strides[0] = 1;
+        xInd2.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     ArrayReference sInd1{2, loopI, 1};
@@ -674,14 +645,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        sInd1.strides[0] = 1;
+        sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     ArrayReference sInd2{2, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd2.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        sInd2.strides[0] = 1;
+        sInd2.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     Schedule sch0_0(1);
@@ -779,8 +750,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (auto &e : iOuterLoopNest.edges) {
         llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
                   << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << "
-";
+                  << "; out ID: " << memAccessIds[e.out] << "\n";
     }
     for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
         const auto &v = iOuterLoopNest.nodes[i];
@@ -796,8 +766,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
         for (auto m : v.outNeighbors) {
             llvm::errs() << m << ", ";
         }
-        llvm::errs() << "
-";
+        llvm::errs() << "\n";
     }
     // Graphs::print(iOuterLoopNest.fullGraph());
     for (auto &mem : iOuterLoopNest.memory) {
@@ -872,8 +841,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
         for (auto m : v.outNeighbors) {
             llvm::errs() << m << ", ";
         }
-        llvm::errs() << "
-";
+        llvm::errs() << "\n";
     }
     IntMatrix optS(2);
     optS.antiDiag() = 1;
@@ -897,33 +865,33 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
 TEST(DoubleDependenceTest, BasicAssertions) {
 
-    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-    //                     "n8:16:32:64-S128");
-    // llvm::TargetTransformInfo TTI{dl};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
+    TestLoopFunction tlf;
+    auto &builder = tlf.builder;
+    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
+                                      "0 0 0 1 0; "
+                                      "-2 0 1 0 -1; "
+                                      "0 0 0 0 1]")};
+    tlf.addLoop(std::move(Aloop), 2);
+    AffineLoopNest &loop = tlf.alns.front();
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrA =
-        builder.CreateIntToPtr(builder.getInt64(16000), Float64);
+    llvm::Value *ptrA = tlf.createArray();
 
-    llvm::ConstantInt *Jv = builder.getInt64(100);
+    llvm::Value* I = loop.symbols[0];
+    // llvm::Value* J = loop.symbols[1];
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
     llvm::Value *iv = builder.CreateAdd(zero, one);
     llvm::Value *jv = builder.CreateAdd(zero, one);
 
     llvm::Value *A_ip1_jp1 =
-        builder.CreateAdd(builder.CreateAdd(jv, one),
-                          builder.CreateMul(builder.CreateAdd(iv, one), Jv));
+        builder.CreateAdd(builder.CreateAdd(iv, one),
+                          builder.CreateMul(builder.CreateAdd(jv, one), I));
     llvm::Value *A_ip1_j = builder.CreateAdd(
-        jv, builder.CreateMul(builder.CreateAdd(iv, one), Jv));
-    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(jv, one),
-                                             builder.CreateMul(iv, Jv));
+        iv, builder.CreateMul(builder.CreateAdd(jv, one), I));
+    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(iv, one),
+                                             builder.CreateMul(jv, I));
 
     auto Aload_ip1_j = builder.CreateAlignedLoad(
         Float64,
@@ -946,23 +914,17 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     //     A(j+1,i+1) = A(j,i+1) + A(j+1,i);
     //   }
     // }
-    auto I = Polynomial::Monomial(Polynomial::ID{1});
-    auto J = Polynomial::Monomial(Polynomial::ID{2});
-    llvm::SmallVector<Polynomial::Monomial> symbols{I, J};
     // A*x >= 0;
     // [ -2  1  0 -1  0    [ 1
     //    0  0  0  1  0  *   I   >= 0
     //   -2  0  1  0 -1      J
     //    0  0  0  0  1 ]    i
     //                       j ]
-    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
-                                      "0 0 0 1 0; "
-                                      "-2 0 1 0 -1; "
-                                      "0 0 0 0 1]")};
-    auto loop{AffineLoopNest::construct(Aloop, symbols)};
 
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type* Int64 = builder.getInt64Ty();
     ArrayReference Asrc(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
@@ -972,11 +934,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
-        Asrc.strides[1] = 1;
-        Asrc.strides[0] = I;
+        Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        Asrc.sizes[0] = SE.getSCEV(I);
     }
-    llvm::errs() << "AaxesSrc = " << Asrc << "
-";
+    llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
     // A[i+1, j]
     ArrayReference Atgt0(0, loop, 2);
@@ -987,11 +948,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         IndMat(1, 0) = 1; // j
                           //                   d  s
         Atgt0.offsetMatrix()(1, 0) = 1;
-        Atgt0.strides[1] = 1;
-        Atgt0.strides[0] = I;
+        Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        Atgt0.sizes[0] = SE.getSCEV(I);
     }
-    llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "
-";
+    llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
     // A[i, j+1]
     ArrayReference Atgt1(0, loop, 2);
@@ -1001,11 +961,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
         Atgt1.offsetMatrix()(0, 0) = 1;
-        Atgt1.strides[1] = 1;
-        Atgt1.strides[0] = I;
+        Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        Atgt1.sizes[0] = SE.getSCEV(I);
     }
-    llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "
-";
+    llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
     //
     Schedule schLoad0(2);
@@ -1016,8 +975,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     DependencePolyhedra dep0(msrc, mtgt0);
     EXPECT_FALSE(dep0.isEmpty());
     dep0.pruneBounds();
-    llvm::errs() << "Dep0 = \n" << dep0 << "
-";
+    llvm::errs() << "Dep0 = \n" << dep0 << "\n";
 
     EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
@@ -1030,8 +988,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     DependencePolyhedra dep1(msrc, mtgt1);
     EXPECT_FALSE(dep1.isEmpty());
     dep1.pruneBounds();
-    llvm::errs() << "Dep1 = \n" << dep1 << "
-";
+    llvm::errs() << "Dep1 = \n" << dep1 << "\n";
     EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
     assert(dep1.getNumInequalityConstraints() == 4);
@@ -1043,8 +1000,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     EXPECT_EQ(dc.size(), 1);
     Dependence &d(dc.front());
     EXPECT_TRUE(d.forward);
-    llvm::errs() << d << "
-";
+    llvm::errs() << d << "\n";
     SHOWLN(d.getNumPhiCoefficients());
     SHOWLN(d.getNumOmegaCoefficients());
     SHOWLN(d.depPoly.getDim0());
@@ -1070,8 +1026,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     for (auto &e : loopBlock.edges) {
         llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
                   << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << "
-";
+                  << "; out ID: " << memAccessIds[e.out] << "\n";
     }
     for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
         const auto &v = loopBlock.nodes[i];
@@ -1087,8 +1042,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         for (auto m : v.outNeighbors) {
             llvm::errs() << m << ", ";
         }
-        llvm::errs() << "
-";
+        llvm::errs() << "\n";
     }
     IntMatrix optPhi(2, 2);
     optPhi(0, _) = 1;
@@ -1114,27 +1068,29 @@ TEST(ConvReversePass, BasicAssertions) {
     //     }
     //   }
     // }
-    // llvm::DataLayout dl("e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-    //                     "n8:16:32:64-S128");
-    // llvm::TargetTransformInfo TTI{dl};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
+    TestLoopFunction tlf;
+    auto &builder = tlf.builder;
+    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
+                                      "0 0 0 0 0 1 0 0 0; "
+                                      "-1 1 0 0 0 0 -1 0 0; "
+                                      "0 0 0 0 0 0 1 0 0; "
+                                      "-1 0 0 0 1 0 0 -1 0; "
+                                      "0 0 0 0 0 0 0 1 0; "
+                                      "-1 0 0 1 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 0 0 1]")};
+    tlf.addLoop(std::move(Aloop), 4);
+    AffineLoopNest &loop = tlf.alns.front();
+    
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrB =
-        builder.CreateIntToPtr(builder.getInt64(960000), Float64);
-    llvm::Value *ptrA =
-        builder.CreateIntToPtr(builder.getInt64(1920000), Float64);
-    llvm::Value *ptrC =
-        builder.CreateIntToPtr(builder.getInt64(2880000), Float64);
+    llvm::Value *ptrB = tlf.createArray();
+    llvm::Value *ptrA = tlf.createArray();
+    llvm::Value *ptrC = tlf.createArray();
 
     // llvm::ConstantInt *Jv = builder.getInt64(100);
-    llvm::ConstantInt *Iv = builder.getInt64(200);
-    llvm::ConstantInt *Mv = builder.getInt64(300);
+    llvm::Value *I = loop.symbols[3];
+    llvm::Value *M = loop.symbols[1];
     // llvm::ConstantInt *Nv = builder.getInt64(400);
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
@@ -1143,12 +1099,12 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::Value *jv = builder.CreateAdd(zero, one);
     llvm::Value *iv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
-    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, M));
+    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, I));
     llvm::Value *Coffset = builder.CreateAdd(
         builder.CreateAdd(mv, iv),
         builder.CreateMul(builder.CreateAdd(nv, jv),
-                          builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
+                          builder.CreateSub(builder.CreateAdd(M, I), one)));
     auto Aload = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
@@ -1179,32 +1135,9 @@ TEST(ConvReversePass, BasicAssertions) {
     //     }
     //   }
     // }
-    auto M = Polynomial::Monomial(Polynomial::ID{1});
-    auto N = Polynomial::Monomial(Polynomial::ID{2});
-    auto I = Polynomial::Monomial(Polynomial::ID{3});
-    auto J = Polynomial::Monomial(Polynomial::ID{4});
-    llvm::SmallVector<Polynomial::Monomial> symbols{M, N, I, J};
-    // Construct the loops
-    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
-                                      "0 0 0 0 0 1 0 0 0; "
-                                      "-1 1 0 0 0 0 -1 0 0; "
-                                      "0 0 0 0 0 0 1 0 0; "
-                                      "-1 0 0 0 1 0 0 -1 0; "
-                                      "0 0 0 0 0 0 0 1 0; "
-                                      "-1 0 0 1 0 0 0 0 -1; "
-                                      "0 0 0 0 0 0 0 0 1]")};
-    auto loop = AffineLoopNest::construct(Aloop, symbols);
 
-    // construct indices
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> m;
-    m.emplace_back(1, VarID(1, VarID::VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> n;
-    n.emplace_back(1, VarID(0, VarID::VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> i;
-    i.emplace_back(1, VarID(3, VarID::VarType::LoopInductionVariable));
-    llvm::SmallVector<std::pair<MPoly, VarID>, 1> j;
-    j.emplace_back(1, VarID(2, VarID::VarType::LoopInductionVariable));
-
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::Type* Int64 = builder.getInt64Ty();
     // B[j, i]
     ArrayReference BmnInd{0, loop, 2};
     {
@@ -1212,11 +1145,10 @@ TEST(ConvReversePass, BasicAssertions) {
         //     l  d
         IndMat(3, 1) = 1; // i
         IndMat(2, 0) = 1; // j
-        BmnInd.strides[1] = 1;
-        BmnInd.strides[0] = I;
+        BmnInd.sizes[0] = SE.getSCEV(I);
+        BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    llvm::errs() << "Bmn = " << BmnInd << "
-";
+    llvm::errs() << "Bmn = " << BmnInd << "\n";
     // A[n, m]
     ArrayReference AmnInd{1, loop, 2};
     {
@@ -1224,8 +1156,8 @@ TEST(ConvReversePass, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // m
         IndMat(0, 0) = 1; // n
-        AmnInd.strides[1] = 1;
-        AmnInd.strides[0] = I;
+        AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        AmnInd.sizes[0] = SE.getSCEV(I);
     }
     // C[m+i, n+j]
     ArrayReference CmijnInd{2, loop, 2};
@@ -1236,8 +1168,8 @@ TEST(ConvReversePass, BasicAssertions) {
         IndMat(3, 1) = 1; // i
         IndMat(0, 0) = 1; // n
         IndMat(2, 0) = 1; // j
-        CmijnInd.strides[1] = 1;
-        CmijnInd.strides[0] = M + I - 1;
+        CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        CmijnInd.sizes[0] = SE.getAddExpr(SE.getAddExpr(SE.getSCEV(M), SE.getSCEV(I)), SE.getMinusOne(Int64));
     }
 
     // for (n = 0; n < N; ++n){

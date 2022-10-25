@@ -90,8 +90,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                                   "-1 0 0 0 1 0 0 0 -1; "
                                   "0 0 0 0 0 0 0 0 1]")};
 
-    TestLoopFunction tlf(std::move(A), 4);
-    AffineLoopNest &aln = tlf.aln;
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 4);
+    AffineLoopNest &aln = tlf.alns.front();
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
@@ -194,8 +195,9 @@ TEST(BadMul, BasicAssertions) {
                                   "0 0 0 0 0 1 -1; "
                                   "-1 0 0 1 0 -1 1]")};
 
-    TestLoopFunction tlf(std::move(A), 3);
-    AffineLoopNest &aln = tlf.aln;
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 3);
+    AffineLoopNest &aln = tlf.alns.front();
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();

@@ -12,6 +12,7 @@
 #include "./Simplex.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
@@ -206,6 +207,38 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Produces
     // A*x <= b
     // Where x = [inds0..., inds1..., time..]
+    unsigned int symbolIndex(llvm::Value *v) {
+        for (unsigned int i = 0; i < symbols.size(); ++i)
+            if (symbols[i] == v)
+                return i;
+        return std::numeric_limits<unsigned int>::max();
+    }
+    std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
+    merge(llvm::ArrayRef<llvm::Value *> s0, llvm::ArrayRef<llvm::Value *> s1) {
+        symbols.reserve(s0.size() + s1.size());
+	std::pair<llvm::SmallVector<unsigned int>,
+                  llvm::SmallVector<unsigned int>> ret;
+	ret.first.reserve(s0.size());
+	ret.second.reserve(s1.size());
+	for (size_t i = 0; i < s0.size(); ++i){
+	    ret.first.push_back(i);
+	    symbols.push_back(s0[i]);
+	}
+	for (size_t i = 0; i < s1.size(); ++i){
+	    unsigned int j = symbolIndex(s1[i]);
+	    if (j == std::numeric_limits<unsigned int>::max()){
+		ret.second.push_back(symbols.size());
+		symbols.push_back(s1[i]);
+	    } else {
+		ret.second.push_back(j);
+	    }
+	}
+	SHOW(s0.size());
+	CSHOW(ret.first.size());
+	CSHOW(s1.size());
+	CSHOWLN(ret.second.size());
+	return ret;
+    }
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
         : Polyhedra<IntMatrix, LinearSymbolicComparator>{} {
@@ -225,7 +258,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
         std::pair<llvm::SmallVector<unsigned int>,
                   llvm::SmallVector<unsigned int>>
-            oldToNewMaps{merge(symbols, ar0.loop->symbols, ar1.loop->symbols)};
+            oldToNewMaps{merge(ar0.loop->symbols, ar1.loop->symbols)};
         auto &oldToNewMap0 = oldToNewMaps.first;
         auto &oldToNewMap1 = oldToNewMaps.second;
         SHOW(oldToNewMap0.size());
