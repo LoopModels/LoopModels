@@ -80,6 +80,11 @@ struct ArrayReference {
         : arrayID(a.arrayID), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
+	llvm::errs() << "Post-Init: ";
+	SHOW(newInds.numRow());
+	CSHOW(newInds.numCol());
+	CSHOW(indexMatrix().numRow());
+	CSHOWLN(indexMatrix().numCol());
     }
     ArrayReference(size_t arrayID, AffineLoopNest *loop)
         : arrayID(arrayID), loop(loop){};
@@ -117,7 +122,9 @@ struct ArrayReference {
                                          const ArrayReference &ar) {
         os << "ArrayReference " << ar.arrayID << " (dim = " << ar.arrayDim()
            << "):\n";
-        auto A{ar.indexMatrix()};
+        PtrMatrix<int64_t> A{ar.indexMatrix()};
+        SHOW(A.numRow());
+	CSHOWLN(A.numCol());
         for (size_t i = 0; i < A.numCol(); ++i) {
             auto &stride = ar.sizes[i];
             assert(!isZero(stride));

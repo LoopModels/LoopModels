@@ -144,10 +144,11 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     AffineLoopNest(IntMatrix A, llvm::SmallVector<llvm::Value *> symbols)
         : SymbolicPolyhedra(std::move(A)), symbols(std::move(symbols)){};
+    AffineLoopNest(IntMatrix A)
+        : SymbolicPolyhedra(std::move(A)), symbols({}){};
     AffineLoopNest() = default;
 
-    AffineLoopNest
-    rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
+    AffineLoopNest rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
         SHOW(R.numCol());
         CSHOW(numPeeled);
         CSHOWLN(getNumLoops());
@@ -178,16 +179,14 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
-    [[nodiscard]] AffineLoopNest
-    removeLoop(size_t i) const {
+    [[nodiscard]] AffineLoopNest removeLoop(size_t i) const {
         AffineLoopNest L{*this};
         // AffineLoopNest L = *this;
         L.removeLoopBang(i);
         return L;
     }
-    llvm::SmallVector<AffineLoopNest,0>
-    perm(PtrVector<unsigned> x) {
-        llvm::SmallVector<AffineLoopNest,0> ret;
+    llvm::SmallVector<AffineLoopNest, 0> perm(PtrVector<unsigned> x) {
+        llvm::SmallVector<AffineLoopNest, 0> ret;
         // llvm::SmallVector<AffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
         ret.back() = *this;

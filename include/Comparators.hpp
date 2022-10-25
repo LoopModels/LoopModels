@@ -5,6 +5,7 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
+#include "Macro.hpp"
 #include "llvm/ADT/Optional.h"
 #include <cassert>
 #include <cstddef>
