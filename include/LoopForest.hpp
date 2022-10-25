@@ -18,8 +18,6 @@ struct LoopForest {
     // definitions due to incomplete types
     bool pushBack(llvm::Loop *, llvm::ScalarEvolution *,
                   std::vector<LoopForest> &);
-    bool pushBack(llvm::Loop *, LoopTree *, llvm::ScalarEvolution *,
-                  std::vector<LoopForest> &);
     LoopForest() = default;
     LoopForest(std::vector<LoopTree> loops);
     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};

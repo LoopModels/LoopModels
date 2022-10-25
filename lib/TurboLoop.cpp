@@ -44,79 +44,6 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
     // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
     llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
-    std::cout << "Assumptions:" << std::endl;
-    for (auto &a : AC.assumptions()) {
-        llvm::errs() << *a << "\n";
-        llvm::CallInst *Call = llvm::cast<llvm::CallInst>(a);
-        llvm::Value *val = (Call->arg_begin()->get());
-        llvm::errs() << *val << "\n";
-        llvm::errs() << "Value id: " << val->getValueID() << "\n";
-        llvm::errs() << "Value name: " << val->getValueName() << "\n";
-        llvm::errs() << "name: " << val->getName() << "\n";
-        if (llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(val)) {
-            llvm::errs() << "icmp: " << *icmp << "\n";
-            llvm::Value *op0 = icmp->getOperand(0);
-            llvm::Value *op1 = icmp->getOperand(1);
-            llvm::errs() << "op0: " << *op0 << "\nop1: " << *op1 << "\n";
-            llvm::errs() << "op0 valueID: " << op0->getValueID()
-                         << "\nop1 valueID: " << op1->getValueID() << "\n";
-            llvm::errs() << "op0 valueName: " << op0->getValueName()
-                         << "\nop1 valueName: " << op1->getValueName() << "\n";
-            size_t op0posID = valueToVarMap.push(op0);
-            size_t op1posID = valueToVarMap.push(op1);
-            llvm::errs() << "op0posID: " << op0posID
-                         << "\nop1posID: " << op1posID << "\n";
-            switch (icmp->getPredicate()) {
-            case llvm::CmpInst::ICMP_ULT:
-                // op0 < op1
-                // 1 - 0
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-                [[fallthrough]];
-            case llvm::CmpInst::ICMP_SLT:
-                poset.push(op0posID, op1posID, Interval::positive());
-                break;
-            case llvm::CmpInst::ICMP_ULE:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-                [[fallthrough]];
-            case llvm::CmpInst::ICMP_SLE:
-                poset.push(op0posID, op1posID, Interval::nonNegative());
-                break;
-            case llvm::CmpInst::ICMP_EQ:
-                poset.push(op0posID, op1posID, Interval::zero());
-                break;
-            case llvm::CmpInst::ICMP_UGT:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-                [[fallthrough]];
-            case llvm::CmpInst::ICMP_SGT:
-                poset.push(op0posID, op1posID, Interval::negative());
-                break;
-            case llvm::CmpInst::ICMP_UGE:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-                [[fallthrough]];
-            case llvm::CmpInst::ICMP_SGE:
-                poset.push(op0posID, op1posID, Interval::nonPositive());
-                break;
-            case llvm::CmpInst::ICMP_NE:
-                // we don't have a representation of this.
-                break;
-            default:
-                // this is icmp, not fcmp!!!
-                break;
-            }
-            if (icmp->isEquality()) {
-                llvm::errs() << *op0 << "\nand\n" << *op1 << "\nare equal!\n";
-            }
-        } else {
-            llvm::errs() << "not an icmp.\n";
-        }
-        llvm::errs() << *Call << "\n";
-    }
-    // llvm::TargetLibraryInfo &TLI =
-    // FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
     // ClassID 0: ScalarRC
     // ClassID 1: RegisterRC
@@ -132,6 +59,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+
+    initializeLoopForest();
 
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops

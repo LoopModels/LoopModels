@@ -1,9 +1,9 @@
 #include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
-#include "../include/Math.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Macro.hpp"
+#include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/MemoryAccess.hpp"
 #include "../include/TestUtilities.hpp"
@@ -45,12 +45,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_FALSE(loopMNK.isEmpty());
     EXPECT_EQ(loopMN.symbols.size(), loopMNK.symbols.size());
     for (size_t i = 0; i < loopMN.symbols.size(); ++i)
-	EXPECT_EQ(loopMN.symbols[i], loopMNK.symbols[i]);
-    
+        EXPECT_EQ(loopMN.symbols[i], loopMNK.symbols[i]);
+
     llvm::ScalarEvolution &SE{tlf.SE};
     auto &builder = tlf.builder;
     llvm::IntegerType *Int64 = builder.getInt64Ty();
-    
+
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
     llvm::Value *ptrB = tlf.createArray();
@@ -59,7 +59,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     llvm::Value *M = loopMN.symbols[0];
     llvm::Value *N = loopMN.symbols[1];
-    llvm::Value* zero = builder.getInt64(0);
+    llvm::Value *zero = builder.getInt64(0);
     llvm::Value *one = builder.getInt64(1);
     llvm::Value *mv = builder.CreateAdd(zero, one);
     llvm::Value *nv = builder.CreateAdd(zero, one);
@@ -143,7 +143,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //     }
     //   }
     // }
-
 
     // construct indices
     // ind mat, loops currently indexed from outside-in
@@ -518,10 +517,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::Value *ptrA = tlf.createArray();
     llvm::Value *ptrS = tlf.createArray();
 
-    
     // llvm::ConstantInt *Iv = builder.getInt64(200);
-    llvm::Value* I = loopIJ.symbols[0];
-    llvm::Value* J = loopIJ.symbols[1];
+    llvm::Value *I = loopIJ.symbols[0];
+    llvm::Value *J = loopIJ.symbols[1];
     auto Jfp = builder.CreateUIToFP(J, Float64);
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
@@ -595,8 +593,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
         builder.CreateGEP(Float64, ptrS,
                           llvm::SmallVector<llvm::Value *, 1>{iv}),
         llvm::MaybeAlign(8));
-    llvm::Function *sqrt =
-        llvm::Intrinsic::getDeclaration(&tlf.mod, llvm::Intrinsic::sqrt, Float64);
+    llvm::Function *sqrt = llvm::Intrinsic::getDeclaration(
+        &tlf.mod, llvm::Intrinsic::sqrt, Float64);
     llvm::FunctionType *sqrtTyp =
         llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
 
@@ -613,7 +611,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // A: 0
     // x: 1
     // s: 2
-    llvm::Type* Int64 = builder.getInt64Ty();
+    llvm::Type *Int64 = builder.getInt64Ty();
     llvm::ScalarEvolution &SE{tlf.SE};
     ArrayReference AInd{0, loopIJ, 2};
     {
@@ -749,8 +747,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
         memAccessIds[&iOuterLoopNest.memory[i]] = i;
     for (auto &e : iOuterLoopNest.edges) {
         llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
-                  << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << "\n";
+                     << ", in ID: " << memAccessIds[e.in]
+                     << "; out ID: " << memAccessIds[e.out] << "\n";
     }
     for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
         const auto &v = iOuterLoopNest.nodes[i];
@@ -878,7 +876,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::Type *Float64 = builder.getDoubleTy();
     llvm::Value *ptrA = tlf.createArray();
 
-    llvm::Value* I = loop.symbols[0];
+    llvm::Value *I = loop.symbols[0];
     // llvm::Value* J = loop.symbols[1];
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
@@ -888,10 +886,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::Value *A_ip1_jp1 =
         builder.CreateAdd(builder.CreateAdd(iv, one),
                           builder.CreateMul(builder.CreateAdd(jv, one), I));
-    llvm::Value *A_ip1_j = builder.CreateAdd(
-        iv, builder.CreateMul(builder.CreateAdd(jv, one), I));
-    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(iv, one),
-                                             builder.CreateMul(jv, I));
+    llvm::Value *A_ip1_j =
+        builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), I));
+    llvm::Value *A_i_jp1 =
+        builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, I));
 
     auto Aload_ip1_j = builder.CreateAlignedLoad(
         Float64,
@@ -924,7 +922,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
     llvm::ScalarEvolution &SE{tlf.SE};
-    llvm::Type* Int64 = builder.getInt64Ty();
+    llvm::Type *Int64 = builder.getInt64Ty();
     ArrayReference Asrc(0, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
@@ -1025,8 +1023,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         memAccessIds[&loopBlock.memory[i]] = i;
     for (auto &e : loopBlock.edges) {
         llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
-                  << ", in ID: " << memAccessIds[e.in]
-                  << "; out ID: " << memAccessIds[e.out] << "\n";
+                     << ", in ID: " << memAccessIds[e.in]
+                     << "; out ID: " << memAccessIds[e.out] << "\n";
     }
     for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
         const auto &v = loopBlock.nodes[i];
@@ -1080,7 +1078,6 @@ TEST(ConvReversePass, BasicAssertions) {
                                       "0 0 0 0 0 0 0 0 1]")};
     tlf.addLoop(std::move(Aloop), 4);
     AffineLoopNest &loop = tlf.alns.front();
-    
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
@@ -1137,7 +1134,7 @@ TEST(ConvReversePass, BasicAssertions) {
     // }
 
     llvm::ScalarEvolution &SE{tlf.SE};
-    llvm::Type* Int64 = builder.getInt64Ty();
+    llvm::Type *Int64 = builder.getInt64Ty();
     // B[j, i]
     ArrayReference BmnInd{0, loop, 2};
     {
@@ -1169,7 +1166,8 @@ TEST(ConvReversePass, BasicAssertions) {
         IndMat(0, 0) = 1; // n
         IndMat(2, 0) = 1; // j
         CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        CmijnInd.sizes[0] = SE.getAddExpr(SE.getAddExpr(SE.getSCEV(M), SE.getSCEV(I)), SE.getMinusOne(Int64));
+        CmijnInd.sizes[0] = SE.getAddExpr(
+            SE.getAddExpr(SE.getSCEV(M), SE.getSCEV(I)), SE.getMinusOne(Int64));
     }
 
     // for (n = 0; n < N; ++n){

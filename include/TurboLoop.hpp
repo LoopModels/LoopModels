@@ -9,7 +9,6 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "./VarTypes.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <limits>
@@ -58,7 +57,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
-    ValueToVarMap valueToVarMap;
     std::vector<LoopForest> loopForests;
     llvm::DenseMap<llvm::Loop *, AffineLoopNest> loops;
     UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
@@ -84,7 +82,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         for (auto &L : llvm::reverse(*LI))
-            forest.pushBack(L, nullptr, SE, loopForests);
+            forest.pushBack(L, SE, loopForests);
     }
 
     // returns index to the loop whose preheader we place it in.
@@ -321,88 +319,5 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (inst->mayReadOrWriteMemory())
                 return true;
         return false;
-    }
-    VarID getVar(llvm::Value *v) {
-        if (auto opt = valueToVarMap.getForward(v))
-            return opt.getValue();
-        auto inst = llvm::dyn_cast<llvm::Instruction>(v);
-        if (!inst) // must be loop invariant
-            return valueToVarMap.pushNewValue(v);
-        // TODO incorporate in valueToPosetMap, so that we can just lookup
-        for (auto &L : *LI) {
-            if (!L->isLoopInvariant(v)) {
-                if (auto phin = llvm::dyn_cast<llvm::PHINode>(v)) {
-                    // TODO: check if it is a loop indvar
-                    // then get the depth of the corresponding loop
-                } else if (auto inst = llvm::dyn_cast<llvm::Instruction>(v)) {
-                    // llvm::BasicBlock *BB = inst->getParent();
-                    // I guess this means it is a term, and we probably don't
-                    // need to do much else.
-                }
-                // return VarType::Term;
-            }
-        }
-        return valueToVarMap.push(v);
-    }
-    // returns true on failure
-    bool symbolify(MPoly &iaccum, MPoly &laccum, llvm::Value *v,
-                   int64_t coef = 1) {
-        if (auto c = llvm::dyn_cast<llvm::ConstantInt>(v)) {
-            uint64_t val =
-                c->getLimitedValue(std::numeric_limits<int64_t>::max());
-            if (val == std::numeric_limits<int64_t>::max())
-                return true;
-            iaccum += int64_t(val) * coef;
-            return false;
-        } else if (auto binOp = llvm::dyn_cast<llvm::BinaryOperator>(v)) {
-            int64_t c1 = coef;
-            switch (binOp->getOpcode()) {
-            case llvm::Instruction::BinaryOps::Sub:
-                c1 = -c1;
-            case llvm::Instruction::BinaryOps::Add:
-                return (symbolify(iaccum, laccum, binOp->getOperand(0), coef) ||
-                        symbolify(iaccum, laccum, binOp->getOperand(1), c1));
-            case llvm::Instruction::BinaryOps::Mul:
-                return mulUpdate(iaccum, laccum, binOp->getOperand(0),
-                                 binOp->getOperand(1), coef);
-            default:
-                break;
-            }
-        }
-        if (llvm::Instruction *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
-            if (isLoopDependent(instr)) {
-                VarID vid(LI->getLoopFor(instr->getParent())->getLoopDepth(),
-                          VarID::VarType::LoopInductionVariable);
-                laccum += Polynomial::Term{coef, Polynomial::Monomial{vid}};
-                return false;
-            }
-        }
-        // check if it is loop invariant
-        iaccum +=
-            Polynomial::Term{coef, Polynomial::Monomial{valueToVarMap.push(v)}};
-        return false;
-    }
-
-    bool mulUpdate(MPoly &iaccum, MPoly &laccum, llvm::Value *a, llvm::Value *b,
-                   int64_t coef) {
-        MPoly iA, lA, iB, lB;
-        if (symbolify(iB, lB, b, 1) || symbolify(iA, lA, a, coef))
-            return true;
-        if (iA.size() && iB.size())
-            iaccum += iA * iB;
-        if (iA.size() && lB.size())
-            laccum += iA * lB;
-        if (lA.size() && iB.size())
-            laccum += lA * iB;
-        if (lA.size() && lB.size())
-            laccum += lA * lB;
-        return false;
-    }
-    llvm::Optional<std::pair<MPoly, MPoly>> symbolify(llvm::Value *v,
-                                                      int64_t coef = 1) {
-        MPoly iaccum, laccum;
-        if (symbolify(iaccum, laccum, v, coef))
-            return {};
-        return std::make_pair(iaccum, laccum);
     }
 };

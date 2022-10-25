@@ -1,11 +1,6 @@
 #pragma once
-#include "./VarTypes.hpp"
 #include <cstdint>
-#include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/IR/Instruction.h>
-#include <llvm/IR/Value.h>
-#include <llvm/IR/ValueMap.h>
 
 // IntegerMap imap;
 // imap.push(2); // adds mapping 2 -> 1
@@ -43,36 +38,5 @@ struct IntegerMap {
         if (--j <= backward.size())
             return backward[j];
         return -1;
-    }
-};
-struct ValueToVarMap {
-    // llvm::ValueMap<llvm::Value *, size_t> forward;
-    llvm::DenseMap<llvm::Value *, VarID> forward;
-    llvm::SmallVector<llvm::Value *, 0> backward;
-    VarID pushNewValue(llvm::Value *i) {
-        backward.push_back(i);
-        uint32_t j = backward.size();
-        forward.insert(std::make_pair(i, VarID{j}));
-        return j;
-    }
-    VarID push(llvm::Value *i) {
-	auto it = forward.find(i);
-	if (it != forward.end())
-	    return it->second;
-	return pushNewValue(i);
-    }
-    // 0 is sentinal value for not found
-    llvm::Optional<VarID> getForward(llvm::Value *i) {
-	auto it = forward.find(i);
-	if (it != forward.end())
-	    return it->second;
-	return {};
-    }
-    // nullptr is sentinal value for not found
-    llvm::Value *getBackward(VarID vid) {
-	// if (vid.isParam() && (vid.id < backward.size()))
-	if (vid.id < backward.size())
-	    return backward[vid.id];
-        return nullptr;
     }
 };
