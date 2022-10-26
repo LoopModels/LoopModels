@@ -14,10 +14,13 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+#include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
@@ -26,6 +29,16 @@ static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
         if (c->getBitWidth() <= 64)
             return c->getSExtValue();
+    return {};
+}
+static llvm::Optional<int64_t> getConstantInt(const llvm::SCEV *v) {
+    if (const llvm::SCEVConstant *sc =
+            llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
+        llvm::ConstantInt *c = sc->getValue();
+        if (c->getBitWidth() <=
+            63) // 63 because +1 for back edge taken -> trip count
+            return c->getSExtValue();
+    }
     return {};
 }
 
@@ -37,12 +50,12 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     // llvm::RefCountedBase<AffineLoopNest> {
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
-    llvm::SmallVector<llvm::Value *> symbols{};
+    llvm::SmallVector<const llvm::SCEV *> symbols{};
     // llvm::SmallVector<Polynomial::Monomial> symbols;
     size_t getNumSymbols() const { return 1 + symbols.size(); }
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
-    size_t findIndex(llvm::Value *v) {
+    size_t findIndex(const llvm::SCEV *v) {
         for (size_t i = 0; i < symbols.size();)
             if (symbols[i++] == v)
                 return i;
@@ -52,6 +65,66 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     // add a symbol to row `r` of A
     // we try to break down value `v`, so that adding
     // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
+    void addSymbol(const llvm::SCEV *v, size_t r, int64_t multiplier) {
+        // first, we check if `v` in `Symbols`
+        if (size_t i = findIndex(v)) {
+            A(r, i) += multiplier;
+            return;
+        }
+	if (llvm::Optional<int64_t> c = getConstantInt(v)) {
+            A(r, 0) += multiplier * (*c);
+            return;
+	} else if (const llvm::SCEVAddExpr *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
+	} else if (const llvm::SCEVMulExpr *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
+	} else if (const llvm::SCEVMinMaxExpr *ex = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
+	} else if (const llvm::SCEVAddRecExpr *ex = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
+	    if (ex->isAffine()){
+		// we can descend into it
+	    }
+	// } else if (const llvm::SCEVUDivExpr *ex = llvm::dyn_cast<const llvm::SCEVUDivExpr>(v)) {
+	    
+	// } else if (const llvm::SCEVUnknown *ex = llvm::dyn_cast<const llvm::SCEVUnknown>(v)) {
+	    
+	} else {
+	    // add SCEV directly rather than decomposing 
+	}
+        if (llvm::BinaryOperator *binOp =
+                llvm::dyn_cast<llvm::BinaryOperator>(v)) {
+            int64_t c1 = multiplier;
+            auto op0 = binOp->getOperand(0);
+            auto op1 = binOp->getOperand(1);
+            switch (binOp->getOpcode()) {
+            case llvm::Instruction::BinaryOps::Sub:
+                c1 = -c1;
+            case llvm::Instruction::BinaryOps::Add:
+                addSymbol(op0, r, multiplier);
+                addSymbol(op1, r, c1);
+                return;
+            case llvm::Instruction::BinaryOps::Mul:
+                if (auto c0 = getConstantInt(op0)) {
+                    if (auto c1 = getConstantInt(op1)) {
+                        A(r, 0) += multiplier * (*c0) * (*c1);
+                    } else {
+                        addSymbol(op1, r, multiplier * (*c0));
+                    }
+                } else if (auto c1 = getConstantInt(op1)) {
+                    addSymbol(op0, r, multiplier * (*c1));
+                } else {
+                    break;
+                }
+                return;
+            default:
+                break;
+            }
+        } else if (llvm::Optional<int64_t> c = getConstantInt(v)) {
+            A(r, 0) += multiplier * (*c);
+            return;
+        }
+        // llvm::Intrinsic::IndependentIntrinsics umax = llvm::Intrinsic::umax;
+        symbols.push_back(v);
+        A.insertZeroColumn(symbols.size());
+        A(r, symbols.size()) = multiplier;
+    }
     void addSymbol(llvm::Value *v, size_t r, int64_t multiplier) {
         // first, we check if `v` in `Symbols`
         if (size_t i = findIndex(v)) {
@@ -90,6 +163,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
             A(r, 0) += multiplier * (*c);
             return;
         }
+        // llvm::Intrinsic::IndependentIntrinsics umax = llvm::Intrinsic::umax;
         symbols.push_back(v);
         A.insertZeroColumn(symbols.size());
         A(r, symbols.size()) = multiplier;
@@ -108,6 +182,29 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         for (auto v : symbols)
             SHOWLN(*v);
     }
+    void addBounds(const llvm::SCEV *backEdgeTakenCount, bool addCol) {
+        auto [M, N] = A.size();
+        A.resize(M + 1, N + addCol);
+	addSymbol(backEdgeTakenCount, M, 1);
+	for (size_t m = M; M < A.numRow(); ++m){
+	    ++A(m, 0);
+	    A(m, end) = -1;
+	}
+        SHOW(symbols.size());
+        CSHOWLN(A);
+        for (auto v : symbols)
+            SHOWLN(*v);
+    }
+    llvm::Optional<AffineLoopNest> construct(llvm::Loop *L,
+                                             llvm::ScalarEvolution *SE) {
+        auto BT = SE->getBackedgeTakenCount(L);
+        if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
+            return {};
+        AffineLoopNest aln;
+
+        return aln;
+    }
+
     void addZeroLowerBounds() {
         size_t numLoops = getNumLoops();
         auto [M, N] = A.size();
@@ -145,8 +242,12 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
             A.moveColLast(j);
             mustAppendColumn = false;
         }
+        SHOW(A.numRow());
+        CSHOWLN(A.numCol());
         addBounds(LB.getInitialIVValue(), LB.getFinalIVValue(),
                   mustAppendColumn);
+        SHOW(A.numRow());
+        CSHOWLN(A.numCol());
         return false;
     }
 
@@ -338,10 +439,6 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
         const size_t numVar = getNumLoops();
         const size_t numConst = getNumSymbols();
-        SHOW(numVar);
-        CSHOW(numConst);
-        CSHOWLN(A.numCol());
-        // printVector(llvm::errs() << "A.getRow(i) = ", A.getRow(i)) << "\n";
         for (size_t j = 0; j < A.numRow(); ++j) {
             int64_t Aji = A(j, i + numConst) * sign;
             if (Aji <= 0)
