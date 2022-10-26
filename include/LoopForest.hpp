@@ -36,8 +36,9 @@ struct LoopForest {
     inline auto rend() { return loops.rend(); }
     inline auto rend() const { return loops.rend(); }
     inline void clear();
+    void addZeroLowerBounds();
 };
-
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
 // TODO: should depth be stored in LoopForests instead?
 struct LoopTree {
     llvm::Loop *loop;
@@ -61,24 +62,28 @@ struct LoopTree {
           initialIVValue(bounds.getInitialIVValue()),
           finalIVValue(bounds.getFinalIVValue()) {
         // initialize the AffineLoopNest
-	llvm::errs() << "new loop";
-	CSHOWLN(affineLoop.getNumLoops());
-	SHOWLN(affineLoop.A);
+        llvm::errs() << "new loop";
+        CSHOWLN(affineLoop.getNumLoops());
+        SHOWLN(affineLoop.A);
         assert(
             llvm::dyn_cast<llvm::ConstantInt>(bounds.getStepValue())->isOne());
     }
     bool addOuterLoop(llvm::Loop *OL, llvm::Loop::LoopBounds &LB,
                       llvm::PHINode *indVar) {
-	bool ret = affineLoop.addLoop(OL, LB, indVar);
-	llvm::errs() << "add outer";
-	CSHOWLN(affineLoop.getNumLoops());
-	SHOWLN(affineLoop.A);
-	return ret;
+        bool ret = affineLoop.addLoop(OL, LB, indVar);
+        llvm::errs() << "add outer";
+        CSHOWLN(affineLoop.getNumLoops());
+        SHOWLN(affineLoop.A);
+        return ret;
         return affineLoop.addLoop(OL, LB, indVar);
     }
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const LoopTree &tree) {
-        return os << tree.affineLoop;
+        return os << tree.affineLoop << tree.subLoops;
+    }
+    void addZeroLowerBounds() {
+        affineLoop.addZeroLowerBounds();
+        subLoops.addZeroLowerBounds();
     }
 };
 
@@ -89,12 +94,15 @@ bool LoopForest::invalid(std::vector<LoopForest> &forests, LoopForest forest) {
         forests.push_back(std::move(forest));
     return true;
 }
+void LoopForest::addZeroLowerBounds() {
+    for (auto &&tree : loops)
+        tree.addZeroLowerBounds();
+}
 
 // try to add Loop L, as well as all of L's subLoops
 // if invalid, create a new LoopForest, and add it to forests instead
-bool LoopForest::pushBack(llvm::Loop *L,
-                                        llvm::ScalarEvolution *SE,
-                                        std::vector<LoopForest> &forests) {
+bool LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution *SE,
+                          std::vector<LoopForest> &forests) {
     auto &subLoops{L->getSubLoops()};
     LoopForest subForest;
     if (subLoops.size()) {
@@ -139,4 +147,9 @@ size_t LoopForest::size() const { return loops.size(); }
 LoopTree &LoopForest::operator[](size_t i) {
     assert(i < loops.size());
     return loops[i];
+}
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree) {
+    for (auto &loop : tree.loops)
+        os << loop;
+    return os;
 }

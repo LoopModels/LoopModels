@@ -83,6 +83,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // loops)
         for (auto &L : llvm::reverse(*LI))
             forest.pushBack(L, SE, loopForests);
+        for (auto &forest : loopForests)
+	    forest.addZeroLowerBounds();
     }
 
     // returns index to the loop whose preheader we place it in.

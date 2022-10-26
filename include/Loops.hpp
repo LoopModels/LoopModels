@@ -97,11 +97,10 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     void addBounds(llvm::Value &lower, llvm::Value &upper, bool addCol) {
         auto [M, N] = A.size();
-        A.resize(M + 2, N + addCol);
+        A.resize(M + 1, N + addCol);
         addSymbol(&lower, M, -1);
-        addSymbol(&upper, M + 1, 1);
-        A(M, end) = 1;
-        A(M + 1, end) = -1;
+        addSymbol(&upper, M, 1);
+        A(M, end) = -1;
         llvm::errs() << "add bounds\nlower = " << lower << "\nupper = " << upper
                      << "\n";
         SHOW(symbols.size());
@@ -109,7 +108,14 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         for (auto v : symbols)
             SHOWLN(*v);
     }
-
+    void addZeroLowerBounds() {
+        size_t numLoops = getNumLoops();
+        auto [M, N] = A.size();
+        A.resizeRows(M + numLoops);
+        for (size_t i = 0; i < numLoops; ++i)
+            A(M + i, N - numLoops + i) = 1;
+        C = LinearSymbolicComparator::construct(A);
+    }
     // std::numeric_limits<uint64_t>::max() is sentinal for not affine
     size_t affineOuterLoopInd(llvm::Loop *L, llvm::PHINode *indVar) {
         bool changed{false};
@@ -146,7 +152,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     AffineLoopNest(llvm::Value &lower, llvm::Value &upper)
         : SymbolicPolyhedra(), symbols() {
-	A.resize(0,1,1);
+        A.resize(0, 1, 1);
         addBounds(lower, upper, true);
     }
 
@@ -324,7 +330,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 int64_t absxi = std::abs(xi);
                 if (absxi != 1)
                     os << absxi << " * ";
-                os << symbols[i - 1];
+                os << *symbols[i - 1];
             }
     }
 
