@@ -61,7 +61,12 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
 
     initializeLoopForest();
-
+    SHOWLN(loopForests.size());
+    for (auto &forest : loopForests){
+	SHOWLN(forest.size());
+	for (auto &root : forest)
+	    SHOWLN(root);
+    }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
     llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;

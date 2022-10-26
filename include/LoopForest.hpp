@@ -10,6 +10,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/raw_ostream.h>
 #include <vector>
 
 struct LoopTree;
@@ -60,12 +61,24 @@ struct LoopTree {
           initialIVValue(bounds.getInitialIVValue()),
           finalIVValue(bounds.getFinalIVValue()) {
         // initialize the AffineLoopNest
+	llvm::errs() << "new loop";
+	CSHOWLN(affineLoop.getNumLoops());
+	SHOWLN(affineLoop.A);
         assert(
             llvm::dyn_cast<llvm::ConstantInt>(bounds.getStepValue())->isOne());
     }
     bool addOuterLoop(llvm::Loop *OL, llvm::Loop::LoopBounds &LB,
                       llvm::PHINode *indVar) {
+	bool ret = affineLoop.addLoop(OL, LB, indVar);
+	llvm::errs() << "add outer";
+	CSHOWLN(affineLoop.getNumLoops());
+	SHOWLN(affineLoop.A);
+	return ret;
         return affineLoop.addLoop(OL, LB, indVar);
+    }
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const LoopTree &tree) {
+        return os << tree.affineLoop;
     }
 };
 
@@ -79,7 +92,7 @@ bool LoopForest::invalid(std::vector<LoopForest> &forests, LoopForest forest) {
 
 // try to add Loop L, as well as all of L's subLoops
 // if invalid, create a new LoopForest, and add it to forests instead
-[[nodiscard]] bool LoopForest::pushBack(llvm::Loop *L,
+bool LoopForest::pushBack(llvm::Loop *L,
                                         llvm::ScalarEvolution *SE,
                                         std::vector<LoopForest> &forests) {
     auto &subLoops{L->getSubLoops()};

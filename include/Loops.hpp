@@ -20,6 +20,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_ostream.h>
 
 static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
@@ -101,6 +102,12 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         addSymbol(&upper, M + 1, 1);
         A(M, end) = 1;
         A(M + 1, end) = -1;
+        llvm::errs() << "add bounds\nlower = " << lower << "\nupper = " << upper
+                     << "\n";
+        SHOW(symbols.size());
+        CSHOWLN(A);
+        for (auto v : symbols)
+            SHOWLN(*v);
     }
 
     // std::numeric_limits<uint64_t>::max() is sentinal for not affine
@@ -139,6 +146,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     AffineLoopNest(llvm::Value &lower, llvm::Value &upper)
         : SymbolicPolyhedra(), symbols() {
+	A.resize(0,1,1);
         addBounds(lower, upper, true);
     }
 

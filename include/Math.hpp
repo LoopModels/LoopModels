@@ -2127,13 +2127,15 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         N = NN;
     }
     void insertZeroColumn(size_t i) {
+        llvm::errs() << "before";
+        CSHOWLN(*this);
         size_t NN = N + 1;
         size_t XX = std::max(X, NN);
         mem.resize(M * XX);
         size_t nLower = (XX > X) ? 0 : i;
         if (M && N)
             // need to copy
-            for (size_t m = M - 1; m > 0; --m)
+            for (size_t m = M; m-- > 0;)
                 for (size_t n = N; n-- > nLower;)
                     mem[m * XX + n + (n >= i)] = mem[m * X + n];
         // zero
@@ -2141,6 +2143,8 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             mem[m * XX + i] = 0;
         X = XX;
         N = NN;
+        llvm::errs() << "after";
+        CSHOWLN(*this);
     }
     void resize(size_t MM, size_t NN) { resize(MM, NN, std::max(NN, X)); }
     void reserve(size_t MM, size_t NN) { mem.reserve(MM * std::max(X, NN)); }
