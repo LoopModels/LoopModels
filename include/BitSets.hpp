@@ -12,7 +12,7 @@
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
-#include <ostream>
+#include <llvm/Support/raw_ostream.h>
 #include <string>
 
 // A set of `size_t` elements.
@@ -92,6 +92,12 @@ struct BitSet {
         return ++it;
     }
     Iterator::End end() const { return Iterator::End{}; };
+    size_t front() const {
+        for (size_t i = 0; i < data.size(); ++i)
+            if (data[i])
+                return 64 * i + std::countr_zero(data[i]);
+        return std::numeric_limits<size_t>::max();
+    }
 
     static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
         size_t d = x >> size_t(6);
@@ -111,6 +117,14 @@ struct BitSet {
         if (!contained)
             data[d] |= (mask);
         return contained;
+    }
+    void uncheckedInsert(size_t x) {
+        size_t d = x >> size_t(6);
+        uint64_t r = uint64_t(x) & uint64_t(63);
+        uint64_t mask = uint64_t(1) << r;
+        if (d >= data.size())
+            data.resize(d + 1);
+        data[d] |= (mask);
     }
 
     bool remove(size_t x) {
@@ -156,7 +170,12 @@ struct BitSet {
             s += std::popcount(u);
         return s;
     }
-
+    bool any() const {
+        for (auto u : data)
+            if (u)
+                return true;
+        return false;
+    }
     void setUnion(const BitSet &bs) {
         size_t O = bs.data.size(), T = data.size();
         if (O > T)
@@ -199,7 +218,7 @@ struct BitSet {
     bool operator==(const BitSet &bs) const { return data == bs.data; }
 };
 
-std::ostream &operator<<(std::ostream &os, BitSet const &x) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, BitSet const &x) {
     os << "BitSet[";
     auto it = x.begin();
     BitSet::Iterator::End e = x.end();
@@ -217,11 +236,58 @@ struct BitSet64 {
     uint64_t u;
     BitSet64() : u(0) {}
     BitSet64(uint64_t u) : u(u) {}
-    bool operator[](size_t i) { return (u >> i) != 0; }
+    struct Reference {
+        uint64_t &u;
+        size_t i;
+        operator bool() const { return (u >> i) != 0; }
+        void operator=(bool b) {
+            uint64_t flag = uint64_t(1) << i;
+            if (b) {
+                u |= flag;
+            } else {
+                u &= ~flag;
+            }
+            return;
+        }
+    };
+    bool operator[](size_t i) { return Reference{u, i}; }
+    bool operator[](size_t i) const { return (u >> i) != 0; }
+    struct Iterator {
+        uint64_t u;
+        size_t i{0};
+        struct End {};
+        size_t operator++() {
+            auto tz = std::countr_zero(u);
+            i += ++tz;
+            u >>= tz;
+            return i;
+        }
+        size_t operator++(int) {
+            size_t ii = i;
+            auto tz = std::countr_zero(u);
+            i += ++tz;
+            u >>= tz;
+            return ii;
+        }
+        size_t operator*() { return i; }
+        bool operator==(End) { return !u; }
+    };
+    Iterator begin() const { return Iterator{u}; }
+    Iterator::End end() const { return Iterator::End{}; }
+    struct ReverseIterator {
+        uint64_t u;
+        size_t i;
+        bool operator==(Iterator::End) { return !u; }
+    };
+    ReverseIterator rbegin() const {
+        return ReverseIterator{u, size_t(64) - size_t(std::countl_zero(u))};
+    }
+    Iterator::End rend() const { return Iterator::End{}; }
     void set(size_t i) {
         u |= (uint64_t(1) << i);
         return;
     }
+    void pushFirst(bool b) { u = (u << 1) | b; }
     void erase(size_t i) { // erase `i` (0-indexed) and shift all remaining
         // `i = 5`, then `mLower = 31` (`000...011111`)
         uint64_t mLower = (uint64_t(1) << i) - 1;

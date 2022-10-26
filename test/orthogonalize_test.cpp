@@ -1,15 +1,80 @@
+#include "../include/Loops.hpp"
 #include "../include/Math.hpp"
+#include "../include/MatrixStringParse.hpp"
 #include "../include/Orthogonalize.hpp"
-#include "../include/Symbolics.hpp"
-#include "Loops.hpp"
-#include "MatrixStringParse.hpp"
-#include "llvm/ADT/SmallVector.h"
+#include "../include/TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
-#include <iostream>
+#include <llvm/ADT/SmallVector.h>
+#include <llvm/ADT/Triple.h>
+#include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/TargetLibraryInfo.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/Dominators.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 #include <memory>
 #include <random>
+
+[[maybe_unused]] static llvm::Optional<
+    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
+    // need to construct matrix `A` of relationship
+    // B*L = I
+    // where L are the loop induct variables, and I are the array indices
+    // e.g., if we have `C[i + j, j]`, then
+    // B = [1 1; 0 1]
+    // additionally, the loop is defined by the bounds
+    // A*L = A*(B\^-1 * I) <= r
+    // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
+    const AffineLoopNest &alnp = *(ai[0]->loop);
+    const size_t numLoops = alnp.getNumLoops();
+    const size_t numSymbols = alnp.getNumSymbols();
+    size_t numRow = 0;
+    for (auto a : ai)
+        numRow += a->arrayDim();
+    IntMatrix S(numLoops, numRow);
+    size_t i = 0;
+    for (auto a : ai) {
+        PtrMatrix<int64_t> A = a->indexMatrix();
+        for (size_t j = 0; j < numLoops; ++j)
+            for (size_t k = 0; k < A.numCol(); ++k)
+                S(j, k + i) = A(j, k);
+        i += A.numCol();
+    }
+    auto [K, included] = NormalForm::orthogonalize(S);
+    if (!included.size())
+        return {};
+    // We let
+    // L = K'*J
+    // Originally, the loop bounds were
+    // A*L <= b
+    // now, we have (A = alnp.aln->A, r = alnp.aln->r)
+    // (A*K')*J <= r
+    IntMatrix AK{alnp.A};
+    AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
+    SHOWLN(alnp.A(_, _(numSymbols, end)));
+    SHOWLN(AK(_, _(numSymbols, end)));
+    AffineLoopNest alnNew{std::move(AK), alnp.symbols};
+    alnNew.pruneBounds();
+    IntMatrix KS{K * S};
+    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>> ret{
+        std::make_pair(std::move(alnNew),
+                       llvm::SmallVector<ArrayReference, 0>())};
+    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
+    newArrayRefs.reserve(numRow);
+    i = 0;
+    for (auto a : ai) {
+        newArrayRefs.emplace_back(*a, &ret.first,
+                                  KS(_, _(i, i + a->arrayDim())));
+        i += a->arrayDim();
+    }
+    return ret;
+}
 
 TEST(OrthogonalizeTest, BasicAssertions) {
     // for m = 0:M-1, n = 0:N-1, i = 0:I-1, j = 0:J-1
@@ -25,214 +90,210 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                                   "-1 0 0 0 1 0 0 0 -1; "
                                   "0 0 0 0 0 0 0 0 1]")};
 
-    llvm::SmallVector<Polynomial::Monomial> symbols{
-        Polynomial::Monomial(Polynomial::ID{1}),
-        Polynomial::Monomial(Polynomial::ID{2}),
-        Polynomial::Monomial(Polynomial::ID{3}),
-        Polynomial::Monomial(Polynomial::ID{4})};
-    auto &M = symbols[0];
-    // auto &N = symbols[1];
-    auto &I = symbols[2];
-    // auto &J = symbols[3];
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp{
-        AffineLoopNest::construct(A, symbols)};
-    EXPECT_FALSE(alnp->isEmpty());
-
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 4);
+    AffineLoopNest &aln = tlf.alns.front();
+    EXPECT_FALSE(aln.isEmpty());
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
+    llvm::Value *N = aln.symbols[2];
+    llvm::Value *J = aln.symbols[3];
     // we have three array refs
     // W[i+m, j+n]
     // llvm::SmallVector<std::pair<MPoly,MPoly>>
-    ArrayReference War{0, alnp, 2};
+    ArrayReference War{0, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(2, 0) = 1; // i
         IndMat(1, 1) = 1; // n
         IndMat(3, 1) = 1; // j
-        War.strides[0] = 1;
-        War.strides[1] = I + M - 1;
+                          // I + M -1
+        War.sizes[0] = SE.getAddExpr(
+            SE.getSCEV(N), SE.getAddExpr(SE.getSCEV(J), SE.getMinusOne(Int64)));
+        War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "War = " << War << std::endl;
+    llvm::errs() << "War = " << War << "\n";
 
     // B[i, j]
-    ArrayReference Bar{1, alnp, 2};
+    ArrayReference Bar{1, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
         IndMat(2, 0) = 1; // i
         IndMat(3, 1) = 1; // j
-        Bar.strides[0] = 1;
-        Bar.strides[1] = I;
+        Bar.sizes[0] = SE.getSCEV(J);
+        Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "Bar = " << Bar << std::endl;
+    llvm::errs() << "Bar = " << Bar << "\n";
 
     // C[m, n]
-    ArrayReference Car{2, alnp, 2};
+    ArrayReference Car{2, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Car.strides[0] = 1;
-        Car.strides[1] = M;
+        Car.sizes[0] = SE.getSCEV(N);
+        Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "Car = " << Car << std::endl;
+    llvm::errs() << "Car = " << Car << "\n";
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<llvm::SmallVector<ArrayReference, 0>> orth(
-        orthogonalize(ai));
+    llvm::Optional<
+        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+        orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
-
-    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth.getValue();
-    AffineLoopNest *newAlnp = newArrayRefs.begin()->loop.get();
-    for (auto &ar : newArrayRefs) {
-        EXPECT_EQ(newAlnp, ar.loop.get());
-    }
+    AffineLoopNest &newAln = orth->first;
+    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
+    for (auto &&ar : newArrayRefs)
+        ar.loop = &newAln;
+    SHOWLN(newArrayRefs.size());
     EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 0)), 1);
     EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 1)), 1);
     EXPECT_EQ(countNonZero(newArrayRefs[1].indexMatrix()(_, 0)), 1);
     EXPECT_EQ(countNonZero(newArrayRefs[1].indexMatrix()(_, 1)), 1);
     EXPECT_EQ(countNonZero(newArrayRefs[2].indexMatrix()(_, 0)), 2);
     EXPECT_EQ(countNonZero(newArrayRefs[2].indexMatrix()(_, 1)), 2);
-    std::cout << "A=" << newAlnp->A << std::endl;
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
-    auto loop3Count =
-        newAlnp->countSigns(newAlnp->A, 3 + newAlnp->getNumSymbols());
+    llvm::errs() << "A=" << newAln.A << "\n";
+    // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
+    llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
+    auto loop3Count = newAln.countSigns(newAln.A, 3 + newAln.getNumSymbols());
     EXPECT_EQ(loop3Count.first, 2);
     EXPECT_EQ(loop3Count.second, 2);
-    newAlnp->removeLoopBang(3);
-    auto loop2Count =
-        newAlnp->countSigns(newAlnp->A, 2 + newAlnp->getNumSymbols());
+    newAln.removeLoopBang(3);
+    auto loop2Count = newAln.countSigns(newAln.A, 2 + newAln.getNumSymbols());
     EXPECT_EQ(loop2Count.first, 2);
     EXPECT_EQ(loop2Count.second, 2);
-    newAlnp->removeLoopBang(2);
-    auto loop1Count =
-        newAlnp->countSigns(newAlnp->A, 1 + newAlnp->getNumSymbols());
+    newAln.removeLoopBang(2);
+    auto loop1Count = newAln.countSigns(newAln.A, 1 + newAln.getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
     EXPECT_EQ(loop1Count.second, 1);
-    newAlnp->removeLoopBang(1);
-    auto loop0Count =
-        newAlnp->countSigns(newAlnp->A, 0 + newAlnp->getNumSymbols());
+    newAln.removeLoopBang(1);
+    auto loop0Count = newAln.countSigns(newAln.A, 0 + newAln.getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
     EXPECT_EQ(loop0Count.second, 1);
-    std::cout << "New ArrayReferences:\n";
+    llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
-        std::cout << ar << std::endl << std::endl;
+        SHOW(ar.indexMatrix().numRow());
+        CSHOWLN(ar.indexMatrix().numCol());
+        llvm::errs() << ar << "\n";
     }
 }
 
 TEST(BadMul, BasicAssertions) {
-    auto M = Polynomial::Monomial{Polynomial::ID{1}};
-    auto N = Polynomial::Monomial{Polynomial::ID{2}};
-    auto O = Polynomial::Monomial{Polynomial::ID{3}};
-    llvm::SmallVector<Polynomial::Monomial> symbols{M, N, O};
     IntMatrix A{stringToIntMatrix("[-3 1 1 1 -1 0 0; "
-				  "0 0 0 0 1 0 0; "
-				  "-2 1 0 1 0 -1 0; "
-				  "0 0 0 0 0 1 0; "
-				  "0 0 0 0 1 -1 0; "
-				  "-1 0 1 0 -1 1 0; "
-				  "-1 1 0 0 0 0 -1; "
-				  "0 0 0 0 0 0 1; "
-				  "0 0 0 0 0 1 -1; "
-				  "-1 0 0 1 0 -1 1]")};
+                                  "0 0 0 0 1 0 0; "
+                                  "-2 1 0 1 0 -1 0; "
+                                  "0 0 0 0 0 1 0; "
+                                  "0 0 0 0 1 -1 0; "
+                                  "-1 0 1 0 -1 1 0; "
+                                  "-1 1 0 0 0 0 -1; "
+                                  "0 0 0 0 0 0 1; "
+                                  "0 0 0 0 0 1 -1; "
+                                  "-1 0 0 1 0 -1 1]")};
+
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 3);
+    AffineLoopNest &aln = tlf.alns.front();
+    EXPECT_FALSE(aln.isEmpty());
+    llvm::ScalarEvolution &SE{tlf.SE};
+    llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
+    llvm::Value *N = aln.symbols[1];
+    llvm::Value *K = aln.symbols[2];
+
     // auto Zero = Polynomial::Term{int64_t(0), Polynomial::Monomial()};
     // auto One = Polynomial::Term{int64_t(1), Polynomial::Monomial()};
-    // for i in 0:M+N+O-3, l in max(0,i+1-N):min(M+O-2,i), j in
-    // max(0,l+1-O):min(M-1,l)
+    // for i in 0:M+N+K-3, l in max(0,i+1-N):min(M+K-2,i), j in
+    // max(0,l+1-K):min(M-1,l)
     //       W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     //
     // Loops: i, l, j
 
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> alnp{
-        AffineLoopNest::construct(A, symbols)};
-    EXPECT_FALSE(alnp->isEmpty());
-
-    // for i in 0:M+N+O-3, l in max(0,i+1-N):min(M+O-2,i), j in
-    // max(0,l+1-O):min(M-1,l)
+    // for i in 0:M+N+K-3, l in max(0,i+1-N):min(M+K-2,i), j in
+    // max(0,l+1-K):min(M-1,l)
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
     // 0, 1, 2
     // i, l, j
     // we have three array refs
-    // W[j, i - l]
+    // W[j, i - l] // M x N
     const int iId = 0, lId = 1, jId = 2;
-    ArrayReference War(0, alnp, 2); //, axes, indTo
+    ArrayReference War(0, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
         IndMat(jId, 0) = 1;  // j
         IndMat(iId, 1) = 1;  // i
         IndMat(lId, 1) = -1; // l
-        War.strides[0] = 1;
-        War.strides[1] = M;
+        War.sizes[0] = SE.getSCEV(N);
+        War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "War = " << War << std::endl;
+    llvm::errs() << "War = " << War << "\n";
 
-    // B[j, l - j]
-    ArrayReference Bar(1, alnp, 2); //, axes, indTo
+    // B[j, l - j] // M x K
+    ArrayReference Bar(1, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
         IndMat(jId, 0) = 1;  // j
         IndMat(lId, 1) = 1;  // l
         IndMat(jId, 1) = -1; // j
-        Bar.strides[0] = 1;
-        Bar.strides[1] = M;
+        Bar.sizes[0] = SE.getSCEV(K);
+        Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "Bar = " << Bar << std::endl;
+    llvm::errs() << "Bar = " << Bar << "\n";
 
-    // C[l-j,i-l]
-    ArrayReference Car(2, alnp, 2); //, axes, indTo
+    // C[l-j,i-l] // K x N
+    ArrayReference Car(2, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
         IndMat(lId, 0) = 1;  // l
         IndMat(jId, 0) = -1; // j
         IndMat(iId, 1) = 1;  // i
         IndMat(lId, 1) = -1; // l
-        Car.strides[0] = 1;
-        Car.strides[1] = O;
+        Car.sizes[0] = SE.getSCEV(N);
+        Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    std::cout << "Car = " << Car << std::endl;
+    llvm::errs() << "Car = " << Car << "\n";
 
     llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<llvm::SmallVector<ArrayReference, 0>> orth(
-        orthogonalize(ai));
+    llvm::Optional<
+        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+        orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
-    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth.getValue();
-    AffineLoopNest *newAlnp = newArrayRefs.begin()->loop.get();
-    for (auto &ar : newArrayRefs) {
-        EXPECT_EQ(newAlnp, ar.loop.get());
-    }
+    AffineLoopNest &newAln = orth->first;
+    llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
 
-    SHOWLN(alnp->A);
-    SHOWLN(newAlnp->A);
-    // std::cout << "b=" << PtrVector<MPoly>(newAlnp->aln->b);
-    std::cout << "Skewed loop nest:\n" << *newAlnp << std::endl;
-    auto loop2Count =
-        newAlnp->countSigns(newAlnp->A, 2 + newAlnp->getNumSymbols());
+    for (auto &ar : newArrayRefs)
+        ar.loop = &newAln;
+
+    SHOWLN(aln.A);
+    SHOWLN(newAln.A);
+    // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
+    llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
+    auto loop2Count = newAln.countSigns(newAln.A, 2 + newAln.getNumSymbols());
     EXPECT_EQ(loop2Count.first, 1);
     EXPECT_EQ(loop2Count.second, 1);
-    newAlnp->removeLoopBang(2);
-    SHOWLN(newAlnp->A);
-    auto loop1Count =
-        newAlnp->countSigns(newAlnp->A, 1 + newAlnp->getNumSymbols());
+    newAln.removeLoopBang(2);
+    SHOWLN(newAln.A);
+    auto loop1Count = newAln.countSigns(newAln.A, 1 + newAln.getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
     EXPECT_EQ(loop1Count.second, 1);
-    newAlnp->removeLoopBang(1);
-    SHOWLN(newAlnp->A);
-    auto loop0Count =
-        newAlnp->countSigns(newAlnp->A, 0 + newAlnp->getNumSymbols());
+    newAln.removeLoopBang(1);
+    SHOWLN(newAln.A);
+    auto loop0Count = newAln.countSigns(newAln.A, 0 + newAln.getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
     EXPECT_EQ(loop0Count.second, 1);
 
-    std::cout << "New ArrayReferences:\n";
+    llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs)
-        std::cout << ar << std::endl << std::endl;
+        llvm::errs() << ar << "\n"
+                     << "\n";
 }
 
 TEST(OrthogonalizeMatricesTest, BasicAssertions) {
@@ -248,17 +309,17 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     for (size_t i = 0; i < iters; ++i) {
         for (auto &&a : A)
             a = distrib(gen);
-        // std::cout << "Random A =\n" << A << std::endl;
+        // llvm::errs() << "Random A =\n" << A << "\n";
         A = orthogonalize(std::move(A));
-        // std::cout << "Orthogonal A =\n" << A << std::endl;
+        // llvm::errs() << "Orthogonal A =\n" << A << "\n";
         // note, A'A is not diagonal
         // but AA' is
         B = A * A.transpose();
-        // std::cout << "A'A =\n" << B << std::endl;
+        // llvm::errs() << "A'A =\n" << B << "\n";
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
-                if (m != n){
+                if (m != n) {
                     EXPECT_EQ(B(m, n), 0);
-		}
+                }
     }
 }

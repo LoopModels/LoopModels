@@ -1,73 +1,186 @@
 #pragma once
 
+#include "./Comparators.hpp"
+#include "./Constraints.hpp"
+#include "./EmptyArrays.hpp"
+#include "./Macro.hpp"
 #include "./Math.hpp"
-#include "./POSet.hpp"
-#include "./Permutation.hpp"
 #include "./Polyhedra.hpp"
-#include "./Symbolics.hpp"
-#include "Comparators.hpp"
-#include "Constraints.hpp"
-#include "EmptyArrays.hpp"
-#include "Macro.hpp"
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/LoopInfo.h>
+#include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
+#include <llvm/IR/Value.h>
+#include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_ostream.h>
+
+static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
+    if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
+        if (c->getBitWidth() <= 64)
+            return c->getSExtValue();
+    return {};
+}
 
 // A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
 // extrema are the extremes, in orig order
-struct AffineLoopNest : SymbolicPolyhedra,
-                        llvm::RefCountedBase<AffineLoopNest> {
+struct AffineLoopNest : SymbolicPolyhedra { //,
+    // llvm::RefCountedBase<AffineLoopNest> {
     // struct AffineLoopNest : Polyhedra<EmptyMatrix<int64_t>,
     // SymbolicComparator> {
-    llvm::SmallVector<Polynomial::Monomial> symbols;
+    llvm::SmallVector<llvm::Value *> symbols{};
+    // llvm::SmallVector<Polynomial::Monomial> symbols;
     size_t getNumSymbols() const { return 1 + symbols.size(); }
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
-    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(IntMatrix A, llvm::SmallVector<Polynomial::Monomial> symbols) {
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-            llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = std::move(A);
-        ret->C = LinearSymbolicComparator::construct(ret->A);
-        ret->symbols = std::move(symbols);
-        return ret;
-    }
-    static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    construct(IntMatrix A, LinearSymbolicComparator C,
-              llvm::SmallVector<Polynomial::Monomial> symbols) {
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> ret{
-            llvm::makeIntrusiveRefCnt<AffineLoopNest>()};
-        ret->A = std::move(A);
-        ret->C = std::move(C);
-        ret->symbols = std::move(symbols);
-        return ret;
+    size_t findIndex(llvm::Value *v) {
+        for (size_t i = 0; i < symbols.size();)
+            if (symbols[i++] == v)
+                return i;
+        return 0;
     }
 
-    llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
-	SHOW(R.numCol());
-	CSHOW(numPeeled);
-	CSHOWLN(getNumLoops());
+    // add a symbol to row `r` of A
+    // we try to break down value `v`, so that adding
+    // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
+    void addSymbol(llvm::Value *v, size_t r, int64_t multiplier) {
+        // first, we check if `v` in `Symbols`
+        if (size_t i = findIndex(v)) {
+            A(r, i) += multiplier;
+            return;
+        }
+        if (llvm::BinaryOperator *binOp =
+                llvm::dyn_cast<llvm::BinaryOperator>(v)) {
+            int64_t c1 = multiplier;
+            auto op0 = binOp->getOperand(0);
+            auto op1 = binOp->getOperand(1);
+            switch (binOp->getOpcode()) {
+            case llvm::Instruction::BinaryOps::Sub:
+                c1 = -c1;
+            case llvm::Instruction::BinaryOps::Add:
+                addSymbol(op0, r, multiplier);
+                addSymbol(op1, r, c1);
+                return;
+            case llvm::Instruction::BinaryOps::Mul:
+                if (auto c0 = getConstantInt(op0)) {
+                    if (auto c1 = getConstantInt(op1)) {
+                        A(r, 0) += multiplier * (*c0) * (*c1);
+                    } else {
+                        addSymbol(op1, r, multiplier * (*c0));
+                    }
+                } else if (auto c1 = getConstantInt(op1)) {
+                    addSymbol(op0, r, multiplier * (*c1));
+                } else {
+                    break;
+                }
+                return;
+            default:
+                break;
+            }
+        } else if (llvm::Optional<int64_t> c = getConstantInt(v)) {
+            A(r, 0) += multiplier * (*c);
+            return;
+        }
+        symbols.push_back(v);
+        A.insertZeroColumn(symbols.size());
+        A(r, symbols.size()) = multiplier;
+    }
+
+    void addBounds(llvm::Value &lower, llvm::Value &upper, bool addCol) {
+        auto [M, N] = A.size();
+        A.resize(M + 1, N + addCol);
+        addSymbol(&lower, M, -1);
+        addSymbol(&upper, M, 1);
+        A(M, end) = -1;
+        llvm::errs() << "add bounds\nlower = " << lower << "\nupper = " << upper
+                     << "\n";
+        SHOW(symbols.size());
+        CSHOWLN(A);
+        for (auto v : symbols)
+            SHOWLN(*v);
+    }
+    void addZeroLowerBounds() {
+        size_t numLoops = getNumLoops();
+        auto [M, N] = A.size();
+        A.resizeRows(M + numLoops);
+        for (size_t i = 0; i < numLoops; ++i)
+            A(M + i, N - numLoops + i) = 1;
+        C = LinearSymbolicComparator::construct(A);
+    }
+    // std::numeric_limits<uint64_t>::max() is sentinal for not affine
+    size_t affineOuterLoopInd(llvm::Loop *L, llvm::PHINode *indVar) {
+        bool changed{false};
+        size_t ind{0};
+        for (size_t v = 0; v < symbols.size();) {
+            if (auto I = llvm::dyn_cast<llvm::Instruction>(symbols[v++]))
+                if (!L->makeLoopInvariant(I, changed, nullptr, nullptr)) {
+                    auto P = llvm::dyn_cast<llvm::PHINode>(I);
+                    if ((!P) || (P != indVar))
+                        return std::numeric_limits<size_t>::max();
+                    assert(ind == 0); // we shouldn't have had two!
+                    ind = v;
+                }
+        }
+        return ind;
+    }
+
+    bool addLoop(llvm::Loop *L, llvm::Loop::LoopBounds &LB,
+                 llvm::PHINode *indVar) {
+
+        bool mustAppendColumn = true;
+        if (size_t j = affineOuterLoopInd(L, indVar)) {
+            if (j == std::numeric_limits<size_t>::max())
+                return true;
+            // we have affine dependencies
+            // A(_,j) is actually a loop indVar, so we move it last
+            A.moveColLast(j);
+            mustAppendColumn = false;
+        }
+        addBounds(LB.getInitialIVValue(), LB.getFinalIVValue(),
+                  mustAppendColumn);
+        return false;
+    }
+
+    AffineLoopNest(llvm::Value &lower, llvm::Value &upper)
+        : SymbolicPolyhedra(), symbols() {
+        A.resize(0, 1, 1);
+        addBounds(lower, upper, true);
+    }
+
+    AffineLoopNest(IntMatrix A, llvm::SmallVector<llvm::Value *> symbols)
+        : SymbolicPolyhedra(std::move(A)), symbols(std::move(symbols)){};
+    AffineLoopNest(IntMatrix A)
+        : SymbolicPolyhedra(std::move(A)), symbols({}){};
+    AffineLoopNest() = default;
+
+    AffineLoopNest rotate(PtrMatrix<int64_t> R, size_t numPeeled = 0) const {
+        SHOW(R.numCol());
+        CSHOW(numPeeled);
+        CSHOWLN(getNumLoops());
         assert(R.numCol() + numPeeled == getNumLoops());
         assert(R.numRow() + numPeeled == getNumLoops());
         assert(numPeeled < getNumLoops());
         const size_t numConst = getNumSymbols() + numPeeled;
         const auto [M, N] = A.size();
-        auto ret = llvm::makeIntrusiveRefCnt<AffineLoopNest>();
-        ret->symbols = symbols;
-        IntMatrix &B = ret->A;
+        AffineLoopNest ret;
+        ret.symbols = symbols;
+        IntMatrix &B = ret.A;
         B.resizeForOverwrite(M, N);
         B(_, _(begin, numConst)) = A(_, _(begin, numConst));
         B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
-        ret->C = LinearSymbolicComparator::construct(B);
-        std::cout << "A = \n" << A << std::endl;
-        std::cout << "R = \n" << R << std::endl;
-        std::cout << "B = \n" << B << std::endl;
+        ret.C = LinearSymbolicComparator::construct(B);
+        llvm::errs() << "A = \n" << A << "\n";
+        llvm::errs() << "R = \n" << R << "\n";
+        llvm::errs() << "B = \n" << B << "\n";
         return ret;
     }
 
@@ -80,24 +193,21 @@ struct AffineLoopNest : SymbolicPolyhedra,
         fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
-    [[nodiscard]] llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    removeLoop(size_t i) const {
-        auto L{llvm::makeIntrusiveRefCnt<AffineLoopNest>(*this)};
+    [[nodiscard]] AffineLoopNest removeLoop(size_t i) const {
+        AffineLoopNest L{*this};
         // AffineLoopNest L = *this;
-        L->removeLoopBang(i);
+        L.removeLoopBang(i);
         return L;
     }
-    llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>>
-    perm(PtrVector<unsigned> x) {
-        llvm::SmallVector<llvm::IntrusiveRefCntPtr<AffineLoopNest>> ret;
+    llvm::SmallVector<AffineLoopNest, 0> perm(PtrVector<unsigned> x) {
+        llvm::SmallVector<AffineLoopNest, 0> ret;
         // llvm::SmallVector<AffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
-        ret.back() = this;
+        ret.back() = *this;
         for (size_t i = x.size() - 1; i != 0;) {
-            llvm::IntrusiveRefCntPtr<AffineLoopNest> prev = ret[i];
-            // AffineLoopNest &prev = ret[i];
+            AffineLoopNest &prev = ret[i];
             size_t oldi = i;
-            ret[--i] = prev->removeLoop(x[oldi]);
+            ret[--i] = prev.removeLoop(x[oldi]);
         }
         return ret;
     }
@@ -165,9 +275,11 @@ struct AffineLoopNest : SymbolicPolyhedra,
         SymbolicPolyhedra margi{tmp};
         margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
         SymbolicPolyhedra tmp2;
-        std::cout << "\nmargi=" << std::endl;
+        llvm::errs() << "\nmargi="
+                     << "\n";
         margi.dump();
-        std::cout << "\ntmp=" << std::endl;
+        llvm::errs() << "\ntmp="
+                     << "\n";
         tmp.dump();
         // margi contains extrema for `_i`
         // we can substitute extended for value of `_i`
@@ -200,7 +312,8 @@ struct AffineLoopNest : SymbolicPolyhedra,
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
-            std::cout << "\nc=" << c << "; tmp2=" << std::endl;
+            llvm::errs() << "\nc=" << c << "; tmp2="
+                         << "\n";
             tmp2.dump();
             if (!(tmp2.isEmpty()))
                 return false;
@@ -208,14 +321,27 @@ struct AffineLoopNest : SymbolicPolyhedra,
         return true;
     }
 
-    // void printBound(std::ostream &os, const IntMatrix &A, size_t i,
-    void printBound(std::ostream &os, size_t i, int64_t sign) const {
+    void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
+                     int64_t mul) const {
+        os << mul * x[0];
+        for (size_t i = 1; i < x.size(); ++i)
+            if (int64_t xi = x[i] * mul) {
+                os << (xi > 0 ? " + " : " - ");
+                int64_t absxi = std::abs(xi);
+                if (absxi != 1)
+                    os << absxi << " * ";
+                os << *symbols[i - 1];
+            }
+    }
+
+    // void printBound(llvm::raw_ostream &os, const IntMatrix &A, size_t i,
+    void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
         const size_t numVar = getNumLoops();
         const size_t numConst = getNumSymbols();
         SHOW(numVar);
         CSHOW(numConst);
         CSHOWLN(A.numCol());
-        // printVector(std::cout << "A.getRow(i) = ", A.getRow(i)) << std::endl;
+        // printVector(llvm::errs() << "A.getRow(i) = ", A.getRow(i)) << "\n";
         for (size_t j = 0; j < A.numRow(); ++j) {
             int64_t Aji = A(j, i + numConst) * sign;
             if (Aji <= 0)
@@ -228,7 +354,7 @@ struct AffineLoopNest : SymbolicPolyhedra,
             PtrVector<int64_t> b = getProgVars(j);
             bool printed = !allZero(b);
             if (printed)
-                printSymbol(os, b, symbols, -sign);
+                printSymbol(os, b, -sign);
             for (size_t k = 0; k < numVar; ++k) {
                 if (k == i)
                     continue;
@@ -247,26 +373,26 @@ struct AffineLoopNest : SymbolicPolyhedra,
             }
             if (!printed)
                 os << 0;
-            os << std::endl;
+            os << "\n";
         }
     }
-    void printLowerBound(std::ostream &os, size_t i) const {
+    void printLowerBound(llvm::raw_ostream &os, size_t i) const {
         printBound(os, i, 1);
     }
-    void printUpperBound(std::ostream &os, size_t i) const {
+    void printUpperBound(llvm::raw_ostream &os, size_t i) const {
         printBound(os, i, -1);
     }
     // prints loops from inner most to outer most.
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const AffineLoopNest &alnb) {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const AffineLoopNest &alnb) {
         AffineLoopNest aln{alnb};
         size_t i = aln.getNumLoops();
         SHOWLN(alnb.getNumLoops());
         SHOWLN(aln.getNumLoops());
         while (true) {
-            os << "Loop " << --i << " lower bounds: " << std::endl;
+            os << "Loop " << --i << " lower bounds:\n";
             aln.printLowerBound(os, i);
-            os << "Loop " << i << " upper bounds: " << std::endl;
+            os << "Loop " << i << " upper bounds:\n";
             aln.printUpperBound(os, i);
             if (i == 0)
                 break;
@@ -274,5 +400,5 @@ struct AffineLoopNest : SymbolicPolyhedra,
         }
         return os;
     }
-    void dump() const { std::cout << *this; }
+    void dump() const { llvm::errs() << *this; }
 };

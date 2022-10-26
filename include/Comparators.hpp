@@ -1,18 +1,17 @@
 #pragma once
 
-#include "./POSet.hpp"
-#include "Constraints.hpp"
-#include "EmptyArrays.hpp"
-#include "Math.hpp"
-#include "NormalForm.hpp"
-#include "Simplex.hpp"
-#include "Symbolics.hpp"
+#include "./Constraints.hpp"
+#include "./EmptyArrays.hpp"
+#include "./Math.hpp"
+#include "./NormalForm.hpp"
+#include "./Simplex.hpp"
+#include "Macro.hpp"
 #include "llvm/ADT/Optional.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
-#include <ostream>
+#include <llvm/Support/raw_ostream.h>
 
 // For `== 0` constraints
 struct EmptyComparator {
@@ -230,78 +229,24 @@ template <typename T> struct BaseComparator {
     }
 };
 
-struct SymbolicComparator : BaseComparator<SymbolicComparator> {
-    PartiallyOrderedSet POSet;
-    llvm::SmallVector<Polynomial::Monomial> monomials;
-    static SymbolicComparator construct(PartiallyOrderedSet poset) {
-        SymbolicComparator sc{
-            {}, std::move(poset), llvm::SmallVector<Polynomial::Monomial>(0)};
-
-        return sc;
-    }
-    static SymbolicComparator construct(PtrVector<MPoly> x,
-                                        PartiallyOrderedSet poset) {
-        SymbolicComparator sc{SymbolicComparator::construct(poset)};
-        for (auto &p : x)
-            for (auto &t : p)
-                if (t.exponent.degree())
-                    addTerm(sc.monomials, t.exponent);
-        return sc;
-    }
-    size_t getNumConstTermsImpl() const { return 1 + monomials.size(); }
-    MPoly getPoly(PtrVector<int64_t> x) const {
-        MPoly delta;
-        assert(x.size() >= 1 + monomials.size());
-        for (size_t i = 0; i < monomials.size(); ++i)
-            if (int64_t d = x[i + 1])
-                delta.terms.emplace_back(d, monomials[i]);
-        if (int64_t d = x[0])
-            delta.terms.emplace_back(d);
-        return delta;
-    }
-    bool greaterEqual(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
-        MPoly delta;
-        assert(x.size() >= 1 + monomials.size());
-        assert(y.size() >= 1 + monomials.size());
-        for (size_t i = 0; i < monomials.size(); ++i)
-            if (int64_t d = x[i + 1] - y[i + 1])
-                delta.terms.emplace_back(d, monomials[i]);
-        if (int64_t d = x[0] - y[0])
-            delta.terms.emplace_back(d);
-        return POSet.knownGreaterEqualZero(delta);
-    }
-    bool greaterEqual(PtrVector<int64_t> x) const {
-        return POSet.knownGreaterEqualZero(getPoly(x));
-    }
-    std::ostream &printSymbol(std::ostream &os, PtrVector<int64_t> x,
-                              int64_t mul = 1) const {
-        os << mul * x[0];
-        for (size_t i = 1; i < x.size(); ++i)
-            if (int64_t xi = x[i] * mul)
-                os << (xi > 0 ? " + " : " - ")
-                   << Polynomial::Term{std::abs(xi), monomials[i - 1]};
-        return os;
-    }
-};
-
 template <typename T>
 concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
-    { t.getNumConstTerms() } -> std::convertible_to<size_t>;
-    { t.greaterEqual(x) } -> std::convertible_to<bool>;
-    { t.lessEqual(x) } -> std::convertible_to<bool>;
-    { t.greater(x) } -> std::convertible_to<bool>;
-    { t.less(x) } -> std::convertible_to<bool>;
-    { t.equal(x) } -> std::convertible_to<bool>;
-    { t.greaterEqual(x, x) } -> std::convertible_to<bool>;
-    { t.lessEqual(x, x) } -> std::convertible_to<bool>;
-    { t.greater(x, x) } -> std::convertible_to<bool>;
-    { t.less(x, x) } -> std::convertible_to<bool>;
-    { t.equal(x, x) } -> std::convertible_to<bool>;
-    { t.equalNegative(x, x) } -> std::convertible_to<bool>;
-    { t.lessEqual(x, y) } -> std::convertible_to<bool>;
-};
-
-static_assert(Comparator<SymbolicComparator>);
+                         {
+                             t.getNumConstTerms()
+                             } -> std::convertible_to<size_t>;
+                         { t.greaterEqual(x) } -> std::convertible_to<bool>;
+                         { t.lessEqual(x) } -> std::convertible_to<bool>;
+                         { t.greater(x) } -> std::convertible_to<bool>;
+                         { t.less(x) } -> std::convertible_to<bool>;
+                         { t.equal(x) } -> std::convertible_to<bool>;
+                         { t.greaterEqual(x, x) } -> std::convertible_to<bool>;
+                         { t.lessEqual(x, x) } -> std::convertible_to<bool>;
+                         { t.greater(x, x) } -> std::convertible_to<bool>;
+                         { t.less(x, x) } -> std::convertible_to<bool>;
+                         { t.equal(x, x) } -> std::convertible_to<bool>;
+                         { t.equalNegative(x, x) } -> std::convertible_to<bool>;
+                         { t.lessEqual(x, y) } -> std::convertible_to<bool>;
+                     };
 
 struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     IntMatrix U;
@@ -362,16 +307,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
-        // std::cout << "A before simplifySystemImp" << std::endl;
-        // SHOWLN(A);
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
         while ((R) && allZero(H.getRow(R - 1)))
             --R;
         H.truncateRows(R);
         U.truncateRows(R);
-        // SHOWLN(H);
-        // SHOWLN(R);
         // numRowTrunc = R;
         if (H.isSquare()) {
             d.clear();
@@ -381,7 +322,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         auto Vt = IntMatrix::identity(Ht.numRow());
         NormalForm::solveSystem(Ht, Vt);
         d = Ht.diag();
-        // std::cout << "D = " << d << std::endl;
         V = Vt.transpose();
     }
 

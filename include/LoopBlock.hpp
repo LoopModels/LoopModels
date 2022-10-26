@@ -13,7 +13,6 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
-#include "./Symbolics.hpp"
 #include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
@@ -25,6 +24,7 @@
 #include <llvm/IR/User.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_ostream.h>
 
 template <std::integral I>
 [[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
@@ -185,7 +185,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     llvm::SmallVector<CarriedDependencyFlag, 16> carriedDeps;
     // llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
-    llvm::SmallVector<Polynomial::Monomial> symbols;
+    llvm::SmallVector<llvm::Value *> symbols;
     Simplex omniSimplex;
     Simplex augOmniSimplex;
     // Simplex activeSimplex;
@@ -326,19 +326,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
-                // CSHOW(j);
-                // CSHOW(refI.arrayID);
-                // CSHOW(refJ.arrayID);
-                // CSHOW(mai.isLoad);
-                // CSHOW(maj.isLoad);
-                if ((refI.arrayID != refJ.arrayID) ||
-                    ((mai.isLoad) && (maj.isLoad)))
-                    std::cout << std::endl;
                 if ((refI.arrayID != refJ.arrayID) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 addEdge(mai, maj);
-                // CSHOWLN(edges.size());
             }
         }
     }
@@ -346,7 +337,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                                  unsigned maxNode) {
         for (auto &use : u->uses()) {
             llvm::User *user = use.getUser();
-            if (llvm::dyn_cast<llvm::StoreInst>(user) != nullptr) {
+            if (llvm::isa<llvm::StoreInst>(user)) {
                 auto memAccess = userToMemory.find(user);
                 if (memAccess != userToMemory.end()) {
                     // already has a nodeIndex
@@ -555,12 +546,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     // TODO: we need to rotate via setting the schedule, not instantiating
     // the rotated array!
-    [[nodiscard]] static llvm::IntrusiveRefCntPtr<AffineLoopNest>
-    getBang(llvm::DenseMap<const AffineLoopNest *,
-                           llvm::IntrusiveRefCntPtr<AffineLoopNest>> &map,
+    [[nodiscard]] static AffineLoopNest &
+    getBang(llvm::DenseMap<const AffineLoopNest *, AffineLoopNest> &map,
             SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
         auto p = map.find(aln);
-        llvm::IntrusiveRefCntPtr<AffineLoopNest> newp;
         if (p != map.end()) {
             return p->second;
         } else {
@@ -568,9 +557,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             const size_t numTransformed = K.numCol();
             const size_t numPeeled = numVar - numTransformed;
             // A = aln->A*K';
-            auto alshr = aln->rotate(K, numPeeled);
-            map.insert(std::make_pair(aln, alshr));
-            return alshr;
+            map.insert(std::make_pair(aln, aln->rotate(K, numPeeled)));
+            return map.find(aln)->second;
         }
     }
 
@@ -666,9 +654,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 // Schedule:
                 // Phi*L = (Phi*K)*J
                 IntMatrix KS{K * S};
-                llvm::DenseMap<const AffineLoopNest *,
-                               llvm::IntrusiveRefCntPtr<AffineLoopNest>>
-                    loopMap;
+                llvm::DenseMap<const AffineLoopNest *, AffineLoopNest> loopMap;
                 rowStore = 0;
                 rowLoad = numStore;
                 for (unsigned j : orthInds) {
@@ -681,7 +667,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     // }
                     ArrayReference oldRef = std::move(maj.ref);
                     maj.ref = {oldRef.arrayID,
-                               getBang(loopMap, K, oldRef.loop.get())};
+                               getBang(loopMap, K, oldRef.loop)};
                     // refMap[oldRefID] = maj.ref = refs.size();
                     // refs.emplace_back(
                     size_t row = maj.isLoad ? rowLoad : rowStore;
@@ -737,8 +723,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     }
                     // node.schedule.getPhi()(_(0, r), _) = indMat.transpose();
                     node.rank = r;
-                    std::cout << "orthogonalizing r = " << r
-                              << "; indMat =" << indMat << std::endl;
                     tryOrth = true;
                 }
             }
@@ -831,17 +815,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     void setScheduleMemoryOffsets(const Graph &g, size_t d) {
         size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
         for (auto &&node : nodes) {
-            SHOW(d);
-            CSHOW(node.getNumLoops());
-            CSHOWLN(hasActiveEdges(g, node, d));
             if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
                 continue;
             if (!node.phiIsScheduled(d))
                 p = node.updatePhiOffset(p);
         }
         numPhiCoefs = p - pInit;
-        std::cout << "\njust set schedule mem offsets";
-        CSHOWLN(numPhiCoefs);
         size_t o = p;
         for (auto &&node : nodes) {
             if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
@@ -892,23 +871,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         size_t c = 0, l = getLambdaOffset();
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
-            // #ifndef NDEBUG
-            //             std::cout << ";edge=" << e;
-            // #endif
             if (g.isInactive(e, d))
                 continue;
-            // #ifndef NDEBUG
-            //             std::cout << "; is active!";
-            //             ++numActiveCount;
-            // #endif
             unsigned outNodeIndex = edge.out->nodeIndex;
             unsigned inNodeIndex = edge.in->nodeIndex;
-            // SHOW(outNodeIndex);
-            // CSHOWLN(inNodeIndex);
-            // if (outNodeIndex == inNodeIndex ||
-            //     g.missingNode(outNodeIndex, inNodeIndex))
-            //     continue;
-            // std::cout<<"; is still active!";
             const ScheduledNode &outNode = nodes[outNodeIndex];
             const ScheduledNode &inNode = nodes[inNodeIndex];
             const auto [satC, satL, satPp, satPc, satO, satW] =
@@ -953,9 +919,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 if (d < outNode.getNumLoops()) {
                     if (satPc.numCol() == satPp.numCol()) {
                         if (outNode.phiIsScheduled(d)) {
-                            std::cout
-                                << "instantiate omniSimplex adding consts; d ="
-                                << d << std::endl;
                             // add it constants
                             auto sch = outNode.getSchedule(d);
                             SHOWLN(sch);
@@ -1067,15 +1030,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 u + edge.dependenceBounding.getConstraints().numCol() -
                 (2 + edge.depPoly.getNumLambda() +
                  edge.getNumPhiCoefficients() + edge.getNumOmegaCoefficients());
-            SHOW(sol.size());
-            CSHOW(w);
-            CSHOW(u);
-            CSHOWLN(uu);
-            SHOW(sol(w));
-            std::cout << "; ";
-            CSHOWLN(sol(_(u, uu)));
             if (sol(w++) || (!(allZero(sol(_(u, uu)))))) {
-                std::cout << "Removing edge = " << e << std::endl;
                 g.activeEdges.remove(e);
                 deactivated.insert(e);
                 carriedDeps[edge.in->nodeIndex].setCarriedDependency(d);
@@ -1086,9 +1041,9 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return deactivated;
     }
     void updateSchedules(const Graph &g, size_t depth) {
+#ifndef NDEBUG
         SHOW(depth);
         CSHOWLN(sol);
-#ifndef NDEBUG
         if (depth & 1) {
             bool allZero = true;
             for (auto &s : sol) {
@@ -1103,7 +1058,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if (depth >= node.getNumLoops())
                 continue;
             if (!hasActiveEdges(g, node)) {
-                // std::cout << "No active edges!!!!!!"<<std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled(depth))
@@ -1149,8 +1103,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return 0;
     }
     void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
-        std::cout << "addIndependentSolutionConstraints(depth = " << depth
-                  << ")" << std::endl;
         omniSimplex.reserveExtraRows(memory.size());
         if (depth == 0) {
             // add ones >= 0
@@ -1170,11 +1122,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 (!hasActiveEdges(g, node)))
                 continue;
             A = node.schedule.getPhi()(_(0, depth), _).transpose();
-            std::cout << "indep constraint; ";
-            SHOW(depth);
-            CSHOWLN(A);
             NormalForm::nullSpace11(N, A);
-            SHOWLN(N);
             auto c{omniSimplex.addConstraintAndVar()};
             c(0) = 1;
             MutPtrVector<int64_t> cc{c(node.getPhiOffset())};
@@ -1191,8 +1139,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
                 continue;
             if (!hasActiveEdges(g, node)) {
-                std::cout << "No active edges setIndep!!!!!!; depth = " << depth
-                          << std::endl;
                 node.schedule.getOmega()(2 * depth + 1) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled(depth))
@@ -1247,7 +1193,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &sg : graphs) {
             if (d >= sg.calcMaxDepth())
                 continue;
-            std::cout << "About to opt level:" << std::endl;
             countAuxParamsAndConstraints(sg, d);
             setScheduleMemoryOffsets(sg, d);
             if (llvm::Optional<BitSet> sat = optimizeLevel(sg, d)) {
@@ -1324,7 +1269,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     //         omniSimplex.copySolution(sol);
     //     }
     [[nodiscard]] llvm::Optional<BitSet> optimizeLevel(Graph &g, size_t d) {
-        std::cout << "Entering optimizeLevel";
         CSHOW(numPhiCoefs);
         CSHOWLN(d);
         if (numPhiCoefs == 0) {
@@ -1333,35 +1277,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         instantiateOmniSimplex(g, d);
         addIndependentSolutionConstraints(g, d);
-#ifndef NDEBUG
-        // {
-        //     size_t i = 0;
-        //     for (size_t eid = 0; eid < edges.size(); ++eid) {
-        //         // for (auto &e : edges) {
-        //         if (g.isInactive(eid, d))
-        //             continue;
-        //         const Dependence &e = edges[eid];
-        //         SHOW(e.depPoly.getNumLambda());
-        //         CSHOW(e.depPoly.getDim0());
-        //         CSHOW(e.depPoly.getDim1());
-        //         CSHOWLN(e.getNumPhiCoefficients());
-        //         std::cout << "constraints:\ndSat_" << i << " = "
-        //                   << e.dependenceSatisfaction.tableau << "\ndBnd_" <<
-        //                   i
-        //                   << " = " << e.dependenceBounding.tableau <<
-        //                   std::endl;
-        //         ++i;
-        //     }
-        // }
-        // SHOWLN(omniSimplex);
-        SHOW(d);
-        CSHOW(numBounding);
-        CSHOW(numActiveEdges);
-        CSHOW(numPhiCoefs);
-        CSHOW(numOmegaCoefs);
-        CSHOW(numLambda);
-        CSHOWLN(numConstraints);
-#endif
         if (omniSimplex.initiateFeasible())
             return {};
         sol.resizeForOverwrite(getLambdaOffset() - 1);
@@ -1401,39 +1316,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             instantiateOmniSimplex(g, d, true);
             addIndependentSolutionConstraints(g, d);
             if (!omniSimplex.initiateFeasible()) {
-                std::cout << "SUCCESS initiateFeasible()" << std::endl;
                 sol.resizeForOverwrite(getLambdaOffset() - 1);
                 omniSimplex.lexMinimize(sol);
                 // lexMinimize(g, sol, d);
                 updateSchedules(g, d);
                 BitSet depSat = deactivateSatisfiedEdges(g, d);
-#ifndef NDEBUG
-                SHOW(d);
-                CSHOW(numBounding);
-                CSHOW(numActiveEdges);
-                CSHOW(numPhiCoefs);
-                CSHOW(numOmegaCoefs);
-                CSHOW(numLambda);
-                CSHOWLN(numConstraints);
-                SHOWLN(sol);
-                SHOWLN(depSat);
-#endif
                 if (llvm::Optional<BitSet> depSatN =
-                        optimize(g, d + 1, maxDepth)) {
-#ifndef NDEBUG
-                    std::cout << "SUCCESS dep sat optimize()" << std::endl;
-                    CSHOWLN(*depSatN);
-#endif
+                        optimize(g, d + 1, maxDepth))
                     return depSat |= *depSatN;
-#ifndef NDEBUG
-                } else {
-                    std::cout << "FAILED dep sat optimize()" << std::endl;
-#endif
-                }
-#ifndef NDEBUG
-            } else {
-                std::cout << "FAILED initiateFeasible()" << std::endl;
-#endif
             }
             // we failed, so reset solved schedules
             std::swap(g.activeEdges, activeEdges);
@@ -1457,13 +1347,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         CSHOWLN(numPhiCoefs);
         // if we fail on this level, break the graph
         BitSet activeEdgesBackup = g.activeEdges;
-        std::cout << "about to optimizeLevel(d = " << d << ") within optimize"
-                  << std::endl;
         if (llvm::Optional<BitSet> depSat = optimizeLevel(g, d)) {
             const size_t numSat = depSat->size();
-            std::cout << "optimize; numSat = " << numSat
-                      << "; maxDepth = " << maxDepth << "; d = " << d
-                      << std::endl;
             if (llvm::Optional<BitSet> depSatNest =
                     optimize(g, d + 1, maxDepth)) {
                 if (numSat && depSatNest->size())
@@ -1489,7 +1374,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
 };
 
-std::ostream &operator<<(std::ostream &os, const MemoryAccess &m) {
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
     if (m.isLoad)
         os << "= ";
     os << "ArrayReference:\n" << m.ref;

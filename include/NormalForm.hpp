@@ -1,8 +1,7 @@
 #pragma once
+#include "./EmptyArrays.hpp"
 #include "./Macro.hpp"
 #include "./Math.hpp"
-#include "./Symbolics.hpp"
-#include "EmptyArrays.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -24,18 +23,10 @@ inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
 MULTIVERSION [[maybe_unused]] static void
 zeroSupDiagonal(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
                 size_t i, size_t M, size_t N) {
-    // std::cout << "M = " << M << "; N = " << N << "; i = " << i << std::endl;
-    // printMatrix(std::cout, A) << std::endl;
     for (size_t j = i + 1; j < M; ++j) {
         int64_t Aii = A(i, i);
         if (int64_t Aji = A(j, i)) {
-            // std::cout << "A(" << i << ", " << i << ") = " << Aii << "; A(" <<
-            // j
-            // << ", " << i << ") = " << Aji << std::endl;
             const auto [p, q, Aiir, Aijr] = gcdxScale(Aii, Aji);
-            // std::cout << "r = " << r << "; p = " << p << "; q = " << q <<
-            // std::endl;
-
             VECTORIZE
             for (size_t k = 0; k < std::min(M, N); ++k) {
                 int64_t Aki = A(i, k);
@@ -162,7 +153,6 @@ orthogonalizeBang(MutPtrMatrix<int64_t> A) {
     llvm::SmallVector<unsigned> included;
     included.reserve(std::min(M, N));
     for (unsigned i = 0, j = 0; i < std::min(M, N); ++j) {
-        // std::cout << "i = " << i << "; N = " << N << std::endl;
         // zero ith row
         if (pivotRows(A, K, i, M)) {
             // cannot pivot, this is a linear combination of previous
@@ -421,14 +411,9 @@ inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
         g = ret;
         for (size_t l = 0; l < A.numCol(); ++l) {
             int64_t Ail = Ajk * A(i, l) - Aik * A(j, l);
-	    // SHOW(i);
-	    // CSHOW(j);
-	    // CSHOW(l);
-	    // CSHOWLN(Ail);
             A(i, l) = Ail;
             g = gcd(Ail, g);
         }
-        // std::cout << "g = " << g << std::endl;
         if (g > 1) {
             for (size_t l = 0; l < A.numCol(); ++l)
                 if (int64_t Ail = A(i, l))
@@ -457,7 +442,6 @@ inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
             A(i, l) = Ail;
             g = gcd(Ail, g);
         }
-        // std::cout << "g = " << g << std::endl;
         if (g > 1) {
             for (size_t l = 0; l < skip.b; ++l)
                 if (int64_t Ail = A(i, l))
@@ -568,8 +552,7 @@ bareiss(IntMatrix &A, llvm::SmallVectorImpl<size_t> &pivots) {
                 for (size_t j = c + 1; j < N; ++j) {
                     auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
                     auto Akj = Akj_u / prev;
-                    auto rr = Akj_u % prev;
-                    assert(rr == 0);
+                    assert(Akj_u % prev == 0);
                     A(k, j) = Akj;
                 }
                 A(k, r) = 0;

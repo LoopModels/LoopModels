@@ -1,13 +1,20 @@
 #include "../include/TurboLoop.hpp"
+#include "LoopBlock.hpp"
+#include "Loops.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
+#include <llvm/ADT/PostOrderIterator.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
+#include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/LoopNestAnalysis.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
@@ -35,91 +42,117 @@
 
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
+    // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
     llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
-    std::cout << "Assumptions:" << std::endl;
-    for (auto &a : AC.assumptions()) {
-        llvm::errs() << *a << "\n";
-        llvm::CallInst *Call = llvm::cast<llvm::CallInst>(a);
-        llvm::Value *val = (Call->arg_begin()->get());
-        llvm::errs() << *val << "\n";
-        llvm::errs() << "Value id: " << val->getValueID() << "\n";
-        llvm::errs() << "Value name: " << val->getValueName() << "\n";
-        llvm::errs() << "name: " << val->getName() << "\n";
-        if (llvm::ICmpInst *icmp = llvm::dyn_cast<llvm::ICmpInst>(val)) {
-            llvm::errs() << "icmp: " << *icmp << "\n";
-            llvm::Value *op0 = icmp->getOperand(0);
-            llvm::Value *op1 = icmp->getOperand(1);
-            llvm::errs() << "op0: " << *op0 << "\nop1: " << *op1 << "\n";
-            llvm::errs() << "op0 valueID: " << op0->getValueID()
-                         << "\nop1 valueID: " << op1->getValueID() << "\n";
-            llvm::errs() << "op0 valueName: " << op0->getValueName()
-                         << "\nop1 valueName: " << op1->getValueName() << "\n";
-            size_t op0posID = valueToPosetMap.push(op0);
-            size_t op1posID = valueToPosetMap.push(op1);
-            llvm::errs() << "op0posID: " << op0posID
-                         << "\nop1posID: " << op1posID << "\n";
-            switch (icmp->getPredicate()) {
-            case llvm::CmpInst::ICMP_ULT:
-                // op0 < op1
-                // 1 - 0
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
-            case llvm::CmpInst::ICMP_SLT:
-                poset.push(op0posID, op1posID, Interval::positive());
-                break;
-            case llvm::CmpInst::ICMP_ULE:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
-            case llvm::CmpInst::ICMP_SLE:
-                poset.push(op0posID, op1posID, Interval::nonNegative());
-                break;
-            case llvm::CmpInst::ICMP_EQ:
-                poset.push(op0posID, op1posID, Interval::zero());
-                break;
-            case llvm::CmpInst::ICMP_UGT:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
-            case llvm::CmpInst::ICMP_SGT:
-                poset.push(op0posID, op1posID, Interval::negative());
-                break;
-            case llvm::CmpInst::ICMP_UGE:
-                poset.push(0, op0posID, Interval::nonNegative());
-                poset.push(0, op1posID, Interval::nonNegative());
-		[[fallthrough]];
-            case llvm::CmpInst::ICMP_SGE:
-                poset.push(op0posID, op1posID, Interval::nonPositive());
-                break;
-            case llvm::CmpInst::ICMP_NE:
-                // we don't have a representation of this.
-                break;
-            default:
-                // this is icmp, not fcmp!!!
-                break;
-            }
-            if (icmp->isEquality()) {
-                llvm::errs() << *op0 << "\nand\n" << *op1 << "\nare equal!\n";
-            }
-        } else {
-            llvm::errs() << "not an icmp.\n";
-        }
-        llvm::errs() << *Call << "\n";
-    }
-    // llvm::TargetLibraryInfo &TLI =
-    // FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
     // ClassID 0: ScalarRC
     // ClassID 1: RegisterRC
     // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
     TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-    llvm::errs() << "DataLayout: " << F.getParent()->getDataLayout().getStringRepresentation() << "\n";
-    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0) << std::endl;
-    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1) << std::endl;
+    llvm::errs() << "DataLayout: "
+                 << F.getParent()->getDataLayout().getStringRepresentation()
+                 << "\n";
+    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0)
+              << std::endl;
+    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1)
+              << std::endl;
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+
+    initializeLoopForest();
+    SHOWLN(loopForests.size());
+    for (auto &forest : loopForests) {
+        SHOWLN(forest.size());
+        SHOWLN(forest);
+    }
+    // first, we try and parse the function to find sets of loop nests
+    // then we search for sets of fusile loops
+    llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;
+
+    // first, we iterate over all loops to find those that are affine,
+    // constructing AffineLoopNest objects. We do this first, because our
+    // ArrayReference struct will hold pointers to these objects, and we only
+    // want to get pointers once we've finished filling the vector, so that
+    // these pointers won't later be invalidated.
+    llvm::SmallVector<llvm::Loop *, 4> loopsPreorder = LI->getLoopsInPreorder();
+    loops.reserve(loopsPreorder.size());
+    for (auto &L : loopsPreorder) {
+        if (!L->isLoopSimplifyForm())
+            continue;
+        auto b = L->getBounds(*SE);
+        if (!b)
+            continue;
+        auto step = b->getStepValue();
+        if (!step)
+            continue;
+        llvm::Value &init = b->getInitialIVValue();
+        llvm::Value &last = b->getFinalIVValue();
+        if (auto cStep = llvm::dyn_cast<llvm::ConstantInt>(step)) {
+            if (cStep->isOne()) {
+            }
+        } else {
+            // check all parent loops to check invariance of step
+            llvm::Loop *P = L;
+            llvm::Loop *firstDependent = nullptr;
+            bool dependentStep = false;
+            while ((P = P->getParentLoop())) {
+                dependentStep |= !(P->isLoopInvariant(step));
+                if (!dependentStep)
+                    continue;
+                if (!firstDependent)
+                    firstDependent = P;
+                // we must remove P and all outer loops
+                auto ap = loops.find(P);
+                if (ap != loops.end())
+                    loops.erase(ap);
+            }
+
+            // check if it is SCEVUnknown
+            // if it is not, then we do not optimize any loops exterior to this
+            // one so that we can make it a conditional constant.
+            // if (SE->getSCEV(step)->getSCEVType() !=
+            // llvm::SCEVTypes::scUnknown) continue;
+        }
+    }
+    // for (auto &L : *LI){
+
+    // }
+
+    llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
+        fusileSets;
+    llvm::ReversePostOrderTraversal<llvm::Function *> RPOT(&F);
+    for (auto &BB : RPOT) {
+        auto [BBE, SC] = searchForFusileEnd(visitedBBs, BB);
+        if (BBE && (BBE != BB))
+            fusileSets.emplace_back(BB, BBE);
+        parseBB(BB);
+    }
+
+    // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
+    // nullptr);
+    LoopBlock lblock;
+    // for (llvm::BasicBlock &BB : F) {
+    //     if (auto *L = LI->getLoopFor(&BB)) {
+    //         // we're in an outer loop
+    //     } else {
+    //         // we're top level
+    //         for (llvm::Instruction &I : BB) {
+    //             if (I.mayReadFromMemory()) {
+    //                 if (I.mayWriteToMemory()) {
+    //                     // may read and write
+
+    //                 } else {
+    //                     // may read
+    //                 }
+    //             } else if (I.mayWriteToMemory()) {
+    //                 // may write
+    //             } else {
+    //                 // may not read or write
+    //             }
+    //         }
+    //     }
+    // }
     // DL = &F.getParent()->getDataLayout();
 
     // llvm::SCEVExpander rewriter(*SE, F.getParent()->getDataLayout(),
@@ -138,19 +171,20 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // If now, we continue parsing and adding until we get to branches.
     // Then, we need to classify them as either as acceptable loop guards, or
     // as indeterminate control flow that'd make fusion non-viable.
-    // In case of the latter, we can generate code, clear our internal representation,
-    // and then continue walking. We could also consider splitting.
+    // In case of the latter, we can generate code, clear our internal
+    // representation, and then continue walking. We could also consider
+    // splitting.
     //
     // Or, perhaps, have/use a graphical representation.
-    // Or, perhaps our tree type should include guard information, and we consider
-    // dominance between (guards present) ? loop guards : loop preheaders
+    // Or, perhaps our tree type should include guard information, and we
+    // consider dominance between (guards present) ? loop guards : loop
+    // preheaders
     //
     // I think for now, stick with the tree structure. No real reason to not add
     // all loops at once.
-    // You can make more decisions here when it comes time to start considering fusion.
-    // Just store the original Loop* within the tree.
-    // Then, we can use the basic blocks and DT for relevant CFG info.
-    // llvm::SmallVector<
+    // You can make more decisions here when it comes time to start considering
+    // fusion. Just store the original Loop* within the tree. Then, we can use
+    // the basic blocks and DT for relevant CFG info. llvm::SmallVector<
     //     std::pair<llvm::Loop *, llvm::Optional<llvm::Loop::LoopBounds>>, 4>
     //     outerLoops;
     // llvm::SmallVector<AffineCmp, 8> affs;
@@ -159,27 +193,29 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     outerLoops.clear();
     //     affs.clear();
     // }
-    
+
+    parseLoopPrint(LI->begin(), LI->end(), 0);
+
     llvm::InductionDescriptor ID;
     for (llvm::Loop *LP : *LI) {
         auto *inductOuter = LP->getInductionVariable(*SE);
-        const llvm::SCEV *backEdgeTaken = nullptr;
-        if (inductOuter) {
-            llvm::errs() << "Outer InductionVariable: " << *inductOuter << "\n";
-            backEdgeTaken = SE->getBackedgeTakenCount(LP);
-            if (backEdgeTaken) {
-                llvm::errs()
-                    << "Back edge taken count: " << *backEdgeTaken
-                    << "\n\ttrip count: "
-                    << *(SE->getAddExpr(backEdgeTaken,
-                                      SE->getOne(backEdgeTaken->getType())))
-                    << "\n";
-            } else {
-                std::cout << "couldn't find backedge taken?\n";
-            }
-        } else {
-            std::cout << "no outer induction variable" << std::endl;
-        }
+        // const llvm::SCEV *backEdgeTaken = nullptr;
+        // if (inductOuter) {
+        //     llvm::errs() << "Outer InductionVariable: " << *inductOuter <<
+        //     "\n"; backEdgeTaken = SE->getBackedgeTakenCount(LP); if
+        //     (backEdgeTaken) {
+        //         llvm::errs()
+        //             << "Back edge taken count: " << *backEdgeTaken
+        //             << "\n\ttrip count: "
+        //             << *(SE->getAddExpr(backEdgeTaken,
+        //                               SE->getOne(backEdgeTaken->getType())))
+        //             << "\n";
+        //     } else {
+        //         std::cout << "couldn't find backedge taken?\n";
+        //     }
+        // } else {
+        //     std::cout << "no outer induction variable" << std::endl;
+        // }
         auto obouter = LP->getBounds(*SE);
         if (obouter.hasValue()) {
             auto b = obouter.getValue();
@@ -280,7 +316,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
             std::cout << "\n";
         }
     }
-    
+
     return llvm::PreservedAnalyses::none();
     // return llvm::PreservedAnalyses::all();
 }

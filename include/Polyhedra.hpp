@@ -7,9 +7,7 @@
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "./POSet.hpp"
 #include "./Simplex.hpp"
-#include "./Symbolics.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -45,7 +43,7 @@
 // How confident can we be about arbitrary combinations of variables vs 0 for
 // comparisons?
 
-// A*x <= b
+// A*x >= 0
 // representation is
 // A[:,0] + A[:,1:s.size()]*s + A[:,1+s.size():end]*x >= 0
 // E[:,0] + E[:,1:s.size()]*s + E[:,1+s.size():end]*x == 0
@@ -60,36 +58,32 @@ struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
-    IntMatrix A;
-    I64Matrix E;
-    CmptrType C;
+    [[no_unique_address]] IntMatrix A;
+    [[no_unique_address]] I64Matrix E;
+    [[no_unique_address]] CmptrType C;
+
+    Polyhedra() = default;
+    Polyhedra(IntMatrix Ain)
+        : A(std::move(Ain)), E{}, C(LinearSymbolicComparator::construct(A)){};
+    Polyhedra(IntMatrix Ain, I64Matrix Ein)
+        : A(std::move(Ain)), E(std::move(Ein)),
+          C(LinearSymbolicComparator::construct(A)){};
 
     void pruneBounds() {
         Vector<int64_t> diff{A.numCol()};
         if constexpr (hasEqualities)
-	    removeRedundantRows(A, E);
-            // NormalForm::simplifySystem(E, 1);
+            removeRedundantRows(A, E);
+        // NormalForm::simplifySystem(E, 1);
         for (size_t j = A.numRow(); j;) {
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
-                // std::cout << "--------------Start new " << i << "--------------"
-                //           << std::endl;
-                // std::cout << "Now i, j are " << i << " " << j << std::endl;
-                // std::cout << "print diff first: " << diff << std::endl;
-
                 if (C.greaterEqual(diff)) {
-                    // std::cout << "i: " << i << "; j: " << j
-                    //           << " greater Equal returns true" << A
-                    //           << std::endl;
                     eraseConstraint(A, i);
                     C.init(A, E);
                     --j; // `i < j`, and `i` has been removed
                 } else if (C.greaterEqual(diff *= -1)) {
-                    // std::cout << "i: " << i << "; j : " << j
-                    //           << " greater Equal returns false" << A
-                    //           << std::endl;
                     eraseConstraint(A, j);
                     C.init(A, E);
                     break; // `j` is gone
@@ -196,11 +190,7 @@ struct Polyhedra {
     }
     // A'x <= b
     // removes variable `i` from system
-    void removeVariable(IntMatrix &A, const size_t i) {
-        fourierMotzkin(A, i);
-        // std::cout << "removed i = " << i << "\nA=\n"<<A <<std::endl;
-        // dump();
-    }
+    void removeVariable(IntMatrix &A, const size_t i) { fourierMotzkin(A, i); }
     // A'x <= b
     // E'x = q
     // removes variable `i` from system
@@ -237,13 +227,14 @@ struct Polyhedra {
             dropEmptyConstraints(E);
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const Polyhedra &p) {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const Polyhedra &p) {
         auto &&os2 = printConstraints(os << "\n", p.A, p.C.getNumConstTerms());
         if constexpr (hasEqualities)
             return printConstraints(os2, p.E, p.C.getNumConstTerms(), false);
         return os2;
     }
-    void dump() const { std::cout << *this; }
+    void dump() const { llvm::errs() << *this; }
     bool isEmpty() const {
         for (size_t r = 0; r < A.numRow(); ++r)
             if (C.less(A(r, _)))

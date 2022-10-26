@@ -13,10 +13,10 @@ struct MemoryAccess {
     llvm::SmallVector<unsigned> edgesIn;
     llvm::SmallVector<unsigned> edgesOut;
     llvm::SmallVector<unsigned> groups;
-    unsigned index{std::numeric_limits<unsigned>::max()};
-    unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
+    [[no_unique_address]] unsigned index{std::numeric_limits<unsigned>::max()};
+    [[no_unique_address]] unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
     // schedule indicated by `1` top bit, remainder indicates loop
-    const bool isLoad;
+    [[no_unique_address]] const bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
         : ref(std::move(ref)), user(user), schedule(schedule),

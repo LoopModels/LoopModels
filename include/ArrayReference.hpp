@@ -2,11 +2,10 @@
 
 #include "./Loops.hpp"
 #include "./Math.hpp"
-#include "./Symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <llvm/ADT/IntrusiveRefCntPtr.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 
 // `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
 // `baz` needs its own (of depth 2):
@@ -23,16 +22,17 @@
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
     size_t arrayID;
-    llvm::IntrusiveRefCntPtr<AffineLoopNest> loop;
+    AffineLoopNest *loop;
     // std::shared_ptr<AffineLoopNest> loop;
-    llvm::SmallVector<MPoly, 3> strides;
+    [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
+    // [[no_unique_address]] llvm::SmallVector<MPoly, 3> strides;
     // llvm::Optional<IntMatrix>
     //     offsets; // symbolicOffsets * (loop->symbols)
-    llvm::SmallVector<int64_t, 16> indices;
-    unsigned rank;
-    bool hasSymbolicOffsets; // normal case is not to
+    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
+    [[no_unique_address]] unsigned rank;
+    [[no_unique_address]] bool hasSymbolicOffsets; // normal case is not to
 
-    size_t arrayDim() const { return strides.size(); }
+    size_t arrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const {
         return hasSymbolicOffsets ? loop->getNumSymbols() : 1;
@@ -71,66 +71,63 @@ struct ArrayReference {
                                   .X = numSymbols};
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
-        : arrayID(a.arrayID), loop(a.loop), strides(a.strides),
+        : arrayID(a.arrayID), loop(a.loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(const ArrayReference &a,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop,
+    ArrayReference(const ArrayReference &a, AffineLoopNest *loop,
                    PtrMatrix<int64_t> newInds)
-        : arrayID(a.arrayID), loop(loop), strides(a.strides),
+        : arrayID(a.arrayID), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(size_t arrayID,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop)
+    ArrayReference(size_t arrayID, AffineLoopNest *loop)
         : arrayID(arrayID), loop(loop){};
     ArrayReference(size_t arrayID, AffineLoopNest &loop)
-        : arrayID(arrayID),
-          loop(llvm::IntrusiveRefCntPtr<AffineLoopNest>(&loop)){};
+        : arrayID(arrayID), loop(&loop){};
 
     void resize(size_t d) {
-        strides.resize(d);
+        sizes.resize(d);
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
-    ArrayReference(size_t arrayID,
-                   llvm::IntrusiveRefCntPtr<AffineLoopNest> loop, size_t dim,
+    ArrayReference(size_t arrayID, AffineLoopNest *loop, size_t dim,
                    bool hasSymbolicOffsets = false)
         : arrayID(arrayID), loop(loop), hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
     ArrayReference(size_t arrayID, AffineLoopNest &loop, size_t dim,
                    bool hasSymbolicOffsets = false)
-        : arrayID(arrayID),
-          loop(llvm::IntrusiveRefCntPtr<AffineLoopNest>(&loop)),
+        : arrayID(arrayID), loop(&loop),
           hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }
     bool allConstantIndices() const { return !hasSymbolicOffsets; }
     // Assumes strides and offsets are sorted
-    bool stridesMatch(const ArrayReference &x) const {
+    bool sizesMatch(const ArrayReference &x) const {
         if (arrayDim() != x.arrayDim())
             return false;
         for (size_t i = 0; i < arrayDim(); ++i)
-            if (strides[i] != x.strides[i])
+            if (sizes[i] != x.sizes[i])
                 return false;
         return true;
     }
 
-    friend std::ostream &operator<<(std::ostream &os,
-                                    ArrayReference const &ar) {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const ArrayReference &ar) {
         os << "ArrayReference " << ar.arrayID << " (dim = " << ar.arrayDim()
-           << "):" << std::endl;
-        auto A{ar.indexMatrix()};
+           << "):\n";
+        PtrMatrix<int64_t> A{ar.indexMatrix()};
+        SHOW(A.numRow());
+	CSHOWLN(A.numCol());
         for (size_t i = 0; i < A.numCol(); ++i) {
-            auto &stride = ar.strides[i];
+            auto &stride = ar.sizes[i];
             assert(!isZero(stride));
-            bool strideIsOne = isOne(stride);
-	    if (i)
-		os << "+";
+            bool strideIsOne = stride->isOne();
+            if (i)
+                os << "+";
             if (!strideIsOne)
-                os << stride << " * ( ";
+                os << *stride << " * ( ";
             bool printPlus = false;
             for (size_t j = 0; j < A.numRow(); ++j) {
                 if (int64_t Aji = A(j, i)) {
@@ -183,18 +180,3 @@ struct ArrayReference {
         return false;
     }
 };
-
-// std::ostream &operator<<(std::ostream &os, ArrayReferenceFlat const &ar)
-// {
-//     os << "ArrayReference " << ar.arrayID << ":" << std::endl;
-//     for (size_t i = 0; i < length(ar.inds); ++i) {
-//         auto [ind, src] = ar.inds[i];
-//         os << "(" << ind << ") "
-//            << "i_" << src.id << " (" << src.getType() << ")";
-//         if (i + 1 < length(ar.inds)) {
-//             os << " +";
-//         }
-//         os << std::endl;
-//     }
-//     return os;
-// }

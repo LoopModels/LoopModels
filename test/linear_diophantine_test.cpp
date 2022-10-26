@@ -16,7 +16,7 @@ TEST(LinearDiophantineTest, BasicAssertions) {
             if (opts.hasValue()) {
                 auto [a, b, c] = opts.getValue();
                 EXPECT_EQ(1, a * x + b * y + c * z);
-                // std::cout << "sols = [ " << a << ", " << b << ", " << c
+                // llvm::errs() << "sols = [ " << a << ", " << b << ", " << c
                 // << " ]\n";
             }
         } while (std::next_permutation(perm.begin(), perm.end()));
@@ -37,7 +37,7 @@ TEST(LinearDiophantineTest, BasicAssertions) {
         std::vector perm{2, 3, 4, 5, 6};
         do {
             int64_t w = perm[0], x = perm[1], y = perm[2], z = perm[3],
-                     u = perm[4];
+                    u = perm[4];
             auto opts = linearDiophantine(1, std::make_tuple(w, x, y, z, u));
             EXPECT_TRUE(opts.hasValue());
             if (opts.hasValue()) {
@@ -99,6 +99,5 @@ TEST(LinearDiophantineTest, BasicAssertions) {
             EXPECT_FALSE(opt1.hasValue());
         }
     }
-    std::cout << "solved: " << solvedOneCounter << " / " << numIters
-              << std::endl;
+    llvm::errs() << "solved: " << solvedOneCounter << " / " << numIters << "\n";
 }

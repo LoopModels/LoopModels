@@ -1,16 +1,16 @@
 #pragma once
-#include <iostream>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 
 template <typename T> void show(llvm::SmallVectorImpl<T> const &x) {
-    printVector(std::cout, x);
+    printVector(llvm::errs(), x);
 }
 template <typename T>
-concept LeftLeftPrint = requires(std::ostream &os, const T &a) {
-    { os << a };
-};
-void show(LeftLeftPrint auto x) { std::cout << x; }
+concept LeftLeftPrint = requires(llvm::raw_ostream &os, const T &a) {
+                            { os << a };
+                        };
+void show(LeftLeftPrint auto x) { llvm::errs() << x; }
 void showln(auto x) {
     show(x);
-    std::cout << std::endl;
+    llvm::errs() << "\n";
 }

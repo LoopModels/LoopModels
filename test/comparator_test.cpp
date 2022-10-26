@@ -42,7 +42,7 @@ TEST(BasicCompare, BasicAssertions) {
     Vector<int64_t> query5{0, 0, 0, 1, -1}; // we could not identity the relation between x and y
     Vector<int64_t> query6{0, -2, 0, 1, 0}; // we could not know whether x is larger than 2b or not
     EXPECT_TRUE(comp3.greaterEqual(query2));
-    // std::cout <<  "comp3 wrong test " << comp3.greaterEqual(query3) <<std::endl;
+    // llvm::errs() <<  "comp3 wrong test " << comp3.greaterEqual(query3) <<"\n";
     EXPECT_TRUE(!comp3.greaterEqual(query3));
     EXPECT_TRUE(!comp3.greaterEqual(query5));
     EXPECT_TRUE(comp3.greaterEqual(query4));
@@ -55,14 +55,14 @@ TEST(V2Matrix, BasicAssertions) {
     auto comp = LinearSymbolicComparator::construct(A, false);
     auto [H, U] = NormalForm::hermite(std::move(A));
     IntMatrix Ht = H.transpose();
-    //std::cout << "Ht matrix:" << Ht << std::endl;
+    //llvm::errs() << "Ht matrix:" << Ht << "\n";
     auto Vt = IntMatrix::identity(Ht.numRow());
     auto NS = NormalForm::nullSpace(Ht);
     NormalForm::solveSystem(Ht, Vt);
 
-    // std::cout << "Null space matrix:" << NS << std::endl;
-    // std::cout << "Diagonal matrix:" << Ht << std::endl;
-    // std::cout << "Transposed V matrix:" << Vt << std::endl;
+    // llvm::errs() << "Null space matrix:" << NS << "\n";
+    // llvm::errs() << "Diagonal matrix:" << Ht << "\n";
+    // llvm::errs() << "Transposed V matrix:" << Vt << "\n";
     auto NSrow = NS.numRow();
     auto NScol = NS.numCol();
     auto offset = Vt.numRow() - NS.numRow();

@@ -19,7 +19,7 @@ TEST(SimplexTest, BasicAssertions) {
     C[3] = -2;
     C[4] = -3;
     C[5] = -4;
-    std::cout << "S.tableau =" << S.tableau << std::endl;
+    llvm::errs() << "S.tableau =" << S.tableau << "\n";
     EXPECT_EQ(S.run(), 20);
 }
 TEST(LexMinSimplexTest, BasicAssertions) {

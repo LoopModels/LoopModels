@@ -22,7 +22,6 @@ struct LU {
                 for (size_t j = 0; j < M; ++j)
                     std::swap(rhs(ip, j), rhs(i, j));
         }
-        // printMatrix(std::cout << "Permuted =\n", rhs) << std::endl;
         // LU x = rhs
         // L y = rhs // L is UnitLowerTriangular
         for (size_t n = 0; n < N; ++n) {
@@ -34,7 +33,6 @@ struct LU {
                 rhs(m, n) = Ymn;
             }
         }
-        // printMatrix(std::cout << "Div LT =\n", rhs) << std::endl;
         /*
         for (size_t k = 0; k < N; ++k) {
             for (size_t j = 0; j < M; ++j) {
@@ -59,7 +57,6 @@ struct LU {
                 }
             }
         }
-        // printMatrix(std::cout << "Div UT =\n", rhs) << std::endl;
         return false;
     }
 
@@ -113,8 +110,6 @@ struct LU {
 
     llvm::Optional<SquareMatrix<Rational>> inv() const {
         SquareMatrix<Rational> A = SquareMatrix<Rational>::identity(F.numCol());
-        // printMatrix(std::cout << "F =\n", F) << std::endl;
-        // printVector(std::cout << "perm =\n", ipiv) << std::endl;
         if (!ldiv(A)) {
             return A;
         } else {
@@ -148,7 +143,6 @@ struct LU {
         SquareMatrix<Rational> A(M);
         for (size_t m = 0; m < M * M; ++m)
             A[m] = B[m];
-        // printMatrix(std::cout << "in lu, initial A =\n", A) << std::endl;
         llvm::SmallVector<unsigned> ipiv(M);
         for (size_t i = 0; i < M; ++i) {
             ipiv[i] = i;
@@ -165,18 +159,10 @@ struct LU {
                 for (size_t j = 0; j < M; ++j)
                     std::swap(A(kp, j), A(k, j));
             }
-            // std::cout << "A(k=" << k << ",k=" << k << ") = " << A(k, k)
-            //           << std::endl;
             Rational Akkinv = A(k, k).inv();
-            // std::cout << "1/A(k=" << k << ",k=" << k << ") = " << Akkinv
-            // << std::endl;
             for (size_t i = k + 1; i < M; ++i) {
                 if (llvm::Optional<Rational> Aik = A(i, k).safeMul(Akkinv)) {
                     A(i, k) = Aik.getValue();
-                    // std::cout << "A(i=" << i << ",k=" << k << ") = " << A(i,
-                    // k)
-                    // << " = Aik = " << Aik.getValue() << std::endl;
-                    // assert(A.data() + M * i + k == &(A(i, k)));
                 } else {
                     return {};
                 }

@@ -2,9 +2,8 @@
 
 #include "./BitSets.hpp"
 #include "./Math.hpp"
-#include <iostream>
-#include <istream>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 #include <tuple>
 #include <type_traits>
 
@@ -129,11 +128,12 @@ stronglyConnectedComponents(AbstractGraph auto &g) {
     return components;
 }
 
-std::ostream &print(const AbstractGraph auto &g, std::ostream &os = std::cout) {
+llvm::raw_ostream &print(const AbstractGraph auto &g,
+                         llvm::raw_ostream &os = llvm::errs()) {
     for (auto i : g.vertexIds()) {
         os << "Vertex " << i << ":";
         printRange(os << "\ninNeighbors: ", g.inNeighbors(i));
-        printRange(os << "\noutNeighbors: ", g.outNeighbors(i)) << std::endl;
+        printRange(os << "\noutNeighbors: ", g.outNeighbors(i)) << "\n";
     }
     return os;
 }

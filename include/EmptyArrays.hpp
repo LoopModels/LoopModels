@@ -1,6 +1,5 @@
 #pragma once
 #include "./Math.hpp"
-#include "./Symbolics.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
@@ -18,9 +17,7 @@ template <typename T> struct EmptyMatrix : BaseMatrix<T, EmptyMatrix<T>> {
     static constexpr size_t getConstCol() { return 0; }
 
     static constexpr T *data() { return nullptr; }
-    inline T operator()(size_t, size_t) {
-	return 0;
-    }
+    inline T operator()(size_t, size_t) { return 0; }
 };
 
 template <typename T>
@@ -44,4 +41,4 @@ template <typename T> struct EmptyVector {
 
 template <typename T, typename S>
 concept MaybeVector = std::is_same_v<T, EmptyVector<S>> ||
-    std::is_same_v<T, llvm::SmallVector<S>>;
+                      std::is_same_v<T, llvm::SmallVector<S>>;
