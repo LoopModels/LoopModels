@@ -88,9 +88,10 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     // add a symbol to row `r` of A
     // we try to break down value `v`, so that adding
     // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
-    size_t addSymbol(IntMatrix &B, llvm::Loop *L, const llvm::SCEV *v,
-                     llvm::ScalarEvolution &SE, size_t l, size_t u, int64_t mlt,
-                     size_t minDepth) {
+    [[nodiscard]] size_t addSymbol(IntMatrix &B, llvm::Loop *L,
+                                   const llvm::SCEV *v,
+                                   llvm::ScalarEvolution &SE, size_t l,
+                                   size_t u, int64_t mlt, size_t minDepth) {
         // first, we check if `v` in `Symbols`
         if (size_t i = findIndex(v)) {
             for (size_t j = l; j < u; ++j)
@@ -123,16 +124,20 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                        llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
             size_t recDepth = x->getLoop()->getLoopDepth();
             if (x->isAffine()) {
+                minDepth =
+                    addSymbol(B, L, x->getOperand(0), SE, l, u, mlt, minDepth);
                 if (auto c = getConstantInt(x->getOperand(1))) {
                     B(l, B.numCol() - recDepth) = mlt * (*c);
-                    return addSymbol(B, L, x->getOperand(0), SE, l, u, mlt,
-                                     minDepth);
+                    return minDepth;
                 }
+                v = SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
+                                     x->getOperand(1), x->getLoop(),
+                                     x->getNoWrapFlags());
             }
-            // not supported
-            // we use a flag "minSupported"
-            // defaults to 0, meaning we support all loops,
-            // as all loops depth > 0 (outer most depth is 1)
+            // we only support affine SCEVAddRecExpr with constant steps
+            // we use a flag "minSupported", which defaults to 0
+            // 0 means we support all loops, as the outer most depth is 1
+            // Depth of 0 means toplevel.
             minDepth = std::max(minDepth, recDepth);
         } else if (const llvm::SCEVMinMaxExpr *ex =
                        llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
@@ -185,20 +190,28 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         }
         // recurse, if possible to add an outer layer
         if (llvm::Loop *P = L->getParentLoop())
-            if (const llvm::SCEV *BTP = SE.getBackedgeTakenCount(P))
-                if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
-                    return addBackedgeTakenCount(B, P, BTP, SE, minDepth);
+            if (areSymbolsLoopInvariant(P, SE))
+                if (const llvm::SCEV *BTP = SE.getBackedgeTakenCount(P))
+                    if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
+                        return addBackedgeTakenCount(B, P, BTP, SE, minDepth);
         return std::max(depth - 1, minDepth);
     }
-    static llvm::Optional<AffineLoopNest>
-    construct(llvm::Loop *L, llvm::ScalarEvolution &SE, llvm::Type *IntTyp) {
+    bool areSymbolsLoopInvariant(llvm::Loop *L,
+                                 llvm::ScalarEvolution &SE) const {
+        for (size_t i = 0; i < symbols.size(); ++i)
+            if ((!allZero(A(_, i + 1))) && (!SE.isLoopInvariant(symbols[i], L)))
+                return false;
+        return true;
+    }
+    static llvm::Optional<AffineLoopNest> construct(llvm::Loop *L,
+                                                    llvm::ScalarEvolution &SE) {
         auto BT = SE.getBackedgeTakenCount(L);
         if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
             return {};
-        return AffineLoopNest(L, BT, SE, IntTyp);
+        return AffineLoopNest(L, BT, SE);
     }
     AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT,
-                   llvm::ScalarEvolution &SE, llvm::Type *IntTyp) {
+                   llvm::ScalarEvolution &SE) {
         IntMatrix B;
         // once we're done assembling these, we'll concatenate A and B
         size_t maxDepth = L->getLoopDepth();
@@ -223,7 +236,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                         for (size_t r = d + 1; r < maxDepth; ++r)
                             P = P->getParentLoop();
                     }
-                    //
+                    // TODO: find a more efficient way to get IntTyp
+                    llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
                     addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp),
                                                SE.getOne(IntTyp), P,
                                                llvm::SCEV::FlagNW),
@@ -237,8 +251,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         // copy the included loops from B into A
         A(_, _(N, N + depth)) = B(_, _(0, depth));
         addZeroLowerBounds();
-	// NOTE: pruneBounds() is not legal here if we wish to use
-	// removeInnerMost later.
+        // NOTE: pruneBounds() is not legal here if we wish to use
+        // removeInnerMost later.
         // pruneBounds();
     }
     [[nodiscard]] AffineLoopNest removeInnerMost() const {

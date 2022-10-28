@@ -54,11 +54,10 @@ struct LoopTree {
     getBounds(llvm::ScalarEvolution *SE) {
         return loop->getBounds(*SE);
     }
-    LoopTree(llvm::Loop *L, LoopForest sL, llvm::PHINode *iV,
-             llvm::Loop::LoopBounds bounds)
-        : loop(L),
-          affineLoop(bounds.getInitialIVValue(), bounds.getFinalIVValue()),
-          subLoops(std::move(sL)), parentLoop(nullptr), indVar(*iV),
+    LoopTree(llvm::Loop *L, LoopForest sL, const llvm::SCEV *BT,
+             llvm::ScalarEvolution &SE)
+        : loop(L), affineLoop(L, BT, SE), subLoops(std::move(sL)),
+          parentLoop(nullptr), indVar(*iV),
           initialIVValue(bounds.getInitialIVValue()),
           finalIVValue(bounds.getFinalIVValue()) {
         // initialize the AffineLoopNest
@@ -121,24 +120,22 @@ bool LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution *SE,
         assert(subForest.size());
     }
 
-    if (llvm::PHINode *indVar = L->getInductionVariable(*SE)) {
-        if (llvm::Optional<llvm::Loop::LoopBounds> LB =
-                llvm::Loop::LoopBounds::getBounds(*L, *indVar, *SE)) {
-            if (llvm::ConstantInt *step =
-                    llvm::dyn_cast<llvm::ConstantInt>(LB->getStepValue())) {
-                if (!step->isOne()) // TODO: canonicalize?
-                    return LoopForest::invalid(forests, std::move(subForest));
-                if (subForest.size()) {
-                    LoopForest backupForest{subForest};
-                    for (auto &&SLT : subForest)
-                        if (SLT.addOuterLoop(L, *LB, indVar)) {
-                            forests.push_back(std::move(backupForest));
-                            return true;
-                        }
-                }
-                loops.emplace_back(L, std::move(subForest), indVar, *LB);
-                return false;
+    if (auto BT = SE.getBackedgeTakenCount(L)) {
+        if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
+            if (subForest.size()) { // add subloops
+                LoopForest backupForest{subForest};
+                for (auto &&SLT : subForest)
+                    if (SLT.addOuterLoop(L, *LB, indVar)) {
+                        forests.push_back(std::move(backupForest));
+                        return true;
+                    }
             }
+            // TODO: subForest.size() should be if/else
+            // if we have subForests, we pop the innermost loop of a parent
+            // if not, then we are the innermost loop and need to create a seed
+            // AffineLoopNest
+            loops.emplace_back(L, std::move(subForest), BT, SE);
+            return false;
         }
     }
     return LoopForest::invalid(forests, std::move(subForest));
