@@ -3,6 +3,7 @@
 #include "./BitSets.hpp"
 #include "./LoopBlock.hpp"
 #include "./Loops.hpp"
+#include "Macro.hpp"
 #include <iterator>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -59,12 +60,14 @@ struct LoopTree {
         llvm::errs() << "new loop";
         CSHOWLN(affineLoop.getNumLoops());
         SHOWLN(affineLoop.A);
+        for (auto v : affineLoop.symbols)
+            SHOWLN(*v);
     }
     LoopTree(llvm::Loop *L, AffineLoopNest aln, LoopForest sL)
         : loop(L), affineLoop(aln), subLoops(sL), parentLoop(nullptr) {}
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const LoopTree &tree) {
-        return os << tree.affineLoop << tree.subLoops;
+        return os << tree.affineLoop << "\n" << tree.subLoops << "\n";
     }
     void addZeroLowerBounds() {
         affineLoop.addZeroLowerBounds();
@@ -117,11 +120,9 @@ size_t LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution &SE,
             return LoopForest::invalid(forests, std::move(subForest));
         assert(subForest.size());
     }
-
     if (subForest.size()) { // add subloops
         AffineLoopNest &subNest = subForest.front().affineLoop;
-        // subForest.front() has interiorDepth0 interior loops
-        if (subNest.getNumLoops() > interiorDepth0) {
+        if (subNest.getNumLoops() > 1) {
             loops.emplace_back(L, subNest.removeInnerMost(),
                                std::move(subForest));
             return ++interiorDepth0;
@@ -141,6 +142,6 @@ LoopTree &LoopForest::operator[](size_t i) {
 }
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree) {
     for (auto &loop : tree.loops)
-        os << loop;
-    return os;
+        os << loop << "\n";
+    return os << "\n\n";
 }

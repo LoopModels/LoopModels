@@ -77,14 +77,15 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //    successive loops. In all such cases, the loops at that level are
     //    split into separate forests.
     void initializeLoopForest() {
-        loopForests.resize(1);
-        auto &forest = loopForests.back();
+        LoopForest forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         for (auto &L : llvm::reverse(*LI))
             forest.pushBack(L, *SE, loopForests);
+	if (forest.size())
+	    loopForests.push_back(std::move(forest));
         for (auto &forest : loopForests)
-	    forest.addZeroLowerBounds();
+            forest.addZeroLowerBounds();
     }
 
     // returns index to the loop whose preheader we place it in.

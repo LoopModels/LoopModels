@@ -1922,17 +1922,9 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
 
     Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
 
-    // inline T &getLinearElement(size_t i) { return mem[i]; }
-    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    // auto begin() { return mem.begin(); }
-    // auto end() { return mem.end(); }
-    // auto begin() const { return mem.begin(); }
-    // auto end() const { return mem.end(); }
     inline size_t numRow() const { return M; }
     inline size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
-    // static constexpr size_t colStride() { return 1; }
-    // static constexpr size_t getConstCol() { return 0; }
 
     T *data() { return mem.data(); }
     const T *data() const { return mem.data(); }
@@ -1952,17 +1944,9 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
 
     Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
 
-    // inline T &getLinearElement(size_t i) { return mem[i]; }
-    // inline const T &getLinearElement(size_t i) const { return mem[i]; }
-    // auto begin() { return mem.begin(); }
-    // auto end() { return mem.end(); }
-    // auto begin() const { return mem.begin(); }
-    // auto end() const { return mem.end(); }
-
     inline size_t numRow() const { return M; }
     static constexpr size_t numCol() { return N; }
     static constexpr size_t rowStride() { return N; }
-    // static constexpr size_t colStride() { return 1; }
     static constexpr size_t getConstCol() { return N; }
 
     T *data() { return mem.data(); }
@@ -2074,7 +2058,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     Matrix(SquareMatrix<T> &&A)
         : mem(std::move(A.mem)), M(A.M), N(A.M), X(A.M){};
     Matrix(const SquareMatrix<T> &A)
-        : mem(A.mem.begin(), A.mem.end()), M(A.M), N(A.M), X(A.M){};
+        : mem(A.begin(), A.end()), M(A.M), N(A.M), X(A.M){};
     Matrix(const AbstractMatrix auto &A)
         : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()),
           X(A.numCol()) {
@@ -2084,9 +2068,9 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
                 mem[m * X + n] = A(m, n);
     }
     auto begin() { return mem.begin(); }
-    auto end() { return mem.end(); }
+    auto end() { return mem.begin() + rowStride() * M; }
     auto begin() const { return mem.begin(); }
-    auto end() const { return mem.end(); }
+    auto end() const { return mem.begin() + rowStride() * M; }
     size_t numRow() const { return M; }
     size_t numCol() const { return N; }
     inline size_t rowStride() const { return X; }
@@ -2167,15 +2151,16 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
     }
 
     void resizeRows(size_t MM) {
-        if (MM > M) {
-            mem.resize(MM * X);
-        }
+        size_t Mold = M;
         M = MM;
+        if (M * rowStride() > mem.size())
+            mem.resize(M * X);
+        if (M > Mold)
+            (*this)(_(Mold, M), _) = 0;
     }
     void resizeRowsForOverwrite(size_t MM) {
-        if (MM > M) {
+        if (MM * rowStride() > mem.size())
             mem.resize_for_overwrite(M * X);
-        }
         M = MM;
     }
     void resizeCols(size_t NN) { resize(M, NN); }
