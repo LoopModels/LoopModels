@@ -21,7 +21,8 @@
 // NOTE: strides are in row major order!
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
-    size_t arrayID;
+    const llvm::SCEVUnknown *basePointer;
+    // size_t arrayID;
     AffineLoopNest *loop;
     // std::shared_ptr<AffineLoopNest> loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
@@ -31,6 +32,11 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] unsigned rank;
     [[no_unique_address]] bool hasSymbolicOffsets; // normal case is not to
+
+    ArrayReference() = default;
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
+                   llvm::ArrayRef<const llvm::SCEV *> subscripts) ;
 
     size_t arrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }

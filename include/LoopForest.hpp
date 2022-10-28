@@ -12,6 +12,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 #include <llvm/Support/raw_ostream.h>
+#include <utility>
 #include <vector>
 
 struct LoopTree;
@@ -38,7 +39,7 @@ struct LoopForest {
     inline auto rend() const { return loops.rend(); }
     inline auto &front() { return loops.front(); }
     inline void clear();
-    void addZeroLowerBounds();
+    void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &);
 };
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
 // TODO: should depth be stored in LoopForests instead?
@@ -69,9 +70,11 @@ struct LoopTree {
                                          const LoopTree &tree) {
         return os << tree.affineLoop << "\n" << tree.subLoops << "\n";
     }
-    void addZeroLowerBounds() {
+    void addZeroLowerBounds(
+        llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &loopMap) {
         affineLoop.addZeroLowerBounds();
-        subLoops.addZeroLowerBounds();
+        subLoops.addZeroLowerBounds(loopMap);
+        loopMap.insert(std::make_pair(loop, &affineLoop));
     }
 };
 
@@ -83,9 +86,10 @@ inline bool LoopForest::invalid(std::vector<LoopForest> &forests,
         forests.push_back(std::move(forest));
     return true;
 }
-void LoopForest::addZeroLowerBounds() {
+void LoopForest::addZeroLowerBounds(
+    llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &loopMap) {
     for (auto &&tree : loops)
-        tree.addZeroLowerBounds();
+        tree.addZeroLowerBounds(loopMap);
 }
 
 // try to add Loop L, as well as all of L's subLoops
