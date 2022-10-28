@@ -96,8 +96,9 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
-    llvm::Value *N = aln.symbols[2];
-    llvm::Value *J = aln.symbols[3];
+    const llvm::SCEV *N = aln.symbols[2];
+    const llvm::SCEV *J = aln.symbols[3];
+
     // we have three array refs
     // W[i+m, j+n]
     // llvm::SmallVector<std::pair<MPoly,MPoly>>
@@ -110,7 +111,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         IndMat(3, 1) = 1; // j
                           // I + M -1
         War.sizes[0] = SE.getAddExpr(
-            SE.getSCEV(N), SE.getAddExpr(SE.getSCEV(J), SE.getMinusOne(Int64)));
+            N, SE.getAddExpr(J, SE.getMinusOne(Int64)));
         War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "War = " << War << "\n";
@@ -121,7 +122,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
         IndMat(2, 0) = 1; // i
         IndMat(3, 1) = 1; // j
-        Bar.sizes[0] = SE.getSCEV(J);
+        Bar.sizes[0] = J;
         Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bar = " << Bar << "\n";
@@ -132,7 +133,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
         IndMat(0, 0) = 1; // m
         IndMat(1, 1) = 1; // n
-        Car.sizes[0] = SE.getSCEV(N);
+        Car.sizes[0] = N;
         Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Car = " << Car << "\n";
@@ -201,8 +202,8 @@ TEST(BadMul, BasicAssertions) {
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
-    llvm::Value *N = aln.symbols[1];
-    llvm::Value *K = aln.symbols[2];
+    const llvm::SCEV *N = aln.symbols[1];
+    const llvm::SCEV *K = aln.symbols[2];
 
     // auto Zero = Polynomial::Term{int64_t(0), Polynomial::Monomial()};
     // auto One = Polynomial::Term{int64_t(1), Polynomial::Monomial()};
@@ -226,7 +227,7 @@ TEST(BadMul, BasicAssertions) {
         IndMat(jId, 0) = 1;  // j
         IndMat(iId, 1) = 1;  // i
         IndMat(lId, 1) = -1; // l
-        War.sizes[0] = SE.getSCEV(N);
+        War.sizes[0] = N;
         War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "War = " << War << "\n";
@@ -238,7 +239,7 @@ TEST(BadMul, BasicAssertions) {
         IndMat(jId, 0) = 1;  // j
         IndMat(lId, 1) = 1;  // l
         IndMat(jId, 1) = -1; // j
-        Bar.sizes[0] = SE.getSCEV(K);
+        Bar.sizes[0] = K;
         Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bar = " << Bar << "\n";
@@ -251,7 +252,7 @@ TEST(BadMul, BasicAssertions) {
         IndMat(jId, 0) = -1; // j
         IndMat(iId, 1) = 1;  // i
         IndMat(lId, 1) = -1; // l
-        Car.sizes[0] = SE.getSCEV(N);
+        Car.sizes[0] = N;
         Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Car = " << Car << "\n";

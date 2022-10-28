@@ -1339,6 +1339,14 @@ template <typename T> struct MutPtrMatrix {
         assert(k == A.nonZeros.size());
         return *this;
     }
+    MutPtrMatrix<T> operator=(MutPtrMatrix<T> A) {
+        return copyto(*this, PtrMatrix<T>(A));
+    }
+    // rule of 5 requires...
+    MutPtrMatrix(const MutPtrMatrix<T> &A) = default;
+    MutPtrMatrix(T *mem, size_t M, size_t N) : mem(mem), M(M), N(N), X(N){};
+    MutPtrMatrix(T *mem, size_t M, size_t N, size_t X)
+        : mem(mem), M(M), N(N), X(X){};
 
     inline std::pair<size_t, size_t> size() const {
         return std::make_pair(M, N);
@@ -1360,10 +1368,8 @@ template <typename T> struct MutPtrMatrix {
         assert(cols.e >= cols.b);
         assert(rows.e <= M);
         assert(cols.e <= numCol());
-        return MutPtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
-                               .M = rows.e - rows.b,
-                               .N = cols.e - cols.b,
-                               .X = rowStride()};
+        return MutPtrMatrix<T>{data() + cols.b + rows.b * rowStride(),
+                               rows.e - rows.b, cols.e - cols.b, rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
@@ -1621,10 +1627,8 @@ template <typename T, typename P> struct BaseMatrix {
         assert(cols.e >= cols.b);
         assert(rows.e <= numRow());
         assert(cols.e <= numCol());
-        return MutPtrMatrix<T>{.mem = data() + cols.b + rows.b * rowStride(),
-                               .M = rows.e - rows.b,
-                               .N = cols.e - cols.b,
-                               .X = rowStride()};
+        return MutPtrMatrix<T>{data() + cols.b + rows.b * rowStride(),
+                               rows.e - rows.b, cols.e - cols.b, rowStride()};
     }
     template <typename R0, typename R1, typename C0, typename C1>
     inline MutPtrMatrix<T> operator()(Range<R0, R1> rows, Range<C0, C1> cols) {
@@ -1725,8 +1729,7 @@ template <typename T, typename P> struct BaseMatrix {
         return StridedVector<T>{data() + n, numRow(), rowStride()};
     }
     operator MutPtrMatrix<T>() {
-        return MutPtrMatrix<T>{
-            .mem = data(), .M = numRow(), .N = numCol(), .X = rowStride()};
+        return MutPtrMatrix<T>{data(), numRow(), numCol(), rowStride()};
     }
     operator PtrMatrix<T>() const {
         return PtrMatrix<T>{
@@ -2206,9 +2209,7 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
         assert(MM <= M);
         M = MM;
     }
-    MutPtrMatrix<T> view() {
-        return MutPtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
-    }
+    MutPtrMatrix<T> view() { return MutPtrMatrix<T>{mem.data(), M, N, X}; }
     PtrMatrix<T> view() const {
         return PtrMatrix<T>{.mem = mem.data(), .M = M, .N = N, .X = X};
     }
@@ -2257,6 +2258,14 @@ struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
             }
             (*this)(m, N - 1) = x;
         }
+    }
+    Matrix<T, 0, 0, S> deleteCol(size_t c) const {
+        Matrix<T, 0, 0, S> A(M, N - 1);
+        for (size_t m = 0; m < M; ++m) {
+            A(m, _(0, c)) = (*this)(m, _(0, c));
+            A(m, _(c, ::end)) = (*this)(m, _(c + 1, ::end));
+        }
+        return A;
     }
 };
 template <typename T> using DynamicMatrix = Matrix<T, 0, 0, 64>;
@@ -2430,7 +2439,7 @@ concept TriviallyCopyableMatrixOrScalar =
     std::is_trivially_copyable_v<T> && MatrixOrScalar<T>;
 
 static_assert(std::copy_constructible<PtrMatrix<int64_t>>);
-static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>);
+// static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>);
 static_assert(std::is_trivially_copyable_v<PtrMatrix<int64_t>>);
 static_assert(TriviallyCopyableMatrixOrScalar<PtrMatrix<int64_t>>);
 static_assert(TriviallyCopyableMatrixOrScalar<int>);

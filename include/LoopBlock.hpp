@@ -185,7 +185,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     llvm::SmallVector<CarriedDependencyFlag, 16> carriedDeps;
     // llvm::SmallVector<bool> visited; // visited, for traversing graph
     llvm::DenseMap<llvm::User *, MemoryAccess *> userToMemory;
-    llvm::SmallVector<llvm::Value *> symbols;
+    // llvm::SmallVector<llvm::Value *> symbols;
     Simplex omniSimplex;
     Simplex augOmniSimplex;
     // Simplex activeSimplex;

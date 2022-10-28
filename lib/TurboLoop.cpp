@@ -78,6 +78,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     llvm::SmallVector<llvm::Loop *, 4> loopsPreorder = LI->getLoopsInPreorder();
     loops.reserve(loopsPreorder.size());
     for (auto &L : loopsPreorder) {
+        llvm::errs() << "Preorder Loop: " << *L << "\nBackedge Taken Count: "
+                     << *(SE->applyLoopGuards(SE->getBackedgeTakenCount(L), L))
+                     << "\n";
         if (!L->isLoopSimplifyForm())
             continue;
         auto b = L->getBounds(*SE);

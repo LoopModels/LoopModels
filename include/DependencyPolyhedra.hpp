@@ -36,7 +36,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     [[no_unique_address]] size_t numDep0Var; // loops dep 0
     // size_t numDep1Var; // loops dep 1
     [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
-    [[no_unique_address]] llvm::SmallVector<llvm::Value *> symbols;
+    [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *> symbols;
     inline size_t getTimeDim() const { return nullStep.size(); }
     inline size_t getDim0() const { return numDep0Var; }
     inline size_t getNumSymbols() const { return 1 + symbols.size(); }
@@ -84,6 +84,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 dims.emplace_back(i, i);
             return dims;
         }
+        llvm::errs() << "Sizes don't match!\n";
         // Farkas: psi(x) >= 0 iff
         // psi(x) = l_0 + lambda' * (b - A'*x) for some l_0, lambda >= 0
         // psi(x) is an affine function.
@@ -207,37 +208,39 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Produces
     // A*x <= b
     // Where x = [inds0..., inds1..., time..]
-    unsigned int symbolIndex(llvm::Value *v) {
+    unsigned int symbolIndex(const llvm::SCEV *v) {
         for (unsigned int i = 0; i < symbols.size(); ++i)
             if (symbols[i] == v)
                 return i;
         return std::numeric_limits<unsigned int>::max();
     }
     std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
-    merge(llvm::ArrayRef<llvm::Value *> s0, llvm::ArrayRef<llvm::Value *> s1) {
+    merge(llvm::ArrayRef<const llvm::SCEV *> s0,
+          llvm::ArrayRef<const llvm::SCEV *> s1) {
         symbols.reserve(s0.size() + s1.size());
-	std::pair<llvm::SmallVector<unsigned int>,
-                  llvm::SmallVector<unsigned int>> ret;
-	ret.first.reserve(s0.size());
-	ret.second.reserve(s1.size());
-	for (size_t i = 0; i < s0.size(); ++i){
-	    ret.first.push_back(i);
-	    symbols.push_back(s0[i]);
-	}
-	for (size_t i = 0; i < s1.size(); ++i){
-	    unsigned int j = symbolIndex(s1[i]);
-	    if (j == std::numeric_limits<unsigned int>::max()){
-		ret.second.push_back(symbols.size());
-		symbols.push_back(s1[i]);
-	    } else {
-		ret.second.push_back(j);
-	    }
-	}
-	SHOW(s0.size());
-	CSHOW(ret.first.size());
-	CSHOW(s1.size());
-	CSHOWLN(ret.second.size());
-	return ret;
+        std::pair<llvm::SmallVector<unsigned int>,
+                  llvm::SmallVector<unsigned int>>
+            ret;
+        ret.first.reserve(s0.size());
+        ret.second.reserve(s1.size());
+        for (size_t i = 0; i < s0.size(); ++i) {
+            ret.first.push_back(i);
+            symbols.push_back(s0[i]);
+        }
+        for (size_t i = 0; i < s1.size(); ++i) {
+            unsigned int j = symbolIndex(s1[i]);
+            if (j == std::numeric_limits<unsigned int>::max()) {
+                ret.second.push_back(symbols.size());
+                symbols.push_back(s1[i]);
+            } else {
+                ret.second.push_back(j);
+            }
+        }
+        SHOW(s0.size());
+        CSHOW(ret.first.size());
+        CSHOW(s1.size());
+        CSHOWLN(ret.second.size());
+        return ret;
     }
 
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
@@ -299,6 +302,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 A(nc0 + i, j + numSymbols + numDep0Var) =
                     ar1.loop->A(i, j + ar1.loop->getNumSymbols());
         }
+        SHOW(numSymbols);
+        CSHOW(numDep0Var);
+        CSHOWLN(numDep1Var);
         // L254: Assertion `col < numCol()` failed
         PtrMatrix<int64_t> A0 = ar0.indexMatrix();
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
@@ -332,8 +338,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             }
             E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
         }
-        // SHOWLN(A);
-        // SHOWLN(E);
+        SHOWLN(A);
+        SHOWLN(E);
         C.init(A, E);
         // SHOWLN(*this);
         // pruneBounds();

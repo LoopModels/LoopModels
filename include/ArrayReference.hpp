@@ -46,29 +46,23 @@ struct ArrayReference {
     // getNumLoops() x arrayDim()
     MutPtrMatrix<int64_t> indexMatrix() {
         const size_t d = arrayDim();
-        return MutPtrMatrix<int64_t>{
-            .mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+        return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     PtrMatrix<int64_t> indexMatrix() const {
         const size_t d = arrayDim();
-        return PtrMatrix<int64_t>{
-            .mem = indices.data(), .M = getNumLoops(), .N = d, .X = d};
+        return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     MutPtrMatrix<int64_t> offsetMatrix() {
         const size_t d = arrayDim();
         const size_t numSymbols = getNumSymbols();
-        return MutPtrMatrix<int64_t>{.mem = indices.data() + getNumLoops() * d,
-                                     .M = d,
-                                     .N = numSymbols,
-                                     .X = numSymbols};
+        return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
+                                     numSymbols, numSymbols};
     }
     PtrMatrix<int64_t> offsetMatrix() const {
         const size_t d = arrayDim();
         const size_t numSymbols = getNumSymbols();
-        return PtrMatrix<int64_t>{.mem = indices.data() + getNumLoops() * d,
-                                  .M = d,
-                                  .N = numSymbols,
-                                  .X = numSymbols};
+        return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
+                                  numSymbols, numSymbols};
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
         : arrayID(a.arrayID), loop(a.loop), sizes(a.sizes),
@@ -119,7 +113,7 @@ struct ArrayReference {
            << "):\n";
         PtrMatrix<int64_t> A{ar.indexMatrix()};
         SHOW(A.numRow());
-	CSHOWLN(A.numCol());
+        CSHOWLN(A.numCol());
         for (size_t i = 0; i < A.numCol(); ++i) {
             auto &stride = ar.sizes[i];
             assert(!isZero(stride));

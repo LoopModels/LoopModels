@@ -1,6 +1,7 @@
 #include "../include/Loops.hpp"
 #include "../include/Macro.hpp"
 #include "../include/Math.hpp"
+#include "../include/TestUtilities.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include <cstdint>
 #include <cstdio>
@@ -34,20 +35,10 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     // -2 + M -m >= 0
     // 1 + m >= 0
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 1);
+    AffineLoopNest &aff = tlf.alns[0];
 
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-    llvm::Value *ptr =
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty());
-
-    llvm::Value *M = builder.CreateAlignedLoad(builder.getInt64Ty(), ptr,llvm::MaybeAlign(8));
-
-    llvm::SmallVector<llvm::Value*> symbols{
-        M};
-    AffineLoopNest aff{A, symbols};
     aff.pruneBounds();
     llvm::errs() << aff << "\n";
     SHOWLN(aff.A);
@@ -61,20 +52,9 @@ TEST(TrivialPruneBounds, BasicAssertions) {
 TEST(TrivialPruneBounds2, BasicAssertions) {
     auto A{stringToIntMatrix(
         "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-    llvm::Value *ptr =
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty());
-    llvm::ConstantInt *One = builder.getInt64(1);
-    
-    llvm::Value *M = builder.CreateAlignedLoad(builder.getInt64Ty(), ptr,llvm::MaybeAlign(8));
-    llvm::Value *N = builder.CreateAlignedLoad(builder.getInt64Ty(), builder.CreateGEP(builder.getInt64Ty(),ptr, llvm::SmallVector<llvm::Value *, 1>{One}),llvm::MaybeAlign(8));
-    llvm::SmallVector<llvm::Value*> symbols{
-	M, N};
-    AffineLoopNest aff{A, symbols};
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 2);
+    AffineLoopNest &aff = tlf.alns[0];
     aff.pruneBounds();
     aff.dump();
     SHOWLN(aff.A);
@@ -94,21 +74,10 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
                                   "0 0 0 0 0 0 1; "
                                   "-1 0 0 1 0 0 -1]")};
 
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-    llvm::Value *ptr =
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty());
-    
-    llvm::Value *M = builder.CreateAlignedLoad(builder.getInt64Ty(), ptr,llvm::MaybeAlign(8));
-    llvm::Value *N = builder.CreateAlignedLoad(builder.getInt64Ty(), builder.CreateGEP(builder.getInt64Ty(),ptr, llvm::SmallVector<llvm::Value *, 1>{builder.getInt64(1)}),llvm::MaybeAlign(8));
-    llvm::Value *K = builder.CreateAlignedLoad(builder.getInt64Ty(), builder.CreateGEP(builder.getInt64Ty(),ptr, llvm::SmallVector<llvm::Value *, 1>{builder.getInt64(2)}),llvm::MaybeAlign(8));
-    llvm::SmallVector<llvm::Value*> symbols{
-	M, N,K};
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 3);
+    AffineLoopNest &aff = tlf.alns[0];
 
-    AffineLoopNest aff{A, symbols};
     aff.pruneBounds();
     llvm::errs() << "LessTrival test Bounds pruned:\n";
     aff.dump();
@@ -141,22 +110,12 @@ TEST(AffineTest0, BasicAssertions) {
                                   "0 1 0 0 0 0; "
                                   "0 0 1 0 0 0]")};
 
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-    llvm::Value *ptr =
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty());
-    
-    llvm::Value *M = builder.CreateAlignedLoad(builder.getInt64Ty(), ptr,llvm::MaybeAlign(8));
-    llvm::Value *N = builder.CreateAlignedLoad(builder.getInt64Ty(), builder.CreateGEP(builder.getInt64Ty(),ptr, llvm::SmallVector<llvm::Value *, 1>{builder.getInt64(1)}),llvm::MaybeAlign(8));
-    llvm::SmallVector<llvm::Value*> symbols{
-	M, N};
-
+    TestLoopFunction tlf;
     llvm::errs() << "About to construct affine obj\n";
+    tlf.addLoop(std::move(A), 3);
+    AffineLoopNest &aff = tlf.alns[0];
 
-    AffineLoopNest aff{A, symbols};
+
     llvm::errs() << "Constructed affine obj\n";
     llvm::errs() << "About to run first compat test\n";
     llvm::errs() << "aff.A.size() = (" << aff.A.numRow() << ", "
@@ -193,18 +152,9 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
                                   "0 2 1 1; "
                                   "-2 0 -1 -1; "
                                   " 0 1 0 0]")};
-    llvm::LLVMContext ctx = llvm::LLVMContext();
-    llvm::IRBuilder<> builder = llvm::IRBuilder(ctx);
-    auto fmf = llvm::FastMathFlags();
-    fmf.set();
-    builder.setFastMathFlags(fmf);
-    llvm::Value *ptr =
-        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty());
-    
-    llvm::Value *M = builder.CreateAlignedLoad(builder.getInt64Ty(), ptr,llvm::MaybeAlign(8));
-    llvm::SmallVector<llvm::Value*> symbols{
-	M};
-    AffineLoopNest aff{A, symbols};
+    TestLoopFunction tlf;
+    tlf.addLoop(std::move(A), 2);
+    AffineLoopNest &aff = tlf.alns[0];
     llvm::errs() << "Original order:\n";
     aff.dump();
 

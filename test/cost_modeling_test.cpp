@@ -14,6 +14,7 @@
 #include <iostream>
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -57,15 +58,19 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::Value *ptrA = tlf.createArray();
     llvm::Value *ptrU = tlf.createArray();
 
-    llvm::Value *M = loopMN.symbols[0];
-    llvm::Value *N = loopMN.symbols[1];
+    const llvm::SCEV *M = loopMN.symbols[0];
+    const llvm::SCEV *N = loopMN.symbols[1];
     llvm::Value *zero = builder.getInt64(0);
     llvm::Value *one = builder.getInt64(1);
     llvm::Value *mv = builder.CreateAdd(zero, one);
     llvm::Value *nv = builder.CreateAdd(zero, one);
     llvm::Value *kv = builder.CreateAdd(nv, one);
 
-    llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, M));
+    llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
+    llvm::Value *Nv = llvm::dyn_cast<llvm::SCEVUnknown>(N)->getValue();
+    llvm::Value *Boffset = builder.CreateAdd(
+        mv, builder.CreateMul(
+			      nv, Mv));
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = B(n,m);
@@ -84,7 +89,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = A(n,m) / U(n,n);
-    llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, N));
+    llvm::Value *Uoffsetnn = builder.CreateAdd(
+        nv, builder.CreateMul(
+			      nv, Nv));
     auto Uloadnn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
@@ -101,13 +108,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //     for (k = n+1; k < N; ++k){
     //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
     //     }
-    llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, N));
+    llvm::Value *Uoffsetnk = builder.CreateAdd(nv, builder.CreateMul(kv, Nv));
     auto Uloadnk = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
                           llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}),
         llvm::MaybeAlign(8));
-    llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, M));
+    llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
     auto Ageped1mk = builder.CreateGEP(
         Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk});
     auto Aload1mk =
@@ -154,7 +161,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        BmnInd.sizes[0] = SE.getSCEV(M);
+        BmnInd.sizes[0] = M;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
@@ -165,7 +172,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn2Ind.sizes[0] = SE.getSCEV(M);
+        Amn2Ind.sizes[0] = M;
         Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
@@ -176,7 +183,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn3Ind.sizes[0] = SE.getSCEV(M);
+        Amn3Ind.sizes[0] = M;
         Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
@@ -187,7 +194,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(2, 0) = 1; // k
         IndMat(0, 1) = 1; // m
-        AmkInd.sizes[0] = SE.getSCEV(M);
+        AmkInd.sizes[0] = M;
         AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amk = " << AmkInd << "\n";
@@ -198,7 +205,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(2, 0) = 1; // k
-        UnkInd.sizes[0] = SE.getSCEV(N);
+        UnkInd.sizes[0] = N;
         UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unk = " << UnkInd << "\n";
@@ -209,7 +216,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(1, 0) = 1; // k
-        UnnInd.sizes[0] = SE.getSCEV(N);
+        UnnInd.sizes[0] = N;
         UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unn = " << UnnInd << "\n";
@@ -518,15 +525,17 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::Value *ptrS = tlf.createArray();
 
     // llvm::ConstantInt *Iv = builder.getInt64(200);
-    llvm::Value *I = loopIJ.symbols[0];
-    llvm::Value *J = loopIJ.symbols[1];
-    auto Jfp = builder.CreateUIToFP(J, Float64);
+    const llvm::SCEV *I = loopIJ.symbols[0];
+    const llvm::SCEV *J = loopIJ.symbols[1];
+    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
+    llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
+    auto Jfp = builder.CreateUIToFP(Jv, Float64);
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
     llvm::Value *iv = builder.CreateAdd(zero, one);
     llvm::Value *jv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, I));
+    llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
     auto Aload_m = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
@@ -619,7 +628,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
         //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
-        AInd.sizes[0] = SE.getSCEV(I);
+        AInd.sizes[0] = I;
         AInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
@@ -876,7 +885,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::Type *Float64 = builder.getDoubleTy();
     llvm::Value *ptrA = tlf.createArray();
 
-    llvm::Value *I = loop.symbols[0];
+    const llvm::SCEV *I = loop.symbols[0];
+    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
     // llvm::Value* J = loop.symbols[1];
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
@@ -885,11 +895,11 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
     llvm::Value *A_ip1_jp1 =
         builder.CreateAdd(builder.CreateAdd(iv, one),
-                          builder.CreateMul(builder.CreateAdd(jv, one), I));
+                          builder.CreateMul(builder.CreateAdd(jv, one), Iv));
     llvm::Value *A_ip1_j =
-        builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), I));
+        builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
     llvm::Value *A_i_jp1 =
-        builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, I));
+        builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, Iv));
 
     auto Aload_ip1_j = builder.CreateAlignedLoad(
         Float64,
@@ -933,7 +943,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Asrc.sizes[0] = SE.getSCEV(I);
+        Asrc.sizes[0] = I;
     }
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
@@ -947,7 +957,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
                           //                   d  s
         Atgt0.offsetMatrix()(1, 0) = 1;
         Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Atgt0.sizes[0] = SE.getSCEV(I);
+        Atgt0.sizes[0] = I;
     }
     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
@@ -960,7 +970,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
         IndMat(1, 0) = 1; // j
         Atgt1.offsetMatrix()(0, 0) = 1;
         Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Atgt1.sizes[0] = SE.getSCEV(I);
+        Atgt1.sizes[0] = I;
     }
     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
@@ -1086,8 +1096,10 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::Value *ptrC = tlf.createArray();
 
     // llvm::ConstantInt *Jv = builder.getInt64(100);
-    llvm::Value *I = loop.symbols[3];
-    llvm::Value *M = loop.symbols[1];
+    const llvm::SCEV *I = loop.symbols[3];
+    const llvm::SCEV *M = loop.symbols[1];
+    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
+    llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
     // llvm::ConstantInt *Nv = builder.getInt64(400);
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
@@ -1096,12 +1108,12 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::Value *jv = builder.CreateAdd(zero, one);
     llvm::Value *iv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, M));
-    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, I));
+    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
     llvm::Value *Coffset = builder.CreateAdd(
         builder.CreateAdd(mv, iv),
         builder.CreateMul(builder.CreateAdd(nv, jv),
-                          builder.CreateSub(builder.CreateAdd(M, I), one)));
+                          builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
     auto Aload = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
@@ -1142,7 +1154,7 @@ TEST(ConvReversePass, BasicAssertions) {
         //     l  d
         IndMat(3, 1) = 1; // i
         IndMat(2, 0) = 1; // j
-        BmnInd.sizes[0] = SE.getSCEV(I);
+        BmnInd.sizes[0] = I;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
@@ -1154,7 +1166,7 @@ TEST(ConvReversePass, BasicAssertions) {
         IndMat(1, 1) = 1; // m
         IndMat(0, 0) = 1; // n
         AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        AmnInd.sizes[0] = SE.getSCEV(I);
+        AmnInd.sizes[0] = I;
     }
     // C[m+i, n+j]
     ArrayReference CmijnInd{2, loop, 2};
@@ -1166,8 +1178,8 @@ TEST(ConvReversePass, BasicAssertions) {
         IndMat(0, 0) = 1; // n
         IndMat(2, 0) = 1; // j
         CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        CmijnInd.sizes[0] = SE.getAddExpr(
-            SE.getAddExpr(SE.getSCEV(M), SE.getSCEV(I)), SE.getMinusOne(Int64));
+        CmijnInd.sizes[0] =
+            SE.getAddExpr(SE.getAddExpr(M, I), SE.getMinusOne(Int64));
     }
 
     // for (n = 0; n < N; ++n){
