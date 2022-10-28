@@ -27,12 +27,12 @@
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 
-static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
-    if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
-        if (c->getBitWidth() <= 64)
-            return c->getSExtValue();
-    return {};
-}
+// static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
+//     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
+//         if (c->getBitWidth() <= 64)
+//             return c->getSExtValue();
+//     return {};
+// }
 static llvm::Optional<int64_t> getConstantInt(const llvm::SCEV *v) {
     if (const llvm::SCEVConstant *sc =
             llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
@@ -71,20 +71,20 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 return i;
         return 0;
     }
-    static llvm::Optional<
-        std::tuple<const llvm::SCEV *, const llvm::Loop *, int64_t>>
-    decomposeAffineConstStride(const llvm::SCEV *v) {
-        // ex->getStart() + ex->getLoop()*ex->getStepRecurrence(SE)
-        // ex->getOperand(0) + ex->getLoop()*ex->getOperand(1)
-        // we don't have SE here, so we're using the latter
-        // NOTE: if we start passing a ScalarEvolution, switch to former
-        if (const llvm::SCEVAddRecExpr *x =
-                llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v))
-            if (x->isAffine())
-                if (auto c = getConstantInt(x->getOperand(1)))
-                    return std::make_tuple(x->getOperand(0), x->getLoop(), *c);
-        return {};
-    }
+    // static llvm::Optional<
+    //     std::tuple<const llvm::SCEV *, const llvm::Loop *, int64_t>>
+    // decomposeAffineConstStride(const llvm::SCEV *v) {
+    //     // ex->getStart() + ex->getLoop()*ex->getStepRecurrence(SE)
+    //     // ex->getOperand(0) + ex->getLoop()*ex->getOperand(1)
+    //     // we don't have SE here, so we're using the latter
+    //     // NOTE: if we start passing a ScalarEvolution, switch to former
+    //     if (const llvm::SCEVAddRecExpr *x =
+    //             llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v))
+    //         if (x->isAffine())
+    //             if (auto c = getConstantInt(x->getOperand(1)))
+    //                 return std::make_tuple(x->getOperand(0), x->getLoop(), *c);
+    //     return {};
+    // }
     // add a symbol to row `r` of A
     // we try to break down value `v`, so that adding
     // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
@@ -250,7 +250,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         A.resizeCols(N + depth);
         // copy the included loops from B into A
         A(_, _(N, N + depth)) = B(_, _(0, depth));
-        addZeroLowerBounds();
+        // addZeroLowerBounds();
         // NOTE: pruneBounds() is not legal here if we wish to use
         // removeInnerMost later.
         // pruneBounds();
@@ -281,6 +281,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
         C = LinearSymbolicComparator::construct(A);
+	pruneBounds();
     }
 
     AffineLoopNest(IntMatrix A, llvm::SmallVector<const llvm::SCEV *> symbols)

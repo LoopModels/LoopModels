@@ -42,7 +42,7 @@ struct TestLoopFunction {
 
     void addLoop(IntMatrix A, size_t numLoops) {
         size_t numSym = A.numCol() - numLoops - 1;
-        llvm::SmallVector<llvm::Value *> symbols;
+        llvm::SmallVector<const llvm::SCEV *> symbols;
         symbols.reserve(numSym);
         if (numSym) {
             // we're going to assume there's some chance of recycling old
@@ -59,7 +59,7 @@ struct TestLoopFunction {
             for (size_t i = 0; i < std::min(numSym, numSymbolSource); ++i)
                 symbols.push_back(symbolSource->symbols[i]);
             for (size_t i = numSymbolSource; i < numSym; ++i)
-                symbols.push_back(createInt64());
+                symbols.push_back(SE.getUnknown(createInt64()));
         }
         alns.emplace_back(std::move(A), std::move(symbols));
     }

@@ -45,7 +45,7 @@ TEST(DependenceTest, BasicAssertions) {
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
-        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[0] = loop.symbols[0];
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
@@ -57,7 +57,7 @@ TEST(DependenceTest, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
         Atgt0.offsetMatrix()(0, 0) = 1;
-        Atgt0.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt0.sizes[0] = loop.symbols[0];
         Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
@@ -69,7 +69,7 @@ TEST(DependenceTest, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
         Atgt1.offsetMatrix()(1, 0) = 1;
-        Atgt1.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt1.sizes[0] = loop.symbols[0];
         Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
@@ -80,6 +80,7 @@ TEST(DependenceTest, BasicAssertions) {
     schStore.getOmega()[4] = 2;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
+    SHOWLN(loop.symbols[0]);
     DependencePolyhedra dep0(msrc, mtgt0);
     EXPECT_FALSE(dep0.isEmpty());
     dep0.pruneBounds();
@@ -146,7 +147,7 @@ TEST(IndependentTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[0] = loop.symbols[0];
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Asrc = " << Asrc << "\n";
@@ -157,7 +158,7 @@ TEST(IndependentTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(1, 0) = 1; // j
         IndMat(0, 1) = 1; // i
-        Atgt.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt.sizes[0] = loop.symbols[0];
         Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Atgt = " << Atgt << "\n";
@@ -211,8 +212,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_FALSE(loopMN.isEmpty());
     AffineLoopNest &loopMNK = tlf.alns[1];
     EXPECT_FALSE(loopMNK.isEmpty());
-    llvm::Value *M = loopMN.symbols[0];
-    llvm::Value *N = loopMN.symbols[1];
+    const llvm::SCEV *M = loopMN.symbols[0];
+    const llvm::SCEV *N = loopMN.symbols[1];
 
     // construct indices
 
@@ -226,7 +227,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        BmnInd.sizes[0] = SE.getSCEV(M);
+        BmnInd.sizes[0] = M;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
@@ -237,7 +238,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn2Ind.sizes[0] = SE.getSCEV(M);
+        Amn2Ind.sizes[0] = M;
         Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
@@ -248,7 +249,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 0) = 1; // n
         IndMat(0, 1) = 1; // m
-        Amn3Ind.sizes[0] = SE.getSCEV(M);
+        Amn3Ind.sizes[0] = M;
         Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
@@ -259,7 +260,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(2, 0) = 1; // k
         IndMat(0, 1) = 1; // m
-        AmkInd.sizes[0] = SE.getSCEV(M);
+        AmkInd.sizes[0] = M;
         AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Amk = " << AmkInd << "\n";
@@ -270,7 +271,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(2, 0) = 1; // k
-        UnkInd.sizes[0] = SE.getSCEV(N);
+        UnkInd.sizes[0] = N;
         UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unk = " << UnkInd << "\n";
@@ -281,7 +282,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         //     l  d
         IndMat(1, 1) = 1; // n
         IndMat(1, 0) = 1; // k
-        UnnInd.sizes[0] = SE.getSCEV(N);
+        UnnInd.sizes[0] = N;
         UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Unn = " << UnnInd << "\n";
@@ -661,7 +662,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(1, 1) = 1; // j
-        Asrc.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Asrc.sizes[0] = loop.symbols[0];
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
@@ -672,7 +673,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(0, 0) = 1; // i
         IndMat(0, 1) = 1; // i
-        Atgt.sizes[0] = SE.getSCEV(loop.symbols[0]);
+        Atgt.sizes[0] = loop.symbols[0];
         Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "AaxesTgt = \n" << Atgt << "\n";
@@ -718,9 +719,9 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
 
-    llvm::Value *I = loop.symbols[0];
-    llvm::Value *J = loop.symbols[1];
-    llvm::Value *K = loop.symbols[2];
+    const llvm::SCEV *I = loop.symbols[0];
+    const llvm::SCEV *J = loop.symbols[1];
+    const llvm::SCEV *K = loop.symbols[2];
 
     // we have three array refs
     // A[i+j, j+k, i - k]
@@ -733,8 +734,8 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
         IndMat(2, 1) = 1;  // + k
         IndMat(0, 2) = 1;  // i
         IndMat(2, 2) = -1; // -k
-        Aref.sizes[0] = SE.getAddExpr(SE.getSCEV(J), SE.getSCEV(K));
-        Aref.sizes[1] = SE.getAddExpr(SE.getSCEV(I), SE.getSCEV(K));
+        Aref.sizes[0] = SE.getAddExpr(J, K);
+        Aref.sizes[1] = SE.getAddExpr(I, K);
         Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "Aref = " << Aref << "\n";
