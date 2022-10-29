@@ -326,7 +326,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = memory[j];
                 ArrayReference &refJ = maj.ref;
-                if ((refI.arrayID != refJ.arrayID) ||
+                if ((refI.basePointer != refJ.basePointer) ||
                     ((mai.isLoad) && (maj.isLoad)))
                     continue;
                 addEdge(mai, maj);
@@ -666,7 +666,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     //     continue;
                     // }
                     ArrayReference oldRef = std::move(maj.ref);
-                    maj.ref = {oldRef.arrayID,
+                    maj.ref = {oldRef.basePointer,
                                getBang(loopMap, K, oldRef.loop)};
                     // refMap[oldRefID] = maj.ref = refs.size();
                     // refs.emplace_back(

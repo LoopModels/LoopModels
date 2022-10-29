@@ -58,7 +58,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
     std::vector<LoopForest> loopForests;
-    llvm::DenseMap<llvm::Loop *, AffineLoopNest*> loopMap;
+    llvm::DenseMap<llvm::Loop *, AffineLoopNest *> loopMap;
     UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
@@ -220,8 +220,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (sizes.size() == 0)
             return {};
         ArrayReference ref(basePointer, loopMap[L], sizes, subscripts);
-        // unsigned arrayID = ptrToArrayIDMap[basePointer];
-        // ArrayReference ref(arrayID);
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";

@@ -68,9 +68,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
     llvm::Value *Nv = llvm::dyn_cast<llvm::SCEVUnknown>(N)->getValue();
-    llvm::Value *Boffset = builder.CreateAdd(
-        mv, builder.CreateMul(
-			      nv, Mv));
+    llvm::Value *Boffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = B(n,m);
@@ -89,9 +87,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
     //     A(n,m) = A(n,m) / U(n,n);
-    llvm::Value *Uoffsetnn = builder.CreateAdd(
-        nv, builder.CreateMul(
-			      nv, Nv));
+    llvm::Value *Uoffsetnn = builder.CreateAdd(nv, builder.CreateMul(nv, Nv));
     auto Uloadnn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrU,
@@ -151,11 +147,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     //   }
     // }
 
+    auto scevB = tlf.getSCEVUnknown(ptrB);
+    auto scevA = tlf.getSCEVUnknown(ptrA);
+    auto scevU = tlf.getSCEVUnknown(ptrU);
+
     // construct indices
     // ind mat, loops currently indexed from outside-in
     LoopBlock lblock;
     // B[n, m]
-    ArrayReference BmnInd{0, &loopMN, 2};
+    ArrayReference BmnInd{scevB, &loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
@@ -166,7 +166,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
     // A[n, m]
-    ArrayReference Amn2Ind{1, loopMN, 2};
+    ArrayReference Amn2Ind{scevA, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         //     l  d
@@ -177,7 +177,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
     // A[n, m]
-    ArrayReference Amn3Ind{1, loopMNK, 2};
+    ArrayReference Amn3Ind{scevA, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         //     l  d
@@ -188,7 +188,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
     // A[k, m]
-    ArrayReference AmkInd{1, loopMNK, 2};
+    ArrayReference AmkInd{scevA, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         //     l  d
@@ -199,7 +199,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amk = " << AmkInd << "\n";
     // U[k, n]
-    ArrayReference UnkInd{2, loopMNK, 2};
+    ArrayReference UnkInd{scevU, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         //     l  d
@@ -210,7 +210,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Unk = " << UnkInd << "\n";
     // U[n, n]
-    ArrayReference UnnInd{2, loopMN, 2};
+    ArrayReference UnnInd{scevU, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         //     l  d
@@ -523,6 +523,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::Value *ptrX = tlf.createArray();
     llvm::Value *ptrA = tlf.createArray();
     llvm::Value *ptrS = tlf.createArray();
+    auto scevX = tlf.getSCEVUnknown(ptrX);
+    auto scevA = tlf.getSCEVUnknown(ptrA);
+    auto scevS = tlf.getSCEVUnknown(ptrS);
 
     // llvm::ConstantInt *Iv = builder.getInt64(200);
     const llvm::SCEV *I = loopIJ.symbols[0];
@@ -622,7 +625,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // s: 2
     llvm::Type *Int64 = builder.getInt64Ty();
     llvm::ScalarEvolution &SE{tlf.SE};
-    ArrayReference AInd{0, loopIJ, 2};
+    ArrayReference AInd{scevA, loopIJ, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AInd.indexMatrix();
         //     l  d
@@ -632,14 +635,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         AInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
-    ArrayReference xInd1{1, loopI, 1};
+    ArrayReference xInd1{scevX, loopI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
         xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference xInd2{1, loopIJ, 1};
+    ArrayReference xInd2{scevX, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd2.indexMatrix();
         //     l  d
@@ -647,14 +650,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         xInd2.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
-    ArrayReference sInd1{2, loopI, 1};
+    ArrayReference sInd1{scevS, loopI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
         sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference sInd2{2, loopIJ, 1};
+    ArrayReference sInd2{scevS, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd2.indexMatrix();
         //     l  d
@@ -755,7 +758,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
         memAccessIds[&iOuterLoopNest.memory[i]] = i;
     for (auto &e : iOuterLoopNest.edges) {
-        llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
+        llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
                      << ", in ID: " << memAccessIds[e.in]
                      << "; out ID: " << memAccessIds[e.out] << "\n";
     }
@@ -884,6 +887,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
     llvm::Value *ptrA = tlf.createArray();
+    auto scevA = tlf.getSCEVUnknown(ptrA);
 
     const llvm::SCEV *I = loop.symbols[0];
     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
@@ -896,10 +900,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::Value *A_ip1_jp1 =
         builder.CreateAdd(builder.CreateAdd(iv, one),
                           builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-    llvm::Value *A_ip1_j =
-        builder.CreateAdd(iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-    llvm::Value *A_i_jp1 =
-        builder.CreateAdd(builder.CreateAdd(iv, one), builder.CreateMul(jv, Iv));
+    llvm::Value *A_ip1_j = builder.CreateAdd(
+        iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
+    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(iv, one),
+                                             builder.CreateMul(jv, Iv));
 
     auto Aload_ip1_j = builder.CreateAlignedLoad(
         Float64,
@@ -933,7 +937,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = builder.getInt64Ty();
-    ArrayReference Asrc(0, loop, 2);
+    ArrayReference Asrc(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         //     l  d
@@ -948,7 +952,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
     // A[i+1, j]
-    ArrayReference Atgt0(0, loop, 2);
+    ArrayReference Atgt0(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         //     l  d
@@ -962,7 +966,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
     // A[i, j+1]
-    ArrayReference Atgt1(0, loop, 2);
+    ArrayReference Atgt1(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         //     l  d
@@ -1032,7 +1036,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     for (size_t i = 0; i < loopBlock.memory.size(); ++i)
         memAccessIds[&loopBlock.memory[i]] = i;
     for (auto &e : loopBlock.edges) {
-        llvm::errs() << "\nEdge for array " << e.out->ref.arrayID
+        llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
                      << ", in ID: " << memAccessIds[e.in]
                      << "; out ID: " << memAccessIds[e.out] << "\n";
     }
@@ -1094,6 +1098,9 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::Value *ptrB = tlf.createArray();
     llvm::Value *ptrA = tlf.createArray();
     llvm::Value *ptrC = tlf.createArray();
+    auto scevB = tlf.getSCEVUnknown(ptrB);
+    auto scevA = tlf.getSCEVUnknown(ptrA);
+    auto scevC = tlf.getSCEVUnknown(ptrC);
 
     // llvm::ConstantInt *Jv = builder.getInt64(100);
     const llvm::SCEV *I = loop.symbols[3];
@@ -1148,7 +1155,7 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = builder.getInt64Ty();
     // B[j, i]
-    ArrayReference BmnInd{0, loop, 2};
+    ArrayReference BmnInd{scevB, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
@@ -1159,7 +1166,7 @@ TEST(ConvReversePass, BasicAssertions) {
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
     // A[n, m]
-    ArrayReference AmnInd{1, loop, 2};
+    ArrayReference AmnInd{scevA, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
         //     l  d
@@ -1169,7 +1176,7 @@ TEST(ConvReversePass, BasicAssertions) {
         AmnInd.sizes[0] = I;
     }
     // C[m+i, n+j]
-    ArrayReference CmijnInd{2, loop, 2};
+    ArrayReference CmijnInd{scevC, loop, 2};
     {
         MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
         //     l  d
