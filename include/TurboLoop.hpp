@@ -10,6 +10,8 @@
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
 #include <algorithm>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/APInt.h>
@@ -115,79 +117,123 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     return LI->isLoopHeader(BI->getSuccessor(0));
         return false;
     }
-    static bool visit(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
-                      llvm::BasicBlock *BB) {
-        if (visitedBBs.contains(BB))
-            return true;
-        visitedBBs.insert(BB);
-        return false;
+    inline static bool containsPeeled(const llvm::SCEV *S, size_t numPeeled) {
+        return llvm::SCEVExprContains(S, [numPeeled](const llvm::SCEV *S) {
+            if (auto r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
+                if (r->getLoop()->getLoopDepth() <= numPeeled)
+                    return true;
+            return false;
+        });
     }
-    enum class Chain {
-        split,
-        unreachable,
-        returned,
-        visited,
-        unknown,
-        loopexit
-    };
-    std::pair<llvm::BasicBlock *, Chain>
-    searchForFusileEnd(llvm::SmallPtrSet<llvm::BasicBlock *, 32> &visitedBBs,
-                       llvm::BasicBlock *BB, llvm::Loop *L = nullptr) {
-
-        if (visit(visitedBBs, BB))
-            return std::make_pair(nullptr, Chain::visited);
-
-        if (llvm::Instruction *term = BB->getTerminator()) {
-            if (llvm::BranchInst *BI = llvm::dyn_cast<llvm::BranchInst>(term)) {
-                if (!BI->isConditional())
-                    return searchForFusileEnd(visitedBBs, BI->getSuccessor(0),
-                                              L);
-                // conditional means it has two successors
-                // maybe BB is a new loop.
-                if (llvm::Loop *BL = LI->getLoopFor(BB)) {
-                    if (L != BL) {
-                        llvm::SmallPtrSet<llvm::BasicBlock *, 32> oldBBs =
-                            visitedBBs;
-                        // BL is a new loop;
-                        auto [LE, EC] = searchForFusileEnd(visitedBBs, BB, BL);
-                        if (EC == Chain::loopexit)
-                            return searchForFusileEnd(visitedBBs, LE, L);
-                        // didn't work out, lets switch to backup so that
-                        // we can still explore old BBs on a future call
-                        std::swap(oldBBs, visitedBBs);
-                    } else if (BB == BL->getExitingBlock()) {
-                        if (llvm::BasicBlock *EB = BL->getExitBlock())
-                            return std::make_pair(EB, Chain::loopexit);
-                    }
-                    return std::make_pair(nullptr, Chain::unknown);
-                }
-                llvm::SmallPtrSet<llvm::BasicBlock *, 32> oldBBs = visitedBBs;
-                // not a loop, but two descendants
-                std::pair<llvm::BasicBlock *, Chain> search0 =
-                    searchForFusileEnd(visitedBBs, BI->getSuccessor(0), L);
-                std::pair<llvm::BasicBlock *, Chain> search1 =
-                    searchForFusileEnd(visitedBBs, BI->getSuccessor(1), L);
-                if (search0.second == Chain::unreachable)
-                    return search1;
-                if (search1.second == Chain::unreachable)
-                    return search0;
-                std::swap(oldBBs, visitedBBs);
-                return std::make_pair(BB, Chain::split);
-            } else if (llvm::ReturnInst *RI =
-                           llvm::dyn_cast<llvm::ReturnInst>(term)) {
-                return std::make_pair(BB, Chain::returned);
-            } else if (llvm::UnreachableInst *UI =
-                           llvm::dyn_cast<llvm::UnreachableInst>(term)) {
-                // TODO: add option to allow moving earlier?
-                return std::make_pair(nullptr, Chain::unreachable);
-            } else {
-                // http://formalverification.cs.utah.edu/llvm_doxy/2.9/classllvm_1_1TerminatorInst.html
-                // IndirectBrInst, InvokeInst, SwitchInst, UnwindInst
-                // TODO: maybe something else?
-                return std::make_pair(BB, Chain::unknown);
-            }
+    static void addSymbolic(Vector<int64_t> &offsets,
+                            llvm::SmallVector<const llvm::SCEV *, 3> &symbols,
+                            const llvm::SCEV *S, int64_t x = 1) {
+        if (size_t i = findSymbolicIndex(symbols, S)) {
+            offsets[i] += x;
+        } else {
+            symbols.push_back(S);
+            offsets.push_back(x);
         }
-        return std::make_pair(nullptr, Chain::unknown);
+    }
+    static uint64_t blackListAllDependentLoops(const llvm::SCEV *S) {
+        uint64_t flag{0};
+        if (const llvm::SCEVNAryExpr *x =
+                llvm::dyn_cast<const llvm::SCEVNAryExpr>(S)) {
+            if (const llvm::SCEVAddRecExpr *y =
+                    llvm::dyn_cast<const llvm::SCEVAddRecExpr>(x))
+                flag |= uint64_t(1) << y->getLoop()->getLoopDepth();
+            for (size_t i = 0; i < x->getNumOperands(); ++i)
+                flag |= blackListAllDependentLoops(x->getOperand(i));
+        } else if (const llvm::SCEVCastExpr *x =
+                       llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
+            for (size_t i = 0; i < x->getNumOperands(); ++i)
+                flag |= blackListAllDependentLoops(x->getOperand(i));
+            return flag;
+        } else if (const llvm::SCEVUDivExpr *x =
+                       llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
+            for (size_t i = 0; i < x->getNumOperands(); ++i)
+                flag |= blackListAllDependentLoops(x->getOperand(i));
+            return flag;
+        }
+        return flag;
+    }
+    static uint64_t blackListAllDependentLoops(const llvm::SCEV *S,
+                                               size_t numPeeled) {
+        return blackListAllDependentLoops(S) >> (numPeeled + 1);
+    }
+    // translates scev S into loops and symbols
+    uint64_t
+    fillAffineIndices(MutPtrVector<int64_t> v, Vector<int64_t> &offsets,
+                      llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
+                      const llvm::SCEV *S, int64_t mlt, size_t numPeeled) {
+        uint64_t blackList{0};
+        if (const llvm::SCEVAddRecExpr *x =
+                llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S)) {
+            const llvm::Loop *L = x->getLoop();
+            size_t depth = L->getLoopDepth();
+            if (depth <= numPeeled) {
+                // we effectively have an offset
+                // we'll add an
+                addSymbolic(offsets, symbolicOffsets, S, 1);
+                for (size_t i = 1; i < x->getNumOperands(); ++i)
+                    blackList |= blackListAllDependentLoops(x->getOperand(i));
+
+                return blackList;
+            }
+            // outermost loop has loopInd 0
+            ptrdiff_t loopInd = ptrdiff_t(depth) - ptrdiff_t(numPeeled + 1);
+            if (x->isAffine()) {
+                if (loopInd >= 0) {
+                    if (auto c = getConstantInt(x->getOperand(1))) {
+                        // we want the innermost loop to have index 0
+                        v(end - loopInd) += *c;
+                        return fillAffineIndices(v, offsets, symbolicOffsets,
+                                                 x->getOperand(0), mlt,
+                                                 numPeeled);
+                    } else
+                        blackList |= (uint64_t(1) << uint64_t(loopInd));
+                }
+                // we separate out the addition
+                // the multiplication was either peeled or involved non-const
+                // multiple
+                blackList |=
+                    fillAffineIndices(v, offsets, symbolicOffsets,
+                                      x->getOperand(0), mlt, numPeeled);
+                // and then add just the multiple here as a symbolic offset
+                const llvm::SCEV *addRec = SE->getAddRecExpr(
+                    SE->getZero(x->getOperand(0)->getType()), x->getOperand(1),
+                    x->getLoop(), x->getNoWrapFlags());
+                addSymbolic(offsets, symbolicOffsets, addRec, mlt);
+                return blackList;
+            } else if (loopInd >= 0)
+                blackList |= (uint64_t(1) << uint64_t(loopInd));
+        } else if (llvm::Optional<int64_t> c = getConstantInt(S)) {
+            offsets[0] += *c;
+            return 0;
+        } else if (const llvm::SCEVAddExpr *ex =
+                       llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
+            return fillAffineIndices(v, offsets, symbolicOffsets,
+                                     ex->getOperand(0), mlt, numPeeled) |
+                   fillAffineIndices(v, offsets, symbolicOffsets,
+                                     ex->getOperand(1), mlt, numPeeled);
+        } else if (const llvm::SCEVMulExpr *ex =
+                       llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
+            if (auto op = getConstantInt(ex->getOperand(0))) {
+                return fillAffineIndices(v, offsets, symbolicOffsets,
+                                         ex->getOperand(1), mlt * (*op),
+                                         numPeeled);
+
+            } else if (auto op = getConstantInt(ex->getOperand(1))) {
+                return fillAffineIndices(v, offsets, symbolicOffsets,
+                                         ex->getOperand(0), mlt * (*op),
+                                         numPeeled);
+            }
+        } else if (const llvm::SCEVCastExpr *ex =
+                       llvm::dyn_cast<llvm::SCEVCastExpr>(S))
+            return fillAffineIndices(v, offsets, symbolicOffsets,
+                                     ex->getOperand(0), mlt, numPeeled);
+        addSymbolic(offsets, symbolicOffsets, S, mlt);
+        return blackList | blackListAllDependentLoops(S, numPeeled);
     }
     llvm::Optional<ArrayReference>
     arrayRef(llvm::Loop *L, llvm::Instruction *ptr, const llvm::SCEV *elSize) {
@@ -219,7 +265,69 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         assert(subscripts.size() == sizes.size());
         if (sizes.size() == 0)
             return {};
-        ArrayReference ref(basePointer, loopMap[L], sizes, subscripts);
+        AffineLoopNest *aln = loopMap[L];
+        size_t numLoops{aln->getNumLoops()};
+        // numLoops x arrayDim
+        // IntMatrix R(numLoops, subscripts.size());
+        size_t numPeeled = L->getLoopDepth() - numLoops;
+        // numLoops x arrayDim
+        IntMatrix Rt(subscripts.size(), numLoops);
+        IntMatrix Bt;
+        Vector<int64_t> offsets(1);
+        assert(offsets.size() == 1);
+        assert(offsets[0] == 0);
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
+        uint64_t blackList{0};
+        for (size_t i = 0; i < subscripts.size(); ++i) {
+            blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
+                                           subscripts[i], 1, numPeeled);
+            Bt.resize(subscripts.size(), offsets.size());
+            Bt(i, _) = offsets;
+        }
+        if (blackList) {
+            uint64_t leadingZeros = std::countl_zero(blackList);
+            uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
+            if (numExtraLoopsToPeel >= numLoops)
+                return {};
+            aln->removeOuterMost(numExtraLoopsToPeel, L, *SE);
+            llvm::Loop *P = L;
+            for (size_t i = 1; i < numLoops; ++i) {
+                P = P->getParentLoop();
+                loopMap[L]->removeOuterMost(numExtraLoopsToPeel, P, *SE);
+            }
+            // remove the numExtraLoopsToPeel from Rt
+            // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
+            // would this code below actually be expected to boost performance?
+            // if (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
+            // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
+            // order of loops in Rt is innermost -> outermost
+            P = L;
+            for (size_t i = 1; i < numLoops - numExtraLoopsToPeel; ++i)
+                P = P->getParentLoop();
+            // loop iterates inner -> outer
+            for (size_t i = numLoops - numExtraLoopsToPeel; i < numLoops; ++i) {
+                P = P->getParentLoop();
+                if (allZero(Rt(_, i)))
+                    continue;
+                // push the SCEV
+                auto IntType = P->getInductionVariable(*SE)->getType();
+                const llvm::SCEV *S =
+                    SE->getAddRecExpr(SE->getZero(IntType), SE->getOne(IntType),
+                                      P, llvm::SCEV::NoWrapMask);
+                if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
+                    Bt(_, j) += Rt(_, i);
+                } else {
+                    size_t N = Bt.numCol();
+                    Bt.resizeCols(N + 1);
+                    Bt(_, N) = Rt(_, i);
+                }
+            }
+            Rt.truncateCols(numLoops - numExtraLoopsToPeel);
+        }
+        ArrayReference ref(basePointer, aln, symbolicOffsets);
+        ref.resize(subscripts.size());
+        ref.indexMatrix() = Rt.transpose();
+        ref.offsetMatrix() = Bt;
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";
@@ -231,8 +339,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 llvm::errs() << "SCEVNAryExpr\n";
             }
         }
-        // return ref;
-        return {};
+        return ref;
+        // return {};
     }
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
         bool isLoad = true;

@@ -4,10 +4,12 @@
 #include "./LoopBlock.hpp"
 #include "./Loops.hpp"
 #include "Macro.hpp"
+#include <cstddef>
 #include <iterator>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
@@ -27,7 +29,7 @@ struct LoopForest {
     LoopForest(auto itb, auto ite) : loops(itb, ite){};
 
     inline size_t size() const;
-    static bool invalid(std::vector<LoopForest> &forests, LoopForest forest);
+    static size_t invalid(std::vector<LoopForest> &forests, LoopForest forest);
     inline LoopTree &operator[](size_t);
     inline auto begin() { return loops.begin(); }
     inline auto begin() const { return loops.begin(); }
@@ -80,16 +82,79 @@ struct LoopTree {
 
 LoopForest::LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
 void LoopForest::clear() { loops.clear(); }
-inline bool LoopForest::invalid(std::vector<LoopForest> &forests,
-                                LoopForest forest) {
+inline size_t LoopForest::invalid(std::vector<LoopForest> &forests,
+                                  LoopForest forest) {
     if (forest.size())
         forests.push_back(std::move(forest));
-    return true;
+    return 0;
 }
 void LoopForest::addZeroLowerBounds(
     llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &loopMap) {
     for (auto &&tree : loops)
         tree.addZeroLowerBounds(loopMap);
+}
+
+[[maybe_unused]] static bool
+visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
+      const llvm::BasicBlock *BB) {
+    if (visitedBBs.contains(BB))
+        return true;
+    visitedBBs.insert(BB);
+    return false;
+}
+enum class BBChain {
+    reached,
+    split,
+    unreachable,
+    returned,
+    visited,
+    unknown,
+    loopexit
+};
+[[maybe_unused]] static void split(std::vector<LoopForest> &forests,
+                                   LoopForest &subForest) {
+    if (subForest.size()) {
+        forests.push_back(std::move(subForest));
+        subForest.clear();
+    }
+}
+[[maybe_unused]] static BBChain allForwardPathsReach(
+    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
+    const llvm::BasicBlock *BBsrc, const llvm::BasicBlock *BBdst) {
+    if (BBsrc == BBdst) {
+        return BBChain::reached;
+    } else if (visit(visitedBBs, BBsrc)) {
+        return BBChain::visited;
+    } else if (const llvm::Instruction *term = BBsrc->getTerminator()) {
+        if (const llvm::BranchInst *BI =
+                llvm::dyn_cast<llvm::BranchInst>(term)) {
+            BBChain dst0 =
+                allForwardPathsReach(visitedBBs, BI->getSuccessor(0), BBdst);
+            if (!BI->isConditional())
+                return dst0;
+            BBChain dst1 =
+                allForwardPathsReach(visitedBBs, BI->getSuccessor(1), BBdst);
+            if ((dst0 == BBChain::unreachable) || (dst0 == dst1)) {
+                return dst1;
+            } else if (dst1 == BBChain::unreachable) {
+                return dst0;
+            } else
+                return BBChain::split;
+        }
+    } else if (const llvm::UnreachableInst *UI =
+                   llvm::dyn_cast<llvm::UnreachableInst>(term))
+        // TODO: add option to allow moving earlier?
+        return BBChain::unreachable;
+
+    return BBChain::unknown;
+}
+[[maybe_unused]] static bool allForwardPathsReach(
+    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
+    llvm::ArrayRef<llvm::BasicBlock *> BBsrc, const llvm::BasicBlock *BBdst) {
+    for (auto &BB : BBsrc)
+        if (allForwardPathsReach(visitedBBs, BB, BBdst) != BBChain::reached)
+            return false;
+    return BBsrc.size() > 0;
 }
 
 // try to add Loop L, as well as all of L's subLoops
@@ -100,25 +165,38 @@ size_t LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution &SE,
     LoopForest subForest;
     size_t interiorDepth0 = 0;
     if (subLoops.size()) {
+        llvm::SmallVector<llvm::BasicBlock *> exitBlocks;
+        llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
         bool anyFail = false;
+        llvm::Loop *P = nullptr;
         for (size_t i = 0; i < subLoops.size(); ++i) {
-            size_t itDepth = subForest.pushBack(subLoops[i], SE, forests);
+            llvm::Loop *N = subLoops[i];
+            if (P) {
+                // if we have a previous loop, does
+                // P->getExitBlocks(exitBlocks);
+                exitBlocks.clear();
+                P->getExitBlocks(exitBlocks);
+                // reach
+                // subLoops[i]->getLoopPreheader();
+                // we need exactly 1 reachCount
+                visitedBBs.clear();
+                llvm::BasicBlock *PH = N->getLoopPreheader();
+                if (!allForwardPathsReach(visitedBBs, exitBlocks, PH)) {
+                    anyFail = true;
+                    split(forests, subForest);
+                    P = nullptr;
+                } else
+                    P = N;
+            } else
+                P = N;
+            size_t itDepth = subForest.pushBack(P, SE, forests);
             if (itDepth == 0) {
                 anyFail = true;
-                if (subForest.size()) {
-                    forests.push_back(std::move(subForest));
-                    subForest.clear();
-                }
+                P = nullptr;
+                split(forests, subForest);
             } else if (i == 0) {
                 interiorDepth0 = itDepth;
             }
-            // if (subForest.pushBack(subLoops[i], SE, forests)) {
-            //     anyFail = true;
-            //     if (subForest.size()) {
-            //         forests.push_back(std::move(subForest));
-            //         subForest.clear();
-            //     }
-            // }
         }
         if (anyFail)
             return LoopForest::invalid(forests, std::move(subForest));

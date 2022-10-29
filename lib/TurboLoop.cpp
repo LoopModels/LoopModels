@@ -68,7 +68,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
-    llvm::SmallPtrSet<llvm::BasicBlock *, 32> visitedBBs;
+    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
 
     // first, we iterate over all loops to find those that are affine,
     // constructing AffineLoopNest objects. We do this first, because our
@@ -121,16 +121,6 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // for (auto &L : *LI){
 
     // }
-
-    llvm::SmallVector<std::pair<llvm::BasicBlock *, llvm::BasicBlock *>>
-        fusileSets;
-    llvm::ReversePostOrderTraversal<llvm::Function *> RPOT(&F);
-    for (auto &BB : RPOT) {
-        auto [BBE, SC] = searchForFusileEnd(visitedBBs, BB);
-        if (BBE && (BBE != BB))
-            fusileSets.emplace_back(BB, BBE);
-        parseBB(BB);
-    }
 
     // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
     // nullptr);

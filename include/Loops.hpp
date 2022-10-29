@@ -52,6 +52,17 @@ template <typename T>
     return std::numeric_limits<size_t>::max();
 }
 
+// returns 1-based index, to match the pattern we use where index 0 refers to a
+// constant offset this function returns 0 if S not found in `symbols`.
+[[nodiscard]] static size_t
+findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
+                  const llvm::SCEV *S) {
+    for (size_t i = 0; i < symbols.size();)
+        if (symbols[i++] == S)
+            return i;
+    return 0;
+}
+
 // A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
@@ -66,10 +77,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
 
     size_t findIndex(const llvm::SCEV *v) {
-        for (size_t i = 0; i < symbols.size();)
-            if (symbols[i++] == v)
-                return i;
-        return 0;
+        return findSymbolicIndex(symbols, v);
     }
     // static llvm::Optional<
     //     std::tuple<const llvm::SCEV *, const llvm::Loop *, int64_t>>
@@ -159,7 +167,9 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 minDepth = addSymbol(B, L, ex->getOperand(1), SE, M, Mp, mlt,
                                      minDepth);
             }
-        }
+        } else if (const llvm::SCEVCastExpr *ex =
+                       llvm::dyn_cast<llvm::SCEVCastExpr>(v))
+            return addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt, minDepth);
         // } else if (const llvm::SCEVUDivExpr *ex = llvm::dyn_cast<const
         // llvm::SCEVUDivExpr>(v)) {
 
@@ -243,7 +253,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                     llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
                     addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp),
                                                SE.getOne(IntTyp), P,
-                                               llvm::SCEV::FlagNW),
+                                               llvm::SCEV::NoWrapMask),
                               i, i + 1, Bid);
                 }
             }
@@ -279,7 +289,64 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         SHOWLN(B);
         return AffineLoopNest(B, symbols);
     }
+    void clear() {
+        A.resize(0, 0);
+        symbols.truncate(1);
+    }
+    void removeOuterMost(size_t numToRemove, llvm::Loop *L,
+                         llvm::ScalarEvolution &SE) {
+        // basically, we move the outermost loops to the symbols section,
+        // and add the appropriate addressees
+        size_t innermostLoopInd = getNumSymbols();
+        size_t oldNumLoops = getNumLoops();
+        if (numToRemove >= oldNumLoops)
+            return clear();
+        size_t numRemainingLoops = oldNumLoops - numToRemove;
+        auto [M, N] = A.size();
+        if (numRemainingLoops != numToRemove) {
+            Vector<int64_t> tmp;
+            if (numRemainingLoops > numToRemove) {
+                tmp.resizeForOverwrite(numToRemove);
+                for (size_t m = 0; m < M; ++m) {
+                    // fill tmp
+                    tmp = A(m, _(innermostLoopInd + numRemainingLoops, N));
+                    for (size_t i = innermostLoopInd;
+                         i < numRemainingLoops + innermostLoopInd; ++i)
+                        A(m, i + numToRemove) = A(m, i);
+                    A(m, _(numToRemove + innermostLoopInd, N)) = tmp;
+                }
+            } else {
+                tmp.resizeForOverwrite(numRemainingLoops);
+                for (size_t m = 0; m < M; ++m) {
+                    // fill tmp
+                    tmp = A(m, _(innermostLoopInd,
+                                 innermostLoopInd + numRemainingLoops));
+                    for (size_t i = innermostLoopInd;
+                         i < numToRemove + innermostLoopInd; ++i)
+                        A(m, i) = A(m, i + numRemainingLoops);
+                    A(m, _(numToRemove + innermostLoopInd, N)) = tmp;
+                }
+            }
+        } else
+            for (size_t m = 0; m < M; ++m)
+                for (size_t i = 0; i < numToRemove; ++i)
+                    std::swap(A(m, innermostLoopInd + i),
+                              A(m, innermostLoopInd + i + numToRemove));
 
+        for (size_t i = 0; i < numRemainingLoops; ++i)
+            L = L->getParentLoop();
+        // L is now inner most loop getting removed
+        for (size_t i = 0; i < numToRemove; ++i) {
+            llvm::Type *IntType = L->getInductionVariable(SE)->getType();
+            symbols.push_back(SE.getAddRecExpr(SE.getZero(IntType),
+                                               SE.getOne(IntType), L,
+                                               llvm::SCEV::NoWrapMask));
+        }
+	initComparator();
+    }
+    void initComparator(){
+	C.init(A,EmptyMatrix<int64_t>{}, true);
+    }
     void addZeroLowerBounds() {
         size_t numLoops = getNumLoops();
         auto [M, N] = A.size();
@@ -290,7 +357,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         CSHOWLN(A);
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
-        C = LinearSymbolicComparator::construct(A);
+	initComparator();
         pruneBounds();
     }
 
@@ -315,7 +382,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         B.resizeForOverwrite(M, N);
         B(_, _(begin, numConst)) = A(_, _(begin, numConst));
         B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
-        ret.C = LinearSymbolicComparator::construct(B);
+	ret.initComparator();
         llvm::errs() << "A = \n" << A << "\n";
         llvm::errs() << "R = \n" << R << "\n";
         llvm::errs() << "B = \n" << B << "\n";

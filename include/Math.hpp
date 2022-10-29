@@ -731,6 +731,16 @@ template <typename T> struct MutPtrVector {
         assert(N);
         return mem[N - 1];
     }
+    T &operator()(OffsetEnd oe) {
+        assert(N);
+	assert(N>oe.offset);
+        return mem[N - 1 - oe.offset];
+    }
+    const T &operator()(OffsetEnd oe) const {
+        assert(N);
+	assert(N>oe.offset);
+        return mem[N - 1 - oe.offset];
+    }
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
     MutPtrVector(const MutPtrVector<T> &x) = default;
@@ -1111,6 +1121,9 @@ template <typename T> struct MutStridedVector {
         return *this;
     }
     MutStridedVector<T> &operator=(const AbstractVector auto &x) {
+        return copyto(*this, x);
+    }
+    MutStridedVector<T> &operator=(const MutStridedVector<T> &x) {
         return copyto(*this, x);
     }
     MutStridedVector<T> &operator+=(const AbstractVector auto &x) {
