@@ -35,9 +35,10 @@ TEST(DependenceTest, BasicAssertions) {
     auto &loop = tlf.alns.front();
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
+    auto ptrA = tlf.getSCEVUnknown(tlf.createArray());
     // we have three array refs
     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
-    ArrayReference Asrc(0, loop, 2);
+    ArrayReference Asrc(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -51,7 +52,7 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
     // A[i+1, j]
-    ArrayReference Atgt0(0, loop, 2);
+    ArrayReference Atgt0(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -63,7 +64,7 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
     // A[i, j+1]
-    ArrayReference Atgt1(0, loop, 2);
+    ArrayReference Atgt1(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -140,9 +141,10 @@ TEST(IndependentTest, BasicAssertions) {
 
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
+    const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(tlf.createArray());
     // we have three array refs
     // A[i, j]
-    ArrayReference Asrc(0, loop, 2);
+    ArrayReference Asrc(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -153,7 +155,7 @@ TEST(IndependentTest, BasicAssertions) {
     llvm::errs() << "Asrc = " << Asrc << "\n";
 
     // A[j, i]
-    ArrayReference Atgt(0, loop, 2);
+    ArrayReference Atgt(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(1, 0) = 1; // j
@@ -214,6 +216,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_FALSE(loopMNK.isEmpty());
     const llvm::SCEV *M = loopMN.symbols[0];
     const llvm::SCEV *N = loopMN.symbols[1];
+    const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevU = tlf.getSCEVUnknown(tlf.createArray());
 
     // construct indices
 
@@ -221,7 +226,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
     LoopBlock lblock;
     // B[m, n]
-    ArrayReference BmnInd{0, &loopMN, 2};
+    ArrayReference BmnInd{scevB, &loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
@@ -232,7 +237,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Bmn = " << BmnInd << "\n";
     // A[n, m]
-    ArrayReference Amn2Ind{1, loopMN, 2};
+    ArrayReference Amn2Ind{scevA, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         //     l  d
@@ -243,7 +248,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
     // A[n, m]
-    ArrayReference Amn3Ind{1, loopMNK, 2};
+    ArrayReference Amn3Ind{scevA, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         //     l  d
@@ -254,7 +259,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
     // A[k, m]
-    ArrayReference AmkInd{1, loopMNK, 2};
+    ArrayReference AmkInd{scevA, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         //     l  d
@@ -265,7 +270,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Amk = " << AmkInd << "\n";
     // U[k, n]
-    ArrayReference UnkInd{2, loopMNK, 2};
+    ArrayReference UnkInd{scevU, loopMNK, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         //     l  d
@@ -276,7 +281,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
     llvm::errs() << "Unk = " << UnkInd << "\n";
     // U[n, n]
-    ArrayReference UnnInd{2, loopMN, 2};
+    ArrayReference UnnInd{scevU, loopMN, 2};
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         //     l  d
@@ -654,10 +659,11 @@ TEST(RankDeficientLoad, BasicAssertions) {
     auto &loop = tlf.alns.front();
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
+    const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(tlf.createArray());
 
     // we have three array refs
     // A[i, j] // i*stride(A,1) + j*stride(A,2);
-    ArrayReference Asrc(0, loop, 2);
+    ArrayReference Asrc(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -668,7 +674,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
     // A[i, i]
-    ArrayReference Atgt(0, loop, 2);
+    ArrayReference Atgt(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
         IndMat(0, 0) = 1; // i
@@ -722,10 +728,11 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     const llvm::SCEV *I = loop.symbols[0];
     const llvm::SCEV *J = loop.symbols[1];
     const llvm::SCEV *K = loop.symbols[2];
+    const llvm::SCEVUnknown *scevA = tlf.getSCEVUnknown(tlf.createArray());
 
     // we have three array refs
     // A[i+j, j+k, i - k]
-    ArrayReference Aref(0, loop, 3);
+    ArrayReference Aref(scevA, loop, 3);
     {
         MutPtrMatrix<int64_t> IndMat = Aref.indexMatrix();
         IndMat(0, 0) = 1;  // i

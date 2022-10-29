@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Support/raw_ostream.h>
 
 // `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
@@ -21,7 +22,7 @@
 // NOTE: strides are in row major order!
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
-    size_t arrayID;
+    const llvm::SCEVUnknown *basePointer;
     AffineLoopNest *loop;
     // std::shared_ptr<AffineLoopNest> loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
@@ -31,6 +32,11 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] unsigned rank;
     [[no_unique_address]] bool hasSymbolicOffsets; // normal case is not to
+
+    ArrayReference() = default;
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
+                   llvm::ArrayRef<const llvm::SCEV *> subscripts);
 
     size_t arrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
@@ -65,33 +71,34 @@ struct ArrayReference {
                                   numSymbols, numSymbols};
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
-        : arrayID(a.arrayID), loop(a.loop), sizes(a.sizes),
+        : basePointer(a.basePointer), loop(a.loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest *loop,
                    PtrMatrix<int64_t> newInds)
-        : arrayID(a.arrayID), loop(loop), sizes(a.sizes),
+        : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(size_t arrayID, AffineLoopNest *loop)
-        : arrayID(arrayID), loop(loop){};
-    ArrayReference(size_t arrayID, AffineLoopNest &loop)
-        : arrayID(arrayID), loop(&loop){};
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop)
+        : basePointer(basePointer), loop(loop){};
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop)
+        : basePointer(basePointer), loop(&loop){};
 
     void resize(size_t d) {
         sizes.resize(d);
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
-    ArrayReference(size_t arrayID, AffineLoopNest *loop, size_t dim,
-                   bool hasSymbolicOffsets = false)
-        : arrayID(arrayID), loop(loop), hasSymbolicOffsets(hasSymbolicOffsets) {
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   size_t dim, bool hasSymbolicOffsets = false)
+        : basePointer(basePointer), loop(loop),
+          hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
-    ArrayReference(size_t arrayID, AffineLoopNest &loop, size_t dim,
-                   bool hasSymbolicOffsets = false)
-        : arrayID(arrayID), loop(&loop),
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop,
+                   size_t dim, bool hasSymbolicOffsets = false)
+        : basePointer(basePointer), loop(&loop),
           hasSymbolicOffsets(hasSymbolicOffsets) {
         resize(dim);
     };
@@ -109,7 +116,7 @@ struct ArrayReference {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const ArrayReference &ar) {
-        os << "ArrayReference " << ar.arrayID << " (dim = " << ar.arrayDim()
+        os << "ArrayReference " << ar.basePointer << " (dim = " << ar.arrayDim()
            << "):\n";
         PtrMatrix<int64_t> A{ar.indexMatrix()};
         SHOW(A.numRow());

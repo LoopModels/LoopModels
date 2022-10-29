@@ -98,11 +98,13 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
     const llvm::SCEV *N = aln.symbols[2];
     const llvm::SCEV *J = aln.symbols[3];
-
+    const llvm::SCEVUnknown *scevW = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevC = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());
     // we have three array refs
     // W[i+m, j+n]
     // llvm::SmallVector<std::pair<MPoly,MPoly>>
-    ArrayReference War{0, &aln, 2};
+    ArrayReference War{scevW, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
         IndMat(0, 0) = 1; // m
@@ -110,14 +112,14 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         IndMat(1, 1) = 1; // n
         IndMat(3, 1) = 1; // j
                           // I + M -1
-        War.sizes[0] = SE.getAddExpr(
-            N, SE.getAddExpr(J, SE.getMinusOne(Int64)));
+        War.sizes[0] =
+            SE.getAddExpr(N, SE.getAddExpr(J, SE.getMinusOne(Int64)));
         War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
     llvm::errs() << "War = " << War << "\n";
 
     // B[i, j]
-    ArrayReference Bar{1, &aln, 2};
+    ArrayReference Bar{scevB, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
         IndMat(2, 0) = 1; // i
@@ -128,7 +130,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::errs() << "Bar = " << Bar << "\n";
 
     // C[m, n]
-    ArrayReference Car{2, &aln, 2};
+    ArrayReference Car{scevC, &aln, 2};
     {
         MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
         IndMat(0, 0) = 1; // m
@@ -213,6 +215,9 @@ TEST(BadMul, BasicAssertions) {
     //
     // Loops: i, l, j
 
+    const llvm::SCEVUnknown *scevW = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());
+    const llvm::SCEVUnknown *scevC = tlf.getSCEVUnknown(tlf.createArray());
     // for i in 0:M+N+K-3, l in max(0,i+1-N):min(M+K-2,i), j in
     // max(0,l+1-K):min(M-1,l)
     // W[j,i-l] += B[j,l-j]*C[l-j,i-l]
@@ -221,7 +226,7 @@ TEST(BadMul, BasicAssertions) {
     // we have three array refs
     // W[j, i - l] // M x N
     const int iId = 0, lId = 1, jId = 2;
-    ArrayReference War(0, aln, 2); //, axes, indTo
+    ArrayReference War(scevW, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
         IndMat(jId, 0) = 1;  // j
@@ -233,7 +238,7 @@ TEST(BadMul, BasicAssertions) {
     llvm::errs() << "War = " << War << "\n";
 
     // B[j, l - j] // M x K
-    ArrayReference Bar(1, aln, 2); //, axes, indTo
+    ArrayReference Bar(scevB, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
         IndMat(jId, 0) = 1;  // j
@@ -245,7 +250,7 @@ TEST(BadMul, BasicAssertions) {
     llvm::errs() << "Bar = " << Bar << "\n";
 
     // C[l-j,i-l] // K x N
-    ArrayReference Car(2, aln, 2); //, axes, indTo
+    ArrayReference Car(scevC, aln, 2); //, axes, indTo
     {
         MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
         IndMat(lId, 0) = 1;  // l

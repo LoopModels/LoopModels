@@ -58,7 +58,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
     std::vector<LoopForest> loopForests;
-    llvm::DenseMap<llvm::Loop *, AffineLoopNest> loops;
+    llvm::DenseMap<llvm::Loop *, AffineLoopNest *> loopMap;
     UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
@@ -77,14 +77,15 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //    successive loops. In all such cases, the loops at that level are
     //    split into separate forests.
     void initializeLoopForest() {
-        loopForests.resize(1);
-        auto &forest = loopForests.back();
+        LoopForest forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         for (auto &L : llvm::reverse(*LI))
             forest.pushBack(L, *SE, loopForests);
+        if (forest.size())
+            loopForests.push_back(std::move(forest));
         for (auto &forest : loopForests)
-	    forest.addZeroLowerBounds();
+            forest.addZeroLowerBounds(loopMap);
     }
 
     // returns index to the loop whose preheader we place it in.
@@ -218,8 +219,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         assert(subscripts.size() == sizes.size());
         if (sizes.size() == 0)
             return {};
-        unsigned arrayID = ptrToArrayIDMap[basePointer];
-        // ArrayReference ref(arrayID);
+        ArrayReference ref(basePointer, loopMap[L], sizes, subscripts);
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";

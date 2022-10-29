@@ -37,8 +37,8 @@ static llvm::Optional<int64_t> getConstantInt(const llvm::SCEV *v) {
     if (const llvm::SCEVConstant *sc =
             llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
         llvm::ConstantInt *c = sc->getValue();
-        if (c->getBitWidth() <=
-            63) // 63 because +1 for back edge taken -> trip count
+        // we need bit width of 64, for sake of negative numbers
+        if (c->getBitWidth() <= 64)
             return c->getSExtValue();
     }
     return {};
@@ -82,7 +82,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     //             llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v))
     //         if (x->isAffine())
     //             if (auto c = getConstantInt(x->getOperand(1)))
-    //                 return std::make_tuple(x->getOperand(0), x->getLoop(), *c);
+    //                 return std::make_tuple(x->getOperand(0), x->getLoop(),
+    //                 *c);
     //     return {};
     // }
     // add a symbol to row `r` of A
@@ -90,8 +91,10 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
     [[nodiscard]] size_t addSymbol(IntMatrix &B, llvm::Loop *L,
                                    const llvm::SCEV *v,
-                                   llvm::ScalarEvolution &SE, size_t l,
-                                   size_t u, int64_t mlt, size_t minDepth) {
+                                   llvm::ScalarEvolution &SE, const size_t l,
+                                   const size_t u, int64_t mlt,
+                                   size_t minDepth) {
+        assert(u > l);
         // first, we check if `v` in `Symbols`
         if (size_t i = findIndex(v)) {
             for (size_t j = l; j < u; ++j)
@@ -148,16 +151,13 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 size_t M = A.numRow();
                 A.resizeRows(M + u - l);
                 B.resizeRows(M + u - l);
-                // TODO: fix MutrPtrMatrix<int64_t> copy assignment operator
-                // is implicitly deleted error.
-                PtrMatrix<int64_t> Aslice = A(_(l, u), _);
-                A(_(M, M + u - l), _) = Aslice;
-                PtrMatrix<int64_t> Bslice = B(_(l, u), _);
-                B(_(M, M + u - l), _) = Bslice;
+                size_t Mp = M + u - l;
+                A(_(M, Mp), _) = A(_(l, u), _);
+                B(_(M, Mp), _) = B(_(l, u), _);
                 minDepth =
                     addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt, minDepth);
-                minDepth = addSymbol(B, L, ex->getOperand(1), SE, M, M + u - l,
-                                     mlt, minDepth);
+                minDepth = addSymbol(B, L, ex->getOperand(1), SE, M, Mp, mlt,
+                                     minDepth);
             }
         }
         // } else if (const llvm::SCEVUDivExpr *ex = llvm::dyn_cast<const
@@ -165,15 +165,18 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
         // } else if (const llvm::SCEVUnknown *ex = llvm::dyn_cast<const
         // llvm::SCEVUnknown>(v)) {
-        addSymbol(v, mlt, l, u);
+        addSymbol(v, l, u, mlt);
         return minDepth;
     }
     void addSymbol(const llvm::SCEV *v, size_t l, size_t u, int64_t mlt) {
+        assert(u > l);
+        // llvm::errs() << "Before adding sym A = " << A << "\n";
         symbols.push_back(v);
         A.resizeCols(A.numCol() + 1);
         // A.insertZeroColumn(symbols.size());
         for (size_t j = l; j < u; ++j)
             A(j, symbols.size()) = mlt;
+        // llvm::errs() << "After adding sym A = " << A << "\n";
     }
     size_t addBackedgeTakenCount(IntMatrix &B, llvm::Loop *L,
                                  const llvm::SCEV *BT,
@@ -241,7 +244,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                     addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp),
                                                SE.getOne(IntTyp), P,
                                                llvm::SCEV::FlagNW),
-                              Bid, i, i + 1);
+                              i, i + 1, Bid);
                 }
             }
         }
@@ -258,6 +261,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     [[nodiscard]] AffineLoopNest removeInnerMost() const {
         size_t innermostLoopInd = getNumSymbols();
         IntMatrix B = A.deleteCol(innermostLoopInd);
+        SHOWLN(A);
+        SHOWLN(B);
         // no loop may be conditioned on the innermost loop
         // so we should be able to safely remove all constraints that reference
         // it
@@ -271,6 +276,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 B.resizeRows(M);
             }
         }
+        SHOWLN(B);
         return AffineLoopNest(B, symbols);
     }
 
@@ -278,10 +284,14 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         size_t numLoops = getNumLoops();
         auto [M, N] = A.size();
         A.resizeRows(M + numLoops);
+        A(_(M, M + numLoops), _) = 0;
+        SHOW(M);
+        CSHOW(N);
+        CSHOWLN(A);
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
         C = LinearSymbolicComparator::construct(A);
-	pruneBounds();
+        pruneBounds();
     }
 
     AffineLoopNest(IntMatrix A, llvm::SmallVector<const llvm::SCEV *> symbols)
@@ -513,6 +523,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         size_t i = aln.getNumLoops();
         SHOWLN(alnb.getNumLoops());
         SHOWLN(aln.getNumLoops());
+        SHOWLN(alnb.A);
         while (true) {
             os << "Loop " << --i << " lower bounds:\n";
             aln.printLowerBound(os, i);

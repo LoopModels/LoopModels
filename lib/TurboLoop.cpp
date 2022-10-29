@@ -76,7 +76,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // want to get pointers once we've finished filling the vector, so that
     // these pointers won't later be invalidated.
     llvm::SmallVector<llvm::Loop *, 4> loopsPreorder = LI->getLoopsInPreorder();
-    loops.reserve(loopsPreorder.size());
+    loopMap.reserve(loopsPreorder.size());
     for (auto &L : loopsPreorder) {
         llvm::errs() << "Preorder Loop: " << *L << "\nBackedge Taken Count: "
                      << *(SE->applyLoopGuards(SE->getBackedgeTakenCount(L), L))
@@ -106,9 +106,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                 if (!firstDependent)
                     firstDependent = P;
                 // we must remove P and all outer loops
-                auto ap = loops.find(P);
-                if (ap != loops.end())
-                    loops.erase(ap);
+                auto ap = loopMap.find(P);
+                if (ap != loopMap.end())
+                    loopMap.erase(ap);
             }
 
             // check if it is SCEVUnknown
