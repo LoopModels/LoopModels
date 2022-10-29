@@ -3,6 +3,7 @@
 #include "./BitSets.hpp"
 #include "./LoopBlock.hpp"
 #include "./Loops.hpp"
+#include "ArrayReference.hpp"
 #include "Macro.hpp"
 #include <cstddef>
 #include <iterator>
@@ -21,8 +22,8 @@ struct LoopTree;
 struct LoopForest {
     std::vector<LoopTree> loops;
     // definitions due to incomplete types
-    size_t pushBack(llvm::Loop *, llvm::ScalarEvolution &,
-                    std::vector<LoopForest> &);
+    size_t pushBack(llvm::SmallVector<AffineLoopNest, 0> &, llvm::Loop *,
+                    llvm::ScalarEvolution &, std::vector<LoopForest> &);
     LoopForest() = default;
     LoopForest(std::vector<LoopTree> loops);
     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
@@ -41,42 +42,62 @@ struct LoopForest {
     inline auto rend() const { return loops.rend(); }
     inline auto &front() { return loops.front(); }
     inline void clear();
-    void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &);
+    void addZeroLowerBounds(llvm::MutableArrayRef<AffineLoopNest>,
+                            llvm::DenseMap<llvm::Loop *, LoopTree *> &);
 };
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
 // TODO: should depth be stored in LoopForests instead?
 struct LoopTree {
     llvm::Loop *loop;
-    AffineLoopNest affineLoop;
     LoopForest subLoops; // incomplete type, don't know size
+    unsigned affineLoopID;
     LoopTree *parentLoop;
     bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
-    llvm::Optional<llvm::Loop::LoopBounds>
-    getBounds(llvm::ScalarEvolution *SE) {
-        return loop->getBounds(*SE);
-    }
-    LoopTree(llvm::Loop *L, LoopForest sL, const llvm::SCEV *BT,
-             llvm::ScalarEvolution &SE)
-        : loop(L), affineLoop(L, BT, SE), subLoops(std::move(sL)),
-          parentLoop(nullptr) {
-        // initialize the AffineLoopNest
-        llvm::errs() << "new loop";
-        CSHOWLN(affineLoop.getNumLoops());
-        SHOWLN(affineLoop.A);
-        for (auto v : affineLoop.symbols)
-            SHOWLN(*v);
-    }
-    LoopTree(llvm::Loop *L, AffineLoopNest aln, LoopForest sL)
-        : loop(L), affineLoop(aln), subLoops(sL), parentLoop(nullptr) {}
+    // llvm::Optional<llvm::Loop::LoopBounds>
+    // getBounds(llvm::ScalarEvolution *SE) {
+    //     return loop->getBounds(*SE);
+    // }
+    // LoopTree(llvm::Loop *L, LoopForest sL, const llvm::SCEV *BT,
+    //          llvm::ScalarEvolution &SE)
+    //     : loop(L), affineLoop(L, BT, SE), subLoops(std::move(sL)),
+    //       parentLoop(nullptr) {
+    //     // initialize the AffineLoopNest
+    //     llvm::errs() << "new loop";
+    //     CSHOWLN(affineLoop.getNumLoops());
+    //     SHOWLN(affineLoop.A);
+    //     for (auto v : affineLoop.symbols)
+    //         SHOWLN(*v);
+    // }
+    // LoopTree(llvm::Loop *L, AffineLoopNest aln, LoopForest sL)
+    //     : loop(L), affineLoop(aln), subLoops(sL), parentLoop(nullptr) {}
+
+    LoopTree(llvm::Loop *L, LoopForest sL, unsigned affineLoopID)
+        : loop(L), subLoops(std::move(sL)), affineLoopID(affineLoopID),
+          parentLoop(nullptr) {}
+
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const LoopTree &tree) {
-        return os << tree.affineLoop << "\n" << tree.subLoops << "\n";
+        return os << (*tree.loop) << "\n" << tree.subLoops << "\n";
     }
-    void addZeroLowerBounds(
-        llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &loopMap) {
-        affineLoop.addZeroLowerBounds();
-        subLoops.addZeroLowerBounds(loopMap);
-        loopMap.insert(std::make_pair(loop, &affineLoop));
+    void
+    addZeroLowerBounds(llvm::MutableArrayRef<AffineLoopNest> affineLoopNests,
+                       llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
+        affineLoopNests[affineLoopID].addZeroLowerBounds();
+        for (auto &&tree : subLoops) {
+            tree.addZeroLowerBounds(affineLoopNests, loopMap);
+            tree.parentLoop = this;
+        }
+        loopMap.insert(std::make_pair(loop, this));
+    }
+    void setParentLoops() {
+        for (auto &&tree : subLoops)
+            tree.parentLoop = this;
+    }
+    void setParentLoopsRecursive() {
+        for (auto &&tree : subLoops) {
+            tree.parentLoop = this;
+            tree.setParentLoopsRecursive();
+        }
     }
 };
 
@@ -89,9 +110,10 @@ inline size_t LoopForest::invalid(std::vector<LoopForest> &forests,
     return 0;
 }
 void LoopForest::addZeroLowerBounds(
-    llvm::DenseMap<llvm::Loop *, AffineLoopNest *> &loopMap) {
+    llvm::MutableArrayRef<AffineLoopNest> affineLoopNests,
+    llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
     for (auto &&tree : loops)
-        tree.addZeroLowerBounds(loopMap);
+        tree.addZeroLowerBounds(affineLoopNests, loopMap);
 }
 
 [[maybe_unused]] static bool
@@ -159,8 +181,10 @@ enum class BBChain {
 
 // try to add Loop L, as well as all of L's subLoops
 // if invalid, create a new LoopForest, and add it to forests instead
-size_t LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution &SE,
-                            std::vector<LoopForest> &forests) {
+size_t
+LoopForest::pushBack(llvm::SmallVector<AffineLoopNest, 0> &affineLoopNests,
+                     llvm::Loop *L, llvm::ScalarEvolution &SE,
+                     std::vector<LoopForest> &forests) {
     auto &subLoops{L->getSubLoops()};
     LoopForest subForest;
     size_t interiorDepth0 = 0;
@@ -189,7 +213,7 @@ size_t LoopForest::pushBack(llvm::Loop *L, llvm::ScalarEvolution &SE,
                     P = N;
             } else
                 P = N;
-            size_t itDepth = subForest.pushBack(P, SE, forests);
+            size_t itDepth = subForest.pushBack(affineLoopNests, P, SE, forests);
             if (itDepth == 0) {
                 anyFail = true;
                 P = nullptr;

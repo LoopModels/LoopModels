@@ -108,8 +108,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
             for (size_t j = l; j < u; ++j)
                 A(j, i) += mlt;
             return minDepth;
-        }
-        if (llvm::Optional<int64_t> c = getConstantInt(v)) {
+        } else if (llvm::Optional<int64_t> c = getConstantInt(v)) {
             for (size_t j = l; j < u; ++j)
                 A(j, 0) += mlt * (*c);
             return minDepth;
@@ -342,11 +341,9 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                                                SE.getOne(IntType), L,
                                                llvm::SCEV::NoWrapMask));
         }
-	initComparator();
+        initComparator();
     }
-    void initComparator(){
-	C.init(A,EmptyMatrix<int64_t>{}, true);
-    }
+    void initComparator() { C.init(A, EmptyMatrix<int64_t>{}, true); }
     void addZeroLowerBounds() {
         size_t numLoops = getNumLoops();
         auto [M, N] = A.size();
@@ -357,7 +354,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         CSHOWLN(A);
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
-	initComparator();
+        initComparator();
         pruneBounds();
     }
 
@@ -382,7 +379,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         B.resizeForOverwrite(M, N);
         B(_, _(begin, numConst)) = A(_, _(begin, numConst));
         B(_, _(numConst, end)) = A(_, _(numConst, end)) * R;
-	ret.initComparator();
+        ret.initComparator();
         llvm::errs() << "A = \n" << A << "\n";
         llvm::errs() << "R = \n" << R << "\n";
         llvm::errs() << "B = \n" << B << "\n";

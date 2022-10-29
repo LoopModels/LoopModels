@@ -9,6 +9,7 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
+#include "LoopBlock.hpp"
 #include <algorithm>
 #include <bit>
 #include <cstddef>
@@ -59,15 +60,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
+    llvm::SmallVector<AffineLoopNest,0> affineLoopNests;
     std::vector<LoopForest> loopForests;
-    llvm::DenseMap<llvm::Loop *, AffineLoopNest *> loopMap;
-    UniqueIDMap<const llvm::SCEVUnknown *> ptrToArrayIDMap;
+    llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
     const llvm::TargetLibraryInfo *TLI;
     const llvm::TargetTransformInfo *TTI;
     llvm::LoopInfo *LI;
     llvm::ScalarEvolution *SE;
+    LoopBlock loopBlock;
     // const llvm::DataLayout *DL;
     unsigned registerCount;
 
@@ -265,7 +267,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         assert(subscripts.size() == sizes.size());
         if (sizes.size() == 0)
             return {};
-        AffineLoopNest *aln = loopMap[L];
+        AffineLoopNest *aln = &(loopMap[L]->affineLoop);
         size_t numLoops{aln->getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
@@ -293,7 +295,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             llvm::Loop *P = L;
             for (size_t i = 1; i < numLoops; ++i) {
                 P = P->getParentLoop();
-                loopMap[L]->removeOuterMost(numExtraLoopsToPeel, P, *SE);
+                loopMap[L]->affineLoop.removeOuterMost(numExtraLoopsToPeel, P, *SE);
             }
             // remove the numExtraLoopsToPeel from Rt
             // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
@@ -343,9 +345,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // return {};
     }
     llvm::Optional<MemoryAccess> addLoad(llvm::Loop *L, llvm::LoadInst *I) {
-        bool isLoad = true;
         llvm::Value *ptr = I->getPointerOperand();
-        llvm::Type *type = I->getPointerOperandType();
+        // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
         if (L) {
             if (llvm::Instruction *iptr =
@@ -358,9 +359,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return {};
     }
     llvm::Optional<MemoryAccess> addStore(llvm::Loop *L, llvm::StoreInst *I) {
-        bool isLoad = false;
         llvm::Value *ptr = I->getPointerOperand();
-        llvm::Type *type = I->getPointerOperandType();
+        // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
         if (L) {
             if (llvm::Instruction *iptr =
@@ -377,14 +377,18 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
-                    addLoad(L, LI);
-                    continue;
+                    if (auto opt = addLoad(L, LI)){
+			loopBlock.memory.push_back(*opt);
+			continue;
+		    }
                 }
                 return true;
             } else if (I.mayWriteToMemory()) {
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
-                    addStore(L, SI);
-                    continue;
+                    if (auto opt = addStore(L, SI)){
+			loopBlock.memory.push_back(*opt);
+			continue;
+		    }
                 }
                 return true;
             }
@@ -393,6 +397,84 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     bool parseBB(llvm::BasicBlock *BB) {
         return parseBB(LI->getLoopFor(BB), BB);
+    }
+    // void splitAndRemove(LoopTree *LT){
+	
+    // }
+    // condition on loop means remove loop L and all those exterior to it
+    // the LoopTree associated with this will be removed;
+    
+    void conditionOnLoop(llvm::Loop* L){
+	LoopTree *LT = loopMap[L];
+	LoopForest tmpForest;
+	if (LoopTree *PT = LT->parentLoop){
+	    for (auto &&LTS : PT->subLoops){
+		if (&LTS != LT){
+		    tmpForest.loops.push_back(std::move(LTS));
+		    // TODO: affineLoopNest pointers need correcting?
+		    tmpForest.loops.back().setParentLoops(); // fix parent loops
+		} else {
+		    loopForests.push_back(std::move(tmpForest));
+		    tmpForest.clear();
+		}
+		if (tmpForest.size()){
+		    loopForests.push_back(std::move(tmpForest));
+		    tmpForest.clear();		    
+		}
+	    }
+	    // add all subLoops <LT and >LT to forests
+	}
+	AffineLoopNest *aln = &(LT->affineLoop);
+	size_t numLoops{aln->getNumLoops()};
+	
+	
+	uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
+            if (numExtraLoopsToPeel >= numLoops)
+                return {};
+            aln->removeOuterMost(numExtraLoopsToPeel, L, *SE);
+            llvm::Loop *P = L;
+            for (size_t i = 1; i < numLoops; ++i) {
+                P = P->getParentLoop();
+                loopMap[L]->removeOuterMost(numExtraLoopsToPeel, P, *SE);
+            }
+            // remove the numExtraLoopsToPeel from Rt
+            // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
+            // would this code below actually be expected to boost performance?
+            // if (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
+            // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
+            // order of loops in Rt is innermost -> outermost
+            P = L;
+            for (size_t i = 1; i < numLoops - numExtraLoopsToPeel; ++i)
+                P = P->getParentLoop();
+            // loop iterates inner -> outer
+            for (size_t i = numLoops - numExtraLoopsToPeel; i < numLoops; ++i) {
+                P = P->getParentLoop();
+                if (allZero(Rt(_, i)))
+                    continue;
+                // push the SCEV
+                auto IntType = P->getInductionVariable(*SE)->getType();
+                const llvm::SCEV *S =
+                    SE->getAddRecExpr(SE->getZero(IntType), SE->getOne(IntType),
+                                      P, llvm::SCEV::NoWrapMask);
+                if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
+                    Bt(_, j) += Rt(_, i);
+                } else {
+                    size_t N = Bt.numCol();
+                    Bt.resizeCols(N + 1);
+                    Bt(_, N) = Rt(_, i);
+                }
+            }
+	
+    }
+    bool parseLoop(llvm::Loop *L){
+	for (auto &BB : L->getBlocks()){
+	    llvm::Loop* P = LI->getLoopFor(BB);
+	    if (parseBB(P, BB)){
+		conditionOnLoop(P);
+		return true;
+	    }
+	}
+	return false;
     }
 
     bool parseLoopPrint(auto B, auto E, size_t depth) {
