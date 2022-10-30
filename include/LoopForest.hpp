@@ -5,8 +5,10 @@
 #include "./Loops.hpp"
 #include "ArrayReference.hpp"
 #include "Macro.hpp"
+#include "MemoryAccess.hpp"
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -18,103 +20,36 @@
 #include <utility>
 #include <vector>
 
-struct LoopTree;
-struct LoopForest {
-    std::vector<LoopTree> loops;
-    // definitions due to incomplete types
-    size_t pushBack(llvm::SmallVector<AffineLoopNest, 0> &, llvm::Loop *,
-                    llvm::ScalarEvolution &, std::vector<LoopForest> &);
-    LoopForest() = default;
-    LoopForest(std::vector<LoopTree> loops);
-    // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
-    LoopForest(auto itb, auto ite) : loops(itb, ite){};
+// struct LoopTree;
+// struct LoopForest {
+//     llvm::SmallVector<LoopTree *> loops;
+//     // definitions due to incomplete types
+//     size_t pushBack(llvm::SmallVectorImpl<LoopTree> &, llvm::Loop *,
+//                     llvm::ScalarEvolution &,
+//                     llvm::SmallVector<LoopForest, 0> &);
+//     LoopForest() = default;
+//     LoopForest(llvm::SmallVector<LoopTree *> loops);
+//     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
+//     LoopForest(auto itb, auto ite) : loops(itb, ite){};
 
-    inline size_t size() const;
-    static size_t invalid(std::vector<LoopForest> &forests, LoopForest forest);
-    inline LoopTree &operator[](size_t);
-    inline auto begin() { return loops.begin(); }
-    inline auto begin() const { return loops.begin(); }
-    inline auto end() { return loops.end(); }
-    inline auto end() const { return loops.end(); }
-    inline auto rbegin() { return loops.rbegin(); }
-    inline auto rbegin() const { return loops.rbegin(); }
-    inline auto rend() { return loops.rend(); }
-    inline auto rend() const { return loops.rend(); }
-    inline auto &front() { return loops.front(); }
-    inline void clear();
-    void addZeroLowerBounds(llvm::MutableArrayRef<AffineLoopNest>,
-                            llvm::DenseMap<llvm::Loop *, LoopTree *> &);
-};
-llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
+//     inline size_t size() const;
+//     static size_t invalid(llvm::SmallVector<LoopForest, 0> &forests,
+//                           LoopForest forest);
+//     inline LoopTree *operator[](size_t i) { return loops[i]; }
+//     inline auto begin() { return loops.begin(); }
+//     inline auto begin() const { return loops.begin(); }
+//     inline auto end() { return loops.end(); }
+//     inline auto end() const { return loops.end(); }
+//     inline auto rbegin() { return loops.rbegin(); }
+//     inline auto rbegin() const { return loops.rbegin(); }
+//     inline auto rend() { return loops.rend(); }
+//     inline auto rend() const { return loops.rend(); }
+//     inline auto &front() { return loops.front(); }
+//     inline void clear();
+//     void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &);
+// };
+// llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
 // TODO: should depth be stored in LoopForests instead?
-struct LoopTree {
-    llvm::Loop *loop;
-    LoopForest subLoops; // incomplete type, don't know size
-    unsigned affineLoopID;
-    LoopTree *parentLoop;
-    bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
-    // llvm::Optional<llvm::Loop::LoopBounds>
-    // getBounds(llvm::ScalarEvolution *SE) {
-    //     return loop->getBounds(*SE);
-    // }
-    // LoopTree(llvm::Loop *L, LoopForest sL, const llvm::SCEV *BT,
-    //          llvm::ScalarEvolution &SE)
-    //     : loop(L), affineLoop(L, BT, SE), subLoops(std::move(sL)),
-    //       parentLoop(nullptr) {
-    //     // initialize the AffineLoopNest
-    //     llvm::errs() << "new loop";
-    //     CSHOWLN(affineLoop.getNumLoops());
-    //     SHOWLN(affineLoop.A);
-    //     for (auto v : affineLoop.symbols)
-    //         SHOWLN(*v);
-    // }
-    // LoopTree(llvm::Loop *L, AffineLoopNest aln, LoopForest sL)
-    //     : loop(L), affineLoop(aln), subLoops(sL), parentLoop(nullptr) {}
-
-    LoopTree(llvm::Loop *L, LoopForest sL, unsigned affineLoopID)
-        : loop(L), subLoops(std::move(sL)), affineLoopID(affineLoopID),
-          parentLoop(nullptr) {}
-
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const LoopTree &tree) {
-        return os << (*tree.loop) << "\n" << tree.subLoops << "\n";
-    }
-    void
-    addZeroLowerBounds(llvm::MutableArrayRef<AffineLoopNest> affineLoopNests,
-                       llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
-        affineLoopNests[affineLoopID].addZeroLowerBounds();
-        for (auto &&tree : subLoops) {
-            tree.addZeroLowerBounds(affineLoopNests, loopMap);
-            tree.parentLoop = this;
-        }
-        loopMap.insert(std::make_pair(loop, this));
-    }
-    void setParentLoops() {
-        for (auto &&tree : subLoops)
-            tree.parentLoop = this;
-    }
-    void setParentLoopsRecursive() {
-        for (auto &&tree : subLoops) {
-            tree.parentLoop = this;
-            tree.setParentLoopsRecursive();
-        }
-    }
-};
-
-LoopForest::LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
-void LoopForest::clear() { loops.clear(); }
-inline size_t LoopForest::invalid(std::vector<LoopForest> &forests,
-                                  LoopForest forest) {
-    if (forest.size())
-        forests.push_back(std::move(forest));
-    return 0;
-}
-void LoopForest::addZeroLowerBounds(
-    llvm::MutableArrayRef<AffineLoopNest> affineLoopNests,
-    llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
-    for (auto &&tree : loops)
-        tree.addZeroLowerBounds(affineLoopNests, loopMap);
-}
 
 [[maybe_unused]] static bool
 visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
@@ -133,13 +68,6 @@ enum class BBChain {
     unknown,
     loopexit
 };
-[[maybe_unused]] static void split(std::vector<LoopForest> &forests,
-                                   LoopForest &subForest) {
-    if (subForest.size()) {
-        forests.push_back(std::move(subForest));
-        subForest.clear();
-    }
-}
 [[maybe_unused]] static BBChain allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     const llvm::BasicBlock *BBsrc, const llvm::BasicBlock *BBdst) {
@@ -179,75 +107,143 @@ enum class BBChain {
     return BBsrc.size() > 0;
 }
 
-// try to add Loop L, as well as all of L's subLoops
-// if invalid, create a new LoopForest, and add it to forests instead
-size_t
-LoopForest::pushBack(llvm::SmallVector<AffineLoopNest, 0> &affineLoopNests,
-                     llvm::Loop *L, llvm::ScalarEvolution &SE,
-                     std::vector<LoopForest> &forests) {
-    auto &subLoops{L->getSubLoops()};
-    LoopForest subForest;
-    size_t interiorDepth0 = 0;
-    if (subLoops.size()) {
-        llvm::SmallVector<llvm::BasicBlock *> exitBlocks;
-        llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
-        bool anyFail = false;
-        llvm::Loop *P = nullptr;
-        for (size_t i = 0; i < subLoops.size(); ++i) {
-            llvm::Loop *N = subLoops[i];
-            if (P) {
-                // if we have a previous loop, does
-                // P->getExitBlocks(exitBlocks);
-                exitBlocks.clear();
-                P->getExitBlocks(exitBlocks);
-                // reach
-                // subLoops[i]->getLoopPreheader();
-                // we need exactly 1 reachCount
-                visitedBBs.clear();
-                llvm::BasicBlock *PH = N->getLoopPreheader();
-                if (!allForwardPathsReach(visitedBBs, exitBlocks, PH)) {
-                    anyFail = true;
-                    split(forests, subForest);
-                    P = nullptr;
+struct LoopTree {
+    [[no_unique_address]] llvm::Loop *loop;
+    [[no_unique_address]] llvm::SmallVector<unsigned> subLoops;
+    [[no_unique_address]] AffineLoopNest affineLoop;
+    [[no_unique_address]] unsigned parentLoop{
+        std::numeric_limits<unsigned>::max()};
+    [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
+
+    bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
+
+    LoopTree(llvm::SmallVector<unsigned> sL)
+        : loop(nullptr), subLoops(std::move(sL)) {}
+
+    LoopTree(llvm::Loop *L, llvm::SmallVector<unsigned> sL,
+             const llvm::SCEV *BT, llvm::ScalarEvolution &SE)
+        : loop(L), subLoops(std::move(sL)), affineLoop(L, BT, SE),
+          parentLoop(std::numeric_limits<unsigned>::max()) {}
+
+    LoopTree(llvm::Loop *L, AffineLoopNest aln, llvm::SmallVector<unsigned> sL)
+        : loop(L), subLoops(sL), affineLoop(std::move(aln)),
+          parentLoop(std::numeric_limits<unsigned>::max()) {}
+    // LoopTree(llvm::Loop *L, AffineLoopNest *aln, LoopForest sL)
+    // : loop(L), subLoops(sL), affineLoop(aln), parentLoop(nullptr) {}
+
+    // LoopTree(llvm::Loop *L, LoopForest sL, unsigned affineLoopID)
+    //     : loop(L), subLoops(std::move(sL)), affineLoopID(affineLoopID),
+    //       parentLoop(nullptr) {}
+    size_t getNumLoops() const { return affineLoop.getNumLoops(); }
+
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
+                                         const LoopTree &tree) {
+        os << (*tree.loop) << "\n";
+        for (auto branch : tree.subLoops)
+            os << branch;
+        return os << "\n";
+    }
+    void addZeroLowerBounds(llvm::MutableArrayRef<LoopTree> loopTrees,
+                            llvm::DenseMap<llvm::Loop *, unsigned> &loopMap,
+                            unsigned myId) {
+        SHOWLN(this);
+        // SHOWLN(affineLoop.A);
+        affineLoop.addZeroLowerBounds();
+        for (auto tid : subLoops) {
+            auto &tree = loopTrees[tid];
+            tree.addZeroLowerBounds(loopTrees, loopMap, tid);
+            tree.parentLoop = myId;
+        }
+        loopMap.insert(std::make_pair(loop, myId));
+    }
+    auto begin() { return subLoops.begin(); }
+    auto end() { return subLoops.end(); }
+    auto begin() const { return subLoops.begin(); }
+    auto end() const { return subLoops.end(); }
+    size_t size() const { return subLoops.size(); }
+
+    // try to add Loop L, as well as all of L's subLoops
+    // if invalid, create a new LoopForest, and add it to forests instead
+    // loopTrees are the cache of all LoopTrees
+    static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
+                           llvm::SmallVector<unsigned> &forests,
+                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
+                           llvm::ScalarEvolution &SE) {
+        auto &subLoops{L->getSubLoops()};
+        llvm::SmallVector<unsigned> subForest;
+        size_t interiorDepth0 = 0;
+        if (subLoops.size()) {
+            llvm::SmallVector<llvm::BasicBlock *> exitBlocks;
+            llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
+            bool anyFail = false;
+            llvm::Loop *P = nullptr;
+            for (size_t i = 0; i < subLoops.size(); ++i) {
+                llvm::Loop *N = subLoops[i];
+                if (P) {
+                    exitBlocks.clear();
+                    // if we have a previous loop, does
+                    P->getExitBlocks(exitBlocks);
+                    // reach
+                    // subLoops[i]->getLoopPreheader();
+                    visitedBBs.clear();
+                    llvm::BasicBlock *PH = N->getLoopPreheader();
+                    if (!allForwardPathsReach(visitedBBs, exitBlocks, PH)) {
+                        anyFail = true;
+                        split(loopTrees, forests, subForest);
+                        P = nullptr;
+                    } else
+                        P = N;
                 } else
                     P = N;
-            } else
-                P = N;
-            size_t itDepth = subForest.pushBack(affineLoopNests, P, SE, forests);
-            if (itDepth == 0) {
-                anyFail = true;
-                P = nullptr;
-                split(forests, subForest);
-            } else if (i == 0) {
-                interiorDepth0 = itDepth;
+                size_t itDepth = pushBack(loopTrees, forests, subForest, P, SE);
+                if (itDepth == 0) {
+                    anyFail = true;
+                    P = nullptr;
+                    split(loopTrees, forests, subForest);
+                } else if (i == 0) {
+                    interiorDepth0 = itDepth;
+                }
+            }
+            if (anyFail)
+                return invalid(loopTrees, forests, subForest);
+            assert(subForest.size());
+        }
+        if (subForest.size()) { // add subloops
+            AffineLoopNest &subNest = loopTrees[subForest.front()].affineLoop;
+            if (subNest.getNumLoops() > 1) {
+                branches.push_back(loopTrees.size());
+                loopTrees.emplace_back(L, subNest.removeInnerMost(),
+                                       std::move(subForest));
+                return ++interiorDepth0;
+            }
+        } else if (auto BT = SE.getBackedgeTakenCount(L)) {
+            if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
+                branches.push_back(loopTrees.size());
+                loopTrees.emplace_back(L, std::move(subForest), BT, SE);
+                return 1;
             }
         }
-        if (anyFail)
-            return LoopForest::invalid(forests, std::move(subForest));
-        assert(subForest.size());
+        return invalid(loopTrees, forests, subForest);
     }
-    if (subForest.size()) { // add subloops
-        AffineLoopNest &subNest = subForest.front().affineLoop;
-        if (subNest.getNumLoops() > 1) {
-            loops.emplace_back(L, subNest.removeInnerMost(),
-                               std::move(subForest));
-            return ++interiorDepth0;
+
+    [[maybe_unused]] static size_t
+    invalid(llvm::SmallVectorImpl<LoopTree> &loopTrees,
+            llvm::SmallVectorImpl<unsigned> &trees,
+            llvm::SmallVector<unsigned> &subTree) {
+        if (subTree.size()) {
+            trees.push_back(loopTrees.size());
+            loopTrees.emplace_back(std::move(subTree));
         }
-    } else if (auto BT = SE.getBackedgeTakenCount(L)) {
-        if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-            loops.emplace_back(L, std::move(subForest), BT, SE);
-            return 1;
+        return 0;
+    }
+    [[maybe_unused]] static void
+    split(llvm::SmallVectorImpl<LoopTree> &loopTrees,
+          llvm::SmallVectorImpl<unsigned> &trees,
+          llvm::SmallVector<unsigned> &subTree) {
+        if (subTree.size()) {
+            trees.push_back(loopTrees.size());
+            loopTrees.emplace_back(std::move(subTree));
+            subTree.clear();
         }
     }
-    return LoopForest::invalid(forests, std::move(subForest));
-}
-size_t LoopForest::size() const { return loops.size(); }
-LoopTree &LoopForest::operator[](size_t i) {
-    assert(i < loops.size());
-    return loops[i];
-}
-llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree) {
-    for (auto &loop : tree.loops)
-        os << loop << "\n";
-    return os << "\n\n";
-}
+};

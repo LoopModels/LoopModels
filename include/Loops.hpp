@@ -289,17 +289,17 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         return AffineLoopNest(B, symbols);
     }
     void clear() {
-        A.resize(0, 0);
-        symbols.truncate(1);
+        A.resize(0, 1); // 0 x 1 so that getNumLoops() == 0
+        symbols.truncate(0);
     }
     void removeOuterMost(size_t numToRemove, llvm::Loop *L,
                          llvm::ScalarEvolution &SE) {
         // basically, we move the outermost loops to the symbols section,
         // and add the appropriate addressees
-        size_t innermostLoopInd = getNumSymbols();
         size_t oldNumLoops = getNumLoops();
         if (numToRemove >= oldNumLoops)
             return clear();
+        size_t innermostLoopInd = getNumSymbols();
         size_t numRemainingLoops = oldNumLoops - numToRemove;
         auto [M, N] = A.size();
         if (numRemainingLoops != numToRemove) {
@@ -345,15 +345,19 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     }
     void initComparator() { C.init(A, EmptyMatrix<int64_t>{}, true); }
     void addZeroLowerBounds() {
-        size_t numLoops = getNumLoops();
         auto [M, N] = A.size();
+        if (!N)
+            return;
+        size_t numLoops = getNumLoops();
+	SHOWLN(A);
         A.resizeRows(M + numLoops);
         A(_(M, M + numLoops), _) = 0;
-        SHOW(M);
-        CSHOW(N);
-        CSHOWLN(A);
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
+        SHOW(getNumLoops());
+        CSHOW(M);
+        CSHOW(N);
+        CSHOWLN(A);
         initComparator();
         pruneBounds();
     }

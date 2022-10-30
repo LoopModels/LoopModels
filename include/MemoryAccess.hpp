@@ -1,5 +1,9 @@
 #pragma once
 #include "./Schedule.hpp"
+
+// struct MemorySchedule{
+
+// }
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -14,15 +18,17 @@ struct MemoryAccess {
     llvm::SmallVector<unsigned> edgesOut;
     llvm::SmallVector<unsigned> groups;
     [[no_unique_address]] unsigned index{std::numeric_limits<unsigned>::max()};
-    [[no_unique_address]] unsigned nodeIndex{std::numeric_limits<unsigned>::max()};
+    [[no_unique_address]] unsigned nodeIndex{
+        std::numeric_limits<unsigned>::max()};
     // schedule indicated by `1` top bit, remainder indicates loop
-    [[no_unique_address]] const bool isLoad;
+    [[no_unique_address]] bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
                  bool isLoad)
         : ref(std::move(ref)), user(user), schedule(schedule),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-
+    // MemoryAccess(const MemoryAccess &MA) = default;
+    
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     // size_t getNumLoops() const { return ref->getNumLoops(); }

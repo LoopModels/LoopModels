@@ -581,7 +581,7 @@ struct Dependence {
     [[no_unique_address]] Simplex dependenceBounding;
     [[no_unique_address]] MemoryAccess *in;
     [[no_unique_address]] MemoryAccess *out;
-    [[no_unique_address]] const bool forward;
+    [[no_unique_address]] bool forward;
     // Dependence(DependencePolyhedra depPoly,
     //            IntegerEqPolyhedra dependenceSatisfaction,
     //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,

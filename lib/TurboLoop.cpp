@@ -63,8 +63,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     initializeLoopForest();
     SHOWLN(loopForests.size());
     for (auto &forest : loopForests) {
-        SHOWLN(forest.size());
-        SHOWLN(forest);
+        SHOWLN(forest->size());
+        SHOWLN(*forest);
     }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
@@ -125,8 +125,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
     // nullptr);
     LoopBlock lblock;
-    for (auto &&forest : loopForests){
-	
+    for (auto &&forest : loopForests) {
     }
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {

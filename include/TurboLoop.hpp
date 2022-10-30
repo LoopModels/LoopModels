@@ -45,6 +45,14 @@
 #include <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
 #include <utility>
 
+[[maybe_unused]] static size_t countNumLoops(const llvm::Loop *L) {
+    auto subLoops = L->getSubLoops();
+    size_t numLoops = subLoops.size();
+    for (auto &SL : subLoops)
+        numLoops += countNumLoops(SL);
+    return numLoops;
+}
+
 // [[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
 //     if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
 //         return constInt->isOne();
@@ -60,9 +68,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
-    llvm::SmallVector<AffineLoopNest,0> affineLoopNests;
-    std::vector<LoopForest> loopForests;
-    llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
+    // llvm::SmallVector<AffineLoopNest, 0> affineLoopNests;
+    // one reason to prefer SmallVector is because it bounds checks `ifndef
+    // NDEBUG`
+    llvm::SmallVector<LoopTree, 0> loopTrees;
+    llvm::SmallVector<unsigned> loopForests;
+    llvm::DenseMap<llvm::Loop *, unsigned> loopMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
     const llvm::TargetLibraryInfo *TLI;
@@ -81,15 +92,26 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //    successive loops. In all such cases, the loops at that level are
     //    split into separate forests.
     void initializeLoopForest() {
-        LoopForest forest;
+        // count the number of loops, and then reserve enough memory to avoid
+        // the need for reallocations
+        size_t numLoops = 0;
+        for (auto &L : *LI)
+            numLoops += countNumLoops(L);
+        loopTrees.reserve(numLoops);
+        loopMap.reserve(numLoops);
+        // affineLoopNests.reserve(numLoops);
+        // thus, we should be able to reference these by pointer.
+        llvm::SmallVector<unsigned> forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         for (auto &L : llvm::reverse(*LI))
-            forest.pushBack(L, *SE, loopForests);
-        if (forest.size())
-            loopForests.push_back(std::move(forest));
+            LoopTree::pushBack(loopTrees, loopForests, forest, L, *SE);
+        LoopTree::invalid(loopTrees, loopForests, forest);
+        // for (auto &lt : loopTrees)
+        // SHOWLN(lt.affineLoop.A);
         for (auto &forest : loopForests)
-            forest.addZeroLowerBounds(loopMap);
+            loopTrees[forest].addZeroLowerBounds(
+                loopTrees, loopMap, std::numeric_limits<unsigned>::max());
     }
 
     // returns index to the loop whose preheader we place it in.
@@ -267,8 +289,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         assert(subscripts.size() == sizes.size());
         if (sizes.size() == 0)
             return {};
-        AffineLoopNest *aln = &(loopMap[L]->affineLoop);
-        size_t numLoops{aln->getNumLoops()};
+        AffineLoopNest &aln = loopTrees[loopMap[L]].affineLoop;
+        size_t numLoops{aln.getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
         size_t numPeeled = L->getLoopDepth() - numLoops;
@@ -291,23 +313,22 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
             if (numExtraLoopsToPeel >= numLoops)
                 return {};
-            aln->removeOuterMost(numExtraLoopsToPeel, L, *SE);
-            llvm::Loop *P = L;
-            for (size_t i = 1; i < numLoops; ++i) {
-                P = P->getParentLoop();
-                loopMap[L]->affineLoop.removeOuterMost(numExtraLoopsToPeel, P, *SE);
-            }
+            aln.removeOuterMost(numExtraLoopsToPeel, L, *SE);
             // remove the numExtraLoopsToPeel from Rt
             // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
             // would this code below actually be expected to boost performance?
             // if (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
             // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
             // order of loops in Rt is innermost -> outermost
-            P = L;
-            for (size_t i = 1; i < numLoops - numExtraLoopsToPeel; ++i)
+            size_t remainingLoops = numLoops - numExtraLoopsToPeel;
+            llvm::Loop *P = L;
+            for (size_t i = 1; i < remainingLoops; ++i)
                 P = P->getParentLoop();
+	    // FIXME: this is wrong
+	    // conditionOnLoop(P);
+            peelOuterLoops(P->getParentLoop(), numExtraLoopsToPeel);
             // loop iterates inner -> outer
-            for (size_t i = numLoops - numExtraLoopsToPeel; i < numLoops; ++i) {
+            for (size_t i = remainingLoops; i < numLoops; ++i) {
                 P = P->getParentLoop();
                 if (allZero(Rt(_, i)))
                     continue;
@@ -326,7 +347,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             }
             Rt.truncateCols(numLoops - numExtraLoopsToPeel);
         }
-        ArrayReference ref(basePointer, aln, symbolicOffsets);
+        ArrayReference ref(basePointer, &aln, symbolicOffsets);
         ref.resize(subscripts.size());
         ref.indexMatrix() = Rt.transpose();
         ref.offsetMatrix() = Bt;
@@ -377,18 +398,18 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I)) {
-                    if (auto opt = addLoad(L, LI)){
-			loopBlock.memory.push_back(*opt);
-			continue;
-		    }
+                    if (auto opt = addLoad(L, LI)) {
+                        loopBlock.memory.push_back(*opt);
+                        continue;
+                    }
                 }
                 return true;
             } else if (I.mayWriteToMemory()) {
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I)) {
-                    if (auto opt = addStore(L, SI)){
-			loopBlock.memory.push_back(*opt);
-			continue;
-		    }
+                    if (auto opt = addStore(L, SI)) {
+                        loopBlock.memory.push_back(*opt);
+                        continue;
+                    }
                 }
                 return true;
             }
@@ -398,83 +419,93 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     bool parseBB(llvm::BasicBlock *BB) {
         return parseBB(LI->getLoopFor(BB), BB);
     }
-    // void splitAndRemove(LoopTree *LT){
-	
-    // }
-    // condition on loop means remove loop L and all those exterior to it
-    // the LoopTree associated with this will be removed;
-    
-    void conditionOnLoop(llvm::Loop* L){
-	LoopTree *LT = loopMap[L];
-	LoopForest tmpForest;
-	if (LoopTree *PT = LT->parentLoop){
-	    for (auto &&LTS : PT->subLoops){
-		if (&LTS != LT){
-		    tmpForest.loops.push_back(std::move(LTS));
-		    // TODO: affineLoopNest pointers need correcting?
-		    tmpForest.loops.back().setParentLoops(); // fix parent loops
-		} else {
-		    loopForests.push_back(std::move(tmpForest));
-		    tmpForest.clear();
-		}
-		if (tmpForest.size()){
-		    loopForests.push_back(std::move(tmpForest));
-		    tmpForest.clear();		    
-		}
-	    }
-	    // add all subLoops <LT and >LT to forests
-	}
-	AffineLoopNest *aln = &(LT->affineLoop);
-	size_t numLoops{aln->getNumLoops()};
-	
-	
-	uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
-            if (numExtraLoopsToPeel >= numLoops)
-                return {};
-            aln->removeOuterMost(numExtraLoopsToPeel, L, *SE);
-            llvm::Loop *P = L;
-            for (size_t i = 1; i < numLoops; ++i) {
-                P = P->getParentLoop();
-                loopMap[L]->removeOuterMost(numExtraLoopsToPeel, P, *SE);
-            }
-            // remove the numExtraLoopsToPeel from Rt
-            // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
-            // would this code below actually be expected to boost performance?
-            // if (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
-            // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
-            // order of loops in Rt is innermost -> outermost
-            P = L;
-            for (size_t i = 1; i < numLoops - numExtraLoopsToPeel; ++i)
-                P = P->getParentLoop();
-            // loop iterates inner -> outer
-            for (size_t i = numLoops - numExtraLoopsToPeel; i < numLoops; ++i) {
-                P = P->getParentLoop();
-                if (allZero(Rt(_, i)))
-                    continue;
-                // push the SCEV
-                auto IntType = P->getInductionVariable(*SE)->getType();
-                const llvm::SCEV *S =
-                    SE->getAddRecExpr(SE->getZero(IntType), SE->getOne(IntType),
-                                      P, llvm::SCEV::NoWrapMask);
-                if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
-                    Bt(_, j) += Rt(_, i);
-                } else {
-                    size_t N = Bt.numCol();
-                    Bt.resizeCols(N + 1);
-                    Bt(_, N) = Rt(_, i);
+    void peelOuterLoops(llvm::Loop *L, size_t numToPeel) {
+        peelOuterLoops(loopTrees[loopMap[L]], numToPeel);
+    }
+    // peelOuterLoops is recursive inwards
+    void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
+        for (auto SL : LT)
+            peelOuterLoops(loopTrees[SL], numToPeel);
+        LT.affineLoop.removeOuterMost(numToPeel, LT.loop, *SE);
+    }
+    // conditionOnLoop(llvm::Loop *L)
+    // means to remove the loop L, and all those exterior to it.
+    //
+    //        /-> C /-> F  -> J
+    // -A -> B -> D  -> G \-> K
+    //  |     \-> E  -> H  -> L
+    //  |           \-> I
+    //   \-> M -> N
+    // if we condition on D
+    // then we get
+    //
+    //     /-> J
+    // _/ F -> K
+    //  \ G
+    // -C
+    // -E -> H -> L
+    //   \-> I
+    // -M -> N
+    // algorithm:
+    // 1. peel the outer loops from D's children (peel 3)
+    // 2. add each of D's children as new forests
+    // 3. remove D from B's subLoops; add prev and following loops as separate
+    // new forests
+    // 4. conditionOnLoop(B)
+    //
+    // approach: remove LoopIndex, and all loops that follow, unless it is first
+    // in which case, just remove LoopIndex
+    void conditionOnLoop(llvm::Loop *L) {
+        conditionOnLoop(loopTrees[loopMap[L]]);
+    }
+    void conditionOnLoop(LoopTree &LT) {
+        unsigned LTID = LT.parentLoop;
+        if (LTID == std::numeric_limits<unsigned>::max())
+            return;
+        LoopTree &PT = loopTrees[LTID];
+        size_t numLoops = LT.getNumLoops();
+        for (auto ST : LT)
+            peelOuterLoops(loopTrees[ST], numLoops);
+
+        LT.parentLoop =
+            std::numeric_limits<unsigned>::max(); // LT is now top of the tree
+        loopForests.push_back(LTID);
+        llvm::SmallVector<unsigned> &friendLoops = PT.subLoops;
+        if (friendLoops.front() != LTID) {
+            size_t numFriendLoops = friendLoops.size();
+            assert(numFriendLoops);
+            size_t loopIndex = 0;
+            for (size_t i = 1; i < numFriendLoops; ++i) {
+                if (friendLoops[i] == LTID) {
+                    loopIndex = i;
+                    break;
                 }
             }
-	
+            assert(loopIndex);
+            size_t j = loopIndex + 1;
+            if (j != numFriendLoops) {
+                llvm::SmallVector<LoopTree *> tmp;
+                tmp.reserve(numFriendLoops - j);
+                for (size_t i = j; i < numFriendLoops; ++i) {
+                    peelOuterLoops(friendLoops[i], numLoops - 1);
+                    tmp.push_back(friendLoops[i]);
+                }
+                loopForests.push_back(&loopTrees.emplace_back(tmp));
+            }
+            friendLoops.truncate(loopIndex);
+        } else
+            friendLoops.erase(friendLoops.begin());
+        conditionOnLoop(PT);
     }
-    bool parseLoop(llvm::Loop *L){
-	for (auto &BB : L->getBlocks()){
-	    llvm::Loop* P = LI->getLoopFor(BB);
-	    if (parseBB(P, BB)){
-		conditionOnLoop(P);
-		return true;
-	    }
-	}
-	return false;
+    bool parseLoop(llvm::Loop *L) {
+        for (auto &BB : L->getBlocks()) {
+            llvm::Loop *P = LI->getLoopFor(BB);
+            if (parseBB(P, BB)) {
+                conditionOnLoop(P);
+                return true;
+            }
+        }
+        return false;
     }
 
     bool parseLoopPrint(auto B, auto E, size_t depth) {
