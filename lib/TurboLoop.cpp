@@ -1,6 +1,8 @@
 #include "../include/TurboLoop.hpp"
 #include "LoopBlock.hpp"
+#include "LoopForest.hpp"
 #include "Loops.hpp"
+#include "Macro.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/PostOrderIterator.h>
@@ -63,8 +65,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     initializeLoopForest();
     SHOWLN(loopForests.size());
     for (auto &forest : loopForests) {
-        SHOWLN(forest->size());
-        SHOWLN(*forest);
+        SHOWLN(loopTrees[forest].size());
+        loopTrees[forest].dump(loopTrees);
     }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
@@ -124,9 +126,22 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
     // nullptr);
-    LoopBlock lblock;
-    for (auto &&forest : loopForests) {
+    // fill array refs
+    for (auto forestID : loopForests) {
+        LoopTree &forest = loopTrees[forestID];
+        for (auto treeID : forest) {
+            LoopTree &tree = loopTrees[treeID];
+            parseLoop(tree.loop);
+        }
     }
+    llvm::errs()<<"\n\nPrinting memory accesses:\n";
+    // TODO: fill schedules
+    for (auto forestID : loopForests)
+        for (auto treeID : loopTrees[forestID]) 
+            loopTrees[treeID].dumpAllMemAccess(loopTrees);
+    llvm::errs()<<"\nDone printing memory accesses\n";
+    // LoopBlock lblock;
+
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {
     //         // we're in an outer loop
@@ -189,128 +204,128 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     affs.clear();
     // }
 
-    parseLoopPrint(LI->begin(), LI->end(), 0);
+    // parseLoopPrint(LI->begin(), LI->end());
 
-    llvm::InductionDescriptor ID;
-    for (llvm::Loop *LP : *LI) {
-        auto *inductOuter = LP->getInductionVariable(*SE);
-        // const llvm::SCEV *backEdgeTaken = nullptr;
-        // if (inductOuter) {
-        //     llvm::errs() << "Outer InductionVariable: " << *inductOuter <<
-        //     "\n"; backEdgeTaken = SE->getBackedgeTakenCount(LP); if
-        //     (backEdgeTaken) {
-        //         llvm::errs()
-        //             << "Back edge taken count: " << *backEdgeTaken
-        //             << "\n\ttrip count: "
-        //             << *(SE->getAddExpr(backEdgeTaken,
-        //                               SE->getOne(backEdgeTaken->getType())))
-        //             << "\n";
-        //     } else {
-        //         std::cout << "couldn't find backedge taken?\n";
-        //     }
-        // } else {
-        //     std::cout << "no outer induction variable" << std::endl;
-        // }
-        auto obouter = LP->getBounds(*SE);
-        if (obouter.hasValue()) {
-            auto b = obouter.getValue();
-            llvm::errs() << "\nOuter loop bounds: " << b.getInitialIVValue()
-                         << " : " << *b.getStepValue() << " : "
-                         << b.getFinalIVValue() << "\n";
-        } else {
-            std::cout << "Could not find outer loop bounds. =(" << std::endl;
-        }
-        int i = 0;
-        for (llvm::Loop *SubLP : depth_first(LP)) {
-            auto *induct = SubLP->getInductionVariable(*SE);
-            if (induct) {
-                if (inductOuter) {
-                    llvm::errs()
-                        << "Loop " << i++
-                        << " in outer InductionVariable: " << *induct << "\n";
-                    llvm::errs()
-                        << "innerInduct > outerInduct: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SGT,
-                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
-                        << "\n";
-                    llvm::errs()
-                        << "innerInduct == outerInduct: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_EQ,
-                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
-                        << "\n";
-                    llvm::errs()
-                        << "innerInduct < outerInduct: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SLT,
-                               SE->getSCEV(induct), SE->getSCEV(inductOuter))
-                        << "\n";
-                }
-            } else {
-                std::cout << "no inner induction variable?" << std::endl;
-            }
-            if (SubLP->getInductionDescriptor(*SE, ID)) {
-                std::cout << "Found induction descriptor" << std::endl;
-            } else {
-                std::cout << "no induction description" << std::endl;
-            }
+    // llvm::InductionDescriptor ID;
+    // for (llvm::Loop *LP : *LI) {
+    //     auto *inductOuter = LP->getInductionVariable(*SE);
+    //     // const llvm::SCEV *backEdgeTaken = nullptr;
+    //     // if (inductOuter) {
+    //     //     llvm::errs() << "Outer InductionVariable: " << *inductOuter <<
+    //     //     "\n"; backEdgeTaken = SE->getBackedgeTakenCount(LP); if
+    //     //     (backEdgeTaken) {
+    //     //         llvm::errs()
+    //     //             << "Back edge taken count: " << *backEdgeTaken
+    //     //             << "\n\ttrip count: "
+    //     //             << *(SE->getAddExpr(backEdgeTaken,
+    //     //                               SE->getOne(backEdgeTaken->getType())))
+    //     //             << "\n";
+    //     //     } else {
+    //     //         std::cout << "couldn't find backedge taken?\n";
+    //     //     }
+    //     // } else {
+    //     //     std::cout << "no outer induction variable" << std::endl;
+    //     // }
+    //     auto obouter = LP->getBounds(*SE);
+    //     if (obouter.hasValue()) {
+    //         auto b = obouter.getValue();
+    //         llvm::errs() << "\nOuter loop bounds: " << b.getInitialIVValue()
+    //                      << " : " << *b.getStepValue() << " : "
+    //                      << b.getFinalIVValue() << "\n";
+    //     } else {
+    //         std::cout << "Could not find outer loop bounds. =(" << std::endl;
+    //     }
+    //     int i = 0;
+    //     for (llvm::Loop *SubLP : depth_first(LP)) {
+    //         auto *induct = SubLP->getInductionVariable(*SE);
+    //         if (induct) {
+    //             if (inductOuter) {
+    //                 llvm::errs()
+    //                     << "Loop " << i++
+    //                     << " in outer InductionVariable: " << *induct << "\n";
+    //                 llvm::errs()
+    //                     << "innerInduct > outerInduct: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SGT,
+    //                            SE->getSCEV(induct), SE->getSCEV(inductOuter))
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "innerInduct == outerInduct: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_EQ,
+    //                            SE->getSCEV(induct), SE->getSCEV(inductOuter))
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "innerInduct < outerInduct: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SLT,
+    //                            SE->getSCEV(induct), SE->getSCEV(inductOuter))
+    //                     << "\n";
+    //             }
+    //         } else {
+    //             std::cout << "no inner induction variable?" << std::endl;
+    //         }
+    //         if (SubLP->getInductionDescriptor(*SE, ID)) {
+    //             std::cout << "Found induction descriptor" << std::endl;
+    //         } else {
+    //             std::cout << "no induction description" << std::endl;
+    //         }
 
-            auto ob = SubLP->getBounds(*SE);
-            if (ob.hasValue()) {
-                auto b = ob.getValue();
-                auto &inner_LB = b.getInitialIVValue();
-                auto &inner_UB = b.getFinalIVValue();
+    //         auto ob = SubLP->getBounds(*SE);
+    //         if (ob.hasValue()) {
+    //             auto b = ob.getValue();
+    //             auto &inner_LB = b.getInitialIVValue();
+    //             auto &inner_UB = b.getFinalIVValue();
 
-                llvm::errs() << "\nLoop Bounds: " << inner_LB << " : "
-                             << *b.getStepValue() << " : " << inner_UB << "\n";
-                if (obouter.hasValue()) {
-                    auto ob = obouter.getValue();
-                    auto oLB = SE->getSCEV(&ob.getInitialIVValue());
-                    auto oUB = SE->getSCEV(&ob.getFinalIVValue());
-                    auto iLB = SE->getSCEV(&inner_LB);
-                    auto iUB = SE->getSCEV(&inner_UB);
+    //             llvm::errs() << "\nLoop Bounds: " << inner_LB << " : "
+    //                          << *b.getStepValue() << " : " << inner_UB << "\n";
+    //             if (obouter.hasValue()) {
+    //                 auto ob = obouter.getValue();
+    //                 auto oLB = SE->getSCEV(&ob.getInitialIVValue());
+    //                 auto oUB = SE->getSCEV(&ob.getFinalIVValue());
+    //                 auto iLB = SE->getSCEV(&inner_LB);
+    //                 auto iUB = SE->getSCEV(&inner_UB);
 
-                    // both ob and ib have values
-                    llvm::errs() << "Loop " << i++
-                                 << " in bounds cmp: " << *induct << "\n";
-                    llvm::errs()
-                        << "inner_LB > outer_UB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SGT, iLB, oUB)
-                        << "\n";
-                    llvm::errs()
-                        << "inner_LB == outer_UB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_EQ, iLB, oUB)
-                        << "\n";
-                    llvm::errs()
-                        << "inner_LB < outer_UB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SLT, iLB, oUB)
-                        << "\n";
-                    llvm::errs()
-                        << "inner_UB > outer_LB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SGT, iUB, oLB)
-                        << "\n";
-                    llvm::errs()
-                        << "inner_UB == outer_LB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_EQ, iUB, oLB)
-                        << "\n";
-                    llvm::errs()
-                        << "inner_UB < outer_LB: "
-                        << SE->isKnownPredicate(
-                               llvm::CmpInst::Predicate::ICMP_SLT, iUB, oLB)
-                        << "\n";
-                }
-            } else {
-                std::cout << "loop bound didn't have value!?" << std::endl;
-            }
-            std::cout << "\n";
-        }
-    }
+    //                 // both ob and ib have values
+    //                 llvm::errs() << "Loop " << i++
+    //                              << " in bounds cmp: " << *induct << "\n";
+    //                 llvm::errs()
+    //                     << "inner_LB > outer_UB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SGT, iLB, oUB)
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "inner_LB == outer_UB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_EQ, iLB, oUB)
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "inner_LB < outer_UB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SLT, iLB, oUB)
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "inner_UB > outer_LB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SGT, iUB, oLB)
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "inner_UB == outer_LB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_EQ, iUB, oLB)
+    //                     << "\n";
+    //                 llvm::errs()
+    //                     << "inner_UB < outer_LB: "
+    //                     << SE->isKnownPredicate(
+    //                            llvm::CmpInst::Predicate::ICMP_SLT, iUB, oLB)
+    //                     << "\n";
+    //             }
+    //         } else {
+    //             std::cout << "loop bound didn't have value!?" << std::endl;
+    //         }
+    //         std::cout << "\n";
+    //     }
+    // }
 
     return llvm::PreservedAnalyses::none();
     // return llvm::PreservedAnalyses::all();

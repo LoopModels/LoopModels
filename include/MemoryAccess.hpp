@@ -1,5 +1,7 @@
 #pragma once
 #include "./Schedule.hpp"
+#include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
 
 // struct MemorySchedule{
 
@@ -10,7 +12,7 @@
 struct MemoryAccess {
     ArrayReference ref;
     // unsigned ref; // index to ArrayReference
-    llvm::User *user;
+    llvm::Instruction *user;
     Schedule schedule;
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
@@ -22,13 +24,17 @@ struct MemoryAccess {
         std::numeric_limits<unsigned>::max()};
     // schedule indicated by `1` top bit, remainder indicates loop
     [[no_unique_address]] bool isLoad;
-    MemoryAccess(ArrayReference ref, llvm::User *user, Schedule schedule,
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user, Schedule schedule,
                  bool isLoad)
         : ref(std::move(ref)), user(user), schedule(schedule),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user, bool isLoad)
+        : ref(std::move(ref)), user(user),
+          edgesIn(llvm::SmallVector<unsigned>()),
+          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     // MemoryAccess(const MemoryAccess &MA) = default;
-    
+
     void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     // size_t getNumLoops() const { return ref->getNumLoops(); }
@@ -47,3 +53,12 @@ struct MemoryAccess {
         return schedule.getPhi()(loop, _);
     }
 };
+
+llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
+    if (m.isLoad && m.user)
+        os << *m.user << " = ";
+    os << m.ref;
+    if ((!m.isLoad) && m.user)
+        os << " = " << *(m.user->getOperand(0));
+    return os;
+}

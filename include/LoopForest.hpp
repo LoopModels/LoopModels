@@ -138,10 +138,28 @@ struct LoopTree {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const LoopTree &tree) {
-        os << (*tree.loop) << "\n";
+        if (tree.loop) {
+            os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
+        } else {
+            os << "top-level:\n";
+        }
         for (auto branch : tree.subLoops)
             os << branch;
         return os << "\n";
+    }
+    llvm::raw_ostream &dump(llvm::raw_ostream &os,
+                            llvm::ArrayRef<LoopTree> loopTrees) const {
+        if (loop) {
+            os << (*loop) << "\n" << affineLoop << "\n";
+        } else {
+            os << "top-level:\n";
+        }
+        for (auto branch : subLoops)
+            loopTrees[branch].dump(os, loopTrees);
+        return os << "\n";
+    }
+    llvm::raw_ostream &dump(llvm::ArrayRef<LoopTree> loopTrees) const {
+        return dump(llvm::errs(), loopTrees);
     }
     void addZeroLowerBounds(llvm::MutableArrayRef<LoopTree> loopTrees,
                             llvm::DenseMap<llvm::Loop *, unsigned> &loopMap,
@@ -245,5 +263,11 @@ struct LoopTree {
             loopTrees.emplace_back(std::move(subTree));
             subTree.clear();
         }
+    }
+    void dumpAllMemAccess(llvm::ArrayRef<LoopTree> loopTrees) const {
+        for (auto &mem : memAccesses)
+            SHOWLN(mem);
+        for (auto id : subLoops)
+            loopTrees[id].dumpAllMemAccess(loopTrees);
     }
 };

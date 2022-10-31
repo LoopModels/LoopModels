@@ -78,7 +78,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         builder.CreateGEP(Float64, ptrB,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),
         llvm::MaybeAlign(8));
-    auto Astore0 = builder.CreateAlignedStore(
+    llvm::StoreInst *Astore0 = builder.CreateAlignedStore(
         Bload,
         builder.CreateGEP(Float64, ptrA,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),

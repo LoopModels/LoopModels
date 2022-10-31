@@ -85,6 +85,11 @@ struct ArrayReference {
                    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
         : basePointer(basePointer), loop(loop),
           symbolicOffsets(std::move(symbolicOffsets)){};
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
+                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
+        : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
+          symbolicOffsets(std::move(symbolicOffsets)){};
 
     void resize(size_t d) {
         sizes.resize(d);
@@ -118,19 +123,24 @@ struct ArrayReference {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const ArrayReference &ar) {
-        os << "ArrayReference " << ar.basePointer << " (dim = " << ar.arrayDim()
-           << "):\n";
+        os << "ArrayReference " << *ar.basePointer
+           << " (dim = " << ar.arrayDim();
+        if (ar.sizes.size())
+            os << ", element size: " << *ar.sizes.back();
+        os << "):\n";
         PtrMatrix<int64_t> A{ar.indexMatrix()};
         SHOW(A.numRow());
         CSHOWLN(A.numCol());
+        os << "Sizes: [";
+        if (ar.sizes.size()) {
+            os << " unknown";
+            for (ptrdiff_t i = 0; i < ptrdiff_t(A.numCol()) - 1; ++i)
+                os << ", " << *ar.sizes[i];
+        }
+        os << " ]\nSubscripts: [ ";
         for (size_t i = 0; i < A.numCol(); ++i) {
-            auto &stride = ar.sizes[i];
-            assert(!isZero(stride));
-            bool strideIsOne = stride->isOne();
             if (i)
-                os << "+";
-            if (!strideIsOne)
-                os << *stride << " * ( ";
+                os << ", ";
             bool printPlus = false;
             for (size_t j = 0; j < A.numRow(); ++j) {
                 if (int64_t Aji = A(j, i)) {
@@ -169,10 +179,8 @@ struct ArrayReference {
                     printPlus = true;
                 }
             }
-            if (!strideIsOne)
-                os << " )";
         }
-        return os;
+        return os << "]";
     }
     // use gcd to check if they're known to be independent
     bool gcdKnownIndependent(const ArrayReference &) const {
