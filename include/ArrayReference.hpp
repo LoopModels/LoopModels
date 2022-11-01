@@ -123,8 +123,10 @@ struct ArrayReference {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const ArrayReference &ar) {
+        SHOWLN(ar.indexMatrix());
         os << "ArrayReference " << *ar.basePointer
-           << " (dim = " << ar.arrayDim();
+           << " (dim = " << ar.arrayDim()
+           << ", num loops: " << ar.getNumLoops();
         if (ar.sizes.size())
             os << ", element size: " << *ar.sizes.back();
         os << "):\n";
@@ -138,23 +140,23 @@ struct ArrayReference {
                 os << ", " << *ar.sizes[i];
         }
         os << " ]\nSubscripts: [ ";
+        size_t numLoops = A.numRow();
         for (size_t i = 0; i < A.numCol(); ++i) {
             if (i)
                 os << ", ";
             bool printPlus = false;
-            for (size_t j = 0; j < A.numRow(); ++j) {
+            for (size_t j = numLoops; j-- > 0; ) {
                 if (int64_t Aji = A(j, i)) {
                     if (printPlus) {
-                        if (Aji > 0) {
-                            os << " + ";
-                        } else {
+                        if (Aji <= 0) {
                             Aji *= -1;
                             os << " - ";
-                        }
+                        } else
+                            os << " + ";
                     }
                     if (Aji != 1)
                         os << Aji << '*';
-                    os << "i_" << j << " ";
+                    os << "i_" << numLoops - j - 1 << " ";
                     printPlus = true;
                 }
             }
@@ -162,20 +164,18 @@ struct ArrayReference {
             for (size_t j = 0; j < offs.numCol(); ++j) {
                 if (int64_t offij = offs(i, j)) {
                     if (printPlus) {
-                        if (offij > 0) {
-                            os << " + ";
-                        } else {
+                        if (offij <= 0) {
                             offij *= -1;
                             os << " - ";
-                        }
+                        } else
+                            os << " + ";
                     }
                     if (j) {
                         if (offij != 1)
                             os << offij << '*';
                         os << ar.loop->symbols[j - 1];
-                    } else {
+                    } else
                         os << offij;
-                    }
                     printPlus = true;
                 }
             }
