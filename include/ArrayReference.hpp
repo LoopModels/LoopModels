@@ -30,19 +30,15 @@ struct ArrayReference {
     // llvm::Optional<IntMatrix>
     //     offsets; // symbolicOffsets * (loop->symbols)
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
+    [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
+        symbolicOffsets;
     [[no_unique_address]] unsigned rank;
-    [[no_unique_address]] bool hasSymbolicOffsets; // normal case is not to
 
-    ArrayReference() = default;
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
-                   llvm::ArrayRef<const llvm::SCEV *> subscripts);
+    ArrayReference() = delete;
 
     size_t arrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
-    size_t getNumSymbols() const {
-        return hasSymbolicOffsets ? loop->getNumSymbols() : 1;
-    }
+    size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
     // 	return dim*numLoops +
     // }
@@ -72,38 +68,49 @@ struct ArrayReference {
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
         : basePointer(a.basePointer), loop(a.loop), sizes(a.sizes),
-          indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
+          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest *loop,
                    PtrMatrix<int64_t> newInds)
         : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
-          indices(a.indices.size()), hasSymbolicOffsets(a.hasSymbolicOffsets) {
+          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
     ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop)
         : basePointer(basePointer), loop(loop){};
     ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop)
         : basePointer(basePointer), loop(&loop){};
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
+        : basePointer(basePointer), loop(loop),
+          symbolicOffsets(std::move(symbolicOffsets)){};
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
+                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
+        : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
+          symbolicOffsets(std::move(symbolicOffsets)){};
 
     void resize(size_t d) {
         sizes.resize(d);
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
-                   size_t dim, bool hasSymbolicOffsets = false)
+    ArrayReference(
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop, size_t dim,
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(loop),
-          hasSymbolicOffsets(hasSymbolicOffsets) {
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop,
-                   size_t dim, bool hasSymbolicOffsets = false)
+    ArrayReference(
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop, size_t dim,
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(&loop),
-          hasSymbolicOffsets(hasSymbolicOffsets) {
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }
-    bool allConstantIndices() const { return !hasSymbolicOffsets; }
+    bool allConstantIndices() const { return symbolicOffsets.size() == 0; }
     // Assumes strides and offsets are sorted
     bool sizesMatch(const ArrayReference &x) const {
         if (arrayDim() != x.arrayDim())
@@ -116,33 +123,40 @@ struct ArrayReference {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const ArrayReference &ar) {
-        os << "ArrayReference " << ar.basePointer << " (dim = " << ar.arrayDim()
-           << "):\n";
+        SHOWLN(ar.indexMatrix());
+        os << "ArrayReference " << *ar.basePointer
+           << " (dim = " << ar.arrayDim()
+           << ", num loops: " << ar.getNumLoops();
+        if (ar.sizes.size())
+            os << ", element size: " << *ar.sizes.back();
+        os << "):\n";
         PtrMatrix<int64_t> A{ar.indexMatrix()};
         SHOW(A.numRow());
         CSHOWLN(A.numCol());
+        os << "Sizes: [";
+        if (ar.sizes.size()) {
+            os << " unknown";
+            for (ptrdiff_t i = 0; i < ptrdiff_t(A.numCol()) - 1; ++i)
+                os << ", " << *ar.sizes[i];
+        }
+        os << " ]\nSubscripts: [ ";
+        size_t numLoops = A.numRow();
         for (size_t i = 0; i < A.numCol(); ++i) {
-            auto &stride = ar.sizes[i];
-            assert(!isZero(stride));
-            bool strideIsOne = stride->isOne();
             if (i)
-                os << "+";
-            if (!strideIsOne)
-                os << *stride << " * ( ";
+                os << ", ";
             bool printPlus = false;
-            for (size_t j = 0; j < A.numRow(); ++j) {
+            for (size_t j = numLoops; j-- > 0; ) {
                 if (int64_t Aji = A(j, i)) {
                     if (printPlus) {
-                        if (Aji > 0) {
-                            os << " + ";
-                        } else {
+                        if (Aji <= 0) {
                             Aji *= -1;
                             os << " - ";
-                        }
+                        } else
+                            os << " + ";
                     }
                     if (Aji != 1)
                         os << Aji << '*';
-                    os << "i_" << j << " ";
+                    os << "i_" << numLoops - j - 1 << " ";
                     printPlus = true;
                 }
             }
@@ -150,27 +164,23 @@ struct ArrayReference {
             for (size_t j = 0; j < offs.numCol(); ++j) {
                 if (int64_t offij = offs(i, j)) {
                     if (printPlus) {
-                        if (offij > 0) {
-                            os << " + ";
-                        } else {
+                        if (offij <= 0) {
                             offij *= -1;
                             os << " - ";
-                        }
+                        } else
+                            os << " + ";
                     }
                     if (j) {
                         if (offij != 1)
                             os << offij << '*';
                         os << ar.loop->symbols[j - 1];
-                    } else {
+                    } else
                         os << offij;
-                    }
                     printPlus = true;
                 }
             }
-            if (!strideIsOne)
-                os << " )";
         }
-        return os;
+        return os << "]";
     }
     // use gcd to check if they're known to be independent
     bool gcdKnownIndependent(const ArrayReference &) const {

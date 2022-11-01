@@ -1374,14 +1374,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
 };
 
-llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
-    if (m.isLoad)
-        os << "= ";
-    os << "ArrayReference:\n" << m.ref;
-    if (!m.isLoad)
-        os << " =";
-    return os;
-}
 template <> struct std::iterator_traits<LoopBlock::Graph> {
     using difference_type = ptrdiff_t;
     using iterator_category = std::forward_iterator_tag;
