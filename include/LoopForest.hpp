@@ -71,8 +71,10 @@ enum class BBChain {
 };
 [[maybe_unused]] static BBChain allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-    llvm::SmallVectorImpl<const llvm::BasicBlock *> &path,
-    const llvm::BasicBlock *BBsrc, const llvm::BasicBlock *BBdst) {
+    llvm::SmallVectorImpl<llvm::BasicBlock *> &path, llvm::BasicBlock *BBsrc,
+    llvm::BasicBlock *BBdst) {
+    llvm::errs() << "allForwardPathsReached BBsrc = " << *BBsrc
+                 << "\nBBdst = " << *BBdst << "\n\n";
     if (BBsrc == BBdst) {
         path.push_back(BBsrc);
         return BBChain::reached;
@@ -103,28 +105,33 @@ enum class BBChain {
                 return BBChain::divergence;
             } else
                 return BBChain::unknown;
-        }
-    } else if (const llvm::UnreachableInst *UI =
-                   llvm::dyn_cast<llvm::UnreachableInst>(term))
-        // TODO: add option to allow moving earlier?
-        return BBChain::unreachable;
-
+        } else if (const llvm::UnreachableInst *UI =
+                       llvm::dyn_cast<llvm::UnreachableInst>(term))
+            // TODO: add option to allow moving earlier?
+            return BBChain::unreachable;
+        else if (const llvm::ReturnInst *RI =
+                     llvm::dyn_cast<llvm::ReturnInst>(term))
+            return BBChain::returned;
+    }
+    llvm::errs() << "\nReturning unknown\n";
     return BBChain::unknown;
 }
 [[maybe_unused]] static bool allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-    llvm::SmallVectorImpl<const llvm::BasicBlock *> &path,
-    llvm::ArrayRef<llvm::BasicBlock *> BBsrc, const llvm::BasicBlock *BBdst) {
+    llvm::SmallVectorImpl<llvm::BasicBlock *> &path,
+    llvm::ArrayRef<llvm::BasicBlock *> BBsrc, llvm::BasicBlock *BBdst) {
     size_t reached = 0;
-    llvm::SmallVector<const llvm::BasicBlock *> pathBackup;
     for (auto &BB : BBsrc) {
         auto dst = allForwardPathsReach(visitedBBs, path, BB, BBdst);
         if (dst == BBChain::reached) {
             path.push_back(BB);
             ++reached;
-        } else if (dst != BBChain::unreachable)
+        } else if (dst != BBChain::unreachable) {
+            llvm::errs() << "failed because dst was: " << size_t(dst) << "\n";
             return false;
+        }
     }
+    SHOWLN(reached);
     std::ranges::reverse(path);
     // TODO: handle divergences
     return reached == 1;
@@ -141,7 +148,7 @@ struct LoopTree {
 
     // in addition to requiring simplify form, we require a single exit block
     [[no_unique_address]] llvm::SmallVector<
-        llvm::SmallVector<const llvm::BasicBlock *, 2>>
+        llvm::SmallVector<llvm::BasicBlock *, 2>>
         paths;
     [[no_unique_address]] AffineLoopNest affineLoop;
     [[no_unique_address]] unsigned parentLoop{
@@ -150,22 +157,19 @@ struct LoopTree {
 
     bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
 
-    LoopTree(
-        llvm::SmallVector<unsigned> sL,
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths)
+    LoopTree(llvm::SmallVector<unsigned> sL,
+             llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths)
         : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
 
-    LoopTree(
-        llvm::Loop *L, llvm::SmallVector<unsigned> sL, const llvm::SCEV *BT,
-        llvm::ScalarEvolution &SE,
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths)
+    LoopTree(llvm::Loop *L, llvm::SmallVector<unsigned> sL,
+             const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
+             llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(L, BT, SE),
           parentLoop(std::numeric_limits<unsigned>::max()) {}
 
-    LoopTree(
-        llvm::Loop *L, AffineLoopNest aln, llvm::SmallVector<unsigned> sL,
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths)
+    LoopTree(llvm::Loop *L, AffineLoopNest aln, llvm::SmallVector<unsigned> sL,
+             llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(std::move(aln)),
           parentLoop(std::numeric_limits<unsigned>::max()) {}
@@ -205,7 +209,7 @@ struct LoopTree {
     void addZeroLowerBounds(llvm::MutableArrayRef<LoopTree> loopTrees,
                             llvm::DenseMap<llvm::Loop *, unsigned> &loopMap,
                             unsigned myId) {
-        SHOWLN(this);
+        // SHOWLN(this);
         // SHOWLN(affineLoop.A);
         affineLoop.addZeroLowerBounds();
         for (auto tid : subLoops) {
@@ -232,7 +236,8 @@ struct LoopTree {
         llvm::BasicBlock *H = L->getHeader();
         llvm::BasicBlock *E = L->getExitingBlock();
         bool anyFail = (E == nullptr) || (!L->isLoopSimplifyForm());
-        pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E, anyFail);
+        return pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E,
+                        anyFail);
     }
     static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
                            llvm::SmallVector<unsigned> &forests,
@@ -250,16 +255,22 @@ struct LoopTree {
         // the one we don't discard.
         //
         // approach:
+        if (L){
+            llvm::errs() << "Current pushBack depth = " << L->getLoopDepth()
+                         << "\n";
+	    SHOWLN(*L);
+        }else
+            llvm::errs() << "Current pushBack depth = toplevel\n";
         llvm::SmallVector<unsigned> subForest;
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths;
-        llvm::SmallVector<const llvm::BasicBlock *, 2> path;
+        llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths;
+        llvm::SmallVector<llvm::BasicBlock *, 2> path;
         size_t interiorDepth0 = 0;
         llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
         llvm::BasicBlock *finalStart;
         if (size_t numSubLoops = subLoops.size()) {
             llvm::SmallVector<llvm::BasicBlock *> exitBlocks;
             exitBlocks.push_back(H);
-            llvm::BasicBlock *PB = H;
+            // llvm::BasicBlock *PB = H;
             llvm::Loop *P = nullptr;
             for (size_t i = 0; i < numSubLoops; ++i) {
                 llvm::Loop *N = subLoops[i];
@@ -272,6 +283,8 @@ struct LoopTree {
                     visitedBBs.clear();
                 }
                 // find back from prev exit blocks to preheader of next
+		// llvm::errs() << ""
+		SHOWLN(*N);
                 llvm::BasicBlock *PH = N->getLoopPreheader();
                 // exit block might == header block of next loop!
                 // equivalently, exiting block of one loop may be preheader of
@@ -279,6 +292,7 @@ struct LoopTree {
                 if (((exitBlocks.size() != 1) ||
                      (N->getHeader() != exitBlocks.front())) &&
                     (!allForwardPathsReach(visitedBBs, path, exitBlocks, PH))) {
+                    llvm::errs() << "path failed for loop :" << *N << "\n";
                     P = nullptr;
                     anyFail = true;
                     split(loopTrees, forests, subForest, paths, subLoops, i);
@@ -286,7 +300,7 @@ struct LoopTree {
                     if (i + 1 < numSubLoops)
                         exitBlocks.push_back(
                             subLoops[i + 1]->getLoopPreheader());
-                    llvm::SmallVector<const llvm::BasicBlock *, 2> vexit{
+                    llvm::SmallVector<llvm::BasicBlock *, 2> vexit{
                         N->getLoopPreheader()};
                     paths.push_back(std::move(vexit));
                 } else {
@@ -296,6 +310,7 @@ struct LoopTree {
                 path.clear();
                 size_t itDepth = pushBack(loopTrees, forests, subForest, N, SE);
                 if (itDepth == 0) {
+                    llvm::errs() << "recursion failed for loop :" << *N << "\n";
                     P = nullptr;
                     anyFail = true;
                     // subForest.size() == 0 if we just hit the
@@ -348,16 +363,18 @@ struct LoopTree {
         return invalid(loopTrees, forests, subForest, paths, subLoops);
     }
 
-    [[maybe_unused]] static size_t invalid(
-        llvm::SmallVectorImpl<LoopTree> &loopTrees,
-        llvm::SmallVectorImpl<unsigned> &trees,
-        llvm::SmallVector<unsigned> &subTree,
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths,
-        const std::vector<llvm::Loop *> &subLoops) {
-        assert(subTree.size() == paths.size());
+    [[maybe_unused]] static size_t
+    invalid(llvm::SmallVectorImpl<LoopTree> &loopTrees,
+            llvm::SmallVectorImpl<unsigned> &trees,
+            llvm::SmallVector<unsigned> &subTree,
+            llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths,
+            const std::vector<llvm::Loop *> &subLoops) {
         if (subTree.size()) {
+            // SHOW(subTree.size());
+            // CSHOWLN(paths.size());
+            assert(subTree.size() == paths.size());
             if (llvm::BasicBlock *exit = subLoops.back()->getExitingBlock()) {
-                llvm::SmallVector<const llvm::BasicBlock *, 2> vexit{exit};
+                llvm::SmallVector<llvm::BasicBlock *, 2> vexit{exit};
                 paths.emplace_back(vexit);
                 trees.push_back(loopTrees.size());
                 loopTrees.emplace_back(std::move(subTree), std::move(paths));
@@ -369,24 +386,29 @@ struct LoopTree {
     split(llvm::SmallVectorImpl<LoopTree> &loopTrees,
           llvm::SmallVectorImpl<unsigned> &trees,
           llvm::SmallVector<unsigned> &subTree,
-          llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>>
-              paths) {
+          llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths) {
         if (subTree.size()) {
+            // SHOW(subTree.size());
+            // CSHOWLN(paths.size());
+            assert(1 + subTree.size() == paths.size());
             trees.push_back(loopTrees.size());
             loopTrees.emplace_back(std::move(subTree), std::move(paths));
             subTree.clear();
             paths.clear();
         }
     }
-    [[maybe_unused]] static void split(
-        llvm::SmallVectorImpl<LoopTree> &loopTrees,
-        llvm::SmallVectorImpl<unsigned> &trees,
-        llvm::SmallVector<unsigned> &subTree,
-        llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths,
-        const std::vector<llvm::Loop *> &subLoops, size_t i) {
+    [[maybe_unused]] static void
+    split(llvm::SmallVectorImpl<LoopTree> &loopTrees,
+          llvm::SmallVectorImpl<unsigned> &trees,
+          llvm::SmallVector<unsigned> &subTree,
+          llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>> paths,
+          const std::vector<llvm::Loop *> &subLoops, size_t i) {
         if (i && subTree.size()) {
             if (llvm::BasicBlock *exit = subLoops[--i]->getExitingBlock()) {
-                llvm::SmallVector<const llvm::BasicBlock *, 2> vexit{exit};
+                // SHOW(subTree.size());
+                // CSHOWLN(paths.size());
+                assert(subTree.size() == paths.size());
+                llvm::SmallVector<llvm::BasicBlock *, 2> vexit{exit};
                 paths.push_back(std::move(vexit));
                 trees.push_back(loopTrees.size());
                 loopTrees.emplace_back(std::move(subTree), std::move(paths));
