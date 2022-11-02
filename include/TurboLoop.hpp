@@ -2,6 +2,7 @@
 
 #include "./ArrayReference.hpp"
 #include "./IntegerMap.hpp"
+#include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
 #include "./Macro.hpp"
@@ -9,7 +10,6 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "LoopBlock.hpp"
 #include <algorithm>
 #include <bit>
 #include <cstddef>
@@ -46,7 +46,7 @@
 #include <utility>
 
 [[maybe_unused]] static size_t countNumLoopsPlusLeaves(const llvm::Loop *L) {
-    auto subLoops = L->getSubLoops();
+    const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
     if (subLoops.size() == 0)
         return 1;
     size_t numLoops = subLoops.size();
@@ -106,9 +106,30 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<unsigned> forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
-        for (auto &L : llvm::reverse(*LI))
-            LoopTree::pushBack(loopTrees, loopForests, forest, L, *SE);
-        LoopTree::invalid(loopTrees, loopForests, forest);
+        std::vector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
+                                        llvm::reverse(*LI).end()};
+        if (revLI.empty())
+            return;
+        llvm::BasicBlock *E = revLI.back()->getExitingBlock();
+        while (!E) {
+            revLI.pop_back();
+            if (revLI.empty())
+                return;
+            llvm::BasicBlock *E = revLI.back()->getExitingBlock();
+        }
+        llvm::BasicBlock *H = revLI.front()->getLoopPreheader();
+        while (!H) {
+            revLI.erase(revLI.begin());
+            if (revLI.empty())
+                return;
+            llvm::BasicBlock *H = revLI.front()->getLoopPreheader();
+        }
+
+        LoopTree::pushBack(loopTrees, loopForests, forest, nullptr, *SE, revLI,
+                           H, E, true);
+        // for (auto &L : llvm::reverse(*LI))
+        //     LoopTree::pushBack(loopTrees, loopForests, forest, L, *SE);
+        // LoopTree::invalid(loopTrees, loopForests, forest);
         // for (auto &lt : loopTrees)
         // SHOWLN(lt.affineLoop.A);
         for (auto &forest : loopForests)
@@ -366,6 +387,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         SHOW(Bt.numRow());
         CSHOWLN(Bt.numCol());
         ref.offsetMatrix() = Bt;
+        // TODO:
+        //  1. set schedule
+        //  2. update schedule, array ref, and offsets when pruning failed loops
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *ref.sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";
@@ -441,13 +465,33 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     bool parseBB(llvm::BasicBlock *BB) {
         return parseBB(LI->getLoopFor(BB), BB);
     }
-    void parseLoop(llvm::Loop *L) {
+    void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
+        omega.push_back(0);
+        llvm::Loop *L = LT.loop;
+        // now we walk blocks
+
+        auto &subLoops = L->getSubLoops();
+        for (size_t i = 0; i < subLoops.size(); ++i) {
+        }
         for (auto &BB : L->getBlocks()) {
             llvm::Loop *P = LI->getLoopFor(BB);
             if (parseBB(P, BB))
                 conditionOnLoop(P);
         }
     }
+    void parseNest() {
+        llvm::SmallVector<unsigned> omega;
+        for (auto forestID : loopForests) {
+            omega.resize(1);
+            auto &forest = loopTrees[forestID];
+            for (size_t i = 0; i < forest.size(); ++i) {
+                omega.front() = i;
+                parseLoop(loopTrees[forest.subLoops[i]], omega);
+            }
+            omega.clear();
+        }
+    }
+
     // bool parseLoop(llvm::Loop *L) {
     //     for (auto &BB : L->getBlocks()) {
     //         llvm::Loop *P = LI->getLoopFor(BB);

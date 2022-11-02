@@ -50,12 +50,12 @@ struct ScheduledNode {
     // llvm::SmallVector<MemoryAccess*> memory;
     // static constexpr uint32_t PHISCHEDULEDFLAG =
     //     std::numeric_limits<uint32_t>::max();
-    uint32_t phiOffset{0};   // used in LoopBlock
-    uint32_t omegaOffset{0}; // used in LoopBlock
-    uint32_t carriedDependence{0};
-    uint8_t numLoops{0};
-    uint8_t rank{0};
-    bool visited{false};
+    [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
+    [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
+    [[no_unique_address]] uint32_t carriedDependence{0};
+    [[no_unique_address]] uint8_t numLoops{0};
+    [[no_unique_address]] uint8_t rank{0};
+    [[no_unique_address]] bool visited{false};
     bool wasVisited() const { return visited; }
     void visit() { visited = true; }
     void unVisit() { visited = false; }
