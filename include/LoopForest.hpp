@@ -241,7 +241,15 @@ struct LoopTree {
                            const std::vector<llvm::Loop *> &subLoops,
                            llvm::BasicBlock *H, llvm::BasicBlock *E,
                            bool anyFail) {
-
+        // how to avoid double counting? Probably shouldn't be an issue:
+        // can have an empty BB vector;
+        // when splitting, we're in either scenario:
+        // 1. We keep both loops but split because we don't have a direct path
+        // -- not the case here!
+        // 2. We're discarding one LoopTree; thus no duplication, give the BB to
+        // the one we don't discard.
+        //
+        // approach:
         llvm::SmallVector<unsigned> subForest;
         llvm::SmallVector<llvm::SmallVector<const llvm::BasicBlock *, 2>> paths;
         llvm::SmallVector<const llvm::BasicBlock *, 2> path;
@@ -265,7 +273,12 @@ struct LoopTree {
                 }
                 // find back from prev exit blocks to preheader of next
                 llvm::BasicBlock *PH = N->getLoopPreheader();
-                if (!allForwardPathsReach(visitedBBs, path, exitBlocks, PH)) {
+                // exit block might == header block of next loop!
+                // equivalently, exiting block of one loop may be preheader of
+                // next! but we compare exit block with header here
+                if (((exitBlocks.size() != 1) ||
+                     (N->getHeader() != exitBlocks.front())) &&
+                    (!allForwardPathsReach(visitedBBs, path, exitBlocks, PH))) {
                     P = nullptr;
                     anyFail = true;
                     split(loopTrees, forests, subForest, paths, subLoops, i);

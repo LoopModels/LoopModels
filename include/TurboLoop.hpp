@@ -560,6 +560,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             llvm::errs() << ", " << id;
         llvm::errs() << "\n";
         if (friendLoops.front() != LTID) {
+            // we're cutting off the front
             size_t numFriendLoops = friendLoops.size();
             assert(numFriendLoops);
             size_t loopIndex = 0;
@@ -572,19 +573,31 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             assert(loopIndex);
             size_t j = loopIndex + 1;
             if (j != numFriendLoops) {
+                // we have some remaining paths we split off
                 llvm::SmallVector<unsigned> tmp;
                 tmp.reserve(numFriendLoops - j);
+                // for paths, we're dropping LT
+                // thus, our paths are paths(_(0,j)), paths(_(j,end))
+                llvm::SmallVector<
+                    llvm::SmallVector<const llvm::BasicBlock *, 2>>
+                    paths;
+                paths.reserve(numFriendLoops - loopIndex);
                 for (size_t i = j; i < numFriendLoops; ++i) {
                     peelOuterLoops(loopTrees[friendLoops[i]], numLoops - 1);
                     tmp.push_back(friendLoops[i]);
+                    paths.push_back(std::move(PT.paths[i]));
                 }
+                paths.push_back(std::move(PT.paths[numFriendLoops]));
                 loopForests.push_back(loopTrees.size());
-		// TODO: split paths
-                loopTrees.emplace_back(std::move(tmp));
+                // TODO: split paths
+                loopTrees.emplace_back(std::move(tmp), std::move(paths));
             }
             friendLoops.truncate(loopIndex);
-        } else
+            PT.paths.truncate(j);
+        } else {
             friendLoops.erase(friendLoops.begin());
+            PT.paths.erase(PT.paths.begin());
+        }
         conditionOnLoop(PT, PTID);
     }
 
