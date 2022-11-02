@@ -579,6 +579,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     tmp.push_back(friendLoops[i]);
                 }
                 loopForests.push_back(loopTrees.size());
+		// TODO: split paths
                 loopTrees.emplace_back(std::move(tmp));
             }
             friendLoops.truncate(loopIndex);

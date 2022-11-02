@@ -247,6 +247,7 @@ struct LoopTree {
         llvm::SmallVector<const llvm::BasicBlock *, 2> path;
         size_t interiorDepth0 = 0;
         llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
+        llvm::BasicBlock *finalStart;
         if (size_t numSubLoops = subLoops.size()) {
             llvm::SmallVector<llvm::BasicBlock *> exitBlocks;
             exitBlocks.push_back(H);
@@ -303,13 +304,14 @@ struct LoopTree {
             if (anyFail)
                 return invalid(loopTrees, forests, subForest, paths, subLoops);
             assert(subForest.size());
-        }
+            finalStart = subLoops.back()->getExitBlock();
+        } else
+            finalStart = H;
         if (subForest.size()) { // add subloops
             AffineLoopNest &subNest = loopTrees[subForest.front()].affineLoop;
             if (subNest.getNumLoops() > 1) {
-                if (allForwardPathsReach(visitedBBs, path,
-                                         subLoops.back()->getExitBlock(),
-                                         E) == BBChain::reached) {
+                if (allForwardPathsReach(visitedBBs, path, finalStart, E) ==
+                    BBChain::reached) {
                     branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
                     loopTrees.emplace_back(L, subNest.removeInnerMost(),
@@ -320,9 +322,8 @@ struct LoopTree {
             }
         } else if (auto BT = SE.getBackedgeTakenCount(L)) {
             if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
-                if (allForwardPathsReach(visitedBBs, path,
-                                         subLoops.back()->getExitBlock(),
-                                         E) == BBChain::reached) {
+                if (allForwardPathsReach(visitedBBs, path, finalStart, E) ==
+                    BBChain::reached) {
                     branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
                     loopTrees.emplace_back(L, std::move(subForest), BT, SE,
