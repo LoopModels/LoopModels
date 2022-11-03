@@ -10,6 +10,7 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
+#include "Predicate.hpp"
 #include <algorithm>
 #include <bit>
 #include <cstddef>
@@ -283,8 +284,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
     // TODO: support top level array refs
-    llvm::Optional<ArrayReference>
-    arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize) {
+    llvm::Optional<ArrayReference> arrayRef(LoopTree &LT,
+                                            llvm::Instruction *ptr,
+                                            Predicates &pred,
+                                            const llvm::SCEV *elSize) {
         llvm::Loop *L = LT.loop;
         // const llvm::SCEV *scev = SE->getSCEV(ptr);
         // code modified from
@@ -318,7 +321,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         AffineLoopNest &aln = loopTrees[loopMap[L]].affineLoop;
         if (sizes.size() == 0)
             return ArrayReference(basePointer, &aln, std::move(sizes),
-                                  std::move(subscripts));
+                                  std::move(subscripts), pred);
         size_t numLoops{aln.getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
@@ -378,7 +381,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             Rt.truncateCols(numLoops - numExtraLoopsToPeel);
         }
         ArrayReference ref(basePointer, &aln, std::move(sizes),
-                           std::move(symbolicOffsets));
+                           std::move(symbolicOffsets), pred);
         ref.resize(subscripts.size());
         ref.indexMatrix() = Rt.transpose();
         // SHOWLN(symbolicOffsets.size());
@@ -405,7 +408,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
     LoopTree &getLoopTree(llvm::Loop *L) { return getLoopTree(loopMap[L]); }
-    bool addLoad(LoopTree &LT, llvm::LoadInst *I) {
+    bool addLoad(LoopTree &LT, Predicates &pred, llvm::LoadInst *I) {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -414,7 +417,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, elSize)) {
+                        arrayRef(LT, iptr, pred, elSize)) {
                     LT.memAccesses.emplace_back(*re, I, true);
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
@@ -426,7 +429,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return false;
     }
-    bool addStore(LoopTree &LT, llvm::StoreInst *I) {
+    bool addStore(LoopTree &LT, Predicates &pred, llvm::StoreInst *I) {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -435,7 +438,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, elSize)) {
+                        arrayRef(LT, iptr, pred, elSize)) {
                     LT.memAccesses.emplace_back(*re, I, false);
                     llvm::errs() << "Succesfully added store\n"
                                  << LT.memAccesses.back() << "\n";
@@ -448,23 +451,24 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return false;
     }
 
-    bool parseBB(llvm::Loop *L, llvm::BasicBlock *BB,
+    bool parseBB(llvm::Loop *L, llvm::BasicBlock *BB, Predicates &pred,
                  llvm::SmallVector<unsigned> &omega) {
         LoopTree &LT = getLoopTree(L);
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
-                    if (addLoad(LT, LI))
+                    if (addLoad(LT, pred, LI))
                         return true;
             } else if (I.mayWriteToMemory())
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
-                    if (addStore(LT, SI))
+                    if (addStore(LT, pred, SI))
                         return true;
         }
         return false;
     }
-    bool parseBB(llvm::BasicBlock *BB, llvm::SmallVector<unsigned> &omega) {
-        return parseBB(LI->getLoopFor(BB), BB, omega);
+    bool parseBB(llvm::BasicBlock *BB, Predicates &pred,
+                 llvm::SmallVector<unsigned> &omega) {
+        return parseBB(LI->getLoopFor(BB), BB, pred, omega);
     }
     void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
         omega.push_back(0);
@@ -474,12 +478,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
         // auto &subLoops = L->getSubLoops();
         for (size_t i = 0; i < LT.subLoops.size(); ++i) {
-            for (auto BB : LT.paths[i])
-                parseBB(BB, omega);
+            for (auto &&PBB : LT.paths[i])
+                parseBB(PBB.basicBlock, PBB.predicates, omega);
             parseLoop(loopTrees[LT.subLoops[i]], omega);
         }
-        for (auto BB : LT.paths.back())
-            parseBB(BB, omega);
+        for (auto PBB : LT.paths.back())
+            parseBB(PBB.basicBlock, PBB.predicates, omega);
         omega.pop_back();
     }
     void parseNest() {
@@ -581,8 +585,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 tmp.reserve(numFriendLoops - j);
                 // for paths, we're dropping LT
                 // thus, our paths are paths(_(0,j)), paths(_(j,end))
-                llvm::SmallVector<llvm::SmallVector<llvm::BasicBlock *, 2>>
-                    paths;
+                llvm::SmallVector<PredicatedChain> paths;
                 paths.reserve(numFriendLoops - loopIndex);
                 for (size_t i = j; i < numFriendLoops; ++i) {
                     peelOuterLoops(loopTrees[friendLoops[i]], numLoops - 1);
