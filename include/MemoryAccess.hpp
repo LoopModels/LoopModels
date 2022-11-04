@@ -26,11 +26,16 @@ struct MemoryAccess {
     [[no_unique_address]] bool isLoad;
     MemoryAccess(ArrayReference ref, llvm::Instruction *user, Schedule schedule,
                  bool isLoad)
-        : ref(std::move(ref)), user(user), schedule(schedule),
+        : ref(std::move(ref)), user(user), schedule(std::move(schedule)),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     MemoryAccess(ArrayReference ref, llvm::Instruction *user, bool isLoad)
         : ref(std::move(ref)), user(user),
+          edgesIn(llvm::SmallVector<unsigned>()),
+          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
+                 llvm::ArrayRef<unsigned> omega, bool isLoad)
+        : ref(std::move(ref)), user(user), schedule(omega),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     // MemoryAccess(const MemoryAccess &MA) = default;

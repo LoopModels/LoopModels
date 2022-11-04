@@ -13,6 +13,8 @@
 #include "Predicate.hpp"
 #include <algorithm>
 #include <bit>
+#include <bits/iterator_concepts.h>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -408,7 +410,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
     LoopTree &getLoopTree(llvm::Loop *L) { return getLoopTree(loopMap[L]); }
-    bool addLoad(LoopTree &LT, Predicates &pred, llvm::LoadInst *I) {
+    bool addLoad(LoopTree &LT, Predicates &pred, llvm::LoadInst *I,
+                 llvm::SmallVector<unsigned> &omega) {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -417,8 +420,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
-                    LT.memAccesses.emplace_back(*re, I, true);
+		    arrayRef(LT, iptr, pred, elSize)) {
+		    SHOWLN(I);
+		    SHOWLN(*I);
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
+                    // LT.memAccesses.emplace_back(std::move(*re), I, true);
+		    SHOWLN(I);
+		    SHOWLN(*I);
+		    SHOWLN(LT.memAccesses.back().user);
+		    SHOWLN(*LT.memAccesses.back().user);
+		    incrementLast(omega);
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -429,7 +440,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return false;
     }
-    bool addStore(LoopTree &LT, Predicates &pred, llvm::StoreInst *I) {
+    bool addStore(LoopTree &LT, Predicates &pred, llvm::StoreInst *I,
+                  llvm::SmallVector<unsigned> &omega) {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -438,8 +450,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
-                    LT.memAccesses.emplace_back(*re, I, false);
+		    arrayRef(LT, iptr, pred, elSize)) {
+		    SHOWLN(I);
+		    SHOWLN(*I);
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega, false);
+                    // LT.memAccesses.emplace_back(std::move(*re), I, false);
+		    SHOWLN(I);
+		    SHOWLN(*I);
+		    SHOWLN(LT.memAccesses.back().user);
+		    SHOWLN(*LT.memAccesses.back().user);
+		    incrementLast(omega);
                     llvm::errs() << "Succesfully added store\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -451,36 +471,50 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return false;
     }
 
-    bool parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
+    void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
                  llvm::SmallVector<unsigned> &omega) {
-
+        omega.push_back(0);
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
-                    if (addLoad(LT, pred, LI))
-                        return true;
+                    if (addLoad(LT, pred, LI, omega))
+                        return omega.pop_back();
             } else if (I.mayWriteToMemory())
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
-                    if (addStore(LT, pred, SI))
-                        return true;
+                    if (addStore(LT, pred, SI, omega))
+                        return omega.pop_back();
         }
-        return false;
+        omega.pop_back();
     }
+    static llvm::SmallVector<unsigned> &
+    incrementLast(llvm::SmallVector<unsigned> &x) {
+        ++x.back();
+        return x;
+    }
+    // we fill omegas, we have loop pos only, not shifts
+    // pR: 0
+    // pL: 0
+    // pL: 0
+    //
+    // [0, 0]
     void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
         omega.push_back(0);
-
         // llvm::Loop *L = LT.loop;
         // now we walk blocks
-
         // auto &subLoops = L->getSubLoops();
         for (size_t i = 0; i < LT.subLoops.size(); ++i) {
             LoopTree &SLT = loopTrees[LT.subLoops[i]];
-            for (auto &&PBB : LT.paths[i])
+            for (auto &&PBB : LT.paths[i]) {
                 parseBB(SLT, PBB.basicBlock, PBB.predicates, omega);
+                //
+            }
             parseLoop(SLT, omega);
+            incrementLast(omega);
         }
-        for (auto PBB : LT.paths.back())
+        for (auto PBB : LT.paths.back()) {
             parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
+            // incrementLast(omega);
+        }
         omega.pop_back();
     }
     void parseNest() {

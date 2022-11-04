@@ -92,7 +92,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
 // TODO:
 // 1. see why L->contains(BBsrc) does not work; does it only contain BBs in it
 // directly, and not nested another loop deeper?
-// 2. ignore cycles for now; longer term TODO: ensure this is done correctly?
+// 2. We are ignoring cycles for now; we must ensure this is done correctly
 [[maybe_unused]] static BBChain allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,

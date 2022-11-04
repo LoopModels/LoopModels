@@ -22,7 +22,9 @@
 // then "i_0" for schedule "S_0" happens before
 // "i_1" for schedule "S_1"
 //
-constexpr unsigned requiredScheduleStorage(unsigned n) { return n * (n + 2) + 1; }
+constexpr unsigned requiredScheduleStorage(unsigned n) {
+    return n * (n + 2) + 1;
+}
 // n^2 + 2n + 1-s = 0
 // -1 + sqrt(1 - (1-s))
 // -1 + sqrt(s)
@@ -32,7 +34,8 @@ struct Schedule {
     // However, all odd columns of `Phi` are structually zero,
     // so we represent it with an `N x N` matrix instead.
     static constexpr unsigned maxStackLoops = 3;
-    static constexpr unsigned maxStackStorage = requiredScheduleStorage(maxStackLoops);
+    static constexpr unsigned maxStackStorage =
+        requiredScheduleStorage(maxStackLoops);
     // 3*3+ 2*3+1 = 16
     [[no_unique_address]] llvm::SmallVector<int64_t, maxStackStorage> data;
     [[no_unique_address]] uint8_t numLoops;
@@ -53,13 +56,17 @@ struct Schedule {
         getPhi().antiDiag() = 1;
     }
     Schedule() = default;
-    Schedule(size_t nLoops)
-        : data(llvm::SmallVector<int64_t, maxStackStorage>(
-              nLoops * (nLoops + 2) + 1)),
-          numLoops(nLoops) {
-        MutSquarePtrMatrix<int64_t> Phi(getPhi());
-        Phi.antiDiag() = 1;
+    Schedule(size_t nLoops) : numLoops(nLoops) {
+        data.resize(requiredScheduleStorage(nLoops));
+        getPhi().antiDiag() = 1;
     };
+    Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size()) {
+        data.resize(requiredScheduleStorage(numLoops));
+        getPhi().antiDiag() = 1;
+        MutPtrVector<int64_t> o{getOmega()};
+        for (size_t i = 0; i < omega.size(); ++i)
+            o[2 * i] = omega[i];
+    }
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
         return MutSquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
@@ -87,5 +94,3 @@ struct Schedule {
     }
     size_t getNumLoops() const { return numLoops; }
 };
-
-
