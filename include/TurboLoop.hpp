@@ -451,9 +451,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return false;
     }
 
-    bool parseBB(llvm::Loop *L, llvm::BasicBlock *BB, Predicates &pred,
+    bool parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
                  llvm::SmallVector<unsigned> &omega) {
-        LoopTree &LT = getLoopTree(L);
+
         for (llvm::Instruction &I : *BB) {
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
@@ -466,10 +466,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return false;
     }
-    bool parseBB(llvm::BasicBlock *BB, Predicates &pred,
-                 llvm::SmallVector<unsigned> &omega) {
-        return parseBB(LI->getLoopFor(BB), BB, pred, omega);
-    }
     void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
         omega.push_back(0);
 
@@ -478,12 +474,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
         // auto &subLoops = L->getSubLoops();
         for (size_t i = 0; i < LT.subLoops.size(); ++i) {
+            LoopTree &SLT = loopTrees[LT.subLoops[i]];
             for (auto &&PBB : LT.paths[i])
-                parseBB(PBB.basicBlock, PBB.predicates, omega);
-            parseLoop(loopTrees[LT.subLoops[i]], omega);
+                parseBB(SLT, PBB.basicBlock, PBB.predicates, omega);
+            parseLoop(SLT, omega);
         }
         for (auto PBB : LT.paths.back())
-            parseBB(PBB.basicBlock, PBB.predicates, omega);
+            parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
         omega.pop_back();
     }
     void parseNest() {
