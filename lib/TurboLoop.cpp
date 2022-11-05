@@ -81,6 +81,14 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 	for (auto treeID : loopTrees[forestID]) 
             loopTrees[treeID].dumpAllMemAccess(loopTrees);
     llvm::errs()<<"\nDone printing memory accesses\n";
+    for (auto forestID : loopForests){
+	fillLoopBlock(loopTrees[forestID]);
+	llvm::Optional<BitSet> optDeps = loopBlock.optimize();
+	SHOWLN(optDeps.hasValue());
+	llvm::errs() << loopBlock << "\n";
+	loopBlock.clear();
+    }
+	    
     // LoopBlock lblock;
     // for (auto forestID : loopForests) 
     //     for (auto treeID : loopTrees[forestID]) 

@@ -35,7 +35,10 @@ struct MemoryAccess {
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     MemoryAccess(ArrayReference ref, llvm::Instruction *user,
                  llvm::ArrayRef<unsigned> omega, bool isLoad)
-        : ref(std::move(ref)), user(user), schedule(omega),
+        : ref(std::move(ref)), user(user),
+          schedule(llvm::ArrayRef<unsigned>{omega.data() + omega.size() -
+                                                ref.getNumLoops(),
+                                            ref.getNumLoops()}),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     // MemoryAccess(const MemoryAccess &MA) = default;
@@ -57,6 +60,10 @@ struct MemoryAccess {
     PtrVector<int64_t> getSchedule(size_t loop) const {
         return schedule.getPhi()(loop, _);
     }
+    MemoryAccess *truncateSchedule() {
+        schedule.truncate(ref.getNumLoops());
+        return this;
+    }
 };
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
@@ -65,5 +72,6 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
     os << m.ref;
     if ((!m.isLoad) && m.user)
         os << " = " << *(m.user->getOperand(0));
+    os << "\nSchedule Omega: " << m.schedule.getOmega();
     return os;
 }

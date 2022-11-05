@@ -52,7 +52,7 @@ struct Schedule {
     [[no_unique_address]] int8_t unrolledOuter{-1};
     void init(size_t nLoops) {
         numLoops = nLoops;
-        data.resize(nLoops * (nLoops + 2) + 1);
+        data.resize(requiredScheduleStorage(nLoops));
         getPhi().antiDiag() = 1;
     }
     Schedule() = default;
@@ -62,10 +62,19 @@ struct Schedule {
     };
     Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size()) {
         data.resize(requiredScheduleStorage(numLoops));
-        getPhi().antiDiag() = 1;
+        // getPhi().antiDiag() = 1;
         MutPtrVector<int64_t> o{getOmega()};
         for (size_t i = 0; i < omega.size(); ++i)
             o[2 * i] = omega[i];
+    }
+    void truncate(size_t newNumLoops) {
+        size_t oOffset = 3*size_t(numLoops) - newNumLoops;
+        size_t nOffset = newNumLoops * newNumLoops;
+        for (size_t i = 0; i < newNumLoops; ++i) 
+            data[i + nOffset] = data[i + oOffset];
+        data.truncate(requiredScheduleStorage(newNumLoops));
+	numLoops = newNumLoops;
+        getPhi().antiDiag() = 1;
     }
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);

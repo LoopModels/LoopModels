@@ -509,11 +509,20 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 };
 
 struct Begin {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Begin) {
+        return os << 0;
+    }
 } begin;
 struct End {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, End) {
+        return os << "end";
+    }
 } end;
 struct OffsetBegin {
     size_t offset;
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, OffsetBegin r) {
+        return os << r.offset;
+    }
 };
 constexpr OffsetBegin operator+(size_t x, Begin) { return OffsetBegin{x}; }
 constexpr OffsetBegin operator+(Begin, size_t x) { return OffsetBegin{x}; }
@@ -525,6 +534,9 @@ inline OffsetBegin operator+(OffsetBegin y, size_t x) {
 }
 struct OffsetEnd {
     size_t offset;
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, OffsetEnd r) {
+        return os << "end - " << r.offset;
+    }
 };
 constexpr OffsetEnd operator-(End, size_t x) { return OffsetEnd{x}; }
 constexpr OffsetEnd operator-(OffsetEnd y, size_t x) {
@@ -567,6 +579,9 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     constexpr Iterator begin() const { return Iterator{b}; }
     constexpr E end() const { return e; }
     constexpr auto size() const { return e - b; }
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Range<B, E> r) {
+        return os << "[" << r.b << ":" << r.e << ")";
+    }
 };
 // template <typename B, typename E>
 // constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
@@ -733,12 +748,12 @@ template <typename T> struct MutPtrVector {
     }
     T &operator()(OffsetEnd oe) {
         assert(N);
-	assert(N>oe.offset);
+        assert(N > oe.offset);
         return mem[N - 1 - oe.offset];
     }
     const T &operator()(OffsetEnd oe) const {
         assert(N);
-	assert(N>oe.offset);
+        assert(N > oe.offset);
         return mem[N - 1 - oe.offset];
     }
     // copy constructor

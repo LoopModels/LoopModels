@@ -420,16 +420,16 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-		    arrayRef(LT, iptr, pred, elSize)) {
-		    SHOWLN(I);
-		    SHOWLN(*I);
+                        arrayRef(LT, iptr, pred, elSize)) {
+                    SHOWLN(I);
+                    SHOWLN(*I);
                     LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
                     // LT.memAccesses.emplace_back(std::move(*re), I, true);
-		    SHOWLN(I);
-		    SHOWLN(*I);
-		    SHOWLN(LT.memAccesses.back().user);
-		    SHOWLN(*LT.memAccesses.back().user);
-		    incrementLast(omega);
+                    SHOWLN(I);
+                    SHOWLN(*I);
+                    SHOWLN(LT.memAccesses.back().user);
+                    SHOWLN(*LT.memAccesses.back().user);
+                    incrementLast(omega);
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -450,16 +450,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-		    arrayRef(LT, iptr, pred, elSize)) {
-		    SHOWLN(I);
-		    SHOWLN(*I);
-                    LT.memAccesses.emplace_back(std::move(*re), I, omega, false);
+                        arrayRef(LT, iptr, pred, elSize)) {
+                    SHOWLN(I);
+                    SHOWLN(*I);
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega,
+                                                false);
                     // LT.memAccesses.emplace_back(std::move(*re), I, false);
-		    SHOWLN(I);
-		    SHOWLN(*I);
-		    SHOWLN(LT.memAccesses.back().user);
-		    SHOWLN(*LT.memAccesses.back().user);
-		    incrementLast(omega);
+                    SHOWLN(I);
+                    SHOWLN(*I);
+                    SHOWLN(LT.memAccesses.back().user);
+                    SHOWLN(*LT.memAccesses.back().user);
+                    incrementLast(omega);
                     llvm::errs() << "Succesfully added store\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -473,18 +474,24 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
     void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
                  llvm::SmallVector<unsigned> &omega) {
-        omega.push_back(0);
+        // omega.push_back(0);
+        llvm::errs() << "\nParsing BB: " << BB << "\n";
+        llvm::errs() << "omega = [" << omega.front();
+        for (size_t i = 1; i < omega.size(); ++i)
+            llvm::errs() << ", " << omega[i];
+        llvm::errs() << "]\n";
         for (llvm::Instruction &I : *BB) {
+            llvm::errs() << "Parsing Instr: " << I << "\n";
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
                     if (addLoad(LT, pred, LI, omega))
-                        return omega.pop_back();
+                        return;
             } else if (I.mayWriteToMemory())
                 if (llvm::StoreInst *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
                     if (addStore(LT, pred, SI, omega))
-                        return omega.pop_back();
+                        return;
         }
-        omega.pop_back();
+        // omega.pop_back();
     }
     static llvm::SmallVector<unsigned> &
     incrementLast(llvm::SmallVector<unsigned> &x) {
@@ -498,7 +505,21 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //
     // [0, 0]
     void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
+#ifndef NDEBUG
+        size_t numOmega = omega.size();
+        llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
+        // FIXME:
+        // two issues, currently:
+        // 1. multiple parses produce the same omega
+        // 2. we have the same BB showing up multiple times
+        // for (auto &&path : LT.paths)
+        //     for (auto PBB : path) {
+        //         assert(!paths.contains(PBB.basicBlock));
+        //         paths.insert(PBB.basicBlock);
+        //     }
+#endif
         omega.push_back(0);
+        assert(LT.subLoops.size() + 1 == LT.paths.size());
         // llvm::Loop *L = LT.loop;
         // now we walk blocks
         // auto &subLoops = L->getSubLoops();
@@ -516,6 +537,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             // incrementLast(omega);
         }
         omega.pop_back();
+#ifndef NDEBUG
+        assert(omega.size() == numOmega);
+#endif
     }
     void parseNest() {
         llvm::SmallVector<unsigned> omega;
@@ -671,5 +695,11 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (inst->mayReadOrWriteMemory())
                 return true;
         return false;
+    }
+    void fillLoopBlock(LoopTree &root) {
+        for (auto &&mem : root.memAccesses)
+            loopBlock.memory.push_back(mem.truncateSchedule());
+        for (size_t i = 0; i < root.subLoops.size(); ++i)
+            fillLoopBlock(loopTrees[root.subLoops[i]]);
     }
 };

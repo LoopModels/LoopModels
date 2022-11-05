@@ -868,6 +868,12 @@ struct Dependence {
         SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
         PtrVector<int64_t> xOmega = x.schedule.getOmega();
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
+	SHOWLN(x.user);
+	SHOWLN(y.user);
+	SHOWLN(*x.user);
+	SHOWLN(*y.user);
+	SHOWLN(xOmega);
+	SHOWLN(yOmega);
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();

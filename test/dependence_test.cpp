@@ -312,90 +312,50 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch2_0_0(2);
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
-    lblock.memory.emplace_back(BmnInd, nullptr, sch2_0_0, true);
-    // MemoryAccess &mSch2_0_0 = lblock.memory.back();
+    MemoryAccess mSch2_0_0(BmnInd, nullptr, sch2_0_0, true);
+    lblock.memory.push_back(&mSch2_0_0);
     sch2_0_1.getOmega()[4] = 1;
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_0_1, false);
-    // llvm::errs() << "Amn2Ind.loop->poset.delta.size() = "
-    //           << Amn2Ind.loop->poset.delta.size() << "\n";
-    // llvm::errs() << "lblock.memory.back().ref.loop->poset.delta.size() = "
-    //           << lblock.memory.back().ref.loop->poset.delta.size() <<
-    //           "\n";
-    MemoryAccess &mSch2_0_1 = lblock.memory.back();
-    // llvm::errs() << "lblock.memory.back().ref.loop = "
-    //           << lblock.memory.back().ref.loop << "\n";
-    // llvm::errs() << "lblock.memory.back().ref.loop.get() = "
-    //           << lblock.memory.back().ref.loop.get() << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << "\n";
+    MemoryAccess mSch2_0_1(Amn2Ind, nullptr, sch2_0_1, false);
+    lblock.memory.push_back(&mSch2_0_1);
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_0, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch2_1_0 = lblock.memory.back();
+    MemoryAccess mSch2_1_0(Amn2Ind, nullptr, sch2_1_0, true);
+    lblock.memory.push_back(&mSch2_1_0);
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
-    lblock.memory.emplace_back(UnnInd, nullptr, sch2_1_1, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    // MemoryAccess &mSch2_1_1 = lblock.memory.back();
+    MemoryAccess mSch2_1_1(UnnInd, nullptr, sch2_1_1, true);
+    lblock.memory.push_back(&mSch2_1_1);
     sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_2, false);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch2_1_2 = lblock.memory.back();
-
+    MemoryAccess mSch2_1_2(Amn2Ind, nullptr, sch2_1_2, false);
+    lblock.memory.push_back(&mSch2_1_2);
+    
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
-    lblock.memory.emplace_back(UnkInd, nullptr, sch3_0, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    // MemoryAccess &mSch3_2 = lblock.memory.back();
+    MemoryAccess mSch3_2(UnkInd, nullptr, sch3_0, true);
+    lblock.memory.push_back(&mSch3_2);
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
-    lblock.memory.emplace_back(Amn3Ind, nullptr, sch3_1, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_1 = lblock.memory.back();
+    MemoryAccess mSch3_1(Amn3Ind, nullptr, sch3_1, true);
+    lblock.memory.push_back(&mSch3_1);
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(AmkInd, nullptr, sch3_2, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_0 = lblock.memory.back();
+    MemoryAccess mSch3_0(AmkInd, nullptr, sch3_2, true);
+    lblock.memory.push_back(&mSch3_0);
     sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(AmkInd, nullptr, sch3_3, false);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_3 = lblock.memory.back();
+    MemoryAccess mSch3_3(AmkInd, nullptr, sch3_3, false);
+    lblock.memory.push_back(&mSch3_3);
     EXPECT_EQ(lblock.memory.size(), 9);
 
     // for (m = 0; m < M; ++m){
@@ -415,18 +375,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     d.reserve(16);
     llvm::SmallVector<Dependence, 0> r;
     r.reserve(16);
-    // llvm::errs() << "lblock.memory[1].ref.loop->poset.delta.size() = "
-    //           << lblock.memory[1].ref.loop->poset.delta.size() << "\n";
-    // llvm::errs() << "&mSch2_0_1 = " << &mSch2_0_1 << "\n";
-    // llvm::errs() << "&(mSch2_0_1.ref) = " << &(mSch2_0_1.ref) << "\n";
-    // llvm::errs() << "lblock.memory[1].ref.loop = " <<
-    // lblock.memory[1].ref.loop
-    //           << "\n";
-    // llvm::errs() << "lblock.memory[1].ref.loop.get() = "
-    //           << lblock.memory[1].ref.loop.get() << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
     // // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_EQ(Dependence::check(r, mSch2_1_0, mSch2_0_1), 1);
