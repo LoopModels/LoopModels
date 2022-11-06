@@ -285,7 +285,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         addSymbolic(offsets, symbolicOffsets, S, mlt);
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
-    // TODO: support top level array refs
     llvm::Optional<ArrayReference> arrayRef(LoopTree &LT,
                                             llvm::Instruction *ptr,
                                             Predicates &pred,
@@ -392,17 +391,18 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // SHOW(Bt.numRow());
         // CSHOWLN(Bt.numCol());
         ref.offsetMatrix() = Bt;
-        // TODO:
-        //  1. set schedule
-        //  2. update schedule, array ref, and offsets when pruning failed loops
+        // TODO: update schedule, array ref, and offsets when pruning failed
+        // loops
         for (size_t i = 0; i < subscripts.size(); ++i) {
             llvm::errs() << "Array Dim " << i << ":\nSize: " << *ref.sizes[i]
                          << "\nSubscript: " << *subscripts[i] << "\n";
-            if (const llvm::SCEVUnknown *param =
-                    llvm::dyn_cast<llvm::SCEVUnknown>(subscripts[i])) {
+            // if (const llvm::SCEVUnknown *param =
+            // llvm::dyn_cast<llvm::SCEVUnknown>(subscripts[i])) {
+            if (llvm::isa<llvm::SCEVUnknown>(subscripts[i])) {
                 llvm::errs() << "SCEVUnknown\n";
-            } else if (const llvm::SCEVNAryExpr *param =
-                           llvm::dyn_cast<llvm::SCEVNAryExpr>(subscripts[i])) {
+                // } else if (const llvm::SCEVNAryExpr *param =
+                // llvm::dyn_cast<llvm::SCEVNAryExpr>(subscripts[i])) {
+            } else if (llvm::isa<llvm::SCEVNAryExpr>(subscripts[i])) {
                 llvm::errs() << "SCEVNAryExpr\n";
             }
         }
@@ -423,13 +423,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         arrayRef(LT, iptr, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
+                    llvm::errs() << "omega = [" << omega.front();
+                    for (size_t i = 1; i < omega.size(); ++i)
+                        llvm::errs() << ", " << omega[i];
+                    llvm::errs() << "]\n";
                     LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
                     // LT.memAccesses.emplace_back(std::move(*re), I, true);
                     SHOWLN(I);
                     SHOWLN(*I);
                     SHOWLN(LT.memAccesses.back().user);
                     SHOWLN(*LT.memAccesses.back().user);
-                    incrementLast(omega);
+                    ++omega.back();
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -453,6 +457,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         arrayRef(LT, iptr, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
+                    llvm::errs() << "omega = [" << omega.front();
+                    for (size_t i = 1; i < omega.size(); ++i)
+                        llvm::errs() << ", " << omega[i];
+                    llvm::errs() << "]\n";
                     LT.memAccesses.emplace_back(std::move(*re), I, omega,
                                                 false);
                     // LT.memAccesses.emplace_back(std::move(*re), I, false);
@@ -460,7 +468,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     SHOWLN(*I);
                     SHOWLN(LT.memAccesses.back().user);
                     SHOWLN(*LT.memAccesses.back().user);
-                    incrementLast(omega);
+                    ++omega.back();
                     llvm::errs() << "Succesfully added store\n"
                                  << LT.memAccesses.back() << "\n";
                     return false;
@@ -493,11 +501,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         // omega.pop_back();
     }
-    static llvm::SmallVector<unsigned> &
-    incrementLast(llvm::SmallVector<unsigned> &x) {
-        ++x.back();
-        return x;
-    }
     // we fill omegas, we have loop pos only, not shifts
     // pR: 0
     // pL: 0
@@ -527,14 +530,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             LoopTree &SLT = loopTrees[LT.subLoops[i]];
             for (auto &&PBB : LT.paths[i]) {
                 parseBB(SLT, PBB.basicBlock, PBB.predicates, omega);
-                //
             }
             parseLoop(SLT, omega);
-            incrementLast(omega);
+            ++omega.back();
         }
         for (auto PBB : LT.paths.back()) {
             parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
-            // incrementLast(omega);
         }
         omega.pop_back();
 #ifndef NDEBUG

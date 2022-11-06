@@ -179,7 +179,7 @@ struct ArrayReference {
                     if (j) {
                         if (offij != 1)
                             os << offij << '*';
-                        os << ar.loop->symbols[j - 1];
+                        os << *ar.loop->symbols[j - 1];
                     } else
                         os << offij;
                     printPlus = true;

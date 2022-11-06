@@ -3,12 +3,14 @@
 #include "./ArrayReference.hpp"
 #include "./Graphs.hpp"
 #include "./Math.hpp"
+#include "Macro.hpp"
 #include "llvm/IR/User.h"
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 #include <utility>
 
 // We represent a schedule as
@@ -63,18 +65,29 @@ struct Schedule {
     Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size()) {
         data.resize(requiredScheduleStorage(numLoops));
         // getPhi().antiDiag() = 1;
+        llvm::errs() << "constructing schedule with omega = [" << omega.front();
+        for (size_t i = 1; i < omega.size(); ++i)
+            llvm::errs() << ", " << omega[i];
+        llvm::errs() << "]\n";
         MutPtrVector<int64_t> o{getOmega()};
         for (size_t i = 0; i < omega.size(); ++i)
             o[2 * i] = omega[i];
     }
     void truncate(size_t newNumLoops) {
-        size_t oOffset = 3*size_t(numLoops) - newNumLoops;
-        size_t nOffset = newNumLoops * newNumLoops;
-        for (size_t i = 0; i < newNumLoops; ++i) 
-            data[i + nOffset] = data[i + oOffset];
-        data.truncate(requiredScheduleStorage(newNumLoops));
-	numLoops = newNumLoops;
+        if (newNumLoops < numLoops) {
+            // llvm::errs() << "pre truncate: ";
+            // CSHOWLN(getOmega());
+            size_t oOffset = size_t(numLoops) * size_t(numLoops) +
+                             size_t(numLoops) - newNumLoops;
+            size_t nOffset = newNumLoops * newNumLoops;
+            for (size_t i = 0; i < newNumLoops; ++i)
+                data[i + nOffset] = data[i + oOffset];
+            data.truncate(requiredScheduleStorage(newNumLoops));
+            numLoops = newNumLoops;
+        }
         getPhi().antiDiag() = 1;
+        // llvm::errs() << "post truncate: ";
+        // CSHOWLN(getOmega());
     }
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);

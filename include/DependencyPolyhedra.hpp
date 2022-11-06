@@ -910,8 +910,8 @@ struct Dependence {
             SHOWLN(xPhi);
             SHOWLN(yPhi);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
-                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
 #ifndef NDEBUG
+                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
                 llvm::errs()
                     << "Dependence decided by forward violation with i = " << i
                     << "\n";

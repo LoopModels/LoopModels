@@ -283,8 +283,8 @@ struct LoopTree {
             tree.addZeroLowerBounds(loopTrees, loopMap, tid);
             tree.parentLoop = myId;
         }
-	if (loop)
-	    loopMap.insert(std::make_pair(loop, myId));
+        if (loop)
+            loopMap.insert(std::make_pair(loop, myId));
     }
     auto begin() { return subLoops.begin(); }
     auto end() { return subLoops.end(); }
@@ -412,6 +412,9 @@ struct LoopTree {
             // assert(paths.size() == subForest.size());
             // bug: anyFail == true, subForest.size() == 1, paths.size() == 2
             if (anyFail)
+                llvm::errs()
+                    << "pushBack returning 0 because anyFail == true.\n";
+            if (anyFail)
                 return invalid(loopTrees, forests, subForest, paths, subLoops);
             assert(subForest.size());
             finalStart = subLoops.back()->getExitBlock();
@@ -430,18 +433,31 @@ struct LoopTree {
                     return ++interiorDepth0;
                 }
             }
-        } else if (auto BT = SE.getBackedgeTakenCount(L)) {
+        // } else if (auto BT = SE.getBackedgeTakenCount(L)) {
+        } else if (auto BT = getBackedgeTakenCount(SE, L)) {
             if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
+                llvm::errs() << "about to add loop: " << *L
+                             << "\nwith backedge taken count: " << *BT << "\n";
+		auto *BTNW = noWrapSCEV(SE, BT);
+		llvm::errs() << "after no-wrapping:\n" << *BTNW << "\n";
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E,
                                          nullptr)) {
                     branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
-                    loopTrees.emplace_back(L, std::move(subForest), BT, SE,
+                    loopTrees.emplace_back(L, std::move(subForest), BTNW, SE,
                                            std::move(paths));
                     return 1;
                 }
             }
         }
+        llvm::errs()
+            << "pushBack returning 0 because end of function reached.\nLoop: "
+            << *L << "\n";
+        SHOW(subForest.size());
+        if (subForest.size()) {
+            CSHOWLN(loopTrees[subForest.front()].getNumLoops());
+        } else
+            llvm::errs() << "\n";
         return invalid(loopTrees, forests, subForest, paths, subLoops);
     }
 
