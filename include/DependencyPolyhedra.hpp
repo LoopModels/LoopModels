@@ -870,8 +870,10 @@ struct Dependence {
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
         SHOWLN(x.user);
         SHOWLN(y.user);
-        SHOWLN(*x.user);
-        SHOWLN(*y.user);
+	if (x.user)
+	    SHOWLN(*x.user);
+	if (y.user)
+	    SHOWLN(*y.user);
         SHOWLN(xOmega);
         SHOWLN(yOmega);
         Vector<int64_t> sch;

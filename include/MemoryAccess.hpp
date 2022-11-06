@@ -1,7 +1,9 @@
 #pragma once
 #include "./Schedule.hpp"
+#include "Macro.hpp"
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/Support/raw_ostream.h>
 
 // struct MemorySchedule{
 
@@ -37,45 +39,54 @@ struct MemoryAccess {
                  llvm::ArrayRef<unsigned> omega, bool isLoad)
         : ref(std::move(ref)), user(user),
           schedule(llvm::ArrayRef<unsigned>{omega.data() + omega.size() -
-                                                ref.getNumLoops(),
-                                            ref.getNumLoops()}),
+                                                (ref.getNumLoops() + 1),
+                                            ref.getNumLoops() + 1}),
           edgesIn(llvm::SmallVector<unsigned>()),
           edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
     // MemoryAccess(const MemoryAccess &MA) = default;
 
-    void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+    inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+    inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     // size_t getNumLoops() const { return ref->getNumLoops(); }
     // size_t getNumAxes() const { return ref->axes.size(); }
     // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    bool fusedThrough(MemoryAccess &x) {
+    inline bool fusedThrough(MemoryAccess &x) {
         // originally separate loops could be fused
         // if (loop() != x.loop()){ return false; }
         return schedule.fusedThrough(x.schedule);
     }
-    size_t getNumLoops() const {
-	// FIXME: assert is failing...
+    inline size_t getNumLoops() const {
+        // FIXME: assert is failing...
+        SHOW(schedule.getNumLoops());
+        CSHOWLN(ref.getNumLoops());
         assert(schedule.getNumLoops() == ref.getNumLoops());
         return schedule.getNumLoops();
     }
-    auto indexMatrix() { return ref.indexMatrix(); }
-    auto indexMatrix() const { return ref.indexMatrix(); }
+    inline MutPtrMatrix<int64_t> indexMatrix() { return ref.indexMatrix(); }
+    inline PtrMatrix<int64_t> indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset
-    PtrVector<int64_t> getSchedule(size_t loop) const {
+    inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
+    inline PtrVector<int64_t> getOmega() const { return schedule.getOmega(); }
+    inline PtrVector<int64_t> getSchedule(size_t loop) const {
         return schedule.getPhi()(loop, _);
     }
-    MemoryAccess *truncateSchedule() {
+    inline MemoryAccess *truncateSchedule() {
+        llvm::errs() << "about to truncate schedule\n";
         schedule.truncate(ref.getNumLoops());
+        SHOWLN(getNumLoops());
         return this;
     }
 };
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
-    if (m.isLoad && m.user)
-        os << *m.user << " = ";
-    os << m.ref;
-    if ((!m.isLoad) && m.user)
-        os << " = " << *(m.user->getOperand(0));
-    os << "\nSchedule Omega: " << m.schedule.getOmega();
+    if (m.isLoad)
+        os << "Load: ";
+    else
+        os << "Store: ";
+    if (m.user)
+        os << *m.user;
+    os << "\n"
+       << m.ref << "\nSchedule Omega: " << m.schedule.getOmega()
+       << "\nAffineLoopNest: " << *m.ref.loop;
     return os;
 }

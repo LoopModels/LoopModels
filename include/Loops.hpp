@@ -244,6 +244,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 minDepth =
                     addSymbol(B, L, x->getOperand(0), SE, l, u, mlt, minDepth);
                 if (auto c = getConstantInt(x->getOperand(1))) {
+		    // swap order vs recDepth to go inner<->outer
                     B(l, B.numCol() - recDepth) = mlt * (*c);
                     return minDepth;
                 }
@@ -683,7 +684,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
                      int64_t mul) const {
-        os << mul * x[0];
+        if (int64_t x0 = x[0])
+            os << mul * x0;
         for (size_t i = 1; i < x.size(); ++i)
             if (int64_t xi = x[i] * mul) {
                 os << (xi > 0 ? " + " : " - ");

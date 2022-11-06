@@ -438,6 +438,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     SHOWLN(*I);
                     SHOWLN(LT.memAccesses.back().user);
                     SHOWLN(*LT.memAccesses.back().user);
+		    SHOWLN(LT.memAccesses.back().getNumLoops());
                     ++omega.back();
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";

@@ -35,7 +35,7 @@ It is expected that in many cases, bounds checks will actually provide informati
 
 Some details and explanations will be provided at [spmd.org](https://spmd.org/).
 
-###### Getting Started
+#### Getting Started
 
 This project requires C++20.
 On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
@@ -162,3 +162,14 @@ Then meson is configured with
 ```
 CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address --native-file custom-llvm.ini
 ```
+
+#### Notes on Code
+
+Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.
+
+For now, a few notes on conventions:
+1. Data structures holding loop information are indexed from inner <-> outer with respect to the original program order. Thus a loop's index equals the number of loops nested inside it. This convention is more convenient for initially parsing loops as well as for the initial pass of ILP reordering. When parsing loops, we take the largest sets we can model at a time. Thus it's natural to start with the innermost loop, and then move outwards, appending additional data. When we encounter something we cannot model, such as non-affine loop bounds or array accesses, we can also easily drop all outer loops, keeping the inner loops that satisfy our requirements. Thus, inner <-> outer is more convenient for parsing. For ILP optimization, we take the lexicographical minimum of the `[dependence distance; schedule]` vector where the schedule is linearly independent of all previously solved schedules. By ordering inner <-> outer, we favor preserving the original program order rather than arbitrarily permuting. 
+
+
+
+
