@@ -120,7 +120,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
         llvm::errs() << "BBhead = " << *BBhead << "\n";
         if (path.contains(BBsrc))
             return BBChain::reached;
-        llvm::errs() << "Returning unknown because already visited\n";
+        llvm::errs() << "Returning returned because already visited\n";
         return BBChain::returned;
         // return BBChain::unknown;
         // return BBChain::visited;
@@ -189,6 +189,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::ArrayRef<llvm::BasicBlock *> BBsrc,
     llvm::BasicBlock *BBdst, llvm::Loop *L) {
+    visitedBBs.clear();
     bool reached = false;
     for (auto &BB : BBsrc) {
         auto dst = allForwardPathsReach(visitedBBs, path, BB, BBdst, {}, BB, L);
@@ -303,6 +304,10 @@ struct LoopTree {
         llvm::BasicBlock *H = L->getHeader();
         llvm::BasicBlock *E = L->getExitingBlock();
         bool anyFail = (E == nullptr) || (!L->isLoopSimplifyForm());
+        if (anyFail)
+            SHOWLN(E);
+        if (anyFail)
+            SHOWLN(L->isLoopSimplifyForm());
         return pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E,
                         anyFail);
     }
@@ -420,9 +425,13 @@ struct LoopTree {
             finalStart = subLoops.back()->getExitBlock();
         } else
             finalStart = H;
+        llvm::errs() << "Starting second pass in pushBack\n";
+        SHOWLN(subForest.size());
         if (subForest.size()) { // add subloops
             AffineLoopNest &subNest = loopTrees[subForest.front()].affineLoop;
+            SHOWLN(subNest.getNumLoops());
             if (subNest.getNumLoops() > 1) {
+                visitedBBs.clear();
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E,
                                          nullptr)) {
                     branches.push_back(loopTrees.size());
@@ -431,15 +440,19 @@ struct LoopTree {
                                            std::move(subForest),
                                            std::move(paths));
                     return ++interiorDepth0;
+                } else {
+                    llvm::errs() << "No direct path from:\n"
+                                 << *finalStart << "\nTo:\n"
+                                 << *E << "\n";
                 }
             }
-        // } else if (auto BT = SE.getBackedgeTakenCount(L)) {
+            // } else if (auto BT = SE.getBackedgeTakenCount(L)) {
         } else if (auto BT = getBackedgeTakenCount(SE, L)) {
             if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
                 llvm::errs() << "about to add loop: " << *L
                              << "\nwith backedge taken count: " << *BT << "\n";
-		auto *BTNW = noWrapSCEV(SE, BT);
-		llvm::errs() << "after no-wrapping:\n" << *BTNW << "\n";
+                auto *BTNW = noWrapSCEV(SE, BT);
+                llvm::errs() << "after no-wrapping:\n" << *BTNW << "\n";
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E,
                                          nullptr)) {
                     branches.push_back(loopTrees.size());

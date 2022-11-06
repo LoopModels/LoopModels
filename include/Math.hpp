@@ -1016,6 +1016,7 @@ template <typename T> struct Vector {
     bool operator==(const Vector<T> &x) const {
         return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
     }
+    void pushBack(T x) { data.push_back(std::move(x)); }
 };
 
 static_assert(std::copyable<Vector<intptr_t>>);

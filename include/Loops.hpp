@@ -338,7 +338,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 // llvm::SmallVector<const llvm::SCEVPredicate *, 4> predicates;
                 // auto *BTI = SE.getPredicatedBackedgeTakenCount(L,
                 // predicates);
-                if (const llvm::SCEV *BTP = SE.getBackedgeTakenCount(P)) {
+                if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
                     llvm::errs() << "BackedgeTakenCount: " << *BTP << "\n";
                     if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP)) {
                         return addBackedgeTakenCount(B, P, BTP, SE, minDepth);
@@ -371,7 +371,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     }
     static llvm::Optional<AffineLoopNest> construct(llvm::Loop *L,
                                                     llvm::ScalarEvolution &SE) {
-        auto BT = SE.getBackedgeTakenCount(L);
+        auto BT = getBackedgeTakenCount(SE, L);
         if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
             return {};
         return AffineLoopNest(L, BT, SE);

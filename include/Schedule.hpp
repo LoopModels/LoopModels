@@ -62,7 +62,7 @@ struct Schedule {
         data.resize(requiredScheduleStorage(nLoops));
         getPhi().antiDiag() = 1;
     };
-    Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size()) {
+    Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size() - 1) {
         data.resize(requiredScheduleStorage(numLoops));
         // getPhi().antiDiag() = 1;
         llvm::errs() << "constructing schedule with omega = [" << omega.front();

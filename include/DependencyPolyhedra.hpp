@@ -868,12 +868,12 @@ struct Dependence {
         SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
         PtrVector<int64_t> xOmega = x.schedule.getOmega();
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
-	SHOWLN(x.user);
-	SHOWLN(y.user);
-	SHOWLN(*x.user);
-	SHOWLN(*y.user);
-	SHOWLN(xOmega);
-	SHOWLN(yOmega);
+        SHOWLN(x.user);
+        SHOWLN(y.user);
+        SHOWLN(*x.user);
+        SHOWLN(*y.user);
+        SHOWLN(xOmega);
+        SHOWLN(yOmega);
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // const size_t numLambda = DependencePolyhedra::getNumLambda();
@@ -909,6 +909,8 @@ struct Dependence {
             SHOWLN(fyx);
             SHOWLN(xPhi);
             SHOWLN(yPhi);
+            SHOWLN(x);
+            SHOWLN(y);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
 #ifndef NDEBUG
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
@@ -1085,6 +1087,12 @@ struct Dependence {
         if (x.ref.gcdKnownIndependent(y.ref))
             return 0;
         DependencePolyhedra dxy(x, y);
+        SHOW(dxy.getDim0());
+        CSHOWLN(dxy.getDim1());
+        SHOW(x.getNumLoops());
+        CSHOWLN(y.getNumLoops());
+	SHOWLN(x);
+	SHOWLN(y);
         assert(x.getNumLoops() == dxy.getDim0());
         assert(y.getNumLoops() == dxy.getDim1());
         assert(x.getNumLoops() + y.getNumLoops() ==

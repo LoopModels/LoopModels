@@ -53,7 +53,11 @@ struct MemoryAccess {
         // if (loop() != x.loop()){ return false; }
         return schedule.fusedThrough(x.schedule);
     }
-    size_t getNumLoops() const { return schedule.getNumLoops(); }
+    size_t getNumLoops() const {
+	// FIXME: assert is failing...
+        assert(schedule.getNumLoops() == ref.getNumLoops());
+        return schedule.getNumLoops();
+    }
     auto indexMatrix() { return ref.indexMatrix(); }
     auto indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset

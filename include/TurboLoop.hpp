@@ -330,16 +330,19 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // numLoops x arrayDim
         IntMatrix Rt(subscripts.size(), numLoops);
         IntMatrix Bt;
-        Vector<int64_t> offsets(1);
-        assert(offsets.size() == 1);
-        assert(offsets[0] == 0);
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
         uint64_t blackList{0};
-        for (size_t i = 0; i < subscripts.size(); ++i) {
-            blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
-                                           subscripts[i], 1, numPeeled);
-            Bt.resize(subscripts.size(), offsets.size());
-            Bt(i, _) = offsets;
+        {
+            Vector<int64_t> offsets;
+            for (size_t i = 0; i < subscripts.size(); ++i) {
+                offsets.clear();
+                offsets.pushBack(0);
+                blackList |=
+                    fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
+                                      subscripts[i], 1, numPeeled);
+                Bt.resize(subscripts.size(), offsets.size());
+                Bt(i, _) = offsets;
+            }
         }
         // SHOW(Bt.numCol());
         // CSHOW(offsets.size());
@@ -390,6 +393,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // CSHOWLN(ref.offsetMatrix().numCol());
         // SHOW(Bt.numRow());
         // CSHOWLN(Bt.numCol());
+        SHOWLN(Rt);
+        SHOWLN(Bt);
         ref.offsetMatrix() = Bt;
         // TODO: update schedule, array ref, and offsets when pruning failed
         // loops
@@ -527,6 +532,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // now we walk blocks
         // auto &subLoops = L->getSubLoops();
         for (size_t i = 0; i < LT.subLoops.size(); ++i) {
+            llvm::errs() << "Parsing loop, i = " << i;
+            if (LT.loop)
+                llvm::errs() << ": " << *LT.loop;
+            llvm::errs() << "\n";
             LoopTree &SLT = loopTrees[LT.subLoops[i]];
             for (auto &&PBB : LT.paths[i]) {
                 parseBB(SLT, PBB.basicBlock, PBB.predicates, omega);
@@ -671,7 +680,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 llvm::errs()
                     << "Outer InductionVariable: " << *inductOuter << "\n";
                 if (const llvm::SCEV *backEdgeTaken =
-                        SE->getBackedgeTakenCount(LP)) {
+                        getBackedgeTakenCount(*SE, LP)) {
                     llvm::errs() << "Back edge taken count: " << *backEdgeTaken
                                  << "\n\ttrip count: "
                                  << *(SE->getAddExpr(
