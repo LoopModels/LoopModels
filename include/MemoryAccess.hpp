@@ -56,9 +56,6 @@ struct MemoryAccess {
         return schedule.fusedThrough(x.schedule);
     }
     inline size_t getNumLoops() const {
-        // FIXME: assert is failing...
-        SHOW(schedule.getNumLoops());
-        CSHOWLN(ref.getNumLoops());
         assert(schedule.getNumLoops() == ref.getNumLoops());
         return schedule.getNumLoops();
     }

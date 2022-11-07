@@ -38,7 +38,7 @@ struct ArrayReference {
 
     ArrayReference() = delete;
 
-    size_t arrayDim() const { return sizes.size(); }
+    size_t getArrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
@@ -49,21 +49,21 @@ struct ArrayReference {
     // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     // getNumLoops() x arrayDim()
     MutPtrMatrix<int64_t> indexMatrix() {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     PtrMatrix<int64_t> indexMatrix() const {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     MutPtrMatrix<int64_t> offsetMatrix() {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                      numSymbols, numSymbols};
     }
     PtrMatrix<int64_t> offsetMatrix() const {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                   numSymbols, numSymbols};
@@ -119,9 +119,9 @@ struct ArrayReference {
     bool allConstantIndices() const { return symbolicOffsets.size() == 0; }
     // Assumes strides and offsets are sorted
     bool sizesMatch(const ArrayReference &x) const {
-        if (arrayDim() != x.arrayDim())
+        if (getArrayDim() != x.getArrayDim())
             return false;
-        for (size_t i = 0; i < arrayDim(); ++i)
+        for (size_t i = 0; i < getArrayDim(); ++i)
             if (sizes[i] != x.sizes[i])
                 return false;
         return true;
@@ -131,7 +131,7 @@ struct ArrayReference {
                                          const ArrayReference &ar) {
         SHOWLN(ar.indexMatrix());
         os << "ArrayReference " << *ar.basePointer
-           << " (dim = " << ar.arrayDim()
+           << " (dim = " << ar.getArrayDim()
            << ", num loops: " << ar.getNumLoops();
         if (ar.sizes.size())
             os << ", element size: " << *ar.sizes.back();

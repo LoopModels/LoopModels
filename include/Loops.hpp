@@ -38,11 +38,28 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L) {
         return SE.getBackedgeTakenCount(L);
     const llvm::SCEV *LB = SE.getSCEV(&b->getInitialIVValue());
     const llvm::SCEV *UB = SE.getSCEV(&b->getFinalIVValue());
+    SHOWLN(*LB);
+    SHOWLN(*UB);
     if (auto umm = llvm::dyn_cast<llvm::SCEVUMaxExpr>(UB)) {
         const llvm::SCEV *m0 = SE.getMinusSCEV(
             umm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
         const llvm::SCEV *m1 = SE.getMinusSCEV(
             umm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
+        // Does checking known negative make sense if we have NUW?
+        SHOWLN(*UB);
+        SHOWLN(*m0);
+        SHOWLN(*m1);
+        if (SE.isKnownNegative(m0))
+            return m1;
+        if (SE.isKnownNegative(m1))
+            return m0;
+    } else if (auto smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
+        const llvm::SCEV *m0 = SE.getMinusSCEV(
+            smm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
+        const llvm::SCEV *m1 = SE.getMinusSCEV(
+            smm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
+        SHOWLN(*m0);
+        SHOWLN(*m1);
         if (SE.isKnownNegative(m0))
             return m1;
         if (SE.isKnownNegative(m1))
@@ -201,26 +218,27 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                        llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
             const llvm::SCEV *op0 = ex->getOperand(0);
             const llvm::SCEV *op1 = ex->getOperand(1);
-            // check if either op is a SCEVMinMaxExpr of the wrong kind
-            // if so, check if we can simplify by moving the add inside.
-            if (const llvm::SCEVAddRecExpr *ar0 =
-                    llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
-                if (const llvm::SCEVMinMaxExpr *mm1 =
-                        llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(op1)) {
-                    llvm::errs() << "for SCEV:" << *ex << "\nwe distribute:\n"
-                                 << *SE.getAddExpr(ar0, mm1->getOperand(0),
-                                                   llvm::SCEV::NoWrapMask)
-                                 << "\n"
-                                 << *SE.getAddExpr(ar0, mm1->getOperand(1),
-                                                   llvm::SCEV::NoWrapMask)
-                                 << "\n";
-                }
-            } else if (const llvm::SCEVMinMaxExpr *mm0 =
-                           llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(op0)) {
-                if (const llvm::SCEVAddRecExpr *ar1 =
-                        llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
-                }
-            }
+            // // check if either op is a SCEVMinMaxExpr of the wrong kind
+            // // if so, check if we can simplify by moving the add inside.
+            // if (const llvm::SCEVAddRecExpr *ar0 =
+            //         llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
+            //     if (const llvm::SCEVMinMaxExpr *mm1 =
+            //             llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(op1)) {
+            //         llvm::errs() << "for SCEV:" << *ex << "\nwe
+            //         distribute:\n"
+            //                      << *SE.getAddExpr(ar0, mm1->getOperand(0),
+            //                                        llvm::SCEV::NoWrapMask)
+            //                      << "\n"
+            //                      << *SE.getAddExpr(ar0, mm1->getOperand(1),
+            //                                        llvm::SCEV::NoWrapMask)
+            //                      << "\n";
+            //     }
+            // } else if (const llvm::SCEVMinMaxExpr *mm0 =
+            //                llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(op0)) {
+            //     if (const llvm::SCEVAddRecExpr *ar1 =
+            //             llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
+            //     }
+            // }
 
             size_t M = A.numRow();
             minDepth = addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
@@ -244,7 +262,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 minDepth =
                     addSymbol(B, L, x->getOperand(0), SE, l, u, mlt, minDepth);
                 if (auto c = getConstantInt(x->getOperand(1))) {
-		    // swap order vs recDepth to go inner<->outer
+                    // swap order vs recDepth to go inner<->outer
                     B(l, B.numCol() - recDepth) = mlt * (*c);
                     return minDepth;
                 }
@@ -326,13 +344,16 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
         size_t M = A.numRow();
         A.resizeRows(M + 1);
         B.resizeRows(M + 1);
+        llvm::errs() << "BT = " << *BT
+                     << "\naddBackedgeTakenCount pre addSym; M = " << M
+                     << "; A = " << A << "\n";
         minDepth = addSymbol(B, L, BT, SE, M, M + 1, 1, minDepth);
+        llvm::errs() << "addBackedgeTakenCount post addSym; M = " << M
+                     << "; A = " << A << "\n";
         assert(A.numRow() == B.numRow());
         size_t depth = L->getLoopDepth();
-        for (size_t m = M; m < A.numRow(); ++m) {
-            ++A(m, 0);                     // backedge taken -> trip count
+        for (size_t m = M; m < A.numRow(); ++m)
             B(m, B.numCol() - depth) = -1; // indvar
-        }
         // recurse, if possible to add an outer layer
         if (llvm::Loop *P = L->getParentLoop()) {
             if (areSymbolsLoopInvariant(P, SE)) {
@@ -409,6 +430,8 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                                                SE.getOne(IntTyp), P,
                                                llvm::SCEV::NoWrapMask),
                               i, i + 1, Bid);
+                    llvm::errs() << "AffineLoopNest iter i = " << i
+                                 << "A = " << A << "\n";
                 }
             }
         }
@@ -684,11 +707,14 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
 
     void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
                      int64_t mul) const {
-        if (int64_t x0 = x[0])
-            os << mul * x0;
+        bool printed = x[0] != 0;
+        if (printed)
+            os << mul * x[0];
         for (size_t i = 1; i < x.size(); ++i)
             if (int64_t xi = x[i] * mul) {
-                os << (xi > 0 ? " + " : " - ");
+                if (printed)
+                    os << (xi > 0 ? " + " : " - ");
+                printed = true;
                 int64_t absxi = std::abs(xi);
                 if (absxi != 1)
                     os << absxi << " * ";
@@ -699,15 +725,18 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     // void printBound(llvm::raw_ostream &os, const IntMatrix &A, size_t i,
     void printBound(llvm::raw_ostream &os, size_t i, int64_t sign) const {
         const size_t numVar = getNumLoops();
+        const size_t numVarMinus1 = numVar - 1;
         const size_t numConst = getNumSymbols();
         for (size_t j = 0; j < A.numRow(); ++j) {
             int64_t Aji = A(j, i + numConst) * sign;
             if (Aji <= 0)
                 continue;
             if (A(j, i + numConst) != sign) {
-                os << Aji << "*i_" << i << ((sign < 0) ? " <= " : " >= ");
+                os << Aji << "*i_" << numVarMinus1 - i
+                   << ((sign < 0) ? " <= " : " >= ");
             } else {
-                os << "i_" << i << ((sign < 0) ? " <= " : " >= ");
+                os << "i_" << numVarMinus1 - i
+                   << ((sign < 0) ? " <= " : " >= ");
             }
             PtrVector<int64_t> b = getProgVars(j);
             bool printed = !allZero(b);
@@ -725,7 +754,7 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                     lakj = std::abs(lakj);
                     if (lakj != 1)
                         os << lakj << "*";
-                    os << "i_" << k;
+                    os << "i_" << numVarMinus1 - k;
                     printed = true;
                 }
             }
@@ -744,18 +773,19 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const AffineLoopNest &alnb) {
         AffineLoopNest aln{alnb};
-        size_t i = aln.getNumLoops();
+        size_t numLoopsMinus1 = aln.getNumLoops() - 1;
         SHOWLN(alnb.getNumLoops());
         SHOWLN(aln.getNumLoops());
         SHOWLN(alnb.A);
+        size_t i = 0;
         while (true) {
-            os << "Loop " << --i << " lower bounds:\n";
+            os << "Loop " << numLoopsMinus1 - i << " lower bounds:\n";
             aln.printLowerBound(os, i);
-            os << "Loop " << i << " upper bounds:\n";
+            os << "Loop " << numLoopsMinus1 - i << " upper bounds:\n";
             aln.printUpperBound(os, i);
-            if (i == 0)
+            if (i == numLoopsMinus1)
                 break;
-            aln.removeLoopBang(i);
+            aln.removeLoopBang(i++);
         }
         return os;
     }

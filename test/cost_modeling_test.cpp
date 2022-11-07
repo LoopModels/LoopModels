@@ -24,18 +24,19 @@
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Operator.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/raw_ostream.h>
 
 TEST(TriangularExampleTest, BasicAssertions) {
-    IntMatrix AMN{stringToIntMatrix("[-1 1 0 -1 0; "
-                                    "0 0 0 1 0; "
-                                    "-1 0 1 0 -1; "
-                                    "0 0 0 0 1]")};
-    IntMatrix AMNK{stringToIntMatrix("[-1 1 0 -1 0 0; "
-                                     "0 0 0 1 0 0; "
+    IntMatrix AMN{stringToIntMatrix("[-1 1 0 0 -1; "
+                                    "0 0 0 0 1; "
+                                    "-1 0 1 -1 0; "
+                                    "0 0 0 1 0]")};
+    IntMatrix AMNK{stringToIntMatrix("[-1 1 0 0 0 -1; "
+                                     "0 0 0 0 0 1; "
                                      "-1 0 1 0 -1 0; "
                                      "0 0 0 0 1 0; "
-                                     "-1 0 1 0 0 -1; "
-                                     "-1 0 0 0 -1 1]")};
+                                     "-1 0 1 -1 0 0; "
+                                     "-1 0 0 1 -1 0]")};
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(AMN), 2);
@@ -159,8 +160,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
-        IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // n
+        IndMat(1, 1) = 1; // m
         BmnInd.sizes[0] = M;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -170,8 +171,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         //     l  d
-        IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // n
+        IndMat(1, 1) = 1; // m
         Amn2Ind.sizes[0] = M;
         Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -182,7 +183,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         //     l  d
         IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(2, 1) = 1; // m
         Amn3Ind.sizes[0] = M;
         Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -192,8 +193,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         //     l  d
-        IndMat(2, 0) = 1; // k
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // k
+        IndMat(2, 1) = 1; // m
         AmkInd.sizes[0] = M;
         AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -204,7 +205,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         //     l  d
         IndMat(1, 1) = 1; // n
-        IndMat(2, 0) = 1; // k
+        IndMat(0, 0) = 1; // k
         UnkInd.sizes[0] = N;
         UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -214,8 +215,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         //     l  d
-        IndMat(1, 1) = 1; // n
-        IndMat(1, 0) = 1; // k
+        IndMat(0, 1) = 1; // n
+        IndMat(0, 0) = 1; // n
         UnnInd.sizes[0] = N;
         UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -442,15 +443,17 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::Optional<BitSet> optDeps = lblock.optimize();
     EXPECT_TRUE(optDeps.hasValue());
     // SHOWLN(optDeps.getValue());
+    // orig order (inner <-> outer): n, m
     IntMatrix optPhi2(2, 2);
-    // phi2 loop order is [n, m]
-    // so the schedule bloe places `n` as the outermost loop, and `m` inside
-    optPhi2.diag() = 1;
-    // IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    // phi2 loop order is
+    // the scheduler preserves the order, keeping `m` as outermost,
+    // and `n` as innermost
+    optPhi2.antiDiag() = 1;
+    // orig order (inner <-> outer): k, n, m
+    IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
     // phi3 loop order is [k, n, m]
-    // so the schedule below places `k` as the outermost loop,
-    // followed by `m`, and `n` as innermost. `n` is the reduction loop.
-    IntMatrix optPhi3{stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]")};
+    // so the schedule below places `m` as the outermost loop,
+    // followed by `k`, and `n` as innermost. `n` is the reduction loop.
     // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
     // assert(!optFail);
     for (auto mem : lblock.memory) {
@@ -506,10 +509,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // for (i = 0; i < I; ++i)
     //   s(i) = sqrt(s(i) / (J-1));
     TestLoopFunction tlf;
-    IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 -1 0; "
-                                            "0 0 0 1 0; "
-                                            "-1 0 1 0 -1; "
-                                            "0 0 0 0 1]")};
+    IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 0 -1; "
+                                            "0 0 0 0 1; "
+                                            "-1 0 1 -1 0; "
+                                            "0 0 0 1 0]")};
     tlf.addLoop(std::move(TwoLoopsMat), 2);
     IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
                                            "0 0 1]")};
@@ -517,6 +520,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     AffineLoopNest &loopIJ = tlf.alns[0];
     AffineLoopNest &loopI = tlf.alns[1];
+    // IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
+    //                                         "0 0 0 0 1; "
+    //                                         "-1 1 0 -1 0; "
+    //                                         "0 0 0 1 0]")};
+    // tlf.addLoop(std::move(TwoLoopsMatJI), 2);
+    // // shouldn't matter?
+    // AffineLoopNest &loopJI = tlf.alns[2];
+    AffineLoopNest &loopJI = loopIJ;//tlf.alns[2];
 
     llvm::IRBuilder<> &builder = tlf.builder;
 
@@ -627,14 +638,23 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // s: 2
     llvm::Type *Int64 = builder.getInt64Ty();
     llvm::ScalarEvolution &SE{tlf.SE};
-    ArrayReference AInd{scevA, loopIJ, 2};
+    ArrayReference AIndIOuter{scevA, loopIJ, 2};
     {
-        MutPtrMatrix<int64_t> IndMat = AInd.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
+        //     l  d
+        IndMat(1, 1) = 1; // i
+        IndMat(0, 0) = 1; // j
+        AIndIOuter.sizes[0] = I;
+        AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    }
+    ArrayReference AIndJOuter{scevA, loopJI, 2};
+    {
+        MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
         //     l  d
         IndMat(0, 1) = 1; // i
         IndMat(1, 0) = 1; // j
-        AInd.sizes[0] = I;
-        AInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        AIndJOuter.sizes[0] = I;
+        AIndJOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     ArrayReference xInd1{scevX, loopI, 1};
@@ -644,12 +664,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference xInd2{scevX, loopIJ, 1};
+    ArrayReference xInd2IOuter{scevX, loopIJ, 1};
     {
-        MutPtrMatrix<int64_t> IndMat = xInd2.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
+        //     l  d
+        IndMat(1, 0) = 1; // i
+        xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    }
+    ArrayReference xInd2JOuter{scevX, loopJI, 1};
+    {
+        MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        xInd2.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        xInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     ArrayReference sInd1{scevS, loopI, 1};
@@ -659,12 +686,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference sInd2{scevS, loopIJ, 1};
+    ArrayReference sInd2IOuter{scevS, loopIJ, 1};
     {
-        MutPtrMatrix<int64_t> IndMat = sInd2.indexMatrix();
+        MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
+        //     l  d
+        IndMat(1, 0) = 1; // i
+        sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+    }
+    ArrayReference sInd2JOuter{scevS, loopJI, 1};
+    {
+        MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
         //     l  d
         IndMat(0, 0) = 1; // i
-        sInd2.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+        sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
     Schedule sch0_0(1);
@@ -727,19 +761,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::SmallVector<MemoryAccess, 0> iOuterMem;
     iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
 
-    iOuterMem.emplace_back(AInd, Aload_m, sch0_1_0, true);  // 1
-    iOuterMem.emplace_back(xInd2, Xload_0, sch0_1_1, true); // 2
+    iOuterMem.emplace_back(AIndIOuter, Aload_m, sch0_1_0, true);  // 1
+    iOuterMem.emplace_back(xInd2IOuter, Xload_0, sch0_1_1, true); // 2
 
-    iOuterMem.emplace_back(xInd2, Xstore_1, sch0_1_2, false); // 3
+    iOuterMem.emplace_back(xInd2IOuter, Xstore_1, sch0_1_2, false); // 3
 
     iOuterMem.emplace_back(xInd1, Xload_1, sch0_2, true);   // 4
     iOuterMem.emplace_back(xInd1, Xstore_2, sch0_3, false); // 5
 
-    iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4, false);   // 6
-    iOuterMem.emplace_back(AInd, Aload_s, sch0_5_0, true);    // 7
-    iOuterMem.emplace_back(xInd2, Xload_2, sch0_5_1, true);   // 8
-    iOuterMem.emplace_back(sInd2, Sload_0, sch0_5_2, true);   // 9
-    iOuterMem.emplace_back(sInd2, Sstore_1, sch0_5_3, false); // 10
+    iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4, false);         // 6
+    iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0, true);    // 7
+    iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1, true);   // 8
+    iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2, true);   // 9
+    iOuterMem.emplace_back(sInd2IOuter, Sstore_1, sch0_5_3, false); // 10
 
     iOuterMem.emplace_back(sInd1, Sload_1, sch0_6, true);   // 11
     iOuterMem.emplace_back(sInd1, Sstore_2, sch0_7, false); // 12
@@ -806,9 +840,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Schedule sch1_0_2(2);
     sch1_0_2.getOmega()(0) = 1;
     sch1_0_2.getOmega()(4) = 2;
-    jOuterMem.emplace_back(AInd, Aload_m, sch1_0_0, true);    // 1
-    jOuterMem.emplace_back(xInd2, Xload_0, sch1_0_1, true);   // 2
-    jOuterMem.emplace_back(xInd2, Xstore_1, sch1_0_2, false); // 3
+    jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0, true);    // 1
+    jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1, true);   // 2
+    jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2, false); // 3
 
     Schedule sch2_0(1);
     sch2_0.getOmega()(0) = 2;
@@ -830,10 +864,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sch3_0_3.getOmega()(0) = 3;
     sch3_0_3.getOmega()(4) = 3;
 
-    jOuterMem.emplace_back(AInd, Aload_s, sch3_0_0, true);    // 7
-    jOuterMem.emplace_back(xInd2, Xload_2, sch3_0_1, true);   // 8
-    jOuterMem.emplace_back(sInd2, Sload_0, sch3_0_2, true);   // 9
-    jOuterMem.emplace_back(sInd2, Sstore_1, sch3_0_3, false); // 10
+    jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0, true);    // 7
+    jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1, true);   // 8
+    jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2, true);   // 9
+    jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3, false); // 10
 
     Schedule sch4_0(1);
     sch4_0.getOmega()(0) = 4;
@@ -845,7 +879,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     for (auto &&mem : jOuterMem)
         jOuterLoopNest.memory.push_back(&mem);
-
+    
     EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
         const auto &v = jOuterLoopNest.nodes[i];
@@ -864,7 +898,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
         llvm::errs() << "\n";
     }
     IntMatrix optS(2);
-    optS.antiDiag() = 1;
+    // we want diag, as that represents swapping loops
+    optS.diag() = 1;
     IntMatrix optSinnerUndef = optS;
     optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
     for (auto mem : jOuterLoopNest.memory) {
@@ -887,10 +922,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
     TestLoopFunction tlf;
     auto &builder = tlf.builder;
-    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
-                                      "0 0 0 1 0; "
-                                      "-2 0 1 0 -1; "
-                                      "0 0 0 0 1]")};
+    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
+                                      "0 0 0 0 1; "
+                                      "-2 0 1 -1 0; "
+                                      "0 0 0 1 0]")};
     tlf.addLoop(std::move(Aloop), 2);
     AffineLoopNest &loop = tlf.alns.front();
 
@@ -951,8 +986,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
         //     l  d
-        IndMat(0, 1) = 1; // i
-        IndMat(1, 0) = 1; // j
+        IndMat(1, 1) = 1; // i
+        IndMat(0, 0) = 1; // j
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
@@ -966,8 +1001,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
         //     l  d
-        IndMat(0, 1) = 1; // i
-        IndMat(1, 0) = 1; // j
+        IndMat(1, 1) = 1; // i
+        IndMat(0, 0) = 1; // j
                           //                   d  s
         Atgt0.offsetMatrix()(1, 0) = 1;
         Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
@@ -980,8 +1015,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
         //     l  d
-        IndMat(0, 1) = 1; // i
-        IndMat(1, 0) = 1; // j
+        IndMat(1, 1) = 1; // i
+        IndMat(0, 0) = 1; // j
         Atgt1.offsetMatrix()(0, 0) = 1;
         Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
         Atgt1.sizes[0] = I;
@@ -1095,14 +1130,14 @@ TEST(ConvReversePass, BasicAssertions) {
     // }
     TestLoopFunction tlf;
     auto &builder = tlf.builder;
-    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 -1 0 0 0; "
-                                      "0 0 0 0 0 1 0 0 0; "
-                                      "-1 1 0 0 0 0 -1 0 0; "
-                                      "0 0 0 0 0 0 1 0 0; "
-                                      "-1 0 0 0 1 0 0 -1 0; "
+    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 0 0 1; "
+                                      "-1 1 0 0 0 0 0 -1 0; "
                                       "0 0 0 0 0 0 0 1 0; "
-                                      "-1 0 0 1 0 0 0 0 -1; "
-                                      "0 0 0 0 0 0 0 0 1]")};
+                                      "-1 0 0 0 1 0 -1 0 0; "
+                                      "0 0 0 0 0 0 1 0 0; "
+                                      "-1 0 0 1 0 -1 0 0 0; "
+                                      "0 0 0 0 0 1 0 0 0]")};
     tlf.addLoop(std::move(Aloop), 4);
     AffineLoopNest &loop = tlf.alns.front();
 
@@ -1172,8 +1207,8 @@ TEST(ConvReversePass, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
-        IndMat(3, 1) = 1; // i
-        IndMat(2, 0) = 1; // j
+        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // j
         BmnInd.sizes[0] = I;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -1183,8 +1218,8 @@ TEST(ConvReversePass, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
         //     l  d
-        IndMat(1, 1) = 1; // m
-        IndMat(0, 0) = 1; // n
+        IndMat(2, 1) = 1; // m
+        IndMat(3, 0) = 1; // n
         AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
         AmnInd.sizes[0] = I;
     }
@@ -1193,10 +1228,10 @@ TEST(ConvReversePass, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
         //     l  d
-        IndMat(1, 1) = 1; // m
-        IndMat(3, 1) = 1; // i
-        IndMat(0, 0) = 1; // n
-        IndMat(2, 0) = 1; // j
+        IndMat(2, 1) = 1; // m
+        IndMat(0, 1) = 1; // i
+        IndMat(3, 0) = 1; // n
+        IndMat(1, 0) = 1; // j
         CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
         CmijnInd.sizes[0] =
             SE.getAddExpr(SE.getAddExpr(M, I), SE.getMinusOne(Int64));
