@@ -244,10 +244,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 ret.second.push_back(j);
             }
         }
-        SHOW(s0.size());
-        CSHOW(ret.first.size());
-        CSHOW(s1.size());
-        CSHOWLN(ret.second.size());
         return ret;
     }
     // static fillA
@@ -272,8 +268,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             oldToNewMaps{merge(ar0.loop->symbols, ar1.loop->symbols)};
         auto &oldToNewMap0 = oldToNewMaps.first;
         auto &oldToNewMap1 = oldToNewMaps.second;
-        SHOW(oldToNewMap0.size());
-        CSHOWLN(ar0.loop->symbols.size());
         assert(oldToNewMap0.size() == ar0.loop->symbols.size());
         assert(oldToNewMap1.size() == ar1.loop->symbols.size());
 
@@ -310,11 +304,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 A(nc0 + i, j + numSymbols + numDep0Var) =
                     ar1.loop->A(i, j + ar1.loop->getNumSymbols());
         }
-        SHOW(numSymbols);
-        CSHOW(numDep0Var);
-        CSHOWLN(numDep1Var);
-        SHOWLN(ma0);
-        SHOWLN(ma1);
         // L254: Assertion `col < numCol()` failed
         // indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim
         // offsetMats are arrayDim x numSymbols
@@ -322,6 +311,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
         PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
         PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
+	llvm::errs()<<"DepPoly construction:\n";
+	SHOWLN(A0);
+	SHOWLN(A1);
+	SHOW(numDep0Var);
+	CSHOWLN(numDep1Var);
         // E(i,:)* indVars = q[i]
         // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
         // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
@@ -336,6 +330,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 E(i, 1 + oldToNewMap1[j]) -= O1(i, 1 + j);
             for (size_t j = 0; j < numDep1Var; ++j)
                 E(i, j + numSymbols + numDep0Var) = -A1(j, i);
+	    SHOWLN(E(i,_));
         }
         for (size_t i = 0; i < nullDim; ++i) {
             for (size_t j = 0; j < NS.numCol(); ++j) {
@@ -345,10 +340,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             }
             E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
         }
-        SHOWLN(A);
-        SHOWLN(E);
         C.init(A, E);
-        // SHOWLN(*this);
         // pruneBounds();
     }
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
@@ -397,11 +389,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
         fC(_, 0) = 0;
         fC(0, 0) = 1; // lambda_0
-        // SHOWLN(A.numRow());
-        // SHOWLN(A.numCol());
-        // SHOWLN(fC.numRow());
-        // SHOWLN(fC.numCol());
-        // SHOWLN(ineqEnd - 1);
         fC(_, _(1, ineqEnd)) = A(_, _(begin, numConstraintsNew)).transpose();
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
@@ -484,8 +471,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         fC(0, numScheduleCoefs - 1 + numLambda) = -1;
         bC(0, numScheduleCoefs - 2 + numLambda) = -1;
         bC(0, numScheduleCoefs - 1 + numLambda) = 1;
-        // SHOWLN(pair.first.tableau);
-        // SHOWLN(pair.second.tableau);
         // note that delta/constant coef is handled as last `s`
         return pair;
         // fw.removeExtraVariables(numVarKeep);
@@ -714,11 +699,6 @@ struct Dependence {
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
     PtrMatrix<int64_t> getSatOmegaCoefs() const {
-        // SHOWLN(dependenceSatisfaction.getConstraints().numRow());
-        // SHOWLN(dependenceSatisfaction.getConstraints().numCol());
-        // SHOW(depPoly.getNumLambda());
-        // CSHOW(getNumPhiCoefficients());
-        // CSHOWLN(getNumOmegaCoefficients());
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
@@ -731,11 +711,6 @@ struct Dependence {
                      getNumOmegaCoefficients()));
     }
     StridedVector<int64_t> getSatW() const {
-        // SHOWLN(dependenceSatisfaction.getConstraints().numRow());
-        // SHOWLN(dependenceSatisfaction.getConstraints().numCol());
-        // SHOW(depPoly.getNumLambda());
-        // CSHOW(getNumPhiCoefficients());
-        // CSHOWLN(getNumOmegaCoefficients());
         return dependenceSatisfaction.getConstraints()(
             _, 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                    getNumOmegaCoefficients());
@@ -842,15 +817,6 @@ struct Dependence {
         sch.resizeForOverwrite(numLoopsTotal + 2);
         sch(_(begin, numLoopsX)) = sx.getPhi()(d, _);
         sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _);
-#ifndef NDEBUG
-        SHOW(sch.size());
-        CSHOW(numLoopsTotal);
-        CSHOW(sx.getOmega().size());
-        CSHOW(sy.getOmega().size());
-        CSHOWLN(2 * d + 1);
-        SHOWLN(sx.getOmega());
-        SHOWLN(sy.getOmega());
-#endif
         sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
         sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
         return dependenceSatisfaction.unSatisfiable(sch, numLambda);
@@ -874,26 +840,10 @@ struct Dependence {
         SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
         PtrVector<int64_t> xOmega = x.schedule.getOmega();
         PtrVector<int64_t> yOmega = y.schedule.getOmega();
-        SHOWLN(x.user);
-        SHOWLN(y.user);
-        if (x.user)
-            SHOWLN(*x.user);
-        if (y.user)
-            SHOWLN(*y.user);
-        SHOWLN(xOmega);
-        SHOWLN(yOmega);
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
-        // const size_t numLambda = DependencePolyhedra::getNumLambda();
-        // SHOWLN(xPhi);
-        // SHOWLN(yPhi);
-        // SHOWLN(xOmega);
-        // SHOWLN(yOmega);
-        // SHOW(&xOmega);
-        // CSHOWLN(&yOmega);
         // i iterates from outer-most to inner most common loop
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-            // SHOWLN(i);
             if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i])
                 return o2idiff > 0;
             // we should not be able to reach `numLoopsCommon`
@@ -912,29 +862,23 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOmega[2 * i + 1];
             sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
-            SHOWLN(i);
-            SHOWLN(sch);
-            SHOWLN(fxy);
-            SHOWLN(fyx);
-            SHOWLN(xPhi);
-            SHOWLN(yPhi);
-            SHOWLN(x);
-            SHOWLN(y);
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
 #ifndef NDEBUG
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
-                llvm::errs()
-                    << "Dependence decided by forward violation with i = " << i
-                    << "\n";
+                // llvm::errs()
+                //     << "Dependence decided by forward violation with i = " <<
+                //     i
+                //     << "\n";
 #endif
                 return false;
             }
             if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
-#ifndef NDEBUG
-                llvm::errs()
-                    << "Dependence decided by backward violation with i = " << i
-                    << "\n";
-#endif
+                // #ifndef NDEBUG
+                //                 llvm::errs()
+                //                     << "Dependence decided by backward
+                //                     violation with i = " << i
+                //                     << "\n";
+                // #endif
                 return true;
             }
         }
@@ -983,7 +927,6 @@ struct Dependence {
         MemoryAccess *in = &x, *out = &y;
         const bool isFwd = checkDirection(pair, x, y, numLambda,
                                           dxy.A.numCol() - dxy.getTimeDim());
-        // SHOWLN(isFwd);
         if (isFwd) {
             std::swap(farkasBackups.first, farkasBackups.second);
         } else {
@@ -994,9 +937,6 @@ struct Dependence {
         // pair.first.removeExtraVariables(numScheduleCoefs);
         deps.emplace_back(Dependence{dxy, std::move(pair.first),
                                      std::move(pair.second), in, out, isFwd});
-        // SHOW(out->getNumLoops());
-        // CSHOW(in->getNumLoops());
-        // CSHOWLN(deps.back().getNumPhiCoefficients());
         assert(out->getNumLoops() + in->getNumLoops() ==
                deps.back().getNumPhiCoefficients());
         // pair is invalid
@@ -1018,8 +958,6 @@ struct Dependence {
         size_t t = 0;
         auto fE{farkasBackups.first.getConstraints()(_, _(1, end))};
         auto sE{farkasBackups.second.getConstraints()(_, _(1, end))};
-        SHOWLN(dxy.A);
-        SHOWLN(dxy.E);
         do {
             // set `t`th timeDim to +1/-1
             // basically, what we do here is set it to `step` and pretend it was
@@ -1028,13 +966,9 @@ struct Dependence {
             // we have the problem that.
             int64_t step = dxy.nullStep[t];
             size_t v = numVar + t;
-            SHOW(dxy.A.numCol());
-            CSHOW(dxy.E.numCol());
-            CSHOWLN(v);
             for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 if (int64_t Acv = dxy.A(c, v)) {
                     Acv *= step;
-                    SHOWLN(Acv);
                     fE(0, c + 1) -= Acv; // *1
                     sE(0, c + 1) -= Acv; // *1
                 }
@@ -1042,7 +976,6 @@ struct Dependence {
             for (size_t c = 0; c < numEqualityConstraintsOld; ++c) {
                 // each of these actually represents 2 inds
                 int64_t Ecv = dxy.E(c, v) * step;
-                SHOWLN(Ecv);
                 fE(0, c + ineqEnd) -= Ecv;
                 fE(0, c + posEqEnd) += Ecv;
                 sE(0, c + ineqEnd) -= Ecv;
@@ -1111,18 +1044,10 @@ struct Dependence {
         if (x.ref.gcdKnownIndependent(y.ref))
             return 0;
         DependencePolyhedra dxy(x, y);
-        SHOW(dxy.getDim0());
-        CSHOWLN(dxy.getDim1());
-        SHOW(x.getNumLoops());
-        CSHOWLN(y.getNumLoops());
-        SHOWLN(x);
-        SHOWLN(y);
         assert(x.getNumLoops() == dxy.getDim0());
         assert(y.getNumLoops() == dxy.getDim1());
         assert(x.getNumLoops() + y.getNumLoops() ==
                dxy.getNumPhiCoefficients());
-        SHOWLN(dxy.A);
-        SHOWLN(dxy.E);
         if (dxy.isEmpty())
             return 0;
         dxy.pruneBounds();
@@ -1146,9 +1071,13 @@ struct Dependence {
         } else {
             os << "y -> x:";
         }
-        return os << d.depPoly << "\nA = " << d.depPoly.A
-                  << "\nE = " << d.depPoly.E
-                  << "\nSchedule Constraints:" << d.dependenceSatisfaction
-                  << "\nBounding Constraints:" << d.dependenceBounding << "\n";
+        os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
+           << "\nSchedule Constraints:" << d.dependenceSatisfaction
+           << "\nBounding Constraints:" << d.dependenceBounding;
+        if (d.in)
+            os << "\n\tInput:\n" << *d.in;
+        if (d.out)
+            os << "\n\tOutput:\n" << *d.out;
+        return os << "\n";
     }
 };

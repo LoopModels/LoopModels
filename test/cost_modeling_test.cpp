@@ -397,16 +397,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     assert(forward.forward);
     assert(!reverse.forward);
     EXPECT_EQ(d.size(), 16);
-    // EXPECT_EQ(forward.dependenceSatisfaction.getNumConstraints(), 3);
-    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumConstraints(), 2);
-    //
-    // EXPECT_EQ(forward.dependenceSatisfaction.getNumInequalityConstraints(),
-    // 2); EXPECT_EQ(forward.dependenceSatisfaction.getNumEqualityConstraints(),
-    // 1);
-    //
-    // EXPECT_EQ(reverse.dependenceSatisfaction.getNumInequalityConstraints(),
-    // 1); EXPECT_EQ(reverse.dependenceSatisfaction.getNumEqualityConstraints(),
-    // 1);
     EXPECT_TRUE(allZero(forward.depPoly.E(_, 0)));
     EXPECT_FALSE(allZero(reverse.depPoly.E(_, 0)));
     int nonZeroInd = -1;
@@ -446,14 +436,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // orig order (inner <-> outer): n, m
     IntMatrix optPhi2(2, 2);
     // phi2 loop order is
-    // the scheduler preserves the order, keeping `m` as outermost,
-    // and `n` as innermost
-    optPhi2.antiDiag() = 1;
+    optPhi2.diag() = 1;
+    // the scheduler swaps the order, making `n` outermost,
+    // and `m` as innermost
     // orig order (inner <-> outer): k, n, m
-    IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
-    // phi3 loop order is [k, n, m]
-    // so the schedule below places `m` as the outermost loop,
-    // followed by `k`, and `n` as innermost. `n` is the reduction loop.
+    // IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
+    IntMatrix optPhi3{stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]")};
+    // phi3 loop order is [k, m, n]
+    // so the schedule below places `k` as the outermost loop,
+    // followed by `m`, and `n` as innermost. `n` is the reduction loop.
     // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
     // assert(!optFail);
     for (auto mem : lblock.memory) {
@@ -518,16 +509,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
                                            "0 0 1]")};
     tlf.addLoop(std::move(OneLoopMat), 1);
 
-    AffineLoopNest &loopIJ = tlf.alns[0];
+    IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
+                                              "0 0 0 0 1; "
+                                              "-1 1 0 -1 0; "
+                                              "0 0 0 1 0]")};
+    tlf.addLoop(std::move(TwoLoopsMatJI), 2);
+    AffineLoopNest &loopJI = tlf.alns[0];
     AffineLoopNest &loopI = tlf.alns[1];
-    // IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
-    //                                         "0 0 0 0 1; "
-    //                                         "-1 1 0 -1 0; "
-    //                                         "0 0 0 1 0]")};
-    // tlf.addLoop(std::move(TwoLoopsMatJI), 2);
-    // // shouldn't matter?
-    // AffineLoopNest &loopJI = tlf.alns[2];
-    AffineLoopNest &loopJI = loopIJ;//tlf.alns[2];
+    AffineLoopNest &loopIJ = tlf.alns[2];
 
     llvm::IRBuilder<> &builder = tlf.builder;
 
@@ -541,8 +530,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     auto scevS = tlf.getSCEVUnknown(ptrS);
 
     // llvm::ConstantInt *Iv = builder.getInt64(200);
-    const llvm::SCEV *I = loopIJ.symbols[0];
-    const llvm::SCEV *J = loopIJ.symbols[1];
+    const llvm::SCEV *I = loopJI.symbols[0];
+    const llvm::SCEV *J = loopJI.symbols[1];
     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
     llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
     auto Jfp = builder.CreateUIToFP(Jv, Float64);
@@ -638,7 +627,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // s: 2
     llvm::Type *Int64 = builder.getInt64Ty();
     llvm::ScalarEvolution &SE{tlf.SE};
-    ArrayReference AIndIOuter{scevA, loopIJ, 2};
+    ArrayReference AIndIOuter{scevA, loopJI, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
         //     l  d
@@ -647,7 +636,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
         AIndIOuter.sizes[0] = I;
         AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference AIndJOuter{scevA, loopJI, 2};
+    ArrayReference AIndJOuter{scevA, loopIJ, 2};
     {
         MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
         //     l  d
@@ -664,14 +653,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference xInd2IOuter{scevX, loopIJ, 1};
+    ArrayReference xInd2IOuter{scevX, loopJI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
         //     l  d
         IndMat(1, 0) = 1; // i
         xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference xInd2JOuter{scevX, loopJI, 1};
+    ArrayReference xInd2JOuter{scevX, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
         //     l  d
@@ -686,14 +675,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
         IndMat(0, 0) = 1; // i
         sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference sInd2IOuter{scevS, loopIJ, 1};
+    ArrayReference sInd2IOuter{scevS, loopJI, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
         //     l  d
         IndMat(1, 0) = 1; // i
         sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
-    ArrayReference sInd2JOuter{scevS, loopJI, 1};
+    ArrayReference sInd2JOuter{scevS, loopIJ, 1};
     {
         MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
         //     l  d
@@ -879,8 +868,13 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     for (auto &&mem : jOuterMem)
         jOuterLoopNest.memory.push_back(&mem);
-    
+
     EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
+    SHOW(jOuterLoopNest.edges.size());
+    CSHOWLN(jOuterLoopNest.memory.size());
+    for (auto &edge : jOuterLoopNest.edges)
+        llvm::errs() << "\nedge = " << edge << "\n";
+
     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
         const auto &v = jOuterLoopNest.nodes[i];
         llvm::errs() << "v_" << i << ":\nmem = ";

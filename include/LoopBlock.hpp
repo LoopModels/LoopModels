@@ -239,10 +239,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         const size_t numLambda = e.getNumLambda();
         // when i == numLoopsCommon, we've passed the last loop
         for (size_t i = 0; i <= numLoopsCommon; ++i) {
-            if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i]) {
+            if (int64_t o2idiff = outOmega[2 * i] - inOmega[2 * i])
                 return (o2idiff > 0);
-            }
-
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
             // should be different, because either:
@@ -325,7 +323,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (size_t i = 1; i < memory.size(); ++i) {
             MemoryAccess &mai = *memory[i];
             ArrayReference &refI = mai.ref;
-            // SHOWLN(i);
             for (size_t j = 0; j < i; ++j) {
                 MemoryAccess &maj = *memory[j];
                 ArrayReference &refJ = maj.ref;
@@ -339,7 +336,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     unsigned searchUsesForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                                  llvm::User *u, unsigned nodeIndex,
                                  unsigned maxNode) {
-        llvm::errs() << "Searching for store: " << *u << "\n";
         for (auto &use : u->uses()) {
             llvm::User *user = use.getUser();
             if (llvm::isa<llvm::StoreInst>(user)) {
@@ -368,12 +364,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                         // userToMemory
                         memAccess->getSecond()->nodeIndex = nodeIndex;
                     }
-                } else {
-                    SHOWLN(user);
-                    for (auto mem : memory)
-                        SHOWLN(mem->user);
-                    for (auto &pair : userToMemory)
-                        SHOWLN(pair.getFirst());
                 }
             } else if (!visited.contains(user)) {
                 visited.insert(user);
@@ -427,12 +417,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             connect(e.in->nodeIndex, e.out->nodeIndex);
         for (auto &&node : nodes)
             node.schedule.init(node.getNumLoops());
-#ifndef NDEBUG
-        for (auto mem : memory) {
-            SHOW(mem->nodeIndex);
-            CSHOWLN(mem->ref);
-        }
-#endif
         // now that we've assigned each MemoryAccess to a NodeIndex, we
         // build the actual graph
     }
@@ -484,7 +468,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         [[nodiscard]] bool missingNode(size_t i, size_t j) const {
             return !(containsNode(i) && containsNode(j));
         }
-	// returns false iff e.in and e.out are in graph
+        // returns false iff e.in and e.out are in graph
         [[nodiscard]] bool missingNode(const Dependence &e) const {
             return missingNode(e.in->nodeIndex, e.out->nodeIndex);
         }
@@ -736,7 +720,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                     for (size_t rr = 0; rr < r; ++rr) {
                         phi(rr, _(begin, phiOffset)) = 0;
                         for (size_t i = 0; i < indR; ++i)
-                            phi(rr, i + phiOffset) = indMat(indR - 1 - i, rr);
+                            phi(rr, i + phiOffset) = indMat(i, rr);
                     }
                     // node.schedule.getPhi()(_(0, r), _) = indMat.transpose();
                     node.rank = r;
@@ -745,8 +729,10 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
         }
         if (tryOrth) {
-            if (llvm::Optional<BitSet> opt = optimize(g, 0, maxDepth))
+            if (llvm::Optional<BitSet> opt = optimize(g, 0, maxDepth)) {
+                llvm::errs() << "orth opt succeeded!\n";
                 return opt;
+            }
             for (auto &&n : nodes)
                 n.rank = 0;
         }
@@ -852,21 +838,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     void validateMemory() {
         for (auto mem : memory) {
-            // SHOW(mem->ref.getNumLoops());
-            // CSHOWLN(mem->schedule.getNumLoops());
             assert(mem->ref.getNumLoops() == mem->schedule.getNumLoops());
         }
     }
     void validateEdges() {
         for (auto &edge : edges) {
-            // SHOWLN(edge);
             assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
                    edge.getNumPhiCoefficients());
             // 2 == 1 for const offset + 1 for w
-            SHOWLN(2 + edge.depPoly.getNumLambda() +
-                   edge.getNumPhiCoefficients() +
-                   edge.getNumOmegaCoefficients());
-            SHOWLN(edge.dependenceSatisfaction.getConstraints().numCol());
             assert(2 + edge.depPoly.getNumLambda() +
                        edge.getNumPhiCoefficients() +
                        edge.getNumOmegaCoefficients() ==
@@ -942,6 +921,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             // now, handle Phi and Omega
             // phis are not constrained to be 0
             if (outNodeIndex == inNodeIndex) {
+                llvm::errs() << "outNodeIndex == inNodeIndex\n";
                 if (d < outNode.getNumLoops()) {
                     if (satPc.numCol() == satPp.numCol()) {
                         if (outNode.phiIsScheduled(d)) {
@@ -999,6 +979,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                         bndO(_, 0) + bndO(_, 1);
                 }
             } else {
+                llvm::errs() << "outNodeIndex != inNodeIndex\n";
                 if (d >= edge.out->getNumLoops()) {
                 } else if (outNode.phiIsScheduled(d)) {
                     // add it constants
@@ -1242,7 +1223,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // We split all of them, solve independently,
         // and then try to fuse again after if/where optimal schedules
         // allow it.
-	llvm::errs()<<"splitting graph!\n";
+        llvm::errs() << "splitting graph!\n";
         auto graphs = g.split(components);
         assert(graphs.size() == components.size());
         BitSet satDeps;
@@ -1333,8 +1314,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         instantiateOmniSimplex(g, d);
         addIndependentSolutionConstraints(g, d);
-        if (omniSimplex.initiateFeasible())
+        if (omniSimplex.initiateFeasible()) {
+            llvm::errs() << "optimizeLevel = " << d
+                         << ": infeasible solution!!!\n";
+            assert(d);
             return {};
+        }
         sol.resizeForOverwrite(getLambdaOffset() - 1);
         omniSimplex.lexMinimize(sol);
         // lexMinimize(g, sol, d);
