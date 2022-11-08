@@ -260,13 +260,27 @@ struct LoopTree {
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(L, BT, SE),
-          parentLoop(std::numeric_limits<unsigned>::max()) {}
+          parentLoop(std::numeric_limits<unsigned>::max()) {
+#ifndef NDEBUG
+        if (loop)
+            for (auto &&chain : paths)
+                for (auto &&pbb : chain)
+                    assert(loop->contains(pbb.basicBlock));
+#endif
+    }
 
     LoopTree(llvm::Loop *L, AffineLoopNest aln, llvm::SmallVector<unsigned> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(std::move(aln)),
-          parentLoop(std::numeric_limits<unsigned>::max()) {}
+          parentLoop(std::numeric_limits<unsigned>::max()) {
+#ifndef NDEBUG
+        if (loop)
+            for (auto &&chain : paths)
+                for (auto &&pbb : chain)
+                    assert(loop->contains(pbb.basicBlock));
+#endif
+    }
     // LoopTree(llvm::Loop *L, AffineLoopNest *aln, LoopForest sL)
     // : loop(L), subLoops(sL), affineLoop(aln), parentLoop(nullptr) {}
 
@@ -554,6 +568,11 @@ struct LoopTree {
         paths.clear();
     }
     void dumpAllMemAccess(llvm::ArrayRef<LoopTree> loopTrees) const {
+        llvm::errs() << "dumpAllMemAccess for ";
+        if (loop)
+            llvm::errs() << *loop << "\n";
+        else
+            llvm::errs() << "toplevel\n";
         for (auto &mem : memAccesses)
             SHOWLN(mem);
         for (auto id : subLoops)

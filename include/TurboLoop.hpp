@@ -290,6 +290,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                                             Predicates &pred,
                                             const llvm::SCEV *elSize) {
         llvm::Loop *L = LT.loop;
+        if (L)
+            llvm::errs() << "arrayRef for " << *L << "\n";
+        else
+            llvm::errs() << "arrayRef for top-level\n";
         // const llvm::SCEV *scev = SE->getSCEV(ptr);
         // code modified from
         // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
@@ -438,7 +442,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     SHOWLN(*I);
                     SHOWLN(LT.memAccesses.back().user);
                     SHOWLN(*LT.memAccesses.back().user);
-		    SHOWLN(LT.memAccesses.back().getNumLoops());
+                    SHOWLN(LT.memAccesses.back().getNumLoops());
                     ++omega.back();
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
@@ -489,15 +493,22 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
                  llvm::SmallVector<unsigned> &omega) {
         // omega.push_back(0);
-        llvm::errs() << "\nParsing BB: " << BB << "\n";
-	if (pred.size())
-	    SHOWLN(pred);
+        llvm::errs() << "\nParsing BB: " << BB << "\n"
+                     << *BB << "\nNested in Loop: ";
+        if (LT.loop)
+            llvm::errs() << *LT.loop << "\n";
+        else
+            llvm::errs() << "toplevel\n";
+        if (pred.size())
+            SHOWLN(pred);
         llvm::errs() << "omega = [" << omega.front();
         for (size_t i = 1; i < omega.size(); ++i)
             llvm::errs() << ", " << omega[i];
         llvm::errs() << "]\n";
         for (llvm::Instruction &I : *BB) {
             llvm::errs() << "Parsing Instr: " << I << "\n";
+            if (LT.loop)
+                assert(LT.loop->contains(&I));
             if (I.mayReadFromMemory()) {
                 if (llvm::LoadInst *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
                     if (addLoad(LT, pred, LI, omega))
@@ -518,7 +529,6 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
 #ifndef NDEBUG
         size_t numOmega = omega.size();
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
         // FIXME:
         // two issues, currently:
         // 1. multiple parses produce the same omega
@@ -529,6 +539,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         //         paths.insert(PBB.basicBlock);
         //     }
 #endif
+        llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
         omega.push_back(0);
         assert(LT.subLoops.size() + 1 == LT.paths.size());
         // llvm::Loop *L = LT.loop;
@@ -539,16 +550,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (LT.loop)
                 llvm::errs() << ": " << *LT.loop;
             llvm::errs() << "\n";
-            LoopTree &SLT = loopTrees[LT.subLoops[i]];
-            for (auto &&PBB : LT.paths[i]) {
-                parseBB(SLT, PBB.basicBlock, PBB.predicates, omega);
-            }
-            parseLoop(SLT, omega);
+            for (auto &&PBB : LT.paths[i])
+                parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
+            parseLoop(loopTrees[LT.subLoops[i]], omega);
             ++omega.back();
         }
-        for (auto PBB : LT.paths.back()) {
+        for (auto PBB : LT.paths.back()) 
             parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
-        }
         omega.pop_back();
 #ifndef NDEBUG
         assert(omega.size() == numOmega);
@@ -712,7 +720,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     void fillLoopBlock(LoopTree &root) {
         for (auto &&mem : root.memAccesses)
             loopBlock.addMemory(mem.truncateSchedule());
-            // loopBlock.memory.push_back(mem.truncateSchedule());
+        // loopBlock.memory.push_back(mem.truncateSchedule());
         for (size_t i = 0; i < root.subLoops.size(); ++i)
             fillLoopBlock(loopTrees[root.subLoops[i]]);
     }
