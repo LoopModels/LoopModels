@@ -490,6 +490,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                  llvm::SmallVector<unsigned> &omega) {
         // omega.push_back(0);
         llvm::errs() << "\nParsing BB: " << BB << "\n";
+	if (pred.size())
+	    SHOWLN(pred);
         llvm::errs() << "omega = [" << omega.front();
         for (size_t i = 1; i < omega.size(); ++i)
             llvm::errs() << ", " << omega[i];
@@ -709,7 +711,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void fillLoopBlock(LoopTree &root) {
         for (auto &&mem : root.memAccesses)
-            loopBlock.memory.push_back(mem.truncateSchedule());
+            loopBlock.addMemory(mem.truncateSchedule());
+            // loopBlock.memory.push_back(mem.truncateSchedule());
         for (size_t i = 0; i < root.subLoops.size(); ++i)
             fillLoopBlock(loopTrees[root.subLoops[i]]);
     }

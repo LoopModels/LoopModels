@@ -465,810 +465,810 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
 }
 
-TEST(MeanStDevTest0, BasicAssertions) {
-    // iOuter variant:
-    // for (i = 0; i < I; ++i){
-    //   x(i) = 0; // [0]
-    //   for (j = 0; j < J; ++j)
-    //     x(i) += A(j,i) // [1,0:2]
-    //   x(i) /= J;
-    //   s(i) = 0;
-    //   for (j = 0; j < J; ++j){
-    //     d = (A(j,i) - x(i));
-    //     s(i) += d*d;
-    //   }
-    //   s(i) = sqrt(s(i) / (J-1));
-    // }
+// TEST(MeanStDevTest0, BasicAssertions) {
+//     // iOuter variant:
+//     // for (i = 0; i < I; ++i){
+//     //   x(i) = 0; // [0]
+//     //   for (j = 0; j < J; ++j)
+//     //     x(i) += A(j,i) // [1,0:2]
+//     //   x(i) /= J;
+//     //   s(i) = 0;
+//     //   for (j = 0; j < J; ++j){
+//     //     d = (A(j,i) - x(i));
+//     //     s(i) += d*d;
+//     //   }
+//     //   s(i) = sqrt(s(i) / (J-1));
+//     // }
 
-    // jOuter variant:
-    //
-    // for (i = 0; i < I; ++i){
-    //    x(i) = 0;
-    //    s(i) = 0;
-    // }
-    // for (j = 0; j < J; ++j){
-    //   for (i = 0; i < I; ++i){
-    //      x(i) += A(j,i)
-    // for (i = 0; i < I; ++i){
-    //   x(i) /= J;
-    // for (j = 0; j < J; ++j){
-    //   for (i = 0; i < I; ++i){
-    //     d = (A(j,i) - x(i));
-    //     s(i) += d*d;
-    //   }
-    // }
-    // for (i = 0; i < I; ++i)
-    //   s(i) = sqrt(s(i) / (J-1));
-    TestLoopFunction tlf;
-    IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 0 -1; "
-                                            "0 0 0 0 1; "
-                                            "-1 0 1 -1 0; "
-                                            "0 0 0 1 0]")};
-    tlf.addLoop(std::move(TwoLoopsMat), 2);
-    IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
-                                           "0 0 1]")};
-    tlf.addLoop(std::move(OneLoopMat), 1);
+//     // jOuter variant:
+//     //
+//     // for (i = 0; i < I; ++i){
+//     //    x(i) = 0;
+//     //    s(i) = 0;
+//     // }
+//     // for (j = 0; j < J; ++j){
+//     //   for (i = 0; i < I; ++i){
+//     //      x(i) += A(j,i)
+//     // for (i = 0; i < I; ++i){
+//     //   x(i) /= J;
+//     // for (j = 0; j < J; ++j){
+//     //   for (i = 0; i < I; ++i){
+//     //     d = (A(j,i) - x(i));
+//     //     s(i) += d*d;
+//     //   }
+//     // }
+//     // for (i = 0; i < I; ++i)
+//     //   s(i) = sqrt(s(i) / (J-1));
+//     TestLoopFunction tlf;
+//     IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 0 -1; "
+//                                             "0 0 0 0 1; "
+//                                             "-1 0 1 -1 0; "
+//                                             "0 0 0 1 0]")};
+//     tlf.addLoop(std::move(TwoLoopsMat), 2);
+//     IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
+//                                            "0 0 1]")};
+//     tlf.addLoop(std::move(OneLoopMat), 1);
 
-    IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
-                                              "0 0 0 0 1; "
-                                              "-1 1 0 -1 0; "
-                                              "0 0 0 1 0]")};
-    tlf.addLoop(std::move(TwoLoopsMatJI), 2);
-    AffineLoopNest &loopJI = tlf.alns[0];
-    AffineLoopNest &loopI = tlf.alns[1];
-    AffineLoopNest &loopIJ = tlf.alns[2];
+//     IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
+//                                               "0 0 0 0 1; "
+//                                               "-1 1 0 -1 0; "
+//                                               "0 0 0 1 0]")};
+//     tlf.addLoop(std::move(TwoLoopsMatJI), 2);
+//     AffineLoopNest &loopJI = tlf.alns[0];
+//     AffineLoopNest &loopI = tlf.alns[1];
+//     AffineLoopNest &loopIJ = tlf.alns[2];
 
-    llvm::IRBuilder<> &builder = tlf.builder;
+//     llvm::IRBuilder<> &builder = tlf.builder;
 
-    // create arrays
-    llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrX = tlf.createArray();
-    llvm::Value *ptrA = tlf.createArray();
-    llvm::Value *ptrS = tlf.createArray();
-    auto scevX = tlf.getSCEVUnknown(ptrX);
-    auto scevA = tlf.getSCEVUnknown(ptrA);
-    auto scevS = tlf.getSCEVUnknown(ptrS);
+//     // create arrays
+//     llvm::Type *Float64 = builder.getDoubleTy();
+//     llvm::Value *ptrX = tlf.createArray();
+//     llvm::Value *ptrA = tlf.createArray();
+//     llvm::Value *ptrS = tlf.createArray();
+//     auto scevX = tlf.getSCEVUnknown(ptrX);
+//     auto scevA = tlf.getSCEVUnknown(ptrA);
+//     auto scevS = tlf.getSCEVUnknown(ptrS);
 
-    // llvm::ConstantInt *Iv = builder.getInt64(200);
-    const llvm::SCEV *I = loopJI.symbols[0];
-    const llvm::SCEV *J = loopJI.symbols[1];
-    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
-    llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
-    auto Jfp = builder.CreateUIToFP(Jv, Float64);
-    auto zero = builder.getInt64(0);
-    auto one = builder.getInt64(1);
-    llvm::Value *iv = builder.CreateAdd(zero, one);
-    llvm::Value *jv = builder.CreateAdd(zero, one);
+//     // llvm::ConstantInt *Iv = builder.getInt64(200);
+//     const llvm::SCEV *I = loopJI.symbols[0];
+//     const llvm::SCEV *J = loopJI.symbols[1];
+//     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
+//     llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
+//     auto Jfp = builder.CreateUIToFP(Jv, Float64);
+//     auto zero = builder.getInt64(0);
+//     auto one = builder.getInt64(1);
+//     llvm::Value *iv = builder.CreateAdd(zero, one);
+//     llvm::Value *jv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
-    auto Aload_m = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
-        llvm::MaybeAlign(8));
-    auto Aload_s = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
-        llvm::MaybeAlign(8));
+//     llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+//     auto Aload_m = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+//         llvm::MaybeAlign(8));
+//     auto Aload_s = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+//         llvm::MaybeAlign(8));
 
-    auto Xload_0 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Xload_1 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Xload_2 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
+//     auto Xload_0 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Xload_1 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Xload_2 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
 
-    auto zeroFP = llvm::ConstantFP::getZero(Float64);
-    auto Xstore_0 = builder.CreateAlignedStore(
-        zeroFP,
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Xstore_1 = builder.CreateAlignedStore(
-        builder.CreateFAdd(Xload_0, Aload_m),
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Xstore_2 = builder.CreateAlignedStore(
-        builder.CreateFDiv(Xload_1, Jfp),
-        builder.CreateGEP(Float64, ptrX,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
+//     auto zeroFP = llvm::ConstantFP::getZero(Float64);
+//     auto Xstore_0 = builder.CreateAlignedStore(
+//         zeroFP,
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Xstore_1 = builder.CreateAlignedStore(
+//         builder.CreateFAdd(Xload_0, Aload_m),
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Xstore_2 = builder.CreateAlignedStore(
+//         builder.CreateFDiv(Xload_1, Jfp),
+//         builder.CreateGEP(Float64, ptrX,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
 
-    auto Sload_0 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrS,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Sload_1 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrS,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto Sstore_0 = builder.CreateAlignedStore(
-        zeroFP,
-        builder.CreateGEP(Float64, ptrS,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    auto diff = builder.CreateFSub(Aload_s, Xload_2);
-    // llvm::Intrinsic::fmuladd
-    auto Sstore_1 = builder.CreateAlignedStore(
-        builder.CreateFAdd(Sload_0, builder.CreateFMul(diff, diff)),
-        builder.CreateGEP(Float64, ptrS,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
-    llvm::Function *sqrt = llvm::Intrinsic::getDeclaration(
-        &tlf.mod, llvm::Intrinsic::sqrt, Float64);
-    llvm::FunctionType *sqrtTyp =
-        llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
+//     auto Sload_0 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrS,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Sload_1 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrS,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto Sstore_0 = builder.CreateAlignedStore(
+//         zeroFP,
+//         builder.CreateGEP(Float64, ptrS,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     auto diff = builder.CreateFSub(Aload_s, Xload_2);
+//     // llvm::Intrinsic::fmuladd
+//     auto Sstore_1 = builder.CreateAlignedStore(
+//         builder.CreateFAdd(Sload_0, builder.CreateFMul(diff, diff)),
+//         builder.CreateGEP(Float64, ptrS,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
+//     llvm::Function *sqrt = llvm::Intrinsic::getDeclaration(
+//         &tlf.mod, llvm::Intrinsic::sqrt, Float64);
+//     llvm::FunctionType *sqrtTyp =
+//         llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
 
-    auto Sstore_2 = builder.CreateAlignedStore(
-        builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
-        builder.CreateGEP(Float64, ptrS,
-                          llvm::SmallVector<llvm::Value *, 1>{iv}),
-        llvm::MaybeAlign(8));
+//     auto Sstore_2 = builder.CreateAlignedStore(
+//         builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
+//         builder.CreateGEP(Float64, ptrS,
+//                           llvm::SmallVector<llvm::Value *, 1>{iv}),
+//         llvm::MaybeAlign(8));
 
-    // Now, create corresponding schedules
-    // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
-    // LoopBlock jOuterLoopNest;
-    // Array IDs are:
-    // A: 0
-    // x: 1
-    // s: 2
-    llvm::Type *Int64 = builder.getInt64Ty();
-    llvm::ScalarEvolution &SE{tlf.SE};
-    ArrayReference AIndIOuter{scevA, loopJI, 2};
-    {
-        MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
-        //     l  d
-        IndMat(1, 1) = 1; // i
-        IndMat(0, 0) = 1; // j
-        AIndIOuter.sizes[0] = I;
-        AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    ArrayReference AIndJOuter{scevA, loopIJ, 2};
-    {
-        MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
-        //     l  d
-        IndMat(0, 1) = 1; // i
-        IndMat(1, 0) = 1; // j
-        AIndJOuter.sizes[0] = I;
-        AIndJOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
+//     // Now, create corresponding schedules
+//     // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
+//     // LoopBlock jOuterLoopNest;
+//     // Array IDs are:
+//     // A: 0
+//     // x: 1
+//     // s: 2
+//     llvm::Type *Int64 = builder.getInt64Ty();
+//     llvm::ScalarEvolution &SE{tlf.SE};
+//     ArrayReference AIndIOuter{scevA, loopJI, 2};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = AIndIOuter.indexMatrix();
+//         //     l  d
+//         IndMat(1, 1) = 1; // i
+//         IndMat(0, 0) = 1; // j
+//         AIndIOuter.sizes[0] = I;
+//         AIndIOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     ArrayReference AIndJOuter{scevA, loopIJ, 2};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = AIndJOuter.indexMatrix();
+//         //     l  d
+//         IndMat(0, 1) = 1; // i
+//         IndMat(1, 0) = 1; // j
+//         AIndJOuter.sizes[0] = I;
+//         AIndJOuter.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
 
-    ArrayReference xInd1{scevX, loopI, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
-        //     l  d
-        IndMat(0, 0) = 1; // i
-        xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    ArrayReference xInd2IOuter{scevX, loopJI, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
-        //     l  d
-        IndMat(1, 0) = 1; // i
-        xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    ArrayReference xInd2JOuter{scevX, loopIJ, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
-        //     l  d
-        IndMat(0, 0) = 1; // i
-        xInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
+//     ArrayReference xInd1{scevX, loopI, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = xInd1.indexMatrix();
+//         //     l  d
+//         IndMat(0, 0) = 1; // i
+//         xInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     ArrayReference xInd2IOuter{scevX, loopJI, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = xInd2IOuter.indexMatrix();
+//         //     l  d
+//         IndMat(1, 0) = 1; // i
+//         xInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     ArrayReference xInd2JOuter{scevX, loopIJ, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = xInd2JOuter.indexMatrix();
+//         //     l  d
+//         IndMat(0, 0) = 1; // i
+//         xInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
 
-    ArrayReference sInd1{scevS, loopI, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
-        //     l  d
-        IndMat(0, 0) = 1; // i
-        sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    ArrayReference sInd2IOuter{scevS, loopJI, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
-        //     l  d
-        IndMat(1, 0) = 1; // i
-        sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    ArrayReference sInd2JOuter{scevS, loopIJ, 1};
-    {
-        MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
-        //     l  d
-        IndMat(0, 0) = 1; // i
-        sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
+//     ArrayReference sInd1{scevS, loopI, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = sInd1.indexMatrix();
+//         //     l  d
+//         IndMat(0, 0) = 1; // i
+//         sInd1.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     ArrayReference sInd2IOuter{scevS, loopJI, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = sInd2IOuter.indexMatrix();
+//         //     l  d
+//         IndMat(1, 0) = 1; // i
+//         sInd2IOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     ArrayReference sInd2JOuter{scevS, loopIJ, 1};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = sInd2JOuter.indexMatrix();
+//         //     l  d
+//         IndMat(0, 0) = 1; // i
+//         sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
 
-    Schedule sch0_0(1);
-    Schedule sch0_1_0(2);
-    sch0_1_0.getOmega()(2) = 1;
-    Schedule sch0_1_1(2);
-    sch0_1_1.getOmega()(2) = 1;
-    sch0_1_1.getOmega()(4) = 1;
-    Schedule sch0_1_2(2);
-    sch0_1_2.getOmega()(2) = 1;
-    sch0_1_2.getOmega()(4) = 2;
-    Schedule sch0_2(1);
-    sch0_2.getOmega()(2) = 2;
-    Schedule sch0_3(1);
-    sch0_3.getOmega()(2) = 3;
-    Schedule sch0_4(1);
-    sch0_4.getOmega()(2) = 4;
-    Schedule sch0_5_0(2);
-    sch0_5_0.getOmega()(2) = 5;
-    Schedule sch0_5_1(2);
-    sch0_5_1.getOmega()(2) = 5;
-    sch0_5_1.getOmega()(4) = 1;
-    Schedule sch0_5_2(2);
-    sch0_5_2.getOmega()(2) = 5;
-    sch0_5_2.getOmega()(4) = 2;
-    Schedule sch0_5_3(2);
-    sch0_5_3.getOmega()(2) = 5;
-    sch0_5_3.getOmega()(4) = 3;
-    Schedule sch0_6(1);
-    sch0_6.getOmega()(2) = 6;
-    Schedule sch0_7(1);
-    sch0_7.getOmega()(2) = 7;
-    // SHOWLN(sch1_0.getPhi());
-    // SHOWLN(sch2_1_0.getPhi());
-    // SHOWLN(sch2_1_1.getPhi());
-    // SHOWLN(sch2_1_2.getPhi());
-    // SHOWLN(sch1_2.getPhi());
-    // SHOWLN(sch1_3.getPhi());
-    // SHOWLN(sch1_4.getPhi());
-    // SHOWLN(sch2_5_0.getPhi());
-    // SHOWLN(sch2_5_1.getPhi());
-    // SHOWLN(sch2_5_2.getPhi());
-    // SHOWLN(sch2_5_3.getPhi());
-    // SHOWLN(sch1_6.getPhi());
-    // SHOWLN(sch1_7.getPhi());
-    // SHOWLN(sch1_0.getOmega());
-    // SHOWLN(sch2_1_0.getOmega());
-    // SHOWLN(sch2_1_1.getOmega());
-    // SHOWLN(sch2_1_2.getOmega());
-    // SHOWLN(sch1_2.getOmega());
-    // SHOWLN(sch1_3.getOmega());
-    // SHOWLN(sch1_4.getOmega());
-    // SHOWLN(sch2_5_0.getOmega());
-    // SHOWLN(sch2_5_1.getOmega());
-    // SHOWLN(sch2_5_2.getOmega());
-    // SHOWLN(sch2_5_3.getOmega());
-    // SHOWLN(sch1_6.getOmega());
-    // SHOWLN(sch1_7.getOmega());
-    LoopBlock iOuterLoopNest;
-    llvm::SmallVector<MemoryAccess, 0> iOuterMem;
-    iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
+//     Schedule sch0_0(1);
+//     Schedule sch0_1_0(2);
+//     sch0_1_0.getOmega()(2) = 1;
+//     Schedule sch0_1_1(2);
+//     sch0_1_1.getOmega()(2) = 1;
+//     sch0_1_1.getOmega()(4) = 1;
+//     Schedule sch0_1_2(2);
+//     sch0_1_2.getOmega()(2) = 1;
+//     sch0_1_2.getOmega()(4) = 2;
+//     Schedule sch0_2(1);
+//     sch0_2.getOmega()(2) = 2;
+//     Schedule sch0_3(1);
+//     sch0_3.getOmega()(2) = 3;
+//     Schedule sch0_4(1);
+//     sch0_4.getOmega()(2) = 4;
+//     Schedule sch0_5_0(2);
+//     sch0_5_0.getOmega()(2) = 5;
+//     Schedule sch0_5_1(2);
+//     sch0_5_1.getOmega()(2) = 5;
+//     sch0_5_1.getOmega()(4) = 1;
+//     Schedule sch0_5_2(2);
+//     sch0_5_2.getOmega()(2) = 5;
+//     sch0_5_2.getOmega()(4) = 2;
+//     Schedule sch0_5_3(2);
+//     sch0_5_3.getOmega()(2) = 5;
+//     sch0_5_3.getOmega()(4) = 3;
+//     Schedule sch0_6(1);
+//     sch0_6.getOmega()(2) = 6;
+//     Schedule sch0_7(1);
+//     sch0_7.getOmega()(2) = 7;
+//     // SHOWLN(sch1_0.getPhi());
+//     // SHOWLN(sch2_1_0.getPhi());
+//     // SHOWLN(sch2_1_1.getPhi());
+//     // SHOWLN(sch2_1_2.getPhi());
+//     // SHOWLN(sch1_2.getPhi());
+//     // SHOWLN(sch1_3.getPhi());
+//     // SHOWLN(sch1_4.getPhi());
+//     // SHOWLN(sch2_5_0.getPhi());
+//     // SHOWLN(sch2_5_1.getPhi());
+//     // SHOWLN(sch2_5_2.getPhi());
+//     // SHOWLN(sch2_5_3.getPhi());
+//     // SHOWLN(sch1_6.getPhi());
+//     // SHOWLN(sch1_7.getPhi());
+//     // SHOWLN(sch1_0.getOmega());
+//     // SHOWLN(sch2_1_0.getOmega());
+//     // SHOWLN(sch2_1_1.getOmega());
+//     // SHOWLN(sch2_1_2.getOmega());
+//     // SHOWLN(sch1_2.getOmega());
+//     // SHOWLN(sch1_3.getOmega());
+//     // SHOWLN(sch1_4.getOmega());
+//     // SHOWLN(sch2_5_0.getOmega());
+//     // SHOWLN(sch2_5_1.getOmega());
+//     // SHOWLN(sch2_5_2.getOmega());
+//     // SHOWLN(sch2_5_3.getOmega());
+//     // SHOWLN(sch1_6.getOmega());
+//     // SHOWLN(sch1_7.getOmega());
+//     LoopBlock iOuterLoopNest;
+//     llvm::SmallVector<MemoryAccess, 0> iOuterMem;
+//     iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
 
-    iOuterMem.emplace_back(AIndIOuter, Aload_m, sch0_1_0, true);  // 1
-    iOuterMem.emplace_back(xInd2IOuter, Xload_0, sch0_1_1, true); // 2
+//     iOuterMem.emplace_back(AIndIOuter, Aload_m, sch0_1_0, true);  // 1
+//     iOuterMem.emplace_back(xInd2IOuter, Xload_0, sch0_1_1, true); // 2
 
-    iOuterMem.emplace_back(xInd2IOuter, Xstore_1, sch0_1_2, false); // 3
+//     iOuterMem.emplace_back(xInd2IOuter, Xstore_1, sch0_1_2, false); // 3
 
-    iOuterMem.emplace_back(xInd1, Xload_1, sch0_2, true);   // 4
-    iOuterMem.emplace_back(xInd1, Xstore_2, sch0_3, false); // 5
+//     iOuterMem.emplace_back(xInd1, Xload_1, sch0_2, true);   // 4
+//     iOuterMem.emplace_back(xInd1, Xstore_2, sch0_3, false); // 5
 
-    iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4, false);         // 6
-    iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0, true);    // 7
-    iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1, true);   // 8
-    iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2, true);   // 9
-    iOuterMem.emplace_back(sInd2IOuter, Sstore_1, sch0_5_3, false); // 10
+//     iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4, false);         // 6
+//     iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0, true);    // 7
+//     iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1, true);   // 8
+//     iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2, true);   // 9
+//     iOuterMem.emplace_back(sInd2IOuter, Sstore_1, sch0_5_3, false); // 10
 
-    iOuterMem.emplace_back(sInd1, Sload_1, sch0_6, true);   // 11
-    iOuterMem.emplace_back(sInd1, Sstore_2, sch0_7, false); // 12
-    for (auto &&mem : iOuterMem)
-        iOuterLoopNest.memory.push_back(&mem);
+//     iOuterMem.emplace_back(sInd1, Sload_1, sch0_6, true);   // 11
+//     iOuterMem.emplace_back(sInd1, Sstore_2, sch0_7, false); // 12
+//     for (auto &&mem : iOuterMem)
+//         iOuterLoopNest.memory.push_back(&mem);
 
-    llvm::SmallVector<Dependence, 0> d;
-    d.reserve(4);
-    Dependence::check(d, *iOuterLoopNest.memory[3], *iOuterLoopNest.memory[5]);
-    EXPECT_TRUE(d.back().forward);
-    Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[3]);
-    EXPECT_FALSE(d.back().forward);
-    Dependence::check(d, *iOuterLoopNest.memory[4], *iOuterLoopNest.memory[5]);
-    EXPECT_TRUE(d.back().forward);
-    Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[4]);
-    EXPECT_FALSE(d.back().forward);
+//     llvm::SmallVector<Dependence, 0> d;
+//     d.reserve(4);
+//     Dependence::check(d, *iOuterLoopNest.memory[3], *iOuterLoopNest.memory[5]);
+//     EXPECT_TRUE(d.back().forward);
+//     Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[3]);
+//     EXPECT_FALSE(d.back().forward);
+//     Dependence::check(d, *iOuterLoopNest.memory[4], *iOuterLoopNest.memory[5]);
+//     EXPECT_TRUE(d.back().forward);
+//     Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[4]);
+//     EXPECT_FALSE(d.back().forward);
 
-    llvm::Optional<BitSet> optDeps = iOuterLoopNest.optimize();
-    EXPECT_TRUE(optDeps.hasValue());
-    llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
-    for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
-        memAccessIds[iOuterLoopNest.memory[i]] = i;
-    for (auto &e : iOuterLoopNest.edges) {
-        llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
-                     << ", in ID: " << memAccessIds[e.in]
-                     << "; out ID: " << memAccessIds[e.out] << "\n";
-    }
-    for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
-        const auto &v = iOuterLoopNest.nodes[i];
-        llvm::errs() << "v_" << i << ":\nmem = ";
-        for (auto m : v.memory) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\ninNeighbors = ";
-        for (auto m : v.inNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\noutNeighbors = ";
-        for (auto m : v.outNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\n";
-    }
-    // Graphs::print(iOuterLoopNest.fullGraph());
-    for (auto mem : iOuterLoopNest.memory) {
-        SHOW(mem->nodeIndex);
-        CSHOWLN(mem->ref);
-        Schedule &s = iOuterLoopNest.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        SHOWLN(s.getOmega());
-    }
+//     llvm::Optional<BitSet> optDeps = iOuterLoopNest.optimize();
+//     EXPECT_TRUE(optDeps.hasValue());
+//     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+//     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
+//         memAccessIds[iOuterLoopNest.memory[i]] = i;
+//     for (auto &e : iOuterLoopNest.edges) {
+//         llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
+//                      << ", in ID: " << memAccessIds[e.in]
+//                      << "; out ID: " << memAccessIds[e.out] << "\n";
+//     }
+//     for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
+//         const auto &v = iOuterLoopNest.nodes[i];
+//         llvm::errs() << "v_" << i << ":\nmem = ";
+//         for (auto m : v.memory) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\ninNeighbors = ";
+//         for (auto m : v.inNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\noutNeighbors = ";
+//         for (auto m : v.outNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\n";
+//     }
+//     // Graphs::print(iOuterLoopNest.fullGraph());
+//     for (auto mem : iOuterLoopNest.memory) {
+//         SHOW(mem->nodeIndex);
+//         CSHOWLN(mem->ref);
+//         Schedule &s = iOuterLoopNest.nodes[mem->nodeIndex].schedule;
+//         SHOWLN(s.getPhi());
+//         SHOWLN(s.getOmega());
+//     }
 
-    LoopBlock jOuterLoopNest;
-    llvm::SmallVector<MemoryAccess, 0> jOuterMem;
-    jOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
-    Schedule sch0_1(1);
-    sch0_1.getOmega()(2) = 1;
-    jOuterMem.emplace_back(sInd1, Sstore_0, sch0_1, false); // 6
-    Schedule sch1_0_0(2);
-    sch1_0_0.getOmega()(0) = 1;
-    Schedule sch1_0_1(2);
-    sch1_0_1.getOmega()(0) = 1;
-    sch1_0_1.getOmega()(4) = 1;
-    Schedule sch1_0_2(2);
-    sch1_0_2.getOmega()(0) = 1;
-    sch1_0_2.getOmega()(4) = 2;
-    jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0, true);    // 1
-    jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1, true);   // 2
-    jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2, false); // 3
+//     LoopBlock jOuterLoopNest;
+//     llvm::SmallVector<MemoryAccess, 0> jOuterMem;
+//     jOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
+//     Schedule sch0_1(1);
+//     sch0_1.getOmega()(2) = 1;
+//     jOuterMem.emplace_back(sInd1, Sstore_0, sch0_1, false); // 6
+//     Schedule sch1_0_0(2);
+//     sch1_0_0.getOmega()(0) = 1;
+//     Schedule sch1_0_1(2);
+//     sch1_0_1.getOmega()(0) = 1;
+//     sch1_0_1.getOmega()(4) = 1;
+//     Schedule sch1_0_2(2);
+//     sch1_0_2.getOmega()(0) = 1;
+//     sch1_0_2.getOmega()(4) = 2;
+//     jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0, true);    // 1
+//     jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1, true);   // 2
+//     jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2, false); // 3
 
-    Schedule sch2_0(1);
-    sch2_0.getOmega()(0) = 2;
-    Schedule sch2_1(1);
-    sch2_1.getOmega()(0) = 2;
-    sch2_1.getOmega()(2) = 1;
-    jOuterMem.emplace_back(xInd1, Xload_1, sch2_0, true);   // 4
-    jOuterMem.emplace_back(xInd1, Xstore_2, sch2_1, false); // 5
+//     Schedule sch2_0(1);
+//     sch2_0.getOmega()(0) = 2;
+//     Schedule sch2_1(1);
+//     sch2_1.getOmega()(0) = 2;
+//     sch2_1.getOmega()(2) = 1;
+//     jOuterMem.emplace_back(xInd1, Xload_1, sch2_0, true);   // 4
+//     jOuterMem.emplace_back(xInd1, Xstore_2, sch2_1, false); // 5
 
-    Schedule sch3_0_0(2);
-    sch3_0_0.getOmega()(0) = 3;
-    Schedule sch3_0_1(2);
-    sch3_0_1.getOmega()(0) = 3;
-    sch3_0_1.getOmega()(4) = 1;
-    Schedule sch3_0_2(2);
-    sch3_0_2.getOmega()(0) = 3;
-    sch3_0_2.getOmega()(4) = 2;
-    Schedule sch3_0_3(2);
-    sch3_0_3.getOmega()(0) = 3;
-    sch3_0_3.getOmega()(4) = 3;
+//     Schedule sch3_0_0(2);
+//     sch3_0_0.getOmega()(0) = 3;
+//     Schedule sch3_0_1(2);
+//     sch3_0_1.getOmega()(0) = 3;
+//     sch3_0_1.getOmega()(4) = 1;
+//     Schedule sch3_0_2(2);
+//     sch3_0_2.getOmega()(0) = 3;
+//     sch3_0_2.getOmega()(4) = 2;
+//     Schedule sch3_0_3(2);
+//     sch3_0_3.getOmega()(0) = 3;
+//     sch3_0_3.getOmega()(4) = 3;
 
-    jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0, true);    // 7
-    jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1, true);   // 8
-    jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2, true);   // 9
-    jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3, false); // 10
+//     jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0, true);    // 7
+//     jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1, true);   // 8
+//     jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2, true);   // 9
+//     jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3, false); // 10
 
-    Schedule sch4_0(1);
-    sch4_0.getOmega()(0) = 4;
-    Schedule sch4_1(1);
-    sch4_1.getOmega()(0) = 4;
-    sch4_1.getOmega()(2) = 1;
-    jOuterMem.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
-    jOuterMem.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
+//     Schedule sch4_0(1);
+//     sch4_0.getOmega()(0) = 4;
+//     Schedule sch4_1(1);
+//     sch4_1.getOmega()(0) = 4;
+//     sch4_1.getOmega()(2) = 1;
+//     jOuterMem.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
+//     jOuterMem.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
 
-    for (auto &&mem : jOuterMem)
-        jOuterLoopNest.memory.push_back(&mem);
+//     for (auto &&mem : jOuterMem)
+//         jOuterLoopNest.memory.push_back(&mem);
 
-    EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
-    SHOW(jOuterLoopNest.edges.size());
-    CSHOWLN(jOuterLoopNest.memory.size());
-    for (auto &edge : jOuterLoopNest.edges)
-        llvm::errs() << "\nedge = " << edge << "\n";
+//     EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
+//     SHOW(jOuterLoopNest.edges.size());
+//     CSHOWLN(jOuterLoopNest.memory.size());
+//     for (auto &edge : jOuterLoopNest.edges)
+//         llvm::errs() << "\nedge = " << edge << "\n";
 
-    for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
-        const auto &v = jOuterLoopNest.nodes[i];
-        llvm::errs() << "v_" << i << ":\nmem = ";
-        for (auto m : v.memory) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\ninNeighbors = ";
-        for (auto m : v.inNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\noutNeighbors = ";
-        for (auto m : v.outNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\n";
-    }
-    IntMatrix optS(2);
-    // we want diag, as that represents swapping loops
-    optS.diag() = 1;
-    IntMatrix optSinnerUndef = optS;
-    optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
-    for (auto mem : jOuterLoopNest.memory) {
-        SHOW(mem->nodeIndex);
-        CSHOWLN(mem->ref);
-        Schedule &s = jOuterLoopNest.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        SHOWLN(s.getOmega());
-        if (s.getNumLoops() == 1) {
-            EXPECT_EQ(s.getPhi()(0, 0), 1);
-        } else if (s.getOmega()(2) < 3) {
-            EXPECT_EQ(s.getPhi(), optSinnerUndef);
-        } else {
-            EXPECT_EQ(s.getPhi(), optS);
-        }
-    }
-}
+//     for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
+//         const auto &v = jOuterLoopNest.nodes[i];
+//         llvm::errs() << "v_" << i << ":\nmem = ";
+//         for (auto m : v.memory) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\ninNeighbors = ";
+//         for (auto m : v.inNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\noutNeighbors = ";
+//         for (auto m : v.outNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\n";
+//     }
+//     IntMatrix optS(2);
+//     // we want diag, as that represents swapping loops
+//     optS.diag() = 1;
+//     IntMatrix optSinnerUndef = optS;
+//     optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
+//     for (auto mem : jOuterLoopNest.memory) {
+//         SHOW(mem->nodeIndex);
+//         CSHOWLN(mem->ref);
+//         Schedule &s = jOuterLoopNest.nodes[mem->nodeIndex].schedule;
+//         SHOWLN(s.getPhi());
+//         SHOWLN(s.getOmega());
+//         if (s.getNumLoops() == 1) {
+//             EXPECT_EQ(s.getPhi()(0, 0), 1);
+//         } else if (s.getOmega()(2) < 3) {
+//             EXPECT_EQ(s.getPhi(), optSinnerUndef);
+//         } else {
+//             EXPECT_EQ(s.getPhi(), optS);
+//         }
+//     }
+// }
 
-TEST(DoubleDependenceTest, BasicAssertions) {
+// TEST(DoubleDependenceTest, BasicAssertions) {
 
-    TestLoopFunction tlf;
-    auto &builder = tlf.builder;
-    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
-                                      "0 0 0 0 1; "
-                                      "-2 0 1 -1 0; "
-                                      "0 0 0 1 0]")};
-    tlf.addLoop(std::move(Aloop), 2);
-    AffineLoopNest &loop = tlf.alns.front();
+//     TestLoopFunction tlf;
+//     auto &builder = tlf.builder;
+//     IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
+//                                       "0 0 0 0 1; "
+//                                       "-2 0 1 -1 0; "
+//                                       "0 0 0 1 0]")};
+//     tlf.addLoop(std::move(Aloop), 2);
+//     AffineLoopNest &loop = tlf.alns.front();
 
-    // create arrays
-    llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrA = tlf.createArray();
-    auto scevA = tlf.getSCEVUnknown(ptrA);
+//     // create arrays
+//     llvm::Type *Float64 = builder.getDoubleTy();
+//     llvm::Value *ptrA = tlf.createArray();
+//     auto scevA = tlf.getSCEVUnknown(ptrA);
 
-    const llvm::SCEV *I = loop.symbols[0];
-    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
-    // llvm::Value* J = loop.symbols[1];
-    auto zero = builder.getInt64(0);
-    auto one = builder.getInt64(1);
-    llvm::Value *iv = builder.CreateAdd(zero, one);
-    llvm::Value *jv = builder.CreateAdd(zero, one);
+//     const llvm::SCEV *I = loop.symbols[0];
+//     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
+//     // llvm::Value* J = loop.symbols[1];
+//     auto zero = builder.getInt64(0);
+//     auto one = builder.getInt64(1);
+//     llvm::Value *iv = builder.CreateAdd(zero, one);
+//     llvm::Value *jv = builder.CreateAdd(zero, one);
 
-    llvm::Value *A_ip1_jp1 =
-        builder.CreateAdd(builder.CreateAdd(iv, one),
-                          builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-    llvm::Value *A_ip1_j = builder.CreateAdd(
-        iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
-    llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(iv, one),
-                                             builder.CreateMul(jv, Iv));
+//     llvm::Value *A_ip1_jp1 =
+//         builder.CreateAdd(builder.CreateAdd(iv, one),
+//                           builder.CreateMul(builder.CreateAdd(jv, one), Iv));
+//     llvm::Value *A_ip1_j = builder.CreateAdd(
+//         iv, builder.CreateMul(builder.CreateAdd(jv, one), Iv));
+//     llvm::Value *A_i_jp1 = builder.CreateAdd(builder.CreateAdd(iv, one),
+//                                              builder.CreateMul(jv, Iv));
 
-    auto Aload_ip1_j = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{A_ip1_j}),
-        llvm::MaybeAlign(8));
-    auto Aload_i_jp1 = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{A_i_jp1}),
-        llvm::MaybeAlign(8));
-    auto Astore = builder.CreateAlignedStore(
-        builder.CreateFAdd(Aload_ip1_j, Aload_i_jp1),
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{A_ip1_jp1}),
-        llvm::MaybeAlign(8));
+//     auto Aload_ip1_j = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{A_ip1_j}),
+//         llvm::MaybeAlign(8));
+//     auto Aload_i_jp1 = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{A_i_jp1}),
+//         llvm::MaybeAlign(8));
+//     auto Astore = builder.CreateAlignedStore(
+//         builder.CreateFAdd(Aload_ip1_j, Aload_i_jp1),
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{A_ip1_jp1}),
+//         llvm::MaybeAlign(8));
 
-    // for (i = 0:I-2){
-    //   for (j = 0:J-2){
-    //     A(j+1,i+1) = A(j,i+1) + A(j+1,i);
-    //   }
-    // }
-    // A*x >= 0;
-    // [ -2  1  0 -1  0    [ 1
-    //    0  0  0  1  0  *   I   >= 0
-    //   -2  0  1  0 -1      J
-    //    0  0  0  0  1 ]    i
-    //                       j ]
+//     // for (i = 0:I-2){
+//     //   for (j = 0:J-2){
+//     //     A(j+1,i+1) = A(j,i+1) + A(j+1,i);
+//     //   }
+//     // }
+//     // A*x >= 0;
+//     // [ -2  1  0 -1  0    [ 1
+//     //    0  0  0  1  0  *   I   >= 0
+//     //   -2  0  1  0 -1      J
+//     //    0  0  0  0  1 ]    i
+//     //                       j ]
 
-    // we have three array refs
-    // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
-    llvm::ScalarEvolution &SE{tlf.SE};
-    llvm::Type *Int64 = builder.getInt64Ty();
-    ArrayReference Asrc(scevA, loop, 2);
-    {
-        MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        //     l  d
-        IndMat(1, 1) = 1; // i
-        IndMat(0, 0) = 1; // j
-        MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
-        OffMat(0, 0) = 1;
-        OffMat(1, 0) = 1;
-        Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Asrc.sizes[0] = I;
-    }
-    llvm::errs() << "AaxesSrc = " << Asrc << "\n";
+//     // we have three array refs
+//     // A[i+1, j+1] // (i+1)*stride(A,1) + (j+1)*stride(A,2);
+//     llvm::ScalarEvolution &SE{tlf.SE};
+//     llvm::Type *Int64 = builder.getInt64Ty();
+//     ArrayReference Asrc(scevA, loop, 2);
+//     {
+//         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
+//         //     l  d
+//         IndMat(1, 1) = 1; // i
+//         IndMat(0, 0) = 1; // j
+//         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
+//         OffMat(0, 0) = 1;
+//         OffMat(1, 0) = 1;
+//         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//         Asrc.sizes[0] = I;
+//     }
+//     llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
-    // A[i+1, j]
-    ArrayReference Atgt0(scevA, loop, 2);
-    {
-        MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
-        //     l  d
-        IndMat(1, 1) = 1; // i
-        IndMat(0, 0) = 1; // j
-                          //                   d  s
-        Atgt0.offsetMatrix()(1, 0) = 1;
-        Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Atgt0.sizes[0] = I;
-    }
-    llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
+//     // A[i+1, j]
+//     ArrayReference Atgt0(scevA, loop, 2);
+//     {
+//         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
+//         //     l  d
+//         IndMat(1, 1) = 1; // i
+//         IndMat(0, 0) = 1; // j
+//                           //                   d  s
+//         Atgt0.offsetMatrix()(1, 0) = 1;
+//         Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//         Atgt0.sizes[0] = I;
+//     }
+//     llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
-    // A[i, j+1]
-    ArrayReference Atgt1(scevA, loop, 2);
-    {
-        MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
-        //     l  d
-        IndMat(1, 1) = 1; // i
-        IndMat(0, 0) = 1; // j
-        Atgt1.offsetMatrix()(0, 0) = 1;
-        Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        Atgt1.sizes[0] = I;
-    }
-    llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
+//     // A[i, j+1]
+//     ArrayReference Atgt1(scevA, loop, 2);
+//     {
+//         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
+//         //     l  d
+//         IndMat(1, 1) = 1; // i
+//         IndMat(0, 0) = 1; // j
+//         Atgt1.offsetMatrix()(0, 0) = 1;
+//         Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//         Atgt1.sizes[0] = I;
+//     }
+//     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
-    //
-    Schedule schLoad0(2);
-    Schedule schStore(2);
-    schStore.getOmega()[4] = 2;
-    MemoryAccess msrc{Asrc, Astore, schStore, false};
-    MemoryAccess mtgt0{Atgt0, Aload_ip1_j, schLoad0, true};
-    DependencePolyhedra dep0(msrc, mtgt0);
-    EXPECT_FALSE(dep0.isEmpty());
-    dep0.pruneBounds();
-    llvm::errs() << "Dep0 = \n" << dep0 << "\n";
+//     //
+//     Schedule schLoad0(2);
+//     Schedule schStore(2);
+//     schStore.getOmega()[4] = 2;
+//     MemoryAccess msrc{Asrc, Astore, schStore, false};
+//     MemoryAccess mtgt0{Atgt0, Aload_ip1_j, schLoad0, true};
+//     DependencePolyhedra dep0(msrc, mtgt0);
+//     EXPECT_FALSE(dep0.isEmpty());
+//     dep0.pruneBounds();
+//     llvm::errs() << "Dep0 = \n" << dep0 << "\n";
 
-    EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
-    EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
-    assert(dep0.getNumInequalityConstraints() == 4);
-    assert(dep0.getNumEqualityConstraints() == 2);
+//     EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
+//     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
+//     assert(dep0.getNumInequalityConstraints() == 4);
+//     assert(dep0.getNumEqualityConstraints() == 2);
 
-    Schedule schLoad1(2);
-    schLoad1.getOmega()[4] = 1;
-    MemoryAccess mtgt1{Atgt1, Aload_i_jp1, schLoad1, true};
-    DependencePolyhedra dep1(msrc, mtgt1);
-    EXPECT_FALSE(dep1.isEmpty());
-    dep1.pruneBounds();
-    llvm::errs() << "Dep1 = \n" << dep1 << "\n";
-    EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
-    EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
-    assert(dep1.getNumInequalityConstraints() == 4);
-    assert(dep1.getNumEqualityConstraints() == 2);
-    // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
-    llvm::SmallVector<Dependence, 1> dc;
-    EXPECT_EQ(dc.size(), 0);
-    EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
-    EXPECT_EQ(dc.size(), 1);
-    Dependence &d(dc.front());
-    EXPECT_TRUE(d.forward);
-    llvm::errs() << d << "\n";
-    SHOWLN(d.getNumPhiCoefficients());
-    SHOWLN(d.getNumOmegaCoefficients());
-    SHOWLN(d.depPoly.getDim0());
-    SHOWLN(d.depPoly.getDim1());
-    SHOWLN(d.depPoly.getNumVar());
-    SHOWLN(d.depPoly.nullStep.size());
-    SHOWLN(d.depPoly.getNumSymbols());
-    SHOWLN(d.depPoly.A.numCol());
-    assert(d.forward);
-    assert(!allZero(d.dependenceSatisfaction.tableau(
-        d.dependenceSatisfaction.tableau.numRow() - 1, _)));
+//     Schedule schLoad1(2);
+//     schLoad1.getOmega()[4] = 1;
+//     MemoryAccess mtgt1{Atgt1, Aload_i_jp1, schLoad1, true};
+//     DependencePolyhedra dep1(msrc, mtgt1);
+//     EXPECT_FALSE(dep1.isEmpty());
+//     dep1.pruneBounds();
+//     llvm::errs() << "Dep1 = \n" << dep1 << "\n";
+//     EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
+//     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
+//     assert(dep1.getNumInequalityConstraints() == 4);
+//     assert(dep1.getNumEqualityConstraints() == 2);
+//     // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
+//     llvm::SmallVector<Dependence, 1> dc;
+//     EXPECT_EQ(dc.size(), 0);
+//     EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
+//     EXPECT_EQ(dc.size(), 1);
+//     Dependence &d(dc.front());
+//     EXPECT_TRUE(d.forward);
+//     llvm::errs() << d << "\n";
+//     SHOWLN(d.getNumPhiCoefficients());
+//     SHOWLN(d.getNumOmegaCoefficients());
+//     SHOWLN(d.depPoly.getDim0());
+//     SHOWLN(d.depPoly.getDim1());
+//     SHOWLN(d.depPoly.getNumVar());
+//     SHOWLN(d.depPoly.nullStep.size());
+//     SHOWLN(d.depPoly.getNumSymbols());
+//     SHOWLN(d.depPoly.A.numCol());
+//     assert(d.forward);
+//     assert(!allZero(d.dependenceSatisfaction.tableau(
+//         d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 
-    LoopBlock loopBlock;
-    MemoryAccess mSchLoad0(Atgt0, Aload_ip1_j, schLoad0, true);
-    loopBlock.memory.push_back(&mSchLoad0);
-    MemoryAccess mSchLoad1(Atgt1, Aload_i_jp1, schLoad1, true);
-    loopBlock.memory.push_back(&mSchLoad1);
-    MemoryAccess mSchStore(Asrc, Astore, schStore, false);
-    loopBlock.memory.push_back(&mSchStore);
+//     LoopBlock loopBlock;
+//     MemoryAccess mSchLoad0(Atgt0, Aload_ip1_j, schLoad0, true);
+//     loopBlock.memory.push_back(&mSchLoad0);
+//     MemoryAccess mSchLoad1(Atgt1, Aload_i_jp1, schLoad1, true);
+//     loopBlock.memory.push_back(&mSchLoad1);
+//     MemoryAccess mSchStore(Asrc, Astore, schStore, false);
+//     loopBlock.memory.push_back(&mSchStore);
 
-    EXPECT_TRUE(loopBlock.optimize().hasValue());
-    EXPECT_EQ(loopBlock.edges.size(), 2);
-    llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
-    for (size_t i = 0; i < loopBlock.memory.size(); ++i)
-        memAccessIds[loopBlock.memory[i]] = i;
-    for (auto &e : loopBlock.edges) {
-        llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
-                     << ", in ID: " << memAccessIds[e.in]
-                     << "; out ID: " << memAccessIds[e.out] << "\n";
-    }
-    for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
-        const auto &v = loopBlock.nodes[i];
-        llvm::errs() << "v_" << i << ":\nmem = ";
-        for (auto m : v.memory) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\ninNeighbors = ";
-        for (auto m : v.inNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\noutNeighbors = ";
-        for (auto m : v.outNeighbors) {
-            llvm::errs() << m << ", ";
-        }
-        llvm::errs() << "\n";
-    }
-    IntMatrix optPhi(2, 2);
-    optPhi(0, _) = 1;
-    optPhi(1, _) = std::numeric_limits<int64_t>::min();
-    // Graphs::print(iOuterLoopNest.fullGraph());
-    for (auto &mem : loopBlock.memory) {
-        SHOW(mem->nodeIndex);
-        CSHOWLN(mem->ref);
-        Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        EXPECT_EQ(s.getPhi(), optPhi);
-        SHOWLN(s.getOmega());
-    }
-}
+//     EXPECT_TRUE(loopBlock.optimize().hasValue());
+//     EXPECT_EQ(loopBlock.edges.size(), 2);
+//     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
+//     for (size_t i = 0; i < loopBlock.memory.size(); ++i)
+//         memAccessIds[loopBlock.memory[i]] = i;
+//     for (auto &e : loopBlock.edges) {
+//         llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
+//                      << ", in ID: " << memAccessIds[e.in]
+//                      << "; out ID: " << memAccessIds[e.out] << "\n";
+//     }
+//     for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
+//         const auto &v = loopBlock.nodes[i];
+//         llvm::errs() << "v_" << i << ":\nmem = ";
+//         for (auto m : v.memory) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\ninNeighbors = ";
+//         for (auto m : v.inNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\noutNeighbors = ";
+//         for (auto m : v.outNeighbors) {
+//             llvm::errs() << m << ", ";
+//         }
+//         llvm::errs() << "\n";
+//     }
+//     IntMatrix optPhi(2, 2);
+//     optPhi(0, _) = 1;
+//     optPhi(1, _) = std::numeric_limits<int64_t>::min();
+//     // Graphs::print(iOuterLoopNest.fullGraph());
+//     for (auto &mem : loopBlock.memory) {
+//         SHOW(mem->nodeIndex);
+//         CSHOWLN(mem->ref);
+//         Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
+//         SHOWLN(s.getPhi());
+//         EXPECT_EQ(s.getPhi(), optPhi);
+//         SHOWLN(s.getOmega());
+//     }
+// }
 
-TEST(ConvReversePass, BasicAssertions) {
-    // for (n = 0; n < N; ++n){
-    //   for (m = 0; n < M; ++m){
-    //     for (j = 0; n < J; ++j){
-    //       for (i = 0; n < I; ++i){
-    //         C[j+n,m+i] += A[n,m] * B[j,i];
-    //       }
-    //     }
-    //   }
-    // }
-    TestLoopFunction tlf;
-    auto &builder = tlf.builder;
-    IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 0 0 0 -1; "
-                                      "0 0 0 0 0 0 0 0 1; "
-                                      "-1 1 0 0 0 0 0 -1 0; "
-                                      "0 0 0 0 0 0 0 1 0; "
-                                      "-1 0 0 0 1 0 -1 0 0; "
-                                      "0 0 0 0 0 0 1 0 0; "
-                                      "-1 0 0 1 0 -1 0 0 0; "
-                                      "0 0 0 0 0 1 0 0 0]")};
-    tlf.addLoop(std::move(Aloop), 4);
-    AffineLoopNest &loop = tlf.alns.front();
+// TEST(ConvReversePass, BasicAssertions) {
+//     // for (n = 0; n < N; ++n){
+//     //   for (m = 0; n < M; ++m){
+//     //     for (j = 0; n < J; ++j){
+//     //       for (i = 0; n < I; ++i){
+//     //         C[j+n,m+i] += A[n,m] * B[j,i];
+//     //       }
+//     //     }
+//     //   }
+//     // }
+//     TestLoopFunction tlf;
+//     auto &builder = tlf.builder;
+//     IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 0 0 0 -1; "
+//                                       "0 0 0 0 0 0 0 0 1; "
+//                                       "-1 1 0 0 0 0 0 -1 0; "
+//                                       "0 0 0 0 0 0 0 1 0; "
+//                                       "-1 0 0 0 1 0 -1 0 0; "
+//                                       "0 0 0 0 0 0 1 0 0; "
+//                                       "-1 0 0 1 0 -1 0 0 0; "
+//                                       "0 0 0 0 0 1 0 0 0]")};
+//     tlf.addLoop(std::move(Aloop), 4);
+//     AffineLoopNest &loop = tlf.alns.front();
 
-    // create arrays
-    llvm::Type *Float64 = builder.getDoubleTy();
-    llvm::Value *ptrB = tlf.createArray();
-    llvm::Value *ptrA = tlf.createArray();
-    llvm::Value *ptrC = tlf.createArray();
-    auto scevB = tlf.getSCEVUnknown(ptrB);
-    auto scevA = tlf.getSCEVUnknown(ptrA);
-    auto scevC = tlf.getSCEVUnknown(ptrC);
+//     // create arrays
+//     llvm::Type *Float64 = builder.getDoubleTy();
+//     llvm::Value *ptrB = tlf.createArray();
+//     llvm::Value *ptrA = tlf.createArray();
+//     llvm::Value *ptrC = tlf.createArray();
+//     auto scevB = tlf.getSCEVUnknown(ptrB);
+//     auto scevA = tlf.getSCEVUnknown(ptrA);
+//     auto scevC = tlf.getSCEVUnknown(ptrC);
 
-    // llvm::ConstantInt *Jv = builder.getInt64(100);
-    const llvm::SCEV *I = loop.symbols[3];
-    const llvm::SCEV *M = loop.symbols[1];
-    llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
-    llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
-    // llvm::ConstantInt *Nv = builder.getInt64(400);
-    auto zero = builder.getInt64(0);
-    auto one = builder.getInt64(1);
-    llvm::Value *mv = builder.CreateAdd(zero, one);
-    llvm::Value *nv = builder.CreateAdd(zero, one);
-    llvm::Value *jv = builder.CreateAdd(zero, one);
-    llvm::Value *iv = builder.CreateAdd(zero, one);
+//     // llvm::ConstantInt *Jv = builder.getInt64(100);
+//     const llvm::SCEV *I = loop.symbols[3];
+//     const llvm::SCEV *M = loop.symbols[1];
+//     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
+//     llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
+//     // llvm::ConstantInt *Nv = builder.getInt64(400);
+//     auto zero = builder.getInt64(0);
+//     auto one = builder.getInt64(1);
+//     llvm::Value *mv = builder.CreateAdd(zero, one);
+//     llvm::Value *nv = builder.CreateAdd(zero, one);
+//     llvm::Value *jv = builder.CreateAdd(zero, one);
+//     llvm::Value *iv = builder.CreateAdd(zero, one);
 
-    llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
-    llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
-    llvm::Value *Coffset = builder.CreateAdd(
-        builder.CreateAdd(mv, iv),
-        builder.CreateMul(builder.CreateAdd(nv, jv),
-                          builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
-    auto Aload = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrA,
-                          llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
-        llvm::MaybeAlign(8));
-    auto Bload = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrB,
-                          llvm::SmallVector<llvm::Value *, 1>{Boffset}),
-        llvm::MaybeAlign(8));
-    auto Cload = builder.CreateAlignedLoad(
-        Float64,
-        builder.CreateGEP(Float64, ptrC,
-                          llvm::SmallVector<llvm::Value *, 1>{Coffset}),
-        llvm::MaybeAlign(8));
-    auto Cstore = builder.CreateAlignedStore(
-        builder.CreateFAdd(Cload, builder.CreateFMul(Aload, Bload)),
-        builder.CreateGEP(Float64, ptrC,
-                          llvm::SmallVector<llvm::Value *, 1>{Coffset}),
-        llvm::MaybeAlign(8));
+//     llvm::Value *Aoffset = builder.CreateAdd(mv, builder.CreateMul(nv, Mv));
+//     llvm::Value *Boffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
+//     llvm::Value *Coffset = builder.CreateAdd(
+//         builder.CreateAdd(mv, iv),
+//         builder.CreateMul(builder.CreateAdd(nv, jv),
+//                           builder.CreateSub(builder.CreateAdd(Mv, Iv), one)));
+//     auto Aload = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrA,
+//                           llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
+//         llvm::MaybeAlign(8));
+//     auto Bload = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrB,
+//                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),
+//         llvm::MaybeAlign(8));
+//     auto Cload = builder.CreateAlignedLoad(
+//         Float64,
+//         builder.CreateGEP(Float64, ptrC,
+//                           llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+//         llvm::MaybeAlign(8));
+//     auto Cstore = builder.CreateAlignedStore(
+//         builder.CreateFAdd(Cload, builder.CreateFMul(Aload, Bload)),
+//         builder.CreateGEP(Float64, ptrC,
+//                           llvm::SmallVector<llvm::Value *, 1>{Coffset}),
+//         llvm::MaybeAlign(8));
 
-    // for (n = 0; n < N; ++n){
-    //   for (m = 0; n < M; ++m){
-    //     for (j = 0; n < J; ++j){
-    //       for (i = 0; n < I; ++i){
-    //         C[n+j,m+i] += A[n,m] * B[j,i];
-    //       }
-    //     }
-    //   }
-    // }
+//     // for (n = 0; n < N; ++n){
+//     //   for (m = 0; n < M; ++m){
+//     //     for (j = 0; n < J; ++j){
+//     //       for (i = 0; n < I; ++i){
+//     //         C[n+j,m+i] += A[n,m] * B[j,i];
+//     //       }
+//     //     }
+//     //   }
+//     // }
 
-    llvm::ScalarEvolution &SE{tlf.SE};
-    llvm::Type *Int64 = builder.getInt64Ty();
-    // B[j, i]
-    ArrayReference BmnInd{scevB, loop, 2};
-    {
-        MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
-        //     l  d
-        IndMat(0, 1) = 1; // i
-        IndMat(1, 0) = 1; // j
-        BmnInd.sizes[0] = I;
-        BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-    }
-    llvm::errs() << "Bmn = " << BmnInd << "\n";
-    // A[n, m]
-    ArrayReference AmnInd{scevA, loop, 2};
-    {
-        MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
-        //     l  d
-        IndMat(2, 1) = 1; // m
-        IndMat(3, 0) = 1; // n
-        AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        AmnInd.sizes[0] = I;
-    }
-    // C[m+i, n+j]
-    ArrayReference CmijnInd{scevC, loop, 2};
-    {
-        MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
-        //     l  d
-        IndMat(2, 1) = 1; // m
-        IndMat(0, 1) = 1; // i
-        IndMat(3, 0) = 1; // n
-        IndMat(1, 0) = 1; // j
-        CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
-        CmijnInd.sizes[0] =
-            SE.getAddExpr(SE.getAddExpr(M, I), SE.getMinusOne(Int64));
-    }
+//     llvm::ScalarEvolution &SE{tlf.SE};
+//     llvm::Type *Int64 = builder.getInt64Ty();
+//     // B[j, i]
+//     ArrayReference BmnInd{scevB, loop, 2};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
+//         //     l  d
+//         IndMat(0, 1) = 1; // i
+//         IndMat(1, 0) = 1; // j
+//         BmnInd.sizes[0] = I;
+//         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//     }
+//     llvm::errs() << "Bmn = " << BmnInd << "\n";
+//     // A[n, m]
+//     ArrayReference AmnInd{scevA, loop, 2};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = AmnInd.indexMatrix();
+//         //     l  d
+//         IndMat(2, 1) = 1; // m
+//         IndMat(3, 0) = 1; // n
+//         AmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//         AmnInd.sizes[0] = I;
+//     }
+//     // C[m+i, n+j]
+//     ArrayReference CmijnInd{scevC, loop, 2};
+//     {
+//         MutPtrMatrix<int64_t> IndMat = CmijnInd.indexMatrix();
+//         //     l  d
+//         IndMat(2, 1) = 1; // m
+//         IndMat(0, 1) = 1; // i
+//         IndMat(3, 0) = 1; // n
+//         IndMat(1, 0) = 1; // j
+//         CmijnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
+//         CmijnInd.sizes[0] =
+//             SE.getAddExpr(SE.getAddExpr(M, I), SE.getMinusOne(Int64));
+//     }
 
-    // for (n = 0; n < N; ++n){
-    //   for (m = 0; n < M; ++m){
-    //     for (j = 0; n < J; ++j){
-    //       for (i = 0; n < I; ++i){
-    //         C[n+j,m+i] = C[n+j,m+i] + A[n,m] * B[j,i];
-    //       }
-    //     }
-    //   }
-    // }
-    LoopBlock loopBlock;
-    Schedule sch_0(4);
-    Schedule sch_1 = sch_0;
-    //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
-    MemoryAccess msch_0(BmnInd, Bload, sch_0, true);
-    loopBlock.memory.push_back(&msch_0);
-    sch_1.getOmega()[8] = 1;
-    Schedule sch_2 = sch_1;
-    //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
-    MemoryAccess msch_1(AmnInd, Aload, sch_1, true);
-    loopBlock.memory.push_back(&msch_1);
-    sch_2.getOmega()[8] = 2;
-    Schedule sch_3 = sch_2;
-    //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
-    MemoryAccess msch_2(CmijnInd, Cload, sch_2, true);
-    loopBlock.memory.push_back(&msch_2);
-    sch_3.getOmega()[8] = 3;
-    //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
-    MemoryAccess msch_3(CmijnInd, Cstore, sch_3, false);
-    loopBlock.memory.push_back(&msch_3);
+//     // for (n = 0; n < N; ++n){
+//     //   for (m = 0; n < M; ++m){
+//     //     for (j = 0; n < J; ++j){
+//     //       for (i = 0; n < I; ++i){
+//     //         C[n+j,m+i] = C[n+j,m+i] + A[n,m] * B[j,i];
+//     //       }
+//     //     }
+//     //   }
+//     // }
+//     LoopBlock loopBlock;
+//     Schedule sch_0(4);
+//     Schedule sch_1 = sch_0;
+//     //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
+//     MemoryAccess msch_0(BmnInd, Bload, sch_0, true);
+//     loopBlock.memory.push_back(&msch_0);
+//     sch_1.getOmega()[8] = 1;
+//     Schedule sch_2 = sch_1;
+//     //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
+//     MemoryAccess msch_1(AmnInd, Aload, sch_1, true);
+//     loopBlock.memory.push_back(&msch_1);
+//     sch_2.getOmega()[8] = 2;
+//     Schedule sch_3 = sch_2;
+//     //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
+//     MemoryAccess msch_2(CmijnInd, Cload, sch_2, true);
+//     loopBlock.memory.push_back(&msch_2);
+//     sch_3.getOmega()[8] = 3;
+//     //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
+//     MemoryAccess msch_3(CmijnInd, Cstore, sch_3, false);
+//     loopBlock.memory.push_back(&msch_3);
 
-    llvm::Optional<BitSet> optRes = loopBlock.optimize();
-    EXPECT_TRUE(optRes.hasValue());
-    for (auto &mem : loopBlock.memory) {
-        SHOW(mem->nodeIndex);
-        CSHOWLN(mem->ref);
-        Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        // EXPECT_EQ(s.getPhi(), optPhi);
-        SHOWLN(s.getOmega());
-    }
-}
+//     llvm::Optional<BitSet> optRes = loopBlock.optimize();
+//     EXPECT_TRUE(optRes.hasValue());
+//     for (auto &mem : loopBlock.memory) {
+//         SHOW(mem->nodeIndex);
+//         CSHOWLN(mem->ref);
+//         Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
+//         SHOWLN(s.getPhi());
+//         // EXPECT_EQ(s.getPhi(), optPhi);
+//         SHOWLN(s.getOmega());
+//     }
+// }

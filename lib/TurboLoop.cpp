@@ -74,24 +74,25 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     // fill array refs
     parseNest();
-    
-    llvm::errs()<<"\n\nPrinting memory accesses:\n";
+
+    llvm::errs() << "\n\nPrinting memory accesses:\n";
     // TODO: fill schedules
     for (auto forestID : loopForests)
-	for (auto treeID : loopTrees[forestID]) 
+        for (auto treeID : loopTrees[forestID])
             loopTrees[treeID].dumpAllMemAccess(loopTrees);
-    llvm::errs()<<"\nDone printing memory accesses\n";
-    for (auto forestID : loopForests){
-	fillLoopBlock(loopTrees[forestID]);
-	llvm::Optional<BitSet> optDeps = loopBlock.optimize();
-	SHOWLN(optDeps.hasValue());
-	llvm::errs() << loopBlock << "\n";
-	loopBlock.clear();
+    llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
+                 << loopForests.size() << "\n";
+    for (auto forestID : loopForests) {
+        fillLoopBlock(loopTrees[forestID]);
+        llvm::Optional<BitSet> optDeps = loopBlock.optimize();
+        SHOWLN(optDeps.hasValue());
+        llvm::errs() << loopBlock << "\n";
+        loopBlock.clear();
     }
-	    
+
     // LoopBlock lblock;
-    // for (auto forestID : loopForests) 
-    //     for (auto treeID : loopTrees[forestID]) 
+    // for (auto forestID : loopForests)
+    //     for (auto treeID : loopTrees[forestID])
     //         loopTrees[treeID].setOriginalProgramSchedule(loopTrees, 0, 0);
 
     // for (llvm::BasicBlock &BB : F) {
@@ -170,7 +171,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     //             << "Back edge taken count: " << *backEdgeTaken
     //     //             << "\n\ttrip count: "
     //     //             << *(SE->getAddExpr(backEdgeTaken,
-    //     //                               SE->getOne(backEdgeTaken->getType())))
+    //     // SE->getOne(backEdgeTaken->getType())))
     //     //             << "\n";
     //     //     } else {
     //     //         std::cout << "couldn't find backedge taken?\n";
@@ -194,7 +195,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //             if (inductOuter) {
     //                 llvm::errs()
     //                     << "Loop " << i++
-    //                     << " in outer InductionVariable: " << *induct << "\n";
+    //                     << " in outer InductionVariable: " << *induct <<
+    //                     "\n";
     //                 llvm::errs()
     //                     << "innerInduct > outerInduct: "
     //                     << SE->isKnownPredicate(
@@ -230,7 +232,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //             auto &inner_UB = b.getFinalIVValue();
 
     //             llvm::errs() << "\nLoop Bounds: " << inner_LB << " : "
-    //                          << *b.getStepValue() << " : " << inner_UB << "\n";
+    //                          << *b.getStepValue() << " : " << inner_UB <<
+    //                          "\n";
     //             if (obouter.hasValue()) {
     //                 auto ob = obouter.getValue();
     //                 auto oLB = SE->getSCEV(&ob.getInitialIVValue());

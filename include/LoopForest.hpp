@@ -97,20 +97,26 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
     Predicates pred, llvm::BasicBlock *BBhead, llvm::Loop *L) {
-    llvm::errs() << "allForwardPathsReached BBsrc = " << *BBsrc
+    llvm::errs() << "allForwardPathsReached BBsrc = " << BBsrc
+                 << "\nBBdst = " << BBdst;
+    llvm::errs() << "\nallForwardPathsReached BBsrc = " << *BBsrc
                  << "\nBBdst = " << *BBdst;
+    for (auto &BBinPath : path)
+        SHOWLN(BBinPath.basicBlock);
     if (L)
         llvm::errs() << "\nL->contains(BBsrc) = " << L->contains(BBsrc);
     llvm::errs() << "\n\n";
     if (BBsrc == BBdst) {
+        SHOWLN(BBsrc);
         path.emplace_back(std::move(pred), BBsrc);
         llvm::errs() << "reached\n";
         return BBChain::reached;
-    } else if (L && L->contains(BBsrc)) {
+    } else if (L && (!(L->contains(BBsrc)))) {
         // oops, we seem to have skipped the preheader in entering L
         // must skip over a guard
-        llvm::errs() << "Skipped preheader! There must've been some sort of "
-                        "loop guard\n";
+        llvm::errs() << "Exited the loop!\n";
+        // llvm::errs() << "Skipped preheader! There must've been some sort of "
+        // "loop guard\n";
         // TODO: give a more appropriate enum value?
         return BBChain::returned;
     } else if (visit(visitedBBs, BBsrc)) {
@@ -136,6 +142,8 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
                     allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
                                          BBdst, pred, BBhead, L);
                 if (dst0 == BBChain::reached)
+                    SHOWLN(BBsrc);
+                if (dst0 == BBChain::reached)
                     path.emplace_back(std::move(pred), BBsrc);
                 return dst0;
             }
@@ -151,10 +159,12 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
             BBChain dst1 = allForwardPathsReach(
                 visitedBBs, path, BI->getSuccessor(1), BBdst,
                 std::move(conditionedPred.flipLastCondition()), BBhead, L);
-            llvm::errs() << "dst1 = " << dst1 << "\n";
+            llvm::errs() << "dst0 = " << dst0 << "; dst1 = " << dst1 << "\n";
 
             // TODO handle divergences
             if ((dst0 == BBChain::unreachable) || (dst0 == BBChain::returned)) {
+                if (dst1 == BBChain::reached)
+                    SHOWLN(BBsrc);
                 if (dst1 == BBChain::reached)
                     path.conditionOnLastPred().emplace_back(std::move(pred),
                                                             BBsrc);
@@ -162,10 +172,14 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
             } else if ((dst1 == BBChain::unreachable) ||
                        (dst1 == BBChain::returned)) {
                 if (dst0 == BBChain::reached)
+                    SHOWLN(BBsrc);
+                if (dst0 == BBChain::reached)
                     path.conditionOnLastPred().emplace_back(std::move(pred),
                                                             BBsrc);
                 return dst0;
             } else if (dst0 == dst1) {
+                if (dst0 == BBChain::reached)
+                    SHOWLN(BBsrc);
                 if (dst0 == BBChain::reached)
                     path.emplace_back(std::move(pred), BBsrc);
                 return dst0;
@@ -192,10 +206,23 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
     visitedBBs.clear();
     bool reached = false;
     for (auto &BB : BBsrc) {
+        if (BB == BBdst) {
+            reached = true;
+            path.push_back(BB);
+            continue;
+        }
         auto dst = allForwardPathsReach(visitedBBs, path, BB, BBdst, {}, BB, L);
         if (dst == BBChain::reached) {
             reached = true;
-            path.push_back(BB);
+#ifndef NDEBUG
+            bool foundBB = false;
+            SHOWLN(BB);
+            for (auto &BBinPathFinal : path) {
+                SHOWLN(BBinPathFinal.basicBlock);
+                foundBB |= (BBinPathFinal.basicBlock == BB);
+            }
+            assert(foundBB);
+#endif
             // } else if (dst != BBChain::unreachable) {
         } else if (dst == BBChain::unknown) {
             llvm::errs() << "failed because dst was: " << dst << "\n";
@@ -371,7 +398,7 @@ struct LoopTree {
                 if (((exitBlocks.size() != 1) ||
                      (N->getHeader() != exitBlocks.front())) &&
                     (!allForwardPathsReach(visitedBBs, path, exitBlocks, PH,
-                                           N))) {
+                                           L))) {
                     llvm::errs() << "path failed for loop :" << *N << "\n";
                     P = nullptr;
                     anyFail = true;
@@ -432,8 +459,7 @@ struct LoopTree {
             SHOWLN(subNest.getNumLoops());
             if (subNest.getNumLoops() > 1) {
                 visitedBBs.clear();
-                if (allForwardPathsReach(visitedBBs, path, finalStart, E,
-                                         nullptr)) {
+                if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
                     branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
                     loopTrees.emplace_back(L, subNest.removeInnerMost(),
@@ -453,8 +479,7 @@ struct LoopTree {
                              << "\nwith backedge taken count: " << *BT << "\n";
                 auto *BTNW = noWrapSCEV(SE, BT);
                 llvm::errs() << "after no-wrapping:\n" << *BTNW << "\n";
-                if (allForwardPathsReach(visitedBBs, path, finalStart, E,
-                                         nullptr)) {
+                if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
                     branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
                     loopTrees.emplace_back(L, std::move(subForest), BTNW, SE,

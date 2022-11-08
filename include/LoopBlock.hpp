@@ -13,6 +13,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
+#include "MemoryAccess.hpp"
 #include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
@@ -770,6 +771,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         setScheduleMemoryOffsets(g, depth);
         countAuxParamsAndConstraints(g, depth);
     }
+    void addMemory(MemoryAccess *m){
+	for (auto o : memory)
+	    assert(o->user != m->user);
+	memory.push_back(m);
+    }
     // assemble omni-simplex
     // we want to order variables to be
     // us, ws, Phi^-, Phi^+, omega, lambdas
@@ -837,12 +843,16 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         numOmegaCoefs = o - p;
     }
     void validateMemory() {
+	SHOWLN(memory.size());
         for (auto mem : memory) {
+	    SHOWLN(*mem);
             assert(mem->ref.getNumLoops() == mem->schedule.getNumLoops());
         }
     }
     void validateEdges() {
+        CSHOWLN(edges.size());
         for (auto &edge : edges) {
+	    SHOWLN(edge);
             assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
                    edge.getNumPhiCoefficients());
             // 2 == 1 for const offset + 1 for w
