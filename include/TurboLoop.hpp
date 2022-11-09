@@ -304,7 +304,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // llvm::errs() << "ptr operand: " << *po << "\n";
         const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
 
-        llvm::errs() << "accessFn: " << *accessFn << "\n";
+        llvm::errs() << "accessFn: " << *accessFn << "\n"
+                     << "\nSE->getSCEV(ptr) = " << *(SE->getSCEV(ptr)) << "\n";
+
         const llvm::SCEV *pb = SE->getPointerBase(accessFn);
         llvm::errs() << "base pointer: " << *pb << "\n";
         const llvm::SCEVUnknown *basePointer =
@@ -336,15 +338,25 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         IntMatrix Bt;
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
         uint64_t blackList{0};
+        llvm::errs() << "AccessFN: " << *accessFn << "\n";
         {
             Vector<int64_t> offsets;
             for (size_t i = 0; i < subscripts.size(); ++i) {
+                llvm::errs()
+                    << "subscripts[" << i << "] = " << *subscripts[i] << "\n";
                 offsets.clear();
                 offsets.pushBack(0);
                 blackList |=
                     fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                       subscripts[i], 1, numPeeled);
                 Bt.resize(subscripts.size(), offsets.size());
+                llvm::errs() << "offsets = [";
+                for (size_t i = 0; i < offsets.size(); ++i) {
+                    if (i)
+                        llvm::errs() << ", ";
+                    llvm::errs() << offsets[i];
+                }
+                llvm::errs() << "]\n";
                 Bt(i, _) = offsets;
             }
         }
@@ -555,7 +567,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             parseLoop(loopTrees[LT.subLoops[i]], omega);
             ++omega.back();
         }
-        for (auto PBB : LT.paths.back()) 
+        for (auto PBB : LT.paths.back())
             parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
         omega.pop_back();
 #ifndef NDEBUG

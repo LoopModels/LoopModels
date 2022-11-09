@@ -25,11 +25,7 @@
 struct ArrayReference {
     [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
     [[no_unique_address]] AffineLoopNest *loop;
-    // std::shared_ptr<AffineLoopNest> loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-    // [[no_unique_address]] llvm::SmallVector<MPoly, 3> strides;
-    // llvm::Optional<IntMatrix>
-    //     offsets; // symbolicOffsets * (loop->symbols)
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;

@@ -311,11 +311,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         PtrMatrix<int64_t> A1 = ar1.indexMatrix();
         PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
         PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
-	llvm::errs()<<"DepPoly construction:\n";
-	SHOWLN(A0);
-	SHOWLN(A1);
-	SHOW(numDep0Var);
-	CSHOWLN(numDep1Var);
+        llvm::errs() << "DepPoly construction:\n";
+        SHOWLN(A0);
+        SHOWLN(A1);
+        SHOW(numDep0Var);
+        CSHOWLN(numDep1Var);
         // E(i,:)* indVars = q[i]
         // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
         // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
@@ -330,7 +330,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 E(i, 1 + oldToNewMap1[j]) -= O1(i, 1 + j);
             for (size_t j = 0; j < numDep1Var; ++j)
                 E(i, j + numSymbols + numDep0Var) = -A1(j, i);
-	    SHOWLN(E(i,_));
+            SHOWLN(E(i, _));
         }
         for (size_t i = 0; i < nullDim; ++i) {
             for (size_t j = 0; j < NS.numCol(); ++j) {
@@ -808,18 +808,21 @@ struct Dependence {
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
-    bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) {
+    bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) const {
         const size_t numLambda = depPoly.getNumLambda();
-        const size_t numLoopsX = sx.getNumLoops();
-        const size_t numLoopsY = sy.getNumLoops();
+        const size_t numLoopsX = depPoly.getDim0();
+        const size_t numLoopsY = depPoly.getDim1();
+        // const size_t numLoopsX = sx.getNumLoops();
+        // const size_t numLoopsY = sy.getNumLoops();
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
-        sch(_(begin, numLoopsX)) = sx.getPhi()(d, _);
-        sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _);
+        sch(_(begin, numLoopsX)) = sx.getPhi()(d, _(end - numLoopsX, end));
+        sch(_(numLoopsX, numLoopsTotal)) =
+            sy.getPhi()(d, _(end - numLoopsY, end));
         sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
         sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
-        return dependenceSatisfaction.unSatisfiable(sch, numLambda);
+        return dependenceSatisfaction.satisfiable(sch, numLambda);
     }
     bool isSatisfied(size_t d) {
         return forward ? isSatisfied(in->schedule, out->schedule, d)
