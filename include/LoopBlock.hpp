@@ -696,46 +696,49 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 
         const size_t maxDepth = calcMaxDepth();
         // check for orthogonalization opportunities
-        // bool tryOrth = false;
-        // for (size_t e = 0; e < edges.size(); ++e) {
-        //     Dependence &edge = edges[e];
-        //     if ((edge.in->nodeIndex == edge.out->nodeIndex) &&
-        //         (edge.in->isLoad ^ edge.out->isLoad)) {
-        //         ScheduledNode &node = nodes[edge.in->nodeIndex];
-        //         if (node.phiIsScheduled(0) ||
-        //             (edge.in->indexMatrix() != edge.out->indexMatrix()))
-        //             continue;
-        //         PtrMatrix<int64_t> indMat = edge.in->indexMatrix();
-        //         size_t r = NormalForm::rank(indMat);
-        //         if (r == edge.in->getNumLoops())
-        //             continue;
-        //         // TODO handle linearly dependent acceses, filtering them out
-        //         if (r == edge.in->ref.getArrayDim()) {
-        //             // indMat indvars are indexed from outside<->inside
-        //             // phi indvars are indexed from inside<->outside
-        //             // so, indMat is indvars[outside<->inside] x array dim
-        //             // phi is loop[outside<->inside] x
-        //             indvars[inside<->outside] MutPtrMatrix<int64_t> phi =
-        //             node.schedule.getPhi(); const size_t indR =
-        //             indMat.numRow(); const size_t phiOffset = phi.numCol() -
-        //             indR; for (size_t rr = 0; rr < r; ++rr) {
-        //                 phi(rr, _(begin, phiOffset)) = 0;
-        //                 for (size_t i = 0; i < indR; ++i)
-        //                     phi(rr, i + phiOffset) = indMat(i, rr);
-        //             }
-        //             // node.schedule.getPhi()(_(0, r), _) =
-        //             indMat.transpose(); node.rank = r; tryOrth = true;
-        //         }
-        //     }
-        // }
-        // if (tryOrth) {
-        //     if (llvm::Optional<BitSet> opt = optimize(g, 0, maxDepth)) {
-        //         llvm::errs() << "orth opt succeeded!\n";
-        //         return opt;
-        //     }
-        //     for (auto &&n : nodes)
-        //         n.rank = 0;
-        // }
+        bool tryOrth = false;
+        for (size_t e = 0; e < edges.size(); ++e) {
+            Dependence &edge = edges[e];
+            if ((edge.in->nodeIndex == edge.out->nodeIndex) &&
+                (edge.in->isLoad ^ edge.out->isLoad)) {
+                ScheduledNode &node = nodes[edge.in->nodeIndex];
+                if (node.phiIsScheduled(0) ||
+                    (edge.in->indexMatrix() != edge.out->indexMatrix()))
+                    continue;
+                PtrMatrix<int64_t> indMat = edge.in->indexMatrix();
+                size_t r = NormalForm::rank(indMat);
+                if (r == edge.in->getNumLoops())
+                    continue;
+                // TODO handle linearly dependent acceses, filtering them out
+                if (r == edge.in->ref.getArrayDim()) {
+                    // indMat indvars are indexed from outside<->inside
+                    // phi indvars are indexed from inside<->outside
+                    // so, indMat is indvars[outside<->inside] x array dim
+                    // phi is loop[outside<->inside] x
+                    // indvars[inside<->outside]
+                    MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
+                    const size_t indR = indMat.numRow();
+                    const size_t phiOffset = phi.numCol() - indR;
+                    for (size_t rr = 0; rr < r; ++rr) {
+                        phi(rr, _(begin, phiOffset)) = 0;
+                        for (size_t i = 0; i < indR; ++i)
+                            phi(rr, i + phiOffset) = indMat(i, rr);
+                    }
+                    // node.schedule.getPhi()(_(0, r), _) =
+                    indMat.transpose();
+                    node.rank = r;
+                    tryOrth = true;
+                }
+            }
+        }
+        if (tryOrth) {
+            if (llvm::Optional<BitSet> opt = optimize(g, 0, maxDepth)) {
+                llvm::errs() << "orth opt succeeded!\n";
+                return opt;
+            }
+            for (auto &&n : nodes)
+                n.rank = 0;
+        }
         return optimize(std::move(g), 0, maxDepth);
     }
     [[nodiscard]] size_t countNumLambdas(const Graph &g, size_t d) const {
