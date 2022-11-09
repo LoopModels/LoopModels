@@ -2,6 +2,7 @@
 
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./Predicate.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
@@ -22,8 +23,8 @@
 // NOTE: strides are in row major order!
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
-    const llvm::SCEVUnknown *basePointer;
-    AffineLoopNest *loop;
+    [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
+    [[no_unique_address]] AffineLoopNest *loop;
     // std::shared_ptr<AffineLoopNest> loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
     // [[no_unique_address]] llvm::SmallVector<MPoly, 3> strides;
@@ -32,11 +33,12 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
+    [[no_unique_address]] Predicates pred;
     [[no_unique_address]] unsigned rank;
 
     ArrayReference() = delete;
 
-    size_t arrayDim() const { return sizes.size(); }
+    size_t getArrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
@@ -47,21 +49,21 @@ struct ArrayReference {
     // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     // getNumLoops() x arrayDim()
     MutPtrMatrix<int64_t> indexMatrix() {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     PtrMatrix<int64_t> indexMatrix() const {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
     MutPtrMatrix<int64_t> offsetMatrix() {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                      numSymbols, numSymbols};
     }
     PtrMatrix<int64_t> offsetMatrix() const {
-        const size_t d = arrayDim();
+        const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                   numSymbols, numSymbols};
@@ -82,14 +84,16 @@ struct ArrayReference {
     ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop)
         : basePointer(basePointer), loop(&loop){};
     ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
+                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
+                   Predicates pred = {})
         : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)){};
+          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)){};
     ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
                    llvm::SmallVector<const llvm::SCEV *, 3> sizes,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
+                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
+                   Predicates pred = {})
         : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
-          symbolicOffsets(std::move(symbolicOffsets)){};
+          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)){};
 
     void resize(size_t d) {
         sizes.resize(d);
@@ -97,25 +101,27 @@ struct ArrayReference {
     }
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop, size_t dim,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        Predicates pred = {})
         : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)) {
+          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)) {
         resize(dim);
     };
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop, size_t dim,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        Predicates pred = {})
         : basePointer(basePointer), loop(&loop),
-          symbolicOffsets(std::move(symbolicOffsets)) {
+          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }
     bool allConstantIndices() const { return symbolicOffsets.size() == 0; }
     // Assumes strides and offsets are sorted
     bool sizesMatch(const ArrayReference &x) const {
-        if (arrayDim() != x.arrayDim())
+        if (getArrayDim() != x.getArrayDim())
             return false;
-        for (size_t i = 0; i < arrayDim(); ++i)
+        for (size_t i = 0; i < getArrayDim(); ++i)
             if (sizes[i] != x.sizes[i])
                 return false;
         return true;
@@ -125,7 +131,7 @@ struct ArrayReference {
                                          const ArrayReference &ar) {
         SHOWLN(ar.indexMatrix());
         os << "ArrayReference " << *ar.basePointer
-           << " (dim = " << ar.arrayDim()
+           << " (dim = " << ar.getArrayDim()
            << ", num loops: " << ar.getNumLoops();
         if (ar.sizes.size())
             os << ", element size: " << *ar.sizes.back();
@@ -145,7 +151,7 @@ struct ArrayReference {
             if (i)
                 os << ", ";
             bool printPlus = false;
-            for (size_t j = numLoops; j-- > 0; ) {
+            for (size_t j = numLoops; j-- > 0;) {
                 if (int64_t Aji = A(j, i)) {
                     if (printPlus) {
                         if (Aji <= 0) {
@@ -173,7 +179,7 @@ struct ArrayReference {
                     if (j) {
                         if (offij != 1)
                             os << offij << '*';
-                        os << ar.loop->symbols[j - 1];
+                        os << *ar.loop->symbols[j - 1];
                     } else
                         os << offij;
                     printPlus = true;

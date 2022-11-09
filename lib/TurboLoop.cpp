@@ -72,75 +72,28 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // then we search for sets of fusile loops
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
 
-    // first, we iterate over all loops to find those that are affine,
-    // constructing AffineLoopNest objects. We do this first, because our
-    // ArrayReference struct will hold pointers to these objects, and we only
-    // want to get pointers once we've finished filling the vector, so that
-    // these pointers won't later be invalidated.
-    llvm::SmallVector<llvm::Loop *, 4> loopsPreorder = LI->getLoopsInPreorder();
-    loopMap.reserve(loopsPreorder.size());
-    for (auto &L : loopsPreorder) {
-        llvm::errs() << "Preorder Loop: " << *L << "\nBackedge Taken Count: "
-                     << *(SE->applyLoopGuards(SE->getBackedgeTakenCount(L), L))
-                     << "\n";
-        if (!L->isLoopSimplifyForm())
-            continue;
-        auto b = L->getBounds(*SE);
-        if (!b)
-            continue;
-        auto step = b->getStepValue();
-        if (!step)
-            continue;
-        llvm::Value &init = b->getInitialIVValue();
-        llvm::Value &last = b->getFinalIVValue();
-        if (auto cStep = llvm::dyn_cast<llvm::ConstantInt>(step)) {
-            if (cStep->isOne()) {
-            }
-        } else {
-            // check all parent loops to check invariance of step
-            llvm::Loop *P = L;
-            llvm::Loop *firstDependent = nullptr;
-            bool dependentStep = false;
-            while ((P = P->getParentLoop())) {
-                dependentStep |= !(P->isLoopInvariant(step));
-                if (!dependentStep)
-                    continue;
-                if (!firstDependent)
-                    firstDependent = P;
-                // we must remove P and all outer loops
-                auto ap = loopMap.find(P);
-                if (ap != loopMap.end())
-                    loopMap.erase(ap);
-            }
-
-            // check if it is SCEVUnknown
-            // if it is not, then we do not optimize any loops exterior to this
-            // one so that we can make it a conditional constant.
-            // if (SE->getSCEV(step)->getSCEVType() !=
-            // llvm::SCEVTypes::scUnknown) continue;
-        }
-    }
-    // for (auto &L : *LI){
-
-    // }
-
-    // searchForFussileLoopSets(fissileSets, visitedBBs, &F.getEntryBlock(),
-    // nullptr);
     // fill array refs
-    for (auto forestID : loopForests) {
-        LoopTree &forest = loopTrees[forestID];
-        for (auto treeID : forest) {
-            LoopTree &tree = loopTrees[treeID];
-            parseLoop(tree.loop);
-        }
-    }
-    llvm::errs()<<"\n\nPrinting memory accesses:\n";
+    parseNest();
+
+    llvm::errs() << "\n\nPrinting memory accesses:\n";
     // TODO: fill schedules
     for (auto forestID : loopForests)
-        for (auto treeID : loopTrees[forestID]) 
+        for (auto treeID : loopTrees[forestID])
             loopTrees[treeID].dumpAllMemAccess(loopTrees);
-    llvm::errs()<<"\nDone printing memory accesses\n";
+    llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
+                 << loopForests.size() << "\n";
+    for (auto forestID : loopForests) {
+        fillLoopBlock(loopTrees[forestID]);
+        llvm::Optional<BitSet> optDeps = loopBlock.optimize();
+        SHOWLN(optDeps.hasValue());
+        llvm::errs() << loopBlock << "\n";
+        loopBlock.clear();
+    }
+
     // LoopBlock lblock;
+    // for (auto forestID : loopForests)
+    //     for (auto treeID : loopTrees[forestID])
+    //         loopTrees[treeID].setOriginalProgramSchedule(loopTrees, 0, 0);
 
     // for (llvm::BasicBlock &BB : F) {
     //     if (auto *L = LI->getLoopFor(&BB)) {
@@ -218,7 +171,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //     //             << "Back edge taken count: " << *backEdgeTaken
     //     //             << "\n\ttrip count: "
     //     //             << *(SE->getAddExpr(backEdgeTaken,
-    //     //                               SE->getOne(backEdgeTaken->getType())))
+    //     // SE->getOne(backEdgeTaken->getType())))
     //     //             << "\n";
     //     //     } else {
     //     //         std::cout << "couldn't find backedge taken?\n";
@@ -242,7 +195,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //             if (inductOuter) {
     //                 llvm::errs()
     //                     << "Loop " << i++
-    //                     << " in outer InductionVariable: " << *induct << "\n";
+    //                     << " in outer InductionVariable: " << *induct <<
+    //                     "\n";
     //                 llvm::errs()
     //                     << "innerInduct > outerInduct: "
     //                     << SE->isKnownPredicate(
@@ -278,7 +232,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     //             auto &inner_UB = b.getFinalIVValue();
 
     //             llvm::errs() << "\nLoop Bounds: " << inner_LB << " : "
-    //                          << *b.getStepValue() << " : " << inner_UB << "\n";
+    //                          << *b.getStepValue() << " : " << inner_UB <<
+    //                          "\n";
     //             if (obouter.hasValue()) {
     //                 auto ob = obouter.getValue();
     //                 auto oLB = SE->getSCEV(&ob.getInitialIVValue());

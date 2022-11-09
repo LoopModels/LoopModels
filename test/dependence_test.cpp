@@ -26,10 +26,10 @@ TEST(DependenceTest, BasicAssertions) {
     //   -2  0  1  0 -1      J
     //    0  0  0  0  1 ]    i
     //                       j ]
-    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 -1 0; "
-                                      "0 0 0 1 0; "
-                                      "-2 0 1 0 -1; "
-                                      "0 0 0 0 1]")};
+    IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
+                                      "0 0 0 0 1; "
+                                      "-2 0 1 -1 0; "
+                                      "0 0 0 1 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(Aloop), 2);
     auto &loop = tlf.alns.front();
@@ -41,8 +41,8 @@ TEST(DependenceTest, BasicAssertions) {
     ArrayReference Asrc(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+        IndMat(1, 0) = 1; // i (loop ind: 1) 
+        IndMat(0, 1) = 1; // j (lopp ind: 0)
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
         OffMat(1, 0) = 1;
@@ -55,8 +55,8 @@ TEST(DependenceTest, BasicAssertions) {
     ArrayReference Atgt0(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt0.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+        IndMat(1, 0) = 1; // i
+        IndMat(0, 1) = 1; // j
         Atgt0.offsetMatrix()(0, 0) = 1;
         Atgt0.sizes[0] = loop.symbols[0];
         Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
@@ -67,8 +67,8 @@ TEST(DependenceTest, BasicAssertions) {
     ArrayReference Atgt1(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt1.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+        IndMat(1, 0) = 1; // i
+        IndMat(0, 1) = 1; // j
         Atgt1.offsetMatrix()(1, 0) = 1;
         Atgt1.sizes[0] = loop.symbols[0];
         Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
@@ -130,10 +130,10 @@ TEST(IndependentTest, BasicAssertions) {
     //   for(j = 0:i-1)
     //     A(j,i) = A(i,j)
     //
-    IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
-                                      "0 0 1 0; "
-                                      "-1 0 1 -1; "
-                                      "0 0 0 1]")};
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 0 -1; "
+                                      "0 0 0 1; "
+                                      "-1 0 -1 1; "
+                                      "0 0 1 0]")};
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(Aloop), 2);
@@ -147,8 +147,8 @@ TEST(IndependentTest, BasicAssertions) {
     ArrayReference Asrc(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+        IndMat(1, 0) = 1; // i
+        IndMat(0, 1) = 1; // j
         Asrc.sizes[0] = loop.symbols[0];
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -158,8 +158,8 @@ TEST(IndependentTest, BasicAssertions) {
     ArrayReference Atgt(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
-        IndMat(1, 0) = 1; // j
-        IndMat(0, 1) = 1; // i
+        IndMat(0, 0) = 1; // j
+        IndMat(1, 1) = 1; // i
         Atgt.sizes[0] = loop.symbols[0];
         Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -196,16 +196,16 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // }
 
     // Construct the loops
-    IntMatrix AMN{(stringToIntMatrix("[-1 1 0 -1 0; "
-                                     "0 0 0 1 0; "
-                                     "-1 0 1 0 -1; "
-                                     "0 0 0 0 1]"))};
-    IntMatrix AMNK{(stringToIntMatrix("[-1 1 0 -1 0 0; "
-                                      "0 0 0 1 0 0; "
+    IntMatrix AMN{(stringToIntMatrix("[-1 1 0 0 -1; "
+                                     "0 0 0 0 1; "
+                                     "-1 0 1 -1 0; "
+                                     "0 0 0 1 0]"))};
+    IntMatrix AMNK{(stringToIntMatrix("[-1 1 0 0 0 -1; "
+                                      "0 0 0 0 0 1; "
                                       "-1 0 1 0 -1 0; "
                                       "0 0 0 0 1 0; "
-                                      "-1 0 1 0 0 -1; "
-                                      "-1 0 0 0 -1 1]"))};
+                                      "-1 0 1 -1 0 0; "
+                                      "-1 0 0 1 -1 0]"))};
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(AMN), 2);
@@ -230,8 +230,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
         //     l  d
-        IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // n
+        IndMat(1, 1) = 1; // m
         BmnInd.sizes[0] = M;
         BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -241,8 +241,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = Amn2Ind.indexMatrix();
         //     l  d
-        IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // n
+        IndMat(1, 1) = 1; // m
         Amn2Ind.sizes[0] = M;
         Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -253,7 +253,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = Amn3Ind.indexMatrix();
         //     l  d
         IndMat(1, 0) = 1; // n
-        IndMat(0, 1) = 1; // m
+        IndMat(2, 1) = 1; // m
         Amn3Ind.sizes[0] = M;
         Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -263,8 +263,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = AmkInd.indexMatrix();
         //     l  d
-        IndMat(2, 0) = 1; // k
-        IndMat(0, 1) = 1; // m
+        IndMat(0, 0) = 1; // k
+        IndMat(2, 1) = 1; // m
         AmkInd.sizes[0] = M;
         AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -275,7 +275,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         MutPtrMatrix<int64_t> IndMat = UnkInd.indexMatrix();
         //     l  d
         IndMat(1, 1) = 1; // n
-        IndMat(2, 0) = 1; // k
+        IndMat(0, 0) = 1; // k
         UnkInd.sizes[0] = N;
         UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -285,8 +285,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     {
         MutPtrMatrix<int64_t> IndMat = UnnInd.indexMatrix();
         //     l  d
-        IndMat(1, 1) = 1; // n
-        IndMat(1, 0) = 1; // k
+        IndMat(0, 1) = 1; // n
+        IndMat(0, 0) = 1; // n
         UnnInd.sizes[0] = N;
         UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -312,90 +312,50 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Schedule sch2_0_0(2);
     Schedule sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
-    lblock.memory.emplace_back(BmnInd, nullptr, sch2_0_0, true);
-    // MemoryAccess &mSch2_0_0 = lblock.memory.back();
+    MemoryAccess mSch2_0_0(BmnInd, nullptr, sch2_0_0, true);
+    lblock.memory.push_back(&mSch2_0_0);
     sch2_0_1.getOmega()[4] = 1;
     Schedule sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_0_1, false);
-    // llvm::errs() << "Amn2Ind.loop->poset.delta.size() = "
-    //           << Amn2Ind.loop->poset.delta.size() << "\n";
-    // llvm::errs() << "lblock.memory.back().ref.loop->poset.delta.size() = "
-    //           << lblock.memory.back().ref.loop->poset.delta.size() <<
-    //           "\n";
-    MemoryAccess &mSch2_0_1 = lblock.memory.back();
-    // llvm::errs() << "lblock.memory.back().ref.loop = "
-    //           << lblock.memory.back().ref.loop << "\n";
-    // llvm::errs() << "lblock.memory.back().ref.loop.get() = "
-    //           << lblock.memory.back().ref.loop.get() << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << "\n";
+    MemoryAccess mSch2_0_1(Amn2Ind, nullptr, sch2_0_1, false);
+    lblock.memory.push_back(&mSch2_0_1);
     sch2_1_0.getOmega()[2] = 1;
     sch2_1_0.getOmega()[4] = 0;
     Schedule sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_0, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop = " << msch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "msch2_0_1.ref.loop.get() = " << msch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch2_1_0 = lblock.memory.back();
+    MemoryAccess mSch2_1_0(Amn2Ind, nullptr, sch2_1_0, true);
+    lblock.memory.push_back(&mSch2_1_0);
     sch2_1_1.getOmega()[4] = 1;
     Schedule sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
-    lblock.memory.emplace_back(UnnInd, nullptr, sch2_1_1, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    // MemoryAccess &mSch2_1_1 = lblock.memory.back();
+    MemoryAccess mSch2_1_1(UnnInd, nullptr, sch2_1_1, true);
+    lblock.memory.push_back(&mSch2_1_1);
     sch2_1_2.getOmega()[4] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
-    lblock.memory.emplace_back(Amn2Ind, nullptr, sch2_1_2, false);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch2_1_2 = lblock.memory.back();
-
+    MemoryAccess mSch2_1_2(Amn2Ind, nullptr, sch2_1_2, false);
+    lblock.memory.push_back(&mSch2_1_2);
+    
     Schedule sch3_0(3);
     sch3_0.getOmega()[2] = 1;
     sch3_0.getOmega()[4] = 3;
     Schedule sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
-    lblock.memory.emplace_back(UnkInd, nullptr, sch3_0, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    // MemoryAccess &mSch3_2 = lblock.memory.back();
+    MemoryAccess mSch3_2(UnkInd, nullptr, sch3_0, true);
+    lblock.memory.push_back(&mSch3_2);
     sch3_1.getOmega()[6] = 1;
     Schedule sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
-    lblock.memory.emplace_back(Amn3Ind, nullptr, sch3_1, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_1 = lblock.memory.back();
+    MemoryAccess mSch3_1(Amn3Ind, nullptr, sch3_1, true);
+    lblock.memory.push_back(&mSch3_1);
     sch3_2.getOmega()[6] = 2;
     Schedule sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(AmkInd, nullptr, sch3_2, true);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_0 = lblock.memory.back();
+    MemoryAccess mSch3_0(AmkInd, nullptr, sch3_2, true);
+    lblock.memory.push_back(&mSch3_0);
     sch3_3.getOmega()[6] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
-    lblock.memory.emplace_back(AmkInd, nullptr, sch3_3, false);
-    // llvm::errs() << "\nPushing back" << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
-    MemoryAccess &mSch3_3 = lblock.memory.back();
+    MemoryAccess mSch3_3(AmkInd, nullptr, sch3_3, false);
+    lblock.memory.push_back(&mSch3_3);
     EXPECT_EQ(lblock.memory.size(), 9);
 
     // for (m = 0; m < M; ++m){
@@ -415,18 +375,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     d.reserve(16);
     llvm::SmallVector<Dependence, 0> r;
     r.reserve(16);
-    // llvm::errs() << "lblock.memory[1].ref.loop->poset.delta.size() = "
-    //           << lblock.memory[1].ref.loop->poset.delta.size() << "\n";
-    // llvm::errs() << "&mSch2_0_1 = " << &mSch2_0_1 << "\n";
-    // llvm::errs() << "&(mSch2_0_1.ref) = " << &(mSch2_0_1.ref) << "\n";
-    // llvm::errs() << "lblock.memory[1].ref.loop = " <<
-    // lblock.memory[1].ref.loop
-    //           << "\n";
-    // llvm::errs() << "lblock.memory[1].ref.loop.get() = "
-    //           << lblock.memory[1].ref.loop.get() << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop = " << mSch2_0_1.ref.loop << "\n";
-    // llvm::errs() << "mSch2_0_1.ref.loop.get() = " << mSch2_0_1.ref.loop.get()
-    //           << "\n";
     // // load in `A(m,n) = A(m,n) / U(n,n)`
     EXPECT_EQ(Dependence::check(d, mSch2_0_1, mSch2_1_0), 1);
     EXPECT_EQ(Dependence::check(r, mSch2_1_0, mSch2_0_1), 1);
@@ -650,10 +598,10 @@ TEST(RankDeficientLoad, BasicAssertions) {
     //  -1   1           <=    0
     //   0  -1 ]               0     ]
     //
-    IntMatrix Aloop{stringToIntMatrix("[-1 1 -1 0; "
-                                      "0 0 1 0; "
-                                      "0 0 1 -1; "
-                                      "0 0 0 1]")};
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 0 -1; "
+                                      "0 0 0 1; "
+                                      "0 0 -1 1; "
+                                      "0 0 1 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(Aloop), 2);
     auto &loop = tlf.alns.front();
@@ -666,8 +614,8 @@ TEST(RankDeficientLoad, BasicAssertions) {
     ArrayReference Asrc(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(1, 1) = 1; // j
+        IndMat(1, 0) = 1; // i
+        IndMat(0, 1) = 1; // j
         Asrc.sizes[0] = loop.symbols[0];
         Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -677,8 +625,8 @@ TEST(RankDeficientLoad, BasicAssertions) {
     ArrayReference Atgt(scevA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Atgt.indexMatrix();
-        IndMat(0, 0) = 1; // i
-        IndMat(0, 1) = 1; // i
+        IndMat(1, 0) = 1; // i
+        IndMat(1, 1) = 1; // i
         Atgt.sizes[0] = loop.symbols[0];
         Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
@@ -713,12 +661,12 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     //   0   0  1 ]               K - 1
     //   0   0 -1 ]               0     ]
     //
-    IntMatrix Aloop{stringToIntMatrix("[-1 1 0 0 -1 0 0; "
-                                      "0 0 0 0 1 0 0; "
+    IntMatrix Aloop{stringToIntMatrix("[-1 1 0 0 0 0 -1; "
+                                      "0 0 0 0 0 0 1; "
                                       "-1 0 1 0 0 -1 0; "
                                       "0 0 0 0 0 1 0; "
-                                      "-1 0 0 1 0 0 -1; "
-                                      "0 0 0 0 0 0 1]")};
+                                      "-1 0 0 1 -1 0 0; "
+                                      "0 0 0 0 1 0 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(Aloop), 3);
     auto &loop = tlf.alns.front();
@@ -735,12 +683,12 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     ArrayReference Aref(scevA, loop, 3);
     {
         MutPtrMatrix<int64_t> IndMat = Aref.indexMatrix();
-        IndMat(0, 0) = 1;  // i
+        IndMat(2, 0) = 1;  // i
         IndMat(1, 0) = 1;  // + j
         IndMat(1, 1) = 1;  // j
-        IndMat(2, 1) = 1;  // + k
-        IndMat(0, 2) = 1;  // i
-        IndMat(2, 2) = -1; // -k
+        IndMat(0, 1) = 1;  // + k
+        IndMat(2, 2) = 1;  // i
+        IndMat(0, 2) = -1; // -k
         Aref.sizes[0] = SE.getAddExpr(J, K);
         Aref.sizes[1] = SE.getAddExpr(I, K);
         Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);

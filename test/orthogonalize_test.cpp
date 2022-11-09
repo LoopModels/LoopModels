@@ -36,7 +36,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     const size_t numSymbols = alnp.getNumSymbols();
     size_t numRow = 0;
     for (auto a : ai)
-        numRow += a->arrayDim();
+        numRow += a->getArrayDim();
     IntMatrix S(numLoops, numRow);
     size_t i = 0;
     for (auto a : ai) {
@@ -70,8 +70,8 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     i = 0;
     for (auto a : ai) {
         newArrayRefs.emplace_back(*a, &ret.first,
-                                  KS(_, _(i, i + a->arrayDim())));
-        i += a->arrayDim();
+                                  KS(_, _(i, i + a->getArrayDim())));
+        i += a->getArrayDim();
     }
     return ret;
 }

@@ -35,7 +35,7 @@ It is expected that in many cases, bounds checks will actually provide informati
 
 Some details and explanations will be provided at [spmd.org](https://spmd.org/).
 
-###### Getting Started
+#### Getting Started
 
 This project requires C++20.
 On Ubuntu 22.04 LTS or later (if you're on an older Ubuntu, I suggest upgrading), you can install the dependencies via
@@ -162,3 +162,22 @@ Then meson is configured with
 ```
 CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address --native-file custom-llvm.ini
 ```
+
+#### Notes on Code
+
+Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.
+
+For now, a few notes on conventions:
+
+####### Loop Order in internal data structures
+
+Loop orders are initially parsed such that their internal representation is inner <-> outer, i.e. the inner most loop would be indexed with `0`, and the outermost with `maxDepth - 1`. 
+
+This convention is more convenient for initially parsing loops as well as for the initial pass of ILP reordering.
+
+When parsing loops, we take the largest sets we can model at a time. Thus it's natural to start with the innermost loop, and then move outwards, appending additional data. When we encounter something we cannot model, such as non-affine loop bounds or array accesses, we can also easily drop all outer loops, keeping the inner loops that satisfy our requirements. Thus, inner <-> outer is more convenient for parsing. 
+
+For ILP optimization, we take the lexicographical minimum of the `[dependence distance; schedule]` vector where the schedule is linearly independent of all previously solved schedules. By ordering inner <-> outer, we favor preserving the original program order rather than arbitrarily permuting. However, when printing, loops are named outer<->inner, as we may be printing many loops of different depths, and this eases comparisons (i.e., we want $i_0$ to mean the same thing across fused loops!).
+
+In contrast, schedules represent loops in an outer <-> inner order, as that is the order we solve them. That is columns of `Phi` and elements from `omega` are in outer <-> inner order.
+

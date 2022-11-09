@@ -509,11 +509,20 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 };
 
 struct Begin {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Begin) {
+        return os << 0;
+    }
 } begin;
 struct End {
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, End) {
+        return os << "end";
+    }
 } end;
 struct OffsetBegin {
     size_t offset;
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, OffsetBegin r) {
+        return os << r.offset;
+    }
 };
 constexpr OffsetBegin operator+(size_t x, Begin) { return OffsetBegin{x}; }
 constexpr OffsetBegin operator+(Begin, size_t x) { return OffsetBegin{x}; }
@@ -525,6 +534,9 @@ inline OffsetBegin operator+(OffsetBegin y, size_t x) {
 }
 struct OffsetEnd {
     size_t offset;
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, OffsetEnd r) {
+        return os << "end - " << r.offset;
+    }
 };
 constexpr OffsetEnd operator-(End, size_t x) { return OffsetEnd{x}; }
 constexpr OffsetEnd operator-(OffsetEnd y, size_t x) {
@@ -567,6 +579,9 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     constexpr Iterator begin() const { return Iterator{b}; }
     constexpr E end() const { return e; }
     constexpr auto size() const { return e - b; }
+    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os, Range<B, E> r) {
+        return os << "[" << r.b << ":" << r.e << ")";
+    }
 };
 // template <typename B, typename E>
 // constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
@@ -650,8 +665,8 @@ constexpr auto operator-(Range<B, E> r, size_t x) {
 template <typename T> struct PtrVector {
     static_assert(!std::is_const_v<T>, "const T is redundant");
     using eltype = T;
-    const T *const mem;
-    const size_t N;
+    [[no_unique_address]] const T *const mem;
+    [[no_unique_address]] const size_t N;
     static constexpr bool canResize = false;
     bool operator==(AbstractVector auto &x) {
         if (N != x.size())
@@ -704,8 +719,8 @@ template <typename T> struct MutPtrVector {
     static_assert(!std::is_const_v<T>, "T shouldn't be const");
     using eltype = T;
     // using eltype = std::remove_const_t<T>;
-    T *const mem;
-    const size_t N;
+    [[no_unique_address]] T *const mem;
+    [[no_unique_address]] const size_t N;
     static constexpr bool canResize = false;
     T &operator[](size_t i) {
         assert(i < N);
@@ -733,12 +748,12 @@ template <typename T> struct MutPtrVector {
     }
     T &operator()(OffsetEnd oe) {
         assert(N);
-	assert(N>oe.offset);
+        assert(N > oe.offset);
         return mem[N - 1 - oe.offset];
     }
     const T &operator()(OffsetEnd oe) const {
         assert(N);
-	assert(N>oe.offset);
+        assert(N > oe.offset);
         return mem[N - 1 - oe.offset];
     }
     // copy constructor
@@ -871,7 +886,7 @@ template <typename T> constexpr auto view(llvm::ArrayRef<T> x) {
 
 template <typename T> struct Vector {
     using eltype = T;
-    llvm::SmallVector<T, 16> data;
+    [[no_unique_address]] llvm::SmallVector<T, 16> data;
     static constexpr bool canResize = true;
 
     Vector(int N) : data(llvm::SmallVector<T>(N)){};
@@ -1001,6 +1016,7 @@ template <typename T> struct Vector {
     bool operator==(const Vector<T> &x) const {
         return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
     }
+    void pushBack(T x) { data.push_back(std::move(x)); }
 };
 
 static_assert(std::copyable<Vector<intptr_t>>);
@@ -1008,13 +1024,13 @@ static_assert(std::copyable<Vector<intptr_t>>);
 template <typename T> struct StridedVector {
     static_assert(!std::is_const_v<T>, "const T is redundant");
     using eltype = T;
-    const T *const d;
-    const size_t N;
-    const size_t x;
+    [[no_unique_address]] const T *const d;
+    [[no_unique_address]] const size_t N;
+    [[no_unique_address]] const size_t x;
     static constexpr bool canResize = false;
     struct StridedIterator {
-        const T *d;
-        size_t x;
+        [[no_unique_address]] const T *d;
+        [[no_unique_address]] size_t x;
         auto operator++() {
             d += x;
             return *this;
@@ -1055,13 +1071,13 @@ template <typename T> struct StridedVector {
 template <typename T> struct MutStridedVector {
     static_assert(!std::is_const_v<T>, "T should not be const");
     using eltype = T;
-    T *const d;
-    const size_t N;
-    const size_t x;
+    [[no_unique_address]] T *const d;
+    [[no_unique_address]] const size_t N;
+    [[no_unique_address]] const size_t x;
     static constexpr bool canResize = false;
     struct StridedIterator {
-        T *d;
-        size_t x;
+        [[no_unique_address]] T *d;
+        [[no_unique_address]] size_t x;
         auto operator++() {
             d += x;
             return *this;
@@ -1182,8 +1198,8 @@ template <typename T> struct PtrMatrix {
     using eltype = std::remove_reference_t<T>;
     static_assert(!std::is_const_v<T>, "const T is redundant");
     static constexpr bool canResize = false;
-    const T *const mem;
-    const size_t M, N, X;
+    [[no_unique_address]] const T *const mem;
+    [[no_unique_address]] const size_t M, N, X;
 
     inline const T *data() const { return mem; }
     inline size_t numRow() const { return M; }
@@ -1320,8 +1336,8 @@ template <typename T> struct MutPtrMatrix {
     using eltype = std::remove_reference_t<T>;
     static_assert(!std::is_const_v<T>,
                   "MutPtrMatrix should never have const T");
-    T *const mem;
-    const size_t M, N, X;
+    [[no_unique_address]] T *const mem;
+    [[no_unique_address]] const size_t M, N, X;
     static constexpr bool canResize = false;
 
     static constexpr bool fixedNumRow = true;
@@ -1928,8 +1944,8 @@ struct Matrix : BaseMatrix<T, Matrix<T, M, N, S>> {
 
 template <typename T, size_t M, size_t S>
 struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
-    llvm::SmallVector<T, S> mem;
-    size_t N, X;
+    [[no_unique_address]] llvm::SmallVector<T, S> mem;
+    [[no_unique_address]] size_t N, X;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -1950,8 +1966,8 @@ struct Matrix<T, M, 0, S> : BaseMatrix<T, Matrix<T, M, 0, S>> {
 };
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
-    llvm::SmallVector<T, S> mem;
-    size_t M;
+    [[no_unique_address]] llvm::SmallVector<T, S> mem;
+    [[no_unique_address]] size_t M;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -1969,8 +1985,8 @@ struct Matrix<T, 0, N, S> : BaseMatrix<T, Matrix<T, 0, N, S>> {
 template <typename T>
 struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
     static_assert(!std::is_const_v<T>, "const T is redundant");
-    const T *const mem;
-    const size_t M;
+    [[no_unique_address]] const T *const mem;
+    [[no_unique_address]] const size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
@@ -1986,8 +2002,8 @@ struct SquarePtrMatrix : BaseMatrix<T, SquarePtrMatrix<T>> {
 template <typename T>
 struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
     static_assert(!std::is_const_v<T>, "T should not be const");
-    T *const mem;
-    const size_t M;
+    [[no_unique_address]] T *const mem;
+    [[no_unique_address]] const size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
@@ -2011,8 +2027,8 @@ struct MutSquarePtrMatrix : BaseMatrix<T, MutSquarePtrMatrix<T>> {
 template <typename T, unsigned STORAGE = 8>
 struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
     static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
-    llvm::SmallVector<T, TOTALSTORAGE> mem;
-    size_t M;
+    [[no_unique_address]] llvm::SmallVector<T, TOTALSTORAGE> mem;
+    [[no_unique_address]] size_t M;
     static constexpr bool fixedNumCol = true;
     static constexpr bool fixedNumRow = true;
     static constexpr bool canResize = false;
@@ -2052,9 +2068,9 @@ struct SquareMatrix : BaseMatrix<T, SquareMatrix<T, STORAGE>> {
 
 template <typename T, size_t S>
 struct Matrix<T, 0, 0, S> : BaseMatrix<T, Matrix<T, 0, 0, S>> {
-    llvm::SmallVector<T, S> mem;
+    [[no_unique_address]] llvm::SmallVector<T, S> mem;
 
-    size_t M, N, X;
+    [[no_unique_address]] size_t M, N, X;
     static constexpr bool canResize = true;
     static constexpr bool isMutable = true;
 
@@ -2488,8 +2504,8 @@ constexpr auto binaryOp(const OP op, const A &a, const B &b) {
 constexpr auto bin2(std::integral auto x) { return (x * (x - 1)) >> 1; }
 
 struct Rational {
-    int64_t numerator{0};
-    int64_t denominator{1};
+    [[no_unique_address]] int64_t numerator{0};
+    [[no_unique_address]] int64_t denominator{1};
 
     Rational() : numerator(0), denominator(1){};
     Rational(int64_t coef) : numerator(coef), denominator(1){};
@@ -2799,12 +2815,12 @@ llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) {
 
 template <typename T> struct SmallSparseMatrix {
     // non-zeros
-    llvm::SmallVector<T> nonZeros;
+    [[no_unique_address]] llvm::SmallVector<T> nonZeros;
     // masks, the upper 8 bits give the number of elements in previous rows
     // the remaining 24 bits are a mask indicating non-zeros within this row
     static constexpr size_t maxElemPerRow = 24;
-    llvm::SmallVector<uint32_t> rows;
-    size_t col;
+    [[no_unique_address]] llvm::SmallVector<uint32_t> rows;
+    [[no_unique_address]] size_t col;
     static constexpr bool canResize = false;
     size_t numRow() const { return rows.size(); }
     size_t numCol() const { return col; }
@@ -2845,8 +2861,8 @@ template <typename T> struct SmallSparseMatrix {
     }
 
     struct Reference {
-        SmallSparseMatrix<T> *A;
-        size_t i, j;
+        [[no_unique_address]] SmallSparseMatrix<T> *A;
+        [[no_unique_address]] size_t i, j;
         operator T() const { return A->get(i, j); }
         void operator=(T x) {
             A->insert(std::move(x), i, j);
@@ -3073,12 +3089,12 @@ static_assert(AbstractVector<ElementwiseVectorBinaryOp<Sub, PtrVector<Rational>,
 template <typename T, typename I> struct SliceView {
     using eltype = T;
     static constexpr bool canResize = false;
-    MutPtrVector<T> a;
-    llvm::ArrayRef<I> i;
+    [[no_unique_address]] MutPtrVector<T> a;
+    [[no_unique_address]] llvm::ArrayRef<I> i;
     struct Iterator {
-        MutPtrVector<T> a;
-        llvm::ArrayRef<I> i;
-        size_t j;
+        [[no_unique_address]] MutPtrVector<T> a;
+        [[no_unique_address]] llvm::ArrayRef<I> i;
+        [[no_unique_address]] size_t j;
         bool operator==(const Iterator &k) const { return j == k.j; }
         Iterator &operator++() {
             ++j;
