@@ -86,6 +86,8 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
         return os << "unknown";
     case BBChain::loopexit:
         return os << "loop exit";
+    default:
+        assert(false && "unreachable");
     }
 }
 

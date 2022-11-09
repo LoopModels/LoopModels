@@ -56,6 +56,7 @@ struct Schedule {
         numLoops = nLoops;
         data.resize(requiredScheduleStorage(nLoops));
         getPhi().antiDiag() = 1;
+        // getOmega() = 0;
     }
     Schedule() = default;
     Schedule(size_t nLoops) : numLoops(nLoops) {

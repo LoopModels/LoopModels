@@ -165,6 +165,63 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
     return 0;
 }
 
+[[maybe_unused]] [[nodiscard]] static std::pair<const llvm::SCEV *,
+                                                const llvm::SCEV *>
+getMinMaxValueSCEV(llvm::ScalarEvolution &SE, const llvm::SCEVAddRecExpr *S) {
+    // if (!SE.containsAddRecurrence(S))
+    // 	return S;
+    if ((!S) || (!(S->isAffine())))
+        return std::make_pair(S, S);
+    auto opStart = S->getStart();
+    auto opStep = S->getStepRecurrence(SE);
+    auto opFinal = SE.getSCEVAtScope(S, nullptr);
+    // auto opFinal = SE.getSCEVAtScope(S, S->getLoop()->getParentLoop());
+    // FIXME: what if there are more AddRecs nested inside?
+    if (SE.isKnownNonNegative(opStep))
+        return std::make_pair(opStart, opFinal);
+    else if (SE.isKnownNonPositive(opStep))
+        return std::make_pair(opFinal, opStart);
+    return std::make_pair(S, S);
+}
+// TODO: strengthen through recursion
+[[maybe_unused]] [[nodiscard]] static std::pair<const llvm::SCEV *,
+                                                const llvm::SCEV *>
+getMinMaxValueSCEV(llvm::ScalarEvolution &SE, const llvm::SCEV *S) {
+    if (const llvm::SCEVAddRecExpr *T = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
+        return getMinMaxValueSCEV(SE, T);
+    return std::make_pair(S, S);
+}
+[[maybe_unused]] [[nodiscard]] static const llvm::SCEV *
+simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEVMinMaxExpr *S) {
+    // FIXME: This is probably a bit aggressive...
+    bool isMin =
+        llvm::isa<llvm::SCEVSMinExpr>(S) || llvm::isa<llvm::SCEVUMinExpr>(S);
+    bool isSigned =
+        llvm::isa<llvm::SCEVSMinExpr>(S) || llvm::isa<llvm::SCEVSMaxExpr>(S);
+    auto GE = isSigned ? llvm::ICmpInst::Predicate::ICMP_SGE
+                       : llvm::ICmpInst::Predicate::ICMP_UGE;
+
+    const llvm::SCEV *op0 = S->getOperand(0);
+    const llvm::SCEV *op1 = S->getOperand(1);
+    auto [LB0, UB0] = getMinMaxValueSCEV(SE, op0);
+    auto [LB1, UB1] = getMinMaxValueSCEV(SE, op1);
+    if (SE.isKnownPredicate(GE, LB0, UB1)) {
+        // op0 >= op1
+        return isMin ? op1 : op0;
+    } else if (SE.isKnownPredicate(GE, LB1, UB0)) {
+        // op1 >= op0
+        return isMin ? op0 : op1;
+    }
+    return S;
+}
+[[maybe_unused]] [[nodiscard]] static const llvm::SCEV *
+simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEV *S) {
+    if (const llvm::SCEVMinMaxExpr *MM =
+            llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(S))
+        return simplifyMinMax(SE, MM);
+    return S;
+}
+
 // A' * i <= b
 // l are the lower bounds
 // u are the upper bounds
@@ -277,10 +334,15 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
             minDepth = std::max(minDepth, recDepth);
         } else if (const llvm::SCEVMinMaxExpr *ex =
                        llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
+	    auto S = simplifyMinMax(SE, ex);
+	    if (S != v)
+		return addSymbol(B,L,S,SE,l,u,mlt,minDepth);
             bool isMin = llvm::isa<llvm::SCEVSMinExpr>(ex) ||
                          llvm::isa<llvm::SCEVUMinExpr>(ex);
             llvm::errs() << "llvm::SCEVMinMaxExpr: " << *ex
                          << "\nisMin = " << isMin << "; mlt = " << mlt << "\n";
+            const llvm::SCEV *op0 = ex->getOperand(0);
+            const llvm::SCEV *op1 = ex->getOperand(1);
             if (isMin ^
                 (mlt < 0)) { // we can represent this as additional constraints
                 size_t M = A.numRow();
@@ -289,21 +351,47 @@ struct AffineLoopNest : SymbolicPolyhedra { //,
                 size_t Mp = M + u - l;
                 A(_(M, Mp), _) = A(_(l, u), _);
                 B(_(M, Mp), _) = B(_(l, u), _);
-                minDepth =
-                    addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt, minDepth);
-                minDepth = addSymbol(B, L, ex->getOperand(1), SE, M, Mp, mlt,
-                                     minDepth);
-            } else if (addRecMatchesLoop(ex->getOperand(0), L)) {
-                return addSymbol(B, L, ex->getOperand(1), SE, l, u, mlt,
-                                 minDepth);
-            } else if (addRecMatchesLoop(ex->getOperand(1), L)) {
-                return addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt,
-                                 minDepth);
+                minDepth = addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
+                minDepth = addSymbol(B, L, op1, SE, M, Mp, mlt, minDepth);
+            } else if (addRecMatchesLoop(op0, L)) {
+                return addSymbol(B, L, op1, SE, l, u, mlt, minDepth);
+            } else if (addRecMatchesLoop(op1, L)) {
+                return addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
             } else {
-                llvm::errs()
-                    << "Failing on llvm::SCEVMinMaxExpr\n*L =" << *L << "\n";
-                SHOWLN(*ex->getOperand(0));
-                SHOWLN(*ex->getOperand(1));
+		// auto S = simplifyMinMax(SE, ex);
+		// if (S != v)
+		//     return addSymbol(B,L,S,SE,l,u,mlt,minDepth);
+                llvm::errs() << "Failing on llvm::SCEVMinMaxExpr = " << *ex
+                             << "<<\n*L =" << *L << "\n";
+                SHOWLN(*op0);
+                SHOWLN(*op1);
+                // TODO: don't only consider final value
+                // this assumes the final value is the maximum, which is not
+                // necessarilly true
+                if (auto op0ar = llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
+                    // auto op0final = SE.getSCEVAtScope(
+                    //     op0ar, op0ar->getLoop()->getParentLoop());
+                    auto op0final = SE.getSCEVAtScope(op0ar, nullptr);
+                    SHOWLN(*op0final);
+                    auto op0FinalMinusOp1 = SE.getMinusSCEV(op0final, op1);
+                    SHOWLN(SE.isKnownNonNegative(op0FinalMinusOp1));
+                    SHOWLN(SE.isKnownNonPositive(op0FinalMinusOp1));
+                    auto op0init = op0ar->getOperand(0);
+                    auto op0InitMinusOp1 = SE.getMinusSCEV(op0init, op1);
+                    SHOWLN(SE.isKnownNonNegative(op0InitMinusOp1));
+                    SHOWLN(SE.isKnownNonPositive(op0InitMinusOp1));
+                    auto op0step = op0ar->getOperand(0);
+                    SHOWLN(SE.isKnownNonNegative(op0step));
+                    SHOWLN(SE.isKnownNonPositive(op0step));
+                }
+                if (auto op1ar = llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
+                    SHOWLN(*SE.getSCEVAtScope(
+                        op1ar, op1ar->getLoop()->getParentLoop()));
+                }
+                auto op0MinusOp1 = SE.getMinusSCEV(op0, op1);
+                SHOWLN(SE.isKnownNonNegative(op0MinusOp1));
+                SHOWLN(SE.isKnownNonPositive(op0MinusOp1));
+
                 if (auto b = L->getBounds(SE))
                     llvm::errs()
                         << "Loop Bounds:\nInitial: " << b->getInitialIVValue()

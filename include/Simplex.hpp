@@ -705,6 +705,7 @@ struct Simplex {
         return m;
     }
     // check if a solution exists such that `x` can be true.
+    // returns `true` if unsatisfiable
     bool unSatisfiable(PtrVector<int64_t> x, size_t off) const {
         // is it a valid solution to set the first `x.size()` variables to `x`?
         // first, check that >= 0 constraint is satisfied
@@ -734,6 +735,7 @@ struct Simplex {
         // SHOWLN(sC);
         // SHOWLN(x);
         // SHOWLN(subSimp);
+	// returns `true` if unsatisfiable
         return subSimp.initiateFeasible();
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
