@@ -961,6 +961,11 @@ template <typename T> struct Vector {
         return llvm::ArrayRef<T>{data.data(), data.size()};
     }
     // MutPtrVector<T> operator=(AbstractVector auto &x) {
+    Vector<T> &operator=(const T &x) {
+        MutPtrVector<T> y{*this};
+        y = x;
+        return *this;
+    }
     Vector<T> &operator=(AbstractVector auto &x) {
         MutPtrVector<T> y{*this};
         y = x;
@@ -1020,6 +1025,8 @@ template <typename T> struct Vector {
 };
 
 static_assert(std::copyable<Vector<intptr_t>>);
+static_assert(AbstractVector<Vector<int64_t>>);
+static_assert(!AbstractVector<int64_t>);
 
 template <typename T> struct StridedVector {
     static_assert(!std::is_const_v<T>, "const T is redundant");

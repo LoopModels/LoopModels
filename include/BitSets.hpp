@@ -98,7 +98,6 @@ struct BitSet {
                 return 64 * i + std::countr_zero(data[i]);
         return std::numeric_limits<size_t>::max();
     }
-
     static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);

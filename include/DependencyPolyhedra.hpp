@@ -168,35 +168,31 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // }
 
     // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
-    static size_t findFirstNonEqualEven(PtrVector<int64_t> x,
-                                        PtrVector<int64_t> y) {
+    static size_t findFirstNonEqual(PtrVector<unsigned> x,
+                                    PtrVector<unsigned> y) {
         const size_t M = std::min(x.size(), y.size());
-        for (size_t i = 0; i < M; i += 2)
+        for (size_t i = 0; i < M; ++i)
             if (x[i] != y[i])
                 return i;
         return M;
     }
     static IntMatrix nullSpace(const MemoryAccess &x, const MemoryAccess &y) {
         const size_t numLoopsCommon =
-            findFirstNonEqualEven(x.schedule.getOmega(),
-                                  y.schedule.getOmega()) >>
-            1;
+            findFirstNonEqual(x.getFusionOmega(), y.getFusionOmega());
         const size_t xDim = x.ref.getArrayDim();
         const size_t yDim = y.ref.getArrayDim();
         IntMatrix A(numLoopsCommon, xDim + yDim);
-        if (numLoopsCommon) {
-            // indMats cols are [innerMostLoop, ..., outerMostLoop]
-            PtrMatrix<int64_t> indMatX = x.ref.indexMatrix();
-            PtrMatrix<int64_t> indMatY = y.ref.indexMatrix();
-            for (size_t i = 0; i < numLoopsCommon; ++i) {
-                A(i, _(begin, xDim)) = indMatX(i, _);
-                A(i, _(xDim, end)) = indMatY(i, _);
-            }
-            // returns rank x num loops
-            return orthogonalNullSpace(std::move(A));
-        } else {
+        if (!numLoopsCommon)
             return A;
+        // indMats cols are [innerMostLoop, ..., outerMostLoop]
+        PtrMatrix<int64_t> indMatX = x.ref.indexMatrix();
+        PtrMatrix<int64_t> indMatY = y.ref.indexMatrix();
+        for (size_t i = 0; i < numLoopsCommon; ++i) {
+            A(i, _(begin, xDim)) = indMatX(i, _);
+            A(i, _(xDim, end)) = indMatY(i, _);
         }
+        // returns rank x num loops
+        return orthogonalNullSpace(std::move(A));
     }
     //     // TODO: two steps:
     //     // 1: gcd test
@@ -808,6 +804,97 @@ struct Dependence {
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
+    bool isSatisfied(const Schedule &schIn, const Schedule &schOut) const {
+        const ArrayReference &refIn = in->ref;
+        const ArrayReference &refOut = out->ref;
+        size_t numLoopsIn = refIn.getNumLoops();
+        size_t numLoopsOut = refOut.getNumLoops();
+        size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
+        size_t numLoopsTotal = numLoopsIn + numLoopsOut;
+        Vector<int64_t> schv;
+        schv.resizeForOverwrite(dependenceSatisfaction.getNumVar());
+        const SquarePtrMatrix<int64_t> inPhi = schIn.getPhi();
+        const SquarePtrMatrix<int64_t> outPhi = schOut.getPhi();
+        llvm::ArrayRef<int64_t> inFusOmega = schIn.getFusionOmega();
+        llvm::ArrayRef<int64_t> outFusOmega = schOut.getFusionOmega();
+        llvm::ArrayRef<int64_t> inOffOmega = schIn.getOffsetOmega();
+        llvm::ArrayRef<int64_t> outOffOmega = schOut.getOffsetOmega();
+        const size_t numLambda = getNumLambda();
+        // when i == numLoopsCommon, we've passed the last loop
+        for (size_t i = 0; i <= numLoopsCommon; ++i) {
+            if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
+                return (o2idiff > 0);
+            // we should not be able to reach `numLoopsCommon`
+            // because at the very latest, this last schedule value
+            // should be different, because either:
+            // if (numLoopsX == numLoopsY){
+            //   we're at the inner most loop, where one of the instructions
+            //   must have appeared before the other.
+            // } else {
+            //   the loop nests differ in depth, in which case the deeper
+            //   loop must appear either above or below the instructions
+            //   present at that level
+            // }
+            assert(i != numLoopsCommon);
+            schv(_(begin, numLoopsIn)) = inPhi(i, _);
+            schv(_(numLoopsIn, numLoopsTotal)) = outPhi(i, _);
+            int64_t inO = inOffOmega[i], outO = outOffOmega[i];
+            // forward means offset is 2nd - 1st
+            schv[numLoopsTotal] = outO - inO;
+            // dependenceSatisfaction is phi_t - phi_s >= 0
+            // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
+            // we implicitly 0-out `w` and `u` here,
+            if (dependenceSatisfaction.unSatisfiable(schv, numLambda) ||
+                dependenceBounding.unSatisfiable(schv, numLambda))
+                // if zerod-out bounding not >= 0, then that means
+                // phi_t - phi_s > 0, so the dependence is satisfied
+                return false;
+        }
+        return true;
+    }
+    bool isSatisfied(llvm::ArrayRef<unsigned> inFusOmega,
+                     llvm::ArrayRef<unsigned> outFusOmega) const {
+        const ArrayReference &refIn = in->ref;
+        const ArrayReference &refOut = out->ref;
+        size_t numLoopsIn = refIn.getNumLoops();
+        size_t numLoopsOut = refOut.getNumLoops();
+        size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
+        size_t numLoopsTotal = numLoopsIn + numLoopsOut;
+        Vector<int64_t> schv;
+        schv.resizeForOverwrite(dependenceSatisfaction.getNumVar());
+        const size_t numLambda = getNumLambda();
+        // when i == numLoopsCommon, we've passed the last loop
+        for (size_t i = 0; i <= numLoopsCommon; ++i) {
+            if (int64_t o2idiff = outFusOmega[i] - inFusOmega[i])
+                return (o2idiff > 0);
+            // we should not be able to reach `numLoopsCommon`
+            // because at the very latest, this last schedule value
+            // should be different, because either:
+            // if (numLoopsX == numLoopsY){
+            //   we're at the inner most loop, where one of the instructions
+            //   must have appeared before the other.
+            // } else {
+            //   the loop nests differ in depth, in which case the deeper
+            //   loop must appear either above or below the instructions
+            //   present at that level
+            // }
+            assert(i != numLoopsCommon);
+            schv = 0;
+            schv(numLoopsIn - i - 1) = 1;
+            schv(numLoopsTotal - i - 1) = 1;
+            // forward means offset is 2nd - 1st
+            schv[numLoopsTotal] = 0;
+            // dependenceSatisfaction is phi_t - phi_s >= 0
+            // dependenceBounding is w + u'N - (phi_t - phi_s) >= 0
+            // we implicitly 0-out `w` and `u` here,
+            if (dependenceSatisfaction.unSatisfiable(schv, numLambda) ||
+                dependenceBounding.unSatisfiable(schv, numLambda))
+                // if zerod-out bounding not >= 0, then that means
+                // phi_t - phi_s > 0, so the dependence is satisfied
+                return false;
+        }
+        return true;
+    }
     bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) const {
         const size_t numLambda = depPoly.getNumLambda();
         const size_t numLoopsX = depPoly.getDim0();
@@ -820,17 +907,36 @@ struct Dependence {
         sch(_(begin, numLoopsX)) = sx.getPhi()(d, _(end - numLoopsX, end));
         sch(_(numLoopsX, numLoopsTotal)) =
             sy.getPhi()(d, _(end - numLoopsY, end));
-        sch(numLoopsTotal) = sx.getOmega()[2 * d + 1];
-        sch(numLoopsTotal + 1) = sy.getOmega()[2 * d + 1];
+        sch(numLoopsTotal) = sx.getOffsetOmega()[d];
+        sch(numLoopsTotal + 1) = sy.getOffsetOmega()[d];
         return dependenceSatisfaction.satisfiable(sch, numLambda);
     }
-    bool isSatisfied(size_t d) {
-        return forward ? isSatisfied(in->schedule, out->schedule, d)
-                       : isSatisfied(out->schedule, in->schedule, d);
+    bool isSatisfied(size_t d) const {
+        const size_t numLambda = depPoly.getNumLambda();
+        const size_t numLoopsX = depPoly.getDim0();
+        const size_t numLoopsY = depPoly.getDim1();
+        // const size_t numLoopsX = sx.getNumLoops();
+        // const size_t numLoopsY = sy.getNumLoops();
+        const size_t numLoopsTotal = numLoopsX + numLoopsY;
+        Vector<int64_t> sch(numLoopsTotal + 2);
+        assert(sch.size() == numLoopsTotal + 2);
+        sch(numLoopsX - d - 1) = 1;
+        sch(numLoopsTotal - d - 1) = 1;
+        // sch(numLoopsTotal) = x[d];
+        // sch(numLoopsTotal + 1) = y[d];
+        return dependenceSatisfaction.satisfiable(sch, numLambda);
     }
+    // bool isSatisfied(size_t d) {
+    //     return forward ? isSatisfied(in->getFusedOmega(),
+    //     out->getFusedOmega(), d)
+    //                    : isSatisfied(out->getFusedOmega(),
+    //                    in->getFusedOmega(), d);
+    // }
     static bool checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
-                               size_t numLambda, size_t nonTimeDim) {
+                               const Schedule &xSchedule,
+                               const Schedule &ySchedule, size_t numLambda,
+                               size_t nonTimeDim) {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -839,15 +945,17 @@ struct Dependence {
         const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
         const size_t numLoopsTotal = numLoopsX + numLoopsY;
-        SquarePtrMatrix<int64_t> xPhi = x.schedule.getPhi();
-        SquarePtrMatrix<int64_t> yPhi = y.schedule.getPhi();
-        PtrVector<int64_t> xOmega = x.schedule.getOmega();
-        PtrVector<int64_t> yOmega = y.schedule.getOmega();
+        SquarePtrMatrix<int64_t> xPhi = xSchedule.getPhi();
+        SquarePtrMatrix<int64_t> yPhi = ySchedule.getPhi();
+        PtrVector<int64_t> xOffOmega = xSchedule.getOffsetOmega();
+        PtrVector<int64_t> yOffOmega = ySchedule.getOffsetOmega();
+        PtrVector<int64_t> xFusOmega = xSchedule.getFusionOmega();
+        PtrVector<int64_t> yFusOmega = ySchedule.getFusionOmega();
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
         // i iterates from outer-most to inner most common loop
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-            if (int64_t o2idiff = yOmega[2 * i] - xOmega[2 * i])
+            if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i])
                 return o2idiff > 0;
             // we should not be able to reach `numLoopsCommon`
             // because at the very latest, this last schedule value
@@ -863,8 +971,66 @@ struct Dependence {
             assert(i != numLoopsCommon);
             sch(_(begin, numLoopsX)) = xPhi(i, _);
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
-            sch(numLoopsTotal) = xOmega[2 * i + 1];
-            sch(numLoopsTotal + 1) = yOmega[2 * i + 1];
+            sch(numLoopsTotal) = xOffOmega[i];
+            sch(numLoopsTotal + 1) = yOffOmega[i];
+            if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+#ifndef NDEBUG
+                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
+                // llvm::errs()
+                //     << "Dependence decided by forward violation with i = " <<
+                //     i
+                //     << "\n";
+#endif
+                return false;
+            }
+            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+                // #ifndef NDEBUG
+                //                 llvm::errs()
+                //                     << "Dependence decided by backward
+                //                     violation with i = " << i
+                //                     << "\n";
+                // #endif
+                return true;
+            }
+        }
+        // assert(false);
+        // return false;
+    }
+    static bool checkDirection(const std::pair<Simplex, Simplex> &p,
+                               const MemoryAccess &x, const MemoryAccess &y,
+                               size_t numLambda, size_t nonTimeDim) {
+        const Simplex &fxy = p.first;
+        const Simplex &fyx = p.second;
+        const size_t numLoopsX = x.ref.getNumLoops();
+        const size_t numLoopsY = y.ref.getNumLoops();
+#ifndef NDEBUG
+        const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
+#endif
+        const size_t numLoopsTotal = numLoopsX + numLoopsY;
+        PtrVector<unsigned> xFusOmega = x.getFusionOmega();
+        PtrVector<unsigned> yFusOmega = y.getFusionOmega();
+        Vector<int64_t> sch;
+        sch.resizeForOverwrite(numLoopsTotal + 2);
+	SHOWLN(sch.size());
+        // i iterates from outer-most to inner most common loop
+        for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
+            if (yFusOmega[i] != xFusOmega[i])
+                return yFusOmega[i] > xFusOmega[i];
+            // we should not be able to reach `numLoopsCommon`
+            // because at the very latest, this last schedule value
+            // should be different, because either:
+            // if (numLoopsX == numLoopsY){
+            //   we're at the inner most loop, where one of the instructions
+            //   must have appeared before the other.
+            // } else {
+            //   the loop nests differ in depth, in which case the deeper
+            //   loop must appear either above or below the instructions
+            //   present at that level
+            // }
+            assert(i != numLoopsCommon);
+            sch = 0;
+            sch(numLoopsX - 1 - i) = 1;
+            sch(numLoopsTotal - 1 - i) = 1;
             if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
 #ifndef NDEBUG
                 assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));

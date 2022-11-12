@@ -12,65 +12,66 @@
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
-    ArrayReference ref;
+    [[no_unique_address]] ArrayReference ref;
     // unsigned ref; // index to ArrayReference
-    llvm::Instruction *user;
-    Schedule schedule;
-    // unsigned (instead of ptr) as we build up edges
-    // and I don't want to relocate pointers when resizing vector
-    llvm::SmallVector<unsigned> edgesIn;
-    llvm::SmallVector<unsigned> edgesOut;
-    llvm::SmallVector<unsigned> groups;
-    [[no_unique_address]] unsigned index{std::numeric_limits<unsigned>::max()};
-    [[no_unique_address]] unsigned nodeIndex{
-        std::numeric_limits<unsigned>::max()};
-    // schedule indicated by `1` top bit, remainder indicates loop
-    [[no_unique_address]] bool isLoad;
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user, Schedule schedule,
-                 bool isLoad)
-        : ref(std::move(ref)), user(user), schedule(std::move(schedule)),
-          edgesIn(llvm::SmallVector<unsigned>()),
-          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user, bool isLoad)
-        : ref(std::move(ref)), user(user),
-          edgesIn(llvm::SmallVector<unsigned>()),
-          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
-                 llvm::ArrayRef<unsigned> omega, bool isLoad)
-        : ref(std::move(ref)), user(user),
-          schedule(llvm::ArrayRef<unsigned>{omega.data() + omega.size() -
-                                                (ref.getNumLoops() + 1),
-                                            ref.getNumLoops() + 1}),
-          edgesIn(llvm::SmallVector<unsigned>()),
-          edgesOut(llvm::SmallVector<unsigned>()), isLoad(isLoad){};
-    // MemoryAccess(const MemoryAccess &MA) = default;
-
+    [[no_unique_address]] llvm::Instruction *user;
+    // omegas order is [outer <-> inner]
+    [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
+    [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
+    [[no_unique_address]] llvm::SmallVector<unsigned> edgesOut;
+    [[no_unique_address]] BitSet nodeIndex;
     inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+    inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
+    // unsigned (instead of ptr) as we build up edges
+    // and I don't want to relocate pointers when resizing vector
+    // schedule indicated by `1` top bit, remainder indicates loop
+    [[no_unique_address]] bool isLoad;
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
+                 llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
+        : ref(std::move(ref)), user(user), omegas(std::move(omegas)),
+          isLoad(isLoad){};
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user, bool isLoad)
+        : ref(std::move(ref)), user(user), isLoad(isLoad){};
+    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
+                 llvm::ArrayRef<unsigned> o, bool isLoad)
+        : ref(std::move(ref)), user(user), omegas(o.begin(), o.end()),
+          isLoad(isLoad){};
+    // MemoryAccess(const MemoryAccess &MA) = default;
+
+    // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+    // inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+
     // size_t getNumLoops() const { return ref->getNumLoops(); }
     // size_t getNumAxes() const { return ref->axes.size(); }
     // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
     inline bool fusedThrough(MemoryAccess &x) {
-        // originally separate loops could be fused
-        // if (loop() != x.loop()){ return false; }
-        return schedule.fusedThrough(x.schedule);
+        bool allEqual = true;
+        size_t numLoopsCommon = std::min(getNumLoops(), x.getNumLoops());
+        for (size_t n = 0; n < numLoopsCommon; ++n)
+            allEqual &= (omegas[n] == x.omegas[n]);
+        return allEqual;
     }
     inline size_t getNumLoops() const {
-        assert(schedule.getNumLoops() == ref.getNumLoops());
-        return schedule.getNumLoops();
+        size_t numLoops = ref.getNumLoops();
+        assert(numLoops + 1 == omegas.size());
+        return numLoops;
     }
     inline MutPtrMatrix<int64_t> indexMatrix() { return ref.indexMatrix(); }
     inline PtrMatrix<int64_t> indexMatrix() const { return ref.indexMatrix(); }
     // note returns true if unset
-    inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
-    inline PtrVector<int64_t> getOmega() const { return schedule.getOmega(); }
-    inline PtrVector<int64_t> getSchedule(size_t loop) const {
-        return schedule.getPhi()(loop, _);
+    // inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
+    inline PtrVector<unsigned> getFusionOmega() const {
+        return PtrVector<unsigned>{omegas.data(), omegas.size()};
     }
+    // inline PtrVector<int64_t> getSchedule(size_t loop) const {
+    //     return schedule.getPhi()(loop, _);
+    // }
     inline MemoryAccess *truncateSchedule() {
-        llvm::errs() << "about to truncate schedule\n";
-        schedule.truncate(ref.getNumLoops());
-        SHOWLN(getNumLoops());
+        // we're truncating down to `ref.getNumLoops()`, discarding outer most
+        size_t dropCount = omegas.size() - (ref.getNumLoops() + 1);
+        if (dropCount)
+            omegas.erase(omegas.begin(), omegas.begin() + dropCount);
         return this;
     }
 };
@@ -83,7 +84,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
     if (m.user)
         os << *m.user;
     os << "\n"
-       << m.ref << "\nSchedule Omega: " << m.schedule.getOmega()
+       << m.ref << "\nSchedule Omega: " << m.getFusionOmega()
        << "\nAffineLoopNest: " << *m.ref.loop;
     return os;
 }
