@@ -41,7 +41,7 @@ TEST(DependenceTest, BasicAssertions) {
     ArrayReference Asrc(ptrA, loop, 2);
     {
         MutPtrMatrix<int64_t> IndMat = Asrc.indexMatrix();
-        IndMat(1, 0) = 1; // i (loop ind: 1) 
+        IndMat(1, 0) = 1; // i (loop ind: 1)
         IndMat(0, 1) = 1; // j (lopp ind: 0)
         MutPtrMatrix<int64_t> OffMat = Asrc.offsetMatrix();
         OffMat(0, 0) = 1;
@@ -76,9 +76,9 @@ TEST(DependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
     //
-    Schedule schLoad0(2);
-    Schedule schStore(2);
-    schStore.getOmega()[4] = 2;
+    llvm::SmallVector<unsigned, 8> schLoad0(3);
+    llvm::SmallVector<unsigned, 8> schStore(3);
+    schStore[2] = 2;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt0{Atgt0, nullptr, schLoad0, true};
     SHOWLN(loop.symbols[0]);
@@ -92,8 +92,8 @@ TEST(DependenceTest, BasicAssertions) {
     assert(dep0.getNumInequalityConstraints() == 4);
     assert(dep0.getNumEqualityConstraints() == 2);
 
-    Schedule schLoad1(2);
-    schLoad1.getOmega()[4] = 1;
+    llvm::SmallVector<unsigned, 8> schLoad1(3);
+    schLoad1[2] = 1;
     MemoryAccess mtgt1{Atgt1, nullptr, schLoad1, true};
     DependencePolyhedra dep1(msrc, mtgt1);
     EXPECT_FALSE(dep1.isEmpty());
@@ -165,9 +165,9 @@ TEST(IndependentTest, BasicAssertions) {
     }
     llvm::errs() << "Atgt = " << Atgt << "\n";
 
-    Schedule schLoad(2);
-    Schedule schStore(2);
-    schStore.getOmega()[4] = 1;
+    llvm::SmallVector<unsigned, 8> schLoad(3);
+    llvm::SmallVector<unsigned, 8> schStore(3);
+    schStore[2] = 1;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
     DependencePolyhedra dep(msrc, mtgt);
@@ -309,50 +309,50 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // }
     // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
     lblock.memory.reserve(9);
-    Schedule sch2_0_0(2);
-    Schedule sch2_0_1 = sch2_0_0;
+    llvm::SmallVector<unsigned, 8> sch2_0_0(2 + 1);
+    llvm::SmallVector<unsigned, 8> sch2_0_1 = sch2_0_0;
     // A(m,n) = -> B(m,n) <-
     MemoryAccess mSch2_0_0(BmnInd, nullptr, sch2_0_0, true);
     lblock.memory.push_back(&mSch2_0_0);
-    sch2_0_1.getOmega()[4] = 1;
-    Schedule sch2_1_0 = sch2_0_1;
+    sch2_0_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch2_1_0 = sch2_0_1;
     // -> A(m,n) <- = B(m,n)
     MemoryAccess mSch2_0_1(Amn2Ind, nullptr, sch2_0_1, false);
     lblock.memory.push_back(&mSch2_0_1);
-    sch2_1_0.getOmega()[2] = 1;
-    sch2_1_0.getOmega()[4] = 0;
-    Schedule sch2_1_1 = sch2_1_0;
+    sch2_1_0[1] = 1;
+    sch2_1_0[2] = 0;
+    llvm::SmallVector<unsigned, 8> sch2_1_1 = sch2_1_0;
     // A(m,n) = -> A(m,n) <- / U(n,n); // sch2
     MemoryAccess mSch2_1_0(Amn2Ind, nullptr, sch2_1_0, true);
     lblock.memory.push_back(&mSch2_1_0);
-    sch2_1_1.getOmega()[4] = 1;
-    Schedule sch2_1_2 = sch2_1_1;
+    sch2_1_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch2_1_2 = sch2_1_1;
     // A(m,n) = A(m,n) / -> U(n,n) <-;
     MemoryAccess mSch2_1_1(UnnInd, nullptr, sch2_1_1, true);
     lblock.memory.push_back(&mSch2_1_1);
-    sch2_1_2.getOmega()[4] = 2;
+    sch2_1_2[2] = 2;
     // -> A(m,n) <- = A(m,n) / U(n,n); // sch2
     MemoryAccess mSch2_1_2(Amn2Ind, nullptr, sch2_1_2, false);
     lblock.memory.push_back(&mSch2_1_2);
-    
-    Schedule sch3_0(3);
-    sch3_0.getOmega()[2] = 1;
-    sch3_0.getOmega()[4] = 3;
-    Schedule sch3_1 = sch3_0;
+
+    llvm::SmallVector<unsigned, 8> sch3_0(3 + 1);
+    sch3_0[1] = 1;
+    sch3_0[2] = 3;
+    llvm::SmallVector<unsigned, 8> sch3_1 = sch3_0;
     // A(m,k) = A(m,k) - A(m,n)* -> U(n,k) <-;
     MemoryAccess mSch3_2(UnkInd, nullptr, sch3_0, true);
     lblock.memory.push_back(&mSch3_2);
-    sch3_1.getOmega()[6] = 1;
-    Schedule sch3_2 = sch3_1;
+    sch3_1[3] = 1;
+    llvm::SmallVector<unsigned, 8> sch3_2 = sch3_1;
     // A(m,k) = A(m,k) - -> A(m,n) <- *U(n,k);
     MemoryAccess mSch3_1(Amn3Ind, nullptr, sch3_1, true);
     lblock.memory.push_back(&mSch3_1);
-    sch3_2.getOmega()[6] = 2;
-    Schedule sch3_3 = sch3_2;
+    sch3_2[3] = 2;
+    llvm::SmallVector<unsigned, 8> sch3_3 = sch3_2;
     // A(m,k) = -> A(m,k) <- - A(m,n)*U(n,k);
     MemoryAccess mSch3_0(AmkInd, nullptr, sch3_2, true);
     lblock.memory.push_back(&mSch3_0);
-    sch3_3.getOmega()[6] = 3;
+    sch3_3[3] = 3;
     // -> A(m,k) <- = A(m,k) - A(m,n)*U(n,k);
     MemoryAccess mSch3_3(AmkInd, nullptr, sch3_3, false);
     lblock.memory.push_back(&mSch3_3);
@@ -632,9 +632,9 @@ TEST(RankDeficientLoad, BasicAssertions) {
     }
     llvm::errs() << "AaxesTgt = \n" << Atgt << "\n";
 
-    Schedule schLoad(2);
-    Schedule schStore(2);
-    schStore.getOmega()[4] = 1;
+    llvm::SmallVector<unsigned, 8> schLoad(2 + 1);
+    llvm::SmallVector<unsigned, 8> schStore(2 + 1);
+    schStore[2] = 1;
     MemoryAccess msrc{Asrc, nullptr, schStore, false};
     MemoryAccess mtgt{Atgt, nullptr, schLoad, true};
 
@@ -695,9 +695,9 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     }
     llvm::errs() << "Aref = " << Aref << "\n";
 
-    Schedule schLoad(3);
-    Schedule schStore(3);
-    schStore.getOmega()(end) = 1;
+    llvm::SmallVector<unsigned, 8> schLoad(3 + 1);
+    llvm::SmallVector<unsigned, 8> schStore(3 + 1);
+    schStore[3] = 1;
     MemoryAccess msrc{Aref, nullptr, schStore, false};
     MemoryAccess mtgt{Aref, nullptr, schLoad, true};
 

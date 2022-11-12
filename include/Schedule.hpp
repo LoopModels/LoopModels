@@ -52,6 +52,11 @@ struct Schedule {
     [[no_unique_address]] int8_t unrolledInner{-1};
     // -1 indicates not unrolled
     [[no_unique_address]] int8_t unrolledOuter{-1};
+    // promotes to size_t(numLoops) before multiplication
+    constexpr size_t getNumLoopsSquared() const {
+        size_t stNumLoops = numLoops;
+        return stNumLoops * stNumLoops;
+    }
     void init(size_t nLoops) {
         numLoops = nLoops;
         data.resize(requiredScheduleStorage(nLoops));
@@ -70,16 +75,16 @@ struct Schedule {
         for (size_t i = 1; i < omega.size(); ++i)
             llvm::errs() << ", " << omega[i];
         llvm::errs() << "]\n";
-        MutPtrVector<int64_t> o{getOmega()};
+        MutPtrVector<int64_t> o{getFusionOmega()};
         for (size_t i = 0; i < omega.size(); ++i)
-            o[2 * i] = omega[i];
+            o[i] = omega[i];
     }
     void truncate(size_t newNumLoops) {
         if (newNumLoops < numLoops) {
             // llvm::errs() << "pre truncate: ";
             // CSHOWLN(getOmega());
-            size_t oOffset = size_t(numLoops) * size_t(numLoops) +
-                             size_t(numLoops) - newNumLoops;
+            size_t oOffset =
+                getNumLoopsSquared() + size_t(numLoops) - newNumLoops;
             size_t nOffset = newNumLoops * newNumLoops;
             for (size_t i = 0; i < newNumLoops; ++i)
                 data[i + nOffset] = data[i + oOffset];
@@ -94,22 +99,31 @@ struct Schedule {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
         return MutSquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
     }
-    MutPtrVector<int64_t> getOmega() {
-        return {data.data() + numLoops * numLoops, 2 * size_t(numLoops) + 1};
-    }
     SquarePtrMatrix<int64_t> getPhi() const {
         return SquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
     }
-    PtrVector<int64_t> getOmega() const {
-        return {.mem = data.data() + numLoops * numLoops,
-                .N = 2 * size_t(numLoops) + 1};
+    PtrVector<int64_t> getFusionOmega() const {
+        return {.mem = data.data() + getNumLoopsSquared(),
+                .N = size_t(numLoops) + 1};
+    }
+    PtrVector<int64_t> getOffsetOmega() const {
+        return {.mem =
+                    data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
+                .N = size_t(numLoops)};
+    }
+    MutPtrVector<int64_t> getFusionOmega() {
+        return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
+    }
+    MutPtrVector<int64_t> getOffsetOmega() {
+        return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
+                size_t(numLoops)};
     }
     bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
-        llvm::ArrayRef<int64_t> o0 = getOmega();
-        llvm::ArrayRef<int64_t> o1 = y.getOmega();
+        llvm::ArrayRef<int64_t> o0 = getFusionOmega();
+        llvm::ArrayRef<int64_t> o1 = y.getFusionOmega();
         bool allEqual = true;
         for (size_t n = 0; n < numLoopsCommon; ++n)
-            allEqual &= (o0[2 * n] == o1[2 * n]);
+            allEqual &= (o0[n] == o1[n]);
         return allEqual;
     }
     bool fusedThrough(const Schedule &y) const {

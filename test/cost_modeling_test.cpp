@@ -239,50 +239,50 @@ TEST(TriangularExampleTest, BasicAssertions) {
     // }
     // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
     lblock.memory.reserve(9);
-    Schedule sch2_0_0(2);
-    Schedule sch2_0_1 = sch2_0_0;
+    llvm::SmallVector<unsigned, 8> sch2_0_0(2 + 1);
+    llvm::SmallVector<unsigned, 8> sch2_0_1 = sch2_0_0;
     // A(n,m) = -> B(n,m) <-
     MemoryAccess mSch2_0_0(BmnInd, Bload, sch2_0_0, true);
     lblock.memory.push_back(&mSch2_0_0);
-    sch2_0_1.getOmega()[4] = 1;
-    Schedule sch2_1_0 = sch2_0_1;
+    sch2_0_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch2_1_0 = sch2_0_1;
     // -> A(n,m) <- = B(n,m)
     MemoryAccess mSch2_0_1(Amn2Ind, Astore0, sch2_0_1, false);
     lblock.memory.push_back(&mSch2_0_1);
-    sch2_1_0.getOmega()[2] = 1;
-    sch2_1_0.getOmega()[4] = 0;
-    Schedule sch2_1_1 = sch2_1_0;
+    sch2_1_0[1] = 1;
+    sch2_1_0[2] = 0;
+    llvm::SmallVector<unsigned, 8> sch2_1_1 = sch2_1_0;
     // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
     MemoryAccess mSch2_1_0(Amn2Ind, Aload0, sch2_1_0, true);
     lblock.memory.push_back(&mSch2_1_0);
-    sch2_1_1.getOmega()[4] = 1;
-    Schedule sch2_1_2 = sch2_1_1;
+    sch2_1_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch2_1_2 = sch2_1_1;
     // A(n,m) = A(n,m) / -> U(n,n) <-;
     MemoryAccess mSch2_1_1(UnnInd, Uloadnn, sch2_1_1, true);
     lblock.memory.push_back(&mSch2_1_1);
-    sch2_1_2.getOmega()[4] = 2;
+    sch2_1_2[2] = 2;
     // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
     MemoryAccess mSch2_1_2(Amn2Ind, AstoreFDiv, sch2_1_2, false);
     lblock.memory.push_back(&mSch2_1_2);
 
-    Schedule sch3_0(3);
-    sch3_0.getOmega()[2] = 1;
-    sch3_0.getOmega()[4] = 3;
-    Schedule sch3_1 = sch3_0;
+    llvm::SmallVector<unsigned, 8> sch3_0(3 + 1);
+    sch3_0[1] = 1;
+    sch3_0[2] = 3;
+    llvm::SmallVector<unsigned, 8> sch3_1 = sch3_0;
     // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
     MemoryAccess mSch3_0(UnkInd, Uloadnk, sch3_0, true);
     lblock.memory.push_back(&mSch3_0);
-    sch3_1.getOmega()[6] = 1;
-    Schedule sch3_2 = sch3_1;
+    sch3_1[3] = 1;
+    llvm::SmallVector<unsigned, 8> sch3_2 = sch3_1;
     // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
     MemoryAccess mSch3_1(Amn3Ind, Aload1mn, sch3_1, true);
     lblock.memory.push_back(&mSch3_1);
-    sch3_2.getOmega()[6] = 2;
-    Schedule sch3_3 = sch3_2;
+    sch3_2[3] = 2;
+    llvm::SmallVector<unsigned, 8> sch3_3 = sch3_2;
     // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
     MemoryAccess mSch3_2(AmkInd, Aload1mk, sch3_2, true);
     lblock.memory.push_back(&mSch3_2);
-    sch3_3.getOmega()[6] = 3;
+    sch3_3[3] = 3;
     // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
     MemoryAccess mSch3_3(AmkInd, Astore2mk, sch3_3, false);
     lblock.memory.push_back(&mSch3_3);
@@ -451,18 +451,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
     for (auto mem : lblock.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);
-        Schedule &s = lblock.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        SHOWLN(s.getOmega());
-        if (mem->getNumLoops() == 2) {
-            EXPECT_EQ(s.getPhi(), optPhi2);
-        } else {
-            assert(mem->getNumLoops() == 3);
-            EXPECT_EQ(s.getPhi(), optPhi3);
+        for (size_t nodeIndex : mem->nodeIndex) {
+            Schedule &s = lblock.nodes[nodeIndex].schedule;
+            SHOWLN(s.getPhi());
+            SHOWLN(s.getFusionOmega());
+            SHOWLN(s.getOffsetOmega());
+            if (mem->getNumLoops() == 2) {
+                EXPECT_EQ(s.getPhi(), optPhi2);
+            } else {
+                assert(mem->getNumLoops() == 3);
+                EXPECT_EQ(s.getPhi(), optPhi3);
+            }
+            // SHOWLN(mem.schedule.getPhi());
+            // SHOWLN(mem.schedule.getOmega());
+            llvm::errs() << "\n";
         }
-        // SHOWLN(mem.schedule.getPhi());
-        // SHOWLN(mem.schedule.getOmega());
-        llvm::errs() << "\n";
     }
 }
 
@@ -691,36 +694,36 @@ TEST(MeanStDevTest0, BasicAssertions) {
         sInd2JOuter.sizes[0] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     }
 
-    Schedule sch0_0(1);
-    Schedule sch0_1_0(2);
-    sch0_1_0.getOmega()(2) = 1;
-    Schedule sch0_1_1(2);
-    sch0_1_1.getOmega()(2) = 1;
-    sch0_1_1.getOmega()(4) = 1;
-    Schedule sch0_1_2(2);
-    sch0_1_2.getOmega()(2) = 1;
-    sch0_1_2.getOmega()(4) = 2;
-    Schedule sch0_2(1);
-    sch0_2.getOmega()(2) = 2;
-    Schedule sch0_3(1);
-    sch0_3.getOmega()(2) = 3;
-    Schedule sch0_4(1);
-    sch0_4.getOmega()(2) = 4;
-    Schedule sch0_5_0(2);
-    sch0_5_0.getOmega()(2) = 5;
-    Schedule sch0_5_1(2);
-    sch0_5_1.getOmega()(2) = 5;
-    sch0_5_1.getOmega()(4) = 1;
-    Schedule sch0_5_2(2);
-    sch0_5_2.getOmega()(2) = 5;
-    sch0_5_2.getOmega()(4) = 2;
-    Schedule sch0_5_3(2);
-    sch0_5_3.getOmega()(2) = 5;
-    sch0_5_3.getOmega()(4) = 3;
-    Schedule sch0_6(1);
-    sch0_6.getOmega()(2) = 6;
-    Schedule sch0_7(1);
-    sch0_7.getOmega()(2) = 7;
+    llvm::SmallVector<unsigned, 8> sch0_0(1 + 1);
+    llvm::SmallVector<unsigned, 8> sch0_1_0(2 + 1);
+    sch0_1_0[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch0_1_1(2 + 1);
+    sch0_1_1[1] = 1;
+    sch0_1_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch0_1_2(2 + 1);
+    sch0_1_2[1] = 1;
+    sch0_1_2[2] = 2;
+    llvm::SmallVector<unsigned, 8> sch0_2(1 + 1);
+    sch0_2[1] = 2;
+    llvm::SmallVector<unsigned, 8> sch0_3(1 + 1);
+    sch0_3[1] = 3;
+    llvm::SmallVector<unsigned, 8> sch0_4(1 + 1);
+    sch0_4[1] = 4;
+    llvm::SmallVector<unsigned, 8> sch0_5_0(2 + 1);
+    sch0_5_0[1] = 5;
+    llvm::SmallVector<unsigned, 8> sch0_5_1(2 + 1);
+    sch0_5_1[1] = 5;
+    sch0_5_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch0_5_2(2 + 1);
+    sch0_5_2[1] = 5;
+    sch0_5_2[2] = 2;
+    llvm::SmallVector<unsigned, 8> sch0_5_3(2 + 1);
+    sch0_5_3[1] = 5;
+    sch0_5_3[2] = 3;
+    llvm::SmallVector<unsigned, 8> sch0_6(1 + 1);
+    sch0_6[1] = 6;
+    llvm::SmallVector<unsigned, 8> sch0_7(1 + 1);
+    sch0_7[1] = 7;
     // SHOWLN(sch1_0.getPhi());
     // SHOWLN(sch2_1_0.getPhi());
     // SHOWLN(sch2_1_1.getPhi());
@@ -812,59 +815,62 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (auto mem : iOuterLoopNest.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);
-        Schedule &s = iOuterLoopNest.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        SHOWLN(s.getOmega());
+        for (size_t nodeIndex : mem->nodeIndex) {
+            Schedule &s = iOuterLoopNest.nodes[nodeIndex].schedule;
+            SHOWLN(s.getPhi());
+            SHOWLN(s.getFusionOmega());
+            SHOWLN(s.getOffsetOmega());
+        }
     }
 
     LoopBlock jOuterLoopNest;
     llvm::SmallVector<MemoryAccess, 0> jOuterMem;
     jOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
-    Schedule sch0_1(1);
-    sch0_1.getOmega()(2) = 1;
+    llvm::SmallVector<unsigned, 8> sch0_1(1 + 1);
+    sch0_1[1] = 1;
     jOuterMem.emplace_back(sInd1, Sstore_0, sch0_1, false); // 6
-    Schedule sch1_0_0(2);
-    sch1_0_0.getOmega()(0) = 1;
-    Schedule sch1_0_1(2);
-    sch1_0_1.getOmega()(0) = 1;
-    sch1_0_1.getOmega()(4) = 1;
-    Schedule sch1_0_2(2);
-    sch1_0_2.getOmega()(0) = 1;
-    sch1_0_2.getOmega()(4) = 2;
+    llvm::SmallVector<unsigned, 8> sch1_0_0(2 + 1);
+    sch1_0_0[0] = 1;
+    llvm::SmallVector<unsigned, 8> sch1_0_1(2 + 1);
+    sch1_0_1[0] = 1;
+    sch1_0_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch1_0_2(2 + 1);
+    sch1_0_2[0] = 1;
+    sch1_0_2[2] = 2;
     jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0, true);    // 1
     jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1, true);   // 2
     jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2, false); // 3
 
-    Schedule sch2_0(1);
-    sch2_0.getOmega()(0) = 2;
-    Schedule sch2_1(1);
-    sch2_1.getOmega()(0) = 2;
-    sch2_1.getOmega()(2) = 1;
+    llvm::SmallVector<unsigned, 8> sch2_0(1 + 1);
+    sch2_0[0] = 2;
+    llvm::SmallVector<unsigned, 8> sch2_1(1 + 1);
+    sch2_1[0] = 2;
+    sch2_1[1] = 1;
     jOuterMem.emplace_back(xInd1, Xload_1, sch2_0, true);   // 4
     jOuterMem.emplace_back(xInd1, Xstore_2, sch2_1, false); // 5
 
-    Schedule sch3_0_0(2);
-    sch3_0_0.getOmega()(0) = 3;
-    Schedule sch3_0_1(2);
-    sch3_0_1.getOmega()(0) = 3;
-    sch3_0_1.getOmega()(4) = 1;
-    Schedule sch3_0_2(2);
-    sch3_0_2.getOmega()(0) = 3;
-    sch3_0_2.getOmega()(4) = 2;
-    Schedule sch3_0_3(2);
-    sch3_0_3.getOmega()(0) = 3;
-    sch3_0_3.getOmega()(4) = 3;
+    llvm::SmallVector<unsigned, 8> sch3_0_0(2 + 1);
+    sch3_0_0[0] = 3;
+    llvm::SmallVector<unsigned, 8> sch3_0_1(2 + 1);
+    sch3_0_1[0] = 3;
+    sch3_0_1[2] = 1;
+    llvm::SmallVector<unsigned, 8> sch3_0_2(2 + 1);
+    sch3_0_2[0] = 3;
+    sch3_0_2[2] = 2;
+    llvm::SmallVector<unsigned, 8> sch3_0_3(2 + 1);
+    sch3_0_3[0] = 3;
+    sch3_0_3[2] = 3;
 
     jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0, true);    // 7
     jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1, true);   // 8
     jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2, true);   // 9
     jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3, false); // 10
 
-    Schedule sch4_0(1);
-    sch4_0.getOmega()(0) = 4;
-    Schedule sch4_1(1);
-    sch4_1.getOmega()(0) = 4;
-    sch4_1.getOmega()(2) = 1;
+    llvm::SmallVector<unsigned, 8> sch4_0(1 + 1);
+    sch4_0[0] = 4;
+    llvm::SmallVector<unsigned, 8> sch4_1(1 + 1);
+    sch4_1[0] = 4;
+    sch4_1[1] = 1;
     jOuterMem.emplace_back(sInd1, Sload_1, sch4_0, true);   // 11
     jOuterMem.emplace_back(sInd1, Sstore_2, sch4_1, false); // 12
 
@@ -902,15 +908,18 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (auto mem : jOuterLoopNest.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);
-        Schedule &s = jOuterLoopNest.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        SHOWLN(s.getOmega());
-        if (s.getNumLoops() == 1) {
-            EXPECT_EQ(s.getPhi()(0, 0), 1);
-        } else if (s.getOmega()(2) < 3) {
-            EXPECT_EQ(s.getPhi(), optSinnerUndef);
-        } else {
-            EXPECT_EQ(s.getPhi(), optS);
+        for (size_t nodeIndex : mem->nodeIndex) {
+            Schedule &s = jOuterLoopNest.nodes[nodeIndex].schedule;
+            SHOWLN(s.getPhi());
+            SHOWLN(s.getFusionOmega());
+            SHOWLN(s.getOffsetOmega());
+            if (s.getNumLoops() == 1) {
+                EXPECT_EQ(s.getPhi()(0, 0), 1);
+            } else if (s.getFusionOmega()(1) < 3) {
+                EXPECT_EQ(s.getPhi(), optSinnerUndef);
+            } else {
+                EXPECT_EQ(s.getPhi(), optS);
+            }
         }
     }
 }
@@ -1021,9 +1030,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
     //
-    Schedule schLoad0(2);
-    Schedule schStore(2);
-    schStore.getOmega()[4] = 2;
+    llvm::SmallVector<unsigned, 8> schLoad0(2 + 1);
+    llvm::SmallVector<unsigned, 8> schStore(2 + 1);
+    schStore[2] = 2;
     MemoryAccess msrc{Asrc, Astore, schStore, false};
     MemoryAccess mtgt0{Atgt0, Aload_ip1_j, schLoad0, true};
     DependencePolyhedra dep0(msrc, mtgt0);
@@ -1036,8 +1045,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     assert(dep0.getNumInequalityConstraints() == 4);
     assert(dep0.getNumEqualityConstraints() == 2);
 
-    Schedule schLoad1(2);
-    schLoad1.getOmega()[4] = 1;
+    llvm::SmallVector<unsigned, 8> schLoad1(2 + 1);
+    schLoad1[2] = 1;
     MemoryAccess mtgt1{Atgt1, Aload_i_jp1, schLoad1, true};
     DependencePolyhedra dep1(msrc, mtgt1);
     EXPECT_FALSE(dep1.isEmpty());
@@ -1108,10 +1117,13 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     for (auto &mem : loopBlock.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);
-        Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        EXPECT_EQ(s.getPhi(), optPhi);
-        SHOWLN(s.getOmega());
+        for (size_t nodeIndex : mem->nodeIndex) {
+            Schedule &s = loopBlock.nodes[nodeIndex].schedule;
+            SHOWLN(s.getPhi());
+            EXPECT_EQ(s.getPhi(), optPhi);
+            SHOWLN(s.getFusionOmega());
+            SHOWLN(s.getOffsetOmega());
+        }
     }
 }
 
@@ -1244,22 +1256,22 @@ TEST(ConvReversePass, BasicAssertions) {
     //   }
     // }
     LoopBlock loopBlock;
-    Schedule sch_0(4);
-    Schedule sch_1 = sch_0;
+    llvm::SmallVector<unsigned, 8> sch_0(4 + 1);
+    llvm::SmallVector<unsigned, 8> sch_1 = sch_0;
     //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
     MemoryAccess msch_0(BmnInd, Bload, sch_0, true);
     loopBlock.memory.push_back(&msch_0);
-    sch_1.getOmega()[8] = 1;
-    Schedule sch_2 = sch_1;
+    sch_1[4] = 1;
+    llvm::SmallVector<unsigned, 8> sch_2 = sch_1;
     //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
     MemoryAccess msch_1(AmnInd, Aload, sch_1, true);
     loopBlock.memory.push_back(&msch_1);
-    sch_2.getOmega()[8] = 2;
-    Schedule sch_3 = sch_2;
+    sch_2[4] = 2;
+    llvm::SmallVector<unsigned, 8> sch_3 = sch_2;
     //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
     MemoryAccess msch_2(CmijnInd, Cload, sch_2, true);
     loopBlock.memory.push_back(&msch_2);
-    sch_3.getOmega()[8] = 3;
+    sch_3[4] = 3;
     //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
     MemoryAccess msch_3(CmijnInd, Cstore, sch_3, false);
     loopBlock.memory.push_back(&msch_3);
@@ -1269,9 +1281,12 @@ TEST(ConvReversePass, BasicAssertions) {
     for (auto &mem : loopBlock.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);
-        Schedule &s = loopBlock.nodes[mem->nodeIndex].schedule;
-        SHOWLN(s.getPhi());
-        // EXPECT_EQ(s.getPhi(), optPhi);
-        SHOWLN(s.getOmega());
+        for (size_t nodeIndex : mem->nodeIndex) {
+            Schedule &s = loopBlock.nodes[nodeIndex].schedule;
+            SHOWLN(s.getPhi());
+            // EXPECT_EQ(s.getPhi(), optPhi);
+            SHOWLN(s.getFusionOmega());
+            SHOWLN(s.getOffsetOmega());
+        }
     }
 }
