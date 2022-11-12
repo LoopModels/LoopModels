@@ -339,7 +339,7 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
 // NormalForm version assumes sorted
 [[maybe_unused]] static size_t numNonZeroRows(PtrMatrix<int64_t> A) {
     size_t Mnew = A.numRow();
-    while (allZero(A.getRow(Mnew - 1)))
+    while (allZero(A(Mnew - 1, _)))
         --Mnew;
     return Mnew;
 }
@@ -382,7 +382,7 @@ MULTIVERSION [[maybe_unused]] static void simplifySystem(IntMatrix &A,
     simplifySystemImpl(A, B);
     size_t Mnew = A.numRow();
     bool need_trunc = false;
-    while (allZero(A.getRow(Mnew - 1))) {
+    while (allZero(A(Mnew - 1, _))) {
         --Mnew;
         need_trunc = true;
     }
@@ -628,7 +628,7 @@ MULTIVERSION [[maybe_unused]] static void solveSystem(IntMatrix &A) {
 //             reduceSubDiagonal(A, c, r++);
 //         }
 //     size_t R = M;
-//     while ((R > 0) && allZero(A.getRow(R - 1))) {
+//     while ((R > 0) && allZero(A(R - 1,_))) {
 //         --R;
 //     }
 //     A.truncateRows(R);
@@ -643,7 +643,7 @@ MULTIVERSION [[maybe_unused]] static void nullSpace11(IntMatrix &B,
     B.diag() = 1;
     solveSystem(A, B);
     size_t R = M;
-    while ((R > 0) && allZero(A.getRow(R - 1)))
+    while ((R > 0) && allZero(A(R - 1, _)))
         --R;
     // slice B[R:end, :]
     // if R == 0, no need to truncate or copy

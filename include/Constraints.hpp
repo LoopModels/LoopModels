@@ -122,7 +122,7 @@ substituteEqualityImpl(IntMatrix &E, const size_t i) {
         }
     if (rowMinNonZero == numConstraints)
         return rowMinNonZero;
-    auto Es = E.getRow(rowMinNonZero);
+    auto Es = E(rowMinNonZero, _);
     int64_t Eis = Es[i];
     // we now subsitute the equality expression with the minimum number
     // of terms.
@@ -171,7 +171,7 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
     }
     if (rowMinNonZero == numConstraints)
         return rowMinNonZero;
-    auto Es = E.getRow(rowMinNonZero);
+    auto Es = E(rowMinNonZero, _);
     int64_t Eis = Es[i];
     int64_t s = 2 * (Eis > 0) - 1;
     // we now subsitute the equality expression with the minimum number
@@ -351,6 +351,6 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
 
 [[maybe_unused]] static void dropEmptyConstraints(IntMatrix &A) {
     for (size_t c = A.numRow(); c != 0;)
-        if (allZero(A.getRow(--c)))
+        if (allZero(A(--c, _)))
             eraseConstraint(A, c);
 }

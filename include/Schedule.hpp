@@ -97,10 +97,10 @@ struct Schedule {
     }
     MutSquarePtrMatrix<int64_t> getPhi() {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
-        return MutSquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
+        return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
     SquarePtrMatrix<int64_t> getPhi() const {
-        return SquarePtrMatrix<int64_t>{{}, data.data(), numLoops};
+        return SquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
     PtrVector<int64_t> getFusionOmega() const {
         return {.mem = data.data() + getNumLoopsSquared(),

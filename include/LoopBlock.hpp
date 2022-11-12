@@ -578,8 +578,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 const size_t phiOffset = phi.numCol() - indR;
                 for (size_t rr = 0; rr < r; ++rr) {
                     phi(rr, _(begin, phiOffset)) = 0;
-                    for (size_t i = 0; i < indR; ++i)
-                        phi(rr, i + phiOffset) = indMat(i, rr);
+                    phi(rr, _(phiOffset, phiOffset + indR)) = indMat(_, rr);
                 }
                 // node.schedule.getPhi()(_(0, r), _) =
                 indMat.transpose();
@@ -979,12 +978,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 auto s = sol(node.getPhiOffsetRange() - 1);
                 int64_t l = denomLCM(s);
                 SHOWLN(l);
+                for (size_t i = 0; i < phi.size(); ++i)
+                    assert(((s(i).numerator * l) / (s(i).denominator)) >= 0);
                 if (l == 1)
                     for (size_t i = 0; i < phi.size(); ++i)
                         phi(i) = s(i).numerator;
                 else
                     for (size_t i = 0; i < phi.size(); ++i)
                         phi(i) = (s(i).numerator * l) / (s(i).denominator);
+		SHOWLN(phi);
                 assert(!(allZero(phi)));
                 // node.schedule.getPhi()(depth, _) =
                 //     sol(node.getPhiOffset() - 1) *
@@ -1039,6 +1041,36 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             c(end) = -1; // for >=
         }
     }
+    static uint64_t nonZeroMask(const AbstractVector auto &x) {
+        assert(x.size() <= 64);
+        uint64_t m = 0;
+        for (auto y : x)
+            m = ((m << 1) | (y != 0));
+        return m;
+    }
+    static void
+    nonZeroMasks(llvm::SmallVector<uint64_t> &masks, const AbstractMatrix auto &A) {
+        const auto [M, N] = A.size();
+        assert(N <= 64);
+        masks.resize_for_overwrite(M);
+        for (size_t m = 0; m < M; ++m)
+            masks[m] = nonZeroMask(A(m, _));
+    }
+    static llvm::SmallVector<uint64_t>
+    nonZeroMasks(const AbstractMatrix auto &A) {
+        llvm::SmallVector<uint64_t> masks;
+	nonZeroMasks(masks, A);
+        return masks;
+    }
+    static uint64_t
+    nonZeroMask(const AbstractMatrix auto A) {
+        const auto [M, N] = A.size();
+        assert(N <= 64);
+        uint64_t mask=0;
+        for (size_t m = 0; m < M; ++m)
+            mask |= nonZeroMask(A(m, _));
+        return mask;
+    }
     void setSchedulesIndependent(const Graph &g, size_t depth) {
         IntMatrix A, N;
         for (auto &&node : nodes) {
@@ -1054,10 +1086,19 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             node.schedule.getOffsetOmega()(depth) = 0;
             MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
+	    llvm::SmallVector<uint64_t> indexMasks;
             if (depth) {
                 A = phi(_(0, depth), _).transpose();
                 NormalForm::nullSpace11(N, A);
+                // we check array references to see if we can find one index
+                // uint64_t nullMask = nonZeroMask(N);
+		// for (MemoryAccess *mem : g.mem){
+		//     nonZeroMasks(indexMasks, mem->ref.indexMatrix().transpose());
+		    
+		// }
                 phi(depth, _) = N(0, _) * lexSign(N(0, _));
+                llvm::errs() << "Set schedules independent:\n";
+                SHOWLN(phi(depth, _));
             } else {
                 phi(depth, _(begin, end - 1)) = 0;
                 phi(depth, end) = 1;
@@ -1310,18 +1351,16 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &edge : lblock.edges) {
             os << "edge = " << edge;
             for (size_t inIndex : edge.in->nodeIndex) {
-                os << "Schedule In:\n";
                 const Schedule &sin = lblock.nodes[inIndex].schedule;
-                os << "nodeIndex = " << edge.in->nodeIndex
+                os << "Schedule In:\nnodeIndex = " << edge.in->nodeIndex
                    << "; ref = " << edge.in->ref << "\ns.getPhi()"
                    << sin.getPhi()
                    << "\ns.getFusionOmega() = " << sin.getFusionOmega()
                    << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
             }
             for (size_t outIndex : edge.out->nodeIndex) {
-                os << "\n\nSchedule Out:\n";
                 const Schedule &sout = lblock.nodes[outIndex].schedule;
-                os << "nodeIndex = " << edge.out->nodeIndex
+                os << "\n\nSchedule Out:\nnodeIndex = " << edge.out->nodeIndex
                    << "; ref = " << edge.out->ref << "\ns.getPhi()"
                    << sout.getPhi()
                    << "\ns.getFusionOmega() = " << sout.getFusionOmega()
@@ -1334,13 +1373,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             os << "Ref = " << mem->ref;
             for (size_t nodeIndex : mem->nodeIndex) {
                 const Schedule &s = lblock.nodes[nodeIndex].schedule;
-                os << "nodeIndex = " << nodeIndex << "\ns.getPhi()"
+                os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()"
                    << s.getPhi()
                    << "\ns.getFusionOmega() = " << s.getFusionOmega()
-                   << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n\n";
+                   << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
             }
         }
-        return os;
+        return os << "\n";
     }
 };
 
