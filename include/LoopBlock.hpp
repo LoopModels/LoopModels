@@ -291,7 +291,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                                 unsigned nodeIndex) {
         for (auto &&op : u->operands()) {
             llvm::User *user = llvm::dyn_cast<llvm::User>(op.get());
-            if (!user)
+            if (!user || visited.contains(user))
                 continue;
             if (llvm::LoadInst *l = llvm::dyn_cast<llvm::LoadInst>(user)) {
                 auto memAccess = userToMemory.find(user);
@@ -1329,13 +1329,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             llvm::errs() << "\n\n";
         }
-        os << "\nLoopBlock schedule:\n";
+        os << "\nLoopBlock schedule:\n\n";
         for (auto mem : lblock.memory) {
-            os << "\nRef = " << mem->ref;
+            os << "Ref = " << mem->ref;
             for (size_t nodeIndex : mem->nodeIndex) {
                 const Schedule &s = lblock.nodes[nodeIndex].schedule;
-                os << "nodeIndex = " << mem->nodeIndex << "; ref = " << mem->ref
-                   << "\ns.getPhi()" << s.getPhi()
+                os << "nodeIndex = " << nodeIndex << "\ns.getPhi()"
+                   << s.getPhi()
                    << "\ns.getFusionOmega() = " << s.getFusionOmega()
                    << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n\n";
             }
