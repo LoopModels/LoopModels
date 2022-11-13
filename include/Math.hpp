@@ -668,8 +668,20 @@ struct Colon {
 constexpr size_t canonicalize(size_t e, size_t) { return e; }
 constexpr size_t canonicalize(Begin, size_t) { return 0; }
 constexpr size_t canonicalize(OffsetBegin b, size_t) { return b.offset; }
-constexpr size_t canonicalize(End, size_t M) { return M; }
-constexpr size_t canonicalize(OffsetEnd e, size_t M) { return M - e.offset; }
+constexpr size_t canonicalize(End, size_t M) { return M - 1; }
+constexpr size_t canonicalize(OffsetEnd e, size_t M) {
+    return M - 1 - e.offset;
+}
+
+constexpr size_t canonicalizeForRange(size_t e, size_t) { return e; }
+constexpr size_t canonicalizeForRange(Begin, size_t) { return 0; }
+constexpr size_t canonicalizeForRange(OffsetBegin b, size_t) {
+    return b.offset;
+}
+constexpr size_t canonicalizeForRange(End, size_t M) { return M; }
+constexpr size_t canonicalizeForRange(OffsetEnd e, size_t M) {
+    return M - e.offset;
+}
 
 // Union type
 template <typename T>
@@ -679,7 +691,8 @@ concept ScalarIndex =
 
 template <typename B, typename E>
 constexpr Range<size_t, size_t> canonicalizeRange(Range<B, E> r, size_t M) {
-    return Range<size_t, size_t>{canonicalize(r.b, M), canonicalize(r.e, M)};
+    return Range<size_t, size_t>{canonicalizeForRange(r.b, M),
+                                 canonicalizeForRange(r.e, M)};
 }
 constexpr Range<size_t, size_t> canonicalizeRange(Colon, size_t M) {
     return Range<size_t, size_t>{0, M};
