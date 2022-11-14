@@ -18,7 +18,7 @@
 // A set of `size_t` elements.
 // Initially constructed
 struct BitSet {
-    llvm::SmallVector<uint64_t> data;
+    [[no_unique_address]] llvm::SmallVector<uint64_t> data;
     // size_t operator[](size_t i) const {
     //     return data[i];
     // } // allow `getindex` but not `setindex`
@@ -41,13 +41,16 @@ struct BitSet {
         return N ? (64 * N - std::countl_zero(data[N - 1])) : 0;
     }
     struct Iterator {
-        llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator it;
-        llvm::SmallVectorTemplateCommon<uint64_t>::const_iterator end;
-        uint64_t istate;
-        size_t cstate0{std::numeric_limits<size_t>::max()};
-        size_t cstate1{0};
-        size_t operator*() const { return cstate0 + cstate1; }
-        Iterator &operator++() {
+        [[no_unique_address]] llvm::SmallVectorTemplateCommon<
+            uint64_t>::const_iterator it;
+        [[no_unique_address]] llvm::SmallVectorTemplateCommon<
+            uint64_t>::const_iterator end;
+        [[no_unique_address]] uint64_t istate;
+        [[no_unique_address]] size_t cstate0{
+            std::numeric_limits<size_t>::max()};
+        [[no_unique_address]] size_t cstate1{0};
+        constexpr size_t operator*() const { return cstate0 + cstate1; }
+        constexpr Iterator &operator++() {
             while (istate == 0) {
                 ++it;
                 if (it == end)
@@ -61,29 +64,34 @@ struct BitSet {
             istate >>= tzp1;
             return *this;
         }
-        Iterator operator++(int) {
+        constexpr Iterator operator++(int) {
             Iterator temp = *this;
             ++*this;
             return temp;
         }
         struct End {
-            ptrdiff_t operator-(Iterator it) {
+            constexpr ptrdiff_t operator-(Iterator it) {
                 ptrdiff_t i = 0;
                 for (; it != End{}; ++it, ++i) {
                 }
                 return i;
             }
+            // overloaded operator== cannot be a static member function
             constexpr bool operator==(End) const { return true; }
         };
-        bool operator==(End) const { return it == end && (istate == 0); }
-        bool operator!=(End) const { return it != end || (istate != 0); }
-        bool operator==(Iterator j) const {
+        constexpr bool operator==(End) const {
+            return it == end && (istate == 0);
+        }
+        constexpr bool operator!=(End) const {
+            return it != end || (istate != 0);
+        }
+        constexpr bool operator==(Iterator j) const {
             return (it == j.it) && (istate == j.istate);
         }
     };
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-    Iterator begin() const {
+    constexpr Iterator begin() const {
         auto b{data.begin()};
         auto e{data.end()};
         if (b == e)
@@ -91,14 +99,15 @@ struct BitSet {
         Iterator it{b, e, *b};
         return ++it;
     }
-    Iterator::End end() const { return Iterator::End{}; };
-    size_t front() const {
+    constexpr static Iterator::End end() { return Iterator::End{}; };
+    constexpr size_t front() const {
         for (size_t i = 0; i < data.size(); ++i)
             if (data[i])
                 return 64 * i + std::countr_zero(data[i]);
         return std::numeric_limits<size_t>::max();
     }
-    static uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
+    static constexpr uint64_t contains(llvm::ArrayRef<uint64_t> data,
+                                       size_t x) {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
@@ -150,8 +159,8 @@ struct BitSet {
     }
 
     struct Reference {
-        llvm::MutableArrayRef<uint64_t> data;
-        size_t i;
+        [[no_unique_address]] llvm::MutableArrayRef<uint64_t> data;
+        [[no_unique_address]] size_t i;
         operator bool() const { return contains(data, i); }
         void operator=(bool b) {
             BitSet::set(data, i, b);
@@ -296,19 +305,19 @@ struct BitSet64 {
 };
 
 template <typename T> struct BitSliceView {
-    llvm::MutableArrayRef<T> a;
-    const BitSet &i;
+    [[no_unique_address]] llvm::MutableArrayRef<T> a;
+    [[no_unique_address]] const BitSet &i;
     struct Iterator {
-        llvm::MutableArrayRef<T> a;
-        BitSet::Iterator it;
-        bool operator==(BitSet::Iterator::End) const {
+        [[no_unique_address]] llvm::MutableArrayRef<T> a;
+        [[no_unique_address]] BitSet::Iterator it;
+        constexpr bool operator==(BitSet::Iterator::End) const {
             return it == BitSet::Iterator::End{};
         }
-        Iterator &operator++() {
+        constexpr Iterator &operator++() {
             ++it;
             return *this;
         }
-        Iterator operator++(int) {
+        constexpr Iterator operator++(int) {
             Iterator temp = *this;
             ++it;
             return temp;
@@ -320,19 +329,19 @@ template <typename T> struct BitSliceView {
     };
     Iterator begin() { return {a, i.begin()}; }
     struct ConstIterator {
-        llvm::ArrayRef<T> a;
-        BitSet::Iterator it;
-        bool operator==(BitSet::Iterator::End) const {
+        [[no_unique_address]] llvm::ArrayRef<T> a;
+        [[no_unique_address]] BitSet::Iterator it;
+        constexpr bool operator==(BitSet::Iterator::End) const {
             return it == BitSet::Iterator::End{};
         }
-        bool operator==(ConstIterator c) const {
+        constexpr bool operator==(ConstIterator c) const {
             return (it == c.it) && (a.data() == c.a.data());
         }
-        ConstIterator &operator++() {
+        constexpr ConstIterator &operator++() {
             ++it;
             return *this;
         }
-        ConstIterator operator++(int) {
+        constexpr ConstIterator operator++(int) {
             ConstIterator temp = *this;
             ++it;
             return temp;
@@ -340,9 +349,9 @@ template <typename T> struct BitSliceView {
         const T &operator*() const { return a[*it]; }
         const T *operator->() const { return &a[*it]; }
     };
-    ConstIterator begin() const { return {a, i.begin()}; }
-    BitSet::Iterator::End end() const { return {}; }
-    size_t size() const { return i.size(); }
+    constexpr ConstIterator begin() const { return {a, i.begin()}; }
+    constexpr BitSet::Iterator::End end() const { return {}; }
+    constexpr size_t size() const { return i.size(); }
 };
 ptrdiff_t operator-(BitSet::Iterator::End, BitSliceView<int64_t>::Iterator v) {
     return BitSet::Iterator::End{} - v.it;
