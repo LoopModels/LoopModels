@@ -650,13 +650,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e))
                 return true;
-        // else
-        // llvm::errs() << "hasActiveEdge In false for: " << edges[e];
+            else
+                llvm::errs() << "hasActiveEdge In false for: " << edges[e];
         for (auto &e : mem.edgesOut)
             if (!g.isInactive(e))
                 return true;
-        // else
-        // llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
+            else
+                llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
         return false;
     }
     [[nodiscard]] bool hasActiveEdges(const Graph &g, const MemoryAccess &mem,
@@ -664,9 +664,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e, d))
                 return true;
+            else
+                llvm::errs() << "hasActiveEdge In d = " << d
+                             << " false for: " << edges[e];
         for (auto &e : mem.edgesOut)
             if (!g.isInactive(e, d))
                 return true;
+            else
+                llvm::errs() << "hasActiveEdge Out d = " << d
+                             << " false for: " << edges[e];
         return false;
     }
     [[nodiscard]] bool hasActiveEdges(const Graph &g, const ScheduledNode &node,
@@ -1075,7 +1081,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return mask;
     }
     void setSchedulesIndependent(const Graph &g, size_t depth) {
-        IntMatrix A, N;
+        // IntMatrix A, N;
         for (auto &&node : nodes) {
             if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
                 continue;
@@ -1089,8 +1095,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             node.schedule.getOffsetOmega()(depth) = 0;
             MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
-            llvm::SmallVector<uint64_t> indexMasks;
-	    phi(depth,_) = std::numeric_limits<int64_t>::min();
+            phi(depth, _) = std::numeric_limits<int64_t>::min();
+            // llvm::SmallVector<uint64_t> indexMasks;
             // if (depth) {
             //     A = phi(_(0, depth), _).transpose();
             //     NormalForm::nullSpace11(N, A);
@@ -1226,8 +1232,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     //         omniSimplex.copySolution(sol);
     //     }
     [[nodiscard]] llvm::Optional<BitSet> optimizeLevel(Graph &g, size_t d) {
-        CSHOW(numPhiCoefs);
-        CSHOWLN(d);
+        // CSHOW(numPhiCoefs);
+        // CSHOWLN(d);
         if (numPhiCoefs == 0) {
             setSchedulesIndependent(g, d);
             return BitSet{};
@@ -1356,7 +1362,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
         os << "\nLoopBlock Edges:\n";
         for (auto &edge : lblock.edges) {
-            os << "edge = " << edge;
+            os << "\tEdge = " << edge;
             for (size_t inIndex : edge.in->nodeIndex) {
                 const Schedule &sin = lblock.nodes[inIndex].schedule;
                 os << "Schedule In:\nnodeIndex = " << edge.in->nodeIndex

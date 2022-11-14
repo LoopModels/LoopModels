@@ -15,6 +15,7 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <sys/types.h>
 #include <type_traits>
 
@@ -229,9 +230,12 @@ struct Polyhedra {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const Polyhedra &p) {
-        auto &&os2 = printConstraints(os << "\n", p.A, p.C.getNumConstTerms());
+        auto &&os2 = printConstraints(
+            os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>{nullptr, 0});
         if constexpr (hasEqualities)
-            return printConstraints(os2, p.E, p.C.getNumConstTerms(), false);
+            return printConstraints(
+                os2, p.E, llvm::ArrayRef<const llvm::SCEV *>{nullptr, 0},
+                false);
         return os2;
     }
     void dump() const { llvm::errs() << *this; }

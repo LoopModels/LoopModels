@@ -6,6 +6,7 @@
 #include "./NormalForm.hpp"
 #include <cstddef>
 #include <cstdint>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Support/raw_ostream.h>
 #include <sys/types.h>
 
@@ -15,10 +16,12 @@
 // which menas either change printing, or move prints `<<` into
 // the derived classes.
 [[maybe_unused]] static llvm::raw_ostream &
-printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A, size_t numSyms,
+printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
+                 llvm::ArrayRef<const llvm::SCEV *> syms,
                  bool inequality = true) {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
+    const unsigned numSyms = syms.size() + 1;
     for (size_t c = 0; c < numConstraints; ++c) {
         bool hasPrinted = false;
         bool allVarNonNegative = allGEZero(A(c, _(numSyms, numVar)));
@@ -58,7 +61,7 @@ printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A, size_t numSyms,
                 Acv = std::abs(Acv);
                 if (Acv != 1)
                     os << Acv << "*";
-                os << 'L' + v;
+                os << *syms[v - 1];
             }
         }
         os << "\n";
@@ -66,8 +69,8 @@ printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A, size_t numSyms,
     return os;
 }
 [[maybe_unused]] static llvm::raw_ostream &
-printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>, size_t,
-                 bool = true, size_t = 0) {
+printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
+                 llvm::ArrayRef<const llvm::SCEV *>, bool = true, size_t = 0) {
     return os;
 }
 

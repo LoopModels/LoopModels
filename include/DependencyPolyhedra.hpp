@@ -477,9 +477,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     }
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const DependencePolyhedra &p) {
-        return printConstraints(
-            printConstraints(os << "\n", p.A, p.getNumSymbols()), p.E,
-            p.getNumSymbols(), false);
+        return printConstraints(printConstraints(os << "\n", p.A, p.symbols),
+                                p.E, p.symbols, false);
     }
 
 }; // namespace DependencePolyhedra
@@ -1011,7 +1010,7 @@ struct Dependence {
         PtrVector<unsigned> yFusOmega = y.getFusionOmega();
         Vector<int64_t> sch;
         sch.resizeForOverwrite(numLoopsTotal + 2);
-	SHOWLN(sch.size());
+        SHOWLN(sch.size());
         // i iterates from outer-most to inner most common loop
         for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
             if (yFusOmega[i] != xFusOmega[i])
