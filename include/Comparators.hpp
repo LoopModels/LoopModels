@@ -309,7 +309,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         // We will have query of the form Ax = q;
         NormalForm::simplifySystemImpl(A, U);
         auto &H = A;
-        while ((R) && allZero(H.getRow(R - 1)))
+        while ((R) && allZero(H(R - 1, _)))
             --R;
         H.truncateRows(R);
         U.truncateRows(R);
@@ -492,7 +492,7 @@ static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
                     break;
                 }
             }
-            if (isNeg && C.equalNegative(A.getRow(i), A.getRow(o))) {
+            if (isNeg && C.equalNegative(A(i, _), A(o, _))) {
                 size_t e = E.numRow();
                 E.resize(e + 1, numVar);
                 for (size_t v = 0; v < numVar; ++v)
