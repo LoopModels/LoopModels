@@ -1090,23 +1090,24 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             node.schedule.getOffsetOmega()(depth) = 0;
             MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
             llvm::SmallVector<uint64_t> indexMasks;
-            if (depth) {
-                A = phi(_(0, depth), _).transpose();
-                NormalForm::nullSpace11(N, A);
-                // we check array references to see if we can find one index
-                // uint64_t nullMask = nonZeroMask(N);
-                // for (MemoryAccess *mem : g.mem){
-                //     nonZeroMasks(indexMasks,
-                //     mem->ref.indexMatrix().transpose());
+	    phi(depth,_) = std::numeric_limits<int64_t>::min();
+            // if (depth) {
+            //     A = phi(_(0, depth), _).transpose();
+            //     NormalForm::nullSpace11(N, A);
+            //     // we check array references to see if we can find one index
+            //     // uint64_t nullMask = nonZeroMask(N);
+            //     // for (MemoryAccess *mem : g.mem){
+            //     //     nonZeroMasks(indexMasks,
+            //     //     mem->ref.indexMatrix().transpose());
 
-                // }
-                phi(depth, _) = N(0, _) * lexSign(N(0, _));
-                llvm::errs() << "Set schedules independent:\n";
-                SHOWLN(phi(depth, _));
-            } else {
-                phi(depth, _(begin, end - 1)) = 0;
-                phi(depth, end) = 1;
-            }
+            //     // }
+            //     phi(depth, _) = N(0, _) * lexSign(N(0, _));
+            //     llvm::errs() << "Set schedules independent:\n";
+            //     SHOWLN(phi(depth, _));
+            // } else {
+            //     phi(depth, _(begin, end - 1)) = 0;
+            //     phi(depth, end) = 1;
+            // }
         }
     }
     void resetPhiOffsets() {
