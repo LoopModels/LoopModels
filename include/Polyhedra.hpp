@@ -230,12 +230,11 @@ struct Polyhedra {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const Polyhedra &p) {
-        auto &&os2 = printConstraints(
-            os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>{nullptr, 0});
+        auto &&os2 = printConstraints(os << "\n", p.A,
+                                      llvm::ArrayRef<const llvm::SCEV *>());
         if constexpr (hasEqualities)
             return printConstraints(
-                os2, p.E, llvm::ArrayRef<const llvm::SCEV *>{nullptr, 0},
-                false);
+                os2, p.E, llvm::ArrayRef<const llvm::SCEV *>(), false);
         return os2;
     }
     void dump() const { llvm::errs() << *this; }
