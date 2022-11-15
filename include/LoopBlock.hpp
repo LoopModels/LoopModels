@@ -188,8 +188,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // [[no_unique_address]] llvm::BumpPtrAllocator allocator;
     // llvm::SmallVector<llvm::Value *> symbols;
     [[no_unique_address]] Simplex omniSimplex;
-    [[no_unique_address]] Simplex augOmniSimplex;
-    // Simplex activeSimplex;
     // we may turn off edges because we've exceeded its loop depth
     // or because the dependence has already been satisfied at an
     // earlier level.

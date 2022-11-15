@@ -634,13 +634,6 @@ struct Simplex {
         // [ I A
         //   0 B ]
         // then drop the extra variables
-	SHOWLN(simplex.getConstraints().numRow());
-	SHOWLN(A.numRow());
-	SHOWLN(B.numRow());
-	SHOWLN(numCon);
-	SHOWLN(numVar);
-	SHOWLN(numSlack);
-	SHOWLN(numStrict);
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
