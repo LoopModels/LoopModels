@@ -5,9 +5,7 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/Support/raw_ostream.h>
 
-// struct MemorySchedule{
 
-// }
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -20,13 +18,13 @@ struct MemoryAccess {
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesOut;
     [[no_unique_address]] BitSet nodeIndex;
-    inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     // schedule indicated by `1` top bit, remainder indicates loop
     [[no_unique_address]] bool isLoad;
+    inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+    inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+    inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
     MemoryAccess(ArrayReference ref, llvm::Instruction *user,
                  llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(std::move(omegas)),

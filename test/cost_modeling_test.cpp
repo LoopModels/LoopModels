@@ -78,12 +78,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
         Float64,
         builder.CreateGEP(Float64, ptrB,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),
-        llvm::MaybeAlign(8));
+        llvm::MaybeAlign(8), "load_Bnm");
     llvm::StoreInst *Astore0 = builder.CreateAlignedStore(
         Bload,
         builder.CreateGEP(Float64, ptrA,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),
-        llvm::MaybeAlign(8));
+        llvm::MaybeAlign(8), false);
 
     // for (m = 0; m < M; ++m){
     //   for (n = 0; n < N; ++n){
@@ -93,13 +93,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
         Float64,
         builder.CreateGEP(Float64, ptrU,
                           llvm::SmallVector<llvm::Value *, 1>{Uoffsetnn}),
-        llvm::MaybeAlign(8));
+        llvm::MaybeAlign(8), "load_Unn");
     auto Ageped0 = builder.CreateGEP(
-        Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Boffset});
-    auto Aload0 =
-        builder.CreateAlignedLoad(Float64, Ageped0, llvm::MaybeAlign(8));
-    auto AstoreFDiv = builder.CreateAlignedStore(
-        builder.CreateFDiv(Aload0, Uloadnn), Ageped0, llvm::MaybeAlign(8));
+        Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Boffset}, "gep_Anm");
+    auto Aload0 = builder.CreateAlignedLoad(Float64, Ageped0,
+                                            llvm::MaybeAlign(8), "load_Anm");
+    auto AstoreFDiv =
+        builder.CreateAlignedStore(builder.CreateFDiv(Aload0, Uloadnn, "fdiv"),
+                                   Ageped0, llvm::MaybeAlign(8), false);
 
     // for (m = 0; m < M; ++m){
     //     for (k = n+1; k < N; ++k){
@@ -110,20 +111,22 @@ TEST(TriangularExampleTest, BasicAssertions) {
         Float64,
         builder.CreateGEP(Float64, ptrU,
                           llvm::SmallVector<llvm::Value *, 1>{Uoffsetnk}),
-        llvm::MaybeAlign(8));
+        llvm::MaybeAlign(8), "load_Ukn");
     llvm::Value *Aoffsetmk = builder.CreateAdd(mv, builder.CreateMul(kv, Mv));
     auto Ageped1mk = builder.CreateGEP(
-        Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk});
-    auto Aload1mk =
-        builder.CreateAlignedLoad(Float64, Ageped1mk, llvm::MaybeAlign(8));
+        Float64, ptrA, llvm::SmallVector<llvm::Value *, 1>{Aoffsetmk},
+        "gep_Akm");
+    auto Aload1mk = builder.CreateAlignedLoad(Float64, Ageped1mk,
+                                              llvm::MaybeAlign(8), "load_Akm");
     auto Aload1mn = builder.CreateAlignedLoad(
         Float64,
         builder.CreateGEP(Float64, ptrA,
                           llvm::SmallVector<llvm::Value *, 1>{Boffset}),
-        llvm::MaybeAlign(8));
+        llvm::MaybeAlign(8), "load_Anm");
     auto Astore2mk = builder.CreateAlignedStore(
-        builder.CreateFSub(Aload1mk, builder.CreateFMul(Aload1mn, Uloadnk)),
-        Ageped0, llvm::MaybeAlign(8));
+        builder.CreateFSub(
+            Aload1mk, builder.CreateFMul(Aload1mn, Uloadnk, "fmul"), "fsub"),
+        Ageped0, llvm::MaybeAlign(8), false);
 
     SHOWLN(Aload1mk);
     for (auto &use : Aload1mk->uses())
