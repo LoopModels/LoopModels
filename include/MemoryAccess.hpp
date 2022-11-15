@@ -20,13 +20,13 @@ struct MemoryAccess {
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesOut;
     [[no_unique_address]] BitSet nodeIndex;
-    inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-    inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
-    inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     // schedule indicated by `1` top bit, remainder indicates loop
     [[no_unique_address]] bool isLoad;
+    inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
+    inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+    inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
     MemoryAccess(ArrayReference ref, llvm::Instruction *user,
                  llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(std::move(omegas)),
@@ -37,6 +37,7 @@ struct MemoryAccess {
                  llvm::ArrayRef<unsigned> o, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(o.begin(), o.end()),
           isLoad(isLoad){};
+    MemoryAccess(const MemoryAccess &) = default;
     // MemoryAccess(const MemoryAccess &MA) = default;
 
     // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }

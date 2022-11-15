@@ -24,6 +24,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/User.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -94,7 +95,7 @@ struct ScheduledNode {
 };
 
 struct CarriedDependencyFlag {
-    uint32_t flag{0};
+    [[no_unique_address]] uint32_t flag{0};
     constexpr bool carriesDependency(size_t d) { return (flag >> d) & 1; }
     constexpr void setCarriedDependency(size_t d) {
         flag |= (uint32_t(1) << uint32_t(d));
@@ -176,29 +177,31 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // and all other other shared schedule parameters are aliases (i.e.,
     // identical)?
     // using VertexType = ScheduledNode;
-    llvm::SmallVector<MemoryAccess *> memory;
-    llvm::SmallVector<ScheduledNode, 0> nodes;
+    [[no_unique_address]] llvm::SmallVector<MemoryAccess *> memory;
+    [[no_unique_address]] llvm::SmallVector<ScheduledNode, 0> nodes;
     // llvm::SmallVector<unsigned> memoryToNodeMap;
-    llvm::SmallVector<Dependence, 0> edges;
-    llvm::SmallVector<CarriedDependencyFlag, 16> carriedDeps;
+    [[no_unique_address]] llvm::SmallVector<Dependence, 0> edges;
+    [[no_unique_address]] llvm::SmallVector<CarriedDependencyFlag, 16>
+        carriedDeps;
     // llvm::SmallVector<bool> visited; // visited, for traversing graph
-    llvm::DenseMap<llvm::User *, unsigned> userToMemory;
+    [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
+    [[no_unique_address]] llvm::BumpPtrAllocator allocator;
     // llvm::SmallVector<llvm::Value *> symbols;
-    Simplex omniSimplex;
-    Simplex augOmniSimplex;
+    [[no_unique_address]] Simplex omniSimplex;
+    [[no_unique_address]] Simplex augOmniSimplex;
     // Simplex activeSimplex;
     // we may turn off edges because we've exceeded its loop depth
     // or because the dependence has already been satisfied at an
     // earlier level.
-    Vector<Rational> sol;
+    [[no_unique_address]] Vector<Rational> sol;
     // llvm::SmallVector<bool, 256> doNotAddEdge;
     // llvm::SmallVector<bool, 256> scheduled;
-    size_t numPhiCoefs{0};
-    size_t numOmegaCoefs{0};
-    size_t numLambda{0};
-    size_t numBounding{0};
-    size_t numConstraints{0};
-    size_t numActiveEdges{0};
+    [[no_unique_address]] size_t numPhiCoefs{0};
+    [[no_unique_address]] size_t numOmegaCoefs{0};
+    [[no_unique_address]] size_t numLambda{0};
+    [[no_unique_address]] size_t numBounding{0};
+    [[no_unique_address]] size_t numConstraints{0};
+    [[no_unique_address]] size_t numActiveEdges{0};
     void clear() {
         memory.clear();
         nodes.clear();
@@ -206,6 +209,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         carriedDeps.clear();
         userToMemory.clear();
         sol.clear();
+        allocator.Reset();
     }
     size_t numVerticies() const { return nodes.size(); }
     llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
@@ -276,6 +280,26 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
         }
     }
+    // used in searchOperandsForLoads
+    // if an operand is stored, we can reload it.
+    // This will insert a new store memory access.
+    bool searchValueForStores(ScheduledNode &node, llvm::User *user,
+                              unsigned nodeIndex) {
+        for (llvm::User *use : user->users()) {
+            if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(use)) {
+                auto memAccess = userToMemory.find(use);
+                if (memAccess == userToMemory.end())
+                    continue; // load is not a part of the LoopBlock
+                MemoryAccess *store = memory[memAccess->getSecond()];
+                MemoryAccess *load = new (allocator) MemoryAccess(*store);
+                load->isLoad = true;
+                node.addMemory(load, memory.size(), nodeIndex);
+                memory.push_back(load);
+		return true;
+            }
+        }
+        return false;
+    }
     // We search uses of user `u` for any stores so that we can assign the use
     // and the store the same schedule. This is done because it is assumed the
     // data is held in registers (or, if things go wrong, spilled to the stack)
@@ -293,16 +317,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             llvm::User *user = llvm::dyn_cast<llvm::User>(op.get());
             if (!user || visited.contains(user))
                 continue;
+            visited.insert(user);
             if (llvm::LoadInst *l = llvm::dyn_cast<llvm::LoadInst>(user)) {
                 auto memAccess = userToMemory.find(user);
                 if (memAccess == userToMemory.end())
                     continue; // load is not a part of the LoopBlock
                 unsigned memId = memAccess->getSecond();
                 node.addMemory(memory[memId], memId, nodeIndex);
-            } else {
-                visited.insert(user);
+            } else if (!searchValueForStores(node, user, nodeIndex))
                 searchOperandsForLoads(visited, node, user, nodeIndex);
-            }
         }
     }
     void connect(unsigned inIndex, unsigned outIndex) {
@@ -317,8 +340,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     void connect(const Dependence &e) {
         for (auto inIndex : e.in->nodeIndex)
             for (auto outIndex : e.out->nodeIndex)
-                if (inIndex != outIndex)
+                if (inIndex != outIndex) {
+                    llvm::errs() << "Connecting inIndex = " << inIndex
+                                 << "; outIndex = " << outIndex << "\n";
                     connect(inIndex, outIndex);
+                }
     }
     size_t calcNumStores() const {
         size_t numStores = 0;
@@ -1344,7 +1370,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const LoopBlock &lblock) {
-        os << "\nLoopBlock graph:\n";
+        os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
         for (size_t i = 0; i < lblock.nodes.size(); ++i) {
             const auto &v = lblock.nodes[i];
             os << "v_" << i << ":\nmem =\n";
@@ -1360,7 +1386,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         // BitSet
         // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
-        os << "\nLoopBlock Edges:\n";
+        os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):\n";
         for (auto &edge : lblock.edges) {
             os << "\tEdge = " << edge;
             for (size_t inIndex : edge.in->nodeIndex) {
@@ -1381,7 +1407,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
             llvm::errs() << "\n\n";
         }
-        os << "\nLoopBlock schedule:\n\n";
+        os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
+           << "):\n\n";
         for (auto mem : lblock.memory) {
             os << "Ref = " << mem->ref;
             for (size_t nodeIndex : mem->nodeIndex) {
