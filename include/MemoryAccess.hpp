@@ -5,9 +5,7 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/Support/raw_ostream.h>
 
-// struct MemorySchedule{
 
-// }
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -37,7 +35,6 @@ struct MemoryAccess {
                  llvm::ArrayRef<unsigned> o, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(o.begin(), o.end()),
           isLoad(isLoad){};
-    MemoryAccess(const MemoryAccess &) = default;
     // MemoryAccess(const MemoryAccess &MA) = default;
 
     // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }

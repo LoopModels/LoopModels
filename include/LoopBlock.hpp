@@ -185,7 +185,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         carriedDeps;
     // llvm::SmallVector<bool> visited; // visited, for traversing graph
     [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
-    [[no_unique_address]] llvm::BumpPtrAllocator allocator;
+    // [[no_unique_address]] llvm::BumpPtrAllocator allocator;
     // llvm::SmallVector<llvm::Value *> symbols;
     [[no_unique_address]] Simplex omniSimplex;
     [[no_unique_address]] Simplex augOmniSimplex;
@@ -209,7 +209,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         carriedDeps.clear();
         userToMemory.clear();
         sol.clear();
-        allocator.Reset();
+        // allocator.Reset();
     }
     size_t numVerticies() const { return nodes.size(); }
     llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
@@ -283,22 +283,43 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // used in searchOperandsForLoads
     // if an operand is stored, we can reload it.
     // This will insert a new store memory access.
-    bool searchValueForStores(ScheduledNode &node, llvm::User *user,
+    bool searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
+                              ScheduledNode &node, llvm::User *user,
                               unsigned nodeIndex) {
         for (llvm::User *use : user->users()) {
+            if (visited.contains(use))
+                continue;
             if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(use)) {
                 auto memAccess = userToMemory.find(use);
                 if (memAccess == userToMemory.end())
                     continue; // load is not a part of the LoopBlock
-                MemoryAccess *store = memory[memAccess->getSecond()];
-                MemoryAccess *load = new (allocator) MemoryAccess(*store);
-                load->isLoad = true;
-                node.addMemory(load, memory.size(), nodeIndex);
-                memory.push_back(load);
-		return true;
+                unsigned memId = memAccess->getSecond();
+                MemoryAccess *store = memory[memId];
+                node.addMemory(store, memId, nodeIndex);
+                // MemoryAccess *load = new (allocator) MemoryAccess(*store);
+                // load->isLoad = true;
+                // node.addMemory(load, memory.size(), nodeIndex);
+                // memory.push_back(load);
+                // TODO: need to add edges and correct edgesIn and edgesOut
+                //
+                return true;
             }
         }
         return false;
+    }
+    void checkUserForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
+                           ScheduledNode &node, llvm::User *user,
+                           unsigned nodeIndex) {
+        if (!user || visited.contains(user))
+            return;
+        if (llvm::LoadInst *l = llvm::dyn_cast<llvm::LoadInst>(user)) {
+            auto memAccess = userToMemory.find(user);
+            if (memAccess == userToMemory.end())
+                return; // load is not a part of the LoopBlock
+            unsigned memId = memAccess->getSecond();
+            node.addMemory(memory[memId], memId, nodeIndex);
+        } else if (!searchValueForStores(visited, node, user, nodeIndex))
+            searchOperandsForLoads(visited, node, user, nodeIndex);
     }
     // We search uses of user `u` for any stores so that we can assign the use
     // and the store the same schedule. This is done because it is assumed the
@@ -313,20 +334,14 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     void searchOperandsForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                                 ScheduledNode &node, llvm::User *u,
                                 unsigned nodeIndex) {
-        for (auto &&op : u->operands()) {
-            llvm::User *user = llvm::dyn_cast<llvm::User>(op.get());
-            if (!user || visited.contains(user))
-                continue;
-            visited.insert(user);
-            if (llvm::LoadInst *l = llvm::dyn_cast<llvm::LoadInst>(user)) {
-                auto memAccess = userToMemory.find(user);
-                if (memAccess == userToMemory.end())
-                    continue; // load is not a part of the LoopBlock
-                unsigned memId = memAccess->getSecond();
-                node.addMemory(memory[memId], memId, nodeIndex);
-            } else if (!searchValueForStores(node, user, nodeIndex))
-                searchOperandsForLoads(visited, node, user, nodeIndex);
-        }
+        visited.insert(u);
+        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u))
+            return checkUserForLoads(
+                visited, node, llvm::dyn_cast<llvm::User>(s->getValueOperand()),
+                nodeIndex);
+        for (auto &&op : u->operands())
+            checkUserForLoads(visited, node,
+                              llvm::dyn_cast<llvm::User>(op.get()), nodeIndex);
     }
     void connect(unsigned inIndex, unsigned outIndex) {
         nodes[inIndex].outNeighbors.insert(outIndex);
@@ -733,16 +748,11 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         numOmegaCoefs = o - p;
     }
     void validateMemory() {
-        SHOWLN(memory.size());
-        for (auto mem : memory) {
-            SHOWLN(*mem);
+        for (auto mem : memory) 
             assert(1 + mem->ref.getNumLoops() == mem->omegas.size());
-        }
     }
     void validateEdges() {
-        CSHOWLN(edges.size());
         for (auto &edge : edges) {
-            SHOWLN(edge);
             assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
                    edge.getNumPhiCoefficients());
             // 2 == 1 for const offset + 1 for w
@@ -766,12 +776,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         C = 0;
         llvm::errs() << "instantiateOmniSimplex, numActiveEdges = "
                      << numActiveEdges << "\n";
-        SHOW(numPhiCoefs);
-        CSHOW(numOmegaCoefs);
-        CSHOWLN(1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-        SHOW(numBounding);
-        CSHOW(numActiveEdges);
-        CSHOWLN(numLambda);
+        // SHOW(numPhiCoefs);
+        // CSHOW(numOmegaCoefs);
+        // CSHOWLN(1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
+        // SHOW(numBounding);
+        // CSHOW(numActiveEdges);
+        // CSHOWLN(numLambda);
         // layout of omniSimplex:
         // Order: C, then priority to minimize
         // all : C, u, w, Phis, omegas, lambdas
@@ -934,7 +944,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         if (allZero(sol(_(begin, numBounding + numActiveEdges))))
             return {};
         size_t u = 0, w = numBounding;
-        SHOWLN(sol);
+        // SHOWLN(sol);
         BitSet deactivated;
         for (size_t e = 0; e < edges.size(); ++e) {
             if (g.isInactive(e, d))
@@ -958,8 +968,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     void updateSchedules(const Graph &g, size_t depth) {
 #ifndef NDEBUG
-        SHOW(depth);
-        CSHOWLN(sol);
+        // SHOW(depth);
+        // CSHOWLN(sol);
         if (depth & 1) {
             bool allZero = true;
             for (auto &s : sol) {
@@ -974,29 +984,29 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if (depth >= node.getNumLoops())
                 continue;
             if (!hasActiveEdges(g, node)) {
-#ifndef NDEBUG
-                for (auto memId : node.memory) {
-                    auto &mem = *memory[memId];
-                    llvm::errs() << "no active edges in:\n" << mem << "\n\n";
-                    for (auto &eId : mem.edgesIn) {
-                        auto &e = edges[eId];
-                        SHOWLN(g.activeEdges[eId]);
-                        CSHOW(e.in->nodeIndex);
-                        CSHOWLN(g.containsNode(e.in->nodeIndex));
-                        CSHOW(e.out->nodeIndex);
-                        CSHOWLN(g.containsNode(e.out->nodeIndex));
-                    }
-                    for (auto &eId : mem.edgesOut) {
-                        auto &e = edges[eId];
-                        SHOWLN(g.activeEdges[eId]);
-                        CSHOW(e.in->nodeIndex);
-                        CSHOWLN(g.containsNode(e.in->nodeIndex));
-                        CSHOW(e.out->nodeIndex);
-                        CSHOWLN(g.containsNode(e.out->nodeIndex));
-                    }
-                }
-                llvm::errs() << "NO ACTIVE EDGES?!? Depth = " << depth << "\n";
-#endif
+// #ifndef NDEBUG
+//                 for (auto memId : node.memory) {
+//                     auto &mem = *memory[memId];
+//                     llvm::errs() << "no active edges in:\n" << mem << "\n\n";
+//                     for (auto &eId : mem.edgesIn) {
+//                         auto &e = edges[eId];
+//                         SHOWLN(g.activeEdges[eId]);
+//                         CSHOW(e.in->nodeIndex);
+//                         CSHOWLN(g.containsNode(e.in->nodeIndex));
+//                         CSHOW(e.out->nodeIndex);
+//                         CSHOWLN(g.containsNode(e.out->nodeIndex));
+//                     }
+//                     for (auto &eId : mem.edgesOut) {
+//                         auto &e = edges[eId];
+//                         SHOWLN(g.activeEdges[eId]);
+//                         CSHOW(e.in->nodeIndex);
+//                         CSHOWLN(g.containsNode(e.in->nodeIndex));
+//                         CSHOW(e.out->nodeIndex);
+//                         CSHOWLN(g.containsNode(e.out->nodeIndex));
+//                     }
+//                 }
+//                 llvm::errs() << "NO ACTIVE EDGES?!? Depth = " << depth << "\n";
+// #endif
                 node.schedule.getOffsetOmega()(depth) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled(depth))
