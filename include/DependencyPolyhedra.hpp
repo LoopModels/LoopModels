@@ -258,7 +258,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = ar0.loop->getNumLoops();
         size_t numDep1Var = ar1.loop->getNumLoops();
-
+        size_t numVar = numDep0Var + numDep1Var;
         std::pair<llvm::SmallVector<unsigned int>,
                   llvm::SmallVector<unsigned int>>
             oldToNewMaps{merge(ar0.loop->symbols, ar1.loop->symbols)};
@@ -280,9 +280,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             nullStep[i] = s;
         }
         //           column meansing in in order
-        A.resize(nc, 1 + symbols.size() + numDep0Var + numDep1Var + nullDim);
-        E.resize(indexDim + nullDim, A.numCol());
         const size_t numSymbols = getNumSymbols();
+        A.resize(nc + numVar, numSymbols + numVar + nullDim);
+        E.resize(indexDim + nullDim, A.numCol());
         // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
             A(i, 0) = ar0.loop->A(i, 0);
@@ -300,6 +300,9 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
                 A(nc0 + i, j + numSymbols + numDep0Var) =
                     ar1.loop->A(i, j + ar1.loop->getNumSymbols());
         }
+        // all var are >= 0
+        for (size_t i = 0; i < numVar; ++i)
+            A(nc + i, numSymbols + i) = 1;
         // L254: Assertion `col < numCol()` failed
         // indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim
         // offsetMats are arrayDim x numSymbols
@@ -337,7 +340,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             E(indexDim + i, numSymbols + numDep0Var + numDep1Var + i) = 1;
         }
         C.init(A, E);
-        // pruneBounds();
+        if (C.isEmpty()) {
+            A.truncateRows(0);
+            E.truncateRows(0);
+        } else
+            pruneBounds();
     }
     static size_t getNumLambda(size_t numIneq, size_t numEq) {
         return 1 + numIneq + 2 * numEq;

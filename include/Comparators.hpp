@@ -249,59 +249,80 @@ concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
                      };
 
 struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
-    IntMatrix U;
-    IntMatrix V;
-    Vector<int64_t> d;
-    size_t numVar;
-    size_t numEquations;
+    [[no_unique_address]] IntMatrix U;
+    [[no_unique_address]] IntMatrix V;
+    [[no_unique_address]] Vector<int64_t> d;
+    [[no_unique_address]] size_t numVar;
+    [[no_unique_address]] size_t numEquations;
     using BaseComparator<LinearSymbolicComparator>::greaterEqual;
     size_t getNumConstTermsImpl() const { return numVar; }
-    void init(PtrMatrix<int64_t> Ap,
+    void init(PtrMatrix<int64_t> A,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
-        const size_t numCon = Ap.numRow() + pos0;
-        numVar = Ap.numCol();
-        auto &A = V;
-        A.resizeForOverwrite(numVar + numCon, 2 * numCon);
-        A = 0;
-        if (pos0)
-            A(0, 0) = pos0;
-        // A = [Ap' 0
-        //      S   I]
-        A(_(begin, numVar), _(pos0, numCon)) = Ap.transpose();
+        const size_t numCon = A.numRow() + pos0;
+        numVar = A.numCol();
+        V.resizeForOverwrite(numVar + numCon, 2 * numCon);
+        V = 0;
+        V(0, 0) = pos0;
+        // V = [A' 0
+        //      S  I]
+        V(_(begin, numVar), _(pos0, numCon)) = A.transpose();
         for (size_t j = 0; j < numCon; ++j) {
-            A(j + numVar, j) = -1;
-            A(j + numVar, j + numCon) = 1;
+            V(j + numVar, j) = -1;
+            V(j + numVar, j + numCon) = 1;
         }
         numEquations = numCon;
         initCore();
     }
-    void init(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0 = true) {
-        const size_t numInEqCon = Ap.numRow() + pos0;
-        numVar = Ap.numCol();
-        const size_t numEqCon = Ep.numRow();
-        auto &A = V;
-        A.resizeForOverwrite(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
-        A = 0;
-        // A = [Ap' Ep' 0
-        //      S   0   I]
-        // if pos0
-        if (pos0)
-            A(0, 0) = pos0;
-        A(_(begin, numVar), _(pos0, numInEqCon)) = Ap.transpose();
-        // Ap(_, _(pos0, end)).transpose();
-        A(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) =
-            Ep.transpose();
+    void initNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative) {
+        // we have an additional numNonNegative x numNonNegative identity matrix
+        // as the lower right block of `A`.
+        const size_t numConExplicit = A.numRow() + 1;
+        const size_t numConTotal = numConExplicit + numNonNegative;
+        numVar = A.numCol();
+        V.resizeForOverwrite(numVar + numConTotal, 2 * numConTotal);
+        V = 0;
+        V(0, 0) = 1;
+        // B = [ A_0 A_1
+        //        0   I  ]
+        // V = [B' 0
+        //      S   I]
+        // V = [A_0'  0  0
+        //      A_1'  I  0
+        //      S_0  S_1 I]
+        V(_(begin, numVar), _(1, numConExplicit)) = A.transpose();
+        for (size_t j = 0; j < numNonNegative; ++j)
+            V(j + numVar - numNonNegative, numConExplicit + j) = 1;
+        for (size_t j = 0; j < numConTotal; ++j) {
+            V(j + numVar, j) = -1;
+            V(j + numVar, j + numConTotal) = 1;
+        }
+        numEquations = numConTotal;
+        initCore();
+    }
+    void init(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E, bool pos0 = true) {
+        const size_t numInEqCon = A.numRow() + pos0;
+        numVar = A.numCol();
+        const size_t numEqCon = E.numRow();
+        V.resizeForOverwrite(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        V = 0;
+        // V = [A' E' 0
+        //      S  0  I]
+        V(0, 0) = pos0;
+        V(_(begin, numVar), _(pos0, numInEqCon)) = A.transpose();
+        // A(_, _(pos0, end)).transpose();
+        V(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) =
+            E.transpose();
 
         for (size_t j = 0; j < numInEqCon; ++j) {
-            A(j + numVar, j) = -1;
-            A(j + numVar, j + numInEqCon + numEqCon) = 1;
+            V(j + numVar, j) = -1;
+            V(j + numVar, j + numInEqCon + numEqCon) = 1;
         }
         numEquations = numInEqCon + numEqCon;
         initCore();
     }
     void initCore() {
         auto &A = V;
-        size_t R = A.numRow();
+        size_t R = V.numRow();
         U.resizeForOverwrite(R, R);
         U = 0;
         for (size_t i = 0; i < R; ++i)

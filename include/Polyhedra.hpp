@@ -127,61 +127,8 @@ struct Polyhedra {
         return C.equalNegative(A(i, _), A(j, _));
     }
 
-    static bool uniqueConstraint(PtrMatrix<int64_t> A, size_t C) {
-        for (size_t c = 0; c < C; ++c) {
-            bool allEqual = true;
-            for (size_t r = 0; r < A.numCol(); ++r)
-                allEqual &= (A(c, r) == A(C, r));
-            if (allEqual)
-                return false;
-        }
-        return true;
-    }
-
-    static std::pair<size_t, size_t> countSigns(PtrMatrix<int64_t> A,
-                                                size_t i) {
-        size_t numNeg = 0;
-        size_t numPos = 0;
-        for (size_t j = 0; j < A.numRow(); ++j) {
-            int64_t Aij = A(j, i);
-            numNeg += (Aij < 0);
-            numPos += (Aij > 0);
-        }
-        return std::make_pair(numNeg, numPos);
-    }
     void moveEqualities(IntMatrix &Aold, I64Matrix &Eold) const {
         ::moveEqualities(Aold, Eold, C);
-    }
-    // returns std::make_pair(numNeg, numPos);
-    // countNonZeroSign(Matrix A, i)
-    // takes `A'x <= b`, and seperates into lower and upper bound equations w/
-    // respect to `i`th variable
-    // static void categorizeBounds(IntMatrix &lA, IntMatrix &uA,
-    //                              PtrMatrix<int64_t> A, size_t i) {
-    //     auto [numConstraints, numLoops] = A.size();
-    //     const auto [numNeg, numPos] = countNonZeroSign(A, i);
-    //     lA.resize(numNeg, numLoops);
-    //     uA.resize(numPos, numLoops);
-    //     // fill bounds
-    //     for (size_t j = 0, l = 0, u = 0; j < numConstraints; ++j) {
-    //         if (int64_t Aij = A(j, i)) {
-    //             if (Aij > 0) {
-    //                 for (size_t k = 0; k < numLoops; ++k)
-    //                     uA(u, k) = A(j, k);
-    //             } else {
-    //                 for (size_t k = 0; k < numLoops; ++k)
-    //                     lA(l, k) = A(j, k);
-    //             }
-    //         }
-    //     }
-    // }
-    inline static bool equalsNegative(llvm::ArrayRef<int64_t> x,
-                                      llvm::ArrayRef<int64_t> y) {
-        assert(x.size() == y.size());
-        for (size_t i = 0; i < x.size(); ++i)
-            if (x[i] + y[i])
-                return false;
-        return true;
     }
     // returns `false` if not violated, `true` if violated
     void deleteBounds(IntMatrix &A, size_t i) const {
@@ -239,6 +186,8 @@ struct Polyhedra {
     }
     void dump() const { llvm::errs() << *this; }
     bool isEmpty() const {
+        if (A.numRow() == 0)
+            return true;
         for (size_t r = 0; r < A.numRow(); ++r)
             if (C.less(A(r, _)))
                 return true;
@@ -249,96 +198,8 @@ struct Polyhedra {
             E.truncateCols(numVar);
         A.truncateCols(numVar);
     }
-    // A*x >= 0
-    // bool knownSatisfied(llvm::ArrayRef<int64_t> x) const {
-    //     int64_t bc;
-    //     size_t numVar = std::min(x.size(), getNumVar());
-    //     for (size_t c = 0; c < getNumInequalityConstraints(); ++c) {
-    //         bc = A(c, 0);
-    //         for (size_t v = 0; v < numVar; ++v)
-    //             bc -= A(c, v + 1) * x[v];
-    //         if (bc < 0)
-    //             return false;
-    //     }
-    //     return true;
-    // }
 };
 
 typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator>
     SymbolicPolyhedra;
 typedef Polyhedra<IntMatrix, LinearSymbolicComparator> SymbolicEqPolyhedra;
-
-/*
-template <MaybeMatrix I64Matrix>
-struct SymbolicPolyhedra : public Polyhedra<I64Matrix> {
-    llvm::SmallVector<Polynomial::Monomial> monomials;
-    SymbolicPolyhedra(IntMatrix A, I64Matrix E, llvm::ArrayRef<MPoly> b,
-                      const PartiallyOrderedSet &poset)
-        : Polyhedra<I64Matrix>(std::move(A), std::move(E)), monomials({}) {
-        // use poset
-        // monomials[{unsigned}_1] >= monomials[{unsigned}_2] + {int64_t}_1
-        llvm::SmallVector<std::tuple<int64_t, unsigned, unsigned>> cmps;
-        for (auto &bi : b) {
-            for (auto &t : bi) {
-                if (t.isCompileTimeConstant())
-                    continue;
-                bool dontPushBack = false;
-                const Polynomial::Monomial &tm = t.exponent;
-                for (auto &m : monomials) {
-                    if (m == tm) {
-                        dontPushBack = true;
-                        break;
-                    }
-                }
-                if (dontPushBack)
-                    continue;
-                for (size_t i = 0; i < monomials.size(); ++i) {
-                    Polynomial::Monomial &m = monomials[i];
-                    // loop inner triangle
-                    if ((m.degree() == 1) && (t.degree() == 1)) {
-                        // we can do a direct lookup
-                        // interval on t - m
-                        const Interval itv = poset(m.prodIDs.front().getID(),
-                                                   tm.prodIDs.front().getID());
-                        if ((itv.lowerBound >
-                             (std::numeric_limits<int64_t>::min() >> 2)) &&
-                            (itv.lowerBound <
-                             (std::numeric_limits<int64_t>::max() >> 2))) {
-                            // t - m >= lowerBound
-                            // t >= m + lowerBound
-                            cmps.emplace_back(itv.lowerBound, monomials.size(),
-                                              i);
-                        }
-                        if ((itv.upperBound >
-                             (std::numeric_limits<int64_t>::min() >> 2)) &&
-                            (itv.upperBound <
-                             (std::numeric_limits<int64_t>::max() >> 2))) {
-                            // t - m <= upperBound
-                            // m >= t + -upperBound
-                            cmps.emplace_back(-itv.upperBound, i,
-                                              monomials.size());
-                        }
-                    } else {
-                        auto [itvt, itvm] = poset.unmatchedIntervals(tm, m);
-                        // TODO: tighten by using matched to
-                        // get less conservative bounds
-                        if (itvt.knownGreaterEqual(itvm)) {
-                            cmps.emplace_back(0, monomials.size(), i);
-                        } else if (itvm.knownGreaterEqual(itvt)) {
-                            cmps.emplace_back(0, i, monomials.size());
-                        }
-                    }
-                }
-                monomials.push_back(tm);
-            }
-        }
-        // order of vars:
-        // constants, loop vars, symbolic vars
-        // this is because of hnf prioritizing diagonalizing leading rows
-        const size_t origNumRow = A.numRow();
-        const size_t origNumCol = A.numCol();
-        const size_t numSymbolicVars = monomials.size();
-        A.resize(origNumRow + cmps.size(), origNumCol + numSymbolicVars + 1);
-    };
-};
-*/

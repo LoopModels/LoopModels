@@ -675,6 +675,19 @@ struct Colon {
     }
 } _;
 
+#ifndef NDEBUG
+void checkIndex(size_t X, size_t x) { assert(x < X); }
+void checkIndex(size_t X, End) { assert(X > 0); }
+void checkIndex(size_t X, Begin) { assert(X > 0); }
+void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
+void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
+template <typename B> void checkIndex(size_t X, Range<B, size_t> x) {
+    assert(x.e <= X);
+}
+template <typename B, typename E> void checkIndex(size_t, Range<B, E>) {}
+void checkIndex(size_t, Colon) {}
+#endif
+
 constexpr size_t canonicalize(size_t e, size_t) { return e; }
 constexpr size_t canonicalize(Begin, size_t) { return 0; }
 constexpr size_t canonicalize(OffsetBegin b, size_t) { return b.offset; }
@@ -732,19 +745,19 @@ template <typename T> struct PtrVector {
         return true;
     }
 
-    const T &operator[](size_t i) const {
-        assert(i < N);
-        return mem[i];
+    const inline T &operator[](const ScalarIndex auto i) const {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
-    const T &operator()(size_t i) const {
-        assert(i < N);
-        return mem[i];
+    const inline T &operator()(const ScalarIndex auto i) const {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
-    const T &operator()(End) const {
-        assert(N);
-        return mem[N - 1];
-    }
-    PtrVector<T> operator()(Range<size_t, size_t> i) const {
+    constexpr PtrVector<T> operator()(Range<size_t, size_t> i) const {
         assert(i.b <= i.e);
         assert(i.e <= N);
         return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
@@ -779,39 +792,29 @@ template <typename T> struct MutPtrVector {
     [[no_unique_address]] T *const mem;
     [[no_unique_address]] const size_t N;
     static constexpr bool canResize = false;
-    T &operator[](size_t i) {
-        assert(i < N);
-        return mem[i];
+    inline T &operator[](const ScalarIndex auto i) {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
-    const T &operator[](size_t i) const {
-        assert(i < N);
-        return mem[i];
+    inline T &operator()(const ScalarIndex auto i) {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
-    T &operator()(size_t i) {
-        assert(i < N);
-        return mem[i];
+    const inline T &operator[](const ScalarIndex auto i) const {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
-    const T &operator()(size_t i) const {
-        assert(i < N);
-        return mem[i];
-    }
-    T &operator()(End) {
-        assert(N);
-        return mem[N - 1];
-    }
-    const T &operator()(End) const {
-        assert(N);
-        return mem[N - 1];
-    }
-    T &operator()(OffsetEnd oe) {
-        assert(N);
-        assert(N > oe.offset);
-        return mem[N - 1 - oe.offset];
-    }
-    const T &operator()(OffsetEnd oe) const {
-        assert(N);
-        assert(N > oe.offset);
-        return mem[N - 1 - oe.offset];
+    const inline T &operator()(const ScalarIndex auto i) const {
+#ifndef NDEBUG
+        checkIndex(N, i);
+#endif
+        return mem[canonicalize(i, N)];
     }
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
@@ -955,13 +958,17 @@ template <typename T> struct Vector {
     Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
     Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
-    T &operator()(size_t i) {
-        assert(i < data.size());
-        return data[i];
+    inline T &operator[](const ScalarIndex auto i) {
+        return data[canonicalize(i, data.size())];
     }
-    const T &operator()(size_t i) const {
-        assert(i < data.size());
-        return data[i];
+    inline T &operator()(const ScalarIndex auto i) {
+        return data[canonicalize(i, data.size())];
+    }
+    const inline T &operator[](const ScalarIndex auto i) const {
+        return data[canonicalize(i, data.size())];
+    }
+    const inline T &operator()(const ScalarIndex auto i) const {
+        return data[canonicalize(i, data.size())];
     }
     constexpr MutPtrVector<T> operator()(Range<size_t, size_t> i) {
         assert(i.b <= i.e);
@@ -1265,18 +1272,6 @@ concept DerivedMatrix =
 template <typename T> struct PtrMatrix;
 template <typename T> struct MutPtrMatrix;
 
-#ifndef NDEBUG
-void checkIndex(size_t X, size_t x) { assert(x < X); }
-void checkIndex(size_t X, End) { assert(X > 0); }
-void checkIndex(size_t X, Begin) { assert(X > 0); }
-void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
-void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
-template <typename B> void checkIndex(size_t X, Range<B, size_t> x) {
-    assert(x.e <= X);
-}
-template <typename B, typename E> void checkIndex(size_t, Range<B, E>) {}
-void checkIndex(size_t, Colon) {}
-#endif
 template <typename T>
 [[maybe_unused]] static inline T &matrixGet(T *ptr, size_t M, size_t N,
                                             size_t X, const ScalarIndex auto m,

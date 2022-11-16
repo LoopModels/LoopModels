@@ -138,6 +138,7 @@ TEST(IndependentTest, BasicAssertions) {
     TestLoopFunction tlf;
     tlf.addLoop(std::move(Aloop), 2);
     auto &loop = tlf.alns.front();
+    // loop.pruneBounds();
 
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();

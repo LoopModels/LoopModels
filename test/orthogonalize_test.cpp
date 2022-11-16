@@ -163,21 +163,21 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::errs() << "A=" << newAln.A << "\n";
     // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
     llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
-    auto loop3Count = newAln.countSigns(newAln.A, 3 + newAln.getNumSymbols());
+    auto loop3Count = countSigns(newAln.A, 3 + newAln.getNumSymbols());
     EXPECT_EQ(loop3Count.first, 2);
-    EXPECT_EQ(loop3Count.second, 2);
+    EXPECT_EQ(loop3Count.second, 1);
     newAln.removeLoopBang(3);
-    auto loop2Count = newAln.countSigns(newAln.A, 2 + newAln.getNumSymbols());
+    auto loop2Count = countSigns(newAln.A, 2 + newAln.getNumSymbols());
     EXPECT_EQ(loop2Count.first, 2);
-    EXPECT_EQ(loop2Count.second, 2);
+    EXPECT_EQ(loop2Count.second, 1);
     newAln.removeLoopBang(2);
-    auto loop1Count = newAln.countSigns(newAln.A, 1 + newAln.getNumSymbols());
+    auto loop1Count = countSigns(newAln.A, 1 + newAln.getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
-    EXPECT_EQ(loop1Count.second, 1);
+    EXPECT_EQ(loop1Count.second, 0);
     newAln.removeLoopBang(1);
-    auto loop0Count = newAln.countSigns(newAln.A, 0 + newAln.getNumSymbols());
+    auto loop0Count = countSigns(newAln.A, 0 + newAln.getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
-    EXPECT_EQ(loop0Count.second, 1);
+    EXPECT_EQ(loop0Count.second, 0);
     llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs) {
         SHOW(ar.indexMatrix().numRow());
@@ -282,19 +282,19 @@ TEST(BadMul, BasicAssertions) {
     SHOWLN(newAln.A);
     // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
     llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
-    auto loop2Count = newAln.countSigns(newAln.A, 2 + newAln.getNumSymbols());
+    auto loop2Count = countSigns(newAln.A, 2 + newAln.getNumSymbols());
     EXPECT_EQ(loop2Count.first, 1);
-    EXPECT_EQ(loop2Count.second, 1);
+    EXPECT_EQ(loop2Count.second, 0);
     newAln.removeLoopBang(2);
     SHOWLN(newAln.A);
-    auto loop1Count = newAln.countSigns(newAln.A, 1 + newAln.getNumSymbols());
+    auto loop1Count = countSigns(newAln.A, 1 + newAln.getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
-    EXPECT_EQ(loop1Count.second, 1);
+    EXPECT_EQ(loop1Count.second, 0);
     newAln.removeLoopBang(1);
     SHOWLN(newAln.A);
-    auto loop0Count = newAln.countSigns(newAln.A, 0 + newAln.getNumSymbols());
+    auto loop0Count = countSigns(newAln.A, 0 + newAln.getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
-    EXPECT_EQ(loop0Count.second, 1);
+    EXPECT_EQ(loop0Count.second, 0);
 
     llvm::errs() << "New ArrayReferences:\n";
     for (auto &ar : newArrayRefs)
