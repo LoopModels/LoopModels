@@ -294,8 +294,12 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
             // last posCount does not get overwritten
             --negCount;
             size_t c = posCount ? (negCount ? numRows++ : i) : j;
+            int64_t Ai = Aiv, Aj = Ajv;
             int64_t g = gcd(Aiv, Ajv);
-            int64_t Ai = Aiv / g, Aj = Ajv / g;
+            if (g != 1) {
+                Ai /= g;
+                Aj /= g;
+            }
             bool allZero = true;
             for (size_t k = 0; k < A.numCol(); ++k) {
                 int64_t Ack = Ai * A(j, k) - Aj * A(i, k);
@@ -319,6 +323,79 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
             eraseConstraint(A, i);
     }
     // assert(numRows == (numRowsNew+1));
+}
+// non-negative Fourier-Motzkin
+[[maybe_unused]] static void fourierMotzkinNonNegative(IntMatrix &A, size_t v) {
+    assert(v < A.numCol());
+    const auto [numNeg, numPos] = countNonZeroSign(A, v);
+    const size_t numPosP1 = numPos + 1;
+    const size_t numRowsOld = A.numRow();
+    const size_t numRowsNew =
+        numRowsOld - numNeg - numPosP1 + numNeg * numPosP1 + 1;
+    // we need one extra, as on the last overwrite, we still need to
+    // read from two constraints we're deleting; we can't write into
+    // both of them. Thus, we use a little extra memory here,
+    // and then truncate.
+    if ((numNeg == 0) | (numPosP1 == 0)) {
+        if ((numNeg == 0) & (numPosP1 == 0))
+            return;
+        for (size_t i = numRowsOld; i != 0;)
+            if (A(--i, v))
+                eraseConstraint(A, i);
+        return;
+    }
+    A.resizeRows(numRowsNew);
+    // plan is to replace
+    size_t numRows = numRowsOld;
+    for (size_t i = 0, posCount = numPos; posCount; ++i) {
+        int64_t Aiv = A(i, v);
+        if (Aiv <= 0)
+            continue;
+        --posCount;
+        for (size_t negCount = numNeg, j = 0; negCount; ++j) {
+            int64_t Ajv = A(j, v);
+            if (Ajv >= 0)
+                continue;
+            // for the last `negCount`, we overwrite `A(i, k)`
+            // note that `A(i,k)` is the positive element
+            size_t c = --negCount ? numRows++ : i;
+            int64_t Ai = Aiv, Aj = Ajv;
+            int64_t g = gcd(Aiv, Ajv);
+            if (g != 1) {
+                Ai /= g;
+                Aj /= g;
+            }
+            bool allZero = true;
+            for (size_t k = 0; k < A.numCol(); ++k) {
+                int64_t Ack = Ai * A(j, k) - Aj * A(i, k);
+                A(c, k) = Ack;
+                allZero &= (Ack == 0);
+            }
+            if (allZero) {
+                eraseConstraint(A, c);
+                if (negCount) {
+                    --numRows;
+                } else {
+                    --i;
+                }
+            }
+        }
+    }
+    for (size_t negCount = numNeg, j = 0; negCount; ++j) {
+        int64_t Ajv = A(j, v);
+        if (Ajv >= 0)
+            continue;
+        // we can always overwrite the old negCount here
+        --negCount;
+        bool allZero = true;
+        for (size_t k = 0; k < A.numCol(); ++k) {
+            int64_t Ajk = A(j, k) - Ajv * (k == v);
+            A(j, k) = Ajk;
+            allZero &= (Ajk == 0);
+        }
+        if (allZero)
+            eraseConstraint(A, j--);
+    }
 }
 // [[maybe_unused]] static constexpr bool substituteEquality(IntMatrix &,
 // EmptyMatrix<int64_t>, size_t){
@@ -356,4 +433,36 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
     for (size_t c = A.numRow(); c != 0;)
         if (allZero(A(--c, _)))
             eraseConstraint(A, c);
+}
+
+[[maybe_unused]] static bool uniqueConstraint(PtrMatrix<int64_t> A, size_t C) {
+    for (size_t c = 0; c < C; ++c) {
+        bool allEqual = true;
+        for (size_t r = 0; r < A.numCol(); ++r)
+            allEqual &= (A(c, r) == A(C, r));
+        if (allEqual)
+            return false;
+    }
+    return true;
+}
+
+[[maybe_unused]] static std::pair<size_t, size_t>
+countSigns(PtrMatrix<int64_t> A, size_t i) {
+    size_t numNeg = 0;
+    size_t numPos = 0;
+    for (size_t j = 0; j < A.numRow(); ++j) {
+        int64_t Aij = A(j, i);
+        numNeg += (Aij < 0);
+        numPos += (Aij > 0);
+    }
+    return std::make_pair(numNeg, numPos);
+}
+
+[[maybe_unused]] inline static bool equalsNegative(llvm::ArrayRef<int64_t> x,
+                                                   llvm::ArrayRef<int64_t> y) {
+    assert(x.size() == y.size());
+    for (size_t i = 0; i < x.size(); ++i)
+        if (x[i] + y[i])
+            return false;
+    return true;
 }

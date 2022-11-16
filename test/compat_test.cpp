@@ -1,14 +1,14 @@
 #include "../include/Loops.hpp"
 #include "../include/Macro.hpp"
 #include "../include/Math.hpp"
-#include "../include/TestUtilities.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "../include/TestUtilities.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
-#include <memory>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#include <memory>
 
 TEST(TrivialPruneBounds, BasicAssertions) {
     // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
@@ -32,24 +32,27 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     // M >= 0
     // -1 + M - m >= 0
     // m >= 0
-    // -2 + M -m >= 0
+    // -2 + M - m >= 0
     // 1 + m >= 0
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 1);
     AffineLoopNest &aff = tlf.alns[0];
-
     aff.pruneBounds();
     llvm::errs() << aff << "\n";
     SHOWLN(aff.A);
     // M >= 0 is redundant
-    // because M -1 >= m >= 0
-    // hence, we should be left with 2 bounds
-    EXPECT_EQ(aff.A.numRow(), 2);
-    EXPECT_EQ(aff.A, stringToIntMatrix("[0 0 1; -2 1 -1]"));
+    // because M - 1 >= m >= 0
+    // hence, we should be left with 1 bound (-2 + M - m >= 0)
+    EXPECT_EQ(aff.A.numRow(), 1);
+    EXPECT_EQ(aff.A, stringToIntMatrix("[-2 1 -1]"));
 }
 
 TEST(TrivialPruneBounds2, BasicAssertions) {
+    // i >= 1
+    // I >= 1
+    // i <= J - 1
+    // J >= 1
     auto A{stringToIntMatrix(
         "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
     TestLoopFunction tlf;
@@ -58,6 +61,9 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
     aff.pruneBounds();
     aff.dump();
     SHOWLN(aff.A);
+    // we expect J >= 1 to be dropped
+    // because J >= i + 1 >= 2
+    // because i >= 1
     EXPECT_EQ(aff.A.numRow(), 3);
 }
 TEST(LessTrivialPruneBounds, BasicAssertions) {
@@ -82,18 +88,18 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
     llvm::errs() << "LessTrival test Bounds pruned:\n";
     aff.dump();
     SHOWLN(aff.A);
-    EXPECT_EQ(aff.A.numRow(), 6);
-    auto loop2Count = aff.countSigns(aff.A, 2 + aff.getNumSymbols());
+    EXPECT_EQ(aff.A.numRow(), 3);
+    auto loop2Count = countSigns(aff.A, 2 + aff.getNumSymbols());
     EXPECT_EQ(loop2Count.first, 1);
-    EXPECT_EQ(loop2Count.second, 1);
+    EXPECT_EQ(loop2Count.second, 0);
     aff.removeLoopBang(2);
-    auto loop1Count = aff.countSigns(aff.A, 1 + aff.getNumSymbols());
+    auto loop1Count = countSigns(aff.A, 1 + aff.getNumSymbols());
     EXPECT_EQ(loop1Count.first, 1);
-    EXPECT_EQ(loop1Count.second, 1);
+    EXPECT_EQ(loop1Count.second, 0);
     aff.removeLoopBang(1);
-    auto loop0Count = aff.countSigns(aff.A, 0 + aff.getNumSymbols());
+    auto loop0Count = countSigns(aff.A, 0 + aff.getNumSymbols());
     EXPECT_EQ(loop0Count.first, 1);
-    EXPECT_EQ(loop0Count.second, 1);
+    EXPECT_EQ(loop0Count.second, 0);
 }
 
 TEST(AffineTest0, BasicAssertions) {
@@ -114,12 +120,13 @@ TEST(AffineTest0, BasicAssertions) {
     llvm::errs() << "About to construct affine obj\n";
     tlf.addLoop(std::move(A), 3);
     AffineLoopNest &aff = tlf.alns[0];
-
+    aff.pruneBounds();
+    EXPECT_EQ(aff.A.numRow(), 3);
 
     llvm::errs() << "Constructed affine obj\n";
     llvm::errs() << "About to run first compat test\n";
     llvm::errs() << "aff.A.size() = (" << aff.A.numRow() << ", "
-              << aff.A.numCol() << ")\n";
+                 << aff.A.numCol() << ")\n";
     EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, false));
     EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, true));
     EXPECT_TRUE(aff.zeroExtraIterationsUponExtending(1, false));
@@ -135,8 +142,8 @@ TEST(AffineTest0, BasicAssertions) {
     // For reference, the permuted loop bounds are:
     // for m in 0:M-1, k in 1:N-1, n in 0:k-1
     llvm::errs() << "Checking if the inner most loop iterates when adjusting "
-                 "outer loops:"
-              << "\n";
+                    "outer loops:"
+                 << "\n";
     llvm::errs() << "Constructed affine obj\n";
     llvm::errs() << "About to run first compat test\n";
     EXPECT_FALSE(affp021.zeroExtraIterationsUponExtending(1, false));
@@ -154,11 +161,24 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
                                   " 0 1 0 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 2);
-    AffineLoopNest &aff = tlf.alns[0];
+    AffineLoopNest &aff = tlf.alns.back();
     llvm::errs() << "Original order:\n";
     aff.dump();
+    // -2 - i - j >= 0 -> i + j <= -2
+    // but i >= 0 and j >= 0 -> isEmpty()
+    EXPECT_TRUE(aff.isEmpty());
 
-    auto affp10{aff.rotate(stringToIntMatrix("[0 1; 1 0]"))};
+    A = stringToIntMatrix("[0 2 1 -1; "
+                          "-2 0 -1 1; "
+                          "0 2 1 1; "
+                          "8 0 -1 -1; "
+                          " 0 1 0 0]");
+    tlf.addLoop(std::move(A), 2);
+    AffineLoopNest &aff2 = tlf.alns.back();
+    EXPECT_FALSE(aff2.isEmpty());
+
+    UnboundedAffineLoopNest affp10{
+        aff2.rotate(stringToIntMatrix("[0 1; 1 0]"))};
     llvm::errs() << "Swapped order:\n";
     affp10.dump();
 

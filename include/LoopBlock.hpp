@@ -550,23 +550,6 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (unsigned i = 0; i < memory.size(); ++i)
             userToMemory.insert(std::make_pair(memory[i]->user, i));
     }
-    // TODO: we need to rotate via setting the schedule, not instantiating
-    // the rotated array!
-    [[nodiscard]] static AffineLoopNest &
-    getBang(llvm::DenseMap<const AffineLoopNest *, AffineLoopNest> &map,
-            SquarePtrMatrix<int64_t> K, const AffineLoopNest *aln) {
-        auto p = map.find(aln);
-        if (p != map.end()) {
-            return p->second;
-        } else {
-            const size_t numVar = aln->getNumLoops();
-            const size_t numTransformed = K.numCol();
-            const size_t numPeeled = numVar - numTransformed;
-            // A = aln->A*K';
-            map.insert(std::make_pair(aln, aln->rotate(K, numPeeled)));
-            return map.find(aln)->second;
-        }
-    }
     llvm::Optional<size_t> getOverlapIndex(const Dependence &edge) {
         MemoryAccess *store;
         MemoryAccess *other;
@@ -746,7 +729,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         numOmegaCoefs = o - p;
     }
     void validateMemory() {
-        for (auto mem : memory) 
+        for (auto mem : memory)
             assert(1 + mem->ref.getNumLoops() == mem->omegas.size());
     }
     void validateEdges() {
@@ -776,9 +759,8 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                      << numActiveEdges << "\n";
         // SHOW(numPhiCoefs);
         // CSHOW(numOmegaCoefs);
-        // CSHOWLN(1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs);
-        // SHOW(numBounding);
-        // CSHOW(numActiveEdges);
+        // CSHOWLN(1 + numBounding + numActiveEdges + numPhiCoefs +
+        // numOmegaCoefs); SHOW(numBounding); CSHOW(numActiveEdges);
         // CSHOWLN(numLambda);
         // layout of omniSimplex:
         // Order: C, then priority to minimize
@@ -982,29 +964,31 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             if (depth >= node.getNumLoops())
                 continue;
             if (!hasActiveEdges(g, node)) {
-// #ifndef NDEBUG
-//                 for (auto memId : node.memory) {
-//                     auto &mem = *memory[memId];
-//                     llvm::errs() << "no active edges in:\n" << mem << "\n\n";
-//                     for (auto &eId : mem.edgesIn) {
-//                         auto &e = edges[eId];
-//                         SHOWLN(g.activeEdges[eId]);
-//                         CSHOW(e.in->nodeIndex);
-//                         CSHOWLN(g.containsNode(e.in->nodeIndex));
-//                         CSHOW(e.out->nodeIndex);
-//                         CSHOWLN(g.containsNode(e.out->nodeIndex));
-//                     }
-//                     for (auto &eId : mem.edgesOut) {
-//                         auto &e = edges[eId];
-//                         SHOWLN(g.activeEdges[eId]);
-//                         CSHOW(e.in->nodeIndex);
-//                         CSHOWLN(g.containsNode(e.in->nodeIndex));
-//                         CSHOW(e.out->nodeIndex);
-//                         CSHOWLN(g.containsNode(e.out->nodeIndex));
-//                     }
-//                 }
-//                 llvm::errs() << "NO ACTIVE EDGES?!? Depth = " << depth << "\n";
-// #endif
+                // #ifndef NDEBUG
+                //                 for (auto memId : node.memory) {
+                //                     auto &mem = *memory[memId];
+                //                     llvm::errs() << "no active edges in:\n"
+                //                     << mem << "\n\n"; for (auto &eId :
+                //                     mem.edgesIn) {
+                //                         auto &e = edges[eId];
+                //                         SHOWLN(g.activeEdges[eId]);
+                //                         CSHOW(e.in->nodeIndex);
+                //                         CSHOWLN(g.containsNode(e.in->nodeIndex));
+                //                         CSHOW(e.out->nodeIndex);
+                //                         CSHOWLN(g.containsNode(e.out->nodeIndex));
+                //                     }
+                //                     for (auto &eId : mem.edgesOut) {
+                //                         auto &e = edges[eId];
+                //                         SHOWLN(g.activeEdges[eId]);
+                //                         CSHOW(e.in->nodeIndex);
+                //                         CSHOWLN(g.containsNode(e.in->nodeIndex));
+                //                         CSHOW(e.out->nodeIndex);
+                //                         CSHOWLN(g.containsNode(e.out->nodeIndex));
+                //                     }
+                //                 }
+                //                 llvm::errs() << "NO ACTIVE EDGES?!? Depth = "
+                //                 << depth << "\n";
+                // #endif
                 node.schedule.getOffsetOmega()(depth) =
                     std::numeric_limits<int64_t>::min();
                 if (!node.phiIsScheduled(depth))

@@ -16,6 +16,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/Support/Casting.h>
+#include <string>
 
 struct TestLoopFunction {
     llvm::LLVMContext ctx;
@@ -34,6 +35,7 @@ struct TestLoopFunction {
     llvm::AssumptionCache AC;
     llvm::ScalarEvolution SE;
     llvm::SmallVector<AffineLoopNest, 0> alns;
+    llvm::SmallVector<std::string, 0> names;
     // llvm::SmallVector<llvm::Value*> symbols;
     llvm::Value *ptr;
     size_t ptrIntOffset{0};
@@ -67,12 +69,13 @@ struct TestLoopFunction {
     }
     // for creating some black box value
     llvm::Value *loadValueFromPtr(llvm::Type *typ) {
+        names.emplace_back("value_" + std::to_string(names.size()));
         return builder.CreateAlignedLoad(
             typ,
             builder.CreateGEP(builder.getInt64Ty(), ptr,
                               llvm::SmallVector<llvm::Value *, 1>{
                                   builder.getInt64(ptrIntOffset++)}),
-            llvm::MaybeAlign(8));
+            llvm::MaybeAlign(8), names.back());
     }
     llvm::Value *createArray() { return loadValueFromPtr(builder.getPtrTy()); }
     llvm::Value *createInt64() {
