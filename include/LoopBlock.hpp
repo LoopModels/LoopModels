@@ -638,7 +638,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             const Dependence &edge = edges[e];
             size_t mlt = edge.in->nodeIndex.size() * edge.out->nodeIndex.size();
             a += mlt * edge.getNumLambda();
-            b += mlt * edge.depPoly.symbols.size();
+            b += mlt * edge.depPoly.S.size();
             c += mlt * edge.getNumConstraints();
             ae += mlt;
         }

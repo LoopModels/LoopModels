@@ -34,7 +34,7 @@ struct TestLoopFunction {
     llvm::TargetLibraryInfo TLI;
     llvm::AssumptionCache AC;
     llvm::ScalarEvolution SE;
-    llvm::SmallVector<AffineLoopNest, 0> alns;
+    llvm::SmallVector<AffineLoopNest<true>, 0> alns;
     llvm::SmallVector<std::string, 0> names;
     // llvm::SmallVector<llvm::Value*> symbols;
     llvm::Value *ptr;
@@ -52,16 +52,16 @@ struct TestLoopFunction {
             // we're going to assume there's some chance of recycling old
             // symbols, so we are only going to be creating new ones if we have
             // to.
-            AffineLoopNest *symbolSource = nullptr;
+            AffineLoopNest<true> *symbolSource = nullptr;
             size_t numSymbolSource = 0;
             for (auto &aln : alns) {
-                if (numSymbolSource < aln.symbols.size()) {
-                    numSymbolSource = aln.symbols.size();
+                if (numSymbolSource < aln.S.size()) {
+                    numSymbolSource = aln.S.size();
                     symbolSource = &aln;
                 }
             }
             for (size_t i = 0; i < std::min(numSym, numSymbolSource); ++i)
-                symbols.push_back(symbolSource->symbols[i]);
+                symbols.push_back(symbolSource->S[i]);
             for (size_t i = numSymbolSource; i < numSym; ++i)
                 symbols.push_back(SE.getUnknown(createInt64()));
         }

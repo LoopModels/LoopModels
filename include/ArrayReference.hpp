@@ -24,7 +24,7 @@
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
     [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
-    [[no_unique_address]] AffineLoopNest *loop;
+    [[no_unique_address]] AffineLoopNest<true> *loop;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
@@ -69,22 +69,22 @@ struct ArrayReference {
           indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(const ArrayReference &a, AffineLoopNest *loop,
+    ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
                    PtrMatrix<int64_t> newInds)
         : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
           indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop)
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop)
         : basePointer(basePointer), loop(loop){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop)
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop)
         : basePointer(basePointer), loop(&loop){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
                    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
                    Predicates pred = {})
         : basePointer(basePointer), loop(loop),
           symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop,
+    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
                    llvm::SmallVector<const llvm::SCEV *, 3> sizes,
                    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
                    Predicates pred = {})
@@ -96,7 +96,7 @@ struct ArrayReference {
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
     ArrayReference(
-        const llvm::SCEVUnknown *basePointer, AffineLoopNest *loop, size_t dim,
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop, size_t dim,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
         Predicates pred = {})
         : basePointer(basePointer), loop(loop),
@@ -104,7 +104,7 @@ struct ArrayReference {
         resize(dim);
     };
     ArrayReference(
-        const llvm::SCEVUnknown *basePointer, AffineLoopNest &loop, size_t dim,
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop, size_t dim,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
         Predicates pred = {})
         : basePointer(basePointer), loop(&loop),
@@ -175,7 +175,7 @@ struct ArrayReference {
                     if (j) {
                         if (offij != 1)
                             os << offij << '*';
-                        os << *ar.loop->symbols[j - 1];
+                        os << *ar.loop->S[j - 1];
                     } else
                         os << offij;
                     printPlus = true;

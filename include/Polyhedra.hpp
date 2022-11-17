@@ -70,9 +70,15 @@ struct Polyhedra {
 
     Polyhedra() = default;
     Polyhedra(IntMatrix Ain)
-        : A(std::move(Ain)), E{}, C(LinearSymbolicComparator::construct(A)){};
+        : E{}, A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
     Polyhedra(IntMatrix Ain, I64Matrix Ein)
-        : A(std::move(Ain)), E(std::move(Ein)),
+        : E(std::move(Ein)), A(std::move(Ain)),
+          C(LinearSymbolicComparator::construct(A)){};
+    Polyhedra(IntMatrix Ain, SymbolVec S)
+        : E{}, S(std::move(S)), A(std::move(Ain)),
+          C(LinearSymbolicComparator::construct(A)){};
+    Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec S)
+        : E(std::move(Ein)), S(std::move(S)), A(std::move(Ain)),
           C(LinearSymbolicComparator::construct(A)){};
 
     inline void initializeComparator() {
@@ -129,8 +135,10 @@ struct Polyhedra {
         }
     }
 
-    constexpr size_t getNumSymbols() const { return 1+ S.size(); }
-    constexpr size_t getNumDynamic() const { return A.numCol() - getNumSymbols(); }
+    constexpr size_t getNumSymbols() const { return 1 + S.size(); }
+    constexpr size_t getNumDynamic() const {
+        return A.numCol() - getNumSymbols();
+    }
     constexpr size_t getNumVar() const { return A.numCol() - 1; }
     constexpr size_t getNumInequalityConstraints() const { return A.numRow(); }
     constexpr size_t getNumEqualityConstraints() const { return E.numRow(); }
@@ -224,5 +232,8 @@ typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                   llvm::SmallVector<const llvm::SCEV *>, true>
     NonNegativeSymbolicPolyhedra;
 typedef Polyhedra<IntMatrix, LinearSymbolicComparator,
-                  EmptyVector<const llvm::SCEV *>, false>
+                  llvm::SmallVector<const llvm::SCEV *>, false>
     SymbolicEqPolyhedra;
+typedef Polyhedra<IntMatrix, LinearSymbolicComparator,
+                  llvm::SmallVector<const llvm::SCEV *>, true>
+    NonNegativeSymbolicEqPolyhedra;
