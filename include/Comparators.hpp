@@ -299,6 +299,37 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         numEquations = numConTotal;
         initCore();
     }
+    void initNonNegative(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E,
+                         size_t numNonNegative) {
+        // we have an additional numNonNegative x numNonNegative identity matrix
+        // as the lower right block of `A`.
+        const size_t numInEqConExplicit = A.numRow() + 1;
+        const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
+        const size_t numEqCon = E.numRow();
+        numVar = A.numCol();
+        V.resizeForOverwrite(numVar + numInEqConTotal,
+                             2 * numInEqConTotal + numEqCon);
+        V = 0;
+        V(0, 0) = 1;
+        // B = [ A_0 A_1
+        //        0   I  ]
+        // V = [B' E' 0
+        //      S  0  I]
+        // V = [A_0'  0  E_0' 0
+        //      A_1'  I  E_1' 0
+        //      S_0  S_1  0   I]
+        numEquations = numInEqConTotal + numEqCon;
+        V(_(begin, numVar), _(1, numInEqConExplicit)) = A.transpose();
+        V(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)) =
+            E.transpose();
+        for (size_t j = 0; j < numNonNegative; ++j)
+            V(j + numVar - numNonNegative, numInEqConExplicit + j) = 1;
+        for (size_t j = 0; j < numInEqConTotal; ++j) {
+            V(j + numVar, j) = -1;
+            V(j + numVar, j + numEquations) = 1;
+        }
+        initCore();
+    }
     void init(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E, bool pos0 = true) {
         const size_t numInEqCon = A.numRow() + pos0;
         numVar = A.numCol();
@@ -313,11 +344,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         V(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) =
             E.transpose();
 
+        numEquations = numInEqCon + numEqCon;
         for (size_t j = 0; j < numInEqCon; ++j) {
             V(j + numVar, j) = -1;
-            V(j + numVar, j + numInEqCon + numEqCon) = 1;
+            V(j + numVar, j + numEquations) = 1;
         }
-        numEquations = numInEqCon + numEqCon;
         initCore();
     }
     void initCore() {

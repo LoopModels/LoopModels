@@ -54,7 +54,7 @@
 // We have `A.numRow()` inequality constraints and `E.numRow()` equality
 // constraints.
 //
-template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType>
+template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType, bool NonNegative>
 struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
