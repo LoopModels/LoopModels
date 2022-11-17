@@ -401,6 +401,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     // Note that this is only valid when the comparator was constructed
     // with index `0` referring to >= 0 constants (i.e., the default).
     bool isEmpty() {
+	SHOW(U.numRow());
+	CSHOWLN(U.numCol());
         StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
         if (d.size() == 0) {
             // SHOWLN(U.numCol());

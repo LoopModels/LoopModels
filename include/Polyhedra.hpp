@@ -83,7 +83,7 @@ struct Polyhedra {
 
     inline void initializeComparator() {
         if constexpr (NonNegative) {
-            C.initNonNegative(A, E, getNumVar());
+            C.initNonNegative(A, E, getNumDynamic());
         } else {
             C.init(A, E);
         }
@@ -211,12 +211,13 @@ struct Polyhedra {
     }
     void dump() const { llvm::errs() << *this; }
     bool isEmpty() const {
-        if (A.numRow() == 0)
-            return true;
-        for (size_t r = 0; r < A.numRow(); ++r)
-            if (C.less(A(r, _)))
-                return true;
-        return false;
+	return A.numRow() == 0;
+        // if (A.numRow() == 0)
+        //     return true;
+        // for (size_t r = 0; r < A.numRow(); ++r)
+        //     if (C.less(A(r, _)))
+        //         return true;
+        // return false;
     }
     void truncateVars(size_t numVar) {
         if constexpr (hasEqualities)

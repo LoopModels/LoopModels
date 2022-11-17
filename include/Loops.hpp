@@ -226,7 +226,7 @@ simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEV *S) {
 // A * x >= 0
 // if constexpr(NonNegative)
 //   x >= 0
-template <bool NonNegative = true>
+template <bool NonNegative>
 struct AffineLoopNest
     : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                 llvm::SmallVector<const llvm::SCEV *>, NonNegative> {
@@ -240,6 +240,12 @@ struct AffineLoopNest
     using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                     llvm::SmallVector<const llvm::SCEV *>,
                     NonNegative>::pruneBounds;
+    using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>,
+                    NonNegative>::initializeComparator;
+    using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>,
+                    NonNegative>::isEmpty;
     using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                     llvm::SmallVector<const llvm::SCEV *>, NonNegative>::A;
     using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
@@ -270,7 +276,7 @@ struct AffineLoopNest
             B(_(M, end), _(0, numConst)) = 0;
             B(_(M, end), _(numConst, end)) = R;
         }
-        ret.initComparator();
+        ret.initializeComparator();
         // llvm::errs() << "A = \n" << A << "\n";
         // llvm::errs() << "R = \n" << R << "\n";
         // llvm::errs() << "B = \n" << B << "\n";
@@ -631,12 +637,13 @@ struct AffineLoopNest
                                          SE.getOne(IntType), L,
                                          llvm::SCEV::NoWrapMask));
         }
-        initComparator();
+        initializeComparator();
     }
-    void initComparator() { C.init(A, EmptyMatrix<int64_t>{}, true); }
     void addZeroLowerBounds() {
+	if (isEmpty())
+	    return;
         if constexpr (NonNegative)
-            return;
+            return initializeComparator();
         auto [M, N] = A.size();
         if (!N)
             return;
@@ -650,7 +657,7 @@ struct AffineLoopNest
         CSHOW(M);
         CSHOW(N);
         CSHOWLN(A);
-        initComparator();
+        initializeComparator();
         pruneBounds();
     }
 
@@ -724,14 +731,6 @@ struct AffineLoopNest
         }
         return ret;
     }
-    // bool isEmpty(size_t numConst) const {
-    //     return static_cast<const SymbolicPolyhedra *>(this)->isEmpty(
-    //         getNumSymbols());
-    // }
-    // bool isEmptyBang(size_t numConst) {
-    //     return static_cast<SymbolicPolyhedra *>(this)->isEmptyBang(
-    //         getNumSymbols());
-    // }
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         AffineLoopNest tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;

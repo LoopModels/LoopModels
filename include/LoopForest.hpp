@@ -246,7 +246,7 @@ struct LoopTree {
 
     // in addition to requiring simplify form, we require a single exit block
     [[no_unique_address]] llvm::SmallVector<PredicatedChain> paths;
-    [[no_unique_address]] AffineLoopNest affineLoop;
+    [[no_unique_address]] AffineLoopNest<true> affineLoop;
     [[no_unique_address]] unsigned parentLoop{
         std::numeric_limits<unsigned>::max()};
     [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
@@ -271,7 +271,8 @@ struct LoopTree {
 #endif
     }
 
-    LoopTree(llvm::Loop *L, AffineLoopNest aln, llvm::SmallVector<unsigned> sL,
+    LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
+             llvm::SmallVector<unsigned> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(std::move(aln)),
@@ -283,7 +284,7 @@ struct LoopTree {
                     assert(loop->contains(pbb.basicBlock));
 #endif
     }
-    // LoopTree(llvm::Loop *L, AffineLoopNest *aln, LoopForest sL)
+    // LoopTree(llvm::Loop *L, AffineLoopNest<true> *aln, LoopForest sL)
     // : loop(L), subLoops(sL), affineLoop(aln), parentLoop(nullptr) {}
 
     // LoopTree(llvm::Loop *L, LoopForest sL, unsigned affineLoopID)
@@ -471,7 +472,8 @@ struct LoopTree {
         llvm::errs() << "Starting second pass in pushBack\n";
         SHOWLN(subForest.size());
         if (subForest.size()) { // add subloops
-            AffineLoopNest &subNest = loopTrees[subForest.front()].affineLoop;
+            AffineLoopNest<true> &subNest =
+                loopTrees[subForest.front()].affineLoop;
             SHOWLN(subNest.getNumLoops());
             if (subNest.getNumLoops() > 1) {
                 visitedBBs.clear();
