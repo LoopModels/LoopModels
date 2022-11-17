@@ -273,6 +273,10 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         numEquations = numCon;
         initCore();
     }
+    inline void initNonNegative(PtrMatrix<int64_t> A, EmptyMatrix<int64_t>,
+                                size_t numNonNegative) {
+        initNonNegative(A, numNonNegative);
+    }
     void initNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative) {
         // we have an additional numNonNegative x numNonNegative identity matrix
         // as the lower right block of `A`.

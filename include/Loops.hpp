@@ -223,14 +223,43 @@ simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEV *S) {
 }
 
 // A * x >= 0
-struct UnboundedAffineLoopNest : SymbolicPolyhedra {
-    [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *> symbols{};
-    size_t getNumSymbols() const { return 1 + symbols.size(); }
-    size_t getNumLoops() const { return A.numCol() - getNumSymbols(); }
+// if constexpr(NonNegative)
+//   x >= 0
+template <bool NonNegative>
+struct AffineLoopNest
+    : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                llvm::SmallVector<const llvm::SCEV *>, NonNegative> {
+
+    constexpr size_t getNumLoops() const { return getNumDynamic(); }
 
     size_t findIndex(const llvm::SCEV *v) const {
-        return findSymbolicIndex(symbols, v);
+        return findSymbolicIndex(S, v);
     }
+    AffineLoopNest<false> rotate(PtrMatrix<int64_t> R) const {
+        size_t numExtraVar = 0;
+        if constexpr (NonNegative)
+            numExtraVar = getNumLoops();
+        assert(R.numCol() == numExtraVar);
+        assert(R.numRow() == numExtraVar);
+        const size_t numConst = getNumSymbols();
+        const auto [M, N] = A.size();
+        AffineLoopNest<false> ret;
+        ret.S = S;
+        IntMatrix &B = ret.A;
+        B.resizeForOverwrite(M + numExtraVar, N);
+        B(_(0, M), _(begin, numConst)) = A(_, _(begin, numConst));
+        B(_(0, M), _(numConst, end)) = A(_, _(numConst, end)) * R;
+        if constexpr (NonNegative) {
+            B(_(M, end), _(0, numConst)) = 0;
+            B(_(M, end), _(numConst, end)) = R;
+        }
+        ret.initComparator();
+        // llvm::errs() << "A = \n" << A << "\n";
+        // llvm::errs() << "R = \n" << R << "\n";
+        // llvm::errs() << "B = \n" << B << "\n";
+        return ret;
+    }
+
     // add a symbol to row `r` of A
     // we try to break down value `v`, so that adding
     // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
@@ -457,15 +486,15 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
                 return false;
         return true;
     }
-    static llvm::Optional<UnboundedAffineLoopNest>
+    static llvm::Optional<AffineLoopNest<NonNegative>>
     construct(llvm::Loop *L, llvm::ScalarEvolution &SE) {
         auto BT = getBackedgeTakenCount(SE, L);
         if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
             return {};
-        return UnboundedAffineLoopNest(L, BT, SE);
+        return AffineLoopNest<NonNegative>(L, BT, SE);
     }
-    UnboundedAffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT,
-                            llvm::ScalarEvolution &SE) {
+    AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT,
+                   llvm::ScalarEvolution &SE) {
         IntMatrix B;
         // once we're done assembling these, we'll concatenate A and B
         size_t maxDepth = L->getLoopDepth();
@@ -511,7 +540,7 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
         // removeInnerMost later.
         // pruneBounds();
     }
-    [[nodiscard]] UnboundedAffineLoopNest removeInnerMost() const {
+    [[nodiscard]] AffineLoopNest<NonNegative> removeInnerMost() const {
         size_t innermostLoopInd = getNumSymbols();
         IntMatrix B = A.deleteCol(innermostLoopInd);
         SHOWLN(A);
@@ -530,7 +559,7 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
             }
         }
         SHOWLN(B);
-        return UnboundedAffineLoopNest(B, symbols);
+        return AffineLoopNest<NonNegative>(B, symbols);
     }
     void clear() {
         A.resize(0, 1); // 0 x 1 so that getNumLoops() == 0
@@ -589,6 +618,8 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
     }
     void initComparator() { C.init(A, EmptyMatrix<int64_t>{}, true); }
     void addZeroLowerBounds() {
+        if constexpr (NonNegative)
+            return;
         auto [M, N] = A.size();
         if (!N)
             return;
@@ -606,12 +637,17 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
         pruneBounds();
     }
 
-    UnboundedAffineLoopNest(IntMatrix A,
-                            llvm::SmallVector<const llvm::SCEV *> symbols)
-        : SymbolicPolyhedra(std::move(A)), symbols(std::move(symbols)){};
-    UnboundedAffineLoopNest(IntMatrix A)
-        : SymbolicPolyhedra(std::move(A)), symbols({}){};
-    UnboundedAffineLoopNest() = default;
+    AffineLoopNest(IntMatrix A, llvm::SmallVector<const llvm::SCEV *> symbols)
+        : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+              std::move(A)),
+          symbols(std::move(symbols)){};
+    AffineLoopNest(IntMatrix A)
+        : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+              std::move(A)),
+          symbols({}){};
+    AffineLoopNest() = default;
 
     PtrVector<int64_t> getProgVars(size_t j) const {
         return A(j, _(0, getNumSymbols()));
@@ -619,16 +655,19 @@ struct UnboundedAffineLoopNest : SymbolicPolyhedra {
     void removeLoopBang(size_t i) {
         SHOW(i);
         CSHOWLN(getNumSymbols());
-        fourierMotzkin(A, i + getNumSymbols());
+        if constexpr (NonNegative)
+            fourierMotzkinNonNegative(A, i + getNumSymbols());
+        else
+            fourierMotzkin(A, i + getNumSymbols());
         pruneBounds();
     }
-    [[nodiscard]] UnboundedAffineLoopNest removeLoop(size_t i) const {
+    [[nodiscard]] AffineLoopNest<NonNegative> removeLoop(size_t i) const {
         UnboundedAffineLoopNest L{*this};
         // UnboundedAffineLoopNest L = *this;
         L.removeLoopBang(i);
         return L;
     }
-    llvm::SmallVector<UnboundedAffineLoopNest, 0> perm(PtrVector<unsigned> x) {
+    llvm::SmallVector<AffineLoopNest<NonNegative>, 0> perm(PtrVector<unsigned> x) {
         llvm::SmallVector<UnboundedAffineLoopNest, 0> ret;
         // llvm::SmallVector<UnboundedAffineLoopNest, 0> ret;
         ret.resize_for_overwrite(x.size());
@@ -1241,7 +1280,7 @@ struct AffineLoopNest {
         size_t numLoops = getNumLoops();
         Vector<int64_t> diff{A.numCol()};
         for (size_t j = A.numRow(); j;) {
-	    bool broke = false;
+            bool broke = false;
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
                     return;
@@ -1253,21 +1292,21 @@ struct AffineLoopNest {
                 } else if (C.greaterEqual(diff *= -1)) {
                     eraseConstraint(A, j);
                     C.initNonNegative(A, numLoops);
-		    broke = true;
+                    broke = true;
                     break; // `j` is gone
                 }
             }
-	    if (!broke){
-		// compare with x >= 0
-		for (size_t i = 0; i < numLoops; ++i) {
-		    diff = A(j, _);
-		    --diff(end - i);
-		    if (C.greaterEqual(diff)) {
-			eraseConstraint(A, j);
-			C.initNonNegative(A, numLoops);
-			break; // `j` is gone
-		    }
-		}
+            if (!broke) {
+                // compare with x >= 0
+                for (size_t i = 0; i < numLoops; ++i) {
+                    diff = A(j, _);
+                    --diff(end - i);
+                    if (C.greaterEqual(diff)) {
+                        eraseConstraint(A, j);
+                        C.initNonNegative(A, numLoops);
+                        break; // `j` is gone
+                    }
+                }
             }
         }
     }
@@ -1401,8 +1440,8 @@ struct AffineLoopNest {
             if (!(tmp2.isEmpty()))
                 return false;
         }
-	if (extendLower){
-	    // sign = 1
+        if (extendLower) {
+            // sign = 1
             tmp2 = tmp;
             // increment to increase bound
             // this is correct for both extending lower and extending upper
@@ -1414,14 +1453,13 @@ struct AffineLoopNest {
             // and then check if the resulting polyhedra is empty.
             // if not, then we may have >0 iterations.
             for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
-                if (int64_t d = tmp2.A(cc, _i + numConst)){
-		    // lower bound is i >= 0
-		    // so setting equal to the extended lower bound now means that
-		    // i = -1
-		    // so we decrement `d` from the column
-		    tmp2.A(cc, 0) -= d;
-		    tmp2.A(cc, _i + numConst) = 0;
-		}
+                if (int64_t d = tmp2.A(cc, _i + numConst)) {
+                    // lower bound is i >= 0
+                    // so setting equal to the extended lower bound now means
+                    // that i = -1 so we decrement `d` from the column
+                    tmp2.A(cc, 0) -= d;
+                    tmp2.A(cc, _i + numConst) = 0;
+                }
             }
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)

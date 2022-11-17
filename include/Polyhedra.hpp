@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "./Comparators.hpp"
@@ -54,14 +53,20 @@
 // We have `A.numRow()` inequality constraints and `E.numRow()` equality
 // constraints.
 //
-template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType, bool NonNegative>
+template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType,
+          MaybeVector<const llvm::SCEV *> SymbolVec, bool NonNegative>
 struct Polyhedra {
     // order of vars:
     // constants, loop vars, symbolic vars
     // this is because of hnf prioritizing diagonalizing leading rows
-    [[no_unique_address]] IntMatrix A;
+    // empty fields sorted first to make it easier for compiler to alias them
     [[no_unique_address]] I64Matrix E;
+    [[no_unique_address]] SymbolVec S;
+    [[no_unique_address]] IntMatrix A;
     [[no_unique_address]] CmptrType C;
+
+    static constexpr bool hasEqualities =
+        !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
     Polyhedra() = default;
     Polyhedra(IntMatrix Ain)
@@ -70,48 +75,78 @@ struct Polyhedra {
         : A(std::move(Ain)), E(std::move(Ein)),
           C(LinearSymbolicComparator::construct(A)){};
 
+    inline void initializeComparator() {
+        if constexpr (NonNegative) {
+            C.initNonNegative(A, E, getNumVar());
+        } else {
+            C.init(A, E);
+        }
+    }
     void pruneBounds() {
+        if (C.isEmpty()) {
+            A.truncateRows(0);
+            if constexpr (hasEqualities)
+                E.truncateRows(0);
+            return;
+        }
+        pruneBoundsUnchecked();
+    }
+    void pruneBoundsUnchecked() {
+        const size_t dyn = getNumDynamic();
         Vector<int64_t> diff{A.numCol()};
         if constexpr (hasEqualities)
             removeRedundantRows(A, E);
-        // NormalForm::simplifySystem(E, 1);
         for (size_t j = A.numRow(); j;) {
+            bool broke = false;
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
                     return;
                 diff = A(--i, _) - A(j, _);
                 if (C.greaterEqual(diff)) {
                     eraseConstraint(A, i);
-                    C.init(A, E);
+                    initializeComparator();
                     --j; // `i < j`, and `i` has been removed
                 } else if (C.greaterEqual(diff *= -1)) {
                     eraseConstraint(A, j);
-                    C.init(A, E);
+                    initializeComparator();
+                    broke = true;
                     break; // `j` is gone
+                }
+            }
+            if constexpr (NonNegative) {
+                if (!broke) {
+                    for (size_t i = 0; i < dyn; ++i) {
+                        diff = A(j, _);
+                        --diff(end - i);
+                        if (C.greaterEqual(diff)) {
+                            eraseConstraint(A, j);
+                            initializeComparator();
+                            break; // `j` is gone
+                        }
+                    }
                 }
             }
         }
     }
 
-    size_t getNumVar() const { return A.numCol() - 1; }
-    size_t getNumInequalityConstraints() const { return A.numRow(); }
-    size_t getNumEqualityConstraints() const { return E.numRow(); }
+    constexpr size_t getNumSymbols() const { return 1+ S.size(); }
+    constexpr size_t getNumDynamic() const { return A.numCol() - getNumSymbols(); }
+    constexpr size_t getNumVar() const { return A.numCol() - 1; }
+    constexpr size_t getNumInequalityConstraints() const { return A.numRow(); }
+    constexpr size_t getNumEqualityConstraints() const { return E.numRow(); }
 
-    static constexpr bool hasEqualities =
-        !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
-
-    bool lessZero(const IntMatrix &A, const size_t r) const {
-        return C.less(A(r, _));
-    }
-    bool lessEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.lessEqual(A(r, _));
-    }
-    bool greaterZero(const IntMatrix &A, const size_t r) const {
-        return C.greater(A(r, _));
-    }
-    bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
-        return C.greaterEqual(A(r, _));
-    }
+    // static bool lessZero(const IntMatrix &A, const size_t r) const {
+    //     return C.less(A(r, _));
+    // }
+    // static bool lessEqualZero(const IntMatrix &A, const size_t r) const {
+    //     return C.lessEqual(A(r, _));
+    // }
+    // static bool greaterZero(const IntMatrix &A, const size_t r) const {
+    //     return C.greater(A(r, _));
+    // }
+    // static bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
+    //     return C.greaterEqual(A(r, _));
+    // }
     bool lessZero(const size_t r) const { return C.less(A(r, _)); }
     bool lessEqualZero(const size_t r) const { return C.lessEqual(A(r, _)); }
     bool greaterZero(const size_t r) const { return C.greater(A(r, _)); }
@@ -122,53 +157,35 @@ struct Polyhedra {
     bool equalNegative(const size_t i, const size_t j) const {
         return C.equalNegative(A(i, _), A(j, _));
     }
-    bool equalNegative(const IntMatrix &A, const size_t i,
-                       const size_t j) const {
-        return C.equalNegative(A(i, _), A(j, _));
-    }
+    // static bool equalNegative(const IntMatrix &A, const size_t i,
+    //                    const size_t j) {
+    //     return C.equalNegative(A(i, _), A(j, _));
+    // }
 
-    void moveEqualities(IntMatrix &Aold, I64Matrix &Eold) const {
-        ::moveEqualities(Aold, Eold, C);
-    }
-    // returns `false` if not violated, `true` if violated
-    void deleteBounds(IntMatrix &A, size_t i) const {
-        for (size_t j = A.numRow(); j != 0;)
-            if (A(--j, i))
-                eraseConstraint(A, j);
-    }
-    // A'x <= b
+    // A'x >= 0
+    // E'x = 0
     // removes variable `i` from system
-    void removeVariable(IntMatrix &A, const size_t i) { fourierMotzkin(A, i); }
-    // A'x <= b
-    // E'x = q
-    // removes variable `i` from system
-    void removeVariable(IntMatrix &A, IntMatrix &E, const size_t i) {
-        if (substituteEquality(A, E, i))
-            fourierMotzkin(A, i);
-        if (E.numRow() > 1)
-            NormalForm::simplifySystem(E);
-        pruneBounds(A, E);
-    }
-
     void removeVariable(const size_t i) {
-        if constexpr (hasEqualities)
-            return removeVariable(A, E, i);
-        removeVariable(A, i);
+        if constexpr (hasEqualities) {
+            if (substituteEquality(A, E, i)) {
+                if constexpr (NonNegative)
+                    fourierMotzkinNonNegative(A, i);
+                else
+                    fourierMotzkin(A, i);
+            }
+            if (E.numRow() > 1)
+                NormalForm::simplifySystem(E);
+        }
+        if constexpr (NonNegative)
+            fourierMotzkinNonNegative(A, i);
+        else
+            fourierMotzkin(A, i);
     }
     void removeVariableAndPrune(const size_t i) {
-        if constexpr (hasEqualities) {
-            removeVariable(A, E, i);
-        } else {
-            removeVariable(A, i);
-        }
-        pruneBounds();
+        removeVariable(i);
+        pruneBoundsUnchecked();
     }
 
-    void dropEmptyConstraints(IntMatrix &A) const {
-        for (size_t c = A.numRow(); c != 0;)
-            if (allZero(A(--c, _)))
-                eraseConstraint(A, c);
-    }
     void dropEmptyConstraints() {
         dropEmptyConstraints(A);
         if constexpr (hasEqualities)
@@ -200,6 +217,12 @@ struct Polyhedra {
     }
 };
 
-typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator>
+typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                  llvm::SmallVector<const llvm::SCEV *>, false>
     SymbolicPolyhedra;
-typedef Polyhedra<IntMatrix, LinearSymbolicComparator> SymbolicEqPolyhedra;
+typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                  llvm::SmallVector<const llvm::SCEV *>, true>
+    NonNegativeSymbolicPolyhedra;
+typedef Polyhedra<IntMatrix, LinearSymbolicComparator,
+                  EmptyVector<const llvm::SCEV *>, false>
+    SymbolicEqPolyhedra;
