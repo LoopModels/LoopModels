@@ -277,6 +277,7 @@ struct AffineLoopNest
             B(_(M, end), _(numConst, end)) = R;
         }
         ret.initializeComparator();
+        ret.pruneBounds();
         // llvm::errs() << "A = \n" << A << "\n";
         // llvm::errs() << "R = \n" << R << "\n";
         // llvm::errs() << "B = \n" << B << "\n";
@@ -558,6 +559,7 @@ struct AffineLoopNest
         A.resizeCols(N + depth);
         // copy the included loops from B into A
         A(_, _(N, N + depth)) = B(_, _(0, depth));
+        initializeComparator();
         // addZeroLowerBounds();
         // NOTE: pruneBounds() is not legal here if we wish to use
         // removeInnerMost later.
@@ -640,10 +642,11 @@ struct AffineLoopNest
         initializeComparator();
     }
     void addZeroLowerBounds() {
-	if (isEmpty())
-	    return;
+        if (isEmpty())
+            return;
         if constexpr (NonNegative)
-            return initializeComparator();
+            return;
+        // return initializeComparator();
         auto [M, N] = A.size();
         if (!N)
             return;
@@ -732,7 +735,7 @@ struct AffineLoopNest
         return ret;
     }
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
-        AffineLoopNest tmp{*this};
+        AffineLoopNest<NonNegative> tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
         // SHOW(getNumLoops());
         // SHOW(numPrevLoops);
@@ -755,9 +758,9 @@ struct AffineLoopNest
                 indep = false;
         if (indep)
             return false;
-        AffineLoopNest margi{tmp};
+        AffineLoopNest<NonNegative> margi{tmp};
         margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
-        AffineLoopNest tmp2;
+        AffineLoopNest<NonNegative> tmp2;
         llvm::errs() << "\nmargi="
                      << "\n";
         margi.dump();
@@ -794,13 +797,12 @@ struct AffineLoopNest
             for (size_t cc = tmp2.A.numRow(); cc != 0;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
-            if (!(tmp2.isEmpty()))
+            tmp2.initializeComparator();
+            if (!(tmp2.calcIsEmpty()))
                 return false;
         }
         if constexpr (NonNegative) {
             if (extendLower) {
-                // sign = 1
-                tmp2 = tmp;
                 // increment to increase bound
                 // this is correct for both extending lower and extending upper
                 // lower: a'x + i + b >= 0 -> i >= -a'x - b
@@ -809,19 +811,20 @@ struct AffineLoopNest
                 // increment `b` our approach here is to set `_i` equal to the
                 // extended bound and then check if the resulting polyhedra is
                 // empty. if not, then we may have >0 iterations.
-                for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
-                    if (int64_t d = tmp2.A(cc, _i + numConst)) {
+                for (size_t cc = 0; cc < tmp.A.numRow(); ++cc) {
+                    if (int64_t d = tmp.A(cc, _i + numConst)) {
                         // lower bound is i >= 0
                         // so setting equal to the extended lower bound now
                         // means that i = -1 so we decrement `d` from the column
-                        tmp2.A(cc, 0) -= d;
-                        tmp2.A(cc, _i + numConst) = 0;
+                        tmp.A(cc, 0) -= d;
+                        tmp.A(cc, _i + numConst) = 0;
                     }
                 }
-                for (size_t cc = tmp2.A.numRow(); cc != 0;)
-                    if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
-                        eraseConstraint(tmp2.A, cc);
-                if (!(tmp2.isEmpty()))
+                for (size_t cc = tmp.A.numRow(); cc != 0;)
+                    if (tmp.A(--cc, numPrevLoops + numConst) == 0)
+                        eraseConstraint(tmp.A, cc);
+                tmp.initializeComparator();
+                if (!(tmp.calcIsEmpty()))
                     return false;
             }
         }

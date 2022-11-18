@@ -88,14 +88,14 @@ struct Polyhedra {
             C.init(A, E);
         }
     }
+    bool calcIsEmpty() { return C.isEmpty(); }
     void pruneBounds() {
-        if (C.isEmpty()) {
+        if (calcIsEmpty()) {
             A.truncateRows(0);
             if constexpr (hasEqualities)
                 E.truncateRows(0);
-            return;
-        }
-        pruneBoundsUnchecked();
+        } else
+            pruneBoundsUnchecked();
     }
     void pruneBoundsUnchecked() {
         const size_t dyn = getNumDynamic();
@@ -211,7 +211,7 @@ struct Polyhedra {
     }
     void dump() const { llvm::errs() << *this; }
     bool isEmpty() const {
-	return A.numRow() == 0;
+        return A.numRow() == 0;
         // if (A.numRow() == 0)
         //     return true;
         // for (size_t r = 0; r < A.numRow(); ++r)

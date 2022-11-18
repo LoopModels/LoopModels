@@ -135,7 +135,8 @@ TEST(AffineTest0, BasicAssertions) {
     aff.dump();
     llvm::errs() << "About to run first set of bounds tests\n";
     llvm::errs() << "\nPermuting loops 1 and 2\n";
-    auto affp021{aff.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
+    AffineLoopNest<false> affp021{
+        aff.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
     // Now that we've swapped loops 1 and 2, we should have
     // for m in 0:M-1, k in 1:N-1, n in 0:k-1
     affp021.dump();
@@ -166,6 +167,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
     aff.dump();
     // -2 - i - j >= 0 -> i + j <= -2
     // but i >= 0 and j >= 0 -> isEmpty()
+    aff.initializeComparator();
     aff.pruneBounds();
     EXPECT_TRUE(aff.isEmpty());
 
