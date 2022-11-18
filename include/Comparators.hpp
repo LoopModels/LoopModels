@@ -401,12 +401,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     // Note that this is only valid when the comparator was constructed
     // with index `0` referring to >= 0 constants (i.e., the default).
     bool isEmpty() {
-	SHOW(U.numRow());
-	CSHOWLN(U.numCol());
         StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
         if (d.size() == 0) {
-            // SHOWLN(U.numCol());
-            // SHOWLN(query.size());
             for (size_t i = V.numRow(); i < b.size(); ++i)
                 if (b(i))
                     return false;
@@ -442,9 +438,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-            // SHOWLN(V);
-            // SHOWLN(U);
-            // SHOWLN(c);
             IntMatrix expandW(numSlack, NSdim * 2 + 1);
             for (size_t i = 0; i < numSlack; ++i) {
                 expandW(i, 0) = c(i);
@@ -455,7 +448,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                     expandW(i, j + NSdim + 1) = val;
                 }
             }
-            // SHOWLN(expandW);
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
@@ -467,12 +459,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
     bool greaterEqual(PtrVector<int64_t> query) const {
         Vector<int64_t> b = U(_, _(begin, query.size())) * query;
-        // SHOWLN(b);
-        // SHOWLN(d.size());
         // Full column rank case
         if (d.size() == 0) {
-            // SHOWLN(U.numCol());
-            // SHOWLN(query.size());
             for (size_t i = V.numRow(); i < b.size(); ++i)
                 if (b(i))
                     return false;
@@ -507,9 +495,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-            // SHOWLN(V);
-            // SHOWLN(U);
-            // SHOWLN(c);
             IntMatrix expandW(numSlack, NSdim * 2 + 1);
             for (size_t i = 0; i < numSlack; ++i) {
                 expandW(i, 0) = c(i);
@@ -520,7 +505,6 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                     expandW(i, j + NSdim + 1) = val;
                 }
             }
-            // SHOWLN(expandW);
             IntMatrix Wcouple{0, expandW.numCol()};
             llvm::Optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};

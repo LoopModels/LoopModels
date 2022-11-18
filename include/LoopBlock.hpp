@@ -672,13 +672,13 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e))
                 return true;
-            else
-                llvm::errs() << "hasActiveEdge In false for: " << edges[e];
+        // else
+        //     llvm::errs() << "hasActiveEdge In false for: " << edges[e];
         for (auto &e : mem.edgesOut)
             if (!g.isInactive(e))
                 return true;
-            else
-                llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
+        // else
+        //     llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
         return false;
     }
     [[nodiscard]] bool hasActiveEdges(const Graph &g, const MemoryAccess &mem,
@@ -686,15 +686,15 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e, d))
                 return true;
-            else
-                llvm::errs() << "hasActiveEdge In d = " << d
-                             << " false for: " << edges[e];
+        // else
+        //     llvm::errs() << "hasActiveEdge In d = " << d
+        //                  << " false for: " << edges[e];
         for (auto &e : mem.edgesOut)
             if (!g.isInactive(e, d))
                 return true;
-            else
-                llvm::errs() << "hasActiveEdge Out d = " << d
-                             << " false for: " << edges[e];
+        // else
+        //     llvm::errs() << "hasActiveEdge Out d = " << d
+        //                  << " false for: " << edges[e];
         return false;
     }
     [[nodiscard]] bool hasActiveEdges(const Graph &g, const ScheduledNode &node,
