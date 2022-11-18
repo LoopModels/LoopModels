@@ -1043,9 +1043,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     dep0.pruneBounds();
     llvm::errs() << "Dep0 = \n" << dep0 << "\n";
 
-    EXPECT_EQ(dep0.getNumInequalityConstraints(), 4);
+    EXPECT_EQ(dep0.getNumInequalityConstraints(), 2);
     EXPECT_EQ(dep0.getNumEqualityConstraints(), 2);
-    assert(dep0.getNumInequalityConstraints() == 4);
+    assert(dep0.getNumInequalityConstraints() == 2);
     assert(dep0.getNumEqualityConstraints() == 2);
 
     llvm::SmallVector<unsigned, 8> schLoad1(2 + 1);
@@ -1055,9 +1055,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     EXPECT_FALSE(dep1.isEmpty());
     dep1.pruneBounds();
     llvm::errs() << "Dep1 = \n" << dep1 << "\n";
-    EXPECT_EQ(dep1.getNumInequalityConstraints(), 4);
+    EXPECT_EQ(dep1.getNumInequalityConstraints(), 2);
     EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
-    assert(dep1.getNumInequalityConstraints() == 4);
+    assert(dep1.getNumInequalityConstraints() == 2);
     assert(dep1.getNumEqualityConstraints() == 2);
     // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
     llvm::SmallVector<Dependence, 1> dc;

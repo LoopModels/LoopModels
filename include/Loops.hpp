@@ -388,47 +388,53 @@ struct AffineLoopNest
                 return addSymbol(B, L, op1, SE, l, u, mlt, minDepth);
             } else if (addRecMatchesLoop(op1, L)) {
                 return addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
-            } else {
-                // auto S = simplifyMinMax(SE, ex);
-                // if (S != v)
-                //     return addSymbol(B,L,S,SE,l,u,mlt,minDepth);
-                llvm::errs() << "Failing on llvm::SCEVMinMaxExpr = " << *ex
-                             << "<<\n*L =" << *L << "\n";
-                SHOWLN(*op0);
-                SHOWLN(*op1);
-                // TODO: don't only consider final value
-                // this assumes the final value is the maximum, which is not
-                // necessarilly true
-                if (auto op0ar = llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
-                    // auto op0final = SE.getSCEVAtScope(
-                    //     op0ar, op0ar->getLoop()->getParentLoop());
-                    auto op0final = SE.getSCEVAtScope(op0ar, nullptr);
-                    SHOWLN(*op0final);
-                    auto op0FinalMinusOp1 = SE.getMinusSCEV(op0final, op1);
-                    SHOWLN(SE.isKnownNonNegative(op0FinalMinusOp1));
-                    SHOWLN(SE.isKnownNonPositive(op0FinalMinusOp1));
-                    auto op0init = op0ar->getOperand(0);
-                    auto op0InitMinusOp1 = SE.getMinusSCEV(op0init, op1);
-                    SHOWLN(SE.isKnownNonNegative(op0InitMinusOp1));
-                    SHOWLN(SE.isKnownNonPositive(op0InitMinusOp1));
-                    auto op0step = op0ar->getOperand(0);
-                    SHOWLN(SE.isKnownNonNegative(op0step));
-                    SHOWLN(SE.isKnownNonPositive(op0step));
-                }
-                if (auto op1ar = llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
-                    SHOWLN(*SE.getSCEVAtScope(
-                        op1ar, op1ar->getLoop()->getParentLoop()));
-                }
-                auto op0MinusOp1 = SE.getMinusSCEV(op0, op1);
-                SHOWLN(SE.isKnownNonNegative(op0MinusOp1));
-                SHOWLN(SE.isKnownNonPositive(op0MinusOp1));
+                // } else {
+                //     // auto S = simplifyMinMax(SE, ex);
+                //     // if (S != v)
+                //     //     return addSymbol(B,L,S,SE,l,u,mlt,minDepth);
+                //     // llvm::errs() << "Failing on llvm::SCEVMinMaxExpr = "
+                //     << *ex
+                //     //              << "<<\n*L =" << *L << "\n";
+                //     // SHOWLN(*op0);
+                //     // SHOWLN(*op1);
+                //     // TODO: don't only consider final value
+                //     // this assumes the final value is the maximum, which is
+                //     not
+                //     // necessarilly true
+                //     if (auto op0ar =
+                //     llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
+                //         // auto op0final = SE.getSCEVAtScope(
+                //         //     op0ar, op0ar->getLoop()->getParentLoop());
+                //         auto op0final = SE.getSCEVAtScope(op0ar, nullptr);
+                //         SHOWLN(*op0final);
+                //         auto op0FinalMinusOp1 = SE.getMinusSCEV(op0final,
+                //         op1);
+                //         SHOWLN(SE.isKnownNonNegative(op0FinalMinusOp1));
+                //         SHOWLN(SE.isKnownNonPositive(op0FinalMinusOp1));
+                //         auto op0init = op0ar->getOperand(0);
+                //         auto op0InitMinusOp1 = SE.getMinusSCEV(op0init, op1);
+                //         SHOWLN(SE.isKnownNonNegative(op0InitMinusOp1));
+                //         SHOWLN(SE.isKnownNonPositive(op0InitMinusOp1));
+                //         auto op0step = op0ar->getOperand(0);
+                //         SHOWLN(SE.isKnownNonNegative(op0step));
+                //         SHOWLN(SE.isKnownNonPositive(op0step));
+                //     }
+                //     if (auto op1ar =
+                //     llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
+                //         SHOWLN(*SE.getSCEVAtScope(
+                //             op1ar, op1ar->getLoop()->getParentLoop()));
+                //     }
+                //     auto op0MinusOp1 = SE.getMinusSCEV(op0, op1);
+                //     // SHOWLN(SE.isKnownNonNegative(op0MinusOp1));
+                //     // SHOWLN(SE.isKnownNonPositive(op0MinusOp1));
 
-                if (auto b = L->getBounds(SE))
-                    llvm::errs()
-                        << "Loop Bounds:\nInitial: " << b->getInitialIVValue()
-                        << "\nStep: " << *b->getStepValue()
-                        << "\nFinal: " << b->getFinalIVValue() << "\n";
-                assert(false);
+                //     if (auto b = L->getBounds(SE))
+                //         llvm::errs()
+                //             << "Loop Bounds:\nInitial: " <<
+                //             b->getInitialIVValue()
+                //             << "\nStep: " << *b->getStepValue()
+                //             << "\nFinal: " << b->getFinalIVValue() << "\n";
+                //     assert(false);
             }
         } else if (const llvm::SCEVCastExpr *ex =
                        llvm::dyn_cast<llvm::SCEVCastExpr>(v))
@@ -568,8 +574,6 @@ struct AffineLoopNest
     [[nodiscard]] AffineLoopNest<NonNegative> removeInnerMost() const {
         size_t innermostLoopInd = getNumSymbols();
         IntMatrix B = A.deleteCol(innermostLoopInd);
-        SHOWLN(A);
-        SHOWLN(B);
         // no loop may be conditioned on the innermost loop
         // so we should be able to safely remove all constraints that reference
         // it
@@ -583,7 +587,6 @@ struct AffineLoopNest
                 B.resizeRows(M);
             }
         }
-        SHOWLN(B);
         return AffineLoopNest<NonNegative>(B, S);
     }
     void clear() {
@@ -645,21 +648,16 @@ struct AffineLoopNest
         if (isEmpty())
             return;
         if constexpr (NonNegative)
-            return;
+            return pruneBounds();
         // return initializeComparator();
         auto [M, N] = A.size();
         if (!N)
             return;
         size_t numLoops = getNumLoops();
-        SHOWLN(A);
         A.resizeRows(M + numLoops);
         A(_(M, M + numLoops), _) = 0;
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
-        SHOW(getNumLoops());
-        CSHOW(M);
-        CSHOW(N);
-        CSHOWLN(A);
         initializeComparator();
         pruneBounds();
     }
@@ -678,8 +676,6 @@ struct AffineLoopNest
         return A(j, _(0, getNumSymbols()));
     }
     void removeLoopBang(size_t i) {
-        SHOW(i);
-        CSHOWLN(getNumSymbols());
         if constexpr (NonNegative)
             fourierMotzkinNonNegative(A, i + getNumSymbols());
         else
@@ -737,16 +733,6 @@ struct AffineLoopNest
     bool zeroExtraIterationsUponExtending(size_t _i, bool extendLower) const {
         AffineLoopNest<NonNegative> tmp{*this};
         const size_t numPrevLoops = getNumLoops() - 1;
-        // SHOW(getNumLoops());
-        // SHOW(numPrevLoops);
-        // SHOW(A.numRow());
-        // SHOW(A.numCol());
-        // for (size_t i = 0; i < numPrevLoops; ++i)
-        // if (_i != i)
-        // tmp.removeLoopBang(i);
-
-        // for (size_t i = _i + 1; i < numPrevLoops; ++i)
-        // tmp.removeLoopBang(i);
         for (size_t i = 0; i < numPrevLoops; ++i)
             if (i != _i)
                 tmp.removeVariableAndPrune(i + getNumSymbols());
@@ -761,12 +747,6 @@ struct AffineLoopNest
         AffineLoopNest<NonNegative> margi{tmp};
         margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
         AffineLoopNest<NonNegative> tmp2;
-        llvm::errs() << "\nmargi="
-                     << "\n";
-        margi.dump();
-        llvm::errs() << "\ntmp="
-                     << "\n";
-        tmp.dump();
         // margi contains extrema for `_i`
         // we can substitute extended for value of `_i`
         // in `tmp`

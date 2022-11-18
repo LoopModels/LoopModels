@@ -18,6 +18,13 @@
 #include <sys/types.h>
 #include <type_traits>
 
+[[maybe_unused]] static llvm::raw_ostream &printPositive(llvm::raw_ostream &os,
+                                                         size_t stop) {
+    for (size_t i = 0; i < stop; ++i)
+        os << "v_" << i << " >= 0\n";
+    return os;
+}
+
 // Can we represent Polyhedra using slack variables + equalities?
 // What must we do with Polyhedra?
 // 1) A*x >= 0 && c'x >= 0 <-> l_0 + l'Ax == c'x && l >= 0 && l_0 >= 0
@@ -204,6 +211,8 @@ struct Polyhedra {
                                          const Polyhedra &p) {
         auto &&os2 = printConstraints(os << "\n", p.A,
                                       llvm::ArrayRef<const llvm::SCEV *>());
+        if constexpr (NonNegative)
+            printPositive(os2, p.getNumDynamic());
         if constexpr (hasEqualities)
             return printConstraints(
                 os2, p.E, llvm::ArrayRef<const llvm::SCEV *>(), false);
