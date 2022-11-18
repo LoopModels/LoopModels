@@ -31,7 +31,7 @@
 // 1 <= j_1 <= i_1
 // i_0 == i_1
 // j_0 == i_1
-struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
+struct DependencePolyhedra : SymbolicEqPolyhedra {
     // size_t numLoops;
     [[no_unique_address]] size_t numDep0Var; // loops dep 0
     // size_t numDep1Var; // loops dep 1
@@ -244,7 +244,7 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
     }
     // static fillA
     DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
-        : NonNegativeSymbolicEqPolyhedra{} {
+        : SymbolicEqPolyhedra{} {
 
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;
@@ -281,7 +281,7 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
         }
         //           column meansing in in order
         const size_t numSymbols = getNumSymbols();
-        A.resize(nc, numSymbols + numVar + nullDim);
+        A.resize(nc + numVar, numSymbols + numVar + nullDim);
         E.resize(indexDim + nullDim, A.numCol());
         // ar0 loop
         for (size_t i = 0; i < nc0; ++i) {
@@ -300,6 +300,7 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
                 A(nc0 + i, j + numSymbols + numDep0Var) =
                     ar1.loop->A(i, j + ar1.loop->getNumSymbols());
         }
+        A(_(nc, end), _(numSymbols, numSymbols + numVar)).diag() = 1;
         // L254: Assertion `col < numCol()` failed
         // indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim
         // offsetMats are arrayDim x numSymbols
@@ -336,10 +337,7 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
     static constexpr size_t getNumLambda(size_t numIneq, size_t numEq) {
         return 1 + numIneq + 2 * numEq;
     }
-    size_t getNumLambda() const {
-        return getNumLambda(A.numRow() + getNumDynamic() - getTimeDim(),
-                            E.numRow());
-    }
+    size_t getNumLambda() const { return getNumLambda(A.numRow(), E.numRow()); }
     // `direction = true` means second dep follow first
     // lambda_0 + lambda*A*x = delta + c'x
     // x = [s, i]
@@ -354,11 +352,7 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
     std::pair<Simplex, Simplex> farkasPair() const {
 
         const size_t numEqualityConstraintsOld = E.numRow();
-        const size_t numInequalityConstraintsBase = A.numRow();
-        // const size_t dim = 2;
-        const size_t dim = getNumDynamic() - getTimeDim();
-        const size_t numInequalityConstraintsOld =
-            numInequalityConstraintsBase + dim;
+        const size_t numInequalityConstraintsOld = A.numRow();
 
         const size_t numPhiCoefs = getNumPhiCoefficients();
         const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoefficients();
@@ -387,12 +381,8 @@ struct DependencePolyhedra : NonNegativeSymbolicEqPolyhedra {
         MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
         fC(_, 0) = 0;
         fC(0, 0) = 1; // lambda_0
-        fC(_, _(1, 1 + numInequalityConstraintsBase)) =
+        fC(_, _(1, 1 + numInequalityConstraintsOld)) =
             A(_, _(begin, numConstraintsNew)).transpose();
-        // x >= 0
-        fC(_(numConstraintsNew - dim, numConstraintsNew),
-           _(1 + numInequalityConstraintsBase, ineqEnd))
-            .diag() = 1;
         // fC(_, _(ineqEnd, posEqEnd)) = E.transpose();
         // fC(_, _(posEqEnd, numVarNew)) = -E.transpose();
         // loading from `E` is expensive
@@ -1092,11 +1082,8 @@ struct Dependence {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         // copy backup
         std::pair<Simplex, Simplex> farkasBackups = pair;
-        const size_t numInequalityConstraintsBase =
-            dxy.getNumInequalityConstraints();
-        const size_t dim = dxy.getNumDynamic() - dxy.getTimeDim();
         const size_t numInequalityConstraintsOld =
-            numInequalityConstraintsBase + dim;
+            dxy.getNumInequalityConstraints();
         const size_t numEqualityConstraintsOld =
             dxy.getNumEqualityConstraints();
         const size_t ineqEnd = 1 + numInequalityConstraintsOld;
@@ -1145,7 +1132,7 @@ struct Dependence {
             // we have the problem that.
             int64_t step = dxy.nullStep[t];
             size_t v = numVar + t;
-            for (size_t c = 0; c < numInequalityConstraintsBase; ++c) {
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 if (int64_t Acv = dxy.A(c, v)) {
                     Acv *= step;
                     fE(0, c + 1) -= Acv; // *1
@@ -1169,7 +1156,7 @@ struct Dependence {
                 checkDirection(farkasBackups, *out, *in, numLambda,
                                dxy.A.numCol() - dxy.getTimeDim());
             // fix
-            for (size_t c = 0; c < numInequalityConstraintsBase; ++c) {
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 int64_t Acv = dxy.A(c, v) * step;
                 fE(0, c + 1) += Acv;
                 sE(0, c + 1) += Acv;
@@ -1190,7 +1177,7 @@ struct Dependence {
             // thus sign = timeDirection[t] ? 1 : -1
             int64_t step = (2 * timeDirection[t] - 1) * dxy.nullStep[t];
             size_t v = numVar + t;
-            for (size_t c = 0; c < numInequalityConstraintsBase; ++c) {
+            for (size_t c = 0; c < numInequalityConstraintsOld; ++c) {
                 if (int64_t Acv = dxy.A(c, v)) {
                     Acv *= step;
                     dxy.A(c, 0) -= Acv;
