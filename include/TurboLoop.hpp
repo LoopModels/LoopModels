@@ -73,7 +73,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
     llvm::PreservedAnalyses run(llvm::Function &F,
                                 llvm::FunctionAnalysisManager &AM);
-    // llvm::SmallVector<AffineLoopNest, 0> affineLoopNests;
+    // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
     // one reason to prefer SmallVector is because it bounds checks `ifndef
     // NDEBUG`
     llvm::SmallVector<LoopTree, 0> loopTrees;
@@ -91,7 +91,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
     // the process of building the LoopForest has the following steps:
     // 1. build initial forest of trees
-    // 2. instantiate AffineLoopNests; any non-affine loops
+    // 2. instantiate AffineLoopNest<true>s; any non-affine loops
     //    are pruned, and their inner loops added as new, separate forests.
     // 3. Existing forests are searched for indirect control flow between
     //    successive loops. In all such cases, the loops at that level are
@@ -325,7 +325,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
         assert(subscripts.size() == sizes.size());
         // SHOWLN(sizes.size());
-        AffineLoopNest &aln = loopTrees[loopMap[L]].affineLoop;
+        AffineLoopNest<true> &aln = loopTrees[loopMap[L]].affineLoop;
         if (sizes.size() == 0)
             return ArrayReference(basePointer, &aln, std::move(sizes),
                                   std::move(subscripts), pred);

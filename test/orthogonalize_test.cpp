@@ -21,7 +21,7 @@
 #include <random>
 
 [[maybe_unused]] static llvm::Optional<
-    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+    std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // need to construct matrix `A` of relationship
     // B*L = I
@@ -31,7 +31,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     // additionally, the loop is defined by the bounds
     // A*L = A*(B\^-1 * I) <= r
     // assuming that `B` is an invertible integer matrix (i.e. is unimodular),
-    const AffineLoopNest &alnp = *(ai[0]->loop);
+    const AffineLoopNest<true> &alnp = *(ai[0]->loop);
     const size_t numLoops = alnp.getNumLoops();
     const size_t numSymbols = alnp.getNumSymbols();
     size_t numRow = 0;
@@ -59,10 +59,10 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
     SHOWLN(alnp.A(_, _(numSymbols, end)));
     SHOWLN(AK(_, _(numSymbols, end)));
-    AffineLoopNest alnNew{std::move(AK), alnp.symbols};
+    AffineLoopNest<true> alnNew{std::move(AK), alnp.S};
     alnNew.pruneBounds();
     IntMatrix KS{K * S};
-    std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>> ret{
+    std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>> ret{
         std::make_pair(std::move(alnNew),
                        llvm::SmallVector<ArrayReference, 0>())};
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = ret.second;
@@ -92,12 +92,12 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 4);
-    AffineLoopNest &aln = tlf.alns.front();
+    AffineLoopNest<true> &aln = tlf.alns.front();
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
-    const llvm::SCEV *N = aln.symbols[2];
-    const llvm::SCEV *J = aln.symbols[3];
+    const llvm::SCEV *N = aln.S[2];
+    const llvm::SCEV *J = aln.S[3];
     const llvm::SCEVUnknown *scevW = tlf.getSCEVUnknown(tlf.createArray());
     const llvm::SCEVUnknown *scevC = tlf.getSCEVUnknown(tlf.createArray());
     const llvm::SCEVUnknown *scevB = tlf.getSCEVUnknown(tlf.createArray());
@@ -145,11 +145,11 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                                            &allArrayRefs[2]};
 
     llvm::Optional<
-        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+        std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
         orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
-    AffineLoopNest &newAln = orth->first;
+    AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
     for (auto &&ar : newArrayRefs)
         ar.loop = &newAln;
@@ -200,12 +200,12 @@ TEST(BadMul, BasicAssertions) {
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 3);
-    AffineLoopNest &aln = tlf.alns.front();
+    AffineLoopNest<true> &aln = tlf.alns.front();
     EXPECT_FALSE(aln.isEmpty());
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::IntegerType *Int64 = tlf.builder.getInt64Ty();
-    const llvm::SCEV *N = aln.symbols[1];
-    const llvm::SCEV *K = aln.symbols[2];
+    const llvm::SCEV *N = aln.S[1];
+    const llvm::SCEV *K = aln.S[2];
 
     // auto Zero = Polynomial::Term{int64_t(0), Polynomial::Monomial()};
     // auto One = Polynomial::Term{int64_t(1), Polynomial::Monomial()};
@@ -267,12 +267,12 @@ TEST(BadMul, BasicAssertions) {
                                            &allArrayRefs[2]};
 
     llvm::Optional<
-        std::pair<AffineLoopNest, llvm::SmallVector<ArrayReference, 0>>>
+        std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
         orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.hasValue());
 
-    AffineLoopNest &newAln = orth->first;
+    AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
 
     for (auto &ar : newArrayRefs)

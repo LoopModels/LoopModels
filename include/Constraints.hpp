@@ -225,8 +225,9 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) {
 
 // C = [ I A
 //       0 B ]
-void slackEqualityConstraints(MutPtrMatrix<int64_t> C, PtrMatrix<int64_t> A,
-                              PtrMatrix<int64_t> B) {
+[[maybe_unused]] static void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
+                                                      PtrMatrix<int64_t> A,
+                                                      PtrMatrix<int64_t> B) {
     const size_t numVar = A.numCol();
     assert(numVar == B.numCol());
     const size_t numSlack = A.numRow();
@@ -465,4 +466,10 @@ countSigns(PtrMatrix<int64_t> A, size_t i) {
         if (x[i] + y[i])
             return false;
     return true;
+}
+
+[[maybe_unused]] static void deleteBounds(IntMatrix &A, size_t i) {
+    for (size_t j = A.numRow(); j != 0;)
+        if (A(--j, i))
+            eraseConstraint(A, j);
 }

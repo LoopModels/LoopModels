@@ -41,13 +41,13 @@ TEST(TriangularExampleTest, BasicAssertions) {
     TestLoopFunction tlf;
     tlf.addLoop(std::move(AMN), 2);
     tlf.addLoop(std::move(AMNK), 3);
-    AffineLoopNest &loopMN = tlf.alns[0];
+    AffineLoopNest<true> &loopMN = tlf.alns[0];
     EXPECT_FALSE(loopMN.isEmpty());
-    AffineLoopNest &loopMNK = tlf.alns[1];
+    AffineLoopNest<true> &loopMNK = tlf.alns[1];
     EXPECT_FALSE(loopMNK.isEmpty());
-    EXPECT_EQ(loopMN.symbols.size(), loopMNK.symbols.size());
-    for (size_t i = 0; i < loopMN.symbols.size(); ++i)
-        EXPECT_EQ(loopMN.symbols[i], loopMNK.symbols[i]);
+    EXPECT_EQ(loopMN.S.size(), loopMNK.S.size());
+    for (size_t i = 0; i < loopMN.S.size(); ++i)
+        EXPECT_EQ(loopMN.S[i], loopMNK.S[i]);
 
     llvm::ScalarEvolution &SE{tlf.SE};
     auto &builder = tlf.builder;
@@ -59,8 +59,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     llvm::Value *ptrA = tlf.createArray();
     llvm::Value *ptrU = tlf.createArray();
 
-    const llvm::SCEV *M = loopMN.symbols[0];
-    const llvm::SCEV *N = loopMN.symbols[1];
+    const llvm::SCEV *M = loopMN.S[0];
+    const llvm::SCEV *N = loopMN.S[1];
     llvm::Value *zero = builder.getInt64(0);
     llvm::Value *one = builder.getInt64(1);
     llvm::Value *mv = builder.CreateAdd(zero, one);
@@ -521,9 +521,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
                                               "-1 1 0 -1 0; "
                                               "0 0 0 1 0]")};
     tlf.addLoop(std::move(TwoLoopsMatJI), 2);
-    AffineLoopNest &loopJI = tlf.alns[0];
-    AffineLoopNest &loopI = tlf.alns[1];
-    AffineLoopNest &loopIJ = tlf.alns[2];
+    AffineLoopNest<true> &loopJI = tlf.alns[0];
+    AffineLoopNest<true> &loopI = tlf.alns[1];
+    AffineLoopNest<true> &loopIJ = tlf.alns[2];
 
     llvm::IRBuilder<> &builder = tlf.builder;
 
@@ -537,8 +537,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     auto scevS = tlf.getSCEVUnknown(ptrS);
 
     // llvm::ConstantInt *Iv = builder.getInt64(200);
-    const llvm::SCEV *I = loopJI.symbols[0];
-    const llvm::SCEV *J = loopJI.symbols[1];
+    const llvm::SCEV *I = loopJI.S[0];
+    const llvm::SCEV *J = loopJI.S[1];
     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
     llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
     auto Jfp = builder.CreateUIToFP(Jv, Float64);
@@ -936,16 +936,16 @@ TEST(DoubleDependenceTest, BasicAssertions) {
                                       "-2 0 1 -1 0; "
                                       "0 0 0 1 0]")};
     tlf.addLoop(std::move(Aloop), 2);
-    AffineLoopNest &loop = tlf.alns.front();
+    AffineLoopNest<true> &loop = tlf.alns.front();
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
     llvm::Value *ptrA = tlf.createArray();
     auto scevA = tlf.getSCEVUnknown(ptrA);
 
-    const llvm::SCEV *I = loop.symbols[0];
+    const llvm::SCEV *I = loop.S[0];
     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
-    // llvm::Value* J = loop.symbols[1];
+    // llvm::Value* J = loop.S[1];
     auto zero = builder.getInt64(0);
     auto one = builder.getInt64(1);
     llvm::Value *iv = builder.CreateAdd(zero, one);
@@ -1151,7 +1151,7 @@ TEST(ConvReversePass, BasicAssertions) {
                                       "-1 0 0 1 0 -1 0 0 0; "
                                       "0 0 0 0 0 1 0 0 0]")};
     tlf.addLoop(std::move(Aloop), 4);
-    AffineLoopNest &loop = tlf.alns.front();
+    AffineLoopNest<true> &loop = tlf.alns.front();
 
     // create arrays
     llvm::Type *Float64 = builder.getDoubleTy();
@@ -1163,8 +1163,8 @@ TEST(ConvReversePass, BasicAssertions) {
     auto scevC = tlf.getSCEVUnknown(ptrC);
 
     // llvm::ConstantInt *Jv = builder.getInt64(100);
-    const llvm::SCEV *I = loop.symbols[3];
-    const llvm::SCEV *M = loop.symbols[1];
+    const llvm::SCEV *I = loop.S[3];
+    const llvm::SCEV *M = loop.S[1];
     llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
     llvm::Value *Mv = llvm::dyn_cast<llvm::SCEVUnknown>(M)->getValue();
     // llvm::ConstantInt *Nv = builder.getInt64(400);

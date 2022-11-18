@@ -202,9 +202,6 @@ struct Simplex {
         // original number of variables
         const size_t numVar = getNumVar();
         MutPtrMatrix<int64_t> C{getConstraints()};
-#ifdef VERBOSESIMPLEX
-        llvm::errs() << "C=" << C << "\n";
-#endif
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         basicCons = -2;
         // first pass, we make sure the equalities are >= 0
@@ -257,7 +254,6 @@ struct Simplex {
                 }
             }
         }
-        // llvm::errs() << "pre-tableau = \n" << tableau << "\n";
 #ifndef NDEBUG
         inCanonicalForm = true;
 #endif
@@ -272,12 +268,6 @@ struct Simplex {
             MutPtrVector<int64_t> basicCons{getBasicConstraints()};
             MutPtrVector<int64_t> costs{getCost()};
             tableau(1, _) = 0;
-#ifdef VERBOSESIMPLEX
-            printVector(llvm::errs() << "augmentVars = ", augmentVars) << "\n";
-            llvm::errs() << "costs = " << PtrVector<int64_t>(costs) << "\n";
-            llvm::errs() << "tableau =" << tableau << "\n";
-            llvm::errs() << "numVar = " << numVar << "\n";
-#endif
             for (size_t i = 0; i < augmentVars.size(); ++i) {
                 size_t a = augmentVars[i];
                 basicVars[a] = i + numVar;
@@ -288,34 +278,17 @@ struct Simplex {
             }
             // false/0 means feasible
             // true/non-zero infeasible
-#ifdef VERBOSESIMPLEX
-            llvm::errs() << "costs: " << PtrVector<int64_t>(costs) << "\n";
-            llvm::errs() << "about to run; tableau =" << tableau << "\n";
-#endif
             if (runCore() != 0)
                 return true;
-// assertCanonical();
-#ifdef VERBOSESIMPLEX
-            SHOW(numVar);
-            CSHOWLN(tableau);
-#endif
             for (size_t c = 0; c < C.numRow(); ++c) {
                 if (size_t(basicVars(c)) >= numVar) {
                     assert(C(c, 0) == 0);
                     assert(c == size_t(basicCons(basicVars(c))));
                     assert(C(c, basicVars(c)) >= 0);
-#ifdef VERBOSESIMPLEX
-                    SHOW(c);
-                    CSHOWLN(basicVars(c));
-#endif
                     // find var to make basic in its place
                     for (size_t v = numVar; v != 0;) {
                         // search for a non-basic variable (basicConstraints<0)
                         assert(v > 1);
-#ifdef VERBOSESIMPLEX
-                        SHOW(basicCons(v - 1));
-                        CSHOWLN(C(c, v));
-#endif
                         if ((basicCons(--v) >= 0) || (C(c, v) == 0))
                             continue;
                         if (C(c, v) < 0)
@@ -329,22 +302,15 @@ struct Simplex {
                     }
                 }
             }
-#ifdef VERBOSESIMPLEX
-            llvm::errs() << "initialized tableau =" << tableau << "\n";
-#endif
             // all augment vars are now 0
             truncateVars(numVar);
         }
-#ifdef VERBOSESIMPLEX
-        llvm::errs() << "final tableau =" << tableau << "\n";
-#endif
         assertCanonical();
         return false;
     }
     // 1 based to match getBasicConstraints
     static int getEnteringVariable(PtrVector<int64_t> costs) {
         // Bland's algorithm; guaranteed to terminate
-        // llvm::errs() << "costs = " << costs << "\n";
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
@@ -386,7 +352,6 @@ struct Simplex {
                 if (i == 0)
                     f = m;
             }
-        // llvm::errs() << "post-removal C =" << C << "\n";
         // update baisc vars and constraints
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
         int64_t oldBasicVar = basicVars[leavingVariable];
@@ -407,17 +372,7 @@ struct Simplex {
         auto C{getCostsAndConstraints()};
         while (true) {
             // entering variable is the column
-            // #ifdef VERBOSESIMPLEX
-            //             llvm::errs() << "C =" << C << "\n";
-            // #endif
             int enteringVariable = getEnteringVariable(C(0, _));
-#ifdef VERBOSESIMPLEX
-            // llvm::errs() << "enteringVariable = " << enteringVariable <<
-            // "\n";
-            if (enteringVariable == -1)
-                llvm::errs() << "runCore() ret: C(0,0) / f = " << C(0, 0)
-                             << " / " << f << "\n";
-#endif
             if (enteringVariable == -1)
                 return Rational::create(C(0, 0), f);
             f = makeBasic(C, f, enteringVariable);
@@ -437,8 +392,6 @@ struct Simplex {
         // zero cost of basic variables to put in canonical form
         for (size_t c = 0; c < basicVars.size();) {
             int64_t v = basicVars[c++];
-            // llvm::errs() << "v = " << v << "; C.numRow() = " << C.numRow()
-            // << "; C.numCol()  = " << C.numCol() << "\n";
             if ((size_t(v) < C.numCol()) && C(0, v))
                 f = NormalForm::zeroWithRowOperation(C, 0, c, v, f);
         }
@@ -483,10 +436,6 @@ struct Simplex {
             enteringVariable += v;
             int _leavingVariable = getLeavingVariable(C, enteringVariable);
             int leavingVariable = _leavingVariable++;
-#ifndef VERBOSESIMPLEX
-            CSHOW(enteringVariable);
-            CSHOW(leavingVariable);
-#endif
             if (_leavingVariable == 0)
                 break;
             for (size_t i = 0; i < C.numRow(); ++i)
@@ -495,9 +444,6 @@ struct Simplex {
                                                      enteringVariable, 0);
             // update baisc vars and constraints
             int64_t oldBasicVar = basicVars[leavingVariable];
-#ifndef VERBOSESIMPLEX
-            CSHOW(oldBasicVar);
-#endif
             basicVars[leavingVariable] = enteringVariable;
             if (size_t(oldBasicVar) < basicConstraints.size())
                 basicConstraints[oldBasicVar] = -1;
@@ -517,8 +463,6 @@ struct Simplex {
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
         int64_t c = basicConstraints(v);
         if (c < 0)
-            llvm::errs() << "\n";
-        if (c < 0)
             return false;
         // we try to zero `v` or at least minimize it.
         // implicitly, set cost to -1, and then see if we can make it
@@ -529,9 +473,6 @@ struct Simplex {
         assert((C(c, v) != 0) || (C(c, 0) == 0));
         assert(allZero(C(_(1, c), v)));
         assert(allZero(C(_(c + 1, end), v)));
-#ifndef VERBOSESIMPLEX
-        CSHOW(c);
-#endif
         lexCoreOpt(v);
         return makeZeroBasic(v);
     }
@@ -594,7 +535,6 @@ struct Simplex {
 #ifndef NDEBUG
         assert(inCanonicalForm);
         assertCanonical();
-        // SHOWLN(tableau);
 #endif
         for (size_t v = 0; v < sol.size();)
             lexMinimize(++v);
@@ -616,7 +556,6 @@ struct Simplex {
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static llvm::Optional<Simplex> positiveVariables(PtrMatrix<int64_t> A,
                                                      PtrMatrix<int64_t> B) {
-        // llvm::errs() << "Entering positive variables!" << "\n";
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -637,16 +576,11 @@ struct Simplex {
         slackEqualityConstraints(
             simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
             A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
-        // llvm::errs() << "before costs simplex.tableau =" << simplex.tableau
-        // << "\n";
         auto consts{simplex.getConstants()};
         for (size_t i = 0; i < numSlack; ++i)
             consts[i] = A(i, 0);
         for (size_t i = 0; i < numStrict; ++i)
             consts[i + numSlack] = B(i, 0);
-        // llvm::errs() << "about to initialize simplex.tableau =" <<
-        // simplex.tableau
-        // << "\n";
         if (simplex.initiateFeasible())
             return {};
         return simplex;
@@ -676,8 +610,6 @@ struct Simplex {
             makeBasic(C, 0, i);
         size_t ind = basicConstraints[i];
         size_t lastRow = C.numRow() - 1;
-        // SHOWLN(ind);
-        // SHOWLN(C.numRow());
         if (lastRow != ind)
             swapRows(C, ind, lastRow);
         truncateConstraints(lastRow);
@@ -730,12 +662,7 @@ struct Simplex {
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
         sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
-        // SHOWLN(off);
-        // SHOWLN(fC);
-        // SHOWLN(sC);
-        // SHOWLN(x);
-        // SHOWLN(subSimp);
-	// returns `true` if unsatisfiable
+        // returns `true` if unsatisfiable
         return subSimp.initiateFeasible();
     }
     bool satisfiable(PtrVector<int64_t> x, size_t off) const {
@@ -770,11 +697,6 @@ struct Simplex {
         //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
         sC(_, _(1, 1 + off)) = fC(_(begin, numRow), _(1, 1 + off));
         assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
-        // SHOWLN(off);
-        // SHOWLN(fC);
-        // SHOWLN(sC);
-        // SHOWLN(x);
-        // SHOWLN(subSimp);
         return subSimp.initiateFeasible();
     }
     bool satisfiableZeroRem(PtrVector<int64_t> x, size_t off,

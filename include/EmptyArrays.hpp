@@ -48,5 +48,8 @@ template <typename T> struct EmptyVector {
 };
 
 template <typename T, typename S>
-concept MaybeVector = std::is_same_v<T, EmptyVector<S>> ||
-                      std::is_same_v<T, llvm::SmallVector<S>>;
+concept MaybeVector =
+    std::is_same_v<T, EmptyVector<S>> || std::is_same_v<T, PtrVector<S>> ||
+    std::is_same_v<T, MutPtrVector<S>> || std::is_same_v<T, StridedVector<S>> ||
+    std::is_same_v<T, MutStridedVector<S>> || std::is_same_v<T, Vector<S>> ||
+    std::is_same_v<T, llvm::SmallVector<S>>;

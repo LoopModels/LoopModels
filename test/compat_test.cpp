@@ -37,7 +37,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 1);
-    AffineLoopNest &aff = tlf.alns[0];
+    AffineLoopNest<true> &aff = tlf.alns[0];
     aff.pruneBounds();
     llvm::errs() << aff << "\n";
     SHOWLN(aff.A);
@@ -57,7 +57,7 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
         "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 2);
-    AffineLoopNest &aff = tlf.alns[0];
+    AffineLoopNest<true> &aff = tlf.alns[0];
     aff.pruneBounds();
     aff.dump();
     SHOWLN(aff.A);
@@ -82,7 +82,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 3);
-    AffineLoopNest &aff = tlf.alns[0];
+    AffineLoopNest<true> &aff = tlf.alns[0];
 
     aff.pruneBounds();
     llvm::errs() << "LessTrival test Bounds pruned:\n";
@@ -119,7 +119,7 @@ TEST(AffineTest0, BasicAssertions) {
     TestLoopFunction tlf;
     llvm::errs() << "About to construct affine obj\n";
     tlf.addLoop(std::move(A), 3);
-    AffineLoopNest &aff = tlf.alns[0];
+    AffineLoopNest<true> &aff = tlf.alns[0];
     aff.pruneBounds();
     EXPECT_EQ(aff.A.numRow(), 3);
 
@@ -135,7 +135,8 @@ TEST(AffineTest0, BasicAssertions) {
     aff.dump();
     llvm::errs() << "About to run first set of bounds tests\n";
     llvm::errs() << "\nPermuting loops 1 and 2\n";
-    auto affp021{aff.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
+    AffineLoopNest<false> affp021{
+        aff.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
     // Now that we've swapped loops 1 and 2, we should have
     // for m in 0:M-1, k in 1:N-1, n in 0:k-1
     affp021.dump();
@@ -161,11 +162,13 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
                                   " 0 1 0 0]")};
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 2);
-    AffineLoopNest &aff = tlf.alns.back();
+    AffineLoopNest<true> &aff = tlf.alns.back();
     llvm::errs() << "Original order:\n";
     aff.dump();
     // -2 - i - j >= 0 -> i + j <= -2
     // but i >= 0 and j >= 0 -> isEmpty()
+    aff.initializeComparator();
+    aff.pruneBounds();
     EXPECT_TRUE(aff.isEmpty());
 
     A = stringToIntMatrix("[0 2 1 -1; "
@@ -174,11 +177,10 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
                           "8 0 -1 -1; "
                           " 0 1 0 0]");
     tlf.addLoop(std::move(A), 2);
-    AffineLoopNest &aff2 = tlf.alns.back();
+    AffineLoopNest<true> &aff2 = tlf.alns.back();
     EXPECT_FALSE(aff2.isEmpty());
 
-    UnboundedAffineLoopNest affp10{
-        aff2.rotate(stringToIntMatrix("[0 1; 1 0]"))};
+    AffineLoopNest<false> affp10{aff2.rotate(stringToIntMatrix("[0 1; 1 0]"))};
     llvm::errs() << "Swapped order:\n";
     affp10.dump();
 
