@@ -91,7 +91,7 @@ struct BitSet {
     };
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-    constexpr Iterator begin() const {
+    inline Iterator begin() const {
         auto b{data.begin()};
         auto e{data.end()};
         if (b == e)
@@ -100,7 +100,7 @@ struct BitSet {
         return ++it;
     }
     constexpr static Iterator::End end() { return Iterator::End{}; };
-    constexpr size_t front() const {
+    inline size_t front() const {
         for (size_t i = 0; i < data.size(); ++i)
             if (data[i])
                 return 64 * i + std::countr_zero(data[i]);

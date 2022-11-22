@@ -7,8 +7,7 @@ struct LU {
 
     bool ldiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
-        auto FM = F.numRow();
-        assert(FM == M);
+        assert(F.numRow() == M);
         // // check unimodularity
         // Rational unit = 1;
         // for (size_t i = 0; i < FM; ++i)
@@ -51,7 +50,7 @@ struct LU {
                     if (Ymn.fnmadd(F(m, k), rhs(k, n)))
                         return true;
                 if (auto div = Ymn.safeDiv(F(m, m))) {
-                    rhs(m, n) = div.getValue();
+                    rhs(m, n) = *div;
                 } else {
                     return true;
                 }
@@ -62,8 +61,7 @@ struct LU {
 
     bool rdiv(MutPtrMatrix<Rational> rhs) const {
         auto [M, N] = rhs.size();
-        auto FN = F.numCol();
-        assert(FN == N);
+        assert(F.numCol() == N);
         // // check unimodularity
         // Rational unit = 1;
         // for (size_t i = 0; i < FN; ++i)
@@ -80,7 +78,7 @@ struct LU {
                     if (Ymn.fnmadd(rhs(m, k), F(k, n)))
                         return true;
                 if (auto div = Ymn.safeDiv(F(n, n))) {
-                    rhs(m, n) = div.getValue();
+                    rhs(m, n) = *div;
                 } else {
                     return true;
                 }
@@ -108,23 +106,20 @@ struct LU {
         return false;
     }
 
-    llvm::Optional<SquareMatrix<Rational>> inv() const {
+    std::optional<SquareMatrix<Rational>> inv() const {
         SquareMatrix<Rational> A = SquareMatrix<Rational>::identity(F.numCol());
-        if (!ldiv(A)) {
+        if (!ldiv(A))
             return A;
-        } else {
+        else
             return {};
-        }
     }
-    llvm::Optional<Rational> det() {
+    std::optional<Rational> det() {
         Rational d = F(0, 0);
-        for (size_t i = 1; i < F.numCol(); ++i) {
-            if (auto di = d.safeMul(F(i, i))) {
-                d = di.getValue();
-            } else {
+        for (size_t i = 1; i < F.numCol(); ++i)
+            if (auto di = d.safeMul(F(i, i)))
+                d = *di;
+            else
                 return {};
-            }
-        }
         return d;
     }
     llvm::SmallVector<unsigned> perm() const {
@@ -161,19 +156,18 @@ struct LU {
             }
             Rational Akkinv = A(k, k).inv();
             for (size_t i = k + 1; i < M; ++i) {
-                if (llvm::Optional<Rational> Aik = A(i, k).safeMul(Akkinv)) {
-                    A(i, k) = Aik.getValue();
-                } else {
+                if (std::optional<Rational> Aik = A(i, k).safeMul(Akkinv))
+                    A(i, k) = *Aik;
+                else
                     return {};
-                }
             }
             for (size_t j = k + 1; j < M; ++j) {
                 for (size_t i = k + 1; i < M; ++i) {
-                    if (llvm::Optional<Rational> Aikj =
+                    if (std::optional<Rational> Aikj =
                             A(i, k).safeMul(A(k, j))) {
-                        if (llvm::Optional<Rational> Aij =
-                                A(i, j).safeSub(Aikj.getValue())) {
-                            A(i, j) = Aij.getValue();
+                        if (std::optional<Rational> Aij =
+                                A(i, j).safeSub(*Aikj)) {
+                            A(i, j) = *Aij;
                             continue;
                         }
                     }

@@ -47,8 +47,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
             printVector(llvm::errs() << "included = ", included) << "\n";
             if (auto optlu = LU::fact(K)) {
                 SHOWLN(K);
-                if (auto optA2 = optlu.getValue().inv()) {
-                    SquareMatrix<Rational> &A2 = optA2.getValue();
+                if (auto optA2 = (*optlu).inv()) {
+                    SquareMatrix<Rational> &A2 = *optA2;
                     SHOWLN(A2);
                     SHOWLN(B);
 

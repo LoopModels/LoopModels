@@ -14,6 +14,7 @@
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
+#include <optional>
 // #include <mlir/Analysis/Presburger/Matrix.h>
 #include <numeric>
 #include <string>
@@ -101,7 +102,7 @@ template <std::integral T> std::tuple<T, T, T> gcdx(T a, T b) {
     return std::make_tuple(old_r, old_s, old_t);
 }
 
-std::pair<int64_t, int64_t> divgcd(int64_t x, int64_t y) {
+constexpr std::pair<int64_t, int64_t> divgcd(int64_t x, int64_t y) {
     if (x) {
         if (y) {
             int64_t g = gcd(x, y);
@@ -571,6 +572,10 @@ constexpr OffsetEnd operator+(OffsetEnd y, size_t x) {
     return OffsetEnd{y.offset - x};
 }
 
+template <typename T>
+concept RelativeOffset = std::same_as<T, End> || std::same_as<T, OffsetEnd> ||
+                         std::same_as<T, Begin> || std::same_as<T, OffsetBegin>;
+
 template <typename B, typename E> struct Range {
     [[no_unique_address]] B b;
     [[no_unique_address]] E e;
@@ -661,15 +666,15 @@ struct Colon {
                                                std::integral auto j) const {
         return Range<size_t, size_t>{size_t(i), size_t(j)};
     }
-    template <typename E>
+    template <RelativeOffset E>
     constexpr Range<size_t, E> operator()(std::integral auto i, E j) const {
         return Range<size_t, E>{size_t(i), j};
     }
-    template <typename B>
+    template <RelativeOffset B>
     constexpr Range<B, size_t> operator()(B i, std::integral auto j) const {
         return Range<B, size_t>{i, size_t(j)};
     }
-    template <typename B, typename E>
+    template <RelativeOffset B, RelativeOffset E>
     constexpr Range<B, E> operator()(B i, E j) const {
         return Range<B, E>{i, j};
     }
@@ -1461,17 +1466,6 @@ template <typename T> struct PtrMatrix {
 
     DEFINEMATRIXMEMBERCONST
 
-    bool operator==(const AbstractMatrix auto &B) const {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        if ((M != numRow()) || (N != numCol()))
-            return false;
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                if ((*this)(r, c) != B(r, c))
-                    return false;
-        return true;
-    }
     constexpr bool isSquare() const { return M == N; }
     // Vector<T> diag() const {
     //     size_t K = std::min(M, N);
@@ -1580,18 +1574,6 @@ template <typename T> struct MutPtrMatrix {
             for (size_t c = 0; c < N; ++c)
                 (*this)(r, c) /= b;
         return *this;
-    }
-
-    bool operator==(const AbstractMatrix auto &B) const {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        if ((M != numRow()) || (N != numCol()))
-            return false;
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                if ((*this)(r, c) != B(r, c))
-                    return false;
-        return true;
     }
     constexpr bool isSquare() const { return M == N; }
     // Vector<T> diag() const {
@@ -2008,29 +1990,6 @@ template <typename T, size_t S> struct Matrix<T, 0, 0, S> {
         assert(MM <= M);
         M = MM;
     }
-    bool operator==(const AbstractMatrix auto &B) const {
-        const size_t R = B.numRow();
-        const size_t C = B.numCol();
-        if ((M != R) || (N != C))
-            return false;
-        for (size_t r = 0; r < R; ++r)
-            for (size_t c = 0; c < C; ++c)
-                if ((*this)(r, c) != B(r, c))
-                    return false;
-        return true;
-    }
-
-    bool operator==(const Matrix<T, 0, 0, S> &B) const {
-        const size_t M = B.numRow();
-        const size_t N = B.numCol();
-        if ((M != numRow()) || (N != numCol()))
-            return false;
-        for (size_t r = 0; r < M; ++r)
-            for (size_t c = 0; c < N; ++c)
-                if ((*this)(r, c) != B(r, c))
-                    return false;
-        return true;
-    }
     Matrix<T, 0, 0, S> &operator=(T x) {
         const size_t M = numRow();
         const size_t N = numCol();
@@ -2317,7 +2276,7 @@ struct Rational {
         }
     }
 
-    constexpr llvm::Optional<Rational> safeAdd(Rational y) const {
+    constexpr std::optional<Rational> safeAdd(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
         bool o1 = __builtin_mul_overflow(numerator, yd, &a);
@@ -2325,7 +2284,7 @@ struct Rational {
         bool o3 = __builtin_mul_overflow(denominator, yd, &d);
         bool o4 = __builtin_add_overflow(a, b, &n);
         if ((o1 | o2) | (o3 | o4)) {
-            return llvm::Optional<Rational>();
+            return {};
         } else if (n) {
             auto [nn, nd] = divgcd(n, d);
             return Rational{nn, nd};
@@ -2333,16 +2292,14 @@ struct Rational {
             return Rational{0, 1};
         }
     }
-    constexpr Rational operator+(Rational y) const {
-        return safeAdd(y).getValue();
-    }
+    constexpr Rational operator+(Rational y) const { return *safeAdd(y); }
     constexpr Rational &operator+=(Rational y) {
-        llvm::Optional<Rational> a = *this + y;
-        assert(a.hasValue());
-        *this = a.getValue();
+        std::optional<Rational> a = *this + y;
+        assert(a.has_value());
+        *this = *a;
         return *this;
     }
-    constexpr llvm::Optional<Rational> safeSub(Rational y) const {
+    constexpr std::optional<Rational> safeSub(Rational y) const {
         auto [xd, yd] = divgcd(denominator, y.denominator);
         int64_t a, b, n, d;
         bool o1 = __builtin_mul_overflow(numerator, yd, &a);
@@ -2350,7 +2307,7 @@ struct Rational {
         bool o3 = __builtin_mul_overflow(denominator, yd, &d);
         bool o4 = __builtin_sub_overflow(a, b, &n);
         if ((o1 | o2) | (o3 | o4)) {
-            return llvm::Optional<Rational>();
+            return std::optional<Rational>();
         } else if (n) {
             auto [nn, nd] = divgcd(n, d);
             return Rational{nn, nd};
@@ -2359,24 +2316,24 @@ struct Rational {
         }
     }
     constexpr Rational operator-(Rational y) const {
-        return safeSub(y).getValue();
+        return *safeSub(y);
     }
     constexpr Rational &operator-=(Rational y) {
-        llvm::Optional<Rational> a = *this - y;
-        assert(a.hasValue());
-        *this = a.getValue();
+        std::optional<Rational> a = *this - y;
+        assert(a.has_value());
+        *this = *a;
         return *this;
     }
-    constexpr llvm::Optional<Rational> safeMul(int64_t y) const {
+    constexpr std::optional<Rational> safeMul(int64_t y) const {
         auto [xd, yn] = divgcd(denominator, y);
         int64_t n;
         if (__builtin_mul_overflow(numerator, yn, &n)) {
-            return llvm::Optional<Rational>();
+            return std::optional<Rational>();
         } else {
             return Rational{n, xd};
         }
     }
-    constexpr llvm::Optional<Rational> safeMul(Rational y) const {
+    constexpr std::optional<Rational> safeMul(Rational y) const {
         if ((numerator != 0) & (y.numerator != 0)) {
             auto [xn, yd] = divgcd(numerator, y.denominator);
             auto [xd, yn] = divgcd(denominator, y.numerator);
@@ -2384,7 +2341,7 @@ struct Rational {
             bool o1 = __builtin_mul_overflow(xn, yn, &n);
             bool o2 = __builtin_mul_overflow(xd, yd, &d);
             if (o1 | o2) {
-                return llvm::Optional<Rational>();
+                return std::optional<Rational>();
             } else {
                 return Rational{n, d};
             }
@@ -2393,10 +2350,10 @@ struct Rational {
         }
     }
     constexpr Rational operator*(int64_t y) const {
-        return safeMul(y).getValue();
+        return *safeMul(y);
     }
     constexpr Rational operator*(Rational y) const {
-        return safeMul(y).getValue();
+        return *safeMul(y);
     }
     constexpr Rational &operator*=(Rational y) {
         if ((numerator != 0) & (y.numerator != 0)) {
@@ -2423,25 +2380,25 @@ struct Rational {
         // return Rational{positive ? denominator : -denominator,
         //                 positive ? numerator : -numerator};
     }
-    constexpr llvm::Optional<Rational> safeDiv(Rational y) const {
+    constexpr std::optional<Rational> safeDiv(Rational y) const {
         return (*this) * y.inv();
     }
     constexpr Rational operator/(Rational y) const {
-        return safeDiv(y).getValue();
+        return *safeDiv(y);
     }
     // *this -= a*b
     constexpr bool fnmadd(Rational a, Rational b) {
-        if (llvm::Optional<Rational> ab = a.safeMul(b)) {
-            if (llvm::Optional<Rational> c = safeSub(ab.getValue())) {
-                *this = c.getValue();
+        if (std::optional<Rational> ab = a.safeMul(b)) {
+            if (std::optional<Rational> c = safeSub(*ab)) {
+                *this = *c;
                 return false;
             }
         }
         return true;
     }
     constexpr bool div(Rational a) {
-        if (llvm::Optional<Rational> d = safeDiv(a)) {
-            *this = d.getValue();
+        if (std::optional<Rational> d = safeDiv(a)) {
+            *this = *d;
             return false;
         }
         return true;
@@ -2529,7 +2486,7 @@ struct Rational {
         return binaryOp(Mul{}, *this, std::forward<B>(b));
     }
 };
-llvm::Optional<Rational> gcd(Rational x, Rational y) {
+std::optional<Rational> gcd(Rational x, Rational y) {
     return Rational{gcd(x.numerator, y.numerator),
                     lcm(x.denominator, y.denominator)};
 }
