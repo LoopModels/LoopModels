@@ -287,7 +287,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         for (llvm::User *use : user->users()) {
             if (visited.contains(use))
                 continue;
-            if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(use)) {
+            if (llvm::isa<llvm::StoreInst>(use)) {
                 auto memAccess = userToMemory.find(use);
                 if (memAccess == userToMemory.end())
                     continue; // load is not a part of the LoopBlock
@@ -310,7 +310,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                            unsigned nodeIndex) {
         if (!user || visited.contains(user))
             return;
-        if (llvm::LoadInst *l = llvm::dyn_cast<llvm::LoadInst>(user)) {
+        if (llvm::isa<llvm::LoadInst>(user)) {
             auto memAccess = userToMemory.find(user);
             if (memAccess == userToMemory.end())
                 return; // load is not a part of the LoopBlock
