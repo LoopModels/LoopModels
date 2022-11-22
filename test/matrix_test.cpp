@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 
 // Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
+TEST(SparseIndexingTest, BasicAssertions) {
     SmallSparseMatrix<int64_t> Asparse(3, 4);
     llvm::errs() << "&Asparse = " << &Asparse << "\n";
     Asparse(0, 1) = 5;
