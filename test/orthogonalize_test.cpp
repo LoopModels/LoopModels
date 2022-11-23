@@ -23,6 +23,7 @@
 [[maybe_unused]] static llvm::Optional<
     std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
+
     // need to construct matrix `A` of relationship
     // B*L = I
     // where L are the loop induct variables, and I are the array indices
@@ -89,6 +90,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                                   "0 0 0 0 0 0 0 1 0; "
                                   "-1 0 0 0 1 0 0 0 -1; "
                                   "0 0 0 0 0 0 0 0 1]")};
+
 
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 4);
