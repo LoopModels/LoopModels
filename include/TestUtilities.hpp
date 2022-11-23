@@ -81,7 +81,6 @@ struct TestLoopFunction {
     llvm::Value *createInt64() {
         return loadValueFromPtr(builder.getInt64Ty());
     }
-
     TestLoopFunction()
         : ctx{llvm::LLVMContext()}, builder{llvm::IRBuilder(ctx)},
           fmf{llvm::FastMathFlags()}, mod("TestModule", ctx), LI{}, DT{},
@@ -91,13 +90,13 @@ struct TestLoopFunction {
           F{llvm::Function::Create(
               FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo",
               mod)},
-          dl{"e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-"
-             "n8:16:32:64-S128"},
-          TTI{dl}, targetTripple{"x86_64-redhat-linux"}, TLII{targetTripple},
+          dl{&mod},
+          TTI{dl}, targetTripple{}, TLII{targetTripple},
           TLI{TLII}, AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{},
           ptr{builder.CreateIntToPtr(builder.getInt64(16000),
                                      builder.getInt64Ty())} {
 
+        
         fmf.set();
         builder.setFastMathFlags(fmf);
     }
