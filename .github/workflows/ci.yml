@@ -1,0 +1,11 @@
+name: CI
+on: [pull_request, push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v1
+    - uses: BSFishy/meson-build@v1.0.3
+      with:
+        action: test
