@@ -12,7 +12,10 @@ jobs:
     #     CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
     steps:
     - run: |
-        sudo apt install lld-15 tar meson clang llvm-15-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        sudo apt-add-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-11 main"
+        sudo apt-get update
+        sudo apt-get install -y llvm-15 llvm-15-dev clang-15 llvm-15-tools
+        sudo apt install tar meson clang libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
         printenv
         echo $PATH
         llvm-mca --version
