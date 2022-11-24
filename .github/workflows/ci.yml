@@ -39,9 +39,13 @@ jobs:
     - run: meson setup builddir/
       env:
         CC: gcc
+        LDFLAGS: "-L/usr/local/opt/llvm/lib"
+        CPPFLAGS: "-I/usr/local/opt/llvm/include"
         # CXX: clang++
     - run: meson test -C builddir/
       env:
+        LDFLAGS: "-L/usr/local/opt/llvm/lib"
+        CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CC: clang
         CXX: clang++
     - uses: actions/upload-artifact@v1
