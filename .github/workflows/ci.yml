@@ -11,16 +11,14 @@ jobs:
     #     CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
     steps:
     - run: |
-        printenv
         sudo apt install tar meson gcc clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        printenv
+        echo $PATH
+        echo llvm-mca --version
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
     - run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
     - run: echo $GITHUB_PATH
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v1
-      with:
-        version: "15.0"
     - run: |
         CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address -Db_coverage=true
         cd builddir
