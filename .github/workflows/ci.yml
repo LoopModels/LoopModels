@@ -3,16 +3,16 @@ on: [pull_request, push]
 jobs:
   test:
     runs-on: ubuntu-latest
-    env: 
-        PATH: $HOME/.local/bin:$PATH
-        LD_LIBRARY_PATH: $HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
-        PKG_CONFIG_PATH: $HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
-        C_INCLUDE_PATH: $HOME/.local/include:$C_INCLUDE_PATH
-        CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
+    # env: 
+    #     PATH: $HOME/.local/bin:$PATH
+    #     LD_LIBRARY_PATH: $HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
+    #     PKG_CONFIG_PATH: $HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
+    #     C_INCLUDE_PATH: $HOME/.local/include:$C_INCLUDE_PATH
+    #     CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
-    - run: sudo apt install meson gcc clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+    - run: sudo apt install tar meson gcc clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v1
       with:
