@@ -47,7 +47,7 @@ jobs:
         export CPLUS_INCLUDE_PATH=$HOME/.local/include/c++/v1:$HOME/.local/include:$CPLUS_INCLUDE_PATH
     - run: meson setup builddir
       env:
-        CC: gcc
+        CC: gcc-12
         LDFLAGS: "-L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         # CC_LD: lld
