@@ -12,7 +12,7 @@ jobs:
     #     CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
     steps:
     - run: |
-        sudo apt install tar meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        sudo apt install lld tar meson clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
         printenv
         echo $PATH
         llvm-mca --version
