@@ -36,7 +36,7 @@ jobs:
         python-version: '3.x'
     - run: brew install gcc
     - run: pip install meson ninja
-    - run: sudo brew install llvm@15 googletest google-benchmark ninja pkg-config cmake
+    - run: brew install llvm@15 googletest google-benchmark ninja pkg-config cmake
     - run: meson setup builddir/
       env:
         CC: gcc
