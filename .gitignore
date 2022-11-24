@@ -6,3 +6,4 @@ release_build*/
 benchmark/mybenchmark
 .gdb_history
 builddir/
+.vscode/
