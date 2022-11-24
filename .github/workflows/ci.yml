@@ -11,6 +11,12 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
+    - run: |
+        bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+        wget https://apt.llvm.org/llvm.sh
+        chmod +x llvm.sh
+        sudo ./llvm.sh 15 all
+        sudo apt install libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
     - run: meson setup builddir/
       env:
         CC: gcc
@@ -21,39 +27,40 @@ jobs:
         name: Linux_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
 
-  macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - run: brew install gcc
-    - run: pip install meson ninja
-    - run: meson setup builddir/
-      env:
-        CC: gcc
-    - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v1
-      if: failure()
-      with:
-        name: MacOS_Meson_Testlog
-        path: builddir/meson-logs/testlog.txt
+  # macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - uses: actions/setup-python@v1
+  #     with:
+  #       python-version: '3.x'
+  #   - run: brew install gcc
+  #   - run: pip install meson ninja
+  #   - run: meson setup builddir/
+  #     env:
+  #       CC: gcc
+  #   - run: meson test -C builddir/ -v
+  #   - uses: actions/upload-artifact@v1
+  #     if: failure()
+  #     with:
+  #       name: MacOS_Meson_Testlog
+  #       path: builddir/meson-logs/testlog.txt
 
-  windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - run: pip install meson ninja
-    - run: meson setup builddir/
-      env:
-        CC: gcc
-    - run: meson test -C builddir/ -v
-    - uses: actions/upload-artifact@v1
-      if: failure()
-      with:
-        name: Windows_Meson_Testlog
-        path: builddir/meson-logs/testlog.txt
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - uses: actions/setup-python@v1
+  #     with:
+  #       python-version: '3.x'
+  #   - run: pip install meson ninja
+
+  #   - run: meson setup builddir/
+  #     env:
+  #       CC: gcc
+  #   - run: meson test -C builddir/ -v
+  #   - uses: actions/upload-artifact@v1
+  #     if: failure()
+  #     with:
+  #       name: Windows_Meson_Testlog
+  #       path: builddir/meson-logs/testlog.txt
