@@ -12,9 +12,9 @@ jobs:
         python-version: '3.x'
     - run: pip install meson ninja
     - run: |
-        bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-        wget https://apt.llvm.org/llvm.sh
-        chmod +x llvm.sh
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+        sudo wget https://apt.llvm.org/llvm.sh
+        sudo chmod +x llvm.sh
         sudo ./llvm.sh 15 all
         sudo apt install libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
     - run: meson setup builddir/
