@@ -41,8 +41,8 @@ jobs:
         CC: gcc
         LDFLAGS: "-L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
-        CC_LD: lld
-        CXX_LD: lld
+        # CC_LD: lld
+        # CXX_LD: lld
         CXXFLAGS: "-stdlib: libc++" 
         # CXX: clang++
     - run: meson test -C builddir/
