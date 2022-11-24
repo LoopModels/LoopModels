@@ -36,12 +36,7 @@ jobs:
         python-version: '3.x'
     - run: brew install gcc
     - run: pip install meson ninja
-    - run: |
-        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-        sudo wget https://apt.llvm.org/llvm.sh
-        sudo chmod +x llvm.sh
-        sudo ./llvm.sh 15 all
-    - run: sudo brew install googletest google-benchmark ninja pkg-config cmake
+    - run: sudo brew install llvm@15 googletest google-benchmark ninja pkg-config cmake
     - run: meson setup builddir/
       env:
         CC: gcc
