@@ -15,7 +15,7 @@ jobs:
         wget https://apt.llvm.org/llvm.sh
         chmod +x llvm.sh
         sudo ./llvm.sh 15 all
-        sudo apt install tar meson clang libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        sudo apt install meson libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
         sudo apt-get install g++20 gcc-12
         sudo apt-get install --reinstall binutils
     - uses: actions/checkout@v2
@@ -23,7 +23,7 @@ jobs:
     - run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
     - run: echo $GITHUB_PATH
     - run: gcc --version
-    - run: llvm-config --version
+    - run: llvm-config-15 --version
     - run: |
         meson setup builddir
         cd builddir
