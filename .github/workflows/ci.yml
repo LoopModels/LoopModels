@@ -24,6 +24,6 @@ jobs:
     - run: echo $GITHUB_PATH
     - run: gcc --version
     - run: |
-        CC=gcc-12 CC_LD=lld-15 CXX_LD=lld-15 CXXFLAGS="" meson setup builddir -Db_santize=address
+        CC=gcc-12 CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address
         cd builddir
         meson test
