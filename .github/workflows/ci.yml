@@ -34,14 +34,11 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc
+    - run: brew install gcc-12 llvm@15 googletest google-benchmark ninja pkg-config cmake
     - run: pip install meson ninja
-    - run: brew install llvm@15 googletest google-benchmark ninja pkg-config cmake
-    - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
-    - run: echo $GITHUB_PATH
     - run: meson setup builddir/
       env:
-        CC: gcc
+        CC: gcc-12
     - run: meson test -C builddir/
     - uses: actions/upload-artifact@v1
       if: failure()
