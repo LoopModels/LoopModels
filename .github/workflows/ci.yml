@@ -10,7 +10,9 @@ jobs:
     #     C_INCLUDE_PATH: $HOME/.local/include:$C_INCLUDE_PATH
     #     CPLUS_INCLUDE_PATH: $HOME/.local/include:$CPLUS_INCLUDE_PATH
     steps:
-    - run: sudo apt install tar meson gcc clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+    - run: |
+        printenv
+        sudo apt install tar meson gcc clang llvm-dev libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
     - run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
