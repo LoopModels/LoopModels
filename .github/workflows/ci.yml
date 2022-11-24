@@ -38,8 +38,12 @@ jobs:
     - run: pip install meson ninja
     - run: meson setup builddir/
       env:
-        CC: gcc-12
+        CC: clang
+        CXX: clang++
     - run: meson test -C builddir/
+      env:
+        CC: clang
+        CXX: clang++
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
