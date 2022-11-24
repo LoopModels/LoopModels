@@ -37,6 +37,8 @@ jobs:
     - run: brew install gcc
     - run: pip install meson ninja
     - run: brew install llvm@15 googletest google-benchmark ninja pkg-config cmake
+    - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
+    - run: echo $GITHUB_PATH
     - run: meson setup builddir/
       env:
         CC: gcc
