@@ -16,6 +16,7 @@ jobs:
         chmod +x llvm.sh
         sudo ./llvm.sh 15
         sudo apt install tar meson clang libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        sudo apt-get install --reinstall binutils
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v1
     - run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
