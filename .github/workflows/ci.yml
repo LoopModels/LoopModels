@@ -28,6 +28,13 @@ jobs:
         path: builddir/meson-logs/testlog.txt
 
   macos:
+    env:
+      SDKROOT: $(xcrun --show-sdk-path)
+      PATH: $HOME/.local/bin:$PATH
+      LD_LIBRARY_PATH: $HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
+      PKG_CONFIG_PATH: $HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
+      C_INCLUDE_PATH: $HOME/.local/include:$C_INCLUDE_PATH
+      CPLUS_INCLUDE_PATH: $HOME/.local/include/c++/v1:$HOME/.local/include:$CPLUS_INCLUDE_PATH
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
