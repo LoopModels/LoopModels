@@ -36,18 +36,21 @@ jobs:
         python-version: '3.x'
     - run: brew install gcc llvm@15 googletest google-benchmark ninja pkg-config cmake
     - run: pip install meson ninja
-    - run: meson setup builddir/
+    - run: meson setup builddir
       env:
         CC: gcc
         LDFLAGS: "-L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
+        CC_LD: lld
+        CXX_LD: lld
+        CXXFLAGS: "-stdlib: libc++" 
         # CXX: clang++
     - run: meson test -C builddir/
       env:
+        CC: clang
+        CXX: clang++ 
         LDFLAGS: "-L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
-        CC: clang
-        CXX: clang++
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
