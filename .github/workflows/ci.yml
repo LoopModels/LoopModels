@@ -34,7 +34,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc-12 llvm@15 googletest google-benchmark ninja pkg-config cmake
+    - run: brew install gcc@12 llvm@15 googletest google-benchmark ninja pkg-config cmake
     - run: pip install meson ninja
     - run: meson setup builddir/
       env:
