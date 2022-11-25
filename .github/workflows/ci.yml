@@ -56,14 +56,14 @@ jobs:
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
-    - run: rm -rf builddir/
-    - run: meson setup builddir/
-      env:
-        CXX: g++-12
-        CXXFLAGS: "-stdlib=libstdc++"
-    - run: meson test -C builddir/
-      env: 
-        CXX: g++-12
+    # - run: rm -rf builddir/
+    # - run: meson setup builddir/
+    #   env:
+    #     CXX: g++-12
+    #     CXXFLAGS: "-stdlib=libstdc++"
+    # - run: meson test -C builddir/
+    #   env: 
+    #     CXX: g++-12
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -78,15 +78,7 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
-    # - run: wget -O winget.msixbundle https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-    - run: Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -OutFile winget.msixbundle
-      shell: pwsh
-    - name: install winget
-      shell: pwsh
-      run: |
-        Add-AppxPackage -path winget.msixbundle
-    - run: winget install -e --id LLVM.LLVM
-    #- run: winget install -e --id mesonbuild.meson
+    - run: choco install llvm
     - run: meson setup -C builddir
       env:
         CXX: g++
