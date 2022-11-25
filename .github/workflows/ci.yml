@@ -60,6 +60,7 @@ jobs:
     - run: meson setup builddir/
       env:
         CXX: g++-12
+        CXXFLAGS: "-stdlib=libstdc++"
     - run: meson test -C builddir/
       env: 
         CXX: g++-12
@@ -77,11 +78,16 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
+    - run: wget -O winget.msixbundle https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    - name: install winget
+      shell: pwsh
+      run: |
+        Add-AppxPackage -path winget.msixbundle
     - run: winget install -e --id LLVM.LLVM
     #- run: winget install -e --id mesonbuild.meson
-    - run: meson setup builddir/
+    - run: meson setup -C builddir
       env:
-        CC: gcc
+        CXX: g++
     - run: meson test -C builddir/ -v
     - uses: actions/upload-artifact@v1
       if: failure()
