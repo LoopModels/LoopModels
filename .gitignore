@@ -5,3 +5,5 @@ release_build*/
 .cache
 benchmark/mybenchmark
 .gdb_history
+builddir/
+.vscode/

@@ -1,0 +1,93 @@
+on: [pull_request, push]
+
+jobs:
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - run: pip install meson ninja
+    - run: |
+        sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+        sudo wget https://apt.llvm.org/llvm.sh
+        sudo chmod +x llvm.sh
+        sudo ./llvm.sh 15 all
+        sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
+        # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
+    - run: meson setup builddir/
+      env:
+        CXX: g++
+    - run: meson test -C builddir/
+      env: 
+        CXX: g++
+    - run: rm -rf builddir/
+    - run: meson setup builddir/
+      env:
+        CXX: clang++-15
+    - run: meson test -C builddir/
+      env: 
+        CXX: clang++-15
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: Linux_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  macos:
+    # env:
+
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
+    - run: pip install meson ninja
+    - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
+    - run: echo $(which clang++)
+    - run: meson setup builddir
+      env:
+        CXX: clang++
+        LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
+        CPPFLAGS: "-I/usr/local/opt/llvm/include"
+        CXXFLAGS: "-stdlib=libc++"
+    - run: meson test -C builddir/
+    # - run: rm -rf builddir/
+    # - run: meson setup builddir/
+    #   env:
+    #     CXX: g++-12
+    #     CXXFLAGS: "-stdlib=libstdc++"
+    # - run: meson test -C builddir/
+    #   env: 
+    #     CXX: g++-12
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
+
+  # https://discourse.llvm.org/t/no-llvm-config-exe-or-llvmconfig-cmake-in-pre-built-windows/57692
+  # Windows doesn't provide llvm-config.exe
+  # windows:
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - uses: actions/setup-python@v1
+  #     with:
+  #       python-version: '3.x'
+  #   - run: pip install meson ninja
+  #   - run: choco install llvm --force
+  #   - run: llvm-config --libdir
+  #   - run: meson setup builddir
+  #     env:
+  #       CXX: g++
+  #   - run: meson test -C builddir/ -v
+  #   - uses: actions/upload-artifact@v1
+  #     if: failure()
+  #     with:
+  #       name: Windows_Meson_Testlog
+  #       path: builddir/meson-logs/testlog.txt
