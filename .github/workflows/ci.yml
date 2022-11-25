@@ -78,7 +78,9 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
-    - run: wget -O winget.msixbundle https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    # - run: wget -O winget.msixbundle https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    - run: Invoke-WebRequest -Uri https://github.com/microsoft/winget-cli/releases/download/v1.4.3132-preview/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle -OutFile winget.msixbundle
+      shell: pwsh
     - name: install winget
       shell: pwsh
       run: |
