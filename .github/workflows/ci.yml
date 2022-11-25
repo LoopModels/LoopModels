@@ -56,6 +56,13 @@ jobs:
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
+    # - run: rm -rf builddir/
+    # - run: meson setup builddir/
+    #   env:
+    #     CXX: g++
+    # - run: meson test -C builddir/
+    #   env: 
+    #     CXX: g++
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -70,6 +77,8 @@ jobs:
       with:
         python-version: '3.x'
     - run: pip install meson ninja
+    - run: winget install -e --id LLVM.LLVM
+    #- run: winget install -e --id mesonbuild.meson
     - run: meson setup builddir/
       env:
         CC: gcc
