@@ -9,7 +9,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: pip install meson ninja
+    - run: pip install meson ninja gcovr
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
         sudo wget https://apt.llvm.org/llvm.sh
@@ -17,25 +17,24 @@ jobs:
         sudo ./llvm.sh 15 all
         sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
         # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
-    - run: meson setup builddir/
+    - run: meson setup builddirgcc -Db_santize=address -Db_coverage=true
       env:
         CXX: g++
-    - run: meson test -C builddir/
-      env: 
-        CXX: g++
-    - run: rm -rf builddir/
-    - run: meson setup builddir/
+    - run: meson test -C builddirgcc
+    - run: ninja coverage -C builddirgcc
+    - run: meson setup builddirclang -Db_santize=address -Db_coverage=true
       env:
         CXX: clang++-15
-    - run: meson test -C builddir/
-      env: 
-        CXX: clang++-15
+    - run: meson test -C builddirclang
+    - run: ninja coverage -C builddirclang
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
         name: Linux_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
-
+    - uses: codecov/codecov-action@v3
+      with:
+        file: builddirgcc/meson-logs/coverage.xml, builddirclang/meson-logs/coverage.xml
   macos:
     # env:
 
@@ -49,13 +48,14 @@ jobs:
     - run: pip install meson ninja
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
-    - run: meson setup builddir
+    - run: meson setup builddir -Db_santize=address -Db_coverage=true
       env:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
+    - run: ninja coverage -C builddir
     # - run: rm -rf builddir/
     # - run: meson setup builddir/
     #   env:
@@ -69,6 +69,9 @@ jobs:
       with:
         name: MacOS_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
+    - uses: codecov/codecov-action@v3
+      with:
+        file: builddir/meson-logs/coverage.xml
 
   # https://discourse.llvm.org/t/no-llvm-config-exe-or-llvmconfig-cmake-in-pre-built-windows/57692
   # Windows doesn't provide llvm-config.exe
