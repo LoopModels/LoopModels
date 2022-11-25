@@ -57,11 +57,19 @@ template <> struct std::iterator_traits<MockGraph> {
 
 static_assert(Graphs::AbstractGraph<MockGraph>);
 
-template <typename T> struct Equal {
-    T x;
-    bool operator()(T y) const { return x == y; }
-};
-template <typename T> static Equal<T> equals(T x) { return Equal<T>{x}; }
+// std::ranges::any_of not supported by libc++
+template <std::ranges::range A, typename T> bool anyEquals(A a, T y) {
+    for (auto x : a)
+        if (x == y)
+            return true;
+    return false;
+}
+
+// template <typename T> struct Equal {
+//     T x;
+//     bool operator()(T y) const { return x == y; }
+// };
+// template <typename T> static Equal<T> equals(T x) { return Equal<T>{x}; }
 
 TEST(GraphTest, BasicAssertions) {
     // graph
@@ -93,18 +101,28 @@ TEST(GraphTest, BasicAssertions) {
         llvm::errs() << "SCC: " << v << "\n";
     // NOTE: currently using inNeighbors instead of outNeighbors, so in
     // topological order.
-    EXPECT_EQ(scc0[0].size(), 1);
-    EXPECT_EQ(scc0[1].size(), 3);
-    EXPECT_EQ(scc0[2].size(), 3);
+    EXPECT_EQ(scc0[0].size(), size_t(1));
+    EXPECT_EQ(scc0[1].size(), size_t(3));
+    EXPECT_EQ(scc0[2].size(), size_t(3));
 
     EXPECT_TRUE(scc0[0][0]);
-    EXPECT_TRUE(std::ranges::any_of(scc0[0], equals(0)));
 
-    EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(2)));
-    EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(5)));
-    EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(6)));
+    EXPECT_TRUE(anyEquals(scc0[0], size_t(0)));
 
-    EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(1)));
-    EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(3)));
-    EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(4)));
+    EXPECT_TRUE(anyEquals(scc0[1], size_t(2)));
+    EXPECT_TRUE(anyEquals(scc0[1], size_t(5)));
+    EXPECT_TRUE(anyEquals(scc0[1], size_t(6)));
+
+    EXPECT_TRUE(anyEquals(scc0[2], size_t(1)));
+    EXPECT_TRUE(anyEquals(scc0[2], size_t(3)));
+    EXPECT_TRUE(anyEquals(scc0[2], size_t(4)));
+    // EXPECT_TRUE(std::ranges::any_of(scc0[0], equals(0)));
+
+    // EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(2)));
+    // EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(5)));
+    // EXPECT_TRUE(std::ranges::any_of(scc0[1], equals(6)));
+
+    // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(1)));
+    // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(3)));
+    // EXPECT_TRUE(std::ranges::any_of(scc0[2], equals(4)));
 }
