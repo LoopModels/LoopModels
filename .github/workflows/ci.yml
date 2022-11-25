@@ -47,11 +47,12 @@ jobs:
         python-version: '3.x'
     - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
     - run: pip install meson ninja
-    - run: echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
+    - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
+    - run: echo $(which clang++)
     - run: meson setup builddir
       env:
         CXX: clang++
-        LDFLAGS: "-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
+        LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
