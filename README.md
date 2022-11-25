@@ -1,7 +1,7 @@
 
 ### LoopModels
 
-[![codecov](https://codecov.io/github/JuliaSIMD/LoopModels/branch/master/graph/badge.svg?token=nokmK2kmhT)](https://codecov.io/github/JuliaSIMD/LoopModels)
+[![codecov](https://codecov.io/github/JuliaSIMD/LoopModels/branch/main/graph/badge.svg?token=nokmK2kmhT)](https://codecov.io/github/JuliaSIMD/LoopModels)
 
 ###### Description
 
