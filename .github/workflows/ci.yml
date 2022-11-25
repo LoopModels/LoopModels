@@ -79,7 +79,7 @@ jobs:
         python-version: '3.x'
     - run: pip install meson ninja
     - run: choco install llvm
-    - run: meson setup -C builddir
+    - run: meson setup builddir
       env:
         CXX: g++
     - run: meson test -C builddir/ -v
