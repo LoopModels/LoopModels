@@ -2,7 +2,9 @@
 #include "BitSets.hpp"
 #include "Macro.hpp"
 #include "Math.hpp"
+#include "llvm/ADT/SmallPtrSet.h"
 #include <cstddef>
+#include <cwchar>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Value.h>
@@ -160,7 +162,12 @@ struct PredicatedChain {
                 return true;
         return false;
     }
-    void reverse() { std::ranges::reverse(chain); }
+    void reverse() {
+	for (size_t i = 0; i < (chain.size()>>1); ++i)
+	    std::swap(chain[i], chain[chain.size()-1-i]);
+	// std::ranges::reverse not support by libc++ yet.
+	// std::ranges::reverse(chain);
+    }
     void clear() { chain.clear(); }
     void truncate(size_t i) { chain.truncate(i); }
     auto begin() { return chain.begin(); }
