@@ -14,7 +14,6 @@
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "MemoryAccess.hpp"
-#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
