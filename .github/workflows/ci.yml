@@ -45,7 +45,7 @@ jobs:
       with:
         python-version: '3.x'
     - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
-    - run: pip install meson ninja
+    - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
     - run: meson setup builddir -Db_santize=address -Db_coverage=true
