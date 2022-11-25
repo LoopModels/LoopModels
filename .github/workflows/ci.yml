@@ -56,13 +56,13 @@ jobs:
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
-    # - run: rm -rf builddir/
-    # - run: meson setup builddir/
-    #   env:
-    #     CXX: g++
-    # - run: meson test -C builddir/
-    #   env: 
-    #     CXX: g++
+    - run: rm -rf builddir/
+    - run: meson setup builddir/
+      env:
+        CXX: g++-12
+    - run: meson test -C builddir/
+      env: 
+        CXX: g++-12
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
