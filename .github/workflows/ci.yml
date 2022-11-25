@@ -50,14 +50,11 @@ jobs:
     - run: echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
     - run: meson setup builddir
       env:
+        CXX: clang++
         LDFLAGS: "-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
     - run: meson test -C builddir/
-      env:
-        CXX: clang++
-        LDFLAGS: "-L/usr/local/opt/llvm/lib"
-        CPPFLAGS: "-I/usr/local/opt/llvm/include"
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
