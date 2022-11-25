@@ -15,7 +15,7 @@ jobs:
         sudo wget https://apt.llvm.org/llvm.sh
         sudo chmod +x llvm.sh
         sudo ./llvm.sh 15 all
-        sudo apt install g++ libgtest-dev libbenchmark-dev ninja-build pkg-config cmake
+        sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
         # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
     - run: meson setup builddir/
       env:
@@ -36,44 +36,33 @@ jobs:
         name: Linux_Meson_Testlog
         path: builddir/meson-logs/testlog.txt
 
-  # macos:
-  #   # env:
+  macos:
+    # env:
 
-  #   runs-on: macos-latest
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   - uses: actions/setup-python@v1
-  #     with:
-  #       python-version: '3.x'
-  #   - run: brew install gcc llvm@15 googletest google-benchmark ninja pkg-config cmake
-  #   - run: pip install meson ninja
-  #   - run: |
-  #       export SDKROOT=$(xcrun --show-sdk-path)
-  #       export PATH=$HOME/.local/bin:$PATH
-  #       export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-unknown-linux-gnu/:$HOME/.local/lib:$LD_LIBRARY_PATH
-  #       export PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig:$PKG_CONFIG_PATH
-  #       export C_INCLUDE_PATH=$HOME/.local/include:$C_INCLUDE_PATH
-  #       export CPLUS_INCLUDE_PATH=$HOME/.local/include/c++/v1:$HOME/.local/include:$CPLUS_INCLUDE_PATH
-  #   - run: meson setup builddir
-  #     env:
-  #       CC: gcc-12
-  #       LDFLAGS: "-L/usr/local/opt/llvm/lib"
-  #       CPPFLAGS: "-I/usr/local/opt/llvm/include"
-  #       # CC_LD: lld
-  #       # CXX_LD: lld
-  #       CXXFLAGS: "-stdlib=libstdc++"
-  #       # CXX: clang++
-  #   - run: meson test -C builddir/
-  #     env:
-  #       CC: clang
-  #       CXX: clang++ 
-  #       LDFLAGS: "-L/usr/local/opt/llvm/lib"
-  #       CPPFLAGS: "-I/usr/local/opt/llvm/include"
-  #   - uses: actions/upload-artifact@v1
-  #     if: failure()
-  #     with:
-  #       name: MacOS_Meson_Testlog
-  #       path: builddir/meson-logs/testlog.txt
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
+    - run: pip install meson ninja
+    - run: echo "/opt/homebrew/opt/llvm/bin" >> $GITHUB_PATH
+    - run: meson setup builddir
+      env:
+        LDFLAGS: "-L/opt/homebrew/opt/llvm/lib/c++ -Wl,-rpath,/opt/homebrew/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
+        CPPFLAGS: "-I/usr/local/opt/llvm/include"
+        CXXFLAGS: "-stdlib=libc++"
+    - run: meson test -C builddir/
+      env:
+        CXX: clang++
+        LDFLAGS: "-L/usr/local/opt/llvm/lib"
+        CPPFLAGS: "-I/usr/local/opt/llvm/include"
+    - uses: actions/upload-artifact@v1
+      if: failure()
+      with:
+        name: MacOS_Meson_Testlog
+        path: builddir/meson-logs/testlog.txt
 
   # windows:
   #   runs-on: windows-latest
