@@ -7,3 +7,5 @@ benchmark/mybenchmark
 .gdb_history
 builddir/
 .vscode/
+latex/
+html/

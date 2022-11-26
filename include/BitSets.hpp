@@ -15,8 +15,8 @@
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 
-// A set of `size_t` elements.
-// Initially constructed
+/// A set of `size_t` elements.
+/// Initially constructed
 struct BitSet {
     [[no_unique_address]] llvm::SmallVector<uint64_t> data;
     // size_t operator[](size_t i) const {

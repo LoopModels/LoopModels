@@ -28,8 +28,8 @@ bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
     }
     return false;
 }
-// Returns maximum number
-// of matching from M to N
+/// Returns maximum number
+/// of matching from M to N
 std::pair<size_t, llvm::SmallVector<int>>
 maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
     // An array to keep track of the

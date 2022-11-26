@@ -79,15 +79,15 @@ struct LiteralComparator {
         return y[0] <= x;
     }
 };
-// BaseComparator defines all other comparator methods as a function of
-// `greaterEqual`, so that `greaterEqual` is the only one that needs to be
-// implemented.
-// An assumption is that index `0` is a literal constant, and only indices >0
-// are symbolic. Thus, we can shift index-0 to swap between `(>/<)=` and ``>/<`
-// comparisons.
-//
-// Note: only allowed to return `true` if known
-// therefore, `a > b -> false` does not imply `a <= b`
+/// BaseComparator defines all other comparator methods as a function of
+/// `greaterEqual`, so that `greaterEqual` is the only one that needs to be
+/// implemented.
+/// An assumption is that index `0` is a literal constant, and only indices >0
+/// are symbolic. Thus, we can shift index-0 to swap between `(>/<)=` and ``>/<`
+/// comparisons.
+///
+/// Note: only allowed to return `true` if known
+/// therefore, `a > b -> false` does not imply `a <= b`
 template <typename T> struct BaseComparator {
     inline size_t getNumConstTerms() const {
         return static_cast<const T *>(this)->getNumConstTermsImpl();
