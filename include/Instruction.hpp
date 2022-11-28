@@ -5,8 +5,12 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Intrinsics.h>
+#include <llvm/IR/Type.h>
+#include <llvm/Support/Alignment.h>
+#include <llvm/Support/Casting.h>
 #include <llvm/Support/InstructionCost.h>
 
 struct RecipThroughputLatency {
@@ -14,6 +18,10 @@ struct RecipThroughputLatency {
     llvm::InstructionCost latency;
     bool isValid() const {
         return recipThroughput.isValid() && latency.isValid();
+    }
+    static RecipThroughputLatency getInvalid() {
+        return {llvm::InstructionCost::getInvalid(),
+                llvm::InstructionCost::getInvalid()};
     }
 };
 
@@ -50,6 +58,26 @@ struct Instruction {
         assert((id != x) || (ptr.val != nullptr));
         return id == x;
     }
+    bool isInstruction(unsigned opCode) const { return id == opCode; }
+    bool isShuffle() const {
+        return isInstruction(llvm::Instruction::ShuffleVector);
+    }
+    bool isFcmp() const { return isInstruction(llvm::Instruction::FCmp); }
+    bool isIcmp() const { return isInstruction(llvm::Instruction::ICmp); }
+    bool isCmp() const { return isFcmp() || isIcmp(); }
+    bool isSelect() const { return isInstruction(llvm::Instruction::Select); }
+    bool isExtract() const {
+        return isInstruction(llvm::Instruction::ExtractElement);
+    }
+    bool isInsert() const {
+        return isInstruction(llvm::Instruction::InsertElement);
+    }
+    bool isExtractValue() const {
+        return isInstruction(llvm::Instruction::ExtractValue);
+    }
+    bool isInsertValue() const {
+        return isInstruction(llvm::Instruction::InsertValue);
+    }
     RecipThroughputLatency getCost(unsigned int vectorWidth) const {
         assert(vectorWidth > 0);
         unsigned int i = 0;
@@ -64,6 +92,14 @@ struct Instruction {
     getCostLog2VectorWidth(unsigned int log2VectorWidth) const {
         return costs[log2VectorWidth];
     }
+    static llvm::Type *getType(llvm::Type *T, unsigned int vectorWidth) {
+        if (vectorWidth == 1)
+            return T;
+        return llvm::FixedVectorType::get(T, vectorWidth);
+    }
+    llvm::Type *getType(unsigned int vectorWidth) const {
+        return getType(type, vectorWidth);
+    }
 #if LLVM_VERSION_MAJOR >= 16
     llvm::TargetTransformInfo::OperandValueInfo
     getOperandInfo(unsigned int i) const {
@@ -72,11 +108,9 @@ struct Instruction {
             return TTI.getOperandInfo(opi->ptr.val);
         return TTI::OK_AnyValue;
     }
-    RecipThroughputLatency unnaryArithmeticCost(unsigned int vectorWidth) {
+    RecipThroughputLatency calcUnaryArithmeticCost(unsigned int vectorWidth) {
         auto op0info = getOperandInfo(0);
-        llvm::Type *T = type;
-        if (vectorWidth > 1)
-            T = llvm::FixedVectorType::get(T, vectorWidth);
+        llvm::Type *T = getType(vectorWidth);
         return {
             TTI.getArithmeticInstrCost(
                 id, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info),
@@ -84,12 +118,10 @@ struct Instruction {
                     id, T, llvm::TargetTransformInfo::TCK_Latency, op0info)
         }
     }
-    RecipThroughputLatency binaryArithmeticCost(unsigned int vectorWidth) {
+    RecipThroughputLatency calcBinaryArithmeticCost(unsigned int vectorWidth) {
         auto op0info = getOperandInfo(0);
         auto op1info = getOperandInfo(1);
-        llvm::Type *T = type;
-        if (vectorWidth > 1)
-            T = llvm::FixedVectorType::get(T, vectorWidth);
+        llvm::Type *T = getType(vectorWidth);
         return {
             TTI.getArithmeticInstrCost(
                 id, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info,
@@ -125,7 +157,7 @@ struct Instruction {
         return std::make_pair(llvm::TargetTransformInfo::OK_AnyValue,
                               llvm::TargetTransformInfo::OP_None);
     }
-    RecipThroughputLatency unaryArithmeticCost(unsigned int vectorWidth) {
+    RecipThroughputLatency calcUnaryArithmeticCost(unsigned int vectorWidth) {
         auto op0info = getOperandInfo(0);
         llvm::Type *T = type;
         if (vectorWidth > 1)
@@ -139,12 +171,10 @@ struct Instruction {
                     op0info.first, llvm::TargetTransformInfo::OK_AnyValue,
                     op0info.second)};
     }
-    RecipThroughputLatency binaryArithmeticCost(unsigned int vectorWidth) {
+    RecipThroughputLatency calcBinaryArithmeticCost(unsigned int vectorWidth) {
         auto op0info = getOperandInfo(0);
         auto op1info = getOperandInfo(1);
-        llvm::Type *T = type;
-        if (vectorWidth > 1)
-            T = llvm::FixedVectorType::get(T, vectorWidth);
+        llvm::Type *T = getType(vectorWidth);
         return {
             TTI.getArithmeticInstrCost(
                 id, T, llvm::TargetTransformInfo::TCK_RecipThroughput,
@@ -154,6 +184,73 @@ struct Instruction {
                 op1info.first, op0info.second, op1info.second)};
     }
 #endif
+    bool operandIsLoad(unsigned int i = 0) const {
+        return operands[i]->isLoad();
+    }
+    bool userIsStore(unsigned int i) const { return users[i]->isLoad(); }
+    bool userIsStore() const {
+        for (auto u : users)
+            if (u->isStore())
+                return true;
+        return false;
+    }
+    llvm::TargetTransformInfo::CastContextHint getCastContext() const {
+        if (operandIsLoad() || userIsStore())
+            return llvm::TargetTransformInfo::CastContextHint::Normal;
+        // TODO: check for whether mask, interleave, or reversed is likely.
+        return llvm::TargetTransformInfo::CastContextHint::None;
+    }
+    RecipThroughputLatency calcCastCost(unsigned int vectorWidth) {
+        llvm::Type *srcT = getType(operands.front()->type, vectorWidth);
+        llvm::Type *dstT = getType(vectorWidth);
+        llvm::TargetTransformInfo::CastContextHint ctx = getCastContext();
+        return {TTI.getCastInstrCost(
+                    id, dstT, srcT, ctx,
+                    llvm::TargetTransformInfo::TCK_RecipThroughput),
+                TTI.getCastInstrCost(id, dstT, srcT, ctx,
+                                     llvm::TargetTransformInfo::TCK_Latency)};
+    }
+    llvm::CmpInst::Predicate getPredicate() const {
+        if (isSelect())
+            return operands.front()->getPredicate();
+        assert(isCmp());
+        if (auto cmp = llvm::dyn_cast<llvm::CmpInst>(ptr.val))
+            return cmp->getPredicate();
+        return isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE
+                        : llvm::CmpInst::BAD_ICMP_PREDICATE;
+    }
+    RecipThroughputLatency calcCmpSelectCost(unsigned int vectorWidth) {
+        llvm::Type *T = getType(vectorWidth);
+        llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);
+        llvm::CmpInst::Predicate pred = getPredicate();
+        return {TTI.getCmpSelInstrCost(
+                    id, T, cmpT, pred,
+                    llvm::TargetTransformInfo::TCK_RecipThroughput),
+                TTI.getCmpSelInstrCost(id, T, cmpT, pred,
+                                       llvm::TargetTransformInfo::TCK_Latency)};
+    }
+    RecipThroughputLatency calcCallCost(unsigned int vectorWidth) {
+        llvm::Type *T = getType(vectorWidth);
+        llvm::SmallVector<llvm::Type *, 4> argTypes;
+        for (auto op : operands)
+            argTypes.push_back(op->getType(vectorWidth));
+        return {TTI.getCallInstrCost(
+                    ptr.func, T, argTypes,
+                    llvm::TargetTransformInfo::TCK_RecipThroughput),
+                TTI.getCallInstrCost(ptr.func, T, argTypes,
+                                     llvm::TargetTransformInfo::TCK_Latency)};
+    }
+    RecipThroughputLatency
+    calculateCostContiguousLoadStore(unsigned int vectorWidth) {
+        constexpr unsigned int AddressSpace = 0;
+        llvm::Type *T = getType(vectorWidth);
+        llvm::Align alignment = ptr.ref->getAlignment();
+        return {
+            TTI.getMemoryOpCost(id, T, alignment, AddressSpace,
+                                llvm::TargetTransformInfo::TCK_RecipThroughput),
+            TTI.getMemoryOpCost(id, T, alignment, AddressSpace,
+                                llvm::TargetTransformInfo::TCK_Latency)};
+    }
     RecipThroughputLatency calculateCost(unsigned int vectorWidth) {
         switch (id) {
         case llvm::Instruction::Add:
@@ -172,20 +269,39 @@ struct Instruction {
         case llvm::Instruction::SDiv:
         case llvm::Instruction::SRem:
         case llvm::Instruction::UDiv:
-        case llvm::Instruction::URem:
         case llvm::Instruction::FRem: // TODO: check if frem is supported?
-                                      // two arg arithmetic cost
-                                      // TTI.getOperandInfo() to get op info;
-            return binaryArithmeticCost(vectorWidth);
+        case llvm::Instruction::URem:
+            // two arg arithmetic cost
+            return calcBinaryArithmeticCost(vectorWidth);
         case llvm::Instruction::FNeg:
             // one arg arithmetic cost
-            return unaryArithmeticCost(vectorWidth);
+            return calcUnaryArithmeticCost(vectorWidth);
+        case llvm::Instruction::Trunc:
+        case llvm::Instruction::ZExt:
+        case llvm::Instruction::SExt:
+        case llvm::Instruction::FPTrunc:
+        case llvm::Instruction::FPExt:
+        case llvm::Instruction::FPToUI:
+        case llvm::Instruction::FPToSI:
+        case llvm::Instruction::UIToFP:
+        case llvm::Instruction::SIToFP:
+        case llvm::Instruction::IntToPtr:
+        case llvm::Instruction::PtrToInt:
+        case llvm::Instruction::BitCast:
+        case llvm::Instruction::AddrSpaceCast:
+            // one arg cast cost
+            return calcCastCost(vectorWidth);
         case llvm::Instruction::ICmp:
         case llvm::Instruction::FCmp:
-
+        case llvm::Instruction::Select:
+            return calcCmpSelectCost(vectorWidth);
+        case llvm::Instruction::Call:
+            return calcCallCost(vectorWidth);
         case llvm::Instruction::Load:
         case llvm::Instruction::Store:
-            return calculateCostLoadStore(vectorWidth);
+            return calculateCostContiguousLoadStore(vectorWidth);
+        default:
+            return RecipThroughputLatency::getInvalid();
         }
     }
 };

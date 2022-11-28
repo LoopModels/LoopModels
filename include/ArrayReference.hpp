@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
+#include <llvm/Support/Alignment.h>
 #include <llvm/Support/raw_ostream.h>
 
 // `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
@@ -29,13 +30,15 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
-    [[no_unique_address]] unsigned rank;
+    [[no_unique_address]] llvm::Align alignment;
 
     ArrayReference() = delete;
 
     size_t getArrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
+
+    constexpr llvm::Align getAlignment() const { return alignment; }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
     // 	return dim*numLoops +
     // }
@@ -65,32 +68,41 @@ struct ArrayReference {
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
         : basePointer(a.basePointer), loop(a.loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
+          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets),
+          alignment(a.alignment) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
                    PtrMatrix<int64_t> newInds)
         : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
+          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets),
+          alignment(a.alignment) {
         indexMatrix() = newInds;
+    }
+    static llvm::Align typeAlignment(llvm::Type *T) {
+        return llvm::Align{T->getScalarSizeInBits() / 8};
     }
     ArrayReference(const llvm::SCEVUnknown *basePointer,
                    AffineLoopNest<true> *loop)
-        : basePointer(basePointer), loop(loop){};
+        : basePointer(basePointer), loop(loop),
+          alignment(typeAlignment(basePointer->getType())){};
     ArrayReference(const llvm::SCEVUnknown *basePointer,
                    AffineLoopNest<true> &loop)
-        : basePointer(basePointer), loop(&loop){};
+        : basePointer(basePointer), loop(&loop),
+          alignment(typeAlignment(basePointer->getType())){};
     ArrayReference(const llvm::SCEVUnknown *basePointer,
                    AffineLoopNest<true> *loop,
                    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
         : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)){};
+          symbolicOffsets(std::move(symbolicOffsets)),
+          alignment(typeAlignment(basePointer->getType())){};
     ArrayReference(const llvm::SCEVUnknown *basePointer,
                    AffineLoopNest<true> *loop,
                    llvm::SmallVector<const llvm::SCEV *, 3> sizes,
                    llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
         : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
-          symbolicOffsets(std::move(symbolicOffsets)){};
+          symbolicOffsets(std::move(symbolicOffsets)),
+          alignment(typeAlignment(basePointer->getType())){};
 
     void resize(size_t d) {
         sizes.resize(d);
@@ -101,7 +113,8 @@ struct ArrayReference {
         size_t dim,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)) {
+          symbolicOffsets(std::move(symbolicOffsets)),
+          alignment(typeAlignment(basePointer->getType())) {
         resize(dim);
     };
     ArrayReference(
@@ -109,7 +122,8 @@ struct ArrayReference {
         size_t dim,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(&loop),
-          symbolicOffsets(std::move(symbolicOffsets)) {
+          symbolicOffsets(std::move(symbolicOffsets)),
+          alignment(typeAlignment(basePointer->getType())) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }
