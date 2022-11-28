@@ -157,7 +157,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     // construct indices
     // ind mat, loops currently indexed from outside-in
-    LoopBlock lblock;
+    LinearProgramLoopBlock lblock;
     // B[n, m]
     ArrayReference BmnInd{scevB, &loopMN, 2};
     {
@@ -753,7 +753,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     // SHOWLN(sch2_5_3.getOmega());
     // SHOWLN(sch1_6.getOmega());
     // SHOWLN(sch1_7.getOmega());
-    LoopBlock iOuterLoopNest;
+    LinearProgramLoopBlock iOuterLoopNest;
     llvm::SmallVector<MemoryAccess, 0> iOuterMem;
     iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
 
@@ -826,7 +826,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
         }
     }
 
-    LoopBlock jOuterLoopNest;
+    LinearProgramLoopBlock jOuterLoopNest;
     llvm::SmallVector<MemoryAccess, 0> jOuterMem;
     jOuterMem.emplace_back(xInd1, Xstore_0, sch0_0, false); // 0
     llvm::SmallVector<unsigned, 8> sch0_1(1 + 1);
@@ -1079,7 +1079,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     assert(!allZero(d.dependenceSatisfaction.tableau(
         d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 
-    LoopBlock loopBlock;
+    LinearProgramLoopBlock loopBlock;
     MemoryAccess mSchLoad0(Atgt0, Aload_ip1_j, schLoad0, true);
     loopBlock.memory.push_back(&mSchLoad0);
     MemoryAccess mSchLoad1(Atgt1, Aload_i_jp1, schLoad1, true);
@@ -1258,7 +1258,7 @@ TEST(ConvReversePass, BasicAssertions) {
     //     }
     //   }
     // }
-    LoopBlock loopBlock;
+    LinearProgramLoopBlock loopBlock;
     llvm::SmallVector<unsigned, 8> sch_0(4 + 1);
     llvm::SmallVector<unsigned, 8> sch_1 = sch_0;
     //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;

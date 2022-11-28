@@ -31,7 +31,7 @@ template <std::integral I>
 [[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
                                                 const I &x) {
     for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
-        if (*it < x)
+	if (*it < x)
             continue;
         if (*it > x)
             v.insert(it, x);
@@ -39,7 +39,6 @@ template <std::integral I>
     }
     v.push_back(x);
 }
-
 struct ScheduledNode {
     [[no_unique_address]] BitSet memory{};
     [[no_unique_address]] BitSet inNeighbors{};
@@ -165,7 +164,7 @@ resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
 // for (i = eachindex(y)){
 //   f(m, ...); // Omega = [2, _, 0]
 // }
-struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
+struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -212,7 +211,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
     llvm::ArrayRef<ScheduledNode> getVerticies() const { return nodes; }
     struct OutNeighbors {
-        LoopBlock &loopBlock;
+        LinearProgramLoopBlock &loopBlock;
         ScheduledNode &node;
         // size_t size()const{return node.num
     };
@@ -1305,7 +1304,7 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const LoopBlock &lblock) {
+                                         const LinearProgramLoopBlock &lblock) {
         os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
         for (size_t i = 0; i < lblock.nodes.size(); ++i) {
             const auto &v = lblock.nodes[i];
@@ -1359,12 +1358,12 @@ struct LoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
 };
 
-template <> struct std::iterator_traits<LoopBlock::Graph> {
+template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
     using difference_type = ptrdiff_t;
     using iterator_category = std::forward_iterator_tag;
     using value_type = ScheduledNode;
     using reference_type = ScheduledNode &;
     using pointer_type = ScheduledNode *;
 };
-static_assert(std::ranges::range<LoopBlock::Graph>);
-static_assert(Graphs::AbstractGraph<LoopBlock::Graph>);
+static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
+static_assert(Graphs::AbstractGraph<LinearProgramLoopBlock::Graph>);

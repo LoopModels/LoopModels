@@ -23,6 +23,12 @@ struct Predicate {
     bool operator==(const Predicate &p) const {
         return (condition == p.condition) && (flip == p.flip);
     }
+    enum MatchResult { NoMatch, Match, MatchAndFlip };
+    MatchResult match(const Predicate &p) const {
+        if (condition == p.condition)
+            return flip == p.flip ? Match : MatchAndFlip;
+        return NoMatch;
+    }
 };
 struct Predicates {
     [[no_unique_address]] llvm::SmallVector<Predicate, 3> pred;
@@ -63,26 +69,63 @@ struct Predicates {
     auto end() { return pred.end(); }
     auto begin() const { return pred.begin(); }
     auto end() const { return pred.end(); }
-    llvm::Optional<Predicates> operator&(const Predicates p) const {
+    void clear() { pred.clear(); }
+    bool empty() const { return pred.empty(); }
+    bool emptyIntersection(const Predicates &p) const {
+        for (auto a : *this)
+            for (auto b : p)
+                if (a.match(b) == Predicate::MatchAndFlip)
+                    return true;
+        return false;
+    }
+    /// Returns a new predicate if the intersection is non-empty
+    std::optional<Predicates> operator&(const Predicates &p) const {
+	auto x = llvm::Intrinsic::sqrt;
         Predicates ret;
         BitSet pmatch;
         for (auto a : *this) {
             for (size_t i = 0; i < p.pred.size(); ++i) {
                 auto b = p.pred[i];
                 if (a.condition == b.condition) {
-                    if (a.flip != b.flip) {
+                    if (a.flip != b.flip)
                         return {};
-                    } else {
-                        pmatch.insert(i);
-                    }
+                    pmatch.insert(i);
                 }
             }
             ret.pred.push_back(a);
         }
+        // Add the remaining predicates from p
         for (size_t i = 0; i < p.pred.size(); ++i)
             if (!pmatch[i])
                 ret.pred.push_back(p.pred[i]);
         return ret;
+    }
+    /// Returns a new predicate if the union is can be expressed as
+    /// an intersection of predicates from `a` or `b` in `a | b` expression
+    std::optional<Predicates> operator|(Predicates p) const {
+        switch (size()) {
+        case 0:
+            return *this;
+        case 1:
+            switch (p.size()) {
+            case 0:
+                return p;
+            case 1:
+                switch (pred[0].match(p.pred[0])) {
+                case Predicate::Match:
+                    return p;
+                case Predicate::MatchAndFlip:
+                    return Predicates{};
+                case Predicate::NoMatch:
+                    break;
+                }
+            default:
+                break;
+            }
+        default:
+            break;
+        }
+        return {};
     }
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                          const Predicates &pred) {
@@ -128,6 +171,8 @@ struct PredicatedBasicBlock {
     bool operator==(const PredicatedBasicBlock &pbb) const {
         return (basicBlock == pbb.basicBlock) && (predicates == pbb.predicates);
     }
+    auto begin() { return basicBlock->begin(); }
+    auto end() { return basicBlock->end(); }
 };
 
 struct PredicatedChain {
@@ -143,6 +188,7 @@ struct PredicatedChain {
     void push_back(llvm::BasicBlock *BB) {
 #ifndef NDEBUG
         SHOWLN(BB);
+        assert(!contains(BB));
         for (auto &&p : chain)
             assert(BB != p.basicBlock);
 #endif
@@ -154,19 +200,31 @@ struct PredicatedChain {
         for (auto &&pbb : chain)
             assert(!((BB == pbb.basicBlock) && (p == pbb.predicates)));
 #endif
+        for (auto it = chain.begin(); it != chain.end(); ++it) {
+            if (it->basicBlock == BB) {
+                if (it->predicates == p) {
+                    chain.erase(it);
+                } else if (auto np = it->predicates | p) {
+                    chain.erase(it);
+                    p = std::move(*np);
+                }
+            }
+        }
         chain.emplace_back(std::move(p), BB);
     }
-    bool contains(llvm::BasicBlock *BB) {
-        for (auto &&c : chain)
-            if (c.basicBlock == BB)
+    static bool contains(llvm::ArrayRef<PredicatedBasicBlock> chain,
+                         llvm::BasicBlock *BB) {
+        for (auto &&pbb : chain)
+            if (pbb.basicBlock == BB)
                 return true;
         return false;
     }
+    bool contains(llvm::BasicBlock *BB) { return contains(chain, BB); }
     void reverse() {
-	for (size_t i = 0; i < (chain.size()>>1); ++i)
-	    std::swap(chain[i], chain[chain.size()-1-i]);
-	// std::ranges::reverse not support by libc++ yet.
-	// std::ranges::reverse(chain);
+        for (size_t i = 0; i < (chain.size() >> 1); ++i)
+            std::swap(chain[i], chain[chain.size() - 1 - i]);
+        // std::ranges::reverse not support by libc++ yet.
+        // std::ranges::reverse(chain);
     }
     void clear() { chain.clear(); }
     void truncate(size_t i) { chain.truncate(i); }

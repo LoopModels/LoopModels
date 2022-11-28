@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
-#include "./IntegerMap.hpp"
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
@@ -76,18 +75,18 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
     // one reason to prefer SmallVector is because it bounds checks `ifndef
     // NDEBUG`
-    llvm::SmallVector<LoopTree, 0> loopTrees;
-    llvm::SmallVector<unsigned> loopForests;
-    llvm::DenseMap<llvm::Loop *, unsigned> loopMap;
+    [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
+    [[no_unique_address]] llvm::SmallVector<unsigned> loopForests;
+    [[no_unique_address]] llvm::DenseMap<llvm::Loop *, unsigned> loopMap;
     // Tree tree;
     // llvm::AssumptionCache *AC;
-    const llvm::TargetLibraryInfo *TLI;
-    const llvm::TargetTransformInfo *TTI;
-    llvm::LoopInfo *LI;
-    llvm::ScalarEvolution *SE;
-    LoopBlock loopBlock;
-    // const llvm::DataLayout *DL;
-    unsigned registerCount;
+    [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
+    [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
+    [[no_unique_address]] llvm::LoopInfo *LI;
+    [[no_unique_address]] llvm::ScalarEvolution *SE;
+    [[no_unique_address]] LinearProgramLoopBlock loopBlock;
+    [[no_unique_address]] llvm::BumpPtrAllocator allocator;
+    [[no_unique_address]] unsigned registerCount;
 
     // the process of building the LoopForest has the following steps:
     // 1. build initial forest of trees
@@ -285,10 +284,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         addSymbolic(offsets, symbolicOffsets, S, mlt);
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
-    llvm::Optional<ArrayReference> arrayRef(LoopTree &LT,
-                                            llvm::Instruction *ptr,
-                                            Predicates &pred,
-                                            const llvm::SCEV *elSize) {
+    llvm::Optional<ArrayReference>
+    arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize) {
         llvm::Loop *L = LT.loop;
         if (L)
             llvm::errs() << "arrayRef for " << *L << "\n";
@@ -328,7 +325,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         AffineLoopNest<true> &aln = loopTrees[loopMap[L]].affineLoop;
         if (sizes.size() == 0)
             return ArrayReference(basePointer, &aln, std::move(sizes),
-                                  std::move(subscripts), pred);
+                                  std::move(subscripts));
         size_t numLoops{aln.getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
@@ -401,7 +398,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             Rt.truncateCols(numLoops - numExtraLoopsToPeel);
         }
         ArrayReference ref(basePointer, &aln, std::move(sizes),
-                           std::move(symbolicOffsets), pred);
+                           std::move(symbolicOffsets));
         ref.resize(subscripts.size());
         ref.indexMatrix() = Rt.transpose();
         // SHOWLN(symbolicOffsets.size());
@@ -441,14 +438,15 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
+                        arrayRef(LT, iptr, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
+                    LT.memAccesses.emplace_back(pred, std::move(*re), I, omega,
+                                                true);
                     // LT.memAccesses.emplace_back(std::move(*re), I, true);
                     SHOWLN(I);
                     SHOWLN(*I);
@@ -476,14 +474,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
+                        arrayRef(LT, iptr, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(std::move(*re), I, omega,
+                    LT.memAccesses.emplace_back(pred, std::move(*re), I, omega,
                                                 false);
                     // LT.memAccesses.emplace_back(std::move(*re), I, false);
                     SHOWLN(I);

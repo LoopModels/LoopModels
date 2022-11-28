@@ -225,7 +225,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
     llvm::ScalarEvolution &SE{tlf.SE};
     llvm::Type *Int64 = tlf.builder.getInt64Ty();
-    LoopBlock lblock;
+    LinearProgramLoopBlock lblock;
     // B[m, n]
     ArrayReference BmnInd{scevB, &loopMN, 2};
     {

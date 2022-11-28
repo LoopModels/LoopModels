@@ -5,11 +5,11 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/Support/raw_ostream.h>
 
-
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
+    [[no_unique_address]] Predicates pred;
     [[no_unique_address]] ArrayReference ref;
     // unsigned ref; // index to ArrayReference
     [[no_unique_address]] llvm::Instruction *user;
@@ -25,6 +25,18 @@ struct MemoryAccess {
     inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
+    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
+                 llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
+        : pred(std::move(pred)), ref(std::move(ref)), user(user),
+          omegas(std::move(omegas)), isLoad(isLoad){};
+    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
+                 bool isLoad)
+        : pred(std::move(pred)), ref(std::move(ref)), user(user),
+          isLoad(isLoad){};
+    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
+                 llvm::ArrayRef<unsigned> o, bool isLoad)
+        : pred(std::move(pred)), ref(std::move(ref)), user(user),
+          omegas(o.begin(), o.end()), isLoad(isLoad){};
     MemoryAccess(ArrayReference ref, llvm::Instruction *user,
                  llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(std::move(omegas)),
@@ -35,6 +47,7 @@ struct MemoryAccess {
                  llvm::ArrayRef<unsigned> o, bool isLoad)
         : ref(std::move(ref)), user(user), omegas(o.begin(), o.end()),
           isLoad(isLoad){};
+    llvm::Instruction *getInstruction() const { return user; }
     // MemoryAccess(const MemoryAccess &MA) = default;
 
     // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
