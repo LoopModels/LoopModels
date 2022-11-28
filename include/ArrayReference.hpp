@@ -9,19 +9,19 @@
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Support/raw_ostream.h>
 
-// `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
-// `baz` needs its own (of depth 2):
-// for i = I, j = J
-//   baz(i,j,...)
-//   for k = K
-//     foo(i,j,k,...)
-//   end
-// end
-// for i = I, j = J, k = K
-//   bar(i,j,k,...)
-// end
-// NOTE: strides are in row major order!
-// this is because we want stride ranks to be in decreasing order
+/// `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
+/// `baz` needs its own (of depth 2):
+/// for i = I, j = J
+///   baz(i,j,...)
+///   for k = K
+///     foo(i,j,k,...)
+///   end
+/// end
+/// for i = I, j = J, k = K
+///   bar(i,j,k,...)
+/// end
+/// NOTE: strides are in row major order!
+/// this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
     [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
     [[no_unique_address]] AffineLoopNest<true> *loop;

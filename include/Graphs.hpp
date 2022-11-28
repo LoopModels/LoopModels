@@ -7,7 +7,7 @@
 #include <tuple>
 #include <type_traits>
 
-// TODO: when we have better std::ranges support in compilers, use it?
+/// TODO: when we have better std::ranges support in compilers, use it?
 namespace Graphs {
 template <typename G>
 concept AbstractGraph =

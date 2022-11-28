@@ -10,11 +10,11 @@
 #include <llvm/Support/raw_ostream.h>
 #include <sys/types.h>
 
-// prints in current permutation order.
-// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
-// in which case, we have to remove `currentToOriginalPerm`,
-// which menas either change printing, or move prints `<<` into
-// the derived classes.
+/// prints in current permutation order.
+/// TODO: decide if we want to make AffineLoopNest a `SymbolicPolyhedra`
+/// in which case, we have to remove `currentToOriginalPerm`,
+/// which menas either change printing, or move prints `<<` into
+/// the derived classes.
 [[maybe_unused]] static llvm::raw_ostream &
 printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
                  llvm::ArrayRef<const llvm::SCEV *> syms,
