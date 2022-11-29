@@ -131,11 +131,8 @@ struct InstructionBlock {
         auto succ0 = term->getSuccessor(0);
         auto succ1 = term->getSuccessor(1);
         if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
-            // we need to fuse these blocks.
-            auto newPred = pred;
-            newPred.add(term);
-            pushBlock(trackInstr, chainBBs, newPred, succ0);
-            pushBlock(trackInstr, chainBBs, pred, succ1);
+            // TODO: we need to fuse these blocks.
+	    
         } else if (chainBBs.contains(succ0)) {
             pushBlock(trackInstr, chainBBs, pred, succ0);
         } else if (chainBBs.contains(succ1)) {

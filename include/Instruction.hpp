@@ -12,6 +12,7 @@
 #include <llvm/Support/Alignment.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/InstructionCost.h>
+#include <llvm/Support/MathExtras.h>
 
 struct RecipThroughputLatency {
     llvm::InstructionCost recipThroughput;
@@ -78,19 +79,42 @@ struct Instruction {
     bool isInsertValue() const {
         return isInstruction(llvm::Instruction::InsertValue);
     }
-    RecipThroughputLatency getCost(unsigned int vectorWidth) const {
-        assert(vectorWidth > 0);
-        unsigned int i = 0;
-        while (vectorWidth >>= 1) {
-            ++i;
-        }
-        assert(i < costs.size());
-        return costs[i];
+    bool isFMul() const { return isInstruction(llvm::Instruction::FMul); }
+    bool isFNeg() const { return isInstruction(llvm::Instruction::FNeg); }
+    bool isFMulOrFNegOfFMul() const {
+        return isFMul() || (isFNeg() && operands[0]->isFMul());
     }
-
+    bool isFAdd() const { return isInstruction(llvm::Instruction::FAdd); }
+    bool isFSub() const { return isInstruction(llvm::Instruction::FSub); }
+    bool allowsContract() const {
+        if (auto m = llvm::dyn_cast<llvm::Instruction>(ptr.val))
+            return m->getFastMathFlags().allowContract();
+        return false;
+    }
+    RecipThroughputLatency getCost(unsigned int vectorWidth,
+                                   unsigned int log2VectorWidth) {
+        RecipThroughputLatency c;
+        if (log2VectorWidth >= costs.size()) {
+            costs.resize(log2VectorWidth + 1,
+                         RecipThroughputLatency::getInvalid());
+            costs[log2VectorWidth] = c = calculateCost(vectorWidth);
+        } else {
+            c = costs[log2VectorWidth];
+            // TODO: differentiate between uninitialized and invalid
+            if (!c.isValid())
+                costs[log2VectorWidth] = c = calculateCost(vectorWidth);
+        }
+        return c;
+    }
+    RecipThroughputLatency getCost(uint32_t vectorWidth) {
+        return getCost(vectorWidth, llvm::Log2_32(vectorWidth));
+    }
+    RecipThroughputLatency getCost(uint64_t vectorWidth) {
+        return getCost(vectorWidth, llvm::Log2_64(vectorWidth));
+    }
     RecipThroughputLatency
-    getCostLog2VectorWidth(unsigned int log2VectorWidth) const {
-        return costs[log2VectorWidth];
+    getCostLog2VectorWidth(unsigned int log2VectorWidth) {
+        return getCost(1 << log2VectorWidth, log2VectorWidth);
     }
     static llvm::Type *getType(llvm::Type *T, unsigned int vectorWidth) {
         if (vectorWidth == 1)
@@ -195,6 +219,8 @@ struct Instruction {
         return false;
     }
     llvm::TargetTransformInfo::CastContextHint getCastContext() const {
+        if (auto cast = llvm::dyn_cast<llvm::CastInst>(ptr.val))
+            return TTI.getCastContextHint(cast);
         if (operandIsLoad() || userIsStore())
             return llvm::TargetTransformInfo::CastContextHint::Normal;
         // TODO: check for whether mask, interleave, or reversed is likely.
@@ -251,14 +277,35 @@ struct Instruction {
             TTI.getMemoryOpCost(id, T, alignment, AddressSpace,
                                 llvm::TargetTransformInfo::TCK_Latency)};
     }
+    RecipThroughputLatency calculateCostFAddFSub(unsigned int vectorWidth) {
+        // TODO: allow not assuming hardware FMA support
+        if ((operands[0]->isFMulOrFNegOfFMul() ||
+             operands[1]->isFMulOrFNegOfFMul()) &&
+            allowsContract())
+            return {};
+        return calcBinaryArithmeticCost(vectorWidth);
+    }
+    bool allUsersAdditiveContract() {
+        for (auto u : users)
+            if (!(((u->isFAdd()) || (u->isFSub())) && (u->allowsContract())))
+                return false;
+        return true;
+    }
+    RecipThroughputLatency calculateFNegCost(unsigned int vectorWidth) {
+
+        if (operands[0]->isFMul() && allUsersAdditiveContract())
+            return {};
+        return calcUnaryArithmeticCost(vectorWidth);
+    }
     RecipThroughputLatency calculateCost(unsigned int vectorWidth) {
         switch (id) {
-        case llvm::Instruction::Add:
-        case llvm::Instruction::Sub:
-        case llvm::Instruction::Mul:
         case llvm::Instruction::FAdd:
         case llvm::Instruction::FSub:
+            return calculateCostFAddFSub(vectorWidth);
+        case llvm::Instruction::Add:
+        case llvm::Instruction::Sub:
         case llvm::Instruction::FMul:
+        case llvm::Instruction::Mul:
         case llvm::Instruction::FDiv:
         case llvm::Instruction::Shl:
         case llvm::Instruction::LShr:
@@ -275,7 +322,7 @@ struct Instruction {
             return calcBinaryArithmeticCost(vectorWidth);
         case llvm::Instruction::FNeg:
             // one arg arithmetic cost
-            return calcUnaryArithmeticCost(vectorWidth);
+            return calculateFNegCost(vectorWidth);
         case llvm::Instruction::Trunc:
         case llvm::Instruction::ZExt:
         case llvm::Instruction::SExt:
