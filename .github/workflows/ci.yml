@@ -17,13 +17,13 @@ jobs:
         sudo ./llvm.sh 15 all
         sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
         # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
-    - run: meson setup builddirgcc -Db_santize=address -Db_coverage=true
+    - run: meson setup builddirgcc -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: g++
     - run: meson test -C builddirgcc
     - run: meson compile -C builddirgcc
     - run: ninja coverage -C builddirgcc
-    - run: meson setup builddirclang -Db_santize=address -Db_coverage=true
+    - run: meson setup builddirclang -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: clang++-15
     - run: meson test -C builddirclang
@@ -50,7 +50,7 @@ jobs:
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
-    - run: meson setup builddir -Db_santize=address -Db_coverage=true
+    - run: meson setup builddir -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
