@@ -7,7 +7,6 @@
 #include "./Macro.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Predicate.hpp"
-#include <bits/ranges_algo.h>
 #include <cstddef>
 #include <iterator>
 #include <limits>
