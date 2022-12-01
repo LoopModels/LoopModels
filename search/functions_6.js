@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['searchoperandsforloads_229',['searchOperandsForLoads',['../structLoopBlock.html#a9fe92164aac9d30d56d6ba2a521f68ad',1,'LoopBlock']]],
-  ['searchvalueforstores_230',['searchValueForStores',['../structLoopBlock.html#af006e6d2c47e38ee77e5feb9c1cff340',1,'LoopBlock']]]
+  ['searchoperandsforloads_259',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
+  ['searchvalueforstores_260',['searchValueForStores',['../structLinearProgramLoopBlock.html#afb9b5a485e8e41e05f0bba4067394ef7',1,'LinearProgramLoopBlock']]]
 ];

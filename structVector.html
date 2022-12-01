@@ -89,18 +89,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a39089cd52e7eb2ef39fa634d9a2722f9"><td class="memItemLeft" align="right" valign="top"><a id="a39089cd52e7eb2ef39fa634d9a2722f9"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (llvm::SmallVector&lt; T &gt; A)</td></tr>
 <tr class="separator:a39089cd52e7eb2ef39fa634d9a2722f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8f8c702b35da51fc4ff5aba2d5192f8"><td class="memItemLeft" align="right" valign="top"><a id="ac8f8c702b35da51fc4ff5aba2d5192f8"></a>
-T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i)</td></tr>
-<tr class="separator:ac8f8c702b35da51fc4ff5aba2d5192f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5629ab817092f02629d822166f473c8b"><td class="memItemLeft" align="right" valign="top"><a id="a5629ab817092f02629d822166f473c8b"></a>
-T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i)</td></tr>
-<tr class="separator:a5629ab817092f02629d822166f473c8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5df2e25d9e98d58f7382af1d75f680ea"><td class="memItemLeft" align="right" valign="top"><a id="a5df2e25d9e98d58f7382af1d75f680ea"></a>
-const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) const</td></tr>
-<tr class="separator:a5df2e25d9e98d58f7382af1d75f680ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a972e75aec0173a56fc2371e7d2166fd4"><td class="memItemLeft" align="right" valign="top"><a id="a972e75aec0173a56fc2371e7d2166fd4"></a>
-const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i) const</td></tr>
-<tr class="separator:a972e75aec0173a56fc2371e7d2166fd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa1c9a2bb66d6f9d2fe0debd494fae58"><td class="memItemLeft" align="right" valign="top"><a id="afa1c9a2bb66d6f9d2fe0debd494fae58"></a>
+constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i)</td></tr>
+<tr class="separator:afa1c9a2bb66d6f9d2fe0debd494fae58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a511f64d977ee23a71df8f3a5c0b5ce47"><td class="memItemLeft" align="right" valign="top"><a id="a511f64d977ee23a71df8f3a5c0b5ce47"></a>
+constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i)</td></tr>
+<tr class="separator:a511f64d977ee23a71df8f3a5c0b5ce47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf51a9c730327493d8229e2124ade5dc"><td class="memItemLeft" align="right" valign="top"><a id="adf51a9c730327493d8229e2124ade5dc"></a>
+const constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) const</td></tr>
+<tr class="separator:adf51a9c730327493d8229e2124ade5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a611494c6c36d2004ebdc9efd08a93ecc"><td class="memItemLeft" align="right" valign="top"><a id="a611494c6c36d2004ebdc9efd08a93ecc"></a>
+const constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i) const</td></tr>
+<tr class="separator:a611494c6c36d2004ebdc9efd08a93ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79bc72432bfcac44223cfdf446582c13"><td class="memItemLeft" align="right" valign="top"><a id="a79bc72432bfcac44223cfdf446582c13"></a>
 constexpr <a class="el" href="structMutPtrVector.html">MutPtrVector</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structRange.html">Range</a>&lt; size_t, size_t &gt; i)</td></tr>
 <tr class="separator:a79bc72432bfcac44223cfdf446582c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,12 +115,12 @@ template&lt;typename F , typename L &gt; </td></tr>
 template&lt;typename F , typename L &gt; </td></tr>
 <tr class="memitem:a8671f55a43408502d2cc9e17a130adaa"><td class="memTemplItemLeft" align="right" valign="top">constexpr <a class="el" href="structPtrVector.html">PtrVector</a>&lt; T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structRange.html">Range</a>&lt; F, L &gt; i) const</td></tr>
 <tr class="separator:a8671f55a43408502d2cc9e17a130adaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a620f40593577792b4fa9546da39eb9da"><td class="memItemLeft" align="right" valign="top"><a id="a620f40593577792b4fa9546da39eb9da"></a>
-T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i)</td></tr>
-<tr class="separator:a620f40593577792b4fa9546da39eb9da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac67f5e22236ad36ff9db3a4580606ac9"><td class="memItemLeft" align="right" valign="top"><a id="ac67f5e22236ad36ff9db3a4580606ac9"></a>
-const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const</td></tr>
-<tr class="separator:ac67f5e22236ad36ff9db3a4580606ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cb68cbe3d5a94fbbbc6a944477b4670"><td class="memItemLeft" align="right" valign="top"><a id="a6cb68cbe3d5a94fbbbc6a944477b4670"></a>
+constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i)</td></tr>
+<tr class="separator:a6cb68cbe3d5a94fbbbc6a944477b4670"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad86cacb6cb32f4fe0eedf83ecb9c7dc8"><td class="memItemLeft" align="right" valign="top"><a id="ad86cacb6cb32f4fe0eedf83ecb9c7dc8"></a>
+const constexpr T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const</td></tr>
+<tr class="separator:ad86cacb6cb32f4fe0eedf83ecb9c7dc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70c66a42236247942d6a9a289367bb16"><td class="memItemLeft" align="right" valign="top"><a id="a70c66a42236247942d6a9a289367bb16"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> ()</td></tr>
 <tr class="separator:a70c66a42236247942d6a9a289367bb16"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -156,18 +156,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N)
 <tr class="memitem:a2606abbcabaa68c4141f3773b7c36636"><td class="memItemLeft" align="right" valign="top"><a id="a2606abbcabaa68c4141f3773b7c36636"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t N)</td></tr>
 <tr class="separator:a2606abbcabaa68c4141f3773b7c36636"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af34afa46f1ca2b49e82b9a2b2f0807b2"><td class="memItemLeft" align="right" valign="top"><a id="af34afa46f1ca2b49e82b9a2b2f0807b2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrVector&lt; T &gt;</b> ()</td></tr>
-<tr class="separator:af34afa46f1ca2b49e82b9a2b2f0807b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae51767d0fee855f9fccc3536e8da5331"><td class="memItemLeft" align="right" valign="top"><a id="ae51767d0fee855f9fccc3536e8da5331"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrVector&lt; T &gt;</b> () const</td></tr>
-<tr class="separator:ae51767d0fee855f9fccc3536e8da5331"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80af7f714f219e08f9760e5ede0ac46a"><td class="memItemLeft" align="right" valign="top"><a id="a80af7f714f219e08f9760e5ede0ac46a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::MutableArrayRef&lt; T &gt;</b> ()</td></tr>
-<tr class="separator:a80af7f714f219e08f9760e5ede0ac46a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd2927e6ee0b24008e466261c0f30a46"><td class="memItemLeft" align="right" valign="top"><a id="acd2927e6ee0b24008e466261c0f30a46"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::ArrayRef&lt; T &gt;</b> () const</td></tr>
-<tr class="separator:acd2927e6ee0b24008e466261c0f30a46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01a45cb3b0fb79cdb3c9ae539c19084c"><td class="memItemLeft" align="right" valign="top"><a id="a01a45cb3b0fb79cdb3c9ae539c19084c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrVector&lt; T &gt;</b> ()</td></tr>
+<tr class="separator:a01a45cb3b0fb79cdb3c9ae539c19084c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a946b71e8604bcecc6455d9b90dd56bf6"><td class="memItemLeft" align="right" valign="top"><a id="a946b71e8604bcecc6455d9b90dd56bf6"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrVector&lt; T &gt;</b> () const</td></tr>
+<tr class="separator:a946b71e8604bcecc6455d9b90dd56bf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b3fb4d40d8885ef5a9e5af46befaf05"><td class="memItemLeft" align="right" valign="top"><a id="a9b3fb4d40d8885ef5a9e5af46befaf05"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::MutableArrayRef&lt; T &gt;</b> ()</td></tr>
+<tr class="separator:a9b3fb4d40d8885ef5a9e5af46befaf05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54347cf4df83e06c7cc73d7b9d44f68c"><td class="memItemLeft" align="right" valign="top"><a id="a54347cf4df83e06c7cc73d7b9d44f68c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::ArrayRef&lt; T &gt;</b> () const</td></tr>
+<tr class="separator:a54347cf4df83e06c7cc73d7b9d44f68c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acdba56ddb562be8c6cc601489607ed02"><td class="memItemLeft" align="right" valign="top"><a id="acdba56ddb562be8c6cc601489607ed02"></a>
 <a class="el" href="structVector.html">Vector</a>&lt; T &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const T &amp;x)</td></tr>
 <tr class="separator:acdba56ddb562be8c6cc601489607ed02"><td class="memSeparator" colspan="2">&#160;</td></tr>

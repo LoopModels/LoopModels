@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['connectgraph_223',['connectGraph',['../structLoopBlock.html#acda88199af2e9d03efe295131a27a573',1,'LoopBlock']]]
+  ['connectgraph_249',['connectGraph',['../structLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8',1,'LinearProgramLoopBlock']]]
 ];

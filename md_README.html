@@ -93,7 +93,7 @@ Getting Started</h3>
 </div><!-- fragment --><p>On Fedora 36: </p><div class="fragment"><div class="line">sudo dnf install meson clang llvm-devel gtest-devel google-benchmark-devel ninja-build pkgconf cmake</div>
 <div class="line">sudo dnf install clang-tools-extra ccache lld libasan</div>
 </div><!-- fragment --><p>I did not start from a clean ubuntu or fedora, so some dependencies may be missing.</p>
-<p>Then to build and run the test suite, simply run </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address -Db_coverage=true</div>
+<p>Then to build and run the test suite, simply run </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address,undefined -Db_coverage=true</div>
 <div class="line">cd builddir</div>
 <div class="line">meson test</div>
 <div class="line">cd .. &amp;&amp; ninja coverage -C builddir</div>
@@ -146,7 +146,7 @@ Getting Started</h3>
 </div><!-- fragment --><p>Now that all our dependencies are built, we can finally build <code>LoopModels</code> itself. It of course also requires <code>libc++</code>. </p><div class="fragment"><div class="line">cd $HOME/Documents/libraries</div>
 <div class="line">git clone https://github.com/JuliaSIMD/LoopModels.git</div>
 <div class="line">cd LoopModels</div>
-<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ meson setup builddir -Db_santize=address -Db_coverage=true</div>
+<div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;-stdlib=libc++&quot; CC=clang CXX=clang++ meson setup builddir -Db_santize=address,undefined -Db_coverage=true</div>
 <div class="line">cd builddir</div>
 <div class="line">meson test</div>
 <div class="line">cd .. &amp;&amp; ninja coverage -C builddir</div>
@@ -154,7 +154,7 @@ Getting Started</h3>
 <p>If you need to wipe the build dir, you'll have to set the temporary environment variables such as the linkers and CXX flags again.</p>
 <h5>Custom LLVM</h5>
 <p>By default, meson uses llvm-config to find LLVM. If you have several LLVM distributives installed, you can use meson <a href="https://mesonbuild.com/Native-environments.html">native file</a> to specify which LLVM is used when compiling LoopModels. The <code>.ini</code> file should override where to find llvm-config. For example, the contents of the <code>custom-llvm.ini</code> file specify the path to llvm-config </p><div class="fragment"><div class="line">llvm-config = &#39;/usr/local/bin/llvm/llvm-config&#39;</div>
-</div><!-- fragment --><p>Then meson is configured with </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address --native-file custom-llvm.ini</div>
+</div><!-- fragment --><p>Then meson is configured with </p><div class="fragment"><div class="line">CC_LD=lld CXX_LD=lld CXXFLAGS=&quot;&quot; meson setup builddir -Db_santize=address,undefined --native-file custom-llvm.ini</div>
 </div><!-- fragment --><h3><a class="anchor" id="autotoc_md2"></a>
 Notes on Code</h3>
 <p>Eventually, I'd like to make didactic developer docs so that it's a useful resource for anyone wanting to learn about loop optimization and jump into the code to try implementing or improving optimizations.</p>
