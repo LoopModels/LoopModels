@@ -14,9 +14,8 @@
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
-#include <optional>
-// #include <mlir/Analysis/Presburger/Matrix.h>
 #include <numeric>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -749,14 +748,14 @@ template <typename T> struct PtrVector {
                 return false;
         return true;
     }
-
-    const inline T &operator[](const ScalarIndex auto i) const {
+    const constexpr T &front() const { return mem[0]; }
+    const constexpr T &operator[](const ScalarIndex auto i) const {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
         return mem[canonicalize(i, N)];
     }
-    const inline T &operator()(const ScalarIndex auto i) const {
+    const constexpr T &operator()(const ScalarIndex auto i) const {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
@@ -797,25 +796,25 @@ template <typename T> struct MutPtrVector {
     [[no_unique_address]] T *const mem;
     [[no_unique_address]] const size_t N;
     static constexpr bool canResize = false;
-    inline T &operator[](const ScalarIndex auto i) {
+    constexpr T &operator[](const ScalarIndex auto i) {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
         return mem[canonicalize(i, N)];
     }
-    inline T &operator()(const ScalarIndex auto i) {
+    constexpr T &operator()(const ScalarIndex auto i) {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
         return mem[canonicalize(i, N)];
     }
-    const inline T &operator[](const ScalarIndex auto i) const {
+    const constexpr T &operator[](const ScalarIndex auto i) const {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
         return mem[canonicalize(i, N)];
     }
-    const inline T &operator()(const ScalarIndex auto i) const {
+    const constexpr T &operator()(const ScalarIndex auto i) const {
 #ifndef NDEBUG
         checkIndex(N, i);
 #endif
@@ -963,16 +962,16 @@ template <typename T> struct Vector {
     Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
     Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
-    inline T &operator[](const ScalarIndex auto i) {
+    constexpr T &operator[](const ScalarIndex auto i) {
         return data[canonicalize(i, data.size())];
     }
-    inline T &operator()(const ScalarIndex auto i) {
+    constexpr T &operator()(const ScalarIndex auto i) {
         return data[canonicalize(i, data.size())];
     }
-    const inline T &operator[](const ScalarIndex auto i) const {
+    const constexpr T &operator[](const ScalarIndex auto i) const {
         return data[canonicalize(i, data.size())];
     }
-    const inline T &operator()(const ScalarIndex auto i) const {
+    const constexpr T &operator()(const ScalarIndex auto i) const {
         return data[canonicalize(i, data.size())];
     }
     constexpr MutPtrVector<T> operator()(Range<size_t, size_t> i) {
@@ -993,8 +992,8 @@ template <typename T> struct Vector {
     constexpr PtrVector<T> operator()(Range<F, L> i) const {
         return (*this)(canonicalizeRange(i, data.size()));
     }
-    T &operator[](size_t i) { return data[i]; }
-    const T &operator[](size_t i) const { return data[i]; }
+    constexpr T &operator[](size_t i) { return data[i]; }
+    const constexpr T &operator[](size_t i) const { return data[i]; }
     // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
     constexpr auto begin() { return data.begin(); }
     constexpr auto end() { return data.end(); }
@@ -1022,16 +1021,16 @@ template <typename T> struct Vector {
     void resize(size_t N) { data.resize(N); }
     void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
 
-    operator MutPtrVector<T>() {
+    constexpr operator MutPtrVector<T>() {
         return MutPtrVector<T>{data.data(), data.size()};
     }
-    operator PtrVector<T>() const {
+    constexpr operator PtrVector<T>() const {
         return PtrVector<T>{.mem = data.data(), .N = data.size()};
     }
-    operator llvm::MutableArrayRef<T>() {
+    constexpr operator llvm::MutableArrayRef<T>() {
         return llvm::MutableArrayRef<T>{data.data(), data.size()};
     }
-    operator llvm::ArrayRef<T>() const {
+    constexpr operator llvm::ArrayRef<T>() const {
         return llvm::ArrayRef<T>{data.data(), data.size()};
     }
     // MutPtrVector<T> operator=(AbstractVector auto &x) {
@@ -1125,8 +1124,8 @@ template <typename T> struct StridedVector {
     };
     constexpr auto begin() const { return StridedIterator{d, x}; }
     constexpr auto end() const { return StridedIterator{d + N * x, x}; }
-    const T &operator[](size_t i) const { return d[i * x]; }
-    const T &operator()(size_t i) const { return d[i * x]; }
+    const constexpr T &operator[](size_t i) const { return d[i * x]; }
+    const constexpr T &operator()(size_t i) const { return d[i * x]; }
 
     constexpr StridedVector<T> operator()(Range<size_t, size_t> i) const {
         return StridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
@@ -1175,10 +1174,10 @@ template <typename T> struct MutStridedVector {
     constexpr auto end() { return StridedIterator{d + N * x, x}; }
     constexpr auto begin() const { return StridedIterator{d, x}; }
     constexpr auto end() const { return StridedIterator{d + N * x, x}; }
-    T &operator[](size_t i) { return d[i * x]; }
-    const T &operator[](size_t i) const { return d[i * x]; }
-    T &operator()(size_t i) { return d[i * x]; }
-    const T &operator()(size_t i) const { return d[i * x]; }
+    constexpr T &operator[](size_t i) { return d[i * x]; }
+    constexpr const T &operator[](size_t i) const { return d[i * x]; }
+    constexpr T &operator()(size_t i) { return d[i * x]; }
+    constexpr const T &operator()(size_t i) const { return d[i * x]; }
 
     constexpr MutStridedVector<T> operator()(Range<size_t, size_t> i) {
         return MutStridedVector<T>{.d = d + i.b * x, .N = i.e - i.b, .x = x};
@@ -1405,8 +1404,8 @@ template <typename T> constexpr StridedVector<T> antiDiag(PtrMatrix<T> A) {
 }
 
 #define DEFINEMATRIXMEMBERCONST                                                \
-    inline const T &operator()(const ScalarIndex auto m,                       \
-                               const ScalarIndex auto n) const {               \
+    constexpr const T &operator()(const ScalarIndex auto m,                    \
+                                  const ScalarIndex auto n) const {            \
         return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);       \
     }                                                                          \
     constexpr auto operator()(auto m, auto n) const {                          \
@@ -1420,7 +1419,8 @@ template <typename T> constexpr StridedVector<T> antiDiag(PtrMatrix<T> A) {
         return ::antiDiag(PtrMatrix<eltype>(*this));                           \
     }
 #define DEFINEMATRIXMEMBERMUT                                                  \
-    inline T &operator()(const ScalarIndex auto m, const ScalarIndex auto n) { \
+    constexpr T &operator()(const ScalarIndex auto m,                          \
+                            const ScalarIndex auto n) {                        \
         return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);       \
     }                                                                          \
     constexpr auto operator()(auto m, auto n) {                                \
@@ -2315,9 +2315,7 @@ struct Rational {
             return Rational{0, 1};
         }
     }
-    constexpr Rational operator-(Rational y) const {
-        return *safeSub(y);
-    }
+    constexpr Rational operator-(Rational y) const { return *safeSub(y); }
     constexpr Rational &operator-=(Rational y) {
         std::optional<Rational> a = *this - y;
         assert(a.has_value());
@@ -2349,12 +2347,8 @@ struct Rational {
             return Rational{0, 1};
         }
     }
-    constexpr Rational operator*(int64_t y) const {
-        return *safeMul(y);
-    }
-    constexpr Rational operator*(Rational y) const {
-        return *safeMul(y);
-    }
+    constexpr Rational operator*(int64_t y) const { return *safeMul(y); }
+    constexpr Rational operator*(Rational y) const { return *safeMul(y); }
     constexpr Rational &operator*=(Rational y) {
         if ((numerator != 0) & (y.numerator != 0)) {
             auto [xn, yd] = divgcd(numerator, y.denominator);
@@ -2383,9 +2377,7 @@ struct Rational {
     constexpr std::optional<Rational> safeDiv(Rational y) const {
         return (*this) * y.inv();
     }
-    constexpr Rational operator/(Rational y) const {
-        return *safeDiv(y);
-    }
+    constexpr Rational operator/(Rational y) const { return *safeDiv(y); }
     // *this -= a*b
     constexpr bool fnmadd(Rational a, Rational b) {
         if (std::optional<Rational> ab = a.safeMul(b)) {

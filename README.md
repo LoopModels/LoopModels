@@ -60,7 +60,7 @@ I did not start from a clean ubuntu or fedora, so some dependencies may be missi
 
 Then to build and run the test suite, simply run
 ```
-CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address -Db_coverage=true
+CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address,undefined -Db_coverage=true
 cd builddir
 meson test
 cd .. && ninja coverage -C builddir
@@ -143,7 +143,7 @@ Now that all our dependencies are built, we can finally build `LoopModels` itsel
 cd $HOME/Documents/libraries
 git clone https://github.com/JuliaSIMD/LoopModels.git
 cd LoopModels
-CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir -Db_santize=address -Db_coverage=true
+CC_LD=lld CXX_LD=lld CXXFLAGS="-stdlib=libc++" CC=clang CXX=clang++ meson setup builddir -Db_santize=address,undefined -Db_coverage=true
 cd builddir
 meson test
 cd .. && ninja coverage -C builddir
@@ -163,7 +163,7 @@ llvm-config = '/usr/local/bin/llvm/llvm-config'
 
 Then meson is configured with
 ```
-CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address --native-file custom-llvm.ini
+CC_LD=lld CXX_LD=lld CXXFLAGS="" meson setup builddir -Db_santize=address,undefined --native-file custom-llvm.ini
 ```
 
 #### Notes on Code

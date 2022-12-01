@@ -1,13 +1,13 @@
 #include "../include/BitSets.hpp"
 #include "../include/Graphs.hpp"
+#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
-#include "Macro.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 #include <ranges>
 #include <utility>
 

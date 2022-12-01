@@ -1,7 +1,7 @@
 #pragma once
-#include "ArrayReference.hpp"
-#include "Loops.hpp"
-#include "Math.hpp"
+#include "./ArrayReference.hpp"
+#include "./Loops.hpp"
+#include "./Math.hpp"
 #include <cstdint>
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/AssumptionCache.h>
@@ -39,10 +39,6 @@ struct TestLoopFunction {
     // llvm::SmallVector<llvm::Value*> symbols;
     llvm::Value *ptr;
     size_t ptrIntOffset{0};
-
-    // std::pair<ArrayReference,llvm::Value*> arrayRef(size_t loopId, ){
-
-    // }
 
     void addLoop(IntMatrix A, size_t numLoops) {
         size_t numSym = A.numCol() - numLoops - 1;
@@ -90,13 +86,11 @@ struct TestLoopFunction {
           F{llvm::Function::Create(
               FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo",
               mod)},
-          dl{&mod},
-          TTI{dl}, targetTripple{}, TLII{targetTripple},
-          TLI{TLII}, AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{},
+          dl{&mod}, TTI{dl}, targetTripple{}, TLII{targetTripple}, TLI{TLII},
+          AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{},
           ptr{builder.CreateIntToPtr(builder.getInt64(16000),
                                      builder.getInt64Ty())} {
 
-        
         fmf.set();
         builder.setFastMathFlags(fmf);
     }

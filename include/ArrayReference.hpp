@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
+#include <llvm/Support/Alignment.h>
 #include <llvm/Support/raw_ostream.h>
 
 /// `foo` and `bar` can share the same `AffineLoopNest` (of depth 3), but
@@ -23,20 +24,33 @@
 /// NOTE: strides are in row major order!
 /// this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
+    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
     [[no_unique_address]] AffineLoopNest<true> *loop;
+    [[no_unique_address]] llvm::Instruction *loadOrStore;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
-    [[no_unique_address]] Predicates pred;
-    [[no_unique_address]] unsigned rank;
+    [[no_unique_address]] Predicates predicates;
 
     ArrayReference() = delete;
 
+    bool isLoad() const { return llvm::isa<llvm::LoadInst>(loadOrStore); }
     size_t getArrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
+
+    llvm::Align getAlignment() const {
+        if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
+            return l->getAlign();
+        else if (auto s = llvm::dyn_cast<llvm::StoreInst>(loadOrStore))
+            return s->getAlign();
+            // not a load or store
+#if __cplusplus >= 202202L
+        std::unreachable();
+#endif
+        return llvm::Align(1);
+    }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
     // 	return dim*numLoops +
     // }
@@ -64,51 +78,59 @@ struct ArrayReference {
         return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                   numSymbols, numSymbols};
     }
-    ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
-        : basePointer(a.basePointer), loop(a.loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
+    ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds,
+                   Predicates p = {})
+        : indices(a.indices.size()), basePointer(a.basePointer), loop(a.loop),
+          loadOrStore(a.loadOrStore), sizes(a.sizes),
+          symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
-                   PtrMatrix<int64_t> newInds)
-        : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets) {
+                   PtrMatrix<int64_t> newInds, Predicates p = {})
+        : indices(a.indices.size()), basePointer(a.basePointer), loop(loop),
+          loadOrStore(a.loadOrStore), sizes(a.sizes),
+          symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
         indexMatrix() = newInds;
     }
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop)
-        : basePointer(basePointer), loop(loop){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop)
-        : basePointer(basePointer), loop(&loop){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
-                   Predicates pred = {})
-        : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets,
-                   Predicates pred = {})
-        : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
-          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)){};
+    /// initialize alignment from an elSize SCEV.
+    static llvm::Align typeAlignment(const llvm::SCEV *S) {
+        if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S)) {
+            return llvm::Align(C->getAPInt().getZExtValue());
+        }
+        return llvm::Align{1};
+    }
+    ArrayReference(
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
+        llvm::Instruction *loadOrStore = nullptr,
+        llvm::SmallVector<const llvm::SCEV *, 3> sizes = {},
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        Predicates p = {})
+        : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
+          sizes(std::move(sizes)), symbolicOffsets(std::move(symbolicOffsets)),
+          predicates(std::move(p)){};
 
     void resize(size_t d) {
         sizes.resize(d);
         indices.resize(d * (getNumLoops() + getNumSymbols()));
     }
     ArrayReference(
-        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop, size_t dim,
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
+        size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        Predicates pred = {})
-        : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)) {
+        Predicates p = {})
+        : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
+          symbolicOffsets(std::move(symbolicOffsets)),
+          predicates(std::move(p)) {
         resize(dim);
     };
     ArrayReference(
-        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop, size_t dim,
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop,
+        size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        Predicates pred = {})
-        : basePointer(basePointer), loop(&loop),
-          symbolicOffsets(std::move(symbolicOffsets)), pred(std::move(pred)) {
+        Predicates p = {})
+        : basePointer(basePointer), loop(&loop), loadOrStore(loadOrStore),
+          symbolicOffsets(std::move(symbolicOffsets)),
+          predicates(std::move(p)) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }

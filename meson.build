@@ -7,7 +7,9 @@ if meson.get_compiler('cpp').get_id() == 'gcc'
   add_global_arguments('-fno-semantic-interposition', language : 'cpp')
   add_global_arguments('-fmax-errors=1', language : 'cpp')
 else
-  add_global_arguments('-ferror-limit=1', language : 'cpp')
+  if meson.get_compiler('cpp').get_id() == 'clang'
+    add_global_arguments('-ferror-limit=1', language : 'cpp')
+  endif
 endif
 add_global_arguments('-fno-rtti', language : 'cpp')
 add_global_arguments('-fno-exceptions', language : 'cpp')
@@ -16,11 +18,11 @@ llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 
 # require clang for pch, as clang's pch should be clangd-compatible
-if meson.get_compiler('cpp').get_id() == 'clang'
-  shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
-else
-  shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
-endif
+# if meson.get_compiler('cpp').get_id() == 'clang'
+shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/turbo.hpp')
+# else
+#   shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+# endif
 
 # TESTS
 gtest_dep = dependency('gtest', main : true, required : false)
@@ -45,11 +47,7 @@ if gtest_dep.found()
   ]
 
   foreach f : test_files
-    if meson.get_compiler('cpp').get_id() == 'clang'
-      test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
-    else
-      test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
-    endif
+    test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch' / f + '.hpp')
     test(f, test_exe)
   endforeach
 endif
@@ -67,11 +65,7 @@ if bench_dep.found()
   # https://github.com/mesonbuild/meson/issues/5920
   # TODO: add 'buildtype=release' when issue resolved
   foreach f : benchmark_files
-    if meson.get_compiler('cpp').get_id() == 'clang'
-      benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/pch_tests.hpp')
-    else
-      benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath)
-    endif
+    benchmark_exe = executable(f, 'benchmark' / f + '.cpp', dependencies : benchmarkdeps, include_directories: incdir, native : true, override_options : ['optimization=3'], cpp_args : bench_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/turbo.hpp')
     benchmark(f, benchmark_exe)
   endforeach
 endif

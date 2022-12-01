@@ -21,6 +21,7 @@
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/InstrTypes.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/PassManager.h>
@@ -54,10 +55,20 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     llvm::errs() << "DataLayout: "
                  << F.getParent()->getDataLayout().getStringRepresentation()
                  << "\n";
-    std::cout << "Scalar registers: " << TTI->getNumberOfRegisters(0)
-              << std::endl;
-    std::cout << "Vector registers: " << TTI->getNumberOfRegisters(1)
-              << std::endl;
+    llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0)
+                 << "\n";
+    llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1)
+                 << "\n";
+
+    for (size_t i = 0; i < 5; ++i) {
+        size_t w = 1 << i;
+        llvm::errs() << "Vector width: " << w << "\nfadd cost: "
+                     << TTI->getArithmeticInstrCost(
+                            llvm::Instruction::FAdd,
+                            llvm::FixedVectorType::get(
+                                llvm::Type::getDoubleTy(F.getContext()), w))
+                     << "\n";
+    }
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
