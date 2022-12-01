@@ -103,24 +103,24 @@ llvm::Align&#160;</td><td class="memItemRight" valign="bottom"><b>getAlignment</
 <tr class="memitem:a0c44f68c7ba7bd349e712d3c1c860d93"><td class="memItemLeft" align="right" valign="top"><a id="a0c44f68c7ba7bd349e712d3c1c860d93"></a>
 <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () const</td></tr>
 <tr class="separator:a0c44f68c7ba7bd349e712d3c1c860d93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae752b057b0b2296e8bcef647d74510b7"><td class="memItemLeft" align="right" valign="top"><a id="ae752b057b0b2296e8bcef647d74510b7"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;a, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; newInds)</td></tr>
-<tr class="separator:ae752b057b0b2296e8bcef647d74510b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc514e4f6d9d21b8c275b349780947b4"><td class="memItemLeft" align="right" valign="top"><a id="abc514e4f6d9d21b8c275b349780947b4"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;a, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; newInds)</td></tr>
-<tr class="separator:abc514e4f6d9d21b8c275b349780947b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a461cb9c93a82742a40d3e6dc0b1c2fe3"><td class="memItemLeft" align="right" valign="top"><a id="a461cb9c93a82742a40d3e6dc0b1c2fe3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; sizes={}, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={})</td></tr>
-<tr class="separator:a461cb9c93a82742a40d3e6dc0b1c2fe3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a45bc0addab871c3f08410f6daf01c84f"><td class="memItemLeft" align="right" valign="top"><a id="a45bc0addab871c3f08410f6daf01c84f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;a, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; newInds, <a class="el" href="structPredicates.html">Predicates</a> p={})</td></tr>
+<tr class="separator:a45bc0addab871c3f08410f6daf01c84f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cf53a8de75cfe3fd6111c6356c7b024"><td class="memItemLeft" align="right" valign="top"><a id="a0cf53a8de75cfe3fd6111c6356c7b024"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;a, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; newInds, <a class="el" href="structPredicates.html">Predicates</a> p={})</td></tr>
+<tr class="separator:a0cf53a8de75cfe3fd6111c6356c7b024"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0944e66287eaf488211bcb7a7403fc2"><td class="memItemLeft" align="right" valign="top"><a id="af0944e66287eaf488211bcb7a7403fc2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; sizes={}, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={}, <a class="el" href="structPredicates.html">Predicates</a> p={})</td></tr>
+<tr class="separator:af0944e66287eaf488211bcb7a7403fc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3dea2420fb6ed42b2f126ed49b4b5caf"><td class="memItemLeft" align="right" valign="top"><a id="a3dea2420fb6ed42b2f126ed49b4b5caf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t d)</td></tr>
 <tr class="separator:a3dea2420fb6ed42b2f126ed49b4b5caf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fd792f495fc98277eae555adc249ca3"><td class="memItemLeft" align="right" valign="top"><a id="a8fd792f495fc98277eae555adc249ca3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, size_t dim, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={})</td></tr>
-<tr class="separator:a8fd792f495fc98277eae555adc249ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94b8a25c235c7251f3838ce461fbf967"><td class="memItemLeft" align="right" valign="top"><a id="a94b8a25c235c7251f3838ce461fbf967"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loop, size_t dim, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={})</td></tr>
-<tr class="separator:a94b8a25c235c7251f3838ce461fbf967"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b9a6d388adeec797328d879a027ab22"><td class="memItemLeft" align="right" valign="top"><a id="a5b9a6d388adeec797328d879a027ab22"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *loop, size_t dim, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={}, <a class="el" href="structPredicates.html">Predicates</a> p={})</td></tr>
+<tr class="separator:a5b9a6d388adeec797328d879a027ab22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a441cb6cb5b12fcc1ce7ddc3727ef31fb"><td class="memItemLeft" align="right" valign="top"><a id="a441cb6cb5b12fcc1ce7ddc3727ef31fb"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *basePointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loop, size_t dim, llvm::Instruction *loadOrStore=nullptr, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; symbolicOffsets={}, <a class="el" href="structPredicates.html">Predicates</a> p={})</td></tr>
+<tr class="separator:a441cb6cb5b12fcc1ce7ddc3727ef31fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adc1c0025b25539127651c89a4e02c21e"><td class="memItemLeft" align="right" valign="top"><a id="adc1c0025b25539127651c89a4e02c21e"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopIndependent</b> () const</td></tr>
 <tr class="separator:adc1c0025b25539127651c89a4e02c21e"><td class="memSeparator" colspan="2">&#160;</td></tr>
