@@ -12,10 +12,10 @@
 
 // #define VERBOSESIMPLEX
 
-// The goal here:
-// this Simplex struct will orchestrate search through the solution space
-// it will add constraints as it goes, e.g. corresponding to desired properties
-// or as we move up loop levels to maintain independence from previous ones.
+/// The goal here:
+/// this Simplex struct will orchestrate search through the solution space
+/// it will add constraints as it goes, e.g. corresponding to desired properties
+/// or as we move up loop levels to maintain independence from previous ones.
 struct Simplex {
     // mapped to a PtrMatrix tableau
     // row 0: indicator indicating whether that column (variable) is basic, and

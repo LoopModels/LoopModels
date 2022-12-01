@@ -20,17 +20,17 @@
 #include <tuple>
 #include <utility>
 
-// for i = 1:N, j = 1:i
-//     A[i,j] = foo(A[i,i])
-// labels: 0           1
-//
-// Dependence Poly:
-// 1 <= i_0 <= N
-// 1 <= j_0 <= i_0
-// 1 <= i_1 <= N
-// 1 <= j_1 <= i_1
-// i_0 == i_1
-// j_0 == i_1
+/// for i = 1:N, j = 1:i
+///     A[i,j] = foo(A[i,i])
+/// labels: 0           1
+///
+/// Dependence Poly:
+/// 1 <= i_0 <= N
+/// 1 <= j_0 <= i_0
+/// 1 <= i_1 <= N
+/// 1 <= j_1 <= i_1
+/// i_0 == i_1
+/// j_0 == i_1
 struct DependencePolyhedra : SymbolicEqPolyhedra {
     // size_t numLoops;
     [[no_unique_address]] size_t numDep0Var; // loops dep 0

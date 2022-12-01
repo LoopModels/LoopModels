@@ -12,7 +12,6 @@
 #include "./Predicate.hpp"
 #include <algorithm>
 #include <bit>
-#include <bits/iterator_concepts.h>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -88,13 +87,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     [[no_unique_address]] llvm::BumpPtrAllocator allocator;
     [[no_unique_address]] unsigned registerCount;
 
-    // the process of building the LoopForest has the following steps:
-    // 1. build initial forest of trees
-    // 2. instantiate AffineLoopNest<true>s; any non-affine loops
-    //    are pruned, and their inner loops added as new, separate forests.
-    // 3. Existing forests are searched for indirect control flow between
-    //    successive loops. In all such cases, the loops at that level are
-    //    split into separate forests.
+    /// the process of building the LoopForest has the following steps:
+    /// 1. build initial forest of trees
+    /// 2. instantiate AffineLoopNest<true>s; any non-affine loops
+    ///    are pruned, and their inner loops added as new, separate forests.
+    /// 3. Existing forests are searched for indirect control flow between
+    ///    successive loops. In all such cases, the loops at that level are
+    ///    split into separate forests.
     void initializeLoopForest() {
         // count the number of loops, and then reserve enough memory to avoid
         // the need for reallocations
@@ -139,9 +138,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 loopTrees, loopMap, std::numeric_limits<unsigned>::max());
     }
 
-    // returns index to the loop whose preheader we place it in.
-    // if it equals depth, then we must place it into the inner most loop
-    // header..
+    /// returns index to the loop whose preheader we place it in.
+    /// if it equals depth, then we must place it into the inner most loop
+    /// header..
     static size_t invariant(
         llvm::Value &V,
         llvm::SmallVector<

@@ -155,8 +155,8 @@ template <typename T>
     return std::numeric_limits<size_t>::max();
 }
 
-// returns 1-based index, to match the pattern we use where index 0 refers to a
-// constant offset this function returns 0 if S not found in `symbols`.
+/// returns 1-based index, to match the pattern we use where index 0 refers to a
+/// constant offset this function returns 0 if S not found in `symbols`.
 [[maybe_unused]] [[nodiscard]] static size_t
 findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
                   const llvm::SCEV *S) {
@@ -284,9 +284,9 @@ struct AffineLoopNest
         return ret;
     }
 
-    // add a symbol to row `r` of A
-    // we try to break down value `v`, so that adding
-    // N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
+    /// add a symbol to row `r` of A
+    /// we try to break down value `v`, so that adding
+    /// N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
     [[nodiscard]] size_t addSymbol(IntMatrix &B, llvm::Loop *L,
                                    const llvm::SCEV *v,
                                    llvm::ScalarEvolution &SE, const size_t l,
