@@ -7,9 +7,9 @@
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
+#include "./Predicate.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "./Predicate.hpp"
 #include <algorithm>
 #include <bit>
 #include <bits/iterator_concepts.h>
@@ -286,6 +286,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     llvm::Optional<ArrayReference> arrayRef(LoopTree &LT,
                                             llvm::Instruction *ptr,
+                                            llvm::Instruction *loadOrStore,
                                             Predicates &pred,
                                             const llvm::SCEV *elSize) {
         llvm::Loop *L = LT.loop;
@@ -326,8 +327,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // SHOWLN(sizes.size());
         AffineLoopNest<true> &aln = loopTrees[loopMap[L]].affineLoop;
         if (sizes.size() == 0)
-            return ArrayReference(basePointer, &aln, std::move(sizes),
-                                  std::move(subscripts));
+            return ArrayReference(basePointer, &aln, loadOrStore,
+                                  std::move(sizes), std::move(subscripts),
+                                  pred);
         size_t numLoops{aln.getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
@@ -399,8 +401,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             }
             Rt.truncateCols(numLoops - numExtraLoopsToPeel);
         }
-        ArrayReference ref(basePointer, &aln, std::move(sizes),
-                           std::move(symbolicOffsets));
+        ArrayReference ref(basePointer, &aln, loadOrStore, std::move(sizes),
+                           std::move(symbolicOffsets), pred);
         ref.resize(subscripts.size());
         ref.indexMatrix() = Rt.transpose();
         // SHOWLN(symbolicOffsets.size());
@@ -440,20 +442,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
+                        arrayRef(LT, iptr, I, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
-                    // LT.memAccesses.emplace_back(std::move(*re), I, true);
-                    SHOWLN(I);
-                    SHOWLN(*I);
-                    SHOWLN(LT.memAccesses.back().user);
-                    SHOWLN(*LT.memAccesses.back().user);
-                    SHOWLN(LT.memAccesses.back().getNumLoops());
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega);
                     ++omega.back();
                     llvm::errs() << "Succesfully added load\n"
                                  << LT.memAccesses.back() << "\n";
@@ -475,20 +471,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, pred, elSize)) {
+                        arrayRef(LT, iptr, I, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(std::move(*re), I, omega,
-                                                false);
-                    // LT.memAccesses.emplace_back(std::move(*re), I, false);
-                    SHOWLN(I);
-                    SHOWLN(*I);
-                    SHOWLN(LT.memAccesses.back().user);
-                    SHOWLN(*LT.memAccesses.back().user);
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega);
                     ++omega.back();
                     llvm::errs() << "Succesfully added store\n"
                                  << LT.memAccesses.back() << "\n";

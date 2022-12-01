@@ -10,7 +10,6 @@
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
-    [[no_unique_address]] Predicates pred;
     [[no_unique_address]] ArrayReference ref;
     // omegas order is [outer <-> inner]
     [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
@@ -33,20 +32,6 @@ struct MemoryAccess {
     inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
-    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user,
-                 llvm::SmallVector<unsigned, 8> omegas)
-        : pred(std::move(pred)), ref(std::move(r)), omegas(std::move(omegas)) {
-        ref.loadOrStore = user;
-    };
-    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user)
-        : pred(std::move(pred)), ref(std::move(r)) {
-        ref.loadOrStore = user;
-    };
-    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user,
-                 llvm::ArrayRef<unsigned> o)
-        : pred(std::move(pred)), ref(std::move(r)), omegas(o.begin(), o.end()) {
-        ref.loadOrStore = user;
-    };
     MemoryAccess(ArrayReference r, llvm::Instruction *user,
                  llvm::SmallVector<unsigned, 8> omegas)
         : ref(std::move(r)), omegas(std::move(omegas)) {
@@ -61,6 +46,11 @@ struct MemoryAccess {
         : ref(std::move(r)), omegas(o.begin(), o.end()) {
         ref.loadOrStore = user;
     };
+    MemoryAccess(ArrayReference r, llvm::SmallVector<unsigned, 8> omegas)
+        : ref(std::move(r)), omegas(std::move(omegas)){};
+    MemoryAccess(ArrayReference r) : ref(std::move(r)){};
+    MemoryAccess(ArrayReference r, llvm::ArrayRef<unsigned> o)
+        : ref(std::move(r)), omegas(o.begin(), o.end()){};
     // MemoryAccess(const MemoryAccess &MA) = default;
 
     // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
