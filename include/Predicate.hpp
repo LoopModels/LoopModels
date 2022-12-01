@@ -1,10 +1,10 @@
 #pragma once
-#include "BitSets.hpp"
-#include "Macro.hpp"
-#include "Math.hpp"
-#include "llvm/ADT/SmallPtrSet.h"
+#include "./BitSets.hpp"
+#include "./Macro.hpp"
+#include "./Math.hpp"
 #include <cstddef>
 #include <cwchar>
+#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Value.h>
@@ -80,7 +80,7 @@ struct Predicates {
     }
     /// Returns a new predicate if the intersection is non-empty
     std::optional<Predicates> operator&(const Predicates &p) const {
-	auto x = llvm::Intrinsic::sqrt;
+        // auto x = llvm::Intrinsic::sqrt;
         Predicates ret;
         BitSet pmatch;
         for (auto a : *this) {

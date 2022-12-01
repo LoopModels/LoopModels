@@ -24,21 +24,33 @@
 // NOTE: strides are in row major order!
 // this is because we want stride ranks to be in decreasing order
 struct ArrayReference {
+    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
     [[no_unique_address]] AffineLoopNest<true> *loop;
+    [[no_unique_address]] llvm::Instruction *loadOrStore;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-    [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
-    [[no_unique_address]] llvm::Align alignment;
+    [[no_unique_address]] Predicates predicates;
 
     ArrayReference() = delete;
 
+    bool isLoad() const { return llvm::isa<llvm::LoadInst>(loadOrStore); }
     size_t getArrayDim() const { return sizes.size(); }
     size_t getNumLoops() const { return loop->getNumLoops(); }
     size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
 
-    constexpr llvm::Align getAlignment() const { return alignment; }
+    llvm::Align getAlignment() const {
+        if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
+            return l->getAlign();
+        else if (auto s = llvm::dyn_cast<llvm::StoreInst>(loadOrStore))
+            return s->getAlign();
+            // not a load or store
+#if __cplusplus >= 202202L
+        std::unreachable();
+#endif
+        return llvm::Align(1);
+    }
     // static inline size_t requiredData(size_t dim, size_t numLoops){
     // 	return dim*numLoops +
     // }
@@ -67,42 +79,33 @@ struct ArrayReference {
                                   numSymbols, numSymbols};
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
-        : basePointer(a.basePointer), loop(a.loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets),
-          alignment(a.alignment) {
+        : indices(a.indices.size()), basePointer(a.basePointer), loop(a.loop),
+          loadOrStore(a.loadOrStore), sizes(a.sizes),
+          symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
                    PtrMatrix<int64_t> newInds)
-        : basePointer(a.basePointer), loop(loop), sizes(a.sizes),
-          indices(a.indices.size()), symbolicOffsets(a.symbolicOffsets),
-          alignment(a.alignment) {
+        : indices(a.indices.size()), basePointer(a.basePointer), loop(loop),
+          loadOrStore(a.loadOrStore), sizes(a.sizes),
+          symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
-    static llvm::Align typeAlignment(llvm::Type *T) {
-        return llvm::Align{T->getScalarSizeInBits() / 8};
+    /// initialize alignment from an elSize SCEV.
+    static llvm::Align typeAlignment(const llvm::SCEV *S) {
+        if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S)) {
+            return llvm::Align(C->getAPInt().getZExtValue());
+        }
+        return llvm::Align{1};
     }
-    ArrayReference(const llvm::SCEVUnknown *basePointer,
-                   AffineLoopNest<true> *loop)
-        : basePointer(basePointer), loop(loop),
-          alignment(typeAlignment(basePointer->getType())){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer,
-                   AffineLoopNest<true> &loop)
-        : basePointer(basePointer), loop(&loop),
-          alignment(typeAlignment(basePointer->getType())){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer,
-                   AffineLoopNest<true> *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
-        : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          alignment(typeAlignment(basePointer->getType())){};
-    ArrayReference(const llvm::SCEVUnknown *basePointer,
-                   AffineLoopNest<true> *loop,
-                   llvm::SmallVector<const llvm::SCEV *, 3> sizes,
-                   llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets)
-        : basePointer(basePointer), loop(loop), sizes(std::move(sizes)),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          alignment(typeAlignment(basePointer->getType())){};
+    ArrayReference(
+        const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
+        llvm::Instruction *loadOrStore = nullptr,
+        llvm::SmallVector<const llvm::SCEV *, 3> sizes = {},
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
+          sizes(std::move(sizes)),
+          symbolicOffsets(std::move(symbolicOffsets)){};
 
     void resize(size_t d) {
         sizes.resize(d);
@@ -110,20 +113,18 @@ struct ArrayReference {
     }
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
-        size_t dim,
+        size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
-        : basePointer(basePointer), loop(loop),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          alignment(typeAlignment(basePointer->getType())) {
+        : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop,
-        size_t dim,
+        size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
-        : basePointer(basePointer), loop(&loop),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          alignment(typeAlignment(basePointer->getType())) {
+        : basePointer(basePointer), loop(&loop), loadOrStore(loadOrStore),
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     bool isLoopIndependent() const { return allZero(indices); }

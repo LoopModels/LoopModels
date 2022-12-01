@@ -1,10 +1,10 @@
 #include "../include/NormalForm.hpp"
+#include "../include/Orthogonalize.hpp"
 #include "../include/Polyhedra.hpp"
-#include "Orthogonalize.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <benchmark/benchmark.h>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/SmallVector.h>
 
 static void BM_NullSpace(benchmark::State &state) {
 

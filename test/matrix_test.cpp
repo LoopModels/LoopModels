@@ -1,5 +1,5 @@
 #include "../include/Math.hpp"
-#include "MatrixStringParse.hpp"
+#include "../include/MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 

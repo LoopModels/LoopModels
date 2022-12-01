@@ -3,6 +3,7 @@
 #include "Macro.hpp"
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_ostream.h>
 
 // TODO:
@@ -11,8 +12,6 @@
 struct MemoryAccess {
     [[no_unique_address]] Predicates pred;
     [[no_unique_address]] ArrayReference ref;
-    // unsigned ref; // index to ArrayReference
-    [[no_unique_address]] llvm::Instruction *user;
     // omegas order is [outer <-> inner]
     [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
@@ -21,33 +20,47 @@ struct MemoryAccess {
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     // schedule indicated by `1` top bit, remainder indicates loop
-    [[no_unique_address]] bool isLoad;
+    bool isLoad() const { return ref.isLoad(); }
+    llvm::Instruction *getInstruction() { return ref.loadOrStore; }
+    llvm::Instruction *getInstruction() const { return ref.loadOrStore; }
+    llvm::LoadInst *getLoad() {
+        return llvm::dyn_cast<llvm::LoadInst>(ref.loadOrStore);
+    }
+    llvm::StoreInst *getStore() {
+        return llvm::dyn_cast<llvm::StoreInst>(ref.loadOrStore);
+    }
+
     inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
     inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
     inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
-    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
-                 llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
-        : pred(std::move(pred)), ref(std::move(ref)), user(user),
-          omegas(std::move(omegas)), isLoad(isLoad){};
-    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
-                 bool isLoad)
-        : pred(std::move(pred)), ref(std::move(ref)), user(user),
-          isLoad(isLoad){};
-    MemoryAccess(Predicates pred, ArrayReference ref, llvm::Instruction *user,
-                 llvm::ArrayRef<unsigned> o, bool isLoad)
-        : pred(std::move(pred)), ref(std::move(ref)), user(user),
-          omegas(o.begin(), o.end()), isLoad(isLoad){};
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
-                 llvm::SmallVector<unsigned, 8> omegas, bool isLoad)
-        : ref(std::move(ref)), user(user), omegas(std::move(omegas)),
-          isLoad(isLoad){};
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user, bool isLoad)
-        : ref(std::move(ref)), user(user), isLoad(isLoad){};
-    MemoryAccess(ArrayReference ref, llvm::Instruction *user,
-                 llvm::ArrayRef<unsigned> o, bool isLoad)
-        : ref(std::move(ref)), user(user), omegas(o.begin(), o.end()),
-          isLoad(isLoad){};
-    llvm::Instruction *getInstruction() const { return user; }
+    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user,
+                 llvm::SmallVector<unsigned, 8> omegas)
+        : pred(std::move(pred)), ref(std::move(r)), omegas(std::move(omegas)) {
+        ref.loadOrStore = user;
+    };
+    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user)
+        : pred(std::move(pred)), ref(std::move(r)) {
+        ref.loadOrStore = user;
+    };
+    MemoryAccess(Predicates pred, ArrayReference r, llvm::Instruction *user,
+                 llvm::ArrayRef<unsigned> o)
+        : pred(std::move(pred)), ref(std::move(r)), omegas(o.begin(), o.end()) {
+        ref.loadOrStore = user;
+    };
+    MemoryAccess(ArrayReference r, llvm::Instruction *user,
+                 llvm::SmallVector<unsigned, 8> omegas)
+        : ref(std::move(r)), omegas(std::move(omegas)) {
+        ref.loadOrStore = user;
+    };
+    MemoryAccess(ArrayReference r, llvm::Instruction *user)
+        : ref(std::move(r)) {
+        ref.loadOrStore = user;
+    };
+    MemoryAccess(ArrayReference r, llvm::Instruction *user,
+                 llvm::ArrayRef<unsigned> o)
+        : ref(std::move(r)), omegas(o.begin(), o.end()) {
+        ref.loadOrStore = user;
+    };
     // MemoryAccess(const MemoryAccess &MA) = default;
 
     // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
@@ -88,12 +101,12 @@ struct MemoryAccess {
 };
 
 llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
-    if (m.isLoad)
+    if (m.isLoad())
         os << "Load: ";
     else
         os << "Store: ";
-    if (m.user)
-        os << *m.user;
+    if (auto instr = m.getInstruction())
+        os << *instr;
     os << "\n"
        << m.ref << "\nSchedule Omega: " << m.getFusionOmega()
        << "\nAffineLoopNest: " << *m.ref.loop;

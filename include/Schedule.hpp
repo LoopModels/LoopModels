@@ -2,14 +2,14 @@
 
 #include "./ArrayReference.hpp"
 #include "./Graphs.hpp"
+#include "./Macro.hpp"
 #include "./Math.hpp"
-#include "Macro.hpp"
-#include "llvm/IR/User.h"
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/User.h>
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 

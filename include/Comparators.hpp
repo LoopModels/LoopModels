@@ -5,11 +5,11 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
-#include "Macro.hpp"
-#include "llvm/ADT/Optional.h"
+#include "./Macro.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
 

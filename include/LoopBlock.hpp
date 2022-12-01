@@ -31,7 +31,7 @@ template <std::integral I>
 [[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
                                                 const I &x) {
     for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
-	if (*it < x)
+        if (*it < x)
             continue;
         if (*it > x)
             v.insert(it, x);
@@ -270,7 +270,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 MemoryAccess &maj = *memory[j];
                 ArrayReference &refJ = maj.ref;
                 if ((refI.basePointer != refJ.basePointer) ||
-                    ((mai.isLoad) && (maj.isLoad)))
+                    ((mai.isLoad()) && (maj.isLoad())))
                     continue;
                 addEdge(mai, maj);
             }
@@ -293,7 +293,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
                 MemoryAccess *store = memory[memId];
                 node.addMemory(store, memId, nodeIndex);
                 // MemoryAccess *load = new (allocator) MemoryAccess(*store);
-                // load->isLoad = true;
+                // load->isLoad() = true;
                 // node.addMemory(load, memory.size(), nodeIndex);
                 // memory.push_back(load);
                 // TODO: need to add edges and correct edgesIn and edgesOut
@@ -360,7 +360,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     size_t calcNumStores() const {
         size_t numStores = 0;
         for (auto &m : memory)
-            numStores += !(m->isLoad);
+            numStores += !(m->isLoad());
         return numStores;
     }
     // When connecting a graph, we draw direct connections between stores and
@@ -373,12 +373,13 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         nodes.reserve(calcNumStores());
         for (unsigned i = 0; i < memory.size(); ++i) {
             MemoryAccess *mai = memory[i];
-            if (mai->isLoad)
+            if (mai->isLoad())
                 continue;
             unsigned nodeIndex = nodes.size();
             ScheduledNode &node = nodes.emplace_back();
             node.addMemory(mai, i, nodeIndex);
-            searchOperandsForLoads(visited, node, mai->user, nodeIndex);
+            searchOperandsForLoads(visited, node, mai->getInstruction(),
+                                   nodeIndex);
             visited.clear();
         }
         for (auto &e : edges)
@@ -514,7 +515,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     //            connects(e, g0, g1);
     // }
     bool connects(const Dependence &e, Graph &g0, Graph &g1) const {
-        if (!e.in->isLoad) {
+        if (!e.in->isLoad()) {
             // e.in is a store
             size_t nodeIn = *e.in->nodeIndex.begin();
             bool g0ContainsNodeIn = g0.nodeIds.contains(nodeIn);
@@ -546,12 +547,12 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     void fillUserToMemoryMap() {
         for (unsigned i = 0; i < memory.size(); ++i)
-            userToMemory.insert(std::make_pair(memory[i]->user, i));
+            userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
     }
     llvm::Optional<size_t> getOverlapIndex(const Dependence &edge) {
         MemoryAccess *store;
         MemoryAccess *other;
-        if (edge.in->isLoad) {
+        if (edge.in->isLoad()) {
             // edge.out is a store
             store = edge.out;
             other = edge.in;
@@ -572,7 +573,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         bool tryOrth = false;
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
-            if (edge.in->isLoad == edge.out->isLoad)
+            if (edge.in->isLoad() == edge.out->isLoad())
                 continue;
             llvm::Optional<size_t> maybeIndex = getOverlapIndex(edge);
             if (!maybeIndex)
@@ -651,7 +652,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
     }
     void addMemory(MemoryAccess *m) {
         for (auto o : memory)
-            assert(o->user != m->user);
+            assert(o->getInstruction() != m->getInstruction());
         memory.push_back(m);
     }
     // assemble omni-simplex
@@ -1310,7 +1311,7 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             const auto &v = lblock.nodes[i];
             os << "v_" << i << ":\nmem =\n";
             for (auto m : v.memory)
-                os << *lblock.memory[m]->user << "\n";
+                os << *lblock.memory[m]->getInstruction() << "\n";
             os << "inNeighbors = ";
             for (auto m : v.inNeighbors)
                 os << "v_" << m << ", ";

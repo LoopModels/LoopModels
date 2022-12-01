@@ -1,9 +1,9 @@
 #pragma once
 
 #include "./Math.hpp"
-#include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <cstddef>
+#include <llvm/ADT/SmallVector.h>
 #include <string>
 
 IntMatrix stringToIntMatrix(const std::string &s) {

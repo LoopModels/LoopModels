@@ -1,7 +1,7 @@
 #include "../include/LinearAlgebra.hpp"
 #include "../include/Math.hpp"
+#include "../include/MatrixStringParse.hpp"
 #include "../include/NormalForm.hpp"
-#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <llvm/ADT/SmallVector.h>

@@ -1,10 +1,11 @@
+#pragma once
+
 #include <bit>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <gtest/gtest.h>
-#include <iostream>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>

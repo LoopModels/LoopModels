@@ -5,7 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-// #include <llvm/ADT/APInt.h> // llvm::Optional
 #include <llvm/ADT/SmallVector.h>
 #include <numeric>
 #include <utility>

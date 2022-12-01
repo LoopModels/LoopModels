@@ -9,7 +9,7 @@
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include "./UniqueIDMap.hpp"
-#include "Predicate.hpp"
+#include "./Predicate.hpp"
 #include <algorithm>
 #include <bit>
 #include <bits/iterator_concepts.h>
@@ -284,8 +284,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         addSymbolic(offsets, symbolicOffsets, S, mlt);
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
-    llvm::Optional<ArrayReference>
-    arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize) {
+    llvm::Optional<ArrayReference> arrayRef(LoopTree &LT,
+                                            llvm::Instruction *ptr,
+                                            Predicates &pred,
+                                            const llvm::SCEV *elSize) {
         llvm::Loop *L = LT.loop;
         if (L)
             llvm::errs() << "arrayRef for " << *L << "\n";
@@ -438,15 +440,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, elSize)) {
+                        arrayRef(LT, iptr, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(pred, std::move(*re), I, omega,
-                                                true);
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega, true);
                     // LT.memAccesses.emplace_back(std::move(*re), I, true);
                     SHOWLN(I);
                     SHOWLN(*I);
@@ -474,14 +475,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             if (llvm::Instruction *iptr =
                     llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (llvm::Optional<ArrayReference> re =
-                        arrayRef(LT, iptr, elSize)) {
+                        arrayRef(LT, iptr, pred, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
-                    LT.memAccesses.emplace_back(pred, std::move(*re), I, omega,
+                    LT.memAccesses.emplace_back(std::move(*re), I, omega,
                                                 false);
                     // LT.memAccesses.emplace_back(std::move(*re), I, false);
                     SHOWLN(I);

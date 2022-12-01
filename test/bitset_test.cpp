@@ -1,7 +1,6 @@
 #include "../include/BitSets.hpp"
 #include "../include/Math.hpp"
 #include <gtest/gtest.h>
-#include <iostream>
 
 TEST(BitSetTest, BasicAssertions) {
     BitSet bs(1000);
