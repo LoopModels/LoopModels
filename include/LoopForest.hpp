@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -20,37 +21,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 #include <vector>
-
-// struct LoopTree;
-// struct LoopForest {
-//     llvm::SmallVector<LoopTree *> loops;
-//     // definitions due to incomplete types
-//     size_t pushBack(llvm::SmallVectorImpl<LoopTree> &, llvm::Loop *,
-//                     llvm::ScalarEvolution &,
-//                     llvm::SmallVector<LoopForest, 0> &);
-//     LoopForest() = default;
-//     LoopForest(llvm::SmallVector<LoopTree *> loops);
-//     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
-//     LoopForest(auto itb, auto ite) : loops(itb, ite){};
-
-//     inline size_t size() const;
-//     static size_t invalid(llvm::SmallVector<LoopForest, 0> &forests,
-//                           LoopForest forest);
-//     inline LoopTree *operator[](size_t i) { return loops[i]; }
-//     inline auto begin() { return loops.begin(); }
-//     inline auto begin() const { return loops.begin(); }
-//     inline auto end() { return loops.end(); }
-//     inline auto end() const { return loops.end(); }
-//     inline auto rbegin() { return loops.rbegin(); }
-//     inline auto rbegin() const { return loops.rbegin(); }
-//     inline auto rend() { return loops.rend(); }
-//     inline auto rend() const { return loops.rend(); }
-//     inline auto &front() { return loops.front(); }
-//     inline void clear();
-//     void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &);
-// };
-// llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
-// TODO: should depth be stored in LoopForests instead?
 
 [[maybe_unused]] static bool
 visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
@@ -149,7 +119,8 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
                 return dst0;
             }
             // SHOWLN(*BI->getSuccessor(1));
-            Predicates conditionedPred = pred & BI->getCondition();
+            llvm::Value *cond = BI->getCondition();
+            Predicates conditionedPred = pred & cond;
             BBChain dst0 =
                 allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
                                      BBdst, conditionedPred, BBhead, L);
@@ -341,7 +312,8 @@ struct LoopTree {
     // loopTrees are the cache of all LoopTrees
     static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
                            llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
+                           llvm::SmallVector<unsigned> &branches,
+                           BlockPredicates &predicates, llvm::Loop *L,
                            llvm::ScalarEvolution &SE) {
         const std::vector<llvm::Loop *> &subLoops{L->getSubLoops()};
         llvm::BasicBlock *H = L->getHeader();
@@ -351,12 +323,13 @@ struct LoopTree {
             SHOWLN(E);
         if (anyFail)
             SHOWLN(L->isLoopSimplifyForm());
-        return pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E,
-                        anyFail);
+        return pushBack(loopTrees, forests, branches, predicates, L, SE,
+                        subLoops, H, E, anyFail);
     }
     static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
                            llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
+                           llvm::SmallVector<unsigned> &branches,
+                           BlockPredicates &predicates, llvm::Loop *L,
                            llvm::ScalarEvolution &SE,
                            const std::vector<llvm::Loop *> &subLoops,
                            llvm::BasicBlock *H, llvm::BasicBlock *E,

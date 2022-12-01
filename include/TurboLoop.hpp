@@ -77,7 +77,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
     [[no_unique_address]] llvm::SmallVector<unsigned> loopForests;
     [[no_unique_address]] llvm::DenseMap<llvm::Loop *, unsigned> loopMap;
-    // Tree tree;
+    [[no_unique_address]] BlockPredicates predicates;
     // llvm::AssumptionCache *AC;
     [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
     [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
@@ -126,13 +126,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             H = revLI.front()->getLoopPreheader();
         }
 
-        LoopTree::pushBack(loopTrees, loopForests, forest, nullptr, *SE, revLI,
+        LoopTree::pushBack(loopTrees, loopForests, forest, predicates, nullptr, *SE, revLI,
                            H, E, true);
-        // for (auto &L : llvm::reverse(*LI))
-        //     LoopTree::pushBack(loopTrees, loopForests, forest, L, *SE);
-        // LoopTree::invalid(loopTrees, loopForests, forest);
-        // for (auto &lt : loopTrees)
-        // SHOWLN(lt.affineLoop.A);
         for (auto &forest : loopForests)
             loopTrees[forest].addZeroLowerBounds(
                 loopTrees, loopMap, std::numeric_limits<unsigned>::max());

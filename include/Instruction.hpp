@@ -91,6 +91,13 @@ struct Instruction {
             return m->getFastMathFlags().allowContract();
         return false;
     }
+    bool isMulAdd() const {
+        if (!isCall())
+            return false;
+        llvm::Intrinsic::ID intrinID = ptr.func->getIntrinsicID();
+        return intrinID == llvm::Intrinsic::fma ||
+               intrinID == llvm::Intrinsic::fmuladd;
+    }
     RecipThroughputLatency getCost(unsigned int vectorWidth,
                                    unsigned int log2VectorWidth) {
         RecipThroughputLatency c;
@@ -349,6 +356,24 @@ struct Instruction {
             return calculateCostContiguousLoadStore(vectorWidth);
         default:
             return RecipThroughputLatency::getInvalid();
+        }
+    }
+    uint8_t associativeOperandsFlag() const {
+        switch (id) {
+        case llvm::Instruction::Call:
+            if (!isMulAdd())
+                return 0;
+            // fall through
+        case llvm::Instruction::FAdd:
+        case llvm::Instruction::Add:
+        case llvm::Instruction::FMul:
+        case llvm::Instruction::Mul:
+        case llvm::Instruction::And:
+        case llvm::Instruction::Or:
+        case llvm::Instruction::Xor:
+            return 0x3;
+        default:
+            return 0;
         }
     }
 };

@@ -838,7 +838,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
 
-    llvm::Optional<BitSet> optDeps = lblock.optimize();
+    llvm::Optional<BitSet<>> optDeps = lblock.optimize();
     EXPECT_TRUE(optDeps.hasValue());
     SHOWLN(lblock);
     // SHOWLN(optDeps.getValue());
@@ -1167,16 +1167,16 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
     iOuterMem.emplace_back(xInd2IOuter, Xstore_1, sch0_1_2); // 3
 
-    iOuterMem.emplace_back(xInd1, Xload_1, sch0_2);   // 4
+    iOuterMem.emplace_back(xInd1, Xload_1, sch0_2);  // 4
     iOuterMem.emplace_back(xInd1, Xstore_2, sch0_3); // 5
 
     iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4);         // 6
-    iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0);    // 7
-    iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1);   // 8
-    iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2);   // 9
+    iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0);   // 7
+    iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1);  // 8
+    iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2);  // 9
     iOuterMem.emplace_back(sInd2IOuter, Sstore_1, sch0_5_3); // 10
 
-    iOuterMem.emplace_back(sInd1, Sload_1, sch0_6);   // 11
+    iOuterMem.emplace_back(sInd1, Sload_1, sch0_6);  // 11
     iOuterMem.emplace_back(sInd1, Sstore_2, sch0_7); // 12
     for (auto &&mem : iOuterMem)
         iOuterLoopNest.memory.push_back(&mem);
@@ -1192,7 +1192,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[4]);
     EXPECT_FALSE(d.back().forward);
 
-    llvm::Optional<BitSet> optDeps = iOuterLoopNest.optimize();
+    llvm::Optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
     EXPECT_TRUE(optDeps.hasValue());
     SHOWLN(iOuterLoopNest);
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
@@ -1245,8 +1245,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::SmallVector<unsigned, 8> sch1_0_2(2 + 1);
     sch1_0_2[0] = 1;
     sch1_0_2[2] = 2;
-    jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0);    // 1
-    jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1);   // 2
+    jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0);   // 1
+    jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1);  // 2
     jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2); // 3
 
     llvm::SmallVector<unsigned, 8> sch2_0(1 + 1);
@@ -1254,7 +1254,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::SmallVector<unsigned, 8> sch2_1(1 + 1);
     sch2_1[0] = 2;
     sch2_1[1] = 1;
-    jOuterMem.emplace_back(xInd1, Xload_1, sch2_0);   // 4
+    jOuterMem.emplace_back(xInd1, Xload_1, sch2_0);  // 4
     jOuterMem.emplace_back(xInd1, Xstore_2, sch2_1); // 5
 
     llvm::SmallVector<unsigned, 8> sch3_0_0(2 + 1);
@@ -1269,9 +1269,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
     sch3_0_3[0] = 3;
     sch3_0_3[2] = 3;
 
-    jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0);    // 7
-    jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1);   // 8
-    jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2);   // 9
+    jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0);   // 7
+    jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1);  // 8
+    jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2);  // 9
     jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3); // 10
 
     llvm::SmallVector<unsigned, 8> sch4_0(1 + 1);
@@ -1279,7 +1279,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::SmallVector<unsigned, 8> sch4_1(1 + 1);
     sch4_1[0] = 4;
     sch4_1[1] = 1;
-    jOuterMem.emplace_back(sInd1, Sload_1, sch4_0);   // 11
+    jOuterMem.emplace_back(sInd1, Sload_1, sch4_0);  // 11
     jOuterMem.emplace_back(sInd1, Sstore_2, sch4_1); // 12
 
     for (auto &&mem : jOuterMem)
@@ -1684,7 +1684,7 @@ TEST(ConvReversePass, BasicAssertions) {
     MemoryAccess msch_3(CmijnInd, Cstore, sch_3);
     loopBlock.memory.push_back(&msch_3);
 
-    llvm::Optional<BitSet> optRes = loopBlock.optimize();
+    llvm::Optional<BitSet<>> optRes = loopBlock.optimize();
     EXPECT_TRUE(optRes.hasValue());
     for (auto &mem : loopBlock.memory) {
         SHOW(mem->nodeIndex);
@@ -1698,4 +1698,3 @@ TEST(ConvReversePass, BasicAssertions) {
         }
     }
 }
-
