@@ -143,7 +143,7 @@ $(function() {
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keywordtype">size_t</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;strongConnect(AbstractGraph <span class="keyword">auto</span> &amp;g, llvm::SmallVector&lt;BitSet&gt; &amp;components,</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;strongConnect(AbstractGraph <span class="keyword">auto</span> &amp;g, llvm::SmallVector&lt;<a class="code" href="structBitSet.html">BitSet&lt;&gt;</a>&gt; &amp;components,</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;              llvm::SmallVector&lt;unsigned&gt; &amp;stack,</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;              llvm::MutableArrayRef&lt;std::tuple&lt;unsigned, unsigned, bool&gt;&gt;</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                  indexLowLinkOnStack,</div>
@@ -168,7 +168,7 @@ $(function() {
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keyword">auto</span> [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];</div>
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">if</span> (vIndex == vLowLink) {</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        components.emplace_back();</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <a class="code" href="structBitSet.html">BitSet</a> &amp;component = components.back();</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> &amp;component = components.back();</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        <span class="keywordtype">unsigned</span> w;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <span class="keywordflow">do</span> {</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            w = stack.back();</div>
@@ -180,9 +180,9 @@ $(function() {
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">return</span> index;</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;}</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;[[maybe_unused]] <span class="keyword">static</span> llvm::SmallVector&lt;BitSet&gt;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;[[maybe_unused]] <span class="keyword">static</span> llvm::SmallVector&lt;BitSet&lt;&gt;&gt;</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;stronglyConnectedComponents(AbstractGraph <span class="keyword">auto</span> &amp;g) {</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    llvm::SmallVector&lt;BitSet&gt; components;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    llvm::SmallVector&lt;BitSet&lt;&gt;&gt; components;</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordtype">size_t</span> maxId = g.maxVertexId();</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    components.reserve(maxId);</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    llvm::SmallVector&lt;std::tuple&lt;unsigned, unsigned, bool&gt;&gt; indexLowLinkOnStack(</div>
@@ -247,7 +247,7 @@ $(function() {
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="comment">// 3. Group these into strongly connected components.</span></div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="comment">// 4. Iterate over schedules by strongly connected components.</span></div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:20</div></div>
+<div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:69</div></div>
 <div class="ttc" id="anamespaceGraphs_html"><div class="ttname"><a href="namespaceGraphs.html">Graphs</a></div><div class="ttdoc">TODO: when we have better std::ranges support in compilers, use it?</div><div class="ttdef"><b>Definition:</b> Graphs.hpp:11</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
