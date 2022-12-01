@@ -2,6 +2,7 @@
 ### LoopModels
 
 [![codecov](https://codecov.io/github/JuliaSIMD/LoopModels/branch/main/graph/badge.svg?token=nokmK2kmhT)](https://codecov.io/github/JuliaSIMD/LoopModels)
+[![Global Docs](https://img.shields.io/badge/docs-LoopModels-blue.svg)](https://juliasimd.github.io/LoopModels/)
 
 ###### Description
 

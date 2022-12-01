@@ -111,6 +111,7 @@ resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
         x.flag &= mask;
 }
 
+<<<<<<< HEAD
 // A loop block is a block of the program that may include multiple loops.
 // These loops are either all executed (note iteration count may be 0, or
 // loops may be in rotated form and the guard prevents execution; this is okay
@@ -165,6 +166,62 @@ resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
 //   f(m, ...); // Omega = [2, _, 0]
 // }
 struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
+=======
+/// A loop block is a block of the program that may include multiple loops.
+/// These loops are either all executed (note iteration count may be 0, or
+/// loops may be in rotated form and the guard prevents execution; this is okay
+/// and counts as executed for our purposes here ), or none of them are.
+/// That is, the LoopBlock does not contain divergent control flow, or guards
+/// unrelated to loop bounds.
+/// The loops within a LoopBlock are optimized together, so we can consider
+/// optimizations such as reordering or fusing them together as a set.
+///
+///
+/// Initially, the `LoopBlock` is initialized as a set of
+/// `Read` and `Write`s, without any dependence polyhedra.
+/// Then, it builds `DependencePolyhedra`.
+/// These can be used to construct an ILP.
+///
+/// That is:
+/// fields that must be provided/filled:
+///  - refs
+///  - memory
+///  - userToMemory
+/// fields it self-initializes:
+///
+///
+/// NOTE: w/ respect to index linearization (e.g., going from Cartesian indexing
+/// to linear indexing), the current behavior will be to fully delinearize as a
+/// preprocessing step. Linear indexing may be used later as an optimization.
+/// This means that not only do we want to delinearize
+/// for (n = 0; n < N; ++n){
+///   for (m = 0; m < M; ++m){
+///      C(m + n*M)
+///   }
+/// }
+/// we would also want to delinearize
+/// for (i = 0; i < M*N; ++i){
+///   C(i)
+/// }
+/// into
+/// for (n = 0; n < N; ++n){
+///   for (m = 0; m < M; ++m){
+///      C(m, n)
+///   }
+/// }
+/// and then relinearize as an optimization later.
+/// Then we can compare fully delinearized loop accesses.
+/// Should be in same block:
+/// s = 0
+/// for (i = eachindex(x)){
+///   s += x[i]; // Omega = [0, _, 0]
+/// }
+/// m = s / length(x); // Omega = [1]
+/// for (i = eachindex(y)){
+///   f(m, ...); // Omega = [2, _, 0]
+/// }
+struct LinearProgramLoopBlock {
+>>>>>>> origin/main
     // llvm::SmallVector<ArrayReference, 0> refs;
     // TODO: figure out how to handle the graph's dependencies based on
     // operation/instruction chains.
@@ -225,28 +282,28 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         return d;
     }
 
-    // NOTE: this relies on two important assumptions:
-    // 1. Code has been fully delinearized, so that axes all match
-    //    (this means that even C[i], 0<=i<M*N -> C[m*M*n])
-    //    (TODO: what if we have C[n+N*m] and C[m+M*n]???)
-    //    (this of course means we have to see other uses in
-    //     deciding whether to expand `C[i]`, and what to expand
-    //     it into.)
-    // 2. Reduction targets have been orthogonalized, so that
-    //     the number of axes reflects the number of loops they
-    //     depend on.
-    // if we have
-    // for (i = I, j = J, m = M, n = N) {
-    //   C(m,n) = foo(C(m,n), ...)
-    // }
-    // then we have dependencies that
-    // the load C(m,n) [ i = x, j = y ]
-    // happens after the store C(m,n) [ i = x-1, j = y], and
-    // happens after the store C(m,n) [ i = x, j = y-1]
-    // and that the store C(m,n) [ i = x, j = y ]
-    // happens after the load C(m,n) [ i = x-1, j = y], and
-    // happens after the load C(m,n) [ i = x, j = y-1]
-    //
+    /// NOTE: this relies on two important assumptions:
+    /// 1. Code has been fully delinearized, so that axes all match
+    ///    (this means that even C[i], 0<=i<M*N -> C[m*M*n])
+    ///    (TODO: what if we have C[n+N*m] and C[m+M*n]???)
+    ///    (this of course means we have to see other uses in
+    ///     deciding whether to expand `C[i]`, and what to expand
+    ///     it into.)
+    /// 2. Reduction targets have been orthogonalized, so that
+    ///     the number of axes reflects the number of loops they
+    ///     depend on.
+    /// if we have
+    /// for (i = I, j = J, m = M, n = N) {
+    ///   C(m,n) = foo(C(m,n), ...)
+    /// }
+    /// then we have dependencies that
+    /// the load C(m,n) [ i = x, j = y ]
+    /// happens after the store C(m,n) [ i = x-1, j = y], and
+    /// happens after the store C(m,n) [ i = x, j = y-1]
+    /// and that the store C(m,n) [ i = x, j = y ]
+    /// happens after the load C(m,n) [ i = x-1, j = y], and
+    /// happens after the load C(m,n) [ i = x, j = y-1]
+    ///
     void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
         // note, axes should be fully delinearized, so should line up
         // as a result of preprocessing.
@@ -259,8 +316,8 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             } while (++e < numEdges);
         }
     }
-    // fills all the edges between memory accesses, checking for
-    // dependencies.
+    /// fills all the edges between memory accesses, checking for
+    /// dependencies.
     void fillEdges() {
         // TODO: handle predicates
         for (size_t i = 1; i < memory.size(); ++i) {
@@ -276,9 +333,9 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             }
         }
     }
-    // used in searchOperandsForLoads
-    // if an operand is stored, we can reload it.
-    // This will insert a new store memory access.
+    /// used in searchOperandsForLoads
+    /// if an operand is stored, we can reload it.
+    /// This will insert a new store memory access.
     bool searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                               ScheduledNode &node, llvm::User *user,
                               unsigned nodeIndex) {
@@ -317,16 +374,16 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         } else if (!searchValueForStores(visited, node, user, nodeIndex))
             searchOperandsForLoads(visited, node, user, nodeIndex);
     }
-    // We search uses of user `u` for any stores so that we can assign the use
-    // and the store the same schedule. This is done because it is assumed the
-    // data is held in registers (or, if things go wrong, spilled to the stack)
-    // in between a load and a store. A complication is that LLVM IR can be
-    // messy, e.g. we may have %x = load %a %y = call foo(x) store %y, %b %z =
-    // call bar(y) store %z, %c here, we might lock all three operations
-    // together. However, this limits reordering opportunities; we thus want to
-    // insert a new load instruction so that we have: %x = load %a %y = call
-    // foo(x) store %y, %b %y.reload = load %b %z = call bar(y.reload) store %z,
-    // %c and we create a new edge from `store %y, %b` to `load %b`.
+    /// We search uses of user `u` for any stores so that we can assign the use
+    /// and the store the same schedule. This is done because it is assumed the
+    /// data is held in registers (or, if things go wrong, spilled to the stack)
+    /// in between a load and a store. A complication is that LLVM IR can be
+    /// messy, e.g. we may have %x = load %a %y = call foo(x) store %y, %b %z =
+    /// call bar(y) store %z, %c here, we might lock all three operations
+    /// together. However, this limits reordering opportunities; we thus want to
+    /// insert a new load instruction so that we have: %x = load %a %y = call
+    /// foo(x) store %y, %b %y.reload = load %b %z = call bar(y.reload) store
+    /// %z, %c and we create a new edge from `store %y, %b` to `load %b`.
     void searchOperandsForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                                 ScheduledNode &node, llvm::User *u,
                                 unsigned nodeIndex) {
@@ -363,10 +420,10 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
             numStores += !(m->isLoad());
         return numStores;
     }
-    // When connecting a graph, we draw direct connections between stores and
-    // loads loads may be duplicated across stores to allow for greater
-    // reordering flexibility (which should generally reduce the ultimate amount
-    // of loads executed in the eventual generated code)
+    /// When connecting a graph, we draw direct connections between stores and
+    /// loads loads may be duplicated across stores to allow for greater
+    /// reordering flexibility (which should generally reduce the ultimate
+    /// amount of loads executed in the eventual generated code)
     void connectGraph() {
         // assembles direct connections in node graph
         llvm::SmallPtrSet<llvm::User *, 32> visited;
@@ -443,11 +500,11 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         [[nodiscard]] bool missingNode(size_t i, size_t j) const {
             return !(containsNode(i) && containsNode(j));
         }
-        // returns false iff e.in and e.out are both in graph
-        // that is, to be missing, both `e.in` and `e.out` must be missing
-        // in case of multiple instances of the edge, we check all of them
-        // if any are not missing, returns false
-        // only returns true if every one of them is missing.
+        /// returns false iff e.in and e.out are both in graph
+        /// that is, to be missing, both `e.in` and `e.out` must be missing
+        /// in case of multiple instances of the edge, we check all of them
+        /// if any are not missing, returns false
+        /// only returns true if every one of them is missing.
         [[nodiscard]] bool missingNode(const Dependence &e) const {
             for (auto inIndex : e.in->nodeIndex)
                 for (auto outIndex : e.out->nodeIndex)
@@ -1267,9 +1324,9 @@ struct LinearProgramLoopBlock { // : BaseGraph<LoopBlock, ScheduledNode> {
         }
         return depSatLevel;
     }
-    // optimize at depth `d`
-    // receives graph by value, so that it is not invalidated when
-    // recursing
+    /// optimize at depth `d`
+    /// receives graph by value, so that it is not invalidated when
+    /// recursing
     [[nodiscard]] llvm::Optional<BitSet> optimize(Graph g, size_t d,
                                                   size_t maxDepth) {
         if (d >= maxDepth)
