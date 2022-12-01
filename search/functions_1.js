@@ -1,4 +1,7 @@
 var searchData=
 [
-  ['connectgraph_249',['connectGraph',['../structLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8',1,'LinearProgramLoopBlock']]]
+  ['initializeloopforest_238',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
+  ['instructionblock_239',['InstructionBlock',['../structInstructionBlock.html#a0da963376584ec923fa40b5f0438f49a',1,'InstructionBlock']]],
+  ['invariant_240',['invariant',['../classTurboLoopPass.html#a2ef223131cc2be40d5a84125403f0e7e',1,'TurboLoopPass']]],
+  ['isvalue_241',['isValue',['../structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708',1,'Instruction']]]
 ];

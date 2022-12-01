@@ -1,9 +1,16 @@
 var searchData=
 [
-  ['range_103',['Range',['../structRange.html',1,'']]],
-  ['range_3c_20b_2c_20e_20_3e_104',['Range&lt; B, E &gt;',['../structRange_3_01B_00_01E_01_4.html',1,'']]],
-  ['rational_105',['Rational',['../structRational.html',1,'']]],
-  ['recipthroughputlatency_106',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
-  ['reference_107',['Reference',['../structBitSet_1_1Reference.html',1,'BitSet::Reference'],['../structSmallSparseMatrix_1_1Reference.html',1,'SmallSparseMatrix&lt; T &gt;::Reference'],['../structBitSet64_1_1Reference.html',1,'BitSet64::Reference']]],
-  ['reverseiterator_108',['ReverseIterator',['../structBitSet64_1_1ReverseIterator.html',1,'BitSet64']]]
+  ['schedule_104',['Schedule',['../structSchedule.html',1,'']]],
+  ['schedulednode_105',['ScheduledNode',['../structScheduledNode.html',1,'']]],
+  ['simplex_106',['Simplex',['../structSimplex.html',1,'']]],
+  ['sliceview_107',['SliceView',['../structSliceView.html',1,'']]],
+  ['smallsparsematrix_108',['SmallSparseMatrix',['../structSmallSparseMatrix.html',1,'']]],
+  ['solution_109',['Solution',['../structSimplex_1_1Solution.html',1,'Simplex']]],
+  ['squarematrix_110',['SquareMatrix',['../structSquareMatrix.html',1,'']]],
+  ['squarematrix_3c_20rational_20_3e_111',['SquareMatrix&lt; Rational &gt;',['../structSquareMatrix.html',1,'']]],
+  ['squareptrmatrix_112',['SquarePtrMatrix',['../structSquarePtrMatrix.html',1,'']]],
+  ['stridediterator_113',['StridedIterator',['../structMutStridedVector_1_1StridedIterator.html',1,'MutStridedVector&lt; T &gt;::StridedIterator'],['../structStridedVector_1_1StridedIterator.html',1,'StridedVector&lt; T &gt;::StridedIterator']]],
+  ['stridedvector_114',['StridedVector',['../structStridedVector.html',1,'']]],
+  ['stridedvector_3c_20int64_5ft_20_3e_115',['StridedVector&lt; int64_t &gt;',['../structStridedVector.html',1,'']]],
+  ['sub_116',['Sub',['../structSub.html',1,'']]]
 ];
