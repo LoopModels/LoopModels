@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Class Members - Variables</title>
+<title>LoopModels: Instruction::InstructionCache Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -45,7 +45,6 @@ $(function() {
 });
 /* @license-end */</script>
 <div id="main-nav"></div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -60,26 +59,31 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="structInstruction.html">Instruction</a></li><li class="navelem"><a class="el" href="structInstruction_1_1InstructionCache.html">InstructionCache</a></li>  </ul>
+</div>
+</div><!-- top -->
+<div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structInstruction_1_1InstructionCache-members.html">List of all members</a>  </div>
+  <div class="headertitle">
+<div class="title">Instruction::InstructionCache Struct Reference</div>  </div>
+</div><!--header-->
 <div class="contents">
-&#160;<ul>
-<li>costs
-: <a class="el" href="structInstruction.html#a253741b3d388205223a19405de9fe044">Instruction</a>
-</li>
-<li>exitBlock
-: <a class="el" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">LoopTreeSchedule</a>
-</li>
-<li>id
-: <a class="el" href="structInstruction_1_1Identifier.html#a024db5e363a24ecf8f4d1db240ae814b">Instruction::Identifier</a>
-</li>
-<li>loopNest
-: <a class="el" href="structLoopTreeSchedule.html#a96581dbcdf7bea5bfbc8565e7d02a9bb">LoopTreeSchedule</a>
-</li>
-<li>nullptr
-: <a class="el" href="structInstruction_1_1Identifier.html#a299a2612dc6d3054f1c953fc4adde73e">Instruction::Identifier</a>
-</li>
-<li>preHeader
-: <a class="el" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">LoopTreeSchedule</a>
-</li>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a8d8bca55f1c24b5503365792b026c307"><td class="memItemLeft" align="right" valign="top"><a id="a8d8bca55f1c24b5503365792b026c307"></a>
+llvm::DenseMap&lt; llvm::Instruction *, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>llvmToInternalMap</b></td></tr>
+<tr class="separator:a8d8bca55f1c24b5503365792b026c307"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc567b70b56a65ca1151155695e3bf7f"><td class="memItemLeft" align="right" valign="top"><a id="adc567b70b56a65ca1151155695e3bf7f"></a>
+llvm::DenseMap&lt; std::pair&lt; <a class="el" href="structInstruction_1_1Identifier.html">Identifier</a>, llvm::SmallVector&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; &gt;, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>argMap</b></td></tr>
+<tr class="separator:adc567b70b56a65ca1151155695e3bf7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

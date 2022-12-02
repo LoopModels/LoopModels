@@ -81,384 +81,427 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Intrinsics.h&gt;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &lt;llvm/IR/Type.h&gt;</span></div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Alignment.h&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Casting.h&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/InstructionCost.h&gt;</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/MathExtras.h&gt;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="structRecipThroughputLatency.html">   17</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    llvm::InstructionCost recipThroughput;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    llvm::InstructionCost latency;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordtype">bool</span> isValid()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keywordflow">return</span> recipThroughput.isValid() &amp;&amp; latency.isValid();</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    }</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">static</span> <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getInvalid() {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="keywordflow">return</span> {llvm::InstructionCost::getInvalid(),</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                llvm::InstructionCost::getInvalid()};</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    }</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;};</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structInstruction.html">   29</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structInstruction.html">Instruction</a> {</div>
-<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="structInstruction.html#a16990b8e17f4b6d2a25530fd8a246ea1">   31</a></span>&#160;    llvm::Intrinsic::ID <a class="code" href="structInstruction.html#a16990b8e17f4b6d2a25530fd8a246ea1">id</a>; <span class="comment">// getOpcode()</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment"></span>    <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;        <a class="code" href="structArrayReference.html">ArrayReference</a> *ref;  <span class="comment">// load or store</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        llvm::Function *func; <span class="comment">// call</span></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;        llvm::Value *val;     <span class="comment">// other</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    } ptr{<span class="keyword">nullptr</span>};</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    llvm::Type *type;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    llvm::SmallVector&lt;Instruction *&gt; operands;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    llvm::SmallVector&lt;Instruction *&gt; users;</div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structInstruction.html#a253741b3d388205223a19405de9fe044">   42</a></span>&#160;    llvm::SmallVector&lt;RecipThroughputLatency&gt; <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    llvm::TargetTransformInfo &amp;TTI;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">bool</span> isCall()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        assert((<span class="keywordtype">id</span> != llvm::Instruction::Call) || (ptr.func != <span class="keyword">nullptr</span>));</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span> == llvm::Instruction::Call;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keywordtype">bool</span> isLoad()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        assert((<span class="keywordtype">id</span> != llvm::Instruction::Load) || (ptr.ref != <span class="keyword">nullptr</span>));</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span> == llvm::Instruction::Load;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    }</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="keywordtype">bool</span> isStore()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        assert((<span class="keywordtype">id</span> != llvm::Instruction::Load) || (ptr.ref != <span class="keyword">nullptr</span>));</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span> == llvm::Instruction::Store;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    }</div>
-<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">   57</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> x = llvm::Instruction::OtherOpsEnd + 1;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        assert((<span class="keywordtype">id</span> != x) || (ptr.val != <span class="keyword">nullptr</span>));</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span> == x;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordtype">bool</span> isInstruction(<span class="keywordtype">unsigned</span> opCode)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <span class="keywordtype">id</span> == opCode; }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordtype">bool</span> isShuffle()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ShuffleVector);</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordtype">bool</span> isFcmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FCmp); }</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keywordtype">bool</span> isIcmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ICmp); }</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordtype">bool</span> isCmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isFcmp() || isIcmp(); }</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">bool</span> isSelect()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::Select); }</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordtype">bool</span> isExtract()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ExtractElement);</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Casting.h&gt;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/InstructionCost.h&gt;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/MathExtras.h&gt;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="structRecipThroughputLatency.html">   18</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    llvm::InstructionCost recipThroughput;</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    llvm::InstructionCost latency;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordtype">bool</span> isValid()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;        <span class="keywordflow">return</span> recipThroughput.isValid() &amp;&amp; latency.isValid();</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    }</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keyword">static</span> <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getInvalid() {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;        <span class="keywordflow">return</span> {llvm::InstructionCost::getInvalid(),</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                llvm::InstructionCost::getInvalid()};</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    }</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="structInstruction.html">   30</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structInstruction.html">Instruction</a> {</div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="structInstruction_1_1Identifier.html">   31</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structInstruction_1_1Identifier.html">Identifier</a> {</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="structInstruction_1_1Identifier.html#a024db5e363a24ecf8f4d1db240ae814b">   33</a></span>&#160;        llvm::Intrinsic::ID <a class="code" href="structInstruction_1_1Identifier.html#a024db5e363a24ecf8f4d1db240ae814b">id</a>; <span class="comment">// getOpcode()</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment"></span>        <span class="keyword">union </span>{</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;            <a class="code" href="structArrayReference.html">ArrayReference</a> *ref;  <span class="comment">// load or store</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;            llvm::Function *func; <span class="comment">// call</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;            llvm::Value *val;     <span class="comment">// other</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        } ptr{<span class="keyword">nullptr</span>};</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    };</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    Identifier id;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    llvm::Type *type;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    llvm::SmallVector&lt;Instruction *&gt; operands;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    llvm::SmallVector&lt;Instruction *&gt; users;</div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="structInstruction.html#a253741b3d388205223a19405de9fe044">   46</a></span>&#160;    llvm::SmallVector&lt;RecipThroughputLatency&gt; <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="comment">// llvm::TargetTransformInfo &amp;TTI;</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="comment">// Instruction(llvm::Intrinsic::ID id, llvm::Type *type) : id(id),</span></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="comment">// type(type) {</span></div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="comment">//     // this-&gt;TTI = TTI;</span></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="structInstruction_1_1InstructionCache.html">   53</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structInstruction_1_1InstructionCache.html">InstructionCache</a> {</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;        llvm::DenseMap&lt;llvm::Instruction *, Instruction *&gt; llvmToInternalMap;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        llvm::DenseMap&lt;std::pair&lt;Identifier, llvm::SmallVector&lt;Instruction *&gt;&gt;,</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;                       <a class="code" href="structInstruction.html">Instruction</a> *&gt;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;            argMap;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    };</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="comment">// static Instruction *create(llvm::BumpPtrAllocator &amp;alloc,</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="comment">//                            llvm::Instruction *instr) {</span></div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="comment">//     llvm::Intrinsic::ID id = instr-&gt;getOpcode();</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="comment">//     Instruction *i = new (alloc) Instruction(id, instr-&gt;getType(), TTI);</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="comment">//     return new Instruction(id, type, TTI);</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordtype">bool</span> isCall()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        assert((<span class="keywordtype">id</span>.<span class="keywordtype">id</span> != llvm::Instruction::Call) || (<span class="keywordtype">id</span>.ptr.func != <span class="keyword">nullptr</span>));</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span>.id == llvm::Instruction::Call;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    }</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">bool</span> isLoad()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        assert((<span class="keywordtype">id</span>.<span class="keywordtype">id</span> != llvm::Instruction::Load) || (<span class="keywordtype">id</span>.ptr.ref != <span class="keyword">nullptr</span>));</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span>.id == llvm::Instruction::Load;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordtype">bool</span> isInsert()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::InsertElement);</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordtype">bool</span> isExtractValue()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ExtractValue);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordtype">bool</span> isInsertValue()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::InsertValue);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">bool</span> isFMul()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FMul); }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">bool</span> isFNeg()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FNeg); }</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordtype">bool</span> isFMulOrFNegOfFMul()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keywordflow">return</span> isFMul() || (isFNeg() &amp;&amp; operands[0]-&gt;isFMul());</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keywordtype">bool</span> isStore()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        assert((<span class="keywordtype">id</span>.<span class="keywordtype">id</span> != llvm::Instruction::Load) || (<span class="keywordtype">id</span>.ptr.ref != <span class="keyword">nullptr</span>));</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span>.id == llvm::Instruction::Store;</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    }</div>
+<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">   78</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> x = llvm::Instruction::OtherOpsEnd + 1;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        assert((<span class="keywordtype">id</span>.<span class="keywordtype">id</span> != x) || (<span class="keywordtype">id</span>.ptr.val != <span class="keyword">nullptr</span>));</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        <span class="keywordflow">return</span> <span class="keywordtype">id</span>.id == x;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    }</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">bool</span> isInstruction(<span class="keywordtype">unsigned</span> opCode)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> <span class="keywordtype">id</span>.id == opCode; }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordtype">bool</span> isShuffle()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ShuffleVector);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">bool</span> isFAdd()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FAdd); }</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">bool</span> isFSub()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FSub); }</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordtype">bool</span> allowsContract()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> m = llvm::dyn_cast&lt;llvm::Instruction&gt;(ptr.val))</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;            <span class="keywordflow">return</span> m-&gt;getFastMathFlags().allowContract();</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">bool</span> isFcmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FCmp); }</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">bool</span> isIcmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ICmp); }</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordtype">bool</span> isCmp()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isFcmp() || isIcmp(); }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keywordtype">bool</span> isSelect()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::Select); }</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordtype">bool</span> isExtract()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ExtractElement);</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordtype">bool</span> isMulAdd()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="keywordflow">if</span> (!isCall())</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        llvm::Intrinsic::ID intrinID = ptr.func-&gt;getIntrinsicID();</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordflow">return</span> intrinID == llvm::Intrinsic::fma ||</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;               intrinID == llvm::Intrinsic::fmuladd;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    }</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth,</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;                                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> log2VectorWidth) {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> c;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keywordflow">if</span> (log2VectorWidth &gt;= <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>.size()) {</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;            <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>.resize(log2VectorWidth + 1,</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                         RecipThroughputLatency::getInvalid());</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth] = c = calculateCost(vectorWidth);</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            c = <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth];</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;            <span class="comment">// TODO: differentiate between uninitialized and invalid</span></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="keywordflow">if</span> (!c.isValid())</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;                <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth] = c = calculateCost(vectorWidth);</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        }</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keywordflow">return</span> c;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    }</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(uint32_t vectorWidth) {</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <span class="keywordflow">return</span> getCost(vectorWidth, llvm::Log2_32(vectorWidth));</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    }</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(uint64_t vectorWidth) {</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keywordflow">return</span> getCost(vectorWidth, llvm::Log2_64(vectorWidth));</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="keywordtype">bool</span> isInsert()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::InsertElement);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    }</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">bool</span> isExtractValue()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::ExtractValue);</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    }</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordtype">bool</span> isInsertValue()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;        <span class="keywordflow">return</span> isInstruction(llvm::Instruction::InsertValue);</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    }</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">bool</span> isFMul()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FMul); }</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordtype">bool</span> isFNeg()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FNeg); }</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keywordtype">bool</span> isFMulOrFNegOfFMul()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="keywordflow">return</span> isFMul() || (isFNeg() &amp;&amp; operands[0]-&gt;isFMul());</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    }</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keywordtype">bool</span> isFAdd()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FAdd); }</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordtype">bool</span> isFSub()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> isInstruction(llvm::Instruction::FSub); }</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordtype">bool</span> allowsContract()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> m = llvm::dyn_cast&lt;llvm::Instruction&gt;(<span class="keywordtype">id</span>.ptr.val))</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <span class="keywordflow">return</span> m-&gt;getFastMathFlags().allowContract();</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    }</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordtype">bool</span> isMulAdd()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="keywordflow">if</span> (!isCall())</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;        llvm::Intrinsic::ID intrinID = <span class="keywordtype">id</span>.ptr.func-&gt;getIntrinsicID();</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;        <span class="keywordflow">return</span> intrinID == llvm::Intrinsic::fma ||</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;               intrinID == llvm::Intrinsic::fmuladd;</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    }</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    getCostLog2VectorWidth(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> log2VectorWidth) {</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keywordflow">return</span> getCost(1 &lt;&lt; log2VectorWidth, log2VectorWidth);</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <span class="keyword">static</span> llvm::Type *getType(llvm::Type *T, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        <span class="keywordflow">if</span> (vectorWidth == 1)</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;            <span class="keywordflow">return</span> T;</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keywordflow">return</span> llvm::FixedVectorType::get(T, vectorWidth);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    }</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    llvm::Type *getType(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keywordflow">return</span> getType(type, vectorWidth);</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    }</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor">#if LLVM_VERSION_MAJOR &gt;= 16</span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    llvm::TargetTransformInfo::OperandValueInfo</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    getOperandInfo(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        <a class="code" href="structInstruction.html">Instruction</a> *opi = operands[i];</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        <span class="keywordflow">if</span> (opi-&gt;<a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>())</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            <span class="keywordflow">return</span> TTI.getOperandInfo(opi-&gt;ptr.val);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        <span class="keywordflow">return</span> TTI::OK_AnyValue;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;                                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth,</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;                                   <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> log2VectorWidth) {</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> c;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        <span class="keywordflow">if</span> (log2VectorWidth &gt;= <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>.size()) {</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;            <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>.resize(log2VectorWidth + 1,</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                         RecipThroughputLatency::getInvalid());</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;            <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth] = c = calculateCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;            c = <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth];</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            <span class="comment">// TODO: differentiate between uninitialized and invalid</span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;            <span class="keywordflow">if</span> (!c.isValid())</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;                <a class="code" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a>[log2VectorWidth] = c = calculateCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;        }</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;        <span class="keywordflow">return</span> c;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    }</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;                                   uint32_t vectorWidth) {</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        <span class="keywordflow">return</span> getCost(TTI, vectorWidth, llvm::Log2_32(vectorWidth));</div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    }</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcUnaryArithmeticCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        <span class="keywordflow">return</span> {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;            TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info),</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;                TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info)</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        }</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    }</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcBinaryArithmeticCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keyword">auto</span> op1info = getOperandInfo(1);</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;        <span class="keywordflow">return</span> {</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;            TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info,</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;                op1info),</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;                TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;                    op1info)</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        }</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    }</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    std::pair&lt;llvm::TargetTransformInfo::OperandValueKind,</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;              llvm::TargetTransformInfo::OperandValueProperties&gt;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    getOperandInfo(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;        <a class="code" href="structInstruction.html">Instruction</a> *opi = operands[i];</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keywordflow">if</span> (opi-&gt;<a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>()) {</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> c = llvm::dyn_cast&lt;llvm::ConstantInt&gt;(opi-&gt;ptr.val)) {</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;                llvm::APInt v = c-&gt;getValue();</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;                <span class="keywordflow">if</span> (v.isPowerOf2())</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                    <span class="keywordflow">return</span> std::make_pair(</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                        llvm::TargetTransformInfo::OK_UniformConstantValue,</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;                        llvm::TargetTransformInfo::OP_PowerOf2);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;                <span class="keywordflow">return</span> std::make_pair(</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160; </div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                    llvm::TargetTransformInfo::OK_UniformConstantValue,</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                    llvm::TargetTransformInfo::OP_None);</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;                <span class="comment">// if (v.isNegative()){</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                <span class="comment">//     v.negate();</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                <span class="comment">//     if (v.isPowerOf2())</span></div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;                <span class="comment">//  return llvm::TargetTransformInfo::OP_NegatedPowerOf@;</span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                <span class="comment">// }</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;            }</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;        }</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;        <span class="keywordflow">return</span> std::make_pair(llvm::TargetTransformInfo::OK_AnyValue,</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;                              llvm::TargetTransformInfo::OP_None);</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    }</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcUnaryArithmeticCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;        llvm::Type *T = type;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        <span class="keywordflow">if</span> (vectorWidth &gt; 1)</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;            T = llvm::FixedVectorType::get(T, vectorWidth);</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;        <span class="keywordflow">return</span> {TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput,</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;                    op0info.first, llvm::TargetTransformInfo::OK_AnyValue,</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;                    op0info.second),</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;                TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency,</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;                    op0info.first, llvm::TargetTransformInfo::OK_AnyValue,</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;                    op0info.second)};</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    }</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcBinaryArithmeticCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;        <span class="keyword">auto</span> op1info = getOperandInfo(1);</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <span class="keywordflow">return</span> {</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;            TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput,</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                op0info.first, op1info.first, op0info.second, op1info.second),</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;            TTI.getArithmeticInstrCost(</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info.first,</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;                op1info.first, op0info.second, op1info.second)};</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    }</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="keywordtype">bool</span> operandIsLoad(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <span class="keywordflow">return</span> operands[i]-&gt;isLoad();</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    }</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="keywordtype">bool</span> userIsStore(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> users[i]-&gt;isLoad(); }</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    <span class="keywordtype">bool</span> userIsStore()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> u : users)</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            <span class="keywordflow">if</span> (u-&gt;isStore())</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    }</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    llvm::TargetTransformInfo::CastContextHint getCastContext()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> cast = llvm::dyn_cast&lt;llvm::CastInst&gt;(ptr.val))</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;            <span class="keywordflow">return</span> TTI.getCastContextHint(cast);</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordflow">if</span> (operandIsLoad() || userIsStore())</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;            <span class="keywordflow">return</span> llvm::TargetTransformInfo::CastContextHint::Normal;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        <span class="comment">// TODO: check for whether mask, interleave, or reversed is likely.</span></div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;        <span class="keywordflow">return</span> llvm::TargetTransformInfo::CastContextHint::None;</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> getCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;                                   uint64_t vectorWidth) {</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;        <span class="keywordflow">return</span> getCost(TTI, vectorWidth, llvm::Log2_64(vectorWidth));</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    }</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    getCostLog2VectorWidth(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;                           <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> log2VectorWidth) {</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        <span class="keywordflow">return</span> getCost(TTI, 1 &lt;&lt; log2VectorWidth, log2VectorWidth);</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;    }</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keyword">static</span> llvm::Type *getType(llvm::Type *T, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        <span class="keywordflow">if</span> (vectorWidth == 1)</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;            <span class="keywordflow">return</span> T;</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keywordflow">return</span> llvm::FixedVectorType::get(T, vectorWidth);</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    }</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;    llvm::Type *getType(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;        <span class="keywordflow">return</span> getType(type, vectorWidth);</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    }</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="preprocessor">#if LLVM_VERSION_MAJOR &gt;= 16</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    llvm::TargetTransformInfo::OperandValueInfo</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    getOperandInfo(llvm::TargetTransformInfo &amp;TTI, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <a class="code" href="structInstruction.html">Instruction</a> *opi = operands[i];</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;        <span class="keywordflow">if</span> (opi-&gt;<a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>())</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;            <span class="keywordflow">return</span> TTI.getOperandInfo(opi-&gt;ptr.val);</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;        <span class="keywordflow">return</span> TTI::OK_AnyValue;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    }</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    calcUnaryArithmeticCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;                            <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(TTI, 0);</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;        <span class="keywordflow">return</span> {</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;            TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info),</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;                TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info)</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;        }</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    }</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;    calcBinaryArithmeticCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;                             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(TTI, 0);</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;        <span class="keyword">auto</span> op1info = getOperandInfo(TTI, 1);</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;        <span class="keywordflow">return</span> {</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;            TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;                <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput, op0info,</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;                op1info),</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;                TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;                    <span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info,</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                    op1info)</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        }</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    }</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    std::pair&lt;llvm::TargetTransformInfo::OperandValueKind,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;              llvm::TargetTransformInfo::OperandValueProperties&gt;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    getOperandInfo(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        <a class="code" href="structInstruction.html">Instruction</a> *opi = operands[i];</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;        <span class="keywordflow">if</span> (opi-&gt;<a class="code" href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">isValue</a>()) {</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> c = llvm::dyn_cast&lt;llvm::ConstantInt&gt;(opi-&gt;id.ptr.val)) {</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;                llvm::APInt v = c-&gt;getValue();</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;                <span class="keywordflow">if</span> (v.isPowerOf2())</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;                    <span class="keywordflow">return</span> std::make_pair(</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;                        llvm::TargetTransformInfo::OK_UniformConstantValue,</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;                        llvm::TargetTransformInfo::OP_PowerOf2);</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;                <span class="keywordflow">return</span> std::make_pair(</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160; </div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;                    llvm::TargetTransformInfo::OK_UniformConstantValue,</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;                    llvm::TargetTransformInfo::OP_None);</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;                <span class="comment">// if (v.isNegative()){</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;                <span class="comment">//     v.negate();</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;                <span class="comment">//     if (v.isPowerOf2())</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;                <span class="comment">//  return llvm::TargetTransformInfo::OP_NegatedPowerOf@;</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;                <span class="comment">// }</span></div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;            }</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;        }</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;        <span class="keywordflow">return</span> std::make_pair(llvm::TargetTransformInfo::OK_AnyValue,</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;                              llvm::TargetTransformInfo::OP_None);</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    }</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    calcUnaryArithmeticCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;                            <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        llvm::Type *T = type;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordflow">if</span> (vectorWidth &gt; 1)</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;            T = llvm::FixedVectorType::get(T, vectorWidth);</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordflow">return</span> {TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                    <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput,</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;                    op0info.first, llvm::TargetTransformInfo::OK_AnyValue,</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;                    op0info.second),</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;                TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;                    <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency,</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;                    op0info.first, llvm::TargetTransformInfo::OK_AnyValue,</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;                    op0info.second)};</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    }</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCastCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;        llvm::Type *srcT = getType(operands.front()-&gt;type, vectorWidth);</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;        llvm::Type *dstT = getType(vectorWidth);</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        llvm::TargetTransformInfo::CastContextHint ctx = getCastContext();</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;        <span class="keywordflow">return</span> {TTI.getCastInstrCost(</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                    <span class="keywordtype">id</span>, dstT, srcT, ctx,</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                TTI.getCastInstrCost(<span class="keywordtype">id</span>, dstT, srcT, ctx,</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;                                     llvm::TargetTransformInfo::TCK_Latency)};</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    }</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    llvm::CmpInst::Predicate getPredicate()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        <span class="keywordflow">if</span> (isSelect())</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            <span class="keywordflow">return</span> operands.front()-&gt;getPredicate();</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;        assert(isCmp());</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> cmp = llvm::dyn_cast&lt;llvm::CmpInst&gt;(ptr.val))</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;            <span class="keywordflow">return</span> cmp-&gt;getPredicate();</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordflow">return</span> isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                        : llvm::CmpInst::BAD_ICMP_PREDICATE;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    }</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCmpSelectCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;        llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;        llvm::CmpInst::Predicate pred = getPredicate();</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        <span class="keywordflow">return</span> {TTI.getCmpSelInstrCost(</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;                    <span class="keywordtype">id</span>, T, cmpT, pred,</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;                TTI.getCmpSelInstrCost(<span class="keywordtype">id</span>, T, cmpT, pred,</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                                       llvm::TargetTransformInfo::TCK_Latency)};</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    }</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCallCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        llvm::SmallVector&lt;llvm::Type *, 4&gt; argTypes;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> op : operands)</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;            argTypes.push_back(op-&gt;getType(vectorWidth));</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        <span class="keywordflow">return</span> {TTI.getCallInstrCost(</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                    ptr.func, T, argTypes,</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;                TTI.getCallInstrCost(ptr.func, T, argTypes,</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;                                     llvm::TargetTransformInfo::TCK_Latency)};</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    }</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    calculateCostContiguousLoadStore(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;        constexpr <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> AddressSpace = 0;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        llvm::Align alignment = ptr.ref-&gt;getAlignment();</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;        <span class="keywordflow">return</span> {</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;            TTI.getMemoryOpCost(<span class="keywordtype">id</span>, T, alignment, AddressSpace,</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;                                llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;            TTI.getMemoryOpCost(<span class="keywordtype">id</span>, T, alignment, AddressSpace,</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;                                llvm::TargetTransformInfo::TCK_Latency)};</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    }</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateCostFAddFSub(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="comment">// TODO: allow not assuming hardware FMA support</span></div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordflow">if</span> ((operands[0]-&gt;isFMulOrFNegOfFMul() ||</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;             operands[1]-&gt;isFMulOrFNegOfFMul()) &amp;&amp;</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;            allowsContract())</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;            <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordflow">return</span> calcBinaryArithmeticCost(vectorWidth);</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    }</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    <span class="keywordtype">bool</span> allUsersAdditiveContract() {</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> u : users)</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;            <span class="keywordflow">if</span> (!(((u-&gt;isFAdd()) || (u-&gt;isFSub())) &amp;&amp; (u-&gt;allowsContract())))</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    calcBinaryArithmeticCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;                             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;        <span class="keyword">auto</span> op0info = getOperandInfo(0);</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;        <span class="keyword">auto</span> op1info = getOperandInfo(1);</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;        <span class="keywordflow">return</span> {</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;            TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;                <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_RecipThroughput,</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;                op0info.first, op1info.first, op0info.second, op1info.second),</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            TTI.getArithmeticInstrCost(</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;                <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, llvm::TargetTransformInfo::TCK_Latency, op0info.first,</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;                op1info.first, op0info.second, op1info.second)};</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;    }</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;    <span class="keywordtype">bool</span> operandIsLoad(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i = 0)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;        <span class="keywordflow">return</span> operands[i]-&gt;isLoad();</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;    }</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;    <span class="keywordtype">bool</span> userIsStore(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i)<span class="keyword"> const </span>{ <span class="keywordflow">return</span> users[i]-&gt;isLoad(); }</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;    <span class="keywordtype">bool</span> userIsStore()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> u : users)</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;            <span class="keywordflow">if</span> (u-&gt;isStore())</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    }</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    llvm::TargetTransformInfo::CastContextHint</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    getCastContext(llvm::TargetTransformInfo &amp;TTI)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> cast = llvm::dyn_cast&lt;llvm::CastInst&gt;(<span class="keywordtype">id</span>.ptr.val))</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;            <span class="keywordflow">return</span> TTI.getCastContextHint(cast);</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordflow">if</span> (operandIsLoad() || userIsStore())</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;            <span class="keywordflow">return</span> llvm::TargetTransformInfo::CastContextHint::Normal;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        <span class="comment">// TODO: check for whether mask, interleave, or reversed is likely.</span></div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;        <span class="keywordflow">return</span> llvm::TargetTransformInfo::CastContextHint::None;</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    }</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCastCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                                        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        llvm::Type *srcT = getType(operands.front()-&gt;type, vectorWidth);</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        llvm::Type *dstT = getType(vectorWidth);</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;        llvm::TargetTransformInfo::CastContextHint ctx = getCastContext(TTI);</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;        <span class="keywordflow">return</span> {TTI.getCastInstrCost(</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                    <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, dstT, srcT, ctx,</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                TTI.getCastInstrCost(<span class="keywordtype">id</span>.<span class="keywordtype">id</span>, dstT, srcT, ctx,</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                                     llvm::TargetTransformInfo::TCK_Latency)};</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    }</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    llvm::CmpInst::Predicate getPredicate()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        <span class="keywordflow">if</span> (isSelect())</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;            <span class="keywordflow">return</span> operands.front()-&gt;getPredicate();</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        assert(isCmp());</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> cmp = llvm::dyn_cast&lt;llvm::CmpInst&gt;(<span class="keywordtype">id</span>.ptr.val))</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;            <span class="keywordflow">return</span> cmp-&gt;getPredicate();</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="keywordflow">return</span> isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;                        : llvm::CmpInst::BAD_ICMP_PREDICATE;</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    }</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCmpSelectCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;                                             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        llvm::CmpInst::Predicate pred = getPredicate();</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordflow">return</span> {TTI.getCmpSelInstrCost(</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;                    <span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, cmpT, pred,</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;                TTI.getCmpSelInstrCost(<span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, cmpT, pred,</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;                                       llvm::TargetTransformInfo::TCK_Latency)};</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    }</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateFNegCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160; </div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        <span class="keywordflow">if</span> (operands[0]-&gt;isFMul() &amp;&amp; allUsersAdditiveContract())</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;            <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="keywordflow">return</span> calcUnaryArithmeticCost(vectorWidth);</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    }</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateCost(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        <span class="keywordflow">switch</span> (<span class="keywordtype">id</span>) {</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FSub:</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;            <span class="keywordflow">return</span> calculateCostFAddFSub(vectorWidth);</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Sub:</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FDiv:</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Shl:</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::LShr:</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::AShr:</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::And:</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Xor:</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SDiv:</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SRem:</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::UDiv:</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FRem: <span class="comment">// TODO: check if frem is supported?</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::URem:</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;            <span class="comment">// two arg arithmetic cost</span></div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;            <span class="keywordflow">return</span> calcBinaryArithmeticCost(vectorWidth);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FNeg:</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;            <span class="comment">// one arg arithmetic cost</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;            <span class="keywordflow">return</span> calculateFNegCost(vectorWidth);</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Trunc:</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::ZExt:</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SExt:</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPTrunc:</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPExt:</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPToUI:</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPToSI:</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::UIToFP:</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SIToFP:</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::IntToPtr:</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::PtrToInt:</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::BitCast:</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::AddrSpaceCast:</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;            <span class="comment">// one arg cast cost</span></div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;            <span class="keywordflow">return</span> calcCastCost(vectorWidth);</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::ICmp:</div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FCmp:</div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Select:</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;            <span class="keywordflow">return</span> calcCmpSelectCost(vectorWidth);</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;            <span class="keywordflow">return</span> calcCallCost(vectorWidth);</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Load:</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Store:</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;            <span class="keywordflow">return</span> calculateCostContiguousLoadStore(vectorWidth);</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;            <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    }</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    uint8_t associativeOperandsFlag()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        <span class="keywordflow">switch</span> (<span class="keywordtype">id</span>) {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;            <span class="keywordflow">if</span> (!isMulAdd())</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;            <span class="comment">// fall through</span></div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::And:</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Xor:</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;            <span class="keywordflow">return</span> 0x3;</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;        <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;            <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;        }</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    }</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;};</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160; </div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;<span class="comment">// unsigned x = llvm::Instruction::FAdd;</span></div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;<span class="comment">// unsigned y = llvm::Instruction::LShr;</span></div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;<span class="comment">// unsigned z = llvm::Instruction::Call;</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;<span class="comment">// unsigned w = llvm::Instruction::Load;</span></div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;<span class="comment">// unsigned v = llvm::Instruction::Store;</span></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<span class="comment">// // getIntrinsicID()</span></div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;</span></div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calcCallCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;                                        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        llvm::SmallVector&lt;llvm::Type *, 4&gt; argTypes;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> op : operands)</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;            argTypes.push_back(op-&gt;getType(vectorWidth));</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="keywordflow">return</span> {TTI.getCallInstrCost(</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;                    <span class="keywordtype">id</span>.ptr.func, T, argTypes,</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;                    llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;                TTI.getCallInstrCost(<span class="keywordtype">id</span>.ptr.func, T, argTypes,</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;                                     llvm::TargetTransformInfo::TCK_Latency)};</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    }</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    calculateCostContiguousLoadStore(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;                                     <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;        constexpr <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> AddressSpace = 0;</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;        llvm::Type *T = getType(vectorWidth);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;        llvm::Align alignment = <span class="keywordtype">id</span>.ptr.ref-&gt;getAlignment();</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;        <span class="keywordflow">return</span> {</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;            TTI.getMemoryOpCost(<span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, alignment, AddressSpace,</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;                                llvm::TargetTransformInfo::TCK_RecipThroughput),</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;            TTI.getMemoryOpCost(<span class="keywordtype">id</span>.<span class="keywordtype">id</span>, T, alignment, AddressSpace,</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;                                llvm::TargetTransformInfo::TCK_Latency)};</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    }</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateCostFAddFSub(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;                                                 <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;        <span class="comment">// TODO: allow not assuming hardware FMA support</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        <span class="keywordflow">if</span> ((operands[0]-&gt;isFMulOrFNegOfFMul() ||</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;             operands[1]-&gt;isFMulOrFNegOfFMul()) &amp;&amp;</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;            allowsContract())</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;            <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        <span class="keywordflow">return</span> calcBinaryArithmeticCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    }</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="keywordtype">bool</span> allUsersAdditiveContract() {</div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> u : users)</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;            <span class="keywordflow">if</span> (!(((u-&gt;isFAdd()) || (u-&gt;isFSub())) &amp;&amp; (u-&gt;allowsContract())))</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;                <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    }</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateFNegCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;                                             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160; </div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;        <span class="keywordflow">if</span> (operands[0]-&gt;isFMul() &amp;&amp; allUsersAdditiveContract())</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;            <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;        <span class="keywordflow">return</span> calcUnaryArithmeticCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    }</div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;    <a class="code" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> calculateCost(llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;                                         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> vectorWidth) {</div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;        <span class="keywordflow">switch</span> (<span class="keywordtype">id</span>.<span class="keywordtype">id</span>) {</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FSub:</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;            <span class="keywordflow">return</span> calculateCostFAddFSub(TTI, vectorWidth);</div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Sub:</div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FDiv:</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Shl:</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::LShr:</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::AShr:</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::And:</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Xor:</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SDiv:</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SRem:</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::UDiv:</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FRem: <span class="comment">// TODO: check if frem is supported?</span></div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::URem:</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;            <span class="comment">// two arg arithmetic cost</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            <span class="keywordflow">return</span> calcBinaryArithmeticCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FNeg:</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;            <span class="comment">// one arg arithmetic cost</span></div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;            <span class="keywordflow">return</span> calculateFNegCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Trunc:</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::ZExt:</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SExt:</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPTrunc:</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPExt:</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPToUI:</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FPToSI:</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::UIToFP:</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::SIToFP:</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::IntToPtr:</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::PtrToInt:</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::BitCast:</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::AddrSpaceCast:</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;            <span class="comment">// one arg cast cost</span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;            <span class="keywordflow">return</span> calcCastCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::ICmp:</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FCmp:</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Select:</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;            <span class="keywordflow">return</span> calcCmpSelectCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;            <span class="keywordflow">return</span> calcCallCost(TTI, vectorWidth);</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Load:</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Store:</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;            <span class="keywordflow">return</span> calculateCostContiguousLoadStore(TTI, vectorWidth);</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;            <span class="keywordflow">return</span> RecipThroughputLatency::getInvalid();</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;        }</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    }</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    uint8_t associativeOperandsFlag()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;        <span class="keywordflow">switch</span> (<span class="keywordtype">id</span>.<span class="keywordtype">id</span>) {</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Call:</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;            <span class="keywordflow">if</span> (!isMulAdd())</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;                <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;            <span class="comment">// fall through</span></div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FAdd:</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Add:</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::FMul:</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Mul:</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::And:</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Or:</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;        <span class="keywordflow">case</span> llvm::Instruction::Xor:</div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;            <span class="keywordflow">return</span> 0x3;</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;        <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;            <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;        }</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;    }</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;};</div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160; </div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="comment">// unsigned x = llvm::Instruction::FAdd;</span></div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;<span class="comment">// unsigned y = llvm::Instruction::LShr;</span></div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="comment">// unsigned z = llvm::Instruction::Call;</span></div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;<span class="comment">// unsigned w = llvm::Instruction::Load;</span></div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;<span class="comment">// unsigned v = llvm::Instruction::Store;</span></div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<span class="comment">// // getIntrinsicID()</span></div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;<span class="comment">// llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
-<div class="ttc" id="astructInstruction_html_a16990b8e17f4b6d2a25530fd8a246ea1"><div class="ttname"><a href="structInstruction.html#a16990b8e17f4b6d2a25530fd8a246ea1">Instruction::id</a></div><div class="ttdeci">llvm::Intrinsic::ID id</div><div class="ttdoc">Instruction ID.</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:31</div></div>
-<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:29</div></div>
-<div class="ttc" id="astructInstruction_html_a253741b3d388205223a19405de9fe044"><div class="ttname"><a href="structInstruction.html#a253741b3d388205223a19405de9fe044">Instruction::costs</a></div><div class="ttdeci">llvm::SmallVector&lt; RecipThroughputLatency &gt; costs</div><div class="ttdoc">costs[i] == cost for vector-width 2^i</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:42</div></div>
-<div class="ttc" id="astructRecipThroughputLatency_html"><div class="ttname"><a href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:17</div></div>
-<div class="ttc" id="astructInstruction_html_aeb0c45f8cd49a92550cf4cafa0564708"><div class="ttname"><a href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">Instruction::isValue</a></div><div class="ttdeci">bool isValue() const</div><div class="ttdoc">fall back in case we need value operand</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:57</div></div>
+<div class="ttc" id="astructInstruction_1_1Identifier_html_a024db5e363a24ecf8f4d1db240ae814b"><div class="ttname"><a href="structInstruction_1_1Identifier.html#a024db5e363a24ecf8f4d1db240ae814b">Instruction::Identifier::id</a></div><div class="ttdeci">llvm::Intrinsic::ID id</div><div class="ttdoc">Instruction ID.</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:33</div></div>
+<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:30</div></div>
+<div class="ttc" id="astructInstruction_html_a253741b3d388205223a19405de9fe044"><div class="ttname"><a href="structInstruction.html#a253741b3d388205223a19405de9fe044">Instruction::costs</a></div><div class="ttdeci">llvm::SmallVector&lt; RecipThroughputLatency &gt; costs</div><div class="ttdoc">costs[i] == cost for vector-width 2^i</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:46</div></div>
+<div class="ttc" id="astructRecipThroughputLatency_html"><div class="ttname"><a href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:18</div></div>
+<div class="ttc" id="astructInstruction_html_aeb0c45f8cd49a92550cf4cafa0564708"><div class="ttname"><a href="structInstruction.html#aeb0c45f8cd49a92550cf4cafa0564708">Instruction::isValue</a></div><div class="ttdeci">bool isValue() const</div><div class="ttdoc">fall back in case we need value operand</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:78</div></div>
+<div class="ttc" id="astructInstruction_1_1InstructionCache_html"><div class="ttname"><a href="structInstruction_1_1InstructionCache.html">Instruction::InstructionCache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:53</div></div>
+<div class="ttc" id="astructInstruction_1_1Identifier_html"><div class="ttname"><a href="structInstruction_1_1Identifier.html">Instruction::Identifier</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:31</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">
