@@ -107,7 +107,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<unsigned> forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
-        std::vector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
+	llvm::SmallVector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
                                         llvm::reverse(*LI).end()};
         if (revLI.empty())
             return;
@@ -126,13 +126,13 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             H = revLI.front()->getLoopPreheader();
         }
 
-        LoopTree::pushBack(loopTrees, loopForests, forest, predicates, nullptr, *SE, revLI,
+        LoopTree::pushBack(loopTrees, loopForests, forest, nullptr, *SE, revLI,
                            H, E, true);
         for (auto &forest : loopForests)
             loopTrees[forest].addZeroLowerBounds(
                 loopTrees, loopMap, std::numeric_limits<unsigned>::max());
     }
-
+    
     /// returns index to the loop whose preheader we place it in.
     /// if it equals depth, then we must place it into the inner most loop
     /// header..
@@ -718,5 +718,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // loopBlock.memory.push_back(mem.truncateSchedule());
         for (size_t i = 0; i < root.subLoops.size(); ++i)
             fillLoopBlock(loopTrees[root.subLoops[i]]);
+    }
+
+    void buildInstructionGraph(LoopTree &root){
+	// predicates
+	
     }
 };

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
+#include "./Instruction.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
@@ -70,31 +71,22 @@ struct CPUExecutionModel {};
 struct InstructionBlock;
 struct LoopTreeSchedule;
 
+// Plan for cost modeling:
+// 1. Build Instruction graph
+// 2. Iterate over all PredicatedChains, merging instructions across branches where possible
+// 3. Create a loop tree structure for optimization
+// 4. Create InstructionBlocks at each level.
+
 struct PredicatedInstruction {
     [[no_unique_address]] Predicates predicates;
-    [[no_unique_address]] llvm::Instruction *instruction;
-    [[no_unique_address]] ArrayReference *ref;
-
-    [[no_unique_address]] union {
-        llvm::Instruction *instruction;
-        MemoryAccess *memoryAccess;
-    } instructionOrMemoryAccessPtr;
+    [[no_unique_address]] Instruction *instruction;
     [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> args;
     [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> uses;
     [[no_unique_address]] InstructionBlock *instrBlock{nullptr};
-    [[no_unique_address]] bool isMemAccess;
-    llvm::Instruction *getInstruction() {
-        if (isMemoryAccess())
-            return instructionOrMemoryAccessPtr.memoryAccess->getInstruction();
-        return instructionOrMemoryAccessPtr.instruction;
+    bool isMemoryAccess() const {
+        return instruction->isLoad() || instruction->isStore();
     }
-    MemoryAccess *getMemoryAccess() {
-        if (isMemoryAccess())
-            return instructionOrMemoryAccessPtr.memoryAccess;
-        return nullptr;
-    }
-    bool isMemoryAccess() const { return isMemAccess; }
-    bool isInstruction() const { return !isMemAccess; }
+    bool isInstruction() const { return !isMemoryAccess(); }
 };
 
 struct InstructionBlock {
@@ -132,47 +124,12 @@ struct InstructionBlock {
         auto succ1 = term->getSuccessor(1);
         if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
             // TODO: we need to fuse these blocks.
-	    
+
         } else if (chainBBs.contains(succ0)) {
             pushBlock(trackInstr, chainBBs, pred, succ0);
         } else if (chainBBs.contains(succ1)) {
             pushBlock(trackInstr, chainBBs, pred, succ1);
         }
-    }
-    /// Construct a single instruction block from a chain of
-    /// predicated basic blocks. This applies the predicates to
-    /// individual instructions, and attempts to fuse.
-    /// We use bipartite matching to merge divergences.
-    InstructionBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-                     PredicatedChain &chain, LoopTreeSchedule *loopTree)
-        : loopTree(loopTree) {
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> chainBBs;
-        for (auto &block : chain)
-            chainBBs.insert(block.basicBlock);
-    }
-    static std::pair<InstructionBlock, size_t>
-    instrBlockCost(InstructionBlock &instrBlock,
-                   llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-                   PtrVector<PredicatedBasicBlock> chain) {
-        auto PBB = chain.front();
-        auto tail = chain(_(1, end));
-        auto pred = PBB.predicates;
-        if (pred.empty()) {
-            for (auto &instr : PBB)
-                instrBlock.instructions.emplace_back(pred, instr);
-        } else {
-            for (auto &instr : PBB) {
-            }
-        }
-    }
-    static std::pair<InstructionBlock, size_t>
-    instrBlockCost(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-                   PredicatedChain &chain, LoopTreeSchedule *loopTree) {
-        // inserts from the predicated chain linearly
-
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> chainBBs;
-        for (auto &block : chain)
-            chainBBs.insert(block.basicBlock);
     }
 };
 

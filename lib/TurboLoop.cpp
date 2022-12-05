@@ -46,8 +46,8 @@
 llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                                            llvm::FunctionAnalysisManager &FAM) {
     // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
-    llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
-    llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+    // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
+    // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
     // ClassID 0: ScalarRC
     // ClassID 1: RegisterRC
     // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
@@ -72,7 +72,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     LI = &FAM.getResult<llvm::LoopAnalysis>(F);
     SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-
+    // Builds the loopForest, constructing predicate chains and loop nests
     initializeLoopForest();
     SHOWLN(loopForests.size());
     for (auto &forest : loopForests) {
@@ -83,7 +83,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // then we search for sets of fusile loops
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
 
-    // fill array refs
+    // fills array refs
     parseNest();
 
     llvm::errs() << "\n\nPrinting memory accesses:\n";
@@ -95,7 +95,7 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
                  << loopForests.size() << "\n";
     for (auto forestID : loopForests) {
         fillLoopBlock(loopTrees[forestID]);
-        llvm::Optional<BitSet> optDeps = loopBlock.optimize();
+        llvm::Optional<BitSet<>> optDeps = loopBlock.optimize();
         SHOWLN(optDeps.hasValue());
         llvm::errs() << loopBlock << "\n";
         loopBlock.clear();

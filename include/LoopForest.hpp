@@ -312,8 +312,7 @@ struct LoopTree {
     // loopTrees are the cache of all LoopTrees
     static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
                            llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches,
-                           BlockPredicates &predicates, llvm::Loop *L,
+                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
                            llvm::ScalarEvolution &SE) {
         const std::vector<llvm::Loop *> &subLoops{L->getSubLoops()};
         llvm::BasicBlock *H = L->getHeader();
@@ -323,15 +322,14 @@ struct LoopTree {
             SHOWLN(E);
         if (anyFail)
             SHOWLN(L->isLoopSimplifyForm());
-        return pushBack(loopTrees, forests, branches, predicates, L, SE,
-                        subLoops, H, E, anyFail);
+        return pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E,
+                        anyFail);
     }
     static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
                            llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches,
-                           BlockPredicates &predicates, llvm::Loop *L,
+                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
                            llvm::ScalarEvolution &SE,
-                           const std::vector<llvm::Loop *> &subLoops,
+                           llvm::ArrayRef<llvm::Loop *> subLoops,
                            llvm::BasicBlock *H, llvm::BasicBlock *E,
                            bool anyFail) {
         // how to avoid double counting? Probably shouldn't be an issue:
@@ -554,4 +552,9 @@ struct LoopTree {
         for (auto id : subLoops)
             loopTrees[id].dumpAllMemAccess(loopTrees);
     }
+
+    // void fill(BlockPredicates &bp){
+    // 	for (auto &c : chains)
+    // 	    c.fill(bp);
+    // }
 };

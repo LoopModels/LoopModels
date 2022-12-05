@@ -10,142 +10,6 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Value.h>
 
-enum struct PredicateRelation : uint8_t {
-    Any = 0,
-    True = 1,
-    False = 2,
-    Empty = 3,
-};
-
-[[maybe_unused]] static constexpr PredicateRelation
-operator&(PredicateRelation a, PredicateRelation b) {
-    return static_cast<PredicateRelation>(static_cast<uint8_t>(a) |
-                                          static_cast<uint8_t>(b));
-}
-[[maybe_unused]] static constexpr PredicateRelation
-operator|(PredicateRelation a, PredicateRelation b) {
-    return static_cast<PredicateRelation>(static_cast<uint8_t>(a) &
-                                          static_cast<uint8_t>(b));
-}
-
-
-/// PredicateRelations
-/// A type for performing set algebra on predicates, representing sets
-/// Note:
-/// Commutative:
-///     a | b == b | a
-///     a & b == b & a
-/// Distributive:
-///     a | (b & c) == (a | b) & (a | c)
-///     a & (b | c) == (a & b) | (a & c)
-/// Associative:
-///    a | (b | c) == (a | b) | c
-///    a & (b & c) == (a & b) & c
-/// Idempotent:
-///    a | a == a
-///    a & a == a
-/// The internal representation can be interpreted as the intersection
-/// of a vector of predicates.
-/// This makes intersection operations efficient, but means we
-/// may need to allocate new instructions to represent unions.
-/// Unions are needed for merging divergent control flow branches.
-/// For union calculation, we'd simplify:
-/// (a & b) | (a & c) == a & (b | c)
-/// If c == !b, then
-/// (a & b) | (a & !b) == a & (b | !b) == a & True == a
-/// Generically:
-/// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
-/// == (a | c) & (b | c) & (a | d) & (b | d)
-struct PredicateRelations {
-    [[no_unique_address]] llvm::SmallVector<uint64_t, 1> relations;
-    PredicateRelation operator[](size_t index) const {
-        return static_cast<PredicateRelation>(
-            (relations[index / 32] >> (2 * (index % 32))) & 3);
-    }
-    struct Reference {
-        [[no_unique_address]] uint64_t *rp;
-        [[no_unique_address]] size_t index;
-        operator PredicateRelation() const {
-            return static_cast<PredicateRelation>((*rp) >> index);
-        }
-        Reference &operator=(PredicateRelation relation) {
-            *this->rp = (*this->rp & ~(3 << index)) |
-                        (static_cast<uint64_t>(relation) << index);
-            return *this;
-        }
-    };
-
-    Reference operator[](size_t index) {
-        return {&relations[index / 32], 2 * (index % 32)};
-    }
-    size_t size() const { return relations.size() * 32; }
-    size_t relationSize() const { return relations.size(); }
-    // FIXME: over-optimistic
-    // (!a & !b) U (a & b) = a == b
-    // (!a & b) U a = b
-    PredicateRelations predUnion(const PredicateRelations &other) const {
-        if (relationSize() < other.relationSize())
-            return other.predUnion(*this);
-        // other.relationSize() <= relationSize()
-        PredicateRelations result;
-        result.relations.resize(other.relationSize());
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < other.relationSize(); i++)
-            result.relations[i] = relations[i] & other.relations[i];
-        return result;
-    }
-    static void intersectImpl(PredicateRelations &c,
-                              const PredicateRelations &a,
-                              const PredicateRelations &b) {
-        assert(a.relationSize() >= b.relationSize());
-        c.relations.resize(a.relationSize());
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < b.relationSize(); i++)
-            c.relations[i] = a.relations[i] | b.relations[i];
-        for (size_t i = b.relationSize(); i < a.relationSize(); i++)
-            c.relations[i] = a.relations[i];
-    }
-    PredicateRelations predIntersect(const PredicateRelations &other) const {
-        PredicateRelations result;
-        if (relationSize() < other.relationSize()) {
-            intersectImpl(result, other, *this);
-        } else {
-            intersectImpl(result, *this, other);
-        }
-        return result;
-    }
-
-    static constexpr bool isEmpty(uint64_t x) {
-        return ((x & (x >> 1)) & 0x5555555555555555) != 0;
-    }
-    bool isEmpty() const {
-        for (uint64_t x : relations)
-            if (isEmpty(x))
-                return true;
-        return false;
-    }
-    bool emptyIntersection(const PredicateRelations &other) const {
-        if (relationSize() < other.relationSize())
-            return other.emptyIntersection(*this);
-        // other.relationSize() <= relationSize()
-        for (size_t i = 0; i < other.relationSize(); i++)
-            if (isEmpty(relations[i] | other.relations[i]))
-                return true;
-        for (size_t i = other.relationSize(); i < relations.size(); i++)
-            if (isEmpty(relations[i]))
-                return true;
-        return false;
-    }
-};
-
-struct BlockPredicates {
-    // TODO: use internal IR for predicates
-    // the purpose of this would be to allow for union calculations.
-    llvm::SmallVector<llvm::Value *> predicates;
-    llvm::DenseMap<llvm::BasicBlock *, PredicateRelations> blockPredicates;
-};
 
 struct Predicate {
     [[no_unique_address]] llvm::Value *condition;
@@ -313,6 +177,8 @@ struct PredicatedBasicBlock {
     auto begin() { return basicBlock->begin(); }
     auto end() { return basicBlock->end(); }
 };
+
+
 
 struct PredicatedChain {
     llvm::SmallVector<PredicatedBasicBlock> chain;

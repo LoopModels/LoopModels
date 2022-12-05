@@ -279,6 +279,9 @@ struct LinearProgramLoopBlock {
     /// used in searchOperandsForLoads
     /// if an operand is stored, we can reload it.
     /// This will insert a new store memory access.
+    ///
+    /// If an instruction was stored somewhere, we don't keep
+    /// searching for placed it was loaded, and instead add a reload.
     bool searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                               ScheduledNode &node, llvm::User *user,
                               unsigned nodeIndex) {
@@ -292,12 +295,6 @@ struct LinearProgramLoopBlock {
                 unsigned memId = memAccess->getSecond();
                 MemoryAccess *store = memory[memId];
                 node.addMemory(store, memId, nodeIndex);
-                // MemoryAccess *load = new (allocator) MemoryAccess(*store);
-                // load->isLoad() = true;
-                // node.addMemory(load, memory.size(), nodeIndex);
-                // memory.push_back(load);
-                // TODO: need to add edges and correct edgesIn and edgesOut
-                //
                 return true;
             }
         }
@@ -321,23 +318,34 @@ struct LinearProgramLoopBlock {
     /// and the store the same schedule. This is done because it is assumed the
     /// data is held in registers (or, if things go wrong, spilled to the stack)
     /// in between a load and a store. A complication is that LLVM IR can be
-    /// messy, e.g. we may have %x = load %a %y = call foo(x) store %y, %b %z =
-    /// call bar(y) store %z, %c here, we might lock all three operations
+    /// messy, e.g. we may have
+    /// %x = load %a
+    /// %y = call foo(x)
+    /// store %y, %b
+    /// %z = call bar(y)
+    /// store %z, %c
+    /// here, we might lock all three operations
     /// together. However, this limits reordering opportunities; we thus want to
-    /// insert a new load instruction so that we have: %x = load %a %y = call
-    /// foo(x) store %y, %b %y.reload = load %b %z = call bar(y.reload) store
-    /// %z, %c and we create a new edge from `store %y, %b` to `load %b`.
+    /// insert a new load instruction so that we have:
+    /// %x = load %a
+    /// %y = call foo(x)
+    /// store %y, %b
+    /// %y.reload = load %b
+    /// %z = call bar(y.reload)
+    /// store %z, %c
+    /// and we create a new edge from `store %y, %b` to `load %b`.
     void searchOperandsForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                                 ScheduledNode &node, llvm::User *u,
                                 unsigned nodeIndex) {
         visited.insert(u);
-        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u))
-            return checkUserForLoads(
-                visited, node, llvm::dyn_cast<llvm::User>(s->getValueOperand()),
-                nodeIndex);
+        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u)){
+	    if (llvm::User *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
+		checkUserForLoads(visited, node, user, nodeIndex);
+	    return;
+	}
         for (auto &&op : u->operands())
-            checkUserForLoads(visited, node,
-                              llvm::dyn_cast<llvm::User>(op.get()), nodeIndex);
+            if (llvm::User *user = llvm::dyn_cast<llvm::User>(op.get()))
+                checkUserForLoads(visited, node, user, nodeIndex);
     }
     void connect(unsigned inIndex, unsigned outIndex) {
         nodes[inIndex].outNeighbors.insert(outIndex);
