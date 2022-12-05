@@ -11,7 +11,7 @@ var searchData=
   ['squarematrix_124',['SquareMatrix',['../structSquareMatrix.html',1,'']]],
   ['squarematrix_3c_20rational_20_3e_125',['SquareMatrix&lt; Rational &gt;',['../structSquareMatrix.html',1,'']]],
   ['squareptrmatrix_126',['SquarePtrMatrix',['../structSquarePtrMatrix.html',1,'']]],
-  ['stridediterator_127',['StridedIterator',['../structMutStridedVector_1_1StridedIterator.html',1,'MutStridedVector&lt; T &gt;::StridedIterator'],['../structStridedVector_1_1StridedIterator.html',1,'StridedVector&lt; T &gt;::StridedIterator']]],
+  ['stridediterator_127',['StridedIterator',['../structStridedVector_1_1StridedIterator.html',1,'StridedVector&lt; T &gt;::StridedIterator'],['../structMutStridedVector_1_1StridedIterator.html',1,'MutStridedVector&lt; T &gt;::StridedIterator']]],
   ['stridedvector_128',['StridedVector',['../structStridedVector.html',1,'']]],
   ['stridedvector_3c_20int64_5ft_20_3e_129',['StridedVector&lt; int64_t &gt;',['../structStridedVector.html',1,'']]],
   ['sub_130',['Sub',['../structSub.html',1,'']]]

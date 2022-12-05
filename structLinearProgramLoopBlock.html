@@ -528,7 +528,8 @@ llvm::raw_ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>op
   </tr>
 </table>
 </div><div class="memdoc">
-<p>used in searchOperandsForLoads if an operand is stored, we can reload it. This will insert a new store memory access. </p>
+<p>used in searchOperandsForLoads if an operand is stored, we can reload it. This will insert a new store memory access.</p>
+<p>If an instruction was stored somewhere, we don't keep searching for placed it was loaded, and instead add a reload. </p>
 
 </div>
 </div>

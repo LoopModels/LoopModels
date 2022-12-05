@@ -63,7 +63,6 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structInstructionBlock-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -76,17 +75,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a936c966406264a88b6d7fa6b85e642b9"><td class="memItemLeft" align="right" valign="top"><a id="a936c966406264a88b6d7fa6b85e642b9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>pushBlock</b> (llvm::SmallPtrSet&lt; llvm::Instruction *, 32 &gt; &amp;trackInstr, llvm::SmallPtrSet&lt; llvm::BasicBlock *, 32 &gt; &amp;chainBBs, <a class="el" href="structPredicates.html">Predicates</a> &amp;pred, llvm::BasicBlock *BB)</td></tr>
 <tr class="separator:a936c966406264a88b6d7fa6b85e642b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0da963376584ec923fa40b5f0438f49a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstructionBlock.html#a0da963376584ec923fa40b5f0438f49a">InstructionBlock</a> (llvm::SmallPtrSet&lt; llvm::Instruction *, 32 &gt; &amp;trackInstr, <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &amp;chain, <a class="el" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *loopTree)</td></tr>
-<tr class="separator:a0da963376584ec923fa40b5f0438f49a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
-Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aae75cedae235ffca2e1eb64acdbb2e3a"><td class="memItemLeft" align="right" valign="top"><a id="aae75cedae235ffca2e1eb64acdbb2e3a"></a>
-static std::pair&lt; <a class="el" href="structInstructionBlock.html">InstructionBlock</a>, size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>instrBlockCost</b> (<a class="el" href="structInstructionBlock.html">InstructionBlock</a> &amp;instrBlock, llvm::SmallPtrSet&lt; llvm::Instruction *, 32 &gt; &amp;trackInstr, <a class="el" href="structPtrVector.html">PtrVector</a>&lt; <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &gt; chain)</td></tr>
-<tr class="separator:aae75cedae235ffca2e1eb64acdbb2e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3fde5603920e356cdb69d2ef7cf9023"><td class="memItemLeft" align="right" valign="top"><a id="af3fde5603920e356cdb69d2ef7cf9023"></a>
-static std::pair&lt; <a class="el" href="structInstructionBlock.html">InstructionBlock</a>, size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>instrBlockCost</b> (llvm::SmallPtrSet&lt; llvm::Instruction *, 32 &gt; &amp;trackInstr, <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &amp;chain, <a class="el" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *loopTree)</td></tr>
-<tr class="separator:af3fde5603920e356cdb69d2ef7cf9023"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -97,50 +85,6 @@ llvm::SmallVector&lt; <a class="el" href="structPredicatedInstruction.html">Pred
 <a class="el" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>loopTree</b></td></tr>
 <tr class="separator:aea1b72bc72f5070c3d54d851d10239fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a0da963376584ec923fa40b5f0438f49a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0da963376584ec923fa40b5f0438f49a">&#9670;&nbsp;</a></span>InstructionBlock()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">InstructionBlock::InstructionBlock </td>
-          <td>(</td>
-          <td class="paramtype">llvm::SmallPtrSet&lt; llvm::Instruction *, 32 &gt; &amp;&#160;</td>
-          <td class="paramname"><em>trackInstr</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structPredicatedChain.html">PredicatedChain</a> &amp;&#160;</td>
-          <td class="paramname"><em>chain</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *&#160;</td>
-          <td class="paramname"><em>loopTree</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Construct a single instruction block from a chain of predicated basic blocks. This applies the predicates to individual instructions, and attempts to fuse. We use bipartite matching to merge divergences. </p>
-
-</div>
-</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
 </ul>

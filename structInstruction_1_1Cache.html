@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.17"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Instruction::InstructionCache Struct Reference</title>
+<title>LoopModels: Instruction::Cache Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,26 +61,36 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="structInstruction.html">Instruction</a></li><li class="navelem"><a class="el" href="structInstruction_1_1InstructionCache.html">InstructionCache</a></li>  </ul>
+<li class="navelem"><a class="el" href="structInstruction.html">Instruction</a></li><li class="navelem"><a class="el" href="structInstruction_1_1Cache.html">Cache</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structInstruction_1_1InstructionCache-members.html">List of all members</a>  </div>
+<a href="structInstruction_1_1Cache-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Instruction::InstructionCache Struct Reference</div>  </div>
+<div class="title">Instruction::Cache Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a7fd7a161b90f8cece26c2a83dca3311b"><td class="memItemLeft" align="right" valign="top"><a id="a7fd7a161b90f8cece26c2a83dca3311b"></a>
+<a class="el" href="structInstruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a7fd7a161b90f8cece26c2a83dca3311b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af88ca3131988efdf3e2781e46388f035"><td class="memItemLeft" align="right" valign="top"><a id="af88ca3131988efdf3e2781e46388f035"></a>
+<a class="el" href="structInstruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::Value *v)</td></tr>
+<tr class="separator:af88ca3131988efdf3e2781e46388f035"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a8d8bca55f1c24b5503365792b026c307"><td class="memItemLeft" align="right" valign="top"><a id="a8d8bca55f1c24b5503365792b026c307"></a>
-llvm::DenseMap&lt; llvm::Instruction *, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>llvmToInternalMap</b></td></tr>
-<tr class="separator:a8d8bca55f1c24b5503365792b026c307"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc567b70b56a65ca1151155695e3bf7f"><td class="memItemLeft" align="right" valign="top"><a id="adc567b70b56a65ca1151155695e3bf7f"></a>
-llvm::DenseMap&lt; std::pair&lt; <a class="el" href="structInstruction_1_1Identifier.html">Identifier</a>, llvm::SmallVector&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; &gt;, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>argMap</b></td></tr>
-<tr class="separator:adc567b70b56a65ca1151155695e3bf7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a302ac3d4e8309958e3d29af7440dc148"><td class="memItemLeft" align="right" valign="top"><a id="a302ac3d4e8309958e3d29af7440dc148"></a>
+llvm::DenseMap&lt; llvm::Value *, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>llvmToInternalMap</b></td></tr>
+<tr class="separator:a302ac3d4e8309958e3d29af7440dc148"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44b04a36a419f2cad0b54090d2bafc76"><td class="memItemLeft" align="right" valign="top"><a id="a44b04a36a419f2cad0b54090d2bafc76"></a>
+llvm::DenseMap&lt; UniqueIdentifier, <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>argMap</b></td></tr>
+<tr class="separator:a44b04a36a419f2cad0b54090d2bafc76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>

@@ -171,7 +171,7 @@ $(function() {
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        llvm::SmallVector&lt;unsigned&gt; forest;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="comment">// NOTE: LoopInfo stores loops in reverse program order (opposite of</span></div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <span class="comment">// loops)</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        std::vector&lt;llvm::Loop *&gt; revLI{llvm::reverse(*LI).begin(),</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    llvm::SmallVector&lt;llvm::Loop *&gt; revLI{llvm::reverse(*LI).begin(),</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;                                        llvm::reverse(*LI).end()};</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordflow">if</span> (revLI.empty())</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            <span class="keywordflow">return</span>;</div>
@@ -190,13 +190,13 @@ $(function() {
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;            H = revLI.front()-&gt;getLoopPreheader();</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        }</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        LoopTree::pushBack(loopTrees, loopForests, forest, predicates, <span class="keyword">nullptr</span>, *SE, revLI,</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        LoopTree::pushBack(loopTrees, loopForests, forest, <span class="keyword">nullptr</span>, *SE, revLI,</div>
 <div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;                           H, E, <span class="keyword">true</span>);</div>
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;forest : loopForests)</div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;            loopTrees[forest].addZeroLowerBounds(</div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;                loopTrees, loopMap, std::numeric_limits&lt;unsigned&gt;::max());</div>
 <div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    </div>
 <div class="line"><a name="l00139"></a><span class="lineno"><a class="line" href="classTurboLoopPass.html#a2ef223131cc2be40d5a84125403f0e7e">  139</a></span>&#160;    <span class="keyword">static</span> <span class="keywordtype">size_t</span> <a class="code" href="classTurboLoopPass.html#a2ef223131cc2be40d5a84125403f0e7e">invariant</a>(</div>
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        llvm::Value &amp;V,</div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        llvm::SmallVector&lt;</div>
@@ -780,14 +780,19 @@ $(function() {
 <div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; root.subLoops.size(); ++i)</div>
 <div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;            fillLoopBlock(loopTrees[root.subLoops[i]]);</div>
 <div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;    }</div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;};</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160; </div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;    <span class="keywordtype">void</span> buildInstructionGraph(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;root){</div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;    <span class="comment">// predicates</span></div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    </div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;    }</div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;};</div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
 <div class="ttc" id="astructVector_html"><div class="ttname"><a href="structVector.html">Vector&lt; int64_t &gt;</a></div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:208</div></div>
-<div class="ttc" id="astructBlockPredicates_html"><div class="ttname"><a href="structBlockPredicates.html">BlockPredicates</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:143</div></div>
+<div class="ttc" id="astructBlockPredicates_html"><div class="ttname"><a href="structBlockPredicates.html">BlockPredicates</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:678</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html_a2ef223131cc2be40d5a84125403f0e7e"><div class="ttname"><a href="classTurboLoopPass.html#a2ef223131cc2be40d5a84125403f0e7e">TurboLoopPass::invariant</a></div><div class="ttdeci">static size_t invariant(llvm::Value &amp;V, llvm::SmallVector&lt; std::pair&lt; llvm::Loop *, llvm::Optional&lt; llvm::Loop::LoopBounds &gt;&gt;, 4 &gt; const &amp;LPS)</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:139</div></div>
-<div class="ttc" id="astructPredicates_html"><div class="ttname"><a href="structPredicates.html">Predicates</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:172</div></div>
+<div class="ttc" id="astructPredicates_html"><div class="ttname"><a href="structPredicates.html">Predicates</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:36</div></div>
 <div class="ttc" id="astructMutPtrVector_html"><div class="ttname"><a href="structMutPtrVector.html">MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:792</div></div>
 <div class="ttc" id="aclassTurboLoopPass_html"><div class="ttname"><a href="classTurboLoopPass.html">TurboLoopPass</a></div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:70</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:167</div></div>

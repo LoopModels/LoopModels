@@ -66,6 +66,8 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structInstruction_1_1Identifier-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -73,27 +75,86 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a5e44f6325208e7b623222fed7d56c5f8"><td class="memItemLeft" align="right" valign="top"><a id="a5e44f6325208e7b623222fed7d56c5f8"></a>
+llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> () const</td></tr>
+<tr class="separator:a5e44f6325208e7b623222fed7d56c5f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7435a496f63d6efd12ed07f6493d2b07"><td class="memItemLeft" align="right" valign="top"><a id="a7435a496f63d6efd12ed07f6493d2b07"></a>
+llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsicID</b> () const</td></tr>
+<tr class="separator:a7435a496f63d6efd12ed07f6493d2b07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a185e97d46b9a2a58bdd9487d4b8c28d2"><td class="memItemLeft" align="right" valign="top"><a id="a185e97d46b9a2a58bdd9487d4b8c28d2"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a185e97d46b9a2a58bdd9487d4b8c28d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aebfcc1b43dcaf9dc5a71a491dc6cb5f4"><td class="memItemLeft" align="right" valign="top"><a id="aebfcc1b43dcaf9dc5a71a491dc6cb5f4"></a>
+constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>isValue</b> () const</td></tr>
+<tr class="separator:aebfcc1b43dcaf9dc5a71a491dc6cb5f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c7ea357bb0672c60ae2c4cf8dbbdddb"><td class="memItemLeft" align="right" valign="top"><a id="a1c7ea357bb0672c60ae2c4cf8dbbdddb"></a>
+constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCall</b> () const</td></tr>
+<tr class="separator:a1c7ea357bb0672c60ae2c4cf8dbbdddb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e18ec2969710ad302206e141436d67e"><td class="memItemLeft" align="right" valign="top"><a id="a7e18ec2969710ad302206e141436d67e"></a>
+constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsicCall</b> () const</td></tr>
+<tr class="separator:a7e18ec2969710ad302206e141436d67e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b53aaa9cef6cbc1eb7778666db68242"><td class="memItemLeft" align="right" valign="top"><a id="a9b53aaa9cef6cbc1eb7778666db68242"></a>
+constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>isInstruction</b> (unsigned opCode) const</td></tr>
+<tr class="separator:a9b53aaa9cef6cbc1eb7778666db68242"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a411a597522fbff29745bc3ed23139715"><td class="memItemLeft" align="right" valign="top"><a id="a411a597522fbff29745bc3ed23139715"></a>
+constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsicInstruction</b> (unsigned opCode) const</td></tr>
+<tr class="separator:a411a597522fbff29745bc3ed23139715"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af417b4db211cc21856a8fcfc51f117dd"><td class="memItemLeft" align="right" valign="top"><a id="af417b4db211cc21856a8fcfc51f117dd"></a>
+llvm::Function *&#160;</td><td class="memItemRight" valign="bottom"><b>getFunction</b> () const</td></tr>
+<tr class="separator:af417b4db211cc21856a8fcfc51f117dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a21885a06e5eb5aa6f0c4bc6b6a204e58"><td class="memItemLeft" align="right" valign="top"><a id="a21885a06e5eb5aa6f0c4bc6b6a204e58"></a>
+static llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a21885a06e5eb5aa6f0c4bc6b6a204e58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18bc3c1a1e0db00d9d29b1a836a2713b"><td class="memItemLeft" align="right" valign="top"><a id="a18bc3c1a1e0db00d9d29b1a836a2713b"></a>
+static llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsicID</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a18bc3c1a1e0db00d9d29b1a836a2713b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a68548c8769417495f0e9fdf3b1172dd6"><td class="memItemLeft" align="right" valign="top"><a id="a68548c8769417495f0e9fdf3b1172dd6"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>isCall</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a68548c8769417495f0e9fdf3b1172dd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f21c8ce9139b3276cd7e8b66aeec818"><td class="memItemLeft" align="right" valign="top"><a id="a4f21c8ce9139b3276cd7e8b66aeec818"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsicCall</b> (llvm::Value *v)</td></tr>
+<tr class="separator:a4f21c8ce9139b3276cd7e8b66aeec818"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a024db5e363a24ecf8f4d1db240ae814b"><td class="memItemLeft" align="right" valign="top"><a id="a024db5e363a24ecf8f4d1db240ae814b"></a>
-llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html#a024db5e363a24ecf8f4d1db240ae814b">id</a></td></tr>
-<tr class="memdesc:a024db5e363a24ecf8f4d1db240ae814b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structInstruction.html">Instruction</a> ID. <br /></td></tr>
-<tr class="separator:a024db5e363a24ecf8f4d1db240ae814b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a299a2612dc6d3054f1c953fc4adde73e"><td class="memItemLeft" ><a id="a299a2612dc6d3054f1c953fc4adde73e"></a>
+<tr class="memitem:ab4b69fff5642067d4da1432c6e46abe4"><td class="memItemLeft" align="right" valign="top">llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html#ab4b69fff5642067d4da1432c6e46abe4">op</a></td></tr>
+<tr class="separator:ab4b69fff5642067d4da1432c6e46abe4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a184998702da86e776cb85c9cbeee0115"><td class="memItemLeft" align="right" valign="top"><a id="a184998702da86e776cb85c9cbeee0115"></a>
+llvm::Intrinsic::ID&#160;</td><td class="memItemRight" valign="bottom"><b>intrin</b> {llvm::Intrinsic::not_intrinsic}</td></tr>
+<tr class="separator:a184998702da86e776cb85c9cbeee0115"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa55ba0fdc6ba1495e338f696b071c551"><td class="memItemLeft" ><a id="aa55ba0fdc6ba1495e338f696b071c551"></a>
 union {</td></tr>
-<tr class="memitem:af728ce4d43efa1afdc5c7bce8358e1ab"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structArrayReference.html">ArrayReference</a> *&#160;&#160;&#160;<b>ref</b></td></tr>
-<tr class="separator:af728ce4d43efa1afdc5c7bce8358e1ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a126f5a40347940ecedf058c55ceb3d55"><td class="memItemLeft" >
-&#160;&#160;&#160;llvm::Function *&#160;&#160;&#160;<b>func</b></td></tr>
-<tr class="separator:a126f5a40347940ecedf058c55ceb3d55"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a682ed00e0651eac4424fa042f0174272"><td class="memItemLeft" >
+<tr class="memitem:af1efc647000fe2411ee8688468bf4766"><td class="memItemLeft" >
 &#160;&#160;&#160;llvm::Value *&#160;&#160;&#160;<b>val</b></td></tr>
-<tr class="separator:a682ed00e0651eac4424fa042f0174272"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a299a2612dc6d3054f1c953fc4adde73e"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html#a299a2612dc6d3054f1c953fc4adde73e">nullptr</a></td></tr>
-<tr class="memdesc:a299a2612dc6d3054f1c953fc4adde73e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data we may need. <br /></td></tr>
-<tr class="separator:a299a2612dc6d3054f1c953fc4adde73e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:af1efc647000fe2411ee8688468bf4766"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74ac605d53e94d10447db447f60ad752"><td class="memItemLeft" >
+&#160;&#160;&#160;<a class="el" href="structArrayReference.html">ArrayReference</a> *&#160;&#160;&#160;<b>ref</b></td></tr>
+<tr class="separator:a74ac605d53e94d10447db447f60ad752"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa55ba0fdc6ba1495e338f696b071c551"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html#aa55ba0fdc6ba1495e338f696b071c551">nullptr</a></td></tr>
+<tr class="memdesc:aa55ba0fdc6ba1495e338f696b071c551"><td class="mdescLeft">&#160;</td><td class="mdescRight">Data we may need. <br /></td></tr>
+<tr class="separator:aa55ba0fdc6ba1495e338f696b071c551"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Data Documentation</h2>
+<a id="ab4b69fff5642067d4da1432c6e46abe4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4b69fff5642067d4da1432c6e46abe4">&#9670;&nbsp;</a></span>op</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">llvm::Intrinsic::ID Instruction::Identifier::op</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p><a class="el" href="structInstruction.html">Instruction</a> ID if not Load or Store, then check val for whether it is a call and ID corresponds to the instruction or to the intrinsic call </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>

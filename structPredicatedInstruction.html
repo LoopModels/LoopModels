@@ -72,12 +72,6 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a47ed7c43645483dc37f9a3ebbcc943db"><td class="memItemLeft" align="right" valign="top"><a id="a47ed7c43645483dc37f9a3ebbcc943db"></a>
-llvm::Instruction *&#160;</td><td class="memItemRight" valign="bottom"><b>getInstruction</b> ()</td></tr>
-<tr class="separator:a47ed7c43645483dc37f9a3ebbcc943db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0f411502399ab93a5b7de3444146ba5"><td class="memItemLeft" align="right" valign="top"><a id="ab0f411502399ab93a5b7de3444146ba5"></a>
-<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccess</b> ()</td></tr>
-<tr class="separator:ab0f411502399ab93a5b7de3444146ba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16ec6a848149610e072bfabb128e6609"><td class="memItemLeft" align="right" valign="top"><a id="a16ec6a848149610e072bfabb128e6609"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>isMemoryAccess</b> () const</td></tr>
 <tr class="separator:a16ec6a848149610e072bfabb128e6609"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -90,22 +84,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:acb0c9c1eb34236a191342b1d82960412"><td class="memItemLeft" align="right" valign="top"><a id="acb0c9c1eb34236a191342b1d82960412"></a>
 <a class="el" href="structPredicates.html">Predicates</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
 <tr class="separator:acb0c9c1eb34236a191342b1d82960412"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88fbf9f24d4ad87f0a360f551608e319"><td class="memItemLeft" align="right" valign="top"><a id="a88fbf9f24d4ad87f0a360f551608e319"></a>
-llvm::Instruction *&#160;</td><td class="memItemRight" valign="bottom"><b>instruction</b></td></tr>
-<tr class="separator:a88fbf9f24d4ad87f0a360f551608e319"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95289e86488eaaaf98aa267faab15785"><td class="memItemLeft" align="right" valign="top"><a id="a95289e86488eaaaf98aa267faab15785"></a>
-<a class="el" href="structArrayReference.html">ArrayReference</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ref</b></td></tr>
-<tr class="separator:a95289e86488eaaaf98aa267faab15785"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0307258e4aef17880ac08fa8f1bca189"><td class="memItemLeft" ><a id="a0307258e4aef17880ac08fa8f1bca189"></a>
-union {</td></tr>
-<tr class="memitem:a6a1adafa0c7cce5afcdf45a9871af4a4"><td class="memItemLeft" >
-&#160;&#160;&#160;llvm::Instruction *&#160;&#160;&#160;<b>instruction</b></td></tr>
-<tr class="separator:a6a1adafa0c7cce5afcdf45a9871af4a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9414fe73abe8a1aac0511361a17117cf"><td class="memItemLeft" >
-&#160;&#160;&#160;<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *&#160;&#160;&#160;<b>memoryAccess</b></td></tr>
-<tr class="separator:a9414fe73abe8a1aac0511361a17117cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0307258e4aef17880ac08fa8f1bca189"><td class="memItemLeft" valign="top">}&#160;</td><td class="memItemRight" valign="bottom"><b>instructionOrMemoryAccessPtr</b></td></tr>
-<tr class="separator:a0307258e4aef17880ac08fa8f1bca189"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae21647885114ade2807d7c29be805957"><td class="memItemLeft" align="right" valign="top"><a id="ae21647885114ade2807d7c29be805957"></a>
+<a class="el" href="structInstruction.html">Instruction</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>instruction</b></td></tr>
+<tr class="separator:ae21647885114ade2807d7c29be805957"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2715eab4228aa373318a709e9f4a2a22"><td class="memItemLeft" align="right" valign="top"><a id="a2715eab4228aa373318a709e9f4a2a22"></a>
 llvm::SmallVector&lt; <a class="el" href="structPredicatedInstruction.html">PredicatedInstruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>args</b></td></tr>
 <tr class="separator:a2715eab4228aa373318a709e9f4a2a22"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,9 +96,6 @@ llvm::SmallVector&lt; <a class="el" href="structPredicatedInstruction.html">Pred
 <tr class="memitem:a16e809be5158ffd9bb226e66afb21096"><td class="memItemLeft" align="right" valign="top"><a id="a16e809be5158ffd9bb226e66afb21096"></a>
 <a class="el" href="structInstructionBlock.html">InstructionBlock</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>instrBlock</b> {nullptr}</td></tr>
 <tr class="separator:a16e809be5158ffd9bb226e66afb21096"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81c3acbba54a27c1eadfc6db933e2788"><td class="memItemLeft" align="right" valign="top"><a id="a81c3acbba54a27c1eadfc6db933e2788"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isMemAccess</b></td></tr>
-<tr class="separator:a81c3acbba54a27c1eadfc6db933e2788"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="CostModeling_8hpp_source.html">CostModeling.hpp</a></li>
