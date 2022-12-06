@@ -74,9 +74,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
     // one reason to prefer SmallVector is because it bounds checks `ifndef
     // NDEBUG`
-    [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
-    [[no_unique_address]] llvm::SmallVector<unsigned> loopForests;
-    [[no_unique_address]] llvm::DenseMap<llvm::Loop *, unsigned> loopMap;
+    // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
+    [[no_unique_address]] llvm::SmallVector<LoopTree *> loopForests;
+    [[no_unique_address]] llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
     [[no_unique_address]] BlockPredicates predicates;
     // llvm::AssumptionCache *AC;
     [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
@@ -97,14 +97,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     void initializeLoopForest() {
         // count the number of loops, and then reserve enough memory to avoid
         // the need for reallocations
-        size_t numLoops = 0;
-        for (auto &L : *LI)
-            numLoops += countNumLoopsPlusLeaves(L);
-        loopTrees.reserve(numLoops);
-        loopMap.reserve(numLoops);
+        // size_t numLoops = 0;
+        // for (auto &L : *LI)
+        //     numLoops += countNumLoopsPlusLeaves(L);
+        // // loopTrees.reserve(numLoops);
+        // loopMap.reserve(numLoops);
         // affineLoopNests.reserve(numLoops);
         // thus, we should be able to reference these by pointer.
-        llvm::SmallVector<unsigned> forest;
+        llvm::SmallVector<LoopTree *> forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
         llvm::SmallVector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
@@ -126,11 +126,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             H = revLI.front()->getLoopPreheader();
         }
 
-        LoopTree::pushBack(loopTrees, loopForests, forest, nullptr, *SE, revLI,
+        LoopTree::pushBack(allocator, loopForests, forest, nullptr, *SE, revLI,
                            H, E, true);
         for (auto &forest : loopForests)
-            loopTrees[forest].addZeroLowerBounds(
-                loopTrees, loopMap, std::numeric_limits<unsigned>::max());
+            forest->addZeroLowerBounds(loopMap);
     }
 
     /// returns index to the loop whose preheader we place it in.
@@ -319,7 +318,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
         assert(subscripts.size() == sizes.size());
         // SHOWLN(sizes.size());
-        AffineLoopNest<true> &aln = loopTrees[loopMap[L]].affineLoop;
+        AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
         if (sizes.size() == 0)
             return ArrayReference(basePointer, &aln, loadOrStore,
                                   std::move(sizes), std::move(subscripts),
@@ -424,8 +423,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return ref;
     }
-    LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
-    LoopTree &getLoopTree(llvm::Loop *L) { return getLoopTree(loopMap[L]); }
+    // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
+    LoopTree *getLoopTree(llvm::Loop *L) { return loopMap[L]; }
     bool addLoad(LoopTree &LT, Predicates &pred, llvm::LoadInst *I,
                  llvm::SmallVector<unsigned> &omega) {
         llvm::Value *ptr = I->getPointerOperand();
@@ -547,7 +546,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             llvm::errs() << "\n";
             for (auto &&PBB : LT.paths[i])
                 parseBB(LT, PBB.basicBlock, PBB.predicates, omega);
-            parseLoop(loopTrees[LT.subLoops[i]], omega);
+            parseLoop(*LT.subLoops[i], omega);
             ++omega.back();
         }
         for (auto PBB : LT.paths.back())
@@ -559,9 +558,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void parseNest() {
         llvm::SmallVector<unsigned> omega;
-        for (auto forestID : loopForests) {
+        for (auto forest : loopForests) {
             omega.clear();
-            parseLoop(loopTrees[forestID], omega);
+            parseLoop(*forest, omega);
             // auto &forest = ;
             // for (size_t i = 0; i < forest.size(); ++i) {
             //     omega.front() = i;
@@ -581,12 +580,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //     return false;
     // }
     void peelOuterLoops(llvm::Loop *L, size_t numToPeel) {
-        peelOuterLoops(loopTrees[loopMap[L]], numToPeel);
+        peelOuterLoops(*loopMap[L], numToPeel);
     }
     // peelOuterLoops is recursive inwards
     void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
         for (auto SL : LT)
-            peelOuterLoops(loopTrees[SL], numToPeel);
+            peelOuterLoops(*SL, numToPeel);
         LT.affineLoop.removeOuterMost(numToPeel, LT.loop, *SE);
     }
     // conditionOnLoop(llvm::Loop *L)
@@ -616,34 +615,29 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     //
     // approach: remove LoopIndex, and all loops that follow, unless it is first
     // in which case, just remove LoopIndex
-    void conditionOnLoop(llvm::Loop *L) {
-        unsigned LTID = loopMap[L];
-        conditionOnLoop(loopTrees[LTID], LTID);
-    }
-    void conditionOnLoop(LoopTree &LT, unsigned LTID) {
-        unsigned PTID = LT.parentLoop;
-        if (PTID == std::numeric_limits<unsigned>::max())
+    void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
+    void conditionOnLoop(LoopTree *LT) {
+        if (LT->parentLoop == nullptr)
             return;
-        LoopTree &PT = loopTrees[PTID];
-        size_t numLoops = LT.getNumLoops();
-        for (auto ST : LT)
-            peelOuterLoops(loopTrees[ST], numLoops);
+        LoopTree &PT = *LT->parentLoop;
+        size_t numLoops = LT->getNumLoops();
+        for (auto ST : *LT)
+            peelOuterLoops(*ST, numLoops);
 
-        LT.parentLoop =
-            std::numeric_limits<unsigned>::max(); // LT is now top of the tree
-        loopForests.push_back(LTID);
-        llvm::SmallVector<unsigned> &friendLoops = PT.subLoops;
+        LT->parentLoop = nullptr; // LT is now top of the tree
+        loopForests.push_back(LT);
+        llvm::SmallVector<LoopTree *> &friendLoops = PT.subLoops;
         // SHOW(LTID);
         for (auto id : friendLoops)
             llvm::errs() << ", " << id;
         llvm::errs() << "\n";
-        if (friendLoops.front() != LTID) {
+        if (friendLoops.front() != LT) {
             // we're cutting off the front
             size_t numFriendLoops = friendLoops.size();
             assert(numFriendLoops);
             size_t loopIndex = 0;
             for (size_t i = 1; i < numFriendLoops; ++i) {
-                if (friendLoops[i] == LTID) {
+                if (friendLoops[i] == LT) {
                     loopIndex = i;
                     break;
                 }
@@ -652,21 +646,22 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             size_t j = loopIndex + 1;
             if (j != numFriendLoops) {
                 // we have some remaining paths we split off
-                llvm::SmallVector<unsigned> tmp;
+                llvm::SmallVector<LoopTree *> tmp;
                 tmp.reserve(numFriendLoops - j);
                 // for paths, we're dropping LT
                 // thus, our paths are paths(_(0,j)), paths(_(j,end))
                 llvm::SmallVector<PredicatedChain> paths;
                 paths.reserve(numFriendLoops - loopIndex);
                 for (size_t i = j; i < numFriendLoops; ++i) {
-                    peelOuterLoops(loopTrees[friendLoops[i]], numLoops - 1);
+                    peelOuterLoops(*friendLoops[i], numLoops - 1);
                     tmp.push_back(friendLoops[i]);
                     paths.push_back(std::move(PT.paths[i]));
                 }
                 paths.push_back(std::move(PT.paths[numFriendLoops]));
-                loopForests.push_back(loopTrees.size());
+                LoopTree *newTree =
+                    new (allocator) LoopTree(std::move(tmp), std::move(paths));
+                loopForests.push_back(newTree);
                 // TODO: split paths
-                loopTrees.emplace_back(std::move(tmp), std::move(paths));
             }
             friendLoops.truncate(loopIndex);
             PT.paths.truncate(j);
@@ -674,7 +669,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             friendLoops.erase(friendLoops.begin());
             PT.paths.erase(PT.paths.begin());
         }
-        conditionOnLoop(PT, PTID);
+        conditionOnLoop(&PT);
     }
 
     bool parseLoopPrint(auto B, auto E) {
@@ -717,7 +712,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             loopBlock.addMemory(mem.truncateSchedule());
         // loopBlock.memory.push_back(mem.truncateSchedule());
         for (size_t i = 0; i < root.subLoops.size(); ++i)
-            fillLoopBlock(loopTrees[root.subLoops[i]]);
+            fillLoopBlock(*root.subLoops[i]);
     }
 
     void buildInstructionGraph(LoopTree &root) {

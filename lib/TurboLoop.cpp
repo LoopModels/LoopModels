@@ -75,9 +75,8 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // Builds the loopForest, constructing predicate chains and loop nests
     initializeLoopForest();
     SHOWLN(loopForests.size());
-    for (auto &forest : loopForests) {
-        SHOWLN(loopTrees[forest].size());
-        loopTrees[forest].dump(loopTrees);
+    for (auto forest : loopForests) {
+        forest->dump();
     }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
@@ -88,13 +87,13 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
 
     llvm::errs() << "\n\nPrinting memory accesses:\n";
     // TODO: fill schedules
-    for (auto forestID : loopForests)
-        for (auto treeID : loopTrees[forestID])
-            loopTrees[treeID].dumpAllMemAccess(loopTrees);
+    for (auto forest : loopForests)
+        for (auto tree : *forest)
+            tree->dumpAllMemAccess();
     llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
                  << loopForests.size() << "\n";
-    for (auto forestID : loopForests) {
-        fillLoopBlock(loopTrees[forestID]);
+    for (auto forest : loopForests) {
+        fillLoopBlock(*forest);
         llvm::Optional<BitSet<>> optDeps = loopBlock.optimize();
         SHOWLN(optDeps.hasValue());
         llvm::errs() << loopBlock << "\n";
