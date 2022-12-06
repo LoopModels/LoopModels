@@ -10,7 +10,6 @@
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Value.h>
 
-
 struct Predicate {
     [[no_unique_address]] llvm::Value *condition;
     [[no_unique_address]] bool flip{false};
@@ -178,8 +177,6 @@ struct PredicatedBasicBlock {
     auto end() { return basicBlock->end(); }
 };
 
-
-
 struct PredicatedChain {
     llvm::SmallVector<PredicatedBasicBlock> chain;
     PredicatedChain() = default;
@@ -237,4 +234,18 @@ struct PredicatedChain {
     auto end() { return chain.end(); }
     auto rbegin() { return chain.rbegin(); }
     auto rend() { return chain.rend(); }
+    auto size() const { return chain.size(); }
+    auto &operator[](size_t i) { return chain[i]; }
+    auto &operator[](size_t i) const { return chain[i]; }
+    auto &back() { return chain.back(); }
+    auto &back() const { return chain.back(); }
+    auto &front() { return chain.front(); }
+    auto &front() const { return chain.front(); }
+
+    bool containsPredicates() const {
+        for (auto &&pbb : chain)
+            if (!pbb.predicates.empty())
+                return true;
+        return false;
+    }
 };

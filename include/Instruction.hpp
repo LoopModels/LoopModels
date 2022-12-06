@@ -1,7 +1,8 @@
 #pragma once
 
-#include "ArrayReference.hpp"
-#include "Predicate.hpp"
+#include "./ArrayReference.hpp"
+#include "./LoopForest.hpp"
+#include "./Predicate.hpp"
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/SmallVector.h>
@@ -29,6 +30,11 @@ struct RecipThroughputLatency {
                 llvm::InstructionCost::getInvalid()};
     }
 };
+
+// struct Instruction{
+//     struct Identifer;
+// };
+// struct Instruction::Identifier;
 
 struct Instruction {
     struct Identifier {
@@ -65,6 +71,9 @@ struct Instruction {
 
         Identifier(llvm::Value *v)
             : op(getOpCode(v)), intrin(getIntrinsicID(v)), ptr{v} {}
+        Identifier(llvm::Intrinsic::ID op, llvm::Intrinsic::ID intrin,
+                   llvm::Value *v)
+            : op(op), intrin(intrin), ptr{v} {}
         constexpr bool isValue() const {
             return op == llvm::Intrinsic::not_intrinsic;
         }
@@ -83,10 +92,18 @@ struct Instruction {
                 return i->getCalledFunction();
             return nullptr;
         }
+        bool operator==(const Identifier &other) const {
+            return op == other.op && intrin == other.intrin &&
+                   ptr.val == other.ptr.val;
+        }
     };
+    /// Provide DenseMapInfo for Identifier.
+
+    // friend struct llvm::DenseMapInfo<Instruction::Identifier, void>;
+
     Identifier id;
     llvm::Type *type;
-    llvm::SmallVector<Instruction *> *operands;
+    llvm::ArrayRef<Instruction *> operands;
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
     llvm::SmallVector<RecipThroughputLatency> costs;
@@ -98,7 +115,7 @@ struct Instruction {
     // }
     Instruction(Identifier id, llvm::Type *type) : id(id), type(type) {}
     using UniqueIdentifier =
-        std::pair<Identifier, llvm::SmallVector<Instruction *>>;
+        std::pair<Identifier, llvm::ArrayRef<Instruction *>>;
     struct Cache {
         llvm::DenseMap<llvm::Value *, Instruction *> llvmToInternalMap;
         llvm::DenseMap<UniqueIdentifier, Instruction *> argMap;
@@ -124,8 +141,8 @@ struct Instruction {
                 auto insertIter = argMap.insert({uid, i});
                 assert(insertIter.second);
                 assert(insertIter.first->second == i);
-                i->operands = &insertIter.first->first.second;
-                for (auto *op : *i->operands) {
+                i->operands = insertIter.first->first.second;
+                for (auto *op : i->operands) {
                     op->users.push_back(i);
                 }
             } else {
@@ -135,15 +152,19 @@ struct Instruction {
             return i;
         }
     };
-    static llvm::SmallVector<Instruction *>
+    static llvm::ArrayRef<Instruction *>
     getOperands(llvm::BumpPtrAllocator &alloc, Cache &cache,
                 llvm::Instruction *instr) {
-        llvm::SmallVector<Instruction *> operands;
-        for (llvm::Use &op : instr->operands()) {
-            auto *i = cache.get(alloc, op.get());
-            operands.push_back(i);
+        auto ops{instr->operands()};
+        auto OI = ops.begin();
+        auto OE = ops.end();
+        size_t Nops = instr->getNumOperands();
+        Instruction **operands = alloc.Allocate<Instruction *>(Nops);
+        Instruction **p = operands;
+        for (; OI != OE; ++OI, ++p) {
+            *p = cache.get(alloc, *OI);
         }
-        return operands;
+        return {operands, Nops};
     }
 
     static Instruction *createIsolated(llvm::BumpPtrAllocator &alloc,
@@ -184,7 +205,7 @@ struct Instruction {
     bool isFMul() const { return id.isInstruction(llvm::Instruction::FMul); }
     bool isFNeg() const { return id.isInstruction(llvm::Instruction::FNeg); }
     bool isFMulOrFNegOfFMul() const {
-        return isFMul() || (isFNeg() && (*operands)[0]->isFMul());
+        return isFMul() || (isFNeg() && operands.front()->isFMul());
     }
     bool isFAdd() const { return id.isInstruction(llvm::Instruction::FAdd); }
     bool isFSub() const { return id.isInstruction(llvm::Instruction::FSub); }
@@ -273,7 +294,7 @@ struct Instruction {
     std::pair<llvm::TargetTransformInfo::OperandValueKind,
               llvm::TargetTransformInfo::OperandValueProperties>
     getOperandInfo(unsigned int i) const {
-        Instruction *opi = (*operands)[i];
+        Instruction *opi = (operands)[i];
         if (opi->isValue()) {
             if (auto c = llvm::dyn_cast<llvm::ConstantInt>(opi->id.ptr.val)) {
                 llvm::APInt v = c->getValue();
@@ -327,7 +348,7 @@ struct Instruction {
     }
 #endif
     bool operandIsLoad(unsigned int i = 0) const {
-        return (*operands)[i]->isLoad();
+        return (operands)[i]->isLoad();
     }
     bool userIsStore(unsigned int i) const { return users[i]->isLoad(); }
     bool userIsStore() const {
@@ -347,7 +368,7 @@ struct Instruction {
     }
     RecipThroughputLatency calcCastCost(llvm::TargetTransformInfo &TTI,
                                         unsigned int vectorWidth) {
-        llvm::Type *srcT = getType(operands->front()->type, vectorWidth);
+        llvm::Type *srcT = getType(operands.front()->type, vectorWidth);
         llvm::Type *dstT = getType(vectorWidth);
         llvm::TargetTransformInfo::CastContextHint ctx = getCastContext(TTI);
         return {TTI.getCastInstrCost(
@@ -358,7 +379,7 @@ struct Instruction {
     }
     llvm::CmpInst::Predicate getPredicate() const {
         if (isSelect())
-            return operands->front()->getPredicate();
+            return operands.front()->getPredicate();
         assert(isCmp());
         if (auto cmp = llvm::dyn_cast<llvm::CmpInst>(id.ptr.val))
             return cmp->getPredicate();
@@ -380,7 +401,7 @@ struct Instruction {
                                         unsigned int vectorWidth) {
         llvm::Type *T = getType(vectorWidth);
         llvm::SmallVector<llvm::Type *, 4> argTypes;
-        for (auto op : *operands)
+        for (auto op : operands)
             argTypes.push_back(op->getType(vectorWidth));
         if (id.intrin == llvm::Intrinsic::not_intrinsic) {
             return {
@@ -412,8 +433,8 @@ struct Instruction {
     RecipThroughputLatency calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
                                                  unsigned int vectorWidth) {
         // TODO: allow not assuming hardware FMA support
-        if (((*operands)[0]->isFMulOrFNegOfFMul() ||
-             (*operands)[1]->isFMulOrFNegOfFMul()) &&
+        if (((operands)[0]->isFMulOrFNegOfFMul() ||
+             (operands)[1]->isFMulOrFNegOfFMul()) &&
             allowsContract())
             return {};
         return calcBinaryArithmeticCost(TTI, vectorWidth);
@@ -427,7 +448,7 @@ struct Instruction {
     RecipThroughputLatency calculateFNegCost(llvm::TargetTransformInfo &TTI,
                                              unsigned int vectorWidth) {
 
-        if (operands->front()->isFMul() && allUsersAdditiveContract())
+        if (operands.front()->isFMul() && allUsersAdditiveContract())
             return {};
         return calcUnaryArithmeticCost(TTI, vectorWidth);
     }
@@ -511,6 +532,27 @@ struct Instruction {
         default:
             return 0;
         }
+    }
+};
+
+template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
+    static inline ::Instruction::Identifier getEmptyKey() {
+        auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getEmptyKey();
+        auto P = llvm::DenseMapInfo<llvm::Value *>::getEmptyKey();
+        return ::Instruction::Identifier{K, K, P};
+    }
+
+    static inline ::Instruction::Identifier getTombstoneKey() {
+        auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getTombstoneKey();
+        auto P = llvm::DenseMapInfo<llvm::Value *>::getTombstoneKey();
+        return ::Instruction::Identifier{K, K, P};
+    }
+
+    static unsigned getHashValue(const ::Instruction::Identifier &Key);
+
+    static bool isEqual(const ::Instruction::Identifier &LHS,
+                        const ::Instruction::Identifier &RHS) {
+        return LHS == RHS;
     }
 };
 
@@ -685,6 +727,13 @@ struct BlockPredicates {
         blockPredicates[B] = PredicateRelations(alloc, ic, predicates, pred);
     }
 };
+
+void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
+                           Instruction::Cache &ic, BlockPredicates &bp,
+                           LoopTree &loopTree) {
+    for (auto &L : loopTree) {
+    }
+}
 
 // unsigned x = llvm::Instruction::FAdd;
 // unsigned y = llvm::Instruction::LShr;

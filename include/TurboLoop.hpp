@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
+#include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
@@ -9,7 +10,6 @@
 #include "./MemoryAccess.hpp"
 #include "./Predicate.hpp"
 #include "./Schedule.hpp"
-#include "./UniqueIDMap.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -107,8 +107,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<unsigned> forest;
         // NOTE: LoopInfo stores loops in reverse program order (opposite of
         // loops)
-	llvm::SmallVector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
-                                        llvm::reverse(*LI).end()};
+        llvm::SmallVector<llvm::Loop *> revLI{llvm::reverse(*LI).begin(),
+                                              llvm::reverse(*LI).end()};
         if (revLI.empty())
             return;
         llvm::BasicBlock *E = revLI.back()->getExitingBlock();
@@ -132,7 +132,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             loopTrees[forest].addZeroLowerBounds(
                 loopTrees, loopMap, std::numeric_limits<unsigned>::max());
     }
-    
+
     /// returns index to the loop whose preheader we place it in.
     /// if it equals depth, then we must place it into the inner most loop
     /// header..
@@ -720,8 +720,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             fillLoopBlock(loopTrees[root.subLoops[i]]);
     }
 
-    void buildInstructionGraph(LoopTree &root){
-	// predicates
-	
+    void buildInstructionGraph(LoopTree &root) {
+        // predicates
     }
 };
