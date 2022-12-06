@@ -427,70 +427,69 @@ $(function() {
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;ptrdiff_t operator-(<a class="code" href="structEndSentinel.html">EndSentinel</a>, <a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a> v) {</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structEndSentinel.html">EndSentinel</a>{} - v.it;</div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;}</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;ptrdiff_t operator-(<a class="code" href="structEndSentinel.html">EndSentinel</a>,</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;                    <a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a> v) {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structEndSentinel.html">EndSentinel</a>{} - v.it;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;}</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
-<div class="line"><a name="l00366"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSetIterator_01_4.html">  366</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSetIterator.html">BitSetIterator</a>&gt; {</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="keyword">using</span> value_type = size_t;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    <span class="keyword">using</span> reference_type = <span class="keywordtype">size_t</span> &amp;;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keyword">using</span> pointer_type = <span class="keywordtype">size_t</span> *;</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;};</div>
-<div class="line"><a name="l00373"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1Iterator_01_4.html">  373</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;int64_t&gt;::Iterator&gt; {</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">using</span> value_type = int64_t;</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    <span class="keyword">using</span> reference_type = int64_t &amp;;</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="keyword">using</span> pointer_type = int64_t *;</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;};</div>
-<div class="line"><a name="l00380"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1ConstIterator_01_4.html">  380</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;int64_t&gt;::ConstIterator&gt; {</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">using</span> value_type = int64_t;</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keyword">using</span> reference_type = int64_t &amp;;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    <span class="keyword">using</span> pointer_type = int64_t *;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;};</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="keyword">struct </span><a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
-<div class="line"><a name="l00388"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1Iterator_01_4.html">  388</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;<a class="code" href="structScheduledNode.html">ScheduledNode</a>&gt;::Iterator&gt; {</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;};</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="keyword">template</span> &lt;&gt;</div>
-<div class="line"><a name="l00396"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1ConstIterator_01_4.html">  396</a></span>&#160;<span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;<a class="code" href="structScheduledNode.html">ScheduledNode</a>&gt;::ConstIterator&gt; {</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;};</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160; </div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;<span class="comment">// typedef</span></div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="comment">// std::iterator_traits&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;::iterator_category;</span></div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;static_assert(std::movable&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;static_assert(std::movable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160; </div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;static_assert(std::weakly_incrementable&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;static_assert(std::weakly_incrementable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;static_assert(std::input_or_output_iterator&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;static_assert(</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;    std::input_or_output_iterator&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;<span class="comment">// static_assert(std::indirectly_readable&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;);</span></div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;static_assert(std::indirectly_readable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">// static_assert(std::input_iterator&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;);</span></div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;static_assert(std::input_iterator&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;static_assert(std::ranges::range&lt;<span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="comment">// static_assert(std::ranges::forward_range&lt;BitSliceView&lt;int64_t&gt;&gt;);</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;static_assert(std::ranges::forward_range&lt;<span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160; </div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSet.html">BitSet&lt;&gt;</a>&gt;);</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;ptrdiff_t operator-(<a class="code" href="structEndSentinel.html">EndSentinel</a>, <a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a> v) {</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structEndSentinel.html">EndSentinel</a>{} - v.it;</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;}</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160; </div>
+<div class="line"><a name="l00365"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSetIterator_01_4.html">  365</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSetIterator.html">BitSetIterator</a>&gt; {</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keyword">using</span> value_type = size_t;</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="keyword">using</span> reference_type = <span class="keywordtype">size_t</span> &amp;;</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    <span class="keyword">using</span> pointer_type = <span class="keywordtype">size_t</span> *;</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;};</div>
+<div class="line"><a name="l00372"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1Iterator_01_4.html">  372</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;int64_t&gt;::Iterator&gt; {</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keyword">using</span> value_type = int64_t;</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">using</span> reference_type = int64_t &amp;;</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    <span class="keyword">using</span> pointer_type = int64_t *;</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;};</div>
+<div class="line"><a name="l00379"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1ConstIterator_01_4.html">  379</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;int64_t&gt;::ConstIterator&gt; {</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keyword">using</span> value_type = int64_t;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">using</span> reference_type = int64_t &amp;;</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keyword">using</span> pointer_type = int64_t *;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;};</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<span class="keyword">struct </span><a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
+<div class="line"><a name="l00387"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1Iterator_01_4.html">  387</a></span>&#160;<span class="keyword">template</span> &lt;&gt; <span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;<a class="code" href="structScheduledNode.html">ScheduledNode</a>&gt;::Iterator&gt; {</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;};</div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;<span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><a name="l00395"></a><span class="lineno"><a class="line" href="structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1ConstIterator_01_4.html">  395</a></span>&#160;<span class="keyword">struct </span>std::iterator_traits&lt;<a class="code" href="structBitSliceView.html">BitSliceView</a>&lt;<a class="code" href="structScheduledNode.html">ScheduledNode</a>&gt;::ConstIterator&gt; {</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keyword">using</span> difference_type = ptrdiff_t;</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    <span class="keyword">using</span> iterator_category = std::forward_iterator_tag;</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">value_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a>;</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">reference_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;;</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;    <span class="keyword">using</span> <a class="code" href="structScheduledNode.html">pointer_type</a> = <a class="code" href="structScheduledNode.html">ScheduledNode</a> *;</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;};</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="comment">// typedef</span></div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;<span class="comment">// std::iterator_traits&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;::iterator_category;</span></div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160; </div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;static_assert(std::movable&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;static_assert(std::movable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160; </div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;static_assert(std::weakly_incrementable&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;static_assert(std::weakly_incrementable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;static_assert(std::input_or_output_iterator&lt;<a class="code" href="structBitSliceView_1_1Iterator.html">BitSliceView&lt;int64_t&gt;::Iterator</a>&gt;);</div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;static_assert(</div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    std::input_or_output_iterator&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="comment">// static_assert(std::indirectly_readable&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;);</span></div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;static_assert(std::indirectly_readable&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="comment">// static_assert(std::input_iterator&lt;BitSliceView&lt;int64_t&gt;::Iterator&gt;);</span></div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;static_assert(std::input_iterator&lt;<a class="code" href="structBitSliceView_1_1ConstIterator.html">BitSliceView&lt;int64_t&gt;::ConstIterator</a>&gt;);</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;static_assert(std::ranges::range&lt;<span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="comment">// static_assert(std::ranges::forward_range&lt;BitSliceView&lt;int64_t&gt;&gt;);</span></div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;static_assert(std::ranges::forward_range&lt;<span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160; </div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSet.html">BitSet&lt;&gt;</a>&gt;);</div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:69</div></div>
 <div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:312</div></div>

@@ -93,7 +93,7 @@ $(function() {
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// d = a*x; x = d/a</span></div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;llvm::Optional&lt;std::tuple&lt;int64_t&gt;&gt; linearDiophantine(int64_t d,</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                                                       std::tuple&lt;int64_t&gt; a) {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                                                      std::tuple&lt;int64_t&gt; a) {</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    int64_t a0 = std::get&lt;0&gt;(a);</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">if</span> (d == 0) {</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        <span class="keywordflow">return</span> std::make_tuple(int64_t(0));</div>
@@ -137,7 +137,7 @@ $(function() {
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="comment">// d == q*((a/q)*x + (b/q)*y) + ... == q*w + ...</span></div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// solve the rest</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> dio_dqc =</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))){</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))) {</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">auto</span> t = dio_dqc.getValue();</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        int64_t w = std::get&lt;0&gt;(t);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="comment">// w == ((a0/q)*x + (a1/q)*y)</span></div>
