@@ -93,12 +93,9 @@ uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>fillAffineIndices
 <tr class="memitem:af9115b3fa9ebac05b19e97408784c155"><td class="memItemLeft" align="right" valign="top"><a id="af9115b3fa9ebac05b19e97408784c155"></a>
 llvm::Optional&lt; <a class="el" href="structArrayReference.html">ArrayReference</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>arrayRef</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::Instruction *ptr, llvm::Instruction *loadOrStore, <a class="el" href="structPredicates.html">Predicates</a> &amp;pred, const llvm::SCEV *elSize)</td></tr>
 <tr class="separator:af9115b3fa9ebac05b19e97408784c155"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f89b76fbe8aabe478b8c61d12ab3b14"><td class="memItemLeft" align="right" valign="top"><a id="a3f89b76fbe8aabe478b8c61d12ab3b14"></a>
-<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTree</b> (unsigned i)</td></tr>
-<tr class="separator:a3f89b76fbe8aabe478b8c61d12ab3b14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6008c8e2acff409174abf8a7f6931d25"><td class="memItemLeft" align="right" valign="top"><a id="a6008c8e2acff409174abf8a7f6931d25"></a>
-<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTree</b> (llvm::Loop *L)</td></tr>
-<tr class="separator:a6008c8e2acff409174abf8a7f6931d25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f58308fdccef8517524f228481b1ef2"><td class="memItemLeft" align="right" valign="top"><a id="a9f58308fdccef8517524f228481b1ef2"></a>
+<a class="el" href="structLoopTree.html">LoopTree</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTree</b> (llvm::Loop *L)</td></tr>
+<tr class="separator:a9f58308fdccef8517524f228481b1ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a628ea6579428134fb8189aec4b65197f"><td class="memItemLeft" align="right" valign="top"><a id="a628ea6579428134fb8189aec4b65197f"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>addLoad</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, <a class="el" href="structPredicates.html">Predicates</a> &amp;pred, llvm::LoadInst *I, llvm::SmallVector&lt; unsigned &gt; &amp;omega)</td></tr>
 <tr class="separator:a628ea6579428134fb8189aec4b65197f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,9 +120,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>peelOuterLoops</b> (<
 <tr class="memitem:a1e1a38fdf9dfe398a93ca2683729c882"><td class="memItemLeft" align="right" valign="top"><a id="a1e1a38fdf9dfe398a93ca2683729c882"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLoop</b> (llvm::Loop *L)</td></tr>
 <tr class="separator:a1e1a38fdf9dfe398a93ca2683729c882"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa92768c21f5ed6b464f99441cd213898"><td class="memItemLeft" align="right" valign="top"><a id="aa92768c21f5ed6b464f99441cd213898"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLoop</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, unsigned LTID)</td></tr>
-<tr class="separator:aa92768c21f5ed6b464f99441cd213898"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d534e0cbe573fcc201c9b0f65bc45dc"><td class="memItemLeft" align="right" valign="top"><a id="a0d534e0cbe573fcc201c9b0f65bc45dc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLoop</b> (<a class="el" href="structLoopTree.html">LoopTree</a> *LT)</td></tr>
+<tr class="separator:a0d534e0cbe573fcc201c9b0f65bc45dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a428d4401d2efafcd674d6e8cab205880"><td class="memItemLeft" align="right" valign="top"><a id="a428d4401d2efafcd674d6e8cab205880"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>parseLoopPrint</b> (auto B, auto E)</td></tr>
 <tr class="separator:a428d4401d2efafcd674d6e8cab205880"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -161,15 +158,12 @@ static uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>blackListA
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a35fbf0297742a6bbfbdd2111c83023df"><td class="memItemLeft" align="right" valign="top"><a id="a35fbf0297742a6bbfbdd2111c83023df"></a>
-llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a>, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopTrees</b></td></tr>
-<tr class="separator:a35fbf0297742a6bbfbdd2111c83023df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf825e4d5949d70da955df2e3c67ee34"><td class="memItemLeft" align="right" valign="top"><a id="adf825e4d5949d70da955df2e3c67ee34"></a>
-llvm::SmallVector&lt; unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopForests</b></td></tr>
-<tr class="separator:adf825e4d5949d70da955df2e3c67ee34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1c206e1e59a49d50277b0d3c9e8654a"><td class="memItemLeft" align="right" valign="top"><a id="af1c206e1e59a49d50277b0d3c9e8654a"></a>
-llvm::DenseMap&lt; llvm::Loop *, unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopMap</b></td></tr>
-<tr class="separator:af1c206e1e59a49d50277b0d3c9e8654a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ecbf7435c8a0d0db4db065691547c52"><td class="memItemLeft" align="right" valign="top"><a id="a2ecbf7435c8a0d0db4db065691547c52"></a>
+llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopForests</b></td></tr>
+<tr class="separator:a2ecbf7435c8a0d0db4db065691547c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64be941fbe1d9c48653e4eae2cc2f6bc"><td class="memItemLeft" align="right" valign="top"><a id="a64be941fbe1d9c48653e4eae2cc2f6bc"></a>
+llvm::DenseMap&lt; llvm::Loop *, <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopMap</b></td></tr>
+<tr class="separator:a64be941fbe1d9c48653e4eae2cc2f6bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a956160bc2f6b406c70cd964b0a4c0b8d"><td class="memItemLeft" align="right" valign="top"><a id="a956160bc2f6b406c70cd964b0a4c0b8d"></a>
 <a class="el" href="structBlockPredicates.html">BlockPredicates</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
 <tr class="separator:a956160bc2f6b406c70cd964b0a4c0b8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
