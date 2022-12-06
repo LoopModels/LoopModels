@@ -29,7 +29,6 @@ jobs:
     - run: meson test -C builddirclang
     - run: meson compile -C builddirclang/
     - run: ninja coverage -C builddirclang
-    - run: ninja clang-format-check -C builddirgcc
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
@@ -38,6 +37,7 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         file: builddirgcc/meson-logs/coverage.xml, builddirclang/meson-logs/coverage.xml
+    # - run: ninja clang-format-check -C builddirclang
   macos:
     # env:
 
