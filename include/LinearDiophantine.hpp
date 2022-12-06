@@ -22,7 +22,7 @@ linearDiophantine(int64_t c, int64_t a, int64_t b) {
 
 // d = a*x; x = d/a
 llvm::Optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
-                                                       std::tuple<int64_t> a) {
+                                                      std::tuple<int64_t> a) {
     int64_t a0 = std::get<0>(a);
     if (d == 0) {
         return std::make_tuple(int64_t(0));
@@ -66,7 +66,7 @@ llvm::Optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
     // d == q*((a/q)*x + (b/q)*y) + ... == q*w + ...
     // solve the rest
     if (auto dio_dqc =
-        linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))){
+            linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))) {
         auto t = dio_dqc.getValue();
         int64_t w = std::get<0>(t);
         // w == ((a0/q)*x + (a1/q)*y)

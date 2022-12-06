@@ -15,7 +15,7 @@ struct MemoryAccess {
     [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
     [[no_unique_address]] llvm::SmallVector<unsigned> edgesOut;
-    [[no_unique_address]] BitSet nodeIndex;
+    [[no_unique_address]] BitSet<> nodeIndex;
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     // schedule indicated by `1` top bit, remainder indicates loop

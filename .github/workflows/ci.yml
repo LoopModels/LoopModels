@@ -37,6 +37,7 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         file: builddirgcc/meson-logs/coverage.xml, builddirclang/meson-logs/coverage.xml
+    # - run: ninja clang-format-check -C builddirclang
   macos:
     # env:
 

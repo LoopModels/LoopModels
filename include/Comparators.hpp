@@ -2,10 +2,10 @@
 
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
+#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
-#include "./Macro.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

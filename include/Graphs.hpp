@@ -73,7 +73,7 @@ concept AbstractGraph =
 }
 
 [[maybe_unused]] static size_t
-strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet> &components,
+strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                   indexLowLinkOnStack,
@@ -98,7 +98,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet> &components,
     auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
     if (vIndex == vLowLink) {
         components.emplace_back();
-        BitSet &component = components.back();
+        BitSet<> &component = components.back();
         unsigned w;
         do {
             w = stack.back();
@@ -110,9 +110,9 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet> &components,
     return index;
 }
 
-[[maybe_unused]] static llvm::SmallVector<BitSet>
+[[maybe_unused]] static llvm::SmallVector<BitSet<>>
 stronglyConnectedComponents(AbstractGraph auto &g) {
-    llvm::SmallVector<BitSet> components;
+    llvm::SmallVector<BitSet<>> components;
     size_t maxId = g.maxVertexId();
     components.reserve(maxId);
     llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(

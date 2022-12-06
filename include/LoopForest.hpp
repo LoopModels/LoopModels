@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/ScalarEvolution.h>
@@ -17,40 +18,10 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 #include <vector>
-
-// struct LoopTree;
-// struct LoopForest {
-//     llvm::SmallVector<LoopTree *> loops;
-//     // definitions due to incomplete types
-//     size_t pushBack(llvm::SmallVectorImpl<LoopTree> &, llvm::Loop *,
-//                     llvm::ScalarEvolution &,
-//                     llvm::SmallVector<LoopForest, 0> &);
-//     LoopForest() = default;
-//     LoopForest(llvm::SmallVector<LoopTree *> loops);
-//     // LoopForest(std::vector<LoopTree> loops) : loops(std::move(loops)){};
-//     LoopForest(auto itb, auto ite) : loops(itb, ite){};
-
-//     inline size_t size() const;
-//     static size_t invalid(llvm::SmallVector<LoopForest, 0> &forests,
-//                           LoopForest forest);
-//     inline LoopTree *operator[](size_t i) { return loops[i]; }
-//     inline auto begin() { return loops.begin(); }
-//     inline auto begin() const { return loops.begin(); }
-//     inline auto end() { return loops.end(); }
-//     inline auto end() const { return loops.end(); }
-//     inline auto rbegin() { return loops.rbegin(); }
-//     inline auto rbegin() const { return loops.rbegin(); }
-//     inline auto rend() { return loops.rend(); }
-//     inline auto rend() const { return loops.rend(); }
-//     inline auto &front() { return loops.front(); }
-//     inline void clear();
-//     void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &);
-// };
-// llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const LoopForest &tree);
-// TODO: should depth be stored in LoopForests instead?
 
 [[maybe_unused]] static bool
 visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
@@ -149,7 +120,8 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
                 return dst0;
             }
             // SHOWLN(*BI->getSuccessor(1));
-            Predicates conditionedPred = pred & BI->getCondition();
+            llvm::Value *cond = BI->getCondition();
+            Predicates conditionedPred = pred & cond;
             BBChain dst0 =
                 allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
                                      BBdst, conditionedPred, BBhead, L);
@@ -236,7 +208,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
 
 struct LoopTree {
     [[no_unique_address]] llvm::Loop *loop;
-    [[no_unique_address]] llvm::SmallVector<unsigned> subLoops;
+    [[no_unique_address]] llvm::SmallVector<LoopTree *> subLoops;
     // length number of sub loops + 1
     // - this loop's header to first loop preheader
     // - first loop's exit to next loop's preheader...
@@ -246,22 +218,20 @@ struct LoopTree {
     // in addition to requiring simplify form, we require a single exit block
     [[no_unique_address]] llvm::SmallVector<PredicatedChain> paths;
     [[no_unique_address]] AffineLoopNest<true> affineLoop;
-    [[no_unique_address]] unsigned parentLoop{
-        std::numeric_limits<unsigned>::max()};
+    [[no_unique_address]] LoopTree *parentLoop{nullptr};
     [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
 
     bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
 
-    LoopTree(llvm::SmallVector<unsigned> sL,
+    LoopTree(llvm::SmallVector<LoopTree *> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
 
-    LoopTree(llvm::Loop *L, llvm::SmallVector<unsigned> sL,
+    LoopTree(llvm::Loop *L, llvm::SmallVector<LoopTree *> sL,
              const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
-          affineLoop(L, BT, SE),
-          parentLoop(std::numeric_limits<unsigned>::max()) {
+          affineLoop(L, BT, SE), parentLoop(nullptr) {
 #ifndef NDEBUG
         if (loop)
             for (auto &&chain : paths)
@@ -271,11 +241,10 @@ struct LoopTree {
     }
 
     LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
-             llvm::SmallVector<unsigned> sL,
+             llvm::SmallVector<LoopTree *> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
-          affineLoop(std::move(aln)),
-          parentLoop(std::numeric_limits<unsigned>::max()) {
+          affineLoop(std::move(aln)), parentLoop(nullptr) {
 #ifndef NDEBUG
         if (loop)
             for (auto &&chain : paths)
@@ -283,12 +252,6 @@ struct LoopTree {
                     assert(loop->contains(pbb.basicBlock));
 #endif
     }
-    // LoopTree(llvm::Loop *L, AffineLoopNest<true> *aln, LoopForest sL)
-    // : loop(L), subLoops(sL), affineLoop(aln), parentLoop(nullptr) {}
-
-    // LoopTree(llvm::Loop *L, LoopForest sL, unsigned affineLoopID)
-    //     : loop(L), subLoops(std::move(sL)), affineLoopID(affineLoopID),
-    //       parentLoop(nullptr) {}
     size_t getNumLoops() const { return affineLoop.getNumLoops(); }
 
     friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
@@ -299,36 +262,20 @@ struct LoopTree {
             os << "top-level:\n";
         }
         for (auto branch : tree.subLoops)
-            os << branch;
+            os << *branch;
         return os << "\n";
     }
-    llvm::raw_ostream &dump(llvm::raw_ostream &os,
-                            llvm::ArrayRef<LoopTree> loopTrees) const {
-        if (loop) {
-            os << (*loop) << "\n" << affineLoop << "\n";
-        } else {
-            os << "top-level:\n";
-        }
-        for (auto branch : subLoops)
-            loopTrees[branch].dump(os, loopTrees);
-        return os << "\n";
-    }
-    llvm::raw_ostream &dump(llvm::ArrayRef<LoopTree> loopTrees) const {
-        return dump(llvm::errs(), loopTrees);
-    }
-    void addZeroLowerBounds(llvm::MutableArrayRef<LoopTree> loopTrees,
-                            llvm::DenseMap<llvm::Loop *, unsigned> &loopMap,
-                            unsigned myId) {
+    llvm::raw_ostream &dump() const { return llvm::errs() << *this; }
+    void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
         // SHOWLN(this);
         // SHOWLN(affineLoop.A);
         affineLoop.addZeroLowerBounds();
-        for (auto tid : subLoops) {
-            auto &tree = loopTrees[tid];
-            tree.addZeroLowerBounds(loopTrees, loopMap, tid);
-            tree.parentLoop = myId;
+        for (auto tree : subLoops) {
+            tree->addZeroLowerBounds(loopMap);
+            tree->parentLoop = this;
         }
         if (loop)
-            loopMap.insert(std::make_pair(loop, myId));
+            loopMap.insert(std::make_pair(loop, this));
     }
     auto begin() { return subLoops.begin(); }
     auto end() { return subLoops.end(); }
@@ -339,10 +286,10 @@ struct LoopTree {
     // try to add Loop L, as well as all of L's subLoops
     // if invalid, create a new LoopForest, and add it to forests instead
     // loopTrees are the cache of all LoopTrees
-    static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
-                           llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
-                           llvm::ScalarEvolution &SE) {
+    static size_t pushBack(llvm::BumpPtrAllocator &alloc,
+                           llvm::SmallVector<LoopTree *> &forests,
+                           llvm::SmallVector<LoopTree *> &branches,
+                           llvm::Loop *L, llvm::ScalarEvolution &SE) {
         const std::vector<llvm::Loop *> &subLoops{L->getSubLoops()};
         llvm::BasicBlock *H = L->getHeader();
         llvm::BasicBlock *E = L->getExitingBlock();
@@ -351,14 +298,14 @@ struct LoopTree {
             SHOWLN(E);
         if (anyFail)
             SHOWLN(L->isLoopSimplifyForm());
-        return pushBack(loopTrees, forests, branches, L, SE, subLoops, H, E,
+        return pushBack(alloc, forests, branches, L, SE, subLoops, H, E,
                         anyFail);
     }
-    static size_t pushBack(llvm::SmallVectorImpl<LoopTree> &loopTrees,
-                           llvm::SmallVector<unsigned> &forests,
-                           llvm::SmallVector<unsigned> &branches, llvm::Loop *L,
-                           llvm::ScalarEvolution &SE,
-                           const std::vector<llvm::Loop *> &subLoops,
+    static size_t pushBack(llvm::BumpPtrAllocator &alloc,
+                           llvm::SmallVector<LoopTree *> &forests,
+                           llvm::SmallVector<LoopTree *> &branches,
+                           llvm::Loop *L, llvm::ScalarEvolution &SE,
+                           llvm::ArrayRef<llvm::Loop *> subLoops,
                            llvm::BasicBlock *H, llvm::BasicBlock *E,
                            bool anyFail) {
         // how to avoid double counting? Probably shouldn't be an issue:
@@ -376,7 +323,7 @@ struct LoopTree {
             SHOWLN(*L);
         } else
             llvm::errs() << "Current pushBack depth = toplevel\n";
-        llvm::SmallVector<unsigned> subForest;
+        llvm::SmallVector<LoopTree *> subForest;
         llvm::SmallVector<PredicatedChain> paths;
         PredicatedChain path;
         size_t interiorDepth0 = 0;
@@ -418,7 +365,7 @@ struct LoopTree {
                     llvm::errs() << "path failed for loop :" << *N << "\n";
                     P = nullptr;
                     anyFail = true;
-                    split(loopTrees, forests, subForest, paths, subLoops, i);
+                    split(alloc, forests, subForest, paths, subLoops, i);
                     exitBlocks.clear();
                     if (i + 1 < numSubLoops)
                         exitBlocks.push_back(
@@ -432,7 +379,7 @@ struct LoopTree {
                 llvm::errs()
                     << "pre-pushBack (subForest.size(),paths.size()) = ("
                     << subForest.size() << ", " << paths.size() << ")\n";
-                size_t itDepth = pushBack(loopTrees, forests, subForest, N, SE);
+                size_t itDepth = pushBack(alloc, forests, subForest, N, SE);
                 llvm::errs()
                     << "post-pushBack (subForest.size(),paths.size()) = ("
                     << subForest.size() << ", " << paths.size() << ")\n";
@@ -448,7 +395,7 @@ struct LoopTree {
                     assert(subForest.size() + 1 == paths.size());
                     // truncate last to drop extra blocks
                     paths.back().truncate(1);
-                    split(loopTrees, forests, subForest, paths);
+                    split(alloc, forests, subForest, paths);
                     exitBlocks.clear();
                     if (i + 1 < numSubLoops)
                         exitBlocks.push_back(
@@ -463,7 +410,7 @@ struct LoopTree {
                 llvm::errs()
                     << "pushBack returning 0 because anyFail == true.\n";
             if (anyFail)
-                return invalid(loopTrees, forests, subForest, paths, subLoops);
+                return invalid(alloc, forests, subForest, paths, subLoops);
             assert(subForest.size());
             finalStart = subLoops.back()->getExitBlock();
         } else
@@ -471,17 +418,16 @@ struct LoopTree {
         llvm::errs() << "Starting second pass in pushBack\n";
         SHOWLN(subForest.size());
         if (subForest.size()) { // add subloops
-            AffineLoopNest<true> &subNest =
-                loopTrees[subForest.front()].affineLoop;
+            AffineLoopNest<true> &subNest = subForest.front()->affineLoop;
             SHOWLN(subNest.getNumLoops());
             if (subNest.getNumLoops() > 1) {
                 visitedBBs.clear();
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
-                    branches.push_back(loopTrees.size());
                     paths.push_back(std::move(path));
-                    loopTrees.emplace_back(L, subNest.removeInnerMost(),
-                                           std::move(subForest),
-                                           std::move(paths));
+                    LoopTree *newTree = new (alloc)
+                        LoopTree{L, subNest.removeInnerMost(),
+                                 std::move(subForest), std::move(paths)};
+                    branches.push_back(newTree);
                     return ++interiorDepth0;
                 } else {
                     llvm::errs() << "No direct path from:\n"
@@ -497,10 +443,11 @@ struct LoopTree {
                 auto *BTNW = noWrapSCEV(SE, BT);
                 llvm::errs() << "after no-wrapping:\n" << *BTNW << "\n";
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
-                    branches.push_back(loopTrees.size());
+
                     paths.push_back(std::move(path));
-                    loopTrees.emplace_back(L, std::move(subForest), BTNW, SE,
-                                           std::move(paths));
+                    LoopTree *newTree = new (alloc) LoopTree{
+                        L, std::move(subForest), BTNW, SE, std::move(paths)};
+                    branches.push_back(newTree);
                     return 1;
                 }
             }
@@ -510,16 +457,16 @@ struct LoopTree {
             << *L << "\n";
         SHOW(subForest.size());
         if (subForest.size()) {
-            CSHOWLN(loopTrees[subForest.front()].getNumLoops());
+            CSHOWLN(subForest.front()->getNumLoops());
         } else
             llvm::errs() << "\n";
-        return invalid(loopTrees, forests, subForest, paths, subLoops);
+        return invalid(alloc, forests, subForest, paths, subLoops);
     }
 
     [[maybe_unused]] static size_t
-    invalid(llvm::SmallVectorImpl<LoopTree> &loopTrees,
-            llvm::SmallVectorImpl<unsigned> &trees,
-            llvm::SmallVector<unsigned> &subTree,
+    invalid(llvm::BumpPtrAllocator &alloc,
+            llvm::SmallVectorImpl<LoopTree *> &trees,
+            llvm::SmallVector<LoopTree *> &subTree,
             llvm::SmallVector<PredicatedChain> &paths,
             const std::vector<llvm::Loop *> &subLoops) {
         if (subTree.size()) {
@@ -528,31 +475,33 @@ struct LoopTree {
             assert(subTree.size() == paths.size());
             if (llvm::BasicBlock *exit = subLoops.back()->getExitingBlock()) {
                 paths.emplace_back(exit);
-                trees.push_back(loopTrees.size());
-                loopTrees.emplace_back(std::move(subTree), std::move(paths));
+                LoopTree *newTree =
+                    new (alloc) LoopTree{std::move(subTree), std::move(paths)};
+                trees.push_back(newTree);
             }
         }
         return 0;
     }
     [[maybe_unused]] static void
-    split(llvm::SmallVectorImpl<LoopTree> &loopTrees,
-          llvm::SmallVectorImpl<unsigned> &trees,
-          llvm::SmallVector<unsigned> &subTree,
+    split(llvm::BumpPtrAllocator &alloc,
+          llvm::SmallVectorImpl<LoopTree *> &trees,
+          llvm::SmallVector<LoopTree *> &subTree,
           llvm::SmallVector<PredicatedChain> &paths) {
         if (subTree.size()) {
             // SHOW(subTree.size());
             // CSHOWLN(paths.size());
             assert(1 + subTree.size() == paths.size());
-            trees.push_back(loopTrees.size());
-            loopTrees.emplace_back(std::move(subTree), std::move(paths));
+            LoopTree *newTree =
+                new (alloc) LoopTree{std::move(subTree), std::move(paths)};
+            trees.push_back(newTree);
             subTree.clear();
         }
         paths.clear();
     }
     [[maybe_unused]] static void
-    split(llvm::SmallVectorImpl<LoopTree> &loopTrees,
-          llvm::SmallVectorImpl<unsigned> &trees,
-          llvm::SmallVector<unsigned> &subTree,
+    split(llvm::BumpPtrAllocator &alloc,
+          llvm::SmallVectorImpl<LoopTree *> &trees,
+          llvm::SmallVector<LoopTree *> &subTree,
           llvm::SmallVector<PredicatedChain> &paths,
           const std::vector<llvm::Loop *> &subLoops, size_t i) {
         if (i && subTree.size()) {
@@ -561,8 +510,9 @@ struct LoopTree {
                 // CSHOWLN(paths.size());
                 assert(subTree.size() == paths.size());
                 paths.emplace_back(exit);
-                trees.push_back(loopTrees.size());
-                loopTrees.emplace_back(std::move(subTree), std::move(paths));
+                LoopTree *newTree =
+                    new (alloc) LoopTree{std::move(subTree), std::move(paths)};
+                trees.push_back(newTree);
                 subTree.clear();
                 paths.clear();
             }
@@ -570,7 +520,7 @@ struct LoopTree {
         }
         paths.clear();
     }
-    void dumpAllMemAccess(llvm::ArrayRef<LoopTree> loopTrees) const {
+    void dumpAllMemAccess() const {
         llvm::errs() << "dumpAllMemAccess for ";
         if (loop)
             llvm::errs() << *loop << "\n";
@@ -578,7 +528,12 @@ struct LoopTree {
             llvm::errs() << "toplevel\n";
         for (auto &mem : memAccesses)
             SHOWLN(mem);
-        for (auto id : subLoops)
-            loopTrees[id].dumpAllMemAccess(loopTrees);
+        for (auto sL : subLoops)
+            sL->dumpAllMemAccess();
     }
+
+    // void fill(BlockPredicates &bp){
+    // 	for (auto &c : chains)
+    // 	    c.fill(bp);
+    // }
 };

@@ -12,8 +12,8 @@
 #include <utility>
 
 struct MockVertex {
-    BitSet inNeighbors;
-    BitSet outNeighbors;
+    BitSet<> inNeighbors;
+    BitSet<> outNeighbors;
     bool visited{false};
     bool wasVisited() const { return visited; }
     void visit() { visited = true; }
@@ -27,12 +27,12 @@ struct MockGraph {
     // BitSet vertexIds() const { return BitSet::dense(getNumVertices()); }
     Range<size_t, size_t> vertexIds() const { return _(0, getNumVertices()); }
     // BitSet &vertexIds() { return vids; }
-    BitSet &inNeighbors(size_t i) { return vertices[i].inNeighbors; }
-    BitSet &outNeighbors(size_t i) { return vertices[i].outNeighbors; }
-    const BitSet &inNeighbors(size_t i) const {
+    BitSet<> &inNeighbors(size_t i) { return vertices[i].inNeighbors; }
+    BitSet<> &outNeighbors(size_t i) { return vertices[i].outNeighbors; }
+    const BitSet<> &inNeighbors(size_t i) const {
         return vertices[i].inNeighbors;
     }
-    const BitSet &outNeighbors(size_t i) const {
+    const BitSet<> &outNeighbors(size_t i) const {
         return vertices[i].outNeighbors;
     }
     auto begin() { return vertices.begin(); }
