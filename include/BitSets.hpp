@@ -358,8 +358,7 @@ template <typename T, unsigned N = 1> struct BitSliceView {
 ptrdiff_t operator-(EndSentinel, BitSliceView<int64_t>::Iterator v) {
     return EndSentinel{} - v.it;
 }
-ptrdiff_t operator-(EndSentinel,
-                    BitSliceView<int64_t>::ConstIterator v) {
+ptrdiff_t operator-(EndSentinel, BitSliceView<int64_t>::ConstIterator v) {
     return EndSentinel{} - v.it;
 }
 

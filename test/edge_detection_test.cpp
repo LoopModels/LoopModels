@@ -4,7 +4,4 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-TEST(EdgeDetection, BasicAssertions){
-    
-}
-
+TEST(EdgeDetection, BasicAssertions) {}

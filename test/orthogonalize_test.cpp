@@ -91,7 +91,6 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                                   "-1 0 0 0 1 0 0 0 -1; "
                                   "0 0 0 0 0 0 0 0 1]")};
 
-
     TestLoopFunction tlf;
     tlf.addLoop(std::move(A), 4);
     AffineLoopNest<true> &aln = tlf.alns.front();

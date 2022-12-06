@@ -286,7 +286,8 @@ struct AffineLoopNest
 
     /// add a symbol to row `r` of A
     /// we try to break down value `v`, so that adding
-    /// N, N - 1, N - 3 only adds the variable `N`, and adds the constant offsets
+    /// N, N - 1, N - 3 only adds the variable `N`, and adds the constant
+    /// offsets
     [[nodiscard]] size_t addSymbol(IntMatrix &B, llvm::Loop *L,
                                    const llvm::SCEV *v,
                                    llvm::ScalarEvolution &SE, const size_t l,

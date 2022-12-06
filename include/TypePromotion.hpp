@@ -3,16 +3,19 @@
 #include <type_traits>
 
 template <typename T>
-concept HasEltype = requires(T) {
-    std::is_scalar_v<typename std::remove_reference_t<T>::eltype>;
-};
+concept HasEltype = requires(
+    T) { std::is_scalar_v<typename std::remove_reference_t<T>::eltype>; };
 
 template <typename A> struct GetEltype {};
 template <HasEltype A> struct GetEltype<A> {
     using eltype = typename A::eltype;
 };
-template <std::integral A> struct GetEltype<A> { using eltype = A; };
-template <std::floating_point A> struct GetEltype<A> { using eltype = A; };
+template <std::integral A> struct GetEltype<A> {
+    using eltype = A;
+};
+template <std::floating_point A> struct GetEltype<A> {
+    using eltype = A;
+};
 
 template <typename T>
 using eltype_t = typename GetEltype<std::remove_reference_t<T>>::eltype;

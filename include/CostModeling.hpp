@@ -73,7 +73,8 @@ struct LoopTreeSchedule;
 
 // Plan for cost modeling:
 // 1. Build Instruction graph
-// 2. Iterate over all PredicatedChains, merging instructions across branches where possible
+// 2. Iterate over all PredicatedChains, merging instructions across branches
+// where possible
 // 3. Create a loop tree structure for optimization
 // 4. Create InstructionBlocks at each level.
 

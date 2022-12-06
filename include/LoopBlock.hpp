@@ -338,11 +338,12 @@ struct LinearProgramLoopBlock {
                                 ScheduledNode &node, llvm::User *u,
                                 unsigned nodeIndex) {
         visited.insert(u);
-        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u)){
-	    if (llvm::User *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
-		checkUserForLoads(visited, node, user, nodeIndex);
-	    return;
-	}
+        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
+            if (llvm::User *user =
+                    llvm::dyn_cast<llvm::User>(s->getValueOperand()))
+                checkUserForLoads(visited, node, user, nodeIndex);
+            return;
+        }
         for (auto &&op : u->operands())
             if (llvm::User *user = llvm::dyn_cast<llvm::User>(op.get()))
                 checkUserForLoads(visited, node, user, nodeIndex);

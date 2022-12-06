@@ -44,7 +44,8 @@ TEST(UnimodularizationTest, BasicAssertions) {
     //     auto [r1, r2] = test6_10_15.getValue();
     //     auto [A10, A11, A12] = r1;
     //     auto [A20, A21, A22] = r2;
-    //     llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ", "
+    //     llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 <<
+    //     ", "
     //               << A12 << " ]\n";
     //     llvm::errs() << "A(2,:): [ " << A20 << ", " << A21 << ", "
     //               << A22 << " ]\n";
@@ -59,7 +60,8 @@ TEST(UnimodularizationTest, BasicAssertions) {
     //      auto [r1, r2] = test102_190_345.getValue();
     //      auto [A10, A11, A12] = r1;
     //      auto [A20, A21, A22] = r2;
-    //      llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 << ",
+    //      llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 <<
+    //      ",
     //      "
     //                << A12 << " ]\n";
     //      llvm::errs() << "A(2,:): [ " << A20 << ", " << A21 << ", "

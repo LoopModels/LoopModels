@@ -1205,12 +1205,12 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     simp.lexMinimize(sol);
     SHOWLN(sol);
     size_t solSum = 0;
-    for (size_t i = 0; i < 10; ++i){
+    for (size_t i = 0; i < 10; ++i) {
         solSum += sol[i].numerator;
-        EXPECT_EQ(sol[i].denominator, 1);	
+        EXPECT_EQ(sol[i].denominator, 1);
     }
     EXPECT_FALSE(solSum);
-    for (size_t i = 10; i < sol.size(); ++i){
+    for (size_t i = 10; i < sol.size(); ++i) {
         solSum += sol[i] != 0;
         // solSum += sol[i].numerator;
         // EXPECT_EQ(sol[i].denominator, 1);

@@ -41,7 +41,7 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
     auto [N, M] = bpGraph.size();
     llvm::SmallVector<int> matchR(N, -1);
     size_t result = 0;
-    if (M){
+    if (M) {
         llvm::SmallVector<bool> seen(N);
         // Count of jobs assigned to applicants
         for (size_t u = 0; u < M; u++) {

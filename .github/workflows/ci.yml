@@ -29,6 +29,7 @@ jobs:
     - run: meson test -C builddirclang
     - run: meson compile -C builddirclang/
     - run: ninja coverage -C builddirclang
+    - run: ninja clang-format-check -C builddirgcc
     - uses: actions/upload-artifact@v1
       if: failure()
       with:
