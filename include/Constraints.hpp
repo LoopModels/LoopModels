@@ -15,10 +15,10 @@
 /// in which case, we have to remove `currentToOriginalPerm`,
 /// which menas either change printing, or move prints `<<` into
 /// the derived classes.
-[[maybe_unused]] static llvm::raw_ostream &
+[[maybe_unused]] static auto
 printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
                  llvm::ArrayRef<const llvm::SCEV *> syms,
-                 bool inequality = true) {
+                 bool inequality = true) -> llvm::raw_ostream & {
     const unsigned numConstraints = A.numRow();
     const unsigned numVar = A.numCol();
     const unsigned numSyms = syms.size() + 1;
@@ -68,9 +68,10 @@ printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
     }
     return os;
 }
-[[maybe_unused]] static llvm::raw_ostream &
+[[maybe_unused]] static auto
 printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
-                 llvm::ArrayRef<const llvm::SCEV *>, bool = true, size_t = 0) {
+                 llvm::ArrayRef<const llvm::SCEV *>, bool = true, size_t = 0)
+    -> llvm::raw_ostream & {
     return os;
 }
 
@@ -107,8 +108,9 @@ eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
     A.truncateRows(penuRow);
 }
 
-MULTIVERSION [[maybe_unused]] static size_t
-substituteEqualityImpl(IntMatrix &E, const size_t i) {
+MULTIVERSION [[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
+                                                                 const size_t i)
+    -> size_t {
     const auto [numConstraints, numVar] = E.size();
     size_t minNonZero = numVar + 1;
     size_t rowMinNonZero = numConstraints;
@@ -148,7 +150,8 @@ substituteEqualityImpl(IntMatrix &E, const size_t i) {
     }
     return rowMinNonZero;
 }
-[[maybe_unused]] static bool substituteEquality(IntMatrix &E, const size_t i) {
+[[maybe_unused]] static auto substituteEquality(IntMatrix &E, const size_t i)
+    -> bool {
     size_t rowMinNonZero = substituteEqualityImpl(E, i);
     if (rowMinNonZero == E.numRow())
         return true;
@@ -156,8 +159,8 @@ substituteEqualityImpl(IntMatrix &E, const size_t i) {
     return false;
 }
 
-inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
-                                     const size_t i) {
+inline auto substituteEqualityImpl(IntMatrix &A, IntMatrix &E, const size_t i)
+    -> size_t {
     const auto [numConstraints, numVar] = E.size();
     size_t minNonZero = numVar + 1;
     size_t rowMinNonZero = numConstraints;
@@ -209,12 +212,13 @@ inline size_t substituteEqualityImpl(IntMatrix &A, IntMatrix &E,
     }
     return rowMinNonZero;
 }
-constexpr bool substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t) {
+constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
+    -> bool {
     return false;
 }
 
-MULTIVERSION [[maybe_unused]] static bool
-substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) {
+MULTIVERSION [[maybe_unused]] static auto
+substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
 
     size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
     if (rowMinNonZero == E.numRow())
@@ -249,8 +253,8 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) {
 }
 // counts how many negative and positive elements there are in row `i`.
 // A row corresponds to a particular variable in `A'x <= b`.
-[[maybe_unused]] static std::pair<size_t, size_t>
-countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
+[[maybe_unused]] static auto countNonZeroSign(PtrMatrix<int64_t> A, size_t i)
+    -> std::pair<size_t, size_t> {
     size_t numNeg = 0;
     size_t numPos = 0;
     size_t numRow = A.numRow();
@@ -436,7 +440,8 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
             eraseConstraint(A, c);
 }
 
-[[maybe_unused]] static bool uniqueConstraint(PtrMatrix<int64_t> A, size_t C) {
+[[maybe_unused]] static auto uniqueConstraint(PtrMatrix<int64_t> A, size_t C)
+    -> bool {
     for (size_t c = 0; c < C; ++c) {
         bool allEqual = true;
         for (size_t r = 0; r < A.numCol(); ++r)
@@ -447,8 +452,8 @@ countNonZeroSign(PtrMatrix<int64_t> A, size_t i) {
     return true;
 }
 
-[[maybe_unused]] static std::pair<size_t, size_t>
-countSigns(PtrMatrix<int64_t> A, size_t i) {
+[[maybe_unused]] static auto countSigns(PtrMatrix<int64_t> A, size_t i)
+    -> std::pair<size_t, size_t> {
     size_t numNeg = 0;
     size_t numPos = 0;
     for (size_t j = 0; j < A.numRow(); ++j) {
@@ -459,8 +464,9 @@ countSigns(PtrMatrix<int64_t> A, size_t i) {
     return std::make_pair(numNeg, numPos);
 }
 
-[[maybe_unused]] inline static bool equalsNegative(llvm::ArrayRef<int64_t> x,
-                                                   llvm::ArrayRef<int64_t> y) {
+[[maybe_unused]] inline static auto equalsNegative(llvm::ArrayRef<int64_t> x,
+                                                   llvm::ArrayRef<int64_t> y)
+    -> bool {
     assert(x.size() == y.size());
     for (size_t i = 0; i < x.size(); ++i)
         if (x[i] + y[i])

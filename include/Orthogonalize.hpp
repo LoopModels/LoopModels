@@ -6,7 +6,8 @@
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
-[[maybe_unused]] static IntMatrix orthogonalize(IntMatrix A) {
+[[nodiscard]] [[maybe_unused]] static auto orthogonalize(IntMatrix A)
+    -> IntMatrix {
     if ((A.numCol() < 2) || (A.numRow() == 0))
         return A;
     normalizeByGCD(A(0, _));
@@ -36,6 +37,7 @@
     return A;
 }
 
-[[maybe_unused]] static IntMatrix orthogonalNullSpace(IntMatrix A) {
+[[nodiscard]] [[maybe_unused]] static auto orthogonalNullSpace(IntMatrix A)
+    -> IntMatrix {
     return orthogonalize(NormalForm::nullSpace(std::move(A)));
 }

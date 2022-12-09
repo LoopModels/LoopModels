@@ -23,9 +23,9 @@
 #include <utility>
 #include <vector>
 
-[[maybe_unused]] static bool
+[[maybe_unused]] static auto
 visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-      const llvm::BasicBlock *BB) {
+      const llvm::BasicBlock *BB) -> bool {
     if (visitedBBs.contains(BB))
         return true;
     visitedBBs.insert(BB);
@@ -40,7 +40,8 @@ enum class BBChain {
     unknown,
     loopexit
 };
-llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
+auto operator<<(llvm::raw_ostream &os, const BBChain &chn)
+    -> llvm::raw_ostream & {
     switch (chn) {
     case BBChain::reached:
         return os << "reached";
@@ -65,10 +66,10 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
 // 1. see why L->contains(BBsrc) does not work; does it only contain BBs in it
 // directly, and not nested another loop deeper?
 // 2. We are ignoring cycles for now; we must ensure this is done correctly
-[[maybe_unused]] static BBChain allForwardPathsReach(
+[[maybe_unused]] static auto allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-    Predicates pred, llvm::BasicBlock *BBhead, llvm::Loop *L) {
+    Predicates pred, llvm::BasicBlock *BBhead, llvm::Loop *L) -> BBChain {
     llvm::errs() << "allForwardPathsReached BBsrc = " << BBsrc
                  << "\nBBdst = " << BBdst;
     llvm::errs() << "\nallForwardPathsReached BBsrc = " << *BBsrc
@@ -105,8 +106,7 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
     } else if (const llvm::Instruction *term = BBsrc->getTerminator()) {
         llvm::errs() << "Checking terminator\n";
         SHOWLN(*term);
-        if (const llvm::BranchInst *BI =
-                llvm::dyn_cast<llvm::BranchInst>(term)) {
+        if (const auto *BI = llvm::dyn_cast<llvm::BranchInst>(term)) {
             SHOWLN(BI->isUnconditional());
             // SHOWLN(*BI->getSuccessor(0));
             if (BI->isUnconditional()) {
@@ -161,21 +161,19 @@ llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const BBChain &chn) {
                              << " and dst1 = " << dst1 << " di\n";
                 return BBChain::unknown;
             }
-        } else if (const llvm::UnreachableInst *UI =
-                       llvm::dyn_cast<llvm::UnreachableInst>(term))
+        } else if (const auto *UI = llvm::dyn_cast<llvm::UnreachableInst>(term))
             // TODO: add option to allow moving earlier?
             return BBChain::unreachable;
-        else if (const llvm::ReturnInst *RI =
-                     llvm::dyn_cast<llvm::ReturnInst>(term))
+        else if (const auto *RI = llvm::dyn_cast<llvm::ReturnInst>(term))
             return BBChain::returned;
     }
     llvm::errs() << "\nReturning unknown because we fell through\n";
     return BBChain::unknown;
 }
-[[maybe_unused]] static bool allForwardPathsReach(
+[[maybe_unused]] static auto allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::ArrayRef<llvm::BasicBlock *> BBsrc,
-    llvm::BasicBlock *BBdst, llvm::Loop *L) {
+    llvm::BasicBlock *BBdst, llvm::Loop *L) -> bool {
     visitedBBs.clear();
     bool reached = false;
     for (auto &BB : BBsrc) {
@@ -286,6 +284,8 @@ struct LoopTree {
     // try to add Loop L, as well as all of L's subLoops
     // if invalid, create a new LoopForest, and add it to forests instead
     // loopTrees are the cache of all LoopTrees
+    //
+    // forests is the collection of forests considered together
     static size_t pushBack(llvm::BumpPtrAllocator &alloc,
                            llvm::SmallVector<LoopTree *> &forests,
                            llvm::SmallVector<LoopTree *> &branches,
@@ -437,6 +437,7 @@ struct LoopTree {
             }
             // } else if (auto BT = SE.getBackedgeTakenCount(L)) {
         } else if (auto BT = getBackedgeTakenCount(SE, L)) {
+            // we're at the bottom of the recursion
             if (!llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
                 llvm::errs() << "about to add loop: " << *L
                              << "\nwith backedge taken count: " << *BT << "\n";
@@ -466,8 +467,8 @@ struct LoopTree {
     [[maybe_unused]] static size_t
     invalid(llvm::BumpPtrAllocator &alloc,
             llvm::SmallVectorImpl<LoopTree *> &trees,
-            llvm::SmallVector<LoopTree *> &subTree,
-            llvm::SmallVector<PredicatedChain> &paths,
+            llvm::SmallVectorImpl<LoopTree *> &subTree,
+            llvm::SmallVectorImpl<PredicatedChain> &paths,
             const std::vector<llvm::Loop *> &subLoops) {
         if (subTree.size()) {
             SHOW(subTree.size());
@@ -485,8 +486,8 @@ struct LoopTree {
     [[maybe_unused]] static void
     split(llvm::BumpPtrAllocator &alloc,
           llvm::SmallVectorImpl<LoopTree *> &trees,
-          llvm::SmallVector<LoopTree *> &subTree,
-          llvm::SmallVector<PredicatedChain> &paths) {
+          llvm::SmallVectorImpl<LoopTree *> &subTree,
+          llvm::SmallVectorImpl<PredicatedChain> &paths) {
         if (subTree.size()) {
             // SHOW(subTree.size());
             // CSHOWLN(paths.size());

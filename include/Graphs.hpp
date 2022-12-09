@@ -72,12 +72,12 @@ concept AbstractGraph =
     return components;
 }
 
-[[maybe_unused]] static size_t
+[[maybe_unused]] static auto
 strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                   indexLowLinkOnStack,
-              size_t index, size_t v) {
+              size_t index, size_t v) -> size_t {
     indexLowLinkOnStack[v] = std::make_tuple(index, index, true);
     g.visit(v);
     ++index;
@@ -110,8 +110,8 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
     return index;
 }
 
-[[maybe_unused]] static llvm::SmallVector<BitSet<>>
-stronglyConnectedComponents(AbstractGraph auto &g) {
+[[maybe_unused]] static auto stronglyConnectedComponents(AbstractGraph auto &g)
+    -> llvm::SmallVector<BitSet<>> {
     llvm::SmallVector<BitSet<>> components;
     size_t maxId = g.maxVertexId();
     components.reserve(maxId);
@@ -128,8 +128,8 @@ stronglyConnectedComponents(AbstractGraph auto &g) {
     return components;
 }
 
-llvm::raw_ostream &print(const AbstractGraph auto &g,
-                         llvm::raw_ostream &os = llvm::errs()) {
+auto print(const AbstractGraph auto &g, llvm::raw_ostream &os = llvm::errs())
+    -> llvm::raw_ostream & {
     for (auto i : g.vertexIds()) {
         os << "Vertex " << i << ":";
         printRange(os << "\ninNeighbors: ", g.inNeighbors(i));

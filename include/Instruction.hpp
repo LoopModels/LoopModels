@@ -10,6 +10,7 @@
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Type.h>
@@ -22,10 +23,10 @@
 struct RecipThroughputLatency {
     llvm::InstructionCost recipThroughput;
     llvm::InstructionCost latency;
-    bool isValid() const {
+    [[nodiscard]] auto isValid() const -> bool {
         return recipThroughput.isValid() && latency.isValid();
     }
-    static RecipThroughputLatency getInvalid() {
+    static auto getInvalid() -> RecipThroughputLatency {
         return {llvm::InstructionCost::getInvalid(),
                 llvm::InstructionCost::getInvalid()};
     }
@@ -43,15 +44,19 @@ struct Instruction {
         /// and ID corresponds to the instruction or to the intrinsic call
         llvm::Intrinsic::ID op; // getOpCode()
         llvm::Intrinsic::ID intrin{llvm::Intrinsic::not_intrinsic};
-        llvm::Intrinsic::ID getOpCode() const { return op; }
-        llvm::Intrinsic::ID getIntrinsicID() const { return intrin; }
-        static llvm::Intrinsic::ID getOpCode(llvm::Value *v) {
-            if (llvm::Instruction *i = llvm::dyn_cast<llvm::Instruction>(v))
+        [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID {
+            return op;
+        }
+        [[nodiscard]] auto getIntrinsicID() const -> llvm::Intrinsic::ID {
+            return intrin;
+        }
+        static auto getOpCode(llvm::Value *v) -> llvm::Intrinsic::ID {
+            if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
                 return i->getOpcode();
             return llvm::Intrinsic::not_intrinsic;
         }
-        static llvm::Intrinsic::ID getIntrinsicID(llvm::Value *v) {
-            if (llvm::IntrinsicInst *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
+        static auto getIntrinsicID(llvm::Value *v) -> llvm::Intrinsic::ID {
+            if (auto *i = llvm::dyn_cast<llvm::IntrinsicInst>(v))
                 return i->getIntrinsicID();
             return llvm::Intrinsic::not_intrinsic;
         }
@@ -62,10 +67,10 @@ struct Instruction {
             ArrayReference *ref; // load or store
         } ptr{nullptr};
 
-        static bool isCall(llvm::Value *v) {
+        static auto isCall(llvm::Value *v) -> bool {
             return getOpCode(v) == llvm::Instruction::Call;
         }
-        static bool isIntrinsicCall(llvm::Value *v) {
+        static auto isIntrinsicCall(llvm::Value *v) -> bool {
             return llvm::isa<llvm::IntrinsicInst>(v);
         }
 
@@ -74,35 +79,37 @@ struct Instruction {
         Identifier(llvm::Intrinsic::ID op, llvm::Intrinsic::ID intrin,
                    llvm::Value *v)
             : op(op), intrin(intrin), ptr{v} {}
-        constexpr bool isValue() const {
+        [[nodiscard]] constexpr auto isValue() const -> bool {
             return op == llvm::Intrinsic::not_intrinsic;
         }
-        constexpr bool isCall() const { return op == llvm::Instruction::Call; }
-        constexpr bool isIntrinsicCall() const {
+        [[nodiscard]] constexpr auto isCall() const -> bool {
+            return op == llvm::Instruction::Call;
+        }
+        [[nodiscard]] constexpr auto isIntrinsicCall() const -> bool {
             return intrin != llvm::Intrinsic::not_intrinsic;
         }
-        constexpr bool isInstruction(unsigned opCode) const {
+        [[nodiscard]] constexpr auto isInstruction(unsigned opCode) const
+            -> bool {
             return op == opCode;
         }
-        constexpr bool isIntrinsicInstruction(unsigned opCode) const {
+        [[nodiscard]] constexpr auto
+        isIntrinsicInstruction(unsigned opCode) const -> bool {
             return intrin == opCode;
         }
-        llvm::Function *getFunction() const {
-            if (llvm::CallBase *i = llvm::dyn_cast<llvm::CallBase>(ptr.val))
+        [[nodiscard]] auto getFunction() const -> llvm::Function * {
+            if (auto *i = llvm::dyn_cast<llvm::CallBase>(ptr.val))
                 return i->getCalledFunction();
             return nullptr;
         }
-        bool operator==(const Identifier &other) const {
+        auto operator==(const Identifier &other) const -> bool {
             return op == other.op && intrin == other.intrin &&
                    ptr.val == other.ptr.val;
         }
     };
-    /// Provide DenseMapInfo for Identifier.
-
-    // friend struct llvm::DenseMapInfo<Instruction::Identifier, void>;
 
     Identifier id;
     llvm::Type *type;
+    llvm::ArrayRef<Instruction *> predicates;
     llvm::ArrayRef<Instruction *> operands;
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
@@ -119,19 +126,25 @@ struct Instruction {
     struct Cache {
         llvm::DenseMap<llvm::Value *, Instruction *> llvmToInternalMap;
         llvm::DenseMap<UniqueIdentifier, Instruction *> argMap;
-        Instruction *operator[](llvm::Value *v) {
+        auto operator[](llvm::Value *v) -> Instruction * {
             auto f = llvmToInternalMap.find(v);
             if (f != llvmToInternalMap.end())
                 return f->second;
             return nullptr;
         }
-        // Instruction *newInstruction(llvm::Value *v) {}
-        Instruction *get(llvm::BumpPtrAllocator &alloc, llvm::Value *v) {
-            Instruction *i = (*this)[v];
-            if (i)
+        /// This is the API for creating new instructions
+        auto get(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
+            -> Instruction * {
+            if (Instruction *i = (*this)[v])
                 return i;
-            Identifier id = Identifier(v);
+            auto id = Identifier(v);
+            Instruction *i = nullptr;
             if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
+                if (auto *load = llvm::dyn_cast<llvm::LoadInst>(instr)) {
+
+                } else if (auto *store =
+                               llvm::dyn_cast<llvm::StoreInst>(instr)) {
+                }
                 UniqueIdentifier uid{id, getOperands(alloc, *this, instr)};
                 auto argMatch = argMap.find(uid);
                 if (argMatch != argMap.end()) {
@@ -152,14 +165,14 @@ struct Instruction {
             return i;
         }
     };
-    static llvm::ArrayRef<Instruction *>
-    getOperands(llvm::BumpPtrAllocator &alloc, Cache &cache,
-                llvm::Instruction *instr) {
+    static auto getOperands(llvm::BumpPtrAllocator &alloc, Cache &cache,
+                            llvm::Instruction *instr)
+        -> llvm::ArrayRef<Instruction *> {
         auto ops{instr->operands()};
         auto OI = ops.begin();
         auto OE = ops.end();
         size_t Nops = instr->getNumOperands();
-        Instruction **operands = alloc.Allocate<Instruction *>(Nops);
+        auto **operands = alloc.Allocate<Instruction *>(Nops);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
             *p = cache.get(alloc, *OI);
@@ -167,60 +180,75 @@ struct Instruction {
         return {operands, Nops};
     }
 
-    static Instruction *createIsolated(llvm::BumpPtrAllocator &alloc,
-                                       llvm::Instruction *instr) {
+    static auto createIsolated(llvm::BumpPtrAllocator &alloc,
+                               llvm::Instruction *instr) -> Instruction * {
         Identifier id{instr};
-        Instruction *i = new (alloc) Instruction(id, instr->getType());
+        auto *i = new (alloc) Instruction(id, instr->getType());
         return i;
     }
-    bool isCall() const {
+    [[nodiscard]] auto isCall() const -> bool {
         assert(!id.isIntrinsicCall() || id.isCall());
         return id.isCall();
     }
-    bool isLoad() const { return id.isInstruction(llvm::Instruction::Load); }
-    bool isStore() const { return id.isInstruction(llvm::Instruction::Store); }
+    [[nodiscard]] auto isLoad() const -> bool {
+        return id.isInstruction(llvm::Instruction::Load);
+    }
+    [[nodiscard]] auto isStore() const -> bool {
+        return id.isInstruction(llvm::Instruction::Store);
+    }
     /// fall back in case we need value operand
-    bool isValue() const { return id.isValue(); }
-    bool isShuffle() const {
+    [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
+    [[nodiscard]] auto isShuffle() const -> bool {
         return id.isInstruction(llvm::Instruction::ShuffleVector);
     }
-    bool isFcmp() const { return id.isInstruction(llvm::Instruction::FCmp); }
-    bool isIcmp() const { return id.isInstruction(llvm::Instruction::ICmp); }
-    bool isCmp() const { return isFcmp() || isIcmp(); }
-    bool isSelect() const {
+    [[nodiscard]] auto isFcmp() const -> bool {
+        return id.isInstruction(llvm::Instruction::FCmp);
+    }
+    [[nodiscard]] auto isIcmp() const -> bool {
+        return id.isInstruction(llvm::Instruction::ICmp);
+    }
+    [[nodiscard]] auto isCmp() const -> bool { return isFcmp() || isIcmp(); }
+    [[nodiscard]] auto isSelect() const -> bool {
         return id.isInstruction(llvm::Instruction::Select);
     }
-    bool isExtract() const {
+    [[nodiscard]] auto isExtract() const -> bool {
         return id.isInstruction(llvm::Instruction::ExtractElement);
     }
-    bool isInsert() const {
+    [[nodiscard]] auto isInsert() const -> bool {
         return id.isInstruction(llvm::Instruction::InsertElement);
     }
-    bool isExtractValue() const {
+    [[nodiscard]] auto isExtractValue() const -> bool {
         return id.isInstruction(llvm::Instruction::ExtractValue);
     }
-    bool isInsertValue() const {
+    [[nodiscard]] auto isInsertValue() const -> bool {
         return id.isInstruction(llvm::Instruction::InsertValue);
     }
-    bool isFMul() const { return id.isInstruction(llvm::Instruction::FMul); }
-    bool isFNeg() const { return id.isInstruction(llvm::Instruction::FNeg); }
-    bool isFMulOrFNegOfFMul() const {
+    [[nodiscard]] auto isFMul() const -> bool {
+        return id.isInstruction(llvm::Instruction::FMul);
+    }
+    [[nodiscard]] auto isFNeg() const -> bool {
+        return id.isInstruction(llvm::Instruction::FNeg);
+    }
+    [[nodiscard]] auto isFMulOrFNegOfFMul() const -> bool {
         return isFMul() || (isFNeg() && operands.front()->isFMul());
     }
-    bool isFAdd() const { return id.isInstruction(llvm::Instruction::FAdd); }
-    bool isFSub() const { return id.isInstruction(llvm::Instruction::FSub); }
-    bool allowsContract() const {
+    [[nodiscard]] auto isFAdd() const -> bool {
+        return id.isInstruction(llvm::Instruction::FAdd);
+    }
+    [[nodiscard]] auto isFSub() const -> bool {
+        return id.isInstruction(llvm::Instruction::FSub);
+    }
+    [[nodiscard]] auto allowsContract() const -> bool {
         if (auto m = llvm::dyn_cast<llvm::Instruction>(id.ptr.val))
             return m->getFastMathFlags().allowContract();
         return false;
     }
-    bool isMulAdd() const {
+    [[nodiscard]] auto isMulAdd() const -> bool {
         return id.isIntrinsicInstruction(llvm::Intrinsic::fmuladd) ||
                id.isIntrinsicInstruction(llvm::Intrinsic::fma);
     }
-    RecipThroughputLatency getCost(llvm::TargetTransformInfo &TTI,
-                                   unsigned int vectorWidth,
-                                   unsigned int log2VectorWidth) {
+    auto getCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth,
+                 unsigned int log2VectorWidth) -> RecipThroughputLatency {
         RecipThroughputLatency c;
         if (log2VectorWidth >= costs.size()) {
             costs.resize(log2VectorWidth + 1,
@@ -234,25 +262,26 @@ struct Instruction {
         }
         return c;
     }
-    RecipThroughputLatency getCost(llvm::TargetTransformInfo &TTI,
-                                   uint32_t vectorWidth) {
+    auto getCost(llvm::TargetTransformInfo &TTI, uint32_t vectorWidth)
+        -> RecipThroughputLatency {
         return getCost(TTI, vectorWidth, llvm::Log2_32(vectorWidth));
     }
-    RecipThroughputLatency getCost(llvm::TargetTransformInfo &TTI,
-                                   uint64_t vectorWidth) {
+    auto getCost(llvm::TargetTransformInfo &TTI, uint64_t vectorWidth)
+        -> RecipThroughputLatency {
         return getCost(TTI, vectorWidth, llvm::Log2_64(vectorWidth));
     }
-    RecipThroughputLatency
-    getCostLog2VectorWidth(llvm::TargetTransformInfo &TTI,
-                           unsigned int log2VectorWidth) {
+    auto getCostLog2VectorWidth(llvm::TargetTransformInfo &TTI,
+                                unsigned int log2VectorWidth)
+        -> RecipThroughputLatency {
         return getCost(TTI, 1 << log2VectorWidth, log2VectorWidth);
     }
-    static llvm::Type *getType(llvm::Type *T, unsigned int vectorWidth) {
+    static auto getType(llvm::Type *T, unsigned int vectorWidth)
+        -> llvm::Type * {
         if (vectorWidth == 1)
             return T;
         return llvm::FixedVectorType::get(T, vectorWidth);
     }
-    llvm::Type *getType(unsigned int vectorWidth) const {
+    [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
         return getType(type, vectorWidth);
     }
 #if LLVM_VERSION_MAJOR >= 16
@@ -291,9 +320,9 @@ struct Instruction {
         }
     }
 #else
-    std::pair<llvm::TargetTransformInfo::OperandValueKind,
-              llvm::TargetTransformInfo::OperandValueProperties>
-    getOperandInfo(unsigned int i) const {
+    [[nodiscard]] auto getOperandInfo(unsigned int i) const
+        -> std::pair<llvm::TargetTransformInfo::OperandValueKind,
+                     llvm::TargetTransformInfo::OperandValueProperties> {
         Instruction *opi = (operands)[i];
         if (opi->isValue()) {
             if (auto c = llvm::dyn_cast<llvm::ConstantInt>(opi->id.ptr.val)) {
@@ -316,9 +345,9 @@ struct Instruction {
         return std::make_pair(llvm::TargetTransformInfo::OK_AnyValue,
                               llvm::TargetTransformInfo::OP_None);
     }
-    RecipThroughputLatency
-    calcUnaryArithmeticCost(llvm::TargetTransformInfo &TTI,
-                            unsigned int vectorWidth) {
+    auto calcUnaryArithmeticCost(llvm::TargetTransformInfo &TTI,
+                                 unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         auto op0info = getOperandInfo(0);
         llvm::Type *T = type;
         if (vectorWidth > 1)
@@ -332,9 +361,9 @@ struct Instruction {
                     op0info.first, llvm::TargetTransformInfo::OK_AnyValue,
                     op0info.second)};
     }
-    RecipThroughputLatency
-    calcBinaryArithmeticCost(llvm::TargetTransformInfo &TTI,
-                             unsigned int vectorWidth) {
+    auto calcBinaryArithmeticCost(llvm::TargetTransformInfo &TTI,
+                                  unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         auto op0info = getOperandInfo(0);
         auto op1info = getOperandInfo(1);
         llvm::Type *T = getType(vectorWidth);
@@ -347,18 +376,20 @@ struct Instruction {
                 op1info.first, op0info.second, op1info.second)};
     }
 #endif
-    bool operandIsLoad(unsigned int i = 0) const {
+    [[nodiscard]] auto operandIsLoad(unsigned int i = 0) const -> bool {
         return (operands)[i]->isLoad();
     }
-    bool userIsStore(unsigned int i) const { return users[i]->isLoad(); }
-    bool userIsStore() const {
+    [[nodiscard]] auto userIsStore(unsigned int i) const -> bool {
+        return users[i]->isLoad();
+    }
+    [[nodiscard]] auto userIsStore() const -> bool {
         for (auto u : users)
             if (u->isStore())
                 return true;
         return false;
     }
-    llvm::TargetTransformInfo::CastContextHint
-    getCastContext(llvm::TargetTransformInfo &TTI) const {
+    auto getCastContext(llvm::TargetTransformInfo &TTI) const
+        -> llvm::TargetTransformInfo::CastContextHint {
         if (auto cast = llvm::dyn_cast<llvm::CastInst>(id.ptr.val))
             return TTI.getCastContextHint(cast);
         if (operandIsLoad() || userIsStore())
@@ -366,8 +397,8 @@ struct Instruction {
         // TODO: check for whether mask, interleave, or reversed is likely.
         return llvm::TargetTransformInfo::CastContextHint::None;
     }
-    RecipThroughputLatency calcCastCost(llvm::TargetTransformInfo &TTI,
-                                        unsigned int vectorWidth) {
+    auto calcCastCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         llvm::Type *srcT = getType(operands.front()->type, vectorWidth);
         llvm::Type *dstT = getType(vectorWidth);
         llvm::TargetTransformInfo::CastContextHint ctx = getCastContext(TTI);
@@ -377,7 +408,7 @@ struct Instruction {
                 TTI.getCastInstrCost(id.op, dstT, srcT, ctx,
                                      llvm::TargetTransformInfo::TCK_Latency)};
     }
-    llvm::CmpInst::Predicate getPredicate() const {
+    [[nodiscard]] auto getPredicate() const -> llvm::CmpInst::Predicate {
         if (isSelect())
             return operands.front()->getPredicate();
         assert(isCmp());
@@ -386,8 +417,8 @@ struct Instruction {
         return isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE
                         : llvm::CmpInst::BAD_ICMP_PREDICATE;
     }
-    RecipThroughputLatency calcCmpSelectCost(llvm::TargetTransformInfo &TTI,
-                                             unsigned int vectorWidth) {
+    auto calcCmpSelectCost(llvm::TargetTransformInfo &TTI,
+                           unsigned int vectorWidth) -> RecipThroughputLatency {
         llvm::Type *T = getType(vectorWidth);
         llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);
         llvm::CmpInst::Predicate pred = getPredicate();
@@ -397,8 +428,8 @@ struct Instruction {
                 TTI.getCmpSelInstrCost(id.op, T, cmpT, pred,
                                        llvm::TargetTransformInfo::TCK_Latency)};
     }
-    RecipThroughputLatency calcCallCost(llvm::TargetTransformInfo &TTI,
-                                        unsigned int vectorWidth) {
+    auto calcCallCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         llvm::Type *T = getType(vectorWidth);
         llvm::SmallVector<llvm::Type *, 4> argTypes;
         for (auto op : operands)
@@ -418,9 +449,9 @@ struct Instruction {
                         attr, llvm::TargetTransformInfo::TCK_Latency)};
         }
     }
-    RecipThroughputLatency
-    calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
-                                     unsigned int vectorWidth) {
+    auto calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
+                                          unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         constexpr unsigned int AddressSpace = 0;
         llvm::Type *T = getType(vectorWidth);
         llvm::Align alignment = id.ptr.ref->getAlignment();
@@ -430,8 +461,9 @@ struct Instruction {
             TTI.getMemoryOpCost(id.op, T, alignment, AddressSpace,
                                 llvm::TargetTransformInfo::TCK_Latency)};
     }
-    RecipThroughputLatency calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
-                                                 unsigned int vectorWidth) {
+    auto calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
+                               unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         // TODO: allow not assuming hardware FMA support
         if (((operands)[0]->isFMulOrFNegOfFMul() ||
              (operands)[1]->isFMulOrFNegOfFMul()) &&
@@ -439,21 +471,21 @@ struct Instruction {
             return {};
         return calcBinaryArithmeticCost(TTI, vectorWidth);
     }
-    bool allUsersAdditiveContract() {
+    auto allUsersAdditiveContract() -> bool {
         for (auto u : users)
             if (!(((u->isFAdd()) || (u->isFSub())) && (u->allowsContract())))
                 return false;
         return true;
     }
-    RecipThroughputLatency calculateFNegCost(llvm::TargetTransformInfo &TTI,
-                                             unsigned int vectorWidth) {
+    auto calculateFNegCost(llvm::TargetTransformInfo &TTI,
+                           unsigned int vectorWidth) -> RecipThroughputLatency {
 
         if (operands.front()->isFMul() && allUsersAdditiveContract())
             return {};
         return calcUnaryArithmeticCost(TTI, vectorWidth);
     }
-    RecipThroughputLatency calculateCost(llvm::TargetTransformInfo &TTI,
-                                         unsigned int vectorWidth) {
+    auto calculateCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
+        -> RecipThroughputLatency {
         switch (id.op) {
         case llvm::Instruction::FAdd:
         case llvm::Instruction::FSub:
@@ -507,15 +539,14 @@ struct Instruction {
             return RecipThroughputLatency::getInvalid();
         }
     }
-    bool isCommutativeCall() const {
+    [[nodiscard]] auto isCommutativeCall() const -> bool {
         if (id.intrin != llvm::Intrinsic::not_intrinsic) {
-            if (llvm::IntrinsicInst *intrin =
-                    llvm::dyn_cast<llvm::IntrinsicInst>(id.ptr.val))
+            if (auto *intrin = llvm::dyn_cast<llvm::IntrinsicInst>(id.ptr.val))
                 return intrin->isCommutative();
         }
         return false;
     }
-    uint8_t associativeOperandsFlag() const {
+    [[nodiscard]] auto associativeOperandsFlag() const -> uint8_t {
         switch (id.op) {
         case llvm::Instruction::Call:
             if (!(isMulAdd() || isCommutativeCall()))
@@ -535,23 +566,24 @@ struct Instruction {
     }
 };
 
+/// Provide DenseMapInfo for Identifier.
 template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
-    static inline ::Instruction::Identifier getEmptyKey() {
+    static inline auto getEmptyKey() -> ::Instruction::Identifier {
         auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getEmptyKey();
         auto P = llvm::DenseMapInfo<llvm::Value *>::getEmptyKey();
         return ::Instruction::Identifier{K, K, P};
     }
 
-    static inline ::Instruction::Identifier getTombstoneKey() {
+    static inline auto getTombstoneKey() -> ::Instruction::Identifier {
         auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getTombstoneKey();
         auto P = llvm::DenseMapInfo<llvm::Value *>::getTombstoneKey();
         return ::Instruction::Identifier{K, K, P};
     }
 
-    static unsigned getHashValue(const ::Instruction::Identifier &Key);
+    static auto getHashValue(const ::Instruction::Identifier &Key) -> unsigned;
 
-    static bool isEqual(const ::Instruction::Identifier &LHS,
-                        const ::Instruction::Identifier &RHS) {
+    static auto isEqual(const ::Instruction::Identifier &LHS,
+                        const ::Instruction::Identifier &RHS) -> bool {
         return LHS == RHS;
     }
 };
@@ -563,13 +595,15 @@ enum struct PredicateRelation : uint8_t {
     Empty = 3,
 };
 
-[[maybe_unused]] static constexpr PredicateRelation
-operator&(PredicateRelation a, PredicateRelation b) {
+[[maybe_unused]] static constexpr auto operator&(PredicateRelation a,
+                                                 PredicateRelation b)
+    -> PredicateRelation {
     return static_cast<PredicateRelation>(static_cast<uint8_t>(a) |
                                           static_cast<uint8_t>(b));
 }
-[[maybe_unused]] static constexpr PredicateRelation
-operator|(PredicateRelation a, PredicateRelation b) {
+[[maybe_unused]] static constexpr auto operator|(PredicateRelation a,
+                                                 PredicateRelation b)
+    -> PredicateRelation {
     return static_cast<PredicateRelation>(static_cast<uint8_t>(a) &
                                           static_cast<uint8_t>(b));
 }
@@ -603,7 +637,7 @@ operator|(PredicateRelation a, PredicateRelation b) {
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct PredicateRelations {
     [[no_unique_address]] llvm::SmallVector<uint64_t, 1> relations;
-    PredicateRelation operator[](size_t index) const {
+    auto operator[](size_t index) const -> PredicateRelation {
         return static_cast<PredicateRelation>(
             (relations[index / 32] >> (2 * (index % 32))) & 3);
     }
@@ -621,25 +655,28 @@ struct PredicateRelations {
         operator PredicateRelation() const {
             return static_cast<PredicateRelation>((*rp) >> index);
         }
-        Reference &operator=(PredicateRelation relation) {
+        auto operator=(PredicateRelation relation) -> Reference & {
             *this->rp = (*this->rp & ~(3 << index)) |
                         (static_cast<uint64_t>(relation) << index);
             return *this;
         }
     };
 
-    Reference operator[](size_t index) {
+    auto operator[](size_t index) -> Reference {
         auto i = index / 32;
         if (i >= relations.size())
             relations.resize(i + 1);
         return {&relations[i], 2 * (index % 32)};
     }
-    size_t size() const { return relations.size() * 32; }
-    size_t relationSize() const { return relations.size(); }
+    [[nodiscard]] auto size() const -> size_t { return relations.size() * 32; }
+    [[nodiscard]] auto relationSize() const -> size_t {
+        return relations.size();
+    }
     // FIXME: over-optimistic
     // (!a & !b) U (a & b) = a == b
     // (!a & b) U a = b
-    PredicateRelations predUnion(const PredicateRelations &other) const {
+    [[nodiscard]] auto predUnion(const PredicateRelations &other) const
+        -> PredicateRelations {
         if (relationSize() < other.relationSize())
             return other.predUnion(*this);
         // other.relationSize() <= relationSize()
@@ -663,7 +700,8 @@ struct PredicateRelations {
         for (size_t i = b.relationSize(); i < a.relationSize(); i++)
             c.relations[i] = a.relations[i];
     }
-    PredicateRelations predIntersect(const PredicateRelations &other) const {
+    [[nodiscard]] auto predIntersect(const PredicateRelations &other) const
+        -> PredicateRelations {
         PredicateRelations result;
         if (relationSize() < other.relationSize()) {
             intersectImpl(result, other, *this);
@@ -673,16 +711,17 @@ struct PredicateRelations {
         return result;
     }
 
-    static constexpr bool isEmpty(uint64_t x) {
+    static constexpr auto isEmpty(uint64_t x) -> bool {
         return ((x & (x >> 1)) & 0x5555555555555555) != 0;
     }
-    bool isEmpty() const {
+    [[nodiscard]] auto isEmpty() const -> bool {
         for (uint64_t x : relations)
             if (isEmpty(x))
                 return true;
         return false;
     }
-    bool emptyIntersection(const PredicateRelations &other) const {
+    [[nodiscard]] auto emptyIntersection(const PredicateRelations &other) const
+        -> bool {
         if (relationSize() < other.relationSize())
             return other.emptyIntersection(*this);
         // other.relationSize() <= relationSize()
@@ -694,8 +733,8 @@ struct PredicateRelations {
                 return true;
         return false;
     }
-    static size_t getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
-                           Instruction *instruction) {
+    static auto getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
+                         Instruction *instruction) -> size_t {
         size_t I = instructions.size();
         for (size_t i = 0; i < I; i++)
             if (instructions[i] == instruction)

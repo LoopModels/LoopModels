@@ -19,13 +19,15 @@ struct MemoryAccess {
     // unsigned (instead of ptr) as we build up edges
     // and I don't want to relocate pointers when resizing vector
     // schedule indicated by `1` top bit, remainder indicates loop
-    bool isLoad() const { return ref.isLoad(); }
-    llvm::Instruction *getInstruction() { return ref.loadOrStore; }
-    llvm::Instruction *getInstruction() const { return ref.loadOrStore; }
-    llvm::LoadInst *getLoad() {
+    [[nodiscard]] auto isLoad() const -> bool { return ref.isLoad(); }
+    auto getInstruction() -> llvm::Instruction * { return ref.loadOrStore; }
+    [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
+        return ref.loadOrStore;
+    }
+    auto getLoad() -> llvm::LoadInst * {
         return llvm::dyn_cast<llvm::LoadInst>(ref.loadOrStore);
     }
-    llvm::StoreInst *getStore() {
+    auto getStore() -> llvm::StoreInst * {
         return llvm::dyn_cast<llvm::StoreInst>(ref.loadOrStore);
     }
 
@@ -59,29 +61,33 @@ struct MemoryAccess {
     // size_t getNumLoops() const { return ref->getNumLoops(); }
     // size_t getNumAxes() const { return ref->axes.size(); }
     // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-    inline bool fusedThrough(MemoryAccess &x) {
+    inline auto fusedThrough(MemoryAccess &x) -> bool {
         bool allEqual = true;
         size_t numLoopsCommon = std::min(getNumLoops(), x.getNumLoops());
         for (size_t n = 0; n < numLoopsCommon; ++n)
             allEqual &= (omegas[n] == x.omegas[n]);
         return allEqual;
     }
-    inline size_t getNumLoops() const {
+    [[nodiscard]] inline auto getNumLoops() const -> size_t {
         size_t numLoops = ref.getNumLoops();
         assert(numLoops + 1 == omegas.size());
         return numLoops;
     }
-    inline MutPtrMatrix<int64_t> indexMatrix() { return ref.indexMatrix(); }
-    inline PtrMatrix<int64_t> indexMatrix() const { return ref.indexMatrix(); }
+    inline auto indexMatrix() -> MutPtrMatrix<int64_t> {
+        return ref.indexMatrix();
+    }
+    [[nodiscard]] inline auto indexMatrix() const -> PtrMatrix<int64_t> {
+        return ref.indexMatrix();
+    }
     // note returns true if unset
     // inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
-    inline PtrVector<unsigned> getFusionOmega() const {
+    [[nodiscard]] inline auto getFusionOmega() const -> PtrVector<unsigned> {
         return PtrVector<unsigned>{omegas.data(), omegas.size()};
     }
     // inline PtrVector<int64_t> getSchedule(size_t loop) const {
     //     return schedule.getPhi()(loop, _);
     // }
-    inline MemoryAccess *truncateSchedule() {
+    inline auto truncateSchedule() -> MemoryAccess * {
         // we're truncating down to `ref.getNumLoops()`, discarding outer most
         size_t dropCount = omegas.size() - (ref.getNumLoops() + 1);
         if (dropCount)
@@ -90,7 +96,8 @@ struct MemoryAccess {
     }
 };
 
-llvm::raw_ostream &operator<<(llvm::raw_ostream &os, const MemoryAccess &m) {
+auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
+    -> llvm::raw_ostream & {
     if (m.isLoad())
         os << "Load: ";
     else

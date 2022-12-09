@@ -35,12 +35,20 @@ struct ArrayReference {
 
     ArrayReference() = delete;
 
-    bool isLoad() const { return llvm::isa<llvm::LoadInst>(loadOrStore); }
-    size_t getArrayDim() const { return sizes.size(); }
-    size_t getNumLoops() const { return loop->getNumLoops(); }
-    size_t getNumSymbols() const { return 1 + symbolicOffsets.size(); }
+    [[nodiscard]] auto isLoad() const -> bool {
+        return llvm::isa<llvm::LoadInst>(loadOrStore);
+    }
+    [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
+        return sizes.size();
+    }
+    [[nodiscard]] auto getNumLoops() const -> size_t {
+        return loop->getNumLoops();
+    }
+    [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+        return 1 + symbolicOffsets.size();
+    }
 
-    llvm::Align getAlignment() const {
+    [[nodiscard]] auto getAlignment() const -> llvm::Align {
         if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
             return l->getAlign();
         else if (auto s = llvm::dyn_cast<llvm::StoreInst>(loadOrStore))
@@ -58,21 +66,21 @@ struct ArrayReference {
     // indexMatrix() returns a getNumLoops() x arrayDim() matrix.
     // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
     // getNumLoops() x arrayDim()
-    MutPtrMatrix<int64_t> indexMatrix() {
+    auto indexMatrix() -> MutPtrMatrix<int64_t> {
         const size_t d = getArrayDim();
         return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
-    PtrMatrix<int64_t> indexMatrix() const {
+    [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
         const size_t d = getArrayDim();
         return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
     }
-    MutPtrMatrix<int64_t> offsetMatrix() {
+    auto offsetMatrix() -> MutPtrMatrix<int64_t> {
         const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                      numSymbols, numSymbols};
     }
-    PtrMatrix<int64_t> offsetMatrix() const {
+    [[nodiscard]] auto offsetMatrix() const -> PtrMatrix<int64_t> {
         const size_t d = getArrayDim();
         const size_t numSymbols = getNumSymbols();
         return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
@@ -93,7 +101,7 @@ struct ArrayReference {
         indexMatrix() = newInds;
     }
     /// initialize alignment from an elSize SCEV.
-    static llvm::Align typeAlignment(const llvm::SCEV *S) {
+    static auto typeAlignment(const llvm::SCEV *S) -> llvm::Align {
         if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S)) {
             return llvm::Align(C->getAPInt().getZExtValue());
         }
@@ -133,10 +141,14 @@ struct ArrayReference {
           predicates(std::move(p)) {
         resize(dim);
     };
-    bool isLoopIndependent() const { return allZero(indices); }
-    bool allConstantIndices() const { return symbolicOffsets.size() == 0; }
+    [[nodiscard]] auto isLoopIndependent() const -> bool {
+        return allZero(indices);
+    }
+    [[nodiscard]] auto allConstantIndices() const -> bool {
+        return symbolicOffsets.size() == 0;
+    }
     // Assumes strides and offsets are sorted
-    bool sizesMatch(const ArrayReference &x) const {
+    [[nodiscard]] auto sizesMatch(const ArrayReference &x) const -> bool {
         if (getArrayDim() != x.getArrayDim())
             return false;
         for (size_t i = 0; i < getArrayDim(); ++i)
@@ -145,8 +157,8 @@ struct ArrayReference {
         return true;
     }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const ArrayReference &ar) {
+    friend auto operator<<(llvm::raw_ostream &os, const ArrayReference &ar)
+        -> llvm::raw_ostream & {
         SHOWLN(ar.indexMatrix());
         os << "ArrayReference " << *ar.basePointer
            << " (dim = " << ar.getArrayDim()
@@ -207,7 +219,8 @@ struct ArrayReference {
         return os << "]";
     }
     // use gcd to check if they're known to be independent
-    bool gcdKnownIndependent(const ArrayReference &) const {
+    [[nodiscard]] auto gcdKnownIndependent(const ArrayReference &) const
+        -> bool {
         // TODO: handle this!
         // consider `x[2i]` vs `x[2i + 1]`, the former
         // will have a stride of `2`, and the latter of `x[2i+1]`

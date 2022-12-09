@@ -15,67 +15,83 @@
 
 // For `== 0` constraints
 struct EmptyComparator {
-    static constexpr size_t getNumConstTerms() { return 0; }
-    static constexpr bool greaterEqual(PtrVector<int64_t>, PtrVector<int64_t>) {
+    static constexpr auto getNumConstTerms() -> size_t { return 0; }
+    static constexpr auto greaterEqual(PtrVector<int64_t>, PtrVector<int64_t>)
+        -> bool {
         return true;
     }
-    static constexpr bool greater(PtrVector<int64_t>, PtrVector<int64_t>) {
+    static constexpr auto greater(PtrVector<int64_t>, PtrVector<int64_t>)
+        -> bool {
         return false;
     }
-    static constexpr bool lessEqual(PtrVector<int64_t>, PtrVector<int64_t>) {
+    static constexpr auto lessEqual(PtrVector<int64_t>, PtrVector<int64_t>)
+        -> bool {
         return true;
     }
-    static constexpr bool less(PtrVector<int64_t>, PtrVector<int64_t>) {
+    static constexpr auto less(PtrVector<int64_t>, PtrVector<int64_t>) -> bool {
         return false;
     }
-    static constexpr bool equal(PtrVector<int64_t>, PtrVector<int64_t>) {
+    static constexpr auto equal(PtrVector<int64_t>, PtrVector<int64_t>)
+        -> bool {
         return true;
     }
-    static constexpr bool greaterEqual(PtrVector<int64_t>) { return true; }
-    static constexpr bool greater(PtrVector<int64_t>) { return false; }
-    static constexpr bool lessEqual(PtrVector<int64_t>) { return true; }
-    static constexpr bool less(PtrVector<int64_t>) { return false; }
-    static constexpr bool equal(PtrVector<int64_t>) { return true; }
-    static constexpr bool equalNegative(PtrVector<int64_t>,
-                                        PtrVector<int64_t>) {
+    static constexpr auto greaterEqual(PtrVector<int64_t>) -> bool {
         return true;
     }
-    static constexpr bool lessEqual(PtrVector<int64_t>, int64_t x) {
+    static constexpr auto greater(PtrVector<int64_t>) -> bool { return false; }
+    static constexpr auto lessEqual(PtrVector<int64_t>) -> bool { return true; }
+    static constexpr auto less(PtrVector<int64_t>) -> bool { return false; }
+    static constexpr auto equal(PtrVector<int64_t>) -> bool { return true; }
+    static constexpr auto equalNegative(PtrVector<int64_t>, PtrVector<int64_t>)
+        -> bool {
+        return true;
+    }
+    static constexpr auto lessEqual(PtrVector<int64_t>, int64_t x) -> bool {
         return 0 <= x;
     }
 };
 
 // for non-symbolic constraints
 struct LiteralComparator {
-    static constexpr size_t getNumConstTerms() { return 1; }
-    static inline bool greaterEqual(PtrVector<int64_t> x,
-                                    PtrVector<int64_t> y) {
+    static constexpr auto getNumConstTerms() -> size_t { return 1; }
+    static inline auto greaterEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         return x[0] >= y[0];
     }
-    static inline bool greater(PtrVector<int64_t> x, PtrVector<int64_t> y) {
+    static inline auto greater(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         return x[0] > y[0];
     }
-    static inline bool lessEqual(PtrVector<int64_t> x, PtrVector<int64_t> y) {
+    static inline auto lessEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         return x[0] <= y[0];
     }
-    static inline bool less(PtrVector<int64_t> x, PtrVector<int64_t> y) {
+    static inline auto less(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         return x[0] < y[0];
     }
-    static inline bool equal(PtrVector<int64_t> x, PtrVector<int64_t> y) {
+    static inline auto equal(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         return x[0] == y[0];
     }
-    static inline bool greaterEqual(PtrVector<int64_t> x) { return x[0] >= 0; }
-    static inline bool greater(PtrVector<int64_t> x) { return x[0] > 0; }
-    static inline bool lessEqual(PtrVector<int64_t> x) { return x[0] <= 0; }
-    static inline bool less(PtrVector<int64_t> x) { return x[0] < 0; }
-    static inline bool equal(PtrVector<int64_t> x) { return x[0] == 0; }
-    static inline bool equalNegative(PtrVector<int64_t> x,
-                                     PtrVector<int64_t> y) {
+    static inline auto greaterEqual(PtrVector<int64_t> x) -> bool {
+        return x[0] >= 0;
+    }
+    static inline auto greater(PtrVector<int64_t> x) -> bool {
+        return x[0] > 0;
+    }
+    static inline auto lessEqual(PtrVector<int64_t> x) -> bool {
+        return x[0] <= 0;
+    }
+    static inline auto less(PtrVector<int64_t> x) -> bool { return x[0] < 0; }
+    static inline auto equal(PtrVector<int64_t> x) -> bool { return x[0] == 0; }
+    static inline auto equalNegative(PtrVector<int64_t> x, PtrVector<int64_t> y)
+        -> bool {
         // this version should return correct results for
         // `std::numeric_limits<int64_t>::min()`
         return (x[0] + y[0]) == 0;
     }
-    static inline bool lessEqual(PtrVector<int64_t> y, int64_t x) {
+    static inline auto lessEqual(PtrVector<int64_t> y, int64_t x) -> bool {
         return y[0] <= x;
     }
 };
@@ -89,11 +105,12 @@ struct LiteralComparator {
 /// Note: only allowed to return `true` if known
 /// therefore, `a > b -> false` does not imply `a <= b`
 template <typename T> struct BaseComparator {
-    inline size_t getNumConstTerms() const {
+    [[nodiscard]] inline auto getNumConstTerms() const -> size_t {
         return static_cast<const T *>(this)->getNumConstTermsImpl();
     }
-    inline bool greaterEqual(MutPtrVector<int64_t> delta, PtrVector<int64_t> x,
-                             PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto greaterEqual(MutPtrVector<int64_t> delta,
+                                           PtrVector<int64_t> x,
+                                           PtrVector<int64_t> y) const -> bool {
         const size_t N = getNumConstTerms();
         assert(delta.size() >= N);
         assert(x.size() >= N);
@@ -102,14 +119,17 @@ template <typename T> struct BaseComparator {
             delta[n] = x[n] - y[n];
         return static_cast<const T *>(this)->greaterEqual(delta);
     }
-    inline bool greaterEqual(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto greaterEqual(PtrVector<int64_t> x,
+                                           PtrVector<int64_t> y) const -> bool {
         llvm::SmallVector<int64_t> delta(getNumConstTerms());
         return greaterEqual(delta, x, y);
     }
-    inline bool less(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto less(PtrVector<int64_t> x,
+                                   PtrVector<int64_t> y) const -> bool {
         return greater(y, x);
     }
-    inline bool greater(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto greater(PtrVector<int64_t> x,
+                                      PtrVector<int64_t> y) const -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         assert(N <= y.size());
@@ -119,23 +139,25 @@ template <typename T> struct BaseComparator {
         --delta[0];
         return static_cast<const T *>(this)->greaterEqual(delta);
     }
-    inline bool lessEqual(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x,
+                                        PtrVector<int64_t> y) const -> bool {
         return static_cast<const T *>(this)->greaterEqual(y, x);
     }
-    inline bool equal(PtrVector<int64_t> x, PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto equal(PtrVector<int64_t> x,
+                                    PtrVector<int64_t> y) const -> bool {
         // check cheap trivial first
         if (x == y)
             return true;
         llvm::SmallVector<int64_t> delta(getNumConstTerms());
         return (greaterEqual(delta, x, y) && greaterEqual(delta, y, x));
     }
-    inline bool greaterEqual(PtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto greaterEqual(PtrVector<int64_t> x) const -> bool {
         return static_cast<const T *>(this)->greaterEqual(x);
     }
-    inline bool lessEqual(llvm::SmallVectorImpl<int64_t> &x) const {
+    inline auto lessEqual(llvm::SmallVectorImpl<int64_t> &x) const -> bool {
         return lessEqual(view(x));
     }
-    inline bool lessEqual(MutPtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         for (size_t n = 0; n < N; ++n)
@@ -145,26 +167,28 @@ template <typename T> struct BaseComparator {
             x[n] *= -1;
         return ret;
     }
-    inline bool lessEqual(PtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
         return lessEqual(view(y));
     }
-    inline bool lessEqual(MutPtrVector<int64_t> x, int64_t y) const {
+    [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x,
+                                        int64_t y) const -> bool {
         int64_t x0 = x[0];
         x[0] = x0 - y;
         bool ret = lessEqual(x);
         x[0] = x0;
         return ret;
     }
-    inline bool lessEqual(PtrVector<int64_t> x, int64_t y) const {
+    [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x, int64_t y) const
+        -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> z{x.begin(), x.begin() + N};
         return lessEqual(z, y);
     }
-    inline bool less(MutPtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto less(MutPtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         int64_t x0 = x[0];
@@ -177,43 +201,46 @@ template <typename T> struct BaseComparator {
             x[i] *= -1;
         return ret;
     }
-    inline bool less(PtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto less(PtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
         return less(view(y));
     }
-    inline bool greater(MutPtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto greater(MutPtrVector<int64_t> x) const -> bool {
         int64_t x0 = x[0]--;
         bool ret = static_cast<const T *>(this)->greaterEqual(x);
         x[0] = x0;
         return ret;
     }
-    inline bool greater(PtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto greater(PtrVector<int64_t> x) const -> bool {
         // TODO: avoid this needless memcopy and (possible) allocation?
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 8> xm{x.begin(), x.begin() + N};
         return greater(view(xm));
     }
-    inline bool greater(Vector<int64_t> &x) const {
+    inline auto greater(Vector<int64_t> &x) const -> bool {
         return greater(MutPtrVector<int64_t>(x));
     }
-    inline bool less(Vector<int64_t> &x) const { return less(x.view()); }
-    inline bool lessEqual(Vector<int64_t> &x) const {
+    inline auto less(Vector<int64_t> &x) const -> bool {
+        return less(x.view());
+    }
+    inline auto lessEqual(Vector<int64_t> &x) const -> bool {
         return lessEqual(x.view());
     }
-    inline bool lessEqual(Vector<int64_t> &x, int64_t y) const {
+    inline auto lessEqual(Vector<int64_t> &x, int64_t y) const -> bool {
         return lessEqual(x.view(), y);
     }
 
-    inline bool equal(PtrVector<int64_t> x) const {
+    [[nodiscard]] inline auto equal(PtrVector<int64_t> x) const -> bool {
         // check cheap trivial first
         return allZero(x) ||
                (static_cast<const T *>(this)->greaterEqual(x) && lessEqual(x));
     }
-    inline bool equalNegative(PtrVector<int64_t> x,
-                              PtrVector<int64_t> y) const {
+    [[nodiscard]] inline auto equalNegative(PtrVector<int64_t> x,
+                                            PtrVector<int64_t> y) const
+        -> bool {
         const size_t N = getNumConstTerms();
         assert(x.size() >= N);
         assert(y.size() >= N);
@@ -255,7 +282,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     [[no_unique_address]] size_t numVar;
     [[no_unique_address]] size_t numEquations;
     using BaseComparator<LinearSymbolicComparator>::greaterEqual;
-    size_t getNumConstTermsImpl() const { return numVar; }
+    [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
     void init(PtrMatrix<int64_t> A,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
         const size_t numCon = A.numRow() + pos0;
@@ -381,26 +408,26 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         V = Vt.transpose();
     }
 
-    static LinearSymbolicComparator
-    construct(PtrMatrix<int64_t> Ap,
-              EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
+    static auto construct(PtrMatrix<int64_t> Ap,
+                          EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
+                          bool pos0 = true) -> LinearSymbolicComparator {
         LinearSymbolicComparator cmp;
         cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
         return cmp;
     };
-    static LinearSymbolicComparator construct(PtrMatrix<int64_t> Ap,
-                                              bool pos0) {
+    static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
+        -> LinearSymbolicComparator {
         return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
     };
-    static LinearSymbolicComparator
-    construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep, bool pos0 = true) {
+    static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
+                          bool pos0 = true) -> LinearSymbolicComparator {
         LinearSymbolicComparator cmp;
         cmp.init(Ap, Ep, pos0);
         return cmp;
     };
     // Note that this is only valid when the comparator was constructed
     // with index `0` referring to >= 0 constants (i.e., the default).
-    bool isEmpty() {
+    auto isEmpty() -> bool {
         StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
         if (d.size() == 0) {
             for (size_t i = V.numRow(); i < b.size(); ++i)
@@ -457,7 +484,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         return true;
     }
-    bool greaterEqual(PtrVector<int64_t> query) const {
+    [[nodiscard]] auto greaterEqual(PtrVector<int64_t> query) const -> bool {
         Vector<int64_t> b = U(_, _(begin, query.size())) * query;
         // Full column rank case
         if (d.size() == 0) {

@@ -26,15 +26,15 @@ struct CPURegisterFile {
     [[no_unique_address]] uint8_t numPredicateRegisters;
 
     // hacky check for has AVX512
-    static inline bool hasAVX512(llvm::LLVMContext &C,
-                                 llvm::TargetTransformInfo &TTI) {
+    static inline auto hasAVX512(llvm::LLVMContext &C,
+                                 llvm::TargetTransformInfo &TTI) -> bool {
         return TTI.isLegalMaskedExpandLoad(
             llvm::FixedVectorType::get(llvm::Type::getDoubleTy(C), 8));
     }
 
-    static uint8_t
-    estimateNumPredicateRegisters(llvm::LLVMContext &C,
-                                  llvm::TargetTransformInfo &TTI) {
+    static auto estimateNumPredicateRegisters(llvm::LLVMContext &C,
+                                              llvm::TargetTransformInfo &TTI)
+        -> uint8_t {
         if (TTI.supportsScalableVectors())
             return 8;
         // hacky check for AVX512
@@ -42,8 +42,9 @@ struct CPURegisterFile {
             return 7; // 7, because k0 is reserved for unmasked
         return 0;
     }
-    static uint8_t estimateMaximumVectorWidth(llvm::LLVMContext &C,
-                                              llvm::TargetTransformInfo &TTI) {
+    static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
+                                           llvm::TargetTransformInfo &TTI)
+        -> uint8_t {
         uint8_t twiceMaxVectorWidth = 2;
         auto f32 = llvm::Type::getFloatTy(C);
         llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
@@ -81,57 +82,69 @@ struct LoopTreeSchedule;
 struct PredicatedInstruction {
     [[no_unique_address]] Predicates predicates;
     [[no_unique_address]] Instruction *instruction;
-    [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> args;
-    [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> uses;
+    // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> args;
+    // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> uses;
     [[no_unique_address]] InstructionBlock *instrBlock{nullptr};
-    bool isMemoryAccess() const {
+    PredicatedInstruction(Instruction *instr) : instruction(instr) {}
+    // PredicatedInstruction(llvm::Instruction *instr) :
+    // instruction(Instruction(instr)) {}
+    [[nodiscard]] auto isMemoryAccess() const -> bool {
         return instruction->isLoad() || instruction->isStore();
     }
-    bool isInstruction() const { return !isMemoryAccess(); }
+    [[nodiscard]] auto isInstruction() const -> bool {
+        return !isMemoryAccess();
+    }
 };
 
 struct InstructionBlock {
-    [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *>
-        instructions;
-    [[no_unique_address]] LoopTreeSchedule *loopTree;
+    // we tend to heap allocate InstructionBlocks with a bump allocator,
+    // so using 128 bytes seems reasonable.
+    [[no_unique_address]] llvm::SmallVector<Instruction *, 14> instructions;
+    // [[no_unique_address]] LoopTreeSchedule *loopTree{nullptr};
 
-    void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-                   llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
-                   Predicates &pred, llvm::BasicBlock *BB) {
-        assert(chainBBs.contains(block));
-        chainBBs.erase(BB);
-        // we only want to extract relevant instructions, i.e. parents of stores
-        for (llvm::Instruction &instr : *BB) {
-            if (trackInstr.contains(&instr))
-                instructions.emplace_back(pred, instr);
-        }
-        llvm::Instruction *term = BB->getTerminator();
-        if (!term)
-            return;
-        switch (term->getNumSuccessors()) {
-        case 0:
-            return;
-        case 1:
-            BB = term->getSuccessor(0);
-            if (chainBBs.contains(BB))
-                pushBlock(trackInstr, chainBBs, pred, BB);
-            return;
-        case 2:
-            break;
-        default:
-            assert(false);
-        }
-        auto succ0 = term->getSuccessor(0);
-        auto succ1 = term->getSuccessor(1);
-        if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
-            // TODO: we need to fuse these blocks.
-
-        } else if (chainBBs.contains(succ0)) {
-            pushBlock(trackInstr, chainBBs, pred, succ0);
-        } else if (chainBBs.contains(succ1)) {
-            pushBlock(trackInstr, chainBBs, pred, succ1);
+    InstructionBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                     llvm::BasicBlock *BB) {
+        for (auto &I : *BB) {
+            instructions.push_back(cache.get(alloc, &I));
         }
     }
+    // void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
+    //                llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
+    //                Predicates &pred, llvm::BasicBlock *BB) {
+    //     assert(chainBBs.contains(block));
+    //     chainBBs.erase(BB);
+    //     // we only want to extract relevant instructions, i.e. parents of
+    //     stores for (llvm::Instruction &instr : *BB) {
+    //         if (trackInstr.contains(&instr))
+    //             instructions.emplace_back(pred, instr);
+    //     }
+    //     llvm::Instruction *term = BB->getTerminator();
+    //     if (!term)
+    //         return;
+    //     switch (term->getNumSuccessors()) {
+    //     case 0:
+    //         return;
+    //     case 1:
+    //         BB = term->getSuccessor(0);
+    //         if (chainBBs.contains(BB))
+    //             pushBlock(trackInstr, chainBBs, pred, BB);
+    //         return;
+    //     case 2:
+    //         break;
+    //     default:
+    //         assert(false);
+    //     }
+    //     auto succ0 = term->getSuccessor(0);
+    //     auto succ1 = term->getSuccessor(1);
+    //     if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
+    //         // TODO: we need to fuse these blocks.
+
+    //     } else if (chainBBs.contains(succ0)) {
+    //         pushBlock(trackInstr, chainBBs, pred, succ0);
+    //     } else if (chainBBs.contains(succ1)) {
+    //         pushBlock(trackInstr, chainBBs, pred, succ1);
+    //     }
+    // }
 };
 
 /// Given: llvm::SmallVector<LoopAndExit> subTrees;
@@ -158,8 +171,10 @@ struct LoopTreeSchedule {
     [[no_unique_address]] uint8_t vectorizationFactor{1};
     [[no_unique_address]] uint8_t unrollFactor{1};
     [[no_unique_address]] uint8_t unrollPredcedence{1};
-    size_t getNumSubTrees() const { return subTrees.size(); }
-    size_t getDepth() const { return depth; }
+    [[nodiscard]] auto getNumSubTrees() const -> size_t {
+        return subTrees.size();
+    }
+    [[nodiscard]] auto getDepth() const -> size_t { return depth; }
 };
 
 struct LoopForestSchedule {
