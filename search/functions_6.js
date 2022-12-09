@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['searchoperandsforloads_273',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
-  ['searchvalueforstores_274',['searchValueForStores',['../structLinearProgramLoopBlock.html#afb9b5a485e8e41e05f0bba4067394ef7',1,'LinearProgramLoopBlock']]]
+  ['operator_26_273',['operator&amp;',['../structPredicates.html#a36995b4734f6604bf0130c7549453c97',1,'Predicates']]],
+  ['operator_7c_274',['operator|',['../structPredicates.html#a66bfdb59cd8c5d9f7ae495ea86bcef87',1,'Predicates']]],
+  ['optimize_275',['optimize',['../structLinearProgramLoopBlock.html#ae3bc3d8b463fc32a0db682038f714829',1,'LinearProgramLoopBlock']]]
 ];
