@@ -218,12 +218,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     [[nodiscard]] auto
     predicateMap(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
                  llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-                 const PredicateRelations &predicate, llvm::BasicBlock *BBhead,
-                 llvm::Loop *L) -> Destination {
+                 const PredicateIntersection &predicate,
+                 llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
         if (BBsrc == BBdst) {
             auto f = predMap.find(BBsrc);
             if (f != predMap.end()) {
-                f->second.predUnion(alloc, predicate);
+                f->second.predUnion(predicate);
             } else {
                 predMap.insert({BBsrc, predicate});
             }

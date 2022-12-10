@@ -2,6 +2,7 @@
 #include "./BitSets.hpp"
 #include "./Macro.hpp"
 #include "./Math.hpp"
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <cwchar>
@@ -11,8 +12,10 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Pass.h>
 #include <llvm/Support/Allocator.h>
-
+#include <optional>
+#include <variant>
 enum struct PredicateRelation : uint8_t {
     Any = 0,
     True = 1,
@@ -36,7 +39,7 @@ enum struct PredicateRelation : uint8_t {
 struct Instruction;
 
 /// PredicateIntersection
-struct PredicateIntersection {
+struct Intersection {
     [[no_unique_address]] uint64_t predicates;
     constexpr auto operator[](size_t index) const -> PredicateRelation {
         assert(index < 32);
@@ -65,11 +68,10 @@ struct PredicateIntersection {
     auto operator[](size_t index) -> Reference {
         return {predicates, 2 * index};
     }
-    constexpr auto operator&(PredicateIntersection other) const
-        -> PredicateIntersection {
+    constexpr auto operator&(Intersection other) const -> Intersection {
         return {predicates | other.predicates};
     }
-    auto operator&=(PredicateIntersection other) -> PredicateIntersection & {
+    auto operator&=(Intersection other) -> Intersection & {
         predicates |= other.predicates;
         return *this;
     }
@@ -86,7 +88,57 @@ struct PredicateIntersection {
         return emptyMask(x) != 0;
     }
     /// returns `true` if the PredicateIntersection is empty, `false` otherwise
-    constexpr auto isEmpty() const -> bool { return isEmpty(predicates); }
+    [[nodiscard]] constexpr auto isEmpty() const -> bool {
+        return isEmpty(predicates);
+    }
+    /// if the union between `this` and `other` can be expressed as an
+    /// intersection of their constituents, return that intersection. Return an
+    /// empty optional otherwise. The cases we handle are:
+    /// (a & b) | a = a
+    /// (a & b) | (a & !b) = a
+    [[nodiscard]] constexpr auto compactUnion(Intersection other) const
+        -> std::variant<std::monostate, Intersection,
+                        std::pair<Intersection, Intersection>> {
+        if (isEmpty())
+            return other;
+        else if (other.isEmpty())
+            return *this;
+        uint64_t x = predicates, y = other.predicates;
+        // 010000 = 010100 & 010000
+        uint64_t intersect = x & y;
+        if (x == intersect || y == intersect) {
+            return Intersection{intersect};
+        }
+        // 011100 = 010100 | 011000
+        // 010000 = 010100 & 011000
+        // we can't handle (a & b) | (a & !b & c) because
+        // (a & b) | (a & !b & c) = a & (b | c)) = (a & b) | (a & c)
+        // bit representation:
+        // 010000 = 010100 & 011001
+        // we thus check all bits equal after masking off `b`.
+        // We could consider returning a pair of options, so we can return the
+        // simplified expression.
+        uint64_t bitUnion = x | y;
+        uint64_t mask = emptyMask(bitUnion);
+        if (std::popcount(mask) == 1) { // a single b & !b case
+            uint64_t remUnionMask =
+                ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
+            uint64_t w = remUnionMask & x;
+            uint64_t z = remUnionMask & y;
+            if (w == z)
+                return Intersection{w};
+            // if we now have
+            //  a     |  a & c
+            // 010000 | 010001
+            uint64_t wz = w & z;
+            if (wz == w) {
+                return std::make_pair(*this, Intersection{z});
+            } else if (wz == z) {
+                return std::make_pair(Intersection{w}, other);
+            }
+        }
+        return {};
+    }
 };
 /// PredicateSet
 /// A type for performing set algebra on predicates, representing sets
@@ -116,41 +168,20 @@ struct PredicateIntersection {
 /// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
 /// == (a | c) & (b | c) & (a | d) & (b | d)
 struct PredicateSet {
-    [[no_unique_address]] llvm::SmallVector<PredicateIntersection, 1> relations;
-    auto operator[](size_t index) const -> PredicateRelation {
-        return static_cast<PredicateRelation>(
-            (relations[index / 32] >> (2 * (index % 32))) & 3);
+    [[no_unique_address]] llvm::SmallVector<Intersection, 2> intersectUnion;
+    PredicateSet() = default;
+    PredicateSet(Intersection pred) : intersectUnion({pred}) {}
+    constexpr auto operator[](size_t index) -> Intersection {
+        return intersectUnion[index];
     }
-    void set(size_t index, PredicateRelation value) {
-        auto d = index / 32;
-        if (d >= relations.size())
-            relations.resize(d + 1);
-        auto r2 = 2 * (index % 32);
-        uint64_t maskedOff = relations[d] & ~(3ULL << (r2));
-        relations[d] = maskedOff | static_cast<uint64_t>(value) << (r2);
+    constexpr auto operator[](size_t index) const -> Intersection {
+        return intersectUnion[index];
     }
-    struct Reference {
-        [[no_unique_address]] uint64_t *rp;
-        [[no_unique_address]] size_t index;
-        operator PredicateRelation() const {
-            return static_cast<PredicateRelation>((*rp) >> index);
-        }
-        auto operator=(PredicateRelation relation) -> Reference & {
-            *this->rp = (*this->rp & ~(3 << index)) |
-                        (static_cast<uint64_t>(relation) << index);
-            return *this;
-        }
-    };
-
-    auto operator[](size_t index) -> Reference {
-        auto i = index / 32;
-        if (i >= relations.size())
-            relations.resize(i + 1);
-        return {&relations[i], 2 * (index % 32)};
+    constexpr auto operator()(size_t i, size_t j) const -> PredicateRelation {
+        return intersectUnion[i][j];
     }
-    [[nodiscard]] auto size() const -> size_t { return relations.size() * 32; }
-    [[nodiscard]] auto relationSize() const -> size_t {
-        return relations.size();
+    [[nodiscard]] constexpr auto size() const -> size_t {
+        return intersectUnion.size();
     }
     /// Cases we simplify:
     /// a | {} = a
@@ -164,117 +195,137 @@ struct PredicateSet {
     /// Impl: if one contains only one cond, drop that cond if it's reversed in
     /// other.
     /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
-    void predUnion(llvm::BumpPtrAllocator &alloc,
-                   const PredicateRelations &other) {
+    /// Currently, it should be able to simplify:
+    /// *this = (a & !b & c) | (a & !c)
+    /// other = (a & b)
+    /// to:
+    /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
+    void predUnion(Intersection other) {
         if (other.isEmpty())
             return;
-        else if (isEmpty()) {
-            relations = other.relations;
+        else if (intersectUnion.empty()) {
+            intersectUnion.push_back(other);
             return;
         }
-        size_t N = std::max(size(), other.size());
-        if (relations.size() < N)
-            relations.resize(N);
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < N; i++) {
-            uint64_t a = relations[i];
-            uint64_t b = other.relations[i];
-            if (a == b)
-                continue;
-            // we want to iterate to all pred relations where they are not equal
-            uint64_t c = a ^ b;
-            while (true) {
-                uint64_t tz = std::countr_zero(c);
-                uint64_t shift = tz & (~(uint64_t(1)));
-                // shift to non-zero relation
-                a >>= shift;
-                b >>= shift;
-                c >>= shift;
+        // we first try to avoid pushing so that we don't have to realloc
+        bool simplifyPreds = false;
+        for (auto &&pred : intersectUnion) {
+            auto u = pred.compactUnion(other);
+            if (auto compact = std::get_if<Intersection>(&u)) {
+                pred = *compact;
+                return;
+            } else if (auto simplify =
+                           std::get_if<std::pair<Intersection, Intersection>>(
+                               &u)) {
+                pred = simplify->first;
+                other = simplify->second;
+                simplifyPreds = true;
+            }
+        }
+        intersectUnion.push_back(other);
+        while (simplifyPreds) {
+            simplifyPreds = false;
+            for (size_t i = 0; i < intersectUnion.size(); ++i) {
+                for (size_t j = i + 1; j < intersectUnion.size();) {
+                    auto u = intersectUnion[i].compactUnion(intersectUnion[j]);
+                    if (auto compact = std::get_if<Intersection>(&u)) {
+                        // delete `j`, update `i`
+                        intersectUnion[i] = *compact;
+                        intersectUnion.erase(intersectUnion.begin() + j);
+                        simplifyPreds = true;
+                    } else {
+                        if (auto simplify = std::get_if<
+                                std::pair<Intersection, Intersection>>(&u)) {
+                            // assert forward progress
+                            assert(
+                                (std::popcount(simplify->first.predicates) +
+                                 std::popcount(simplify->second.predicates)) <=
+                                (std::popcount(intersectUnion[i].predicates) +
+                                 std::popcount(intersectUnion[j].predicates)));
+                            intersectUnion[i] = simplify->first;
+                            intersectUnion[j] = simplify->second;
+                            simplifyPreds = true;
+                        }
+                        ++j;
+                    }
+                }
             }
         }
     }
-    static void intersectImpl(PredicateRelations &c,
-                              const PredicateRelations &a,
-                              const PredicateRelations &b) {
-        assert(a.relationSize() >= b.relationSize());
-        c.relations.resize(a.relationSize());
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < b.relationSize(); i++)
-            c.relations[i] = a.relations[i] | b.relations[i];
-        for (size_t i = b.relationSize(); i < a.relationSize(); i++)
-            c.relations[i] = a.relations[i];
-    }
-    [[nodiscard]] auto predIntersect(const PredicateRelations &other) const
-        -> PredicateRelations {
-        PredicateRelations result;
-        if (relationSize() < other.relationSize()) {
-            intersectImpl(result, other, *this);
-        } else {
-            intersectImpl(result, *this, other);
+    auto operator&=(Intersection pred) -> PredicateSet & {
+        for (size_t i = 0; i < intersectUnion.size();) {
+            intersectUnion[i] &= pred;
+            if (intersectUnion[i].isEmpty()) {
+                intersectUnion.erase(intersectUnion.begin() + i);
+            } else
+                ++i;
         }
-        return result;
+        return *this;
+    }
+    [[nodiscard]] constexpr auto begin() { return intersectUnion.begin(); }
+    [[nodiscard]] constexpr auto end() { return intersectUnion.end(); }
+    [[nodiscard]] constexpr auto begin() const {
+        return intersectUnion.begin();
+    }
+    [[nodiscard]] constexpr auto end() const { return intersectUnion.end(); }
+    [[nodiscard]] auto operator&=(PredicateSet &pred) -> PredicateSet & {
+        for (auto p : pred)
+            (*this) &= p;
+        return *this;
+    }
+    [[nodiscard]] constexpr auto isEmpty() const -> bool {
+        return intersectUnion.empty();
+    }
+    [[nodiscard]] auto emptyIntersection(const PredicateSet &other) const
+        -> bool {
+        for (auto pred : intersectUnion)
+            for (auto otherPred : other)
+                if ((pred & otherPred).isEmpty())
+                    return true;
+        return false;
     }
 
-    [[nodiscard]] auto isEmpty() const -> bool {
-        for (uint64_t x : relations)
-            if (isEmpty(x))
-                return true;
-        return false;
-    }
-    [[nodiscard]] auto emptyIntersection(const PredicateRelations &other) const
-        -> bool {
-        if (relationSize() < other.relationSize())
-            return other.emptyIntersection(*this);
-        // other.relationSize() <= relationSize()
-        for (size_t i = 0; i < other.relationSize(); i++)
-            if (isEmpty(relations[i] | other.relations[i]))
-                return true;
-        for (size_t i = other.relationSize(); i < relations.size(); i++)
-            if (isEmpty(relations[i]))
-                return true;
-        return false;
-    }
-    static auto getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
-                         Instruction *instruction) -> size_t {
-        size_t I = instructions.size();
-        for (size_t i = 0; i < I; i++)
-            if (instructions[i] == instruction)
-                return i;
-        instructions.push_back(instruction);
-        return I;
-    }
-    // PredicateRelations() = default;
-    // PredicateRelations(llvm::BumpPtrAllocator &alloc, Instruction::Cache &ic,
+    // static auto getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
+    //                      Instruction *instruction) -> size_t {
+    //     size_t I = instructions.size();
+    //     for (size_t i = 0; i < I; i++)
+    //         if (instructions[i] == instruction)
+    //             return i;
+    //     instructions.push_back(instruction);
+    //     return I;
+    // }
+    // PredicateSet() = default;
+    // PredicateSet(llvm::BumpPtrAllocator &alloc, Instruction::Cache
+    // &ic,
     //                    llvm::SmallVector<Instruction *> &predicates,
     //                    Predicates &pred) {
     //     for (Predicate &p : pred) {
     //         Instruction *i = ic.get(alloc, p.condition);
     //         size_t index = getIndex(predicates, i);
     //         PredicateRelation val =
-    //             p.flip ? PredicateRelation::False : PredicateRelation::True;
+    //             p.flip ? PredicateRelation::False :
+    //             PredicateRelation::True;
     //         set(index, val);
     //     }
     // }
 };
 struct Predicates {
-    [[no_unique_address]] PredicateRelations predicates;
-    // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in case of
-    // realloc
+    [[no_unique_address]] PredicateSet predicates;
+    // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
+    // case of realloc
     [[no_unique_address]] llvm::SmallVector<Instruction *> instr;
 };
 
 struct PredicateMap {
-    llvm::DenseMap<llvm::BasicBlock *, PredicateRelations> map;
+    llvm::DenseMap<llvm::BasicBlock *, PredicateSet> map;
     llvm::SmallVector<Instruction *> predicates;
-    auto get(llvm::BasicBlock *bb) -> PredicateRelations & { return map[bb]; }
+    auto get(llvm::BasicBlock *bb) -> PredicateSet & { return map[bb]; }
     auto find(llvm::BasicBlock *bb)
-        -> llvm::DenseMap<llvm::BasicBlock *, PredicateRelations>::iterator {
+        -> llvm::DenseMap<llvm::BasicBlock *, PredicateSet>::iterator {
         return map.find(bb);
     }
     auto find(llvm::Instruction *inst)
-        -> llvm::DenseMap<llvm::BasicBlock *, PredicateRelations>::iterator {
+        -> llvm::DenseMap<llvm::BasicBlock *, PredicateSet>::iterator {
         return map.find(inst->getParent());
     }
     auto begin() -> decltype(map.begin()) { return map.begin(); }
@@ -288,7 +339,7 @@ struct PredicateMap {
     auto operator[](llvm::Instruction *inst) -> std::optional<Predicates> {
         return (*this)[inst->getParent()];
     }
-    void insert(std::pair<llvm::BasicBlock *, PredicateRelations> &&pair) {
+    void insert(std::pair<llvm::BasicBlock *, PredicateSet> &&pair) {
         map.insert(std::move(pair));
     }
 };
@@ -387,7 +438,8 @@ struct PredicatesOld {
         return ret;
     }
     /// Returns a new predicate if the union is can be expressed as
-    /// an intersection of predicates from `a` or `b` in `a | b` expression
+    /// an intersection of predicates from `a` or `b` in `a | b`
+    /// expression
     auto operator|(PredicatesOld p) const -> std::optional<PredicatesOld> {
         switch (size()) {
         case 0:
