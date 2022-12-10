@@ -253,12 +253,12 @@ $(function() {
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    [[nodiscard]] <span class="keyword">auto</span></div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    predicateMap(llvm::BumpPtrAllocator &amp;alloc, <a class="code" href="structPredicateMap.html">PredicateMap</a> &amp;predMap,</div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;                 llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;                 <span class="keyword">const</span> PredicateRelations &amp;predicate, llvm::BasicBlock *BBhead,</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;                 llvm::Loop *L) -&gt; Destination {</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;                 <span class="keyword">const</span> PredicateIntersection &amp;predicate,</div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;                 llvm::BasicBlock *BBhead, llvm::Loop *L) -&gt; Destination {</div>
 <div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;        <span class="keywordflow">if</span> (BBsrc == BBdst) {</div>
 <div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;            <span class="keyword">auto</span> f = predMap.find(BBsrc);</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            <span class="keywordflow">if</span> (f != predMap.end()) {</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;                f-&gt;second.predUnion(alloc, predicate);</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;                f-&gt;second.predUnion(predicate);</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;            } <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                predMap.insert({BBsrc, predicate});</div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;            }</div>
@@ -877,8 +877,8 @@ $(function() {
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:207</div></div>
 <div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
 <div class="ttc" id="astructMutPtrVector_html"><div class="ttname"><a href="structMutPtrVector.html">MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:815</div></div>
-<div class="ttc" id="astructPredicateMap_html"><div class="ttname"><a href="structPredicateMap.html">PredicateMap</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:268</div></div>
-<div class="ttc" id="astructPredicatesOld_html"><div class="ttname"><a href="structPredicatesOld.html">PredicatesOld</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:318</div></div>
+<div class="ttc" id="astructPredicateMap_html"><div class="ttname"><a href="structPredicateMap.html">PredicateMap</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:319</div></div>
+<div class="ttc" id="astructPredicatesOld_html"><div class="ttname"><a href="structPredicatesOld.html">PredicatesOld</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:369</div></div>
 <div class="ttc" id="astructVector_html"><div class="ttname"><a href="structVector.html">Vector&lt; int64_t &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

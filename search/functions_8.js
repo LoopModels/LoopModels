@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['removeemptymask_299',['removeEmptyMask',['../structPredicateIntersection.html#a453811c2faa5fcfc4af667c3364defdc',1,'PredicateIntersection']]]
+  ['removeemptymask_301',['removeEmptyMask',['../structIntersection.html#a6f43701ad170ad8e55f10a7081f33bb8',1,'Intersection']]]
 ];
