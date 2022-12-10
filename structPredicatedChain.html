@@ -76,18 +76,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acbd23bfa6ae28bc73ae8037b4491433c"><td class="memItemLeft" align="right" valign="top"><a id="acbd23bfa6ae28bc73ae8037b4491433c"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PredicatedChain</b> (llvm::BasicBlock *basicBlock)</td></tr>
 <tr class="separator:acbd23bfa6ae28bc73ae8037b4491433c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78146877bc18c8fc83f6cb7305870f71"><td class="memItemLeft" align="right" valign="top"><a id="a78146877bc18c8fc83f6cb7305870f71"></a>
-<a class="el" href="structPredicatedChain.html">PredicatedChain</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLastPred</b> ()</td></tr>
-<tr class="separator:a78146877bc18c8fc83f6cb7305870f71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a994c34eb936664623b248608e55d4ee0"><td class="memItemLeft" align="right" valign="top"><a id="a994c34eb936664623b248608e55d4ee0"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>conditionOnLastPred</b> () -&gt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &amp;</td></tr>
+<tr class="separator:a994c34eb936664623b248608e55d4ee0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a79a900508f83944d0d737e936ca73b70"><td class="memItemLeft" align="right" valign="top"><a id="a79a900508f83944d0d737e936ca73b70"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>push_back</b> (llvm::BasicBlock *BB)</td></tr>
 <tr class="separator:a79a900508f83944d0d737e936ca73b70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaebb50b3c49fc37a3474d266edf81d7f"><td class="memItemLeft" align="right" valign="top"><a id="aaebb50b3c49fc37a3474d266edf81d7f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>emplace_back</b> (<a class="el" href="structPredicates.html">Predicates</a> p, llvm::BasicBlock *BB)</td></tr>
-<tr class="separator:aaebb50b3c49fc37a3474d266edf81d7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7821e656218d7b441ef0a794910ff180"><td class="memItemLeft" align="right" valign="top"><a id="a7821e656218d7b441ef0a794910ff180"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::BasicBlock *BB)</td></tr>
-<tr class="separator:a7821e656218d7b441ef0a794910ff180"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30e33f0a29b1c9035dcb98f59582b2ba"><td class="memItemLeft" align="right" valign="top"><a id="a30e33f0a29b1c9035dcb98f59582b2ba"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>emplace_back</b> (<a class="el" href="structPredicatesOld.html">PredicatesOld</a> p, llvm::BasicBlock *BB)</td></tr>
+<tr class="separator:a30e33f0a29b1c9035dcb98f59582b2ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae6e82ef692d1fa6461f29f78b7be17cb"><td class="memItemLeft" align="right" valign="top"><a id="ae6e82ef692d1fa6461f29f78b7be17cb"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::BasicBlock *BB) -&gt; bool</td></tr>
+<tr class="separator:ae6e82ef692d1fa6461f29f78b7be17cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afcd3e34d9170fe1296c245ac8f76a815"><td class="memItemLeft" align="right" valign="top"><a id="afcd3e34d9170fe1296c245ac8f76a815"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reverse</b> ()</td></tr>
 <tr class="separator:afcd3e34d9170fe1296c245ac8f76a815"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -112,33 +112,33 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>rend</b> ()</td></tr>
 <tr class="memitem:ac367d1b717018ba0b5bed8854b6e6e64"><td class="memItemLeft" align="right" valign="top"><a id="ac367d1b717018ba0b5bed8854b6e6e64"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
 <tr class="separator:ac367d1b717018ba0b5bed8854b6e6e64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb36f147936bf8084ebba12a3c9bc65f"><td class="memItemLeft" align="right" valign="top"><a id="abb36f147936bf8084ebba12a3c9bc65f"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i)</td></tr>
-<tr class="separator:abb36f147936bf8084ebba12a3c9bc65f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ee25bb1fb7f49b84d37337c1397392a"><td class="memItemLeft" align="right" valign="top"><a id="a4ee25bb1fb7f49b84d37337c1397392a"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const</td></tr>
-<tr class="separator:a4ee25bb1fb7f49b84d37337c1397392a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9e8e8510f6aa105ef20528633bebd270"><td class="memItemLeft" align="right" valign="top"><a id="a9e8e8510f6aa105ef20528633bebd270"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> ()</td></tr>
-<tr class="separator:a9e8e8510f6aa105ef20528633bebd270"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe7fac7878581cc6eb778e8b30b57aa6"><td class="memItemLeft" align="right" valign="top"><a id="abe7fac7878581cc6eb778e8b30b57aa6"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () const</td></tr>
-<tr class="separator:abe7fac7878581cc6eb778e8b30b57aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a709271f7d99e7ff4b615e740a05b4189"><td class="memItemLeft" align="right" valign="top"><a id="a709271f7d99e7ff4b615e740a05b4189"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> ()</td></tr>
-<tr class="separator:a709271f7d99e7ff4b615e740a05b4189"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33145288012e35a9a52b1fb0f31317c1"><td class="memItemLeft" align="right" valign="top"><a id="a33145288012e35a9a52b1fb0f31317c1"></a>
-auto &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () const</td></tr>
-<tr class="separator:a33145288012e35a9a52b1fb0f31317c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8de5b025e4222c684b854c9d224a8740"><td class="memItemLeft" align="right" valign="top"><a id="a8de5b025e4222c684b854c9d224a8740"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>containsPredicates</b> () const</td></tr>
-<tr class="separator:a8de5b025e4222c684b854c9d224a8740"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4486afdb7209ffa4bec4db20c94957c9"><td class="memItemLeft" align="right" valign="top"><a id="a4486afdb7209ffa4bec4db20c94957c9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) -&gt; auto &amp;</td></tr>
+<tr class="separator:a4486afdb7209ffa4bec4db20c94957c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e2972a25dc8076182964006106bec23"><td class="memItemLeft" align="right" valign="top"><a id="a0e2972a25dc8076182964006106bec23"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const -&gt; auto &amp;</td></tr>
+<tr class="separator:a0e2972a25dc8076182964006106bec23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a343de56f5dd8ca917ce99d54db9465f7"><td class="memItemLeft" align="right" valign="top"><a id="a343de56f5dd8ca917ce99d54db9465f7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () -&gt; auto &amp;</td></tr>
+<tr class="separator:a343de56f5dd8ca917ce99d54db9465f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6c199312937ea4179540fbb1d82ed2f"><td class="memItemLeft" align="right" valign="top"><a id="af6c199312937ea4179540fbb1d82ed2f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>back</b> () const -&gt; auto &amp;</td></tr>
+<tr class="separator:af6c199312937ea4179540fbb1d82ed2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8cf116c32b34fae6f24abacb0dbaa9f7"><td class="memItemLeft" align="right" valign="top"><a id="a8cf116c32b34fae6f24abacb0dbaa9f7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () -&gt; auto &amp;</td></tr>
+<tr class="separator:a8cf116c32b34fae6f24abacb0dbaa9f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b2ede63462eed1abc5c9917411323b5"><td class="memItemLeft" align="right" valign="top"><a id="a4b2ede63462eed1abc5c9917411323b5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () const -&gt; auto &amp;</td></tr>
+<tr class="separator:a4b2ede63462eed1abc5c9917411323b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3068f9b19a0d93a8693accc727e2600"><td class="memItemLeft" align="right" valign="top"><a id="af3068f9b19a0d93a8693accc727e2600"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>containsPredicates</b> () const -&gt; bool</td></tr>
+<tr class="separator:af3068f9b19a0d93a8693accc727e2600"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a70272ff167ffd63a15fecbf331b1c501"><td class="memItemLeft" align="right" valign="top"><a id="a70272ff167ffd63a15fecbf331b1c501"></a>
-static bool&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::ArrayRef&lt; <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &gt; chain, llvm::BasicBlock *BB)</td></tr>
-<tr class="separator:a70272ff167ffd63a15fecbf331b1c501"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2581a51a51b95b5babd501ea466692aa"><td class="memItemLeft" align="right" valign="top"><a id="a2581a51a51b95b5babd501ea466692aa"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>contains</b> (llvm::ArrayRef&lt; <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &gt; chain, llvm::BasicBlock *BB) -&gt; bool</td></tr>
+<tr class="separator:a2581a51a51b95b5babd501ea466692aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

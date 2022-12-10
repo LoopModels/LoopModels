@@ -7,6 +7,5 @@ var searchData=
   ['bitset64_11',['BitSet64',['../structBitSet64.html',1,'']]],
   ['bitset_3c_201_20_3e_12',['BitSet&lt; 1 &gt;',['../structBitSet.html',1,'']]],
   ['bitsetiterator_13',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
-  ['bitsliceview_14',['BitSliceView',['../structBitSliceView.html',1,'']]],
-  ['blockpredicates_15',['BlockPredicates',['../structBlockPredicates.html',1,'']]]
+  ['bitsliceview_14',['BitSliceView',['../structBitSliceView.html',1,'']]]
 ];

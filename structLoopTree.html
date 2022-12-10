@@ -74,9 +74,21 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad046e8edb81d299bafaeeff7f82fae24"><td class="memItemLeft" align="right" valign="top"><a id="ad046e8edb81d299bafaeeff7f82fae24"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b> () const</td></tr>
-<tr class="separator:ad046e8edb81d299bafaeeff7f82fae24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49ca95e7251697bba5cf45527acc2190"><td class="memItemLeft" align="right" valign="top"><a id="a49ca95e7251697bba5cf45527acc2190"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b> () const -&gt; bool</td></tr>
+<tr class="separator:a49ca95e7251697bba5cf45527acc2190"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab09a6bc647f8bdf3a3670e83da4290a7"><td class="memItemLeft" align="right" valign="top"><a id="ab09a6bc647f8bdf3a3670e83da4290a7"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;)=default</td></tr>
+<tr class="separator:ab09a6bc647f8bdf3a3670e83da4290a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef959c18a61e0a247537a12443f55d30"><td class="memItemLeft" align="right" valign="top"><a id="aef959c18a61e0a247537a12443f55d30"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;)=default</td></tr>
+<tr class="separator:aef959c18a61e0a247537a12443f55d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memItemLeft" align="right" valign="top"><a id="ac2a35572c599f1ac0d23f0f5f6cde04b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
+<tr class="separator:ac2a35572c599f1ac0d23f0f5f6cde04b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memItemLeft" align="right" valign="top"><a id="ac836944aef0bd253ff09a9e4a7287d7d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
+<tr class="separator:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a67b7e638c04131b96e2fbda22bd48723"><td class="memItemLeft" align="right" valign="top"><a id="a67b7e638c04131b96e2fbda22bd48723"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &gt; paths)</td></tr>
 <tr class="separator:a67b7e638c04131b96e2fbda22bd48723"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -86,12 +98,12 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b
 <tr class="memitem:a12edccaaac5f3cc1551dd71cb78e047f"><td class="memItemLeft" align="right" valign="top"><a id="a12edccaaac5f3cc1551dd71cb78e047f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::Loop *L, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; aln, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &gt; paths)</td></tr>
 <tr class="separator:a12edccaaac5f3cc1551dd71cb78e047f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dee540c380acb7e8dd272d8dfce4d5b"><td class="memItemLeft" align="right" valign="top"><a id="a2dee540c380acb7e8dd272d8dfce4d5b"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const</td></tr>
-<tr class="separator:a2dee540c380acb7e8dd272d8dfce4d5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7dc3690987b12d14365b07d13b4eb6c"><td class="memItemLeft" align="right" valign="top"><a id="ab7dc3690987b12d14365b07d13b4eb6c"></a>
-llvm::raw_ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td></tr>
-<tr class="separator:ab7dc3690987b12d14365b07d13b4eb6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memItemLeft" align="right" valign="top"><a id="ab9cb2aac21f4ca6e045d387d70833c7c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00b1034ed4ff2d7dfe9d139628a80914"><td class="memItemLeft" align="right" valign="top"><a id="a00b1034ed4ff2d7dfe9d139628a80914"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:a00b1034ed4ff2d7dfe9d139628a80914"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6105880b8b8af86c60a1e343f0d3e4c"><td class="memItemLeft" align="right" valign="top"><a id="ac6105880b8b8af86c60a1e343f0d3e4c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> (llvm::DenseMap&lt; llvm::Loop *, <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;loopMap)</td></tr>
 <tr class="separator:ac6105880b8b8af86c60a1e343f0d3e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -107,24 +119,24 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () const</t
 <tr class="memitem:adcfb9858e2c1bfa45f445b4c2db67ef5"><td class="memItemLeft" align="right" valign="top"><a id="adcfb9858e2c1bfa45f445b4c2db67ef5"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const</td></tr>
 <tr class="separator:adcfb9858e2c1bfa45f445b4c2db67ef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58dba502d11b13ef0e014707e2298769"><td class="memItemLeft" align="right" valign="top"><a id="a58dba502d11b13ef0e014707e2298769"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
-<tr class="separator:a58dba502d11b13ef0e014707e2298769"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0dc5a25b0136432386db927b0875a7a2"><td class="memItemLeft" align="right" valign="top"><a id="a0dc5a25b0136432386db927b0875a7a2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a0dc5a25b0136432386db927b0875a7a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2d427808be0d6ba29d3dfc1ef435363"><td class="memItemLeft" align="right" valign="top"><a id="af2d427808be0d6ba29d3dfc1ef435363"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dumpAllMemAccess</b> () const</td></tr>
 <tr class="separator:af2d427808be0d6ba29d3dfc1ef435363"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8414fe7f758022b1f2faea4c87088d4e"><td class="memItemLeft" align="right" valign="top"><a id="a8414fe7f758022b1f2faea4c87088d4e"></a>
-static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>pushBack</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forests, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::Loop *L, llvm::ScalarEvolution &amp;SE)</td></tr>
-<tr class="separator:a8414fe7f758022b1f2faea4c87088d4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7497997f0471a473b455fffc7efa27e3"><td class="memItemLeft" align="right" valign="top"><a id="a7497997f0471a473b455fffc7efa27e3"></a>
-static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>pushBack</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forests, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::Loop *L, llvm::ScalarEvolution &amp;SE, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, bool anyFail)</td></tr>
-<tr class="separator:a7497997f0471a473b455fffc7efa27e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ac2d1397dca39674b4712305d6c1e30"><td class="memItemLeft" align="right" valign="top"><a id="a4ac2d1397dca39674b4712305d6c1e30"></a>
-static size_t&#160;</td><td class="memItemRight" valign="bottom"><b>invalid</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;subTree, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &gt; &amp;paths, const std::vector&lt; llvm::Loop * &gt; &amp;subLoops)</td></tr>
-<tr class="separator:a4ac2d1397dca39674b4712305d6c1e30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a006e9660cbf5782830d9cd6a313bc5ba"><td class="memItemLeft" align="right" valign="top"><a id="a006e9660cbf5782830d9cd6a313bc5ba"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>pushBack</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forests, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::Loop *L, llvm::ScalarEvolution &amp;SE) -&gt; size_t</td></tr>
+<tr class="separator:a006e9660cbf5782830d9cd6a313bc5ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea9d9a87d1b07718414032fd6519ba40"><td class="memItemLeft" align="right" valign="top"><a id="aea9d9a87d1b07718414032fd6519ba40"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>pushBack</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forests, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::Loop *L, llvm::ScalarEvolution &amp;SE, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, bool anyFail) -&gt; size_t</td></tr>
+<tr class="separator:aea9d9a87d1b07718414032fd6519ba40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1c8b812e052bf6e731041a7c3009734"><td class="memItemLeft" align="right" valign="top"><a id="af1c8b812e052bf6e731041a7c3009734"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>invalid</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;subTree, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &gt; &amp;paths, const std::vector&lt; llvm::Loop * &gt; &amp;subLoops) -&gt; size_t</td></tr>
+<tr class="separator:af1c8b812e052bf6e731041a7c3009734"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b6eebed360705aa8900be587f0d6372"><td class="memItemLeft" align="right" valign="top"><a id="a9b6eebed360705aa8900be587f0d6372"></a>
 static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;subTree, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicatedChain.html">PredicatedChain</a> &gt; &amp;paths)</td></tr>
 <tr class="separator:a9b6eebed360705aa8900be587f0d6372"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,9 +167,9 @@ llvm::SmallVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess<
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a70ff1d9784ccaa30344ae6461bc700de"><td class="memItemLeft" align="right" valign="top"><a id="a70ff1d9784ccaa30344ae6461bc700de"></a>
-llvm::raw_ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;tree)</td></tr>
-<tr class="separator:a70ff1d9784ccaa30344ae6461bc700de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1199a32fdfc7dc4e2d82f4a3d75180f3"><td class="memItemLeft" align="right" valign="top"><a id="a1199a32fdfc7dc4e2d82f4a3d75180f3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structLoopTree.html">LoopTree</a> &amp;tree) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:a1199a32fdfc7dc4e2d82f4a3d75180f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="LoopForest_8hpp_source.html">LoopForest.hpp</a></li>

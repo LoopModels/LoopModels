@@ -83,6 +83,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpCode</b> () cons
 <tr class="memitem:a5b309db2f1e5255fc50c409e095eecf8"><td class="memItemLeft" align="right" valign="top"><a id="a5b309db2f1e5255fc50c409e095eecf8"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIntrinsicID</b> () const -&gt; llvm::Intrinsic::ID</td></tr>
 <tr class="separator:a5b309db2f1e5255fc50c409e095eecf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8cbf4c5faa39849f9106ce3e390b2fd"><td class="memItemLeft" align="right" valign="top"><a id="ab8cbf4c5faa39849f9106ce3e390b2fd"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> (UniqueIdentifier id)</td></tr>
+<tr class="separator:ab8cbf4c5faa39849f9106ce3e390b2fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a185e97d46b9a2a58bdd9487d4b8c28d2"><td class="memItemLeft" align="right" valign="top"><a id="a185e97d46b9a2a58bdd9487d4b8c28d2"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> (llvm::Value *v)</td></tr>
 <tr class="separator:a185e97d46b9a2a58bdd9487d4b8c28d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,15 +104,19 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsic
 <tr class="memitem:aaa58a12c9dcbbd58662e07cbca6fa94c"><td class="memItemLeft" align="right" valign="top"><a id="aaa58a12c9dcbbd58662e07cbca6fa94c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInstruction</b> (unsigned opCode) const -&gt; bool</td></tr>
 <tr class="separator:aaa58a12c9dcbbd58662e07cbca6fa94c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac230ef745494b1af1a926df6181df50e"><td class="memItemLeft" align="right" valign="top"><a id="ac230ef745494b1af1a926df6181df50e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html#ac230ef745494b1af1a926df6181df50e">isValueLoadOrStore</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:ac230ef745494b1af1a926df6181df50e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the ptr is a load or store. <br /></td></tr>
+<tr class="separator:ac230ef745494b1af1a926df6181df50e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1346b9f379e270bafcf51240d6c3f926"><td class="memItemLeft" align="right" valign="top"><a id="a1346b9f379e270bafcf51240d6c3f926"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsicInstruction</b> (unsigned opCode) const -&gt; bool</td></tr>
 <tr class="separator:a1346b9f379e270bafcf51240d6c3f926"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a924b9e347f73da151716e322f27c25a2"><td class="memItemLeft" align="right" valign="top"><a id="a924b9e347f73da151716e322f27c25a2"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFunction</b> () const -&gt; llvm::Function *</td></tr>
 <tr class="separator:a924b9e347f73da151716e322f27c25a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84f814c195a9448f6306417271789632"><td class="memItemLeft" align="right" valign="top"><a id="a84f814c195a9448f6306417271789632"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structInstruction_1_1Identifier.html">Identifier</a> &amp;other) const -&gt; bool</td></tr>
-<tr class="separator:a84f814c195a9448f6306417271789632"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace5192c4b35132af8cb3ff8504295a9c"><td class="memItemLeft" align="right" valign="top"><a id="ace5192c4b35132af8cb3ff8504295a9c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structInstruction_1_1Identifier.html">Identifier</a> &amp;other) const -&gt; bool</td></tr>
+<tr class="separator:ace5192c4b35132af8cb3ff8504295a9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>

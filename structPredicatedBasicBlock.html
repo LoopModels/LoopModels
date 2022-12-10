@@ -75,15 +75,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acdc81e747aa34bb179e3b06bf4112f0d"><td class="memItemLeft" align="right" valign="top"><a id="acdc81e747aa34bb179e3b06bf4112f0d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>PredicatedBasicBlock</b> (llvm::BasicBlock *basicBlock)</td></tr>
 <tr class="separator:acdc81e747aa34bb179e3b06bf4112f0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb516245ea1565a671e56f6bf8d422ac"><td class="memItemLeft" align="right" valign="top"><a id="adb516245ea1565a671e56f6bf8d422ac"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>PredicatedBasicBlock</b> (<a class="el" href="structPredicates.html">Predicates</a> predicates, llvm::BasicBlock *basicBlock)</td></tr>
-<tr class="separator:adb516245ea1565a671e56f6bf8d422ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5430960e7de9afb00bee3a75195179e6"><td class="memItemLeft" align="right" valign="top"><a id="a5430960e7de9afb00bee3a75195179e6"></a>
-<a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>dropLastCondition</b> ()</td></tr>
-<tr class="separator:a5430960e7de9afb00bee3a75195179e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a148ce684498aad982ca31895a79f74a0"><td class="memItemLeft" align="right" valign="top"><a id="a148ce684498aad982ca31895a79f74a0"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &amp;pbb) const</td></tr>
-<tr class="separator:a148ce684498aad982ca31895a79f74a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b9a7941a29ed5cbbd2d482a74c6f177"><td class="memItemLeft" align="right" valign="top"><a id="a2b9a7941a29ed5cbbd2d482a74c6f177"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>PredicatedBasicBlock</b> (<a class="el" href="structPredicatesOld.html">PredicatesOld</a> predicates, llvm::BasicBlock *basicBlock)</td></tr>
+<tr class="separator:a2b9a7941a29ed5cbbd2d482a74c6f177"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e3d2a5592e6dff7e351ac3ef4056a63"><td class="memItemLeft" align="right" valign="top"><a id="a5e3d2a5592e6dff7e351ac3ef4056a63"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>dropLastCondition</b> () -&gt; <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &amp;</td></tr>
+<tr class="separator:a5e3d2a5592e6dff7e351ac3ef4056a63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e4b385a9ba1b567d097ce756f75abf6"><td class="memItemLeft" align="right" valign="top"><a id="a2e4b385a9ba1b567d097ce756f75abf6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structPredicatedBasicBlock.html">PredicatedBasicBlock</a> &amp;pbb) const -&gt; bool</td></tr>
+<tr class="separator:a2e4b385a9ba1b567d097ce756f75abf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01f3999f1f8d9895d42019c3cf4b3d28"><td class="memItemLeft" align="right" valign="top"><a id="a01f3999f1f8d9895d42019c3cf4b3d28"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> ()</td></tr>
 <tr class="separator:a01f3999f1f8d9895d42019c3cf4b3d28"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -93,9 +93,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> ()</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a0073333355a1f30c6d130da9b92f3443"><td class="memItemLeft" align="right" valign="top"><a id="a0073333355a1f30c6d130da9b92f3443"></a>
-<a class="el" href="structPredicates.html">Predicates</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
-<tr class="separator:a0073333355a1f30c6d130da9b92f3443"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea35a24b2cba5f67e3daf15af0c3d76e"><td class="memItemLeft" align="right" valign="top"><a id="aea35a24b2cba5f67e3daf15af0c3d76e"></a>
+<a class="el" href="structPredicatesOld.html">PredicatesOld</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
+<tr class="separator:aea35a24b2cba5f67e3daf15af0c3d76e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38d62e53e4faa6111335eda5ccc369e8"><td class="memItemLeft" align="right" valign="top"><a id="a38d62e53e4faa6111335eda5ccc369e8"></a>
 llvm::BasicBlock *&#160;</td><td class="memItemRight" valign="bottom"><b>basicBlock</b></td></tr>
 <tr class="separator:a38d62e53e4faa6111335eda5ccc369e8"><td class="memSeparator" colspan="2">&#160;</td></tr>

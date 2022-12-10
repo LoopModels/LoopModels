@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Predicate Struct Reference</title>
+<title>LoopModels: PredicateOld Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -66,49 +66,49 @@ $(function() {
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
-<a href="structPredicate-members.html">List of all members</a>  </div>
+<a href="structPredicateOld-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Predicate Struct Reference</div>  </div>
+<div class="title">PredicateOld Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a087304042fa0bf1c0d2e7035e6ae1d83"><td class="memItemLeft" align="right" valign="top"><a id="a087304042fa0bf1c0d2e7035e6ae1d83"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>MatchResult</b> { <b>NoMatch</b>
+<tr class="memitem:ace6b4ee7d1ba56ae420afa9836e32aed"><td class="memItemLeft" align="right" valign="top"><a id="ace6b4ee7d1ba56ae420afa9836e32aed"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>MatchResult</b> { <b>NoMatch</b>
 , <b>Match</b>
 , <b>MatchAndFlip</b>
  }</td></tr>
-<tr class="separator:a087304042fa0bf1c0d2e7035e6ae1d83"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ace6b4ee7d1ba56ae420afa9836e32aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a958591af507b059c99c7d2c489f1b191"><td class="memItemLeft" align="right" valign="top"><a id="a958591af507b059c99c7d2c489f1b191"></a>
-<a class="el" href="structPredicate.html">Predicate</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator!</b> ()</td></tr>
-<tr class="separator:a958591af507b059c99c7d2c489f1b191"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a600e4a3f42b6b69ca167050d83b7183c"><td class="memItemLeft" align="right" valign="top"><a id="a600e4a3f42b6b69ca167050d83b7183c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Predicate</b> (llvm::Value *condition, bool flip=false)</td></tr>
-<tr class="separator:a600e4a3f42b6b69ca167050d83b7183c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acaee9d955f30854012e7f5e7f84fb271"><td class="memItemLeft" align="right" valign="top"><a id="acaee9d955f30854012e7f5e7f84fb271"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structPredicate.html">Predicate</a> &amp;p) const</td></tr>
-<tr class="separator:acaee9d955f30854012e7f5e7f84fb271"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27e69962ee9996cd67d7d5f772aeb1d9"><td class="memItemLeft" align="right" valign="top"><a id="a27e69962ee9996cd67d7d5f772aeb1d9"></a>
-MatchResult&#160;</td><td class="memItemRight" valign="bottom"><b>match</b> (const <a class="el" href="structPredicate.html">Predicate</a> &amp;p) const</td></tr>
-<tr class="separator:a27e69962ee9996cd67d7d5f772aeb1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a436400d5a6ea9a6ad0057bee6216bb3f"><td class="memItemLeft" align="right" valign="top"><a id="a436400d5a6ea9a6ad0057bee6216bb3f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!</b> () -&gt; <a class="el" href="structPredicateOld.html">PredicateOld</a></td></tr>
+<tr class="separator:a436400d5a6ea9a6ad0057bee6216bb3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ec8a3d8dbe01e35beebaa22e734786c"><td class="memItemLeft" align="right" valign="top"><a id="a6ec8a3d8dbe01e35beebaa22e734786c"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>PredicateOld</b> (llvm::Value *condition, bool flip=false)</td></tr>
+<tr class="separator:a6ec8a3d8dbe01e35beebaa22e734786c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21fde869d493bf1700cabcb1e102d8d5"><td class="memItemLeft" align="right" valign="top"><a id="a21fde869d493bf1700cabcb1e102d8d5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structPredicateOld.html">PredicateOld</a> &amp;p) const -&gt; bool</td></tr>
+<tr class="separator:a21fde869d493bf1700cabcb1e102d8d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae277198c4cdbde304b687c1a969eec83"><td class="memItemLeft" align="right" valign="top"><a id="ae277198c4cdbde304b687c1a969eec83"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>match</b> (const <a class="el" href="structPredicateOld.html">PredicateOld</a> &amp;p) const -&gt; MatchResult</td></tr>
+<tr class="separator:ae277198c4cdbde304b687c1a969eec83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ad239572dce1c0a594c6c6e45583b8c3a"><td class="memItemLeft" align="right" valign="top"><a id="ad239572dce1c0a594c6c6e45583b8c3a"></a>
+<tr class="memitem:a5b09fa7654abf1d2bcc2bc6af8c95ef5"><td class="memItemLeft" align="right" valign="top"><a id="a5b09fa7654abf1d2bcc2bc6af8c95ef5"></a>
 llvm::Value *&#160;</td><td class="memItemRight" valign="bottom"><b>condition</b></td></tr>
-<tr class="separator:ad239572dce1c0a594c6c6e45583b8c3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9aae55961818ef730a6f1d41a6ac5504"><td class="memItemLeft" align="right" valign="top"><a id="a9aae55961818ef730a6f1d41a6ac5504"></a>
+<tr class="separator:a5b09fa7654abf1d2bcc2bc6af8c95ef5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a740cfa87ddea14250eb893b000bb52"><td class="memItemLeft" align="right" valign="top"><a id="a5a740cfa87ddea14250eb893b000bb52"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>flip</b> {false}</td></tr>
-<tr class="separator:a9aae55961818ef730a6f1d41a6ac5504"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5a740cfa87ddea14250eb893b000bb52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a9d2e5fd83c3d4b0ce2855de081105fe9"><td class="memItemLeft" align="right" valign="top"><a id="a9d2e5fd83c3d4b0ce2855de081105fe9"></a>
-llvm::raw_ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structPredicate.html">Predicate</a> &amp;pred)</td></tr>
-<tr class="separator:a9d2e5fd83c3d4b0ce2855de081105fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa752ea142a1d43b5bafdaee20ab4457"><td class="memItemLeft" align="right" valign="top"><a id="aaa752ea142a1d43b5bafdaee20ab4457"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structPredicateOld.html">PredicateOld</a> &amp;pred) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:aaa752ea142a1d43b5bafdaee20ab4457"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Predicate_8hpp_source.html">Predicate.hpp</a></li>
