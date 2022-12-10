@@ -31,7 +31,7 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
-    [[no_unique_address]] Predicates predicates;
+    [[no_unique_address]] PredicatesOld predicates;
 
     ArrayReference() = delete;
 
@@ -87,14 +87,14 @@ struct ArrayReference {
                                   numSymbols, numSymbols};
     }
     ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds,
-                   Predicates p = {})
+                   PredicatesOld p = {})
         : indices(a.indices.size()), basePointer(a.basePointer), loop(a.loop),
           loadOrStore(a.loadOrStore), sizes(a.sizes),
           symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
-                   PtrMatrix<int64_t> newInds, Predicates p = {})
+                   PtrMatrix<int64_t> newInds, PredicatesOld p = {})
         : indices(a.indices.size()), basePointer(a.basePointer), loop(loop),
           loadOrStore(a.loadOrStore), sizes(a.sizes),
           symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
@@ -112,7 +112,7 @@ struct ArrayReference {
         llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> sizes = {},
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        Predicates p = {})
+        PredicatesOld p = {})
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
           sizes(std::move(sizes)), symbolicOffsets(std::move(symbolicOffsets)),
           predicates(std::move(p)){};
@@ -125,7 +125,7 @@ struct ArrayReference {
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
         size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        Predicates p = {})
+        PredicatesOld p = {})
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
           symbolicOffsets(std::move(symbolicOffsets)),
           predicates(std::move(p)) {
@@ -135,7 +135,7 @@ struct ArrayReference {
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop,
         size_t dim, llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        Predicates p = {})
+        PredicatesOld p = {})
         : basePointer(basePointer), loop(&loop), loadOrStore(loadOrStore),
           symbolicOffsets(std::move(symbolicOffsets)),
           predicates(std::move(p)) {

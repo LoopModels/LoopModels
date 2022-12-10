@@ -69,7 +69,7 @@ auto operator<<(llvm::raw_ostream &os, const BBChain &chn)
 [[maybe_unused]] static auto allForwardPathsReach(
     llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
     PredicatedChain &path, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-    Predicates pred, llvm::BasicBlock *BBhead, llvm::Loop *L) -> BBChain {
+    PredicatesOld pred, llvm::BasicBlock *BBhead, llvm::Loop *L) -> BBChain {
     llvm::errs() << "allForwardPathsReached BBsrc = " << BBsrc
                  << "\nBBdst = " << BBdst;
     llvm::errs() << "\nallForwardPathsReached BBsrc = " << *BBsrc
@@ -121,7 +121,7 @@ auto operator<<(llvm::raw_ostream &os, const BBChain &chn)
             }
             // SHOWLN(*BI->getSuccessor(1));
             llvm::Value *cond = BI->getCondition();
-            Predicates conditionedPred = pred & cond;
+            PredicatesOld conditionedPred = pred & cond;
             BBChain dst0 =
                 allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
                                      BBdst, conditionedPred, BBhead, L);
@@ -219,8 +219,14 @@ struct LoopTree {
     [[no_unique_address]] LoopTree *parentLoop{nullptr};
     [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
 
-    bool isLoopSimplifyForm() const { return loop->isLoopSimplifyForm(); }
+    [[nodiscard]] auto isLoopSimplifyForm() const -> bool {
+        return loop->isLoopSimplifyForm();
+    }
 
+    LoopTree(const LoopTree &) = default;
+    LoopTree(LoopTree &&) = default;
+    auto operator=(const LoopTree &) -> LoopTree & = default;
+    auto operator=(LoopTree &&) -> LoopTree & = default;
     LoopTree(llvm::SmallVector<LoopTree *> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
@@ -229,7 +235,7 @@ struct LoopTree {
              const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
-          affineLoop(L, BT, SE), parentLoop(nullptr) {
+          affineLoop(L, BT, SE) {
 #ifndef NDEBUG
         if (loop)
             for (auto &&chain : paths)
@@ -242,7 +248,7 @@ struct LoopTree {
              llvm::SmallVector<LoopTree *> sL,
              llvm::SmallVector<PredicatedChain> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
-          affineLoop(std::move(aln)), parentLoop(nullptr) {
+          affineLoop(std::move(aln)) {
 #ifndef NDEBUG
         if (loop)
             for (auto &&chain : paths)
@@ -250,10 +256,12 @@ struct LoopTree {
                     assert(loop->contains(pbb.basicBlock));
 #endif
     }
-    size_t getNumLoops() const { return affineLoop.getNumLoops(); }
+    [[nodiscard]] auto getNumLoops() const -> size_t {
+        return affineLoop.getNumLoops();
+    }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const LoopTree &tree) {
+    friend auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
+        -> llvm::raw_ostream & {
         if (tree.loop) {
             os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
         } else {
@@ -263,7 +271,9 @@ struct LoopTree {
             os << *branch;
         return os << "\n";
     }
-    llvm::raw_ostream &dump() const { return llvm::errs() << *this; }
+    [[nodiscard]] auto dump() const -> llvm::raw_ostream & {
+        return llvm::errs() << *this;
+    }
     void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
         // SHOWLN(this);
         // SHOWLN(affineLoop.A);
@@ -277,19 +287,19 @@ struct LoopTree {
     }
     auto begin() { return subLoops.begin(); }
     auto end() { return subLoops.end(); }
-    auto begin() const { return subLoops.begin(); }
-    auto end() const { return subLoops.end(); }
-    size_t size() const { return subLoops.size(); }
+    [[nodiscard]] auto begin() const { return subLoops.begin(); }
+    [[nodiscard]] auto end() const { return subLoops.end(); }
+    [[nodiscard]] auto size() const -> size_t { return subLoops.size(); }
 
     // try to add Loop L, as well as all of L's subLoops
     // if invalid, create a new LoopForest, and add it to forests instead
     // loopTrees are the cache of all LoopTrees
     //
     // forests is the collection of forests considered together
-    static size_t pushBack(llvm::BumpPtrAllocator &alloc,
-                           llvm::SmallVector<LoopTree *> &forests,
-                           llvm::SmallVector<LoopTree *> &branches,
-                           llvm::Loop *L, llvm::ScalarEvolution &SE) {
+    static auto pushBack(llvm::BumpPtrAllocator &alloc,
+                         llvm::SmallVector<LoopTree *> &forests,
+                         llvm::SmallVector<LoopTree *> &branches, llvm::Loop *L,
+                         llvm::ScalarEvolution &SE) -> size_t {
         const std::vector<llvm::Loop *> &subLoops{L->getSubLoops()};
         llvm::BasicBlock *H = L->getHeader();
         llvm::BasicBlock *E = L->getExitingBlock();
@@ -301,13 +311,13 @@ struct LoopTree {
         return pushBack(alloc, forests, branches, L, SE, subLoops, H, E,
                         anyFail);
     }
-    static size_t pushBack(llvm::BumpPtrAllocator &alloc,
-                           llvm::SmallVector<LoopTree *> &forests,
-                           llvm::SmallVector<LoopTree *> &branches,
-                           llvm::Loop *L, llvm::ScalarEvolution &SE,
-                           llvm::ArrayRef<llvm::Loop *> subLoops,
-                           llvm::BasicBlock *H, llvm::BasicBlock *E,
-                           bool anyFail) {
+    static auto pushBack(llvm::BumpPtrAllocator &alloc,
+                         llvm::SmallVector<LoopTree *> &forests,
+                         llvm::SmallVector<LoopTree *> &branches, llvm::Loop *L,
+                         llvm::ScalarEvolution &SE,
+                         llvm::ArrayRef<llvm::Loop *> subLoops,
+                         llvm::BasicBlock *H, llvm::BasicBlock *E, bool anyFail)
+        -> size_t {
         // how to avoid double counting? Probably shouldn't be an issue:
         // can have an empty BB vector;
         // when splitting, we're in either scenario:
@@ -424,7 +434,7 @@ struct LoopTree {
                 visitedBBs.clear();
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
                     paths.push_back(std::move(path));
-                    LoopTree *newTree = new (alloc)
+                    auto *newTree = new (alloc)
                         LoopTree{L, subNest.removeInnerMost(),
                                  std::move(subForest), std::move(paths)};
                     branches.push_back(newTree);
@@ -446,7 +456,7 @@ struct LoopTree {
                 if (allForwardPathsReach(visitedBBs, path, finalStart, E, L)) {
 
                     paths.push_back(std::move(path));
-                    LoopTree *newTree = new (alloc) LoopTree{
+                    auto *newTree = new (alloc) LoopTree{
                         L, std::move(subForest), BTNW, SE, std::move(paths)};
                     branches.push_back(newTree);
                     return 1;
@@ -464,19 +474,19 @@ struct LoopTree {
         return invalid(alloc, forests, subForest, paths, subLoops);
     }
 
-    [[maybe_unused]] static size_t
+    [[maybe_unused]] static auto
     invalid(llvm::BumpPtrAllocator &alloc,
             llvm::SmallVectorImpl<LoopTree *> &trees,
             llvm::SmallVectorImpl<LoopTree *> &subTree,
             llvm::SmallVectorImpl<PredicatedChain> &paths,
-            const std::vector<llvm::Loop *> &subLoops) {
+            const std::vector<llvm::Loop *> &subLoops) -> size_t {
         if (subTree.size()) {
             SHOW(subTree.size());
             CSHOWLN(paths.size());
             assert(subTree.size() == paths.size());
             if (llvm::BasicBlock *exit = subLoops.back()->getExitingBlock()) {
                 paths.emplace_back(exit);
-                LoopTree *newTree =
+                auto *newTree =
                     new (alloc) LoopTree{std::move(subTree), std::move(paths)};
                 trees.push_back(newTree);
             }
@@ -492,7 +502,7 @@ struct LoopTree {
             // SHOW(subTree.size());
             // CSHOWLN(paths.size());
             assert(1 + subTree.size() == paths.size());
-            LoopTree *newTree =
+            auto *newTree =
                 new (alloc) LoopTree{std::move(subTree), std::move(paths)};
             trees.push_back(newTree);
             subTree.clear();
@@ -511,7 +521,7 @@ struct LoopTree {
                 // CSHOWLN(paths.size());
                 assert(subTree.size() == paths.size());
                 paths.emplace_back(exit);
-                LoopTree *newTree =
+                auto *newTree =
                     new (alloc) LoopTree{std::move(subTree), std::move(paths)};
                 trees.push_back(newTree);
                 subTree.clear();

@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <bit>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -71,15 +72,15 @@
 // requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
   public:
-    llvm::PreservedAnalyses run(llvm::Function &F,
-                                llvm::FunctionAnalysisManager &AM);
+    auto run(llvm::Function &F, llvm::FunctionAnalysisManager &AM)
+        -> llvm::PreservedAnalyses;
     // llvm::SmallVector<AffineLoopNest<true>, 0> affineLoopNests;
     // one reason to prefer SmallVector is because it bounds checks `ifndef
     // NDEBUG`
     // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
     [[no_unique_address]] llvm::SmallVector<LoopTree *> loopForests;
     [[no_unique_address]] llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
-    [[no_unique_address]] BlockPredicates predicates;
+    // [[no_unique_address]] BlockPredicates predicates;
     // llvm::AssumptionCache *AC;
     [[no_unique_address]] const llvm::TargetLibraryInfo *TLI;
     [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
@@ -212,6 +213,37 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             // we need `H` to have a direct path to `E`.
         }
         return 0;
+    }
+    enum class Destination { Reached, Unreachable, Visited, Unknown };
+    [[nodiscard]] auto
+    predicateMap(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
+                 llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
+                 const PredicateRelations &predicate, llvm::BasicBlock *BBhead,
+                 llvm::Loop *L) -> Destination {
+        if (BBsrc == BBdst) {
+            auto f = predMap.find(BBsrc);
+            if (f != predMap.end()) {
+                f->second.predUnion(alloc, predicate);
+            } else {
+                predMap.insert({BBsrc, predicate});
+            }
+            return Destination::Reached;
+        }
+        return Destination::Unknown;
+    }
+    /// We bail if there are more than 32 conditions; control flow that branchy
+    /// is probably not worth trying to vectorize.
+    [[nodiscard]] auto predicateMap(llvm::BumpPtrAllocator &alloc,
+                                    llvm::BasicBlock *start,
+                                    llvm::BasicBlock *stop, llvm::Loop *L)
+        -> std::optional<PredicateMap> {
+        PredicateMap pm;
+        Destination dst = predicateMap(alloc, pm, start, stop, {}, start, L);
+        if (dst == Destination::Reached) {
+            return pm;
+        } else {
+            return std::nullopt;
+        }
     }
     /// try to construct a direct path from `llvm::BasicBlock *BBsrc` to
     /// `llvm::BasicBlock *BBdst`, so that we fuse it into a single
@@ -373,7 +405,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
     auto arrayRef(LoopTree &LT, llvm::Instruction *ptr,
-                  llvm::Instruction *loadOrStore, Predicates &pred,
+                  llvm::Instruction *loadOrStore, PredicatesOld &pred,
                   const llvm::SCEV *elSize) -> llvm::Optional<ArrayReference> {
         llvm::Loop *L = LT.loop;
         if (L)
@@ -517,7 +549,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
     auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
-    auto addLoad(LoopTree &LT, Predicates &pred, llvm::LoadInst *I,
+    auto addLoad(LoopTree &LT, PredicatesOld &pred, llvm::LoadInst *I,
                  llvm::SmallVector<unsigned> &omega) -> bool {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
@@ -545,7 +577,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return false;
     }
-    auto addStore(LoopTree &LT, Predicates &pred, llvm::StoreInst *I,
+    auto addStore(LoopTree &LT, PredicatesOld &pred, llvm::StoreInst *I,
                   llvm::SmallVector<unsigned> &omega) -> bool {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
@@ -574,7 +606,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return false;
     }
 
-    void parseBB(LoopTree &LT, llvm::BasicBlock *BB, Predicates &pred,
+    void parseBB(LoopTree &LT, llvm::BasicBlock *BB, PredicatesOld &pred,
                  llvm::SmallVector<unsigned> &omega) {
         // omega.push_back(0);
         llvm::errs() << "\nParsing BB: " << BB << "\n"

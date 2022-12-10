@@ -80,7 +80,7 @@ struct LoopTreeSchedule;
 // 4. Create InstructionBlocks at each level.
 
 struct PredicatedInstruction {
-    [[no_unique_address]] Predicates predicates;
+    [[no_unique_address]] PredicatesOld predicates;
     [[no_unique_address]] Instruction *instruction;
     // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> args;
     // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> uses;
@@ -96,56 +96,43 @@ struct PredicatedInstruction {
     }
 };
 
-struct InstructionBlock {
-    // we tend to heap allocate InstructionBlocks with a bump allocator,
-    // so using 128 bytes seems reasonable.
-    [[no_unique_address]] llvm::SmallVector<Instruction *, 14> instructions;
-    // [[no_unique_address]] LoopTreeSchedule *loopTree{nullptr};
+// void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
+//                llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
+//                Predicates &pred, llvm::BasicBlock *BB) {
+//     assert(chainBBs.contains(block));
+//     chainBBs.erase(BB);
+//     // we only want to extract relevant instructions, i.e. parents of
+//     stores for (llvm::Instruction &instr : *BB) {
+//         if (trackInstr.contains(&instr))
+//             instructions.emplace_back(pred, instr);
+//     }
+//     llvm::Instruction *term = BB->getTerminator();
+//     if (!term)
+//         return;
+//     switch (term->getNumSuccessors()) {
+//     case 0:
+//         return;
+//     case 1:
+//         BB = term->getSuccessor(0);
+//         if (chainBBs.contains(BB))
+//             pushBlock(trackInstr, chainBBs, pred, BB);
+//         return;
+//     case 2:
+//         break;
+//     default:
+//         assert(false);
+//     }
+//     auto succ0 = term->getSuccessor(0);
+//     auto succ1 = term->getSuccessor(1);
+//     if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
+//         // TODO: we need to fuse these blocks.
 
-    InstructionBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
-                     llvm::BasicBlock *BB) {
-        for (auto &I : *BB) {
-            instructions.push_back(cache.get(alloc, &I));
-        }
-    }
-    // void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
-    //                llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
-    //                Predicates &pred, llvm::BasicBlock *BB) {
-    //     assert(chainBBs.contains(block));
-    //     chainBBs.erase(BB);
-    //     // we only want to extract relevant instructions, i.e. parents of
-    //     stores for (llvm::Instruction &instr : *BB) {
-    //         if (trackInstr.contains(&instr))
-    //             instructions.emplace_back(pred, instr);
-    //     }
-    //     llvm::Instruction *term = BB->getTerminator();
-    //     if (!term)
-    //         return;
-    //     switch (term->getNumSuccessors()) {
-    //     case 0:
-    //         return;
-    //     case 1:
-    //         BB = term->getSuccessor(0);
-    //         if (chainBBs.contains(BB))
-    //             pushBlock(trackInstr, chainBBs, pred, BB);
-    //         return;
-    //     case 2:
-    //         break;
-    //     default:
-    //         assert(false);
-    //     }
-    //     auto succ0 = term->getSuccessor(0);
-    //     auto succ1 = term->getSuccessor(1);
-    //     if (chainBBs.contains(succ0) && chainBBs.contains(succ1)) {
-    //         // TODO: we need to fuse these blocks.
-
-    //     } else if (chainBBs.contains(succ0)) {
-    //         pushBlock(trackInstr, chainBBs, pred, succ0);
-    //     } else if (chainBBs.contains(succ1)) {
-    //         pushBlock(trackInstr, chainBBs, pred, succ1);
-    //     }
-    // }
-};
+//     } else if (chainBBs.contains(succ0)) {
+//         pushBlock(trackInstr, chainBBs, pred, succ0);
+//     } else if (chainBBs.contains(succ1)) {
+//         pushBlock(trackInstr, chainBBs, pred, succ1);
+//     }
+// }
 
 /// Given: llvm::SmallVector<LoopAndExit> subTrees;
 /// subTrees[i].second is the preheader for

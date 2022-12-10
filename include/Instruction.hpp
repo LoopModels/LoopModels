@@ -5,6 +5,7 @@
 #include "./Predicate.hpp"
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Constants.h>
@@ -38,6 +39,9 @@ struct RecipThroughputLatency {
 // struct Instruction::Identifier;
 
 struct Instruction {
+    using UniqueIdentifier =
+        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Value *,
+                   llvm::ArrayRef<Instruction *>>;
     struct Identifier {
         /// Instruction ID
         /// if not Load or Store, then check val for whether it is a call
@@ -67,6 +71,10 @@ struct Instruction {
             ArrayReference *ref; // load or store
         } ptr{nullptr};
 
+        Identifier(UniqueIdentifier id)
+            : op(std::get<0>(id)),
+              intrin(std::get<1>(id)), ptr{std::get<2>(id)} {}
+
         static auto isCall(llvm::Value *v) -> bool {
             return getOpCode(v) == llvm::Instruction::Call;
         }
@@ -92,6 +100,11 @@ struct Instruction {
             -> bool {
             return op == opCode;
         }
+        /// Check if the ptr is a load or store
+        [[nodiscard]] auto isValueLoadOrStore() const -> bool {
+            return isValue() && (llvm::isa<llvm::LoadInst>(ptr.val) ||
+                                 llvm::isa<llvm::StoreInst>(ptr.val));
+        }
         [[nodiscard]] constexpr auto
         isIntrinsicInstruction(unsigned opCode) const -> bool {
             return intrin == opCode;
@@ -101,7 +114,8 @@ struct Instruction {
                 return i->getCalledFunction();
             return nullptr;
         }
-        auto operator==(const Identifier &other) const -> bool {
+        [[nodiscard]] constexpr auto operator==(const Identifier &other) const
+            -> bool {
             return op == other.op && intrin == other.intrin &&
                    ptr.val == other.ptr.val;
         }
@@ -109,7 +123,7 @@ struct Instruction {
 
     Identifier id;
     llvm::Type *type;
-    llvm::ArrayRef<Instruction *> predicates;
+    Predicates predicates;
     llvm::ArrayRef<Instruction *> operands;
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
@@ -121,8 +135,8 @@ struct Instruction {
     //     // this->TTI = TTI;
     // }
     Instruction(Identifier id, llvm::Type *type) : id(id), type(type) {}
-    using UniqueIdentifier =
-        std::pair<Identifier, llvm::ArrayRef<Instruction *>>;
+    Instruction(UniqueIdentifier uid)
+        : id(uid), type(std::get<2>(uid)->getType()) {}
     struct Cache {
         llvm::DenseMap<llvm::Value *, Instruction *> llvmToInternalMap;
         llvm::DenseMap<UniqueIdentifier, Instruction *> argMap;
@@ -132,41 +146,115 @@ struct Instruction {
                 return f->second;
             return nullptr;
         }
+
         /// This is the API for creating new instructions
+        auto createInstruction(llvm::BumpPtrAllocator &alloc,
+                               llvm::Instruction *instr) -> Instruction * {
+            UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, instr)};
+            auto argMatch = argMap.find(uid);
+            if (argMatch != argMap.end())
+                return argMatch->second;
+            // if load or store, we replace ptr with ArrayReference
+            auto i = new (alloc) Instruction(uid);
+            auto insertIter = argMap.insert({uid, i});
+            assert(insertIter.second);
+            assert(insertIter.first->second == i);
+            i->operands = std::get<3>(insertIter.first->first);
+            for (auto *op : i->operands) {
+                op->users.push_back(i);
+            }
+            llvmToInternalMap[instr] = i;
+            return i;
+        }
+        auto createInstruction(llvm::BumpPtrAllocator &alloc,
+                               PredicateMap &predMap, llvm::Instruction *instr)
+            -> Instruction * {
+            auto pred = predMap[instr];
+            if (!pred) {
+                // return an incomplete instruction
+                // it is not added to the argMap
+                auto i = new (alloc)
+                    Instruction(Identifier(instr), instr->getType());
+                llvmToInternalMap[instr] = i;
+                return i;
+            }
+            UniqueIdentifier uid{
+                getUniqueIdentifier(alloc, predMap, *this, instr)};
+            auto argMatch = argMap.find(uid);
+            if (argMatch != argMap.end())
+                return argMatch->second;
+            auto i = new (alloc) Instruction(uid);
+            auto insertIter = argMap.insert({uid, i});
+            assert(insertIter.second);
+            assert(insertIter.first->second == i);
+            i->predicates = std::move(*pred);
+            i->operands = std::get<3>(insertIter.first->first);
+            for (auto *op : i->operands) {
+                op->users.push_back(i);
+            }
+            llvmToInternalMap[instr] = i;
+            return i;
+        }
         auto get(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
             -> Instruction * {
             if (Instruction *i = (*this)[v])
                 return i;
-            auto id = Identifier(v);
-            Instruction *i = nullptr;
-            if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v)) {
-                if (auto *load = llvm::dyn_cast<llvm::LoadInst>(instr)) {
-
-                } else if (auto *store =
-                               llvm::dyn_cast<llvm::StoreInst>(instr)) {
+            if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
+                return createInstruction(alloc, instr);
+            auto *i = new (alloc) Instruction(Identifier(v), v->getType());
+            llvmToInternalMap[v] = i;
+            return i;
+        }
+        // if not in predMap, then operands don't get added, and
+        // it won't be added to the argMap
+        auto get(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
+                 llvm::Value *v) -> Instruction * {
+            if (Instruction *i = (*this)[v]) {
+                // if `i` has operands, it's been completed
+                if (i->operands.size() > 0)
+                    return i;
+                // maybe `i` legitimately has no operands? If so, we also return
+                auto instr = llvm::dyn_cast<llvm::Instruction>(v);
+                if (!instr || instr->getNumOperands() == 0)
+                    return i;
+                // instr is non-null and has operands
+                // maybe instr isn't in BBpreds?
+                if (auto pred = predMap[instr]) {
+                    // instr is in BBpreds, therefore, we now complete `i`.
+                    i->predicates = std::move(*pred);
+                    i->operands = getOperands(alloc, predMap, *this, instr);
+                    for (auto *op : i->operands) {
+                        op->users.push_back(i);
+                    }
                 }
-                UniqueIdentifier uid{id, getOperands(alloc, *this, instr)};
-                auto argMatch = argMap.find(uid);
-                if (argMatch != argMap.end()) {
-                    return argMatch->second;
-                }
-                i = new (alloc) Instruction(id, v->getType());
-                auto insertIter = argMap.insert({uid, i});
-                assert(insertIter.second);
-                assert(insertIter.first->second == i);
-                i->operands = insertIter.first->first.second;
-                for (auto *op : i->operands) {
-                    op->users.push_back(i);
-                }
-            } else {
-                i = new (alloc) Instruction(id, v->getType());
+                return i;
             }
+            if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
+                return createInstruction(alloc, predMap, instr);
+            auto *i = new (alloc) Instruction(Identifier(v), v->getType());
             llvmToInternalMap[v] = i;
             return i;
         }
     };
-    static auto getOperands(llvm::BumpPtrAllocator &alloc, Cache &cache,
-                            llvm::Instruction *instr)
+    [[nodiscard]] static auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+                                                  Cache &cache,
+                                                  llvm::Instruction *v)
+        -> UniqueIdentifier {
+        return std::make_tuple(Identifier::getOpCode(v),
+                               Identifier::getIntrinsicID(v), v,
+                               getOperands(alloc, cache, v));
+    }
+    [[nodiscard]] static auto
+    getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
+                        Cache &cache, llvm::Instruction *v)
+        -> UniqueIdentifier {
+        return std::make_tuple(Identifier::getOpCode(v),
+                               Identifier::getIntrinsicID(v), v,
+                               getOperands(alloc, predMap, cache, v));
+    }
+    [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
+                                          Cache &cache,
+                                          llvm::Instruction *instr)
         -> llvm::ArrayRef<Instruction *> {
         auto ops{instr->operands()};
         auto OI = ops.begin();
@@ -176,6 +264,21 @@ struct Instruction {
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
             *p = cache.get(alloc, *OI);
+        }
+        return {operands, Nops};
+    }
+    [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
+                                          PredicateMap &BBpreds, Cache &cache,
+                                          llvm::Instruction *instr)
+        -> llvm::ArrayRef<Instruction *> {
+        auto ops{instr->operands()};
+        auto OI = ops.begin();
+        auto OE = ops.end();
+        size_t Nops = instr->getNumOperands();
+        auto **operands = alloc.Allocate<Instruction *>(Nops);
+        Instruction **p = operands;
+        for (; OI != OE; ++OI, ++p) {
+            *p = cache.get(alloc, BBpreds, *OI);
         }
         return {operands, Nops};
     }
@@ -195,6 +298,9 @@ struct Instruction {
     }
     [[nodiscard]] auto isStore() const -> bool {
         return id.isInstruction(llvm::Instruction::Store);
+    }
+    [[nodiscard]] auto isLoadOrStore() const -> bool {
+        return isLoad() || isStore();
     }
     /// fall back in case we need value operand
     [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
@@ -455,11 +561,21 @@ struct Instruction {
         constexpr unsigned int AddressSpace = 0;
         llvm::Type *T = getType(vectorWidth);
         llvm::Align alignment = id.ptr.ref->getAlignment();
-        return {
-            TTI.getMemoryOpCost(id.op, T, alignment, AddressSpace,
-                                llvm::TargetTransformInfo::TCK_RecipThroughput),
-            TTI.getMemoryOpCost(id.op, T, alignment, AddressSpace,
-                                llvm::TargetTransformInfo::TCK_Latency)};
+        if (predicates.size() == 0) {
+            return {
+                TTI.getMemoryOpCost(
+                    id.op, T, alignment, AddressSpace,
+                    llvm::TargetTransformInfo::TCK_RecipThroughput),
+                TTI.getMemoryOpCost(id.op, T, alignment, AddressSpace,
+                                    llvm::TargetTransformInfo::TCK_Latency)};
+        } else {
+            return {TTI.getMaskedMemoryOpCost(
+                        id.op, T, alignment, AddressSpace,
+                        llvm::TargetTransformInfo::TCK_RecipThroughput),
+                    TTI.getMaskedMemoryOpCost(
+                        id.op, T, alignment, AddressSpace,
+                        llvm::TargetTransformInfo::TCK_Latency)};
+        }
     }
     auto calculateCostFAddFSub(llvm::TargetTransformInfo &TTI,
                                unsigned int vectorWidth)
@@ -588,191 +704,19 @@ template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
     }
 };
 
-enum struct PredicateRelation : uint8_t {
-    Any = 0,
-    True = 1,
-    False = 2,
-    Empty = 3,
-};
+struct InstructionBlock {
+    // we tend to heap allocate InstructionBlocks with a bump allocator,
+    // so using 128 bytes seems reasonable.
+    [[no_unique_address]] llvm::SmallVector<Instruction *, 14> instructions;
+    // [[no_unique_address]] LoopTreeSchedule *loopTree{nullptr};
 
-[[maybe_unused]] static constexpr auto operator&(PredicateRelation a,
-                                                 PredicateRelation b)
-    -> PredicateRelation {
-    return static_cast<PredicateRelation>(static_cast<uint8_t>(a) |
-                                          static_cast<uint8_t>(b));
-}
-[[maybe_unused]] static constexpr auto operator|(PredicateRelation a,
-                                                 PredicateRelation b)
-    -> PredicateRelation {
-    return static_cast<PredicateRelation>(static_cast<uint8_t>(a) &
-                                          static_cast<uint8_t>(b));
-}
-
-/// PredicateRelations
-/// A type for performing set algebra on predicates, representing sets
-/// Note:
-/// Commutative:
-///     a | b == b | a
-///     a & b == b & a
-/// Distributive:
-///     a | (b & c) == (a | b) & (a | c)
-///     a & (b | c) == (a & b) | (a & c)
-/// Associative:
-///    a | (b | c) == (a | b) | c
-///    a & (b & c) == (a & b) & c
-/// Idempotent:
-///    a | a == a
-///    a & a == a
-/// The internal representation can be interpreted as the intersection
-/// of a vector of predicates.
-/// This makes intersection operations efficient, but means we
-/// may need to allocate new instructions to represent unions.
-/// Unions are needed for merging divergent control flow branches.
-/// For union calculation, we'd simplify:
-/// (a & b) | (a & c) == a & (b | c)
-/// If c == !b, then
-/// (a & b) | (a & !b) == a & (b | !b) == a & True == a
-/// Generically:
-/// (a & b) | (c & d) == ((a & b) | c) & ((a & b) | d)
-/// == (a | c) & (b | c) & (a | d) & (b | d)
-struct PredicateRelations {
-    [[no_unique_address]] llvm::SmallVector<uint64_t, 1> relations;
-    auto operator[](size_t index) const -> PredicateRelation {
-        return static_cast<PredicateRelation>(
-            (relations[index / 32] >> (2 * (index % 32))) & 3);
-    }
-    void set(size_t index, PredicateRelation value) {
-        auto d = index / 32;
-        if (d >= relations.size())
-            relations.resize(d + 1);
-        auto r2 = 2 * (index % 32);
-        uint64_t maskedOff = relations[d] & ~(3ULL << (r2));
-        relations[d] = maskedOff | static_cast<uint64_t>(value) << (r2);
-    }
-    struct Reference {
-        [[no_unique_address]] uint64_t *rp;
-        [[no_unique_address]] size_t index;
-        operator PredicateRelation() const {
-            return static_cast<PredicateRelation>((*rp) >> index);
-        }
-        auto operator=(PredicateRelation relation) -> Reference & {
-            *this->rp = (*this->rp & ~(3 << index)) |
-                        (static_cast<uint64_t>(relation) << index);
-            return *this;
-        }
-    };
-
-    auto operator[](size_t index) -> Reference {
-        auto i = index / 32;
-        if (i >= relations.size())
-            relations.resize(i + 1);
-        return {&relations[i], 2 * (index % 32)};
-    }
-    [[nodiscard]] auto size() const -> size_t { return relations.size() * 32; }
-    [[nodiscard]] auto relationSize() const -> size_t {
-        return relations.size();
-    }
-    // FIXME: over-optimistic
-    // (!a & !b) U (a & b) = a == b
-    // (!a & b) U a = b
-    [[nodiscard]] auto predUnion(const PredicateRelations &other) const
-        -> PredicateRelations {
-        if (relationSize() < other.relationSize())
-            return other.predUnion(*this);
-        // other.relationSize() <= relationSize()
-        PredicateRelations result;
-        result.relations.resize(other.relationSize());
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < other.relationSize(); i++)
-            result.relations[i] = relations[i] & other.relations[i];
-        return result;
-    }
-    static void intersectImpl(PredicateRelations &c,
-                              const PredicateRelations &a,
-                              const PredicateRelations &b) {
-        assert(a.relationSize() >= b.relationSize());
-        c.relations.resize(a.relationSize());
-        // `&` because `0` is `Any`
-        // and `Any` is the preferred default initialization
-        for (size_t i = 0; i < b.relationSize(); i++)
-            c.relations[i] = a.relations[i] | b.relations[i];
-        for (size_t i = b.relationSize(); i < a.relationSize(); i++)
-            c.relations[i] = a.relations[i];
-    }
-    [[nodiscard]] auto predIntersect(const PredicateRelations &other) const
-        -> PredicateRelations {
-        PredicateRelations result;
-        if (relationSize() < other.relationSize()) {
-            intersectImpl(result, other, *this);
-        } else {
-            intersectImpl(result, *this, other);
-        }
-        return result;
-    }
-
-    static constexpr auto isEmpty(uint64_t x) -> bool {
-        return ((x & (x >> 1)) & 0x5555555555555555) != 0;
-    }
-    [[nodiscard]] auto isEmpty() const -> bool {
-        for (uint64_t x : relations)
-            if (isEmpty(x))
-                return true;
-        return false;
-    }
-    [[nodiscard]] auto emptyIntersection(const PredicateRelations &other) const
-        -> bool {
-        if (relationSize() < other.relationSize())
-            return other.emptyIntersection(*this);
-        // other.relationSize() <= relationSize()
-        for (size_t i = 0; i < other.relationSize(); i++)
-            if (isEmpty(relations[i] | other.relations[i]))
-                return true;
-        for (size_t i = other.relationSize(); i < relations.size(); i++)
-            if (isEmpty(relations[i]))
-                return true;
-        return false;
-    }
-    static auto getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
-                         Instruction *instruction) -> size_t {
-        size_t I = instructions.size();
-        for (size_t i = 0; i < I; i++)
-            if (instructions[i] == instruction)
-                return i;
-        instructions.push_back(instruction);
-        return I;
-    }
-    PredicateRelations() = default;
-    PredicateRelations(llvm::BumpPtrAllocator &alloc, Instruction::Cache &ic,
-                       llvm::SmallVector<Instruction *> &predicates,
-                       Predicates &pred) {
-        for (Predicate &p : pred) {
-            Instruction *i = ic.get(alloc, p.condition);
-            size_t index = getIndex(predicates, i);
-            PredicateRelation val =
-                p.flip ? PredicateRelation::False : PredicateRelation::True;
-            set(index, val);
+    InstructionBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                     llvm::BasicBlock *BB) {
+        for (auto &I : *BB) {
+            instructions.push_back(cache.get(alloc, &I));
         }
     }
 };
-
-struct BlockPredicates {
-    // TODO: use internal IR for predicates
-    // the purpose of this would be to allow for union calculations.
-    llvm::SmallVector<Instruction *> predicates;
-    llvm::DenseMap<llvm::BasicBlock *, PredicateRelations> blockPredicates;
-    void add(llvm::BumpPtrAllocator &alloc, Instruction::Cache &ic,
-             llvm::BasicBlock *B, Predicates &pred) {
-        blockPredicates[B] = PredicateRelations(alloc, ic, predicates, pred);
-    }
-};
-
-void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
-                           Instruction::Cache &ic, BlockPredicates &bp,
-                           LoopTree &loopTree) {
-    for (auto &L : loopTree) {
-    }
-}
 
 // unsigned x = llvm::Instruction::FAdd;
 // unsigned y = llvm::Instruction::LShr;
