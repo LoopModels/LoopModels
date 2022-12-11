@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['typealignment_304',['typeAlignment',['../structArrayReference.html#a8d40893e36897a4d7251fc6699d93c84',1,'ArrayReference']]]
+  ['searchoperandsforloads_290',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
+  ['searchvalueforstores_291',['searchValueForStores',['../structLinearProgramLoopBlock.html#afb9b5a485e8e41e05f0bba4067394ef7',1,'LinearProgramLoopBlock']]]
 ];

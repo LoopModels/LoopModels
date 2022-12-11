@@ -79,6 +79,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Identifier.html">Identifier</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Predicates.html">Predicates</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
@@ -233,15 +235,15 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ae9cb939311af162486244a1a5ffd1b0d"><td class="memItemLeft" align="right" valign="top"><a id="ae9cb939311af162486244a1a5ffd1b0d"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; UniqueIdentifier</td></tr>
 <tr class="separator:ae9cb939311af162486244a1a5ffd1b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cc704f79b6603e3dd16d75e01d7d680"><td class="memItemLeft" align="right" valign="top"><a id="a5cc704f79b6603e3dd16d75e01d7d680"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structPredicateMap.html">PredicateMap</a> &amp;predMap, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; UniqueIdentifier</td></tr>
-<tr class="separator:a5cc704f79b6603e3dd16d75e01d7d680"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d0e6fd66873d5ccc24c84718eb5cc85"><td class="memItemLeft" align="right" valign="top"><a id="a9d0e6fd66873d5ccc24c84718eb5cc85"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;predMap, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; UniqueIdentifier</td></tr>
+<tr class="separator:a9d0e6fd66873d5ccc24c84718eb5cc85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04d4fe01b0de236e5e1940cdc603ce34"><td class="memItemLeft" align="right" valign="top"><a id="a04d4fe01b0de236e5e1940cdc603ce34"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; llvm::ArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;</td></tr>
 <tr class="separator:a04d4fe01b0de236e5e1940cdc603ce34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18d6c9c5979a9a65caf1ad357d6a5b17"><td class="memItemLeft" align="right" valign="top"><a id="a18d6c9c5979a9a65caf1ad357d6a5b17"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structPredicateMap.html">PredicateMap</a> &amp;BBpreds, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; llvm::ArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;</td></tr>
-<tr class="separator:a18d6c9c5979a9a65caf1ad357d6a5b17"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b9133fad6380917aa8fac1c5bcbd127"><td class="memItemLeft" align="right" valign="top"><a id="a9b9133fad6380917aa8fac1c5bcbd127"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperands</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;BBpreds, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *instr) -&gt; llvm::ArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;</td></tr>
+<tr class="separator:a9b9133fad6380917aa8fac1c5bcbd127"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad53aecb99e83be85fa8c0ef0447bb24b"><td class="memItemLeft" align="right" valign="top"><a id="ad53aecb99e83be85fa8c0ef0447bb24b"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createIsolated</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::Instruction *instr) -&gt; <a class="el" href="structInstruction.html">Instruction</a> *</td></tr>
 <tr class="separator:ad53aecb99e83be85fa8c0ef0447bb24b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -258,7 +260,7 @@ Public Attributes</h2></td></tr>
 llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
 <tr class="separator:a662cb538aa98b8c07e6b0b6a1c857712"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0858b4f924d3f45de863bdde2438bd5"><td class="memItemLeft" align="right" valign="top"><a id="ab0858b4f924d3f45de863bdde2438bd5"></a>
-<a class="el" href="structPredicates.html">Predicates</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
+<a class="el" href="structInstruction_1_1Predicates.html">Predicates</a>&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
 <tr class="separator:ab0858b4f924d3f45de863bdde2438bd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2caf04010b92a892419ce386c92fdc2"><td class="memItemLeft" align="right" valign="top"><a id="af2caf04010b92a892419ce386c92fdc2"></a>
 llvm::ArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
