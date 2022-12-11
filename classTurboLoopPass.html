@@ -84,8 +84,11 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (llvm::Functi
 <tr class="separator:aadfe91290e371745a4544eca289cb533"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61d15982d3d7c2d1918da31c454a2f10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">initializeLoopForest</a> ()</td></tr>
 <tr class="separator:a61d15982d3d7c2d1918da31c454a2f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbabba678fcfa1e11a544d73eb573859"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#acbabba678fcfa1e11a544d73eb573859">pushLoopTree</a> (llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forest, llvm::Loop *L, llvm::SmallVector&lt; unsigned &gt; &amp;omega, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</td></tr>
-<tr class="separator:acbabba678fcfa1e11a544d73eb573859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c5f13bdde176df4111af9b7398c6f5e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#a5c5f13bdde176df4111af9b7398c6f5e">pushLoopTree</a> (llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</td></tr>
+<tr class="separator:a5c5f13bdde176df4111af9b7398c6f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2b8cd1c3b29b86bfbb8ddc334e98366"><td class="memItemLeft" align="right" valign="top"><a id="ac2b8cd1c3b29b86bfbb8ddc334e98366"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction_1_1Cache.html">Instruction::Cache</a> &amp;cache, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;forests, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;branchBlocks, llvm::BasicBlock *BB, llvm::Loop *L)</td></tr>
+<tr class="separator:ac2b8cd1c3b29b86bfbb8ddc334e98366"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:affa31291378cddd6dafc513b9efa0435"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#affa31291378cddd6dafc513b9efa0435">pushInstructionBlock</a> (llvm::BasicBlock *start, llvm::BasicBlock *stop) -&gt; <a class="el" href="structInstructionBlock.html">InstructionBlock</a> *</td></tr>
 <tr class="separator:affa31291378cddd6dafc513b9efa0435"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c4a65020e14d0d99344a6521a373bb0"><td class="memItemLeft" align="right" valign="top"><a id="a5c4a65020e14d0d99344a6521a373bb0"></a>
@@ -299,8 +302,8 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b>
 
 </div>
 </div>
-<a id="acbabba678fcfa1e11a544d73eb573859"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbabba678fcfa1e11a544d73eb573859">&#9670;&nbsp;</a></span>pushLoopTree()</h2>
+<a id="a5c5f13bdde176df4111af9b7398c6f5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c5f13bdde176df4111af9b7398c6f5e">&#9670;&nbsp;</a></span>pushLoopTree()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -319,12 +322,6 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b>
           <td></td>
           <td class="paramtype">llvm::Loop *&#160;</td>
           <td class="paramname"><em>L</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">llvm::SmallVector&lt; unsigned &gt; &amp;&#160;</td>
-          <td class="paramname"><em>omega</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
