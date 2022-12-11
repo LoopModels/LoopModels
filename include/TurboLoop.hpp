@@ -164,21 +164,21 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
     /// sub-loop's exit block to this.
     auto pushLoopTree(llvm::SmallVectorImpl<LoopTree *> &forest, llvm::Loop *L,
-                      llvm::SmallVector<unsigned> &omega,
                       llvm::ArrayRef<llvm::Loop *> subLoops,
                       llvm::BasicBlock *H, llvm::BasicBlock *E) -> size_t {
 
-        omega.push_back(0);
+        size_t interiorDepth = 0;
         if (size_t numSubLoops = subLoops.size()) {
             // branches of this tree;
             llvm::SmallVector<LoopTree *> branches;
             branches.reserve(numSubLoops);
-            llvm::SmallVector<InstructionBlock *> branchBlocks;
+            llvm::SmallVector<Predicate::Map> branchBlocks;
             branchBlocks.reserve(numSubLoops + 1);
+            bool anyFail = false;
             for (size_t i = 0; i < numSubLoops; ++i) {
                 llvm::Loop *subLoop = subLoops[i];
                 if (size_t depth = pushLoopTree(
-                        branches, subLoop, omega, subLoop->getSubLoops(),
+                        branches, subLoop, subLoop->getSubLoops(),
                         subLoop->getHeader(), subLoop->getExitingBlock())) {
                     // pushLoopTree succeeded, and we have `depth` inner loops
                     // within `subLoop` (inclusive, i.e. `depth == 1` would
@@ -190,31 +190,66 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     // `subLoop->getLoopPreheader();`
                     llvm::BasicBlock *subLoopPreheader =
                         subLoop->getLoopPreheader();
-                    if (H == subLoopPreheader) {
-                        // trivial fast path
-
-                    } else if (InstructionBlock *iblck =
-                                   pushInstructionBlock(H, subLoopPreheader)) {
-                        branchBlocks.push_back(iblck);
+                    if (auto predMap = Predicate::descend(
+                            alloc, cache, H, subLoopPreheader, L)) {
+                        interiorDepth = std::max(interiorDepth, depth);
+                        branchBlocks.push_back(std::move(*predMap));
+                        H = subLoop->getExitBlock();
                     } else {
                         // oops, no direct path, we split
+                        anyFail = true;
+                        if (branches.size() > 1) {
+                            // we need to split off the last tree
+                            LoopTree *lastTree = branches.pop_back_val();
+                            // so we can push previous branches as one set
+                            // for the final branchBlocks, we'll push H->H
+                            split(alloc, cache, forests, branches, branchBlocks,
+                                  H, L);
+                            // reinsert last tree
+                            branches.push_back(lastTree);
+                        }
+                        if (i + 1 < numSubLoops) {
+                            H = subLoops[i + 1]->getLoopPreheader();
+                        }
                     }
                     // for the next loop, we'll want a path to its preheader
                     // from this loop's exit block.
-                    H = subLoop->getExitBlock();
                 } else {
                     // `depth == 0` indicates failure, therefore we need to
                     // split loops
-                    //
+                    anyFail = true;
+                    if (branches.size()) {
+                        split(alloc, cache, forests, branches, branchBlocks, H,
+                              L);
+                    }
+                    if (i + 1 < numSubLoops) {
+                        H = subLoops[i + 1]->getLoopPreheader();
+                    }
                 }
-                ++omega.back();
             }
+            if (anyFail) {
+                if (branches.size()) {
+                    split(alloc, cache, forests, branches, branchBlocks, H, L);
+                }
+                return 0;
+            }
+
         } else {
-            // we need `H` to have a direct path to `E`.
         }
+        // Finally, we need `H` to have a direct path to `E`.
         return 0;
     }
+    void split(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+               llvm::SmallVectorImpl<LoopTree *> &forests,
+               llvm::SmallVectorImpl<LoopTree *> &branches,
+               llvm::SmallVectorImpl<Predicate::Map> &branchBlocks,
+               llvm::BasicBlock *BB, llvm::Loop *L) {
 
+        auto predMapAbridged = Predicate::descend(alloc, cache, BB, BB, L);
+        assert(predMapAbridged);
+        branchBlocks.push_back(std::move(*predMapAbridged));
+        LoopTree::split(alloc, forests, branches, branchBlocks);
+    }
     /// try to construct a direct path from `llvm::BasicBlock *BBsrc` to
     /// `llvm::BasicBlock *BBdst`, so that we fuse it into a single
     /// `InstructionBlock*`.

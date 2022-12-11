@@ -60,20 +60,20 @@ struct LoopTree {
         if (loop)
             for (auto &&chain : paths)
                 for (auto &&pbb : chain)
-                    assert(loop->contains(pbb.basicBlock));
+                    assert(loop->contains(pbb.first));
 #endif
     }
 
     LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
              llvm::SmallVector<LoopTree *> sL,
-             llvm::SmallVector<PredicatedChain> paths)
+             llvm::SmallVector<Predicate::Map> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(std::move(aln)) {
 #ifndef NDEBUG
         if (loop)
             for (auto &&chain : paths)
                 for (auto &&pbb : chain)
-                    assert(loop->contains(pbb.basicBlock));
+                    assert(loop->contains(pbb.first));
 #endif
     }
     [[nodiscard]] auto getNumLoops() const -> size_t {
@@ -154,7 +154,7 @@ struct LoopTree {
         } else
             llvm::errs() << "Current pushBack depth = toplevel\n";
         llvm::SmallVector<LoopTree *> subForest;
-        llvm::SmallVector<PredicatedChain> paths;
+        llvm::SmallVector<Predicate::Map> paths;
         PredicatedChain path;
         size_t interiorDepth0 = 0;
         llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
@@ -298,7 +298,7 @@ struct LoopTree {
     invalid(llvm::BumpPtrAllocator &alloc,
             llvm::SmallVectorImpl<LoopTree *> &trees,
             llvm::SmallVectorImpl<LoopTree *> &subTree,
-            llvm::SmallVectorImpl<PredicatedChain> &paths,
+            llvm::SmallVectorImpl<Predicate::Map> &paths,
             const std::vector<llvm::Loop *> &subLoops) -> size_t {
         if (subTree.size()) {
             SHOW(subTree.size());
@@ -317,7 +317,7 @@ struct LoopTree {
     split(llvm::BumpPtrAllocator &alloc,
           llvm::SmallVectorImpl<LoopTree *> &trees,
           llvm::SmallVectorImpl<LoopTree *> &subTree,
-          llvm::SmallVectorImpl<PredicatedChain> &paths) {
+          llvm::SmallVectorImpl<Predicate::Map> &paths) {
         if (subTree.size()) {
             // SHOW(subTree.size());
             // CSHOWLN(paths.size());
@@ -333,7 +333,7 @@ struct LoopTree {
     split(llvm::BumpPtrAllocator &alloc,
           llvm::SmallVectorImpl<LoopTree *> &trees,
           llvm::SmallVector<LoopTree *> &subTree,
-          llvm::SmallVector<PredicatedChain> &paths,
+          llvm::SmallVector<Predicate::Map> &paths,
           const std::vector<llvm::Loop *> &subLoops, size_t i) {
         if (i && subTree.size()) {
             if (llvm::BasicBlock *exit = subLoops[--i]->getExitingBlock()) {
