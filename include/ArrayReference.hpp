@@ -31,7 +31,6 @@ struct ArrayReference {
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
     [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
         symbolicOffsets;
-    [[no_unique_address]] PredicatesOld predicates;
 
     ArrayReference() = delete;
 
@@ -86,18 +85,17 @@ struct ArrayReference {
         return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
                                   numSymbols, numSymbols};
     }
-    ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds,
-                   PredicatesOld p = {})
+    ArrayReference(const ArrayReference &a, PtrMatrix<int64_t> newInds)
         : indices(a.indices.size()), basePointer(a.basePointer), loop(a.loop),
           loadOrStore(a.loadOrStore), sizes(a.sizes),
-          symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
+          symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
     ArrayReference(const ArrayReference &a, AffineLoopNest<true> *loop,
-                   PtrMatrix<int64_t> newInds, PredicatesOld p = {})
+                   PtrMatrix<int64_t> newInds)
         : indices(a.indices.size()), basePointer(a.basePointer), loop(loop),
           loadOrStore(a.loadOrStore), sizes(a.sizes),
-          symbolicOffsets(a.symbolicOffsets), predicates(std::move(p)) {
+          symbolicOffsets(a.symbolicOffsets) {
         indexMatrix() = newInds;
     }
     /// initialize alignment from an elSize SCEV.
@@ -111,11 +109,10 @@ struct ArrayReference {
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
         llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> sizes = {},
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        PredicatesOld p = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
-          sizes(std::move(sizes)), symbolicOffsets(std::move(symbolicOffsets)),
-          predicates(std::move(p)){};
+          sizes(std::move(sizes)),
+          symbolicOffsets(std::move(symbolicOffsets)){};
 
     void resize(size_t d) {
         sizes.resize(d);
@@ -124,21 +121,17 @@ struct ArrayReference {
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
         size_t dim, llvm::Instruction *loadOrStore = nullptr,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        PredicatesOld p = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          predicates(std::move(p)) {
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop,
         size_t dim, llvm::Instruction *loadOrStore = nullptr,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
-        PredicatesOld p = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
         : basePointer(basePointer), loop(&loop), loadOrStore(loadOrStore),
-          symbolicOffsets(std::move(symbolicOffsets)),
-          predicates(std::move(p)) {
+          symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     [[nodiscard]] auto isLoopIndependent() const -> bool {

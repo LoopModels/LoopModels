@@ -955,6 +955,8 @@ template <typename T> struct MutPtrVector {
     }
     void extendOrAssertSize(size_t M) const { assert(M == N); }
 };
+template <typename T> PtrVector(T *, size_t) -> PtrVector<T>;
+template <typename T> MutPtrVector(T *, size_t) -> MutPtrVector<T>;
 
 //
 // Vectors
@@ -1539,7 +1541,7 @@ template <typename T> struct MutPtrMatrix {
     [[nodiscard]] constexpr auto numRow() const -> size_t { return M; }
     [[nodiscard]] constexpr auto numCol() const -> size_t { return N; }
     [[nodiscard]] constexpr auto rowStride() const -> size_t { return X; }
-    constexpr auto data() -> T * { return mem; }
+    [[nodiscard]] constexpr auto data() -> T * { return mem; }
     [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
     [[nodiscard]] constexpr auto view() const -> PtrMatrix<T> {
         return PtrMatrix<T>{.mem = data(), .M = M, .N = N, .X = X};
@@ -1641,6 +1643,12 @@ template <typename T> constexpr auto ptrVector(T *p, size_t M) {
         return MutPtrVector<T>{p, M};
     }
 }
+
+template <typename T> PtrMatrix(T *, size_t, size_t) -> PtrMatrix<T>;
+template <typename T> MutPtrMatrix(T *, size_t, size_t) -> MutPtrMatrix<T>;
+template <typename T> PtrMatrix(T *, size_t, size_t, size_t) -> PtrMatrix<T>;
+template <typename T>
+MutPtrMatrix(T *, size_t, size_t, size_t) -> MutPtrMatrix<T>;
 
 // template <typename T>
 // constexpr auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {

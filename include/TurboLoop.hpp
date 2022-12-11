@@ -214,37 +214,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return 0;
     }
-    enum class Destination { Reached, Unreachable, Visited, Unknown };
-    [[nodiscard]] auto
-    predicateMap(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
-                 llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-                 const PredicateIntersection &predicate,
-                 llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
-        if (BBsrc == BBdst) {
-            auto f = predMap.find(BBsrc);
-            if (f != predMap.end()) {
-                f->second.predUnion(predicate);
-            } else {
-                predMap.insert({BBsrc, predicate});
-            }
-            return Destination::Reached;
-        }
-        return Destination::Unknown;
-    }
-    /// We bail if there are more than 32 conditions; control flow that branchy
-    /// is probably not worth trying to vectorize.
-    [[nodiscard]] auto predicateMap(llvm::BumpPtrAllocator &alloc,
-                                    llvm::BasicBlock *start,
-                                    llvm::BasicBlock *stop, llvm::Loop *L)
-        -> std::optional<PredicateMap> {
-        PredicateMap pm;
-        Destination dst = predicateMap(alloc, pm, start, stop, {}, start, L);
-        if (dst == Destination::Reached) {
-            return pm;
-        } else {
-            return std::nullopt;
-        }
-    }
+
     /// try to construct a direct path from `llvm::BasicBlock *BBsrc` to
     /// `llvm::BasicBlock *BBdst`, so that we fuse it into a single
     /// `InstructionBlock*`.
@@ -364,8 +334,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                         blackList |= (uint64_t(1) << uint64_t(loopInd));
                 }
                 // we separate out the addition
-                // the multiplication was either peeled or involved non-const
-                // multiple
+                // the multiplication was either peeled or involved
+                // non-const multiple
                 blackList |=
                     fillAffineIndices(v, offsets, symbolicOffsets,
                                       x->getOperand(0), mlt, numPeeled);
@@ -405,8 +375,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
     auto arrayRef(LoopTree &LT, llvm::Instruction *ptr,
-                  llvm::Instruction *loadOrStore, PredicatesOld &pred,
-                  const llvm::SCEV *elSize) -> llvm::Optional<ArrayReference> {
+                  llvm::Instruction *loadOrStore,
+                  Predicate::PredicatesOld &pred, const llvm::SCEV *elSize)
+        -> llvm::Optional<ArrayReference> {
         llvm::Loop *L = LT.loop;
         if (L)
             llvm::errs() << "arrayRef for " << *L << "\n";
@@ -487,9 +458,10 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             uint64_t numExtraLoopsToPeel = 64 - leadingZeros;
             // need to condition on loop
             // remove the numExtraLoopsToPeel from Rt
-            // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end)) to
-            // would this code below actually be expected to boost performance?
-            // if (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
+            // that is, we want to move Rt(_,_(end-numExtraLoopsToPeel,end))
+            // to would this code below actually be expected to boost
+            // performance? if
+            // (Bt.numCol()+numExtraLoopsToPeel>Bt.rowStride())
             // 	Bt.resize(Bt.numRow(),Bt.numCol(),Bt.numCol()+numExtraLoopsToPeel);
             // order of loops in Rt is innermost -> outermost
             size_t remainingLoops = numLoops - numExtraLoopsToPeel;
@@ -549,8 +521,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
     auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
-    auto addLoad(LoopTree &LT, PredicatesOld &pred, llvm::LoadInst *I,
-                 llvm::SmallVector<unsigned> &omega) -> bool {
+    auto addLoad(LoopTree &LT, Predicate::PredicatesOld &pred,
+                 llvm::LoadInst *I, llvm::SmallVector<unsigned> &omega)
+        -> bool {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -577,8 +550,9 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         }
         return false;
     }
-    auto addStore(LoopTree &LT, PredicatesOld &pred, llvm::StoreInst *I,
-                  llvm::SmallVector<unsigned> &omega) -> bool {
+    auto addStore(LoopTree &LT, Predicate::PredicatesOld &pred,
+                  llvm::StoreInst *I, llvm::SmallVector<unsigned> &omega)
+        -> bool {
         llvm::Value *ptr = I->getPointerOperand();
         // llvm::Type *type = I->getPointerOperandType();
         const llvm::SCEV *elSize = SE->getElementSize(I);
@@ -606,7 +580,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return false;
     }
 
-    void parseBB(LoopTree &LT, llvm::BasicBlock *BB, PredicatesOld &pred,
+    void parseBB(LoopTree &LT, llvm::BasicBlock *BB,
+                 Predicate::PredicatesOld &pred,
                  llvm::SmallVector<unsigned> &omega) {
         // omega.push_back(0);
         llvm::errs() << "\nParsing BB: " << BB << "\n"
@@ -731,12 +706,12 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     // algorithm:
     // 1. peel the outer loops from D's children (peel 3)
     // 2. add each of D's children as new forests
-    // 3. remove D from B's subLoops; add prev and following loops as separate
-    // new forests
+    // 3. remove D from B's subLoops; add prev and following loops as
+    // separate new forests
     // 4. conditionOnLoop(B)
     //
-    // approach: remove LoopIndex, and all loops that follow, unless it is first
-    // in which case, just remove LoopIndex
+    // approach: remove LoopIndex, and all loops that follow, unless it is
+    // first in which case, just remove LoopIndex
     void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
     void conditionOnLoop(LoopTree *LT) {
         if (LT->parentLoop == nullptr)

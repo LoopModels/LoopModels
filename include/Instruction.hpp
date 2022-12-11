@@ -1,8 +1,8 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
-#include "./LoopForest.hpp"
 #include "./Predicate.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DenseMap.h>
@@ -120,6 +120,15 @@ struct Instruction {
                    ptr.val == other.ptr.val;
         }
     };
+    struct Predicates {
+        [[no_unique_address]] Predicate::Set predicates;
+        // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
+        // case of realloc
+        [[no_unique_address]] llvm::SmallVector<Instruction *> instr;
+        constexpr auto size() -> size_t { return instr.size(); }
+        constexpr auto begin() { return instr.begin(); }
+        constexpr auto end() { return instr.end(); }
+    };
 
     Identifier id;
     llvm::Type *type;
@@ -167,34 +176,8 @@ struct Instruction {
             return i;
         }
         auto createInstruction(llvm::BumpPtrAllocator &alloc,
-                               PredicateMap &predMap, llvm::Instruction *instr)
-            -> Instruction * {
-            auto pred = predMap[instr];
-            if (!pred) {
-                // return an incomplete instruction
-                // it is not added to the argMap
-                auto i = new (alloc)
-                    Instruction(Identifier(instr), instr->getType());
-                llvmToInternalMap[instr] = i;
-                return i;
-            }
-            UniqueIdentifier uid{
-                getUniqueIdentifier(alloc, predMap, *this, instr)};
-            auto argMatch = argMap.find(uid);
-            if (argMatch != argMap.end())
-                return argMatch->second;
-            auto i = new (alloc) Instruction(uid);
-            auto insertIter = argMap.insert({uid, i});
-            assert(insertIter.second);
-            assert(insertIter.first->second == i);
-            i->predicates = std::move(*pred);
-            i->operands = std::get<3>(insertIter.first->first);
-            for (auto *op : i->operands) {
-                op->users.push_back(i);
-            }
-            llvmToInternalMap[instr] = i;
-            return i;
-        }
+                               Predicate::Map &predMap,
+                               llvm::Instruction *instr) -> Instruction *;
         auto get(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
             -> Instruction * {
             if (Instruction *i = (*this)[v])
@@ -207,34 +190,8 @@ struct Instruction {
         }
         // if not in predMap, then operands don't get added, and
         // it won't be added to the argMap
-        auto get(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
-                 llvm::Value *v) -> Instruction * {
-            if (Instruction *i = (*this)[v]) {
-                // if `i` has operands, it's been completed
-                if (i->operands.size() > 0)
-                    return i;
-                // maybe `i` legitimately has no operands? If so, we also return
-                auto instr = llvm::dyn_cast<llvm::Instruction>(v);
-                if (!instr || instr->getNumOperands() == 0)
-                    return i;
-                // instr is non-null and has operands
-                // maybe instr isn't in BBpreds?
-                if (auto pred = predMap[instr]) {
-                    // instr is in BBpreds, therefore, we now complete `i`.
-                    i->predicates = std::move(*pred);
-                    i->operands = getOperands(alloc, predMap, *this, instr);
-                    for (auto *op : i->operands) {
-                        op->users.push_back(i);
-                    }
-                }
-                return i;
-            }
-            if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
-                return createInstruction(alloc, predMap, instr);
-            auto *i = new (alloc) Instruction(Identifier(v), v->getType());
-            llvmToInternalMap[v] = i;
-            return i;
-        }
+        auto get(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
+                 llvm::Value *v) -> Instruction *;
     };
     [[nodiscard]] static auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
                                                   Cache &cache,
@@ -245,7 +202,7 @@ struct Instruction {
                                getOperands(alloc, cache, v));
     }
     [[nodiscard]] static auto
-    getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, PredicateMap &predMap,
+    getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
                         Cache &cache, llvm::Instruction *v)
         -> UniqueIdentifier {
         return std::make_tuple(Identifier::getOpCode(v),
@@ -268,7 +225,7 @@ struct Instruction {
         return {operands, Nops};
     }
     [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
-                                          PredicateMap &BBpreds, Cache &cache,
+                                          Predicate::Map &BBpreds, Cache &cache,
                                           llvm::Instruction *instr)
         -> llvm::ArrayRef<Instruction *> {
         auto ops{instr->operands()};
@@ -703,6 +660,246 @@ template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
         return LHS == RHS;
     }
 };
+
+namespace Predicate {
+struct Map {
+    llvm::DenseMap<llvm::BasicBlock *, Set> map;
+    llvm::SmallVector<Instruction *> predicates;
+    [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
+    [[nodiscard]] auto find(llvm::BasicBlock *bb)
+        -> llvm::DenseMap<llvm::BasicBlock *, Set>::iterator {
+        return map.find(bb);
+    }
+    [[nodiscard]] auto find(llvm::Instruction *inst)
+        -> llvm::DenseMap<llvm::BasicBlock *, Set>::iterator {
+        return map.find(inst->getParent());
+    }
+    [[nodiscard]] auto begin() -> decltype(map.begin()) { return map.begin(); }
+    [[nodiscard]] auto end() -> decltype(map.end()) { return map.end(); }
+    [[nodiscard]] auto operator[](llvm::BasicBlock *bb)
+        -> std::optional<Instruction::Predicates> {
+        auto it = map.find(bb);
+        if (it == map.end())
+            return std::nullopt;
+        return Instruction::Predicates{it->second, predicates};
+    }
+    [[nodiscard]] auto operator[](llvm::Instruction *inst)
+        -> std::optional<Instruction::Predicates> {
+        return (*this)[inst->getParent()];
+    }
+    void insert(std::pair<llvm::BasicBlock *, Set> &&pair) {
+        map.insert(std::move(pair));
+    }
+    [[nodiscard]] auto contains(llvm::BasicBlock *BB) -> bool {
+        return map.count(BB);
+    }
+    [[nodiscard]] auto isInPath(llvm::BasicBlock *BB) -> bool {
+        auto f = find(BB);
+        if (f == end())
+            return false;
+        return !f->second.isEmpty();
+    }
+    [[nodiscard]] auto isInPath(llvm::Instruction *I) -> bool {
+        return isInPath(I->getParent());
+    }
+    void clear() {
+        map.clear();
+        predicates.clear();
+    }
+    void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB, Set())); }
+    void visit(llvm::Instruction *inst) { visit(inst->getParent()); }
+    [[nodiscard]] auto addPredicate(llvm::BumpPtrAllocator &alloc,
+                                    Instruction::Cache &cache,
+                                    llvm::Value *value) -> size_t {
+        auto *I = cache.get(alloc, *this, value);
+        assert(predicates.size() <= 32 && "too many predicates");
+        for (size_t i = 0; i < predicates.size(); ++i)
+            if (predicates[i] == I)
+                return i;
+        size_t i = predicates.size();
+        assert(predicates.size() != 32 && "too many predicates");
+        predicates.emplace_back(I);
+        return i;
+    }
+    void reach(llvm::BasicBlock *BB, Intersection predicate) {
+        // because we may have inserted into predMap, we need to look up
+        // again rather than being able to reuse anything from the
+        // `visit`.
+        auto f = find(BB);
+        assert(f != end());
+        f->second.predUnion(predicate);
+    }
+    void assume(Intersection predicate) {
+        for (auto &&pair : map)
+            pair.second &= predicate;
+    };
+    enum class Destination { Reached, Unreachable, Returned, Unknown };
+    // TODO:
+    // 1. see why L->contains(BBsrc) does not work; does it only contain BBs in
+    // it directly, and not nested another loop deeper?
+    // 2. We are ignoring cycles for now; we must ensure this is done correctly
+    [[nodiscard]] static auto
+    descendBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                 Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
+                 llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
+                 llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
+        if (BBsrc == BBdst) {
+            auto f = predMap.find(BBsrc);
+            if (f != predMap.end()) {
+                f->second.predUnion(predicate);
+            } else {
+                predMap.insert({BBsrc, predicate});
+            }
+            return Destination::Reached;
+        } else if (L && (!(L->contains(BBsrc)))) {
+            // oops, we seem to have skipped the preheader and escaped the loop.
+            return Destination::Returned;
+        } else if (auto f = predMap.find(BBsrc); f != predMap.end()) {
+            // FIXME: This is terribly hacky.
+            // if `BBsrc == BBhead`, then we assume we hit a path that
+            // bypasses the following loop, e.g. there was a loop guard.
+            //
+            // Thus, we return `Returned`, indicating that it was a non-fatal
+            // dead-end.
+            // Otherwise, we check if it seems to have led to a live, non-empty
+            // path.
+            // TODO: should we union the predicates in case of returned?
+            return ((BBsrc == BBhead) || (f->second.isEmpty()))
+                       ? Destination::Returned
+                       : Destination::Reached;
+        }
+        // Inserts a tombstone to indicate that we have visited BBsrc, but not
+        // actually reached a destination.
+        predMap.visit(BBsrc);
+        assert(predMap.find(BBsrc)->second.isEmpty());
+        const llvm::Instruction *I = BBsrc->getTerminator();
+        if (!I)
+            return Destination::Unknown;
+        else if (llvm::isa<llvm::ReturnInst>(I))
+            return Destination::Returned;
+        else if (llvm::isa<llvm::UnreachableInst>(I))
+            return Destination::Unreachable;
+        auto *BI = llvm::dyn_cast<llvm::BranchInst>(I);
+        if (!BI)
+            return Destination::Unknown;
+        if (BI->isUnconditional()) {
+            auto rc = descendBlock(alloc, cache, predMap, BI->getSuccessor(0),
+                                   BBdst, predicate, BBhead, L);
+            if (rc == Destination::Reached)
+                predMap.reach(BBsrc, predicate);
+            return rc;
+        }
+        // We have a conditional branch.
+        llvm::Value *cond = BI->getCondition();
+        // We need to check both sides of the branch and add a predicate.
+        size_t predInd = predMap.addPredicate(alloc, cache, cond);
+        auto rc0 = descendBlock(
+            alloc, cache, predMap, BI->getSuccessor(0), BBdst,
+            predicate.intersect(predInd, Predicate::Relation::True), BBhead, L);
+        if (rc0 == Destination::Unknown) // bail
+            return Destination::Unknown;
+        auto rc1 = descendBlock(
+            alloc, cache, predMap, BI->getSuccessor(1), BBdst,
+            predicate.intersect(predInd, Predicate::Relation::False), BBhead,
+            L);
+        if ((rc0 == Destination::Returned) ||
+            (rc0 == Destination::Unreachable)) {
+            if (rc1 == Destination::Reached) {
+                //  we're now assuming that !cond
+                predMap.assume(Predicate::Intersection(
+                    predInd, Predicate::Relation::False));
+                predMap.reach(BBsrc, predicate);
+            }
+            return rc1;
+        } else if ((rc1 == Destination::Returned) ||
+                   (rc1 == Destination::Unreachable)) {
+            if (rc0 == Destination::Reached) {
+                //  we're now assuming that cond
+                predMap.assume(Predicate::Intersection(
+                    predInd, Predicate::Relation::True));
+                predMap.reach(BBsrc, predicate);
+            }
+            return rc0;
+        } else if (rc0 == rc1) {
+            if (rc0 == Destination::Reached)
+                predMap.reach(BBsrc, predicate);
+            return rc0;
+        } else
+            return Destination::Unknown;
+    }
+    /// We bail if there are more than 32 conditions; control flow that
+    /// branchy is probably not worth trying to vectorize.
+    [[nodiscard]] static auto
+    descend(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+            llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L)
+        -> std::optional<Map> {
+        Predicate::Map pm;
+        if (descendBlock(alloc, cache, pm, start, stop, {}, start, L) ==
+            Destination::Reached)
+            return std::move(pm);
+        return std::nullopt;
+    }
+
+}; // struct Map
+} // namespace Predicate
+
+auto Instruction::Cache::createInstruction(llvm::BumpPtrAllocator &alloc,
+                                           Predicate::Map &predMap,
+                                           llvm::Instruction *instr)
+    -> Instruction * {
+    auto pred = predMap[instr];
+    if (!pred) {
+        // return an incomplete instruction
+        // it is not added to the argMap
+        auto i = new (alloc) Instruction(Identifier(instr), instr->getType());
+        llvmToInternalMap[instr] = i;
+        return i;
+    }
+    UniqueIdentifier uid{getUniqueIdentifier(alloc, predMap, *this, instr)};
+    auto argMatch = argMap.find(uid);
+    if (argMatch != argMap.end())
+        return argMatch->second;
+    auto i = new (alloc) Instruction(uid);
+    auto insertIter = argMap.insert({uid, i});
+    assert(insertIter.second);
+    assert(insertIter.first->second == i);
+    i->predicates = std::move(*pred);
+    i->operands = std::get<3>(insertIter.first->first);
+    for (auto *op : i->operands) {
+        op->users.push_back(i);
+    }
+    llvmToInternalMap[instr] = i;
+    return i;
+}
+auto Instruction::Cache::get(llvm::BumpPtrAllocator &alloc,
+                             Predicate::Map &predMap, llvm::Value *v)
+    -> Instruction * {
+    if (Instruction *i = (*this)[v]) {
+        // if `i` has operands, it's been completed
+        if (i->operands.size() > 0)
+            return i;
+        // maybe `i` legitimately has no operands? If so, we also return
+        auto instr = llvm::dyn_cast<llvm::Instruction>(v);
+        if (!instr || instr->getNumOperands() == 0)
+            return i;
+        // instr is non-null and has operands
+        // maybe instr isn't in BBpreds?
+        if (auto pred = predMap[instr]) {
+            // instr is in BBpreds, therefore, we now complete `i`.
+            i->predicates = std::move(*pred);
+            i->operands = getOperands(alloc, predMap, *this, instr);
+            for (auto *op : i->operands) {
+                op->users.push_back(i);
+            }
+        }
+        return i;
+    }
+    if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
+        return createInstruction(alloc, predMap, instr);
+    auto *i = new (alloc) Instruction(Identifier(v), v->getType());
+    llvmToInternalMap[v] = i;
+    return i;
+}
 
 struct InstructionBlock {
     // we tend to heap allocate InstructionBlocks with a bump allocator,

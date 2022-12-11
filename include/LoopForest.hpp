@@ -2,6 +2,7 @@
 // #include "./CallableStructs.hpp"
 #include "./ArrayReference.hpp"
 #include "./BitSets.hpp"
+#include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./Loops.hpp"
 #include "./Macro.hpp"
@@ -23,187 +24,6 @@
 #include <utility>
 #include <vector>
 
-[[maybe_unused]] static auto
-visit(llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-      const llvm::BasicBlock *BB) -> bool {
-    if (visitedBBs.contains(BB))
-        return true;
-    visitedBBs.insert(BB);
-    return false;
-}
-enum class BBChain {
-    reached,
-    divergence,
-    unreachable,
-    returned,
-    visited,
-    unknown,
-    loopexit
-};
-auto operator<<(llvm::raw_ostream &os, const BBChain &chn)
-    -> llvm::raw_ostream & {
-    switch (chn) {
-    case BBChain::reached:
-        return os << "reached";
-    case BBChain::divergence:
-        return os << "divergence";
-    case BBChain::unreachable:
-        return os << "unreachable";
-    case BBChain::returned:
-        return os << "returned";
-    case BBChain::visited:
-        return os << "visited";
-    case BBChain::unknown:
-        return os << "unknown";
-    case BBChain::loopexit:
-        return os << "loop exit";
-    default:
-        assert(false && "unreachable");
-    }
-}
-
-// TODO:
-// 1. see why L->contains(BBsrc) does not work; does it only contain BBs in it
-// directly, and not nested another loop deeper?
-// 2. We are ignoring cycles for now; we must ensure this is done correctly
-[[maybe_unused]] static auto allForwardPathsReach(
-    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-    PredicatedChain &path, llvm::BasicBlock *BBsrc, llvm::BasicBlock *BBdst,
-    PredicatesOld pred, llvm::BasicBlock *BBhead, llvm::Loop *L) -> BBChain {
-    llvm::errs() << "allForwardPathsReached BBsrc = " << BBsrc
-                 << "\nBBdst = " << BBdst;
-    llvm::errs() << "\nallForwardPathsReached BBsrc = " << *BBsrc
-                 << "\nBBdst = " << *BBdst;
-    for (auto &BBinPath : path)
-        SHOWLN(BBinPath.basicBlock);
-    if (L)
-        llvm::errs() << "\nL->contains(BBsrc) = " << L->contains(BBsrc);
-    llvm::errs() << "\n\n";
-    if (BBsrc == BBdst) {
-        SHOWLN(BBsrc);
-        path.emplace_back(std::move(pred), BBsrc);
-        llvm::errs() << "reached\n";
-        return BBChain::reached;
-    } else if (L && (!(L->contains(BBsrc)))) {
-        // oops, we seem to have skipped the preheader in entering L
-        // must skip over a guard
-        llvm::errs() << "Exited the loop!\n";
-        // llvm::errs() << "Skipped preheader! There must've been some sort of "
-        // "loop guard\n";
-        // TODO: give a more appropriate enum value?
-        return BBChain::returned;
-    } else if (visit(visitedBBs, BBsrc)) {
-        if (BBsrc == BBhead) // TODO: add another enum?
-            return BBChain::returned;
-        // TODO: need to be able to handle temporarily split and rejoined path
-        llvm::errs() << "BBhead = " << *BBhead << "\n";
-        if (path.contains(BBsrc))
-            return BBChain::reached;
-        llvm::errs() << "Returning returned because already visited\n";
-        return BBChain::returned;
-        // return BBChain::unknown;
-        // return BBChain::visited;
-    } else if (const llvm::Instruction *term = BBsrc->getTerminator()) {
-        llvm::errs() << "Checking terminator\n";
-        SHOWLN(*term);
-        if (const auto *BI = llvm::dyn_cast<llvm::BranchInst>(term)) {
-            SHOWLN(BI->isUnconditional());
-            // SHOWLN(*BI->getSuccessor(0));
-            if (BI->isUnconditional()) {
-                BBChain dst0 =
-                    allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
-                                         BBdst, pred, BBhead, L);
-                if (dst0 == BBChain::reached)
-                    SHOWLN(BBsrc);
-                if (dst0 == BBChain::reached)
-                    path.emplace_back(std::move(pred), BBsrc);
-                return dst0;
-            }
-            // SHOWLN(*BI->getSuccessor(1));
-            llvm::Value *cond = BI->getCondition();
-            PredicatesOld conditionedPred = pred & cond;
-            BBChain dst0 =
-                allForwardPathsReach(visitedBBs, path, BI->getSuccessor(0),
-                                     BBdst, conditionedPred, BBhead, L);
-            // if ((dst0 != BBChain::reached) && (dst0 != BBChain::unreachable))
-            llvm::errs() << "dst0 = " << dst0 << "\n";
-            if (dst0 == BBChain::unknown)
-                return BBChain::unknown; // if bad values, return early
-            BBChain dst1 = allForwardPathsReach(
-                visitedBBs, path, BI->getSuccessor(1), BBdst,
-                std::move(conditionedPred.flipLastCondition()), BBhead, L);
-            llvm::errs() << "dst0 = " << dst0 << "; dst1 = " << dst1 << "\n";
-
-            // TODO handle divergences
-            if ((dst0 == BBChain::unreachable) || (dst0 == BBChain::returned)) {
-                if (dst1 == BBChain::reached)
-                    SHOWLN(BBsrc);
-                if (dst1 == BBChain::reached)
-                    path.conditionOnLastPred().emplace_back(std::move(pred),
-                                                            BBsrc);
-                return dst1;
-            } else if ((dst1 == BBChain::unreachable) ||
-                       (dst1 == BBChain::returned)) {
-                if (dst0 == BBChain::reached)
-                    SHOWLN(BBsrc);
-                if (dst0 == BBChain::reached)
-                    path.conditionOnLastPred().emplace_back(std::move(pred),
-                                                            BBsrc);
-                return dst0;
-            } else if (dst0 == dst1) {
-                if (dst0 == BBChain::reached)
-                    SHOWLN(BBsrc);
-                if (dst0 == BBChain::reached)
-                    path.emplace_back(std::move(pred), BBsrc);
-                return dst0;
-            } else {
-                llvm::errs() << "Returning unknown because dst0 = " << dst0
-                             << " and dst1 = " << dst1 << " di\n";
-                return BBChain::unknown;
-            }
-        } else if (const auto *UI = llvm::dyn_cast<llvm::UnreachableInst>(term))
-            // TODO: add option to allow moving earlier?
-            return BBChain::unreachable;
-        else if (const auto *RI = llvm::dyn_cast<llvm::ReturnInst>(term))
-            return BBChain::returned;
-    }
-    llvm::errs() << "\nReturning unknown because we fell through\n";
-    return BBChain::unknown;
-}
-[[maybe_unused]] static auto allForwardPathsReach(
-    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> &visitedBBs,
-    PredicatedChain &path, llvm::ArrayRef<llvm::BasicBlock *> BBsrc,
-    llvm::BasicBlock *BBdst, llvm::Loop *L) -> bool {
-    visitedBBs.clear();
-    bool reached = false;
-    for (auto &BB : BBsrc) {
-        if (BB == BBdst) {
-            reached = true;
-            path.push_back(BB);
-            continue;
-        }
-        auto dst = allForwardPathsReach(visitedBBs, path, BB, BBdst, {}, BB, L);
-        if (dst == BBChain::reached) {
-            reached = true;
-#ifndef NDEBUG
-            bool foundBB = false;
-            SHOWLN(BB);
-            for (auto &BBinPathFinal : path) {
-                SHOWLN(BBinPathFinal.basicBlock);
-                foundBB |= (BBinPathFinal.basicBlock == BB);
-            }
-            assert(foundBB);
-#endif
-            // } else if (dst != BBChain::unreachable) {
-        } else if (dst == BBChain::unknown) {
-            llvm::errs() << "failed because dst was: " << dst << "\n";
-            return false;
-        }
-    }
-    path.reverse();
-    return reached;
-}
-
 struct LoopTree {
     [[no_unique_address]] llvm::Loop *loop;
     [[no_unique_address]] llvm::SmallVector<LoopTree *> subLoops;
@@ -214,7 +34,7 @@ struct LoopTree {
     // - last loop's exit to this loop's latch
 
     // in addition to requiring simplify form, we require a single exit block
-    [[no_unique_address]] llvm::SmallVector<PredicatedChain> paths;
+    [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
     [[no_unique_address]] AffineLoopNest<true> affineLoop;
     [[no_unique_address]] LoopTree *parentLoop{nullptr};
     [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
@@ -228,12 +48,12 @@ struct LoopTree {
     auto operator=(const LoopTree &) -> LoopTree & = default;
     auto operator=(LoopTree &&) -> LoopTree & = default;
     LoopTree(llvm::SmallVector<LoopTree *> sL,
-             llvm::SmallVector<PredicatedChain> paths)
+             llvm::SmallVector<Predicate::Map> paths)
         : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
 
     LoopTree(llvm::Loop *L, llvm::SmallVector<LoopTree *> sL,
              const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
-             llvm::SmallVector<PredicatedChain> paths)
+             llvm::SmallVector<Predicate::Map> paths)
         : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
           affineLoop(L, BT, SE) {
 #ifndef NDEBUG
