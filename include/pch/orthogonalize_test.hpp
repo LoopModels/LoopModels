@@ -1,5 +1,3 @@
-#pragma once
-
 #include <bit>
 #include <cassert>
 #include <cstddef>

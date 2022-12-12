@@ -624,73 +624,33 @@ template <std::integral B, std::integral E> struct Range<B, E> {
         -> llvm::raw_ostream & {
         return os << "[" << r.b << ":" << r.e << ")";
     }
+    template <std::integral BB, std::integral EE>
+    constexpr operator Range<BB, EE>() const {
+        return Range<BB, EE>{static_cast<BB>(b), static_cast<EE>(e)};
+    }
 };
-// template <typename B, typename E>
-// constexpr B std::ranges::begin(Range<B,E> r){ return r.b;}
+template <typename B, typename E> Range(B, E) -> Range<B, E>;
 
-// template <> struct std::iterator_traits<Range<size_t,size_t>> {
-//     using difference_type = ptrdiff_t;
-//     using iterator_category = std::forward_iterator_tag;
-//     using value_type = size_t;
-//     using reference_type = void;
-//     using pointer_type = void;
-// };
+template <std::signed_integral B, typename E>
+Range(B, E) -> Range<ptrdiff_t, E>;
+template <typename B, std::signed_integral E>
+Range(B, E) -> Range<B, ptrdiff_t>;
+template <std::signed_integral B, std::signed_integral E>
+Range(B, E) -> Range<ptrdiff_t, ptrdiff_t>;
 
-// static_assert(std::ranges::range<Range<size_t, size_t>>);
+template <std::unsigned_integral B, typename E> Range(B, E) -> Range<size_t, E>;
+template <typename B, std::unsigned_integral E> Range(B, E) -> Range<B, size_t>;
+template <std::unsigned_integral B, std::unsigned_integral E>
+Range(B, E) -> Range<size_t, size_t>;
 
-// template <> struct Range<Begin, int> {
-//     static constexpr Begin b = begin;
-//     int e;
-//     operator Range<Begin, size_t>() {
-//         return Range<Begin, size_t>{b, size_t(e)};
-//     }
-// };
-// template <> struct Range<int, End> {
-//     int b;
-//     static constexpr End e = end;
-//     operator Range<size_t, End>() { return Range<size_t, End>{size_t(b), e};
-//     }
-// };
-// template <> struct Range<int, int> {
-//     int b;
-//     int e;
-//     operator Range<size_t, size_t>() {
-//         return Range<size_t, size_t>{.b = size_t(b), .e = size_t(e)};
-//     }
-// };
-// template <> struct Range<Begin, size_t> {
-//     static constexpr Begin b = begin;
-//     size_t e;
-//     Range(Range<Begin, int> r) : e(r.e){};
-// };
-// template <> struct Range<size_t, End> {
-//     size_t b;
-//     static constexpr End e = end;
-//     Range(Range<int, End> r) : b(r.b){};
-// };
-// template <> struct Range<size_t,size_t> {
-//     size_t b;
-//     size_t e;
-//     Range(Range<int, int> r) : b(r.b), e(r.e) {};
-// };
-struct Colon {
-    constexpr auto operator()(std::integral auto i, std::integral auto j) const
-        -> Range<size_t, size_t> {
-        return Range<size_t, size_t>{size_t(i), size_t(j)};
-    }
-    template <RelativeOffset E>
-    constexpr auto operator()(std::integral auto i, E j) const
-        -> Range<size_t, E> {
-        return Range<size_t, E>{size_t(i), j};
-    }
-    template <RelativeOffset B>
-    constexpr auto operator()(B i, std::integral auto j) const
-        -> Range<B, size_t> {
-        return Range<B, size_t>{i, size_t(j)};
-    }
-    template <RelativeOffset B, RelativeOffset E>
-    constexpr auto operator()(B i, E j) const -> Range<B, E> {
-        return Range<B, E>{i, j};
+template <std::signed_integral B, std::unsigned_integral E>
+Range(B, E) -> Range<ptrdiff_t, size_t>;
+template <std::unsigned_integral B, std::signed_integral E>
+Range(B, E) -> Range<size_t, ptrdiff_t>;
+
+static inline constexpr struct Colon {
+    [[nodiscard]] inline constexpr auto operator()(auto B, auto E) const {
+        return Range{B, E};
     }
 } _;
 
