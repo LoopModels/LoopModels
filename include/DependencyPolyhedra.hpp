@@ -37,21 +37,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // size_t numDep1Var; // loops dep 1
     [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
 
-    // using
-    [[nodiscard]] constexpr auto getTimeDim() const -> size_t {
-        return nullStep.size();
-    }
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
     [[nodiscard]] constexpr auto getDim0() const -> size_t {
         return numDep0Var;
     }
-    [[nodiscard]] constexpr auto getDim1() const -> size_t {
+    [[nodiscard]] auto getDim1() const -> size_t {
         return getNumVar() - numDep0Var - nullStep.size() - S.size();
     }
-    [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
+    [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
         return getNumVar() - nullStep.size() - S.size();
     }
     static constexpr auto getNumOmegaCoefficients() -> size_t { return 2; }
-    [[nodiscard]] constexpr auto getNumScheduleCoefficients() const -> size_t {
+    [[nodiscard]] auto getNumScheduleCoefficients() const -> size_t {
         return getNumPhiCoefficients() + getNumOmegaCoefficients();
     }
     auto getSymbols(size_t i) -> MutPtrVector<int64_t> {

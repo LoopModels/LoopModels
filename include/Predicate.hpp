@@ -197,9 +197,7 @@ struct Set {
     [[nodiscard]] auto operator()(size_t i, size_t j) const -> Relation {
         return intersectUnion[i][j];
     }
-    [[nodiscard]] constexpr auto size() const -> size_t {
-        return intersectUnion.size();
-    }
+    [[nodiscard]] auto size() const -> size_t { return intersectUnion.size(); }
     // [[nodiscard]] static auto Tombstone() -> Set {
     //     return {Intersection::Tombstone()};
     // }
@@ -283,18 +281,17 @@ struct Set {
         }
         return *this;
     }
-    [[nodiscard]] constexpr auto begin() { return intersectUnion.begin(); }
-    [[nodiscard]] constexpr auto end() { return intersectUnion.end(); }
-    [[nodiscard]] constexpr auto begin() const {
-        return intersectUnion.begin();
-    }
-    [[nodiscard]] constexpr auto end() const { return intersectUnion.end(); }
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto begin() { return intersectUnion.begin(); }
+    [[nodiscard]] auto end() { return intersectUnion.end(); }
+    [[nodiscard]] auto begin() const { return intersectUnion.begin(); }
+    [[nodiscard]] auto end() const { return intersectUnion.end(); }
     [[nodiscard]] auto operator&=(Set &pred) -> Set & {
         for (auto p : pred)
             (*this) &= p;
         return *this;
     }
-    [[nodiscard]] constexpr auto isEmpty() const -> bool {
+    [[nodiscard]] auto isEmpty() const -> bool {
         return intersectUnion.empty();
     }
     [[nodiscard]] auto emptyIntersection(const Set &other) const -> bool {

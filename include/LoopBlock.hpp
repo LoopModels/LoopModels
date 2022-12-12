@@ -218,9 +218,8 @@ struct LinearProgramLoopBlock {
         sol.clear();
         // allocator.Reset();
     }
-    [[nodiscard]] constexpr auto numVerticies() const -> size_t {
-        return nodes.size();
-    }
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto numVerticies() const -> size_t { return nodes.size(); }
     [[nodiscard]] auto getVerticies() -> llvm::MutableArrayRef<ScheduledNode> {
         return nodes;
     }
@@ -231,7 +230,8 @@ struct LinearProgramLoopBlock {
         LinearProgramLoopBlock &loopBlock;
         ScheduledNode &node;
     };
-    [[nodiscard]] constexpr auto outNeighbors(size_t idx) -> OutNeighbors {
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto outNeighbors(size_t idx) -> OutNeighbors {
         return OutNeighbors{*this, nodes[idx]};
     }
     [[nodiscard]] auto calcMaxDepth() const -> size_t {

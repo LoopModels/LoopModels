@@ -37,14 +37,13 @@ struct ArrayReference {
     [[nodiscard]] auto isLoad() const -> bool {
         return llvm::isa<llvm::LoadInst>(loadOrStore);
     }
-    [[nodiscard]] constexpr auto getArrayDim() const -> size_t {
-        return sizes.size();
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
+    [[nodiscard]] auto getNumSymbols() const -> size_t {
+        return 1 + symbolicOffsets.size();
     }
     [[nodiscard]] auto getNumLoops() const -> size_t {
         return loop->getNumLoops();
-    }
-    [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
-        return 1 + symbolicOffsets.size();
     }
 
     [[nodiscard]] auto getAlignment() const -> llvm::Align {
