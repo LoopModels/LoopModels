@@ -55,23 +55,32 @@ struct ScheduledNode {
         memory.insert(memId);
         numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
     }
-    bool wasVisited() const { return visited; }
-    void visit() { visited = true; }
-    void unVisit() { visited = false; }
-    size_t getNumLoops() const { return numLoops; }
-    bool phiIsScheduled(size_t d) const { return d < rank; }
+    [[nodiscard]] auto wasVisited() const -> bool { return visited; }
+    constexpr void visit() { visited = true; }
+    constexpr void unVisit() { visited = false; }
+    [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+        return numLoops;
+    }
+    [[nodiscard]] constexpr auto phiIsScheduled(size_t d) const -> bool {
+        return d < rank;
+    }
 
-    size_t updatePhiOffset(size_t p) { return phiOffset = p + numLoops; }
-    size_t updateOmegaOffset(size_t o) {
+    [[nodiscard]] constexpr auto updatePhiOffset(size_t p) -> size_t {
+        return phiOffset = p + numLoops;
+    }
+    [[nodiscard]] constexpr auto updateOmegaOffset(size_t o) -> size_t {
         omegaOffset = o;
         return ++o;
     }
-    size_t getPhiOffset() const { return phiOffset; }
-    Range<size_t, size_t> getPhiOffsetRange() const {
+    [[nodiscard]] constexpr auto getPhiOffset() const -> size_t {
+        return phiOffset;
+    }
+    [[nodiscard]] constexpr auto getPhiOffsetRange() const
+        -> Range<size_t, size_t> {
         return _(phiOffset - numLoops, phiOffset);
     }
 
-    ScheduledNode operator|(const ScheduledNode &s) const {
+    auto operator|(const ScheduledNode &s) const -> ScheduledNode {
         uint8_t nL = std::max(numLoops, s.numLoops);
         return {memory | s.memory,
                 (inNeighbors | s.inNeighbors),
@@ -81,24 +90,26 @@ struct ScheduledNode {
                 0,
                 nL};
     }
-    ScheduledNode &operator|=(const ScheduledNode &s) {
+    auto operator|=(const ScheduledNode &s) -> ScheduledNode & {
         memory |= s.memory;
         outNeighbors |= s.outNeighbors;
         numLoops = std::max(numLoops, s.numLoops);
         return *this;
     }
-    PtrVector<int64_t> getSchedule(size_t d) const {
+    [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
         return schedule.getPhi()(d, _);
     }
 };
 
 struct CarriedDependencyFlag {
     [[no_unique_address]] uint32_t flag{0};
-    constexpr bool carriesDependency(size_t d) { return (flag >> d) & 1; }
+    [[nodiscard]] constexpr auto carriesDependency(size_t d) const -> bool {
+        return (flag >> d) & 1;
+    }
     constexpr void setCarriedDependency(size_t d) {
         flag |= (uint32_t(1) << uint32_t(d));
     }
-    static constexpr uint32_t resetMaskFlag(size_t d) {
+    [[nodiscard]] static constexpr auto resetMaskFlag(size_t d) -> uint32_t {
         return ((uint32_t(1) << uint32_t(d)) - uint32_t(1));
     }
     // resets all but `d` deps
@@ -207,18 +218,23 @@ struct LinearProgramLoopBlock {
         sol.clear();
         // allocator.Reset();
     }
-    size_t numVerticies() const { return nodes.size(); }
-    llvm::MutableArrayRef<ScheduledNode> getVerticies() { return nodes; }
-    llvm::ArrayRef<ScheduledNode> getVerticies() const { return nodes; }
+    [[nodiscard]] constexpr auto numVerticies() const -> size_t {
+        return nodes.size();
+    }
+    [[nodiscard]] auto getVerticies() -> llvm::MutableArrayRef<ScheduledNode> {
+        return nodes;
+    }
+    [[nodiscard]] auto getVerticies() const -> llvm::ArrayRef<ScheduledNode> {
+        return nodes;
+    }
     struct OutNeighbors {
         LinearProgramLoopBlock &loopBlock;
         ScheduledNode &node;
-        // size_t size()const{return node.num
     };
-    OutNeighbors outNeighbors(size_t idx) {
+    [[nodiscard]] constexpr auto outNeighbors(size_t idx) -> OutNeighbors {
         return OutNeighbors{*this, nodes[idx]};
     }
-    [[nodiscard]] size_t calcMaxDepth() const {
+    [[nodiscard]] auto calcMaxDepth() const -> size_t {
         size_t d = 0;
         for (auto &mem : memory)
             d = std::max(d, mem->getNumLoops());
@@ -282,9 +298,10 @@ struct LinearProgramLoopBlock {
     ///
     /// If an instruction was stored somewhere, we don't keep
     /// searching for placed it was loaded, and instead add a reload.
-    bool searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
-                              ScheduledNode &node, llvm::User *user,
-                              unsigned nodeIndex) {
+    [[nodiscard]] auto
+    searchValueForStores(llvm::SmallPtrSet<llvm::User *, 32> &visited,
+                         ScheduledNode &node, llvm::User *user,
+                         unsigned nodeIndex) -> bool {
         for (llvm::User *use : user->users()) {
             if (visited.contains(use))
                 continue;
@@ -338,14 +355,13 @@ struct LinearProgramLoopBlock {
                                 ScheduledNode &node, llvm::User *u,
                                 unsigned nodeIndex) {
         visited.insert(u);
-        if (llvm::StoreInst *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
-            if (llvm::User *user =
-                    llvm::dyn_cast<llvm::User>(s->getValueOperand()))
+        if (auto *s = llvm::dyn_cast<llvm::StoreInst>(u)) {
+            if (auto *user = llvm::dyn_cast<llvm::User>(s->getValueOperand()))
                 checkUserForLoads(visited, node, user, nodeIndex);
             return;
         }
         for (auto &&op : u->operands())
-            if (llvm::User *user = llvm::dyn_cast<llvm::User>(op.get()))
+            if (auto *user = llvm::dyn_cast<llvm::User>(op.get()))
                 checkUserForLoads(visited, node, user, nodeIndex);
     }
     void connect(unsigned inIndex, unsigned outIndex) {
@@ -366,7 +382,7 @@ struct LinearProgramLoopBlock {
                     connect(inIndex, outIndex);
                 }
     }
-    size_t calcNumStores() const {
+    [[nodiscard]] auto calcNumStores() const -> size_t {
         size_t numStores = 0;
         for (auto &m : memory)
             numStores += !(m->isLoad());
@@ -407,49 +423,49 @@ struct LinearProgramLoopBlock {
         llvm::ArrayRef<Dependence> edges;
         // llvm::SmallVector<bool> visited;
         // BitSet visited;
-        Graph operator&(const Graph &g) {
+        auto operator&(const Graph &g) -> Graph {
             return Graph{nodeIds & g.nodeIds, activeEdges & g.activeEdges, mem,
                          nodes, edges};
         }
-        Graph operator|(const Graph &g) {
+        auto operator|(const Graph &g) -> Graph {
             return Graph{nodeIds | g.nodeIds, activeEdges | g.activeEdges, mem,
                          nodes, edges};
         }
-        Graph &operator&=(const Graph &g) {
+        auto operator&=(const Graph &g) -> Graph & {
             nodeIds &= g.nodeIds;
             activeEdges &= g.activeEdges;
             return *this;
         }
-        Graph &operator|=(const Graph &g) {
+        auto operator|=(const Graph &g) -> Graph & {
             nodeIds |= g.nodeIds;
             activeEdges |= g.activeEdges;
             return *this;
         }
-        [[nodiscard]] BitSet<> &inNeighbors(size_t i) {
+        [[nodiscard]] auto inNeighbors(size_t i) -> BitSet<> & {
             return nodes[i].inNeighbors;
         }
-        [[nodiscard]] BitSet<> &outNeighbors(size_t i) {
+        [[nodiscard]] auto outNeighbors(size_t i) -> BitSet<> & {
             return nodes[i].outNeighbors;
         }
-        [[nodiscard]] const BitSet<> &inNeighbors(size_t i) const {
+        [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet<> & {
             return nodes[i].inNeighbors;
         }
-        [[nodiscard]] const BitSet<> &outNeighbors(size_t i) const {
+        [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet<> & {
             return nodes[i].outNeighbors;
         }
-        [[nodiscard]] bool containsNode(size_t i) const {
+        [[nodiscard]] auto containsNode(size_t i) const -> bool {
             return nodeIds.contains(i);
         }
-        [[nodiscard]] bool containsNode(BitSet<> &b) const {
+        [[nodiscard]] auto containsNode(BitSet<> &b) const -> bool {
             for (size_t i : b)
                 if (nodeIds.contains(i))
                     return true;
             return false;
         }
-        [[nodiscard]] bool missingNode(size_t i) const {
+        [[nodiscard]] auto missingNode(size_t i) const -> bool {
             return !containsNode(i);
         }
-        [[nodiscard]] bool missingNode(size_t i, size_t j) const {
+        [[nodiscard]] auto missingNode(size_t i, size_t j) const -> bool {
             return !(containsNode(i) && containsNode(j));
         }
         /// returns false iff e.in and e.out are both in graph
@@ -457,7 +473,7 @@ struct LinearProgramLoopBlock {
         /// in case of multiple instances of the edge, we check all of them
         /// if any are not missing, returns false
         /// only returns true if every one of them is missing.
-        [[nodiscard]] bool missingNode(const Dependence &e) const {
+        [[nodiscard]] auto missingNode(const Dependence &e) const -> bool {
             for (auto inIndex : e.in->nodeIndex)
                 for (auto outIndex : e.out->nodeIndex)
                     if (!missingNode(inIndex, outIndex))
@@ -465,51 +481,64 @@ struct LinearProgramLoopBlock {
             return true;
         }
 
-        [[nodiscard]] bool isInactive(const Dependence &edge, size_t d) const {
+        [[nodiscard]] auto isInactive(const Dependence &edge, size_t d) const
+            -> bool {
             return edge.isInactive(d) || missingNode(edge);
         }
-        [[nodiscard]] bool isInactive(const Dependence &edge) const {
+        [[nodiscard]] auto isInactive(const Dependence &edge) const -> bool {
             return missingNode(edge);
         }
-        [[nodiscard]] bool isInactive(size_t e, size_t d) const {
+        [[nodiscard]] auto isInactive(size_t e, size_t d) const -> bool {
             return !(activeEdges[e]) || isInactive(edges[e], d);
         }
-        [[nodiscard]] bool isInactive(size_t e) const {
+        [[nodiscard]] auto isInactive(size_t e) const -> bool {
             return !(activeEdges[e]) || isInactive(edges[e]);
         }
-        [[nodiscard]] bool isActive(size_t e, size_t d) const {
+        [[nodiscard]] auto isActive(size_t e, size_t d) const -> bool {
             return (activeEdges[e]) && (!isInactive(edges[e], d));
         }
-        [[nodiscard]] bool isActive(size_t e) const {
+        [[nodiscard]] auto isActive(size_t e) const -> bool {
             return (activeEdges[e]) && (!isInactive(edges[e]));
         }
-        BitSliceView<ScheduledNode>::Iterator begin() {
+        [[nodiscard]] constexpr auto begin()
+            -> BitSliceView<ScheduledNode>::Iterator {
             return BitSliceView<ScheduledNode>{nodes, nodeIds}.begin();
         }
-        BitSliceView<ScheduledNode>::ConstIterator begin() const {
+        [[nodiscard]] constexpr auto begin() const
+            -> BitSliceView<ScheduledNode>::ConstIterator {
             const BitSliceView<ScheduledNode> bsv{nodes, nodeIds};
             return bsv.begin();
         }
-        EndSentinel end() const { return {}; }
-        bool wasVisited(size_t i) const { return nodes[i].visited; }
+        [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
+        [[nodiscard]] auto wasVisited(size_t i) const -> bool {
+            return nodes[i].visited;
+        }
         void visit(size_t i) { nodes[i].visit(); }
         void unVisit(size_t i) { nodes[i].unVisit(); }
-        size_t getNumVertices() const { return nodeIds.size(); }
-        size_t maxVertexId() const { return nodeIds.maxValue(); }
-        BitSet<> &vertexIds() { return nodeIds; }
-        const BitSet<> &vertexIds() const { return nodeIds; }
-        [[nodiscard]] Graph subGraph(const BitSet<> &components) {
+        [[nodiscard]] auto getNumVertices() const -> size_t {
+            return nodeIds.size();
+        }
+        [[nodiscard]] auto maxVertexId() const -> size_t {
+            return nodeIds.maxValue();
+        }
+        [[nodiscard]] constexpr auto vertexIds() -> BitSet<> & {
+            return nodeIds;
+        }
+        [[nodiscard]] constexpr auto vertexIds() const -> const BitSet<> & {
+            return nodeIds;
+        }
+        [[nodiscard]] auto subGraph(const BitSet<> &components) -> Graph {
             return {components, activeEdges, mem, nodes, edges};
         }
-        [[nodiscard]] llvm::SmallVector<Graph, 0>
-        split(const llvm::SmallVector<BitSet<>> &components) {
+        [[nodiscard]] auto split(const llvm::SmallVector<BitSet<>> &components)
+            -> llvm::SmallVector<Graph, 0> {
             llvm::SmallVector<Graph, 0> graphs;
             graphs.reserve(components.size());
             for (auto &c : components)
                 graphs.push_back(subGraph(c));
             return graphs;
         }
-        [[nodiscard]] size_t calcMaxDepth() const {
+        [[nodiscard]] auto calcMaxDepth() const -> size_t {
             if (nodeIds.data.size() == 0)
                 return 0;
             size_t d = 0;
@@ -523,7 +552,7 @@ struct LinearProgramLoopBlock {
     //     return ((e.in->getNumLoops() > d) && (e.out->getNumLoops() > d)) &&
     //            connects(e, g0, g1);
     // }
-    bool connects(const Dependence &e, Graph &g0, Graph &g1) const {
+    auto connects(const Dependence &e, Graph &g0, Graph &g1) const -> bool {
         if (!e.in->isLoad()) {
             // e.in is a store
             size_t nodeIn = *e.in->nodeIndex.begin();
@@ -550,7 +579,7 @@ struct LinearProgramLoopBlock {
         }
         return false;
     }
-    Graph fullGraph() {
+    auto fullGraph() -> Graph {
         return {BitSet<>::dense(nodes.size()), BitSet<>::dense(edges.size()),
                 memory, nodes, edges};
     }
@@ -558,7 +587,7 @@ struct LinearProgramLoopBlock {
         for (unsigned i = 0; i < memory.size(); ++i)
             userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
     }
-    llvm::Optional<size_t> getOverlapIndex(const Dependence &edge) {
+    auto getOverlapIndex(const Dependence &edge) -> llvm::Optional<size_t> {
         MemoryAccess *store;
         MemoryAccess *other;
         if (edge.in->isLoad()) {
@@ -575,7 +604,7 @@ struct LinearProgramLoopBlock {
             return index;
         return {};
     }
-    llvm::Optional<BitSet<>> optOrth(Graph g) {
+    auto optOrth(Graph g) -> llvm::Optional<BitSet<>> {
 
         const size_t maxDepth = calcMaxDepth();
         // check for orthogonalization opportunities
@@ -610,8 +639,6 @@ struct LinearProgramLoopBlock {
                     phi(rr, _(begin, phiOffset)) = 0;
                     phi(rr, _(phiOffset, phiOffset + indR)) = indMat(_, rr);
                 }
-                // node.schedule.getPhi()(_(0, r), _) =
-                indMat.transpose();
                 node.rank = r;
                 tryOrth = true;
             }
@@ -626,13 +653,15 @@ struct LinearProgramLoopBlock {
         }
         return optimize(std::move(g), 0, maxDepth);
     }
-    [[nodiscard]] size_t countNumLambdas(const Graph &g, size_t d) const {
+    [[nodiscard]] auto countNumLambdas(const Graph &g, size_t d) const
+        -> size_t {
         size_t c = 0;
         for (size_t e = 0; e < edges.size(); ++e)
             c += ((g.isInactive(e, d)) ? 0 : edges[e].getNumLambda());
         return c;
     }
-    [[nodiscard]] size_t countNumBoundingCoefs(const Graph &g, size_t d) const {
+    [[nodiscard]] auto countNumBoundingCoefs(const Graph &g, size_t d) const
+        -> size_t {
         size_t c = 0;
         for (size_t e = 0; e < edges.size(); ++e)
             c += (g.isInactive(e, d) ? 0 : edges[e].getNumSymbols());
@@ -672,11 +701,11 @@ struct LinearProgramLoopBlock {
     // bounding, scheduled coefs, lambda
     // matches lexicographical ordering of minimization
     // bounding, however, is to be favoring minimizing `u` over `w`
-    [[nodiscard]] size_t getLambdaOffset() const {
+    [[nodiscard]] constexpr auto getLambdaOffset() const -> size_t {
         return 1 + numBounding + numActiveEdges + numPhiCoefs + numOmegaCoefs;
     }
-    [[nodiscard]] bool hasActiveEdges(const Graph &g,
-                                      const MemoryAccess &mem) const {
+    [[nodiscard]] auto hasActiveEdges(const Graph &g,
+                                      const MemoryAccess &mem) const -> bool {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e))
                 return true;
@@ -689,8 +718,8 @@ struct LinearProgramLoopBlock {
         //     llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const Graph &g, const MemoryAccess &mem,
-                                      size_t d) const {
+    [[nodiscard]] auto hasActiveEdges(const Graph &g, const MemoryAccess &mem,
+                                      size_t d) const -> bool {
         for (auto &e : mem.edgesIn)
             if (!g.isInactive(e, d))
                 return true;
@@ -705,15 +734,15 @@ struct LinearProgramLoopBlock {
         //                  << " false for: " << edges[e];
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const Graph &g, const ScheduledNode &node,
-                                      size_t d) const {
+    [[nodiscard]] auto hasActiveEdges(const Graph &g, const ScheduledNode &node,
+                                      size_t d) const -> bool {
         for (auto memId : node.memory)
             if (hasActiveEdges(g, *memory[memId], d))
                 return true;
         return false;
     }
-    [[nodiscard]] bool hasActiveEdges(const Graph &g,
-                                      const ScheduledNode &node) const {
+    [[nodiscard]] auto hasActiveEdges(const Graph &g,
+                                      const ScheduledNode &node) const -> bool {
         for (auto memId : node.memory)
             if (hasActiveEdges(g, *memory[memId]))
                 return true;
@@ -921,7 +950,8 @@ struct LinearProgramLoopBlock {
             C(_(cc, ccc), _(phiChild - bnd.numCol(), phiChild)) = bnd;
         }
     }
-    BitSet<> deactivateSatisfiedEdges(Graph &g, size_t d) {
+    [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d)
+        -> BitSet<> {
         if (allZero(sol(_(begin, numBounding + numActiveEdges))))
             return {};
         size_t u = 0, w = numBounding;
@@ -997,7 +1027,7 @@ struct LinearProgramLoopBlock {
 #endif
         }
     }
-    [[nodiscard]] static int64_t lexSign(PtrVector<int64_t> x) {
+    [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
         for (auto it = x.rbegin(); it != x.rend(); ++it)
             if (*it)
                 return 2 * (*it > 0) - 1;
@@ -1034,7 +1064,8 @@ struct LinearProgramLoopBlock {
         }
         assert(!allZero(omniSimplex.getConstraints()(end, _)));
     }
-    static uint64_t nonZeroMask(const AbstractVector auto &x) {
+    [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
+        -> uint64_t {
         assert(x.size() <= 64);
         uint64_t m = 0;
         for (auto y : x)
@@ -1049,13 +1080,14 @@ struct LinearProgramLoopBlock {
         for (size_t m = 0; m < M; ++m)
             masks[m] = nonZeroMask(A(m, _));
     }
-    static llvm::SmallVector<uint64_t>
-    nonZeroMasks(const AbstractMatrix auto &A) {
+    [[nodiscard]] static auto nonZeroMasks(const AbstractMatrix auto &A)
+        -> llvm::SmallVector<uint64_t> {
         llvm::SmallVector<uint64_t> masks;
         nonZeroMasks(masks, A);
         return masks;
     }
-    static uint64_t nonZeroMask(const AbstractMatrix auto A) {
+    [[nodiscard]] static auto nonZeroMask(const AbstractMatrix auto A)
+        -> uint64_t {
         const auto [M, N] = A.size();
         assert(N <= 64);
         uint64_t mask = 0;
@@ -1103,7 +1135,7 @@ struct LinearProgramLoopBlock {
         for (auto &&node : nodes)
             node.phiOffset = std::numeric_limits<unsigned>::max();
     }
-    bool isSatisfied(Dependence &e, size_t d) {
+    [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
         for (size_t inIndex : e.in->nodeIndex) {
             for (size_t outIndex : e.out->nodeIndex) {
                 Schedule *first = &(nodes[inIndex].schedule);
@@ -1116,7 +1148,7 @@ struct LinearProgramLoopBlock {
         }
         return true;
     }
-    bool canFuse(Graph &g0, Graph &g1, size_t d) {
+    [[nodiscard]] auto canFuse(Graph &g0, Graph &g1, size_t d) -> bool {
         for (auto &e : edges) {
             if ((e.in->getNumLoops() <= d) || (e.out->getNumLoops() <= d))
                 return false;
@@ -1126,7 +1158,8 @@ struct LinearProgramLoopBlock {
         }
         return true;
     }
-    [[nodiscard]] llvm::Optional<BitSet<>> breakGraph(Graph g, size_t d) {
+    [[nodiscard]] auto breakGraph(Graph g, size_t d)
+        -> llvm::Optional<BitSet<>> {
         auto components = Graphs::stronglyConnectedComponents(g);
         if (components.size() <= 1)
             return {};
@@ -1213,7 +1246,8 @@ struct LinearProgramLoopBlock {
     // 	}
     //         omniSimplex.copySolution(sol);
     //     }
-    [[nodiscard]] llvm::Optional<BitSet<>> optimizeLevel(Graph &g, size_t d) {
+    [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
+        -> llvm::Optional<BitSet<>> {
         if (numPhiCoefs == 0) {
             setSchedulesIndependent(g, d);
             return BitSet{};
@@ -1231,9 +1265,10 @@ struct LinearProgramLoopBlock {
         updateSchedules(g, d);
         return deactivateSatisfiedEdges(g, d);
     }
-    BitSet<> optimizeSatDep(Graph g, size_t d, size_t maxDepth,
-                            BitSet<> depSatLevel, const BitSet<> &depSatNest,
-                            BitSet<> activeEdges) {
+    [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
+                                      BitSet<> depSatLevel,
+                                      const BitSet<> &depSatNest,
+                                      BitSet<> activeEdges) -> BitSet<> {
         // if we're here, there are satisfied deps in both
         // depSatLevel and depSatNest
         // what we want to know is, can we satisfy all the deps
@@ -1279,8 +1314,8 @@ struct LinearProgramLoopBlock {
     /// optimize at depth `d`
     /// receives graph by value, so that it is not invalidated when
     /// recursing
-    [[nodiscard]] llvm::Optional<BitSet<>> optimize(Graph g, size_t d,
-                                                    size_t maxDepth) {
+    [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
+        -> llvm::Optional<BitSet<>> {
         if (d >= maxDepth)
             return BitSet{};
         countAuxParamsAndConstraints(g, d);
@@ -1301,7 +1336,7 @@ struct LinearProgramLoopBlock {
         return breakGraph(std::move(g), d);
     }
     // returns true on failure
-    [[nodiscard]] llvm::Optional<BitSet<>> optimize() {
+    [[nodiscard]] auto optimize() -> llvm::Optional<BitSet<>> {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();
@@ -1313,8 +1348,9 @@ struct LinearProgramLoopBlock {
         return optOrth(fullGraph());
     }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const LinearProgramLoopBlock &lblock) {
+    friend auto operator<<(llvm::raw_ostream &os,
+                           const LinearProgramLoopBlock &lblock)
+        -> llvm::raw_ostream & {
         os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
         for (size_t i = 0; i < lblock.nodes.size(); ++i) {
             const auto &v = lblock.nodes[i];

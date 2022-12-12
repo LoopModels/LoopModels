@@ -79,23 +79,6 @@ struct LoopTreeSchedule;
 // 3. Create a loop tree structure for optimization
 // 4. Create InstructionBlocks at each level.
 
-struct PredicatedInstruction {
-    [[no_unique_address]] PredicatesOld predicates;
-    [[no_unique_address]] Instruction *instruction;
-    // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> args;
-    // [[no_unique_address]] llvm::SmallVector<PredicatedInstruction *> uses;
-    [[no_unique_address]] InstructionBlock *instrBlock{nullptr};
-    PredicatedInstruction(Instruction *instr) : instruction(instr) {}
-    // PredicatedInstruction(llvm::Instruction *instr) :
-    // instruction(Instruction(instr)) {}
-    [[nodiscard]] auto isMemoryAccess() const -> bool {
-        return instruction->isLoad() || instruction->isStore();
-    }
-    [[nodiscard]] auto isInstruction() const -> bool {
-        return !isMemoryAccess();
-    }
-};
-
 // void pushBlock(llvm::SmallPtrSet<llvm::Instruction *, 32> &trackInstr,
 //                llvm::SmallPtrSet<llvm::BasicBlock *, 32> &chainBBs,
 //                Predicates &pred, llvm::BasicBlock *BB) {

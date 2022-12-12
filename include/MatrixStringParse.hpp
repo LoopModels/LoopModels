@@ -3,10 +3,11 @@
 #include "./Math.hpp"
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 #include <string>
 
-IntMatrix stringToIntMatrix(const std::string &s) {
+[[nodiscard]] auto stringToIntMatrix(const std::string &s) -> IntMatrix {
     assert(s.starts_with('['));
     assert(s.ends_with(']'));
     llvm::SmallVector<int64_t, 64> content;
@@ -25,7 +26,7 @@ IntMatrix stringToIntMatrix(const std::string &s) {
             break;
         }
         size_t sz = 0;
-        long long ll = std::stoll(s.c_str() + cur, &sz, 10);
+        int64_t ll = std::stoll(s.c_str() + cur, &sz, 10);
         cur += sz;
         content.push_back(ll);
     }

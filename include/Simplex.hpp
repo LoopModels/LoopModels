@@ -99,24 +99,26 @@ struct Simplex {
         tableau.resizeForOverwrite(numTableauRows(numCon),
                                    numTableauCols(numVar), stride);
     }
-    auto getCostsAndConstraints() -> MutPtrMatrix<int64_t> {
+    [[nodiscard]] constexpr auto getCostsAndConstraints()
+        -> MutPtrMatrix<int64_t> {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    [[nodiscard]] auto getCostsAndConstraints() const -> PtrMatrix<int64_t> {
+    [[nodiscard]] constexpr auto getCostsAndConstraints() const
+        -> PtrMatrix<int64_t> {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    auto getConstraints() -> MutPtrMatrix<int64_t> {
+    [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<int64_t> {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
-    [[nodiscard]] auto getConstraints() const -> PtrMatrix<int64_t> {
+    [[nodiscard]] constexpr auto getConstraints() const -> PtrMatrix<int64_t> {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
     // note that this is 1 more than the actual number of variables
     // as it includes the constants
-    [[nodiscard]] auto getNumVar() const -> size_t {
+    [[nodiscard]] constexpr auto getNumVar() const -> size_t {
         return tableau.numCol() - numExtraCols;
     }
-    [[nodiscard]] auto getNumConstraints() const -> size_t {
+    [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
         return tableau.numRow() - numExtraRows;
     }
 
@@ -131,25 +133,32 @@ struct Simplex {
         eraseConstraintImpl(tableau, numTableauRows(c));
         --tableau.M;
     }
-    [[nodiscard]] auto getTableauRow(size_t i) const -> PtrVector<int64_t> {
+    [[nodiscard]] constexpr auto getTableauRow(size_t i) const
+        -> PtrVector<int64_t> {
         return tableau(i, _(numExtraCols, end));
     }
     // 1-indexed, 0 returns value for const col
-    [[nodiscard]] auto getBasicConstraints() const -> PtrVector<int64_t> {
+    [[nodiscard]] constexpr auto getBasicConstraints() const
+        -> PtrVector<int64_t> {
         return getTableauRow(0);
     }
-    [[nodiscard]] auto getCost() const -> PtrVector<int64_t> {
+    [[nodiscard]] constexpr auto getCost() const -> PtrVector<int64_t> {
         return getTableauRow(1);
     }
-    auto getTableauRow(size_t i) -> MutPtrVector<int64_t> {
+    [[nodiscard]] constexpr auto getTableauRow(size_t i)
+        -> MutPtrVector<int64_t> {
         return tableau(i, _(numExtraCols, end));
     }
     // 1-indexed, 0 returns value for const col
-    auto getBasicConstraints() -> MutPtrVector<int64_t> {
+    [[nodiscard]] constexpr auto getBasicConstraints()
+        -> MutPtrVector<int64_t> {
         return getTableauRow(0);
     }
-    auto getCost() -> MutPtrVector<int64_t> { return getTableauRow(1); }
-    [[nodiscard]] auto getTableauCol(size_t i) const -> StridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getCost() -> MutPtrVector<int64_t> {
+        return getTableauRow(1);
+    }
+    [[nodiscard]] constexpr auto getTableauCol(size_t i) const
+        -> StridedVector<int64_t> {
         return tableau(_(numExtraRows, end), i);
         // return StridedVector<int64_t>{tableau.data() + i +
         //                                   numExtraRows * tableau.rowStride(),
@@ -157,26 +166,30 @@ struct Simplex {
         //                               tableau.rowStride()};
     }
     // 0-indexed
-    [[nodiscard]] auto getBasicVariables() const -> StridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getBasicVariables() const
+        -> StridedVector<int64_t> {
         return getTableauCol(0);
     }
     // StridedVector<int64_t> getDenominators() const {
     //     return getTableauCol(1);
     // }
-    [[nodiscard]] auto getConstants() const -> StridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getConstants() const
+        -> StridedVector<int64_t> {
         return getTableauCol(numExtraCols);
     }
-    auto getTableauCol(size_t i) -> MutStridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getTableauCol(size_t i)
+        -> MutStridedVector<int64_t> {
         return tableau(_(numExtraRows, end), i);
         // return MutStridedVector<int64_t>{
         //     tableau.data() + i + numExtraRows * tableau.rowStride(),
         //     getNumConstraints(), tableau.rowStride()};
     }
-    auto getBasicVariables() -> MutStridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getBasicVariables()
+        -> MutStridedVector<int64_t> {
         return getTableauCol(0);
     }
     // MutStridedVector<int64_t> getDenominators() { return getTableauCol(1); }
-    auto getConstants() -> MutStridedVector<int64_t> {
+    [[nodiscard]] constexpr auto getConstants() -> MutStridedVector<int64_t> {
         return getTableauCol(numExtraCols);
     }
     // AbstractVector
@@ -208,7 +221,9 @@ struct Simplex {
 
     // returns `true` if infeasible
     // `false ` if feasible
-    auto initiateFeasible() -> bool {
+    [[nodiscard(
+        "returns `true` if infeasible; should check when calling.")]] auto
+    initiateFeasible() -> bool {
         tableau(0, 0) = 0;
         // remove trivially redundant constraints
         hermiteNormalForm();
@@ -324,15 +339,17 @@ struct Simplex {
         return false;
     }
     // 1 based to match getBasicConstraints
-    static auto getEnteringVariable(PtrVector<int64_t> costs) -> int {
+    [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
+        -> int {
         // Bland's algorithm; guaranteed to terminate
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
         return -1;
     }
-    static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
-                                   size_t enteringVariable) -> int {
+    [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
+                                                 size_t enteringVariable)
+        -> int {
         // inits guarantee first valid is selected
         // we need
         int64_t n = -1;
