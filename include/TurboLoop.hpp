@@ -237,7 +237,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
 
                 branchBlocks.push_back(std::move(*predMapAbridged));
                 LoopTree::split(allocator, pForest, branches, branchBlocks);
-                return interiorDepth;
+                return ++interiorDepth;
             } else {
                 // we don't have a direct path from H to E
                 // we need to split

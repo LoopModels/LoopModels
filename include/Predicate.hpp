@@ -187,13 +187,14 @@ struct Set {
     [[no_unique_address]] llvm::SmallVector<Intersection, 2> intersectUnion;
     Set() = default;
     Set(Intersection pred) : intersectUnion({pred}) {}
-    constexpr auto operator[](size_t index) -> Intersection {
+    // TODO: constexpr these when llvm::SmallVector supports it
+    [[nodiscard]] auto operator[](size_t index) -> Intersection {
         return intersectUnion[index];
     }
-    constexpr auto operator[](size_t index) const -> Intersection {
+    [[nodiscard]] auto operator[](size_t index) const -> Intersection {
         return intersectUnion[index];
     }
-    constexpr auto operator()(size_t i, size_t j) const -> Relation {
+    [[nodiscard]] auto operator()(size_t i, size_t j) const -> Relation {
         return intersectUnion[i][j];
     }
     [[nodiscard]] constexpr auto size() const -> size_t {

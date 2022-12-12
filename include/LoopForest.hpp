@@ -82,9 +82,8 @@ struct LoopTree {
             os << *branch;
         return os << "\n";
     }
-    [[nodiscard]] auto dump() const -> llvm::raw_ostream & {
-        return llvm::errs() << *this;
-    }
+    // NOLINTNEXTLINE(*-nodiscard)
+    auto dump() const -> llvm::raw_ostream & { return llvm::errs() << *this; }
     void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
         // SHOWLN(this);
         // SHOWLN(affineLoop.A);

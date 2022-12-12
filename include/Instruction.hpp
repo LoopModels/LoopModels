@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -201,6 +202,13 @@ struct Instruction {
                                Identifier::getIntrinsicID(v), v,
                                getOperands(alloc, cache, v));
     }
+    [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+                                           Cache &cache) -> UniqueIdentifier {
+        return std::make_tuple(
+            id.op, id.intrin, id.ptr.val,
+            getOperands(alloc, cache,
+                        llvm::cast<llvm::Instruction>(id.ptr.val)));
+    }
     [[nodiscard]] static auto
     getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
                         Cache &cache, llvm::Instruction *v)
@@ -208,6 +216,14 @@ struct Instruction {
         return std::make_tuple(Identifier::getOpCode(v),
                                Identifier::getIntrinsicID(v), v,
                                getOperands(alloc, predMap, cache, v));
+    }
+    [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+                                           Predicate::Map &predMap,
+                                           Cache &cache) -> UniqueIdentifier {
+        return std::make_tuple(
+            id.op, id.intrin, id.ptr.val,
+            getOperands(alloc, predMap, cache,
+                        llvm::cast<llvm::Instruction>(id.ptr.val)));
     }
     [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
                                           Cache &cache,
@@ -678,6 +694,8 @@ struct Map {
     [[nodiscard]] auto end() -> decltype(map.end()) { return map.end(); }
     [[nodiscard]] auto operator[](llvm::BasicBlock *bb)
         -> std::optional<Instruction::Predicates> {
+        SHOWLN(bb);
+        SHOWLN(*bb);
         auto it = map.find(bb);
         if (it == map.end())
             return std::nullopt;
@@ -847,23 +865,26 @@ auto Instruction::Cache::createInstruction(llvm::BumpPtrAllocator &alloc,
                                            Predicate::Map &predMap,
                                            llvm::Instruction *instr)
     -> Instruction * {
+    auto i = new (alloc) Instruction(Identifier(instr), instr->getType());
+    // allocate and store first to avoid cycles
+    llvmToInternalMap[instr] = i;
     auto pred = predMap[instr];
     if (!pred) {
         // return an incomplete instruction
-        // it is not added to the argMap
-        auto i = new (alloc) Instruction(Identifier(instr), instr->getType());
-        llvmToInternalMap[instr] = i;
+        // it is not added to the argmap
         return i;
     }
-    UniqueIdentifier uid{getUniqueIdentifier(alloc, predMap, *this, instr)};
+    UniqueIdentifier uid{i->getUniqueIdentifier(alloc, predMap, *this)};
     auto argMatch = argMap.find(uid);
-    if (argMatch != argMap.end())
+    if (argMatch != argMap.end()) {
+        llvmToInternalMap[instr] = argMatch->second;
         return argMatch->second;
-    auto i = new (alloc) Instruction(uid);
+    }
+    // auto i = new (alloc) Instruction(uid);
     auto insertIter = argMap.insert({uid, i});
     assert(insertIter.second);
     assert(insertIter.first->second == i);
-    i->predicates = std::move(*pred);
+    i->predicates = *pred;
     i->operands = std::get<3>(insertIter.first->first);
     for (auto *op : i->operands) {
         op->users.push_back(i);
@@ -886,7 +907,11 @@ auto Instruction::Cache::get(llvm::BumpPtrAllocator &alloc,
         // maybe instr isn't in BBpreds?
         if (auto pred = predMap[instr]) {
             // instr is in BBpreds, therefore, we now complete `i`.
+            SHOWLN(instr);
+            SHOWLN(*instr);
             i->predicates = std::move(*pred);
+            // we use dummy operands to avoid infinite recursion
+            i->operands = llvm::ArrayRef<Instruction *>{nullptr, 1};
             i->operands = getOperands(alloc, predMap, *this, instr);
             for (auto *op : i->operands) {
                 op->users.push_back(i);
