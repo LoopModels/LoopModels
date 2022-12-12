@@ -218,134 +218,135 @@ $(function() {
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    [[no_unique_address]] llvm::SmallVector&lt;Intersection, 2&gt; intersectUnion;</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="structPredicate_1_1Set.html">Set</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <a class="code" href="structPredicate_1_1Set.html">Set</a>(<a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) : intersectUnion({pred}) {}</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) -&gt; <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> {</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;        <span class="keywordflow">return</span> intersectUnion[index];</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    }</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) <span class="keyword">const</span> -&gt; <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> {</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;        <span class="keywordflow">return</span> intersectUnion[index];</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    }</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; Relation {</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;        <span class="keywordflow">return</span> intersectUnion[i][j];</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    }</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;        <span class="keywordflow">return</span> intersectUnion.size();</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    }</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <span class="comment">// [[nodiscard]] static auto Tombstone() -&gt; Set {</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="comment">//     return {Intersection::Tombstone()};</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00223"></a><span class="lineno"><a class="line" href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">  223</a></span>&#160;<span class="comment"></span>    <span class="keywordtype">void</span> <a class="code" href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">predUnion</a>(<a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> other) {</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordflow">if</span> (other.isEmpty())</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">if</span> (intersectUnion.empty()) {</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;            intersectUnion.push_back(other);</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;            <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;        }</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        <span class="comment">// we first try to avoid pushing so that we don&#39;t have to realloc</span></div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="keywordtype">bool</span> simplifyPreds = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;pred : intersectUnion) {</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;            <span class="keyword">auto</span> u = pred.<a class="code" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a>(other);</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> compact = std::get_if&lt;Intersection&gt;(&amp;u)) {</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;                pred = *compact;</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;                <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> simplify =</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;                           std::get_if&lt;std::pair&lt;Intersection, Intersection&gt;&gt;(</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;                               &amp;u)) {</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;                pred = simplify-&gt;first;</div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                other = simplify-&gt;second;</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                simplifyPreds = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;            }</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;        }</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;        intersectUnion.push_back(other);</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;        <span class="keywordflow">while</span> (simplifyPreds) {</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;            simplifyPreds = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; intersectUnion.size(); ++i) {</div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = i + 1; j &lt; intersectUnion.size();) {</div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;                    <span class="keyword">auto</span> u = intersectUnion[i].<a class="code" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a>(intersectUnion[j]);</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;                    <span class="keywordflow">if</span> (<span class="keyword">auto</span> compact = std::get_if&lt;Intersection&gt;(&amp;u)) {</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                        <span class="comment">// delete `j`, update `i`</span></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                        intersectUnion[i] = *compact;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                        intersectUnion.erase(intersectUnion.begin() + j);</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                        simplifyPreds = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                        <span class="keywordflow">if</span> (<span class="keyword">auto</span> simplify = std::get_if&lt;</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                                std::pair&lt;Intersection, Intersection&gt;&gt;(&amp;u)) {</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;                            <span class="comment">// assert forward progress</span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;                            assert(</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                                (std::popcount(simplify-&gt;first.predicates) +</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;                                 std::popcount(simplify-&gt;second.predicates)) &lt;=</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                                (std::popcount(intersectUnion[i].predicates) +</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                                 std::popcount(intersectUnion[j].predicates)));</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                            intersectUnion[i] = simplify-&gt;first;</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                            intersectUnion[j] = simplify-&gt;second;</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                            simplifyPreds = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;                        }</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                        ++j;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;                    }</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                }</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;            }</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        }</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    }</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) -&gt; <a class="code" href="structPredicate_1_1Set.html">Set</a> &amp; {</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; intersectUnion.size();) {</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;            intersectUnion[i] &amp;= pred;</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            <span class="keywordflow">if</span> (intersectUnion[i].isEmpty()) {</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;                intersectUnion.erase(intersectUnion.begin() + i);</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;            } <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;                ++i;</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        }</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin() { <span class="keywordflow">return</span> intersectUnion.begin(); }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> end() { <span class="keywordflow">return</span> intersectUnion.end(); }</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordflow">return</span> intersectUnion.begin();</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    }</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> end()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> intersectUnion.end(); }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> operator&amp;=(Set &amp;pred) -&gt; Set &amp; {</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> p : pred)</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;            (*this) &amp;= p;</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;    }</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> isEmpty() const -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;        <span class="keywordflow">return</span> intersectUnion.empty();</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    }</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> emptyIntersection(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : intersectUnion)</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;                <span class="keywordflow">if</span> ((pred &amp; otherPred).isEmpty())</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;                    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    }</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="comment">//     size_t I = instructions.size();</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="comment">//         if (instructions[i] == instruction)</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="comment">//             return i;</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">//     instructions.push_back(instruction);</span></div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">//     return I;</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="comment">// PredicateSet() = default;</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="comment">// PredicateSet(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">// &amp;ic,</span></div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="comment">//                    Predicates &amp;pred) {</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">//         PredicateRelation val =</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">//             PredicateRelation::True;</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">//         set(index, val);</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="comment">//     }</span></div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160; </div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;<span class="keyword">struct </span>Map;</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="comment">// TODO: constexpr these when llvm::SmallVector supports it</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) -&gt; <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> {</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;        <span class="keywordflow">return</span> intersectUnion[index];</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    }</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) <span class="keyword">const</span> -&gt; <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> {</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;        <span class="keywordflow">return</span> intersectUnion[index];</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    }</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; Relation {</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;        <span class="keywordflow">return</span> intersectUnion[i][j];</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    }</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;        <span class="keywordflow">return</span> intersectUnion.size();</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    }</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="comment">// [[nodiscard]] static auto Tombstone() -&gt; Set {</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="comment">//     return {Intersection::Tombstone()};</span></div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno"><a class="line" href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">  224</a></span>&#160;<span class="comment"></span>    <span class="keywordtype">void</span> <a class="code" href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">predUnion</a>(<a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> other) {</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordflow">if</span> (other.isEmpty())</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">if</span> (intersectUnion.empty()) {</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;            intersectUnion.push_back(other);</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;            <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        }</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <span class="comment">// we first try to avoid pushing so that we don&#39;t have to realloc</span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <span class="keywordtype">bool</span> simplifyPreds = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;pred : intersectUnion) {</div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;            <span class="keyword">auto</span> u = pred.<a class="code" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a>(other);</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> compact = std::get_if&lt;Intersection&gt;(&amp;u)) {</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;                pred = *compact;</div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;                <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">auto</span> simplify =</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;                           std::get_if&lt;std::pair&lt;Intersection, Intersection&gt;&gt;(</div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;                               &amp;u)) {</div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;                pred = simplify-&gt;first;</div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;                other = simplify-&gt;second;</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;                simplifyPreds = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;            }</div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;        }</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;        intersectUnion.push_back(other);</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        <span class="keywordflow">while</span> (simplifyPreds) {</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;            simplifyPreds = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; intersectUnion.size(); ++i) {</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = i + 1; j &lt; intersectUnion.size();) {</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;                    <span class="keyword">auto</span> u = intersectUnion[i].<a class="code" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a>(intersectUnion[j]);</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;                    <span class="keywordflow">if</span> (<span class="keyword">auto</span> compact = std::get_if&lt;Intersection&gt;(&amp;u)) {</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;                        <span class="comment">// delete `j`, update `i`</span></div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;                        intersectUnion[i] = *compact;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;                        intersectUnion.erase(intersectUnion.begin() + j);</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;                        simplifyPreds = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;                    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;                        <span class="keywordflow">if</span> (<span class="keyword">auto</span> simplify = std::get_if&lt;</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;                                std::pair&lt;Intersection, Intersection&gt;&gt;(&amp;u)) {</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;                            <span class="comment">// assert forward progress</span></div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                            assert(</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;                                (std::popcount(simplify-&gt;first.predicates) +</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                                 std::popcount(simplify-&gt;second.predicates)) &lt;=</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;                                (std::popcount(intersectUnion[i].predicates) +</div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;                                 std::popcount(intersectUnion[j].predicates)));</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;                            intersectUnion[i] = simplify-&gt;first;</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                            intersectUnion[j] = simplify-&gt;second;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;                            simplifyPreds = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                        }</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;                        ++j;</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                    }</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;                }</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;            }</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;        }</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    }</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keyword">auto</span> operator&amp;=(<a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> pred) -&gt; <a class="code" href="structPredicate_1_1Set.html">Set</a> &amp; {</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; intersectUnion.size();) {</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;            intersectUnion[i] &amp;= pred;</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            <span class="keywordflow">if</span> (intersectUnion[i].isEmpty()) {</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;                intersectUnion.erase(intersectUnion.begin() + i);</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;            } <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;                ++i;</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;        }</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    }</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin() { <span class="keywordflow">return</span> intersectUnion.begin(); }</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> end() { <span class="keywordflow">return</span> intersectUnion.end(); }</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> begin()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordflow">return</span> intersectUnion.begin();</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    }</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> end()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> intersectUnion.end(); }</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> operator&amp;=(Set &amp;pred) -&gt; Set &amp; {</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> p : pred)</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;            (*this) &amp;= p;</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    }</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> isEmpty() const -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordflow">return</span> intersectUnion.empty();</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    }</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> emptyIntersection(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : intersectUnion)</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;                <span class="keywordflow">if</span> ((pred &amp; otherPred).isEmpty())</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;                    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    }</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="comment">//     size_t I = instructions.size();</span></div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="comment">//         if (instructions[i] == instruction)</span></div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">//             return i;</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">//     instructions.push_back(instruction);</span></div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">//     return I;</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="comment">// PredicateSet() = default;</span></div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">// PredicateSet(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache</span></div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="comment">// &amp;ic,</span></div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">//                    Predicates &amp;pred) {</span></div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">//         PredicateRelation val =</span></div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">//             PredicateRelation::True;</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="comment">//         set(index, val);</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <span class="comment">//     }</span></div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="keyword">struct </span>Map;</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
 <div class="ttc" id="astructEmpty_html"><div class="ttname"><a href="structEmpty.html">Empty</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
-<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:41</div></div>
+<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:42</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structPredicate_1_1Intersection_1_1Reference.html">Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:68</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:46</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html_a955076f74163093f46e90c5f1877ad93"><div class="ttname"><a href="structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93">Predicate::Intersection::isEmpty</a></div><div class="ttdeci">constexpr auto isEmpty() const -&gt; bool</div><div class="ttdoc">returns true if the PredicateIntersection is empty, false otherwise</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:106</div></div>
@@ -353,7 +354,7 @@ $(function() {
 <div class="ttc" id="astructPredicate_1_1Intersection_html_aa96f5013d74c11be8d75b23afd2431be"><div class="ttname"><a href="structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be">Predicate::Intersection::removeEmptyMask</a></div><div class="ttdeci">static constexpr auto removeEmptyMask(uint64_t x) -&gt; uint64_t</div><div class="ttdoc">returns 11 if non-empty, 00 if empty</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:97</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html_aaa2b904ea48bc52b82906c61c905274e"><div class="ttname"><a href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">Predicate::Intersection::compactUnion</a></div><div class="ttdeci">constexpr auto compactUnion(Intersection other) const -&gt; std::variant&lt; std::monostate, Intersection, std::pair&lt; Intersection, Intersection &gt;&gt;</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:114</div></div>
 <div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:186</div></div>
-<div class="ttc" id="astructPredicate_1_1Set_html_a4dff27191434be4efc9ffa4da3c4ad9a"><div class="ttname"><a href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">Predicate::Set::predUnion</a></div><div class="ttdeci">void predUnion(Intersection other)</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:223</div></div>
+<div class="ttc" id="astructPredicate_1_1Set_html_a4dff27191434be4efc9ffa4da3c4ad9a"><div class="ttname"><a href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">Predicate::Set::predUnion</a></div><div class="ttdeci">void predUnion(Intersection other)</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:224</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
