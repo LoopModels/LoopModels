@@ -4,5 +4,5 @@
 
 template <typename T> struct Equals {
     T x;
-    constexpr bool operator()(const auto &y) { return x == y; }
+    constexpr auto operator()(const auto &y) -> bool { return x == y; }
 };

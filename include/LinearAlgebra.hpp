@@ -5,7 +5,7 @@ struct LU {
     SquareMatrix<Rational> F;
     llvm::SmallVector<unsigned> ipiv;
 
-    bool ldiv(MutPtrMatrix<Rational> rhs) const {
+    [[nodiscard]] auto ldiv(MutPtrMatrix<Rational> rhs) const -> bool {
         auto [M, N] = rhs.size();
         assert(F.numRow() == M);
         // // check unimodularity
@@ -59,7 +59,7 @@ struct LU {
         return false;
     }
 
-    bool rdiv(MutPtrMatrix<Rational> rhs) const {
+    [[nodiscard]] auto rdiv(MutPtrMatrix<Rational> rhs) const -> bool {
         auto [M, N] = rhs.size();
         assert(F.numCol() == N);
         // // check unimodularity
@@ -106,14 +106,14 @@ struct LU {
         return false;
     }
 
-    std::optional<SquareMatrix<Rational>> inv() const {
+    [[nodiscard]] auto inv() const -> std::optional<SquareMatrix<Rational>> {
         SquareMatrix<Rational> A = SquareMatrix<Rational>::identity(F.numCol());
         if (!ldiv(A))
             return A;
         else
             return {};
     }
-    std::optional<Rational> det() {
+    auto det() -> std::optional<Rational> {
         Rational d = F(0, 0);
         for (size_t i = 1; i < F.numCol(); ++i)
             if (auto di = d.safeMul(F(i, i)))
@@ -122,7 +122,7 @@ struct LU {
                 return {};
         return d;
     }
-    llvm::SmallVector<unsigned> perm() const {
+    [[nodiscard]] auto perm() const -> llvm::SmallVector<unsigned> {
         size_t M = F.numCol();
         llvm::SmallVector<unsigned> perm;
         for (size_t m = 0; m < M; ++m) {
@@ -133,7 +133,7 @@ struct LU {
         }
         return perm;
     }
-    static llvm::Optional<LU> fact(const SquareMatrix<int64_t> &B) {
+    static auto fact(const SquareMatrix<int64_t> &B) -> llvm::Optional<LU> {
         size_t M = B.M;
         SquareMatrix<Rational> A(M);
         for (size_t m = 0; m < M * M; ++m)

@@ -37,35 +37,39 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // size_t numDep1Var; // loops dep 1
     [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
 
-    // using
-    inline size_t getTimeDim() const { return nullStep.size(); }
-    inline size_t getDim0() const { return numDep0Var; }
-    inline size_t getDim1() const {
+    // TODO: `constexpr` once `llvm::SmallVector` supports it
+    [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
+    [[nodiscard]] constexpr auto getDim0() const -> size_t {
+        return numDep0Var;
+    }
+    [[nodiscard]] auto getDim1() const -> size_t {
         return getNumVar() - numDep0Var - nullStep.size() - S.size();
     }
-    inline size_t getNumPhiCoefficients() const {
+    [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
         return getNumVar() - nullStep.size() - S.size();
     }
-    static constexpr size_t getNumOmegaCoefficients() { return 2; }
-    inline size_t getNumScheduleCoefficients() const {
+    static constexpr auto getNumOmegaCoefficients() -> size_t { return 2; }
+    [[nodiscard]] auto getNumScheduleCoefficients() const -> size_t {
         return getNumPhiCoefficients() + getNumOmegaCoefficients();
     }
-    MutPtrVector<int64_t> getSymbols(size_t i) {
+    auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
         return A(i, _(begin, getNumSymbols()));
     }
-    PtrVector<int64_t> getInEqSymbols(size_t i) const {
+    [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
         return A(i, _(begin, getNumSymbols()));
     }
-    PtrVector<int64_t> getEqSymbols(size_t i) const {
+    [[nodiscard]] auto getEqSymbols(size_t i) const -> PtrVector<int64_t> {
         return E(i, _(begin, getNumSymbols()));
     }
-    llvm::Optional<int64_t> getCompTimeInEqOffset(size_t i) const {
+    [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
+        -> llvm::Optional<int64_t> {
         for (size_t j = 1; j < getNumSymbols(); ++j)
             if (A(i, j))
                 return {};
         return A(i, 0);
     }
-    llvm::Optional<int64_t> getCompTimeEqOffset(size_t i) const {
+    [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
+        -> llvm::Optional<int64_t> {
         for (size_t j = 1; j < getNumSymbols(); ++j)
             if (E(i, j))
                 return {};
@@ -168,15 +172,16 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // }
 
     // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
-    static size_t findFirstNonEqual(PtrVector<unsigned> x,
-                                    PtrVector<unsigned> y) {
+    static auto findFirstNonEqual(PtrVector<unsigned> x, PtrVector<unsigned> y)
+        -> size_t {
         const size_t M = std::min(x.size(), y.size());
         for (size_t i = 0; i < M; ++i)
             if (x[i] != y[i])
                 return i;
         return M;
     }
-    static IntMatrix nullSpace(const MemoryAccess &x, const MemoryAccess &y) {
+    static auto nullSpace(const MemoryAccess &x, const MemoryAccess &y)
+        -> IntMatrix {
         const size_t numLoopsCommon =
             findFirstNonEqual(x.getFusionOmega(), y.getFusionOmega());
         const size_t xDim = x.ref.getArrayDim();
@@ -212,15 +217,16 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Produces
     // A*x <= b
     // Where x = [inds0..., inds1..., time..]
-    unsigned int symbolIndex(const llvm::SCEV *v) {
+    auto symbolIndex(const llvm::SCEV *v) -> unsigned int {
         for (unsigned int i = 0; i < S.size(); ++i)
             if (S[i] == v)
                 return i;
         return std::numeric_limits<unsigned int>::max();
     }
-    std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
-    merge(llvm::ArrayRef<const llvm::SCEV *> s0,
-          llvm::ArrayRef<const llvm::SCEV *> s1) {
+    auto merge(llvm::ArrayRef<const llvm::SCEV *> s0,
+               llvm::ArrayRef<const llvm::SCEV *> s1)
+        -> std::pair<llvm::SmallVector<unsigned int>,
+                     llvm::SmallVector<unsigned int>> {
         S.reserve(s0.size() + s1.size());
         std::pair<llvm::SmallVector<unsigned int>,
                   llvm::SmallVector<unsigned int>>
@@ -231,11 +237,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
             ret.first.push_back(i);
             S.push_back(s0[i]);
         }
-        for (size_t i = 0; i < s1.size(); ++i) {
-            unsigned int j = symbolIndex(s1[i]);
+        for (auto i : s1) {
+            unsigned int j = symbolIndex(i);
             if (j == std::numeric_limits<unsigned int>::max()) {
                 ret.second.push_back(S.size());
-                S.push_back(s1[i]);
+                S.push_back(i);
             } else {
                 ret.second.push_back(j);
             }
@@ -334,10 +340,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         initializeComparator();
         pruneBounds();
     }
-    static constexpr size_t getNumLambda(size_t numIneq, size_t numEq) {
+    static constexpr auto getNumLambda(size_t numIneq, size_t numEq) -> size_t {
         return 1 + numIneq + 2 * numEq;
     }
-    size_t getNumLambda() const { return getNumLambda(A.numRow(), E.numRow()); }
+    [[nodiscard]] auto getNumLambda() const -> size_t {
+        return getNumLambda(A.numRow(), E.numRow());
+    }
     // `direction = true` means second dep follow first
     // lambda_0 + lambda*A*x = delta + c'x
     // x = [s, i]
@@ -349,7 +357,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // constraint order corresponds to old variables, will be in same order
     //
     // Time parameters are carried over into farkas polys
-    std::pair<Simplex, Simplex> farkasPair() const {
+    [[nodiscard]] auto farkasPair() const -> std::pair<Simplex, Simplex> {
 
         const size_t numEqualityConstraintsOld = E.numRow();
         const size_t numInequalityConstraintsOld = A.numRow();
@@ -472,8 +480,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         // assert(bw.E.numRow() == bw.q.size());
         // return pair;
     }
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const DependencePolyhedra &p) {
+    friend auto operator<<(llvm::raw_ostream &os, const DependencePolyhedra &p)
+        -> llvm::raw_ostream & {
         return printConstraints(
             printPositive(printConstraints(os << "\n", p.A, p.S),
                           p.getNumDynamic()),
@@ -633,92 +641,97 @@ struct Dependence {
     // }
     // emplaces dependencies without any repeat accesses to the same memory
     // returns
-    bool isInactive(size_t depth) const {
+    [[nodiscard]] auto isInactive(size_t depth) const -> bool {
         return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
     }
-    size_t getNumLambda() const { return depPoly.getNumLambda() << 1; }
-    size_t getNumSymbols() const { return depPoly.getNumSymbols(); }
-    size_t getNumPhiCoefficients() const {
+    [[nodiscard]] auto getNumLambda() const -> size_t {
+        return depPoly.getNumLambda() << 1;
+    }
+    [[nodiscard]] auto getNumSymbols() const -> size_t {
+        return depPoly.getNumSymbols();
+    }
+    [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
         return depPoly.getNumPhiCoefficients();
     }
-    static constexpr size_t getNumOmegaCoefficients() {
+    static constexpr auto getNumOmegaCoefficients() -> size_t {
         return DependencePolyhedra::getNumOmegaCoefficients();
     }
-    size_t getNumConstraints() const {
+    [[nodiscard]] auto getNumConstraints() const -> size_t {
         return dependenceBounding.getNumConstraints() +
                dependenceSatisfaction.getNumConstraints();
     }
-    StridedVector<int64_t> getSatConstants() const {
+    [[nodiscard]] auto getSatConstants() const -> StridedVector<int64_t> {
         return dependenceSatisfaction.getConstants();
     }
-    StridedVector<int64_t> getBndConstants() const {
+    [[nodiscard]] auto getBndConstants() const -> StridedVector<int64_t> {
         return dependenceBounding.getConstants();
     }
-    PtrMatrix<int64_t> getSatLambda() const {
+    [[nodiscard]] auto getSatLambda() const -> PtrMatrix<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, _(1, 1 + depPoly.getNumLambda()));
     }
-    PtrMatrix<int64_t> getBndLambda() const {
+    [[nodiscard]] auto getBndLambda() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1, 1 + depPoly.getNumLambda()));
     }
-    PtrMatrix<int64_t> getSatPhiCoefs() const {
+    [[nodiscard]] auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
-    PtrMatrix<int64_t> getSatPhi0Coefs() const {
+    [[nodiscard]] auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda(),
                  1 + depPoly.getNumLambda() + depPoly.getDim0()));
     }
-    PtrMatrix<int64_t> getSatPhi1Coefs() const {
+    [[nodiscard]] auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
-    PtrMatrix<int64_t> getBndPhiCoefs() const {
+    [[nodiscard]] auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
-    PtrMatrix<int64_t> getBndPhi0Coefs() const {
+    [[nodiscard]] auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda(),
                  1 + depPoly.getNumLambda() + depPoly.getDim0()));
     }
-    PtrMatrix<int64_t> getBndPhi1Coefs() const {
+    [[nodiscard]] auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
     }
-    PtrMatrix<int64_t> getSatOmegaCoefs() const {
+    [[nodiscard]] auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
-    PtrMatrix<int64_t> getBndOmegaCoefs() const {
+    [[nodiscard]] auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
                  1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients()));
     }
-    StridedVector<int64_t> getSatW() const {
+    [[nodiscard]] auto getSatW() const -> StridedVector<int64_t> {
         return dependenceSatisfaction.getConstraints()(
             _, 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                    getNumOmegaCoefficients());
     }
-    PtrMatrix<int64_t> getBndCoefs() const {
+    [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
         return dependenceBounding.getConstraints()(
             _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
                      getNumOmegaCoefficients(),
                  end));
     }
 
-    std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-               PtrMatrix<int64_t>, PtrMatrix<int64_t>, StridedVector<int64_t>>
-    splitSatisfaction() const {
+    [[nodiscard]] auto splitSatisfaction() const
+        -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
+                      PtrMatrix<int64_t>, PtrMatrix<int64_t>,
+                      PtrMatrix<int64_t>, StridedVector<int64_t>> {
         PtrMatrix<int64_t> phiCoefsIn =
             forward ? getSatPhi0Coefs() : getSatPhi1Coefs();
         PtrMatrix<int64_t> phiCoefsOut =
@@ -726,9 +739,10 @@ struct Dependence {
         return std::make_tuple(getSatConstants(), getSatLambda(), phiCoefsIn,
                                phiCoefsOut, getSatOmegaCoefs(), getSatW());
     }
-    std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
-               PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>>
-    splitBounding() const {
+    [[nodiscard]] auto splitBounding() const
+        -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
+                      PtrMatrix<int64_t>, PtrMatrix<int64_t>,
+                      PtrMatrix<int64_t>, PtrMatrix<int64_t>> {
         PtrMatrix<int64_t> phiCoefsIn =
             forward ? getBndPhi0Coefs() : getBndPhi1Coefs();
         PtrMatrix<int64_t> phiCoefsOut =
@@ -802,7 +816,8 @@ struct Dependence {
         W(_(satConstraints, end)) = BC(_, 0);
         U(_(satConstraints, end), _) = BC(_, _(1, end));
     }
-    bool isSatisfied(const Schedule &schIn, const Schedule &schOut) const {
+    [[nodiscard]] auto isSatisfied(const Schedule &schIn,
+                                   const Schedule &schOut) const -> bool {
         const ArrayReference &refIn = in->ref;
         const ArrayReference &refOut = out->ref;
         size_t numLoopsIn = refIn.getNumLoops();
@@ -850,8 +865,9 @@ struct Dependence {
         }
         return true;
     }
-    bool isSatisfied(llvm::ArrayRef<unsigned> inFusOmega,
-                     llvm::ArrayRef<unsigned> outFusOmega) const {
+    [[nodiscard]] auto isSatisfied(llvm::ArrayRef<unsigned> inFusOmega,
+                                   llvm::ArrayRef<unsigned> outFusOmega) const
+        -> bool {
         const ArrayReference &refIn = in->ref;
         const ArrayReference &refOut = out->ref;
         size_t numLoopsIn = refIn.getNumLoops();
@@ -893,7 +909,8 @@ struct Dependence {
         }
         return true;
     }
-    bool isSatisfied(const Schedule &sx, const Schedule &sy, size_t d) const {
+    [[nodiscard]] auto isSatisfied(const Schedule &sx, const Schedule &sy,
+                                   size_t d) const -> bool {
         const size_t numLambda = depPoly.getNumLambda();
         const size_t numLoopsX = depPoly.getDim0();
         const size_t numLoopsY = depPoly.getDim1();
@@ -909,7 +926,7 @@ struct Dependence {
         sch(numLoopsTotal + 1) = sy.getOffsetOmega()[d];
         return dependenceSatisfaction.satisfiable(sch, numLambda);
     }
-    bool isSatisfied(size_t d) const {
+    [[nodiscard]] auto isSatisfied(size_t d) const -> bool {
         const size_t numLambda = depPoly.getNumLambda();
         const size_t numLoopsX = depPoly.getDim0();
         const size_t numLoopsY = depPoly.getDim1();
@@ -930,11 +947,11 @@ struct Dependence {
     //                    : isSatisfied(out->getFusedOmega(),
     //                    in->getFusedOmega(), d);
     // }
-    static bool checkDirection(const std::pair<Simplex, Simplex> &p,
+    static auto checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
                                const Schedule &xSchedule,
                                const Schedule &ySchedule, size_t numLambda,
-                               size_t nonTimeDim) {
+                               size_t nonTimeDim) -> bool {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -994,9 +1011,9 @@ struct Dependence {
         // assert(false);
         // return false;
     }
-    static bool checkDirection(const std::pair<Simplex, Simplex> &p,
+    static auto checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
-                               size_t numLambda, size_t nonTimeDim) {
+                               size_t numLambda, size_t nonTimeDim) -> bool {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -1052,7 +1069,7 @@ struct Dependence {
         // return false;
     }
     static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
-                              const DependencePolyhedra &dxy, MemoryAccess &x,
+                              DependencePolyhedra dxy, MemoryAccess &x,
                               MemoryAccess &y) {
         std::pair<Simplex, Simplex> pair(dxy.farkasPair());
         const size_t numLambda = dxy.getNumLambda();
@@ -1205,8 +1222,8 @@ struct Dependence {
                deps.back().getNumPhiCoefficients());
     }
 
-    static size_t check(llvm::SmallVectorImpl<Dependence> &deps,
-                        MemoryAccess &x, MemoryAccess &y) {
+    static auto check(llvm::SmallVectorImpl<Dependence> &deps, MemoryAccess &x,
+                      MemoryAccess &y) -> size_t {
         if (x.ref.gcdKnownIndependent(y.ref))
             return 0;
         DependencePolyhedra dxy(x, y);
@@ -1228,8 +1245,8 @@ struct Dependence {
         }
     }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const Dependence &d) {
+    friend auto operator<<(llvm::raw_ostream &os, const Dependence &d)
+        -> llvm::raw_ostream & {
         os << "Dependence Poly ";
         if (d.forward) {
             os << "x -> y:";

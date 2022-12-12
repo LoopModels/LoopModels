@@ -16,14 +16,14 @@
 #include <string>
 
 struct EndSentinel {
-    constexpr ptrdiff_t operator-(auto it) {
+    [[nodiscard]] constexpr auto operator-(auto it) -> ptrdiff_t {
         ptrdiff_t i = 0;
         for (; it != EndSentinel{}; ++it, ++i) {
         }
         return i;
     }
     // overloaded operator== cannot be a static member function
-    constexpr bool operator==(EndSentinel) const { return true; }
+    constexpr auto operator==(EndSentinel) const -> bool { return true; }
 };
 struct BitSetIterator {
     [[no_unique_address]] llvm::SmallVectorTemplateCommon<
@@ -33,8 +33,8 @@ struct BitSetIterator {
     [[no_unique_address]] uint64_t istate;
     [[no_unique_address]] size_t cstate0{std::numeric_limits<size_t>::max()};
     [[no_unique_address]] size_t cstate1{0};
-    constexpr size_t operator*() const { return cstate0 + cstate1; }
-    constexpr BitSetIterator &operator++() {
+    constexpr auto operator*() const -> size_t { return cstate0 + cstate1; }
+    constexpr auto operator++() -> BitSetIterator & {
         while (istate == 0) {
             ++it;
             if (it == end)
@@ -48,18 +48,18 @@ struct BitSetIterator {
         istate >>= tzp1;
         return *this;
     }
-    constexpr BitSetIterator operator++(int) {
+    constexpr auto operator++(int) -> BitSetIterator {
         BitSetIterator temp = *this;
         ++*this;
         return temp;
     }
-    constexpr bool operator==(EndSentinel) const {
+    constexpr auto operator==(EndSentinel) const -> bool {
         return it == end && (istate == 0);
     }
-    constexpr bool operator!=(EndSentinel) const {
+    constexpr auto operator!=(EndSentinel) const -> bool {
         return it != end || (istate != 0);
     }
-    constexpr bool operator==(BitSetIterator j) const {
+    constexpr auto operator==(BitSetIterator j) const -> bool {
         return (it == j.it) && (istate == j.istate);
     }
 };
@@ -72,12 +72,12 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
     //     return data[i];
     // } // allow `getindex` but not `setindex`
     BitSet() = default;
-    size_t static constexpr numElementsNeeded(size_t N) {
+    static constexpr auto numElementsNeeded(size_t N) -> size_t {
         return (N + 63) >> 6;
     }
     BitSet(size_t N)
         : data(llvm::SmallVector<uint64_t>(numElementsNeeded(N))) {}
-    static BitSet dense(size_t N) {
+    static auto dense(size_t N) -> BitSet {
         BitSet b;
         b.data.resize(numElementsNeeded(N),
                       std::numeric_limits<uint64_t>::max());
@@ -85,13 +85,13 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
             b.data.back() = (size_t(1) << rem) - 1;
         return b;
     }
-    size_t maxValue() const {
+    [[nodiscard]] auto maxValue() const -> size_t {
         size_t N = data.size();
         return N ? (64 * N - std::countl_zero(data[N - 1])) : 0;
     }
     // BitSet::Iterator(std::vector<std::uint64_t> &seta)
     //     : set(seta), didx(0), offset(0), state(seta[0]), count(0) {};
-    inline BitSetIterator begin() const {
+    [[nodiscard]] constexpr auto begin() const -> BitSetIterator {
         auto b{data.begin()};
         auto e{data.end()};
         if (b == e)
@@ -99,14 +99,17 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         BitSetIterator it{b, e, *b};
         return ++it;
     }
-    constexpr static EndSentinel end() { return EndSentinel{}; };
-    inline size_t front() const {
+    [[nodiscard]] constexpr static auto end() -> EndSentinel {
+        return EndSentinel{};
+    };
+    [[nodiscard]] inline auto front() const -> size_t {
         for (size_t i = 0; i < data.size(); ++i)
             if (data[i])
                 return 64 * i + std::countr_zero(data[i]);
         return std::numeric_limits<size_t>::max();
     }
-    static inline uint64_t contains(llvm::ArrayRef<uint64_t> data, size_t x) {
+    static inline auto contains(llvm::ArrayRef<uint64_t> data, size_t x)
+        -> uint64_t {
         if (data.empty())
             return 0;
         size_t d = x >> size_t(6);
@@ -114,9 +117,11 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         uint64_t mask = uint64_t(1) << r;
         return (data[d] & (mask));
     }
-    uint64_t contains(size_t i) const { return contains(data, i); }
+    [[nodiscard]] auto contains(size_t i) const -> uint64_t {
+        return contains(data, i);
+    }
 
-    bool insert(size_t x) {
+    auto insert(size_t x) -> bool {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
@@ -136,7 +141,7 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         data[d] |= (mask);
     }
 
-    bool remove(size_t x) {
+    auto remove(size_t x) -> bool {
         size_t d = x >> size_t(6);
         uint64_t r = uint64_t(x) & uint64_t(63);
         uint64_t mask = uint64_t(1) << r;
@@ -169,17 +174,17 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         }
     };
 
-    bool operator[](size_t i) const { return contains(data, i); }
-    Reference operator[](size_t i) {
+    auto operator[](size_t i) const -> bool { return contains(data, i); }
+    auto operator[](size_t i) -> Reference {
         return Reference{llvm::MutableArrayRef<uint64_t>(data), i};
     }
-    size_t size() const {
+    [[nodiscard]] auto size() const -> size_t {
         size_t s = 0;
         for (auto u : data)
             s += std::popcount(u);
         return s;
     }
-    bool any() const {
+    [[nodiscard]] auto any() const -> bool {
         for (auto u : data)
             if (u)
                 return true;
@@ -194,7 +199,7 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
             data[i] = d;
         }
     }
-    BitSet &operator&=(const BitSet &bs) {
+    auto operator&=(const BitSet &bs) -> BitSet & {
         if (bs.data.size() < data.size())
             data.resize(bs.data.size());
         for (size_t i = 0; i < data.size(); ++i)
@@ -202,32 +207,32 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         return *this;
     }
     // &!
-    BitSet &operator-=(const BitSet &bs) {
+    auto operator-=(const BitSet &bs) -> BitSet & {
         if (bs.data.size() < data.size())
             data.resize(bs.data.size());
         for (size_t i = 0; i < data.size(); ++i)
             data[i] &= (~bs.data[i]);
         return *this;
     }
-    BitSet &operator|=(const BitSet &bs) {
+    auto operator|=(const BitSet &bs) -> BitSet & {
         if (bs.data.size() > data.size())
             data.resize(bs.data.size());
         for (size_t i = 0; i < bs.data.size(); ++i)
             data[i] |= bs.data[i];
         return *this;
     }
-    BitSet operator&(const BitSet &bs) const {
+    auto operator&(const BitSet &bs) const -> BitSet {
         BitSet r = *this;
         return r &= bs;
     }
-    BitSet operator|(const BitSet &bs) const {
+    auto operator|(const BitSet &bs) const -> BitSet {
         BitSet r = *this;
         return r |= bs;
     }
-    bool operator==(const BitSet &bs) const { return data == bs.data; }
+    auto operator==(const BitSet &bs) const -> bool { return data == bs.data; }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         BitSet const &x) {
+    friend auto operator<<(llvm::raw_ostream &os, BitSet const &x)
+        -> llvm::raw_ostream & {
         os << "BitSet[";
         auto it = x.begin();
         constexpr EndSentinel e = BitSet::end();
@@ -249,7 +254,7 @@ struct BitSet64 {
     struct Reference {
         uint64_t &u;
         size_t i;
-        operator bool() const { return (u >> i) != 0; }
+        constexpr operator bool() const { return (u >> i) != 0; }
         void operator=(bool b) {
             uint64_t flag = uint64_t(1) << i;
             if (b) {
@@ -260,39 +265,39 @@ struct BitSet64 {
             return;
         }
     };
-    bool operator[](size_t i) { return Reference{u, i}; }
-    bool operator[](size_t i) const { return (u >> i) != 0; }
+    constexpr auto operator[](size_t i) -> bool { return Reference{u, i}; }
+    constexpr auto operator[](size_t i) const -> bool { return (u >> i) != 0; }
     struct Iterator {
         uint64_t u;
         size_t i{0};
         struct End {};
-        size_t operator++() {
+        auto operator++() -> size_t {
             auto tz = std::countr_zero(u);
             i += ++tz;
             u >>= tz;
             return i;
         }
-        size_t operator++(int) {
+        auto operator++(int) -> size_t {
             size_t ii = i;
             auto tz = std::countr_zero(u);
             i += ++tz;
             u >>= tz;
             return ii;
         }
-        size_t operator*() { return i; }
-        bool operator==(End) { return !u; }
+        auto operator*() -> size_t { return i; }
+        auto operator==(End) -> bool { return !u; }
     };
-    Iterator begin() const { return Iterator{u}; }
-    Iterator::End end() const { return Iterator::End{}; }
+    [[nodiscard]] auto begin() const -> Iterator { return Iterator{u}; }
+    [[nodiscard]] auto end() const -> Iterator::End { return Iterator::End{}; }
     struct ReverseIterator {
         uint64_t u;
         size_t i;
-        bool operator==(Iterator::End) { return !u; }
+        auto operator==(Iterator::End) -> bool { return !u; }
     };
-    ReverseIterator rbegin() const {
+    [[nodiscard]] auto rbegin() const -> ReverseIterator {
         return ReverseIterator{u, size_t(64) - size_t(std::countl_zero(u))};
     }
-    Iterator::End rend() const { return Iterator::End{}; }
+    [[nodiscard]] auto rend() const -> Iterator::End { return Iterator::End{}; }
     void set(size_t i) {
         u |= (uint64_t(1) << i);
         return;
@@ -312,53 +317,59 @@ template <typename T, unsigned N = 1> struct BitSliceView {
     struct Iterator {
         [[no_unique_address]] llvm::MutableArrayRef<T> a;
         [[no_unique_address]] BitSetIterator it;
-        constexpr bool operator==(EndSentinel) const {
+        constexpr auto operator==(EndSentinel) const -> bool {
             return it == EndSentinel{};
         }
-        constexpr Iterator &operator++() {
+        constexpr auto operator++() -> Iterator & {
             ++it;
             return *this;
         }
-        constexpr Iterator operator++(int) {
+        constexpr auto operator++(int) -> Iterator {
             Iterator temp = *this;
             ++it;
             return temp;
         }
-        T &operator*() { return a[*it]; }
-        const T &operator*() const { return a[*it]; }
-        T *operator->() { return &a[*it]; }
-        const T *operator->() const { return &a[*it]; }
+        auto operator*() -> T & { return a[*it]; }
+        auto operator*() const -> const T & { return a[*it]; }
+        auto operator->() -> T * { return &a[*it]; }
+        auto operator->() const -> const T * { return &a[*it]; }
     };
-    Iterator begin() { return {a, i.begin()}; }
+    constexpr auto begin() -> Iterator { return {a, i.begin()}; }
     struct ConstIterator {
         [[no_unique_address]] llvm::ArrayRef<T> a;
         [[no_unique_address]] BitSetIterator it;
-        constexpr bool operator==(EndSentinel) const {
+        constexpr auto operator==(EndSentinel) const -> bool {
             return it == EndSentinel{};
         }
-        constexpr bool operator==(ConstIterator c) const {
+        constexpr auto operator==(ConstIterator c) const -> bool {
             return (it == c.it) && (a.data() == c.a.data());
         }
-        constexpr ConstIterator &operator++() {
+        constexpr auto operator++() -> ConstIterator & {
             ++it;
             return *this;
         }
-        constexpr ConstIterator operator++(int) {
+        constexpr auto operator++(int) -> ConstIterator {
             ConstIterator temp = *this;
             ++it;
             return temp;
         }
-        const T &operator*() const { return a[*it]; }
-        const T *operator->() const { return &a[*it]; }
+        auto operator*() const -> const T & { return a[*it]; }
+        auto operator->() const -> const T * { return &a[*it]; }
     };
-    constexpr ConstIterator begin() const { return {a, i.begin()}; }
-    constexpr EndSentinel end() const { return {}; }
-    constexpr size_t size() const { return i.size(); }
+    [[nodiscard]] constexpr auto begin() const -> ConstIterator {
+        return {a, i.begin()};
+    }
+    [[nodiscard]] constexpr auto end() const -> EndSentinel { return {}; }
+    [[nodiscard]] constexpr auto size() const -> size_t { return i.size(); }
 };
-ptrdiff_t operator-(EndSentinel, BitSliceView<int64_t>::Iterator v) {
+[[nodiscard]] constexpr auto operator-(EndSentinel,
+                                       BitSliceView<int64_t>::Iterator v)
+    -> ptrdiff_t {
     return EndSentinel{} - v.it;
 }
-ptrdiff_t operator-(EndSentinel, BitSliceView<int64_t>::ConstIterator v) {
+[[nodiscard]] constexpr auto operator-(EndSentinel,
+                                       BitSliceView<int64_t>::ConstIterator v)
+    -> ptrdiff_t {
     return EndSentinel{} - v.it;
 }
 

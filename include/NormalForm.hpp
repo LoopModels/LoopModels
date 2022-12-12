@@ -11,8 +11,8 @@
 
 namespace NormalForm {
 
-inline std::tuple<int64_t, int64_t, int64_t, int64_t> gcdxScale(int64_t a,
-                                                                int64_t b) {
+inline auto gcdxScale(int64_t a, int64_t b)
+    -> std::tuple<int64_t, int64_t, int64_t, int64_t> {
     if (std::abs(a) == 1)
         return std::make_tuple(a, 0, a, b);
     auto [g, p, q] = gcdx(a, b);
@@ -93,9 +93,9 @@ zeroSubDiagonal(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
     }
 }
 
-MULTIVERSION inline bool pivotRows(MutPtrMatrix<int64_t> A,
+MULTIVERSION inline auto pivotRows(MutPtrMatrix<int64_t> A,
                                    MutPtrMatrix<int64_t> K, size_t i, size_t M,
-                                   size_t piv) {
+                                   size_t piv) -> bool {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
@@ -113,11 +113,12 @@ MULTIVERSION inline bool pivotRows(MutPtrMatrix<int64_t> A,
     }
     return false;
 }
-inline bool pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
-                      size_t i, size_t M) {
+inline auto pivotRows(MutPtrMatrix<int64_t> A, MutSquarePtrMatrix<int64_t> K,
+                      size_t i, size_t M) -> bool {
     return pivotRows(A, K, i, M, i);
 }
-inline bool pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
+inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv)
+    -> bool {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
@@ -126,7 +127,7 @@ inline bool pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
         swapRows(A, j, piv);
     return false;
 }
-inline bool pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t N) {
+inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, size_t N) -> bool {
     return pivotRows(A, i, N, i);
 }
 
@@ -142,9 +143,9 @@ dropCol(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t N) {
     }
 }
 
-MULTIVERSION [[maybe_unused]] static std::pair<SquareMatrix<int64_t>,
-                                               llvm::SmallVector<unsigned>>
-orthogonalizeBang(MutPtrMatrix<int64_t> A) {
+MULTIVERSION [[maybe_unused]] static auto
+orthogonalizeBang(MutPtrMatrix<int64_t> A)
+    -> std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>> {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
@@ -176,9 +177,8 @@ orthogonalizeBang(MutPtrMatrix<int64_t> A) {
     }
     return std::make_pair(std::move(K), std::move(included));
 }
-[[maybe_unused]] static std::pair<SquareMatrix<int64_t>,
-                                  llvm::SmallVector<unsigned>>
-orthogonalize(IntMatrix A) {
+[[maybe_unused]] static auto orthogonalize(IntMatrix A)
+    -> std::pair<SquareMatrix<int64_t>, llvm::SmallVector<unsigned>> {
     return orthogonalizeBang(A);
 }
 
@@ -336,7 +336,7 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
     reduceSubDiagonalStack(B, A, c, r);
 }
 // NormalForm version assumes sorted
-[[maybe_unused]] static size_t numNonZeroRows(PtrMatrix<int64_t> A) {
+[[maybe_unused]] static auto numNonZeroRows(PtrMatrix<int64_t> A) -> size_t {
     size_t Mnew = A.numRow();
     while (allZero(A(Mnew - 1, _)))
         --Mnew;
@@ -347,8 +347,8 @@ MULTIVERSION inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
     A.truncateRows(numNonZeroRows(A));
 }
 
-MULTIVERSION [[maybe_unused]] static size_t
-simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) {
+MULTIVERSION [[maybe_unused]] static auto
+simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) -> size_t {
     auto [M, N] = A.size();
     for (size_t r = 0, c = colInit; c < N && r < M; ++c)
         if (!pivotRows(A, c, M, r))
@@ -360,7 +360,7 @@ simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0) {
 [[maybe_unused]] static void simplifySystem(IntMatrix &E, size_t colInit = 0) {
     E.truncateRows(simplifySystemImpl(E, colInit));
 }
-[[maybe_unused]] static size_t rank(IntMatrix E) {
+[[maybe_unused]] static auto rank(IntMatrix E) -> size_t {
     return simplifySystemImpl(E, 0);
 }
 [[maybe_unused]] static void reduceColumn(MutPtrMatrix<int64_t> A,
@@ -391,16 +391,16 @@ MULTIVERSION [[maybe_unused]] static void simplifySystem(IntMatrix &A,
     }
     return;
 }
-[[nodiscard, maybe_unused]] static std::pair<IntMatrix, SquareMatrix<int64_t>>
-hermite(IntMatrix A) {
+[[nodiscard, maybe_unused]] static auto hermite(IntMatrix A)
+    -> std::pair<IntMatrix, SquareMatrix<int64_t>> {
     SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(A.numRow())};
     simplifySystemImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
 }
 
 // zero A(i,k) with A(j,k)
-inline int64_t zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
-                                    size_t k, size_t f) {
+inline auto zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j,
+                                 size_t k, size_t f) -> int64_t {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
         int64_t g = gcd(Aik, Ajk);
@@ -529,8 +529,8 @@ MULTIVERSION [[maybe_unused]] static void zeroColumn(IntMatrix &A, size_t c,
     }
 }
 
-MULTIVERSION [[maybe_unused]] static int
-pivotRows2(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) {
+MULTIVERSION [[maybe_unused]] static auto
+pivotRows2(MutPtrMatrix<int64_t> A, size_t i, size_t M, size_t piv) -> int {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
@@ -562,8 +562,8 @@ bareiss(IntMatrix &A, llvm::SmallVectorImpl<size_t> &pivots) {
     }
 }
 
-MULTIVERSION [[maybe_unused]] static llvm::SmallVector<size_t, 16>
-bareiss(IntMatrix &A) {
+MULTIVERSION [[maybe_unused]] static auto bareiss(IntMatrix &A)
+    -> llvm::SmallVector<size_t, 16> {
     llvm::SmallVector<size_t, 16> pivots;
     bareiss(A, pivots);
     return pivots;
@@ -657,8 +657,8 @@ MULTIVERSION [[maybe_unused]] static void nullSpace11(IntMatrix &B,
         B.truncateRows(D);
     }
 }
-MULTIVERSION [[nodiscard, maybe_unused]] static IntMatrix
-nullSpace(IntMatrix A) {
+MULTIVERSION [[nodiscard, maybe_unused]] static auto nullSpace(IntMatrix A)
+    -> IntMatrix {
     IntMatrix B;
     nullSpace11(B, A);
     return B;

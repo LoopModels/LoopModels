@@ -64,7 +64,7 @@ struct TestLoopFunction {
         alns.emplace_back(std::move(A), std::move(symbols));
     }
     // for creating some black box value
-    llvm::Value *loadValueFromPtr(llvm::Type *typ) {
+    auto loadValueFromPtr(llvm::Type *typ) -> llvm::Value * {
         names.emplace_back("value_" + std::to_string(names.size()));
         return builder.CreateAlignedLoad(
             typ,
@@ -73,8 +73,10 @@ struct TestLoopFunction {
                                   builder.getInt64(ptrIntOffset++)}),
             llvm::MaybeAlign(8), names.back());
     }
-    llvm::Value *createArray() { return loadValueFromPtr(builder.getPtrTy()); }
-    llvm::Value *createInt64() {
+    auto createArray() -> llvm::Value * {
+        return loadValueFromPtr(builder.getPtrTy());
+    }
+    auto createInt64() -> llvm::Value * {
         return loadValueFromPtr(builder.getInt64Ty());
     }
     TestLoopFunction()
@@ -94,7 +96,7 @@ struct TestLoopFunction {
         fmf.set();
         builder.setFastMathFlags(fmf);
     }
-    const llvm::SCEVUnknown *getSCEVUnknown(llvm::Value *v) {
+    auto getSCEVUnknown(llvm::Value *v) -> const llvm::SCEVUnknown * {
         return llvm::dyn_cast<llvm::SCEVUnknown>(SE.getUnknown(v));
     }
 };

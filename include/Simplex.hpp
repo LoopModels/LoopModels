@@ -31,10 +31,10 @@ struct Simplex {
 #endif
     static constexpr size_t numExtraRows = 2;
     static constexpr size_t numExtraCols = 1;
-    static constexpr size_t numTableauRows(size_t i) {
+    static constexpr auto numTableauRows(size_t i) -> size_t {
         return i + numExtraRows;
     }
-    static constexpr size_t numTableauCols(size_t j) {
+    static constexpr auto numTableauCols(size_t j) -> size_t {
         return j + numExtraCols;
     }
     // NOTE: all methods resizing the tableau may invalidate references to it
@@ -49,18 +49,18 @@ struct Simplex {
         tableau.resize(tableau.numRow(), numCol,
                        std::max(numCol, tableau.rowStride()));
     }
-    MutPtrVector<int64_t> addConstraint() {
+    auto addConstraint() -> MutPtrVector<int64_t> {
         tableau.resize(tableau.numRow() + 1, tableau.numCol(),
                        tableau.rowStride());
         tableau(end, _) = 0;
         return tableau(end, _(numExtraCols, end));
     }
-    MutPtrVector<int64_t> addConstraintAndVar() {
+    auto addConstraintAndVar() -> MutPtrVector<int64_t> {
         tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
         tableau(end, _) = 0;
         return tableau(end, _(numExtraCols, end));
     }
-    MutPtrMatrix<int64_t> addConstraintsAndVars(size_t i) {
+    auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
         tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
         tableau(_(end - i, end), _) = 0;
         return tableau(_(end - i, end), _(numExtraCols, end));
@@ -99,22 +99,28 @@ struct Simplex {
         tableau.resizeForOverwrite(numTableauRows(numCon),
                                    numTableauCols(numVar), stride);
     }
-    MutPtrMatrix<int64_t> getCostsAndConstraints() {
+    [[nodiscard]] constexpr auto getCostsAndConstraints()
+        -> MutPtrMatrix<int64_t> {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    PtrMatrix<int64_t> getCostsAndConstraints() const {
+    [[nodiscard]] constexpr auto getCostsAndConstraints() const
+        -> PtrMatrix<int64_t> {
         return tableau(_(numExtraRows - 1, end), _(numExtraCols, end));
     }
-    MutPtrMatrix<int64_t> getConstraints() {
+    [[nodiscard]] constexpr auto getConstraints() -> MutPtrMatrix<int64_t> {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
-    PtrMatrix<int64_t> getConstraints() const {
+    [[nodiscard]] constexpr auto getConstraints() const -> PtrMatrix<int64_t> {
         return tableau(_(numExtraRows, end), _(numExtraCols, end));
     }
     // note that this is 1 more than the actual number of variables
     // as it includes the constants
-    size_t getNumVar() const { return tableau.numCol() - numExtraCols; }
-    size_t getNumConstraints() const { return tableau.numRow() - numExtraRows; }
+    [[nodiscard]] constexpr auto getNumVar() const -> size_t {
+        return tableau.numCol() - numExtraCols;
+    }
+    [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
+        return tableau.numRow() - numExtraRows;
+    }
 
     void hermiteNormalForm() {
 #ifndef NDEBUG
@@ -127,19 +133,32 @@ struct Simplex {
         eraseConstraintImpl(tableau, numTableauRows(c));
         --tableau.M;
     }
-    PtrVector<int64_t> getTableauRow(size_t i) const {
+    [[nodiscard]] constexpr auto getTableauRow(size_t i) const
+        -> PtrVector<int64_t> {
         return tableau(i, _(numExtraCols, end));
     }
     // 1-indexed, 0 returns value for const col
-    PtrVector<int64_t> getBasicConstraints() const { return getTableauRow(0); }
-    PtrVector<int64_t> getCost() const { return getTableauRow(1); }
-    MutPtrVector<int64_t> getTableauRow(size_t i) {
+    [[nodiscard]] constexpr auto getBasicConstraints() const
+        -> PtrVector<int64_t> {
+        return getTableauRow(0);
+    }
+    [[nodiscard]] constexpr auto getCost() const -> PtrVector<int64_t> {
+        return getTableauRow(1);
+    }
+    [[nodiscard]] constexpr auto getTableauRow(size_t i)
+        -> MutPtrVector<int64_t> {
         return tableau(i, _(numExtraCols, end));
     }
     // 1-indexed, 0 returns value for const col
-    MutPtrVector<int64_t> getBasicConstraints() { return getTableauRow(0); }
-    MutPtrVector<int64_t> getCost() { return getTableauRow(1); }
-    StridedVector<int64_t> getTableauCol(size_t i) const {
+    [[nodiscard]] constexpr auto getBasicConstraints()
+        -> MutPtrVector<int64_t> {
+        return getTableauRow(0);
+    }
+    [[nodiscard]] constexpr auto getCost() -> MutPtrVector<int64_t> {
+        return getTableauRow(1);
+    }
+    [[nodiscard]] constexpr auto getTableauCol(size_t i) const
+        -> StridedVector<int64_t> {
         return tableau(_(numExtraRows, end), i);
         // return StridedVector<int64_t>{tableau.data() + i +
         //                                   numExtraRows * tableau.rowStride(),
@@ -147,24 +166,30 @@ struct Simplex {
         //                               tableau.rowStride()};
     }
     // 0-indexed
-    StridedVector<int64_t> getBasicVariables() const {
+    [[nodiscard]] constexpr auto getBasicVariables() const
+        -> StridedVector<int64_t> {
         return getTableauCol(0);
     }
     // StridedVector<int64_t> getDenominators() const {
     //     return getTableauCol(1);
     // }
-    StridedVector<int64_t> getConstants() const {
+    [[nodiscard]] constexpr auto getConstants() const
+        -> StridedVector<int64_t> {
         return getTableauCol(numExtraCols);
     }
-    MutStridedVector<int64_t> getTableauCol(size_t i) {
+    [[nodiscard]] constexpr auto getTableauCol(size_t i)
+        -> MutStridedVector<int64_t> {
         return tableau(_(numExtraRows, end), i);
         // return MutStridedVector<int64_t>{
         //     tableau.data() + i + numExtraRows * tableau.rowStride(),
         //     getNumConstraints(), tableau.rowStride()};
     }
-    MutStridedVector<int64_t> getBasicVariables() { return getTableauCol(0); }
+    [[nodiscard]] constexpr auto getBasicVariables()
+        -> MutStridedVector<int64_t> {
+        return getTableauCol(0);
+    }
     // MutStridedVector<int64_t> getDenominators() { return getTableauCol(1); }
-    MutStridedVector<int64_t> getConstants() {
+    [[nodiscard]] constexpr auto getConstants() -> MutStridedVector<int64_t> {
         return getTableauCol(numExtraCols);
     }
     // AbstractVector
@@ -174,26 +199,31 @@ struct Simplex {
         // view of tableau dropping const column
         PtrMatrix<int64_t> tableauView;
         StridedVector<int64_t> consts;
-        Rational operator()(size_t i) const {
+        auto operator()(size_t i) const -> Rational {
             int64_t j = tableauView(0, i);
             if (j < 0)
                 return 0;
             return Rational::create(consts(j),
                                     tableauView(j + numExtraRows, i));
         }
-        template <typename B, typename E> Solution operator()(Range<B, E> r) {
+        template <typename B, typename E>
+        auto operator()(Range<B, E> r) -> Solution {
             return Solution{tableauView(_, r), consts};
         }
-        size_t size() const { return tableauView.numCol(); }
-        auto &view() const { return *this; };
+        [[nodiscard]] auto size() const -> size_t {
+            return tableauView.numCol();
+        }
+        [[nodiscard]] auto view() const -> auto & { return *this; };
     };
-    Solution getSolution() const {
+    [[nodiscard]] auto getSolution() const -> Solution {
         return Solution{tableau(_, _(numExtraCols, end)), getConstants()};
     }
 
     // returns `true` if infeasible
     // `false ` if feasible
-    bool initiateFeasible() {
+    [[nodiscard(
+        "returns `true` if infeasible; should check when calling.")]] auto
+    initiateFeasible() -> bool {
         tableau(0, 0) = 0;
         // remove trivially redundant constraints
         hermiteNormalForm();
@@ -309,15 +339,17 @@ struct Simplex {
         return false;
     }
     // 1 based to match getBasicConstraints
-    static int getEnteringVariable(PtrVector<int64_t> costs) {
+    [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
+        -> int {
         // Bland's algorithm; guaranteed to terminate
         for (int i = 1; i < int(costs.size()); ++i)
             if (costs[i] < 0)
                 return i;
         return -1;
     }
-    static int getLeavingVariable(MutPtrMatrix<int64_t> C,
-                                  size_t enteringVariable) {
+    [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
+                                                 size_t enteringVariable)
+        -> int {
         // inits guarantee first valid is selected
         // we need
         int64_t n = -1;
@@ -339,8 +371,8 @@ struct Simplex {
         }
         return --j;
     }
-    int64_t makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
-                      int enteringVariable) {
+    auto makeBasic(MutPtrMatrix<int64_t> C, int64_t f, int enteringVariable)
+        -> int64_t {
         int leavingVariable = getLeavingVariable(C, enteringVariable);
         if (leavingVariable == -1)
             return 0; // unbounded
@@ -362,7 +394,7 @@ struct Simplex {
         return f;
     }
     // run the simplex algorithm, assuming basicVar's costs have been set to 0
-    Rational runCore(int64_t f = 1) {
+    auto runCore(int64_t f = 1) -> Rational {
 #ifndef NDEBUG
         assert(inCanonicalForm);
 #endif
@@ -381,7 +413,7 @@ struct Simplex {
         }
     }
     // set basicVar's costs to 0, and then runCore()
-    Rational run() {
+    auto run() -> Rational {
 #ifndef NDEBUG
         assert(inCanonicalForm);
         assertCanonical();
@@ -454,7 +486,7 @@ struct Simplex {
     // v starts at 1
     // returns `false` if `0`, `true` if not zero
     // minimize v, not touching any variable lex < v
-    bool lexMinimize(size_t v) {
+    auto lexMinimize(size_t v) -> bool {
 #ifndef NDEBUG
         assert(inCanonicalForm);
         assert(v >= 1);
@@ -476,7 +508,7 @@ struct Simplex {
         lexCoreOpt(v);
         return makeZeroBasic(v);
     }
-    bool makeZeroBasic(size_t v) {
+    auto makeZeroBasic(size_t v) -> bool {
         MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
         MutStridedVector<int64_t> basicVars{getBasicVariables()};
         MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
@@ -554,8 +586,8 @@ struct Simplex {
     // A(:,1:end)*x <= A(:,0)
     // B(:,1:end)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
-    static llvm::Optional<Simplex> positiveVariables(PtrMatrix<int64_t> A,
-                                                     PtrMatrix<int64_t> B) {
+    static auto positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B)
+        -> llvm::Optional<Simplex> {
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};
@@ -620,14 +652,14 @@ struct Simplex {
             truncateVars(j);
         }
     }
-    static uint64_t toMask(PtrVector<int64_t> x) {
+    static auto toMask(PtrVector<int64_t> x) -> uint64_t {
         assert(x.size() <= 64);
         uint64_t m = 0;
         for (auto y : x)
             m = ((m << 1) | (y != 0));
         return m;
     }
-    uint64_t getBasicTrueVarMask() const {
+    [[nodiscard]] auto getBasicTrueVarMask() const -> uint64_t {
         const size_t numVarTotal = getNumVar();
         assert(numVarTotal <= 64);
         uint64_t m = 0;
@@ -638,7 +670,8 @@ struct Simplex {
     }
     // check if a solution exists such that `x` can be true.
     // returns `true` if unsatisfiable
-    bool unSatisfiable(PtrVector<int64_t> x, size_t off) const {
+    [[nodiscard]] auto unSatisfiable(PtrVector<int64_t> x, size_t off) const
+        -> bool {
         // is it a valid solution to set the first `x.size()` variables to `x`?
         // first, check that >= 0 constraint is satisfied
         for (auto y : x)
@@ -665,13 +698,14 @@ struct Simplex {
         // returns `true` if unsatisfiable
         return subSimp.initiateFeasible();
     }
-    bool satisfiable(PtrVector<int64_t> x, size_t off) const {
+    [[nodiscard]] auto satisfiable(PtrVector<int64_t> x, size_t off) const
+        -> bool {
         return !unSatisfiable(x, off);
     }
     // check if a solution exists such that `x` can be true.
     // zeros remaining rows
-    bool unSatisfiableZeroRem(PtrVector<int64_t> x, size_t off,
-                              size_t numRow) const {
+    [[nodiscard]] auto unSatisfiableZeroRem(PtrVector<int64_t> x, size_t off,
+                                            size_t numRow) const -> bool {
         // is it a valid solution to set the first `x.size()` variables to `x`?
         // first, check that >= 0 constraint is satisfied
         for (auto y : x)
@@ -699,8 +733,8 @@ struct Simplex {
         assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
         return subSimp.initiateFeasible();
     }
-    bool satisfiableZeroRem(PtrVector<int64_t> x, size_t off,
-                            size_t numRow) const {
+    [[nodiscard]] auto satisfiableZeroRem(PtrVector<int64_t> x, size_t off,
+                                          size_t numRow) const -> bool {
         return !unSatisfiableZeroRem(x, off, numRow);
     }
     void printResult() {
@@ -722,8 +756,8 @@ struct Simplex {
             }
         }
     }
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const Simplex &s) {
+    friend auto operator<<(llvm::raw_ostream &os, const Simplex &s)
+        -> llvm::raw_ostream & {
         return os << "\nSimplex; tableau = " << s.tableau;
     }
     /*

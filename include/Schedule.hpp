@@ -24,7 +24,7 @@
 /// then "i_0" for schedule "S_0" happens before
 /// "i_1" for schedule "S_1"
 ///
-constexpr unsigned requiredScheduleStorage(unsigned n) {
+constexpr auto requiredScheduleStorage(unsigned n) -> unsigned {
     return n * (n + 2) + 1;
 }
 // n^2 + 2n + 1-s = 0
@@ -53,7 +53,7 @@ struct Schedule {
     // -1 indicates not unrolled
     [[no_unique_address]] int8_t unrolledOuter{-1};
     // promotes to size_t(numLoops) before multiplication
-    constexpr size_t getNumLoopsSquared() const {
+    [[nodiscard]] constexpr auto getNumLoopsSquared() const -> size_t {
         size_t stNumLoops = numLoops;
         return stNumLoops * stNumLoops;
     }
@@ -95,30 +95,31 @@ struct Schedule {
         // llvm::errs() << "post truncate: ";
         // CSHOWLN(getOmega());
     }
-    MutSquarePtrMatrix<int64_t> getPhi() {
+    auto getPhi() -> MutSquarePtrMatrix<int64_t> {
         // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
         return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
-    SquarePtrMatrix<int64_t> getPhi() const {
+    [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
         return SquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
-    PtrVector<int64_t> getFusionOmega() const {
+    [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
         return {.mem = data.data() + getNumLoopsSquared(),
                 .N = size_t(numLoops) + 1};
     }
-    PtrVector<int64_t> getOffsetOmega() const {
+    [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
         return {.mem =
                     data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
                 .N = size_t(numLoops)};
     }
-    MutPtrVector<int64_t> getFusionOmega() {
+    [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
         return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
     }
-    MutPtrVector<int64_t> getOffsetOmega() {
+    [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
         return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
                 size_t(numLoops)};
     }
-    bool fusedThrough(const Schedule &y, const size_t numLoopsCommon) const {
+    [[nodiscard]] auto fusedThrough(const Schedule &y,
+                                    const size_t numLoopsCommon) const -> bool {
         llvm::ArrayRef<int64_t> o0 = getFusionOmega();
         llvm::ArrayRef<int64_t> o1 = y.getFusionOmega();
         bool allEqual = true;
@@ -126,8 +127,8 @@ struct Schedule {
             allEqual &= (o0[n] == o1[n]);
         return allEqual;
     }
-    bool fusedThrough(const Schedule &y) const {
+    [[nodiscard]] auto fusedThrough(const Schedule &y) const -> bool {
         return fusedThrough(y, std::min(numLoops, y.numLoops));
     }
-    size_t getNumLoops() const { return numLoops; }
+    [[nodiscard]] auto getNumLoops() const -> size_t { return numLoops; }
 };

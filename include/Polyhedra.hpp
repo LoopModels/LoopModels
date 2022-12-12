@@ -18,8 +18,8 @@
 #include <sys/types.h>
 #include <type_traits>
 
-[[maybe_unused]] static llvm::raw_ostream &printPositive(llvm::raw_ostream &os,
-                                                         size_t stop) {
+[[maybe_unused]] static auto printPositive(llvm::raw_ostream &os, size_t stop)
+    -> llvm::raw_ostream & {
     for (size_t i = 0; i < stop; ++i)
         os << "v_" << i << " >= 0\n";
     return os;
@@ -95,7 +95,7 @@ struct Polyhedra {
             C.init(A, E);
         }
     }
-    bool calcIsEmpty() { return C.isEmpty(); }
+    auto calcIsEmpty() -> bool { return C.isEmpty(); }
     void pruneBounds() {
         if (calcIsEmpty()) {
             A.truncateRows(0);
@@ -142,13 +142,21 @@ struct Polyhedra {
         }
     }
 
-    constexpr size_t getNumSymbols() const { return 1 + S.size(); }
-    constexpr size_t getNumDynamic() const {
+    [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+        return 1 + S.size();
+    }
+    [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
         return A.numCol() - getNumSymbols();
     }
-    constexpr size_t getNumVar() const { return A.numCol() - 1; }
-    constexpr size_t getNumInequalityConstraints() const { return A.numRow(); }
-    constexpr size_t getNumEqualityConstraints() const { return E.numRow(); }
+    [[nodiscard]] constexpr auto getNumVar() const -> size_t {
+        return A.numCol() - 1;
+    }
+    [[nodiscard]] constexpr auto getNumInequalityConstraints() const -> size_t {
+        return A.numRow();
+    }
+    [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
+        return E.numRow();
+    }
 
     // static bool lessZero(const IntMatrix &A, const size_t r) const {
     //     return C.less(A(r, _));
@@ -162,14 +170,21 @@ struct Polyhedra {
     // static bool greaterEqualZero(const IntMatrix &A, const size_t r) const {
     //     return C.greaterEqual(A(r, _));
     // }
-    bool lessZero(const size_t r) const { return C.less(A(r, _)); }
-    bool lessEqualZero(const size_t r) const { return C.lessEqual(A(r, _)); }
-    bool greaterZero(const size_t r) const { return C.greater(A(r, _)); }
-    bool greaterEqualZero(const size_t r) const {
+    [[nodiscard]] auto lessZero(const size_t r) const -> bool {
+        return C.less(A(r, _));
+    }
+    [[nodiscard]] auto lessEqualZero(const size_t r) const -> bool {
+        return C.lessEqual(A(r, _));
+    }
+    [[nodiscard]] auto greaterZero(const size_t r) const -> bool {
+        return C.greater(A(r, _));
+    }
+    [[nodiscard]] auto greaterEqualZero(const size_t r) const -> bool {
         return C.greaterEqual(A(r, _));
     }
 
-    bool equalNegative(const size_t i, const size_t j) const {
+    [[nodiscard]] auto equalNegative(const size_t i, const size_t j) const
+        -> bool {
         return C.equalNegative(A(i, _), A(j, _));
     }
     // static bool equalNegative(const IntMatrix &A, const size_t i,
@@ -207,8 +222,8 @@ struct Polyhedra {
             dropEmptyConstraints(E);
     }
 
-    friend llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                         const Polyhedra &p) {
+    friend auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
+        -> llvm::raw_ostream & {
         auto &&os2 = printConstraints(os << "\n", p.A,
                                       llvm::ArrayRef<const llvm::SCEV *>());
         if constexpr (NonNegative)
@@ -219,7 +234,7 @@ struct Polyhedra {
         return os2;
     }
     void dump() const { llvm::errs() << *this; }
-    bool isEmpty() const {
+    [[nodiscard]] auto isEmpty() const -> bool {
         return A.numRow() == 0;
         // if (A.numRow() == 0)
         //     return true;
@@ -235,15 +250,15 @@ struct Polyhedra {
     }
 };
 
-typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, false>
-    SymbolicPolyhedra;
-typedef Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, true>
-    NonNegativeSymbolicPolyhedra;
-typedef Polyhedra<IntMatrix, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, false>
-    SymbolicEqPolyhedra;
-typedef Polyhedra<IntMatrix, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, true>
-    NonNegativeSymbolicEqPolyhedra;
+using SymbolicPolyhedra =
+    Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+              llvm::SmallVector<const llvm::SCEV *>, false>;
+using NonNegativeSymbolicPolyhedra =
+    Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+              llvm::SmallVector<const llvm::SCEV *>, true>;
+using SymbolicEqPolyhedra =
+    Polyhedra<IntMatrix, LinearSymbolicComparator,
+              llvm::SmallVector<const llvm::SCEV *>, false>;
+using NonNegativeSymbolicEqPolyhedra =
+    Polyhedra<IntMatrix, LinearSymbolicComparator,
+              llvm::SmallVector<const llvm::SCEV *>, true>;
