@@ -236,20 +236,20 @@ $(function() {
 <div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;        sol.clear();</div>
 <div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;        <span class="comment">// allocator.Reset();</span></div>
 <div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    }</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> numVerticies() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;        <span class="keywordflow">return</span> nodes.size();</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    }</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getVerticies() -&gt; llvm::MutableArrayRef&lt;ScheduledNode&gt; {</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;        <span class="keywordflow">return</span> nodes;</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    }</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getVerticies() <span class="keyword">const</span> -&gt; llvm::ArrayRef&lt;ScheduledNode&gt; {</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;        <span class="keywordflow">return</span> nodes;</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;    }</div>
-<div class="line"><a name="l00230"></a><span class="lineno"><a class="line" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">  230</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a> {</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <a class="code" href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;loopBlock;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;        <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;node;</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    };</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> outNeighbors(<span class="keywordtype">size_t</span> idx) -&gt; <a class="code" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a> {</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;    <span class="comment">// TODO: `constexpr` once `llvm::SmallVector` supports it</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> numVerticies() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> nodes.size(); }</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getVerticies() -&gt; llvm::MutableArrayRef&lt;ScheduledNode&gt; {</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;        <span class="keywordflow">return</span> nodes;</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;    }</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getVerticies() <span class="keyword">const</span> -&gt; llvm::ArrayRef&lt;ScheduledNode&gt; {</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;        <span class="keywordflow">return</span> nodes;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;    }</div>
+<div class="line"><a name="l00229"></a><span class="lineno"><a class="line" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">  229</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a> {</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;        <a class="code" href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a> &amp;loopBlock;</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;        <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;node;</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;    };</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;    <span class="comment">// TODO: `constexpr` once `llvm::SmallVector` supports it</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> outNeighbors(<span class="keywordtype">size_t</span> idx) -&gt; <a class="code" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a> {</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a>{*<span class="keyword">this</span>, nodes[idx]};</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    }</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> calcMaxDepth() const -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -1371,14 +1371,14 @@ $(function() {
 <div class="line"><a name="l01415"></a><span class="lineno"> 1415</span>&#160;static_assert(Graphs::AbstractGraph&lt;LinearProgramLoopBlock::Graph&gt;);</div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:69</div></div>
-<div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:312</div></div>
-<div class="ttc" id="astructBitSliceView_html"><div class="ttname"><a href="structBitSliceView.html">BitSliceView</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:309</div></div>
+<div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:317</div></div>
+<div class="ttc" id="astructBitSliceView_html"><div class="ttname"><a href="structBitSliceView.html">BitSliceView</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:314</div></div>
 <div class="ttc" id="astructCarriedDependencyFlag_html"><div class="ttname"><a href="structCarriedDependencyFlag.html">CarriedDependencyFlag</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:104</div></div>
-<div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:495</div></div>
+<div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:493</div></div>
 <div class="ttc" id="astructEndSentinel_html"><div class="ttname"><a href="structEndSentinel.html">EndSentinel</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:18</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html">LinearProgramLoopBlock::Graph</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:417</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html_a625c1bc32023c0d53aec7f1745216b8c"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c">LinearProgramLoopBlock::Graph::missingNode</a></div><div class="ttdeci">auto missingNode(const Dependence &amp;e) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:476</div></div>
-<div class="ttc" id="astructLinearProgramLoopBlock_1_1OutNeighbors_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1OutNeighbors.html">LinearProgramLoopBlock::OutNeighbors</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:230</div></div>
+<div class="ttc" id="astructLinearProgramLoopBlock_1_1OutNeighbors_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1OutNeighbors.html">LinearProgramLoopBlock::OutNeighbors</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:229</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:178</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html_a07a5af74d3682d24abc08a0490b55da8"><div class="ttname"><a href="structLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8">LinearProgramLoopBlock::connectGraph</a></div><div class="ttdeci">void connectGraph()</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:395</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html_a1d76b0e8c6b7a221850327644f09dbb2"><div class="ttname"><a href="structLinearProgramLoopBlock.html#a1d76b0e8c6b7a221850327644f09dbb2">LinearProgramLoopBlock::fillEdges</a></div><div class="ttdeci">void fillEdges()</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:280</div></div>

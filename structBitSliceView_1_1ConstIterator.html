@@ -76,24 +76,24 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9bda3249a1dbfbab33c9fd1e9e6f2f5e"><td class="memItemLeft" align="right" valign="top"><a id="a9bda3249a1dbfbab33c9fd1e9e6f2f5e"></a>
-constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>) const</td></tr>
-<tr class="separator:a9bda3249a1dbfbab33c9fd1e9e6f2f5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af66f173c1772b5fd66f7a0230f0ff797"><td class="memItemLeft" align="right" valign="top"><a id="af66f173c1772b5fd66f7a0230f0ff797"></a>
-constexpr bool&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a> c) const</td></tr>
-<tr class="separator:af66f173c1772b5fd66f7a0230f0ff797"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aded4868606bf1ed5aba10e80156845b6"><td class="memItemLeft" align="right" valign="top"><a id="aded4868606bf1ed5aba10e80156845b6"></a>
-constexpr <a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> ()</td></tr>
-<tr class="separator:aded4868606bf1ed5aba10e80156845b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a585395b3c78089b6f3bc943962c49bfc"><td class="memItemLeft" align="right" valign="top"><a id="a585395b3c78089b6f3bc943962c49bfc"></a>
-constexpr <a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int)</td></tr>
-<tr class="separator:a585395b3c78089b6f3bc943962c49bfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac3af2804a9395bb9c06e09c3c970bdd2"><td class="memItemLeft" align="right" valign="top"><a id="ac3af2804a9395bb9c06e09c3c970bdd2"></a>
-const T &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () const</td></tr>
-<tr class="separator:ac3af2804a9395bb9c06e09c3c970bdd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fff9c33310254321d15f108f61ed65b"><td class="memItemLeft" align="right" valign="top"><a id="a0fff9c33310254321d15f108f61ed65b"></a>
-const T *&#160;</td><td class="memItemRight" valign="bottom"><b>operator-&gt;</b> () const</td></tr>
-<tr class="separator:a0fff9c33310254321d15f108f61ed65b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aade81b3fea137b42672b68f88a89a9fc"><td class="memItemLeft" align="right" valign="top"><a id="aade81b3fea137b42672b68f88a89a9fc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structEndSentinel.html">EndSentinel</a>) const -&gt; bool</td></tr>
+<tr class="separator:aade81b3fea137b42672b68f88a89a9fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa701105aea1e943adfe6ebcae252c1e6"><td class="memItemLeft" align="right" valign="top"><a id="aa701105aea1e943adfe6ebcae252c1e6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a> c) const -&gt; bool</td></tr>
+<tr class="separator:aa701105aea1e943adfe6ebcae252c1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a4686e1a7d7e0b7afc3ef0e60223de0"><td class="memItemLeft" align="right" valign="top"><a id="a1a4686e1a7d7e0b7afc3ef0e60223de0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> () -&gt; <a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a> &amp;</td></tr>
+<tr class="separator:a1a4686e1a7d7e0b7afc3ef0e60223de0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac5c0ad3fb53885cdb9082f772b95d04c"><td class="memItemLeft" align="right" valign="top"><a id="ac5c0ad3fb53885cdb9082f772b95d04c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int) -&gt; <a class="el" href="structBitSliceView_1_1ConstIterator.html">ConstIterator</a></td></tr>
+<tr class="separator:ac5c0ad3fb53885cdb9082f772b95d04c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12a46ad1a7fd6de1f7301c18cf0881fc"><td class="memItemLeft" align="right" valign="top"><a id="a12a46ad1a7fd6de1f7301c18cf0881fc"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () const -&gt; const T &amp;</td></tr>
+<tr class="separator:a12a46ad1a7fd6de1f7301c18cf0881fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92c9f7730bc88abb90685613a0d5b1b0"><td class="memItemLeft" align="right" valign="top"><a id="a92c9f7730bc88abb90685613a0d5b1b0"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-&gt;</b> () const -&gt; const T *</td></tr>
+<tr class="separator:a92c9f7730bc88abb90685613a0d5b1b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
