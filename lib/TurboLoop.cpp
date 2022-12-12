@@ -43,8 +43,8 @@
 // directly leads to another, which would be important for whether two loops may
 // be fused.
 
-llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
-                                           llvm::FunctionAnalysisManager &FAM) {
+auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
+    -> llvm::PreservedAnalyses {
     // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
     // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
     // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
@@ -75,6 +75,9 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // Builds the loopForest, constructing predicate chains and loop nests
     initializeLoopForest();
     SHOWLN(loopForests.size());
+    if (loopForests.empty())
+        return llvm::PreservedAnalyses::all();
+
     for (auto forest : loopForests) {
         forest->dump();
     }
@@ -293,10 +296,10 @@ llvm::PreservedAnalyses TurboLoopPass::run(llvm::Function &F,
     // }
 
     return llvm::PreservedAnalyses::none();
-    // return llvm::PreservedAnalyses::all();
 }
-bool PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
-                       llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) {
+auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
+                       llvm::ArrayRef<llvm::PassBuilder::PipelineElement>)
+    -> bool {
     if (Name == "turbo-loop") {
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
@@ -311,7 +314,7 @@ void RegisterCB(llvm::PassBuilder &PB) {
     PB.registerPipelineParsingCallback(PipelineParsingCB);
 }
 
-extern "C" ::llvm::PassPluginLibraryInfo LLVM_ATTRIBUTE_WEAK
-llvmGetPassPluginInfo() {
+extern "C" auto LLVM_ATTRIBUTE_WEAK llvmGetPassPluginInfo()
+    -> ::llvm::PassPluginLibraryInfo {
     return {LLVM_PLUGIN_API_VERSION, "TurboLoop", "v0.1", RegisterCB};
 }

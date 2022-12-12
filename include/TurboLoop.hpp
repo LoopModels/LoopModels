@@ -132,8 +132,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
         // Track position within the loop nest
         llvm::SmallVector<unsigned> omega;
-        llvm::SmallVector<LoopTree *> forest;
-        pushLoopTree(forest, nullptr, revLI, H, E);
+        pushLoopTree(loopForests, nullptr, revLI, H, E);
         for (auto &forest : loopForests)
             forest->addZeroLowerBounds(loopMap);
     }
