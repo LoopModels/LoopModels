@@ -128,8 +128,8 @@ struct Instruction {
         [[no_unique_address]] llvm::SmallVector<Instruction *> instr;
         // TODO: constexpr once llvm::SmallVector supports it
         auto size() -> size_t { return instr.size(); }
-        constexpr auto begin() { return instr.begin(); }
-        constexpr auto end() { return instr.end(); }
+        auto begin() { return instr.begin(); }
+        auto end() { return instr.end(); }
     };
 
     Identifier id;
@@ -855,7 +855,7 @@ struct Map {
         Predicate::Map pm;
         if (descendBlock(alloc, cache, pm, start, stop, {}, start, L) ==
             Destination::Reached)
-            return std::move(pm);
+            return pm;
         return std::nullopt;
     }
 
