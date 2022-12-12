@@ -126,7 +126,8 @@ struct Instruction {
         // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
         // case of realloc
         [[no_unique_address]] llvm::SmallVector<Instruction *> instr;
-        constexpr auto size() -> size_t { return instr.size(); }
+        // TODO: constexpr once llvm::SmallVector supports it
+        auto size() -> size_t { return instr.size(); }
         constexpr auto begin() { return instr.begin(); }
         constexpr auto end() { return instr.end(); }
     };
