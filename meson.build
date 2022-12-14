@@ -1,6 +1,6 @@
 project('LoopModels', ['cpp'], version : '0.1', default_options : ['cpp_std=gnu++20'])
 
-llvm_dep = dependency('llvm', version : '>=14.0', fallback : ['llvm', 'dep_llvm'])
+llvm_dep = dependency('llvm', version : '>=14.0')
 
 incdir = include_directories('include')
 
