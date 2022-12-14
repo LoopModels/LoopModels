@@ -661,7 +661,7 @@ $(function() {
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;    }</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;    <span class="keywordtype">void</span> visit(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;LT, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;map,</div>
 <div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;               llvm::SmallVector&lt;unsigned&gt; &amp;omega,</div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;               llvm::SmallPtrSet&lt;llvm::BasicBlock *, 16&gt; visited,</div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;               llvm::SmallPtrSet&lt;llvm::BasicBlock *, 8&gt; visited,</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;               llvm::BasicBlock *BB) {</div>
 <div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;        <span class="keywordflow">if</span> ((!map.isInPath(BB)) || visited.contains(BB))</div>
 <div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;            <span class="keywordflow">return</span>;</div>
@@ -672,7 +672,7 @@ $(function() {
 <div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;    }</div>
 <div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;    <span class="keywordtype">void</span> parseBBMap(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;LT, <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> &amp;map,</div>
 <div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;                    llvm::SmallVector&lt;unsigned&gt; &amp;omega) {</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;        llvm::SmallPtrSet&lt;llvm::BasicBlock *, 16&gt; visited;</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;        llvm::SmallPtrSet&lt;llvm::BasicBlock *, 8&gt; visited;</div>
 <div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;pair : map)</div>
 <div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;            visit(LT, map, omega, visited, pair.first);</div>
 <div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;    }</div>
@@ -695,7 +695,7 @@ $(function() {
 <div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;        <span class="comment">//         paths.insert(PBB.basicBlock);</span></div>
 <div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;        <span class="comment">//     }</span></div>
 <div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;        <span class="comment">// llvm::SmallPtrSet&lt;llvm::BasicBlock *, 32&gt; paths;</span></div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;        llvm::SmallPtrSet&lt;llvm::BasicBlock *, 32&gt; paths;</div>
 <div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        omega.push_back(0);</div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        assert(LT.subLoops.size() + 1 == LT.paths.size());</div>
 <div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        <span class="comment">// llvm::Loop *L = LT.loop;</span></div>
@@ -884,13 +884,13 @@ $(function() {
 <div class="ttc" id="aclassTurboLoopPass_html_aeef5b3c39dc10c8350ef7b89efff46de"><div class="ttname"><a href="classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de">TurboLoopPass::pushLoopTree</a></div><div class="ttdeci">auto pushLoopTree(llvm::SmallVectorImpl&lt; LoopTree * &gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:168</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
-<div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:154</div></div>
+<div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:151</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:178</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:27</div></div>
 <div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
 <div class="ttc" id="astructMutPtrVector_html"><div class="ttname"><a href="structMutPtrVector.html">MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:775</div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:696</div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html_ad329a3160de985d1a1b3ac4c1e37f492"><div class="ttname"><a href="structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:901</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:682</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html_ad329a3160de985d1a1b3ac4c1e37f492"><div class="ttname"><a href="structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:852</div></div>
 <div class="ttc" id="astructVector_html"><div class="ttname"><a href="structVector.html">Vector&lt; int64_t &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
