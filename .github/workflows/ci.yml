@@ -47,7 +47,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
+    - run: brew install gcc llvm@15 ninja pkg-config cmake
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: meson setup builddir/
