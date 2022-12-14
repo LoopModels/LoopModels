@@ -26,7 +26,7 @@ shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include
 # endif
 
 # TESTS
-if get_option('test').enabled()
+if get_option('test')
   gtest_dep = dependency('gtest', main : true, fallback : ['gtest', 'gtest_main_dep'])
   if gtest_dep.found()
     testdeps = [gtest_dep, llvm_dep]
@@ -55,7 +55,7 @@ if get_option('test').enabled()
   endif
 endif
 
-if get_option('benchmark').enabled()
+if get_option('benchmark')
   bench_dep = dependency('benchmark', fallback : ['google-benchmark', 'google_benchmark_dep'])
 
   if bench_dep.found()
