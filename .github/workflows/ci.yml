@@ -47,10 +47,19 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc llvm@15 googletest ninja pkg-config cmake
+    - run: brew install gcc llvm@15 ninja pkg-config cmake
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
+    - run: meson setup builddir/
+      env:
+        CXX: g++-12
+        CXXFLAGS: "-stdlib=libstdc++"
+    - run: meson test -C builddir/
+      env: 
+        CXX: g++-12
+    - run: brew install googletest
     - run: echo $(which clang++)
+    - run: rm -rf builddir/
     - run: meson setup builddir -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: clang++
@@ -60,14 +69,6 @@ jobs:
     - run: meson test -C builddir/
     - run: meson compile -C builddir/
     - run: ninja coverage -C builddir
-    # - run: rm -rf builddir/
-    # - run: meson setup builddir/
-    #   env:
-    #     CXX: g++-12
-    #     CXXFLAGS: "-stdlib=libstdc++"
-    # - run: meson test -C builddir/
-    #   env: 
-    #     CXX: g++-12
     - uses: actions/upload-artifact@v1
       if: failure()
       with:

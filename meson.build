@@ -1,6 +1,7 @@
 project('LoopModels', ['cpp'], version : '0.1', default_options : ['cpp_std=gnu++20'])
 
-llvm_dep = dependency('llvm', version : '>=14.0')
+llvm_dep = dependency('llvm', version : '>=14.0', fallback : ['llvm', 'dep_llvm'])
+
 incdir = include_directories('include')
 
 if meson.get_compiler('cpp').get_id() == 'gcc'
@@ -25,7 +26,7 @@ shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include
 # endif
 
 # TESTS
-gtest_dep = dependency('gtest', main : true, required : false)
+gtest_dep = dependency('gtest', main : true, fallback : ['gtest', 'gtest_main_dep'])
 if gtest_dep.found()
   testdeps = [gtest_dep, llvm_dep]
 
@@ -52,7 +53,7 @@ if gtest_dep.found()
   endforeach
 endif
 
-bench_dep = dependency('benchmark', required : false)
+bench_dep = dependency('benchmark', fallback : ['google-benchmark', 'google_benchmark_dep'])
 
 if bench_dep.found()
   benchmark_files = [
