@@ -9,3 +9,5 @@ builddir/
 .vscode/
 latex/
 html/
+subprojects/*
+!subprojects/*.wrap
