@@ -307,43 +307,45 @@ $(function() {
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> isEmpty() const -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordflow">return</span> intersectUnion.empty();</div>
 <div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;    }</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> emptyIntersection(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : intersectUnion)</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;                <span class="keywordflow">if</span> ((pred &amp; otherPred).isEmpty())</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;                    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    }</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160; </div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="comment">//     size_t I = instructions.size();</span></div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="comment">//         if (instructions[i] == instruction)</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="comment">//             return i;</span></div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="comment">//     instructions.push_back(instruction);</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="comment">//     return I;</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">// PredicateSet() = default;</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">// PredicateSet(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="comment">// &amp;ic,</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">//                    Predicates &amp;pred) {</span></div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">//         PredicateRelation val =</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">//             PredicateRelation::True;</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">//         set(index, val);</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">//     }</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">// }</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160; </div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;<span class="keyword">struct </span>Map;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    <span class="comment">// NOTE: `Map.isDivergent()` uses the fact that this returns `false`</span></div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;    <span class="comment">// when either `this-&gt;isEmpty()` or `other.isEmpty()`</span></div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> emptyIntersection(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> pred : intersectUnion)</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;            <span class="keywordflow">for</span> (<span class="keyword">auto</span> otherPred : other)</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;                <span class="keywordflow">if</span> ((pred &amp; otherPred).isEmpty())</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;                    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    }</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="comment">// static auto getIndex(llvm::SmallVectorImpl&lt;Instruction *&gt; &amp;instructions,</span></div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;    <span class="comment">//                      Instruction *instruction) -&gt; size_t {</span></div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;    <span class="comment">//     size_t I = instructions.size();</span></div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="comment">//     for (size_t i = 0; i &lt; I; i++)</span></div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="comment">//         if (instructions[i] == instruction)</span></div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="comment">//             return i;</span></div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;    <span class="comment">//     instructions.push_back(instruction);</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    <span class="comment">//     return I;</span></div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="comment">// PredicateSet() = default;</span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    <span class="comment">// PredicateSet(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache</span></div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="comment">// &amp;ic,</span></div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="comment">//                    llvm::SmallVector&lt;Instruction *&gt; &amp;predicates,</span></div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;    <span class="comment">//                    Predicates &amp;pred) {</span></div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    <span class="comment">//     for (Predicate &amp;p : pred) {</span></div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">//         Instruction *i = ic.get(alloc, p.condition);</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">//         size_t index = getIndex(predicates, i);</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">//         PredicateRelation val =</span></div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="comment">//             p.flip ? PredicateRelation::False :</span></div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="comment">//             PredicateRelation::True;</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="comment">//         set(index, val);</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="comment">//     }</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <span class="comment">// }</span></div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;}; <span class="comment">// struct Predicate::Set</span></div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160; </div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;<span class="keyword">struct </span>Map;</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;}; <span class="comment">// namespace Predicate</span></div>
 <div class="ttc" id="astructEmpty_html"><div class="ttname"><a href="structEmpty.html">Empty</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
-<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:42</div></div>
+<div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:45</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_1_1Reference_html"><div class="ttname"><a href="structPredicate_1_1Intersection_1_1Reference.html">Predicate::Intersection::Reference</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:68</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:46</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html_a955076f74163093f46e90c5f1877ad93"><div class="ttname"><a href="structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93">Predicate::Intersection::isEmpty</a></div><div class="ttdeci">constexpr auto isEmpty() const -&gt; bool</div><div class="ttdoc">returns true if the PredicateIntersection is empty, false otherwise</div><div class="ttdef"><b>Definition:</b> Predicate.hpp:106</div></div>
