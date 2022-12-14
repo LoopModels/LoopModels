@@ -294,6 +294,8 @@ struct Set {
     [[nodiscard]] auto isEmpty() const -> bool {
         return intersectUnion.empty();
     }
+    // NOTE: `Map.isDivergent()` uses the fact that this returns `false`
+    // when either `this->isEmpty()` or `other.isEmpty()`
     [[nodiscard]] auto emptyIntersection(const Set &other) const -> bool {
         for (auto pred : intersectUnion)
             for (auto otherPred : other)

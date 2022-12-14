@@ -648,7 +648,7 @@ Range(B, E) -> Range<ptrdiff_t, size_t>;
 template <std::unsigned_integral B, std::signed_integral E>
 Range(B, E) -> Range<size_t, ptrdiff_t>;
 
-static inline constexpr struct Colon {
+inline constexpr struct Colon {
     [[nodiscard]] inline constexpr auto operator()(auto B, auto E) const {
         return Range{B, E};
     }
@@ -1272,9 +1272,9 @@ template <typename T> struct PtrMatrix;
 template <typename T> struct MutPtrMatrix;
 
 template <typename T>
-[[maybe_unused]] static inline auto
-matrixGet(T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
-          const ScalarIndex auto n) -> T & {
+[[maybe_unused]] inline auto matrixGet(T *ptr, size_t M, size_t N, size_t X,
+                                       const ScalarIndex auto m,
+                                       const ScalarIndex auto n) -> T & {
 #ifndef NDEBUG
     checkIndex(M, m);
     checkIndex(N, n);
@@ -1282,9 +1282,9 @@ matrixGet(T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
     return *(ptr + (canonicalize(n, N) + canonicalize(m, M) * X));
 }
 template <typename T>
-[[maybe_unused]] static inline auto
-matrixGet(const T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
-          const ScalarIndex auto n) -> const T & {
+[[maybe_unused]] inline auto matrixGet(const T *ptr, size_t M, size_t N,
+                                       size_t X, const ScalarIndex auto m,
+                                       const ScalarIndex auto n) -> const T & {
 #ifndef NDEBUG
     checkIndex(M, m);
     checkIndex(N, n);
@@ -1300,7 +1300,7 @@ concept AbstractSlice = requires(T t, size_t M) {
                         };
 
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(const T *ptr, size_t M, size_t N, size_t X,
           const AbstractSlice auto m, const AbstractSlice auto n)
     -> PtrMatrix<T> {
@@ -1313,7 +1313,7 @@ matrixGet(const T *ptr, size_t M, size_t N, size_t X,
     return PtrMatrix<T>{ptr + nr.b + mr.b * X, mr.e - mr.b, nr.e - nr.b, X};
 }
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(T *ptr, size_t M, size_t N, size_t X, const AbstractSlice auto m,
           const AbstractSlice auto n) -> MutPtrMatrix<T> {
 #ifndef NDEBUG
@@ -1326,7 +1326,7 @@ matrixGet(T *ptr, size_t M, size_t N, size_t X, const AbstractSlice auto m,
 }
 
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(const T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
           const AbstractSlice auto n) -> PtrVector<T> {
 #ifndef NDEBUG
@@ -1338,7 +1338,7 @@ matrixGet(const T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
     return PtrVector<T>{ptr + nr.b + mi * X, nr.e - nr.b};
 }
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
           const AbstractSlice auto n) -> MutPtrVector<T> {
 #ifndef NDEBUG
@@ -1351,7 +1351,7 @@ matrixGet(T *ptr, size_t M, size_t N, size_t X, const ScalarIndex auto m,
 }
 
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(const T *ptr, size_t M, size_t N, size_t X,
           const AbstractSlice auto m, const ScalarIndex auto n)
     -> StridedVector<T> {
@@ -1364,7 +1364,7 @@ matrixGet(const T *ptr, size_t M, size_t N, size_t X,
     return StridedVector<T>{ptr + ni + mr.b * X, mr.e - mr.b, X};
 }
 template <typename T>
-[[maybe_unused]] static inline constexpr auto
+[[maybe_unused]] inline constexpr auto
 matrixGet(T *ptr, size_t M, size_t N, size_t X, const AbstractSlice auto m,
           const ScalarIndex auto n) -> MutStridedVector<T> {
 #ifndef NDEBUG

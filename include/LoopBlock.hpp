@@ -226,6 +226,12 @@ struct LinearProgramLoopBlock {
     [[nodiscard]] auto getVerticies() const -> llvm::ArrayRef<ScheduledNode> {
         return nodes;
     }
+    auto getMemoryAccesses() const -> llvm::ArrayRef<MemoryAccess *> {
+        return memory;
+    }
+    auto getMemoryAccesses() -> llvm::MutableArrayRef<MemoryAccess *> {
+        return memory;
+    }
     struct OutNeighbors {
         LinearProgramLoopBlock &loopBlock;
         ScheduledNode &node;
@@ -689,8 +695,10 @@ struct LinearProgramLoopBlock {
         countAuxParamsAndConstraints(g, depth);
     }
     void addMemory(MemoryAccess *m) {
+#ifndef NDEBUG
         for (auto o : memory)
             assert(o->getInstruction() != m->getInstruction());
+#endif
         memory.push_back(m);
     }
     // assemble omni-simplex

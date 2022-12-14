@@ -626,7 +626,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void visit(LoopTree &LT, Predicate::Map &map,
                llvm::SmallVector<unsigned> &omega,
-               llvm::SmallPtrSet<llvm::BasicBlock *, 8> visited,
+               llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited,
                llvm::BasicBlock *BB) {
         if ((!map.isInPath(BB)) || visited.contains(BB))
             return;
@@ -637,7 +637,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void parseBBMap(LoopTree &LT, Predicate::Map &map,
                     llvm::SmallVector<unsigned> &omega) {
-        llvm::SmallPtrSet<llvm::BasicBlock *, 8> visited;
+        llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
         for (auto &pair : map)
             visit(LT, map, omega, visited, pair.first);
     }
@@ -660,7 +660,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         //         paths.insert(PBB.basicBlock);
         //     }
 #endif
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
+        // llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
         omega.push_back(0);
         assert(LT.subLoops.size() + 1 == LT.paths.size());
         // llvm::Loop *L = LT.loop;

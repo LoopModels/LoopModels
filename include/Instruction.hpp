@@ -7,8 +7,11 @@
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
+#include <llvm/ADT/MapVector.h>
+#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
@@ -194,8 +197,11 @@ struct Instruction {
         // it won't be added to the argMap
         auto get(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
                  llvm::Value *v) -> Instruction *;
+        [[nodiscard]] auto contains(llvm::Value *v) const -> bool {
+            return llvmToInternalMap.count(v);
+        }
     };
-    [[nodiscard]] static auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+    [[nodiscard]] auto static getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
                                                   Cache &cache,
                                                   llvm::Instruction *v)
         -> UniqueIdentifier {
@@ -230,10 +236,14 @@ struct Instruction {
                                           Cache &cache,
                                           llvm::Instruction *instr)
         -> llvm::ArrayRef<Instruction *> {
+        if (llvm::isa<llvm::LoadInst>(instr))
+            return {nullptr, unsigned(0)};
         auto ops{instr->operands()};
         auto OI = ops.begin();
-        auto OE = ops.end();
-        size_t Nops = instr->getNumOperands();
+        // NOTE: operand 0 is the value operand of a store
+        bool isStore = llvm::isa<llvm::StoreInst>(instr);
+        auto OE = isStore ? (OI + 1) : ops.end();
+        size_t Nops = isStore ? 1 : instr->getNumOperands();
         auto **operands = alloc.Allocate<Instruction *>(Nops);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
@@ -245,10 +255,14 @@ struct Instruction {
                                           Predicate::Map &BBpreds, Cache &cache,
                                           llvm::Instruction *instr)
         -> llvm::ArrayRef<Instruction *> {
+        if (llvm::isa<llvm::LoadInst>(instr))
+            return {nullptr, unsigned(0)};
         auto ops{instr->operands()};
         auto OI = ops.begin();
-        auto OE = ops.end();
-        size_t Nops = instr->getNumOperands();
+        // NOTE: operand 0 is the value operand of a store
+        bool isStore = llvm::isa<llvm::StoreInst>(instr);
+        auto OE = isStore ? (OI + 1) : ops.end();
+        size_t Nops = isStore ? 1 : instr->getNumOperands();
         auto **operands = alloc.Allocate<Instruction *>(Nops);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
@@ -680,23 +694,47 @@ template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
 
 namespace Predicate {
 struct Map {
-    llvm::DenseMap<llvm::BasicBlock *, Set> map;
+    llvm::MapVector<llvm::BasicBlock *, Set> map;
     llvm::SmallVector<Instruction *> predicates;
+    [[nodiscard]] auto size() const -> size_t { return map.size(); }
+    [[nodiscard]] auto isEmpty() const -> bool { return map.empty(); }
+    [[nodiscard]] auto isDivergent() const -> bool {
+        if (size() < 2)
+            return false;
+        for (auto I = map.begin(), E = map.end(); I != E; ++I) {
+            if (I->second.isEmpty())
+                continue;
+            for (auto J = std::next(I); J != E; ++J) {
+                // NOTE: we don't need to check`isEmpty()`
+                // because `emptyIntersection()` returns `false`
+                // when isEmpty() is true.
+                if (I->second.emptyIntersection(J->second))
+                    return true;
+            }
+        }
+        return false;
+    }
+    [[nodiscard]] auto getEntry() const -> llvm::BasicBlock * {
+        return map.back().first;
+    }
     [[nodiscard]] auto get(llvm::BasicBlock *bb) -> Set & { return map[bb]; }
     [[nodiscard]] auto find(llvm::BasicBlock *bb)
-        -> llvm::DenseMap<llvm::BasicBlock *, Set>::iterator {
+        -> llvm::MapVector<llvm::BasicBlock *, Set>::iterator {
         return map.find(bb);
     }
     [[nodiscard]] auto find(llvm::Instruction *inst)
-        -> llvm::DenseMap<llvm::BasicBlock *, Set>::iterator {
+        -> llvm::MapVector<llvm::BasicBlock *, Set>::iterator {
         return map.find(inst->getParent());
     }
-    [[nodiscard]] auto begin() -> decltype(map.begin()) { return map.begin(); }
-    [[nodiscard]] auto end() -> decltype(map.end()) { return map.end(); }
+    // we insert into map in reverse order, so our iterators reverse
+    [[nodiscard]] auto begin() -> decltype(map.rbegin()) {
+        return map.rbegin();
+    }
+    [[nodiscard]] auto end() -> decltype(map.rend()) { return map.rend(); }
+    [[nodiscard]] auto rbegin() -> decltype(map.begin()) { return map.begin(); }
+    [[nodiscard]] auto rend() -> decltype(map.end()) { return map.end(); }
     [[nodiscard]] auto operator[](llvm::BasicBlock *bb)
         -> std::optional<Instruction::Predicates> {
-        SHOWLN(bb);
-        SHOWLN(*bb);
         auto it = map.find(bb);
         if (it == map.end())
             return std::nullopt;
@@ -714,7 +752,7 @@ struct Map {
     }
     [[nodiscard]] auto isInPath(llvm::BasicBlock *BB) -> bool {
         auto f = find(BB);
-        if (f == end())
+        if (f == rend())
             return false;
         return !f->second.isEmpty();
     }
@@ -725,8 +763,8 @@ struct Map {
         map.clear();
         predicates.clear();
     }
-    void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB, Set())); }
-    void visit(llvm::Instruction *inst) { visit(inst->getParent()); }
+    // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB, Set()));
+    // } void visit(llvm::Instruction *inst) { visit(inst->getParent()); }
     [[nodiscard]] auto addPredicate(llvm::BumpPtrAllocator &alloc,
                                     Instruction::Cache &cache,
                                     llvm::Value *value) -> size_t {
@@ -744,9 +782,12 @@ struct Map {
         // because we may have inserted into predMap, we need to look up
         // again rather than being able to reuse anything from the
         // `visit`.
-        auto f = find(BB);
-        assert(f != end());
-        f->second.predUnion(predicate);
+        if (auto f = find(BB); f != rend()) {
+            f->second.predUnion(predicate);
+        } else {
+            map.insert({BB, predicate});
+            // map.insert(std::make_pair(BB, Set(predicate)));
+        }
     }
     void assume(Intersection predicate) {
         for (auto &&pair : map)
@@ -759,21 +800,24 @@ struct Map {
     // 2. We are ignoring cycles for now; we must ensure this is done correctly
     [[nodiscard]] static auto
     descendBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                 llvm::SmallPtrSet<llvm::BasicBlock *, 16> &visited,
                  Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
                  llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
                  llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
         if (BBsrc == BBdst) {
-            auto f = predMap.find(BBsrc);
-            if (f != predMap.end()) {
-                f->second.predUnion(predicate);
-            } else {
-                predMap.insert({BBsrc, predicate});
-            }
+            // auto f = predMap.find(BBsrc);
+            // if (f != predMap.end()) {
+            //     f->second.predUnion(predicate);
+            // } else {
+            //     predMap.insert({BBsrc, predicate});
+            // }
+            assert(!predMap.contains(BBsrc));
+            predMap.insert({BBsrc, predicate});
             return Destination::Reached;
         } else if (L && (!(L->contains(BBsrc)))) {
             // oops, we seem to have skipped the preheader and escaped the loop.
             return Destination::Returned;
-        } else if (auto f = predMap.find(BBsrc); f != predMap.end()) {
+        } else if (visited.contains(BBsrc)) {
             // FIXME: This is terribly hacky.
             // if `BBsrc == BBhead`, then we assume we hit a path that
             // bypasses the following loop, e.g. there was a loop guard.
@@ -783,14 +827,18 @@ struct Map {
             // Otherwise, we check if it seems to have led to a live, non-empty
             // path.
             // TODO: should we union the predicates in case of returned?
-            return ((BBsrc == BBhead) || (f->second.isEmpty()))
-                       ? Destination::Returned
-                       : Destination::Reached;
+            if (BBsrc == BBhead) {
+                return Destination::Returned;
+            } else if (auto f = predMap.find(BBsrc);
+                       f != predMap.rend() && !f->second.isEmpty()) {
+                return Destination::Returned;
+            } else {
+                return Destination::Reached;
+            }
         }
         // Inserts a tombstone to indicate that we have visited BBsrc, but not
         // actually reached a destination.
-        predMap.visit(BBsrc);
-        assert(predMap.find(BBsrc)->second.isEmpty());
+        visited.insert(BBsrc);
         const llvm::Instruction *I = BBsrc->getTerminator();
         if (!I)
             return Destination::Unknown;
@@ -802,8 +850,9 @@ struct Map {
         if (!BI)
             return Destination::Unknown;
         if (BI->isUnconditional()) {
-            auto rc = descendBlock(alloc, cache, predMap, BI->getSuccessor(0),
-                                   BBdst, predicate, BBhead, L);
+            auto rc =
+                descendBlock(alloc, cache, visited, predMap,
+                             BI->getSuccessor(0), BBdst, predicate, BBhead, L);
             if (rc == Destination::Reached)
                 predMap.reach(BBsrc, predicate);
             return rc;
@@ -813,12 +862,12 @@ struct Map {
         // We need to check both sides of the branch and add a predicate.
         size_t predInd = predMap.addPredicate(alloc, cache, cond);
         auto rc0 = descendBlock(
-            alloc, cache, predMap, BI->getSuccessor(0), BBdst,
+            alloc, cache, visited, predMap, BI->getSuccessor(0), BBdst,
             predicate.intersect(predInd, Predicate::Relation::True), BBhead, L);
         if (rc0 == Destination::Unknown) // bail
             return Destination::Unknown;
         auto rc1 = descendBlock(
-            alloc, cache, predMap, BI->getSuccessor(1), BBdst,
+            alloc, cache, visited, predMap, BI->getSuccessor(1), BBdst,
             predicate.intersect(predInd, Predicate::Relation::False), BBhead,
             L);
         if ((rc0 == Destination::Returned) ||
@@ -853,8 +902,9 @@ struct Map {
             llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L)
         -> std::optional<Map> {
         Predicate::Map pm;
-        if (descendBlock(alloc, cache, pm, start, stop, {}, start, L) ==
-            Destination::Reached)
+        llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
+        if (descendBlock(alloc, cache, visited, pm, start, stop, {}, start,
+                         L) == Destination::Reached)
             return pm;
         return std::nullopt;
     }
