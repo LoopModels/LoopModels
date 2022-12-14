@@ -1,0 +1,2 @@
+option('test', type : 'boolean', value : true)
+option('benchmark', type : 'boolean', value : false)
