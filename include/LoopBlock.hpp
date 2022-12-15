@@ -13,6 +13,7 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
+#include "./Utilities.hpp"
 #include "MemoryAccess.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -593,7 +594,7 @@ struct LinearProgramLoopBlock {
         for (unsigned i = 0; i < memory.size(); ++i)
             userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
     }
-    auto getOverlapIndex(const Dependence &edge) -> llvm::Optional<size_t> {
+    auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
         MemoryAccess *store;
         MemoryAccess *other;
         if (edge.in->isLoad()) {
@@ -610,7 +611,7 @@ struct LinearProgramLoopBlock {
             return index;
         return {};
     }
-    auto optOrth(Graph g) -> llvm::Optional<BitSet<>> {
+    auto optOrth(Graph g) -> std::optional<BitSet<>> {
 
         const size_t maxDepth = calcMaxDepth();
         // check for orthogonalization opportunities
@@ -619,7 +620,7 @@ struct LinearProgramLoopBlock {
             Dependence &edge = edges[e];
             if (edge.in->isLoad() == edge.out->isLoad())
                 continue;
-            llvm::Optional<size_t> maybeIndex = getOverlapIndex(edge);
+            Optional<size_t> maybeIndex = getOverlapIndex(edge);
             if (!maybeIndex)
                 continue;
             size_t index = *maybeIndex;
@@ -650,7 +651,7 @@ struct LinearProgramLoopBlock {
             }
         }
         if (tryOrth) {
-            if (llvm::Optional<BitSet<>> opt = optimize(g, 0, maxDepth)) {
+            if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth)) {
                 llvm::errs() << "orth opt succeeded!\n";
                 return opt;
             }
@@ -1167,7 +1168,7 @@ struct LinearProgramLoopBlock {
         return true;
     }
     [[nodiscard]] auto breakGraph(Graph g, size_t d)
-        -> llvm::Optional<BitSet<>> {
+        -> std::optional<BitSet<>> {
         auto components = Graphs::stronglyConnectedComponents(g);
         if (components.size() <= 1)
             return {};
@@ -1184,7 +1185,7 @@ struct LinearProgramLoopBlock {
                 continue;
             countAuxParamsAndConstraints(sg, d);
             setScheduleMemoryOffsets(sg, d);
-            if (llvm::Optional<BitSet<>> sat = optimizeLevel(sg, d)) {
+            if (std::optional<BitSet<>> sat = optimizeLevel(sg, d)) {
                 satDeps |= *sat;
             } else {
                 return {}; // give up
@@ -1217,7 +1218,7 @@ struct LinearProgramLoopBlock {
         ++d;
         // size_t numSat = satDeps.size();
         for (auto i : baseGraphs)
-            if (llvm::Optional<BitSet<>> sat = optimize(
+            if (std::optional<BitSet<>> sat = optimize(
                     std::move(graphs[i]), d, graphs[i].calcMaxDepth())) {
                 // TODO: try and satisfy extra dependences
                 // if ((numSat > 0) && (sat->size()>0)){}
@@ -1255,7 +1256,7 @@ struct LinearProgramLoopBlock {
     //         omniSimplex.copySolution(sol);
     //     }
     [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
-        -> llvm::Optional<BitSet<>> {
+        -> std::optional<BitSet<>> {
         if (numPhiCoefs == 0) {
             setSchedulesIndependent(g, d);
             return BitSet{};
@@ -1305,7 +1306,7 @@ struct LinearProgramLoopBlock {
                 // lexMinimize(g, sol, d);
                 updateSchedules(g, d);
                 BitSet depSat = deactivateSatisfiedEdges(g, d);
-                if (llvm::Optional<BitSet<>> depSatN =
+                if (std::optional<BitSet<>> depSatN =
                         optimize(g, d + 1, maxDepth))
                     return depSat |= *depSatN;
             }
@@ -1323,16 +1324,16 @@ struct LinearProgramLoopBlock {
     /// receives graph by value, so that it is not invalidated when
     /// recursing
     [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
-        -> llvm::Optional<BitSet<>> {
+        -> std::optional<BitSet<>> {
         if (d >= maxDepth)
             return BitSet{};
         countAuxParamsAndConstraints(g, d);
         setScheduleMemoryOffsets(g, d);
         // if we fail on this level, break the graph
         BitSet activeEdgesBackup = g.activeEdges;
-        if (llvm::Optional<BitSet<>> depSat = optimizeLevel(g, d)) {
+        if (std::optional<BitSet<>> depSat = optimizeLevel(g, d)) {
             const size_t numSat = depSat->size();
-            if (llvm::Optional<BitSet<>> depSatNest =
+            if (std::optional<BitSet<>> depSatNest =
                     optimize(g, d + 1, maxDepth)) {
                 if (numSat && depSatNest->size())
                     return optimizeSatDep(std::move(g), d, maxDepth,
@@ -1344,7 +1345,7 @@ struct LinearProgramLoopBlock {
         return breakGraph(std::move(g), d);
     }
     // returns true on failure
-    [[nodiscard]] auto optimize() -> llvm::Optional<BitSet<>> {
+    [[nodiscard]] auto optimize() -> std::optional<BitSet<>> {
         fillEdges();
         fillUserToMemoryMap();
         connectGraph();

@@ -12,9 +12,9 @@ TEST(LinearDiophantineTest, BasicAssertions) {
         do {
             int64_t x = perm[0], y = perm[1], z = perm[2];
             auto opts = linearDiophantine(1, std::make_tuple(x, y, z));
-            EXPECT_TRUE(opts.hasValue());
-            if (opts.hasValue()) {
-                auto [a, b, c] = opts.getValue();
+            EXPECT_TRUE(opts.has_value());
+            if (opts.has_value()) {
+                auto [a, b, c] = *opts;
                 EXPECT_EQ(1, a * x + b * y + c * z);
                 // llvm::errs() << "sols = [ " << a << ", " << b << ", " << c
                 // << " ]\n";
@@ -26,9 +26,9 @@ TEST(LinearDiophantineTest, BasicAssertions) {
         do {
             int64_t w = perm[0], x = perm[1], y = perm[2], z = perm[3];
             auto opts = linearDiophantine(1, std::make_tuple(w, x, y, z));
-            EXPECT_TRUE(opts.hasValue());
-            if (opts.hasValue()) {
-                auto [a, b, c, d] = opts.getValue();
+            EXPECT_TRUE(opts.has_value());
+            if (opts.has_value()) {
+                auto [a, b, c, d] = *opts;
                 EXPECT_EQ(1, a * w + b * x + c * y + d * z);
             }
         } while (std::next_permutation(perm.begin(), perm.end()));
@@ -39,9 +39,9 @@ TEST(LinearDiophantineTest, BasicAssertions) {
             int64_t w = perm[0], x = perm[1], y = perm[2], z = perm[3],
                     u = perm[4];
             auto opts = linearDiophantine(1, std::make_tuple(w, x, y, z, u));
-            EXPECT_TRUE(opts.hasValue());
-            if (opts.hasValue()) {
-                auto [a, b, c, d, e] = opts.getValue();
+            EXPECT_TRUE(opts.has_value());
+            if (opts.has_value()) {
+                auto [a, b, c, d, e] = *opts;
                 EXPECT_EQ(1, a * w + b * x + c * y + d * z + u * e);
             }
         } while (std::next_permutation(perm.begin(), perm.end()));
@@ -71,32 +71,32 @@ TEST(LinearDiophantineTest, BasicAssertions) {
         int64_t d =
             a0 * b0 + a1 * b1 + a2 * b2 + a3 * b3 + a4 * b4 + a5 * b5 + a6 * b6;
         auto opt = linearDiophantine(d, t);
-        EXPECT_TRUE(opt.hasValue());
-        if (opt.hasValue()) {
-            auto [x0, x1, x2, x3, x4, x5, x6] = opt.getValue();
+        EXPECT_TRUE(opt.has_value());
+        if (opt.has_value()) {
+            auto [x0, x1, x2, x3, x4, x5, x6] = *opt;
             EXPECT_EQ(d, a0 * x0 + a1 * x1 + a2 * x2 + a3 * x3 + a4 * x4 +
                              a5 * x5 + a6 * x6);
         }
         opt = linearDiophantine(1, t);
-        if (opt.hasValue()) {
+        if (opt.has_value()) {
             ++solvedOneCounter;
-            auto [x0, x1, x2, x3, x4, x5, x6] = opt.getValue();
+            auto [x0, x1, x2, x3, x4, x5, x6] = *opt;
             EXPECT_EQ(1, a0 * x0 + a1 * x1 + a2 * x2 + a3 * x3 + a4 * x4 +
                              a5 * x5 + a6 * x6);
         }
         auto opt1 = linearDiophantine(d * a0, std::make_tuple(a0));
-        EXPECT_TRUE(opt1.hasValue());
-        if (opt1.hasValue()) {
+        EXPECT_TRUE(opt1.has_value());
+        if (opt1.has_value()) {
             if (a0) {
-                EXPECT_EQ(std::get<0>(opt1.getValue()), d);
+                EXPECT_EQ(std::get<0>(*opt1), d);
             } else {
-                EXPECT_EQ(std::get<0>(opt1.getValue()), 0);
+                EXPECT_EQ(std::get<0>(*opt1), 0);
             }
         }
         if (std::abs(a0) > 1) {
             // guaranteed coprime
             auto opt1 = linearDiophantine(a0 + 1, std::make_tuple(a0));
-            EXPECT_FALSE(opt1.hasValue());
+            EXPECT_FALSE(opt1.has_value());
         }
     }
     llvm::errs() << "solved: " << solvedOneCounter << " / " << numIters << "\n";

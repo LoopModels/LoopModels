@@ -366,7 +366,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 return blackList;
             } else if (loopInd >= 0)
                 blackList |= (uint64_t(1) << uint64_t(loopInd));
-        } else if (llvm::Optional<int64_t> c = getConstantInt(S)) {
+        } else if (std::optional<int64_t> c = getConstantInt(S)) {
             offsets[0] += *c;
             return 0;
         } else if (const auto *ex =
@@ -395,7 +395,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     auto arrayRef(LoopTree &LT, llvm::Instruction *ptr,
                   llvm::Instruction *loadOrStore, const llvm::SCEV *elSize)
-        -> llvm::Optional<ArrayReference> {
+        -> std::optional<ArrayReference> {
         llvm::Loop *L = LT.loop;
         if (L)
             llvm::errs() << "arrayRef for " << *L << "\n";
@@ -546,7 +546,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // TODO: support top level array refs
         if (LT.loop) {
             if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-                if (llvm::Optional<ArrayReference> re =
+                if (std::optional<ArrayReference> re =
                         arrayRef(LT, iptr, I, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
@@ -574,7 +574,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // TODO: support top level array refs
         if (LT.loop) {
             if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-                if (llvm::Optional<ArrayReference> re =
+                if (std::optional<ArrayReference> re =
                         arrayRef(LT, iptr, I, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
