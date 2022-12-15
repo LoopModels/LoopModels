@@ -1343,9 +1343,9 @@ $(function() {
 <div class="line"><a name="l01272"></a><span class="lineno"> 1272</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structMutPtrMatrix.html">MutPtrMatrix</a>;</div>
 <div class="line"><a name="l01273"></a><span class="lineno"> 1273</span>&#160; </div>
 <div class="line"><a name="l01274"></a><span class="lineno"> 1274</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;matrixGet(T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
-<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;          <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n) -&gt; T &amp; {</div>
+<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> <span class="keyword">auto</span> matrixGet(T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X,</div>
+<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;                                       <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
+<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;                                       <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n) -&gt; T &amp; {</div>
 <div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;    checkIndex(M, m);</div>
 <div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;    checkIndex(N, n);</div>
@@ -1353,9 +1353,9 @@ $(function() {
 <div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;    <span class="keywordflow">return</span> *(ptr + (canonicalize(n, N) + canonicalize(m, M) * X));</div>
 <div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;}</div>
 <div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;matrixGet(<span class="keyword">const</span> T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
-<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;          <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n) -&gt; <span class="keyword">const</span> T &amp; {</div>
+<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> <span class="keyword">auto</span> matrixGet(<span class="keyword">const</span> T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N,</div>
+<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;                                       <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
+<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;                                       <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n) -&gt; <span class="keyword">const</span> T &amp; {</div>
 <div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l01289"></a><span class="lineno"> 1289</span>&#160;    checkIndex(M, m);</div>
 <div class="line"><a name="l01290"></a><span class="lineno"> 1290</span>&#160;    checkIndex(N, n);</div>
@@ -1371,7 +1371,7 @@ $(function() {
 <div class="line"><a name="l01300"></a><span class="lineno"> 1300</span>&#160;                        };</div>
 <div class="line"><a name="l01301"></a><span class="lineno"> 1301</span>&#160; </div>
 <div class="line"><a name="l01302"></a><span class="lineno"> 1302</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;matrixGet(<span class="keyword">const</span> T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X,</div>
 <div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;          <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> m, <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> n)</div>
 <div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;    -&gt; <a class="code" href="structPtrMatrix.html">PtrMatrix&lt;T&gt;</a> {</div>
@@ -1384,7 +1384,7 @@ $(function() {
 <div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structPtrMatrix.html">PtrMatrix&lt;T&gt;</a>{ptr + nr.b + mr.b * X, mr.e - mr.b, nr.e - nr.b, X};</div>
 <div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;}</div>
 <div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01317"></a><span class="lineno"> 1317</span>&#160;matrixGet(T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> m,</div>
 <div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;          <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> n) -&gt; <a class="code" href="structMutPtrMatrix.html">MutPtrMatrix&lt;T&gt;</a> {</div>
 <div class="line"><a name="l01319"></a><span class="lineno"> 1319</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
@@ -1397,7 +1397,7 @@ $(function() {
 <div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;}</div>
 <div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160; </div>
 <div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;matrixGet(<span class="keyword">const</span> T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
 <div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;          <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> n) -&gt; <a class="code" href="structPtrVector.html">PtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l01332"></a><span class="lineno"> 1332</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
@@ -1409,7 +1409,7 @@ $(function() {
 <div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structPtrVector.html">PtrVector&lt;T&gt;</a>{ptr + nr.b + mi * X, nr.e - nr.b};</div>
 <div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;}</div>
 <div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;matrixGet(T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> m,</div>
 <div class="line"><a name="l01343"></a><span class="lineno"> 1343</span>&#160;          <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> n) -&gt; <a class="code" href="structMutPtrVector.html">MutPtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
@@ -1422,7 +1422,7 @@ $(function() {
 <div class="line"><a name="l01351"></a><span class="lineno"> 1351</span>&#160;}</div>
 <div class="line"><a name="l01352"></a><span class="lineno"> 1352</span>&#160; </div>
 <div class="line"><a name="l01353"></a><span class="lineno"> 1353</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01354"></a><span class="lineno"> 1354</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01354"></a><span class="lineno"> 1354</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01355"></a><span class="lineno"> 1355</span>&#160;matrixGet(<span class="keyword">const</span> T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X,</div>
 <div class="line"><a name="l01356"></a><span class="lineno"> 1356</span>&#160;          <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> m, <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n)</div>
 <div class="line"><a name="l01357"></a><span class="lineno"> 1357</span>&#160;    -&gt; <a class="code" href="structStridedVector.html">StridedVector&lt;T&gt;</a> {</div>
@@ -1435,7 +1435,7 @@ $(function() {
 <div class="line"><a name="l01364"></a><span class="lineno"> 1364</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structStridedVector.html">StridedVector&lt;T&gt;</a>{ptr + ni + mr.b * X, mr.e - mr.b, X};</div>
 <div class="line"><a name="l01365"></a><span class="lineno"> 1365</span>&#160;}</div>
 <div class="line"><a name="l01366"></a><span class="lineno"> 1366</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l01367"></a><span class="lineno"> 1367</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l01367"></a><span class="lineno"> 1367</span>&#160;[[maybe_unused]] <span class="keyword">inline</span> constexpr <span class="keyword">auto</span></div>
 <div class="line"><a name="l01368"></a><span class="lineno"> 1368</span>&#160;matrixGet(T *ptr, <span class="keywordtype">size_t</span> M, <span class="keywordtype">size_t</span> N, <span class="keywordtype">size_t</span> X, <span class="keyword">const</span> AbstractSlice <span class="keyword">auto</span> m,</div>
 <div class="line"><a name="l01369"></a><span class="lineno"> 1369</span>&#160;          <span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> n) -&gt; <a class="code" href="structMutStridedVector.html">MutStridedVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l01370"></a><span class="lineno"> 1370</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
