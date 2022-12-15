@@ -607,14 +607,14 @@ $(function() {
 <div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    constexpr <span class="keyword">auto</span> view()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> *<span class="keyword">this</span>; };</div>
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;};</div>
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160; </div>
-<div class="line"><a name="l00539"></a><span class="lineno"><a class="line" href="structBegin.html">  539</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structBegin.html">Begin</a> {</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structBegin.html">Begin</a>)</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">struct </span>Begin {</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;    <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, Begin)</div>
 <div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;        -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;        <span class="keywordflow">return</span> os &lt;&lt; 0;</div>
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;    }</div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;} begin;</div>
-<div class="line"><a name="l00545"></a><span class="lineno"><a class="line" href="structEnd.html">  545</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structEnd.html">End</a> {</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structEnd.html">End</a>) -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">struct </span>End {</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, End) -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;        <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;end&quot;</span>;</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    }</div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;} end;</div>
@@ -625,10 +625,10 @@ $(function() {
 <div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;        <span class="keywordflow">return</span> os &lt;&lt; r.offset;</div>
 <div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;    }</div>
 <div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;};</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keywordtype">size_t</span> x, <a class="code" href="structBegin.html">Begin</a>) -&gt; <a class="code" href="structOffsetBegin.html">OffsetBegin</a> {</div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keywordtype">size_t</span> x, Begin) -&gt; <a class="code" href="structOffsetBegin.html">OffsetBegin</a> {</div>
 <div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structOffsetBegin.html">OffsetBegin</a>{x};</div>
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;}</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;constexpr <span class="keyword">auto</span> operator+(<a class="code" href="structBegin.html">Begin</a>, <span class="keywordtype">size_t</span> x) -&gt; <a class="code" href="structOffsetBegin.html">OffsetBegin</a> {</div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;constexpr <span class="keyword">auto</span> operator+(Begin, <span class="keywordtype">size_t</span> x) -&gt; <a class="code" href="structOffsetBegin.html">OffsetBegin</a> {</div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structOffsetBegin.html">OffsetBegin</a>{x};</div>
 <div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;}</div>
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keywordtype">size_t</span> x, <a class="code" href="structOffsetBegin.html">OffsetBegin</a> y) -&gt; <a class="code" href="structOffsetBegin.html">OffsetBegin</a> {</div>
@@ -644,7 +644,7 @@ $(function() {
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;        <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;end - &quot;</span> &lt;&lt; r.offset;</div>
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    }</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;};</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;constexpr <span class="keyword">auto</span> operator-(<a class="code" href="structEnd.html">End</a>, <span class="keywordtype">size_t</span> x) -&gt; <a class="code" href="structOffsetEnd.html">OffsetEnd</a> { <span class="keywordflow">return</span> <a class="code" href="structOffsetEnd.html">OffsetEnd</a>{x}; }</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;constexpr <span class="keyword">auto</span> operator-(End, <span class="keywordtype">size_t</span> x) -&gt; <a class="code" href="structOffsetEnd.html">OffsetEnd</a> { <span class="keywordflow">return</span> <a class="code" href="structOffsetEnd.html">OffsetEnd</a>{x}; }</div>
 <div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;constexpr <span class="keyword">auto</span> operator-(<a class="code" href="structOffsetEnd.html">OffsetEnd</a> y, <span class="keywordtype">size_t</span> x) -&gt; <a class="code" href="structOffsetEnd.html">OffsetEnd</a> {</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structOffsetEnd.html">OffsetEnd</a>{y.offset + x};</div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;}</div>
@@ -727,8 +727,8 @@ $(function() {
 <div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160; </div>
 <div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <span class="keywordtype">size_t</span> x) { assert(x &lt; X); }</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <a class="code" href="structEnd.html">End</a>) { assert(X &gt; 0); }</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <a class="code" href="structBegin.html">Begin</a>) { assert(X &gt; 0); }</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, End) { assert(X &gt; 0); }</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, Begin) { assert(X &gt; 0); }</div>
 <div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <a class="code" href="structOffsetEnd.html">OffsetEnd</a> x) { assert(x.offset &lt; X); }</div>
 <div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;<span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <a class="code" href="structOffsetBegin.html">OffsetBegin</a> x) { assert(x.offset &lt; X); }</div>
 <div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> B&gt; <span class="keywordtype">void</span> checkIndex(<span class="keywordtype">size_t</span> X, <a class="code" href="structRange.html">Range&lt;B, size_t&gt;</a> x) {</div>
@@ -739,21 +739,21 @@ $(function() {
 <div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160; </div>
 <div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(<span class="keywordtype">size_t</span> e, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> e; }</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(<a class="code" href="structBegin.html">Begin</a>, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(Begin, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
 <div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(<a class="code" href="structOffsetBegin.html">OffsetBegin</a> b, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;    <span class="keywordflow">return</span> b.offset;</div>
 <div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;}</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(<a class="code" href="structEnd.html">End</a>, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> M - 1; }</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(End, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> M - 1; }</div>
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;constexpr <span class="keyword">auto</span> canonicalize(<a class="code" href="structOffsetEnd.html">OffsetEnd</a> e, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;    <span class="keywordflow">return</span> M - 1 - e.offset;</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;}</div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160; </div>
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(<span class="keywordtype">size_t</span> e, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> e; }</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(<a class="code" href="structBegin.html">Begin</a>, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(Begin, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
 <div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(<a class="code" href="structOffsetBegin.html">OffsetBegin</a> b, <span class="keywordtype">size_t</span>) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keywordflow">return</span> b.offset;</div>
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;}</div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(<a class="code" href="structEnd.html">End</a>, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> M; }</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(End, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> M; }</div>
 <div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;constexpr <span class="keyword">auto</span> canonicalizeForRange(<a class="code" href="structOffsetEnd.html">OffsetEnd</a> e, <span class="keywordtype">size_t</span> M) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    <span class="keywordflow">return</span> M - e.offset;</div>
 <div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;}</div>
@@ -2960,12 +2960,10 @@ $(function() {
 <div class="line"><a name="l02889"></a><span class="lineno"> 2889</span>&#160; </div>
 <div class="line"><a name="l02890"></a><span class="lineno"> 2890</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structSliceView.html">SliceView&lt;int64_t, unsigned&gt;</a>&gt;);</div>
 <div class="ttc" id="astructAdd_html"><div class="ttname"><a href="structAdd.html">Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:367</div></div>
-<div class="ttc" id="astructBegin_html"><div class="ttname"><a href="structBegin.html">Begin</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:539</div></div>
 <div class="ttc" id="astructDiv_html"><div class="ttname"><a href="structDiv.html">Div</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:377</div></div>
 <div class="ttc" id="astructElementwiseMatrixBinaryOp_html"><div class="ttname"><a href="structElementwiseMatrixBinaryOp.html">ElementwiseMatrixBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:443</div></div>
 <div class="ttc" id="astructElementwiseUnaryOp_html"><div class="ttname"><a href="structElementwiseUnaryOp.html">ElementwiseUnaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:381</div></div>
 <div class="ttc" id="astructElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structElementwiseVectorBinaryOp.html">ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:421</div></div>
-<div class="ttc" id="astructEnd_html"><div class="ttname"><a href="structEnd.html">End</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:545</div></div>
 <div class="ttc" id="astructGetEltype_html"><div class="ttname"><a href="structGetEltype.html">GetEltype</a></div><div class="ttdef"><b>Definition:</b> TypePromotion.hpp:9</div></div>
 <div class="ttc" id="astructMatMatMul_html"><div class="ttname"><a href="structMatMatMul.html">MatMatMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:504</div></div>
 <div class="ttc" id="astructMatVecMul_html"><div class="ttname"><a href="structMatVecMul.html">MatVecMul</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:523</div></div>

@@ -354,10 +354,10 @@ $(function() {
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;            <span class="keywordflow">return</span> ii;</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;        }</div>
 <div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="keyword">auto</span> operator*() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> i; }</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keyword">auto</span> operator==(<a class="code" href="structEnd.html">End</a>) -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !u; }</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keyword">auto</span> operator==(End) -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> !u; }</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    };</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> begin() const -&gt; Iterator { <span class="keywordflow">return</span> Iterator{u}; }</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> end() const -&gt; Iterator::<a class="code" href="structEnd.html">End</a> { <span class="keywordflow">return</span> Iterator::End{}; }</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> end() const -&gt; Iterator::End { <span class="keywordflow">return</span> Iterator::End{}; }</div>
 <div class="line"><a name="l00292"></a><span class="lineno"><a class="line" href="structBitSet64_1_1ReverseIterator.html">  292</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structBitSet64_1_1ReverseIterator.html">ReverseIterator</a> {</div>
 <div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;        uint64_t u;</div>
 <div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;        <span class="keywordtype">size_t</span> i;</div>
@@ -366,7 +366,7 @@ $(function() {
 <div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> rbegin() const -&gt; <a class="code" href="structBitSet64_1_1ReverseIterator.html">ReverseIterator</a> {</div>
 <div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structBitSet64_1_1ReverseIterator.html">ReverseIterator</a>{u, size_t(64) - size_t(std::countl_zero(u))};</div>
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    }</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> rend() const -&gt; Iterator::<a class="code" href="structEnd.html">End</a> { <span class="keywordflow">return</span> Iterator::End{}; }</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> rend() const -&gt; Iterator::End { <span class="keywordflow">return</span> Iterator::End{}; }</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="keywordtype">void</span> set(<span class="keywordtype">size_t</span> i) {</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;        u |= (uint64_t(1) &lt;&lt; i);</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;        <span class="keywordflow">return</span>;</div>
@@ -513,7 +513,6 @@ $(function() {
 <div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:317</div></div>
 <div class="ttc" id="astructBitSliceView_html"><div class="ttname"><a href="structBitSliceView.html">BitSliceView</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:314</div></div>
 <div class="ttc" id="astructEndSentinel_html"><div class="ttname"><a href="structEndSentinel.html">EndSentinel</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:18</div></div>
-<div class="ttc" id="astructEnd_html"><div class="ttname"><a href="structEnd.html">End</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:545</div></div>
 <div class="ttc" id="astructScheduledNode_html"><div class="ttname"><a href="structScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:42</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
