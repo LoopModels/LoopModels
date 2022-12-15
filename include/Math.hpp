@@ -536,13 +536,13 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
     constexpr auto view() const { return *this; };
 };
 
-struct Begin {
+static inline constexpr struct Begin {
     friend auto operator<<(llvm::raw_ostream &os, Begin)
         -> llvm::raw_ostream & {
         return os << 0;
     }
 } begin;
-struct End {
+static inline constexpr struct End {
     friend auto operator<<(llvm::raw_ostream &os, End) -> llvm::raw_ostream & {
         return os << "end";
     }
