@@ -401,7 +401,7 @@ $(function() {
 <div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;                <span class="keywordflow">return</span> blackList;</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (loopInd &gt;= 0)</div>
 <div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;                blackList |= (uint64_t(1) &lt;&lt; uint64_t(loopInd));</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (llvm::Optional&lt;int64_t&gt; c = getConstantInt(S)) {</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (std::optional&lt;int64_t&gt; c = getConstantInt(S)) {</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;            offsets[0] += *c;</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;            <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *ex =</div>
@@ -430,7 +430,7 @@ $(function() {
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    }</div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;    <span class="keyword">auto</span> arrayRef(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::Instruction *ptr,</div>
 <div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;                  llvm::Instruction *loadOrStore, <span class="keyword">const</span> llvm::SCEV *elSize)</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        -&gt; llvm::Optional&lt;ArrayReference&gt; {</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;        -&gt; std::optional&lt;ArrayReference&gt; {</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;        llvm::Loop *L = LT.loop;</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;        <span class="keywordflow">if</span> (L)</div>
 <div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;            llvm::errs() &lt;&lt; <span class="stringliteral">&quot;arrayRef for &quot;</span> &lt;&lt; *L &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -581,7 +581,7 @@ $(function() {
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;        <span class="comment">// TODO: support top level array refs</span></div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;        <span class="keywordflow">if</span> (LT.loop) {</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> *iptr = llvm::dyn_cast&lt;llvm::Instruction&gt;(ptr)) {</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                <span class="keywordflow">if</span> (llvm::Optional&lt;ArrayReference&gt; re =</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                <span class="keywordflow">if</span> (std::optional&lt;ArrayReference&gt; re =</div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                        arrayRef(LT, iptr, I, elSize)) {</div>
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                    SHOWLN(I);</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                    SHOWLN(*I);</div>
@@ -609,7 +609,7 @@ $(function() {
 <div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;        <span class="comment">// TODO: support top level array refs</span></div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;        <span class="keywordflow">if</span> (LT.loop) {</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;            <span class="keywordflow">if</span> (<span class="keyword">auto</span> *iptr = llvm::dyn_cast&lt;llvm::Instruction&gt;(ptr)) {</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                <span class="keywordflow">if</span> (llvm::Optional&lt;ArrayReference&gt; re =</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                <span class="keywordflow">if</span> (std::optional&lt;ArrayReference&gt; re =</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;                        arrayRef(LT, iptr, I, elSize)) {</div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;                    SHOWLN(I);</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;                    SHOWLN(*I);</div>
@@ -885,7 +885,7 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:151</div></div>
-<div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:178</div></div>
+<div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:179</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:27</div></div>
 <div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
 <div class="ttc" id="astructMutPtrVector_html"><div class="ttname"><a href="structMutPtrVector.html">MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:775</div></div>

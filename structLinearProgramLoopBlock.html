@@ -136,12 +136,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>fullGraph</b> () -&gt
 <tr class="memitem:a8f1a89984757b4194d64c0e835aa6f0c"><td class="memItemLeft" align="right" valign="top"><a id="a8f1a89984757b4194d64c0e835aa6f0c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>fillUserToMemoryMap</b> ()</td></tr>
 <tr class="separator:a8f1a89984757b4194d64c0e835aa6f0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc1c6496a2c7d8caa68f753d28d07863"><td class="memItemLeft" align="right" valign="top"><a id="afc1c6496a2c7d8caa68f753d28d07863"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="structDependence.html">Dependence</a> &amp;edge) -&gt; llvm::Optional&lt; size_t &gt;</td></tr>
-<tr class="separator:afc1c6496a2c7d8caa68f753d28d07863"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7c6c8183b4709a55732ccc66fc5635f"><td class="memItemLeft" align="right" valign="top"><a id="ae7c6c8183b4709a55732ccc66fc5635f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>optOrth</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g) -&gt; llvm::Optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
-<tr class="separator:ae7c6c8183b4709a55732ccc66fc5635f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbadfb32ed5aec74c081a5c509857ce1"><td class="memItemLeft" align="right" valign="top"><a id="abbadfb32ed5aec74c081a5c509857ce1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOverlapIndex</b> (const <a class="el" href="structDependence.html">Dependence</a> &amp;edge) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; size_t &gt;</td></tr>
+<tr class="separator:abbadfb32ed5aec74c081a5c509857ce1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad6d4469dc98fbfdd7dd29d236f2b4b48"><td class="memItemLeft" align="right" valign="top"><a id="ad6d4469dc98fbfdd7dd29d236f2b4b48"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>optOrth</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:ad6d4469dc98fbfdd7dd29d236f2b4b48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95a4bda1f6bb81cd4c6ba61478c703a7"><td class="memItemLeft" align="right" valign="top"><a id="a95a4bda1f6bb81cd4c6ba61478c703a7"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>countNumLambdas</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) const -&gt; size_t</td></tr>
 <tr class="separator:a95a4bda1f6bb81cd4c6ba61478c703a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -208,20 +208,20 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (<a c
 <tr class="memitem:a6f5bd197b87aa4e24069a61d120276c4"><td class="memItemLeft" align="right" valign="top"><a id="a6f5bd197b87aa4e24069a61d120276c4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>canFuse</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g0, <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g1, size_t d) -&gt; bool</td></tr>
 <tr class="separator:a6f5bd197b87aa4e24069a61d120276c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0bacc064ea28ad49387b275d1833e6c"><td class="memItemLeft" align="right" valign="top"><a id="ab0bacc064ea28ad49387b275d1833e6c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>breakGraph</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d) -&gt; llvm::Optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
-<tr class="separator:ab0bacc064ea28ad49387b275d1833e6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01ab291a30d795ee00b61cf5d6f05cfc"><td class="memItemLeft" align="right" valign="top"><a id="a01ab291a30d795ee00b61cf5d6f05cfc"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimizeLevel</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) -&gt; llvm::Optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
-<tr class="separator:a01ab291a30d795ee00b61cf5d6f05cfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19e322cb6da447ac3fb1446839cb40d1"><td class="memItemLeft" align="right" valign="top"><a id="a19e322cb6da447ac3fb1446839cb40d1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>breakGraph</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:a19e322cb6da447ac3fb1446839cb40d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d3edc725117882140cc776e2e9af84c"><td class="memItemLeft" align="right" valign="top"><a id="a2d3edc725117882140cc776e2e9af84c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimizeLevel</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:a2d3edc725117882140cc776e2e9af84c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a76df183d2c421baa3f13c901b2b5fb3c"><td class="memItemLeft" align="right" valign="top"><a id="a76df183d2c421baa3f13c901b2b5fb3c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimizeSatDep</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d, size_t maxDepth, <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; depSatLevel, const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;depSatNest, <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; activeEdges) -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;</td></tr>
 <tr class="separator:a76df183d2c421baa3f13c901b2b5fb3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf5e6ff1574d413c5e67787f30198f84"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearProgramLoopBlock.html#aaf5e6ff1574d413c5e67787f30198f84">optimize</a> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d, size_t maxDepth) -&gt; llvm::Optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
-<tr class="separator:aaf5e6ff1574d413c5e67787f30198f84"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af69339c91b79ad73c683d2fe5a63ea54"><td class="memItemLeft" align="right" valign="top"><a id="af69339c91b79ad73c683d2fe5a63ea54"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> () -&gt; llvm::Optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
-<tr class="separator:af69339c91b79ad73c683d2fe5a63ea54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad26576b4763d758bf1f49c03a1adaf1"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLinearProgramLoopBlock.html#aad26576b4763d758bf1f49c03a1adaf1">optimize</a> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> g, size_t d, size_t maxDepth) -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:aad26576b4763d758bf1f49c03a1adaf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23dbfb4cae843364972f943dd8599c5a"><td class="memItemLeft" align="right" valign="top"><a id="a23dbfb4cae843364972f943dd8599c5a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> () -&gt; std::optional&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:a23dbfb4cae843364972f943dd8599c5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -391,8 +391,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 
 </div>
 </div>
-<a id="aaf5e6ff1574d413c5e67787f30198f84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaf5e6ff1574d413c5e67787f30198f84">&#9670;&nbsp;</a></span>optimize()</h2>
+<a id="aad26576b4763d758bf1f49c03a1adaf1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad26576b4763d758bf1f49c03a1adaf1">&#9670;&nbsp;</a></span>optimize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -421,7 +421,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
         <tr>
           <td></td>
           <td>)</td>
-          <td></td><td> -&gt; llvm::Optional&lt;<a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt; </td>
+          <td></td><td> -&gt; std::optional&lt;<a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt; </td>
         </tr>
       </table>
   </td>

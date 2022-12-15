@@ -73,7 +73,7 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;./Math.hpp&quot;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &lt;tuple&gt;</span></div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;llvm::Optional&lt;std::tuple&lt;int64_t, int64_t&gt;&gt;</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;std::optional&lt;std::tuple&lt;int64_t, int64_t&gt;&gt;</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;linearDiophantine(int64_t c, int64_t a, int64_t b) {</div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    <span class="keywordflow">if</span> (c == 0) {</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;        <span class="keywordflow">return</span> std::make_tuple(int64_t(0), int64_t(0));</div>
@@ -92,8 +92,8 @@ $(function() {
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;}</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// d = a*x; x = d/a</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;llvm::Optional&lt;std::tuple&lt;int64_t&gt;&gt; linearDiophantine(int64_t d,</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                                                      std::tuple&lt;int64_t&gt; a) {</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;std::optional&lt;std::tuple&lt;int64_t&gt;&gt; linearDiophantine(int64_t d,</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                                                     std::tuple&lt;int64_t&gt; a) {</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    int64_t a0 = std::get&lt;0&gt;(a);</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">if</span> (d == 0) {</div>
 <div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;        <span class="keywordflow">return</span> std::make_tuple(int64_t(0));</div>
@@ -105,7 +105,7 @@ $(function() {
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;}</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">// d = a[0]*x + a[1]*y;</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;llvm::Optional&lt;std::tuple&lt;int64_t, int64_t&gt;&gt;</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;std::optional&lt;std::tuple&lt;int64_t, int64_t&gt;&gt;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;linearDiophantine(int64_t d, std::tuple&lt;int64_t, int64_t&gt; a) {</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">return</span> linearDiophantine(d, std::get&lt;0&gt;(a), std::get&lt;1&gt;(a));</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;}</div>
@@ -123,14 +123,14 @@ $(function() {
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;}</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Tuple&gt;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;llvm::Optional&lt;Tuple&gt; linearDiophantine(int64_t d, Tuple a) {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;std::optional&lt;Tuple&gt; linearDiophantine(int64_t d, Tuple a) {</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    int64_t a0 = std::get&lt;0&gt;(a);</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    int64_t a1 = std::get&lt;1&gt;(a);</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keyword">auto</span> aRem = pop_front(a, <a class="code" href="structVal.html">Val&lt;2&gt;</a>());</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordflow">if</span> ((a0 | a1) == 0) {</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> opt = linearDiophantine(d, aRem))</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;            <span class="keywordflow">return</span> std::tuple_cat(std::make_tuple(int64_t(0), int64_t(0)),</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                                  opt.getValue());</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                                  *opt);</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    int64_t q = gcd(a0, a1);</div>
@@ -138,11 +138,11 @@ $(function() {
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// solve the rest</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">if</span> (<span class="keyword">auto</span> dio_dqc =</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))) {</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">auto</span> t = dio_dqc.getValue();</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="keyword">auto</span> t = *dio_dqc;</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        int64_t w = std::get&lt;0&gt;(t);</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="comment">// w == ((a0/q)*x + (a1/q)*y)</span></div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> o = linearDiophantine(w, a0 / q, a1 / q))</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <span class="keywordflow">return</span> std::tuple_cat(o.getValue(), pop_front(t, <a class="code" href="structVal.html">Val&lt;1&gt;</a>()));</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            <span class="keywordflow">return</span> std::tuple_cat(*o, pop_front(t, <a class="code" href="structVal.html">Val&lt;1&gt;</a>()));</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;}</div>

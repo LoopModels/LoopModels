@@ -83,22 +83,18 @@ $(function() {
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// end</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">// if `A` can be unimodularized, returns the inverse of the unimodularized `A`</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;[[maybe_unused]] <span class="keyword">static</span> llvm::Optional&lt;SquareMatrix&lt;int64_t&gt;&gt;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;unimodularize(<a class="code" href="structMatrix.html">IntMatrix</a> A) {</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    llvm::Optional&lt;std::pair&lt;IntMatrix, SquareMatrix&lt;int64_t&gt;&gt;&gt; OHNF =</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;[[nodiscard]] [[maybe_unused]] <span class="keyword">static</span> <span class="keyword">auto</span> unimodularize(<a class="code" href="structMatrix.html">IntMatrix</a> A)</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    -&gt; std::optional&lt;SquareMatrix&lt;int64_t&gt;&gt; {</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    std::optional&lt;std::pair&lt;IntMatrix, SquareMatrix&lt;int64_t&gt;&gt;&gt; OHNF =</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;        NormalForm::hermite(std::move(A));</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">if</span> (!OHNF.hasValue()) {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">if</span> (!OHNF.has_value())</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;        <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    }</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">auto</span> &amp;[H, U] = OHNF.getValue();</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; H.numCol(); ++m) {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;        <span class="keywordflow">if</span> (H(m, m) != 1) {</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;            <span class="comment">// unimodularization was not succesful</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;            <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        }</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    }</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">return</span> std::move(U);</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">auto</span> &amp;[H, U] = *OHNF;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = 0; m &lt; H.numCol(); ++m)</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        <span class="keywordflow">if</span> (H(m, m) != 1)</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;            <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">return</span> std::move(U);</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;}</div>
 <div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
