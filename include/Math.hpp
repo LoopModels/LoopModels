@@ -648,7 +648,7 @@ Range(B, E) -> Range<ptrdiff_t, size_t>;
 template <std::unsigned_integral B, std::signed_integral E>
 Range(B, E) -> Range<size_t, ptrdiff_t>;
 
-inline constexpr struct Colon {
+static inline constexpr struct Colon {
     [[nodiscard]] inline constexpr auto operator()(auto B, auto E) const {
         return Range{B, E};
     }

@@ -24,6 +24,7 @@
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/InstructionCost.h>
 #include <llvm/Support/MathExtras.h>
+#include <utility>
 
 struct RecipThroughputLatency {
     llvm::InstructionCost recipThroughput;
@@ -142,6 +143,25 @@ struct Instruction {
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
     llvm::SmallVector<RecipThroughputLatency> costs;
+
+    [[nodiscard]] auto getOperands() -> llvm::ArrayRef<Instruction *> {
+        return operands;
+    }
+    [[nodiscard]] auto getUsers() -> llvm::ArrayRef<Instruction *> {
+        return users;
+    }
+    [[nodiscard]] auto getOpPair() const
+        -> std::pair<llvm::Intrinsic::ID, llvm::Intrinsic::ID> {
+        return std::make_pair(id.op, id.intrin);
+    }
+    [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
+        if (isLoadOrStore())
+            return id.ptr.ref->loadOrStore->getParent();
+        else if (auto *I = llvm::dyn_cast<llvm::Instruction>(id.ptr.val))
+            return I->getParent();
+        else
+            return nullptr;
+    }
     // llvm::TargetTransformInfo &TTI;
 
     // Instruction(llvm::Intrinsic::ID id, llvm::Type *type) : id(id),
