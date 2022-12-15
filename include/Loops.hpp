@@ -6,6 +6,7 @@
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./Polyhedra.hpp"
+#include "./Utilities.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -40,28 +41,21 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
         return SE.getBackedgeTakenCount(L);
     const llvm::SCEV *LB = SE.getSCEV(&b->getInitialIVValue());
     const llvm::SCEV *UB = SE.getSCEV(&b->getFinalIVValue());
-    SHOWLN(*LB);
-    SHOWLN(*UB);
-    if (auto umm = llvm::dyn_cast<llvm::SCEVUMaxExpr>(UB)) {
+    if (auto *umm = llvm::dyn_cast<llvm::SCEVUMaxExpr>(UB)) {
         const llvm::SCEV *m0 = SE.getMinusSCEV(
             umm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
         const llvm::SCEV *m1 = SE.getMinusSCEV(
             umm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
         // Does checking known negative make sense if we have NUW?
-        SHOWLN(*UB);
-        SHOWLN(*m0);
-        SHOWLN(*m1);
         if (SE.isKnownNegative(m0))
             return m1;
         if (SE.isKnownNegative(m1))
             return m0;
-    } else if (auto smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
+    } else if (auto *smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
         const llvm::SCEV *m0 = SE.getMinusSCEV(
             smm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
         const llvm::SCEV *m1 = SE.getMinusSCEV(
             smm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
-        SHOWLN(*m0);
-        SHOWLN(*m1);
         if (SE.isKnownNegative(m0))
             return m1;
         if (SE.isKnownNegative(m1))
@@ -123,14 +117,14 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
     return S;
 }
 
-// static llvm::Optional<int64_t> getConstantInt(llvm::Value *v) {
+// static std::optional<int64_t> getConstantInt(llvm::Value *v) {
 //     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
 //         if (c->getBitWidth() <= 64)
 //             return c->getSExtValue();
 //     return {};
 // }
 [[maybe_unused]] static auto getConstantInt(const llvm::SCEV *v)
-    -> llvm::Optional<int64_t> {
+    -> std::optional<int64_t> {
     if (const auto *sc = llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
         llvm::ConstantInt *c = sc->getValue();
         // we need bit width of 64, for sake of negative numbers
@@ -142,11 +136,11 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
 
 template <typename T>
 [[maybe_unused]] static auto findFirst(llvm::ArrayRef<T> v, const T &x)
-    -> size_t {
+    -> Optional<size_t> {
     for (size_t i = 0; i < v.size(); ++i)
         if (v[i] == x)
             return i;
-    return std::numeric_limits<size_t>::max();
+    return {};
 }
 
 /// returns 1-based index, to match the pattern we use where index 0 refers to a
@@ -296,7 +290,7 @@ struct AffineLoopNest
             for (size_t j = l; j < u; ++j)
                 A(j, i) += mlt;
             return minDepth;
-        } else if (llvm::Optional<int64_t> c = getConstantInt(v)) {
+        } else if (std::optional<int64_t> c = getConstantInt(v)) {
             for (size_t j = l; j < u; ++j)
                 A(j, 0) += mlt * (*c);
             return minDepth;
@@ -513,7 +507,7 @@ struct AffineLoopNest
         return true;
     }
     static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
-        -> llvm::Optional<AffineLoopNest<NonNegative>> {
+        -> std::optional<AffineLoopNest<NonNegative>> {
         auto BT = getBackedgeTakenCount(SE, L);
         if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
             return {};

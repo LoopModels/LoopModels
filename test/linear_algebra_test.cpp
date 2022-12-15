@@ -26,8 +26,8 @@ TEST(LinearAlgebraTest, BasicAssertions) {
     A(3, 3) = 4;
 
     auto LUFopt = LU::fact(A);
-    EXPECT_TRUE(LUFopt.hasValue());
-    auto LUF = LUFopt.getValue();
+    EXPECT_TRUE(LUFopt.has_value());
+    auto &LUF = *LUFopt;
     Matrix<Rational, 0, 0> B = A;
     llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
     printVector(llvm::errs() << "F = \n"

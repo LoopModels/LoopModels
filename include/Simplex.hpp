@@ -587,7 +587,7 @@ struct Simplex {
     // B(:,1:end)*x == B(:,0)
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static auto positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B)
-        -> llvm::Optional<Simplex> {
+        -> std::optional<Simplex> {
         size_t numVar = A.numCol();
         assert(numVar == B.numCol());
         Simplex simplex{};

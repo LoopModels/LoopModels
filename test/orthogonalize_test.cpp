@@ -20,7 +20,7 @@
 #include <memory>
 #include <random>
 
-[[maybe_unused]] static llvm::Optional<
+[[maybe_unused]] static std::optional<
     std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
 orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
 
@@ -145,11 +145,11 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<
+    std::optional<
         std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
         orth(orthogonalize(ai));
 
-    EXPECT_TRUE(orth.hasValue());
+    EXPECT_TRUE(orth.has_value());
     AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
     for (auto &&ar : newArrayRefs)
@@ -267,11 +267,11 @@ TEST(BadMul, BasicAssertions) {
     llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
                                            &allArrayRefs[2]};
 
-    llvm::Optional<
+    std::optional<
         std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
         orth(orthogonalize(ai));
 
-    EXPECT_TRUE(orth.hasValue());
+    EXPECT_TRUE(orth.has_value());
 
     AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;

@@ -823,8 +823,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
     auto nonZero = reverse.depPoly.getCompTimeEqOffset(nonZeroInd);
     const size_t numSymbols = reverse.depPoly.getNumSymbols();
     EXPECT_EQ(numSymbols, 3);
-    EXPECT_TRUE(nonZero.hasValue());
-    if (nonZero.getValue() == 1) {
+    EXPECT_TRUE(nonZero.has_value());
+    if (*nonZero == 1) {
         // v_1 - v_4 == 1
         // 1 - v_1 + v_4 == 0
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), -1);
@@ -833,15 +833,14 @@ TEST(TriangularExampleTest, BasicAssertions) {
     } else {
         // -v_1 + v_4 == -1
         // -1 + v_1 - v_4 == 0
-        EXPECT_EQ(nonZero.getValue(), -1);
+        EXPECT_EQ(*nonZero, -1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 1), 1);
         EXPECT_EQ(reverse.depPoly.E(nonZeroInd, numSymbols + 4), -1);
     }
 
-    llvm::Optional<BitSet<>> optDeps = lblock.optimize();
-    EXPECT_TRUE(optDeps.hasValue());
+    std::optional<BitSet<>> optDeps = lblock.optimize();
+    EXPECT_TRUE(optDeps.has_value());
     SHOWLN(lblock);
-    // SHOWLN(optDeps.getValue());
     // orig order (inner <-> outer): n, m
     IntMatrix optPhi2(2, 2);
     // phi2 loop order is
@@ -1192,8 +1191,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[4]);
     EXPECT_FALSE(d.back().forward);
 
-    llvm::Optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
-    EXPECT_TRUE(optDeps.hasValue());
+    std::optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
+    EXPECT_TRUE(optDeps.has_value());
     SHOWLN(iOuterLoopNest);
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
     for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
@@ -1285,7 +1284,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     for (auto &&mem : jOuterMem)
         jOuterLoopNest.memory.push_back(&mem);
 
-    EXPECT_TRUE(jOuterLoopNest.optimize().hasValue());
+    EXPECT_TRUE(jOuterLoopNest.optimize().has_value());
     SHOW(jOuterLoopNest.edges.size());
     CSHOWLN(jOuterLoopNest.memory.size());
     for (auto &edge : jOuterLoopNest.edges)
@@ -1492,7 +1491,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     MemoryAccess mSchStore(Asrc, Astore, schStore);
     loopBlock.memory.push_back(&mSchStore);
 
-    EXPECT_TRUE(loopBlock.optimize().hasValue());
+    EXPECT_TRUE(loopBlock.optimize().has_value());
     EXPECT_EQ(loopBlock.edges.size(), 2);
     llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
     for (size_t i = 0; i < loopBlock.memory.size(); ++i)
@@ -1684,8 +1683,8 @@ TEST(ConvReversePass, BasicAssertions) {
     MemoryAccess msch_3(CmijnInd, Cstore, sch_3);
     loopBlock.memory.push_back(&msch_3);
 
-    llvm::Optional<BitSet<>> optRes = loopBlock.optimize();
-    EXPECT_TRUE(optRes.hasValue());
+    std::optional<BitSet<>> optRes = loopBlock.optimize();
+    EXPECT_TRUE(optRes.has_value());
     for (auto &mem : loopBlock.memory) {
         SHOW(mem->nodeIndex);
         CSHOWLN(mem->ref);

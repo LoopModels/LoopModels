@@ -133,7 +133,7 @@ struct LU {
         }
         return perm;
     }
-    static auto fact(const SquareMatrix<int64_t> &B) -> llvm::Optional<LU> {
+    static auto fact(const SquareMatrix<int64_t> &B) -> std::optional<LU> {
         size_t M = B.M;
         SquareMatrix<Rational> A(M);
         for (size_t m = 0; m < M * M; ++m)

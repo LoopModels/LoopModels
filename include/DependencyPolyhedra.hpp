@@ -62,21 +62,21 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         return E(i, _(begin, getNumSymbols()));
     }
     [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
-        -> llvm::Optional<int64_t> {
+        -> std::optional<int64_t> {
         for (size_t j = 1; j < getNumSymbols(); ++j)
             if (A(i, j))
                 return {};
         return A(i, 0);
     }
     [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
-        -> llvm::Optional<int64_t> {
+        -> std::optional<int64_t> {
         for (size_t j = 1; j < getNumSymbols(); ++j)
             if (E(i, j))
                 return {};
         return E(i, 0);
     }
 
-    // static llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
+    // static std::optional<llvm::SmallVector<std::pair<int, int>, 4>>
     // matchingStrideConstraintPairs(const ArrayReference &ar0,
     //                               const ArrayReference &ar1) {
     //     // fast path; most common case
@@ -205,7 +205,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     //     // step 1
 
     //     // step 2
-    //     const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
+    //     const std::optional<llvm::SmallVector<std::pair<int, int>, 4>>
     //         maybeDims = matchingStrideConstraintPairs(ar0, ar1);
 
     //     return true;
@@ -255,11 +255,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         const ArrayReference &ar0 = ma0.ref;
         const ArrayReference &ar1 = ma1.ref;
         assert(ar0.sizesMatch(ar1));
-        // const llvm::Optional<llvm::SmallVector<std::pair<int, int>, 4>>
-        //     maybeDims = matchingStrideConstraintPairs(ar0, ar1);
-        // assert(maybeDims.hasValue());
-        // const llvm::SmallVector<std::pair<int, int>, 4> &dims =
-        //     maybeDims.getValue();
         auto [nc0, nv0] = ar0.loop->A.size();
         auto [nc1, nv1] = ar1.loop->A.size();
         numDep0Var = ar0.loop->getNumLoops();

@@ -18,8 +18,8 @@ TEST(UnimodularizationTest, BasicAssertions) {
     VE(3, 1) = 0;
     llvm::errs() << "VE=\n" << VE << "\n";
     auto VB = unimodularize(VE);
-    EXPECT_TRUE(VB.hasValue());
-    llvm::errs() << "VB:\n" << VB.getValue() << "\n";
+    EXPECT_TRUE(VB.has_value());
+    llvm::errs() << "VB:\n" << *VB << "\n";
 
     IntMatrix A23(3, 2);
     A23(0, 0) = 9;
@@ -29,8 +29,8 @@ TEST(UnimodularizationTest, BasicAssertions) {
     A23(1, 1) = -2;
     A23(2, 1) = 0;
     auto B = unimodularize(A23);
-    EXPECT_TRUE(B.hasValue());
-    llvm::errs() << "B:\n" << B.getValue() << "\n";
+    EXPECT_TRUE(B.has_value());
+    llvm::errs() << "B:\n" << *B << "\n";
     // EXPECT_EQ(j, length(bsc));
     // EXPECT_EQ(j, length(bs));
 
@@ -39,9 +39,9 @@ TEST(UnimodularizationTest, BasicAssertions) {
     A13(1, 0) = -5;
     A13(2, 0) = 15;
     auto test6_10_15 = unimodularize(A13); //, 1, 93, 1001);
-    EXPECT_TRUE(test6_10_15.hasValue());
-    // if (test6_10_15.hasValue()) {
-    //     auto [r1, r2] = test6_10_15.getValue();
+    EXPECT_TRUE(test6_10_15.has_value());
+    // if (test6_10_15.has_value()) {
+    //     auto [r1, r2] = test6_10_15.get_value();
     //     auto [A10, A11, A12] = r1;
     //     auto [A20, A21, A22] = r2;
     //     llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 <<
@@ -54,10 +54,10 @@ TEST(UnimodularizationTest, BasicAssertions) {
     A13(1, 0) = 190;
     A13(2, 0) = 345;
     auto test102_190_345 = unimodularize(A13); //, 1, 93, 1001);
-    EXPECT_TRUE(test102_190_345.hasValue());
+    EXPECT_TRUE(test102_190_345.has_value());
     // auto test102_190_345 = unimodularize2x3(102, 190, 345, 1, 0, 1);
-    //  if (test102_190_345.hasValue()) {
-    //      auto [r1, r2] = test102_190_345.getValue();
+    //  if (test102_190_345.has_value()) {
+    //      auto [r1, r2] = test102_190_345.get_value();
     //      auto [A10, A11, A12] = r1;
     //      auto [A20, A21, A22] = r2;
     //      llvm::errs() << "\n\n\n======\nA(1,:): [ " << A10 << ", " << A11 <<

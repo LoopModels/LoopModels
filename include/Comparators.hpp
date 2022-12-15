@@ -476,11 +476,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 }
             }
             IntMatrix Wcouple{0, expandW.numCol()};
-            llvm::Optional<Simplex> optS{
+            std::optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
-            // if (optS.hasValue())
-            //     optS->printResult();
-            return optS.hasValue();
+            return optS.has_value();
         }
         return true;
     }
@@ -533,11 +531,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 }
             }
             IntMatrix Wcouple{0, expandW.numCol()};
-            llvm::Optional<Simplex> optS{
+            std::optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
-            // if (optS.hasValue())
-            //     optS->printResult();
-            return optS.hasValue();
+            return optS.has_value();
         }
     }
 };
