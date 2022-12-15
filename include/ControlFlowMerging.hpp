@@ -87,6 +87,27 @@ struct MergingCost {
             return it->second;
         return nullptr;
     }
+    auto findMerge(Instruction *key) const -> Instruction * {
+        if (auto it = mergeMap.find(key); it != mergeMap.end())
+            return it->second;
+        return nullptr;
+    }
+    /// isMerged(Instruction *key) const -> bool
+    /// returns true if `key` is merged with any other Instruction
+    auto isMerged(Instruction *key) const -> bool {
+        return mergeMap.count(key);
+    }
+    /// isMerged(Instruction *I, Instruction *J) const -> bool
+    /// returns true if `I` and `J` are merged with each other
+    auto isMerged(Instruction *I, Instruction *J) const -> bool {
+        Instruction *K = J;
+        do {
+            if (I == K)
+                return true;
+            K = findMerge(K);
+        } while (K && K != J);
+        return false;
+    }
     // follows the cycle, traversing H -> mergeMap[H] -> mergeMap[mergeMap[H]]
     // ... until it reaches E, updating the ancestorMap pointer at each level of
     // the recursion.
@@ -97,6 +118,7 @@ struct MergingCost {
             H = mergeMap[H];
         }
     }
+
     void merge(llvm::BumpPtrAllocator &alloc, Instruction *O, Instruction *I) {
         auto aI = ancestorMap.find(I);
         auto aO = ancestorMap.find(O);
@@ -113,6 +135,23 @@ struct MergingCost {
         aO->second = merged;
         // now, we need to check everything connected to O and I in the mergeMap
         // to see if any of them need to be updated.
+        // TODO: we want to estimate select cost
+        // worst case scenario is 1 select per operand (p is pred):
+        // select(p, f(a,b), f(c,d)) => f(select(p, a, c), select(p, b, d))
+        // but we can often do better, e.g. we may have
+        // select(p, f(a,b), f(c,b)) => f(select(p, a, c), b)
+        // additionally, we can check `I->associativeOperandsFlag()`
+        // select(p, f(a,b), f(c,a)) => f(a, select(p, b, c))
+        // we need to figure out which operands we're merging with which,
+        //
+        // We need to give special consideration to the case where
+        // arguments are merged, as this may be common when two
+        // control flow branches have relatively similar pieces.
+        // E.g., if b and c are already merged,
+        // and if `f`'s ops are associative, then we'd get
+        // select(p, f(a,b), f(c,a)) => f(a, b)
+        // so we need to check if any operand pairs are merged with each other.
+        // note `isMerged(a,a) == true`, so that's the one query we need to use.
         auto mI = findMerge(I);
         if (mI)
             cycleUpdateMerged(merged, I, mI);
