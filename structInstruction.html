@@ -202,6 +202,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCostLog2VectorWidt
 <tr class="memitem:afb896e777970d954fa5aea16430c070b"><td class="memItemLeft" align="right" valign="top"><a id="afb896e777970d954fa5aea16430c070b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (unsigned int vectorWidth) const -&gt; llvm::Type *</td></tr>
 <tr class="separator:afb896e777970d954fa5aea16430c070b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c826cb79b615f0876d1303e6e38ba7e"><td class="memItemLeft" align="right" valign="top"><a id="a5c826cb79b615f0876d1303e6e38ba7e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBits</b> () const -&gt; unsigned int</td></tr>
+<tr class="separator:a5c826cb79b615f0876d1303e6e38ba7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef0003c4a8d85386b85e456da723ca1d"><td class="memItemLeft" align="right" valign="top"><a id="aef0003c4a8d85386b85e456da723ca1d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScalarBytes</b> () const -&gt; unsigned int</td></tr>
+<tr class="separator:aef0003c4a8d85386b85e456da723ca1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b162f9641ae850fe2ff806fd7a6780e"><td class="memItemLeft" align="right" valign="top"><a id="a2b162f9641ae850fe2ff806fd7a6780e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperandInfo</b> (unsigned int i) const -&gt; std::pair&lt; llvm::TargetTransformInfo::OperandValueKind, llvm::TargetTransformInfo::OperandValueProperties &gt;</td></tr>
 <tr class="separator:a2b162f9641ae850fe2ff806fd7a6780e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -232,6 +238,8 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPredicate</b> () c
 <tr class="memitem:a341b8a3b31da80a0c560099d30d28a3d"><td class="memItemLeft" align="right" valign="top"><a id="a341b8a3b31da80a0c560099d30d28a3d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCmpSelectCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
 <tr class="separator:a341b8a3b31da80a0c560099d30d28a3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c9e374d023ab4f16d882484fb87f325"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction.html#a7c9e374d023ab4f16d882484fb87f325">selectCost</a> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; llvm::InstructionCost</td></tr>
+<tr class="separator:a7c9e374d023ab4f16d882484fb87f325"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a508a8446d105287e0ab65c0af7eeec3b"><td class="memItemLeft" align="right" valign="top"><a id="a508a8446d105287e0ab65c0af7eeec3b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcCallCost</b> (llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a></td></tr>
 <tr class="separator:a508a8446d105287e0ab65c0af7eeec3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -300,6 +308,44 @@ llvm::SmallVector&lt; <a class="el" href="structRecipThroughputLatency.html">Rec
 <tr class="memdesc:a253741b3d388205223a19405de9fe044"><td class="mdescLeft">&#160;</td><td class="mdescRight">costs[i] == cost for vector-width 2^i <br /></td></tr>
 <tr class="separator:a253741b3d388205223a19405de9fe044"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a7c9e374d023ab4f16d882484fb87f325"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c9e374d023ab4f16d882484fb87f325">&#9670;&nbsp;</a></span>selectCost()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto Instruction::selectCost </td>
+          <td>(</td>
+          <td class="paramtype">llvm::TargetTransformInfo &amp;&#160;</td>
+          <td class="paramname"><em>TTI</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>vectorWidth</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> -&gt; llvm::InstructionCost </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>for calculating the cost of a select when merging this instruction with another one. </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Instruction_8hpp_source.html">Instruction.hpp</a></li>
 </ul>
