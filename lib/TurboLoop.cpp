@@ -303,7 +303,6 @@ auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
     if (Name == "turbo-loop") {
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
         // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
-        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(UnitStepPass()));
         FPM.addPass(TurboLoopPass());
         return true;
     }
@@ -311,6 +310,10 @@ auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
 }
 
 void RegisterCB(llvm::PassBuilder &PB) {
+    PB.registerVectorizerStartEPCallback(
+        [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel) {
+            PM.addPass(TurboLoopPass());
+        });
     PB.registerPipelineParsingCallback(PipelineParsingCB);
 }
 
