@@ -86,6 +86,13 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAncestors</b> (<a 
 <tr class="memitem:ae01767cd104275a29749c57786307b81"><td class="memItemLeft" align="right" valign="top"><a id="ae01767cd104275a29749c57786307b81"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) -&gt; <a class="el" href="structInstruction.html">Instruction</a> *</td></tr>
 <tr class="separator:ae01767cd104275a29749c57786307b81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4c08bebed2d6858bf6fd4a5bf81b539"><td class="memItemLeft" align="right" valign="top"><a id="ac4c08bebed2d6858bf6fd4a5bf81b539"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>findMerge</b> (<a class="el" href="structInstruction.html">Instruction</a> *key) const -&gt; <a class="el" href="structInstruction.html">Instruction</a> *</td></tr>
+<tr class="separator:ac4c08bebed2d6858bf6fd4a5bf81b539"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9b5ac0cc98e21087c9eefccb31bce58"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58">isMerged</a> (<a class="el" href="structInstruction.html">Instruction</a> *key) const -&gt; bool</td></tr>
+<tr class="separator:af9b5ac0cc98e21087c9eefccb31bce58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b7381c441c4860be32aab9e6348620a"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMergingCost.html#a0b7381c441c4860be32aab9e6348620a">isMerged</a> (<a class="el" href="structInstruction.html">Instruction</a> *I, <a class="el" href="structInstruction.html">Instruction</a> *J) const -&gt; bool</td></tr>
+<tr class="separator:a0b7381c441c4860be32aab9e6348620a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2ab86a80af6cc375c531aed0e9f69bb6"><td class="memItemLeft" align="right" valign="top"><a id="a2ab86a80af6cc375c531aed0e9f69bb6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>cycleUpdateMerged</b> (llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 16 &gt; *ancestors, <a class="el" href="structInstruction.html">Instruction</a> *E, <a class="el" href="structInstruction.html">Instruction</a> *H)</td></tr>
 <tr class="separator:a2ab86a80af6cc375c531aed0e9f69bb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -141,6 +148,70 @@ llvm::InstructionCost&#160;</td><td class="memItemRight" valign="bottom"><b>cost
 </div><div class="memdoc">
 <p>returns <code>true</code> if <code>key</code> was already in ancestors returns <code>false</code> if it had to initialize </p>
 <p>instructions are considered their own ancestor for our purposes</p>
+
+</div>
+</div>
+<a id="a0b7381c441c4860be32aab9e6348620a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b7381c441c4860be32aab9e6348620a">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto MergingCost::isMerged </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structInstruction.html">Instruction</a> *&#160;</td>
+          <td class="paramname"><em>I</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structInstruction.html">Instruction</a> *&#160;</td>
+          <td class="paramname"><em>J</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="structMergingCost.html#a0b7381c441c4860be32aab9e6348620a">isMerged(Instruction *I, Instruction *J) const </a>-&gt; bool returns true if <code>I</code> and <code>J</code> are merged with each other </p>
+
+</div>
+</div>
+<a id="af9b5ac0cc98e21087c9eefccb31bce58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9b5ac0cc98e21087c9eefccb31bce58">&#9670;&nbsp;</a></span>isMerged() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto MergingCost::isMerged </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structInstruction.html">Instruction</a> *&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58">isMerged(Instruction *key) const </a>-&gt; bool returns true if <code>key</code> is merged with any other <a class="el" href="structInstruction.html">Instruction</a> </p>
 
 </div>
 </div>
