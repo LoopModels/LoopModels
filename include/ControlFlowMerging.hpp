@@ -122,7 +122,8 @@ struct MergingCost {
     static constexpr auto popBit(uint8_t x) -> std::pair<bool, uint8_t> {
         return {x & 1, x >> 1};
     }
-    void merge(llvm::BumpPtrAllocator &alloc, Instruction *O, Instruction *I) {
+    void merge(llvm::BumpPtrAllocator &alloc, llvm::TargetTransformInfo &TTI,
+               unsigned int vectorBits, Instruction *O, Instruction *I) {
         auto aI = ancestorMap.find(I);
         auto aO = ancestorMap.find(O);
         assert(aI != ancestorMap.end());
@@ -208,6 +209,10 @@ struct MergingCost {
         }
         // TODO:
         // increase cost by numSelects, decrease cost by `I`'s cost
+        unsigned int W = vectorBits / I->getNumScalarBits();
+        if (numSelects)
+            cost += numSelects * I->selectCost(TTI, W);
+        cost -= I->getCost(TTI, W).recipThroughput;
         auto mI = findMerge(I);
         if (mI)
             cycleUpdateMerged(merged, I, mI);
@@ -233,7 +238,8 @@ struct MergingCost {
 
 void mergeInstructions(
     llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
-    Predicate::Map &predMap,
+    Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
+    unsigned int vectorBits,
     llvm::DenseMap<std::pair<llvm::Intrinsic::ID, llvm::Intrinsic::ID>,
                    llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
         &opMap,
@@ -280,7 +286,7 @@ void mergeInstructions(
             // so only an ancestor had a chance
             auto *MC = new (alloc) MergingCost(*C);
             // MC is a copy of C, except we're now merging
-            MC->merge(alloc, other, I);
+            MC->merge(alloc, TTI, vectorBits, other, I);
         }
     }
     // descendants aren't legal merge candidates, so check before merging
@@ -288,11 +294,11 @@ void mergeInstructions(
         if (llvm::BasicBlock *BBU = U->getBasicBlock()) {
             if (BBU == BB) {
                 // fast path, skip lookup
-                mergeInstructions(alloc, cache, predMap, opMap, mergingCosts, U,
-                                  BB, preds);
+                mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
+                                  mergingCosts, U, BB, preds);
             } else if (auto f = predMap.find(BBU); f != predMap.rend()) {
-                mergeInstructions(alloc, cache, predMap, opMap, mergingCosts, U,
-                                  BBU, f->second);
+                mergeInstructions(alloc, cache, predMap, TTI, vectorBits, opMap,
+                                  mergingCosts, U, BBU, f->second);
             }
         }
     }
@@ -310,9 +316,13 @@ void mergeInstructions(
 /// merges instructions from predMap what have disparate control flow.
 /// NOTE: calls tmpAlloc.Reset(); this should be an allocator specific for
 /// merging as it allocates a lot of memory that it can free when it is done.
+/// TODO: this algorithm is exponential in time and memory.
+/// Odds are that there's way smarter things we can do.
 void mergeInstructions(llvm::BumpPtrAllocator &alloc,
                        llvm::BumpPtrAllocator &tAlloc,
-                       Instruction::Cache &cache, Predicate::Map &predMap) {
+                       Instruction::Cache &cache, Predicate::Map &predMap,
+                       llvm::TargetTransformInfo &TTI,
+                       unsigned int vectorBits) {
     if (!predMap.isDivergent())
         return;
     // there is a divergence in the control flow that we can ideally merge
@@ -324,10 +334,13 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc,
     for (auto &pred : predMap) {
         for (llvm::Instruction &lI : *pred.first) {
             if (Instruction *I = cache[&lI]) {
-                mergeInstructions(tAlloc, cache, predMap, opMap, mergingCosts,
-                                  I, pred.first, pred.second);
+                mergeInstructions(tAlloc, cache, predMap, TTI, vectorBits,
+                                  opMap, mergingCosts, I, pred.first,
+                                  pred.second);
             }
         }
     }
+    // TODO:
+    // pick the minimum cost mergingCost, and then apply it to the instructions.
     tAlloc.Reset();
 }

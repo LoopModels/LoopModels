@@ -407,6 +407,12 @@ struct Instruction {
     [[nodiscard]] auto getType(unsigned int vectorWidth) const -> llvm::Type * {
         return getType(type, vectorWidth);
     }
+    [[nodiscard]] auto getNumScalarBits() const -> unsigned int {
+        return type->getScalarSizeInBits();
+    }
+    [[nodiscard]] auto getNumScalarBytes() const -> unsigned int {
+        return getNumScalarBits() / 8;
+    }
 #if LLVM_VERSION_MAJOR >= 16
     llvm::TargetTransformInfo::OperandValueInfo
     getOperandInfo(llvm::TargetTransformInfo &TTI, unsigned int i) const {
@@ -550,6 +556,25 @@ struct Instruction {
                     llvm::TargetTransformInfo::TCK_RecipThroughput),
                 TTI.getCmpSelInstrCost(id.op, T, cmpT, pred,
                                        llvm::TargetTransformInfo::TCK_Latency)};
+    }
+
+    /// for calculating the cost of a select when merging this instruction with
+    /// another one.
+    auto selectCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
+        -> llvm::InstructionCost {
+        llvm::Type *T = getType(vectorWidth);
+        llvm::Type *cmpT = llvm::CmpInst::makeCmpResultType(T);
+        // llvm::CmpInst::Predicate pred =
+        // TODO: extract from difference in predicates
+        // between this and other (which would have to be passed in).
+        // However, X86TargetTransformInfo doesn't use this for selects,
+        // so doesn't seem like we need to bother with it.
+        llvm::CmpInst::Predicate pred = T->isFPOrFPVectorTy()
+                                            ? llvm::CmpInst::BAD_FCMP_PREDICATE
+                                            : llvm::CmpInst::BAD_ICMP_PREDICATE;
+        return TTI.getCmpSelInstrCost(
+            llvm::Instruction::Select, T, cmpT, pred,
+            llvm::TargetTransformInfo::TCK_RecipThroughput);
     }
     auto calcCallCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
         -> RecipThroughputLatency {
