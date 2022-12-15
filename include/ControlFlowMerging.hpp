@@ -5,6 +5,7 @@
 #include "./Predicate.hpp"
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -118,7 +119,9 @@ struct MergingCost {
             H = mergeMap[H];
         }
     }
-
+    static constexpr auto popBit(uint8_t x) -> std::pair<bool, uint8_t> {
+        return {x & 1, x >> 1};
+    }
     void merge(llvm::BumpPtrAllocator &alloc, Instruction *O, Instruction *I) {
         auto aI = ancestorMap.find(I);
         auto aO = ancestorMap.find(O);
@@ -152,6 +155,59 @@ struct MergingCost {
         // select(p, f(a,b), f(c,a)) => f(a, b)
         // so we need to check if any operand pairs are merged with each other.
         // note `isMerged(a,a) == true`, so that's the one query we need to use.
+        size_t numOperands = I->getOperands().size();
+        assert(numOperands == O->getOperands().size());
+        uint8_t associativeOpsFlag = I->associativeOperandsFlag();
+        // For example,
+        // we keep track of which operands we've already merged,
+        // f(a, b), f(b, b)
+        // we can't merge b twice!
+        uint8_t mergedOperandsI = 0, mergedOperandsO = 0;
+        size_t numSelects = numOperands;
+        for (size_t i = 0; i < numOperands; ++i) {
+            auto *opI = I->getOperand(i);
+            auto *opO = O->getOperand(i);
+            auto [assoc, assocFlag] = popBit(associativeOpsFlag);
+            associativeOpsFlag = assocFlag;
+            bool mergedI = mergedOperandsI & 1, mergedO = mergedOperandsO & 1;
+            // if both operands were merged, we can ignore it's associativity
+            // assocFlag &= ~(mergedFlagI & mergedFlagO);
+            if ((!mergedI) && (!mergedO) && isMerged(opI, opO)) {
+                --numSelects;
+                continue;
+            } else if (!((assoc) && (assocFlag))) {
+                // this op isn't associative with any remaining
+                continue;
+            }
+            // we only look forward
+            size_t j = i;
+            uint8_t mask = 1;
+            while (assocFlag) {
+                auto shift = std::countr_zero(assocFlag);
+                j += ++shift;
+                mask <<= shift;
+                assocFlag >>= shift;
+                auto *opIJ = I->getOperand(j);
+                auto *opOJ = O->getOperand(j);
+                // if elements in these pairs weren't already used
+                // to drop a select, and they're merged with each other
+                // we'll use them now to drop a select.
+                if (((mergedOperandsO & mask) == 0) && isMerged(opI, opOJ)) {
+                    --numSelects;
+                    mergedOperandsO |= mask;
+                    break;
+                } else if (((mergedOperandsI & mask) == 0) &&
+                           isMerged(opIJ, opO)) {
+                    --numSelects;
+                    mergedOperandsI |= mask;
+                    break;
+                }
+            }
+            mergedOperandsI >>= 1;
+            mergedOperandsO >>= 1;
+        }
+        // TODO:
+        // increase cost by numSelects, decrease cost by `I`'s cost
         auto mI = findMerge(I);
         if (mI)
             cycleUpdateMerged(merged, I, mI);

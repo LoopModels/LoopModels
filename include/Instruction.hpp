@@ -147,6 +147,15 @@ struct Instruction {
     [[nodiscard]] auto getOperands() -> llvm::ArrayRef<Instruction *> {
         return operands;
     }
+    [[nodiscard]] auto getOperands() const -> llvm::ArrayRef<Instruction *> {
+        return operands;
+    }
+    [[nodiscard]] auto getOperand(size_t i) -> Instruction * {
+        return operands[i];
+    }
+    [[nodiscard]] auto getOperand(size_t i) const -> Instruction * {
+        return operands[i];
+    }
     [[nodiscard]] auto getUsers() -> llvm::ArrayRef<Instruction *> {
         return users;
     }
