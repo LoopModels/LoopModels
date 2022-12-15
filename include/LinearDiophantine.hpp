@@ -2,7 +2,7 @@
 #include "./Math.hpp"
 #include <tuple>
 
-llvm::Optional<std::tuple<int64_t, int64_t>>
+std::optional<std::tuple<int64_t, int64_t>>
 linearDiophantine(int64_t c, int64_t a, int64_t b) {
     if (c == 0) {
         return std::make_tuple(int64_t(0), int64_t(0));
@@ -21,8 +21,8 @@ linearDiophantine(int64_t c, int64_t a, int64_t b) {
 }
 
 // d = a*x; x = d/a
-llvm::Optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
-                                                      std::tuple<int64_t> a) {
+std::optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
+                                                     std::tuple<int64_t> a) {
     int64_t a0 = std::get<0>(a);
     if (d == 0) {
         return std::make_tuple(int64_t(0));
@@ -34,7 +34,7 @@ llvm::Optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
     return {};
 }
 // d = a[0]*x + a[1]*y;
-llvm::Optional<std::tuple<int64_t, int64_t>>
+std::optional<std::tuple<int64_t, int64_t>>
 linearDiophantine(int64_t d, std::tuple<int64_t, int64_t> a) {
     return linearDiophantine(d, std::get<0>(a), std::get<1>(a));
 }
@@ -52,14 +52,14 @@ template <typename Tuple, size_t N> auto pop_front(const Tuple &tuple, Val<N>) {
 }
 
 template <typename Tuple>
-llvm::Optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
+std::optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
     int64_t a0 = std::get<0>(a);
     int64_t a1 = std::get<1>(a);
     auto aRem = pop_front(a, Val<2>());
     if ((a0 | a1) == 0) {
         if (auto opt = linearDiophantine(d, aRem))
             return std::tuple_cat(std::make_tuple(int64_t(0), int64_t(0)),
-                                  opt.getValue());
+                                  *opt);
         return {};
     }
     int64_t q = gcd(a0, a1);
@@ -67,11 +67,11 @@ llvm::Optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
     // solve the rest
     if (auto dio_dqc =
             linearDiophantine(d, std::tuple_cat(std::make_tuple(q), aRem))) {
-        auto t = dio_dqc.getValue();
+        auto t = *dio_dqc;
         int64_t w = std::get<0>(t);
         // w == ((a0/q)*x + (a1/q)*y)
         if (auto o = linearDiophantine(w, a0 / q, a1 / q))
-            return std::tuple_cat(o.getValue(), pop_front(t, Val<1>()));
+            return std::tuple_cat(*o, pop_front(t, Val<1>()));
     }
     return {};
 }

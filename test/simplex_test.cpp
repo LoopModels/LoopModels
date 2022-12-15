@@ -9,9 +9,9 @@
 TEST(SimplexTest, BasicAssertions) {
     IntMatrix A{stringToIntMatrix("[10 3 2 1; 15 2 5 3]")};
     IntMatrix B{0, 4};
-    llvm::Optional<Simplex> optS{Simplex::positiveVariables(A, B)};
-    EXPECT_TRUE(optS.hasValue());
-    Simplex &S{optS.getValue()};
+    std::optional<Simplex> optS{Simplex::positiveVariables(A, B)};
+    EXPECT_TRUE(optS.has_value());
+    Simplex &S{*optS};
     auto C{S.getCost()};
     C[0] = 0;
     C[1] = 0;

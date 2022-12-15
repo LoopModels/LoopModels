@@ -69,10 +69,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                 llvm::errs() << "B = " << B << "\nK = " << K << "\n";
                 continue;
             }
-            // llvm::errs() << "lu_F = " << optlu.getValue().F << "\nlu_perm = "
-            // << Vector<unsigned, 0>(optlu.getValue().perm) << "\n";
         }
-        // llvm::errs() << "\n\n";
     }
     llvm::errs() << "Mean orthogonalized: "
                  << double(orthCount) / double(numIters)
@@ -249,10 +246,10 @@ TEST(Hermite, BasicAssertions) {
         A(1, 0) = 0;
         A(1, 1) = 0;
         A(1, 2) = -2;
-        llvm::Optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
+        std::optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
             NormalForm::hermite(A);
-        EXPECT_TRUE(B.hasValue());
-        auto [H, U] = B.getValue();
+        EXPECT_TRUE(B.has_value());
+        auto &[H, U] = *B;
         EXPECT_TRUE(isHNF(H));
         EXPECT_TRUE(U * A == H);
         llvm::errs() << "A = \n"
