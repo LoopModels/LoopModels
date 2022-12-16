@@ -38,15 +38,10 @@ struct RecipThroughputLatency {
     }
 };
 
-// struct Instruction{
-//     struct Identifer;
-// };
-// struct Instruction::Identifier;
-
 struct Instruction {
     using UniqueIdentifier =
         std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Value *,
-                   llvm::ArrayRef<Instruction *>>;
+                   llvm::MutableArrayRef<Instruction *>>;
     struct Identifier {
         /// Instruction ID
         /// if not Load or Store, then check val for whether it is a call
@@ -129,7 +124,7 @@ struct Instruction {
         [[no_unique_address]] Predicate::Set predicates;
         // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
         // case of realloc
-        [[no_unique_address]] llvm::SmallVector<Instruction *> instr;
+        [[no_unique_address]] llvm::SmallVector<Instruction *, 2> instr;
         // TODO: constexpr once llvm::SmallVector supports it
         auto size() -> size_t { return instr.size(); }
         auto begin() { return instr.begin(); }
@@ -139,12 +134,12 @@ struct Instruction {
     Identifier id;
     llvm::Type *type;
     Predicates predicates;
-    llvm::ArrayRef<Instruction *> operands;
+    llvm::MutableArrayRef<Instruction *> operands;
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
     llvm::SmallVector<RecipThroughputLatency> costs;
-
-    [[nodiscard]] auto getOperands() -> llvm::ArrayRef<Instruction *> {
+    [[nodiscard]] auto getType() const -> llvm::Type * { return type; }
+    [[nodiscard]] auto getOperands() -> llvm::MutableArrayRef<Instruction *> {
         return operands;
     }
     [[nodiscard]] auto getOperands() const -> llvm::ArrayRef<Instruction *> {
@@ -159,9 +154,12 @@ struct Instruction {
     [[nodiscard]] auto getUsers() -> llvm::ArrayRef<Instruction *> {
         return users;
     }
-    [[nodiscard]] auto getOpPair() const
-        -> std::pair<llvm::Intrinsic::ID, llvm::Intrinsic::ID> {
-        return std::make_pair(id.op, id.intrin);
+    [[nodiscard]] auto getNumOperands() const -> size_t {
+        return operands.size();
+    }
+    [[nodiscard]] auto getOpTripple() const
+        -> std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *> {
+        return std::make_tuple(id.op, id.intrin, getType());
     }
     [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
         if (isLoadOrStore())
@@ -170,6 +168,42 @@ struct Instruction {
             return I->getParent();
         else
             return nullptr;
+    }
+    static auto createSelect(llvm::BumpPtrAllocator &alloc, Instruction *A,
+                             Instruction *B) -> Instruction * {
+        Identifier id = Identifier(llvm::Instruction::Select,
+                                   llvm::Intrinsic::not_intrinsic, nullptr);
+        auto *S = new (alloc) Instruction(id, A->getType()); //, {A, B});
+        // TODO: make predicate's instruction vector shared among all in
+        // LoopTree?
+        // What I need here is to take the union of the predicates to form the
+        // predicates of the new select instruction.
+        // Then, for the select's `cond` instruction, I need something
+        // to indicate when to take one path and not the other.
+        // We know the intersection is empty, so -- why is it empty?
+        // We need something to slice that. E.g.
+        /// if *A = [(a & b) | (c & d)]
+        ///    *B = [(e & f) | (g & h)]
+        /// then
+        /// [(a & b) | (c & d)] & [(e & f) | (g & h)] =
+        ///   [(a & b) & (e & f)] |
+        ///   [(a & b) & (g & h)] |
+        ///   [(c & d) & (e & f)] |
+        ///   [(c & d) & (g & h)]
+        /// for this to be empty, we need to have
+        ///   [(a & b) & (e & f)] =
+        ///   [(a & b) & (g & h)] =
+        ///   [(c & d) & (e & f)] =
+        ///   [(c & d) & (g & h)] = 0
+        /// Suggestion: loop over union elements,
+        /// and take the set of all of the conditions for
+        /// each side.
+        /// Then use the simpler of these two to determine the direction of the
+        /// select.
+        auto [L, R] = A->predicates.predicates.cut(B->predicates.predicates);
+        S->predicates.predicates =
+            A->predicates.predicates | B->predicates.predicates;
+        return S;
     }
     // llvm::TargetTransformInfo &TTI;
 
@@ -264,7 +298,7 @@ struct Instruction {
     [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
                                           Cache &cache,
                                           llvm::Instruction *instr)
-        -> llvm::ArrayRef<Instruction *> {
+        -> llvm::MutableArrayRef<Instruction *> {
         if (llvm::isa<llvm::LoadInst>(instr))
             return {nullptr, unsigned(0)};
         auto ops{instr->operands()};
@@ -272,18 +306,18 @@ struct Instruction {
         // NOTE: operand 0 is the value operand of a store
         bool isStore = llvm::isa<llvm::StoreInst>(instr);
         auto OE = isStore ? (OI + 1) : ops.end();
-        size_t Nops = isStore ? 1 : instr->getNumOperands();
-        auto **operands = alloc.Allocate<Instruction *>(Nops);
+        size_t numOps = isStore ? 1 : instr->getNumOperands();
+        auto **operands = alloc.Allocate<Instruction *>(numOps);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
             *p = cache.get(alloc, *OI);
         }
-        return {operands, Nops};
+        return {operands, numOps};
     }
     [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
                                           Predicate::Map &BBpreds, Cache &cache,
                                           llvm::Instruction *instr)
-        -> llvm::ArrayRef<Instruction *> {
+        -> llvm::MutableArrayRef<Instruction *> {
         if (llvm::isa<llvm::LoadInst>(instr))
             return {nullptr, unsigned(0)};
         auto ops{instr->operands()};
@@ -762,7 +796,7 @@ struct Map {
                 // NOTE: we don't need to check`isEmpty()`
                 // because `emptyIntersection()` returns `false`
                 // when isEmpty() is true.
-                if (I->second.emptyIntersection(J->second))
+                if (I->second.intersectionIsEmpty(J->second))
                     return true;
             }
         }
@@ -837,7 +871,7 @@ struct Map {
         // again rather than being able to reuse anything from the
         // `visit`.
         if (auto f = find(BB); f != rend()) {
-            f->second.predUnion(predicate);
+            f->second |= predicate;
         } else {
             map.insert({BB, predicate});
             // map.insert(std::make_pair(BB, Set(predicate)));
@@ -859,12 +893,6 @@ struct Map {
                  llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
                  llvm::BasicBlock *BBhead, llvm::Loop *L) -> Destination {
         if (BBsrc == BBdst) {
-            // auto f = predMap.find(BBsrc);
-            // if (f != predMap.end()) {
-            //     f->second.predUnion(predicate);
-            // } else {
-            //     predMap.insert({BBsrc, predicate});
-            // }
             assert(!predMap.contains(BBsrc));
             predMap.insert({BBsrc, predicate});
             return Destination::Reached;
@@ -1016,7 +1044,7 @@ auto Instruction::Cache::get(llvm::BumpPtrAllocator &alloc,
             SHOWLN(*instr);
             i->predicates = std::move(*pred);
             // we use dummy operands to avoid infinite recursion
-            i->operands = llvm::ArrayRef<Instruction *>{nullptr, 1};
+            i->operands = llvm::MutableArrayRef<Instruction *>{nullptr, 1};
             i->operands = getOperands(alloc, predMap, *this, instr);
             for (auto *op : i->operands) {
                 op->users.push_back(i);

@@ -6,13 +6,16 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/InstructionCost.h>
 #include <set>
+#include <sys/select.h>
 
 void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
                            Instruction::Cache &cache,
@@ -43,13 +46,14 @@ struct MergingCost {
     // c -> a => c -> d
     // d      => d -> a
     // yielding: c -> d -> a -> b -> c
-    // if instead we have d <-> e, then
+    // if instead we're merging c and d, but d is also paired d <-> e, then
     // c -> a => c -> e
     // d -> e => d -> a
     // yielding c -> e -> d -> a -> b -> c
     // that is, if we're fusing c and d, we can make each point toward
     // what the other one was pointing to, in order to link the chains.
     llvm::DenseMap<Instruction *, Instruction *> mergeMap;
+    llvm::SmallVector<std::pair<Instruction *, Instruction *>> mergeList;
     llvm::DenseMap<Instruction *, llvm::SmallPtrSet<Instruction *, 16> *>
         ancestorMap;
     llvm::InstructionCost cost;
@@ -68,6 +72,8 @@ struct MergingCost {
         ancestorMap[key] = set;
         return set;
     }
+    auto begin() -> decltype(mergeList.begin()) { return mergeList.begin(); }
+    auto end() -> decltype(mergeList.end()) { return mergeList.end(); }
     [[nodiscard]] auto visited(Instruction *key) const -> bool {
         return ancestorMap.count(key);
     }
@@ -122,21 +128,52 @@ struct MergingCost {
     static constexpr auto popBit(uint8_t x) -> std::pair<bool, uint8_t> {
         return {x & 1, x >> 1};
     }
-    void merge(llvm::BumpPtrAllocator &alloc, llvm::TargetTransformInfo &TTI,
-               unsigned int vectorBits, Instruction *O, Instruction *I) {
-        auto aI = ancestorMap.find(I);
-        auto aO = ancestorMap.find(O);
-        assert(aI != ancestorMap.end());
-        assert(aO != ancestorMap.end());
-        // in the old MergingCost where they're separate instructions,
-        // we leave their ancestor PtrMaps intact.
-        // in the new MergingCost where they're the same instruction,
-        // we assign them the same ancestor Claptrap.
-        auto *merged =
-            new (alloc) llvm::SmallPtrSet<Instruction *, 16>(*aI->second);
-        merged->insert(aO->second->begin(), aO->second->end());
-        aI->second = merged;
-        aO->second = merged;
+
+    struct Allocate {
+        llvm::BumpPtrAllocator &alloc;
+        Instruction::Cache &cache;
+    };
+    struct Count {};
+
+    struct SelectCounter {
+        size_t numSelects{0};
+        constexpr operator size_t() const { return numSelects; }
+        constexpr void merge(size_t, Instruction *, Instruction *) {}
+        constexpr void select(size_t, Instruction *, Instruction *) {
+            ++numSelects;
+        }
+    };
+    struct SelectAllocator {
+        llvm::BumpPtrAllocator &alloc;
+        Instruction::Cache &cache;
+        llvm::MutableArrayRef<Instruction *> operands;
+        constexpr operator llvm::MutableArrayRef<Instruction *>() const {
+            return operands;
+        }
+        void merge(size_t i, Instruction *A, Instruction *B) {}
+        void select(size_t i, Instruction *A, Instruction *B) {
+            auto *S = Instruction::createSelect(alloc, A, B);
+            operands[i] = S;
+        }
+    };
+    static auto init(Allocate a, Instruction *A, Instruction *)
+        -> SelectAllocator {
+        size_t numOps = A->getNumOperands();
+        auto **operandsPtr = a.alloc.Allocate<Instruction *>(numOps);
+        llvm::MutableArrayRef<Instruction *> operands(operandsPtr, numOps);
+        return SelectAllocator{a.alloc, a.cache, operands};
+    }
+    static auto init(Count, Instruction *, Instruction *) -> SelectCounter {
+        return SelectCounter{0};
+    }
+    // An abstraction that runs an algorithm to look for merging opportunities,
+    // either counting the number of selects needed, or allocating selects
+    // and returning the new operand vector.
+    // We generally aim to have analysis/cost modeling and code generation
+    // take the same code paths, to both avoid code duplication and to
+    // make sure the cost modeling reflects the actual code we're generating.
+    template <typename S>
+    auto mergeOperands(Instruction *A, Instruction *B, S selects) {
         // now, we need to check everything connected to O and I in the mergeMap
         // to see if any of them need to be updated.
         // TODO: we want to estimate select cost
@@ -156,83 +193,113 @@ struct MergingCost {
         // select(p, f(a,b), f(c,a)) => f(a, b)
         // so we need to check if any operand pairs are merged with each other.
         // note `isMerged(a,a) == true`, so that's the one query we need to use.
-        size_t numOperands = I->getOperands().size();
-        assert(numOperands == O->getOperands().size());
-        uint8_t associativeOpsFlag = I->associativeOperandsFlag();
+        auto selector = init(selects, A, B);
+        llvm::MutableArrayRef<Instruction *> operandsA = A->getOperands();
+        llvm::MutableArrayRef<Instruction *> operandsB = B->getOperands();
+        size_t numOperands = operandsA.size();
+        assert(numOperands == operandsB.size());
+        uint8_t associativeOpsFlag = B->associativeOperandsFlag();
         // For example,
         // we keep track of which operands we've already merged,
         // f(a, b), f(b, b)
         // we can't merge b twice!
-        uint8_t mergedOperandsI = 0, mergedOperandsO = 0;
-        size_t numSelects = numOperands;
+        // size_t numSelects = numOperands;
         for (size_t i = 0; i < numOperands; ++i) {
-            auto *opI = I->getOperand(i);
-            auto *opO = O->getOperand(i);
+            auto *opA = A->getOperand(i);
+            auto *opB = B->getOperand(i);
             auto [assoc, assocFlag] = popBit(associativeOpsFlag);
             associativeOpsFlag = assocFlag;
-            bool mergedI = mergedOperandsI & 1, mergedO = mergedOperandsO & 1;
             // if both operands were merged, we can ignore it's associativity
-            // assocFlag &= ~(mergedFlagI & mergedFlagO);
-            if ((!mergedI) && (!mergedO) && isMerged(opI, opO)) {
-                --numSelects;
+            if (isMerged(opB, opA)) {
+                selector.merge(i, opA, opB);
+                // --numSelects;
                 continue;
             } else if (!((assoc) && (assocFlag))) {
                 // this op isn't associative with any remaining
+                selector.select(i, opA, opB);
                 continue;
             }
-            // we only look forward
+            // we look forward
             size_t j = i;
-            uint8_t mask = 1;
+            bool merged = false;
             while (assocFlag) {
                 auto shift = std::countr_zero(assocFlag);
                 j += ++shift;
-                mask <<= shift;
                 assocFlag >>= shift;
-                auto *opIJ = I->getOperand(j);
-                auto *opOJ = O->getOperand(j);
+                auto *opjA = A->getOperand(j);
+                auto *opjB = B->getOperand(j);
                 // if elements in these pairs weren't already used
                 // to drop a select, and they're merged with each other
                 // we'll use them now to drop a select.
-                if (((mergedOperandsO & mask) == 0) && isMerged(opI, opOJ)) {
-                    --numSelects;
-                    mergedOperandsO |= mask;
+                if (isMerged(opB, opjA)) {
+                    std::swap(operandsA[i], operandsA[j]);
+                    selector.merge(i, opjA, opB);
+                    merged = true;
                     break;
-                } else if (((mergedOperandsI & mask) == 0) &&
-                           isMerged(opIJ, opO)) {
-                    --numSelects;
-                    mergedOperandsI |= mask;
+                } else if (isMerged(opjB, opA)) {
+                    std::swap(operandsB[i], operandsB[j]);
+                    selector.merge(i, opA, opjB);
+                    merged = true;
                     break;
                 }
             }
-            mergedOperandsI >>= 1;
-            mergedOperandsO >>= 1;
+            // we couldn't find any candidates
+            if (!merged) {
+                selector.select(i, opA, opB);
+            }
         }
+        return selector;
+    };
+
+    void merge(llvm::BumpPtrAllocator &alloc, llvm::TargetTransformInfo &TTI,
+               unsigned int vectorBits, Instruction *A, Instruction *B) {
+        mergeList.emplace_back(A, B);
+        auto aA = ancestorMap.find(B);
+        auto aB = ancestorMap.find(A);
+        assert(aA != ancestorMap.end());
+        assert(aB != ancestorMap.end());
+        // in the old MergingCost where they're separate instructions,
+        // we leave their ancestor PtrMaps intact.
+        // in the new MergingCost where they're the same instruction,
+        // we assign them the same ancestor Claptrap.
+        auto *merged =
+            new (alloc) llvm::SmallPtrSet<Instruction *, 16>(*aA->second);
+        merged->insert(aB->second->begin(), aB->second->end());
+        aA->second = merged;
+        aB->second = merged;
+        size_t numSelects = mergeOperands(A, B, Count{});
         // TODO:
         // increase cost by numSelects, decrease cost by `I`'s cost
-        unsigned int W = vectorBits / I->getNumScalarBits();
+        unsigned int W = vectorBits / B->getNumScalarBits();
         if (numSelects)
-            cost += numSelects * I->selectCost(TTI, W);
-        cost -= I->getCost(TTI, W).recipThroughput;
-        auto mI = findMerge(I);
-        if (mI)
-            cycleUpdateMerged(merged, I, mI);
+            cost += numSelects * B->selectCost(TTI, W);
+        cost -= B->getCost(TTI, W).recipThroughput;
+        auto mB = findMerge(B);
+        if (mB)
+            cycleUpdateMerged(merged, B, mB);
         // fuse the merge map cycles
-        if (auto mO = findMerge(O)) {
-            cycleUpdateMerged(merged, O, mO);
-            if (mI) {
-                mergeMap[I] = mO;
-                mergeMap[O] = mI;
+        if (auto mA = findMerge(A)) {
+            cycleUpdateMerged(merged, A, mA);
+            if (mB) {
+                mergeMap[B] = mA;
+                mergeMap[A] = mB;
             } else {
-                mergeMap[I] = mO;
-                mergeMap[O] = I;
+                mergeMap[B] = mA;
+                mergeMap[A] = B;
             }
-        } else if (mI) {
-            mergeMap[O] = mI;
-            mergeMap[I] = O;
+        } else if (mB) {
+            mergeMap[A] = mB;
+            mergeMap[B] = A;
         } else {
-            mergeMap[I] = O;
-            mergeMap[O] = I;
+            mergeMap[B] = A;
+            mergeMap[A] = B;
         }
+    }
+    constexpr auto operator<(const MergingCost &other) const -> bool {
+        return cost < other.cost;
+    }
+    constexpr auto operator>(const MergingCost &other) const -> bool {
+        return cost > other.cost;
     }
 };
 
@@ -240,9 +307,9 @@ void mergeInstructions(
     llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
     Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
     unsigned int vectorBits,
-    llvm::DenseMap<std::pair<llvm::Intrinsic::ID, llvm::Intrinsic::ID>,
-                   llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
-        &opMap,
+    llvm::DenseMap<
+        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>,
+        llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>> &opMap,
     llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *I,
     llvm::BasicBlock *BB, Predicate::Set &preds) {
     // have we already visited?
@@ -253,7 +320,7 @@ void mergeInstructions(
             return;
         C->initAncestors(alloc, I);
     }
-    auto op = I->getOpPair();
+    auto op = I->getOpTripple();
     // TODO: confirm that `vec` doesn't get moved if `opMap` is resized
     auto &vec = opMap[op];
     // consider merging with every instruction sharing an opcode
@@ -262,7 +329,7 @@ void mergeInstructions(
         // check legality
         // illegal if:
         // 1. pred intersection not empty
-        if (!preds.emptyIntersection(pair.second))
+        if (!preds.intersectionIsEmpty(pair.second))
             continue;
         // 2. one op descends from another
         // because of our traversal pattern, this should not happen
@@ -327,7 +394,7 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc,
         return;
     // there is a divergence in the control flow that we can ideally merge
     auto &opMap = *alloc.Allocate<llvm::DenseMap<
-        std::pair<llvm::Intrinsic::ID, llvm::Intrinsic::ID>,
+        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>,
         llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>>();
     llvm::SmallVector<MergingCost *> mergingCosts;
     mergingCosts.push_back(alloc.Allocate<MergingCost>());
@@ -341,6 +408,19 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc,
         }
     }
     // TODO:
-    // pick the minimum cost mergingCost, and then apply it to the instructions.
+    // pick the minimum cost mergingCost
+    MergingCost *minCostStrategy = *std::ranges::min_element(
+        mergingCosts, [](auto *a, auto *b) { return *a < *b; });
+    // and then apply it to the instructions.
+    llvm::DenseMap<Instruction *, Instruction *> reMap;
+    // we use `alloc` for objects intended to live on
+    for (auto &pair : *minCostStrategy) {
+        // merge pair through `select`ing the arguments that differ
+        auto [A, B] = pair;
+        llvm::MutableArrayRef<Instruction *> operands =
+            minCostStrategy->mergeOperands(A, B,
+                                           MergingCost::Allocate{alloc, cache});
+    }
+    // free memory
     tAlloc.Reset();
 }

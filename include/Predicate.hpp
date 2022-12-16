@@ -94,10 +94,14 @@ struct Intersection {
         return ((x & (x >> 1)) & 0x5555555555555555);
     }
     /// returns 11 if non-empty, 00 if empty
+    [[nodiscard]] static constexpr auto keepEmptyMask(uint64_t x) -> uint64_t {
+        uint64_t y = emptyMask(x);
+        return (y | (y << 1));
+    }
+    /// returns 11 if non-empty, 00 if empty
     [[nodiscard]] static constexpr auto removeEmptyMask(uint64_t x)
         -> uint64_t {
-        uint64_t y = emptyMask(x);
-        return ~(y | (y << 1));
+        return ~keepEmptyMask(x);
     }
     [[nodiscard]] static constexpr auto isEmpty(uint64_t x) -> bool {
         return emptyMask(x) != 0;
@@ -105,6 +109,12 @@ struct Intersection {
     /// returns `true` if the PredicateIntersection is empty, `false` otherwise
     [[nodiscard]] constexpr auto isEmpty() const -> bool {
         return isEmpty(predicates);
+    }
+    [[nodiscard]] constexpr auto getConflict(Intersection other)
+        -> std::pair<Intersection, Intersection> {
+        uint64_t m = keepEmptyMask(predicates & other.predicates);
+        return std::make_pair(Intersection{predicates & m},
+                              Intersection{other.predicates & m});
     }
     /// if the union between `this` and `other` can be expressed as an
     /// intersection of their constituents, return that intersection. Return an
@@ -219,12 +229,12 @@ struct Set {
     /// to:
     /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
     /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
-    void predUnion(Intersection other) {
+    auto operator|=(Intersection other) -> Set & {
         if (other.isEmpty())
-            return;
+            return *this;
         else if (intersectUnion.empty()) {
             intersectUnion.push_back(other);
-            return;
+            return *this;
         }
         // we first try to avoid pushing so that we don't have to realloc
         bool simplifyPreds = false;
@@ -232,7 +242,7 @@ struct Set {
             auto u = pred.compactUnion(other);
             if (auto compact = std::get_if<Intersection>(&u)) {
                 pred = *compact;
-                return;
+                return *this;
             } else if (auto simplify =
                            std::get_if<std::pair<Intersection, Intersection>>(
                                &u)) {
@@ -270,6 +280,31 @@ struct Set {
                 }
             }
         }
+        return *this;
+    }
+    /// if *this = [(a & b) | (c & d)]
+    /// and other = [(e & f) | (g & h)]
+    /// then
+    /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
+    ///   [(a & b) | (c & d) | (e & f) | (g & h)]
+    auto operator|=(const Set &other) -> Set & {
+        for (auto &&pred : other.intersectUnion)
+            *this |= pred;
+        return *this;
+    }
+    [[nodiscard]] auto operator|(Intersection other) const & -> Set {
+        auto ret = *this;
+        ret |= other;
+        return ret;
+    }
+    [[nodiscard]] auto operator|(Intersection other) && -> Set {
+        return std::move(*this |= other);
+    }
+    [[nodiscard]] auto operator|(Set other) const & -> Set {
+        return other |= *this;
+    }
+    [[nodiscard]] auto operator|(const Set &other) && -> Set {
+        return std::move(*this |= other);
     }
     auto operator&=(Intersection pred) -> Set & {
         for (size_t i = 0; i < intersectUnion.size();) {
@@ -294,14 +329,45 @@ struct Set {
     [[nodiscard]] auto isEmpty() const -> bool {
         return intersectUnion.empty();
     }
-    // NOTE: `Map.isDivergent()` uses the fact that this returns `false`
-    // when either `this->isEmpty()` or `other.isEmpty()`
-    [[nodiscard]] auto emptyIntersection(const Set &other) const -> bool {
+    [[nodiscard]] auto operator&(const Set &other) const {
+        Set ret;
+        for (auto &&pred : intersectUnion)
+            for (auto &&otherPred : other)
+                ret |= pred & otherPred;
+        return ret;
+    }
+    [[nodiscard]] auto cut(const Set &other)
+        -> std::pair<Intersection, Intersection> {
+        assert(intersectionIsEmpty(other));
+        Intersection retL, retR;
+        for (auto pred : intersectUnion) {
+            for (auto otherPred : other) {
+                assert((pred & otherPred).isEmpty());
+                auto [L, R] = pred.getConflict(otherPred);
+                retL &= L;
+                retR &= R;
+            }
+        }
+        return std::make_pair(retL, retR);
+    }
+    /// intersectionIsEmpty(const Set &other) -> bool
+    /// returns `true` if the intersection of `*this` and `other` is empty
+    /// if *this = [(a & b) | (c & d)]
+    ///    other = [(e & f) | (g & h)]
+    /// then
+    /// [(a & b) | (c & d)] & [(e & f) | (g & h)] =
+    ///   [(a & b) & (e & f)] |
+    ///   [(a & b) & (g & h)] |
+    ///   [(c & d) & (e & f)] |
+    ///   [(c & d) & (g & h)]
+    /// So iterating over the union elements, if any of them are not empty, then
+    /// the intersection is not empty.
+    [[nodiscard]] auto intersectionIsEmpty(const Set &other) const -> bool {
         for (auto pred : intersectUnion)
             for (auto otherPred : other)
-                if ((pred & otherPred).isEmpty())
-                    return true;
-        return false;
+                if (!((pred & otherPred).isEmpty()))
+                    return false;
+        return true;
     }
 
     // static auto getIndex(llvm::SmallVectorImpl<Instruction *> &instructions,
