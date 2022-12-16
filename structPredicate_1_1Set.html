@@ -93,8 +93,22 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (size_
 <tr class="memitem:a2d4fa0fea8517a1439700902f96327df"><td class="memItemLeft" align="right" valign="top"><a id="a2d4fa0fea8517a1439700902f96327df"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a2d4fa0fea8517a1439700902f96327df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4dff27191434be4efc9ffa4da3c4ad9a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a">predUnion</a> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other)</td></tr>
-<tr class="separator:a4dff27191434be4efc9ffa4da3c4ad9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73579f1c8eaf6a998b6543bdf69f76fd"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Set.html#a73579f1c8eaf6a998b6543bdf69f76fd">operator|=</a> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;</td></tr>
+<tr class="separator:a73579f1c8eaf6a998b6543bdf69f76fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89d258109261725f37e377ece23858ed"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Set.html#a89d258109261725f37e377ece23858ed">operator|=</a> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) -&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;</td></tr>
+<tr class="separator:a89d258109261725f37e377ece23858ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf825c33d662421382ae04fb6dad2d29"><td class="memItemLeft" align="right" valign="top"><a id="abf825c33d662421382ae04fb6dad2d29"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) const &amp;-&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a></td></tr>
+<tr class="separator:abf825c33d662421382ae04fb6dad2d29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a319be860fc65e305f329fcbe7f655876"><td class="memItemLeft" align="right" valign="top"><a id="a319be860fc65e305f329fcbe7f655876"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) &amp;&amp;-&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a></td></tr>
+<tr class="separator:a319be860fc65e305f329fcbe7f655876"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e4381edbec04e191c639da4710ca07d"><td class="memItemLeft" align="right" valign="top"><a id="a5e4381edbec04e191c639da4710ca07d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (<a class="el" href="structPredicate_1_1Set.html">Set</a> other) const &amp;-&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a></td></tr>
+<tr class="separator:a5e4381edbec04e191c639da4710ca07d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a433015a77cc0ecbac6b99d1ccf91d205"><td class="memItemLeft" align="right" valign="top"><a id="a433015a77cc0ecbac6b99d1ccf91d205"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) &amp;&amp;-&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a></td></tr>
+<tr class="separator:a433015a77cc0ecbac6b99d1ccf91d205"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b6cd44c6dfdc63e58359e21db9ba222"><td class="memItemLeft" align="right" valign="top"><a id="a1b6cd44c6dfdc63e58359e21db9ba222"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> pred) -&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;</td></tr>
 <tr class="separator:a1b6cd44c6dfdc63e58359e21db9ba222"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,9 +130,14 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<
 <tr class="memitem:a90d727f4a50bfb5597e9aebb76a2d672"><td class="memItemLeft" align="right" valign="top"><a id="a90d727f4a50bfb5597e9aebb76a2d672"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEmpty</b> () const -&gt; bool</td></tr>
 <tr class="separator:a90d727f4a50bfb5597e9aebb76a2d672"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea4c37ea2927a639b1d5dbf7efd67f22"><td class="memItemLeft" align="right" valign="top"><a id="aea4c37ea2927a639b1d5dbf7efd67f22"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>emptyIntersection</b> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) const -&gt; bool</td></tr>
-<tr class="separator:aea4c37ea2927a639b1d5dbf7efd67f22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c4ee6a2fd9e52191f5f2644ee4df093"><td class="memItemLeft" align="right" valign="top"><a id="a1c4ee6a2fd9e52191f5f2644ee4df093"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;</b> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) const</td></tr>
+<tr class="separator:a1c4ee6a2fd9e52191f5f2644ee4df093"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d2f2d5a05273104dd769a94f3927542"><td class="memItemLeft" align="right" valign="top"><a id="a2d2f2d5a05273104dd769a94f3927542"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>cut</b> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) -&gt; std::pair&lt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &gt;</td></tr>
+<tr class="separator:a2d2f2d5a05273104dd769a94f3927542"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4a7c78b6c53cec5eb5ee53e291359e3"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3">intersectionIsEmpty</a> (const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;other) const -&gt; bool</td></tr>
+<tr class="separator:ad4a7c78b6c53cec5eb5ee53e291359e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -129,8 +148,8 @@ llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Intersection.html">
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structPredicate_1_1Set.html">Predicate::Set</a> A type for performing set algebra on predicates, representing sets Note: Commutative: a | b == b | a a &amp; b == b &amp; a Distributive: a | (b &amp; c) == (a | b) &amp; (a | c) a &amp; (b | c) == (a &amp; b) | (a &amp; c) Associative: a | (b | c) == (a | b) | c a &amp; (b &amp; c) == (a &amp; b) &amp; c Idempotent: a | a == a a &amp; a == a The internal representation can be interpreted as the intersection of a vector of predicates. This makes intersection operations efficient, but means we may need to allocate new instructions to represent unions. Unions are needed for merging divergent control flow branches. For union calculation, we'd simplify: (a &amp; b) | (a &amp; c) == a &amp; (b | c) If c == !b, then (a &amp; b) | (a &amp; !b) == a &amp; (b | !b) == a &amp; True == a Generically: (a &amp; b) | (c &amp; d) == ((a &amp; b) | c) &amp; ((a &amp; b) | d) == (a | c) &amp; (b | c) &amp; (a | d) &amp; (b | d) </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4dff27191434be4efc9ffa4da3c4ad9a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4dff27191434be4efc9ffa4da3c4ad9a">&#9670;&nbsp;</a></span>predUnion()</h2>
+<a id="ad4a7c78b6c53cec5eb5ee53e291359e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4a7c78b6c53cec5eb5ee53e291359e3">&#9670;&nbsp;</a></span>intersectionIsEmpty()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -139,11 +158,65 @@ llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Intersection.html">
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void Predicate::Set::predUnion </td>
+          <td class="memname">auto Predicate::Set::intersectionIsEmpty </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td> const -&gt; bool </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>intersectionIsEmpty(const Set &amp;other) -&gt; bool returns <code>true</code> if the intersection of <code>*this</code> and <code>other</code> is empty if *this = [(a &amp; b) | (c &amp; d)] other = [(e &amp; f) | (g &amp; h)] then [(a &amp; b) | (c &amp; d)] &amp; [(e &amp; f) | (g &amp; h)] = [(a &amp; b) &amp; (e &amp; f)] | [(a &amp; b) &amp; (g &amp; h)] | [(c &amp; d) &amp; (e &amp; f)] | [(c &amp; d) &amp; (g &amp; h)] So iterating over the union elements, if any of them are not empty, then the intersection is not empty. </p>
+
+</div>
+</div>
+<a id="a89d258109261725f37e377ece23858ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89d258109261725f37e377ece23858ed">&#9670;&nbsp;</a></span>operator|=() <span class="overload">[1/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto Predicate::Set::operator|= </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td> -&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>if *this = [(a &amp; b) | (c &amp; d)] and other = [(e &amp; f) | (g &amp; h)] then [(a &amp; b) | (c &amp; d)] | [(e &amp; f) | (g &amp; h)] = [(a &amp; b) | (c &amp; d) | (e &amp; f) | (g &amp; h)] </p>
+
+</div>
+</div>
+<a id="a73579f1c8eaf6a998b6543bdf69f76fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73579f1c8eaf6a998b6543bdf69f76fd">&#9670;&nbsp;</a></span>operator|=() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto Predicate::Set::operator|= </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>&#160;</td>
           <td class="paramname"><em>other</em></td><td>)</td>
-          <td></td>
+          <td> -&gt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &amp; </td>
         </tr>
       </table>
   </td>

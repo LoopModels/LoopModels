@@ -6,5 +6,6 @@ var searchData=
   ['affineloopnest_3',['AffineLoopNest',['../structAffineLoopNest.html',1,'']]],
   ['affineloopnest_3c_20false_20_3e_4',['AffineLoopNest&lt; false &gt;',['../structAffineLoopNest.html',1,'']]],
   ['affineloopnest_3c_20true_20_3e_5',['AffineLoopNest&lt; true &gt;',['../structAffineLoopNest.html',1,'']]],
-  ['arrayreference_6',['ArrayReference',['../structArrayReference.html',1,'']]]
+  ['allocate_6',['Allocate',['../structMergingCost_1_1Allocate.html',1,'MergingCost']]],
+  ['arrayreference_7',['ArrayReference',['../structArrayReference.html',1,'']]]
 ];

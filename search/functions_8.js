@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['predunion_282',['predUnion',['../structPredicate_1_1Set.html#a4dff27191434be4efc9ffa4da3c4ad9a',1,'Predicate::Set']]],
-  ['pushlooptree_283',['pushLoopTree',['../classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de',1,'TurboLoopPass']]]
+  ['operator_7c_3d_295',['operator|=',['../structPredicate_1_1Set.html#a73579f1c8eaf6a998b6543bdf69f76fd',1,'Predicate::Set::operator|=(Intersection other) -&gt; Set &amp;'],['../structPredicate_1_1Set.html#a89d258109261725f37e377ece23858ed',1,'Predicate::Set::operator|=(const Set &amp;other) -&gt; Set &amp;']]],
+  ['optimize_296',['optimize',['../structLinearProgramLoopBlock.html#aad26576b4763d758bf1f49c03a1adaf1',1,'LinearProgramLoopBlock']]]
 ];

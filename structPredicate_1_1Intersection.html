@@ -113,6 +113,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93">isEmpty</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a955076f74163093f46e90c5f1877ad93"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns <code>true</code> if the PredicateIntersection is empty, <code>false</code> otherwise <br /></td></tr>
 <tr class="separator:a955076f74163093f46e90c5f1877ad93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a25fd4065d3d5dbc1a2e62b73dffdfc90"><td class="memItemLeft" align="right" valign="top"><a id="a25fd4065d3d5dbc1a2e62b73dffdfc90"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConflict</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) -&gt; std::pair&lt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &gt;</td></tr>
+<tr class="separator:a25fd4065d3d5dbc1a2e62b73dffdfc90"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa2b904ea48bc52b82906c61c905274e"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) const -&gt; std::variant&lt; std::monostate, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, std::pair&lt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &gt;&gt;</td></tr>
 <tr class="separator:aaa2b904ea48bc52b82906c61c905274e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -125,6 +128,10 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>Tomb
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#aa490ae09b4cd35d39a821182dbcc9348">emptyMask</a> (uint64_t x) -&gt; uint64_t</td></tr>
 <tr class="memdesc:aa490ae09b4cd35d39a821182dbcc9348"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns 00 if non-empty, 01 if empty <br /></td></tr>
 <tr class="separator:aa490ae09b4cd35d39a821182dbcc9348"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36ff71dbb9a5ed959906ad99a979c598"><td class="memItemLeft" align="right" valign="top"><a id="a36ff71dbb9a5ed959906ad99a979c598"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#a36ff71dbb9a5ed959906ad99a979c598">keepEmptyMask</a> (uint64_t x) -&gt; uint64_t</td></tr>
+<tr class="memdesc:a36ff71dbb9a5ed959906ad99a979c598"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns 11 if non-empty, 00 if empty <br /></td></tr>
+<tr class="separator:a36ff71dbb9a5ed959906ad99a979c598"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa96f5013d74c11be8d75b23afd2431be"><td class="memItemLeft" align="right" valign="top"><a id="aa96f5013d74c11be8d75b23afd2431be"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be">removeEmptyMask</a> (uint64_t x) -&gt; uint64_t</td></tr>
 <tr class="memdesc:aa96f5013d74c11be8d75b23afd2431be"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns 11 if non-empty, 00 if empty <br /></td></tr>
