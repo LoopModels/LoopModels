@@ -2,7 +2,6 @@
 
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
@@ -155,7 +154,7 @@ template <typename T> struct BaseComparator {
         return static_cast<const T *>(this)->greaterEqual(x);
     }
     inline auto lessEqual(llvm::SmallVectorImpl<int64_t> &x) const -> bool {
-        return lessEqual(view(x));
+        return lessEqual(LinearAlgebra::view(x));
     }
     [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
@@ -171,7 +170,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
-        return lessEqual(view(y));
+        return lessEqual(LinearAlgebra::view(y));
     }
     [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x,
                                         int64_t y) const -> bool {
@@ -205,7 +204,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
-        return less(view(y));
+        return less(LinearAlgebra::view(y));
     }
     [[nodiscard]] inline auto greater(MutPtrVector<int64_t> x) const -> bool {
         int64_t x0 = x[0]--;
@@ -218,7 +217,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 8> xm{x.begin(), x.begin() + N};
-        return greater(view(xm));
+        return greater(LinearAlgebra::view(xm));
     }
     inline auto greater(Vector<int64_t> &x) const -> bool {
         return greater(MutPtrVector<int64_t>(x));
@@ -287,7 +286,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
         const size_t numCon = A.numRow() + pos0;
         numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numCon, 2 * numCon);
+        V.resizeForOverwrite(Row{numVar + numCon}, Col{2 * numCon});
         V = 0;
         V(0, 0) = pos0;
         // V = [A' 0
@@ -310,7 +309,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         const size_t numConExplicit = A.numRow() + 1;
         const size_t numConTotal = numConExplicit + numNonNegative;
         numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numConTotal, 2 * numConTotal);
+        V.resizeForOverwrite(Row{numVar + numConTotal}, Col{2 * numConTotal});
         V = 0;
         V(0, 0) = 1;
         // B = [ A_0 A_1
@@ -338,8 +337,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
         const size_t numEqCon = E.numRow();
         numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numInEqConTotal,
-                             2 * numInEqConTotal + numEqCon);
+        V.resizeForOverwrite(Row{numVar + numInEqConTotal},
+                             Col{2 * numInEqConTotal + numEqCon});
         V = 0;
         V(0, 0) = 1;
         // B = [ A_0 A_1
@@ -365,7 +364,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         const size_t numInEqCon = A.numRow() + pos0;
         numVar = A.numCol();
         const size_t numEqCon = E.numRow();
-        V.resizeForOverwrite(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        V.resizeForOverwrite(Row{numVar + numInEqCon},
+                             Col{2 * numInEqCon + numEqCon});
         V = 0;
         // V = [A' E' 0
         //      S  0  I]
@@ -385,7 +385,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     void initCore() {
         auto &A = V;
         size_t R = V.numRow();
-        U.resizeForOverwrite(R, R);
+        U.resizeForOverwrite(Row{R}, Col{R});
         U = 0;
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
@@ -394,8 +394,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         auto &H = A;
         while ((R) && allZero(H(R - 1, _)))
             --R;
-        H.truncateRows(R);
-        U.truncateRows(R);
+        H.truncate(Row{R});
+        U.truncate(Row{R});
         // numRowTrunc = R;
         if (H.isSquare()) {
             d.clear();
@@ -434,7 +434,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 if (b(i))
                     return false;
             auto H = V;
-            auto oldn = H.numCol();
+            size_t oldn = H.numCol();
             H.resizeCols(oldn + 1);
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = -b(i);
@@ -465,7 +465,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-            IntMatrix expandW(numSlack, NSdim * 2 + 1);
+            IntMatrix expandW(Row{numSlack}, Col{NSdim * 2 + 1});
             for (size_t i = 0; i < numSlack; ++i) {
                 expandW(i, 0) = c(i);
                 // expandW(i, 0) *= Dlcm;
@@ -475,7 +475,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                     expandW(i, j + NSdim + 1) = val;
                 }
             }
-            IntMatrix Wcouple{0, expandW.numCol()};
+            IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};
             std::optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
             return optS.has_value();

@@ -5,7 +5,7 @@
 
 // Demonstrate some basic assertions.
 TEST(SparseIndexingTest, BasicAssertions) {
-    SmallSparseMatrix<int64_t> Asparse(3, 4);
+    SmallSparseMatrix<int64_t> Asparse(Row{3}, Col{4});
     llvm::errs() << "&Asparse = " << &Asparse << "\n";
     Asparse(0, 1) = 5;
     Asparse(1, 3) = 3;
@@ -20,7 +20,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
         for (size_t j = 0; j < 4; ++j)
             EXPECT_TRUE(A(i, j) == Asparse(i, j));
     // EXPECT_EQ(A(i, j), Asparse(i, j));
-    IntMatrix B(4, 5);
+    IntMatrix B(Row{4}, Col{5});
     B(0, 0) = 3;
     B(0, 1) = -1;
     B(0, 2) = 0;
@@ -41,7 +41,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
     B(3, 2) = 2;
     B(3, 3) = -3;
     B(3, 4) = 5;
-    IntMatrix C{3, 5};
+    IntMatrix C{Row{3}, Col{5}};
     C(0, 0) = -20;
     C(0, 1) = 25;
     C(0, 2) = -5;
@@ -123,8 +123,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     // llvm::errs() << "C = \n"<<C<<"\n";
     // IntMatrix B;
     // B = A*4;
-    IntMatrix A1x1(1, 1);
-    IntMatrix A2x2(2, 2);
+    IntMatrix A1x1(Row{1}, Col{1});
+    IntMatrix A2x2(Row{2}, Col{2});
     A1x1.antiDiag() = 1;
     EXPECT_EQ(A1x1(0, 0), 1);
     A2x2.antiDiag() = 1;
@@ -133,7 +133,7 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     EXPECT_EQ(A2x2(1, 0), 1);
     EXPECT_EQ(A2x2(1, 1), 0);
     for (size_t i = 1; i < 20; ++i) {
-        IntMatrix A(i, i);
+        IntMatrix A(Row{i}, Col{i});
         A.antiDiag() = 1;
         for (size_t j = 0; j < i; ++j)
             for (size_t k = 0; k < i; ++k)

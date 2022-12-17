@@ -2,6 +2,7 @@
 
 #include "./ArrayReference.hpp"
 #include "./Predicate.hpp"
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
@@ -124,7 +125,7 @@ struct Instruction {
         [[no_unique_address]] Predicate::Set predicates;
         // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
         // case of realloc
-        [[no_unique_address]] llvm::SmallVector<Instruction *, 2> instr;
+        [[no_unique_address]] llvm::MutableArrayRef<Instruction *> instr;
         // TODO: constexpr once llvm::SmallVector supports it
         auto size() -> size_t { return instr.size(); }
         auto begin() { return instr.begin(); }
@@ -201,6 +202,15 @@ struct Instruction {
         /// Then use the simpler of these two to determine the direction of the
         /// select.
         auto [L, R] = A->predicates.predicates.cut(B->predicates.predicates);
+        uint64_t Lc = std::popcount(L.predicates);
+        uint64_t Rc = std::popcount(R.predicates);
+        if (Lc < Rc) {
+            S->predicates.predicates = L.predicates;
+            S->predicates.instr = L.instr;
+        } else {
+            S->predicates.predicates = R.predicates;
+            S->predicates.instr = R.instr;
+        }
         S->predicates.predicates =
             A->predicates.predicates | B->predicates.predicates;
         return S;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <random>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LinearAlgebraTest, BasicAssertions) {
     const SquareMatrix<Rational> identity = SquareMatrix<Rational>::identity(4);
     SquareMatrix<int64_t> A(4);
@@ -27,12 +28,13 @@ TEST(LinearAlgebraTest, BasicAssertions) {
 
     auto LUFopt = LU::fact(A);
     EXPECT_TRUE(LUFopt.has_value());
+    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
     auto &LUF = *LUFopt;
     Matrix<Rational, 0, 0> B = A;
     llvm::errs() << "A = \n" << A << "\nB = \n" << B << "\n";
-    printVector(llvm::errs() << "F = \n"
-                             << LUF.F << "\nperm = \n",
-                LUF.ipiv)
+    LinearAlgebra::printVector(llvm::errs() << "F = \n"
+                                            << LUF.F << "\nperm = \n",
+                               LUF.ipiv)
         << "\n";
     auto Bcopy = B;
     EXPECT_FALSE(LUF.ldiv(Bcopy));

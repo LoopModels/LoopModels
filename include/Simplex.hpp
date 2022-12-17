@@ -1,6 +1,5 @@
 #pragma once
 #include "./Constraints.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include <bit>
@@ -31,23 +30,24 @@ struct Simplex {
 #endif
     static constexpr size_t numExtraRows = 2;
     static constexpr size_t numExtraCols = 1;
-    static constexpr auto numTableauRows(size_t i) -> size_t {
-        return i + numExtraRows;
+    static constexpr auto numTableauRows(size_t i) -> Row {
+        return Row{i + numExtraRows};
     }
-    static constexpr auto numTableauCols(size_t j) -> size_t {
-        return j + numExtraCols;
+    static constexpr auto numTableauCols(size_t j) -> Col {
+        return Col{j + numExtraCols};
     }
     // NOTE: all methods resizing the tableau may invalidate references to it
     void resize(size_t numCon, size_t numVar) {
         tableau.resize(numTableauRows(numCon), numTableauCols(numVar));
     }
-    void resize(size_t numCon, size_t numVar, size_t stride) {
+    void resize(size_t numCon, size_t numVar, LinearAlgebra::RowStride stride) {
         tableau.resize(numTableauRows(numCon), numTableauCols(numVar), stride);
     }
     void addVars(size_t numVars) {
-        size_t numCol = tableau.numCol() + numVars;
+        Col numCol = tableau.numCol() + numVars;
         tableau.resize(tableau.numRow(), numCol,
-                       std::max(numCol, tableau.rowStride()));
+                       LinearAlgebra::RowStride{std::max(
+                           size_t(numCol), size_t(tableau.rowStride()))});
     }
     auto addConstraint() -> MutPtrVector<int64_t> {
         tableau.resize(tableau.numRow() + 1, tableau.numCol(),

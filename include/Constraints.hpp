@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include <cstddef>
@@ -75,8 +74,8 @@ printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
     return os;
 }
 
-MULTIVERSION [[maybe_unused]] static void
-eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
+[[maybe_unused]] static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
+                                                 size_t i) {
     const size_t lastRow = A.numRow() - 1;
     assert(i <= lastRow);
     if (lastRow != i)
@@ -84,7 +83,7 @@ eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
 }
 [[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t i) {
     eraseConstraintImpl(A, i);
-    A.truncateRows(A.numRow() - 1);
+    A.truncate(Row{A.numRow() - 1});
 }
 [[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t _i,
                                              size_t _j) {
@@ -105,19 +104,18 @@ eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
             A(j, n) = A(lastRow, n);
         }
     }
-    A.truncateRows(penuRow);
+    A.truncate(Row{penuRow});
 }
 
-MULTIVERSION [[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
-                                                                 const size_t i)
-    -> size_t {
+[[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
+                                                    const size_t i) -> size_t {
     const auto [numConstraints, numVar] = E.size();
     size_t minNonZero = numVar + 1;
     size_t rowMinNonZero = numConstraints;
     for (size_t j = 0; j < numConstraints; ++j)
         if (E(j, i)) {
             size_t nonZero = 0;
-            VECTORIZE
+
             for (size_t v = 0; v < numVar; ++v)
                 nonZero += (E(j, v) != 0);
             if (nonZero < minNonZero) {
@@ -217,8 +215,8 @@ constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
     return false;
 }
 
-MULTIVERSION [[maybe_unused]] static auto
-substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
+[[maybe_unused]] static auto substituteEquality(IntMatrix &A, IntMatrix &E,
+                                                const size_t i) -> bool {
 
     size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
     if (rowMinNonZero == E.numRow())

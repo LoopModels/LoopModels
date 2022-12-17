@@ -4,13 +4,8 @@
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
-#include "./LinearAlgebra.hpp"
-#include "./Loops.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "./Orthogonalize.hpp"
-#include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
@@ -831,20 +826,20 @@ struct LinearProgramLoopBlock {
 
                     size_t ll = l + satL.numCol();
                     size_t lll = ll + bndL.numCol();
-                    C(_(c, cc), _(l, ll)) = satL;
-                    C(_(cc, ccc), _(ll, lll)) = bndL;
+                    C(to(c, cc), to(l, ll)) = satL;
+                    C(to(cc, ccc), to(ll, lll)) = bndL;
                     l = lll;
 
                     // bounding
-                    C(_(cc, ccc), w++) = bndWU(_, 0);
+                    C(to(cc, ccc), w++) = bndWU(to, 0);
                     size_t uu = u + bndWU.numCol() - 1;
-                    C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
+                    C(to(cc, ccc), to(u, uu)) = bndWU(to, to(1, end));
                     u = uu;
                     if (satisfyDeps)
-                        C(_(c, cc), 0) = satC + satW;
+                        C(to(c, cc), 0) = satC + satW;
                     else
-                        C(_(c, cc), 0) = satC;
-                    C(_(cc, ccc), 0) = bndC;
+                        C(to(c, cc), 0) = satC;
+                    C(to(cc, ccc), 0) = bndC;
                     // now, handle Phi and Omega
                     // phis are not constrained to be 0
                     if (outNodeIndex == inNodeIndex) {
@@ -854,25 +849,26 @@ struct LinearProgramLoopBlock {
                                 if (outNode.phiIsScheduled(d)) {
                                     // add it constants
                                     auto sch = outNode.getSchedule(d);
-                                    C(_(c, cc), 0) -=
+                                    C(to(c, cc), 0) -=
                                         satPc *
-                                            sch(_(end - satPc.numCol(), end)) +
+                                            sch(to(end - satPc.numCol(), end)) +
                                         satPp *
-                                            sch(_(end - satPp.numCol(), end));
-                                    C(_(cc, ccc), 0) -=
+                                            sch(to(end - satPp.numCol(), end));
+                                    C(to(cc, ccc), 0) -=
                                         bndPc *
-                                            sch(_(end - bndPc.numCol(), end)) +
+                                            sch(to(end - bndPc.numCol(), end)) +
                                         bndPp *
-                                            sch(_(end - satPp.numCol(), end));
+                                            sch(to(end - satPp.numCol(), end));
                                 } else {
                                     // FIXME: phiChild = [14:18), 4 cols
                                     // while Dependence seems to indicate 2
                                     // loops why the disagreement?
                                     auto phiChild = outNode.getPhiOffset();
-                                    C(_(c, cc), _(phiChild - satPc.numCol(),
-                                                  phiChild)) = satPc + satPp;
-                                    C(_(cc, ccc), _(phiChild - bndPc.numCol(),
-                                                    phiChild)) = bndPc + bndPp;
+                                    C(to(c, cc), to(phiChild - satPc.numCol(),
+                                                    phiChild)) = satPc + satPp;
+                                    C(to(cc, ccc),
+                                      to(phiChild - bndPc.numCol(), phiChild)) =
+                                        bndPc + bndPp;
                                 }
                             } else if (outNode.phiIsScheduled(d)) {
                                 // add it constants
@@ -880,39 +876,42 @@ struct LinearProgramLoopBlock {
                                 // inner -> outer
                                 // so we need to drop inner most if one has less
                                 auto sch = outNode.getSchedule(d);
-                                auto schP = sch(_(end - satPp.numCol(), end));
-                                auto schC = sch(_(end - satPc.numCol(), end));
-                                C(_(c, cc), 0) -= satPc * schC + satPp * schP;
-                                C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
+                                auto schP = sch(to(end - satPp.numCol(), end));
+                                auto schC = sch(to(end - satPc.numCol(), end));
+                                C(to(c, cc), 0) -= satPc * schC + satPp * schP;
+                                C(to(cc, ccc), 0) -=
+                                    bndPc * schC + bndPp * schP;
                             } else if (satPc.numCol() < satPp.numCol()) {
                                 auto phiChild = outNode.getPhiOffset();
                                 size_t P = satPc.numCol();
                                 auto m = phiChild - P;
-                                C(_(c, cc), _(phiChild - satPp.numCol(), m)) =
-                                    satPp(_, _(begin, end - P));
-                                C(_(cc, ccc), _(phiChild - bndPp.numCol(), m)) =
-                                    bndPp(_, _(begin, end - P));
-                                C(_(c, cc), _(m, phiChild)) =
-                                    satPc + satPp(_, _(end - P, end));
-                                C(_(cc, ccc), _(m, phiChild)) =
-                                    bndPc + bndPp(_, _(end - P, end));
+                                C(to(c, cc), to(phiChild - satPp.numCol(), m)) =
+                                    satPp(to, to(begin, end - P));
+                                C(to(cc, ccc),
+                                  to(phiChild - bndPp.numCol(), m)) =
+                                    bndPp(to, to(begin, end - P));
+                                C(to(c, cc), to(m, phiChild)) =
+                                    satPc + satPp(to, to(end - P, end));
+                                C(to(cc, ccc), to(m, phiChild)) =
+                                    bndPc + bndPp(to, to(end - P, end));
                             } else /* if (satPc.numCol() > satPp.numCol()) */ {
                                 auto phiChild = outNode.getPhiOffset();
                                 size_t P = satPp.numCol();
                                 auto m = phiChild - P;
-                                C(_(c, cc), _(phiChild - satPc.numCol(), m)) =
-                                    satPc(_, _(begin, end - P));
-                                C(_(cc, ccc), _(phiChild - bndPc.numCol(), m)) =
-                                    bndPc(_, _(begin, end - P));
-                                C(_(c, cc), _(m, phiChild)) =
-                                    satPc(_, _(end - P, end)) + satPp;
-                                C(_(cc, ccc), _(m, phiChild)) =
-                                    bndPc(_, _(end - P, end)) + bndPp;
+                                C(to(c, cc), to(phiChild - satPc.numCol(), m)) =
+                                    satPc(to, to(begin, end - P));
+                                C(to(cc, ccc),
+                                  to(phiChild - bndPc.numCol(), m)) =
+                                    bndPc(to, to(begin, end - P));
+                                C(to(c, cc), to(m, phiChild)) =
+                                    satPc(to, to(end - P, end)) + satPp;
+                                C(to(cc, ccc), to(m, phiChild)) =
+                                    bndPc(to, to(end - P, end)) + bndPp;
                             }
-                            C(_(c, cc), outNode.omegaOffset) =
-                                satO(_, 0) + satO(_, 1);
-                            C(_(cc, ccc), outNode.omegaOffset) =
-                                bndO(_, 0) + bndO(_, 1);
+                            C(to(c, cc), outNode.omegaOffset) =
+                                satO(to, 0) + satO(to, 1);
+                            C(to(cc, ccc), outNode.omegaOffset) =
+                                bndO(to, 0) + bndO(to, 1);
                         }
                     } else {
                         // llvm::errs() << "outNodeIndex != inNodeIndex\n";
@@ -924,16 +923,16 @@ struct LinearProgramLoopBlock {
                                               ccc);
                         // Omegas are included regardless of rotation
                         if (d < edge.out->getNumLoops()) {
-                            C(_(c, cc), outNode.omegaOffset) =
-                                satO(_, !edge.forward);
-                            C(_(cc, ccc), outNode.omegaOffset) =
-                                bndO(_, !edge.forward);
+                            C(to(c, cc), outNode.omegaOffset) =
+                                satO(to, !edge.forward);
+                            C(to(cc, ccc), outNode.omegaOffset) =
+                                bndO(to, !edge.forward);
                         }
                         if (d < edge.in->getNumLoops()) {
-                            C(_(c, cc), inNode.omegaOffset) =
-                                satO(_, edge.forward);
-                            C(_(cc, ccc), inNode.omegaOffset) =
-                                bndO(_, edge.forward);
+                            C(to(c, cc), inNode.omegaOffset) =
+                                satO(to, edge.forward);
+                            C(to(cc, ccc), inNode.omegaOffset) =
+                                bndO(to, edge.forward);
                         }
                     }
                     c = ccc;

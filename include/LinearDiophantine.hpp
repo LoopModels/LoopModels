@@ -1,9 +1,11 @@
 #pragma once
-#include "./Math.hpp"
+#include "./GreatestCommonDivisor.hpp"
+#include <optional>
 #include <tuple>
 
-std::optional<std::tuple<int64_t, int64_t>>
-linearDiophantine(int64_t c, int64_t a, int64_t b) {
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+auto linearDiophantine(int64_t c, int64_t a, int64_t b)
+    -> std::optional<std::tuple<int64_t, int64_t>> {
     if (c == 0) {
         return std::make_tuple(int64_t(0), int64_t(0));
     } else if ((a | b) == 0) {
@@ -21,8 +23,8 @@ linearDiophantine(int64_t c, int64_t a, int64_t b) {
 }
 
 // d = a*x; x = d/a
-std::optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
-                                                     std::tuple<int64_t> a) {
+auto linearDiophantine(int64_t d, std::tuple<int64_t> a)
+    -> std::optional<std::tuple<int64_t>> {
     int64_t a0 = std::get<0>(a);
     if (d == 0) {
         return std::make_tuple(int64_t(0));
@@ -34,8 +36,8 @@ std::optional<std::tuple<int64_t>> linearDiophantine(int64_t d,
     return {};
 }
 // d = a[0]*x + a[1]*y;
-std::optional<std::tuple<int64_t, int64_t>>
-linearDiophantine(int64_t d, std::tuple<int64_t, int64_t> a) {
+auto linearDiophantine(int64_t d, std::tuple<int64_t, int64_t> a)
+    -> std::optional<std::tuple<int64_t, int64_t>> {
     return linearDiophantine(d, std::get<0>(a), std::get<1>(a));
 }
 
@@ -52,7 +54,7 @@ template <typename Tuple, size_t N> auto pop_front(const Tuple &tuple, Val<N>) {
 }
 
 template <typename Tuple>
-std::optional<Tuple> linearDiophantine(int64_t d, Tuple a) {
+auto linearDiophantine(int64_t d, Tuple a) -> std::optional<Tuple> {
     int64_t a0 = std::get<0>(a);
     int64_t a1 = std::get<1>(a);
     auto aRem = pop_front(a, Val<2>());
