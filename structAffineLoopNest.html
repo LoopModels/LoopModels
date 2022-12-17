@@ -89,15 +89,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const llvm::SCEV *v) const -&gt; size_t</td></tr>
 <tr class="separator:a63489ba1782354820cec69596358f034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a66b9b17886e1f1322b8b16072dbc6c0d"><td class="memItemLeft" align="right" valign="top"><a id="a66b9b17886e1f1322b8b16072dbc6c0d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (<a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; R) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; R) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;</td></tr>
 <tr class="separator:a66b9b17886e1f1322b8b16072dbc6c0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9e53512f8983b7209f975f33d88df88"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a> (<a class="el" href="structMatrix.html">IntMatrix</a> &amp;B, llvm::Loop *L, const llvm::SCEV *v, llvm::ScalarEvolution &amp;SE, const size_t l, const size_t u, int64_t mlt, size_t minDepth) -&gt; size_t</td></tr>
+<tr class="memitem:aa9e53512f8983b7209f975f33d88df88"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a> (IntMatrix &amp;B, llvm::Loop *L, const llvm::SCEV *v, llvm::ScalarEvolution &amp;SE, const size_t l, const size_t u, int64_t mlt, size_t minDepth) -&gt; size_t</td></tr>
 <tr class="separator:aa9e53512f8983b7209f975f33d88df88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a733640262aa85e4497ee13e74123da38"><td class="memItemLeft" align="right" valign="top"><a id="a733640262aa85e4497ee13e74123da38"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addSymbol</b> (const llvm::SCEV *v, size_t l, size_t u, int64_t mlt)</td></tr>
 <tr class="separator:a733640262aa85e4497ee13e74123da38"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53145a092315e69e32c642f883467aec"><td class="memItemLeft" align="right" valign="top"><a id="a53145a092315e69e32c642f883467aec"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addBackedgeTakenCount</b> (<a class="el" href="structMatrix.html">IntMatrix</a> &amp;B, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, size_t minDepth) -&gt; size_t</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>addBackedgeTakenCount</b> (IntMatrix &amp;B, llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, size_t minDepth) -&gt; size_t</td></tr>
 <tr class="separator:a53145a092315e69e32c642f883467aec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21dbf1f25b28e234b70224437b4ff522"><td class="memItemLeft" align="right" valign="top"><a id="a21dbf1f25b28e234b70224437b4ff522"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>areSymbolsLoopInvariant</b> (llvm::Loop *L, llvm::ScalarEvolution &amp;SE) const -&gt; bool</td></tr>
@@ -118,13 +118,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOuterMost</b> (
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addZeroLowerBounds</b> ()</td></tr>
 <tr class="separator:adcf210dcbef9fe68903c1c18265096c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2b04d5ca9d8ce2c00bb5901ed84fde6"><td class="memItemLeft" align="right" valign="top"><a id="aa2b04d5ca9d8ce2c00bb5901ed84fde6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (<a class="el" href="structMatrix.html">IntMatrix</a> A, llvm::SmallVector&lt; const llvm::SCEV * &gt; symbols)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (IntMatrix A, llvm::SmallVector&lt; const llvm::SCEV * &gt; symbols)</td></tr>
 <tr class="separator:aa2b04d5ca9d8ce2c00bb5901ed84fde6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7bd7f0731d87b5879e323061178f56c"><td class="memItemLeft" align="right" valign="top"><a id="ad7bd7f0731d87b5879e323061178f56c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (<a class="el" href="structMatrix.html">IntMatrix</a> A)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>AffineLoopNest</b> (IntMatrix A)</td></tr>
 <tr class="separator:ad7bd7f0731d87b5879e323061178f56c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memItemLeft" align="right" valign="top"><a id="a7b42b9010c9e810b74cd7edd65633a7d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size_t j) const -&gt; <a class="el" href="structPtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getProgVars</b> (size_t j) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a7b42b9010c9e810b74cd7edd65633a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6c7047853aa952be9f87ed18dd15341"><td class="memItemLeft" align="right" valign="top"><a id="ac6c7047853aa952be9f87ed18dd15341"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (size_t i)</td></tr>
@@ -133,19 +133,19 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoopBang</b> (s
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>removeLoop</b> (size_t i) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;</td></tr>
 <tr class="separator:a0d4791b2f188d334f13adcec7f390d50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memItemLeft" align="right" valign="top"><a id="a2689cfda5eafa0dd6672a9a41493f0c9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (<a class="el" href="structPtrVector.html">PtrVector</a>&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;, 0 &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>perm</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;, 0 &gt;</td></tr>
 <tr class="separator:a2689cfda5eafa0dd6672a9a41493f0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a823875a08df937f353e1baab1c0abf61"><td class="memItemLeft" align="right" valign="top"><a id="a823875a08df937f353e1baab1c0abf61"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::pair&lt; <a class="el" href="structMatrix.html">IntMatrix</a>, <a class="el" href="structMatrix.html">IntMatrix</a> &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>bounds</b> (size_t i) const -&gt; std::pair&lt; IntMatrix, IntMatrix &gt;</td></tr>
 <tr class="separator:a823875a08df937f353e1baab1c0abf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25adc932f153367f32e4fcb305fb0e4b"><td class="memItemLeft" align="right" valign="top"><a id="a25adc932f153367f32e4fcb305fb0e4b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBounds</b> (<a class="el" href="structPtrVector.html">PtrVector</a>&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; std::pair&lt; <a class="el" href="structMatrix.html">IntMatrix</a>, <a class="el" href="structMatrix.html">IntMatrix</a> &gt;, 0 &gt;</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBounds</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; unsigned &gt; x) -&gt; llvm::SmallVector&lt; std::pair&lt; IntMatrix, IntMatrix &gt;, 0 &gt;</td></tr>
 <tr class="separator:a25adc932f153367f32e4fcb305fb0e4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d7738d091e5ceea738a954f8545816b"><td class="memItemLeft" align="right" valign="top"><a id="a0d7738d091e5ceea738a954f8545816b"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>zeroExtraIterationsUponExtending</b> (size_t _i, bool extendLower) const -&gt; bool</td></tr>
 <tr class="separator:a0d7738d091e5ceea738a954f8545816b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memItemLeft" align="right" valign="top"><a id="a1b4b8f17155e41b88dacffd1cfcc1454"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printSymbol</b> (llvm::raw_ostream &amp;os, <a class="el" href="structPtrVector.html">PtrVector</a>&lt; int64_t &gt; x, int64_t mul) const</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printSymbol</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; x, int64_t mul) const</td></tr>
 <tr class="separator:a1b4b8f17155e41b88dacffd1cfcc1454"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a012ec8a761d02cf823d8c6e0af23ad16"><td class="memItemLeft" align="right" valign="top"><a id="a012ec8a761d02cf823d8c6e0af23ad16"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>printBound</b> (llvm::raw_ostream &amp;os, size_t i, int64_t sign) const</td></tr>
@@ -161,16 +161,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td
 <tr class="separator:a98dc6e2176d3023abb6ccd5871e80a3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structPolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structPolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structPolyhedra.html">Polyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, NonNegative &gt;</a></td></tr>
 <tr class="memitem:a4844c33c643b4016305f94251edb90b8 inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a4844c33c643b4016305f94251edb90b8"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (<a class="el" href="structMatrix.html">IntMatrix</a> Ain)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (IntMatrix Ain)</td></tr>
 <tr class="separator:a4844c33c643b4016305f94251edb90b8 inherit pub_methods_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa007b8d5ed1e1e0ca6a1500c6488c39a inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="aa007b8d5ed1e1e0ca6a1500c6488c39a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (<a class="el" href="structMatrix.html">IntMatrix</a> Ain, I64Matrix Ein)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (IntMatrix Ain, I64Matrix Ein)</td></tr>
 <tr class="separator:aa007b8d5ed1e1e0ca6a1500c6488c39a inherit pub_methods_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a282e51dc2239c47a00f88ed28758951e inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a282e51dc2239c47a00f88ed28758951e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (<a class="el" href="structMatrix.html">IntMatrix</a> Ain, SymbolVec S)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (IntMatrix Ain, SymbolVec S)</td></tr>
 <tr class="separator:a282e51dc2239c47a00f88ed28758951e inherit pub_methods_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a08cacf06cd97aad6fa03b595a2455f3a inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a08cacf06cd97aad6fa03b595a2455f3a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (<a class="el" href="structMatrix.html">IntMatrix</a> Ain, I64Matrix Ein, SymbolVec S)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (IntMatrix Ain, I64Matrix Ein, SymbolVec S)</td></tr>
 <tr class="separator:a08cacf06cd97aad6fa03b595a2455f3a inherit pub_methods_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad036f175db912687778d6a0dc1c68d60 inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="ad036f175db912687778d6a0dc1c68d60"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> ()</td></tr>
@@ -258,7 +258,7 @@ I64Matrix&#160;</td><td class="memItemRight" valign="bottom"><b>E</b></td></tr>
 SymbolVec&#160;</td><td class="memItemRight" valign="bottom"><b>S</b></td></tr>
 <tr class="separator:aa5cd509315e9ef12138fb5597152551b inherit pub_attribs_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7994eee44594e3fad405e8417da51d01 inherit pub_attribs_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a7994eee44594e3fad405e8417da51d01"></a>
-<a class="el" href="structMatrix.html">IntMatrix</a>&#160;</td><td class="memItemRight" valign="bottom"><b>A</b></td></tr>
+IntMatrix&#160;</td><td class="memItemRight" valign="bottom"><b>A</b></td></tr>
 <tr class="separator:a7994eee44594e3fad405e8417da51d01 inherit pub_attribs_structPolyhedra"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afeed70de19b7a5841f67d43b55391b57 inherit pub_attribs_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="afeed70de19b7a5841f67d43b55391b57"></a>
 CmptrType&#160;</td><td class="memItemRight" valign="bottom"><b>C</b></td></tr>
@@ -283,7 +283,7 @@ template&lt;bool NonNegative&gt; </div>
         <tr>
           <td class="memname">auto <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;::addSymbol </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structMatrix.html">IntMatrix</a> &amp;&#160;</td>
+          <td class="paramtype">IntMatrix &amp;&#160;</td>
           <td class="paramname"><em>B</em>, </td>
         </tr>
         <tr>

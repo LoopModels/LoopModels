@@ -78,7 +78,7 @@ $(function() {
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/SmallVector.h&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;[[nodiscard]] <span class="keyword">auto</span> stringToIntMatrix(<span class="keyword">const</span> std::string &amp;s) -&gt; <a class="code" href="structMatrix.html">IntMatrix</a> {</div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;[[nodiscard]] <span class="keyword">auto</span> stringToIntMatrix(<span class="keyword">const</span> std::string &amp;s) -&gt; IntMatrix {</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    assert(s.starts_with(<span class="charliteral">&#39;[&#39;</span>));</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    assert(s.ends_with(<span class="charliteral">&#39;]&#39;</span>));</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    llvm::SmallVector&lt;int64_t, 64&gt; content;</div>
@@ -103,10 +103,11 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    }</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">size_t</span> numCols = content.size() / numRows;</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    assert(content.size() % numRows == 0);</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <a class="code" href="structMatrix.html">IntMatrix</a> A(std::move(content), numRows, numCols);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    IntMatrix A(std::move(content), <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{numRows}, <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{numCols});</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;}</div>
-<div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:92</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:129</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -144,16 +144,16 @@ $(function() {
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        assert(numLoops + 1 == omegas.size());</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        <span class="keywordflow">return</span> numLoops;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    }</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keyword">inline</span> <span class="keyword">auto</span> indexMatrix() -&gt; <a class="code" href="structMutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keyword">inline</span> <span class="keyword">auto</span> indexMatrix() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordflow">return</span> ref.indexMatrix();</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> indexMatrix() <span class="keyword">const</span> -&gt; <a class="code" href="structPtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> indexMatrix() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <span class="keywordflow">return</span> ref.indexMatrix();</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    }</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="comment">// note returns true if unset</span></div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="comment">// inline PtrMatrix&lt;int64_t&gt; getPhi() const { return schedule.getPhi(); }</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getFusionOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structPtrVector.html">PtrVector&lt;unsigned&gt;</a> {</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structPtrVector.html">PtrVector&lt;unsigned&gt;</a>{omegas.data(), omegas.size()};</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    [[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> getFusionOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> {</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a>{omegas.data(), omegas.size()};</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    }</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="comment">// inline PtrVector&lt;int64_t&gt; getSchedule(size_t loop) const {</span></div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="comment">//     return schedule.getPhi()(loop, _);</span></div>
@@ -182,10 +182,10 @@ $(function() {
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;}</div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:26</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:69</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1452</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1415</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:634</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:12</div></div>
-<div class="ttc" id="astructMutPtrMatrix_html"><div class="ttname"><a href="structMutPtrMatrix.html">MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1491</div></div>
-<div class="ttc" id="astructPtrMatrix_html"><div class="ttname"><a href="structPtrMatrix.html">PtrMatrix&lt; int64_t &gt;</a></div></div>
-<div class="ttc" id="astructPtrVector_html"><div class="ttname"><a href="structPtrVector.html">PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:715</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -105,22 +105,22 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">// empty fields sorted first to make it easier for compiler to alias them</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    [[no_unique_address]] I64Matrix E;</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    [[no_unique_address]] SymbolVec S;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    [[no_unique_address]] <a class="code" href="structMatrix.html">IntMatrix</a> A;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    [[no_unique_address]] IntMatrix A;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    [[no_unique_address]] CmptrType C;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">bool</span> hasEqualities =</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        !std::is_same_v&lt;I64Matrix, EmptyMatrix&lt;int64_t&gt;&gt;;</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(<a class="code" href="structMatrix.html">IntMatrix</a> Ain)</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(IntMatrix Ain)</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        : E{}, A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(<a class="code" href="structMatrix.html">IntMatrix</a> Ain, I64Matrix Ein)</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(IntMatrix Ain, I64Matrix Ein)</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        : E(std::move(Ein)), A(std::move(Ain)),</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;          C(LinearSymbolicComparator::construct(A)){};</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(<a class="code" href="structMatrix.html">IntMatrix</a> Ain, SymbolVec S)</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(IntMatrix Ain, SymbolVec S)</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        : E{}, S(std::move(S)), A(std::move(Ain)),</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;          C(LinearSymbolicComparator::construct(A)){};</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(<a class="code" href="structMatrix.html">IntMatrix</a> Ain, I64Matrix Ein, SymbolVec S)</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>(IntMatrix Ain, I64Matrix Ein, SymbolVec S)</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        : E(std::move(Ein)), S(std::move(S)), A(std::move(Ain)),</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;          C(LinearSymbolicComparator::construct(A)){};</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
@@ -142,7 +142,7 @@ $(function() {
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    }</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordtype">void</span> pruneBoundsUnchecked() {</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> dyn = getNumDynamic();</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <a class="code" href="structVector.html">Vector&lt;int64_t&gt;</a> diff{A.numCol()};</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> diff{A.numCol()};</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        <span class="keywordflow">if</span> constexpr (hasEqualities)</div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            removeRedundantRows(A, E);</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = A.numRow(); j;) {</div>
@@ -293,15 +293,14 @@ $(function() {
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;              llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="keyword">using</span> <a class="code" href="structPolyhedra.html">SymbolicEqPolyhedra</a> =</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;<a class="code" href="structMatrix.html">IntMatrix</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;IntMatrix, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;              llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">false</span>&gt;;</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="keyword">using</span> <a class="code" href="structPolyhedra.html">NonNegativeSymbolicEqPolyhedra</a> =</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;<a class="code" href="structMatrix.html">IntMatrix</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;IntMatrix, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;              llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
-<div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:278</div></div>
-<div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:855</div></div>
+<div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:277</div></div>
 <div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:65</div></div>
-<div class="ttc" id="astructVector_html"><div class="ttname"><a href="structVector.html">Vector&lt; int64_t &gt;</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

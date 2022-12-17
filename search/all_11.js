@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['val_151',['Val',['../structVal.html',1,'']]],
-  ['vector_152',['Vector',['../structVector.html',1,'']]],
-  ['vector_3c_20int64_5ft_20_3e_153',['Vector&lt; int64_t &gt;',['../structVector.html',1,'']]],
-  ['vector_3c_20rational_20_3e_154',['Vector&lt; Rational &gt;',['../structVector.html',1,'']]]
+  ['val_165',['Val',['../structVal.html',1,'']]],
+  ['vector_166',['Vector',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]],
+  ['vector_3c_20int64_5ft_20_3e_167',['Vector&lt; int64_t &gt;',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]],
+  ['vector_3c_20rational_20_3e_168',['Vector&lt; Rational &gt;',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]]
 ];

@@ -111,7 +111,7 @@ $(function() {
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    llvm::Value *ptr;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordtype">size_t</span> ptrIntOffset{0};</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> addLoop(<a class="code" href="structMatrix.html">IntMatrix</a> A, <span class="keywordtype">size_t</span> numLoops) {</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordtype">void</span> addLoop(IntMatrix A, <span class="keywordtype">size_t</span> numLoops) {</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <span class="keywordtype">size_t</span> numSym = A.numCol() - numLoops - 1;</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        llvm::SmallVector&lt;const llvm::SCEV *&gt; symbols;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        symbols.reserve(numSym);</div>
@@ -172,7 +172,6 @@ $(function() {
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    }</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;};</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
-<div class="ttc" id="astructMatrix_html"><div class="ttname"><a href="structMatrix.html">Matrix&lt; int64_t &gt;</a></div></div>
 <div class="ttc" id="astructTestLoopFunction_html"><div class="ttname"><a href="structTestLoopFunction.html">TestLoopFunction</a></div><div class="ttdef"><b>Definition:</b> TestUtilities.hpp:21</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

@@ -191,7 +191,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>validateEdges</b> ()<
 void&#160;</td><td class="memItemRight" valign="bottom"><b>instantiateOmniSimplex</b> (const <a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d, bool satisfyDeps=false)</td></tr>
 <tr class="separator:ae5aa7858de7883d9e6711c03b3cd25d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a353e2c16a77c85fbd9c8cb8937807ac9"><td class="memItemLeft" align="right" valign="top"><a id="a353e2c16a77c85fbd9c8cb8937807ac9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>updateConstraints</b> (<a class="el" href="structMutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; sat, <a class="el" href="structPtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; bnd, size_t d, size_t c, size_t cc, size_t ccc)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>updateConstraints</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;node, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; sat, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; bnd, size_t d, size_t c, size_t cc, size_t ccc)</td></tr>
 <tr class="separator:a353e2c16a77c85fbd9c8cb8937807ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af949997a47c4d46fac11ade90877c5b6"><td class="memItemLeft" align="right" valign="top"><a id="af949997a47c4d46fac11ade90877c5b6"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>deactivateSatisfiedEdges</b> (<a class="el" href="structLinearProgramLoopBlock_1_1Graph.html">Graph</a> &amp;g, size_t d) -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;</td></tr>
@@ -232,7 +232,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> () -&gt;
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a7a3fc15f234aa7e560125381c2381676"><td class="memItemLeft" align="right" valign="top"><a id="a7a3fc15f234aa7e560125381c2381676"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (<a class="el" href="structPtrVector.html">PtrVector</a>&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexSign</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; x) -&gt; int64_t</td></tr>
 <tr class="separator:a7a3fc15f234aa7e560125381c2381676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1435d31cdc77012b890a2976c033ec7e"><td class="memItemLeft" align="right" valign="top"><a id="a1435d31cdc77012b890a2976c033ec7e"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractVector auto &amp;x) -&gt; uint64_t</td></tr>
@@ -268,7 +268,7 @@ llvm::DenseMap&lt; llvm::User *, unsigned &gt;&#160;</td><td class="memItemRight
 <a class="el" href="structSimplex.html">Simplex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>omniSimplex</b></td></tr>
 <tr class="separator:ac7454f56b3cb833c19f59b8ac714e9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a170bf272f9c30f3641bb57ddd50e2255"><td class="memItemLeft" align="right" valign="top"><a id="a170bf272f9c30f3641bb57ddd50e2255"></a>
-<a class="el" href="structVector.html">Vector</a>&lt; <a class="el" href="structRational.html">Rational</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sol</b></td></tr>
+<a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; <a class="el" href="structRational.html">Rational</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sol</b></td></tr>
 <tr class="separator:a170bf272f9c30f3641bb57ddd50e2255"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3b7e85e22f4ad304a905e45768626a5"><td class="memItemLeft" align="right" valign="top"><a id="af3b7e85e22f4ad304a905e45768626a5"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numPhiCoefs</b> {0}</td></tr>
