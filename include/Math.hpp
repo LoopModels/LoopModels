@@ -27,6 +27,7 @@
 //     std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
 // #endif
 
+struct Rational;
 namespace LinearAlgebra {
 
 template <typename R>
@@ -124,6 +125,8 @@ struct Col {
     constexpr auto operator>(Col x) const -> bool { return N > size_t(x); }
     constexpr auto operator<=(Col x) const -> bool { return N <= size_t(x); }
     constexpr auto operator>=(Col x) const -> bool { return N >= size_t(x); }
+    constexpr auto operator<=(size_t x) const -> bool { return N <= x; }
+    constexpr auto operator>=(size_t x) const -> bool { return N >= x; }
 };
 /// Strong typing for rows
 struct Row {
@@ -161,6 +164,8 @@ struct Row {
     constexpr auto operator>(Row x) const -> bool { return M > size_t(x); }
     constexpr auto operator<=(Row x) const -> bool { return M <= size_t(x); }
     constexpr auto operator>=(Row x) const -> bool { return M >= size_t(x); }
+    constexpr auto operator<=(size_t x) const -> bool { return M <= x; }
+    constexpr auto operator>=(size_t x) const -> bool { return M >= x; }
 };
 /// Strong typing for row strides
 struct RowStride {
@@ -321,7 +326,6 @@ constexpr auto size(const std::integral auto) -> size_t { return 1; }
 constexpr auto size(const std::floating_point auto) -> size_t { return 1; }
 constexpr auto size(const AbstractVector auto &x) -> size_t { return x.size(); }
 
-struct Rational;
 template <typename T>
 concept Scalar =
     std::integral<T> || std::floating_point<T> || std::same_as<T, Rational>;
@@ -647,13 +651,13 @@ template <typename T> struct PtrVector {
     [[nodiscard]] constexpr auto front() const -> const T & { return mem[0]; }
     constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
     constexpr auto operator()(const ScalarIndex auto i) const -> const T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
@@ -698,25 +702,25 @@ template <typename T> struct MutPtrVector {
     [[no_unique_address]] const size_t N;
     constexpr auto operator[](const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
     constexpr auto operator()(const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
     constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
     constexpr auto operator()(const ScalarIndex auto i) const -> const T & {
 #ifndef NDEBUG
-        checkIndex(N, i);
+        checkIndex(size_t(N), i);
 #endif
         return mem[canonicalize(i, N)];
     }
@@ -1205,8 +1209,8 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
 }
 template <typename T>
 [[maybe_unused]] constexpr inline auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarIndex auto mm,
-          const ScalarIndex auto nn) -> const T & {
+matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
+          const ScalarColIndex auto nn) -> const T & {
     auto m = unwrapRow(mm);
     auto n = unwrapCol(nn);
 #ifndef NDEBUG
@@ -1232,8 +1236,8 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
     checkIndex(M, m);
     checkIndex(N, n);
 #endif
-    Range<size_t, size_t> mr = canonicalizeRange(m, M);
-    Range<size_t, size_t> nr = canonicalizeRange(n, N);
+    Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
+    Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
     return PtrMatrix<T>{ptr + nr.b + X * mr.b, mr.e - mr.b, nr.e - nr.b, X};
 }
 template <typename T>
@@ -1241,61 +1245,65 @@ template <typename T>
 matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
           const AbstractSlice auto n) -> MutPtrMatrix<T> {
 #ifndef NDEBUG
-    checkIndex(M, m);
-    checkIndex(N, n);
+    checkIndex(size_t(M), m);
+    checkIndex(size_t(N), n);
 #endif
-    Range<size_t, size_t> mr = canonicalizeRange(m, M);
-    Range<size_t, size_t> nr = canonicalizeRange(n, N);
+    Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
+    Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
     return MutPtrMatrix<T>{ptr + nr.b + X * mr.b, Row{mr.e - mr.b},
                            Col{nr.e - nr.b}, X};
 }
 
 template <typename T>
 [[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarIndex auto m,
+matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
           const AbstractSlice auto n) -> PtrVector<T> {
+    auto m = unwrapRow(mm);
 #ifndef NDEBUG
-    checkIndex(M, m);
-    checkIndex(N, n);
+    checkIndex(size_t(M), m);
+    checkIndex(size_t(N), n);
 #endif
-    size_t mi = canonicalize(m, M);
-    Range<size_t, size_t> nr = canonicalizeRange(n, N);
+    size_t mi = canonicalize(m, size_t(M));
+    Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
     return PtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
 }
 template <typename T>
 [[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarIndex auto m,
+matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
           const AbstractSlice auto n) -> MutPtrVector<T> {
+    auto m = unwrapRow(mm);
 #ifndef NDEBUG
-    checkIndex(M, m);
-    checkIndex(N, n);
+    checkIndex(size_t(M), m);
+    checkIndex(size_t(N), n);
 #endif
-    size_t mi = canonicalize(m, M);
-    Range<size_t, size_t> nr = canonicalizeRange(n, N);
+    size_t mi = canonicalize(m, size_t(M));
+    Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
     return MutPtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
 }
 
 template <typename T>
 [[maybe_unused]] inline constexpr auto
 matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarIndex auto n) -> StridedVector<T> {
+          const ScalarColIndex auto nn) -> StridedVector<T> {
+    auto n = unwrapCol(nn);
 #ifndef NDEBUG
-    checkIndex(M, m);
-    checkIndex(N, n);
+    checkIndex(size_t(M), m);
+    checkIndex(size_t(N), n);
 #endif
-    Range<size_t, size_t> mr = canonicalizeRange(m, M);
+    Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
     size_t ni = canonicalize(n, N);
     return StridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
 }
 template <typename T>
 [[maybe_unused]] inline constexpr auto
 matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarIndex auto n) -> MutStridedVector<T> {
+          const ScalarColIndex auto nn) -> MutStridedVector<T> {
+    auto n = unwrapCol(nn);
 #ifndef NDEBUG
-    checkIndex(M, m);
-    checkIndex(N, n);
+    checkIndex(size_t(M), m);
+    checkIndex(size_t(N), n);
 #endif
-    Range<size_t, size_t> mr = canonicalizeRange(m, M);
+    Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
     size_t ni = canonicalize(n, N);
     return MutStridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
 }
@@ -1995,8 +2003,8 @@ struct Matrix<T, 0, 0, S> : CastableMatrixCore<T, Matrix<T, 0, 0, S>> {
         M = MM;
     }
     auto operator=(T x) -> Matrix<T, 0, 0, S> & {
-        const size_t M = numRow();
-        const size_t N = numCol();
+        const Row M = numRow();
+        const Col N = numCol();
         for (size_t r = 0; r < M; ++r)
             for (size_t c = 0; c < N; ++c)
                 (*this)(r, c) = x;
@@ -2399,10 +2407,10 @@ constexpr auto operator+(const AbstractMatrix auto &a, const auto &b) {
 constexpr auto operator+(const AbstractVector auto &a, const auto &b) {
     return ElementwiseVectorBinaryOp(Add{}, view(a), view(b));
 }
-constexpr auto operator+(std::integral auto a, const AbstractMatrix auto &b) {
+constexpr auto operator+(Scalar auto a, const AbstractMatrix auto &b) {
     return ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));
 }
-constexpr auto operator+(std::integral auto a, const AbstractVector auto &b) {
+constexpr auto operator+(Scalar auto a, const AbstractVector auto &b) {
     return ElementwiseVectorBinaryOp(Add{}, view(a), view(b));
 }
 constexpr auto operator-(const AbstractMatrix auto &a, const auto &b) {
@@ -2411,10 +2419,10 @@ constexpr auto operator-(const AbstractMatrix auto &a, const auto &b) {
 constexpr auto operator-(const AbstractVector auto &a, const auto &b) {
     return ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));
 }
-constexpr auto operator-(std::integral auto a, const AbstractMatrix auto &b) {
+constexpr auto operator-(Scalar auto a, const AbstractMatrix auto &b) {
     return ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));
 }
-constexpr auto operator-(std::integral auto a, const AbstractVector auto &b) {
+constexpr auto operator-(Scalar auto a, const AbstractVector auto &b) {
     return ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));
 }
 constexpr auto operator/(const AbstractMatrix auto &a, const auto &b) {
@@ -2423,10 +2431,10 @@ constexpr auto operator/(const AbstractMatrix auto &a, const auto &b) {
 constexpr auto operator/(const AbstractVector auto &a, const auto &b) {
     return ElementwiseVectorBinaryOp(Div{}, view(a), view(b));
 }
-constexpr auto operator/(std::integral auto a, const AbstractMatrix auto &b) {
+constexpr auto operator/(Scalar auto a, const AbstractMatrix auto &b) {
     return ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));
 }
-constexpr auto operator/(std::integral auto a, const AbstractVector auto &b) {
+constexpr auto operator/(Scalar auto a, const AbstractVector auto &b) {
     return ElementwiseVectorBinaryOp(Div{}, view(a), view(b));
 }
 constexpr auto operator*(const AbstractMatrix auto &a,
@@ -2453,10 +2461,10 @@ constexpr auto operator*(const AbstractVector auto &a,
 constexpr auto operator*(const AbstractVector auto &a, std::integral auto b) {
     return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
-constexpr auto operator*(std::integral auto a, const AbstractMatrix auto &b) {
+constexpr auto operator*(Scalar auto a, const AbstractMatrix auto &b) {
     return ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));
 }
-constexpr auto operator*(std::integral auto a, const AbstractVector auto &b) {
+constexpr auto operator*(Scalar auto a, const AbstractVector auto &b) {
     return ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));
 }
 

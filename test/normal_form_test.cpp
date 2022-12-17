@@ -9,6 +9,7 @@
 #include <numeric>
 #include <random>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(OrthogonalizeTest, BasicAssertions) {
     SquareMatrix<int64_t> A(4);
     llvm::errs() << "\n\n\n========\n========\n========\n\n";
@@ -21,7 +22,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     size_t luFailedCount = 0;
     size_t invFailedCount = 0;
     size_t numIters = 1000;
-    IntMatrix B(4, 8);
+    IntMatrix B(Row{4}, Col{8});
     SquareMatrix<int64_t> I4 = SquareMatrix<int64_t>::identity(4);
     for (size_t i = 0; i < numIters; ++i) {
         for (size_t n = 0; n < 4; ++n)
@@ -44,7 +45,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
             EXPECT_TRUE(K * A == I4);
         } else {
             // llvm::errs() << "K= " << K << "\nB= " << B << "\n";
-            printVector(llvm::errs() << "included = ", included) << "\n";
+            LinearAlgebra::printVector(llvm::errs() << "included = ", included)
+                << "\n";
             if (auto optlu = LU::fact(K)) {
                 SHOWLN(K);
                 if (auto optA2 = (*optlu).inv()) {
@@ -107,7 +109,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     B(3, 5) = 1;
     llvm::errs() << "B_orth_motivating_example = " << B << "\n";
     auto [K, included] = NormalForm::orthogonalize(B);
-    printVector(llvm::errs() << "K = " << K << "\nincluded = ", included)
+    LinearAlgebra::printVector(llvm::errs() << "K = " << K << "\nincluded = ",
+                               included)
         << "\n";
     EXPECT_EQ(included.size(), 4);
     for (size_t i = 0; i < 4; ++i) {
@@ -125,7 +128,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     EXPECT_TRUE(KA == I4);
 }
 
-bool isHNF(PtrMatrix<int64_t> A) {
+auto isHNF(PtrMatrix<int64_t> A) -> bool {
     const auto [M, N] = A.size();
     // l is lead
     size_t l = 0;
@@ -153,9 +156,10 @@ bool isHNF(PtrMatrix<int64_t> A) {
     return true;
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(Hermite, BasicAssertions) {
     {
-        IntMatrix A4x3(4, 3);
+        IntMatrix A4x3(Row{4}, Col{3});
         A4x3(0, 0) = 2;
         A4x3(1, 0) = 3;
         A4x3(2, 0) = 6;
@@ -239,7 +243,7 @@ TEST(Hermite, BasicAssertions) {
         EXPECT_TRUE(H3 == U3 * A);
     }
     {
-        IntMatrix A(2, 3);
+        IntMatrix A(Row{2}, Col{3});
         A(0, 0) = -3;
         A(0, 1) = -1;
         A(0, 2) = 1;
@@ -258,7 +262,7 @@ TEST(Hermite, BasicAssertions) {
                      << U << "\n";
     }
     {
-        IntMatrix A(3, 11);
+        IntMatrix A(Row{3}, Col{11});
         A(0, 0) = 3;
         A(0, 1) = 3;
         A(0, 2) = -3;
@@ -304,6 +308,7 @@ TEST(Hermite, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(NullSpaceTests, BasicAssertions) {
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -312,7 +317,7 @@ TEST(NullSpaceTests, BasicAssertions) {
     // size_t numIters = 1000;
     size_t numIters = 1;
     for (size_t numCol = 2; numCol < 11; numCol += 2) {
-        IntMatrix B(8, numCol);
+        IntMatrix B(Row{8}, Col{numCol});
         size_t nullDim = 0;
         IntMatrix Z, NS;
         for (size_t i = 0; i < numIters; ++i) {
@@ -321,7 +326,7 @@ TEST(NullSpaceTests, BasicAssertions) {
                 b = b > 10 ? 0 : b;
             }
             NS = NormalForm::nullSpace(B);
-            nullDim += NS.numRow();
+            nullDim += size_t(NS.numRow());
             Z = NS * B;
             for (auto &z : Z.mem)
                 EXPECT_EQ(z, 0);
@@ -332,6 +337,7 @@ TEST(NullSpaceTests, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SimplifySystemTests, BasicAssertions) {
     IntMatrix A = stringToIntMatrix(
         "[2 4 5 5 -5; -4 3 -4 -3 -1; 1 0 -2 1 -4; -4 -2 3 -2 -1]");
@@ -358,6 +364,7 @@ TEST(SimplifySystemTests, BasicAssertions) {
     EXPECT_EQ(trueD, D);
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BareissTests, BasicAssertions) {
     IntMatrix A = stringToIntMatrix(
         "[-4 3 -2 2 -5; -5 1 -1 2 -5; -1 0 5 -3 2; -4 5 -4 -2 -4]");

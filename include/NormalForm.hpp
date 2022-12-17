@@ -3,18 +3,24 @@
 #include "./GreatestCommonDivisor.hpp"
 #include "./Macro.hpp"
 #include "./Math.hpp"
+#include "./Utilities.hpp"
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
 #include <numeric>
+#include <sys/types.h>
 #include <utility>
 
 namespace NormalForm {
+constexpr inline auto abs(std::signed_integral auto x) noexcept {
+    return x < 0 ? -x : x;
+}
 
 constexpr inline auto gcdxScale(int64_t a, int64_t b)
     -> std::tuple<int64_t, int64_t, int64_t, int64_t> {
-    if (std::abs(a) == 1)
+    if (abs(a) == 1)
         return std::make_tuple(a, 0, a, b);
     auto [g, p, q] = gcdx(a, b);
     return std::make_tuple(p, q, a / g, b / g);
@@ -43,14 +49,14 @@ constexpr inline auto gcdxScale(int64_t a, int64_t b)
                 K(j, k) = Aiir * Kkj - Aijr * Kki;
             }
 
-            for (size_t k = N; k < M; ++k) {
+            for (auto k = size_t(N); k < M; ++k) {
                 int64_t Kki = K(i, k);
                 int64_t Kkj = K(j, k);
                 K(i, k) = p * Kki + q * Kkj;
                 K(j, k) = Aiir * Kkj - Aijr * Kki;
             }
 
-            for (size_t k = M; k < N; ++k) {
+            for (auto k = size_t(M); k < N; ++k) {
                 int64_t Aki = A(i, k);
                 int64_t Akj = A(j, k);
                 A(i, k) = p * Aki + q * Akj;
@@ -86,10 +92,10 @@ constexpr inline auto gcdxScale(int64_t a, int64_t b)
                 K(z, i) -= Akz * K(k, i);
             }
 
-            for (size_t i = N; i < M; ++i)
+            for (auto i = size_t(N); i < M; ++i)
                 K(z, i) -= Akz * K(k, i);
 
-            for (size_t i = M; i < N; ++i)
+            for (auto i = size_t(M); i < N; ++i)
                 A(z, i) -= Akz * A(k, i);
         }
     }
@@ -122,14 +128,15 @@ static inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, Row M,
         swapRows(A, j, piv);
     return false;
 }
-static inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, Row N) -> bool {
+[[maybe_unused]] static inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i,
+                                              Row N) -> bool {
     return pivotRows(A, i, N, i);
 }
 
 [[maybe_unused]] static void dropCol(MutPtrMatrix<int64_t> A, size_t i, Row M,
                                      Col N) {
     // if any rows are left, we shift them up to replace it
-    if (i >= N)
+    if (N <= i)
         return;
     for (size_t m = 0; m < M; ++m)
 
@@ -142,7 +149,7 @@ static inline auto pivotRows(MutPtrMatrix<int64_t> A, size_t i, Row N) -> bool {
     // we try to orthogonalize with respect to as many rows of `A` as we can
     // prioritizing earlier rows.
     auto [M, N] = A.size();
-    SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(M);
+    SquareMatrix<int64_t> K = SquareMatrix<int64_t>::identity(size_t(M));
     llvm::SmallVector<unsigned> included;
     size_t minMN = std::min(size_t(M), size_t(N));
     included.reserve(minMN);
@@ -197,7 +204,7 @@ static inline void zeroSupDiagonal(MutPtrMatrix<int64_t> A,
                                    MutPtrMatrix<int64_t> B, size_t r,
                                    size_t c) {
     auto [M, N] = A.size();
-    const size_t K = B.numCol();
+    const Col K = B.numCol();
     assert(M == B.numRow());
     for (size_t j = c + 1; j < M; ++j) {
         int64_t Aii = A(c, r);
@@ -331,7 +338,7 @@ static inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
 }
 // NormalForm version assumes sorted
 [[maybe_unused]] static auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
-    size_t Mnew = A.numRow();
+    Row Mnew = A.numRow();
     while (allZero(A(Mnew - 1, _)))
         --Mnew;
     return Row{Mnew};
@@ -355,7 +362,7 @@ static inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
     E.truncate(simplifySystemImpl(E, colInit));
 }
 [[maybe_unused]] static auto rank(IntMatrix E) -> size_t {
-    return simplifySystemImpl(E, 0);
+    return size_t(simplifySystemImpl(E, 0));
 }
 [[maybe_unused]] static void reduceColumn(MutPtrMatrix<int64_t> A,
                                           MutPtrMatrix<int64_t> B, size_t c,
@@ -386,15 +393,16 @@ static inline void reduceSubDiagonal(MutPtrMatrix<int64_t> A,
 }
 [[nodiscard, maybe_unused]] static auto hermite(IntMatrix A)
     -> std::pair<IntMatrix, SquareMatrix<int64_t>> {
-    SquareMatrix<int64_t> U{SquareMatrix<int64_t>::identity(A.numRow())};
+    SquareMatrix<int64_t> U{
+        SquareMatrix<int64_t>::identity(size_t(A.numRow()))};
     simplifySystemImpl(A, U);
     return std::make_pair(std::move(A), std::move(U));
 }
 
 // zero A(i,k) with A(j,k)
-static inline auto zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
-                                        size_t j, size_t k, size_t f)
-    -> int64_t {
+[[maybe_unused]] static inline auto
+zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j, size_t k,
+                     int64_t f) -> int64_t {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
         int64_t g = gcd(Aik, Ajk);
@@ -417,9 +425,9 @@ static inline auto zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
     }
     return f;
 }
-static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
-                                        size_t j, size_t k,
-                                        Range<size_t, size_t> skip) {
+[[maybe_unused]] static inline void
+zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i, size_t j, size_t k,
+                     Range<size_t, size_t> skip) {
     if (int64_t Aik = A(i, k)) {
         int64_t Ajk = A(j, k);
         int64_t g = gcd(Aik, Ajk);
@@ -450,9 +458,9 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
 // use row `r` to zero the remaining rows of column `c`
 [[maybe_unused]] static void zeroColumn(IntMatrix &A, IntMatrix &B, size_t c,
                                         size_t r) {
-    const size_t N = A.numCol();
-    const size_t K = B.numCol();
-    const size_t M = A.numRow();
+    const Col N = A.numCol();
+    const Col K = B.numCol();
+    const Row M = A.numRow();
     assert(M == B.numRow());
     for (size_t j = 0; j < r; ++j) {
         int64_t Arc = A(r, c);
@@ -493,8 +501,8 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
 }
 // use row `r` to zero the remaining rows of column `c`
 [[maybe_unused]] static void zeroColumn(IntMatrix &A, size_t c, size_t r) {
-    const size_t N = A.numCol();
-    const size_t M = A.numRow();
+    const Col N = A.numCol();
+    const Row M = A.numRow();
     for (size_t j = 0; j < r; ++j) {
         int64_t Arc = A(r, c);
         if (int64_t Ajc = A(j, c)) {
@@ -524,11 +532,11 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
 }
 
 [[maybe_unused]] static auto pivotRows2(MutPtrMatrix<int64_t> A, size_t i,
-                                        Row M, size_t piv) -> size_t {
+                                        Row M, size_t piv) -> Optional<size_t> {
     size_t j = piv;
     while (A(piv, i) == 0)
         if (++piv == M)
-            return -1;
+            return {};
     if (j != piv)
         swapRows(A, j, piv);
     return piv;
@@ -538,9 +546,8 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
     const auto [M, N] = A.size();
     int64_t prev = 1;
     for (size_t r = 0, c = 0; c < N && r < M; ++c) {
-        auto piv = pivotRows2(A, c, M, r);
-        if (piv >= 0) {
-            pivots.push_back(piv);
+        if (auto piv = pivotRows2(A, c, M, r)) {
+            pivots.push_back(*piv);
             for (size_t k = r + 1; k < M; ++k) {
                 for (size_t j = c + 1; j < N; ++j) {
                     auto Akj_u = A(r, c) * A(k, j) - A(k, c) * A(r, j);
@@ -610,7 +617,7 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
 // diagonals contain denominators.
 // Assumes the last column is the vector to solve for.
 [[maybe_unused]] static void solveSystem(IntMatrix &A) {
-    solveSystem(A, A.numCol() - 1);
+    solveSystem(A, size_t(A.numCol()) - 1);
 }
 // MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
 //     const auto [M, N] = A.size();
@@ -628,23 +635,24 @@ static inline void zeroWithRowOperation(MutPtrMatrix<int64_t> A, size_t i,
 // }
 
 [[maybe_unused]] static void nullSpace11(IntMatrix &B, IntMatrix &A) {
-    const size_t M = A.numRow();
-    B.resizeForOverwrite(Row{M}, Col{M});
+    const Row M = A.numRow();
+    const auto X = size_t(M);
+    B.resizeForOverwrite(Row{M}, Col{X});
     B = 0;
     B.diag() = 1;
     solveSystem(A, B);
-    size_t R = M;
+    size_t R = X;
     while ((R > 0) && allZero(A(R - 1, _)))
         --R;
     // slice B[R:end, :]
     // if R == 0, no need to truncate or copy
     if (R) {
         // we keep last D columns
-        size_t D = M - R;
-        size_t o = R * M;
+        size_t D = X - R;
+        size_t o = R * X;
         // we keep `D` columns
 
-        for (size_t d = 0; d < D * M; ++d)
+        for (size_t d = 0; d < X * D; ++d)
             B.mem[d] = B.mem[d + o];
         B.truncate(Row{D});
     }

@@ -249,33 +249,6 @@ struct Rational {
         return os;
     }
     void dump() const { llvm::errs() << *this << "\n"; }
-
-    template <AbstractMatrix B> constexpr auto operator+(B &&b) {
-        return LinearAlgebra::binaryOp(LinearAlgebra::Add{}, *this,
-                                       std::forward<B>(b));
-    }
-    template <AbstractVector B> constexpr auto operator+(B &&b) {
-        return binaryOp(LinearAlgebra::Add{}, *this, std::forward<B>(b));
-    }
-    template <AbstractMatrix B> constexpr auto operator-(B &&b) {
-        return binaryOp(LinearAlgebra::Sub{}, *this, std::forward<B>(b));
-    }
-    template <AbstractVector B> constexpr auto operator-(B &&b) {
-        return binaryOp(LinearAlgebra::Sub{}, *this, std::forward<B>(b));
-    }
-    template <AbstractMatrix B> constexpr auto operator/(B &&b) {
-        return binaryOp(LinearAlgebra::Div{}, *this, std::forward<B>(b));
-    }
-    template <AbstractVector B> constexpr auto operator/(B &&b) {
-        return binaryOp(LinearAlgebra::Div{}, *this, std::forward<B>(b));
-    }
-
-    template <AbstractVector B> constexpr auto operator*(B &&b) {
-        return binaryOp(LinearAlgebra::Mul{}, *this, std::forward<B>(b));
-    }
-    template <AbstractMatrix B> constexpr auto operator*(B &&b) {
-        return binaryOp(LinearAlgebra::Mul{}, *this, std::forward<B>(b));
-    }
 };
 auto gcd(Rational x, Rational y) -> std::optional<Rational> {
     return Rational{gcd(x.numerator, y.numerator),
