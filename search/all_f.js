@@ -15,8 +15,10 @@ var searchData=
   ['squarematrix_154',['SquareMatrix',['../structLinearAlgebra_1_1SquareMatrix.html',1,'LinearAlgebra']]],
   ['squarematrix_3c_20rational_20_3e_155',['SquareMatrix&lt; Rational &gt;',['../structLinearAlgebra_1_1SquareMatrix.html',1,'LinearAlgebra']]],
   ['squareptrmatrix_156',['SquarePtrMatrix',['../structLinearAlgebra_1_1SquarePtrMatrix.html',1,'LinearAlgebra']]],
-  ['stridediterator_157',['StridedIterator',['../structLinearAlgebra_1_1MutStridedVector_1_1StridedIterator.html',1,'LinearAlgebra::MutStridedVector&lt; T &gt;::StridedIterator'],['../structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html',1,'LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator']]],
-  ['stridedvector_158',['StridedVector',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
-  ['stridedvector_3c_20int64_5ft_20_3e_159',['StridedVector&lt; int64_t &gt;',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
-  ['sub_160',['Sub',['../structLinearAlgebra_1_1Sub.html',1,'LinearAlgebra']]]
+  ['standardizerangebound_157',['StandardizeRangeBound',['../structLinearAlgebra_1_1StandardizeRangeBound.html',1,'LinearAlgebra']]],
+  ['standardizerangebound_3c_20t_20_3e_158',['StandardizeRangeBound&lt; T &gt;',['../structLinearAlgebra_1_1StandardizeRangeBound_3_01T_01_4.html',1,'LinearAlgebra']]],
+  ['stridediterator_159',['StridedIterator',['../structLinearAlgebra_1_1MutStridedVector_1_1StridedIterator.html',1,'LinearAlgebra::MutStridedVector&lt; T &gt;::StridedIterator'],['../structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html',1,'LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator']]],
+  ['stridedvector_160',['StridedVector',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
+  ['stridedvector_3c_20int64_5ft_20_3e_161',['StridedVector&lt; int64_t &gt;',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
+  ['sub_162',['Sub',['../structLinearAlgebra_1_1Sub.html',1,'LinearAlgebra']]]
 ];

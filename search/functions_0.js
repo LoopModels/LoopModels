@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['addedge_305',['addEdge',['../structLinearProgramLoopBlock.html#a50c267ca49c6e8f135802004abe4eba9',1,'LinearProgramLoopBlock']]],
-  ['addsymbol_306',['addSymbol',['../structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88',1,'AffineLoopNest']]]
+  ['addedge_309',['addEdge',['../structLinearProgramLoopBlock.html#a50c267ca49c6e8f135802004abe4eba9',1,'LinearProgramLoopBlock']]],
+  ['addsymbol_310',['addSymbol',['../structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88',1,'AffineLoopNest']]]
 ];
