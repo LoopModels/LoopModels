@@ -2,6 +2,7 @@
 #include "./Constraints.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include "./Rational.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -65,31 +66,32 @@ struct Simplex {
         tableau(_(end - i, end), _) = 0;
         return tableau(_(end - i, end), _(numExtraCols, end));
     }
-    void reserve(size_t numVar, size_t numCon) {
-        tableau.reserve(numVar, std::max(numCon, tableau.rowStride()));
+    void reserve(size_t numCon, size_t numVar) {
+        tableau.reserve(
+            numTableauRows(numCon),
+            Col{size_t(max(numTableauCols(numVar), tableau.rowStride()))});
     }
     void reserveExtraRows(size_t additionalRows) {
         tableau.reserve(tableau.numRow() + additionalRows, tableau.rowStride());
     }
-    void reserveExtra(size_t additionalRows, size_t additionalCols) {
-        size_t newStride =
-            std::max(tableau.rowStride(), tableau.numCol() + additionalCols);
+    void reserveExtra(Row additionalRows, Col additionalCols) {
+        LinearAlgebra::RowStride newStride =
+            max(tableau.numCol() + additionalCols, tableau.rowStride());
         tableau.reserve(tableau.numRow() + additionalRows, newStride);
         if (newStride == tableau.rowStride())
             return;
         // copy memory, so that incrementally adding columns is cheap later.
-        size_t nC = tableau.numCol();
-        tableau.resize(tableau.numRow(), newStride, newStride);
-        tableau.truncateCols(nC);
+        Col nC = tableau.numCol();
+        tableau.resize(tableau.numRow(), nC, newStride);
     }
     void reserveExtra(size_t additional) {
         reserveExtra(additional, additional);
     }
     void truncateVars(size_t numVars) {
-        tableau.truncateCols(numTableauCols(numVars));
+        tableau.truncate(numTableauCols(numVars));
     }
     void truncateConstraints(size_t numCons) {
-        tableau.truncateRows(numTableauRows(numCons));
+        tableau.truncate(numTableauRows(numCons));
     }
     void resizeForOverwrite(size_t numCon, size_t numVar) {
         tableau.resizeForOverwrite(numTableauRows(numCon),
@@ -116,10 +118,10 @@ struct Simplex {
     // note that this is 1 more than the actual number of variables
     // as it includes the constants
     [[nodiscard]] constexpr auto getNumVar() const -> size_t {
-        return tableau.numCol() - numExtraCols;
+        return size_t(tableau.numCol()) - numExtraCols;
     }
     [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
-        return tableau.numRow() - numExtraRows;
+        return size_t(tableau.numRow()) - numExtraRows;
     }
 
     void hermiteNormalForm() {
@@ -127,7 +129,7 @@ struct Simplex {
         inCanonicalForm = false;
 #endif
         truncateConstraints(
-            NormalForm::simplifySystemImpl(getConstraints(), 1));
+            size_t(NormalForm::simplifySystemImpl(getConstraints(), 1)));
     }
     void deleteConstraint(size_t c) {
         eraseConstraintImpl(tableau, numTableauRows(c));
@@ -211,7 +213,7 @@ struct Simplex {
             return Solution{tableauView(_, r), consts};
         }
         [[nodiscard]] auto size() const -> size_t {
-            return tableauView.numCol();
+            return size_t(tableauView.numCol());
         }
         [[nodiscard]] auto view() const -> auto & { return *this; };
     };
@@ -230,18 +232,18 @@ struct Simplex {
         // [ I;  X ; b ]
         //
         // original number of variables
-        const size_t numVar = getNumVar();
+        const ptrdiff_t numVar = ptrdiff_t(getNumVar());
         MutPtrMatrix<int64_t> C{getConstraints()};
         MutPtrVector<int64_t> basicCons{getBasicConstraints()};
         basicCons = -2;
         // first pass, we make sure the equalities are >= 0
         // and we eagerly try and find columns with
         // only a single non-0 element.
-        for (size_t c = 0; c < C.numRow(); ++c) {
+        for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
             int64_t &Ceq = C(c, 0);
             if (Ceq >= 0) {
                 // close-open and close-close are out, open-open is in
-                for (size_t v = 1; v < numVar; ++v) {
+                for (ptrdiff_t v = 1; v < numVar; ++v) {
                     if (int64_t Ccv = C(c, v)) {
                         if (((basicCons[v] == -2) && (Ccv > 0))) {
                             basicCons[v] = c;
@@ -252,7 +254,7 @@ struct Simplex {
                 }
             } else {
                 Ceq *= -1;
-                for (size_t v = 1; v < numVar; ++v) {
+                for (ptrdiff_t v = 1; v < numVar; ++v) {
                     if (int64_t Ccv = -C(c, v)) {
                         if (((basicCons[v] == -2) && (Ccv > 0))) {
                             basicCons[v] = c;
@@ -270,7 +272,7 @@ struct Simplex {
         //
         auto basicVars{getBasicVariables()};
         basicVars = -1;
-        for (size_t v = 1; v < numVar; ++v) {
+        for (ptrdiff_t v = 1; v < numVar; ++v) {
             int64_t r = basicCons[v];
             if (r >= 0) {
                 if (basicVars[r] == -1) {
@@ -298,8 +300,8 @@ struct Simplex {
             MutPtrVector<int64_t> basicCons{getBasicConstraints()};
             MutPtrVector<int64_t> costs{getCost()};
             tableau(1, _) = 0;
-            for (size_t i = 0; i < augmentVars.size(); ++i) {
-                size_t a = augmentVars[i];
+            for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
+                ptrdiff_t a = augmentVars[i];
                 basicVars[a] = i + numVar;
                 basicCons[i + numVar] = a;
                 C(a, numVar + i) = 1;
@@ -310,13 +312,13 @@ struct Simplex {
             // true/non-zero infeasible
             if (runCore() != 0)
                 return true;
-            for (size_t c = 0; c < C.numRow(); ++c) {
-                if (size_t(basicVars(c)) >= numVar) {
+            for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
+                if (basicVars(c) >= numVar) {
                     assert(C(c, 0) == 0);
-                    assert(c == size_t(basicCons(basicVars(c))));
+                    assert(c == basicCons(basicVars(c)));
                     assert(C(c, basicVars(c)) >= 0);
                     // find var to make basic in its place
-                    for (size_t v = numVar; v != 0;) {
+                    for (ptrdiff_t v = numVar; v != 0;) {
                         // search for a non-basic variable (basicConstraints<0)
                         assert(v > 1);
                         if ((basicCons(--v) >= 0) || (C(c, v) == 0))
@@ -518,7 +520,7 @@ struct Simplex {
             return cc >= 0;
         // search for entering variable
         assertCanonical();
-        for (size_t ev = C.numCol(); ev > v + 1;) {
+        for (auto ev = size_t(C.numCol()); ev > v + 1;) {
             // search for a non-basic variable (basicConstraints<0)
             if ((basicConstraints(--ev) >= 0) || (C(c, ev) == 0))
                 continue;
@@ -588,11 +590,11 @@ struct Simplex {
     // returns a Simplex if feasible, and an empty `Optional` otherwise
     static auto positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B)
         -> std::optional<Simplex> {
-        size_t numVar = A.numCol();
+        size_t numVar = size_t(A.numCol());
         assert(numVar == B.numCol());
         Simplex simplex{};
-        size_t numSlack = simplex.numSlackVar = A.numRow();
-        size_t numStrict = B.numRow();
+        size_t numSlack = simplex.numSlackVar = size_t(A.numRow());
+        size_t numStrict = size_t(B.numRow());
         size_t numCon = numSlack + numStrict;
         size_t extraStride = 0;
         // see how many slack vars are infeasible as solution
@@ -641,9 +643,9 @@ struct Simplex {
         if (basicConstraints[i] < 0)
             makeBasic(C, 0, i);
         size_t ind = basicConstraints[i];
-        size_t lastRow = C.numRow() - 1;
+        size_t lastRow = size_t(C.numRow() - 1);
         if (lastRow != ind)
-            swapRows(C, ind, lastRow);
+            swap(C, Row{ind}, Row{lastRow});
         truncateConstraints(lastRow);
     }
     void removeExtraVariables(size_t i) {
