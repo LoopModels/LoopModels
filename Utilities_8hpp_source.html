@@ -84,7 +84,7 @@ $(function() {
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;        assert(hasValue());</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;        <span class="keywordflow">return</span> *opt;</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    }</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    constexpr <span class="keyword">auto</span> operator-&gt;() -&gt; T * { <span class="keywordflow">return</span> &amp;getValue(); }</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T value) : opt(std::move(value)) {}</div>
@@ -101,41 +101,43 @@ $(function() {
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;        <span class="keywordflow">return</span> *value;</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    }</div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> getValue(); }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    constexpr <span class="keyword">auto</span> operator-&gt;() -&gt; T * { <span class="keywordflow">return</span> value; }</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T *v) : value(v) {}</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;};</div>
 <div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="structOptional_3_01T_01_4.html">   38</a></span>&#160;<span class="keyword">template</span> &lt;std::<span class="keywordtype">signed</span>_<span class="keywordtype">int</span>egral T&gt; <span class="keyword">struct </span><a class="code" href="structOptional.html">Optional</a>&lt;T&gt; {</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    [[no_unique_address]] T value{std::numeric_limits&lt;T&gt;::min()};</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasValue() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;        <span class="keywordflow">return</span> value != std::numeric_limits&lt;T&gt;::min();</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    }</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() -&gt; T &amp; {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        assert(hasValue());</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        <span class="keywordflow">return</span> value;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> getValue(); }</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T v) : value(v) {}</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;};</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="keyword">template</span> &lt;std::<span class="keywordtype">unsigned</span>_<span class="keywordtype">int</span>egral T&gt; <span class="keyword">struct </span><a class="code" href="structOptional.html">Optional</a>&lt;T&gt; {</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    [[no_unique_address]] T value{std::numeric_limits&lt;T&gt;::max()};</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasValue() const -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;        <span class="keywordflow">return</span> value != std::numeric_limits&lt;T&gt;::max();</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    }</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() -&gt; T &amp; {</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        assert(hasValue());</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordflow">return</span> value;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> getValue(); }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T v) : value(v) {}</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;};</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structOptional.html">Optional</a>(T) -&gt; <a class="code" href="structOptional_3_01T_01_4.html">Optional&lt;T&gt;</a>;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">static</span> constexpr T <span class="keyword">null</span> = std::numeric_limits&lt;T&gt;::min();</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    [[no_unique_address]] T value{<span class="keyword">null</span>};</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasValue() <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        <span class="keywordflow">return</span> value != <span class="keyword">null</span>;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() -&gt; T &amp; {</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        assert(hasValue());</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;        <span class="keywordflow">return</span> value;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    }</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> getValue(); }</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    constexpr <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T v) : value(v) {}</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;};</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="keyword">template</span> &lt;std::<span class="keywordtype">unsigned</span>_<span class="keywordtype">int</span>egral T&gt; <span class="keyword">struct </span><a class="code" href="structOptional.html">Optional</a>&lt;T&gt; {</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    <span class="keyword">static</span> constexpr T <span class="keyword">null</span> = std::numeric_limits&lt;T&gt;::max();</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    [[no_unique_address]] T value{<span class="keyword">null</span>};</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> hasValue() const -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        <span class="keywordflow">return</span> value != <span class="keyword">null</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> getValue() -&gt; T &amp; {</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        assert(hasValue());</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        <span class="keywordflow">return</span> value;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    }</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    [[nodiscard]] constexpr <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> getValue(); }</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    constexpr <span class="keyword">explicit</span> <span class="keyword">operator</span> bool()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> hasValue(); }</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    constexpr <a class="code" href="structOptional.html">Optional</a>(T v) : value(v) {}</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;};</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <a class="code" href="structOptional.html">Optional</a>(T) -&gt; <a class="code" href="structOptional_3_01T_01_4.html">Optional&lt;T&gt;</a>;</div>
 <div class="ttc" id="astructOptional_3_01T_01_4_html"><div class="ttname"><a href="structOptional_3_01T_01_4.html">Optional&lt; T &gt;</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:38</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
 </div><!-- fragment --></div><!-- contents -->

@@ -104,6 +104,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>addConstraintsAndVars
 <tr class="memitem:ab28a5eea3f0263f2ff80a834b6342722"><td class="memItemLeft" align="right" valign="top"><a id="ab28a5eea3f0263f2ff80a834b6342722"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reserve</b> (size_t numCon, size_t numVar)</td></tr>
 <tr class="separator:ab28a5eea3f0263f2ff80a834b6342722"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aafb6ac1939b4c00209f203446c5578d0"><td class="memItemLeft" align="right" valign="top"><a id="aafb6ac1939b4c00209f203446c5578d0"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (size_t numCon, size_t numVar)</td></tr>
+<tr class="separator:aafb6ac1939b4c00209f203446c5578d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2e01a8fbe447b3bf558e932e98cf5b9"><td class="memItemLeft" align="right" valign="top"><a id="af2e01a8fbe447b3bf558e932e98cf5b9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtraRows</b> (size_t additionalRows)</td></tr>
 <tr class="separator:af2e01a8fbe447b3bf558e932e98cf5b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -191,9 +194,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSolution</b> () co
 <tr class="memitem:a8670b1057e7253c284dbf0f53a9fe78e"><td class="memItemLeft" align="right" valign="top"><a id="a8670b1057e7253c284dbf0f53a9fe78e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>initiateFeasible</b> () -&gt; bool</td></tr>
 <tr class="separator:a8670b1057e7253c284dbf0f53a9fe78e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76e33f491fadcaaa7aee74e5122bfbaa"><td class="memItemLeft" align="right" valign="top"><a id="a76e33f491fadcaaa7aee74e5122bfbaa"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeBasic</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, int64_t f, int enteringVariable) -&gt; int64_t</td></tr>
-<tr class="separator:a76e33f491fadcaaa7aee74e5122bfbaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87d9d84f1f9198591e1ae2a53a4e6a3f"><td class="memItemLeft" align="right" valign="top"><a id="a87d9d84f1f9198591e1ae2a53a4e6a3f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeBasic</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, int64_t f, unsigned int enteringVariable) -&gt; int64_t</td></tr>
+<tr class="separator:a87d9d84f1f9198591e1ae2a53a4e6a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a506fa07249c0dc5c747f0b8b0ee4a55c"><td class="memItemLeft" align="right" valign="top"><a id="a506fa07249c0dc5c747f0b8b0ee4a55c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>runCore</b> (int64_t f=1) -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
 <tr class="separator:a506fa07249c0dc5c747f0b8b0ee4a55c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -203,15 +206,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> () -&gt; <a c
 <tr class="memitem:a09417f43212d4b2582ba368da2c32d0b"><td class="memItemLeft" align="right" valign="top"><a id="a09417f43212d4b2582ba368da2c32d0b"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>assertCanonical</b> () const</td></tr>
 <tr class="separator:a09417f43212d4b2582ba368da2c32d0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a594334adf36793314b81cb1928934bf1"><td class="memItemLeft" align="right" valign="top"><a id="a594334adf36793314b81cb1928934bf1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>lexCoreOpt</b> (size_t v)</td></tr>
-<tr class="separator:a594334adf36793314b81cb1928934bf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a932f49ef1e32599c5bd85390b3da2acf"><td class="memItemLeft" align="right" valign="top"><a id="a932f49ef1e32599c5bd85390b3da2acf"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>lexCoreOpt</b> (unsigned int v)</td></tr>
+<tr class="separator:a932f49ef1e32599c5bd85390b3da2acf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3ddb7aff5a17a5dd91f7d7b54266bc38"><td class="memItemLeft" align="right" valign="top"><a id="a3ddb7aff5a17a5dd91f7d7b54266bc38"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (size_t v) -&gt; bool</td></tr>
 <tr class="separator:a3ddb7aff5a17a5dd91f7d7b54266bc38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e0430117abe6926abc4de48fa98b732"><td class="memItemLeft" align="right" valign="top"><a id="a6e0430117abe6926abc4de48fa98b732"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeZeroBasic</b> (size_t v) -&gt; bool</td></tr>
-<tr class="separator:a6e0430117abe6926abc4de48fa98b732"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa75f6c2b4a8094b1d8adb72757565ea9"><td class="memItemLeft" align="right" valign="top"><a id="aa75f6c2b4a8094b1d8adb72757565ea9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>makeZeroBasic</b> (unsigned int v) -&gt; bool</td></tr>
+<tr class="separator:aa75f6c2b4a8094b1d8adb72757565ea9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad20f919ae21fe94eeb03831b879a2b2a"><td class="memItemLeft" align="right" valign="top"><a id="ad20f919ae21fe94eeb03831b879a2b2a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>lexMinimize</b> (size_t l, size_t u)</td></tr>
 <tr class="separator:ad20f919ae21fe94eeb03831b879a2b2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -260,12 +263,12 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numT
 <tr class="memitem:a6ef929e0fc8c8a505bda760a84199277"><td class="memItemLeft" align="right" valign="top"><a id="a6ef929e0fc8c8a505bda760a84199277"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numTableauCols</b> (size_t j) -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
 <tr class="separator:a6ef929e0fc8c8a505bda760a84199277"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5597fa1a68596612648ac2b0c9855124"><td class="memItemLeft" align="right" valign="top"><a id="a5597fa1a68596612648ac2b0c9855124"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; costs) -&gt; int</td></tr>
-<tr class="separator:a5597fa1a68596612648ac2b0c9855124"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4c4dbbf2d3785a5b2c14c3195c528a6a"><td class="memItemLeft" align="right" valign="top"><a id="a4c4dbbf2d3785a5b2c14c3195c528a6a"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLeavingVariable</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, size_t enteringVariable) -&gt; int</td></tr>
-<tr class="separator:a4c4dbbf2d3785a5b2c14c3195c528a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a106b65db2873fe11d397ccb1a945b5ce"><td class="memItemLeft" align="right" valign="top"><a id="a106b65db2873fe11d397ccb1a945b5ce"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; costs) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:a106b65db2873fe11d397ccb1a945b5ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71b0263b8bd4df985285a727704c971b"><td class="memItemLeft" align="right" valign="top"><a id="a71b0263b8bd4df985285a727704c971b"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLeavingVariable</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt; C, size_t enteringVariable) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:a71b0263b8bd4df985285a727704c971b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a53c86ff9504576a2469afe306f04b993"><td class="memItemLeft" align="right" valign="top"><a id="a53c86ff9504576a2469afe306f04b993"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>positiveVariables</b> (<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; A, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; B) -&gt; std::optional&lt; <a class="el" href="structSimplex.html">Simplex</a> &gt;</td></tr>
 <tr class="separator:a53c86ff9504576a2469afe306f04b993"><td class="memSeparator" colspan="2">&#160;</td></tr>

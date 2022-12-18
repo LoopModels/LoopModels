@@ -68,6 +68,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="structLinearAlgebra_1_1RowStride-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">LinearAlgebra::RowStride Struct Reference</div>  </div>
@@ -87,6 +88,9 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>RowStride</b> (s
 <tr class="memitem:a76bc84d5c3a62db46370b396843d31f0"><td class="memItemLeft" align="right" valign="top"><a id="a76bc84d5c3a62db46370b396843d31f0"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator size_t</b> () const</td></tr>
 <tr class="separator:a76bc84d5c3a62db46370b396843d31f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6af301ff4f9602e655372f1bbff645a"><td class="memItemLeft" align="right" valign="top"><a id="af6af301ff4f9602e655372f1bbff645a"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator ptrdiff_t</b> () const</td></tr>
+<tr class="separator:af6af301ff4f9602e655372f1bbff645a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c7042f3815de328cdf3a7f27bd2e418"><td class="memItemLeft" align="right" valign="top"><a id="a3c7042f3815de328cdf3a7f27bd2e418"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
 <tr class="separator:a3c7042f3815de328cdf3a7f27bd2e418"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,8 +155,14 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a63898e809cba0d3f19aba6c5243e8f67"><td class="memItemLeft" align="right" valign="top"><a id="a63898e809cba0d3f19aba6c5243e8f67"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>X</b></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>X</b> {0}</td></tr>
 <tr class="separator:a63898e809cba0d3f19aba6c5243e8f67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:ac642ea89942fc89ae9d0d616aacc204a"><td class="memItemLeft" align="right" valign="top"><a id="ac642ea89942fc89ae9d0d616aacc204a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinearAlgebra_1_1RowStride.html">RowStride</a> x) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:ac642ea89942fc89ae9d0d616aacc204a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Strong typing for row strides. </p>

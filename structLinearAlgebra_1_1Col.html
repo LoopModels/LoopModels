@@ -68,6 +68,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="structLinearAlgebra_1_1Col-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">LinearAlgebra::Col Struct Reference</div>  </div>
@@ -87,6 +88,9 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Col</b> (size_t 
 <tr class="memitem:a475ec79ff218fe0f4e4891c8973c08e0"><td class="memItemLeft" align="right" valign="top"><a id="a475ec79ff218fe0f4e4891c8973c08e0"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator size_t</b> () const</td></tr>
 <tr class="separator:a475ec79ff218fe0f4e4891c8973c08e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1490caf4a93c128a616fc4ba8959d078"><td class="memItemLeft" align="right" valign="top"><a id="a1490caf4a93c128a616fc4ba8959d078"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator ptrdiff_t</b> () const</td></tr>
+<tr class="separator:a1490caf4a93c128a616fc4ba8959d078"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a3057437bd70a8998fdffeeb382c733"><td class="memItemLeft" align="right" valign="top"><a id="a3a3057437bd70a8998fdffeeb382c733"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
 <tr class="separator:a3a3057437bd70a8998fdffeeb382c733"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,12 +115,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</
 <tr class="memitem:a08d38a5dd8f14757677af10cc098a9ea"><td class="memItemLeft" align="right" valign="top"><a id="a08d38a5dd8f14757677af10cc098a9ea"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (int i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
 <tr class="separator:a08d38a5dd8f14757677af10cc098a9ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2614c2e938ab6f6245f07d58050e8da"><td class="memItemLeft" align="right" valign="top"><a id="ad2614c2e938ab6f6245f07d58050e8da"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (<a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
+<tr class="separator:ad2614c2e938ab6f6245f07d58050e8da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa71b322f614d619d4063590a5f8a93df"><td class="memItemLeft" align="right" valign="top"><a id="aa71b322f614d619d4063590a5f8a93df"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
 <tr class="separator:aa71b322f614d619d4063590a5f8a93df"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f6e1ee341b060c27e4bcb8a094b472b"><td class="memItemLeft" align="right" valign="top"><a id="a8f6e1ee341b060c27e4bcb8a094b472b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (int i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
 <tr class="separator:a8f6e1ee341b060c27e4bcb8a094b472b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a220c314928ce3bda4249a6a0ced63980"><td class="memItemLeft" align="right" valign="top"><a id="a220c314928ce3bda4249a6a0ced63980"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
+<tr class="separator:a220c314928ce3bda4249a6a0ced63980"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac6b0aa69e5be2091ba3417ff725dddd"><td class="memItemLeft" align="right" valign="top"><a id="aac6b0aa69e5be2091ba3417ff725dddd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (int i) const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
+<tr class="separator:aac6b0aa69e5be2091ba3417ff725dddd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9902b02a706f452eb61f860371aaa204"><td class="memItemLeft" align="right" valign="top"><a id="a9902b02a706f452eb61f860371aaa204"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator RowStride</b> ()</td></tr>
 <tr class="separator:a9902b02a706f452eb61f860371aaa204"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,12 +163,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt
 <tr class="memitem:aa8bf723710a8d6fb0ee4696298d8162f"><td class="memItemLeft" align="right" valign="top"><a id="aa8bf723710a8d6fb0ee4696298d8162f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (size_t x) const -&gt; bool</td></tr>
 <tr class="separator:aa8bf723710a8d6fb0ee4696298d8162f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcba31aed6ac293587eed0a280151534"><td class="memItemLeft" align="right" valign="top"><a id="adcba31aed6ac293587eed0a280151534"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (<a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> x) -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> &amp;</td></tr>
+<tr class="separator:adcba31aed6ac293587eed0a280151534"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65c99d29852696f3b1586720c853c75f"><td class="memItemLeft" align="right" valign="top"><a id="a65c99d29852696f3b1586720c853c75f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (<a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> x) -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> &amp;</td></tr>
+<tr class="separator:a65c99d29852696f3b1586720c853c75f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ac83433d0e02f917a2b990f1a52b7be8c"><td class="memItemLeft" align="right" valign="top"><a id="ac83433d0e02f917a2b990f1a52b7be8c"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>N</b> {0}</td></tr>
 <tr class="separator:ac83433d0e02f917a2b990f1a52b7be8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:ac60438e50d758e950aac59b2c298b10d"><td class="memItemLeft" align="right" valign="top"><a id="ac60438e50d758e950aac59b2c298b10d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> x) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:ac60438e50d758e950aac59b2c298b10d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Strong typing for cols. </p>

@@ -434,8 +434,8 @@ $(function() {
 <div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;            <span class="keywordflow">if</span> (isMin ^</div>
 <div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;                (mlt &lt; 0)) { <span class="comment">// we can represent this as additional constraints</span></div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;                <span class="keywordtype">size_t</span> M = A.numRow();</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                A.resizeRows(M + u - l);</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                B.resizeRows(M + u - l);</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;                A.resize(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{M + u - l});</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;                B.resize(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{M + u - l});</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;                <span class="keywordtype">size_t</span> Mp = M + u - l;</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;                A(_(M, Mp), _) = A(_(l, u), _);</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;                B(_(M, Mp), _) = B(_(l, u), _);</div>
@@ -503,13 +503,13 @@ $(function() {
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;        <a class="code" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a>(v, l, u, mlt);</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;        <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;    }</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a>(<span class="keyword">const</span> llvm::SCEV *v, <span class="keywordtype">size_t</span> l, <span class="keywordtype">size_t</span> u, int64_t mlt) {</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;        assert(u &gt; l);</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a>(<span class="keyword">const</span> llvm::SCEV *v, <a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt) {</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;        assert(lu.size());</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;        <span class="comment">// llvm::errs() &lt;&lt; &quot;Before adding sym A = &quot; &lt;&lt; A &lt;&lt; &quot;\n&quot;;</span></div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;        S.push_back(v);</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;        A.resizeCols(A.numCol() + 1);</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;        <span class="comment">// A.insertZeroColumn(symbols.size());</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = l; j &lt; u; ++j)</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j : lu)</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;            A(j, S.size()) = mlt;</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;        <span class="comment">// llvm::errs() &lt;&lt; &quot;After adding sym A = &quot; &lt;&lt; A &lt;&lt; &quot;\n&quot;;</span></div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    }</div>
@@ -521,9 +521,9 @@ $(function() {
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    <span class="keyword">auto</span> addBackedgeTakenCount(IntMatrix &amp;B, llvm::Loop *L,</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;                               <span class="keyword">const</span> llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE,</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;                               <span class="keywordtype">size_t</span> minDepth) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;        <span class="keywordtype">size_t</span> M = A.numRow();</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;        A.resizeRows(M + 1);</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;        B.resizeRows(M + 1);</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> M = A.numRow();</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;        A.resize(M + 1);</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;        B.resize(M + 1);</div>
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;        llvm::errs() &lt;&lt; <span class="stringliteral">&quot;BT = &quot;</span> &lt;&lt; *BT</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;                     &lt;&lt; <span class="stringliteral">&quot;\naddBackedgeTakenCount pre addSym; M = &quot;</span> &lt;&lt; M</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;                     &lt;&lt; <span class="stringliteral">&quot;; A = &quot;</span> &lt;&lt; A &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
@@ -532,7 +532,7 @@ $(function() {
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;                     &lt;&lt; <span class="stringliteral">&quot;; A = &quot;</span> &lt;&lt; A &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;        assert(A.numRow() == B.numRow());</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;        <span class="keywordtype">size_t</span> depth = L-&gt;getLoopDepth();</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = M; m &lt; A.numRow(); ++m)</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> m = <span class="keywordtype">size_t</span>(M); m &lt; A.numRow(); ++m)</div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;            B(m, B.numCol() - depth) = -1; <span class="comment">// indvar</span></div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;        <span class="comment">// recurse, if possible to add an outer layer</span></div>
 <div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;        <span class="keywordflow">if</span> (llvm::Loop *P = L-&gt;getParentLoop()) {</div>
@@ -609,7 +609,7 @@ $(function() {
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                    <a class="code" href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">addSymbol</a>(SE.getAddRecExpr(SE.getZero(IntTyp),</div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;                                               SE.getOne(IntTyp), P,</div>
 <div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;                                               llvm::SCEV::NoWrapMask),</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                              i, i + 1, Bid);</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                              _(i, i + 1), Bid);</div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;UnboundedAffineLoopNest iter i = &quot;</span> &lt;&lt; i</div>
 <div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;                                 &lt;&lt; <span class="stringliteral">&quot;A = &quot;</span> &lt;&lt; A &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                }</div>
@@ -632,14 +632,14 @@ $(function() {
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;        <span class="comment">// no loop may be conditioned on the innermost loop</span></div>
 <div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;        <span class="comment">// so we should be able to safely remove all constraints that reference</span></div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;        <span class="comment">// it</span></div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = B.numRow(); m-- &gt; 0;) {</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> m = <span class="keywordtype">size_t</span>(B.numRow()); m--;) {</div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;            <span class="keywordflow">if</span> (A(m, innermostLoopInd)) {</div>
 <div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;                <span class="comment">// B(_(m,end-1),_) = B(_(m+1,end),_);</span></div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;                <span class="comment">// make sure we&#39;re explicit about the order we copy rows</span></div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;                <span class="keywordtype">size_t</span> M = B.numRow() - 1;</div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;                <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> M = B.numRow() - 1;</div>
 <div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = m; r &lt; M; ++r)</div>
 <div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;                    B(r, _) = B(r + 1, _);</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                B.resizeRows(M);</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;                B.resize(M);</div>
 <div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;            }</div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;        }</div>
 <div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;NonNegative&gt;</a>(B, S);</div>
@@ -833,7 +833,7 @@ $(function() {
 <div class="line"><a name="l00768"></a><span class="lineno">  768</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; tmp2.A.numCol(); ++v)</div>
 <div class="line"><a name="l00769"></a><span class="lineno">  769</span>&#160;                    tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);</div>
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;            }</div>
-<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = tmp2.A.numRow(); cc != 0;)</div>
+<div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp2.A.numRow()); cc;)</div>
 <div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;                <span class="keywordflow">if</span> (tmp2.A(--cc, numPrevLoops + numConst) == 0)</div>
 <div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;                    eraseConstraint(tmp2.A, cc);</div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;            tmp2.initializeComparator();</div>
@@ -859,7 +859,7 @@ $(function() {
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;                        tmp.A(cc, _i + numConst) = 0;</div>
 <div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;                    }</div>
 <div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;                }</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = tmp.A.numRow(); cc != 0;)</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> cc = <span class="keywordtype">size_t</span>(tmp.A.numRow()); cc;)</div>
 <div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;                    <span class="keywordflow">if</span> (tmp.A(--cc, numPrevLoops + numConst) == 0)</div>
 <div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;                        eraseConstraint(tmp.A, cc);</div>
 <div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;                tmp.initializeComparator();</div>
@@ -961,12 +961,14 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:221</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_aa9e53512f8983b7209f975f33d88df88"><div class="ttname"><a href="structAffineLoopNest.html#aa9e53512f8983b7209f975f33d88df88">AffineLoopNest::addSymbol</a></div><div class="ttdeci">auto addSymbol(IntMatrix &amp;B, llvm::Loop *L, const llvm::SCEV *v, llvm::ScalarEvolution &amp;SE, const size_t l, const size_t u, int64_t mlt, size_t minDepth) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> Loops.hpp:283</div></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1456</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:670</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:891</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1504</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:720</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:579</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:135</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:941</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:277</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
-<div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:65</div></div>
+<div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:63</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

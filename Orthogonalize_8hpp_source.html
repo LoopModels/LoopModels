@@ -70,10 +70,10 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;./ArrayReference.hpp&quot;</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;./Math.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;./NormalForm.hpp&quot;</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;./Math.hpp&quot;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./NormalForm.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;./VectorGreatestCommonDivisor.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Rational.hpp&quot;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;llvm/ADT/SmallVector.h&gt;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
@@ -85,7 +85,7 @@ $(function() {
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keywordflow">if</span> (A.numRow() == 1)</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;        <span class="keywordflow">return</span> A;</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    llvm::SmallVector&lt;Rational, 8&gt; buff;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    buff.resize_for_overwrite(A.numCol());</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    buff.resize_for_overwrite(<span class="keywordtype">size_t</span>(A.numCol()));</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; A.numRow(); ++i) {</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numCol(); ++j)</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;            buff[j] = A(i, j);</div>
