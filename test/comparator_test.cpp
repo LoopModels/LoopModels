@@ -7,6 +7,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <memory>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BasicCompare, BasicAssertions) {
 
     // TEST full column rank case of A
@@ -55,6 +56,7 @@ TEST(BasicCompare, BasicAssertions) {
     EXPECT_TRUE(!comp3.greaterEqual(query6));
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(V2Matrix, BasicAssertions) {
     IntMatrix A = stringToIntMatrix(
         "[0 -1 0 1 0 0; 0 0 -1 1 0 0; 0 0 0 1 -1 0; 0 0 0 1 0 -1]");
@@ -69,6 +71,7 @@ TEST(V2Matrix, BasicAssertions) {
     auto Vt = IntMatrix::identity(Ht.numRow());
     auto NS = NormalForm::nullSpace(Ht);
     NormalForm::solveSystem(Ht, Vt);
+    // NormalForm::solveSystem(NormalForm::solvePair(Ht, Vt));
 
     // llvm::errs() << "Null space matrix:" << NS << "\n";
     // llvm::errs() << "Diagonal matrix:" << Ht << "\n";
@@ -82,6 +85,7 @@ TEST(V2Matrix, BasicAssertions) {
         }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest, BasicAssertions) {
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
     auto comp = LinearSymbolicComparator::construct(A);
@@ -95,6 +99,7 @@ TEST(ConstantTest, BasicAssertions) {
     EXPECT_FALSE(comp.isEmpty());
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest2, BasicAssertions) {
     auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
     auto comp = LinearSymbolicComparator::construct(A, false);
@@ -107,6 +112,7 @@ TEST(ConstantTest2, BasicAssertions) {
     EXPECT_FALSE(comp.greaterEqual(query1));
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(EqTest, BasicAssertions) {
     IntMatrix A{stringToIntMatrix(
         "[-2 1 0 -1 0 0 0; 0 0 0 1 0 0 0; -2 0 1 0 -1 0 0; 0 0 0 0 1 0 0; -2 1 "
@@ -123,6 +129,7 @@ TEST(EqTest, BasicAssertions) {
     EXPECT_FALSE(comp.isEmpty());
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TestEmpty, BasicAssertions) {
     IntMatrix A{stringToIntMatrix(
         "[0 0 1 0 0 0; -1 1 -1 0 0 0; 0 0 0 1 0 0; -1 0 1 -1 0 0; 0 0 0 0 1 0; "

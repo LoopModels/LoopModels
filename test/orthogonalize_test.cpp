@@ -1,3 +1,4 @@
+#include "../include/ArrayReference.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
@@ -20,9 +21,10 @@
 #include <memory>
 #include <random>
 
-[[maybe_unused]] static std::optional<
-    std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>>
-orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
+[[maybe_unused]] static auto
+orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
+    -> std::optional<
+        std::pair<AffineLoopNest<true>, llvm::SmallVector<ArrayReference, 0>>> {
 
     // need to construct matrix `A` of relationship
     // B*L = I
@@ -39,12 +41,12 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     for (auto a : ai)
         numRow += a->getArrayDim();
     IntMatrix S(numLoops, numRow);
-    size_t i = 0;
+    Col i = 0;
     for (auto a : ai) {
         PtrMatrix<int64_t> A = a->indexMatrix();
         for (size_t j = 0; j < numLoops; ++j)
             for (size_t k = 0; k < A.numCol(); ++k)
-                S(j, k + i) = A(j, k);
+                S(j, i + k) = A(j, k);
         i += A.numCol();
     }
     auto [K, included] = NormalForm::orthogonalize(S);
@@ -77,6 +79,7 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai) {
     return ret;
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(OrthogonalizeTest, BasicAssertions) {
     // for m = 0:M-1, n = 0:N-1, i = 0:I-1, j = 0:J-1
     //   W[m + i, n + j] += C[i,j] * B[m,n]
@@ -150,6 +153,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
         orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.has_value());
+    assert(orth.has_value());
     AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
     for (auto &&ar : newArrayRefs)
@@ -187,6 +191,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BadMul, BasicAssertions) {
     IntMatrix A{stringToIntMatrix("[-3 1 1 1 -1 0 0; "
                                   "0 0 0 0 1 0 0; "
@@ -272,7 +277,7 @@ TEST(BadMul, BasicAssertions) {
         orth(orthogonalize(ai));
 
     EXPECT_TRUE(orth.has_value());
-
+    assert(orth.has_value());
     AffineLoopNest<true> &newAln = orth->first;
     llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
 
@@ -303,6 +308,7 @@ TEST(BadMul, BasicAssertions) {
                      << "\n";
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     std::random_device rd;
     std::mt19937 gen(rd());

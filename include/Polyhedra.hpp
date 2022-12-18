@@ -3,10 +3,8 @@
 #include "./Comparators.hpp"
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "./Simplex.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -98,18 +96,18 @@ struct Polyhedra {
     auto calcIsEmpty() -> bool { return C.isEmpty(); }
     void pruneBounds() {
         if (calcIsEmpty()) {
-            A.truncateRows(0);
+            A.truncate(Row{0});
             if constexpr (hasEqualities)
-                E.truncateRows(0);
+                E.truncate(Row{0});
         } else
             pruneBoundsUnchecked();
     }
     void pruneBoundsUnchecked() {
         const size_t dyn = getNumDynamic();
-        Vector<int64_t> diff{A.numCol()};
+        Vector<int64_t> diff{size_t(A.numCol())};
         if constexpr (hasEqualities)
             removeRedundantRows(A, E);
-        for (size_t j = A.numRow(); j;) {
+        for (auto j = size_t(A.numRow()); j;) {
             bool broke = false;
             for (size_t i = --j; i;) {
                 if (A.numRow() <= 1)
@@ -119,7 +117,7 @@ struct Polyhedra {
                     eraseConstraint(A, i);
                     initializeComparator();
                     --j; // `i < j`, and `i` has been removed
-                } else if (C.greaterEqual(diff *= -1)) {
+                } else if (diff *= -1; C.greaterEqual(diff)) {
                     eraseConstraint(A, j);
                     initializeComparator();
                     broke = true;
@@ -146,16 +144,16 @@ struct Polyhedra {
         return 1 + S.size();
     }
     [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
-        return A.numCol() - getNumSymbols();
+        return size_t(A.numCol()) - getNumSymbols();
     }
     [[nodiscard]] constexpr auto getNumVar() const -> size_t {
-        return A.numCol() - 1;
+        return size_t(A.numCol()) - 1;
     }
     [[nodiscard]] constexpr auto getNumInequalityConstraints() const -> size_t {
-        return A.numRow();
+        return size_t(A.numRow());
     }
     [[nodiscard]] constexpr auto getNumEqualityConstraints() const -> size_t {
-        return E.numRow();
+        return size_t(E.numRow());
     }
 
     // static bool lessZero(const IntMatrix &A, const size_t r) const {
@@ -245,8 +243,8 @@ struct Polyhedra {
     }
     void truncateVars(size_t numVar) {
         if constexpr (hasEqualities)
-            E.truncateCols(numVar);
-        A.truncateCols(numVar);
+            E.truncate(Col{numVar});
+        A.truncate(Col{numVar});
     }
 };
 

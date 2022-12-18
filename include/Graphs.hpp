@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./BitSets.hpp"
-#include "./Math.hpp"
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/raw_ostream.h>
 #include <tuple>
@@ -9,6 +8,25 @@
 
 /// TODO: when we have better std::ranges support in compilers, use it?
 namespace Graphs {
+template <typename R>
+concept AbstractRange = requires(R r) {
+                            { r.begin() };
+                            { r.end() };
+                        };
+auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
+    -> llvm::raw_ostream & {
+    os << "[ ";
+    bool needComma = false;
+    for (auto x : r) {
+        if (needComma)
+            os << ", ";
+        os << x;
+        needComma = true;
+    }
+    os << " ]";
+    return os;
+}
+
 template <typename G>
 concept AbstractGraph =
     AbstractRange<G> && requires(G g, const G cg, size_t i) {

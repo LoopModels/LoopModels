@@ -369,8 +369,8 @@ struct AffineLoopNest
             if (isMin ^
                 (mlt < 0)) { // we can represent this as additional constraints
                 size_t M = A.numRow();
-                A.resizeRows(M + u - l);
-                B.resizeRows(M + u - l);
+                A.resize(Row{M + u - l});
+                B.resize(Row{M + u - l});
                 size_t Mp = M + u - l;
                 A(_(M, Mp), _) = A(_(l, u), _);
                 B(_(M, Mp), _) = B(_(l, u), _);
@@ -438,13 +438,13 @@ struct AffineLoopNest
         addSymbol(v, l, u, mlt);
         return minDepth;
     }
-    void addSymbol(const llvm::SCEV *v, size_t l, size_t u, int64_t mlt) {
-        assert(u > l);
+    void addSymbol(const llvm::SCEV *v, Range<size_t, size_t> lu, int64_t mlt) {
+        assert(lu.size());
         // llvm::errs() << "Before adding sym A = " << A << "\n";
         S.push_back(v);
         A.resizeCols(A.numCol() + 1);
         // A.insertZeroColumn(symbols.size());
-        for (size_t j = l; j < u; ++j)
+        for (size_t j : lu)
             A(j, S.size()) = mlt;
         // llvm::errs() << "After adding sym A = " << A << "\n";
     }
@@ -456,9 +456,9 @@ struct AffineLoopNest
     auto addBackedgeTakenCount(IntMatrix &B, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                size_t minDepth) -> size_t {
-        size_t M = A.numRow();
-        A.resizeRows(M + 1);
-        B.resizeRows(M + 1);
+        Row M = A.numRow();
+        A.resize(M + 1);
+        B.resize(M + 1);
         llvm::errs() << "BT = " << *BT
                      << "\naddBackedgeTakenCount pre addSym; M = " << M
                      << "; A = " << A << "\n";
@@ -467,7 +467,7 @@ struct AffineLoopNest
                      << "; A = " << A << "\n";
         assert(A.numRow() == B.numRow());
         size_t depth = L->getLoopDepth();
-        for (size_t m = M; m < A.numRow(); ++m)
+        for (auto m = size_t(M); m < A.numRow(); ++m)
             B(m, B.numCol() - depth) = -1; // indvar
         // recurse, if possible to add an outer layer
         if (llvm::Loop *P = L->getParentLoop()) {
@@ -544,7 +544,7 @@ struct AffineLoopNest
                     addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp),
                                                SE.getOne(IntTyp), P,
                                                llvm::SCEV::NoWrapMask),
-                              i, i + 1, Bid);
+                              _(i, i + 1), Bid);
                     llvm::errs() << "UnboundedAffineLoopNest iter i = " << i
                                  << "A = " << A << "\n";
                 }
@@ -567,14 +567,14 @@ struct AffineLoopNest
         // no loop may be conditioned on the innermost loop
         // so we should be able to safely remove all constraints that reference
         // it
-        for (size_t m = B.numRow(); m-- > 0;) {
+        for (size_t m = size_t(B.numRow()); m--;) {
             if (A(m, innermostLoopInd)) {
                 // B(_(m,end-1),_) = B(_(m+1,end),_);
                 // make sure we're explicit about the order we copy rows
-                size_t M = B.numRow() - 1;
+                Row M = B.numRow() - 1;
                 for (size_t r = m; r < M; ++r)
                     B(r, _) = B(r + 1, _);
-                B.resizeRows(M);
+                B.resize(M);
             }
         }
         return AffineLoopNest<NonNegative>(B, S);
@@ -768,7 +768,7 @@ struct AffineLoopNest
                 for (size_t v = 0; v < tmp2.A.numCol(); ++v)
                     tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
             }
-            for (size_t cc = tmp2.A.numRow(); cc != 0;)
+            for (size_t cc = size_t(tmp2.A.numRow()); cc;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
             tmp2.initializeComparator();
@@ -794,7 +794,7 @@ struct AffineLoopNest
                         tmp.A(cc, _i + numConst) = 0;
                     }
                 }
-                for (size_t cc = tmp.A.numRow(); cc != 0;)
+                for (size_t cc = size_t(tmp.A.numRow()); cc;)
                     if (tmp.A(--cc, numPrevLoops + numConst) == 0)
                         eraseConstraint(tmp.A, cc);
                 tmp.initializeComparator();

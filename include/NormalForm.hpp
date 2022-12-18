@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/SmallVector.h>
+#include <map>
 #include <numeric>
 #include <sys/types.h>
 #include <utility>
@@ -101,6 +102,12 @@ constexpr inline auto gcdxScale(int64_t a, int64_t b)
     }
 }
 
+constexpr static inline auto
+solvePair(LinearAlgebra::AbstractRowMajorMatrix auto &A,
+          LinearAlgebra::AbstractRowMajorMatrix auto &B) {
+    return std::make_pair(MutPtrMatrix(A), MutPtrMatrix(B));
+}
+
 static inline auto
 pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
           Row M, Row piv) -> bool {
@@ -117,7 +124,7 @@ pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
 static inline auto pivotRows(MutPtrMatrix<int64_t> A,
                              MutSquarePtrMatrix<int64_t> K, size_t i, Row M)
     -> bool {
-    return pivotRows(std::make_pair(A, MutPtrMatrix<int64_t>(K)), i, M, i);
+    return pivotRows(solvePair(A, K), i, M, i);
 }
 static inline auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
     -> bool {
@@ -376,7 +383,7 @@ simplifySystemImpl(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB) {
             reduceColumn(AB, Col{c}, Row{r++});
 }
 [[maybe_unused]] static void simplifySystem(IntMatrix &A, IntMatrix &B) {
-    simplifySystemImpl(std::make_pair(MutPtrMatrix(A), MutPtrMatrix(B)));
+    simplifySystemImpl(solvePair(A, B));
     Row Mnew = A.numRow();
     bool need_trunc = false;
     while (allZero(A(Mnew - 1, _))) {
@@ -393,7 +400,7 @@ simplifySystemImpl(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB) {
     -> std::pair<IntMatrix, SquareMatrix<int64_t>> {
     SquareMatrix<int64_t> U{
         SquareMatrix<int64_t>::identity(size_t(A.numRow()))};
-    simplifySystemImpl(std::make_pair(MutPtrMatrix(A), MutPtrMatrix(U)));
+    simplifySystemImpl(solvePair(A, U));
     return std::make_pair(std::move(A), std::move(U));
 }
 
@@ -601,7 +608,7 @@ zeroColumn(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB, Col c,
 // }
 [[maybe_unused]] static void solveSystem(IntMatrix &A, IntMatrix &B) {
     const auto [M, N] = A.size();
-    auto AB = std::make_pair(MutPtrMatrix(A), MutPtrMatrix(B));
+    auto AB = solvePair(A, B);
     for (size_t r = 0, c = 0; c < N && r < M; ++c)
         if (!pivotRows(AB, Col{c}, M, Row{r}))
             zeroColumn(AB, Col{c}, Row{r++});

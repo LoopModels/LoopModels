@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 // Demonstrate some basic assertions.
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SparseIndexingTest, BasicAssertions) {
     SmallSparseMatrix<int64_t> Asparse(Row{3}, Col{4});
     llvm::errs() << "&Asparse = " << &Asparse << "\n";
@@ -70,6 +71,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
     EXPECT_TRUE(C == At.transpose() * Bt.transpose());
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ExpressionTemplateTest, BasicAssertions) {
     auto A{stringToIntMatrix(
         "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
