@@ -20,5 +20,9 @@ var searchData=
   ['stridediterator_162',['StridedIterator',['../structLinearAlgebra_1_1MutStridedVector_1_1StridedIterator.html',1,'LinearAlgebra::MutStridedVector&lt; T &gt;::StridedIterator'],['../structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html',1,'LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator']]],
   ['stridedvector_163',['StridedVector',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
   ['stridedvector_3c_20int64_5ft_20_3e_164',['StridedVector&lt; int64_t &gt;',['../structLinearAlgebra_1_1StridedVector.html',1,'LinearAlgebra']]],
-  ['sub_165',['Sub',['../structLinearAlgebra_1_1Sub.html',1,'LinearAlgebra']]]
+  ['strongintwrapper_165',['StrongIntWrapper',['../structLinearAlgebra_1_1StrongIntWrapper.html',1,'LinearAlgebra']]],
+  ['strongintwrapper_3c_20col_20_3e_166',['StrongIntWrapper&lt; Col &gt;',['../structLinearAlgebra_1_1StrongIntWrapper.html',1,'LinearAlgebra']]],
+  ['strongintwrapper_3c_20row_20_3e_167',['StrongIntWrapper&lt; Row &gt;',['../structLinearAlgebra_1_1StrongIntWrapper.html',1,'LinearAlgebra']]],
+  ['strongintwrapper_3c_20rowstride_20_3e_168',['StrongIntWrapper&lt; RowStride &gt;',['../structLinearAlgebra_1_1StrongIntWrapper.html',1,'LinearAlgebra']]],
+  ['sub_169',['Sub',['../structLinearAlgebra_1_1Sub.html',1,'LinearAlgebra']]]
 ];

@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['searchoperandsforloads_340',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
-  ['searchvalueforstores_341',['searchValueForStores',['../structLinearProgramLoopBlock.html#a8c9fd983b91fbf28ff04ffcc7def0560',1,'LinearProgramLoopBlock']]],
-  ['selectcost_342',['selectCost',['../structInstruction.html#a7c9e374d023ab4f16d882484fb87f325',1,'Instruction']]]
+  ['searchoperandsforloads_348',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
+  ['searchvalueforstores_349',['searchValueForStores',['../structLinearProgramLoopBlock.html#a8c9fd983b91fbf28ff04ffcc7def0560',1,'LinearProgramLoopBlock']]],
+  ['selectcost_350',['selectCost',['../structInstruction.html#a7c9e374d023ab4f16d882484fb87f325',1,'Instruction']]]
 ];
