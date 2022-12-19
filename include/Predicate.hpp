@@ -1,7 +1,7 @@
 #pragma once
 #include "./BitSets.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
+#include "./Utilities.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -14,7 +14,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/Pass.h>
 #include <llvm/Support/Allocator.h>
-#include <optional>
 #include <variant>
 
 struct Instruction;
@@ -89,6 +88,16 @@ struct Intersection {
         predicates |= other.predicates;
         return *this;
     }
+    [[nodiscard]] constexpr auto popCount() const -> size_t {
+        return std::popcount(predicates);
+    }
+    [[nodiscard]] constexpr auto getFirstIndex() const -> size_t {
+        return std::countr_zero(predicates) / 2;
+    }
+    [[nodiscard]] constexpr auto getNextIndex(size_t i) const -> size_t {
+        ++i;
+        return std::countr_zero(predicates >> (2 * i)) / 2 + i;
+    }
     /// returns 00 if non-empty, 01 if empty
     [[nodiscard]] static constexpr auto emptyMask(uint64_t x) -> uint64_t {
         return ((x & (x >> 1)) & 0x5555555555555555);
@@ -110,12 +119,18 @@ struct Intersection {
     [[nodiscard]] constexpr auto isEmpty() const -> bool {
         return isEmpty(predicates);
     }
-    [[nodiscard]] constexpr auto getConflict(Intersection other)
-        -> std::pair<Intersection, Intersection> {
+    [[nodiscard]] constexpr auto getConflict(Intersection other) const
+        -> Intersection {
         uint64_t m = keepEmptyMask(predicates & other.predicates);
-        return std::make_pair(Intersection{predicates & m},
-                              Intersection{other.predicates & m});
+        return Intersection{predicates & m};
     }
+    [[nodiscard]] constexpr auto countTrue() const {
+        return std::popcount(predicates & 0x5555555555555555);
+    }
+    [[nodiscard]] constexpr auto countFalse() const {
+        return std::popcount(predicates & 0xAAAAAAAAAAAAAAAA);
+    }
+
     /// if the union between `this` and `other` can be expressed as an
     /// intersection of their constituents, return that intersection. Return an
     /// empty optional otherwise. The cases we handle are:
@@ -288,8 +303,12 @@ struct Set {
     /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
     ///   [(a & b) | (c & d) | (e & f) | (g & h)]
     auto operator|=(const Set &other) -> Set & {
-        for (auto &&pred : other.intersectUnion)
-            *this |= pred;
+        if (intersectUnion.empty()) {
+            intersectUnion = other.intersectUnion;
+        } else {
+            for (auto &&pred : other.intersectUnion)
+                *this |= pred;
+        }
         return *this;
     }
     [[nodiscard]] auto operator|(Intersection other) const & -> Set {
@@ -336,19 +355,17 @@ struct Set {
                 ret |= pred & otherPred;
         return ret;
     }
-    [[nodiscard]] auto cut(const Set &other)
-        -> std::pair<Intersection, Intersection> {
+    /// returns a pair intersections
+    [[nodiscard]] auto getConflict(const Set &other) -> Intersection {
         assert(intersectionIsEmpty(other));
-        Intersection retL, retR;
+        Intersection ret;
         for (auto pred : intersectUnion) {
             for (auto otherPred : other) {
                 assert((pred & otherPred).isEmpty());
-                auto [L, R] = pred.getConflict(otherPred);
-                retL &= L;
-                retR &= R;
+                ret &= pred.getConflict(otherPred);
             }
         }
-        return std::make_pair(retL, retR);
+        return ret;
     }
     /// intersectionIsEmpty(const Set &other) -> bool
     /// returns `true` if the intersection of `*this` and `other` is empty

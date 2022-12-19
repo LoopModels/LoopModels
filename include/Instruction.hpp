@@ -3,6 +3,7 @@
 #include "./ArrayReference.hpp"
 #include "./Predicate.hpp"
 #include <bit>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/APInt.h>
@@ -13,6 +14,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
@@ -26,6 +28,7 @@
 #include <llvm/Support/InstructionCost.h>
 #include <llvm/Support/MathExtras.h>
 #include <utility>
+#include <variant>
 
 struct RecipThroughputLatency {
     llvm::InstructionCost recipThroughput;
@@ -40,13 +43,8 @@ struct RecipThroughputLatency {
 };
 
 struct Instruction {
-    using UniqueIdentifier =
-        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Value *,
-                   llvm::MutableArrayRef<Instruction *>>;
-    struct Identifier {
-        /// Instruction ID
-        /// if not Load or Store, then check val for whether it is a call
-        /// and ID corresponds to the instruction or to the intrinsic call
+    struct Intrinsic {
+
         llvm::Intrinsic::ID op; // getOpCode()
         llvm::Intrinsic::ID intrin{llvm::Intrinsic::not_intrinsic};
         [[nodiscard]] auto getOpCode() const -> llvm::Intrinsic::ID {
@@ -66,15 +64,11 @@ struct Instruction {
             return llvm::Intrinsic::not_intrinsic;
         }
 
-        /// Data we may need
-        union {
-            llvm::Value *val;    // other
-            ArrayReference *ref; // load or store
-        } ptr{nullptr};
+        /// Instruction ID
+        /// if not Load or Store, then check val for whether it is a call
+        /// and ID corresponds to the instruction or to the intrinsic call
 
-        Identifier(UniqueIdentifier id)
-            : op(std::get<0>(id)),
-              intrin(std::get<1>(id)), ptr{std::get<2>(id)} {}
+        /// Data we may need
 
         static auto isCall(llvm::Value *v) -> bool {
             return getOpCode(v) == llvm::Instruction::Call;
@@ -83,11 +77,13 @@ struct Instruction {
             return llvm::isa<llvm::IntrinsicInst>(v);
         }
 
-        Identifier(llvm::Value *v)
-            : op(getOpCode(v)), intrin(getIntrinsicID(v)), ptr{v} {}
-        Identifier(llvm::Intrinsic::ID op, llvm::Intrinsic::ID intrin,
-                   llvm::Value *v)
-            : op(op), intrin(intrin), ptr{v} {}
+        Intrinsic(llvm::Value *v)
+            : op(getOpCode(v)), intrin(getIntrinsicID(v)) {}
+        /// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+        Intrinsic(llvm::Intrinsic::ID op, llvm::Intrinsic::ID intrin)
+            : op(op), intrin(intrin) {}
+        Intrinsic(llvm::Intrinsic::ID op)
+            : op(op), intrin(llvm::Intrinsic::not_intrinsic) {}
         [[nodiscard]] constexpr auto isValue() const -> bool {
             return op == llvm::Intrinsic::not_intrinsic;
         }
@@ -101,26 +97,19 @@ struct Instruction {
             -> bool {
             return op == opCode;
         }
-        /// Check if the ptr is a load or store
-        [[nodiscard]] auto isValueLoadOrStore() const -> bool {
-            return isValue() && (llvm::isa<llvm::LoadInst>(ptr.val) ||
-                                 llvm::isa<llvm::StoreInst>(ptr.val));
-        }
         [[nodiscard]] constexpr auto
         isIntrinsicInstruction(unsigned opCode) const -> bool {
             return intrin == opCode;
         }
-        [[nodiscard]] auto getFunction() const -> llvm::Function * {
-            if (auto *i = llvm::dyn_cast<llvm::CallBase>(ptr.val))
-                return i->getCalledFunction();
-            return nullptr;
-        }
-        [[nodiscard]] constexpr auto operator==(const Identifier &other) const
+        [[nodiscard]] constexpr auto operator==(const Intrinsic &other) const
             -> bool {
-            return op == other.op && intrin == other.intrin &&
-                   ptr.val == other.ptr.val;
+            return op == other.op && intrin == other.intrin;
         }
     };
+    using Identifer =
+        std::variant<Intrinsic, llvm::Function *, int64_t, double>;
+    using UniqueIdentifier =
+        std::pair<Identifer, llvm::MutableArrayRef<Instruction *>>;
     struct Predicates {
         [[no_unique_address]] Predicate::Set predicates;
         // `SmallVector` to copy, as `llvm::ArrayRef` wouldn't be safe in
@@ -131,14 +120,64 @@ struct Instruction {
         auto begin() { return instr.begin(); }
         auto end() { return instr.end(); }
     };
-
-    Identifier id;
+    Identifer id;
+    // Intrinsic id;
     llvm::Type *type;
+    std::variant<std::monostate, llvm::Instruction *, llvm::ConstantInt *,
+                 llvm::ConstantFP *, ArrayReference *>
+        ptr;
     Predicates predicates;
     llvm::MutableArrayRef<Instruction *> operands;
     llvm::SmallVector<Instruction *> users;
     /// costs[i] == cost for vector-width 2^i
     llvm::SmallVector<RecipThroughputLatency> costs;
+
+    static auto getIdentifier(llvm::Instruction *I) -> Identifer {
+        if (auto *CB = llvm::dyn_cast<llvm::CallBase>(I))
+            if (auto *F = CB->getCalledFunction())
+                return F;
+        return Intrinsic(I);
+    }
+    static auto getIdentifier(llvm::ConstantInt *I) -> Identifer {
+        return I->getSExtValue();
+    }
+    static auto getIdentifier(llvm::ConstantFP *I) -> Identifer {
+        return I->getValueAPF().convertToDouble();
+    }
+    static auto getIdentifier(llvm::Value *v) -> std::optional<Identifer> {
+        if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) {
+            return getIdentifier(i);
+        } else if (auto *i = llvm::dyn_cast<llvm::ConstantInt>(v)) {
+            return getIdentifier(i);
+        } else if (auto *i = llvm::dyn_cast<llvm::ConstantFP>(v)) {
+            return getIdentifier(i);
+        } else {
+            return std::nullopt;
+        }
+    }
+
+    bool isIntrinsic() const { return std::holds_alternative<Intrinsic>(id); }
+    bool isFunction() const {
+        return std::holds_alternative<llvm::Function *>(id);
+    }
+    bool isConstantInt() const { return std::holds_alternative<int64_t>(id); }
+    bool isConstantFP() const { return std::holds_alternative<double>(id); }
+    bool isConstant() const { return isConstantInt() || isConstantFP(); }
+
+    /// Check if the ptr is a load or store, without an ArrayRef
+    [[nodiscard]] auto isValueLoadOrStore() const -> bool {
+        if (llvm::Instruction *const *I =
+                std::get_if<llvm::Instruction *>(&ptr))
+            return llvm::isa<llvm::LoadInst>(*I) ||
+                   llvm::isa<llvm::StoreInst>(*I);
+        return false;
+    }
+    [[nodiscard]] auto getFunction() const -> llvm::Function * {
+        if (llvm::Function *const *F = std::get_if<llvm::Function *>(&id))
+            return *F;
+        return nullptr;
+    }
+
     [[nodiscard]] auto getType() const -> llvm::Type * { return type; }
     [[nodiscard]] auto getOperands() -> llvm::MutableArrayRef<Instruction *> {
         return operands;
@@ -158,72 +197,56 @@ struct Instruction {
     [[nodiscard]] auto getNumOperands() const -> size_t {
         return operands.size();
     }
-    [[nodiscard]] auto getOpTripple() const
-        -> std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *> {
-        return std::make_tuple(id.op, id.intrin, getType());
-    }
-    [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
-        if (isLoadOrStore())
-            return id.ptr.ref->loadOrStore->getParent();
-        else if (auto *I = llvm::dyn_cast<llvm::Instruction>(id.ptr.val))
-            return I->getParent();
-        else
-            return nullptr;
-    }
-    static auto createSelect(llvm::BumpPtrAllocator &alloc, Instruction *A,
-                             Instruction *B) -> Instruction * {
-        Identifier id = Identifier(llvm::Instruction::Select,
-                                   llvm::Intrinsic::not_intrinsic, nullptr);
-        auto *S = new (alloc) Instruction(id, A->getType()); //, {A, B});
-        // TODO: make predicate's instruction vector shared among all in
-        // LoopTree?
-        // What I need here is to take the union of the predicates to form the
-        // predicates of the new select instruction.
-        // Then, for the select's `cond` instruction, I need something
-        // to indicate when to take one path and not the other.
-        // We know the intersection is empty, so -- why is it empty?
-        // We need something to slice that. E.g.
-        /// if *A = [(a & b) | (c & d)]
-        ///    *B = [(e & f) | (g & h)]
-        /// then
-        /// [(a & b) | (c & d)] & [(e & f) | (g & h)] =
-        ///   [(a & b) & (e & f)] |
-        ///   [(a & b) & (g & h)] |
-        ///   [(c & d) & (e & f)] |
-        ///   [(c & d) & (g & h)]
-        /// for this to be empty, we need to have
-        ///   [(a & b) & (e & f)] =
-        ///   [(a & b) & (g & h)] =
-        ///   [(c & d) & (e & f)] =
-        ///   [(c & d) & (g & h)] = 0
-        /// Suggestion: loop over union elements,
-        /// and take the set of all of the conditions for
-        /// each side.
-        /// Then use the simpler of these two to determine the direction of the
-        /// select.
-        auto [L, R] = A->predicates.predicates.cut(B->predicates.predicates);
-        uint64_t Lc = std::popcount(L.predicates);
-        uint64_t Rc = std::popcount(R.predicates);
-        if (Lc < Rc) {
-            S->predicates.predicates = L.predicates;
-            S->predicates.instr = L.instr;
-        } else {
-            S->predicates.predicates = R.predicates;
-            S->predicates.instr = R.instr;
+    // [[nodiscard]] auto getOpTripple() const
+    //     -> std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>
+    //     { return std::make_tuple(id.op, id.intrin, getType());
+    // }
+    struct ExtractValue {
+        auto operator()(auto) const -> llvm::Value * { return nullptr; }
+        auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
+        auto operator()(ArrayReference *v) const -> llvm::Value * {
+            return v->loadOrStore;
         }
-        S->predicates.predicates =
-            A->predicates.predicates | B->predicates.predicates;
-        return S;
+    };
+    [[nodiscard]] auto getValue() -> llvm::Value * {
+        return std::visit<llvm::Value *>(ExtractValue{}, ptr);
     }
+    [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
+        return llvm::dyn_cast_or_null<llvm::Instruction>(getValue());
+    }
+    [[nodiscard]] auto getValue() const -> llvm::Value * {
+        return std::visit<llvm::Value *>(ExtractValue{}, ptr);
+    }
+    [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
+        return llvm::dyn_cast_or_null<llvm::Instruction>(getValue());
+    }
+
+    struct ExtractBasicBlock {
+        auto operator()(auto) const -> llvm::BasicBlock * { return nullptr; }
+        auto operator()(llvm::Value *v) const -> llvm::BasicBlock * {
+            if (auto *I = llvm::dyn_cast<llvm::Instruction>(v))
+                return I->getParent();
+            return nullptr;
+        }
+        auto operator()(ArrayReference *v) const -> llvm::BasicBlock * {
+            return v->loadOrStore->getParent();
+        }
+    };
+    [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
+        return std::visit<llvm::BasicBlock *>(ExtractBasicBlock{}, ptr);
+    }
+
     // llvm::TargetTransformInfo &TTI;
 
     // Instruction(llvm::Intrinsic::ID id, llvm::Type *type) : id(id),
     // type(type) {
     //     // this->TTI = TTI;
     // }
-    Instruction(Identifier id, llvm::Type *type) : id(id), type(type) {}
-    Instruction(UniqueIdentifier uid)
-        : id(uid), type(std::get<2>(uid)->getType()) {}
+    Instruction(Intrinsic id, llvm::Type *type) : id(id), type(type) {}
+    // Instruction(UniqueIdentifier uid)
+    // : id(std::get<0>(uid)), operands(std::get<1>(uid)) {}
+    Instruction(UniqueIdentifier uid, llvm::Type *type)
+        : id(std::get<0>(uid)), type(type), operands(std::get<1>(uid)) {}
     struct Cache {
         llvm::DenseMap<llvm::Value *, Instruction *> llvmToInternalMap;
         llvm::DenseMap<UniqueIdentifier, Instruction *> argMap;
@@ -233,77 +256,278 @@ struct Instruction {
                 return f->second;
             return nullptr;
         }
+        auto operator[](UniqueIdentifier uid) -> Instruction * {
+            auto f = argMap.find(uid);
+            if (f != argMap.end())
+                return f->second;
+            return nullptr;
+        }
+        auto argMapLoopup(Identifer id) -> Instruction * {
+            UniqueIdentifier uid{id, {}};
+            return (*this)[uid];
+        }
+        auto argMapLoopup(Identifer id, Instruction *op) -> Instruction * {
+            std::array<Instruction *, 1> ops;
+            ops[0] = op;
+            llvm::MutableArrayRef<Instruction *> opsRef(ops);
+            UniqueIdentifier uid{id, opsRef};
+            return (*this)[uid];
+        }
+        auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1)
+            -> Instruction * {
+            std::array<Instruction *, 1> ops;
+            ops[0] = op0;
+            ops[1] = op1;
+            llvm::MutableArrayRef<Instruction *> opsRef(ops);
+            UniqueIdentifier uid{id, opsRef};
+            return (*this)[uid];
+        }
+        auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1,
+                          Instruction *op2) -> Instruction * {
+            std::array<Instruction *, 3> ops;
+            ops[0] = op0;
+            ops[1] = op1;
+            ops[2] = op2;
+            llvm::MutableArrayRef<Instruction *> opsRef(ops);
+            UniqueIdentifier uid{id, opsRef};
+            return (*this)[uid];
+        }
+        auto createInstruction(llvm::BumpPtrAllocator &alloc,
+                               UniqueIdentifier uid, llvm::Type *type)
+            -> Instruction * {
+            auto *i = new (alloc) Instruction(uid, type);
+            for (auto *op : i->operands)
+                op->users.push_back(i);
+            argMap.insert({uid, i});
+            return i;
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, UniqueIdentifier uid,
+                            llvm::Type *type) {
+            if (auto *i = (*this)[uid])
+                return i;
+            return createInstruction(alloc, uid, type);
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, UniqueIdentifier uid,
+                            llvm::Type *type, Predicates pred) {
+            if (auto *i = (*this)[uid])
+                return i;
+            auto *i = createInstruction(alloc, uid, type);
+            i->predicates = std::move(pred);
+            return i;
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
+                            llvm::Type *type) {
+            UniqueIdentifier uid{id, {}};
+            return getInstruction(alloc, uid, type);
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
+                            Instruction *op0, llvm::Type *type) {
+            // stack allocate for check
+            if (auto *i = argMapLoopup(id, op0))
+                return i;
+            auto **operands = alloc.Allocate<Instruction *>(1);
+            operands[0] = op0;
+            llvm::MutableArrayRef<Instruction *> ops(operands, 1);
+            UniqueIdentifier uid{id, ops};
+            return createInstruction(alloc, uid, type);
+        }
+
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
+                            Instruction *op0, Instruction *op1,
+                            llvm::Type *type) {
+            // stack allocate for check
+            if (auto *i = argMapLoopup(id, op0, op1))
+                return i;
+            auto **operands = alloc.Allocate<Instruction *>(2);
+            operands[0] = op0;
+            operands[1] = op1;
+            llvm::MutableArrayRef<Instruction *> ops(operands, 2);
+            UniqueIdentifier uid{id, ops};
+            return createInstruction(alloc, uid, type);
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
+                            Instruction *op0, Instruction *op1,
+                            Instruction *op2, llvm::Type *type) {
+            // stack allocate for check
+            if (auto *i = argMapLoopup(id, op0, op1, op2))
+                return i;
+            auto **operands = alloc.Allocate<Instruction *>(2);
+            operands[0] = op0;
+            operands[1] = op1;
+            operands[2] = op2;
+            llvm::MutableArrayRef<Instruction *> ops(operands, 3);
+            UniqueIdentifier uid{id, ops};
+            return createInstruction(alloc, uid, type);
+        }
 
         /// This is the API for creating new instructions
-        auto createInstruction(llvm::BumpPtrAllocator &alloc,
-                               llvm::Instruction *instr) -> Instruction * {
+        auto getInstruction(llvm::BumpPtrAllocator &alloc,
+                            llvm::Instruction *instr) -> Instruction * {
+            if (Instruction *i = (*this)[instr])
+                return i;
             UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, instr)};
-            auto argMatch = argMap.find(uid);
-            if (argMatch != argMap.end())
-                return argMatch->second;
-            // if load or store, we replace ptr with ArrayReference
-            auto i = new (alloc) Instruction(uid);
-            auto insertIter = argMap.insert({uid, i});
-            assert(insertIter.second);
-            assert(insertIter.first->second == i);
-            i->operands = std::get<3>(insertIter.first->first);
-            for (auto *op : i->operands) {
-                op->users.push_back(i);
-            }
+            auto *i = getInstruction(alloc, uid, instr->getType());
             llvmToInternalMap[instr] = i;
             return i;
         }
-        auto createInstruction(llvm::BumpPtrAllocator &alloc,
-                               Predicate::Map &predMap,
-                               llvm::Instruction *instr) -> Instruction *;
-        auto get(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
+        auto getInstruction(llvm::BumpPtrAllocator &alloc,
+                            Predicate::Map &predMap, llvm::Instruction *instr)
+            -> Instruction *;
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
             -> Instruction * {
             if (Instruction *i = (*this)[v])
                 return i;
-            if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
-                return createInstruction(alloc, instr);
-            auto *i = new (alloc) Instruction(Identifier(v), v->getType());
+            UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, v)};
+            auto *i = getInstruction(alloc, uid, v->getType());
             llvmToInternalMap[v] = i;
             return i;
         }
         // if not in predMap, then operands don't get added, and
         // it won't be added to the argMap
-        auto get(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
-                 llvm::Value *v) -> Instruction *;
+        auto getInstruction(llvm::BumpPtrAllocator &alloc,
+                            Predicate::Map &predMap, llvm::Value *v)
+            -> Instruction *;
         [[nodiscard]] auto contains(llvm::Value *v) const -> bool {
             return llvmToInternalMap.count(v);
+        }
+        auto createConstant(llvm::BumpPtrAllocator &alloc, llvm::Type *type,
+                            int64_t c) -> Instruction * {
+            UniqueIdentifier uid{Identifer(c), {}};
+            auto argMatch = argMap.find(uid);
+            if (argMatch != argMap.end())
+                return argMatch->second;
+            return new (alloc) Instruction(uid, type);
+        }
+        auto getConstant(llvm::BumpPtrAllocator &alloc, llvm::Type *type,
+                         int64_t c) -> Instruction * {
+            UniqueIdentifier uid{Identifer(c), {}};
+            if (auto *i = (*this)[uid])
+                return i;
+            return createConstant(alloc, type, c);
+        }
+        auto createCondition(llvm::BumpPtrAllocator &alloc,
+                             Predicate::Relation rel, Instruction *instr,
+                             bool swap = false) -> Instruction * {
+            switch (rel) {
+            case Predicate::Relation::Any:
+                return getConstant(alloc, instr->getType(), 1);
+            case Predicate::Relation::Empty:
+                return getConstant(alloc, instr->getType(), 0);
+            case Predicate::Relation::False:
+                swap = !swap;
+                [[fallthrough]];
+            case Predicate::Relation::True:
+                return swap ? instr->negate(alloc, *this) : instr;
+            }
+        }
+        auto createCondition(llvm::BumpPtrAllocator &alloc,
+                             Predicate::Intersection pred,
+                             llvm::MutableArrayRef<Instruction *> instr,
+                             bool swap) -> Instruction * {
+            size_t popCount = pred.popCount();
+            if (popCount == 0) {
+                // everything is true
+                return getConstant(alloc, instr[0]->getType(), 1);
+            } else if (popCount == 1) {
+                size_t ind = pred.getFirstIndex();
+                Instruction *I = instr[ind];
+                return swap ? I->negate(alloc, *this) : I;
+            }
+            // we have more than one instruction
+            auto And = Intrinsic(llvm::Instruction::And);
+            size_t ind = pred.getFirstIndex();
+            Instruction *I = instr[ind];
+            ind = pred.getNextIndex(ind);
+            // we keep I &= instr[ind] until ind is invalid
+            // ind will be >= 32 when it is invalid
+            // getNextIndex will return a valid answer at least once, because
+            // popCount > 1
+            // there may be a better order than folding from the left
+            // e.g. a binary tree could allow for more out of order execution
+            // but I think a later pass should handle that sort of associativity
+            do {
+                I = getInstruction(alloc, And, I, instr[ind], I->getType());
+                ind = pred.getNextIndex(ind);
+            } while (ind < 32);
+            return I;
+        }
+        auto createSelect(llvm::BumpPtrAllocator &alloc, Instruction *A,
+                          Instruction *B) -> Instruction * {
+            Intrinsic id = Intrinsic(llvm::Instruction::Select,
+                                     llvm::Intrinsic::not_intrinsic);
+            // TODO: make predicate's instruction vector shared among all in
+            // LoopTree?
+            // What I need here is to take the union of the predicates to form
+            // the predicates of the new select instruction. Then, for the
+            // select's `cond` instruction, I need something to indicate when to
+            // take one path and not the other. We know the intersection is
+            // empty, so -- why is it empty? We need something to slice that.
+            // E.g.
+            /// if *A = [(a & b) | (c & d)]
+            ///    *B = [(e & f) | (g & h)]
+            /// then
+            /// [(a & b) | (c & d)] & [(e & f) | (g & h)] =
+            ///   [(a & b) & (e & f)] |
+            ///   [(a & b) & (g & h)] |
+            ///   [(c & d) & (e & f)] |
+            ///   [(c & d) & (g & h)]
+            /// for this to be empty, we need to have
+            ///   [(a & b) & (e & f)] =
+            ///   [(a & b) & (g & h)] =
+            ///   [(c & d) & (e & f)] =
+            ///   [(c & d) & (g & h)] = 0
+            /// Suggestion: loop over union elements,
+            /// and take the set of all of the conditions for
+            /// each side.
+            /// Then use the simpler of these two to determine the direction of
+            /// the select.
+            Predicate::Intersection P =
+                A->predicates.predicates.getConflict(B->predicates.predicates);
+            assert(!P.isEmpty() && "No conflict between predicates");
+            bool swap = P.countFalse() <= P.countTrue();
+            Instruction *C =
+                createCondition(alloc, P, A->predicates.instr, swap);
+            Instruction *S;
+            if (swap) {
+                S = getInstruction(alloc, id, C, B, A, A->getType());
+            } else {
+                S = getInstruction(alloc, id, C, A, B, A->getType());
+            }
+            S->predicates.predicates |= A->predicates.predicates;
+            S->predicates.predicates |= B->predicates.predicates;
+            return S;
         }
     };
     [[nodiscard]] auto static getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
                                                   Cache &cache,
                                                   llvm::Instruction *v)
         -> UniqueIdentifier {
-        return std::make_tuple(Identifier::getOpCode(v),
-                               Identifier::getIntrinsicID(v), v,
-                               getOperands(alloc, cache, v));
+        return std::make_pair(Intrinsic(v), getOperands(alloc, cache, v));
     }
     [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
                                            Cache &cache) -> UniqueIdentifier {
-        return std::make_tuple(
-            id.op, id.intrin, id.ptr.val,
-            getOperands(alloc, cache,
-                        llvm::cast<llvm::Instruction>(id.ptr.val)));
+        llvm::Instruction *I = getInstruction();
+        return std::make_pair(id, getOperands(alloc, cache, I));
+    }
+    [[nodiscard]] auto static getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+                                                  Cache &cache, llvm::Value *v)
+        -> UniqueIdentifier {
+        if (auto *I = llvm::dyn_cast<llvm::Instruction>(v))
+            return getUniqueIdentifier(alloc, cache, I);
+        return {Intrinsic(v), {}};
     }
     [[nodiscard]] static auto
     getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
-                        Cache &cache, llvm::Instruction *v)
+                        Cache &cache, llvm::Instruction *I)
         -> UniqueIdentifier {
-        return std::make_tuple(Identifier::getOpCode(v),
-                               Identifier::getIntrinsicID(v), v,
-                               getOperands(alloc, predMap, cache, v));
+        return std::make_pair(Intrinsic(I),
+                              getOperands(alloc, predMap, cache, I));
     }
     [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
                                            Predicate::Map &predMap,
                                            Cache &cache) -> UniqueIdentifier {
-        return std::make_tuple(
-            id.op, id.intrin, id.ptr.val,
-            getOperands(alloc, predMap, cache,
-                        llvm::cast<llvm::Instruction>(id.ptr.val)));
+        llvm::Instruction *I = getInstruction();
+        return std::make_pair(id, getOperands(alloc, predMap, cache, I));
     }
     [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
                                           Cache &cache,
@@ -320,7 +544,7 @@ struct Instruction {
         auto **operands = alloc.Allocate<Instruction *>(numOps);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
-            *p = cache.get(alloc, *OI);
+            *p = cache.getInstruction(alloc, *OI);
         }
         return {operands, numOps};
     }
@@ -339,16 +563,44 @@ struct Instruction {
         auto **operands = alloc.Allocate<Instruction *>(Nops);
         Instruction **p = operands;
         for (; OI != OE; ++OI, ++p) {
-            *p = cache.get(alloc, BBpreds, *OI);
+            *p = cache.getInstruction(alloc, BBpreds, *OI);
         }
         return {operands, Nops};
     }
-
     static auto createIsolated(llvm::BumpPtrAllocator &alloc,
                                llvm::Instruction *instr) -> Instruction * {
-        Identifier id{instr};
+        Intrinsic id{instr};
         auto *i = new (alloc) Instruction(id, instr->getType());
         return i;
+    }
+
+    auto negate(llvm::BumpPtrAllocator &alloc, Cache &cache) -> Instruction * {
+        // first, check if its parent is a negation
+        if (isInstruction(llvm::Instruction::Xor) && (getNumOperands() == 2)) {
+            // !x where `x isa bool` is represented as `x ^ true`
+            auto *op0 = getOperand(0);
+            auto *op1 = getOperand(1);
+            if (op1->isConstantOne()) {
+                return op0;
+            } else if (op0->isConstantOne()) {
+                return op1;
+            }
+        }
+        Instruction *one = cache.getConstant(alloc, getType(), 1);
+        Identifer Xor = Intrinsic(llvm::Instruction::Xor);
+        return cache.getInstruction(alloc, Xor, this, one, getType());
+    }
+    [[nodiscard]] auto isInstruction(Intrinsic op) const -> bool {
+        Intrinsic *intrin = std::get_if<Intrinsic>(&id);
+        if (!intrin)
+            return false;
+        return *intrin == op;
+    }
+    [[nodiscard]] auto isInstruction(llvm::Intrinsic::ID op) const -> bool {
+        Intrinsic *intrin = std::get_if<Intrinsic>(&id);
+        if (!intrin)
+            return false;
+        return intrin->isInstruction(op);
     }
     [[nodiscard]] auto isCall() const -> bool {
         assert(!id.isIntrinsicCall() || id.isCall());
@@ -406,7 +658,7 @@ struct Instruction {
         return id.isInstruction(llvm::Instruction::FSub);
     }
     [[nodiscard]] auto allowsContract() const -> bool {
-        if (auto m = llvm::dyn_cast<llvm::Instruction>(id.ptr.val))
+        if (auto m = getInstruction())
             return m->getFastMathFlags().allowContract();
         return false;
     }
@@ -497,23 +749,22 @@ struct Instruction {
         -> std::pair<llvm::TargetTransformInfo::OperandValueKind,
                      llvm::TargetTransformInfo::OperandValueProperties> {
         Instruction *opi = (operands)[i];
-        if (opi->isValue()) {
-            if (auto c = llvm::dyn_cast<llvm::ConstantInt>(opi->id.ptr.val)) {
-                llvm::APInt v = c->getValue();
-                if (v.isPowerOf2())
-                    return std::make_pair(
-                        llvm::TargetTransformInfo::OK_UniformConstantValue,
-                        llvm::TargetTransformInfo::OP_PowerOf2);
+        if (auto c =
+                llvm::dyn_cast_or_null<llvm::ConstantInt>(opi->getValue())) {
+            llvm::APInt v = c->getValue();
+            if (v.isPowerOf2())
                 return std::make_pair(
-
                     llvm::TargetTransformInfo::OK_UniformConstantValue,
-                    llvm::TargetTransformInfo::OP_None);
-                // if (v.isNegative()){
-                //     v.negate();
-                //     if (v.isPowerOf2())
-                // 	return llvm::TargetTransformInfo::OP_NegatedPowerOf@;
-                // }
-            }
+                    llvm::TargetTransformInfo::OP_PowerOf2);
+            return std::make_pair(
+
+                llvm::TargetTransformInfo::OK_UniformConstantValue,
+                llvm::TargetTransformInfo::OP_None);
+            // if (v.isNegative()){
+            //     v.negate();
+            //     if (v.isPowerOf2())
+            // 	return llvm::TargetTransformInfo::OP_NegatedPowerOf@;
+            // }
         }
         return std::make_pair(llvm::TargetTransformInfo::OK_AnyValue,
                               llvm::TargetTransformInfo::OP_None);
@@ -563,10 +814,10 @@ struct Instruction {
     }
     auto getCastContext(llvm::TargetTransformInfo &TTI) const
         -> llvm::TargetTransformInfo::CastContextHint {
-        if (auto cast = llvm::dyn_cast<llvm::CastInst>(id.ptr.val))
-            return TTI.getCastContextHint(cast);
         if (operandIsLoad() || userIsStore())
             return llvm::TargetTransformInfo::CastContextHint::Normal;
+        if (auto cast = llvm::dyn_cast_or_null<llvm::CastInst>(getValue()))
+            return TTI.getCastContextHint(cast);
         // TODO: check for whether mask, interleave, or reversed is likely.
         return llvm::TargetTransformInfo::CastContextHint::None;
     }
@@ -585,7 +836,7 @@ struct Instruction {
         if (isSelect())
             return operands.front()->getPredicate();
         assert(isCmp());
-        if (auto cmp = llvm::dyn_cast<llvm::CmpInst>(id.ptr.val))
+        if (auto cmp = llvm::dyn_cast_or_null<llvm::CmpInst>(getValue()))
             return cmp->getPredicate();
         return isFcmp() ? llvm::CmpInst::BAD_FCMP_PREDICATE
                         : llvm::CmpInst::BAD_ICMP_PREDICATE;
@@ -629,9 +880,9 @@ struct Instruction {
         if (id.intrin == llvm::Intrinsic::not_intrinsic) {
             return {
                 TTI.getCallInstrCost(
-                    id.getFunction(), T, argTypes,
+                    getFunction(), T, argTypes,
                     llvm::TargetTransformInfo::TCK_RecipThroughput),
-                TTI.getCallInstrCost(id.getFunction(), T, argTypes,
+                TTI.getCallInstrCost(getFunction(), T, argTypes,
                                      llvm::TargetTransformInfo::TCK_Latency)};
         } else {
             llvm::IntrinsicCostAttributes attr(id.intrin, T, argTypes);
@@ -641,12 +892,30 @@ struct Instruction {
                         attr, llvm::TargetTransformInfo::TCK_Latency)};
         }
     }
+    struct ExtractAlignment {
+        constexpr auto operator()(std::monostate) -> llvm::Align {
+            return llvm::Align{};
+        }
+        auto operator()(llvm::Value *v) -> llvm::Align {
+            if (auto load = llvm::dyn_cast_or_null<llvm::LoadInst>(v)) {
+                return load->getAlign();
+            } else if (auto store =
+                           llvm::dyn_cast_or_null<llvm::StoreInst>(v)) {
+                return store->getAlign();
+            } else {
+                return {};
+            }
+        }
+        auto operator()(ArrayReference *ref) const -> llvm::Align {
+            return ref->getAlign();
+        }
+    };
     auto calculateCostContiguousLoadStore(llvm::TargetTransformInfo &TTI,
                                           unsigned int vectorWidth)
         -> RecipThroughputLatency {
         constexpr unsigned int AddressSpace = 0;
         llvm::Type *T = getType(vectorWidth);
-        llvm::Align alignment = id.ptr.ref->getAlignment();
+        llvm::Align alignment = std::visit(ExtractAlignment{}, ptr);
         if (predicates.size() == 0) {
             return {
                 TTI.getMemoryOpCost(
@@ -685,6 +954,12 @@ struct Instruction {
         if (operands.front()->isFMul() && allUsersAdditiveContract())
             return {};
         return calcUnaryArithmeticCost(TTI, vectorWidth);
+    }
+    bool isConstantOne() const {
+        if (id.op == llvm::Intrinsic::not_intrinsic)
+            if (auto c = llvm::dyn_cast_or_null<llvm::ConstantInt>(getValue()))
+                return c->isOne();
+        return false;
     }
     auto calculateCost(llvm::TargetTransformInfo &TTI, unsigned int vectorWidth)
         -> RecipThroughputLatency {
@@ -743,7 +1018,8 @@ struct Instruction {
     }
     [[nodiscard]] auto isCommutativeCall() const -> bool {
         if (id.intrin != llvm::Intrinsic::not_intrinsic) {
-            if (auto *intrin = llvm::dyn_cast<llvm::IntrinsicInst>(id.ptr.val))
+            if (auto *intrin =
+                    llvm::dyn_cast_or_null<llvm::IntrinsicInst>(getValue()))
                 return intrin->isCommutative();
         }
         return false;
@@ -769,23 +1045,21 @@ struct Instruction {
 };
 
 /// Provide DenseMapInfo for Identifier.
-template <> struct llvm::DenseMapInfo<Instruction::Identifier, void> {
-    static inline auto getEmptyKey() -> ::Instruction::Identifier {
+template <> struct llvm::DenseMapInfo<Instruction::Intrinsic, void> {
+    static inline auto getEmptyKey() -> ::Instruction::Intrinsic {
         auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getEmptyKey();
-        auto P = llvm::DenseMapInfo<llvm::Value *>::getEmptyKey();
-        return ::Instruction::Identifier{K, K, P};
+        return ::Instruction::Intrinsic{K, K};
     }
 
-    static inline auto getTombstoneKey() -> ::Instruction::Identifier {
+    static inline auto getTombstoneKey() -> ::Instruction::Intrinsic {
         auto K = llvm::DenseMapInfo<llvm::Intrinsic::ID>::getTombstoneKey();
-        auto P = llvm::DenseMapInfo<llvm::Value *>::getTombstoneKey();
-        return ::Instruction::Identifier{K, K, P};
+        return ::Instruction::Intrinsic{K, K};
     }
 
-    static auto getHashValue(const ::Instruction::Identifier &Key) -> unsigned;
+    static auto getHashValue(const ::Instruction::Intrinsic &Key) -> unsigned;
 
-    static auto isEqual(const ::Instruction::Identifier &LHS,
-                        const ::Instruction::Identifier &RHS) -> bool {
+    static auto isEqual(const ::Instruction::Intrinsic &LHS,
+                        const ::Instruction::Intrinsic &RHS) -> bool {
         return LHS == RHS;
     }
 };
@@ -919,14 +1193,9 @@ struct Map {
             // Otherwise, we check if it seems to have led to a live, non-empty
             // path.
             // TODO: should we union the predicates in case of returned?
-            if (BBsrc == BBhead) {
-                return Destination::Returned;
-            } else if (auto f = predMap.find(BBsrc);
-                       f != predMap.rend() && !f->second.isEmpty()) {
-                return Destination::Returned;
-            } else {
+            if ((BBsrc != BBhead) && predMap.find(BBsrc) != predMap.rend())
                 return Destination::Reached;
-            }
+            return Destination::Returned;
         }
         // Inserts a tombstone to indicate that we have visited BBsrc, but not
         // actually reached a destination.
@@ -1008,7 +1277,7 @@ auto Instruction::Cache::createInstruction(llvm::BumpPtrAllocator &alloc,
                                            Predicate::Map &predMap,
                                            llvm::Instruction *instr)
     -> Instruction * {
-    auto i = new (alloc) Instruction(Identifier(instr), instr->getType());
+    auto i = new (alloc) Instruction(Intrinsic(instr), instr->getType());
     // allocate and store first to avoid cycles
     llvmToInternalMap[instr] = i;
     auto pred = predMap[instr];
@@ -1028,7 +1297,7 @@ auto Instruction::Cache::createInstruction(llvm::BumpPtrAllocator &alloc,
     assert(insertIter.second);
     assert(insertIter.first->second == i);
     i->predicates = *pred;
-    i->operands = std::get<3>(insertIter.first->first);
+    i->operands = std::get<2>(insertIter.first->first);
     for (auto *op : i->operands) {
         op->users.push_back(i);
     }
@@ -1064,7 +1333,7 @@ auto Instruction::Cache::get(llvm::BumpPtrAllocator &alloc,
     }
     if (auto *instr = llvm::dyn_cast<llvm::Instruction>(v))
         return createInstruction(alloc, predMap, instr);
-    auto *i = new (alloc) Instruction(Identifier(v), v->getType());
+    auto *i = new (alloc) Instruction(Intrinsic(v), v->getType());
     llvmToInternalMap[v] = i;
     return i;
 }
