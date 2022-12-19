@@ -3,6 +3,7 @@
 // nor an operator will be outside of the struct/class.
 
 #include "./TypePromotion.hpp"
+#include "BitSets.hpp"
 #include <bit>
 #include <cassert>
 #include <cmath>
@@ -16,6 +17,7 @@
 #include <llvm/Support/raw_ostream.h>
 #include <numeric>
 #include <optional>
+#include <sched.h>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -69,186 +71,170 @@ concept AbstractVector =
                         //     } -> std::same_as<const bool &>;
                         // {t.extendOrAssertSize(i)};
                     };
+
+enum class AxisType {
+    Row,
+    Column,
+    RowStride,
+
+};
+auto operator<<(llvm::raw_ostream &os, AxisType x) -> llvm::raw_ostream & {
+    switch (x) {
+    case AxisType::Row:
+        return os << "Row";
+    case AxisType::Column:
+        return os << "Column";
+    case AxisType::RowStride:
+        return os << "RowStride";
+    }
+}
+
 // strong typing
-template <typename T> struct StrongIntWrapper {
+template <AxisType T> struct AxisInt {
     using V = size_t;
     [[no_unique_address]] V value{0};
     // [[no_unique_address]] unsigned int value{0};
-    constexpr StrongIntWrapper() = default;
-    constexpr StrongIntWrapper(V value) : value(value) {}
+    constexpr AxisInt() = default;
+    constexpr AxisInt(V value) : value(value) {}
     explicit constexpr operator size_t() const { return value; }
     explicit constexpr operator ptrdiff_t() const { return value; }
     explicit constexpr operator unsigned() const { return value; }
     explicit constexpr operator bool() const { return value; }
 
-    constexpr auto operator+(V i) const -> T { return T{value + i}; }
-    constexpr auto operator-(V i) const -> T { return T{value - i}; }
-    constexpr auto operator*(V i) const -> T { return T{value * i}; }
-    constexpr auto operator/(V i) const -> T { return T{value / i}; }
-    constexpr auto operator%(V i) const -> T { return T{value % i}; }
+    constexpr auto operator+(V i) const -> AxisInt<T> { return value + i; }
+    constexpr auto operator-(V i) const -> AxisInt<T> { return value - i; }
+    constexpr auto operator*(V i) const -> AxisInt<T> { return value * i; }
+    constexpr auto operator/(V i) const -> AxisInt<T> { return value / i; }
+    constexpr auto operator%(V i) const -> AxisInt<T> { return value % i; }
     constexpr auto operator==(V i) const -> bool { return value == i; }
     constexpr auto operator!=(V i) const -> bool { return value != i; }
     constexpr auto operator<(V i) const -> bool { return value < i; }
     constexpr auto operator<=(V i) const -> bool { return value <= i; }
     constexpr auto operator>(V i) const -> bool { return value > i; }
     constexpr auto operator>=(V i) const -> bool { return value >= i; }
-    constexpr auto operator++() -> T & {
+    constexpr auto operator++() -> AxisInt<T> & {
         ++value;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator++(int) -> T { return T{value++}; }
-    constexpr auto operator--() -> T & {
+    constexpr auto operator++(int) -> AxisInt<T> { return value++; }
+    constexpr auto operator--() -> AxisInt<T> & {
         --value;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator--(int) -> T { return T{value--}; }
-    constexpr auto operator+=(T i) -> T & {
+    constexpr auto operator--(int) -> AxisInt<T> { return value--; }
+    constexpr auto operator+=(AxisInt<T> i) -> AxisInt<T> & {
         value += V(i);
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator+=(V i) -> T & {
+    constexpr auto operator+=(V i) -> AxisInt<T> & {
         value += i;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator-=(T i) -> T & {
+    constexpr auto operator-=(AxisInt<T> i) -> AxisInt<T> & {
         value -= V(i);
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator-=(V i) -> T & {
+    constexpr auto operator-=(V i) -> AxisInt<T> & {
         value -= i;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator*=(T i) -> T & {
+    constexpr auto operator*=(AxisInt<T> i) -> AxisInt<T> & {
         value *= V(i);
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator*=(V i) -> T & {
+    constexpr auto operator*=(V i) -> AxisInt<T> & {
         value *= i;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator/=(T i) -> T & {
+    constexpr auto operator/=(AxisInt<T> i) -> AxisInt<T> & {
         value /= V(i);
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator/=(V i) -> T & {
+    constexpr auto operator/=(V i) -> AxisInt<T> & {
         value /= i;
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator%=(T i) -> T & {
+    constexpr auto operator%=(AxisInt<T> i) -> AxisInt<T> & {
         value %= V(i);
-        return *static_cast<T *>(this);
+        return *this;
     }
-    constexpr auto operator%=(V i) -> T & {
+    constexpr auto operator%=(V i) -> AxisInt<T> & {
         value %= i;
-        return *static_cast<T *>(this);
+        return *this;
+    }
+    constexpr auto operator*() const -> V { return value; }
+
+    friend auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
+        -> llvm::raw_ostream & {
+        return os << T << "{" << *x << "}";
     }
 };
-template <typename T, typename W>
-constexpr auto operator+(T *p, StrongIntWrapper<W> y) -> T * {
-    return p + y.value;
+template <typename T, AxisType W>
+constexpr auto operator+(T *p, AxisInt<W> y) -> T * {
+    return p + *y;
 }
-template <typename T, typename W>
-constexpr auto operator-(T *p, StrongIntWrapper<W> y) -> T * {
-    return p - y.value;
+template <typename T, AxisType W>
+constexpr auto operator-(T *p, AxisInt<W> y) -> T * {
+    return p - *y;
 }
 
-template <typename T>
-constexpr auto operator+(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
-    return T{x.value + y.value};
+template <AxisType T>
+constexpr auto operator+(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
+    return (*x) + (*y);
 }
-template <typename T>
-constexpr auto operator-(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
-    return T{x.value - y.value};
+template <AxisType T>
+constexpr auto operator-(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
+    return (*x) - (*y);
 }
-template <typename T>
-constexpr auto operator*(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
-    return T{x.value * y.value};
+template <AxisType T>
+constexpr auto operator*(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
+    return (*x) * (*y);
 }
-template <typename T>
-constexpr auto operator/(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
-    return T{x.value / y.value};
+template <AxisType T>
+constexpr auto operator/(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
+    return (*x) / (*y);
 }
-template <typename T>
-constexpr auto operator%(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
-    return T{x.value % y.value};
+template <AxisType T>
+constexpr auto operator%(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
+    return (*x) % (*y);
 }
-template <typename T>
-constexpr auto operator==(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
-    -> bool {
-    return x.value == y.value;
+template <AxisType T>
+constexpr auto operator==(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x == *y;
 }
-template <typename T>
-constexpr auto operator!=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
-    -> bool {
-    return x.value != y.value;
+template <AxisType T>
+constexpr auto operator!=(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x != *y;
 }
-template <typename T>
-constexpr auto operator<(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> bool {
-    return x.value < y.value;
+template <AxisType T>
+constexpr auto operator<(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x < *y;
 }
-template <typename T>
-constexpr auto operator<=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
-    -> bool {
-    return x.value <= y.value;
+template <AxisType T>
+constexpr auto operator<=(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x <= *y;
 }
-template <typename T>
-constexpr auto operator>(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> bool {
-    return x.value > y.value;
+template <AxisType T>
+constexpr auto operator>(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x > *y;
 }
-template <typename T>
-constexpr auto operator>=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
-    -> bool {
-    return x.value >= y.value;
+template <AxisType T>
+constexpr auto operator>=(AxisInt<T> x, AxisInt<T> y) -> bool {
+    return *x >= *y;
 }
+using Col = AxisInt<AxisType::Column>;
+using Row = AxisInt<AxisType::Row>;
+using RowStride = AxisInt<AxisType::RowStride>;
 
-struct RowStride;
-/// Strong typing for cols
-struct Col : StrongIntWrapper<Col> {
-    explicit constexpr operator RowStride();
-    constexpr Col() = default;
-    constexpr Col(StrongIntWrapper<Col>::V i) : StrongIntWrapper<Col>(i) {}
-    friend auto operator<<(llvm::raw_ostream &os, Col x)
-        -> llvm::raw_ostream & {
-        return os << "Col{" << size_t(x) << "}";
-    }
-};
-/// Strong typing for rows
-struct Row : StrongIntWrapper<Row> {
-    constexpr Row() = default;
-    constexpr Row(StrongIntWrapper<Row>::V i) : StrongIntWrapper<Row>(i) {}
-    friend auto operator<<(llvm::raw_ostream &os, Row x)
-        -> llvm::raw_ostream & {
-        return os << "Row{" << size_t(x) << "}";
-    }
-};
-/// Strong typing for row strides
-struct RowStride : StrongIntWrapper<RowStride> {
-    constexpr RowStride() = default;
-    constexpr RowStride(StrongIntWrapper<RowStride>::V i)
-        : StrongIntWrapper<RowStride>(i) {}
-    using StrongIntWrapper<RowStride>::operator*,
-        StrongIntWrapper<RowStride>::operator>=,
-        StrongIntWrapper<RowStride>::operator<;
-    constexpr auto operator*(Row M) const -> size_t {
-        return value * size_t(M);
-    }
-    constexpr auto operator>=(Col x) const -> bool {
-        return value >= size_t(x);
-    }
-    constexpr auto operator<(Col x) const -> bool { return value < size_t(x); }
-    friend auto operator<<(llvm::raw_ostream &os, RowStride x)
-        -> llvm::raw_ostream & {
-        return os << "RowStride{" << size_t(x) << "}";
-    }
-};
+constexpr auto operator*(RowStride x, Row y) -> size_t { return (*x) * (*y); }
+constexpr auto operator>=(RowStride x, Col u) -> bool { return (*x) >= (*u); }
+constexpr auto operator<(RowStride x, Col u) -> bool { return (*x) < (*u); }
+
 static_assert(sizeof(Row) == sizeof(size_t));
 static_assert(sizeof(Col) == sizeof(size_t));
 static_assert(sizeof(RowStride) == sizeof(size_t));
-constexpr auto operator*(Row r, Col c) -> StrongIntWrapper<Row>::V {
-    return r.value * c.value;
-}
+constexpr auto operator*(Row r, Col c) -> Row::V { return *r * *c; }
 
-constexpr Col::operator RowStride() { return RowStride{value}; }
 constexpr auto operator<(size_t x, Row y) -> bool { return x < size_t(y); }
 constexpr auto operator<(size_t x, Col y) -> bool { return x < size_t(y); }
 constexpr auto operator>(size_t x, Row y) -> bool { return x > size_t(y); }
@@ -262,7 +248,6 @@ constexpr auto operator-(size_t x, Row y) -> Row { return Row{x - size_t(y)}; }
 constexpr auto operator*(size_t x, Row y) -> Row { return Row{x * size_t(y)}; }
 constexpr auto operator+(size_t x, RowStride y) -> RowStride {
     return RowStride{x + size_t(y)};
-    // return RowStride{static_cast<unsigned int>(x + size_t(y))};
 }
 constexpr auto operator-(size_t x, RowStride y) -> RowStride {
     return RowStride{x - size_t(y)};
@@ -273,6 +258,9 @@ constexpr auto operator*(size_t x, RowStride y) -> RowStride {
 
 constexpr auto max(Col N, RowStride X) -> RowStride {
     return RowStride{std::max(size_t(N), size_t(X))};
+}
+constexpr auto min(Col N, Col X) -> Col {
+    return Col{std::max(Col::V(N), Col::V(X))};
 }
 
 template <typename T>
@@ -576,33 +564,30 @@ template <typename B, typename E> struct Range {
 template <std::integral B, std::integral E> struct Range<B, E> {
     [[no_unique_address]] B b;
     [[no_unique_address]] E e;
+    // wrapper that allows dereferencing
     struct Iterator {
-        B i;
+        [[no_unique_address]] B i;
         constexpr auto operator==(E e) -> bool { return i == e; }
         auto operator++() -> Iterator & {
             ++i;
             return *this;
         }
-        auto operator++(int) -> Iterator {
-            Iterator t = *this;
-            ++*this;
-            return t;
-        }
+        auto operator++(int) -> Iterator { return Iterator{i++}; }
         auto operator--() -> Iterator & {
             --i;
             return *this;
         }
-        auto operator--(int) -> Iterator {
-            Iterator t = *this;
-            --*this;
-            return t;
-        }
+        auto operator--(int) -> Iterator { return Iterator{i--}; }
         auto operator*() -> B { return i; }
     };
     [[nodiscard]] constexpr auto begin() const -> Iterator {
         return Iterator{b};
     }
     [[nodiscard]] constexpr auto end() const -> E { return e; }
+    [[nodiscard]] constexpr auto rbegin() const -> Iterator {
+        return Iterator{e - 1};
+    }
+    [[nodiscard]] constexpr auto rend() const -> E { return b - 1; }
     [[nodiscard]] constexpr auto size() const { return e - b; }
     friend auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
         -> llvm::raw_ostream & {
@@ -1511,11 +1496,15 @@ template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
     static_assert(!std::is_const_v<T>, "const T is redundant");
 
     [[no_unique_address]] const T *const mem;
-    [[no_unique_address]] Row M;
-    [[no_unique_address]] Col N;
-    [[no_unique_address]] RowStride X;
+    [[no_unique_address]] unsigned int M, N, X;
+    // [[no_unique_address]] Row M;
+    // [[no_unique_address]] Col N;
+    // [[no_unique_address]] RowStride X;
 
     [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
+    [[nodiscard]] constexpr auto _numRow() const -> unsigned { return M; }
+    [[nodiscard]] constexpr auto _numCol() const -> unsigned { return N; }
+    [[nodiscard]] constexpr auto _rowStride() const -> unsigned { return X; }
     [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
     [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
     [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
@@ -1548,20 +1537,23 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
     static_assert(!std::is_const_v<T>,
                   "MutPtrMatrix should never have const T");
     [[no_unique_address]] T *const mem;
-    [[no_unique_address]] Row M;
-    [[no_unique_address]] Col N;
-    [[no_unique_address]] RowStride X;
+    [[no_unique_address]] unsigned int M, N, X;
+    // [[no_unique_address]] Col N;
+    // [[no_unique_address]] RowStride X;
 
+    [[nodiscard]] constexpr auto data() -> T * { return mem; }
+    [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
     [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
     [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
     [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
-    [[nodiscard]] constexpr auto data() -> T * { return mem; }
-    [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
+    [[nodiscard]] constexpr auto _numRow() const -> unsigned { return M; }
+    [[nodiscard]] constexpr auto _numCol() const -> unsigned { return N; }
+    [[nodiscard]] constexpr auto _rowStride() const -> unsigned { return X; }
     [[nodiscard]] constexpr auto view() const -> PtrMatrix<T> {
-        return PtrMatrix<T>(data(), numRow(), numCol(), rowStride());
+        return PtrMatrix<T>(data(), _numRow(), _numCol(), _rowStride());
     };
     constexpr operator PtrMatrix<T>() const {
-        return PtrMatrix<T>(data(), numRow(), numCol(), rowStride());
+        return PtrMatrix<T>(data(), _numRow(), _numCol(), _rowStride());
     }
 
     auto operator=(const SmallSparseMatrix<T> &A) -> MutPtrMatrix<T> {
@@ -1672,10 +1664,10 @@ MutPtrMatrix(T &A) -> MutPtrMatrix<eltype_t<T>>;
 //             .mem = ptr, .M = numRow, .N = numCol, .X = stride};
 //     }
 // }
-static_assert(sizeof(PtrMatrix<int64_t>) ==
-              3 * sizeof(size_t) + sizeof(int64_t *));
-static_assert(sizeof(MutPtrMatrix<int64_t>) ==
-              3 * sizeof(size_t) + sizeof(int64_t *));
+static_assert(sizeof(PtrMatrix<int64_t>) <=
+              4 * sizeof(unsigned int) + sizeof(int64_t *));
+static_assert(sizeof(MutPtrMatrix<int64_t>) <=
+              4 * sizeof(unsigned int) + sizeof(int64_t *));
 static_assert(std::is_trivially_copyable_v<Row>);
 static_assert(std::is_trivially_copyable_v<Col>);
 static_assert(std::is_trivially_copyable_v<RowStride>);
@@ -1939,19 +1931,20 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         Base::operator ::LinearAlgebra::MutPtrMatrix<T>;
     using eltype = std::remove_reference_t<T>;
     [[no_unique_address]] llvm::SmallVector<T, S> mem;
-    [[no_unique_address]] Row M;
-    [[no_unique_address]] Col N;
-    [[no_unique_address]] RowStride X;
+    [[no_unique_address]] unsigned int M = 0, N = 0, X = 0;
+    // [[no_unique_address]] Row M;
+    // [[no_unique_address]] Col N;
+    // [[no_unique_address]] RowStride X;
 
     constexpr auto data() -> T * { return mem.data(); }
     [[nodiscard]] constexpr auto data() const -> const T * {
         return mem.data();
     }
     Matrix(llvm::SmallVector<T, S> content, Row M, Col N)
-        : mem(std::move(content)), M(M), N(N), X(RowStride(N)){};
+        : mem(std::move(content)), M(M), N(N), X(RowStride(*N)){};
 
     Matrix(Row M, Col N)
-        : mem(llvm::SmallVector<T, S>(M * N)), M(M), N(N), X(RowStride(N)){};
+        : mem(llvm::SmallVector<T, S>(M * N)), M(M), N(N), X(RowStride(*N)){};
 
     Matrix() = default;
     Matrix(SquareMatrix<T> &&A)
@@ -1972,11 +1965,12 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     [[nodiscard]] constexpr auto end() const {
         return mem.begin() + rowStride() * M;
     }
-    [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
-    [[nodiscard]] constexpr auto numCol() const -> Col { return Col{N}; }
-    [[nodiscard]] constexpr auto rowStride() const -> RowStride {
-        return RowStride{X};
-    }
+    [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
+    [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
+    [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
+    [[nodiscard]] constexpr auto _numRow() const -> unsigned { return M; }
+    [[nodiscard]] constexpr auto _numCol() const -> unsigned { return N; }
+    [[nodiscard]] constexpr auto _rowStride() const -> unsigned { return X; }
 
     static auto uninitialized(Row MM, Col NN) -> Matrix<T, 0, 0, S> {
         Matrix<T, 0, 0, S> A(0, 0);
@@ -1999,9 +1993,7 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         return identity(size_t(N));
     }
     void clear() {
-        M = Row{0};
-        N = Col{0};
-        X = RowStride{0};
+        M = N = X = 0;
         mem.clear();
     }
 
@@ -2020,9 +2012,9 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         for (size_t m = minMMM; m < size_t(MM); ++m)
             for (size_t n = 0; n < size_t(NN); ++n)
                 mem[size_t(XX * m + n)] = 0;
-        X = XX;
-        M = MM;
-        N = NN;
+        X = *XX;
+        M = *MM;
+        N = *NN;
     }
     void insertZero(Col i) {
         Col NN = N + 1;
@@ -2038,36 +2030,35 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         // zero
         for (size_t m = 0; m < M; ++m)
             mem[size_t(XX * m) + size_t(i)] = 0;
-        X = XX;
-        N = NN;
+        X = *XX;
+        N = *NN;
     }
     void resize(Row MM, Col NN) { resize(MM, NN, max(NN, X)); }
     void reserve(Row MM, Col NN) { reserve(MM, max(NN, X)); }
     void reserve(Row MM, RowStride NN) { mem.reserve(NN * MM); }
-    void clearReserve(Row MM, Col NN) { clearReserve(MM, RowStride(NN)); }
+    void clearReserve(Row MM, Col NN) { clearReserve(MM, RowStride(*NN)); }
     void clearReserve(Row MM, RowStride XX) {
         clear();
         mem.reserve(XX * MM);
     }
     void resizeForOverwrite(Row MM, Col NN, RowStride XX) {
         assert(XX >= NN);
-        M = MM;
-        N = NN;
-        X = XX;
+        M = *MM;
+        N = *NN;
+        X = *XX;
         if (X * M > mem.size())
             mem.resize_for_overwrite(X * M);
     }
     void resizeForOverwrite(Row MM, Col NN) {
-        M = MM;
-        N = NN;
-        X = RowStride(NN);
+        M = *MM;
+        N = X = *NN;
         if (X * M > mem.size())
             mem.resize_for_overwrite(X * M);
     }
 
     void resize(Row MM) {
         Row Mold = M;
-        M = MM;
+        M = *MM;
         if (rowStride() * M > mem.size())
             mem.resize(X * M);
         if (M > Mold)
@@ -2076,15 +2067,15 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     void resizeForOverwrite(Row MM) {
         if (rowStride() * MM > mem.size())
             mem.resize_for_overwrite(X * M);
-        M = MM;
+        M = *MM;
     }
     void resize(Col NN) { resize(M, NN); }
     void resizeForOverwrite(Col NN) {
         if (X < NN) {
-            X = RowStride(NN);
+            X = *NN;
             mem.resize_for_overwrite(X * M);
         }
-        N = NN;
+        N = *NN;
     }
     void erase(Col i) {
         assert(i < N);
@@ -2099,13 +2090,13 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         mem.erase(it, it + X);
         --M;
     }
-    void truncate(Col NN) {
+    constexpr void truncate(Col NN) {
         assert(NN <= N);
-        N = NN;
+        N = *NN;
     }
-    void truncate(Row MM) {
+    constexpr void truncate(Row MM) {
         assert(MM <= M);
-        M = MM;
+        M = *MM;
     }
     auto operator=(T x) -> Matrix<T, 0, 0, S> & {
         const Row M = numRow();
@@ -2644,9 +2635,10 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
     LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector,
     LinearAlgebra::Vector, LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix,
     LinearAlgebra::IntMatrix, LinearAlgebra::PtrMatrix,
-    LinearAlgebra::MutPtrMatrix, LinearAlgebra::Row, LinearAlgebra::Col,
+    LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt, LinearAlgebra::AxisInt,
     LinearAlgebra::SmallSparseMatrix, LinearAlgebra::SquareMatrix,
     LinearAlgebra::StridedVector, LinearAlgebra::MutStridedVector,
     LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::Range,
     LinearAlgebra::begin, LinearAlgebra::end, LinearAlgebra::swap,
-    LinearAlgebra::SquarePtrMatrix;
+    LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
+    LinearAlgebra::RowStride, LinearAlgebra::Col;

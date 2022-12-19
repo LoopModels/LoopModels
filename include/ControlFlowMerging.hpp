@@ -153,6 +153,8 @@ struct MergingCost {
         void merge(size_t i, Instruction *A, Instruction *B) {}
         void select(size_t i, Instruction *A, Instruction *B) {
             auto *S = Instruction::createSelect(alloc, A, B);
+            A->replaceAllOtherUsesWith(S);
+            B->replaceAllOtherUsesWith(S);
             operands[i] = S;
         }
     };

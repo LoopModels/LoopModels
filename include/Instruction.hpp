@@ -1085,6 +1085,26 @@ struct Instruction {
             return 0;
         }
     }
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    void replaceOperand(Instruction *old, Instruction *new_) {
+        for (auto &&op : operands)
+            if (op == old)
+                op = new_;
+    }
+    /// replace all uses of `*this` with `*I`.
+    /// Assumes that `*I` does not depend on `*this`.
+    void replaceAllUsesWith(Instruction *I) {
+        for (auto u : users)
+            u->replaceOperand(this, I);
+    }
+    /// replace all uses of `*this` with `*I`, except for `*I` itself.
+    /// This is useful when replacing `*this` with `*I = f(*this)`
+    /// E.g., when merging control flow branches, where `f` may be a select
+    void replaceAllOtherUsesWith(Instruction *I) {
+        for (auto u : users)
+            if (u != I)
+                u->replaceOperand(this, I);
+    }
 };
 
 /// Provide DenseMapInfo for Identifier.
