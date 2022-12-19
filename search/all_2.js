@@ -13,6 +13,5 @@ var searchData=
   ['count_25',['Count',['../structMergingCost_1_1Count.html',1,'MergingCost']]],
   ['cpuexecutionmodel_26',['CPUExecutionModel',['../structCPUExecutionModel.html',1,'']]],
   ['cpuregisterfile_27',['CPURegisterFile',['../structCPURegisterFile.html',1,'']]],
-  ['createinstruction_28',['createInstruction',['../structInstruction_1_1Cache.html#ab884af9c628821e10948b782c62b4609',1,'Instruction::Cache']]],
-  ['createselect_29',['createSelect',['../structInstruction.html#aaaa7a29d0fd942d69ec53ba649cc2c37',1,'Instruction']]]
+  ['createselect_28',['createSelect',['../structInstruction_1_1Cache.html#a37d61f99a3da1f930285614bdcca0898',1,'Instruction::Cache']]]
 ];

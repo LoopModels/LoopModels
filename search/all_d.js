@@ -1,17 +1,12 @@
 var searchData=
 [
-  ['polyhedra_118',['Polyhedra',['../structPolyhedra.html',1,'']]],
-  ['polyhedra_3c_20emptymatrix_3c_20int64_5ft_20_3e_2c_20linearsymboliccomparator_2c_20llvm_3a_3asmallvector_3c_20const_20llvm_3a_3ascev_20_2a_20_3e_2c_20nonnegative_20_3e_119',['Polyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, NonNegative &gt;',['../structPolyhedra.html',1,'']]],
-  ['predicates_120',['Predicates',['../structInstruction_1_1Predicates.html',1,'Instruction']]],
-  ['preheader_121',['preHeader',['../structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd',1,'LoopTreeSchedule']]],
-  ['promoteeltype_122',['PromoteEltype',['../structPromoteEltype.html',1,'']]],
-  ['promotetype_123',['PromoteType',['../structPromoteType.html',1,'']]],
-  ['promotetype_3c_20a_2c_20b_20_3e_124',['PromoteType&lt; A, B &gt;',['../structPromoteType_3_01A_00_01B_01_4.html',1,'']]],
-  ['promotetype_3c_20i_2c_20rational_20_3e_125',['PromoteType&lt; I, Rational &gt;',['../structPromoteType_3_01I_00_01Rational_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20i_20_3e_126',['PromoteType&lt; Rational, I &gt;',['../structPromoteType_3_01Rational_00_01I_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20rational_20_3e_127',['PromoteType&lt; Rational, Rational &gt;',['../structPromoteType_3_01Rational_00_01Rational_01_4.html',1,'']]],
-  ['ptrmatrix_128',['PtrMatrix',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
-  ['ptrmatrix_3c_20int64_5ft_20_3e_129',['PtrMatrix&lt; int64_t &gt;',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
-  ['ptrvector_130',['PtrVector',['../structLinearAlgebra_1_1PtrVector.html',1,'LinearAlgebra']]],
-  ['pushlooptree_131',['pushLoopTree',['../classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de',1,'TurboLoopPass']]]
+  ['range_135',['Range',['../structLinearAlgebra_1_1Range.html',1,'LinearAlgebra']]],
+  ['range_3c_20b_2c_20e_20_3e_136',['Range&lt; B, E &gt;',['../structLinearAlgebra_1_1Range_3_01B_00_01E_01_4.html',1,'LinearAlgebra']]],
+  ['rational_137',['Rational',['../structRational.html',1,'']]],
+  ['recipthroughputlatency_138',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
+  ['reference_139',['Reference',['../structBitSet64_1_1Reference.html',1,'BitSet64::Reference'],['../structBitSet_1_1Reference.html',1,'BitSet&lt; PreallocatedStorage &gt;::Reference'],['../structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html',1,'LinearAlgebra::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
+  ['removeemptymask_140',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
+  ['reverseiterator_141',['ReverseIterator',['../structBitSet64_1_1ReverseIterator.html',1,'BitSet64']]],
+  ['row_142',['Row',['../structLinearAlgebra_1_1Row.html',1,'LinearAlgebra']]],
+  ['rowstride_143',['RowStride',['../structLinearAlgebra_1_1RowStride.html',1,'LinearAlgebra']]]
 ];

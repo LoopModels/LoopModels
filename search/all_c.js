@@ -1,13 +1,17 @@
 var searchData=
 [
-  ['offsetbegin_108',['OffsetBegin',['../structLinearAlgebra_1_1OffsetBegin.html',1,'LinearAlgebra']]],
-  ['offsetend_109',['OffsetEnd',['../structLinearAlgebra_1_1OffsetEnd.html',1,'LinearAlgebra']]],
-  ['one_110',['One',['../structOne.html',1,'']]],
-  ['op_111',['op',['../structInstruction_1_1Identifier.html#ab4b69fff5642067d4da1432c6e46abe4',1,'Instruction::Identifier']]],
-  ['operator_7c_3d_112',['operator|=',['../structPredicate_1_1Set.html#a73579f1c8eaf6a998b6543bdf69f76fd',1,'Predicate::Set::operator|=(Intersection other) -&gt; Set &amp;'],['../structPredicate_1_1Set.html#a89d258109261725f37e377ece23858ed',1,'Predicate::Set::operator|=(const Set &amp;other) -&gt; Set &amp;']]],
-  ['optimize_113',['optimize',['../structLinearProgramLoopBlock.html#aad26576b4763d758bf1f49c03a1adaf1',1,'LinearProgramLoopBlock']]],
-  ['optional_114',['Optional',['../structOptional.html',1,'']]],
-  ['optional_3c_20t_20_2a_20_3e_115',['Optional&lt; T * &gt;',['../structOptional_3_01T_01_5_01_4.html',1,'']]],
-  ['optional_3c_20t_20_3e_116',['Optional&lt; T &gt;',['../structOptional_3_01T_01_4.html',1,'']]],
-  ['outneighbors_117',['OutNeighbors',['../structLinearProgramLoopBlock_1_1OutNeighbors.html',1,'LinearProgramLoopBlock']]]
+  ['polyhedra_121',['Polyhedra',['../structPolyhedra.html',1,'']]],
+  ['polyhedra_3c_20emptymatrix_3c_20int64_5ft_20_3e_2c_20linearsymboliccomparator_2c_20llvm_3a_3asmallvector_3c_20const_20llvm_3a_3ascev_20_2a_20_3e_2c_20nonnegative_20_3e_122',['Polyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, NonNegative &gt;',['../structPolyhedra.html',1,'']]],
+  ['predicates_123',['Predicates',['../structInstruction_1_1Predicates.html',1,'Instruction']]],
+  ['preheader_124',['preHeader',['../structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd',1,'LoopTreeSchedule']]],
+  ['promoteeltype_125',['PromoteEltype',['../structPromoteEltype.html',1,'']]],
+  ['promotetype_126',['PromoteType',['../structPromoteType.html',1,'']]],
+  ['promotetype_3c_20a_2c_20b_20_3e_127',['PromoteType&lt; A, B &gt;',['../structPromoteType_3_01A_00_01B_01_4.html',1,'']]],
+  ['promotetype_3c_20i_2c_20rational_20_3e_128',['PromoteType&lt; I, Rational &gt;',['../structPromoteType_3_01I_00_01Rational_01_4.html',1,'']]],
+  ['promotetype_3c_20rational_2c_20i_20_3e_129',['PromoteType&lt; Rational, I &gt;',['../structPromoteType_3_01Rational_00_01I_01_4.html',1,'']]],
+  ['promotetype_3c_20rational_2c_20rational_20_3e_130',['PromoteType&lt; Rational, Rational &gt;',['../structPromoteType_3_01Rational_00_01Rational_01_4.html',1,'']]],
+  ['ptrmatrix_131',['PtrMatrix',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
+  ['ptrmatrix_3c_20int64_5ft_20_3e_132',['PtrMatrix&lt; int64_t &gt;',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
+  ['ptrvector_133',['PtrVector',['../structLinearAlgebra_1_1PtrVector.html',1,'LinearAlgebra']]],
+  ['pushlooptree_134',['pushLoopTree',['../classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de',1,'TurboLoopPass']]]
 ];

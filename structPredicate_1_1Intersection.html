@@ -109,13 +109,28 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:aed52d9dc23251d86c52748f9b59b7d02"><td class="memItemLeft" align="right" valign="top"><a id="aed52d9dc23251d86c52748f9b59b7d02"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&amp;=</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) -&gt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &amp;</td></tr>
 <tr class="separator:aed52d9dc23251d86c52748f9b59b7d02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3947e7f38f3e3c6b6955b7c0e42d59e5"><td class="memItemLeft" align="right" valign="top"><a id="a3947e7f38f3e3c6b6955b7c0e42d59e5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>popCount</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a3947e7f38f3e3c6b6955b7c0e42d59e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36e139c6c8931061c90b4f9c3d65bf7c"><td class="memItemLeft" align="right" valign="top"><a id="a36e139c6c8931061c90b4f9c3d65bf7c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFirstIndex</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a36e139c6c8931061c90b4f9c3d65bf7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4136e4fcc635ac25431aa64fa7ed8e0"><td class="memItemLeft" align="right" valign="top"><a id="af4136e4fcc635ac25431aa64fa7ed8e0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNextIndex</b> (size_t i) const -&gt; size_t</td></tr>
+<tr class="separator:af4136e4fcc635ac25431aa64fa7ed8e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a955076f74163093f46e90c5f1877ad93"><td class="memItemLeft" align="right" valign="top"><a id="a955076f74163093f46e90c5f1877ad93"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93">isEmpty</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a955076f74163093f46e90c5f1877ad93"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns <code>true</code> if the PredicateIntersection is empty, <code>false</code> otherwise <br /></td></tr>
 <tr class="separator:a955076f74163093f46e90c5f1877ad93"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25fd4065d3d5dbc1a2e62b73dffdfc90"><td class="memItemLeft" align="right" valign="top"><a id="a25fd4065d3d5dbc1a2e62b73dffdfc90"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConflict</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) -&gt; std::pair&lt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &gt;</td></tr>
-<tr class="separator:a25fd4065d3d5dbc1a2e62b73dffdfc90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d1f0090870dda7b411175c044b8e0b5"><td class="memItemLeft" align="right" valign="top"><a id="a2d1f0090870dda7b411175c044b8e0b5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getConflict</b> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) const -&gt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a></td></tr>
+<tr class="separator:a2d1f0090870dda7b411175c044b8e0b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d66b9672f6870df73846b5b5c2b5a3f"><td class="memItemLeft" align="right" valign="top"><a id="a6d66b9672f6870df73846b5b5c2b5a3f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countTrue</b> () const</td></tr>
+<tr class="separator:a6d66b9672f6870df73846b5b5c2b5a3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab07716a4ac294f74ead522cc83d25f08"><td class="memItemLeft" align="right" valign="top"><a id="ab07716a4ac294f74ead522cc83d25f08"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>countFalse</b> () const</td></tr>
+<tr class="separator:ab07716a4ac294f74ead522cc83d25f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaa2b904ea48bc52b82906c61c905274e"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e">compactUnion</a> (<a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> other) const -&gt; std::variant&lt; std::monostate, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, std::pair&lt; <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a>, <a class="el" href="structPredicate_1_1Intersection.html">Intersection</a> &gt;&gt;</td></tr>
 <tr class="separator:aaa2b904ea48bc52b82906c61c905274e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
