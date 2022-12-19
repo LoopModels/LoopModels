@@ -120,12 +120,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>rbegin</b> () -&gt; d
 <tr class="memitem:ae2cbc9abba1d55a02d7975798a4c5b1a"><td class="memItemLeft" align="right" valign="top"><a id="ae2cbc9abba1d55a02d7975798a4c5b1a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>rend</b> () -&gt; decltype(map.end())</td></tr>
 <tr class="separator:ae2cbc9abba1d55a02d7975798a4c5b1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adce8d40e50716c3bfcff2b7bf1812f52"><td class="memItemLeft" align="right" valign="top"><a id="adce8d40e50716c3bfcff2b7bf1812f52"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::BasicBlock *bb) -&gt; std::optional&lt; <a class="el" href="structInstruction_1_1Predicates.html">Instruction::Predicates</a> &gt;</td></tr>
-<tr class="separator:adce8d40e50716c3bfcff2b7bf1812f52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a312ef98fdaf3d8ddb487d283c7001755"><td class="memItemLeft" align="right" valign="top"><a id="a312ef98fdaf3d8ddb487d283c7001755"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Instruction *inst) -&gt; std::optional&lt; <a class="el" href="structInstruction_1_1Predicates.html">Instruction::Predicates</a> &gt;</td></tr>
-<tr class="separator:a312ef98fdaf3d8ddb487d283c7001755"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e46437377712655de987c595ba835a7"><td class="memItemLeft" align="right" valign="top"><a id="a0e46437377712655de987c595ba835a7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::BasicBlock *bb) -&gt; std::optional&lt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &gt;</td></tr>
+<tr class="separator:a0e46437377712655de987c595ba835a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b5d419032dd780471905202afab3105"><td class="memItemLeft" align="right" valign="top"><a id="a5b5d419032dd780471905202afab3105"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (llvm::Instruction *inst) -&gt; std::optional&lt; <a class="el" href="structPredicate_1_1Set.html">Set</a> &gt;</td></tr>
+<tr class="separator:a5b5d419032dd780471905202afab3105"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afe99e68cf91ed4385c5b2aee7d74d887"><td class="memItemLeft" align="right" valign="top"><a id="afe99e68cf91ed4385c5b2aee7d74d887"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (std::pair&lt; llvm::BasicBlock *, <a class="el" href="structPredicate_1_1Set.html">Set</a> &gt; &amp;&amp;pair)</td></tr>
 <tr class="separator:afe99e68cf91ed4385c5b2aee7d74d887"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,9 +164,6 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a12e269aeb55689943481797e6ea72fe2"><td class="memItemLeft" align="right" valign="top"><a id="a12e269aeb55689943481797e6ea72fe2"></a>
 llvm::MapVector&lt; llvm::BasicBlock *, <a class="el" href="structPredicate_1_1Set.html">Set</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>map</b></td></tr>
 <tr class="separator:a12e269aeb55689943481797e6ea72fe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4675970d6d9820b36fa917346f180e33"><td class="memItemLeft" align="right" valign="top"><a id="a4675970d6d9820b36fa917346f180e33"></a>
-llvm::SmallVector&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>predicates</b></td></tr>
-<tr class="separator:a4675970d6d9820b36fa917346f180e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="ad329a3160de985d1a1b3ac4c1e37f492"></a>

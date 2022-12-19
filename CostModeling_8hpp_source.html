@@ -141,7 +141,7 @@ $(function() {
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;};</div>
 <div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="structCPUExecutionModel.html">   71</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structCPUExecutionModel.html">CPUExecutionModel</a> {};</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keyword">struct </span><a class="code" href="structInstructionBlock.html">InstructionBlock</a>;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keyword">struct </span>InstructionBlock;</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">struct </span><a class="code" href="structLoopTreeSchedule.html">LoopTreeSchedule</a>;</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment">// Plan for cost modeling:</span></div>
@@ -196,10 +196,10 @@ $(function() {
 <div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="comment">// schedule commented out, as we&#39;re assuming we applied the rotation</span></div>
 <div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="comment">// to the array reference.</span></div>
 <div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <span class="comment">// [[no_unique_address]] Schedule *schedule;</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    [[no_unique_address]] <a class="code" href="structInstructionBlock.html">InstructionBlock</a> enteringBlock;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    [[no_unique_address]] InstructionBlock enteringBlock;</div>
 <div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    [[no_unique_address]] llvm::SmallVector&lt;LoopAndExit&gt; subTrees;</div>
-<div class="line"><a name="l00137"></a><span class="lineno"><a class="line" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">  137</a></span>&#160;    [[no_unique_address]] <a class="code" href="structInstructionBlock.html">InstructionBlock</a> *<a class="code" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">preHeader</a>;</div>
-<div class="line"><a name="l00139"></a><span class="lineno"><a class="line" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">  139</a></span>&#160;    [[no_unique_address]] <a class="code" href="structInstructionBlock.html">InstructionBlock</a> *<a class="code" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">exitBlock</a>;</div>
+<div class="line"><a name="l00137"></a><span class="lineno"><a class="line" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">  137</a></span>&#160;    [[no_unique_address]] InstructionBlock *<a class="code" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">preHeader</a>;</div>
+<div class="line"><a name="l00139"></a><span class="lineno"><a class="line" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">  139</a></span>&#160;    [[no_unique_address]] InstructionBlock *<a class="code" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">exitBlock</a>;</div>
 <div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    [[no_unique_address]] <a class="code" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *parentLoop{<span class="keyword">nullptr</span>};</div>
 <div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;    [[no_unique_address]] uint8_t depth;</div>
 <div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    [[no_unique_address]] uint8_t vectorizationFactor{1};</div>
@@ -212,7 +212,7 @@ $(function() {
 <div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;};</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
 <div class="line"><a name="l00151"></a><span class="lineno"><a class="line" href="structLoopForestSchedule.html">  151</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLoopForestSchedule.html">LoopForestSchedule</a> {</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    [[no_unique_address]] <a class="code" href="structInstructionBlock.html">InstructionBlock</a> enteringBlock;</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    [[no_unique_address]] InstructionBlock enteringBlock;</div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    [[no_unique_address]] llvm::SmallVector&lt;LoopAndExit&gt; loopNests;</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    [[no_unique_address]] llvm::SmallVector&lt;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        llvm::SmallVector&lt;LoopTreeSchedule *&gt;&gt;</div>
@@ -222,7 +222,6 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; false &gt;</a></div></div>
 <div class="ttc" id="astructCPUExecutionModel_html"><div class="ttname"><a href="structCPUExecutionModel.html">CPUExecutionModel</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:71</div></div>
 <div class="ttc" id="astructCPURegisterFile_html"><div class="ttname"><a href="structCPURegisterFile.html">CPURegisterFile</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:22</div></div>
-<div class="ttc" id="astructInstructionBlock_html"><div class="ttname"><a href="structInstructionBlock.html">InstructionBlock</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1341</div></div>
 <div class="ttc" id="astructLoopForestSchedule_html"><div class="ttname"><a href="structLoopForestSchedule.html">LoopForestSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:151</div></div>
 <div class="ttc" id="astructLoopTreeSchedule_html"><div class="ttname"><a href="structLoopTreeSchedule.html">LoopTreeSchedule</a></div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:127</div></div>
 <div class="ttc" id="astructLoopTreeSchedule_html_a4cff5646eb5347a3ce250de5e4405d25"><div class="ttname"><a href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">LoopTreeSchedule::exitBlock</a></div><div class="ttdeci">InstructionBlock * exitBlock</div><div class="ttdoc">Loop exit block for this loop tree.</div><div class="ttdef"><b>Definition:</b> CostModeling.hpp:139</div></div>
