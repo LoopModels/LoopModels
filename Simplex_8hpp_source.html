@@ -98,23 +98,23 @@ $(function() {
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> numExtraRows = 2;</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> numExtraCols = 1;</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numTableauRows(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> {</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{i + numExtraRows};</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numTableauRows(<span class="keywordtype">size_t</span> i) -&gt; Row {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <span class="keywordflow">return</span> Row{i + numExtraRows};</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    }</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numTableauCols(<span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{j + numExtraCols};</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numTableauCols(<span class="keywordtype">size_t</span> j) -&gt; Col {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;        <span class="keywordflow">return</span> Col{j + numExtraCols};</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    }</div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="comment">// NOTE: all methods resizing the tableau may invalidate references to it</span></div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordtype">void</span> resize(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar) {</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        tableau.resize(numTableauRows(numCon), numTableauCols(numVar));</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">void</span> resize(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar, <a class="code" href="structLinearAlgebra_1_1RowStride.html">LinearAlgebra::RowStride</a> stride) {</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keywordtype">void</span> resize(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> stride) {</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;        tableau.resize(numTableauRows(numCon), numTableauCols(numVar), stride);</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    }</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keywordtype">void</span> addVars(<span class="keywordtype">size_t</span> numVars) {</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> numCol = tableau.numCol() + numVars;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        Col numCol = tableau.numCol() + numVars;</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;        tableau.resize(tableau.numRow(), numCol,</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                       <a class="code" href="structLinearAlgebra_1_1RowStride.html">LinearAlgebra::RowStride</a>{std::max(</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;                       <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>{std::max(</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;                           size_t(numCol), size_t(tableau.rowStride()))});</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    }</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keyword">auto</span> addConstraint() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
@@ -136,25 +136,25 @@ $(function() {
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordtype">void</span> reserve(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar) {</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        tableau.reserve(</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            numTableauRows(numCon),</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{size_t(max(numTableauCols(numVar), tableau.rowStride()))});</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            Col{size_t(max(numTableauCols(numVar), tableau.rowStride()))});</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    }</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordtype">void</span> clearReserve(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar) {</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        numSlackVar = 0;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        tableau.clearReserve(</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;            numTableauRows(numCon),</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{size_t(max(numTableauCols(numVar), tableau.rowStride()))});</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            Col{size_t(max(numTableauCols(numVar), tableau.rowStride()))});</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    }</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordtype">void</span> reserveExtraRows(<span class="keywordtype">size_t</span> additionalRows) {</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;        tableau.reserve(tableau.numRow() + additionalRows, tableau.rowStride());</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">void</span> reserveExtra(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> additionalRows, <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> additionalCols) {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <a class="code" href="structLinearAlgebra_1_1RowStride.html">LinearAlgebra::RowStride</a> newStride =</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">void</span> reserveExtra(Row additionalRows, Col additionalCols) {</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> newStride =</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            max(tableau.numCol() + additionalCols, tableau.rowStride());</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        tableau.reserve(tableau.numRow() + additionalRows, newStride);</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordflow">if</span> (newStride == tableau.rowStride())</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;            <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        <span class="comment">// copy memory, so that incrementally adding columns is cheap later.</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> nC = tableau.numCol();</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        Col nC = tableau.numCol();</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        tableau.resize(tableau.numRow(), nC, newStride);</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    }</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordtype">void</span> reserveExtra(<span class="keywordtype">size_t</span> additional) {</div>
@@ -731,7 +731,7 @@ $(function() {
 <div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;        <span class="keywordtype">size_t</span> ind = basicConstraints[i];</div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;        <span class="keywordtype">size_t</span> lastRow = size_t(C.numRow() - 1);</div>
 <div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;        <span class="keywordflow">if</span> (lastRow != ind)</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;            swap(C, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{ind}, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{lastRow});</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;            swap(C, Row{ind}, Row{lastRow});</div>
 <div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;        truncateConstraints(lastRow);</div>
 <div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;    }</div>
 <div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;    <span class="keywordtype">void</span> removeExtraVariables(<span class="keywordtype">size_t</span> i) {</div>
@@ -1100,18 +1100,16 @@ $(function() {
 <div class="line"><a name="l01033"></a><span class="lineno"> 1033</span>&#160;<span class="comment">    }</span></div>
 <div class="line"><a name="l01034"></a><span class="lineno"> 1034</span>&#160;<span class="comment">    */</span></div>
 <div class="line"><a name="l01035"></a><span class="lineno"> 1035</span>&#160;};</div>
-<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:206</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1754</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1541</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:772</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1136</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1504</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:572</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1RowStride_html"><div class="ttname"><a href="structLinearAlgebra_1_1RowStride.html">LinearAlgebra::RowStride</a></div><div class="ttdoc">Strong typing for row strides.</div><div class="ttdef"><b>Definition:</b> Math.hpp:225</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:216</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1081</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:934</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt&lt; AxisType::RowStride &gt;</a></div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1746</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1530</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:757</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1121</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1489</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:698</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:560</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1066</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:919</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:16</div></div>
 <div class="ttc" id="astructSimplex_1_1Solution_html"><div class="ttname"><a href="structSimplex_1_1Solution.html">Simplex::Solution</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:206</div></div>

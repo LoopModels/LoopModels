@@ -327,7 +327,7 @@ $(function() {
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;        assert(oldToNewMap1.size() == ar1.loop-&gt;S.size());</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160; </div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;        <span class="comment">// numDep1Var = nv1;</span></div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        <span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> nc = nc0 + nc1;</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;        <span class="keyword">const</span> Row nc = nc0 + nc1;</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;        IntMatrix NS{nullSpace(ma0, ma1)};</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> nullDim{NS.numRow()};</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> indexDim{ar0.getArrayDim()};</div>
@@ -393,7 +393,7 @@ $(function() {
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;        initializeComparator();</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;        pruneBounds();</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    }</div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getNumLambda(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> numIneq, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> numEq) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getNumLambda(Row numIneq, Row numEq) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;        <span class="keywordflow">return</span> 1 + size_t(numIneq) + 2 * size_t(numEq);</div>
 <div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    }</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> getNumLambda() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -999,7 +999,7 @@ $(function() {
 <div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;                               <span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;y,</div>
 <div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;                               <span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;xSchedule,</div>
 <div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;                               <span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;ySchedule, <span class="keywordtype">size_t</span> numLambda,</div>
-<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;                               <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;                               Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSimplex.html">Simplex</a> &amp;fxy = p.first;</div>
 <div class="line"><a name="l00949"></a><span class="lineno">  949</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSimplex.html">Simplex</a> &amp;fyx = p.second;</div>
 <div class="line"><a name="l00950"></a><span class="lineno">  950</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsX = x.ref.getNumLoops();</div>
@@ -1062,7 +1062,7 @@ $(function() {
 <div class="line"><a name="l01007"></a><span class="lineno"> 1007</span>&#160;    }</div>
 <div class="line"><a name="l01008"></a><span class="lineno"> 1008</span>&#160;    <span class="keyword">static</span> <span class="keyword">auto</span> checkDirection(<span class="keyword">const</span> std::pair&lt;Simplex, Simplex&gt; &amp;p,</div>
 <div class="line"><a name="l01009"></a><span class="lineno"> 1009</span>&#160;                               <span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <span class="keyword">const</span> <a class="code" href="structMemoryAccess.html">MemoryAccess</a> &amp;y,</div>
-<div class="line"><a name="l01010"></a><span class="lineno"> 1010</span>&#160;                               <span class="keywordtype">size_t</span> numLambda, <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01010"></a><span class="lineno"> 1010</span>&#160;                               <span class="keywordtype">size_t</span> numLambda, Col nonTimeDim) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l01011"></a><span class="lineno"> 1011</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSimplex.html">Simplex</a> &amp;fxy = p.first;</div>
 <div class="line"><a name="l01012"></a><span class="lineno"> 1012</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSimplex.html">Simplex</a> &amp;fyx = p.second;</div>
 <div class="line"><a name="l01013"></a><span class="lineno"> 1013</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsX = x.ref.getNumLoops();</div>
@@ -1316,15 +1316,13 @@ $(function() {
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:25</div></div>
 <div class="ttc" id="astructDependencePolyhedra_html"><div class="ttname"><a href="structDependencePolyhedra.html">DependencePolyhedra</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:32</div></div>
 <div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:486</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:206</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1541</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:772</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1504</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:216</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1830</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1081</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:934</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1530</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:757</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1489</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:698</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1822</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1066</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:919</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:12</div></div>
 <div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:63</div></div>
 <div class="ttc" id="astructSchedule_html"><div class="ttname"><a href="structSchedule.html">Schedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:30</div></div>

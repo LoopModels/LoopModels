@@ -524,13 +524,13 @@ $(function() {
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;                <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> j = findSymbolicIndex(symbolicOffsets, S)) {</div>
 <div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;                    Bt(_, j) += Rt(_, i);</div>
 <div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;                } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> N = Bt.numCol();</div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;                    Col N = Bt.numCol();</div>
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;                    Bt.resize(N + 1);</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;                    Bt(_, N) = Rt(_, i);</div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;                    symbolicOffsets.push_back(S);</div>
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;                }</div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;            }</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;            Rt.truncate(<a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{numLoops - numExtraLoopsToPeel});</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;            Rt.truncate(Col{numLoops - numExtraLoopsToPeel});</div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;        }</div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;        <a class="code" href="structArrayReference.html">ArrayReference</a> ref(basePointer, &amp;aln, std::move(sizes),</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;                           std::move(symbolicOffsets));</div>
@@ -877,13 +877,12 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:25</div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:250</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:206</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:772</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:934</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:757</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:919</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:174</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:24</div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1113</div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html_ad329a3160de985d1a1b3ac4c1e37f492"><div class="ttname"><a href="structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1304</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1133</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html_ad329a3160de985d1a1b3ac4c1e37f492"><div class="ttname"><a href="structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1324</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

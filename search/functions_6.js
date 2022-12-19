@@ -1,11 +1,11 @@
 var searchData=
 [
-  ['initancestors_334',['initAncestors',['../structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269',1,'MergingCost']]],
-  ['initializeloopforest_335',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['intersectionisempty_336',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
-  ['intrinsic_337',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
-  ['isempty_338',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
-  ['ismerged_339',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
-  ['isshuffle_340',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
-  ['isvalueloadorstore_341',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]]
+  ['initancestors_328',['initAncestors',['../structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269',1,'MergingCost']]],
+  ['initializeloopforest_329',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
+  ['intersectionisempty_330',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
+  ['intrinsic_331',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
+  ['isempty_332',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
+  ['ismerged_333',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
+  ['isshuffle_334',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
+  ['isvalueloadorstore_335',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]]
 ];

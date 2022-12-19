@@ -765,8 +765,8 @@ $(function() {
 <div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;        <span class="comment">// constexpr size_t numOmega =</span></div>
 <div class="line"><a name="l00807"></a><span class="lineno">  807</span>&#160;        <span class="comment">//     DependencePolyhedra::getNumOmegaCoefficients();</span></div>
 <div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;        <span class="keywordtype">size_t</span> w = 1 + numBounding;</div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> c = 0;</div>
-<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;        <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> l = getLambdaOffset(), u = 1;</div>
+<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;        Row c = 0;</div>
+<div class="line"><a name="l00810"></a><span class="lineno">  810</span>&#160;        Col l = getLambdaOffset(), u = 1;</div>
 <div class="line"><a name="l00811"></a><span class="lineno">  811</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> e = 0; e &lt; edges.size(); ++e) {</div>
 <div class="line"><a name="l00812"></a><span class="lineno">  812</span>&#160;            <a class="code" href="structDependence.html">Dependence</a> &amp;edge = edges[e];</div>
 <div class="line"><a name="l00813"></a><span class="lineno">  813</span>&#160;            <span class="keywordflow">if</span> (g.isInactive(e, d))</div>
@@ -784,18 +784,18 @@ $(function() {
 <div class="line"><a name="l00825"></a><span class="lineno">  825</span>&#160;                <span class="keywordflow">for</span> (<span class="keyword">auto</span> inNodeIndex : inNodeIndexSet) {</div>
 <div class="line"><a name="l00826"></a><span class="lineno">  826</span>&#160;                    <span class="keyword">const</span> <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;inNode = nodes[inNodeIndex];</div>
 <div class="line"><a name="l00827"></a><span class="lineno">  827</span>&#160; </div>
-<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> cc = c + numSatConstraints;</div>
-<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> ccc = cc + numBndConstraints;</div>
+<div class="line"><a name="l00828"></a><span class="lineno">  828</span>&#160;                    Row cc = c + numSatConstraints;</div>
+<div class="line"><a name="l00829"></a><span class="lineno">  829</span>&#160;                    Row ccc = cc + numBndConstraints;</div>
 <div class="line"><a name="l00830"></a><span class="lineno">  830</span>&#160; </div>
-<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> ll = l + satL.numCol();</div>
-<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> lll = ll + bndL.numCol();</div>
+<div class="line"><a name="l00831"></a><span class="lineno">  831</span>&#160;                    Col ll = l + satL.numCol();</div>
+<div class="line"><a name="l00832"></a><span class="lineno">  832</span>&#160;                    Col lll = ll + bndL.numCol();</div>
 <div class="line"><a name="l00833"></a><span class="lineno">  833</span>&#160;                    C(_(c, cc), _(l, ll)) = satL;</div>
 <div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;                    C(_(cc, ccc), _(ll, lll)) = bndL;</div>
 <div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;                    l = lll;</div>
 <div class="line"><a name="l00836"></a><span class="lineno">  836</span>&#160; </div>
 <div class="line"><a name="l00837"></a><span class="lineno">  837</span>&#160;                    <span class="comment">// bounding</span></div>
 <div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;                    C(_(cc, ccc), w++) = bndWU(_, 0);</div>
-<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;                    <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> uu = u + bndWU.numCol() - 1;</div>
+<div class="line"><a name="l00839"></a><span class="lineno">  839</span>&#160;                    Col uu = u + bndWU.numCol() - 1;</div>
 <div class="line"><a name="l00840"></a><span class="lineno">  840</span>&#160;                    C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));</div>
 <div class="line"><a name="l00841"></a><span class="lineno">  841</span>&#160;                    u = uu;</div>
 <div class="line"><a name="l00842"></a><span class="lineno">  842</span>&#160;                    <span class="keywordflow">if</span> (satisfyDeps)</div>
@@ -844,7 +844,7 @@ $(function() {
 <div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;                                C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;</div>
 <div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;                            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (satPc.numCol() &lt; satPp.numCol()) {</div>
 <div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;                                <span class="keyword">auto</span> phiChild = outNode.getPhiOffset();</div>
-<div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;                                <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> P = satPc.numCol();</div>
+<div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;                                Col P = satPc.numCol();</div>
 <div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;                                <span class="keyword">auto</span> m = phiChild - P;</div>
 <div class="line"><a name="l00890"></a><span class="lineno">  890</span>&#160;                                C(_(c, cc), _(phiChild - satPp.numCol(), m)) =</div>
 <div class="line"><a name="l00891"></a><span class="lineno">  891</span>&#160;                                    satPp(_, _(begin, end - P));</div>
@@ -856,7 +856,7 @@ $(function() {
 <div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;                                    bndPc + bndPp(_, _(end - P, end));</div>
 <div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;                            } <span class="keywordflow">else</span> <span class="comment">/* if (satPc.numCol() &gt; satPp.numCol()) */</span> {</div>
 <div class="line"><a name="l00899"></a><span class="lineno">  899</span>&#160;                                <span class="keyword">auto</span> phiChild = outNode.getPhiOffset();</div>
-<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;                                <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> P = satPp.numCol();</div>
+<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;                                Col P = satPp.numCol();</div>
 <div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;                                <span class="keyword">auto</span> m = phiChild - P;</div>
 <div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;                                C(_(c, cc), _(phiChild - satPc.numCol(), m)) =</div>
 <div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;                                    satPc(_, _(begin, end - P));</div>
@@ -901,7 +901,7 @@ $(function() {
 <div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;    }</div>
 <div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;    <span class="keywordtype">void</span> updateConstraints(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C, <span class="keyword">const</span> <a class="code" href="structScheduledNode.html">ScheduledNode</a> &amp;node,</div>
 <div class="line"><a name="l00944"></a><span class="lineno">  944</span>&#160;                           <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> sat, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> bnd,</div>
-<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;                           <span class="keywordtype">size_t</span> d, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> c, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> cc, <a class="code" href="structLinearAlgebra_1_1Row.html">Row</a> ccc) {</div>
+<div class="line"><a name="l00945"></a><span class="lineno">  945</span>&#160;                           <span class="keywordtype">size_t</span> d, Row c, Row cc, Row ccc) {</div>
 <div class="line"><a name="l00946"></a><span class="lineno">  946</span>&#160;        <span class="keywordflow">if</span> (node.phiIsScheduled(d)) {</div>
 <div class="line"><a name="l00947"></a><span class="lineno">  947</span>&#160;            <span class="comment">// add it constants</span></div>
 <div class="line"><a name="l00948"></a><span class="lineno">  948</span>&#160;            <span class="keyword">auto</span> sch = node.getSchedule(d);</div>
@@ -927,7 +927,7 @@ $(function() {
 <div class="line"><a name="l00968"></a><span class="lineno">  968</span>&#160;            <span class="keywordflow">if</span> (g.isInactive(e, d))</div>
 <div class="line"><a name="l00969"></a><span class="lineno">  969</span>&#160;                <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00970"></a><span class="lineno">  970</span>&#160;            <span class="keyword">const</span> <a class="code" href="structDependence.html">Dependence</a> &amp;edge = edges[e];</div>
-<div class="line"><a name="l00971"></a><span class="lineno">  971</span>&#160;            <a class="code" href="structLinearAlgebra_1_1Col.html">Col</a> uu =</div>
+<div class="line"><a name="l00971"></a><span class="lineno">  971</span>&#160;            Col uu =</div>
 <div class="line"><a name="l00972"></a><span class="lineno">  972</span>&#160;                u + edge.dependenceBounding.getConstraints().numCol() -</div>
 <div class="line"><a name="l00973"></a><span class="lineno">  973</span>&#160;                (2 + edge.depPoly.getNumLambda() +</div>
 <div class="line"><a name="l00974"></a><span class="lineno">  974</span>&#160;                 edge.getNumPhiCoefficients() + edge.getNumOmegaCoefficients());</div>
@@ -1409,15 +1409,13 @@ $(function() {
 <div class="ttc" id="astructCarriedDependencyFlag_html"><div class="ttname"><a href="structCarriedDependencyFlag.html">CarriedDependencyFlag</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:100</div></div>
 <div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:486</div></div>
 <div class="ttc" id="astructEndSentinel_html"><div class="ttname"><a href="structEndSentinel.html">EndSentinel</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:18</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:206</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1541</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:772</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1851</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1504</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:572</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:216</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:934</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1530</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:757</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1843</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1489</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:698</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:560</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:919</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html">LinearProgramLoopBlock::Graph</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:421</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1Graph_html_a625c1bc32023c0d53aec7f1745216b8c"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1Graph.html#a625c1bc32023c0d53aec7f1745216b8c">LinearProgramLoopBlock::Graph::missingNode</a></div><div class="ttdeci">auto missingNode(const Dependence &amp;e) const -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:480</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_1_1OutNeighbors_html"><div class="ttname"><a href="structLinearProgramLoopBlock_1_1OutNeighbors.html">LinearProgramLoopBlock::OutNeighbors</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:231</div></div>

@@ -132,9 +132,9 @@ $(function() {
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keyword">auto</span> calcIsEmpty() -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> C.isEmpty(); }</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">void</span> pruneBounds() {</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;        <span class="keywordflow">if</span> (calcIsEmpty()) {</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            A.truncate(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{0});</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;            A.truncate(Row{0});</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;            <span class="keywordflow">if</span> constexpr (hasEqualities)</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                E.truncate(<a class="code" href="structLinearAlgebra_1_1Row.html">Row</a>{0});</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;                E.truncate(Row{0});</div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;        } <span class="keywordflow">else</span></div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;            pruneBoundsUnchecked();</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    }</div>
@@ -279,8 +279,8 @@ $(function() {
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    }</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keywordtype">void</span> truncateVars(<span class="keywordtype">size_t</span> numVar) {</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;        <span class="keywordflow">if</span> constexpr (hasEqualities)</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            E.truncate(<a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{numVar});</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        A.truncate(<a class="code" href="structLinearAlgebra_1_1Col.html">Col</a>{numVar});</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;            E.truncate(Col{numVar});</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;        A.truncate(Col{numVar});</div>
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    }</div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;};</div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160; </div>
@@ -296,9 +296,7 @@ $(function() {
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="keyword">using</span> <a class="code" href="structPolyhedra.html">NonNegativeSymbolicEqPolyhedra</a> =</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;IntMatrix, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;              llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
-<div class="ttc" id="astructLinearAlgebra_1_1Col_html"><div class="ttname"><a href="structLinearAlgebra_1_1Col.html">LinearAlgebra::Col</a></div><div class="ttdoc">Strong typing for cols.</div><div class="ttdef"><b>Definition:</b> Math.hpp:206</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Row_html"><div class="ttname"><a href="structLinearAlgebra_1_1Row.html">LinearAlgebra::Row</a></div><div class="ttdoc">Strong typing for rows.</div><div class="ttdef"><b>Definition:</b> Math.hpp:216</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:934</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:919</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:277</div></div>
 <div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:63</div></div>
 </div><!-- fragment --></div><!-- contents -->

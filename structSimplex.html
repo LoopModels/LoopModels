@@ -87,7 +87,7 @@ Public Member Functions</h2></td></tr>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar)</td></tr>
 <tr class="separator:ac9f12392832367afd295ecdd3050e36e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a33c9ab4bfb47dcc34f5a6c8daffcecf7"><td class="memItemLeft" align="right" valign="top"><a id="a33c9ab4bfb47dcc34f5a6c8daffcecf7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar, <a class="el" href="structLinearAlgebra_1_1RowStride.html">LinearAlgebra::RowStride</a> stride)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t numCon, size_t numVar, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> stride)</td></tr>
 <tr class="separator:a33c9ab4bfb47dcc34f5a6c8daffcecf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4e753c6e7986795593839ea4e6b36345"><td class="memItemLeft" align="right" valign="top"><a id="a4e753c6e7986795593839ea4e6b36345"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addVars</b> (size_t numVars)</td></tr>
@@ -111,7 +111,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clearReserve</b> (siz
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtraRows</b> (size_t additionalRows)</td></tr>
 <tr class="separator:af2e01a8fbe447b3bf558e932e98cf5b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bb54d6d209eda502af323dd8bce53e7"><td class="memItemLeft" align="right" valign="top"><a id="a1bb54d6d209eda502af323dd8bce53e7"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (<a class="el" href="structLinearAlgebra_1_1Row.html">Row</a> additionalRows, <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> additionalCols)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (Row additionalRows, Col additionalCols)</td></tr>
 <tr class="separator:a1bb54d6d209eda502af323dd8bce53e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b3ce203138baa4a27961faea1905db9"><td class="memItemLeft" align="right" valign="top"><a id="a4b3ce203138baa4a27961faea1905db9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reserveExtra</b> (size_t additional)</td></tr>
@@ -258,10 +258,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>printResult</b> ()</t
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a9893bb5ae92d93fdcd5e750ebbe8a02a"><td class="memItemLeft" align="right" valign="top"><a id="a9893bb5ae92d93fdcd5e750ebbe8a02a"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numTableauRows</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1Row.html">Row</a></td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numTableauRows</b> (size_t i) -&gt; Row</td></tr>
 <tr class="separator:a9893bb5ae92d93fdcd5e750ebbe8a02a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6ef929e0fc8c8a505bda760a84199277"><td class="memItemLeft" align="right" valign="top"><a id="a6ef929e0fc8c8a505bda760a84199277"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numTableauCols</b> (size_t j) -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numTableauCols</b> (size_t j) -&gt; Col</td></tr>
 <tr class="separator:a6ef929e0fc8c8a505bda760a84199277"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a106b65db2873fe11d397ccb1a945b5ce"><td class="memItemLeft" align="right" valign="top"><a id="a106b65db2873fe11d397ccb1a945b5ce"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEnteringVariable</b> (<a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; costs) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>

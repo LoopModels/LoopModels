@@ -84,22 +84,22 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a824ff94d0a08d75db2df06130fd74e48"><td class="memItemLeft" align="right" valign="top"><a id="a824ff94d0a08d75db2df06130fd74e48"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Row.html">Row</a></td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a></td></tr>
 <tr class="separator:a824ff94d0a08d75db2df06130fd74e48"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a719dde9429447726cf87f396f22441d6"><td class="memItemLeft" align="right" valign="top"><a id="a719dde9429447726cf87f396f22441d6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a></td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a></td></tr>
 <tr class="separator:a719dde9429447726cf87f396f22441d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29b8237047af19a7847f6ab0b4927c05"><td class="memItemLeft" align="right" valign="top"><a id="a29b8237047af19a7847f6ab0b4927c05"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SmallSparseMatrix</b> (<a class="el" href="structLinearAlgebra_1_1Row.html">Row</a> numRows, <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> numCols)</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>SmallSparseMatrix</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> numRows, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> numCols)</td></tr>
 <tr class="separator:a29b8237047af19a7847f6ab0b4927c05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae04fd84a819f5b92d4f2c6cfa3de477"><td class="memItemLeft" align="right" valign="top"><a id="aae04fd84a819f5b92d4f2c6cfa3de477"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (<a class="el" href="structLinearAlgebra_1_1Row.html">Row</a> i, <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> j) const -&gt; T</td></tr>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) const -&gt; T</td></tr>
 <tr class="separator:aae04fd84a819f5b92d4f2c6cfa3de477"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3366b7fbff29ca57d268c1dd686b3e05"><td class="memItemLeft" align="right" valign="top"><a id="a3366b7fbff29ca57d268c1dd686b3e05"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (size_t i, size_t j) const -&gt; T</td></tr>
 <tr class="separator:a3366b7fbff29ca57d268c1dd686b3e05"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b68af65d619bdaac3845a62a7c6cbbe"><td class="memItemLeft" align="right" valign="top"><a id="a1b68af65d619bdaac3845a62a7c6cbbe"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (T x, <a class="el" href="structLinearAlgebra_1_1Row.html">Row</a> i, <a class="el" href="structLinearAlgebra_1_1Col.html">Col</a> j)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>insert</b> (T x, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j)</td></tr>
 <tr class="separator:a1b68af65d619bdaac3845a62a7c6cbbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b11efe7c9123e3bb2b8aca2617afdef"><td class="memItemLeft" align="right" valign="top"><a id="a2b11efe7c9123e3bb2b8aca2617afdef"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (size_t i, size_t j) -&gt; <a class="el" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a></td></tr>
@@ -117,7 +117,7 @@ llvm::SmallVector&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom">
 llvm::SmallVector&lt; uint32_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>rows</b></td></tr>
 <tr class="separator:ae56d8d3d057c5cd4ddf8cc5759d04e49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af57634a8170f82101cb2114dc5aedc70"><td class="memItemLeft" align="right" valign="top"><a id="af57634a8170f82101cb2114dc5aedc70"></a>
-<a class="el" href="structLinearAlgebra_1_1Col.html">Col</a>&#160;</td><td class="memItemRight" valign="bottom"><b>col</b></td></tr>
+<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a>&#160;</td><td class="memItemRight" valign="bottom"><b>col</b></td></tr>
 <tr class="separator:af57634a8170f82101cb2114dc5aedc70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
