@@ -124,7 +124,7 @@ pivotRows(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AK, Col i,
 static inline auto pivotRows(MutPtrMatrix<int64_t> A,
                              MutSquarePtrMatrix<int64_t> K, size_t i, Row M)
     -> bool {
-    return pivotRows(solvePair(A, K), i, M, i);
+    return pivotRows(solvePair(A, K), Col{i}, M, Row{i});
 }
 static inline auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
     -> bool {

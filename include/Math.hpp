@@ -69,194 +69,186 @@ concept AbstractVector =
                         //     } -> std::same_as<const bool &>;
                         // {t.extendOrAssertSize(i)};
                     };
+// strong typing
+template <typename T> struct StrongIntWrapper {
+    using V = size_t;
+    [[no_unique_address]] V value{0};
+    // [[no_unique_address]] unsigned int value{0};
+    constexpr StrongIntWrapper() = default;
+    constexpr StrongIntWrapper(V value) : value(value) {}
+    explicit constexpr operator size_t() const { return value; }
+    explicit constexpr operator ptrdiff_t() const { return value; }
+    explicit constexpr operator unsigned() const { return value; }
+    explicit constexpr operator bool() const { return value; }
+
+    constexpr auto operator+(V i) const -> T { return T{value + i}; }
+    constexpr auto operator-(V i) const -> T { return T{value - i}; }
+    constexpr auto operator*(V i) const -> T { return T{value * i}; }
+    constexpr auto operator/(V i) const -> T { return T{value / i}; }
+    constexpr auto operator%(V i) const -> T { return T{value % i}; }
+    constexpr auto operator==(V i) const -> bool { return value == i; }
+    constexpr auto operator!=(V i) const -> bool { return value != i; }
+    constexpr auto operator<(V i) const -> bool { return value < i; }
+    constexpr auto operator<=(V i) const -> bool { return value <= i; }
+    constexpr auto operator>(V i) const -> bool { return value > i; }
+    constexpr auto operator>=(V i) const -> bool { return value >= i; }
+    constexpr auto operator++() -> T & {
+        ++value;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator++(int) -> T { return T{value++}; }
+    constexpr auto operator--() -> T & {
+        --value;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator--(int) -> T { return T{value--}; }
+    constexpr auto operator+=(T i) -> T & {
+        value += V(i);
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator+=(V i) -> T & {
+        value += i;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator-=(T i) -> T & {
+        value -= V(i);
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator-=(V i) -> T & {
+        value -= i;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator*=(T i) -> T & {
+        value *= V(i);
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator*=(V i) -> T & {
+        value *= i;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator/=(T i) -> T & {
+        value /= V(i);
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator/=(V i) -> T & {
+        value /= i;
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator%=(T i) -> T & {
+        value %= V(i);
+        return *static_cast<T *>(this);
+    }
+    constexpr auto operator%=(V i) -> T & {
+        value %= i;
+        return *static_cast<T *>(this);
+    }
+};
+template <typename T, typename W>
+constexpr auto operator+(T *p, StrongIntWrapper<W> y) -> T * {
+    return p + y.value;
+}
+template <typename T, typename W>
+constexpr auto operator-(T *p, StrongIntWrapper<W> y) -> T * {
+    return p - y.value;
+}
+
+template <typename T>
+constexpr auto operator+(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
+    return T{x.value + y.value};
+}
+template <typename T>
+constexpr auto operator-(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
+    return T{x.value - y.value};
+}
+template <typename T>
+constexpr auto operator*(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
+    return T{x.value * y.value};
+}
+template <typename T>
+constexpr auto operator/(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
+    return T{x.value / y.value};
+}
+template <typename T>
+constexpr auto operator%(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> T {
+    return T{x.value % y.value};
+}
+template <typename T>
+constexpr auto operator==(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
+    -> bool {
+    return x.value == y.value;
+}
+template <typename T>
+constexpr auto operator!=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
+    -> bool {
+    return x.value != y.value;
+}
+template <typename T>
+constexpr auto operator<(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> bool {
+    return x.value < y.value;
+}
+template <typename T>
+constexpr auto operator<=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
+    -> bool {
+    return x.value <= y.value;
+}
+template <typename T>
+constexpr auto operator>(StrongIntWrapper<T> x, StrongIntWrapper<T> y) -> bool {
+    return x.value > y.value;
+}
+template <typename T>
+constexpr auto operator>=(StrongIntWrapper<T> x, StrongIntWrapper<T> y)
+    -> bool {
+    return x.value >= y.value;
+}
+
 struct RowStride;
 /// Strong typing for cols
-struct Col {
-    [[no_unique_address]] size_t N{0};
-    constexpr Col() = default;
-    constexpr Col(size_t M) : N(M) {}
-    explicit constexpr operator size_t() const { return N; }
-    explicit constexpr operator ptrdiff_t() const {
-        assert(N <= std::numeric_limits<ptrdiff_t>::max());
-        return ptrdiff_t(N);
-    }
-    explicit constexpr operator bool() const { return N; }
-    constexpr auto operator++() -> Col {
-        ++N;
-        return *this;
-    }
-    constexpr auto operator++(int) -> Col {
-        auto tmp = *this;
-        ++N;
-        return tmp;
-    }
-    constexpr auto operator--() -> Col {
-        --N;
-        return *this;
-    }
-    constexpr auto operator--(int) -> Col {
-        auto tmp = *this;
-        --N;
-        return tmp;
-    }
-    constexpr auto operator+(Col i) const -> Col { return Col{N + size_t(i)}; }
-    constexpr auto operator+(size_t i) const -> Col { return Col{N + i}; }
-    constexpr auto operator+(int i) const -> Col { return Col{N + i}; }
-    constexpr auto operator-(Col i) const -> Col { return Col{N - size_t(i)}; }
-    constexpr auto operator-(size_t i) const -> Col { return Col{N - i}; }
-    constexpr auto operator-(int i) const -> Col { return Col{N - i}; }
-    constexpr auto operator*(size_t i) const -> Col { return Col{N * i}; }
-    constexpr auto operator*(int i) const -> Col { return Col{N * i}; }
+struct Col : StrongIntWrapper<Col> {
     explicit constexpr operator RowStride();
-    constexpr auto operator==(size_t x) const -> bool { return N == x; }
-    constexpr auto operator!=(size_t x) const -> bool { return N != x; }
-    constexpr auto operator==(Col x) const -> bool { return N == size_t(x); }
-    constexpr auto operator!=(Col x) const -> bool { return N != size_t(x); }
-    constexpr auto operator<(Col x) const -> bool { return N < size_t(x); }
-    constexpr auto operator>(Col x) const -> bool { return N > size_t(x); }
-    constexpr auto operator<=(Col x) const -> bool { return N <= size_t(x); }
-    constexpr auto operator>=(Col x) const -> bool { return N >= size_t(x); }
-    constexpr auto operator<=(size_t x) const -> bool { return N <= x; }
-    constexpr auto operator>=(size_t x) const -> bool { return N >= x; }
+    constexpr Col() = default;
+    constexpr Col(StrongIntWrapper<Col>::V i) : StrongIntWrapper<Col>(i) {}
     friend auto operator<<(llvm::raw_ostream &os, Col x)
         -> llvm::raw_ostream & {
         return os << "Col{" << size_t(x) << "}";
     }
-    constexpr auto operator+=(Col x) -> Col & {
-        N += size_t(x);
-        return *this;
-    }
-    constexpr auto operator-=(Col x) -> Col & {
-        N -= size_t(x);
-        return *this;
-    }
 };
 /// Strong typing for rows
-struct Row {
-    [[no_unique_address]] size_t M{0};
+struct Row : StrongIntWrapper<Row> {
     constexpr Row() = default;
-    constexpr Row(size_t N) : M(N) {}
-    explicit constexpr operator size_t() const { return M; }
-    explicit constexpr operator ptrdiff_t() const {
-        assert(M <= std::numeric_limits<ptrdiff_t>::max());
-        return ptrdiff_t(M);
-    }
-    explicit constexpr operator bool() const { return M; }
-    constexpr auto operator++() -> Row {
-        ++M;
-        return *this;
-    }
-    constexpr auto operator++(int) -> Row {
-        auto tmp = *this;
-        ++M;
-        return tmp;
-    }
-    constexpr auto operator--() -> Row {
-        --M;
-        return *this;
-    }
-    constexpr auto operator--(int) -> Row {
-        auto tmp = *this;
-        --M;
-        return tmp;
-    }
-    constexpr auto operator+(Row i) const -> Row { return Row{M + size_t(i)}; }
-    constexpr auto operator+(size_t i) const -> Row { return Row{M + i}; }
-    constexpr auto operator+(int i) const -> Row { return Row{M + i}; }
-    constexpr auto operator-(Row i) const -> Row { return Row{M - size_t(i)}; }
-    constexpr auto operator-(size_t i) const -> Row { return Row{M - i}; }
-    constexpr auto operator-(int i) const -> Row { return Row{M - i}; }
-    constexpr auto operator*(Col N) const -> size_t { return M * size_t(N); }
-    constexpr auto operator*(size_t N) const -> Row { return Row{M * N}; }
-    constexpr auto operator*(int N) const -> Row { return Row{M * size_t(N)}; }
-    constexpr auto operator==(size_t x) const -> bool { return M == x; }
-    constexpr auto operator!=(size_t x) const -> bool { return M != x; }
-    constexpr auto operator==(Row x) const -> bool { return M == size_t(x); }
-    constexpr auto operator!=(Row x) const -> bool { return M != size_t(x); }
-    constexpr auto operator<(Row x) const -> bool { return M < size_t(x); }
-    constexpr auto operator>(Row x) const -> bool { return M > size_t(x); }
-    constexpr auto operator<=(Row x) const -> bool { return M <= size_t(x); }
-    constexpr auto operator>=(Row x) const -> bool { return M >= size_t(x); }
-    constexpr auto operator<=(size_t x) const -> bool { return M <= x; }
-    constexpr auto operator>=(size_t x) const -> bool { return M >= x; }
+    constexpr Row(StrongIntWrapper<Row>::V i) : StrongIntWrapper<Row>(i) {}
     friend auto operator<<(llvm::raw_ostream &os, Row x)
         -> llvm::raw_ostream & {
         return os << "Row{" << size_t(x) << "}";
     }
 };
 /// Strong typing for row strides
-struct RowStride {
-    [[no_unique_address]] size_t X{0};
+struct RowStride : StrongIntWrapper<RowStride> {
     constexpr RowStride() = default;
-    constexpr RowStride(size_t N) : X(N) {}
-    explicit constexpr operator size_t() const { return X; }
-    explicit constexpr operator ptrdiff_t() const {
-        assert(X <= std::numeric_limits<ptrdiff_t>::max());
-        return ptrdiff_t(X);
+    constexpr RowStride(StrongIntWrapper<RowStride>::V i)
+        : StrongIntWrapper<RowStride>(i) {}
+    using StrongIntWrapper<RowStride>::operator*,
+        StrongIntWrapper<RowStride>::operator>=,
+        StrongIntWrapper<RowStride>::operator<;
+    constexpr auto operator*(Row M) const -> size_t {
+        return value * size_t(M);
     }
-    explicit constexpr operator bool() const { return X; }
-    constexpr auto operator++() -> RowStride {
-        ++X;
-        return *this;
+    constexpr auto operator>=(Col x) const -> bool {
+        return value >= size_t(x);
     }
-    constexpr auto operator++(int) -> RowStride {
-        auto tmp = *this;
-        ++X;
-        return tmp;
-    }
-    constexpr auto operator--() -> RowStride {
-        --X;
-        return *this;
-    }
-    constexpr auto operator--(int) -> RowStride {
-        auto tmp = *this;
-        --X;
-        return tmp;
-    }
-    constexpr auto operator+(RowStride i) const -> RowStride {
-        return RowStride{X + size_t(i)};
-    }
-    constexpr auto operator+(size_t i) const -> RowStride {
-        return RowStride{X + i};
-    }
-    constexpr auto operator+(int i) const -> RowStride {
-        return RowStride{X + i};
-    }
-    constexpr auto operator-(size_t i) const -> RowStride {
-        return RowStride{X - i};
-    }
-    constexpr auto operator-(int i) const -> RowStride {
-        return RowStride{X - i};
-    }
-    constexpr auto operator*(size_t i) const -> size_t { return X * i; }
-    constexpr auto operator*(Row M) const -> size_t { return X * size_t(M); }
-    constexpr auto operator==(RowStride x) const -> bool {
-        return X == size_t(x);
-    }
-    constexpr auto operator!=(RowStride x) const -> bool {
-        return X != size_t(x);
-    }
-    constexpr auto operator<(RowStride y) const -> bool {
-        return X < size_t(y);
-    }
-    constexpr auto operator>(RowStride y) const -> bool {
-        return X > size_t(y);
-    }
-    constexpr auto operator<=(RowStride x) const -> bool {
-        return X <= size_t(x);
-    }
-    constexpr auto operator>=(RowStride x) const -> bool {
-        return X >= size_t(x);
-    }
-    constexpr auto operator>=(Col x) const -> bool { return X >= size_t(x); }
-    constexpr auto operator<(Col x) const -> bool { return X < size_t(x); }
+    constexpr auto operator<(Col x) const -> bool { return value < size_t(x); }
     friend auto operator<<(llvm::raw_ostream &os, RowStride x)
         -> llvm::raw_ostream & {
         return os << "RowStride{" << size_t(x) << "}";
     }
 };
+static_assert(sizeof(Row) == sizeof(size_t));
+static_assert(sizeof(Col) == sizeof(size_t));
+static_assert(sizeof(RowStride) == sizeof(size_t));
+constexpr auto operator*(Row r, Col c) -> StrongIntWrapper<Row>::V {
+    return r.value * c.value;
+}
 
-constexpr Col::operator RowStride() { return RowStride{N}; }
+constexpr Col::operator RowStride() { return RowStride{value}; }
 constexpr auto operator<(size_t x, Row y) -> bool { return x < size_t(y); }
 constexpr auto operator<(size_t x, Col y) -> bool { return x < size_t(y); }
 constexpr auto operator>(size_t x, Row y) -> bool { return x > size_t(y); }
@@ -270,6 +262,7 @@ constexpr auto operator-(size_t x, Row y) -> Row { return Row{x - size_t(y)}; }
 constexpr auto operator*(size_t x, Row y) -> Row { return Row{x * size_t(y)}; }
 constexpr auto operator+(size_t x, RowStride y) -> RowStride {
     return RowStride{x + size_t(y)};
+    // return RowStride{static_cast<unsigned int>(x + size_t(y))};
 }
 constexpr auto operator-(size_t x, RowStride y) -> RowStride {
     return RowStride{x - size_t(y)};
@@ -1111,8 +1104,12 @@ template <typename T> struct StridedVector {
     constexpr auto end() const { return StridedIterator{d + x * N, size_t(x)}; }
     constexpr auto rbegin() const { return --end(); }
     constexpr auto rend() const { return --begin(); }
-    constexpr auto operator[](size_t i) const -> const T & { return d[x * i]; }
-    constexpr auto operator()(size_t i) const -> const T & { return d[x * i]; }
+    constexpr auto operator[](size_t i) const -> const T & {
+        return d[size_t(x * i)];
+    }
+    constexpr auto operator()(size_t i) const -> const T & {
+        return d[size_t(x * i)];
+    }
 
     constexpr auto operator()(Range<size_t, size_t> i) const
         -> StridedVector<T> {
@@ -1167,10 +1164,14 @@ template <typename T> struct MutStridedVector {
     constexpr auto rend() { return --begin(); }
     constexpr auto rbegin() const { return --end(); }
     constexpr auto rend() const { return --begin(); }
-    constexpr auto operator[](size_t i) -> T & { return d[x * i]; }
-    constexpr auto operator[](size_t i) const -> const T & { return d[x * i]; }
-    constexpr auto operator()(size_t i) -> T & { return d[x * i]; }
-    constexpr auto operator()(size_t i) const -> const T & { return d[x * i]; }
+    constexpr auto operator[](size_t i) -> T & { return d[size_t(x * i)]; }
+    constexpr auto operator[](size_t i) const -> const T & {
+        return d[size_t(x * i)];
+    }
+    constexpr auto operator()(size_t i) -> T & { return d[size_t(x * i)]; }
+    constexpr auto operator()(size_t i) const -> const T & {
+        return d[size_t(x * i)];
+    }
 
     constexpr auto operator()(Range<size_t, size_t> i) -> MutStridedVector<T> {
         return MutStridedVector<T>{.d = d + x * i.b, .N = i.e - i.b, .x = x};
@@ -1207,7 +1208,7 @@ template <typename T> struct MutStridedVector {
     }
     auto operator=(const T &y) -> MutStridedVector<T> & {
         for (size_t i = 0; i < N; ++i)
-            d[x * i] = y;
+            d[size_t(x * i)] = y;
         return *this;
     }
     auto operator=(const AbstractVector auto &x) -> MutStridedVector<T> & {
@@ -1402,21 +1403,20 @@ constexpr auto isSquare(const AbstractMatrix auto &A) -> bool {
 
 template <typename T>
 constexpr auto diag(MutPtrMatrix<T> A) -> MutStridedVector<T> {
-    return MutStridedVector<T>{A.data(), A.minRowCol(),
-                               size_t(A.rowStride() + 1)};
+    return MutStridedVector<T>{A.data(), A.minRowCol(), A.rowStride() + 1};
 }
 template <typename T> constexpr auto diag(PtrMatrix<T> A) -> StridedVector<T> {
-    return StridedVector<T>{A.data(), A.minRowCol(), size_t(A.rowStride() + 1)};
+    return StridedVector<T>{A.data(), A.minRowCol(), A.rowStride() + 1};
 }
 template <typename T>
 constexpr auto antiDiag(MutPtrMatrix<T> A) -> MutStridedVector<T> {
     return MutStridedVector<T>{A.data() + size_t(A.numCol()) - 1, A.minRowCol(),
-                               size_t(A.rowStride() - 1)};
+                               (A.rowStride() - 1)};
 }
 template <typename T>
 constexpr auto antiDiag(PtrMatrix<T> A) -> StridedVector<T> {
     return StridedVector<T>{A.data() + size_t(A.numCol()) - 1, A.minRowCol(),
-                            size_t(A.rowStride() - 1)};
+                            (A.rowStride() - 1)};
 }
 
 /// A CRTP type defining const methods for matrices.
@@ -1964,7 +1964,7 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
         mem.resize_for_overwrite(M * N);
         for (size_t m = 0; m < M; ++m)
             for (size_t n = 0; n < N; ++n)
-                mem[X * m + n] = A(m, n);
+                mem[size_t(X * m + n)] = A(m, n);
     }
     constexpr auto begin() { return mem.begin(); }
     constexpr auto end() { return mem.begin() + rowStride() * M; }
@@ -2012,14 +2012,14 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
             // need to copy
             for (size_t m = minMMM - 1; m > 0; --m)
                 for (auto n = size_t(N); n-- > 0;)
-                    mem[XX * m + n] = mem[X * m + n];
+                    mem[size_t(XX * m + n)] = mem[size_t(X * m + n)];
         // zero
         for (size_t m = 0; m < minMMM; ++m)
             for (auto n = size_t(N); n < size_t(NN); ++n)
-                mem[XX * m + n] = 0;
+                mem[size_t(XX * m + n)] = 0;
         for (size_t m = minMMM; m < size_t(MM); ++m)
             for (size_t n = 0; n < size_t(NN); ++n)
-                mem[XX * m + n] = 0;
+                mem[size_t(XX * m + n)] = 0;
         X = XX;
         M = MM;
         N = NN;
@@ -2033,10 +2033,11 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
             // need to copy
             for (auto m = size_t(M); m-- > 0;)
                 for (auto n = size_t(N); n-- > nLower;)
-                    mem[XX * m + n + (n >= size_t(i))] = mem[X * m + n];
+                    mem[size_t(XX * m + n) + (n >= size_t(i))] =
+                        mem[size_t(X * m + n)];
         // zero
         for (size_t m = 0; m < M; ++m)
-            mem[XX * m + size_t(i)] = 0;
+            mem[size_t(XX * m) + size_t(i)] = 0;
         X = XX;
         N = NN;
     }
@@ -2335,7 +2336,7 @@ template <typename T>
 auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
     // llvm::raw_ostream &printMatrix(llvm::raw_ostream &os, T const &A) {
     auto [m, n] = A.size();
-    if (m == 0)
+    if (!m)
         return os << "[ ]";
     for (size_t i = 0; i < m; i++) {
         if (i) {
