@@ -150,12 +150,13 @@ struct MergingCost {
         constexpr operator llvm::MutableArrayRef<Instruction *>() const {
             return operands;
         }
-        void merge(size_t i, Instruction *A, Instruction *B) {}
+        void merge(size_t i, Instruction *A, Instruction *B) {
+            operands[i] = A->replaceAllUsesOf(B);
+        }
         void select(size_t i, Instruction *A, Instruction *B) {
-            auto *S = Instruction::createSelect(alloc, A, B);
-            A->replaceAllOtherUsesWith(S);
-            B->replaceAllOtherUsesWith(S);
-            operands[i] = S;
+            operands[i] = Instruction::createSelect(alloc, A, B)
+                              ->replaceAllOtherUsesOf(A)
+                              ->replaceAllOtherUsesOf(B);
         }
     };
     static auto init(Allocate a, Instruction *A, Instruction *)

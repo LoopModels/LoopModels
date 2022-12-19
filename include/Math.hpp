@@ -4,12 +4,14 @@
 
 #include "./TypePromotion.hpp"
 #include "BitSets.hpp"
+#include <algorithm>
 #include <bit>
 #include <cassert>
 #include <cmath>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
@@ -585,9 +587,11 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     }
     [[nodiscard]] constexpr auto end() const -> E { return e; }
     [[nodiscard]] constexpr auto rbegin() const -> Iterator {
-        return Iterator{e - 1};
+        return std::reverse_iterator{end()};
     }
-    [[nodiscard]] constexpr auto rend() const -> E { return b - 1; }
+    [[nodiscard]] constexpr auto rend() const -> E {
+        return std::reverse_iterator{begin()};
+    }
     [[nodiscard]] constexpr auto size() const { return e - b; }
     friend auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
         -> llvm::raw_ostream & {
@@ -1087,8 +1091,8 @@ template <typename T> struct StridedVector {
     };
     constexpr auto begin() const { return StridedIterator{d, size_t(x)}; }
     constexpr auto end() const { return StridedIterator{d + x * N, size_t(x)}; }
-    constexpr auto rbegin() const { return --end(); }
-    constexpr auto rend() const { return --begin(); }
+    constexpr auto rbegin() const { return std::reverse_iterator(end()); }
+    constexpr auto rend() const { return std::reverse_iterator(begin()); }
     constexpr auto operator[](size_t i) const -> const T & {
         return d[size_t(x * i)];
     }
@@ -1145,10 +1149,10 @@ template <typename T> struct MutStridedVector {
     constexpr auto end() { return StridedIterator{d + x * N, size_t(x)}; }
     constexpr auto begin() const { return StridedIterator{d, size_t(x)}; }
     constexpr auto end() const { return StridedIterator{d + x * N, size_t(x)}; }
-    constexpr auto rbegin() { return --end(); }
-    constexpr auto rend() { return --begin(); }
-    constexpr auto rbegin() const { return --end(); }
-    constexpr auto rend() const { return --begin(); }
+    constexpr auto rbegin() { return std::reverse_iterator(end()); }
+    constexpr auto rend() { return std::reverse_iterator(begin()); }
+    constexpr auto rbegin() const { return std::reverse_iterator(end()); }
+    constexpr auto rend() const { return std::reverse_iterator(begin()); }
     constexpr auto operator[](size_t i) -> T & { return d[size_t(x * i)]; }
     constexpr auto operator[](size_t i) const -> const T & {
         return d[size_t(x * i)];

@@ -276,24 +276,16 @@ struct Instruction {
             UniqueIdentifier uid{id, opsRef};
             return (*this)[uid];
         }
-        auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1)
+        template <size_t N>
+        auto argMapLoopup(Identifer id, std::array<Instruction *, N> ops)
             -> Instruction * {
-            std::array<Instruction *, 1> ops;
-            ops[0] = op0;
-            ops[1] = op1;
             llvm::MutableArrayRef<Instruction *> opsRef(ops);
             UniqueIdentifier uid{id, opsRef};
             return (*this)[uid];
         }
         auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1,
                           Instruction *op2) -> Instruction * {
-            std::array<Instruction *, 3> ops;
-            ops[0] = op0;
-            ops[1] = op1;
-            ops[2] = op2;
-            llvm::MutableArrayRef<Instruction *> opsRef(ops);
-            UniqueIdentifier uid{id, opsRef};
-            return (*this)[uid];
+            return argMapLoopup<3>(id, {op0, op1, op2});
         }
         auto createInstruction(llvm::BumpPtrAllocator &alloc,
                                UniqueIdentifier uid, llvm::Type *type)
@@ -334,18 +326,18 @@ struct Instruction {
             UniqueIdentifier uid{id, ops};
             return createInstruction(alloc, uid, type);
         }
-
+        template <size_t N>
         auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
-                            Instruction *op0, Instruction *op1,
+                            std::array<Instruction *, N> ops,
                             llvm::Type *type) {
             // stack allocate for check
-            if (auto *i = argMapLoopup(id, op0, op1))
+            if (auto *i = argMapLoopup(id, ops))
                 return i;
             auto **operands = alloc.Allocate<Instruction *>(2);
-            operands[0] = op0;
-            operands[1] = op1;
-            llvm::MutableArrayRef<Instruction *> ops(operands, 2);
-            UniqueIdentifier uid{id, ops};
+            for (size_t n = 0; n < N; n++)
+                operands[n] = ops[n];
+            llvm::MutableArrayRef<Instruction *> mops(operands, N);
+            UniqueIdentifier uid{id, mops};
             return createInstruction(alloc, uid, type);
         }
         auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
@@ -1094,16 +1086,39 @@ struct Instruction {
     /// replace all uses of `*this` with `*I`.
     /// Assumes that `*I` does not depend on `*this`.
     void replaceAllUsesWith(Instruction *I) {
-        for (auto u : users)
+        for (auto u : users) {
+            assert(u != I);
             u->replaceOperand(this, I);
+            I->users.push_back(u);
+        }
     }
     /// replace all uses of `*this` with `*I`, except for `*I` itself.
     /// This is useful when replacing `*this` with `*I = f(*this)`
     /// E.g., when merging control flow branches, where `f` may be a select
     void replaceAllOtherUsesWith(Instruction *I) {
-        for (auto u : users)
-            if (u != I)
+        for (auto u : users) {
+            if (u != I) {
                 u->replaceOperand(this, I);
+                I->users.push_back(u);
+            }
+        }
+    }
+    auto replaceAllUsesOf(Instruction *I) -> Instruction * {
+        for (auto u : I->users) {
+            assert(u != this);
+            u->replaceOperand(I, this);
+            users.push_back(u);
+        }
+        return this;
+    }
+    auto replaceAllOtherUsesOf(Instruction *I) -> Instruction * {
+        for (auto u : I->users) {
+            if (u != this) {
+                u->replaceOperand(I, this);
+                users.push_back(u);
+            }
+        }
+        return this;
     }
 };
 
