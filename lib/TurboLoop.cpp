@@ -44,87 +44,85 @@
 // be fused.
 
 auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
-    -> llvm::PreservedAnalyses {
-    // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
-    // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
-    // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
-    // ClassID 0: ScalarRC
-    // ClassID 1: RegisterRC
-    // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
-    TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-    llvm::errs() << "DataLayout: "
-                 << F.getParent()->getDataLayout().getStringRepresentation()
+  -> llvm::PreservedAnalyses {
+  // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
+  // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
+  // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
+  // ClassID 0: ScalarRC
+  // ClassID 1: RegisterRC
+  // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
+  TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
+  llvm::errs() << "DataLayout: "
+               << F.getParent()->getDataLayout().getStringRepresentation()
+               << "\n";
+  llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0) << "\n";
+  llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1) << "\n";
+
+  for (size_t i = 0; i < 5; ++i) {
+    size_t w = 1 << i;
+    llvm::errs() << "Vector width: " << w << "\nfadd cost: "
+                 << TTI->getArithmeticInstrCost(
+                      llvm::Instruction::FAdd,
+                      llvm::FixedVectorType::get(
+                        llvm::Type::getDoubleTy(F.getContext()), w))
                  << "\n";
-    llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0)
-                 << "\n";
-    llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1)
-                 << "\n";
+  }
 
-    for (size_t i = 0; i < 5; ++i) {
-        size_t w = 1 << i;
-        llvm::errs() << "Vector width: " << w << "\nfadd cost: "
-                     << TTI->getArithmeticInstrCost(
-                            llvm::Instruction::FAdd,
-                            llvm::FixedVectorType::get(
-                                llvm::Type::getDoubleTy(F.getContext()), w))
-                     << "\n";
-    }
+  LI = &FAM.getResult<llvm::LoopAnalysis>(F);
+  SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+  // Builds the loopForest, constructing predicate chains and loop nests
+  initializeLoopForest();
+  SHOWLN(loopForests.size());
+  if (loopForests.empty())
+    return llvm::PreservedAnalyses::all();
 
-    LI = &FAM.getResult<llvm::LoopAnalysis>(F);
-    SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
-    // Builds the loopForest, constructing predicate chains and loop nests
-    initializeLoopForest();
-    SHOWLN(loopForests.size());
-    if (loopForests.empty())
-        return llvm::PreservedAnalyses::all();
+  for (auto forest : loopForests) {
+    forest->dump();
+  }
+  // first, we try and parse the function to find sets of loop nests
+  // then we search for sets of fusile loops
 
-    for (auto forest : loopForests) {
-        forest->dump();
-    }
-    // first, we try and parse the function to find sets of loop nests
-    // then we search for sets of fusile loops
+  // fills array refs
+  parseNest();
 
-    // fills array refs
-    parseNest();
+  llvm::errs() << "\n\nPrinting memory accesses:\n";
+  // TODO: fill schedules
+  for (auto forest : loopForests)
+    for (auto tree : *forest)
+      tree->dumpAllMemAccess();
+  llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
+               << loopForests.size() << "\n";
+  for (auto forest : loopForests) {
+    fillLoopBlock(*forest);
+    std::optional<BitSet<>> optDeps = loopBlock.optimize();
+    SHOWLN(optDeps.has_value());
+    llvm::errs() << loopBlock << "\n";
+    loopBlock.clear();
+  }
 
-    llvm::errs() << "\n\nPrinting memory accesses:\n";
-    // TODO: fill schedules
-    for (auto forest : loopForests)
-        for (auto tree : *forest)
-            tree->dumpAllMemAccess();
-    llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
-                 << loopForests.size() << "\n";
-    for (auto forest : loopForests) {
-        fillLoopBlock(*forest);
-        std::optional<BitSet<>> optDeps = loopBlock.optimize();
-        SHOWLN(optDeps.has_value());
-        llvm::errs() << loopBlock << "\n";
-        loopBlock.clear();
-    }
-
-    return llvm::PreservedAnalyses::none();
+  return llvm::PreservedAnalyses::none();
 }
 auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
                        llvm::ArrayRef<llvm::PassBuilder::PipelineElement>)
-    -> bool {
-    if (Name == "turbo-loop") {
-        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
-        // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
-        FPM.addPass(TurboLoopPass());
-        return true;
-    }
-    return false;
+  -> bool {
+  if (Name == "turbo-loop") {
+    // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
+    // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
+    FPM.addPass(TurboLoopPass());
+    return true;
+  }
+  return false;
 }
 
 void RegisterCB(llvm::PassBuilder &PB) {
-    PB.registerVectorizerStartEPCallback(
-        [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel) {
-            PM.addPass(TurboLoopPass());
-        });
-    PB.registerPipelineParsingCallback(PipelineParsingCB);
+  PB.registerVectorizerStartEPCallback(
+    [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel) {
+      PM.addPass(TurboLoopPass());
+    });
+  PB.registerPipelineParsingCallback(PipelineParsingCB);
 }
 
 extern "C" auto LLVM_ATTRIBUTE_WEAK llvmGetPassPluginInfo()
-    -> ::llvm::PassPluginLibraryInfo {
-    return {LLVM_PLUGIN_API_VERSION, "TurboLoop", "v0.1", RegisterCB};
+  -> ::llvm::PassPluginLibraryInfo {
+  return {LLVM_PLUGIN_API_VERSION, "TurboLoop", "v0.1", RegisterCB};
 }
