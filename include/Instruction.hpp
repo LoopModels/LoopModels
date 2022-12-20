@@ -27,6 +27,7 @@
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/InstructionCost.h>
 #include <llvm/Support/MathExtras.h>
+#include <tuple>
 #include <utility>
 #include <variant>
 
@@ -45,7 +46,7 @@ struct RecipThroughputLatency {
 struct Instruction {
     struct Intrinsic {
         struct OpCode {
-            llvm::Intrinsic::ID id;
+            llvm::Intrinsic::ID id{llvm::Intrinsic::not_intrinsic};
             constexpr auto operator==(const OpCode &other) const -> bool {
                 return id == other.id;
             }
@@ -79,8 +80,10 @@ struct Instruction {
 
         Intrinsic(llvm::Value *v)
             : opcode(getOpCode(v)), intrin(getIntrinsicID(v)) {}
-        Intrinsic(OpCode op, Intrin intrin) : opcode(op), intrin(intrin) {}
-        Intrinsic(OpCode op) : opcode(op) {}
+        constexpr Intrinsic(OpCode op, Intrin intrin)
+            : opcode(op), intrin(intrin) {}
+        constexpr Intrinsic(OpCode op) : opcode(op) {}
+        constexpr Intrinsic() = default;
         [[nodiscard]] constexpr auto isInstruction(OpCode opCode) const
             -> bool {
             return opcode == opCode;
@@ -116,9 +119,17 @@ struct Instruction {
         ptr;
     [[no_unique_address]] Predicate::Set predicates;
     [[no_unique_address]] llvm::MutableArrayRef<Instruction *> operands;
-    [[no_unique_address]] llvm::SmallVector<Instruction *> users;
+    // [[no_unique_address]] llvm::SmallVector<Instruction *> users;
+    [[no_unique_address]] llvm::SmallPtrSet<Instruction *, 8> users;
     /// costs[i] == cost for vector-width 2^i
     [[no_unique_address]] llvm::SmallVector<RecipThroughputLatency> costs;
+
+    void setOperands(llvm::MutableArrayRef<Instruction *> ops) {
+        operands = ops;
+        for (auto op : ops) {
+            op->users.insert(this);
+        }
+    }
 
     static auto getIdentifier(llvm::Instruction *I) -> Identifer {
         if (auto *CB = llvm::dyn_cast<llvm::CallBase>(I))
@@ -143,7 +154,11 @@ struct Instruction {
             return std::nullopt;
         }
     }
-
+    [[nodiscard]] auto getOpType() const -> std::pair<Intrinsic, llvm::Type *> {
+        if (auto i = getIntrinsic())
+            return std::make_pair(*i, type);
+        return std::make_pair(Intrinsic(), type);
+    }
     [[nodiscard]] auto isIntrinsic() const -> bool {
         return std::holds_alternative<Intrinsic>(id);
     }
@@ -283,6 +298,10 @@ struct Instruction {
             UniqueIdentifier uid{id, opsRef};
             return (*this)[uid];
         }
+        auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1)
+            -> Instruction * {
+            return argMapLoopup<2>(id, {op0, op1});
+        }
         auto argMapLoopup(Identifer id, Instruction *op0, Instruction *op1,
                           Instruction *op2) -> Instruction * {
             return argMapLoopup<3>(id, {op0, op1, op2});
@@ -342,17 +361,13 @@ struct Instruction {
         }
         auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
                             Instruction *op0, Instruction *op1,
+                            llvm::Type *type) {
+            return getInstruction<2>(alloc, id, {op0, op1}, type);
+        }
+        auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifer id,
+                            Instruction *op0, Instruction *op1,
                             Instruction *op2, llvm::Type *type) {
-            // stack allocate for check
-            if (auto *i = argMapLoopup(id, op0, op1, op2))
-                return i;
-            auto **operands = alloc.Allocate<Instruction *>(2);
-            operands[0] = op0;
-            operands[1] = op1;
-            operands[2] = op2;
-            llvm::MutableArrayRef<Instruction *> ops(operands, 3);
-            UniqueIdentifier uid{id, ops};
-            return createInstruction(alloc, uid, type);
+            return getInstruction<3>(alloc, id, {op0, op1, op2}, type);
         }
 
         /// This is the API for creating new instructions

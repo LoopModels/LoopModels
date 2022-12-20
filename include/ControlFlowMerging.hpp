@@ -26,8 +26,8 @@ void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
         // TODO: add a means for cache.get to stop adding operands
         // that are outside of LB, as we don't care about that part of the
         // graph.
-        auto inst = cache.get(alloc, mem->getInstruction());
-        inst->id.ptr.ref = &mem->ref;
+        Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
+        inst->ptr = &mem->ref;
     }
 }
 
@@ -36,6 +36,15 @@ inline void merge(llvm::SmallPtrSetImpl<Instruction *> &merged,
                   llvm::SmallPtrSetImpl<Instruction *> &toMerge) {
     merged.insert(toMerge.begin(), toMerge.end());
 }
+struct ReMapper {
+    llvm::DenseMap<Instruction *, Instruction *> reMap;
+    auto operator[](Instruction *I) -> Instruction * {
+        if (auto f = reMap.find(I); f != reMap.end())
+            return f->second;
+        return I;
+    }
+    void remapFromTo(Instruction *I, Instruction *J) { reMap[I] = J; }
+};
 
 // represents the cost of merging key=>values; cost is hopefully negative.
 // cost is measured in reciprocal throughput
@@ -132,12 +141,13 @@ struct MergingCost {
     struct Allocate {
         llvm::BumpPtrAllocator &alloc;
         Instruction::Cache &cache;
+        ReMapper &reMap;
     };
     struct Count {};
 
     struct SelectCounter {
-        size_t numSelects{0};
-        constexpr operator size_t() const { return numSelects; }
+        unsigned numSelects{0};
+        constexpr operator unsigned() const { return numSelects; }
         constexpr void merge(size_t, Instruction *, Instruction *) {}
         constexpr void select(size_t, Instruction *, Instruction *) {
             ++numSelects;
@@ -146,27 +156,29 @@ struct MergingCost {
     struct SelectAllocator {
         llvm::BumpPtrAllocator &alloc;
         Instruction::Cache &cache;
+        ReMapper &reMap;
         llvm::MutableArrayRef<Instruction *> operands;
         constexpr operator llvm::MutableArrayRef<Instruction *>() const {
             return operands;
         }
         void merge(size_t i, Instruction *A, Instruction *B) {
-            operands[i] = A->replaceAllUsesOf(B);
+            operands[i] = reMap[A]->replaceAllUsesOf(reMap[B]);
         }
         void select(size_t i, Instruction *A, Instruction *B) {
-            operands[i] = Instruction::createSelect(alloc, A, B)
+            A = reMap[A];
+            B = reMap[B];
+            operands[i] = cache.createSelect(alloc, A, B)
                               ->replaceAllOtherUsesOf(A)
                               ->replaceAllOtherUsesOf(B);
         }
     };
-    static auto init(Allocate a, Instruction *A, Instruction *)
-        -> SelectAllocator {
+    static auto init(Allocate a, Instruction *A) -> SelectAllocator {
         size_t numOps = A->getNumOperands();
         auto **operandsPtr = a.alloc.Allocate<Instruction *>(numOps);
         llvm::MutableArrayRef<Instruction *> operands(operandsPtr, numOps);
-        return SelectAllocator{a.alloc, a.cache, operands};
+        return SelectAllocator{a.alloc, a.cache, a.reMap, operands};
     }
-    static auto init(Count, Instruction *, Instruction *) -> SelectCounter {
+    static auto init(Count, Instruction *) -> SelectCounter {
         return SelectCounter{0};
     }
     // An abstraction that runs an algorithm to look for merging opportunities,
@@ -196,7 +208,7 @@ struct MergingCost {
         // select(p, f(a,b), f(c,a)) => f(a, b)
         // so we need to check if any operand pairs are merged with each other.
         // note `isMerged(a,a) == true`, so that's the one query we need to use.
-        auto selector = init(selects, A, B);
+        auto selector = init(selects, A);
         llvm::MutableArrayRef<Instruction *> operandsA = A->getOperands();
         llvm::MutableArrayRef<Instruction *> operandsB = B->getOperands();
         size_t numOperands = operandsA.size();
@@ -270,7 +282,7 @@ struct MergingCost {
         merged->insert(aB->second->begin(), aB->second->end());
         aA->second = merged;
         aB->second = merged;
-        size_t numSelects = mergeOperands(A, B, Count{});
+        unsigned numSelects = mergeOperands(A, B, Count{});
         // TODO:
         // increase cost by numSelects, decrease cost by `I`'s cost
         unsigned int W = vectorBits / B->getNumScalarBits();
@@ -310,9 +322,9 @@ void mergeInstructions(
     llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
     Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
     unsigned int vectorBits,
-    llvm::DenseMap<
-        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>,
-        llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>> &opMap,
+    llvm::DenseMap<std::pair<Instruction::Intrinsic, llvm::Type *>,
+                   llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
+        &opMap,
     llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *I,
     llvm::BasicBlock *BB, Predicate::Set &preds) {
     // have we already visited?
@@ -323,7 +335,7 @@ void mergeInstructions(
             return;
         C->initAncestors(alloc, I);
     }
-    auto op = I->getOpTripple();
+    auto op = I->getOpType();
     // TODO: confirm that `vec` doesn't get moved if `opMap` is resized
     auto &vec = opMap[op];
     // consider merging with every instruction sharing an opcode
@@ -388,16 +400,15 @@ void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-void mergeInstructions(llvm::BumpPtrAllocator &alloc,
+void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                       Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
                        llvm::BumpPtrAllocator &tAlloc,
-                       Instruction::Cache &cache, Predicate::Map &predMap,
-                       llvm::TargetTransformInfo &TTI,
                        unsigned int vectorBits) {
     if (!predMap.isDivergent())
         return;
     // there is a divergence in the control flow that we can ideally merge
     auto &opMap = *alloc.Allocate<llvm::DenseMap<
-        std::tuple<llvm::Intrinsic::ID, llvm::Intrinsic::ID, llvm::Type *>,
+        std::pair<Instruction::Intrinsic, llvm::Type *>,
         llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>>();
     llvm::SmallVector<MergingCost *> mergingCosts;
     mergingCosts.push_back(alloc.Allocate<MergingCost>());
@@ -415,14 +426,18 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc,
     MergingCost *minCostStrategy = *std::ranges::min_element(
         mergingCosts, [](auto *a, auto *b) { return *a < *b; });
     // and then apply it to the instructions.
-    llvm::DenseMap<Instruction *, Instruction *> reMap;
+    ReMapper reMap;
     // we use `alloc` for objects intended to live on
     for (auto &pair : *minCostStrategy) {
         // merge pair through `select`ing the arguments that differ
         auto [A, B] = pair;
+        A = reMap[A];
+        B = reMap[B];
         llvm::MutableArrayRef<Instruction *> operands =
-            minCostStrategy->mergeOperands(A, B,
-                                           MergingCost::Allocate{alloc, cache});
+            minCostStrategy->mergeOperands(
+                A, B, MergingCost::Allocate{alloc, cache, reMap});
+        A->replaceAllUsesOf(B)->setOperands(operands);
+        reMap.remapFromTo(B, A);
     }
     // free memory
     tAlloc.Reset();
