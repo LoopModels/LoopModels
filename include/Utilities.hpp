@@ -13,7 +13,7 @@ template <typename T> struct Optional {
         assert(hasValue());
         return *opt;
     }
-    constexpr operator bool() const { return hasValue(); }
+    constexpr explicit operator bool() const { return hasValue(); }
     constexpr auto operator->() -> T * { return &getValue(); }
     constexpr Optional() = default;
     constexpr Optional(T value) : opt(std::move(value)) {}
@@ -30,15 +30,16 @@ template <typename T> struct Optional<T *> {
         return *value;
     }
     [[nodiscard]] constexpr auto operator*() -> T & { return getValue(); }
-    constexpr operator bool() const { return hasValue(); }
+    constexpr explicit operator bool() const { return hasValue(); }
     constexpr auto operator->() -> T * { return value; }
     constexpr Optional() = default;
     constexpr Optional(T *v) : value(v) {}
 };
 template <std::signed_integral T> struct Optional<T> {
-    [[no_unique_address]] T value{std::numeric_limits<T>::min()};
+    static constexpr T null = std::numeric_limits<T>::min();
+    [[no_unique_address]] T value{null};
     [[nodiscard]] constexpr auto hasValue() const -> bool {
-        return value != std::numeric_limits<T>::min();
+        return value != null;
     }
     [[nodiscard]] constexpr auto getValue() -> T & {
         assert(hasValue());
@@ -50,16 +51,17 @@ template <std::signed_integral T> struct Optional<T> {
     constexpr Optional(T v) : value(v) {}
 };
 template <std::unsigned_integral T> struct Optional<T> {
-    [[no_unique_address]] T value{std::numeric_limits<T>::max()};
+    static constexpr T null = std::numeric_limits<T>::max();
+    [[no_unique_address]] T value{null};
     [[nodiscard]] constexpr auto hasValue() const -> bool {
-        return value != std::numeric_limits<T>::max();
+        return value != null;
     }
     [[nodiscard]] constexpr auto getValue() -> T & {
         assert(hasValue());
         return value;
     }
     [[nodiscard]] constexpr auto operator*() -> T & { return getValue(); }
-    constexpr operator bool() const { return hasValue(); }
+    constexpr explicit operator bool() const { return hasValue(); }
     constexpr Optional() = default;
     constexpr Optional(T v) : value(v) {}
 };

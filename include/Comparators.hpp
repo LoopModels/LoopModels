@@ -2,7 +2,6 @@
 
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
@@ -155,7 +154,7 @@ template <typename T> struct BaseComparator {
         return static_cast<const T *>(this)->greaterEqual(x);
     }
     inline auto lessEqual(llvm::SmallVectorImpl<int64_t> &x) const -> bool {
-        return lessEqual(view(x));
+        return lessEqual(LinearAlgebra::view(x));
     }
     [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x) const -> bool {
         const size_t N = getNumConstTerms();
@@ -171,7 +170,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
-        return lessEqual(view(y));
+        return lessEqual(LinearAlgebra::view(y));
     }
     [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x,
                                         int64_t y) const -> bool {
@@ -205,7 +204,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 16> y{x.begin(), x.begin() + N};
-        return less(view(y));
+        return less(LinearAlgebra::view(y));
     }
     [[nodiscard]] inline auto greater(MutPtrVector<int64_t> x) const -> bool {
         int64_t x0 = x[0]--;
@@ -218,7 +217,7 @@ template <typename T> struct BaseComparator {
         const size_t N = getNumConstTerms();
         assert(N <= x.size());
         llvm::SmallVector<int64_t, 8> xm{x.begin(), x.begin() + N};
-        return greater(view(xm));
+        return greater(LinearAlgebra::view(xm));
     }
     inline auto greater(Vector<int64_t> &x) const -> bool {
         return greater(MutPtrVector<int64_t>(x));
@@ -285,9 +284,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
     void init(PtrMatrix<int64_t> A,
               EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{}, bool pos0 = true) {
-        const size_t numCon = A.numRow() + pos0;
-        numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numCon, 2 * numCon);
+        const size_t numCon = size_t(A.numRow()) + pos0;
+        numVar = size_t(A.numCol());
+        V.resizeForOverwrite(Row{numVar + numCon}, Col{2 * numCon});
         V = 0;
         V(0, 0) = pos0;
         // V = [A' 0
@@ -307,10 +306,10 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     void initNonNegative(PtrMatrix<int64_t> A, size_t numNonNegative) {
         // we have an additional numNonNegative x numNonNegative identity matrix
         // as the lower right block of `A`.
-        const size_t numConExplicit = A.numRow() + 1;
+        const size_t numConExplicit = size_t(A.numRow()) + 1;
         const size_t numConTotal = numConExplicit + numNonNegative;
-        numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numConTotal, 2 * numConTotal);
+        numVar = size_t(A.numCol());
+        V.resizeForOverwrite(Row{numVar + numConTotal}, Col{2 * numConTotal});
         V = 0;
         V(0, 0) = 1;
         // B = [ A_0 A_1
@@ -334,12 +333,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                          size_t numNonNegative) {
         // we have an additional numNonNegative x numNonNegative identity matrix
         // as the lower right block of `A`.
-        const size_t numInEqConExplicit = A.numRow() + 1;
+        const size_t numInEqConExplicit = size_t(A.numRow()) + 1;
         const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
-        const size_t numEqCon = E.numRow();
-        numVar = A.numCol();
-        V.resizeForOverwrite(numVar + numInEqConTotal,
-                             2 * numInEqConTotal + numEqCon);
+        const size_t numEqCon = size_t(E.numRow());
+        numVar = size_t(A.numCol());
+        V.resizeForOverwrite(Row{numVar + numInEqConTotal},
+                             Col{2 * numInEqConTotal + numEqCon});
         V = 0;
         V(0, 0) = 1;
         // B = [ A_0 A_1
@@ -362,10 +361,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         initCore();
     }
     void init(PtrMatrix<int64_t> A, PtrMatrix<int64_t> E, bool pos0 = true) {
-        const size_t numInEqCon = A.numRow() + pos0;
-        numVar = A.numCol();
-        const size_t numEqCon = E.numRow();
-        V.resizeForOverwrite(numVar + numInEqCon, 2 * numInEqCon + numEqCon);
+        const size_t numInEqCon = size_t(A.numRow()) + pos0;
+        numVar = size_t(A.numCol());
+        const size_t numEqCon = size_t(E.numRow());
+        V.resizeForOverwrite(Row{numVar + numInEqCon},
+                             Col{2 * numInEqCon + numEqCon});
         V = 0;
         // V = [A' E' 0
         //      S  0  I]
@@ -384,25 +384,25 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
     void initCore() {
         auto &A = V;
-        size_t R = V.numRow();
-        U.resizeForOverwrite(R, R);
+        size_t R = size_t(V.numRow());
+        U.resizeForOverwrite(Row{R}, Col{R});
         U = 0;
         for (size_t i = 0; i < R; ++i)
             U(i, i) = 1;
         // We will have query of the form Ax = q;
-        NormalForm::simplifySystemImpl(A, U);
+        NormalForm::simplifySystemImpl(NormalForm::solvePair(A, U));
         auto &H = A;
         while ((R) && allZero(H(R - 1, _)))
             --R;
-        H.truncateRows(R);
-        U.truncateRows(R);
+        H.truncate(Row{R});
+        U.truncate(Row{R});
         // numRowTrunc = R;
         if (H.isSquare()) {
             d.clear();
             return;
         }
         IntMatrix Ht = H.transpose();
-        auto Vt = IntMatrix::identity(Ht.numRow());
+        auto Vt = IntMatrix::identity(size_t(Ht.numRow()));
         NormalForm::solveSystem(Ht, Vt);
         d = Ht.diag();
         V = Vt.transpose();
@@ -430,12 +430,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     auto isEmpty() -> bool {
         StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
         if (d.size() == 0) {
-            for (size_t i = V.numRow(); i < b.size(); ++i)
+            for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
                 if (b(i))
                     return false;
             auto H = V;
-            auto oldn = H.numCol();
-            H.resizeCols(oldn + 1);
+            Col oldn = H.numCol();
+            H.resize(oldn + 1);
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = -b(i);
             NormalForm::solveSystem(H);
@@ -447,7 +447,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         // Column rank deficient case
         else {
-            size_t numSlack = V.numRow() - numEquations;
+            size_t numSlack = size_t(V.numRow()) - numEquations;
             // Vector<int64_t> dinv = d; // copy
             auto Dlcm = d[0];
             // We represent D martix as a vector, and multiply the lcm to the
@@ -458,24 +458,24 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             b2.resizeForOverwrite(d.size());
             for (size_t i = 0; i < d.size(); ++i)
                 b2(i) = -b(i) * Dlcm / d(i);
-            size_t numRowTrunc = U.numRow();
+            size_t numRowTrunc = size_t(U.numRow());
             Vector<int64_t> c =
                 V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
             auto NSdim = V.numCol() - numRowTrunc;
             // expand W stores [c -JV2 JV2]
             //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
             // where y2 = y2+ - y2-
-            IntMatrix expandW(numSlack, NSdim * 2 + 1);
+            IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);
             for (size_t i = 0; i < numSlack; ++i) {
                 expandW(i, 0) = c(i);
                 // expandW(i, 0) *= Dlcm;
                 for (size_t j = 0; j < NSdim; ++j) {
                     auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
                     expandW(i, j + 1) = -val;
-                    expandW(i, j + NSdim + 1) = val;
+                    expandW(i, NSdim + 1 + j) = val;
                 }
             }
-            IntMatrix Wcouple{0, expandW.numCol()};
+            IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};
             std::optional<Simplex> optS{
                 Simplex::positiveVariables(expandW, Wcouple)};
             return optS.has_value();
@@ -486,12 +486,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         Vector<int64_t> b = U(_, _(begin, query.size())) * query;
         // Full column rank case
         if (d.size() == 0) {
-            for (size_t i = V.numRow(); i < b.size(); ++i)
+            for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
                 if (b(i))
                     return false;
             auto H = V;
             auto oldn = H.numCol();
-            H.resizeCols(oldn + 1);
+            H.resize(oldn + 1);
             for (size_t i = 0; i < H.numRow(); ++i)
                 H(i, oldn) = b(i);
             NormalForm::solveSystem(H);
@@ -503,7 +503,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
         }
         // Column rank deficient case
         else {
-            size_t numSlack = V.numRow() - numEquations;
+            size_t numSlack = size_t(V.numRow()) - numEquations;
             Vector<int64_t> dinv = d; // copy
             auto Dlcm = dinv[0];
             // We represent D martix as a vector, and multiply the lcm to the
@@ -513,7 +513,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
             for (size_t i = 0; i < dinv.size(); ++i)
                 dinv(i) = Dlcm / dinv(i);
             b *= dinv;
-            size_t numRowTrunc = U.numRow();
+            size_t numRowTrunc = size_t(U.numRow());
             Vector<int64_t> c =
                 V(_(numEquations, end), _(begin, numRowTrunc)) * b;
             auto NSdim = V.numCol() - numRowTrunc;
@@ -527,7 +527,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
                 for (size_t j = 0; j < NSdim; ++j) {
                     auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
                     expandW(i, j + 1) = -val;
-                    expandW(i, j + NSdim + 1) = val;
+                    expandW(i, NSdim + 1 + j) = val;
                 }
             }
             IntMatrix Wcouple{0, expandW.numCol()};
@@ -544,11 +544,11 @@ static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,
                                      const Comparator auto &) {}
 static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
                                   const Comparator auto &C) {
-    const size_t numVar = E.numCol();
+    const size_t numVar = size_t(E.numCol());
     assert(A.numCol() == numVar);
     if (A.numRow() <= 1)
         return;
-    for (size_t o = A.numRow() - 1; o > 0;) {
+    for (size_t o = size_t(A.numRow()) - 1; o > 0;) {
         for (size_t i = o--; i < A.numRow(); ++i) {
             bool isNeg = true;
             for (size_t v = 0; v < numVar; ++v) {
@@ -558,7 +558,7 @@ static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
                 }
             }
             if (isNeg && C.equalNegative(A(i, _), A(o, _))) {
-                size_t e = E.numRow();
+                size_t e = size_t(E.numRow());
                 E.resize(e + 1, numVar);
                 for (size_t v = 0; v < numVar; ++v)
                     E(e, v) = A(i, v);

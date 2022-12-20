@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include <cstddef>
@@ -19,10 +18,10 @@
 printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
                  llvm::ArrayRef<const llvm::SCEV *> syms,
                  bool inequality = true) -> llvm::raw_ostream & {
-    const unsigned numConstraints = A.numRow();
-    const unsigned numVar = A.numCol();
+    const Row numConstraints = A.numRow();
+    const Col numVar = A.numCol();
     const unsigned numSyms = syms.size() + 1;
-    for (size_t c = 0; c < numConstraints; ++c) {
+    for (Row c = 0; c < numConstraints; ++c) {
         bool hasPrinted = false;
         bool allVarNonNegative = allGEZero(A(c, _(numSyms, numVar)));
         int64_t sign = allVarNonNegative ? 1 : -1;
@@ -75,16 +74,16 @@ printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
     return os;
 }
 
-MULTIVERSION [[maybe_unused]] static void
-eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
-    const size_t lastRow = A.numRow() - 1;
-    assert(i <= lastRow);
+[[maybe_unused]] static void eraseConstraintImpl(MutPtrMatrix<int64_t> A,
+                                                 Row i) {
+    const Row lastRow = A.numRow() - 1;
+    assert(lastRow >= i);
     if (lastRow != i)
         A(i, _) = A(lastRow, _);
 }
-[[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t i) {
+[[maybe_unused]] static void eraseConstraint(IntMatrix &A, Row i) {
     eraseConstraintImpl(A, i);
-    A.truncateRows(A.numRow() - 1);
+    A.truncate(Row{A.numRow() - 1});
 }
 [[maybe_unused]] static void eraseConstraint(IntMatrix &A, size_t _i,
                                              size_t _j) {
@@ -92,8 +91,8 @@ eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
     size_t i = std::min(_i, _j);
     size_t j = std::max(_i, _j);
     const auto [M, N] = A.size();
-    const size_t lastRow = M - 1;
-    const size_t penuRow = lastRow - 1;
+    const Row lastRow = M - 1;
+    const Row penuRow = lastRow - 1;
     if (j == penuRow) {
         // then we only need to copy one column (i to lastCol)
         eraseConstraint(A, i);
@@ -105,19 +104,18 @@ eraseConstraintImpl(MutPtrMatrix<int64_t> A, size_t i) {
             A(j, n) = A(lastRow, n);
         }
     }
-    A.truncateRows(penuRow);
+    A.truncate(Row{penuRow});
 }
 
-MULTIVERSION [[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
-                                                                 const size_t i)
-    -> size_t {
+[[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
+                                                    const size_t i) -> size_t {
     const auto [numConstraints, numVar] = E.size();
-    size_t minNonZero = numVar + 1;
-    size_t rowMinNonZero = numConstraints;
+    Col minNonZero = numVar + 1;
+    auto rowMinNonZero = size_t(numConstraints);
     for (size_t j = 0; j < numConstraints; ++j)
         if (E(j, i)) {
             size_t nonZero = 0;
-            VECTORIZE
+
             for (size_t v = 0; v < numVar; ++v)
                 nonZero += (E(j, v) != 0);
             if (nonZero < minNonZero) {
@@ -159,11 +157,13 @@ MULTIVERSION [[maybe_unused]] static auto substituteEqualityImpl(IntMatrix &E,
     return false;
 }
 
-inline auto substituteEqualityImpl(IntMatrix &A, IntMatrix &E, const size_t i)
+inline auto substituteEqualityImpl(
+    std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AE, const size_t i)
     -> size_t {
+    auto [A, E] = AE;
     const auto [numConstraints, numVar] = E.size();
-    size_t minNonZero = numVar + 1;
-    size_t rowMinNonZero = numConstraints;
+    Col minNonZero = numVar + 1;
+    auto rowMinNonZero = size_t(numConstraints);
     for (size_t j = 0; j < numConstraints; ++j) {
         if (E(j, i)) {
             size_t nonZero = 0;
@@ -217,10 +217,11 @@ constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
     return false;
 }
 
-MULTIVERSION [[maybe_unused]] static auto
-substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
+[[maybe_unused]] static auto substituteEquality(IntMatrix &A, IntMatrix &E,
+                                                const size_t i) -> bool {
 
-    size_t rowMinNonZero = substituteEqualityImpl(A, E, i);
+    size_t rowMinNonZero = substituteEqualityImpl(
+        std::make_pair(MutPtrMatrix(A), MutPtrMatrix(E)), i);
     if (rowMinNonZero == E.numRow())
         return true;
     eraseConstraint(E, rowMinNonZero);
@@ -232,23 +233,23 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
 [[maybe_unused]] static void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
                                                       PtrMatrix<int64_t> A,
                                                       PtrMatrix<int64_t> B) {
-    const size_t numVar = A.numCol();
+    const Col numVar = A.numCol();
     assert(numVar == B.numCol());
-    const size_t numSlack = A.numRow();
-    const size_t numStrict = B.numRow();
+    const Row numSlack = A.numRow();
+    const Row numStrict = B.numRow();
     assert(C.numRow() == numSlack + numStrict);
-    assert(C.numCol() == numSlack + numVar);
+    size_t slackAndVar = size_t(numSlack) + size_t(numVar);
+    assert(size_t(C.numCol()) == slackAndVar);
     // [I A]
     for (size_t s = 0; s < numSlack; ++s) {
         C(s, _(begin, numSlack)) = 0;
         C(s, s) = 1;
-        C(s, _(numSlack, numSlack + numVar)) = A(s, _(begin, numVar));
+        C(s, _(numSlack, slackAndVar)) = A(s, _(begin, numVar));
     }
     // [0 B]
-    for (size_t s = 0; s < numStrict; ++s) {
+    for (Row s = 0; s < numStrict; ++s) {
         C(s + numSlack, _(begin, numSlack)) = 0;
-        C(s + numSlack, _(numSlack, numSlack + numVar)) =
-            B(s, _(begin, numVar));
+        C(s + numSlack, _(numSlack, slackAndVar)) = B(s, _(begin, numVar));
     }
 }
 // counts how many negative and positive elements there are in row `i`.
@@ -257,8 +258,8 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
     -> std::pair<size_t, size_t> {
     size_t numNeg = 0;
     size_t numPos = 0;
-    size_t numRow = A.numRow();
-    for (size_t j = 0; j < numRow; ++j) {
+    Row numRow = A.numRow();
+    for (Row j = 0; j < numRow; ++j) {
         int64_t Aij = A(j, i);
         numNeg += (Aij < 0);
         numPos += (Aij > 0);
@@ -269,9 +270,8 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
 [[maybe_unused]] static void fourierMotzkin(IntMatrix &A, size_t v) {
     assert(v < A.numCol());
     const auto [numNeg, numPos] = countNonZeroSign(A, v);
-    const size_t numRowsOld = A.numRow();
-    const size_t numRowsNew =
-        numRowsOld - numNeg - numPos + numNeg * numPos + 1;
+    const Row numRowsOld = A.numRow();
+    const Row numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;
     // we need one extra, as on the last overwrite, we still need to
     // read from two constraints we're deleting; we can't write into
     // both of them. Thus, we use a little extra memory here,
@@ -279,14 +279,15 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
     if ((numNeg == 0) | (numPos == 0)) {
         if ((numNeg == 0) & (numPos == 0))
             return;
-        for (size_t i = numRowsOld; i != 0;)
+        for (Row i = numRowsOld; i != 0;)
             if (A(--i, v))
                 eraseConstraint(A, i);
         return;
     }
-    A.resizeRows(numRowsNew);
+    A.resize(numRowsNew);
     // plan is to replace
-    for (size_t i = 0, numRows = numRowsOld, posCount = numPos; posCount; ++i) {
+    for (size_t i = 0, numRows = size_t(numRowsOld), posCount = numPos;
+         posCount; ++i) {
         int64_t Aiv = A(i, v);
         if (Aiv <= 0)
             continue;
@@ -298,7 +299,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
             // for the last `negCount`, we overwrite `A(i, k)`
             // last posCount does not get overwritten
             --negCount;
-            size_t c = posCount ? (negCount ? numRows++ : i) : j;
+            size_t c = posCount ? (negCount ? numRows++ : size_t(i)) : j;
             int64_t Ai = Aiv, Aj = Ajv;
             int64_t g = gcd(Aiv, Ajv);
             if (g != 1) {
@@ -334,7 +335,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
     assert(v < A.numCol());
     const auto [numNeg, numPos] = countNonZeroSign(A, v);
     const size_t numPosP1 = numPos + 1;
-    const size_t numRowsOld = A.numRow();
+    const size_t numRowsOld = size_t(A.numRow());
     const size_t numRowsNew =
         numRowsOld - numNeg - numPosP1 + numNeg * numPosP1 + 1;
     // we need one extra, as on the last overwrite, we still need to
@@ -349,7 +350,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
                 eraseConstraint(A, i);
         return;
     }
-    A.resizeRows(numRowsNew);
+    A.resize(Row{numRowsNew});
     // plan is to replace
     size_t numRows = numRowsOld;
     for (size_t i = 0, posCount = numPos; posCount; ++i) {
@@ -416,7 +417,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
         fourierMotzkin(A, v);
 }
 [[maybe_unused]] static void removeZeroRows(IntMatrix &A) {
-    for (size_t i = A.numRow(); i;)
+    for (Row i = A.numRow(); i;)
         if (allZero(A(--i, _)))
             eraseConstraint(A, i);
 }
@@ -435,7 +436,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
 }
 
 [[maybe_unused]] static void dropEmptyConstraints(IntMatrix &A) {
-    for (size_t c = A.numRow(); c != 0;)
+    for (Row c = A.numRow(); c != 0;)
         if (allZero(A(--c, _)))
             eraseConstraint(A, c);
 }
@@ -475,7 +476,7 @@ substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i) -> bool {
 }
 
 [[maybe_unused]] static void deleteBounds(IntMatrix &A, size_t i) {
-    for (size_t j = A.numRow(); j != 0;)
+    for (Row j = A.numRow(); j != 0;)
         if (A(--j, i))
             eraseConstraint(A, j);
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "./ArrayReference.hpp"
-#include "./CostModeling.hpp"
 #include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
@@ -9,8 +8,6 @@
 #include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Predicate.hpp"
-#include "./Schedule.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -227,23 +224,17 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                     }
                 }
             }
-            if (anyFail) {
-                if (branches.size())
-                    split(branches, branchBlocks, H, L);
-                return 0;
-            } else if (auto predMapAbridged = Predicate::Map::descend(
-                           allocator, instrCache, H, E, L)) {
-
-                branchBlocks.push_back(std::move(*predMapAbridged));
-                LoopTree::split(allocator, pForest, branches, branchBlocks);
-                return ++interiorDepth;
-            } else {
-                // we don't have a direct path from H to E
-                // we need to split
-                if (branches.size())
-                    split(branches, branchBlocks, H, L);
-                return 0;
+            if (!anyFail) {
+                if (auto predMapAbridged = Predicate::Map::descend(
+                        allocator, instrCache, H, E, L)) {
+                    branchBlocks.push_back(std::move(*predMapAbridged));
+                    LoopTree::split(allocator, pForest, branchBlocks, branches);
+                    return ++interiorDepth;
+                }
             }
+            if (branches.size())
+                split(branches, branchBlocks, H, L);
+            return 0;
         } else if (auto BT = getBackedgeTakenCount(*SE, L);
                    !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
             // we're at the bottom of the recursion
@@ -267,7 +258,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
             Predicate::Map::descend(allocator, instrCache, BB, BB, L);
         assert(predMapAbridged);
         branchBlocks.push_back(std::move(*predMapAbridged));
-        LoopTree::split(allocator, loopForests, branches, branchBlocks);
+        LoopTree::split(allocator, loopForests, branchBlocks, branches);
     }
 
     auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
@@ -394,8 +385,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         return blackList | blackListAllDependentLoops(S, numPeeled);
     }
     auto arrayRef(LoopTree &LT, llvm::Instruction *ptr,
-                  llvm::Instruction *loadOrStore, const llvm::SCEV *elSize)
-        -> std::optional<ArrayReference> {
+                  const llvm::SCEV *elSize) -> std::optional<ArrayReference> {
         llvm::Loop *L = LT.loop;
         if (L)
             llvm::errs() << "arrayRef for " << *L << "\n";
@@ -433,8 +423,8 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         // SHOWLN(sizes.size());
         AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
         if (sizes.size() == 0)
-            return ArrayReference(basePointer, &aln, loadOrStore,
-                                  std::move(sizes), std::move(subscripts));
+            return ArrayReference(basePointer, &aln, std::move(sizes),
+                                  std::move(subscripts));
         size_t numLoops{aln.getNumLoops()};
         // numLoops x arrayDim
         // IntMatrix R(numLoops, subscripts.size());
@@ -499,15 +489,15 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
                 if (size_t j = findSymbolicIndex(symbolicOffsets, S)) {
                     Bt(_, j) += Rt(_, i);
                 } else {
-                    size_t N = Bt.numCol();
-                    Bt.resizeCols(N + 1);
+                    Col N = Bt.numCol();
+                    Bt.resize(N + 1);
                     Bt(_, N) = Rt(_, i);
                     symbolicOffsets.push_back(S);
                 }
             }
-            Rt.truncateCols(numLoops - numExtraLoopsToPeel);
+            Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
         }
-        ArrayReference ref(basePointer, &aln, loadOrStore, std::move(sizes),
+        ArrayReference ref(basePointer, &aln, std::move(sizes),
                            std::move(symbolicOffsets));
         ref.resize(subscripts.size());
         ref.indexMatrix() = Rt.transpose();
@@ -547,13 +537,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (LT.loop) {
             if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (std::optional<ArrayReference> re =
-                        arrayRef(LT, iptr, I, elSize)) {
+                        arrayRef(LT, iptr, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
+                    re->loadOrStore = I;
                     LT.memAccesses.emplace_back(std::move(*re), I, omega);
                     ++omega.back();
                     llvm::errs() << "Succesfully added load\n"
@@ -575,13 +566,14 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         if (LT.loop) {
             if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
                 if (std::optional<ArrayReference> re =
-                        arrayRef(LT, iptr, I, elSize)) {
+                        arrayRef(LT, iptr, elSize)) {
                     SHOWLN(I);
                     SHOWLN(*I);
                     llvm::errs() << "omega = [" << omega.front();
                     for (size_t i = 1; i < omega.size(); ++i)
                         llvm::errs() << ", " << omega[i];
                     llvm::errs() << "]\n";
+                    re->loadOrStore = I;
                     LT.memAccesses.emplace_back(std::move(*re), I, omega);
                     ++omega.back();
                     llvm::errs() << "Succesfully added store\n"
@@ -626,7 +618,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void visit(LoopTree &LT, Predicate::Map &map,
                llvm::SmallVector<unsigned> &omega,
-               llvm::SmallPtrSet<llvm::BasicBlock *, 8> visited,
+               llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited,
                llvm::BasicBlock *BB) {
         if ((!map.isInPath(BB)) || visited.contains(BB))
             return;
@@ -637,7 +629,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
     }
     void parseBBMap(LoopTree &LT, Predicate::Map &map,
                     llvm::SmallVector<unsigned> &omega) {
-        llvm::SmallPtrSet<llvm::BasicBlock *, 8> visited;
+        llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
         for (auto &pair : map)
             visit(LT, map, omega, visited, pair.first);
     }
@@ -660,7 +652,7 @@ class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
         //         paths.insert(PBB.basicBlock);
         //     }
 #endif
-        llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
+        // llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
         omega.push_back(0);
         assert(LT.subLoops.size() + 1 == LT.paths.size());
         // llvm::Loop *L = LT.loop;

@@ -10,6 +10,7 @@
 #include <llvm/IR/LLVMContext.h>
 #include <memory>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds, BasicAssertions) {
     // A(5, 3) [1, M, m] constants, symbolic vars, loop vars
     //[0 1 0;
@@ -48,6 +49,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
     EXPECT_EQ(aff.A, stringToIntMatrix("[-2 1 -1]"));
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds2, BasicAssertions) {
     // i >= 1
     // I >= 1
@@ -66,6 +68,7 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
     // because i >= 1
     EXPECT_EQ(aff.A.numRow(), 3);
 }
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LessTrivialPruneBounds, BasicAssertions) {
 
     // Ax * b >= 0
@@ -102,6 +105,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
     EXPECT_EQ(loop0Count.second, 0);
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(AffineTest0, BasicAssertions) {
     llvm::errs() << "Starting affine test 0\n";
     // the loop is
@@ -125,8 +129,8 @@ TEST(AffineTest0, BasicAssertions) {
 
     llvm::errs() << "Constructed affine obj\n";
     llvm::errs() << "About to run first compat test\n";
-    llvm::errs() << "aff.A.size() = (" << aff.A.numRow() << ", "
-                 << aff.A.numCol() << ")\n";
+    llvm::errs() << "aff.A.size() = (" << size_t(aff.A.numRow()) << ", "
+                 << size_t(aff.A.numCol()) << ")\n";
     EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, false));
     EXPECT_FALSE(aff.zeroExtraIterationsUponExtending(0, true));
     EXPECT_TRUE(aff.zeroExtraIterationsUponExtending(1, false));
@@ -153,6 +157,7 @@ TEST(AffineTest0, BasicAssertions) {
 
     // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(NonUnimodularExperiment, BasicAssertions) {
     llvm::errs() << "Starting affine test 1\n";
     IntMatrix A{stringToIntMatrix("[0 2 1 -1; "

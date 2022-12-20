@@ -282,17 +282,14 @@ struct AffineLoopNest
     /// offsets
     [[nodiscard]] auto addSymbol(IntMatrix &B, llvm::Loop *L,
                                  const llvm::SCEV *v, llvm::ScalarEvolution &SE,
-                                 const size_t l, const size_t u, int64_t mlt,
+                                 Range<size_t, size_t> lu, int64_t mlt,
                                  size_t minDepth) -> size_t {
-        assert(u > l);
         // first, we check if `v` in `Symbols`
         if (size_t i = findIndex(v)) {
-            for (size_t j = l; j < u; ++j)
-                A(j, i) += mlt;
+            A(lu, i) += mlt;
             return minDepth;
         } else if (std::optional<int64_t> c = getConstantInt(v)) {
-            for (size_t j = l; j < u; ++j)
-                A(j, 0) += mlt * (*c);
+            A(lu, 0) += mlt * (*c);
             return minDepth;
         } else if (const auto *ex =
                        llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
@@ -319,20 +316,19 @@ struct AffineLoopNest
             //             llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
             //     }
             // }
-
-            size_t M = A.numRow();
-            minDepth = addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
+            Row M = A.numRow();
+            minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
             if (M != A.numRow())
                 minDepth =
-                    addSymbol(B, L, op1, SE, M, A.numRow(), mlt, minDepth);
-            return addSymbol(B, L, op1, SE, l, u, mlt, minDepth);
+                    addSymbol(B, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
+            return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
         } else if (const auto *ex =
                        llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
             if (auto op = getConstantInt(ex->getOperand(0))) {
-                return addSymbol(B, L, ex->getOperand(1), SE, l, u, mlt * (*op),
+                return addSymbol(B, L, ex->getOperand(1), SE, lu, mlt * (*op),
                                  minDepth);
             } else if (auto op = getConstantInt(ex->getOperand(1))) {
-                return addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt * (*op),
+                return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt * (*op),
                                  minDepth);
             }
         } else if (const auto *x =
@@ -340,10 +336,10 @@ struct AffineLoopNest
             size_t recDepth = x->getLoop()->getLoopDepth();
             if (x->isAffine()) {
                 minDepth =
-                    addSymbol(B, L, x->getOperand(0), SE, l, u, mlt, minDepth);
+                    addSymbol(B, L, x->getOperand(0), SE, lu, mlt, minDepth);
                 if (auto c = getConstantInt(x->getOperand(1))) {
                     // swap order vs recDepth to go inner<->outer
-                    B(l, B.numCol() - recDepth) = mlt * (*c);
+                    B(lu, B.numCol() - recDepth) = mlt * (*c);
                     return minDepth;
                 }
                 v = SE.getAddRecExpr(SE.getZero(x->getOperand(0)->getType()),
@@ -359,7 +355,7 @@ struct AffineLoopNest
                        llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
             auto S = simplifyMinMax(SE, ex);
             if (S != v)
-                return addSymbol(B, L, S, SE, l, u, mlt, minDepth);
+                return addSymbol(B, L, S, SE, lu, mlt, minDepth);
             bool isMin = llvm::isa<llvm::SCEVSMinExpr>(ex) ||
                          llvm::isa<llvm::SCEVUMinExpr>(ex);
             llvm::errs() << "llvm::SCEVMinMaxExpr: " << *ex
@@ -368,18 +364,18 @@ struct AffineLoopNest
             const llvm::SCEV *op1 = ex->getOperand(1);
             if (isMin ^
                 (mlt < 0)) { // we can represent this as additional constraints
-                size_t M = A.numRow();
-                A.resizeRows(M + u - l);
-                B.resizeRows(M + u - l);
-                size_t Mp = M + u - l;
-                A(_(M, Mp), _) = A(_(l, u), _);
-                B(_(M, Mp), _) = B(_(l, u), _);
-                minDepth = addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
-                minDepth = addSymbol(B, L, op1, SE, M, Mp, mlt, minDepth);
+                Row M = A.numRow();
+                Row Mp = M + lu.size();
+                A.resize(Mp);
+                B.resize(Mp);
+                A(_(M, Mp), _) = A(lu, _);
+                B(_(M, Mp), _) = B(lu, _);
+                minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
+                minDepth = addSymbol(B, L, op1, SE, _(M, Mp), mlt, minDepth);
             } else if (addRecMatchesLoop(op0, L)) {
-                return addSymbol(B, L, op1, SE, l, u, mlt, minDepth);
+                return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
             } else if (addRecMatchesLoop(op1, L)) {
-                return addSymbol(B, L, op0, SE, l, u, mlt, minDepth);
+                return addSymbol(B, L, op0, SE, lu, mlt, minDepth);
                 // } else {
                 //     // auto S = simplifyMinMax(SE, ex);
                 //     // if (S != v)
@@ -429,23 +425,22 @@ struct AffineLoopNest
                 //     assert(false);
             }
         } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(v))
-            return addSymbol(B, L, ex->getOperand(0), SE, l, u, mlt, minDepth);
+            return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt, minDepth);
         // } else if (const llvm::SCEVUDivExpr *ex = llvm::dyn_cast<const
         // llvm::SCEVUDivExpr>(v)) {
 
         // } else if (const llvm::SCEVUnknown *ex = llvm::dyn_cast<const
         // llvm::SCEVUnknown>(v)) {
-        addSymbol(v, l, u, mlt);
+        addSymbol(v, lu, mlt);
         return minDepth;
     }
-    void addSymbol(const llvm::SCEV *v, size_t l, size_t u, int64_t mlt) {
-        assert(u > l);
+    void addSymbol(const llvm::SCEV *v, Range<size_t, size_t> lu, int64_t mlt) {
+        assert(lu.size());
         // llvm::errs() << "Before adding sym A = " << A << "\n";
         S.push_back(v);
-        A.resizeCols(A.numCol() + 1);
+        A.resize(A.numCol() + 1);
         // A.insertZeroColumn(symbols.size());
-        for (size_t j = l; j < u; ++j)
-            A(j, S.size()) = mlt;
+        A(lu, S.size()) = mlt;
         // llvm::errs() << "After adding sym A = " << A << "\n";
     }
     static auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
@@ -456,18 +451,18 @@ struct AffineLoopNest
     auto addBackedgeTakenCount(IntMatrix &B, llvm::Loop *L,
                                const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
                                size_t minDepth) -> size_t {
-        size_t M = A.numRow();
-        A.resizeRows(M + 1);
-        B.resizeRows(M + 1);
+        Row M = A.numRow();
+        A.resize(M + 1);
+        B.resize(M + 1);
         llvm::errs() << "BT = " << *BT
                      << "\naddBackedgeTakenCount pre addSym; M = " << M
                      << "; A = " << A << "\n";
-        minDepth = addSymbol(B, L, BT, SE, M, M + 1, 1, minDepth);
+        minDepth = addSymbol(B, L, BT, SE, _(M, M + 1), 1, minDepth);
         llvm::errs() << "addBackedgeTakenCount post addSym; M = " << M
                      << "; A = " << A << "\n";
         assert(A.numRow() == B.numRow());
         size_t depth = L->getLoopDepth();
-        for (size_t m = M; m < A.numRow(); ++m)
+        for (auto m = size_t(M); m < A.numRow(); ++m)
             B(m, B.numCol() - depth) = -1; // indvar
         // recurse, if possible to add an outer layer
         if (llvm::Loop *P = L->getParentLoop()) {
@@ -544,15 +539,15 @@ struct AffineLoopNest
                     addSymbol(SE.getAddRecExpr(SE.getZero(IntTyp),
                                                SE.getOne(IntTyp), P,
                                                llvm::SCEV::NoWrapMask),
-                              i, i + 1, Bid);
+                              _(i, i + 1), Bid);
                     llvm::errs() << "UnboundedAffineLoopNest iter i = " << i
                                  << "A = " << A << "\n";
                 }
             }
         }
         size_t depth = maxDepth - minDepth;
-        size_t N = A.numCol();
-        A.resizeCols(N + depth);
+        Col N = A.numCol();
+        A.resize(N + depth);
         // copy the included loops from B into A
         A(_, _(N, N + depth)) = B(_, _(0, depth));
         initializeComparator();
@@ -567,14 +562,14 @@ struct AffineLoopNest
         // no loop may be conditioned on the innermost loop
         // so we should be able to safely remove all constraints that reference
         // it
-        for (size_t m = B.numRow(); m-- > 0;) {
+        for (size_t m = size_t(B.numRow()); m--;) {
             if (A(m, innermostLoopInd)) {
                 // B(_(m,end-1),_) = B(_(m+1,end),_);
                 // make sure we're explicit about the order we copy rows
-                size_t M = B.numRow() - 1;
+                Row M = B.numRow() - 1;
                 for (size_t r = m; r < M; ++r)
                     B(r, _) = B(r + 1, _);
-                B.resizeRows(M);
+                B.resize(M);
             }
         }
         return AffineLoopNest<NonNegative>(B, S);
@@ -644,7 +639,7 @@ struct AffineLoopNest
         if (!N)
             return;
         size_t numLoops = getNumLoops();
-        A.resizeRows(M + numLoops);
+        A.resize(M + numLoops);
         A(_(M, M + numLoops), _) = 0;
         for (size_t i = 0; i < numLoops; ++i)
             A(M + i, N - numLoops + i) = 1;
@@ -768,7 +763,7 @@ struct AffineLoopNest
                 for (size_t v = 0; v < tmp2.A.numCol(); ++v)
                     tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
             }
-            for (size_t cc = tmp2.A.numRow(); cc != 0;)
+            for (size_t cc = size_t(tmp2.A.numRow()); cc;)
                 if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
                     eraseConstraint(tmp2.A, cc);
             tmp2.initializeComparator();
@@ -794,7 +789,7 @@ struct AffineLoopNest
                         tmp.A(cc, _i + numConst) = 0;
                     }
                 }
-                for (size_t cc = tmp.A.numRow(); cc != 0;)
+                for (size_t cc = size_t(tmp.A.numRow()); cc;)
                     if (tmp.A(--cc, numPrevLoops + numConst) == 0)
                         eraseConstraint(tmp.A, cc);
                 tmp.initializeComparator();

@@ -244,6 +244,12 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
         os << "]";
         return os;
     }
+    [[nodiscard]] auto isEmpty() const -> bool {
+        for (auto u : data)
+            if (u)
+                return false;
+        return true;
+    }
 };
 
 // BitSet with length 64

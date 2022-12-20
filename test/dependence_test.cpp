@@ -14,6 +14,7 @@
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/Type.h>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DependenceTest, BasicAssertions) {
 
     // for (i = 0:I-2){
@@ -166,6 +167,7 @@ TEST(DependenceTest, BasicAssertions) {
         d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SymmetricIndependentTest, BasicAssertions) {
     // symmetric copy
     // for(i = 0:I-1)
@@ -251,6 +253,7 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
     EXPECT_EQ(dc.size(), 0);
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(RankDeficientLoad, BasicAssertions) {
 
     // for (i = 0:I-1){
@@ -334,6 +337,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
     llvm::errs() << "Blog post example:\n" << deps[0] << "\n";
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     // for (i = 0; i < I; ++i)
     //   for (j = 0; j < J; ++j)
@@ -428,6 +432,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
                  << deps[1] << "\n";
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TriangularExampleTest, BasicAssertions) {
     IntMatrix AMN{stringToIntMatrix("[-1 1 0 0 -1; "
                                     "0 0 0 0 1; "
@@ -807,7 +812,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     EXPECT_EQ(d.size(), 16);
     EXPECT_TRUE(allZero(forward.depPoly.E(_, 0)));
     EXPECT_FALSE(allZero(reverse.depPoly.E(_, 0)));
-    int nonZeroInd = -1;
+    ptrdiff_t nonZeroInd = -1;
     for (unsigned i = 0; i < reverse.depPoly.E.numRow(); ++i) {
         bool notZero = !allZero(reverse.depPoly.getEqSymbols(i));
         // we should only find 1 non-zero
@@ -824,6 +829,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     const size_t numSymbols = reverse.depPoly.getNumSymbols();
     EXPECT_EQ(numSymbols, 3);
     EXPECT_TRUE(nonZero.has_value());
+    assert(nonZero.has_value());
     if (*nonZero == 1) {
         // v_1 - v_4 == 1
         // 1 - v_1 + v_4 == 0
@@ -876,6 +882,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(MeanStDevTest0, BasicAssertions) {
     // iOuter variant:
     // for (i = 0; i < I; ++i){
@@ -1331,6 +1338,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DoubleDependenceTest, BasicAssertions) {
 
     TestLoopFunction tlf;
@@ -1534,6 +1542,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     }
 }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConvReversePass, BasicAssertions) {
     // for (n = 0; n < N; ++n){
     //   for (m = 0; n < M; ++m){

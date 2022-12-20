@@ -1,5 +1,6 @@
 #pragma once
 #include "./Math.hpp"
+#include "./Rational.hpp"
 
 struct LU {
     SquareMatrix<Rational> F;
@@ -44,7 +45,7 @@ struct LU {
         */
         // U x = y
         for (size_t n = 0; n < N; ++n) {
-            for (int64_t m = M - 1; m >= 0; --m) {
+            for (auto m = size_t(M); m--;) {
                 Rational Ymn = rhs(m, n);
                 for (size_t k = m + 1; k < M; ++k)
                     if (Ymn.fnmadd(F(m, k), rhs(k, n)))
@@ -85,7 +86,7 @@ struct LU {
             }
         }
         // x L = y
-        for (int64_t n = N - 1; n >= 0; --n) {
+        for (auto n = size_t(N); n--;) {
             // for (size_t n = 0; n < N; ++n) {
             for (size_t m = 0; m < M; ++m) {
                 Rational Xmn = rhs(m, n);
@@ -96,7 +97,7 @@ struct LU {
             }
         }
         // permute rhs
-        for (int64_t j = N - 1; j >= 0; --j) {
+        for (auto j = size_t(N); j--;) {
             unsigned jp = ipiv[j];
             if (j != jp)
                 for (size_t i = 0; i < M; ++i)
@@ -107,7 +108,8 @@ struct LU {
     }
 
     [[nodiscard]] auto inv() const -> std::optional<SquareMatrix<Rational>> {
-        SquareMatrix<Rational> A = SquareMatrix<Rational>::identity(F.numCol());
+        SquareMatrix<Rational> A =
+            SquareMatrix<Rational>::identity(size_t(F.numCol()));
         if (!ldiv(A))
             return A;
         else
@@ -123,7 +125,7 @@ struct LU {
         return d;
     }
     [[nodiscard]] auto perm() const -> llvm::SmallVector<unsigned> {
-        size_t M = F.numCol();
+        Col M = F.numCol();
         llvm::SmallVector<unsigned> perm;
         for (size_t m = 0; m < M; ++m) {
             perm.push_back(m);

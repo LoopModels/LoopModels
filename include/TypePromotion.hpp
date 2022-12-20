@@ -49,3 +49,17 @@ template <typename A, typename B> struct PromoteEltype {
 };
 template <typename A, typename B>
 using promote_eltype_t = typename PromoteEltype<A, B>::eltype;
+
+struct Rational;
+template <> struct GetEltype<Rational> {
+    using eltype = Rational;
+};
+template <> struct PromoteType<Rational, Rational> {
+    using eltype = Rational;
+};
+template <std::integral I> struct PromoteType<I, Rational> {
+    using eltype = Rational;
+};
+template <std::integral I> struct PromoteType<Rational, I> {
+    using eltype = Rational;
+};

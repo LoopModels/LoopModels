@@ -1,8 +1,5 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
-#include "./Graphs.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -100,7 +97,7 @@ struct Schedule {
         return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
     }
     [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
-        return SquarePtrMatrix<int64_t>{data.data(), numLoops};
+        return {data.data(), numLoops}; //
     }
     [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
         return {.mem = data.data() + getNumLoopsSquared(),

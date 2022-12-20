@@ -1,13 +1,10 @@
 #pragma once
 // #include "./CallableStructs.hpp"
-#include "./ArrayReference.hpp"
 #include "./BitSets.hpp"
 #include "./Instruction.hpp"
-#include "./LoopBlock.hpp"
 #include "./Loops.hpp"
 #include "./Macro.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Predicate.hpp"
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -104,8 +101,8 @@ struct LoopTree {
     [[maybe_unused]] static void
     split(llvm::BumpPtrAllocator &alloc,
           llvm::SmallVectorImpl<LoopTree *> &trees,
-          llvm::SmallVectorImpl<LoopTree *> &subTree,
-          llvm::SmallVectorImpl<Predicate::Map> &paths) {
+          llvm::SmallVectorImpl<Predicate::Map> &paths,
+          llvm::SmallVectorImpl<LoopTree *> &subTree) {
         if (subTree.size()) {
             // SHOW(subTree.size());
             // CSHOWLN(paths.size());

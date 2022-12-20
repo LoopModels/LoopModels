@@ -1,6 +1,6 @@
 #pragma once
-#include "./Schedule.hpp"
-#include "Macro.hpp"
+#include "ArrayReference.hpp"
+#include "BitSets.hpp"
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>

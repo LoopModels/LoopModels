@@ -32,6 +32,6 @@
     }
     size_t numCols = content.size() / numRows;
     assert(content.size() % numRows == 0);
-    IntMatrix A(std::move(content), numRows, numCols);
+    IntMatrix A(std::move(content), Row{numRows}, Col{numCols});
     return A;
 }

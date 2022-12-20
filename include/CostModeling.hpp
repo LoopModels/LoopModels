@@ -42,6 +42,7 @@ struct CPURegisterFile {
             return 7; // 7, because k0 is reserved for unmasked
         return 0;
     }
+    // returns vector width in bits
     static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
                                            llvm::TargetTransformInfo &TTI)
         -> uint8_t {

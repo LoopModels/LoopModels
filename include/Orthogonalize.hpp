@@ -1,8 +1,8 @@
 #pragma once
-#include "./ArrayReference.hpp"
-#include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include "./VectorGreatestCommonDivisor.hpp"
+#include "Rational.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
@@ -14,7 +14,7 @@
     if (A.numRow() == 1)
         return A;
     llvm::SmallVector<Rational, 8> buff;
-    buff.resize_for_overwrite(A.numCol());
+    buff.resize_for_overwrite(size_t(A.numCol()));
     for (size_t i = 1; i < A.numRow(); ++i) {
         for (size_t j = 0; j < A.numCol(); ++j)
             buff[j] = A(i, j);

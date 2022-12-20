@@ -2,7 +2,6 @@
 
 #include "./Loops.hpp"
 #include "./Math.hpp"
-#include "./Predicate.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
@@ -46,7 +45,7 @@ struct ArrayReference {
         return loop->getNumLoops();
     }
 
-    [[nodiscard]] auto getAlignment() const -> llvm::Align {
+    [[nodiscard]] auto getAlign() const -> llvm::Align {
         if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
             return l->getAlign();
         else if (auto s = llvm::dyn_cast<llvm::StoreInst>(loadOrStore))
@@ -106,9 +105,9 @@ struct ArrayReference {
     }
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
-        llvm::Instruction *loadOrStore = nullptr,
         llvm::SmallVector<const llvm::SCEV *, 3> sizes = {},
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        llvm::Instruction *loadOrStore = nullptr)
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
           sizes(std::move(sizes)),
           symbolicOffsets(std::move(symbolicOffsets)){};
@@ -119,22 +118,24 @@ struct ArrayReference {
     }
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> *loop,
-        size_t dim, llvm::Instruction *loadOrStore = nullptr,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        size_t dim,
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        llvm::Instruction *loadOrStore = nullptr)
         : basePointer(basePointer), loop(loop), loadOrStore(loadOrStore),
           symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     ArrayReference(
         const llvm::SCEVUnknown *basePointer, AffineLoopNest<true> &loop,
-        size_t dim, llvm::Instruction *loadOrStore = nullptr,
-        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {})
+        size_t dim,
+        llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets = {},
+        llvm::Instruction *loadOrStore = nullptr)
         : basePointer(basePointer), loop(&loop), loadOrStore(loadOrStore),
           symbolicOffsets(std::move(symbolicOffsets)) {
         resize(dim);
     };
     [[nodiscard]] auto isLoopIndependent() const -> bool {
-        return allZero(indices);
+        return LinearAlgebra::allZero(indices);
     }
     [[nodiscard]] auto allConstantIndices() const -> bool {
         return symbolicOffsets.size() == 0;
@@ -168,7 +169,7 @@ struct ArrayReference {
                 os << ", " << *ar.sizes[i];
         }
         os << " ]\nSubscripts: [ ";
-        size_t numLoops = A.numRow();
+        size_t numLoops = size_t(A.numRow());
         for (size_t i = 0; i < A.numCol(); ++i) {
             if (i)
                 os << ", ";

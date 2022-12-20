@@ -1,8 +1,8 @@
 #include "../include/TurboLoop.hpp"
-#include "LoopBlock.hpp"
-#include "LoopForest.hpp"
-#include "Loops.hpp"
-#include "Macro.hpp"
+#include "../include/LoopBlock.hpp"
+#include "../include/LoopForest.hpp"
+#include "../include/Loops.hpp"
+#include "../include/Macro.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/PostOrderIterator.h>
@@ -83,7 +83,6 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
     }
     // first, we try and parse the function to find sets of loop nests
     // then we search for sets of fusile loops
-    llvm::SmallPtrSet<const llvm::BasicBlock *, 32> visitedBBs;
 
     // fills array refs
     parseNest();

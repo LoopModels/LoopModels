@@ -4,13 +4,8 @@
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
-#include "./LinearAlgebra.hpp"
-#include "./Loops.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "./Orthogonalize.hpp"
-#include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
@@ -51,7 +46,7 @@ struct ScheduledNode {
     [[no_unique_address]] uint8_t numLoops{0};
     [[no_unique_address]] uint8_t rank{0};
     [[no_unique_address]] bool visited{false};
-    void addMemory(MemoryAccess *mem, unsigned memId, unsigned nodeIndex) {
+    void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
         mem->addNodeIndex(nodeIndex);
         memory.insert(memId);
         numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
@@ -227,6 +222,12 @@ struct LinearProgramLoopBlock {
     [[nodiscard]] auto getVerticies() const -> llvm::ArrayRef<ScheduledNode> {
         return nodes;
     }
+    auto getMemoryAccesses() const -> llvm::ArrayRef<MemoryAccess *> {
+        return memory;
+    }
+    auto getMemoryAccesses() -> llvm::MutableArrayRef<MemoryAccess *> {
+        return memory;
+    }
     struct OutNeighbors {
         LinearProgramLoopBlock &loopBlock;
         ScheduledNode &node;
@@ -312,7 +313,7 @@ struct LinearProgramLoopBlock {
                     continue; // load is not a part of the LoopBlock
                 unsigned memId = memAccess->getSecond();
                 MemoryAccess *store = memory[memId];
-                node.addMemory(store, memId, nodeIndex);
+                node.addMemory(memId, store, nodeIndex);
                 return true;
             }
         }
@@ -328,7 +329,7 @@ struct LinearProgramLoopBlock {
             if (memAccess == userToMemory.end())
                 return; // load is not a part of the LoopBlock
             unsigned memId = memAccess->getSecond();
-            node.addMemory(memory[memId], memId, nodeIndex);
+            node.addMemory(memId, memory[memId], nodeIndex);
         } else if (!searchValueForStores(visited, node, user, nodeIndex))
             searchOperandsForLoads(visited, node, user, nodeIndex);
     }
@@ -369,7 +370,9 @@ struct LinearProgramLoopBlock {
         nodes[inIndex].outNeighbors.insert(outIndex);
         nodes[outIndex].inNeighbors.insert(inIndex);
     }
-    void connect(BitSet<> inIndexSet, BitSet<> outIndexSet) {
+    // the order of parameters is irrelevant, so swapping is irrelevant
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+    void connect(const BitSet<> &inIndexSet, const BitSet<> &outIndexSet) {
         for (auto inIndex : inIndexSet)
             for (auto outIndex : outIndexSet)
                 connect(inIndex, outIndex);
@@ -403,7 +406,7 @@ struct LinearProgramLoopBlock {
                 continue;
             unsigned nodeIndex = nodes.size();
             ScheduledNode &node = nodes.emplace_back();
-            node.addMemory(mai, i, nodeIndex);
+            node.addMemory(i, mai, nodeIndex);
             searchOperandsForLoads(visited, node, mai->getInstruction(),
                                    nodeIndex);
             visited.clear();
@@ -634,8 +637,8 @@ struct LinearProgramLoopBlock {
                 // phi is loop[outside<->inside] x
                 // indvars[inside<->outside]
                 MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
-                const size_t indR = indMat.numRow();
-                const size_t phiOffset = phi.numCol() - indR;
+                const size_t indR = size_t(indMat.numRow());
+                const size_t phiOffset = size_t(phi.numCol()) - indR;
                 for (size_t rr = 0; rr < r; ++rr) {
                     phi(rr, _(begin, phiOffset)) = 0;
                     phi(rr, _(phiOffset, phiOffset + indR)) = indMat(_, rr);
@@ -690,8 +693,10 @@ struct LinearProgramLoopBlock {
         countAuxParamsAndConstraints(g, depth);
     }
     void addMemory(MemoryAccess *m) {
+#ifndef NDEBUG
         for (auto o : memory)
             assert(o->getInstruction() != m->getInstruction());
+#endif
         memory.push_back(m);
     }
     // assemble omni-simplex
@@ -785,9 +790,10 @@ struct LinearProgramLoopBlock {
                                 bool satisfyDeps = false) {
         // defines numScheduleCoefs, numLambda, numBounding, and
         // numConstraints
-        omniSimplex.reserve(numConstraints + numOmegaCoefs,
-                            1 + numBounding + numActiveEdges + numPhiCoefs +
-                                2 * numOmegaCoefs + numLambda);
+        omniSimplex.clearReserve(numConstraints + numOmegaCoefs,
+                                 1 + numBounding + numActiveEdges +
+                                     numPhiCoefs + 2 * numOmegaCoefs +
+                                     numLambda);
         omniSimplex.resizeForOverwrite(
             numConstraints, 1 + numBounding + numActiveEdges + numPhiCoefs +
                                 numOmegaCoefs + numLambda);
@@ -799,8 +805,9 @@ struct LinearProgramLoopBlock {
         // rows give constraints; each edge gets its own
         // constexpr size_t numOmega =
         //     DependencePolyhedra::getNumOmegaCoefficients();
-        size_t u = 1, w = 1 + numBounding;
-        size_t c = 0, l = getLambdaOffset();
+        size_t w = 1 + numBounding;
+        Row c = 0;
+        Col l = getLambdaOffset(), u = 1;
         for (size_t e = 0; e < edges.size(); ++e) {
             Dependence &edge = edges[e];
             if (g.isInactive(e, d))
@@ -818,18 +825,18 @@ struct LinearProgramLoopBlock {
                 for (auto inNodeIndex : inNodeIndexSet) {
                     const ScheduledNode &inNode = nodes[inNodeIndex];
 
-                    size_t cc = c + numSatConstraints;
-                    size_t ccc = cc + numBndConstraints;
+                    Row cc = c + numSatConstraints;
+                    Row ccc = cc + numBndConstraints;
 
-                    size_t ll = l + satL.numCol();
-                    size_t lll = ll + bndL.numCol();
+                    Col ll = l + satL.numCol();
+                    Col lll = ll + bndL.numCol();
                     C(_(c, cc), _(l, ll)) = satL;
                     C(_(cc, ccc), _(ll, lll)) = bndL;
                     l = lll;
 
                     // bounding
                     C(_(cc, ccc), w++) = bndWU(_, 0);
-                    size_t uu = u + bndWU.numCol() - 1;
+                    Col uu = u + bndWU.numCol() - 1;
                     C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
                     u = uu;
                     if (satisfyDeps)
@@ -878,7 +885,7 @@ struct LinearProgramLoopBlock {
                                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
                             } else if (satPc.numCol() < satPp.numCol()) {
                                 auto phiChild = outNode.getPhiOffset();
-                                size_t P = satPc.numCol();
+                                Col P = satPc.numCol();
                                 auto m = phiChild - P;
                                 C(_(c, cc), _(phiChild - satPp.numCol(), m)) =
                                     satPp(_, _(begin, end - P));
@@ -890,7 +897,7 @@ struct LinearProgramLoopBlock {
                                     bndPc + bndPp(_, _(end - P, end));
                             } else /* if (satPc.numCol() > satPp.numCol()) */ {
                                 auto phiChild = outNode.getPhiOffset();
-                                size_t P = satPp.numCol();
+                                Col P = satPp.numCol();
                                 auto m = phiChild - P;
                                 C(_(c, cc), _(phiChild - satPc.numCol(), m)) =
                                     satPc(_, _(begin, end - P));
@@ -935,7 +942,7 @@ struct LinearProgramLoopBlock {
     }
     void updateConstraints(MutPtrMatrix<int64_t> C, const ScheduledNode &node,
                            PtrMatrix<int64_t> sat, PtrMatrix<int64_t> bnd,
-                           size_t d, size_t c, size_t cc, size_t ccc) {
+                           size_t d, Row c, Row cc, Row ccc) {
         if (node.phiIsScheduled(d)) {
             // add it constants
             auto sch = node.getSchedule(d);
@@ -961,11 +968,11 @@ struct LinearProgramLoopBlock {
             if (g.isInactive(e, d))
                 continue;
             const Dependence &edge = edges[e];
-            size_t uu =
+            Col uu =
                 u + edge.dependenceBounding.getConstraints().numCol() -
                 (2 + edge.depPoly.getNumLambda() +
                  edge.getNumPhiCoefficients() + edge.getNumOmegaCoefficients());
-            if (sol(w++) || (!(allZero(sol(_(u, uu)))))) {
+            if ((sol(w++) != 0) || (!(allZero(sol(_(u, uu)))))) {
                 g.activeEdges.remove(e);
                 deactivated.insert(e);
                 for (size_t inIndex : edge.in->nodeIndex)
@@ -973,7 +980,7 @@ struct LinearProgramLoopBlock {
                 for (size_t outIndex : edge.out->nodeIndex)
                     carriedDeps[outIndex].setCarriedDependency(d);
             }
-            u = uu;
+            u = size_t(uu);
         }
         return deactivated;
     }
@@ -1000,23 +1007,31 @@ struct LinearProgramLoopBlock {
                         std::numeric_limits<int64_t>::min();
                 continue;
             }
-            node.schedule.getOffsetOmega()(depth) = sol(node.omegaOffset - 1);
+            Rational sOmega = sol(node.omegaOffset - 1);
+            // TODO: handle s.denominator != 1
             if (!node.phiIsScheduled(depth)) {
                 auto phi = node.schedule.getPhi()(depth, _);
                 auto s = sol(node.getPhiOffsetRange() - 1);
-                int64_t l = denomLCM(s);
+                int64_t baseDenom = sOmega.denominator;
+                int64_t l = lcm(denomLCM(s), baseDenom);
                 for (size_t i = 0; i < phi.size(); ++i)
                     assert(((s(i).numerator * l) / (s(i).denominator)) >= 0);
-                if (l == 1)
+                if (l == 1) {
+                    node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
                     for (size_t i = 0; i < phi.size(); ++i)
                         phi(i) = s(i).numerator;
-                else
+                } else {
+                    node.schedule.getOffsetOmega()(depth) =
+                        (sOmega.numerator * l) / baseDenom;
                     for (size_t i = 0; i < phi.size(); ++i)
                         phi(i) = (s(i).numerator * l) / (s(i).denominator);
+                }
                 assert(!(allZero(phi)));
                 // node.schedule.getPhi()(depth, _) =
                 //     sol(node.getPhiOffset() - 1) *
                 //     denomLCM(sol(node.getPhiOffset() - 1));
+            } else {
+                node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
             }
 #ifndef NDEBUG
             if (!node.phiIsScheduled(depth)) {
@@ -1029,6 +1044,13 @@ struct LinearProgramLoopBlock {
         }
     }
     [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
+        // TODO: once `std::ranges::reverse_view` works on up to date Linux
+        // distros like Arch and Fedora, use a range based for loop. Currently,
+        // applying the automatic fix:
+        // for (int64_t it : std::ranges::reverse_view(x))
+        // won't compile. There is a deduction failure.
+        // Possibly fixable by defining more PtrVector methods.
+        // NOLINTNEXTLINE(modernize-loop-convert)
         for (auto it = x.rbegin(); it != x.rend(); ++it)
             if (*it)
                 return 2 * (*it > 0) - 1;
@@ -1183,7 +1205,7 @@ struct LinearProgramLoopBlock {
                 return {}; // give up
             }
         }
-        size_t unfusedOffset = 0;
+        int64_t unfusedOffset = 0;
         // For now, just greedily try and fuse from top down
         // we do this by setting the Omegas in a loop.
         // If fusion is legal, we don't increment the Omega offset.
@@ -1266,10 +1288,20 @@ struct LinearProgramLoopBlock {
         updateSchedules(g, d);
         return deactivateSatisfiedEdges(g, d);
     }
-    [[nodiscard]] auto optimizeSatDep(Graph g, size_t d, size_t maxDepth,
-                                      BitSet<> depSatLevel,
-                                      const BitSet<> &depSatNest,
-                                      BitSet<> activeEdges) -> BitSet<> {
+    // NOTE: the NOLINTS, maybe we should come up with a way
+    // to avoid easily swappable params. For now, we just
+    // double check that the single callsite is correct.
+    // This is an internal function, so that should be okay.
+    // Maybe it'd make sense to define some sort of API
+    // around the ideas of dependency satisfaction at a level,
+    // or active edges, so these BitSets can be given types.
+    // But that sort of seems like abstraction for the sake of
+    // abstraction, rather than actually a good idea?
+    [[nodiscard]] auto optimizeSatDep(
+        Graph g, size_t d, size_t maxDepth, BitSet<> depSatLevel,
+        const BitSet<>   // NOLINT(bugprone-easily-swappable-parameters)
+            &depSatNest, // NOLINT(bugprone-easily-swappable-parameters)
+        BitSet<> activeEdges) -> BitSet<> {
         // if we're here, there are satisfied deps in both
         // depSatLevel and depSatNest
         // what we want to know is, can we satisfy all the deps

@@ -2,10 +2,8 @@
 
 #include "./ArrayReference.hpp"
 #include "./Loops.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "./NormalForm.hpp"
 #include "./Orthogonalize.hpp"
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
@@ -269,7 +267,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         assert(oldToNewMap1.size() == ar1.loop->S.size());
 
         // numDep1Var = nv1;
-        const size_t nc = nc0 + nc1;
+        const Row nc = nc0 + nc1;
         IntMatrix NS{nullSpace(ma0, ma1)};
         const size_t nullDim{NS.numRow()};
         const size_t indexDim{ar0.getArrayDim()};
@@ -335,8 +333,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
         initializeComparator();
         pruneBounds();
     }
-    static constexpr auto getNumLambda(size_t numIneq, size_t numEq) -> size_t {
-        return 1 + numIneq + 2 * numEq;
+    static constexpr auto getNumLambda(Row numIneq, Row numEq) -> size_t {
+        return 1 + size_t(numIneq) + 2 * size_t(numEq);
     }
     [[nodiscard]] auto getNumLambda() const -> size_t {
         return getNumLambda(A.numRow(), E.numRow());
@@ -354,14 +352,14 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // Time parameters are carried over into farkas polys
     [[nodiscard]] auto farkasPair() const -> std::pair<Simplex, Simplex> {
 
-        const size_t numEqualityConstraintsOld = E.numRow();
-        const size_t numInequalityConstraintsOld = A.numRow();
+        const size_t numEqualityConstraintsOld = size_t(E.numRow());
+        const size_t numInequalityConstraintsOld = size_t(A.numRow());
 
         const size_t numPhiCoefs = getNumPhiCoefficients();
         const size_t numScheduleCoefs = numPhiCoefs + getNumOmegaCoefficients();
         const size_t numBoundingCoefs = getNumSymbols();
 
-        const size_t numConstraintsNew = A.numCol() - getTimeDim();
+        const size_t numConstraintsNew = size_t(A.numCol()) - getTimeDim();
         const size_t numVarInterest = numScheduleCoefs + numBoundingCoefs;
 
         // lambda_0 + lambda'*A*i == psi'i
@@ -745,72 +743,72 @@ struct Dependence {
         return std::make_tuple(getBndConstants(), getBndLambda(), phiCoefsIn,
                                phiCoefsOut, getBndOmegaCoefs(), getBndCoefs());
     }
-    // order of variables from Farkas:
-    // [ lambda, Phi coefs, omega coefs, w, u ]
-    // that is thus the order of arguments here
-    // Note: we have two different sets of lambdas, so we store
-    // A = [lambda_sat, lambda_bound]
-    void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> Bp,
-                    MutPtrMatrix<int64_t> Bm, MutPtrMatrix<int64_t> C,
-                    MutStridedVector<int64_t> W, MutPtrMatrix<int64_t> U,
-                    MutStridedVector<int64_t> c) const {
-        // const size_t numBoundingConstraints =
-        //     dependenceBounding.getNumConstraints();
-        const auto satLambda = getSatLambda();
-        const auto bndLambda = getBndLambda();
-        const size_t satConstraints = satLambda.numRow();
-        const size_t numSatLambda = satLambda.numCol();
-        assert(numSatLambda + bndLambda.numCol() == A.numCol());
+    // // order of variables from Farkas:
+    // // [ lambda, Phi coefs, omega coefs, w, u ]
+    // // that is thus the order of arguments here
+    // // Note: we have two different sets of lambdas, so we store
+    // // A = [lambda_sat, lambda_bound]
+    // void copyLambda(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> Bp,
+    //                 MutPtrMatrix<int64_t> Bm, MutPtrMatrix<int64_t> C,
+    //                 MutStridedVector<int64_t> W, MutPtrMatrix<int64_t> U,
+    //                 MutStridedVector<int64_t> c) const {
+    //     // const size_t numBoundingConstraints =
+    //     //     dependenceBounding.getNumConstraints();
+    //     const auto satLambda = getSatLambda();
+    //     const auto bndLambda = getBndLambda();
+    //     const size_t satConstraints = size_t(satLambda.numRow());
+    //     const size_t numSatLambda = size_t(satLambda.numCol());
+    //     assert(numSatLambda + bndLambda.numCol() == A.numCol());
 
-        c(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
-        c(_(satConstraints, end)) = dependenceBounding.getConstants();
+    //     c(_(begin, satConstraints)) = dependenceSatisfaction.getConstants();
+    //     c(_(satConstraints, end)) = dependenceBounding.getConstants();
 
-        A(_(begin, satConstraints), _(begin, numSatLambda)) = satLambda;
-        // A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
-        // A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
-        A(_(satConstraints, end), _(numSatLambda, end)) = bndLambda;
+    //     A(_(begin, satConstraints), _(begin, numSatLambda)) = satLambda;
+    //     // A(_(begin, satConstraints), _(numSatLambda, end)) = 0;
+    //     // A(_(satConstraints, end), _(begin, numSatLambda)) = 0;
+    //     A(_(satConstraints, end), _(numSatLambda, end)) = bndLambda;
 
-        // TODO: develop and suport fusion of statements like
-        // Bp(_(begin, satConstraints), _) = getSatPhiCoefs();
-        // Bm(_(begin, satConstraints), _) = -getSatPhiCoefs();
-        // Bp(_(satConstraints, end), _) = getBndPhiCoefs();
-        // Bm(_(satConstraints, end), _) = -getBndPhiCoefs();
-        // perhaps something like:
-        // std::make_pair(
-        //   Bp(_(begin, satConstraints), _),
-        //   Bm(_(begin, satConstraints), _)) =
-        //     elementwiseMap(
-        //       std::make_pair(Plus{},Minus{}),
-        //       getSatPhiCoefs()
-        //     );
-        auto SP{getSatPhiCoefs()};
-        assert(Bp.numCol() == SP.numCol());
-        assert(Bm.numCol() == SP.numCol());
-        assert(Bp.numRow() == Bm.numRow());
-        for (size_t i = 0; i < satConstraints; ++i) {
-            for (size_t j = 0; j < SP.numCol(); ++j) {
-                int64_t SOij = SP(i, j);
-                Bp(i, j) = SOij;
-                Bm(i, j) = -SOij;
-            }
-        }
-        auto BP{getBndPhiCoefs()};
-        assert(Bp.numCol() == BP.numCol());
-        for (size_t i = satConstraints; i < Bp.numRow(); ++i) {
-            for (size_t j = 0; j < BP.numCol(); ++j) {
-                int64_t BOij = BP(i - satConstraints, j);
-                Bp(i, j) = BOij;
-                Bm(i, j) = -BOij;
-            }
-        }
+    //     // TODO: develop and suport fusion of statements like
+    //     // Bp(_(begin, satConstraints), _) = getSatPhiCoefs();
+    //     // Bm(_(begin, satConstraints), _) = -getSatPhiCoefs();
+    //     // Bp(_(satConstraints, end), _) = getBndPhiCoefs();
+    //     // Bm(_(satConstraints, end), _) = -getBndPhiCoefs();
+    //     // perhaps something like:
+    //     // std::make_pair(
+    //     //   Bp(_(begin, satConstraints), _),
+    //     //   Bm(_(begin, satConstraints), _)) =
+    //     //     elementwiseMap(
+    //     //       std::make_pair(Plus{},Minus{}),
+    //     //       getSatPhiCoefs()
+    //     //     );
+    //     auto SP{getSatPhiCoefs()};
+    //     assert(Bp.numCol() == SP.numCol());
+    //     assert(Bm.numCol() == SP.numCol());
+    //     assert(Bp.numRow() == Bm.numRow());
+    //     for (size_t i = 0; i < satConstraints; ++i) {
+    //         for (size_t j = 0; j < SP.numCol(); ++j) {
+    //             int64_t SOij = SP(i, j);
+    //             Bp(i, j) = SOij;
+    //             Bm(i, j) = -SOij;
+    //         }
+    //     }
+    //     auto BP{getBndPhiCoefs()};
+    //     assert(Bp.numCol() == BP.numCol());
+    //     for (size_t i = satConstraints; i < Bp.numRow(); ++i) {
+    //         for (size_t j = 0; j < BP.numCol(); ++j) {
+    //             int64_t BOij = BP(i - satConstraints, j);
+    //             Bp(i, j) = BOij;
+    //             Bm(i, j) = -BOij;
+    //         }
+    //     }
 
-        C(_(begin, satConstraints), _) = getSatOmegaCoefs();
-        C(_(satConstraints, end), _) = getBndOmegaCoefs();
+    //     C(_(begin, satConstraints), _) = getSatOmegaCoefs();
+    //     C(_(satConstraints, end), _) = getBndOmegaCoefs();
 
-        auto BC{getBndCoefs()};
-        W(_(satConstraints, end)) = BC(_, 0);
-        U(_(satConstraints, end), _) = BC(_, _(1, end));
-    }
+    //     auto BC{getBndCoefs()};
+    //     W(_(satConstraints, end)) = BC(_, 0);
+    //     U(_(satConstraints, end), _) = BC(_, _(1, end));
+    // }
     [[nodiscard]] auto isSatisfied(const Schedule &schIn,
                                    const Schedule &schOut) const -> bool {
         const ArrayReference &refIn = in->ref;
@@ -946,7 +944,7 @@ struct Dependence {
                                const MemoryAccess &x, const MemoryAccess &y,
                                const Schedule &xSchedule,
                                const Schedule &ySchedule, size_t numLambda,
-                               size_t nonTimeDim) -> bool {
+                               Col nonTimeDim) -> bool {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -983,9 +981,10 @@ struct Dependence {
             sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
             sch(numLoopsTotal) = xOffOmega[i];
             sch(numLoopsTotal + 1) = yOffOmega[i];
-            if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+            if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
-                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
+                assert(!fyx.unSatisfiableZeroRem(sch, numLambda,
+                                                 size_t(nonTimeDim)));
                 // llvm::errs()
                 //     << "Dependence decided by forward violation with i = " <<
                 //     i
@@ -993,7 +992,7 @@ struct Dependence {
 #endif
                 return false;
             }
-            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+            if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
                 // llvm::errs()
                 //     << "Dependence decided by backward violation with i = "
@@ -1008,7 +1007,7 @@ struct Dependence {
     }
     static auto checkDirection(const std::pair<Simplex, Simplex> &p,
                                const MemoryAccess &x, const MemoryAccess &y,
-                               size_t numLambda, size_t nonTimeDim) -> bool {
+                               size_t numLambda, Col nonTimeDim) -> bool {
         const Simplex &fxy = p.first;
         const Simplex &fyx = p.second;
         const size_t numLoopsX = x.ref.getNumLoops();
@@ -1040,9 +1039,10 @@ struct Dependence {
             sch = 0;
             sch(numLoopsX - 1 - i) = 1;
             sch(numLoopsTotal - 1 - i) = 1;
-            if (fxy.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+            if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
-                assert(!fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim));
+                assert(!fyx.unSatisfiableZeroRem(sch, numLambda,
+                                                 size_t(nonTimeDim)));
                 // llvm::errs()
                 //     << "Dependence decided by forward violation with i = " <<
                 //     i
@@ -1050,7 +1050,7 @@ struct Dependence {
 #endif
                 return false;
             }
-            if (fyx.unSatisfiableZeroRem(sch, numLambda, nonTimeDim)) {
+            if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
                 // llvm::errs()
                 //     << "Dependence decided by backward violation with i = "
@@ -1120,7 +1120,7 @@ struct Dependence {
         // pair is invalid
         const size_t timeDim = dxy.getTimeDim();
         assert(timeDim);
-        const size_t numVarOld = dxy.A.numCol();
+        const size_t numVarOld = size_t(dxy.A.numCol());
         const size_t numVar = numVarOld - timeDim;
         // const size_t numBoundingCoefs = numVarKeep - numLambda;
         // remove the time dims from the deps

@@ -1,5 +1,4 @@
 #pragma once
-#include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include <cstdint>
@@ -41,7 +40,7 @@ struct TestLoopFunction {
     size_t ptrIntOffset{0};
 
     void addLoop(IntMatrix A, size_t numLoops) {
-        size_t numSym = A.numCol() - numLoops - 1;
+        size_t numSym = size_t(A.numCol()) - numLoops - 1;
         llvm::SmallVector<const llvm::SCEV *> symbols;
         symbols.reserve(numSym);
         if (numSym) {
