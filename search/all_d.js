@@ -5,8 +5,9 @@ var searchData=
   ['rational_140',['Rational',['../structRational.html',1,'']]],
   ['recipthroughputlatency_141',['RecipThroughputLatency',['../structRecipThroughputLatency.html',1,'']]],
   ['reference_142',['Reference',['../structBitSet64_1_1Reference.html',1,'BitSet64::Reference'],['../structBitSet_1_1Reference.html',1,'BitSet&lt; PreallocatedStorage &gt;::Reference'],['../structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html',1,'LinearAlgebra::SmallSparseMatrix&lt; T &gt;::Reference'],['../structPredicate_1_1Intersection_1_1Reference.html',1,'Predicate::Intersection::Reference']]],
-  ['removeemptymask_143',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
-  ['replaceallotheruseswith_144',['replaceAllOtherUsesWith',['../structInstruction.html#ab525733a4cc5ea3ba5a153b0d009425e',1,'Instruction']]],
-  ['replacealluseswith_145',['replaceAllUsesWith',['../structInstruction.html#a458dca4ec6b930aad5bb78e5f8c7d0f9',1,'Instruction']]],
-  ['reverseiterator_146',['ReverseIterator',['../structBitSet64_1_1ReverseIterator.html',1,'BitSet64']]]
+  ['remapper_143',['ReMapper',['../structReMapper.html',1,'']]],
+  ['removeemptymask_144',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
+  ['replaceallotheruseswith_145',['replaceAllOtherUsesWith',['../structInstruction.html#ab525733a4cc5ea3ba5a153b0d009425e',1,'Instruction']]],
+  ['replacealluseswith_146',['replaceAllUsesWith',['../structInstruction.html#a458dca4ec6b930aad5bb78e5f8c7d0f9',1,'Instruction']]],
+  ['reverseiterator_147',['ReverseIterator',['../structBitSet64_1_1ReverseIterator.html',1,'BitSet64']]]
 ];

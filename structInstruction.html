@@ -99,6 +99,12 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>UniqueIdentifier</b>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:ab7b6f7868be2f298fc42c98549104a48"><td class="memItemLeft" align="right" valign="top"><a id="ab7b6f7868be2f298fc42c98549104a48"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>setOperands</b> (llvm::MutableArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; ops)</td></tr>
+<tr class="separator:ab7b6f7868be2f298fc42c98549104a48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50a80a385eb05f28e06a1c714b2a3644"><td class="memItemLeft" align="right" valign="top"><a id="a50a80a385eb05f28e06a1c714b2a3644"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOpType</b> () const -&gt; std::pair&lt; <a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a>, llvm::Type * &gt;</td></tr>
+<tr class="separator:a50a80a385eb05f28e06a1c714b2a3644"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae8de7901b1a41eaf4de564c168711c33"><td class="memItemLeft" align="right" valign="top"><a id="ae8de7901b1a41eaf4de564c168711c33"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isIntrinsic</b> () const -&gt; bool</td></tr>
 <tr class="separator:ae8de7901b1a41eaf4de564c168711c33"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -395,9 +401,9 @@ std::variant&lt; std::monostate, llvm::Instruction *, llvm::ConstantInt *, llvm:
 <tr class="memitem:a54047bfca9927fa0d945357058b27024"><td class="memItemLeft" align="right" valign="top"><a id="a54047bfca9927fa0d945357058b27024"></a>
 llvm::MutableArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>operands</b></td></tr>
 <tr class="separator:a54047bfca9927fa0d945357058b27024"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef7bf88c1f72d1dbe2b8181f4124dbd2"><td class="memItemLeft" align="right" valign="top"><a id="aef7bf88c1f72d1dbe2b8181f4124dbd2"></a>
-llvm::SmallVector&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>users</b></td></tr>
-<tr class="separator:aef7bf88c1f72d1dbe2b8181f4124dbd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaaca2628d5efefbf6dd4987ba522a19b"><td class="memItemLeft" align="right" valign="top"><a id="aaaca2628d5efefbf6dd4987ba522a19b"></a>
+llvm::SmallPtrSet&lt; <a class="el" href="structInstruction.html">Instruction</a> *, 8 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>users</b></td></tr>
+<tr class="separator:aaaca2628d5efefbf6dd4987ba522a19b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a253741b3d388205223a19405de9fe044"><td class="memItemLeft" align="right" valign="top"><a id="a253741b3d388205223a19405de9fe044"></a>
 llvm::SmallVector&lt; <a class="el" href="structRecipThroughputLatency.html">RecipThroughputLatency</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction.html#a253741b3d388205223a19405de9fe044">costs</a></td></tr>
 <tr class="memdesc:a253741b3d388205223a19405de9fe044"><td class="mdescLeft">&#160;</td><td class="mdescRight">costs[i] == cost for vector-width 2^i <br /></td></tr>
