@@ -1284,29 +1284,28 @@ $(function() {
 <div class="line"><a name="l01229"></a><span class="lineno"> 1229</span>&#160;  <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="structDependence.html">Dependence</a> &amp;d)</div>
 <div class="line"><a name="l01230"></a><span class="lineno"> 1230</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l01231"></a><span class="lineno"> 1231</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;Dependence Poly &quot;</span>;</div>
-<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    <span class="keywordflow">if</span> (d.forward) {</div>
+<div class="line"><a name="l01232"></a><span class="lineno"> 1232</span>&#160;    <span class="keywordflow">if</span> (d.forward)</div>
 <div class="line"><a name="l01233"></a><span class="lineno"> 1233</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;x -&gt; y:&quot;</span>;</div>
-<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01234"></a><span class="lineno"> 1234</span>&#160;    <span class="keywordflow">else</span></div>
 <div class="line"><a name="l01235"></a><span class="lineno"> 1235</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;y -&gt; x:&quot;</span>;</div>
-<div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;    }</div>
-<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;    os &lt;&lt; d.depPoly &lt;&lt; <span class="stringliteral">&quot;\nA = &quot;</span> &lt;&lt; d.depPoly.A &lt;&lt; <span class="stringliteral">&quot;\nE = &quot;</span> &lt;&lt; d.depPoly.E</div>
-<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nSchedule Constraints:&quot;</span> &lt;&lt; d.dependenceSatisfaction</div>
-<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nBounding Constraints:&quot;</span> &lt;&lt; d.dependenceBounding;</div>
-<div class="line"><a name="l01240"></a><span class="lineno"> 1240</span>&#160;    <span class="keywordflow">if</span> (d.in)</div>
-<div class="line"><a name="l01241"></a><span class="lineno"> 1241</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tInput:\n&quot;</span> &lt;&lt; *d.in;</div>
-<div class="line"><a name="l01242"></a><span class="lineno"> 1242</span>&#160;    <span class="keywordflow">if</span> (d.out)</div>
-<div class="line"><a name="l01243"></a><span class="lineno"> 1243</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tOutput:\n&quot;</span> &lt;&lt; *d.out;</div>
-<div class="line"><a name="l01244"></a><span class="lineno"> 1244</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l01245"></a><span class="lineno"> 1245</span>&#160;  }</div>
-<div class="line"><a name="l01246"></a><span class="lineno"> 1246</span>&#160;};</div>
+<div class="line"><a name="l01236"></a><span class="lineno"> 1236</span>&#160;    os &lt;&lt; d.depPoly &lt;&lt; <span class="stringliteral">&quot;\nA = &quot;</span> &lt;&lt; d.depPoly.A &lt;&lt; <span class="stringliteral">&quot;\nE = &quot;</span> &lt;&lt; d.depPoly.E</div>
+<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nSchedule Constraints:&quot;</span> &lt;&lt; d.dependenceSatisfaction</div>
+<div class="line"><a name="l01238"></a><span class="lineno"> 1238</span>&#160;       &lt;&lt; <span class="stringliteral">&quot;\nBounding Constraints:&quot;</span> &lt;&lt; d.dependenceBounding;</div>
+<div class="line"><a name="l01239"></a><span class="lineno"> 1239</span>&#160;    <span class="keywordflow">if</span> (d.in)</div>
+<div class="line"><a name="l01240"></a><span class="lineno"> 1240</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tInput:\n&quot;</span> &lt;&lt; *d.in;</div>
+<div class="line"><a name="l01241"></a><span class="lineno"> 1241</span>&#160;    <span class="keywordflow">if</span> (d.out)</div>
+<div class="line"><a name="l01242"></a><span class="lineno"> 1242</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tOutput:\n&quot;</span> &lt;&lt; *d.out;</div>
+<div class="line"><a name="l01243"></a><span class="lineno"> 1243</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l01244"></a><span class="lineno"> 1244</span>&#160;  }</div>
+<div class="line"><a name="l01245"></a><span class="lineno"> 1245</span>&#160;};</div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:25</div></div>
 <div class="ttc" id="astructDependencePolyhedra_html"><div class="ttname"><a href="structDependencePolyhedra.html">DependencePolyhedra</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:32</div></div>
 <div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:479</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1547</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1546</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:761</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1506</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1505</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:702</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1834</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1832</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1086</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:939</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:12</div></div>
