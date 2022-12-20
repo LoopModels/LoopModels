@@ -1047,7 +1047,7 @@ struct LinearProgramLoopBlock {
         // TODO: once `std::ranges::reverse_view` works on up to date Linux
         // distros like Arch and Fedora, use a range based for loop. Currently,
         // applying the automatic fix:
-        // for (long it : std::ranges::reverse_view(x))
+        // for (int64_t it : std::ranges::reverse_view(x))
         // won't compile. There is a deduction failure.
         // Possibly fixable by defining more PtrVector methods.
         // NOLINTNEXTLINE(modernize-loop-convert)

@@ -1045,7 +1045,7 @@ struct Instruction {
         return calcUnaryArithmeticCost(TTI, id, vectorWidth);
     }
     [[nodiscard]] auto isConstantOneInt() const -> bool {
-        if (const long *c = std::get_if<int64_t>(&id))
+        if (const int64_t *c = std::get_if<int64_t>(&id))
             return *c == 1;
         return false;
     }
