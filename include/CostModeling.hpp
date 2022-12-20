@@ -20,53 +20,53 @@
 #include <llvm/Support/Allocator.h>
 
 struct CPURegisterFile {
-    [[no_unique_address]] uint8_t maximumVectorWidth;
-    [[no_unique_address]] uint8_t numVectorRegisters;
-    [[no_unique_address]] uint8_t numGeneralPurposeRegisters;
-    [[no_unique_address]] uint8_t numPredicateRegisters;
+  [[no_unique_address]] uint8_t maximumVectorWidth;
+  [[no_unique_address]] uint8_t numVectorRegisters;
+  [[no_unique_address]] uint8_t numGeneralPurposeRegisters;
+  [[no_unique_address]] uint8_t numPredicateRegisters;
 
-    // hacky check for has AVX512
-    static inline auto hasAVX512(llvm::LLVMContext &C,
-                                 llvm::TargetTransformInfo &TTI) -> bool {
-        return TTI.isLegalMaskedExpandLoad(
-            llvm::FixedVectorType::get(llvm::Type::getDoubleTy(C), 8));
-    }
+  // hacky check for has AVX512
+  static inline auto hasAVX512(llvm::LLVMContext &C,
+                               llvm::TargetTransformInfo &TTI) -> bool {
+    return TTI.isLegalMaskedExpandLoad(
+      llvm::FixedVectorType::get(llvm::Type::getDoubleTy(C), 8));
+  }
 
-    static auto estimateNumPredicateRegisters(llvm::LLVMContext &C,
-                                              llvm::TargetTransformInfo &TTI)
-        -> uint8_t {
-        if (TTI.supportsScalableVectors())
-            return 8;
-        // hacky check for AVX512
-        if (hasAVX512(C, TTI))
-            return 7; // 7, because k0 is reserved for unmasked
-        return 0;
+  static auto estimateNumPredicateRegisters(llvm::LLVMContext &C,
+                                            llvm::TargetTransformInfo &TTI)
+    -> uint8_t {
+    if (TTI.supportsScalableVectors())
+      return 8;
+    // hacky check for AVX512
+    if (hasAVX512(C, TTI))
+      return 7; // 7, because k0 is reserved for unmasked
+    return 0;
+  }
+  // returns vector width in bits
+  static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
+                                         llvm::TargetTransformInfo &TTI)
+    -> uint8_t {
+    uint8_t twiceMaxVectorWidth = 2;
+    auto f32 = llvm::Type::getFloatTy(C);
+    llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
+      llvm::Instruction::FAdd,
+      llvm::FixedVectorType::get(f32, twiceMaxVectorWidth));
+    while (true) {
+      llvm::InstructionCost nextCost = TTI.getArithmeticInstrCost(
+        llvm::Instruction::FAdd,
+        llvm::FixedVectorType::get(f32, twiceMaxVectorWidth *= 2));
+      if (nextCost > prevCost)
+        break;
+      prevCost = nextCost;
     }
-    // returns vector width in bits
-    static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
-                                           llvm::TargetTransformInfo &TTI)
-        -> uint8_t {
-        uint8_t twiceMaxVectorWidth = 2;
-        auto f32 = llvm::Type::getFloatTy(C);
-        llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
-            llvm::Instruction::FAdd,
-            llvm::FixedVectorType::get(f32, twiceMaxVectorWidth));
-        while (true) {
-            llvm::InstructionCost nextCost = TTI.getArithmeticInstrCost(
-                llvm::Instruction::FAdd,
-                llvm::FixedVectorType::get(f32, twiceMaxVectorWidth *= 2));
-            if (nextCost > prevCost)
-                break;
-            prevCost = nextCost;
-        }
-        return 16 * twiceMaxVectorWidth;
-    }
-    CPURegisterFile(llvm::LLVMContext &C, llvm::TargetTransformInfo &TTI) {
-        maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);
-        numVectorRegisters = TTI.getNumberOfRegisters(true);
-        numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
-        numPredicateRegisters = estimateNumPredicateRegisters(C, TTI);
-    }
+    return 16 * twiceMaxVectorWidth;
+  }
+  CPURegisterFile(llvm::LLVMContext &C, llvm::TargetTransformInfo &TTI) {
+    maximumVectorWidth = estimateMaximumVectorWidth(C, TTI);
+    numVectorRegisters = TTI.getNumberOfRegisters(true);
+    numGeneralPurposeRegisters = TTI.getNumberOfRegisters(false);
+    numPredicateRegisters = estimateNumPredicateRegisters(C, TTI);
+  }
 };
 struct CPUExecutionModel {};
 
@@ -125,34 +125,33 @@ struct LoopTreeSchedule;
 using LoopAndExit = std::pair<LoopTreeSchedule *, InstructionBlock>;
 
 struct LoopTreeSchedule {
-    /// First block of the loop body. Also, the preheader of
-    /// subTrees.front().first;
-    [[no_unique_address]] AffineLoopNest<false> *loopNest;
-    // schedule commented out, as we're assuming we applied the rotation
-    // to the array reference.
-    // [[no_unique_address]] Schedule *schedule;
-    [[no_unique_address]] InstructionBlock enteringBlock;
-    [[no_unique_address]] llvm::SmallVector<LoopAndExit> subTrees;
-    /// Loop pre-header block for this loop tree.
-    [[no_unique_address]] InstructionBlock *preHeader;
-    /// Loop exit block for this loop tree.
-    [[no_unique_address]] InstructionBlock *exitBlock;
-    [[no_unique_address]] LoopTreeSchedule *parentLoop{nullptr};
-    [[no_unique_address]] uint8_t depth;
-    [[no_unique_address]] uint8_t vectorizationFactor{1};
-    [[no_unique_address]] uint8_t unrollFactor{1};
-    [[no_unique_address]] uint8_t unrollPredcedence{1};
-    [[nodiscard]] auto getNumSubTrees() const -> size_t {
-        return subTrees.size();
-    }
-    [[nodiscard]] auto getDepth() const -> size_t { return depth; }
+  /// First block of the loop body. Also, the preheader of
+  /// subTrees.front().first;
+  [[no_unique_address]] AffineLoopNest<false> *loopNest;
+  // schedule commented out, as we're assuming we applied the rotation
+  // to the array reference.
+  // [[no_unique_address]] Schedule *schedule;
+  [[no_unique_address]] InstructionBlock enteringBlock;
+  [[no_unique_address]] llvm::SmallVector<LoopAndExit> subTrees;
+  /// Loop pre-header block for this loop tree.
+  [[no_unique_address]] InstructionBlock *preHeader;
+  /// Loop exit block for this loop tree.
+  [[no_unique_address]] InstructionBlock *exitBlock;
+  [[no_unique_address]] LoopTreeSchedule *parentLoop{nullptr};
+  [[no_unique_address]] uint8_t depth;
+  [[no_unique_address]] uint8_t vectorizationFactor{1};
+  [[no_unique_address]] uint8_t unrollFactor{1};
+  [[no_unique_address]] uint8_t unrollPredcedence{1};
+  [[nodiscard]] auto getNumSubTrees() const -> size_t {
+    return subTrees.size();
+  }
+  [[nodiscard]] auto getDepth() const -> size_t { return depth; }
 };
 
 struct LoopForestSchedule {
-    [[no_unique_address]] InstructionBlock enteringBlock;
-    [[no_unique_address]] llvm::SmallVector<LoopAndExit> loopNests;
-    [[no_unique_address]] llvm::SmallVector<
-        llvm::SmallVector<LoopTreeSchedule *>>
-        depthTrees;
-    [[no_unique_address]] llvm::BumpPtrAllocator &allocator;
+  [[no_unique_address]] InstructionBlock enteringBlock;
+  [[no_unique_address]] llvm::SmallVector<LoopAndExit> loopNests;
+  [[no_unique_address]] llvm::SmallVector<llvm::SmallVector<LoopTreeSchedule *>>
+    depthTrees;
+  [[no_unique_address]] llvm::BumpPtrAllocator &allocator;
 };
