@@ -86,14 +86,59 @@ Variables</h2></td></tr>
 <tr class="memitem:afcb787ee6954f97a28e86718698e554a"><td class="memTemplParams" colspan="2">template&lt;typename R &gt; </td></tr>
 <tr class="memitem:afcb787ee6954f97a28e86718698e554a"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractRange</b></td></tr>
 <tr class="separator:afcb787ee6954f97a28e86718698e554a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf28e87416bb2e7ebe22b1ede47b1d7c"><td class="memTemplParams" colspan="2"><a id="acf28e87416bb2e7ebe22b1ede47b1d7c"></a>
-template&lt;typename G &gt; </td></tr>
+<tr class="memitem:acf28e87416bb2e7ebe22b1ede47b1d7c"><td class="memTemplParams" colspan="2">template&lt;typename G &gt; </td></tr>
 <tr class="memitem:acf28e87416bb2e7ebe22b1ede47b1d7c"><td class="memTemplItemLeft" align="right" valign="top">concept&#160;</td><td class="memTemplItemRight" valign="bottom"><b>AbstractGraph</b></td></tr>
 <tr class="separator:acf28e87416bb2e7ebe22b1ede47b1d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>TODO: when we have better std::ranges support in compilers, use it? </p>
 </div><h2 class="groupheader">Variable Documentation</h2>
+<a id="acf28e87416bb2e7ebe22b1ede47b1d7c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf28e87416bb2e7ebe22b1ede47b1d7c">&#9670;&nbsp;</a></span>AbstractGraph</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename G &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">concept Graphs::AbstractGraph</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">=</div>
+<div class="line">  AbstractRange&lt;G&gt; &amp;&amp; requires(G g, <span class="keyword">const</span> G cg, <span class="keywordtype">size_t</span> i) {</div>
+<div class="line">                        { g.vertexIds() } -&gt; AbstractRange;</div>
+<div class="line">                        </div>
+<div class="line">                        </div>
+<div class="line">                        {</div>
+<div class="line">                          *g.vertexIds().begin()</div>
+<div class="line">                          } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line">                        { g.outNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line">                        { cg.outNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line">                        </div>
+<div class="line">                        </div>
+<div class="line">                        {</div>
+<div class="line">                          *g.outNeighbors(i).begin()</div>
+<div class="line">                          } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line">                        { g.inNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line">                        { cg.inNeighbors(i) } -&gt; AbstractRange;</div>
+<div class="line">                        </div>
+<div class="line">                        </div>
+<div class="line">                        {</div>
+<div class="line">                          *g.inNeighbors(i).begin()</div>
+<div class="line">                          } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line">                        { g.wasVisited(i) } -&gt; std::same_as&lt;bool&gt;;</div>
+<div class="line">                        { g.begin()-&gt;wasVisited() } -&gt; std::same_as&lt;bool&gt;;</div>
+<div class="line">                        { g.begin()-&gt;visit() };</div>
+<div class="line">                        { g.begin()-&gt;unVisit() };</div>
+<div class="line">                        { g.visit(i) };</div>
+<div class="line">                        { g.getNumVertices() } -&gt; std::convertible_to&lt;unsigned&gt;;</div>
+<div class="line">                        { g.maxVertexId() } -&gt; std::convertible_to&lt;size_t&gt;;</div>
+<div class="line">                      }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="afcb787ee6954f97a28e86718698e554a"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afcb787ee6954f97a28e86718698e554a">&#9670;&nbsp;</a></span>AbstractRange</h2>
 
@@ -108,8 +153,8 @@ template&lt;typename R &gt; </div>
       </table>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= requires(R r) {</div>
-<div class="line">                            { r.begin() };</div>
-<div class="line">                            { r.end() };</div>
+<div class="line">                          { r.begin() };</div>
+<div class="line">                          { r.end() };</div>
 <div class="line">                        }</div>
 </div><!-- fragment -->
 </div>
