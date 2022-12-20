@@ -762,8 +762,8 @@ template <typename T> struct MutPtrVector {
     static_assert(!std::is_const_v<T>, "T shouldn't be const");
     using eltype = T;
     // using eltype = std::remove_const_t<T>;
-    [[no_unique_address]] T *const mem;
-    [[no_unique_address]] const size_t N;
+    [[no_unique_address]] T *const mem{nullptr};
+    [[no_unique_address]] const size_t N{0};
     constexpr auto operator[](const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
         checkIndex(size_t(N), i);
@@ -788,8 +788,26 @@ template <typename T> struct MutPtrVector {
 #endif
         return mem[canonicalize(i, N)];
     }
+    [[nodiscard]] auto front() -> T & {
+        assert(N > 0);
+        return mem[0];
+    }
+    [[nodiscard]] auto back() -> T & {
+        assert(N > 0);
+        return mem[N - 1];
+    }
+    [[nodiscard]] auto front() const -> const T & {
+        assert(N > 0);
+        return mem[0];
+    }
+    [[nodiscard]] auto back() const -> const T & {
+        assert(N > 0);
+        return mem[N - 1];
+    }
+    [[nodiscard]] constexpr auto isEmpty() const -> bool { return N == 0; }
     // copy constructor
     // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
+    constexpr MutPtrVector() = default;
     constexpr MutPtrVector(const MutPtrVector<T> &x) = default;
     constexpr MutPtrVector(llvm::MutableArrayRef<T> x)
         : mem(x.data()), N(x.size()) {}
@@ -1207,6 +1225,12 @@ template <typename T> struct MutStridedVector {
         if (this == &x)
             return *this;
         return copyto(*this, x);
+    }
+    auto operator+=(T x) -> MutStridedVector<T> & {
+        MutStridedVector<T> &self = *this;
+        for (size_t i = 0; i < N; ++i)
+            self(i) += x;
+        return self;
     }
     auto operator+=(const AbstractVector auto &x) -> MutStridedVector<T> & {
         const size_t M = x.size();
@@ -1791,12 +1815,12 @@ struct Matrix<T, M, 0, S> : MutMatrixCore<T, Matrix<T, M, 0, S>> {
     [[nodiscard]] constexpr auto data() const -> const T * {
         return mem.data();
     }
-    void resizeColsForOverwrite(Col NN, RowStride XX) {
+    void resizeForOverwrite(Col NN, RowStride XX) {
         N = size_t(NN);
         X = size_t(XX);
         mem.resize_for_overwrite(XX * M);
     }
-    void resizeColsForOverwrite(Col NN) { resizeColsForOverwrite(NN, NN); }
+    void resizeForOverwrite(Col NN) { resizeForOverwrite(NN, NN); }
 };
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : MutMatrixCore<T, Matrix<T, 0, N, S>> {

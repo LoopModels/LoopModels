@@ -115,6 +115,11 @@ struct MergingCost {
     }
     /// isMerged(Instruction *I, Instruction *J) const -> bool
     /// returns true if `I` and `J` are merged with each other
+    // note: this is not the same as `isMerged(I) && isMerged(J)`,
+    // as `I` and `J` may be merged with different Instructions
+    // however, isMerged(I, J) == isMerged(J, I)
+    // so we ignore easily swappable parameters
+    // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
     auto isMerged(Instruction *I, Instruction *J) const -> bool {
         Instruction *K = J;
         do {
