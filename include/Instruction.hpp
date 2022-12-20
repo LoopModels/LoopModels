@@ -77,13 +77,13 @@ struct RecipThroughputLatency {
 struct Instruction {
     struct Intrinsic {
         struct OpCode {
-            llvm::Intrinsic::ID id{llvm::Intrinsic::not_intrinsic};
+            llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
             constexpr auto operator==(const OpCode &other) const -> bool {
                 return id == other.id;
             }
         };
         struct Intrin {
-            llvm::Intrinsic::ID id{llvm::Intrinsic::not_intrinsic};
+            llvm::Intrinsic::ID id; //{llvm::Intrinsic::not_intrinsic};
             constexpr auto operator==(const Intrin &other) const -> bool {
                 return id == other.id;
             }
@@ -602,7 +602,7 @@ struct Instruction {
                                           llvm::Instruction *instr)
         -> llvm::MutableArrayRef<Instruction *> {
         if (llvm::isa<llvm::LoadInst>(instr))
-            return {nullptr, unsigned(0)};
+            return {nullptr, size_t(0)};
         auto ops{instr->operands()};
         auto OI = ops.begin();
         // NOTE: operand 0 is the value operand of a store
@@ -621,7 +621,7 @@ struct Instruction {
                                           llvm::Instruction *instr)
         -> llvm::MutableArrayRef<Instruction *> {
         if (llvm::isa<llvm::LoadInst>(instr))
-            return {nullptr, unsigned(0)};
+            return {nullptr, size_t(0)};
         auto ops{instr->operands()};
         auto OI = ops.begin();
         // NOTE: operand 0 is the value operand of a store

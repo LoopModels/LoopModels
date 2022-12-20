@@ -89,6 +89,8 @@ auto operator<<(llvm::raw_ostream &os, AxisType x) -> llvm::raw_ostream & {
     case AxisType::RowStride:
         return os << "RowStride";
     }
+    llvm_unreachable("Unknown AxisType");
+    return os;
 }
 
 // strong typing
