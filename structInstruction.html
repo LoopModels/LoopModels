@@ -83,6 +83,10 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1ExtractValue.html">ExtractValue</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1IdentifierEmpty.html">IdentifierEmpty</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1IdentifierTombstone.html">IdentifierTombstone</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structInstruction_1_1Predicates.html">Predicates</a></td></tr>
@@ -90,12 +94,12 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:a4fe63d6058edf1e36a8038535e22a016"><td class="memItemLeft" align="right" valign="top"><a id="a4fe63d6058edf1e36a8038535e22a016"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Identifer</b> = std::variant&lt; <a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a>, llvm::Function *, int64_t, double &gt;</td></tr>
-<tr class="separator:a4fe63d6058edf1e36a8038535e22a016"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d8760388a83111d1285537115e4a06f"><td class="memItemLeft" align="right" valign="top"><a id="a5d8760388a83111d1285537115e4a06f"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>UniqueIdentifier</b> = std::pair&lt; Identifer, llvm::MutableArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; &gt;</td></tr>
-<tr class="separator:a5d8760388a83111d1285537115e4a06f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af51c77b4b8d0747aae93a325be955b19"><td class="memItemLeft" align="right" valign="top"><a id="af51c77b4b8d0747aae93a325be955b19"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Identifier</b> = std::variant&lt; <a class="el" href="structInstruction_1_1Intrinsic.html">Intrinsic</a>, llvm::Function *, int64_t, double, <a class="el" href="structInstruction_1_1IdentifierEmpty.html">IdentifierEmpty</a>, <a class="el" href="structInstruction_1_1IdentifierTombstone.html">IdentifierTombstone</a> &gt;</td></tr>
+<tr class="separator:af51c77b4b8d0747aae93a325be955b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90d9ce4400fa90445931bb33db27e84b"><td class="memItemLeft" align="right" valign="top"><a id="a90d9ce4400fa90445931bb33db27e84b"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>UniqueIdentifier</b> = std::pair&lt; Identifier, llvm::MutableArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; &gt;</td></tr>
+<tr class="separator:a90d9ce4400fa90445931bb33db27e84b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -142,9 +146,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_
 <tr class="memitem:aa76005eaf85cd25a4633be44bf91077a"><td class="memItemLeft" align="right" valign="top"><a id="aa76005eaf85cd25a4633be44bf91077a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOperand</b> (size_t i) const -&gt; <a class="el" href="structInstruction.html">Instruction</a> *</td></tr>
 <tr class="separator:aa76005eaf85cd25a4633be44bf91077a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d6ecbd23c439df9d3e404f62700197d"><td class="memItemLeft" align="right" valign="top"><a id="a9d6ecbd23c439df9d3e404f62700197d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; llvm::ArrayRef&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt;</td></tr>
-<tr class="separator:a9d6ecbd23c439df9d3e404f62700197d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add147dae2834f7e0cd0ad97f7667fbc4"><td class="memItemLeft" align="right" valign="top"><a id="add147dae2834f7e0cd0ad97f7667fbc4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUsers</b> () -&gt; llvm::SmallPtrSetImpl&lt; <a class="el" href="structInstruction.html">Instruction</a> * &gt; &amp;</td></tr>
+<tr class="separator:add147dae2834f7e0cd0ad97f7667fbc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a42576c0a6f34ca4d12dc034981c8f3ed"><td class="memItemLeft" align="right" valign="top"><a id="a42576c0a6f34ca4d12dc034981c8f3ed"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOperands</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a42576c0a6f34ca4d12dc034981c8f3ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -281,9 +285,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcBinaryArithmeticC
 <tr class="memitem:adb8f32346fec9a9ac1c6ace0a2015b89"><td class="memItemLeft" align="right" valign="top"><a id="adb8f32346fec9a9ac1c6ace0a2015b89"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operandIsLoad</b> (unsigned int i=0) const -&gt; bool</td></tr>
 <tr class="separator:adb8f32346fec9a9ac1c6ace0a2015b89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9af637eae09a10bd063e7c3987a7035e"><td class="memItemLeft" align="right" valign="top"><a id="a9af637eae09a10bd063e7c3987a7035e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>userIsStore</b> (unsigned int i) const -&gt; bool</td></tr>
-<tr class="separator:a9af637eae09a10bd063e7c3987a7035e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a604e3a5978e9ca30778cce6f18c3dc66"><td class="memItemLeft" align="right" valign="top"><a id="a604e3a5978e9ca30778cce6f18c3dc66"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>userIsStore</b> () const -&gt; bool</td></tr>
 <tr class="separator:a604e3a5978e9ca30778cce6f18c3dc66"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -350,18 +351,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>replaceAllOtherUsesOf
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:ab1db961e33bc1bf69943a5cbfba1e0c8"><td class="memItemLeft" align="right" valign="top"><a id="ab1db961e33bc1bf69943a5cbfba1e0c8"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::Instruction *I) -&gt; Identifer</td></tr>
-<tr class="separator:ab1db961e33bc1bf69943a5cbfba1e0c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48ab5d871167a5e91d5be1723d13d119"><td class="memItemLeft" align="right" valign="top"><a id="a48ab5d871167a5e91d5be1723d13d119"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::ConstantInt *I) -&gt; Identifer</td></tr>
-<tr class="separator:a48ab5d871167a5e91d5be1723d13d119"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a889e8518335092ba65fa9ae85d9d0ca7"><td class="memItemLeft" align="right" valign="top"><a id="a889e8518335092ba65fa9ae85d9d0ca7"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::ConstantFP *I) -&gt; Identifer</td></tr>
-<tr class="separator:a889e8518335092ba65fa9ae85d9d0ca7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3704598287ab3d0dfc6df2142ff2d430"><td class="memItemLeft" align="right" valign="top"><a id="a3704598287ab3d0dfc6df2142ff2d430"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::Value *v) -&gt; std::optional&lt; Identifer &gt;</td></tr>
-<tr class="separator:a3704598287ab3d0dfc6df2142ff2d430"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7619cd81f19c92d9c41de04a8f007325"><td class="memItemLeft" align="right" valign="top"><a id="a7619cd81f19c92d9c41de04a8f007325"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::Instruction *I) -&gt; Identifier</td></tr>
+<tr class="separator:a7619cd81f19c92d9c41de04a8f007325"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59515ee6cad69ce736f2cc59669a660c"><td class="memItemLeft" align="right" valign="top"><a id="a59515ee6cad69ce736f2cc59669a660c"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::ConstantInt *I) -&gt; Identifier</td></tr>
+<tr class="separator:a59515ee6cad69ce736f2cc59669a660c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad53ccf4c227b0f767e87755d1b894113"><td class="memItemLeft" align="right" valign="top"><a id="ad53ccf4c227b0f767e87755d1b894113"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::ConstantFP *I) -&gt; Identifier</td></tr>
+<tr class="separator:ad53ccf4c227b0f767e87755d1b894113"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67033537e8ca1dcdd647abdac4332eee"><td class="memItemLeft" align="right" valign="top"><a id="a67033537e8ca1dcdd647abdac4332eee"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getIdentifier</b> (llvm::Value *v) -&gt; std::optional&lt; Identifier &gt;</td></tr>
+<tr class="separator:a67033537e8ca1dcdd647abdac4332eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9cb939311af162486244a1a5ffd1b0d"><td class="memItemLeft" align="right" valign="top"><a id="ae9cb939311af162486244a1a5ffd1b0d"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUniqueIdentifier</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structInstruction_1_1Cache.html">Cache</a> &amp;cache, llvm::Instruction *v) -&gt; UniqueIdentifier</td></tr>
 <tr class="separator:ae9cb939311af162486244a1a5ffd1b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -386,9 +387,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>getType</b> (l
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a9f7661f7d342deb6addebdde5dd19657"><td class="memItemLeft" align="right" valign="top"><a id="a9f7661f7d342deb6addebdde5dd19657"></a>
-Identifer&#160;</td><td class="memItemRight" valign="bottom"><b>id</b></td></tr>
-<tr class="separator:a9f7661f7d342deb6addebdde5dd19657"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f057196b1b0d37a018e212053bdee50"><td class="memItemLeft" align="right" valign="top"><a id="a7f057196b1b0d37a018e212053bdee50"></a>
+Identifier&#160;</td><td class="memItemRight" valign="bottom"><b>id</b></td></tr>
+<tr class="separator:a7f057196b1b0d37a018e212053bdee50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a662cb538aa98b8c07e6b0b6a1c857712"><td class="memItemLeft" align="right" valign="top"><a id="a662cb538aa98b8c07e6b0b6a1c857712"></a>
 llvm::Type *&#160;</td><td class="memItemRight" valign="bottom"><b>type</b></td></tr>
 <tr class="separator:a662cb538aa98b8c07e6b0b6a1c857712"><td class="memSeparator" colspan="2">&#160;</td></tr>

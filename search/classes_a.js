@@ -1,15 +1,11 @@
 var searchData=
 [
-  ['polyhedra_274',['Polyhedra',['../structPolyhedra.html',1,'']]],
-  ['polyhedra_3c_20emptymatrix_3c_20int64_5ft_20_3e_2c_20linearsymboliccomparator_2c_20llvm_3a_3asmallvector_3c_20const_20llvm_3a_3ascev_20_2a_20_3e_2c_20nonnegative_20_3e_275',['Polyhedra&lt; EmptyMatrix&lt; int64_t &gt;, LinearSymbolicComparator, llvm::SmallVector&lt; const llvm::SCEV * &gt;, NonNegative &gt;',['../structPolyhedra.html',1,'']]],
-  ['predicates_276',['Predicates',['../structInstruction_1_1Predicates.html',1,'Instruction']]],
-  ['promoteeltype_277',['PromoteEltype',['../structPromoteEltype.html',1,'']]],
-  ['promotetype_278',['PromoteType',['../structPromoteType.html',1,'']]],
-  ['promotetype_3c_20a_2c_20b_20_3e_279',['PromoteType&lt; A, B &gt;',['../structPromoteType_3_01A_00_01B_01_4.html',1,'']]],
-  ['promotetype_3c_20i_2c_20rational_20_3e_280',['PromoteType&lt; I, Rational &gt;',['../structPromoteType_3_01I_00_01Rational_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20i_20_3e_281',['PromoteType&lt; Rational, I &gt;',['../structPromoteType_3_01Rational_00_01I_01_4.html',1,'']]],
-  ['promotetype_3c_20rational_2c_20rational_20_3e_282',['PromoteType&lt; Rational, Rational &gt;',['../structPromoteType_3_01Rational_00_01Rational_01_4.html',1,'']]],
-  ['ptrmatrix_283',['PtrMatrix',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
-  ['ptrmatrix_3c_20int64_5ft_20_3e_284',['PtrMatrix&lt; int64_t &gt;',['../structLinearAlgebra_1_1PtrMatrix.html',1,'LinearAlgebra']]],
-  ['ptrvector_285',['PtrVector',['../structLinearAlgebra_1_1PtrVector.html',1,'LinearAlgebra']]]
+  ['offsetbegin_277',['OffsetBegin',['../structLinearAlgebra_1_1OffsetBegin.html',1,'LinearAlgebra']]],
+  ['offsetend_278',['OffsetEnd',['../structLinearAlgebra_1_1OffsetEnd.html',1,'LinearAlgebra']]],
+  ['one_279',['One',['../structOne.html',1,'']]],
+  ['opcode_280',['OpCode',['../structInstruction_1_1Intrinsic_1_1OpCode.html',1,'Instruction::Intrinsic']]],
+  ['optional_281',['Optional',['../structOptional.html',1,'']]],
+  ['optional_3c_20t_20_2a_20_3e_282',['Optional&lt; T * &gt;',['../structOptional_3_01T_01_5_01_4.html',1,'']]],
+  ['optional_3c_20t_20_3e_283',['Optional&lt; T &gt;',['../structOptional_3_01T_01_4.html',1,'']]],
+  ['outneighbors_284',['OutNeighbors',['../structLinearProgramLoopBlock_1_1OutNeighbors.html',1,'LinearProgramLoopBlock']]]
 ];
