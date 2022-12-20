@@ -148,13 +148,13 @@ $(function() {
 <div class="line"><a name="l00077"></a><span class="lineno"><a class="line" href="structInstruction.html">   77</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structInstruction.html">Instruction</a> {</div>
 <div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="structInstruction_1_1Intrinsic.html">   78</a></span>&#160;    <span class="keyword">struct </span><a class="code" href="structInstruction_1_1Intrinsic.html">Intrinsic</a> {</div>
 <div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="structInstruction_1_1Intrinsic_1_1OpCode.html">   79</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structInstruction_1_1Intrinsic_1_1OpCode.html">OpCode</a> {</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            llvm::Intrinsic::ID <span class="keywordtype">id</span>{llvm::Intrinsic::not_intrinsic};</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            llvm::Intrinsic::ID id; <span class="comment">//{llvm::Intrinsic::not_intrinsic};</span></div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            constexpr <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structInstruction_1_1Intrinsic_1_1OpCode.html">OpCode</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;                <span class="keywordflow">return</span> <span class="keywordtype">id</span> == other.id;</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        };</div>
 <div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="structInstruction_1_1Intrinsic_1_1Intrin.html">   85</a></span>&#160;        <span class="keyword">struct </span><a class="code" href="structInstruction_1_1Intrinsic_1_1Intrin.html">Intrin</a> {</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            llvm::Intrinsic::ID <span class="keywordtype">id</span>{llvm::Intrinsic::not_intrinsic};</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            llvm::Intrinsic::ID id; <span class="comment">//{llvm::Intrinsic::not_intrinsic};</span></div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;            constexpr <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structInstruction_1_1Intrinsic_1_1Intrin.html">Intrin</a> &amp;other) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;                <span class="keywordflow">return</span> <span class="keywordtype">id</span> == other.id;</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;            }</div>
@@ -644,7 +644,7 @@ $(function() {
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;                                          llvm::Instruction *instr)</div>
 <div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;        -&gt; llvm::MutableArrayRef&lt;Instruction *&gt; {</div>
 <div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;        <span class="keywordflow">if</span> (llvm::isa&lt;llvm::LoadInst&gt;(instr))</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;            <span class="keywordflow">return</span> {<span class="keyword">nullptr</span>, unsigned(0)};</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;            <span class="keywordflow">return</span> {<span class="keyword">nullptr</span>, size_t(0)};</div>
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;        <span class="keyword">auto</span> ops{instr-&gt;operands()};</div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;        <span class="keyword">auto</span> OI = ops.begin();</div>
 <div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;        <span class="comment">// NOTE: operand 0 is the value operand of a store</span></div>
@@ -663,7 +663,7 @@ $(function() {
 <div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;                                          llvm::Instruction *instr)</div>
 <div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;        -&gt; llvm::MutableArrayRef&lt;Instruction *&gt; {</div>
 <div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;        <span class="keywordflow">if</span> (llvm::isa&lt;llvm::LoadInst&gt;(instr))</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;            <span class="keywordflow">return</span> {<span class="keyword">nullptr</span>, unsigned(0)};</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;            <span class="keywordflow">return</span> {<span class="keyword">nullptr</span>, size_t(0)};</div>
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;        <span class="keyword">auto</span> ops{instr-&gt;operands()};</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;        <span class="keyword">auto</span> OI = ops.begin();</div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;        <span class="comment">// NOTE: operand 0 is the value operand of a store</span></div>
