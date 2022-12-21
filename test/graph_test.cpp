@@ -1,6 +1,5 @@
 #include "../include/BitSets.hpp"
 #include "../include/Graphs.hpp"
-#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
 #include <algorithm>
 #include <cstdint>
@@ -96,7 +95,6 @@ TEST(GraphTest, BasicAssertions) {
   auto scc0 = Graphs::stronglyConnectedComponents(G);
   auto scc1 = Graphs::stronglyConnectedComponents(G);
   EXPECT_EQ(scc0, scc1);
-  SHOWLN(scc0.size());
   for (auto &v : scc0)
     llvm::errs() << "SCC: " << v << "\n";
   // NOTE: currently using inNeighbors instead of outNeighbors, so in

@@ -1,7 +1,7 @@
 #include "../include/BitSets.hpp"
-#include "../include/Math.hpp"
 #include <gtest/gtest.h>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BitSetTest, BasicAssertions) {
   BitSet bs(1000);
   bs[4] = true;

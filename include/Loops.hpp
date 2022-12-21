@@ -3,7 +3,6 @@
 #include "./Comparators.hpp"
 #include "./Constraints.hpp"
 #include "./EmptyArrays.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./Polyhedra.hpp"
 #include "./Utilities.hpp"
@@ -365,72 +364,17 @@ struct AffineLoopNest
         return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
       } else if (addRecMatchesLoop(op1, L)) {
         return addSymbol(B, L, op0, SE, lu, mlt, minDepth);
-        // } else {
-        //     // auto S = simplifyMinMax(SE, ex);
-        //     // if (S != v)
-        //     //     return addSymbol(B,L,S,SE,l,u,mlt,minDepth);
-        //     // llvm::errs() << "Failing on llvm::SCEVMinMaxExpr = "
-        //     << *ex
-        //     //              << "<<\n*L =" << *L << "\n";
-        //     // SHOWLN(*op0);
-        //     // SHOWLN(*op1);
-        //     // TODO: don't only consider final value
-        //     // this assumes the final value is the maximum, which is
-        //     not
-        //     // necessarilly true
-        //     if (auto op0ar =
-        //     llvm::dyn_cast<llvm::SCEVAddRecExpr>(op0)) {
-        //         // auto op0final = SE.getSCEVAtScope(
-        //         //     op0ar, op0ar->getLoop()->getParentLoop());
-        //         auto op0final = SE.getSCEVAtScope(op0ar, nullptr);
-        //         SHOWLN(*op0final);
-        //         auto op0FinalMinusOp1 = SE.getMinusSCEV(op0final,
-        //         op1);
-        //         SHOWLN(SE.isKnownNonNegative(op0FinalMinusOp1));
-        //         SHOWLN(SE.isKnownNonPositive(op0FinalMinusOp1));
-        //         auto op0init = op0ar->getOperand(0);
-        //         auto op0InitMinusOp1 = SE.getMinusSCEV(op0init, op1);
-        //         SHOWLN(SE.isKnownNonNegative(op0InitMinusOp1));
-        //         SHOWLN(SE.isKnownNonPositive(op0InitMinusOp1));
-        //         auto op0step = op0ar->getOperand(0);
-        //         SHOWLN(SE.isKnownNonNegative(op0step));
-        //         SHOWLN(SE.isKnownNonPositive(op0step));
-        //     }
-        //     if (auto op1ar =
-        //     llvm::dyn_cast<llvm::SCEVAddRecExpr>(op1)) {
-        //         SHOWLN(*SE.getSCEVAtScope(
-        //             op1ar, op1ar->getLoop()->getParentLoop()));
-        //     }
-        //     auto op0MinusOp1 = SE.getMinusSCEV(op0, op1);
-        //     // SHOWLN(SE.isKnownNonNegative(op0MinusOp1));
-        //     // SHOWLN(SE.isKnownNonPositive(op0MinusOp1));
-
-        //     if (auto b = L->getBounds(SE))
-        //         llvm::errs()
-        //             << "Loop Bounds:\nInitial: " <<
-        //             b->getInitialIVValue()
-        //             << "\nStep: " << *b->getStepValue()
-        //             << "\nFinal: " << b->getFinalIVValue() << "\n";
-        //     assert(false);
       }
     } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(v))
       return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt, minDepth);
-    // } else if (const llvm::SCEVUDivExpr *ex = llvm::dyn_cast<const
-    // llvm::SCEVUDivExpr>(v)) {
-
-    // } else if (const llvm::SCEVUnknown *ex = llvm::dyn_cast<const
-    // llvm::SCEVUnknown>(v)) {
     addSymbol(v, lu, mlt);
     return minDepth;
   }
   void addSymbol(const llvm::SCEV *v, Range<size_t, size_t> lu, int64_t mlt) {
     assert(lu.size());
-    // llvm::errs() << "Before adding sym A = " << A << "\n";
     S.push_back(v);
     A.resize(A.numCol() + 1);
-    // A.insertZeroColumn(symbols.size());
     A(lu, S.size()) = mlt;
-    // llvm::errs() << "After adding sym A = " << A << "\n";
   }
   static auto addRecMatchesLoop(const llvm::SCEV *S, llvm::Loop *L) -> bool {
     if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(S))
@@ -443,12 +387,7 @@ struct AffineLoopNest
     Row M = A.numRow();
     A.resize(M + 1);
     B.resize(M + 1);
-    llvm::errs() << "BT = " << *BT
-                 << "\naddBackedgeTakenCount pre addSym; M = " << M
-                 << "; A = " << A << "\n";
     minDepth = addSymbol(B, L, BT, SE, _(M, M + 1), 1, minDepth);
-    llvm::errs() << "addBackedgeTakenCount post addSym; M = " << M
-                 << "; A = " << A << "\n";
     assert(A.numRow() == B.numRow());
     size_t depth = L->getLoopDepth();
     for (auto m = size_t(M); m < A.numRow(); ++m)
@@ -460,7 +399,6 @@ struct AffineLoopNest
         // auto *BTI = SE.getPredicatedBackedgeTakenCount(L,
         // predicates);
         if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
-          llvm::errs() << "BackedgeTakenCount: " << *BTP << "\n";
           if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
             return addBackedgeTakenCount(B, P, BTP, SE, minDepth);
           else
@@ -848,9 +786,6 @@ struct AffineLoopNest
     -> llvm::raw_ostream & {
     AffineLoopNest<NonNegative> aln{alnb};
     size_t numLoopsMinus1 = aln.getNumLoops() - 1;
-    SHOWLN(alnb.getNumLoops());
-    SHOWLN(aln.getNumLoops());
-    SHOWLN(alnb.A);
     size_t i = 0;
     while (true) {
       os << "Loop " << numLoopsMinus1 - i << " lower bounds:\n";

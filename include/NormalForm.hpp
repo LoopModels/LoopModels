@@ -1,7 +1,6 @@
 #pragma once
 #include "./EmptyArrays.hpp"
 #include "./GreatestCommonDivisor.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./Utilities.hpp"
 #include <concepts>
@@ -161,7 +160,6 @@ static inline auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
   llvm::SmallVector<unsigned> included;
   included.reserve(std::min(size_t(M), size_t(N)));
   for (size_t i = 0, j = 0; i < std::min(size_t(M), size_t(N)); ++j) {
-    SHOWLN(A);
     // zero ith row
     if (pivotRows(A, K, i, M)) {
       // cannot pivot, this is a linear combination of previous
@@ -170,9 +168,6 @@ static inline auto pivotRows(MutPtrMatrix<int64_t> A, Col i, Row M, Row piv)
     } else {
       zeroSupDiagonal(A, K, i, M, N);
       int64_t Aii = A(i, i);
-      SHOW(Aii);
-      CSHOW(j);
-      CSHOWLN(i);
       if (std::abs(Aii) != 1) {
         // including this row renders the matrix not unimodular!
         // therefore, we drop the row.

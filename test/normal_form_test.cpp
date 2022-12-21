@@ -48,12 +48,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
       LinearAlgebra::printVector(llvm::errs() << "included = ", included)
         << "\n";
       if (auto optlu = LU::fact(K)) {
-        SHOWLN(K);
         if (auto optA2 = (*optlu).inv()) {
           SquareMatrix<Rational> &A2 = *optA2;
-          SHOWLN(A2);
-          SHOWLN(B);
-
           for (size_t n = 0; n < 4; ++n) {
             for (size_t j = 0; j < included.size(); ++j) {
               llvm::errs() << "A2(" << n << ", " << j << ") = " << A2(n, j)

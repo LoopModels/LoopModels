@@ -88,9 +88,6 @@ TEST(V2Matrix, BasicAssertions) {
 TEST(ConstantTest, BasicAssertions) {
   auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
   auto comp = LinearSymbolicComparator::construct(A);
-  SHOWLN(comp.U);
-  SHOWLN(comp.V);
-  SHOWLN(comp.d);
   Vector<int64_t> query0{-1, 0, 0};
   Vector<int64_t> query1{1, 0, 0};
   EXPECT_FALSE(comp.greaterEqual(query0));
@@ -102,9 +99,6 @@ TEST(ConstantTest, BasicAssertions) {
 TEST(ConstantTest2, BasicAssertions) {
   auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
   auto comp = LinearSymbolicComparator::construct(A, false);
-  SHOWLN(comp.U);
-  SHOWLN(comp.V);
-  SHOWLN(comp.d);
   Vector<int64_t> query0{-1, 0, 0};
   Vector<int64_t> query1{1, 0, 0};
   EXPECT_FALSE(comp.greaterEqual(query0));
@@ -119,8 +113,6 @@ TEST(EqTest, BasicAssertions) {
   IntMatrix E{stringToIntMatrix("[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]")};
   auto comp = LinearSymbolicComparator::construct(A, E);
   Vector<int64_t> diff = A(7, _) - A(3, _);
-  SHOWLN(comp.greaterEqual(diff));
-  SHOWLN(comp.greater(diff));
   EXPECT_TRUE(comp.greaterEqual(diff));
   EXPECT_TRUE(comp.greater(diff));
   diff *= -1;

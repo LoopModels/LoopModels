@@ -5,7 +5,6 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
-#include "./Macro.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
 #include <algorithm>
@@ -15,9 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <llvm/ADT/APInt.h>
 #include <llvm/ADT/ArrayRef.h>
-#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Analysis/AssumptionCache.h>
@@ -59,16 +56,6 @@
     numLoops += countNumLoopsPlusLeaves(SL);
   return numLoops;
 }
-
-// [[maybe_unused]] static bool isKnownOne(llvm::Value *x) {
-//     if (llvm::ConstantInt *constInt = llvm::dyn_cast<llvm::ConstantInt>(x)) {
-//         return constInt->isOne();
-//     } else if (llvm::Constant *constVal = llvm::dyn_cast<llvm::Constant>(x))
-//     {
-//         return constVal->isOneValue();
-//     }
-//     return false;
-// }
 
 // requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
@@ -377,40 +364,29 @@ public:
   auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize)
     -> std::optional<ArrayReference> {
     llvm::Loop *L = LT.loop;
-    if (L)
-      llvm::errs() << "arrayRef for " << *L << "\n";
-    else
-      llvm::errs() << "arrayRef for top-level\n";
-    // const llvm::SCEV *scev = SE->getSCEV(ptr);
     // code modified from
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    llvm::errs() << "ptr: " << *ptr << "\n";
     // llvm::Value *po = llvm::getPointerOperand(ptr);
     // if (!po)
     //     return {};
     // llvm::errs() << "ptr operand: " << *po << "\n";
     const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
 
-    llvm::errs() << "accessFn: " << *accessFn << "\n"
-                 << "\nSE->getSCEV(ptr) = " << *(SE->getSCEV(ptr)) << "\n";
-
     const llvm::SCEV *pb = SE->getPointerBase(accessFn);
-    llvm::errs() << "base pointer: " << *pb << "\n";
     const auto *basePointer = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
-    if (!basePointer)
-      llvm::errs() << "ArrayReference failed because !basePointer\n";
+    if (!basePointer && ORE && LT.loop) {
+      remark("ArrayRefDeliniarize", LT.loop,
+             "ArrayReference failed because !basePointer\n", ptr);
+    }
     if (!basePointer) {
       conditionOnLoop(L);
       return {};
     }
-    llvm::errs() << "base pointer SCEVUnknown: " << *basePointer << "\n";
     accessFn = SE->getMinusSCEV(accessFn, basePointer);
-    llvm::errs() << "diff accessFn: " << *accessFn << "\n";
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
     assert(subscripts.size() == sizes.size());
-    // SHOWLN(sizes.size());
     AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
     if (sizes.size() == 0)
       return ArrayReference(basePointer, &aln, std::move(sizes),
@@ -424,29 +400,17 @@ public:
     IntMatrix Bt;
     llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
     uint64_t blackList{0};
-    llvm::errs() << "AccessFN: " << *accessFn << "\n";
     {
       Vector<int64_t> offsets;
       for (size_t i = 0; i < subscripts.size(); ++i) {
-        llvm::errs() << "subscripts[" << i << "] = " << *subscripts[i] << "\n";
         offsets.clear();
         offsets.pushBack(0);
         blackList |= fillAffineIndices(Rt(i, _), offsets, symbolicOffsets,
                                        subscripts[i], 1, numPeeled);
         Bt.resize(subscripts.size(), offsets.size());
-        llvm::errs() << "offsets = [";
-        for (size_t i = 0; i < offsets.size(); ++i) {
-          if (i)
-            llvm::errs() << ", ";
-          llvm::errs() << offsets[i];
-        }
-        llvm::errs() << "]\n";
         Bt(i, _) = offsets;
       }
     }
-    // SHOW(Bt.numCol());
-    // CSHOW(offsets.size());
-    // CSHOWLN(symbolicOffsets.size());
     if (blackList) {
       // blacklist: inner - outer
       uint64_t leadingZeros = std::countl_zero(blackList);
@@ -488,29 +452,7 @@ public:
                        std::move(symbolicOffsets));
     ref.resize(subscripts.size());
     ref.indexMatrix() = Rt.transpose();
-    // SHOWLN(symbolicOffsets.size());
-    // SHOW(ref.offsetMatrix().numRow());
-    // CSHOWLN(ref.offsetMatrix().numCol());
-    // SHOW(Bt.numRow());
-    // CSHOWLN(Bt.numCol());
-    SHOWLN(Rt);
-    SHOWLN(Bt);
     ref.offsetMatrix() = Bt;
-    // TODO: update schedule, array ref, and offsets when pruning failed
-    // loops
-    for (size_t i = 0; i < subscripts.size(); ++i) {
-      llvm::errs() << "Array Dim " << i << ":\nSize: " << *ref.sizes[i]
-                   << "\nSubscript: " << *subscripts[i] << "\n";
-      // if (const llvm::SCEVUnknown *param =
-      // llvm::dyn_cast<llvm::SCEVUnknown>(subscripts[i])) {
-      if (llvm::isa<llvm::SCEVUnknown>(subscripts[i])) {
-        llvm::errs() << "SCEVUnknown\n";
-        // } else if (const llvm::SCEVNAryExpr *param =
-        // llvm::dyn_cast<llvm::SCEVNAryExpr>(subscripts[i])) {
-      } else if (llvm::isa<llvm::SCEVNAryExpr>(subscripts[i])) {
-        llvm::errs() << "SCEVNAryExpr\n";
-      }
-    }
     return ref;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
@@ -524,21 +466,18 @@ public:
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
         if (std::optional<ArrayReference> re = arrayRef(LT, iptr, elSize)) {
-          SHOWLN(I);
-          SHOWLN(*I);
-          llvm::errs() << "omega = [" << omega.front();
-          for (size_t i = 1; i < omega.size(); ++i)
-            llvm::errs() << ", " << omega[i];
-          llvm::errs() << "]\n";
           re->loadOrStore = I;
           LT.memAccesses.emplace_back(std::move(*re), I, omega);
           ++omega.back();
-          llvm::errs() << "Succesfully added load\n"
-                       << LT.memAccesses.back() << "\n";
           return false;
         }
       }
-      llvm::errs() << "Failed for load instruction: " << *I << "\n";
+      if (LT.loop && ORE) {
+        llvm::SmallVector<char> x;
+        llvm::raw_svector_ostream os(x);
+        os << "No affine representation for load: " << *I << "\n";
+        remark("AddAffineLoad", LT.loop, os.str(), I);
+      }
       return true;
     }
     return false;
@@ -552,21 +491,18 @@ public:
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
         if (std::optional<ArrayReference> re = arrayRef(LT, iptr, elSize)) {
-          SHOWLN(I);
-          SHOWLN(*I);
-          llvm::errs() << "omega = [" << omega.front();
-          for (size_t i = 1; i < omega.size(); ++i)
-            llvm::errs() << ", " << omega[i];
-          llvm::errs() << "]\n";
           re->loadOrStore = I;
           LT.memAccesses.emplace_back(std::move(*re), I, omega);
           ++omega.back();
-          llvm::errs() << "Succesfully added store\n"
-                       << LT.memAccesses.back() << "\n";
           return false;
         }
       }
-      llvm::errs() << "Failed for store instruction: " << *I << "\n";
+      if (LT.loop && ORE) {
+        llvm::SmallVector<char> x;
+        llvm::raw_svector_ostream os(x);
+        os << "No affine representation for store: " << *I << "\n";
+        remark("AddAffineStore", LT.loop, os.str(), I);
+      }
       return true;
     }
     return false;
@@ -575,19 +511,7 @@ public:
   void parseBB(LoopTree &LT, llvm::BasicBlock *BB,
 
                llvm::SmallVector<unsigned> &omega) {
-    // omega.push_back(0);
-    llvm::errs() << "\nParsing BB: " << BB << "\n"
-                 << *BB << "\nNested in Loop: ";
-    if (LT.loop)
-      llvm::errs() << *LT.loop << "\n";
-    else
-      llvm::errs() << "toplevel\n";
-    llvm::errs() << "omega = [" << omega.front();
-    for (size_t i = 1; i < omega.size(); ++i)
-      llvm::errs() << ", " << omega[i];
-    llvm::errs() << "]\n";
     for (llvm::Instruction &I : *BB) {
-      llvm::errs() << "Parsing Instr: " << I << "\n";
       if (LT.loop)
         assert(LT.loop->contains(&I));
       if (I.mayReadFromMemory()) {
@@ -599,7 +523,6 @@ public:
           if (addStore(LT, SI, omega))
             return;
     }
-    // omega.pop_back();
   }
   void visit(LoopTree &LT, Predicate::Map &map,
              llvm::SmallVector<unsigned> &omega,
@@ -626,7 +549,7 @@ public:
   // [0, 0]
   void parseLoop(LoopTree &LT, llvm::SmallVector<unsigned> &omega) {
 #ifndef NDEBUG
-    size_t numOmega = omega.size();
+    size_t numOmegaInitial = omega.size();
     // FIXME:
     // two issues, currently:
     // 1. multiple parses produce the same omega
@@ -636,18 +559,12 @@ public:
     //         assert(!paths.contains(PBB.basicBlock));
     //         paths.insert(PBB.basicBlock);
     //     }
-#endif
-    // llvm::SmallPtrSet<llvm::BasicBlock *, 32> paths;
-    omega.push_back(0);
     assert(LT.subLoops.size() + 1 == LT.paths.size());
-    // llvm::Loop *L = LT.loop;
+#endif
+    omega.push_back(0);
     // now we walk blocks
     // auto &subLoops = L->getSubLoops();
     for (size_t i = 0; i < LT.subLoops.size(); ++i) {
-      llvm::errs() << "Parsing loop, i = " << i;
-      if (LT.loop)
-        llvm::errs() << ": " << *LT.loop;
-      llvm::errs() << "\n";
       parseBBMap(LT, LT.paths[i], omega);
       parseLoop(*LT.subLoops[i], omega);
       ++omega.back();
@@ -655,7 +572,7 @@ public:
     parseBBMap(LT, LT.paths.back(), omega);
     omega.pop_back();
 #ifndef NDEBUG
-    assert(omega.size() == numOmega);
+    assert(omega.size() == numOmegaInitial);
 #endif
   }
   void parseNest() {
@@ -663,24 +580,9 @@ public:
     for (auto forest : loopForests) {
       omega.clear();
       parseLoop(*forest, omega);
-      // auto &forest = ;
-      // for (size_t i = 0; i < forest.size(); ++i) {
-      //     omega.front() = i;
-      //     parseLoop(loopTrees[forest.subLoops[i]], omega);
-      // }
     }
   }
 
-  // bool parseLoop(llvm::Loop *L) {
-  //     for (auto &BB : L->getBlocks()) {
-  //         llvm::Loop *P = LI->getLoopFor(BB);
-  //         if (parseBB(P, BB)) {
-  //             conditionOnLoop(P);
-  //             return true;
-  //         }
-  //     }
-  //     return false;
-  // }
   void peelOuterLoops(llvm::Loop *L, size_t numToPeel) {
     peelOuterLoops(*loopMap[L], numToPeel);
   }
@@ -729,7 +631,6 @@ public:
     LT->parentLoop = nullptr; // LT is now top of the tree
     loopForests.push_back(LT);
     llvm::SmallVector<LoopTree *> &friendLoops = PT.subLoops;
-    // SHOW(LTID);
     for (auto id : friendLoops)
       llvm::errs() << ", " << id;
     llvm::errs() << "\n";
@@ -815,34 +716,28 @@ public:
       fillLoopBlock(*root.subLoops[i]);
   }
 
-  // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
-  void remark(const llvm::StringRef remarkName, llvm::Loop *L,
-              const llvm::StringRef remarkMessage,
-              llvm::Instruction *I = nullptr) {
+  static auto remarkAnalysis(const llvm::StringRef remarkName, llvm::Loop *L,
+                             llvm::Instruction *I = nullptr)
+    -> llvm::OptimizationRemarkAnalysis {
     llvm::Value *codeRegion = L->getHeader();
     llvm::DebugLoc DL = L->getStartLoc();
 
     if (I) {
       codeRegion = I->getParent();
-      // If there is no debug location attached to the instruction, revert back
-      // to using the loop's.
+      // If there is no debug location attached to the instruction, revert
+      // back to using the loop's.
       if (I->getDebugLoc())
         DL = I->getDebugLoc();
     }
 
-    llvm::OptimizationRemarkAnalysis analysis{"turbo-loop", remarkName, DL,
-                                              codeRegion};
-
-    ORE->emit(analysis << remarkMessage);
+    return {"turbo-loop", remarkName, DL, codeRegion};
   }
-  void remark(const llvm::StringRef remarkName, llvm::Function *F,
-              const llvm::StringRef remarkMessage) {
-    llvm::Instruction *codeRegion = &*F->begin()->begin();
-    llvm::DebugLoc DL = codeRegion->getDebugLoc();
+  // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
+  void remark(const llvm::StringRef remarkName, llvm::Loop *L,
+              const llvm::StringRef remarkMessage,
+              llvm::Instruction *I = nullptr) {
 
-    llvm::OptimizationRemarkAnalysis analysis{"turbo-loop", remarkName, DL,
-                                              codeRegion};
-
+    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, I)};
     ORE->emit(analysis << remarkMessage);
   }
   // void buildInstructionGraph(LoopTree &root) {

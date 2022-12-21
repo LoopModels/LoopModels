@@ -148,15 +148,12 @@ struct ArrayReference {
 
   friend auto operator<<(llvm::raw_ostream &os, const ArrayReference &ar)
     -> llvm::raw_ostream & {
-    SHOWLN(ar.indexMatrix());
     os << "ArrayReference " << *ar.basePointer << " (dim = " << ar.getArrayDim()
        << ", num loops: " << ar.getNumLoops();
     if (ar.sizes.size())
       os << ", element size: " << *ar.sizes.back();
     os << "):\n";
     PtrMatrix<int64_t> A{ar.indexMatrix()};
-    SHOW(A.numRow());
-    CSHOWLN(A.numCol());
     os << "Sizes: [";
     if (ar.sizes.size()) {
       os << " unknown";

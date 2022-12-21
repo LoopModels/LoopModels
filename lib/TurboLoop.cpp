@@ -1,10 +1,12 @@
 #include "../include/TurboLoop.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/LoopForest.hpp"
-#include "../include/Macro.hpp"
+#include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
 #include <llvm/ADT/PostOrderIterator.h>
+#include <llvm/ADT/SmallString.h>
+#include <llvm/ADT/SmallVector.h>
 #include <llvm/ADT/Statistic.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/Delinearization.h>
@@ -31,6 +33,7 @@
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/PassPlugin.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Scalar/IndVarSimplify.h>
 #include <llvm/Transforms/Scalar/LoopRotation.h>
@@ -55,64 +58,69 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   // ClassID 1: RegisterRC
   // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
   TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-  llvm::errs() << "DataLayout: "
-               << F.getParent()->getDataLayout().getStringRepresentation()
-               << "\n";
+  // llvm::errs() << "DataLayout: "
+  //              << F.getParent()->getDataLayout().getStringRepresentation()
+  //              << "\n";
 
-  for (size_t i = 0; i < 5; ++i) {
-    size_t w = 1 << i;
-    llvm::errs() << "Vector width: " << w << "\nfadd cost: "
-                 << TTI->getArithmeticInstrCost(
-                      llvm::Instruction::FAdd,
-                      llvm::FixedVectorType::get(
-                        llvm::Type::getDoubleTy(F.getContext()), w))
-                 << "\n";
-  }
+  // for (size_t i = 0; i < 5; ++i) {
+  //   size_t w = 1 << i;
+  //   llvm::errs() << "Vector width: " << w << "\nfadd cost: "
+  //                << TTI->getArithmeticInstrCost(
+  //                     llvm::Instruction::FAdd,
+  //                     llvm::FixedVectorType::get(
+  //                       llvm::Type::getDoubleTy(F.getContext()), w))
+  //                << "\n";
+  // }
 
   LI = &FAM.getResult<llvm::LoopAnalysis>(F);
   SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
   ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);
+  if (!ORE->enabled())
+    ORE = nullptr; // cheaper check
+  if (ORE) {
+    // llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis("RegisterCount",
+    // *LI->begin())}; ORE->emit(analysis << "There are
+    // "<<TTI->getNumberOfRegisters(0)<<" scalar registers");
+    llvm::SmallString<32> str = llvm::formatv("there are {0} scalar registers",
+                                              TTI->getNumberOfRegisters(0));
 
-  remark("ScalarRegisterCount", &F,
-         "there are " + std::to_string(TTI->getNumberOfRegisters(0)) +
-           " scalar registers");
-
-  remark("VectorRegisterCount", &F,
-         "there are " + std::to_string(TTI->getNumberOfRegisters(1)) +
-           " vector registers");
+    remark("ScalarRegisterCount", *LI->begin(), str);
+    str = llvm::formatv("there are {0} vector registers",
+                        TTI->getNumberOfRegisters(1));
+    remark("VectorRegisterCount", *LI->begin(), str);
+  }
   // llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0) <<
   // "\n"; llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1)
   // << "\n";
 
   // Builds the loopForest, constructing predicate chains and loop nests
   initializeLoopForest();
-  SHOWLN(loopForests.size());
   if (loopForests.empty())
     return llvm::PreservedAnalyses::all();
 
-  for (auto forest : loopForests)
-    forest->dump();
   // first, we try and parse the function to find sets of loop nests
   // then we search for sets of fusile loops
 
   // fills array refs
   parseNest();
 
-  llvm::errs() << "\n\nPrinting memory accesses:\n";
   // TODO: fill schedules
-  for (auto forest : loopForests)
-    for (auto tree : *forest)
-      tree->dumpAllMemAccess();
-  llvm::errs() << "\nDone printing memory accesses\nloopForests.size() = "
-               << loopForests.size() << "\n";
   for (auto forest : loopForests) {
     fillLoopBlock(*forest);
     std::optional<BitSet<>> optDeps = loopBlock.optimize();
-    SHOWLN(optDeps.has_value());
-    llvm::errs() << loopBlock << "\n";
+    if (ORE) {
+      if (optDeps) {
+        llvm::SmallVector<char, 512> str;
+        llvm::raw_svector_ostream os(str);
+        os << "Solved linear program\n:" << loopBlock << "\n";
+        remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
+      } else {
+        remark("LinearProgramFailure", forest->getOuterLoop(),
+               "Failed to solve linear program");
+      }
+    }
     loopBlock.clear();
   }
-
   return llvm::PreservedAnalyses::none();
 }
 auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,

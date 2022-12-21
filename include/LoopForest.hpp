@@ -3,7 +3,6 @@
 #include "./BitSets.hpp"
 #include "./Instruction.hpp"
 #include "./Loops.hpp"
-#include "./Macro.hpp"
 #include "./MemoryAccess.hpp"
 #include <cstddef>
 #include <iterator>
@@ -39,7 +38,15 @@ struct LoopTree {
   [[nodiscard]] auto isLoopSimplifyForm() const -> bool {
     return loop->isLoopSimplifyForm();
   }
-
+  // mostly to get a loop to print
+  [[nodiscard]] auto getOuterLoop() const -> llvm::Loop * {
+    if (loop)
+      return loop;
+    for (auto *subLoop : subLoops)
+      if (auto *L = subLoop->getOuterLoop())
+        return L;
+    return nullptr;
+  }
   LoopTree(const LoopTree &) = default;
   LoopTree(LoopTree &&) = default;
   auto operator=(const LoopTree &) -> LoopTree & = default;
@@ -81,8 +88,6 @@ struct LoopTree {
   // NOLINTNEXTLINE(*-nodiscard)
   auto dump() const -> llvm::raw_ostream & { return llvm::errs() << *this; }
   void addZeroLowerBounds(llvm::DenseMap<llvm::Loop *, LoopTree *> &loopMap) {
-    // SHOWLN(this);
-    // SHOWLN(affineLoop.A);
     affineLoop.addZeroLowerBounds();
     for (auto tree : subLoops) {
       tree->addZeroLowerBounds(loopMap);
@@ -102,8 +107,6 @@ struct LoopTree {
         llvm::SmallVectorImpl<Predicate::Map> &paths,
         llvm::SmallVectorImpl<LoopTree *> &subTree) {
     if (subTree.size()) {
-      // SHOW(subTree.size());
-      // CSHOWLN(paths.size());
       assert(1 + subTree.size() == paths.size());
       auto *newTree =
         new (alloc) LoopTree{std::move(subTree), std::move(paths)};
@@ -119,13 +122,8 @@ struct LoopTree {
     else
       llvm::errs() << "toplevel\n";
     for (auto &mem : memAccesses)
-      SHOWLN(mem);
+      llvm::errs() << "mem = " << mem << "\n";
     for (auto sL : subLoops)
       sL->dumpAllMemAccess();
   }
-
-  // void fill(BlockPredicates &bp){
-  // 	for (auto &c : chains)
-  // 	    c.fill(bp);
-  // }
 };

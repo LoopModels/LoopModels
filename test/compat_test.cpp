@@ -1,5 +1,4 @@
 #include "../include/Loops.hpp"
-#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/TestUtilities.hpp"
@@ -40,8 +39,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   tlf.addLoop(std::move(A), 1);
   AffineLoopNest<true> &aff = tlf.alns[0];
   aff.pruneBounds();
-  llvm::errs() << aff << "\n";
-  SHOWLN(aff.A);
+  llvm::errs() << aff << "\naff.A = " << aff.A << "\n";
   // M >= 0 is redundant
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
@@ -62,7 +60,7 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
   AffineLoopNest<true> &aff = tlf.alns[0];
   aff.pruneBounds();
   aff.dump();
-  SHOWLN(aff.A);
+  llvm::errs() << "aff.A = " << aff.A << "\n";
   // we expect J >= 1 to be dropped
   // because J >= i + 1 >= 2
   // because i >= 1
@@ -90,7 +88,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   aff.pruneBounds();
   llvm::errs() << "LessTrival test Bounds pruned:\n";
   aff.dump();
-  SHOWLN(aff.A);
+  llvm::errs() << "aff.A = " << aff.A << "\n";
   EXPECT_EQ(aff.A.numRow(), 3);
   auto loop2Count = countSigns(aff.A, 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);
