@@ -149,9 +149,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>fillLoopBlock</b> (<a
 <tr class="memitem:ac293f44c768cd3f1508dc6bc1c8e360d"><td class="memItemLeft" align="right" valign="top"><a id="ac293f44c768cd3f1508dc6bc1c8e360d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>remark</b> (const llvm::StringRef remarkName, llvm::Loop *L, const llvm::StringRef remarkMessage, llvm::Instruction *I=nullptr)</td></tr>
 <tr class="separator:ac293f44c768cd3f1508dc6bc1c8e360d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afaab8e111f721cf39e94b4b4a8340ef6"><td class="memItemLeft" align="right" valign="top"><a id="afaab8e111f721cf39e94b4b4a8340ef6"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>remark</b> (const llvm::StringRef remarkName, llvm::Function *F, const llvm::StringRef remarkMessage)</td></tr>
-<tr class="separator:afaab8e111f721cf39e94b4b4a8340ef6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -167,6 +164,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDe
 <tr class="memitem:aeb696d6c05f9b16ca2f13da77a291bf3"><td class="memItemLeft" align="right" valign="top"><a id="aeb696d6c05f9b16ca2f13da77a291bf3"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDependentLoops</b> (const llvm::SCEV *S, size_t numPeeled) -&gt; uint64_t</td></tr>
 <tr class="separator:aeb696d6c05f9b16ca2f13da77a291bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8ba0ab9845b194be81ca30b01f2b729e"><td class="memItemLeft" align="right" valign="top"><a id="a8ba0ab9845b194be81ca30b01f2b729e"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>remarkAnalysis</b> (const llvm::StringRef remarkName, llvm::Loop *L, llvm::Instruction *I=nullptr) -&gt; llvm::OptimizationRemarkAnalysis</td></tr>
+<tr class="separator:a8ba0ab9845b194be81ca30b01f2b729e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
