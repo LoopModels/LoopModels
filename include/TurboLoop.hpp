@@ -7,6 +7,7 @@
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
+#include "RemarkAnalysis.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -716,22 +717,6 @@ public:
       fillLoopBlock(*root.subLoops[i]);
   }
 
-  static auto remarkAnalysis(const llvm::StringRef remarkName, llvm::Loop *L,
-                             llvm::Instruction *I = nullptr)
-    -> llvm::OptimizationRemarkAnalysis {
-    llvm::Value *codeRegion = L->getHeader();
-    llvm::DebugLoc DL = L->getStartLoc();
-
-    if (I) {
-      codeRegion = I->getParent();
-      // If there is no debug location attached to the instruction, revert
-      // back to using the loop's.
-      if (I->getDebugLoc())
-        DL = I->getDebugLoc();
-    }
-
-    return {"turbo-loop", remarkName, DL, codeRegion};
-  }
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
   void remark(const llvm::StringRef remarkName, llvm::Loop *L,
               const llvm::StringRef remarkMessage,

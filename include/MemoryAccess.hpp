@@ -106,6 +106,7 @@ auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
     os << *instr;
   os << "\n"
      << m.ref << "\nSchedule Omega: " << m.getFusionOmega()
-     << "\nAffineLoopNest: " << *m.ref.loop;
+     << "\nAffineLoopNest:\n"
+     << *m.ref.loop;
   return os;
 }

@@ -204,7 +204,8 @@ struct ArrayReference {
     return os << "]";
   }
   // use gcd to check if they're known to be independent
-  [[nodiscard]] auto gcdKnownIndependent(const ArrayReference &) const -> bool {
+  [[nodiscard]] constexpr static auto
+  gcdKnownIndependent(const ArrayReference &) -> bool {
     // TODO: handle this!
     // consider `x[2i]` vs `x[2i + 1]`, the former
     // will have a stride of `2`, and the latter of `x[2i+1]`

@@ -1315,13 +1315,13 @@ struct LinearProgramLoopBlock {
     }
     // BitSet
     // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
-    os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):\n";
+    os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
     for (auto &edge : lblock.edges) {
-      os << "\tEdge = " << edge;
+      os << "\n\tEdge = " << edge;
       for (size_t inIndex : edge.in->nodeIndex) {
         const Schedule &sin = lblock.nodes[inIndex].schedule;
-        os << "Schedule In:\nnodeIndex = " << edge.in->nodeIndex
-           << "; ref = " << edge.in->ref << "\ns.getPhi()" << sin.getPhi()
+        os << "Schedule In: nodeIndex = " << edge.in->nodeIndex
+           << "\nref = " << edge.in->ref << "\ns.getPhi()" << sin.getPhi()
            << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }

@@ -112,7 +112,7 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
       if (optDeps) {
         llvm::SmallVector<char, 512> str;
         llvm::raw_svector_ostream os(str);
-        os << "Solved linear program\n:" << loopBlock << "\n";
+        os << "Solved linear program:" << loopBlock << "\n";
         remark("LinearProgramSuccess", forest->getOuterLoop(), os.str());
       } else {
         remark("LinearProgramFailure", forest->getOuterLoop(),

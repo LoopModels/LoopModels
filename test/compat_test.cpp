@@ -2,12 +2,22 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/TestUtilities.hpp"
+#include "Constraints.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <memory>
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(FourierMotzkin, BasicAssertions) {
+  auto A{stringToIntMatrix("[-2 1 0 -1 -1 0; -1 0 1 0 0 -1]")};
+  fourierMotzkinNonNegative(A, 3);
+  auto B{stringToIntMatrix("[-2 1 0 0 -1 0; -1 0 1 0 0 -1]")};
+  llvm::errs() << "A = " << A << "\nB = " << B << "\n";
+  EXPECT_EQ(A, B);
+}
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds, BasicAssertions) {

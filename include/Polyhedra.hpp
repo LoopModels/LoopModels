@@ -5,6 +5,7 @@
 #include "./EmptyArrays.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include "VectorGreatestCommonDivisor.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -137,6 +138,9 @@ struct Polyhedra {
         }
       }
     }
+    if constexpr (hasEqualities)
+      for (size_t i = 0; i < E.numRow(); ++i)
+        normalizeByGCD(E(i, _));
   }
 
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
