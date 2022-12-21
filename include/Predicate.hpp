@@ -144,9 +144,8 @@ struct Intersection {
     uint64_t x = predicates, y = other.predicates;
     // 010000 = 010100 & 010000
     uint64_t intersect = x & y;
-    if (x == intersect || y == intersect) {
+    if (x == intersect || y == intersect)
       return Intersection{intersect};
-    }
     // 011100 = 010100 | 011000
     // 010000 = 010100 & 011000
     // we can't handle (a & b) | (a & !b & c) because
@@ -169,11 +168,10 @@ struct Intersection {
       //  a     |  a & c
       // 010000 | 010001
       uint64_t wz = w & z;
-      if (wz == w) {
+      if (wz == w)
         return std::make_pair(*this, Intersection{z});
-      } else if (wz == z) {
+      else if (wz == z)
         return std::make_pair(Intersection{w}, other);
-      }
     }
     return {};
   }
@@ -299,12 +297,11 @@ struct Set {
   /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
   ///   [(a & b) | (c & d) | (e & f) | (g & h)]
   auto operator|=(const Set &other) -> Set & {
-    if (intersectUnion.empty()) {
+    if (intersectUnion.empty())
       intersectUnion = other.intersectUnion;
-    } else {
+    else
       for (auto &&pred : other.intersectUnion)
         *this |= pred;
-    }
     return *this;
   }
   [[nodiscard]] auto operator|(Intersection other) const & -> Set {
@@ -324,9 +321,9 @@ struct Set {
   auto operator&=(Intersection pred) -> Set & {
     for (size_t i = 0; i < intersectUnion.size();) {
       intersectUnion[i] &= pred;
-      if (intersectUnion[i].isEmpty()) {
+      if (intersectUnion[i].isEmpty())
         intersectUnion.erase(intersectUnion.begin() + i);
-      } else
+      else
         ++i;
     }
     return *this;

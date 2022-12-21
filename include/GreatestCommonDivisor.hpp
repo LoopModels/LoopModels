@@ -6,11 +6,10 @@
 #include <tuple>
 
 [[maybe_unused]] static auto gcd(int64_t x, int64_t y) -> int64_t {
-  if (x == 0) {
+  if (x == 0)
     return std::abs(y);
-  } else if (y == 0) {
+  else if (y == 0)
     return std::abs(x);
-  }
   assert(x != std::numeric_limits<int64_t>::min());
   assert(y != std::numeric_limits<int64_t>::min());
   int64_t a = std::abs(x);

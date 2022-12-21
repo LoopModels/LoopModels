@@ -136,11 +136,10 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   llvm::SmallVector<unsigned> stack;
   size_t index = 0;
   clearVisited(g);
-  for (auto v : g.vertexIds()) {
+  for (auto v : g.vertexIds())
     if (!g.wasVisited(v))
       index =
         strongConnect(g, components, stack, indexLowLinkOnStack, index, v);
-  }
   return components;
 }
 

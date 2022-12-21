@@ -205,9 +205,8 @@ public:
               // reinsert last tree
               branches.push_back(lastTree);
             }
-            if (i + 1 < numSubLoops) {
+            if (i + 1 < numSubLoops)
               H = subLoops[i + 1]->getLoopPreheader();
-            }
           }
           // for the next loop, we'll want a path to its preheader
           // from this loop's exit block.
@@ -215,12 +214,10 @@ public:
           // `depth == 0` indicates failure, therefore we need to
           // split loops
           anyFail = true;
-          if (branches.size()) {
+          if (branches.size())
             split(branches, branchBlocks, H, L);
-          }
-          if (i + 1 < numSubLoops) {
+          if (i + 1 < numSubLoops)
             H = subLoops[i + 1]->getLoopPreheader();
-          }
         }
       }
       if (!anyFail) {

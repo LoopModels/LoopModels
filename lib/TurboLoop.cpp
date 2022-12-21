@@ -76,9 +76,8 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   if (loopForests.empty())
     return llvm::PreservedAnalyses::all();
 
-  for (auto forest : loopForests) {
+  for (auto forest : loopForests)
     forest->dump();
-  }
   // first, we try and parse the function to find sets of loop nests
   // then we search for sets of fusile loops
 

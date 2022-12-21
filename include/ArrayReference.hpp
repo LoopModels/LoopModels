@@ -98,9 +98,8 @@ struct ArrayReference {
   }
   /// initialize alignment from an elSize SCEV.
   static auto typeAlignment(const llvm::SCEV *S) -> llvm::Align {
-    if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S)) {
+    if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S))
       return llvm::Align(C->getAPInt().getZExtValue());
-    }
     return llvm::Align{1};
   }
   ArrayReference(const llvm::SCEVUnknown *basePointer,

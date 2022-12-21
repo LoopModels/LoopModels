@@ -80,9 +80,8 @@ TEST(V2Matrix, BasicAssertions) {
   auto NScol = NS.numCol();
   auto offset = Vt.numRow() - NS.numRow();
   for (size_t i = 0; i < NSrow; ++i)
-    for (size_t j = 0; j < NScol; ++j) {
+    for (size_t j = 0; j < NScol; ++j)
       EXPECT_EQ(NS(i, j), Vt(offset + i, j));
-    }
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)

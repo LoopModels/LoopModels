@@ -36,11 +36,10 @@ printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
           }
         }
         if (Acv != 1) {
-          if (Acv == -1) {
+          if (Acv == -1)
             os << "-";
-          } else {
+          else
             os << Acv;
-          }
         }
         os << "v_" << v - numSyms;
         hasPrinted = true;
@@ -48,11 +47,10 @@ printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
     }
     if (!hasPrinted)
       os << '0';
-    if (inequality) {
+    if (inequality)
       os << (allVarNonNegative ? " >= " : " <= ");
-    } else {
+    else
       os << " == ";
-    }
     os << A(c, 0);
     for (size_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A(c, v)) {
@@ -314,15 +312,13 @@ constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
       }
       if (allZero) {
         eraseConstraint(A, c);
-        if (posCount) {
-          if (negCount) {
+        if (posCount)
+          if (negCount)
             --numRows;
-          } else {
+          else
             --i;
-          }
-        } else {
+        else
           --j;
-        }
       }
     }
     if (posCount == 0) // last posCount not overwritten, so we erase
@@ -379,11 +375,10 @@ constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
       }
       if (allZero) {
         eraseConstraint(A, c);
-        if (negCount) {
+        if (negCount)
           --numRows;
-        } else {
+        else
           --i;
-        }
       }
     }
   }

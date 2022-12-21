@@ -107,11 +107,10 @@ struct Rational {
     -> std::optional<Rational> {
     auto [xd, yn] = divgcd(denominator, y);
     int64_t n;
-    if (__builtin_mul_overflow(numerator, yn, &n)) {
+    if (__builtin_mul_overflow(numerator, yn, &n))
       return {};
-    } else {
+    else
       return Rational{n, xd};
-    }
   }
   [[nodiscard]] constexpr auto safeMul(Rational y) const
     -> std::optional<Rational> {
@@ -121,11 +120,10 @@ struct Rational {
       int64_t n, d;
       bool o1 = __builtin_mul_overflow(xn, yn, &n);
       bool o2 = __builtin_mul_overflow(xd, yd, &d);
-      if (o1 | o2) {
+      if (o1 | o2)
         return {};
-      } else {
+      else
         return Rational{n, d};
-      }
     } else {
       return Rational{0, 1};
     }
@@ -241,9 +239,8 @@ struct Rational {
   friend auto operator<<(llvm::raw_ostream &os, const Rational &x)
     -> llvm::raw_ostream & {
     os << x.numerator;
-    if (x.denominator != 1) {
+    if (x.denominator != 1)
       os << " // " << x.denominator;
-    }
     return os;
   }
   void dump() const { llvm::errs() << *this << "\n"; }

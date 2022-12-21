@@ -1191,17 +1191,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
     const auto &v = iOuterLoopNest.nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory) {
+    for (auto m : v.memory)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors) {
+    for (auto m : v.inNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors) {
+    for (auto m : v.outNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\n";
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
@@ -1279,17 +1276,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
     const auto &v = jOuterLoopNest.nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory) {
+    for (auto m : v.memory)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors) {
+    for (auto m : v.inNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors) {
+    for (auto m : v.outNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\n";
   }
   IntMatrix optS(2);
@@ -1306,13 +1300,12 @@ TEST(MeanStDevTest0, BasicAssertions) {
       SHOWLN(s.getPhi());
       SHOWLN(s.getFusionOmega());
       SHOWLN(s.getOffsetOmega());
-      if (s.getNumLoops() == 1) {
+      if (s.getNumLoops() == 1)
         EXPECT_EQ(s.getPhi()(0, 0), 1);
-      } else if (s.getFusionOmega()(1) < 3) {
+      else if (s.getFusionOmega()(1) < 3)
         EXPECT_EQ(s.getPhi(), optSinnerUndef);
-      } else {
+      else
         EXPECT_EQ(s.getPhi(), optS);
-      }
     }
   }
 }
@@ -1491,17 +1484,14 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
     const auto &v = loopBlock.nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory) {
+    for (auto m : v.memory)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors) {
+    for (auto m : v.inNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors) {
+    for (auto m : v.outNeighbors)
       llvm::errs() << m << ", ";
-    }
     llvm::errs() << "\n";
   }
   IntMatrix optPhi(2, 2);

@@ -155,11 +155,10 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
     uint64_t dd = data[d];
     if (b == ((dd & mask) != 0))
       return;
-    if (b) {
+    if (b)
       data[d] = dd | mask;
-    } else {
+    else
       data[d] = dd & (~mask);
-    }
   }
 
   struct Reference {
@@ -261,11 +260,10 @@ struct BitSet64 {
     constexpr operator bool() const { return (u >> i) != 0; }
     void operator=(bool b) {
       uint64_t flag = uint64_t(1) << i;
-      if (b) {
+      if (b)
         u |= flag;
-      } else {
+      else
         u &= ~flag;
-      }
       return;
     }
   };

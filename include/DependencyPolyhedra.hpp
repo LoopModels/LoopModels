@@ -1229,11 +1229,10 @@ struct Dependence {
   friend auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
-    if (d.forward) {
+    if (d.forward)
       os << "x -> y:";
-    } else {
+    else
       os << "y -> x:";
-    }
     os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
        << "\nSchedule Constraints:" << d.dependenceSatisfaction
        << "\nBounding Constraints:" << d.dependenceBounding;

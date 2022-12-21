@@ -1126,10 +1126,9 @@ template <typename T> struct StridedVector {
   auto operator==(StridedVector<T> x) const -> bool {
     if (size() != x.size())
       return false;
-    for (size_t i = 0; i < size(); ++i) {
+    for (size_t i = 0; i < size(); ++i)
       if ((*this)[i] != x[i])
         return false;
-    }
     return true;
   }
   constexpr auto view() const -> StridedVector<T> { return *this; }
@@ -1653,11 +1652,10 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   }
 };
 template <typename T> constexpr auto ptrVector(T *p, size_t M) {
-  if constexpr (std::is_const_v<T>) {
+  if constexpr (std::is_const_v<T>)
     return PtrVector<std::remove_const_t<T>>{.mem = p, .N = M};
-  } else {
+  else
     return MutPtrVector<T>{p, M};
-  }
 }
 
 template <typename T> PtrMatrix(T *, size_t, size_t) -> PtrMatrix<T>;
@@ -1987,9 +1985,8 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
   }
   static auto identity(size_t MM) -> Matrix<T, 0, 0, S> {
     Matrix<T, 0, 0, S> A(MM, MM);
-    for (size_t i = 0; i < MM; ++i) {
+    for (size_t i = 0; i < MM; ++i)
       A(i, i) = 1;
-    }
     return A;
   }
   inline static auto identity(Row N) -> Matrix<T, 0, 0, S> {
@@ -2143,9 +2140,8 @@ auto printVectorImpl(llvm::raw_ostream &os, const AbstractVector auto &a)
   os << "[ ";
   if (size_t M = a.size()) {
     os << a[0];
-    for (size_t m = 1; m < M; m++) {
+    for (size_t m = 1; m < M; m++)
       os << ", " << a[m];
-    }
   }
   os << " ]";
   return os;
@@ -2196,9 +2192,8 @@ inline void swap(MutPtrMatrix<int64_t> A, Row i, Row j) {
     std::swap(A(i, n), A(j, n));
 }
 inline void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
-  if (i == j) {
+  if (i == j)
     return;
-  }
   Row M = A.numRow();
   assert((i < A.numCol()) && (j < A.numCol()));
 
@@ -2334,30 +2329,26 @@ auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
   if (!m)
     return os << "[ ]";
   for (size_t i = 0; i < m; i++) {
-    if (i) {
+    if (i)
       os << "  ";
-    } else {
+    else
       os << "\n[ ";
-    }
     if (size_t(n)) {
       for (size_t j = 0; j < n - 1; j++) {
         auto Aij = A(i, j);
-        if (Aij >= 0) {
+        if (Aij >= 0)
           os << " ";
-        }
         os << Aij << " ";
       }
     }
     if (n) {
       auto Aij = A(i, n - 1);
-      if (Aij >= 0) {
+      if (Aij >= 0)
         os << " ";
-      }
       os << Aij;
     }
-    if (i != m - 1) {
+    if (i != m - 1)
       os << "\n";
-    }
   }
   os << " ]";
   return os;
