@@ -461,11 +461,10 @@ struct AffineLoopNest
         // predicates);
         if (const llvm::SCEV *BTP = getBackedgeTakenCount(SE, P)) {
           llvm::errs() << "BackedgeTakenCount: " << *BTP << "\n";
-          if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP)) {
+          if (!llvm::isa<llvm::SCEVCouldNotCompute>(BTP))
             return addBackedgeTakenCount(B, P, BTP, SE, minDepth);
-          } else {
+          else
             llvm::errs() << "SCEVCouldNotCompute from loop: " << *P << "\n";
-          }
         }
       } else {
         llvm::errs() << "Fail because symbols are not loop invariant in loop:\n"
@@ -676,11 +675,10 @@ struct AffineLoopNest
     ret.second.resizeForOverwrite(numPos, A.numCol());
     size_t negCount = 0;
     size_t posCount = 0;
-    for (size_t j = 0; j < A.numRow(); ++j) {
+    for (size_t j = 0; j < A.numRow(); ++j)
       if (int64_t Aji = A(j, i))
         (Aji < 0 ? ret.first : ret.second)(Aji < 0 ? negCount++ : posCount++,
                                            _) = A(j, _);
-    }
     return ret;
   }
   auto getBounds(PtrVector<unsigned> x)
@@ -821,11 +819,10 @@ struct AffineLoopNest
         if (k == i)
           continue;
         if (int64_t lakj = A(j, k + numConst)) {
-          if (lakj * sign > 0) {
+          if (lakj * sign > 0)
             os << " - ";
-          } else if (printed) {
+          else if (printed)
             os << " + ";
-          }
           lakj = std::abs(lakj);
           if (lakj != 1)
             os << lakj << "*";

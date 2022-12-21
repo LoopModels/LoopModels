@@ -73,11 +73,9 @@ struct MergingCost {
     auto *set = alloc.Allocate<llvm::SmallPtrSet<Instruction *, 16>>();
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
-    for (auto *op : key->operands) {
-      if (auto f = ancestorMap.find(op); f != ancestorMap.end()) {
+    for (auto *op : key->operands)
+      if (auto f = ancestorMap.find(op); f != ancestorMap.end())
         set->insert(f->second->begin(), f->second->end());
-      }
-    }
     ancestorMap[key] = set;
     return set;
   }
@@ -262,9 +260,8 @@ struct MergingCost {
         }
       }
       // we couldn't find any candidates
-      if (!merged) {
+      if (!merged)
         selector.select(i, opA, opB);
-      }
     }
     return selector;
   };
@@ -361,9 +358,8 @@ void mergeInstructions(
     // invalidation, we use an indexed loop
     for (size_t i = 0; i < numMerges; ++i) {
       MergingCost *C = mergingCosts[i];
-      if (C->getAncestors(I)->contains(other)) {
+      if (C->getAncestors(I)->contains(other))
         continue;
-      }
       // we shouldn't have to check the opposite condition
       // if (C->getAncestors(other)->contains(I))
       // because we are traversing in topological order

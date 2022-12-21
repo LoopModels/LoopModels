@@ -572,11 +572,10 @@ struct LinearProgramLoopBlock {
       bool g1ContainsNodeOut = g1.nodeIds.contains(nodeOut);
       if (!(g0ContainsNodeOut || g1ContainsNodeOut))
         return false;
-      for (auto nodeIn : e.in->nodeIndex) {
+      for (auto nodeIn : e.in->nodeIndex)
         if ((g0ContainsNodeOut && g1.nodeIds.contains(nodeIn)) ||
             (g1ContainsNodeOut && g0.nodeIds.contains(nodeIn)))
           return true;
-      }
     }
     return false;
   }
@@ -964,9 +963,8 @@ struct LinearProgramLoopBlock {
 #ifndef NDEBUG
     if (depth & 1) {
       bool allZero = true;
-      for (auto &s : sol) {
+      for (auto &s : sol)
         allZero &= (s == 0);
-      }
       if (allZero)
         SHOWLN(omniSimplex);
       assert(!allZero);
@@ -1174,11 +1172,10 @@ struct LinearProgramLoopBlock {
         continue;
       countAuxParamsAndConstraints(sg, d);
       setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet<>> sat = optimizeLevel(sg, d)) {
+      if (std::optional<BitSet<>> sat = optimizeLevel(sg, d))
         satDeps |= *sat;
-      } else {
+      else
         return {}; // give up
-      }
     }
     int64_t unfusedOffset = 0;
     // For now, just greedily try and fuse from top down

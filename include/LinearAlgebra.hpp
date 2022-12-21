@@ -50,11 +50,10 @@ struct LU {
         for (size_t k = m + 1; k < M; ++k)
           if (Ymn.fnmadd(F(m, k), rhs(k, n)))
             return true;
-        if (auto div = Ymn.safeDiv(F(m, m))) {
+        if (auto div = Ymn.safeDiv(F(m, m)))
           rhs(m, n) = *div;
-        } else {
+        else
           return true;
-        }
       }
     }
     return false;
@@ -78,11 +77,10 @@ struct LU {
         for (size_t k = 0; k < n; ++k)
           if (Ymn.fnmadd(rhs(m, k), F(k, n)))
             return true;
-        if (auto div = Ymn.safeDiv(F(n, n))) {
+        if (auto div = Ymn.safeDiv(F(n, n)))
           rhs(m, n) = *div;
-        } else {
+        else
           return true;
-        }
       }
     }
     // x L = y
@@ -127,12 +125,10 @@ struct LU {
   [[nodiscard]] auto perm() const -> llvm::SmallVector<unsigned> {
     Col M = F.numCol();
     llvm::SmallVector<unsigned> perm;
-    for (size_t m = 0; m < M; ++m) {
+    for (size_t m = 0; m < M; ++m)
       perm.push_back(m);
-    }
-    for (size_t m = 0; m < M; ++m) {
+    for (size_t m = 0; m < M; ++m)
       std::swap(perm[m], perm[ipiv[m]]);
-    }
     return perm;
   }
   static auto fact(const SquareMatrix<int64_t> &B) -> std::optional<LU> {
@@ -141,9 +137,8 @@ struct LU {
     for (size_t m = 0; m < M * M; ++m)
       A[m] = B[m];
     llvm::SmallVector<unsigned> ipiv(M);
-    for (size_t i = 0; i < M; ++i) {
+    for (size_t i = 0; i < M; ++i)
       ipiv[i] = i;
-    }
     for (size_t k = 0; k < M; ++k) {
       size_t kp = k;
       for (; kp < M; ++kp) {
@@ -152,17 +147,15 @@ struct LU {
           break;
         }
       }
-      if (kp != k) {
+      if (kp != k)
         for (size_t j = 0; j < M; ++j)
           std::swap(A(kp, j), A(k, j));
-      }
       Rational Akkinv = A(k, k).inv();
-      for (size_t i = k + 1; i < M; ++i) {
+      for (size_t i = k + 1; i < M; ++i)
         if (std::optional<Rational> Aik = A(i, k).safeMul(Akkinv))
           A(i, k) = *Aik;
         else
           return {};
-      }
       for (size_t j = k + 1; j < M; ++j) {
         for (size_t i = k + 1; i < M; ++i) {
           if (std::optional<Rational> Aikj = A(i, k).safeMul(A(k, j))) {

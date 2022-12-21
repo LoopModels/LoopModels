@@ -165,9 +165,8 @@ struct Instruction {
 
   void setOperands(llvm::MutableArrayRef<Instruction *> ops) {
     operands = ops;
-    for (auto op : ops) {
+    for (auto op : ops)
       op->users.insert(this);
-    }
   }
 
   static auto getIdentifier(llvm::Instruction *I) -> Identifier {
@@ -183,15 +182,14 @@ struct Instruction {
     return I->getValueAPF().convertToDouble();
   }
   static auto getIdentifier(llvm::Value *v) -> std::optional<Identifier> {
-    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v)) {
+    if (auto *i = llvm::dyn_cast<llvm::Instruction>(v))
       return getIdentifier(i);
-    } else if (auto *i = llvm::dyn_cast<llvm::ConstantInt>(v)) {
+    else if (auto *i = llvm::dyn_cast<llvm::ConstantInt>(v))
       return getIdentifier(i);
-    } else if (auto *i = llvm::dyn_cast<llvm::ConstantFP>(v)) {
+    else if (auto *i = llvm::dyn_cast<llvm::ConstantFP>(v))
       return getIdentifier(i);
-    } else {
+    else
       return std::nullopt;
-    }
   }
   [[nodiscard]] auto getOpType() const -> std::pair<Intrinsic, llvm::Type *> {
     if (auto i = getIntrinsic())
@@ -595,9 +593,8 @@ struct Instruction {
     size_t numOps = isStore ? 1 : instr->getNumOperands();
     auto **operands = alloc.Allocate<Instruction *>(numOps);
     Instruction **p = operands;
-    for (; OI != OE; ++OI, ++p) {
+    for (; OI != OE; ++OI, ++p)
       *p = cache.getInstruction(alloc, *OI);
-    }
     return {operands, numOps};
   }
   [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
@@ -614,9 +611,8 @@ struct Instruction {
     size_t Nops = isStore ? 1 : instr->getNumOperands();
     auto **operands = alloc.Allocate<Instruction *>(Nops);
     Instruction **p = operands;
-    for (; OI != OE; ++OI, ++p) {
+    for (; OI != OE; ++OI, ++p)
       *p = cache.getInstruction(alloc, BBpreds, *OI);
-    }
     return {operands, Nops};
   }
   static auto createIsolated(llvm::BumpPtrAllocator &alloc,
@@ -632,11 +628,10 @@ struct Instruction {
       // !x where `x isa bool` is represented as `x ^ true`
       auto *op0 = getOperand(0);
       auto *op1 = getOperand(1);
-      if (op1->isConstantOneInt()) {
+      if (op1->isConstantOneInt())
         return op0;
-      } else if (op0->isConstantOneInt()) {
+      else if (op0->isConstantOneInt())
         return op1;
-      }
     }
     Instruction *one = cache.getConstant(alloc, getType(), 1);
     Identifier Xor = Intrinsic(Intrinsic::OpCode{llvm::Instruction::Xor});
@@ -959,13 +954,12 @@ struct Instruction {
       return llvm::Align{};
     }
     auto operator()(llvm::Value *v) -> llvm::Align {
-      if (auto load = llvm::dyn_cast_or_null<llvm::LoadInst>(v)) {
+      if (auto load = llvm::dyn_cast_or_null<llvm::LoadInst>(v))
         return load->getAlign();
-      } else if (auto store = llvm::dyn_cast_or_null<llvm::StoreInst>(v)) {
+      else if (auto store = llvm::dyn_cast_or_null<llvm::StoreInst>(v))
         return store->getAlign();
-      } else {
+      else
         return {};
-      }
     }
     auto operator()(ArrayReference *ref) const -> llvm::Align {
       return ref->getAlign();
@@ -1024,13 +1018,12 @@ struct Instruction {
   [[nodiscard]] auto calculateCost(llvm::TargetTransformInfo &TTI,
                                    unsigned int vectorWidth)
     -> RecipThroughputLatency {
-    if (Optional<const Intrinsic *> id = getIntrinsic()) {
+    if (Optional<const Intrinsic *> id = getIntrinsic())
       return calculateCost(*id, TTI, vectorWidth);
-    } else if (auto *F = getFunction()) {
+    else if (auto *F = getFunction())
       return calcCallCost(TTI, F, vectorWidth);
-    } else {
+    else
       return {};
-    }
   }
   [[nodiscard]] auto calculateCost(Intrinsic id, llvm::TargetTransformInfo &TTI,
                                    unsigned int vectorWidth)

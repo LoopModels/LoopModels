@@ -245,22 +245,20 @@ struct Simplex {
         // close-open and close-close are out, open-open is in
         for (ptrdiff_t v = 1; v < numVar; ++v) {
           if (int64_t Ccv = C(c, v)) {
-            if (((basicCons[v] == -2) && (Ccv > 0))) {
+            if (((basicCons[v] == -2) && (Ccv > 0)))
               basicCons[v] = c;
-            } else {
+            else
               basicCons[v] = -1;
-            }
           }
         }
       } else {
         Ceq *= -1;
         for (ptrdiff_t v = 1; v < numVar; ++v) {
           if (int64_t Ccv = -C(c, v)) {
-            if (((basicCons[v] == -2) && (Ccv > 0))) {
+            if (((basicCons[v] == -2) && (Ccv > 0)))
               basicCons[v] = c;
-            } else {
+            else
               basicCons[v] = -1;
-            }
             C(c, v) = Ccv;
           }
         }

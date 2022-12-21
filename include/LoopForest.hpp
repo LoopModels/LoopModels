@@ -70,11 +70,10 @@ struct LoopTree {
 
   friend auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
-    if (tree.loop) {
+    if (tree.loop)
       os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
-    } else {
+    else
       os << "top-level:\n";
-    }
     for (auto branch : tree.subLoops)
       os << *branch;
     return os << "\n";

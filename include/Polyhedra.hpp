@@ -87,11 +87,10 @@ struct Polyhedra {
       C(LinearSymbolicComparator::construct(A)){};
 
   inline void initializeComparator() {
-    if constexpr (NonNegative) {
+    if constexpr (NonNegative)
       C.initNonNegative(A, E, getNumDynamic());
-    } else {
+    else
       C.init(A, E);
-    }
   }
   auto calcIsEmpty() -> bool { return C.isEmpty(); }
   void pruneBounds() {

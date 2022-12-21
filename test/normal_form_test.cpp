@@ -112,9 +112,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
                              included)
     << "\n";
   EXPECT_EQ(included.size(), 4);
-  for (size_t i = 0; i < 4; ++i) {
+  for (size_t i = 0; i < 4; ++i)
     EXPECT_EQ(included[i], i);
-  }
   for (size_t n = 0; n < 4; ++n) {
     size_t m = 0;
     for (auto mb : included) {
@@ -133,14 +132,12 @@ auto isHNF(PtrMatrix<int64_t> A) -> bool {
   size_t l = 0;
   for (size_t m = 0; m < M; ++m) {
     // all entries must be 0
-    for (size_t n = 0; n < l; ++n) {
+    for (size_t n = 0; n < l; ++n)
       if (A(m, n))
         return false;
-    }
     // now search for next lead
-    while ((l < N) && A(m, l) == 0) {
+    while ((l < N) && A(m, l) == 0)
       ++l;
-    }
     if (l == N)
       continue;
     int64_t Aml = A(m, l);
@@ -178,9 +175,8 @@ TEST(Hermite, BasicAssertions) {
     EXPECT_TRUE(isHNF(H));
     EXPECT_TRUE(H == U * A4x3);
 
-    for (size_t i = 0; i < 3; ++i) {
+    for (size_t i = 0; i < 3; ++i)
       A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
-    }
     llvm::errs() << "\n\n\n=======\n\nA=\n" << A4x3 << "\n";
     auto [H2, U2] = NormalForm::hermite(A4x3);
     llvm::errs() << "H=\n" << H2 << "\nU=\n" << U2 << "\n";
