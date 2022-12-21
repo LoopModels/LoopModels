@@ -1271,13 +1271,13 @@ $(function() {
 <div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;    }</div>
 <div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;    <span class="comment">// BitSet</span></div>
 <div class="line"><a name="l01317"></a><span class="lineno"> 1317</span>&#160;    <span class="comment">// memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};</span></div>
-<div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges (#edges = &quot;</span> &lt;&lt; lblock.edges.size() &lt;&lt; <span class="stringliteral">&quot;):\n&quot;</span>;</div>
+<div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges (#edges = &quot;</span> &lt;&lt; lblock.edges.size() &lt;&lt; <span class="stringliteral">&quot;):&quot;</span>;</div>
 <div class="line"><a name="l01319"></a><span class="lineno"> 1319</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;edge : lblock.edges) {</div>
-<div class="line"><a name="l01320"></a><span class="lineno"> 1320</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\tEdge = &quot;</span> &lt;&lt; edge;</div>
+<div class="line"><a name="l01320"></a><span class="lineno"> 1320</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
 <div class="line"><a name="l01321"></a><span class="lineno"> 1321</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> inIndex : edge.in-&gt;nodeIndex) {</div>
 <div class="line"><a name="l01322"></a><span class="lineno"> 1322</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;sin = lblock.nodes[inIndex].schedule;</div>
-<div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Schedule In:\nnodeIndex = &quot;</span> &lt;&lt; edge.in-&gt;nodeIndex</div>
-<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;; ref = &quot;</span> &lt;&lt; edge.in-&gt;ref &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi()&quot;</span> &lt;&lt; sin.getPhi()</div>
+<div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Schedule In: nodeIndex = &quot;</span> &lt;&lt; edge.in-&gt;nodeIndex</div>
+<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\nref = &quot;</span> &lt;&lt; edge.in-&gt;ref &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi()&quot;</span> &lt;&lt; sin.getPhi()</div>
 <div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getFusionOmega() = &quot;</span> &lt;&lt; sin.getFusionOmega()</div>
 <div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;           &lt;&lt; <span class="stringliteral">&quot;\ns.getOffsetOmega() = &quot;</span> &lt;&lt; sin.getOffsetOmega();</div>
 <div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;      }</div>

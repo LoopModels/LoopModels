@@ -261,14 +261,15 @@ $(function() {
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;]&quot;</span>;</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;  }</div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;  <span class="comment">// use gcd to check if they&#39;re known to be independent</span></div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> gcdKnownIndependent(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="comment">// TODO: handle this!</span></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="comment">// consider `x[2i]` vs `x[2i + 1]`, the former</span></div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="comment">// will have a stride of `2`, and the latter of `x[2i+1]`</span></div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <span class="comment">// Additionally, in the future, we do</span></div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  }</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;};</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  [[nodiscard]] constexpr <span class="keyword">static</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  gcdKnownIndependent(<span class="keyword">const</span> <a class="code" href="structArrayReference.html">ArrayReference</a> &amp;) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="comment">// TODO: handle this!</span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="comment">// consider `x[2i]` vs `x[2i + 1]`, the former</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    <span class="comment">// will have a stride of `2`, and the latter of `x[2i+1]`</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="comment">// Additionally, in the future, we do</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;  }</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;};</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructArrayReference_html"><div class="ttname"><a href="structArrayReference.html">ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:25</div></div>
 <div class="ttc" id="astructArrayReference_html_a8d40893e36897a4d7251fc6699d93c84"><div class="ttname"><a href="structArrayReference.html#a8d40893e36897a4d7251fc6699d93c84">ArrayReference::typeAlignment</a></div><div class="ttdeci">static auto typeAlignment(const llvm::SCEV *S) -&gt; llvm::Align</div><div class="ttdoc">initialize alignment from an elSize SCEV.</div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:100</div></div>
