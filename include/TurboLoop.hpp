@@ -23,6 +23,7 @@
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
+#include <llvm/Analysis/OptimizationRemarkEmitter.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
@@ -86,6 +87,7 @@ public:
   [[no_unique_address]] const llvm::TargetTransformInfo *TTI;
   [[no_unique_address]] llvm::LoopInfo *LI;
   [[no_unique_address]] llvm::ScalarEvolution *SE;
+  [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
   [[no_unique_address]] llvm::BumpPtrAllocator allocator;
   [[no_unique_address]] Instruction::Cache instrCache;
@@ -813,6 +815,36 @@ public:
       fillLoopBlock(*root.subLoops[i]);
   }
 
+  // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932
+  void remark(const llvm::StringRef remarkName, llvm::Loop *L,
+              const llvm::StringRef remarkMessage,
+              llvm::Instruction *I = nullptr) {
+    llvm::Value *codeRegion = L->getHeader();
+    llvm::DebugLoc DL = L->getStartLoc();
+
+    if (I) {
+      codeRegion = I->getParent();
+      // If there is no debug location attached to the instruction, revert back
+      // to using the loop's.
+      if (I->getDebugLoc())
+        DL = I->getDebugLoc();
+    }
+
+    llvm::OptimizationRemarkAnalysis analysis{"turbo-loop", remarkName, DL,
+                                              codeRegion};
+
+    ORE->emit(analysis << remarkMessage);
+  }
+  void remark(const llvm::StringRef remarkName, llvm::Function *F,
+              const llvm::StringRef remarkMessage) {
+    llvm::Instruction *codeRegion = &*F->begin()->begin();
+    llvm::DebugLoc DL = codeRegion->getDebugLoc();
+
+    llvm::OptimizationRemarkAnalysis analysis{"turbo-loop", remarkName, DL,
+                                              codeRegion};
+
+    ORE->emit(analysis << remarkMessage);
+  }
   // void buildInstructionGraph(LoopTree &root) {
   //     // predicates
   // }

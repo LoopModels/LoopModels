@@ -1,7 +1,6 @@
 #include "../include/TurboLoop.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/LoopForest.hpp"
-#include "../include/Loops.hpp"
 #include "../include/Macro.hpp"
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -11,6 +10,7 @@
 #include <llvm/Analysis/Delinearization.h>
 #include <llvm/Analysis/LoopInfo.h>
 #include <llvm/Analysis/LoopNestAnalysis.h>
+#include <llvm/Analysis/OptimizationRemarkEmitter.h>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
@@ -18,6 +18,7 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DataLayout.h>
+#include <llvm/IR/DiagnosticInfo.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/InstrTypes.h>
@@ -25,6 +26,8 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/PassManager.h>
+#include <llvm/Pass.h>
+#include <llvm/Passes/OptimizationLevel.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/PassPlugin.h>
 #include <llvm/Support/Casting.h>
@@ -55,8 +58,6 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   llvm::errs() << "DataLayout: "
                << F.getParent()->getDataLayout().getStringRepresentation()
                << "\n";
-  llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0) << "\n";
-  llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1) << "\n";
 
   for (size_t i = 0; i < 5; ++i) {
     size_t w = 1 << i;
@@ -70,6 +71,19 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
 
   LI = &FAM.getResult<llvm::LoopAnalysis>(F);
   SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
+  ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);
+
+  remark("ScalarRegisterCount", &F,
+         "there are " + std::to_string(TTI->getNumberOfRegisters(0)) +
+           " scalar registers");
+
+  remark("VectorRegisterCount", &F,
+         "there are " + std::to_string(TTI->getNumberOfRegisters(1)) +
+           " vector registers");
+  // llvm::errs() << "Scalar registers: " << TTI->getNumberOfRegisters(0) <<
+  // "\n"; llvm::errs() << "Vector registers: " << TTI->getNumberOfRegisters(1)
+  // << "\n";
+
   // Builds the loopForest, constructing predicate chains and loop nests
   initializeLoopForest();
   SHOWLN(loopForests.size());
