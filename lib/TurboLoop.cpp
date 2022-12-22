@@ -54,24 +54,8 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
   // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
   // llvm::DominatorTree &DT = FAM.getResult<llvm::DominatorTreeAnalysis>(F);
-  // ClassID 0: ScalarRC
-  // ClassID 1: RegisterRC
   // TLI = &FAM.getResult<llvm::TargetLibraryAnalysis>(F);
   TTI = &FAM.getResult<llvm::TargetIRAnalysis>(F);
-  // llvm::errs() << "DataLayout: "
-  //              << F.getParent()->getDataLayout().getStringRepresentation()
-  //              << "\n";
-
-  // for (size_t i = 0; i < 5; ++i) {
-  //   size_t w = 1 << i;
-  //   llvm::errs() << "Vector width: " << w << "\nfadd cost: "
-  //                << TTI->getArithmeticInstrCost(
-  //                     llvm::Instruction::FAdd,
-  //                     llvm::FixedVectorType::get(
-  //                       llvm::Type::getDoubleTy(F.getContext()), w))
-  //                << "\n";
-  // }
-
   LI = &FAM.getResult<llvm::LoopAnalysis>(F);
   SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
   ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);

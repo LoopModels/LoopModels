@@ -52,9 +52,9 @@ if get_option('test')
       test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch' / f + '.hpp')
       test(f, test_exe)
     endforeach
-    turbo_dep = declare_dependency(dependencies : [turbo_module])
-    remark_test_exe = executable('remarks_test', 'test' / 'remarks_test.cpp', dependencies : [gtest_dep,turbo_dep], include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
-    test('remarks_test', remark_test_exe)
+    
+    remark_test_exe = executable('remarks_test', 'test' / 'remarks_test.cpp', include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+    test('remarks_test', remark_test_exe, depends: [turbo_module], args: [turbo_module.full_path(), meson.source_root() / 'test' / 'examples'])
   endif
 endif
 
