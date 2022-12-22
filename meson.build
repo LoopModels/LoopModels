@@ -20,7 +20,7 @@ debug_args = ['-Wall', '-Wextra', '-Wpedantic']
 
 # require clang for pch, as clang's pch should be clangd-compatible
 # if meson.get_compiler('cpp').get_id() == 'clang'
-shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/turbo.hpp')
+turbo_module = shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch/turbo.hpp')
 # else
 #   shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
 # endif
@@ -29,6 +29,10 @@ shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : llvm_dep, include
 if get_option('test')
   gtest_dep = dependency('gtest', main : true, fallback : ['gtest', 'gtest_main_dep'])
   if gtest_dep.found()
+    if get_option('testremarks')
+      remark_test_exe = executable('remarks_test', 'test' / 'remarks_test.cpp', include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+      test('remarks_test', remark_test_exe, depends: [turbo_module], args: [turbo_module.full_path(), meson.source_root() / 'test' / 'examples'])
+    endif
     testdeps = [gtest_dep, llvm_dep]
 
     test_files = [

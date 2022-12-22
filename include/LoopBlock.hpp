@@ -15,6 +15,7 @@
 #include <iterator>
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/User.h>
@@ -644,10 +645,8 @@ struct LinearProgramLoopBlock {
       }
     }
     if (tryOrth) {
-      if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth)) {
-        llvm::errs() << "orth opt succeeded!\n";
+      if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth))
         return opt;
-      }
       for (auto &&n : nodes)
         n.rank = 0;
     }
@@ -966,7 +965,7 @@ struct LinearProgramLoopBlock {
       for (auto &s : sol)
         allZero &= (s == 0);
       if (allZero)
-        SHOWLN(omniSimplex);
+        llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
       assert(!allZero);
     }
 #endif
@@ -1018,16 +1017,9 @@ struct LinearProgramLoopBlock {
     }
   }
   [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
-    // TODO: once `std::ranges::reverse_view` works on up to date Linux
-    // distros like Arch and Fedora, use a range based for loop. Currently,
-    // applying the automatic fix:
-    // for (int64_t it : std::ranges::reverse_view(x))
-    // won't compile. There is a deduction failure.
-    // Possibly fixable by defining more PtrVector methods.
-    // NOLINTNEXTLINE(modernize-loop-convert)
-    for (auto it = x.rbegin(); it != x.rend(); ++it)
-      if (*it)
-        return 2 * (*it > 0) - 1;
+    for (int64_t it : llvm::reverse(x))
+      if (it)
+        return 2 * (it > 0) - 1;
     return 0;
   }
   void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
@@ -1108,24 +1100,6 @@ struct LinearProgramLoopBlock {
       node.schedule.getOffsetOmega()(depth) = 0;
       MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
       phi(depth, _) = std::numeric_limits<int64_t>::min();
-      // llvm::SmallVector<uint64_t> indexMasks;
-      // if (depth) {
-      //     A = phi(_(0, depth), _).transpose();
-      //     NormalForm::nullSpace11(N, A);
-      //     // we check array references to see if we can find one index
-      //     // uint64_t nullMask = nonZeroMask(N);
-      //     // for (MemoryAccess *mem : g.mem){
-      //     //     nonZeroMasks(indexMasks,
-      //     //     mem->ref.indexMatrix().transpose());
-
-      //     // }
-      //     phi(depth, _) = N(0, _) * lexSign(N(0, _));
-      //     llvm::errs() << "Set schedules independent:\n";
-      //     SHOWLN(phi(depth, _));
-      // } else {
-      //     phi(depth, _(begin, end - 1)) = 0;
-      //     phi(depth, end) = 1;
-      // }
     }
   }
   void resetPhiOffsets() {
@@ -1215,32 +1189,6 @@ struct LinearProgramLoopBlock {
     // remove
     return satDeps;
   }
-  //     void lexMinimize(const Graph &g, Vector<Rational> &sol,
-  //     size_t depth){
-  // 	// omniSimplex.lexMinimize(sol);
-  // #ifndef NDEBUG
-  //         assert(omniSimplex.inCanonicalForm);
-  //         omniSimplex.assertCanonical();
-  //         // SHOWLN(omniSimplex);
-  // #endif
-  //         for (size_t v = 0; v < numActiveEdges + numBounding;)
-  //             omniSimplex.lexMinimize(++v);
-  // 	for (auto &&node : nodes) {
-  //             if (depth >= node.getNumLoops())
-  //                 continue;
-  //             if (!hasActiveEdges(g, node))
-  // 		continue;
-  // 	    omniSimplex.lexMinimize(node.getPhiOffset());
-  // 	}
-  // 	for (auto &&node : nodes) {
-  //             if (depth >= node.getNumLoops())
-  //                 continue;
-  //             if (!hasActiveEdges(g, node))
-  // 		continue;
-  // 	    omniSimplex.lexMinimize(node.omegaOffset);
-  // 	}
-  //         omniSimplex.copySolution(sol);
-  //     }
   [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
     -> std::optional<BitSet<>> {
     if (numPhiCoefs == 0) {
@@ -1367,13 +1315,13 @@ struct LinearProgramLoopBlock {
     }
     // BitSet
     // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
-    os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):\n";
+    os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
     for (auto &edge : lblock.edges) {
-      os << "\tEdge = " << edge;
+      os << "\n\tEdge = " << edge;
       for (size_t inIndex : edge.in->nodeIndex) {
         const Schedule &sin = lblock.nodes[inIndex].schedule;
-        os << "Schedule In:\nnodeIndex = " << edge.in->nodeIndex
-           << "; ref = " << edge.in->ref << "\ns.getPhi()" << sin.getPhi()
+        os << "Schedule In: nodeIndex = " << edge.in->nodeIndex
+           << "\nref = " << edge.in->ref << "\ns.getPhi()" << sin.getPhi()
            << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }

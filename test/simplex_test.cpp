@@ -1,16 +1,17 @@
+#include "../include/Math.hpp"
+#include "../include/MatrixStringParse.hpp"
 #include "../include/Simplex.hpp"
-#include "Macro.hpp"
-#include "Math.hpp"
-#include "MatrixStringParse.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <numeric>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SimplexTest, BasicAssertions) {
   IntMatrix A{stringToIntMatrix("[10 3 2 1; 15 2 5 3]")};
   IntMatrix B{0, 4};
   std::optional<Simplex> optS{Simplex::positiveVariables(A, B)};
   EXPECT_TRUE(optS.has_value());
+  assert(optS.has_value());
   Simplex &S{*optS};
   auto C{S.getCost()};
   C[0] = 0;
@@ -22,6 +23,7 @@ TEST(SimplexTest, BasicAssertions) {
   llvm::errs() << "S.tableau =" << S.tableau << "\n";
   EXPECT_EQ(S.run(), 20);
 }
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LexMinSimplexTest, BasicAssertions) {
   IntMatrix tableau{stringToIntMatrix(
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
@@ -940,13 +942,10 @@ TEST(LexMinSimplexTest, BasicAssertions) {
 
   tableau(_(0, 2), _) = -5859553999884210514;
   Simplex simp{tableau};
-  // SHOWLN(simp);
   Vector<Rational> sol(37);
-  SHOWLN(sol);
   EXPECT_EQ(sol.size(), 37);
   EXPECT_FALSE(simp.initiateFeasible());
   simp.lexMinimize(sol);
-  SHOWLN(sol);
   size_t solSum = 0;
   for (auto s : sol) {
     solSum += s.numerator;
@@ -964,7 +963,6 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     C(_(37, end)) = 0;
     EXPECT_EQ(simp.run(), -3);
     Vector<Rational> sol2 = simp.getSolution();
-    SHOWLN(sol2(_(begin, 38)));
     size_t sum = 0;
     for (size_t i = 0; i < 38; ++i) {
       Rational r = sol2(i);
@@ -985,7 +983,6 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     C(_(37, end)) = 0;
     EXPECT_EQ(simp2.run(), -3);
     Vector<Rational> sol2 = simp2.getSolution();
-    SHOWLN(sol2(_(begin, 38)));
     size_t sum = 0;
     Rational rsum = 0; // test summing rationals
     for (size_t i = 0; i < 38; ++i) {
@@ -1000,6 +997,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
       EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
   }
 }
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LexMinSimplexTest2, BasicAssertions) {
   IntMatrix tableau{stringToIntMatrix(
     "[140296676906080 140296676906080 94205055383680 94205055383680 0 0 0 "
@@ -1197,13 +1195,10 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "-1]")};
   Simplex simp{tableau};
-  // SHOWLN(simp);
   Vector<Rational> sol(15);
-  SHOWLN(sol);
   EXPECT_EQ(sol.size(), 15);
   EXPECT_FALSE(simp.initiateFeasible());
   simp.lexMinimize(sol);
-  SHOWLN(sol);
   size_t solSum = 0;
   for (size_t i = 0; i < 10; ++i) {
     solSum += sol[i].numerator;
@@ -1227,7 +1222,6 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     C(_(11, end)) = 0;
     EXPECT_EQ(simp.run(), 0);
     Vector<Rational> sol2 = simp.getSolution();
-    SHOWLN(sol2(_(begin, 15)));
     size_t sum = 0;
     for (size_t i = 0; i < 10; ++i) {
       Rational r = sol2(i);
@@ -1238,28 +1232,4 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     // for (size_t i = 0; i < 37; ++i)
     //     EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
   }
-  // {
-  //     // test new simplex
-  //     Simplex simp2{tableau};
-  //     EXPECT_FALSE(simp2.initiateFeasible());
-  //     auto C{simp2.getCost()};
-  //     C(0) = 0;
-  //     C(_(1, 37)) = 1;
-  //     C(_(37, end)) = 0;
-  //     EXPECT_EQ(simp2.run(), -3);
-  //     Vector<Rational> sol2 = simp2.getSolution();
-  //     SHOWLN(sol2(_(begin, 38)));
-  //     size_t sum = 0;
-  //     Rational rsum = 0; // test summing rationals
-  //     for (size_t i = 0; i < 38; ++i) {
-  //         Rational r = sol2(i);
-  //         sum += r.numerator;
-  //         EXPECT_EQ(r.denominator, 1);
-  //         rsum += r;
-  //     }
-  //     EXPECT_EQ(sum, 3);
-  //     EXPECT_EQ(rsum, 3);
-  //     for (size_t i = 0; i < 37; ++i)
-  //         EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
-  // }
 }

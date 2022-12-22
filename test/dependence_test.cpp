@@ -2,7 +2,6 @@
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Loops.hpp"
-#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/TestUtilities.hpp"
@@ -120,7 +119,6 @@ TEST(DependenceTest, BasicAssertions) {
   schStore[2] = 2;
   MemoryAccess msrc{Asrc, Astore11, schStore};
   MemoryAccess mtgt01{Atgt01, Aload01, schLoad0};
-  SHOWLN(loop.S[0]);
   DependencePolyhedra dep0(msrc, mtgt01);
   EXPECT_FALSE(dep0.isEmpty());
   dep0.pruneBounds();
@@ -150,14 +148,6 @@ TEST(DependenceTest, BasicAssertions) {
   Dependence &d(dc.front());
   EXPECT_TRUE(d.forward);
   llvm::errs() << d << "\n";
-  SHOWLN(d.getNumPhiCoefficients());
-  SHOWLN(d.getNumOmegaCoefficients());
-  SHOWLN(d.depPoly.getDim0());
-  SHOWLN(d.depPoly.getDim1());
-  SHOWLN(d.depPoly.getNumVar());
-  SHOWLN(d.depPoly.nullStep.size());
-  SHOWLN(d.depPoly.getNumSymbols());
-  SHOWLN(d.depPoly.A.numCol());
   assert(d.forward);
   assert(!allZero(d.dependenceSatisfaction.tableau(
     d.dependenceSatisfaction.tableau.numRow() - 1, _)));
@@ -237,8 +227,6 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   MemoryAccess mtgt{Atgt, Aloadji, schLoad};
   DependencePolyhedra dep(msrc, mtgt);
   llvm::errs() << "Dep = \n" << dep << "\n";
-  SHOWLN(dep.A);
-  SHOWLN(dep.E);
   EXPECT_TRUE(dep.isEmpty());
   assert(dep.isEmpty());
   //
@@ -525,16 +513,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
                        "fsub"),
     Ageped0, llvm::MaybeAlign(8), false);
 
-  SHOWLN(Aload1mk);
-  for (auto &use : Aload1mk->uses())
-    SHOWLN(use.getUser());
-  SHOWLN(Aload1mn);
-  for (auto &use : Aload1mn->uses())
-    SHOWLN(use.getUser());
-  SHOWLN(Uloadnk);
-  for (auto &use : Uloadnk->uses())
-    SHOWLN(use.getUser());
-  SHOWLN(Astore2mk);
   // badly written triangular solve:
   // for (m = 0; m < M; ++m){
   //   for (n = 0; n < N; ++n){
@@ -836,7 +814,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
 
   std::optional<BitSet<>> optDeps = lblock.optimize();
   EXPECT_TRUE(optDeps.has_value());
-  SHOWLN(lblock);
   // orig order (inner <-> outer): n, m
   IntMatrix optPhi2(2, 2);
   // phi2 loop order is
@@ -852,22 +829,15 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
   // assert(!optFail);
   for (auto mem : lblock.memory) {
-    SHOW(mem->nodeIndex);
-    CSHOWLN(mem->ref);
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = lblock.nodes[nodeIndex].schedule;
-      SHOWLN(s.getPhi());
-      SHOWLN(s.getFusionOmega());
-      SHOWLN(s.getOffsetOmega());
       if (mem->getNumLoops() == 2) {
         EXPECT_EQ(s.getPhi(), optPhi2);
       } else {
         assert(mem->getNumLoops() == 3);
         EXPECT_EQ(s.getPhi(), optPhi3);
       }
-      // SHOWLN(mem.schedule.getPhi());
-      // SHOWLN(mem.schedule.getOmega());
-      llvm::errs() << "\n";
+      //       //       llvm::errs() << "\n";
     }
   }
 }
@@ -1117,32 +1087,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch0_6[1] = 6;
   llvm::SmallVector<unsigned, 8> sch0_7(1 + 1);
   sch0_7[1] = 7;
-  // SHOWLN(sch1_0.getPhi());
-  // SHOWLN(sch2_1_0.getPhi());
-  // SHOWLN(sch2_1_1.getPhi());
-  // SHOWLN(sch2_1_2.getPhi());
-  // SHOWLN(sch1_2.getPhi());
-  // SHOWLN(sch1_3.getPhi());
-  // SHOWLN(sch1_4.getPhi());
-  // SHOWLN(sch2_5_0.getPhi());
-  // SHOWLN(sch2_5_1.getPhi());
-  // SHOWLN(sch2_5_2.getPhi());
-  // SHOWLN(sch2_5_3.getPhi());
-  // SHOWLN(sch1_6.getPhi());
-  // SHOWLN(sch1_7.getPhi());
-  // SHOWLN(sch1_0.getOmega());
-  // SHOWLN(sch2_1_0.getOmega());
-  // SHOWLN(sch2_1_1.getOmega());
-  // SHOWLN(sch2_1_2.getOmega());
-  // SHOWLN(sch1_2.getOmega());
-  // SHOWLN(sch1_3.getOmega());
-  // SHOWLN(sch1_4.getOmega());
-  // SHOWLN(sch2_5_0.getOmega());
-  // SHOWLN(sch2_5_1.getOmega());
-  // SHOWLN(sch2_5_2.getOmega());
-  // SHOWLN(sch2_5_3.getOmega());
-  // SHOWLN(sch1_6.getOmega());
-  // SHOWLN(sch1_7.getOmega());
   LinearProgramLoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess, 0> iOuterMem;
   iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0); // 0
@@ -1179,7 +1123,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
   std::optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
-  SHOWLN(iOuterLoopNest);
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
   for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
     memAccessIds[iOuterLoopNest.memory[i]] = i;
@@ -1203,13 +1146,13 @@ TEST(MeanStDevTest0, BasicAssertions) {
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto mem : iOuterLoopNest.memory) {
-    SHOW(mem->nodeIndex);
-    CSHOWLN(mem->ref);
+    llvm::errs() << "mem->nodeIndex =" << mem->nodeIndex << ";";
+    llvm::errs() << "mem->ref =" << mem->ref << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = iOuterLoopNest.nodes[nodeIndex].schedule;
-      SHOWLN(s.getPhi());
-      SHOWLN(s.getFusionOmega());
-      SHOWLN(s.getOffsetOmega());
+      llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
+      llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
+      llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
     }
   }
 
@@ -1268,8 +1211,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
     jOuterLoopNest.memory.push_back(&mem);
 
   EXPECT_TRUE(jOuterLoopNest.optimize().has_value());
-  SHOW(jOuterLoopNest.edges.size());
-  CSHOWLN(jOuterLoopNest.memory.size());
   for (auto &edge : jOuterLoopNest.edges)
     llvm::errs() << "\nedge = " << edge << "\n";
 
@@ -1291,15 +1232,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   optS.diag() = 1;
   IntMatrix optSinnerUndef = optS;
   optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
-  SHOWLN(jOuterLoopNest);
   for (auto mem : jOuterLoopNest.memory) {
-    SHOW(mem->nodeIndex);
-    CSHOWLN(mem->ref);
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = jOuterLoopNest.nodes[nodeIndex].schedule;
-      SHOWLN(s.getPhi());
-      SHOWLN(s.getFusionOmega());
-      SHOWLN(s.getOffsetOmega());
       if (s.getNumLoops() == 1)
         EXPECT_EQ(s.getPhi()(0, 0), 1);
       else if (s.getFusionOmega()(1) < 3)
@@ -1451,14 +1386,6 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   Dependence &d(dc.front());
   EXPECT_TRUE(d.forward);
   llvm::errs() << d << "\n";
-  SHOWLN(d.getNumPhiCoefficients());
-  SHOWLN(d.getNumOmegaCoefficients());
-  SHOWLN(d.depPoly.getDim0());
-  SHOWLN(d.depPoly.getDim1());
-  SHOWLN(d.depPoly.getNumVar());
-  SHOWLN(d.depPoly.nullStep.size());
-  SHOWLN(d.depPoly.getNumSymbols());
-  SHOWLN(d.depPoly.A.numCol());
   assert(d.forward);
   assert(!allZero(d.dependenceSatisfaction.tableau(
     d.dependenceSatisfaction.tableau.numRow() - 1, _)));
@@ -1499,14 +1426,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   optPhi(1, _) = std::numeric_limits<int64_t>::min();
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.memory) {
-    SHOW(mem->nodeIndex);
-    CSHOWLN(mem->ref);
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = loopBlock.nodes[nodeIndex].schedule;
-      SHOWLN(s.getPhi());
       EXPECT_EQ(s.getPhi(), optPhi);
-      SHOWLN(s.getFusionOmega());
-      SHOWLN(s.getOffsetOmega());
     }
   }
 }
@@ -1664,14 +1586,14 @@ TEST(ConvReversePass, BasicAssertions) {
   std::optional<BitSet<>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
   for (auto &mem : loopBlock.memory) {
-    SHOW(mem->nodeIndex);
-    CSHOWLN(mem->ref);
+    llvm::errs() << "mem->nodeIndex: " << mem->nodeIndex << "; ";
+    llvm::errs() << "mem->ref: " << mem->ref << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = loopBlock.nodes[nodeIndex].schedule;
-      SHOWLN(s.getPhi());
+      llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
+      llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";
+      llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
       // EXPECT_EQ(s.getPhi(), optPhi);
-      SHOWLN(s.getFusionOmega());
-      SHOWLN(s.getOffsetOmega());
     }
   }
 }

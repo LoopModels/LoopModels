@@ -148,15 +148,12 @@ struct ArrayReference {
 
   friend auto operator<<(llvm::raw_ostream &os, const ArrayReference &ar)
     -> llvm::raw_ostream & {
-    SHOWLN(ar.indexMatrix());
     os << "ArrayReference " << *ar.basePointer << " (dim = " << ar.getArrayDim()
        << ", num loops: " << ar.getNumLoops();
     if (ar.sizes.size())
       os << ", element size: " << *ar.sizes.back();
     os << "):\n";
     PtrMatrix<int64_t> A{ar.indexMatrix()};
-    SHOW(A.numRow());
-    CSHOWLN(A.numCol());
     os << "Sizes: [";
     if (ar.sizes.size()) {
       os << " unknown";
@@ -207,7 +204,8 @@ struct ArrayReference {
     return os << "]";
   }
   // use gcd to check if they're known to be independent
-  [[nodiscard]] auto gcdKnownIndependent(const ArrayReference &) const -> bool {
+  [[nodiscard]] constexpr static auto
+  gcdKnownIndependent(const ArrayReference &) -> bool {
     // TODO: handle this!
     // consider `x[2i]` vs `x[2i + 1]`, the former
     // will have a stride of `2`, and the latter of `x[2i+1]`

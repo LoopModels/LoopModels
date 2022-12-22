@@ -2,7 +2,6 @@
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Loops.hpp"
-#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/MemoryAccess.hpp"

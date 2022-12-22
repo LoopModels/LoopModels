@@ -16,6 +16,7 @@ jobs:
         sudo chmod +x llvm.sh
         sudo ./llvm.sh 15 all
         sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
+        sudo ln -s $(which opt-15) /usr/local/bin/opt
         # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
     - run: meson setup builddirgcc -Db_santize=address,undefined -Db_coverage=true
       env:
@@ -50,7 +51,7 @@ jobs:
     - run: brew install gcc llvm@15 ninja pkg-config cmake
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
-    - run: meson setup builddir/
+    - run: meson setup builddir -Db_santize=address,undefined -Db_coverage=true -Dtestremarks=false
       env:
         CXX: g++-12
         CXXFLAGS: "-stdlib=libstdc++"

@@ -20,7 +20,6 @@ using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
     for (size_t n = 2; (n < N) & (g != 1); ++n)
       g = gcd(g, x[n]);
     if (g > 1)
-      for (auto &&a : x)
-        a /= g;
+      x /= g;
   }
 }

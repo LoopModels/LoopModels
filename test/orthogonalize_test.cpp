@@ -60,8 +60,6 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
   // (A*K')*J <= r
   IntMatrix AK{alnp.A};
   AK(_, _(numSymbols, end)) = alnp.A(_, _(numSymbols, end)) * K.transpose();
-  SHOWLN(alnp.A(_, _(numSymbols, end)));
-  SHOWLN(AK(_, _(numSymbols, end)));
   AffineLoopNest<true> alnNew{std::move(AK), alnp.S};
   alnNew.pruneBounds();
   IntMatrix KS{K * S};
@@ -156,7 +154,6 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
   for (auto &&ar : newArrayRefs)
     ar.loop = &newAln;
-  SHOWLN(newArrayRefs.size());
   EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 0)), 1);
   EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 1)), 1);
   EXPECT_EQ(countNonZero(newArrayRefs[1].indexMatrix()(_, 0)), 1);
@@ -182,11 +179,8 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);
   llvm::errs() << "New ArrayReferences:\n";
-  for (auto &ar : newArrayRefs) {
-    SHOW(ar.indexMatrix().numRow());
-    CSHOWLN(ar.indexMatrix().numCol());
+  for (auto &ar : newArrayRefs)
     llvm::errs() << ar << "\n";
-  }
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -282,20 +276,16 @@ TEST(BadMul, BasicAssertions) {
   for (auto &ar : newArrayRefs)
     ar.loop = &newAln;
 
-  SHOWLN(aln.A);
-  SHOWLN(newAln.A);
   // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
   llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
   auto loop2Count = countSigns(newAln.A, 2 + newAln.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);
   EXPECT_EQ(loop2Count.second, 0);
   newAln.removeLoopBang(2);
-  SHOWLN(newAln.A);
   auto loop1Count = countSigns(newAln.A, 1 + newAln.getNumSymbols());
   EXPECT_EQ(loop1Count.first, 1);
   EXPECT_EQ(loop1Count.second, 0);
   newAln.removeLoopBang(1);
-  SHOWLN(newAln.A);
   auto loop0Count = countSigns(newAln.A, 0 + newAln.getNumSymbols());
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);

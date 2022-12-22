@@ -1451,9 +1451,7 @@ auto Instruction::Cache::getInstruction(llvm::BumpPtrAllocator &alloc,
   -> Instruction * {
   if (Instruction *i = completeInstruction(alloc, predMap, instr))
     return i;
-  llvm::errs() << "Could not find instruction " << *instr << "\n";
   if (containsCycle(instr)) {
-    llvm::errs() << "Instruction is part of a cycle\n";
     auto *i =
       new (alloc) Instruction(Instruction::Intrinsic(instr), instr->getType());
     llvmToInternalMap[instr] = i;

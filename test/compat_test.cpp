@@ -1,14 +1,23 @@
 #include "../include/Loops.hpp"
-#include "../include/Macro.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/TestUtilities.hpp"
+#include "Constraints.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <memory>
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(FourierMotzkin, BasicAssertions) {
+  auto A{stringToIntMatrix("[-2 1 0 -1 -1 0; -1 0 1 0 0 -1]")};
+  fourierMotzkinNonNegative(A, 3);
+  auto B{stringToIntMatrix("[-2 1 0 0 -1 0; -1 0 1 0 0 -1]")};
+  llvm::errs() << "A = " << A << "\nB = " << B << "\n";
+  EXPECT_EQ(A, B);
+}
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds, BasicAssertions) {
@@ -40,8 +49,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   tlf.addLoop(std::move(A), 1);
   AffineLoopNest<true> &aff = tlf.alns[0];
   aff.pruneBounds();
-  llvm::errs() << aff << "\n";
-  SHOWLN(aff.A);
+  llvm::errs() << aff << "\naff.A = " << aff.A << "\n";
   // M >= 0 is redundant
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
@@ -62,7 +70,7 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
   AffineLoopNest<true> &aff = tlf.alns[0];
   aff.pruneBounds();
   aff.dump();
-  SHOWLN(aff.A);
+  llvm::errs() << "aff.A = " << aff.A << "\n";
   // we expect J >= 1 to be dropped
   // because J >= i + 1 >= 2
   // because i >= 1
@@ -90,7 +98,7 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
   aff.pruneBounds();
   llvm::errs() << "LessTrival test Bounds pruned:\n";
   aff.dump();
-  SHOWLN(aff.A);
+  llvm::errs() << "aff.A = " << aff.A << "\n";
   EXPECT_EQ(aff.A.numRow(), 3);
   auto loop2Count = countSigns(aff.A, 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);

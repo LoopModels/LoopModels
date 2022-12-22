@@ -1233,9 +1233,9 @@ struct Dependence {
       os << "x -> y:";
     else
       os << "y -> x:";
-    os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
-       << "\nSchedule Constraints:" << d.dependenceSatisfaction
-       << "\nBounding Constraints:" << d.dependenceBounding;
+    // os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
+    //    << "\nSchedule Constraints:" << d.dependenceSatisfaction
+    //    << "\nBounding Constraints:" << d.dependenceBounding;
     if (d.in)
       os << "\n\tInput:\n" << *d.in;
     if (d.out)

@@ -58,7 +58,6 @@ struct Schedule {
     numLoops = nLoops;
     data.resize(requiredScheduleStorage(nLoops));
     getPhi().antiDiag() = 1;
-    // getOmega() = 0;
   }
   Schedule() = default;
   Schedule(size_t nLoops) : numLoops(nLoops) {
@@ -67,19 +66,12 @@ struct Schedule {
   };
   Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size() - 1) {
     data.resize(requiredScheduleStorage(numLoops));
-    // getPhi().antiDiag() = 1;
-    llvm::errs() << "constructing schedule with omega = [" << omega.front();
-    for (size_t i = 1; i < omega.size(); ++i)
-      llvm::errs() << ", " << omega[i];
-    llvm::errs() << "]\n";
     MutPtrVector<int64_t> o{getFusionOmega()};
     for (size_t i = 0; i < omega.size(); ++i)
       o[i] = omega[i];
   }
   void truncate(size_t newNumLoops) {
     if (newNumLoops < numLoops) {
-      // llvm::errs() << "pre truncate: ";
-      // CSHOWLN(getOmega());
       size_t oOffset = getNumLoopsSquared() + size_t(numLoops) - newNumLoops;
       size_t nOffset = newNumLoops * newNumLoops;
       for (size_t i = 0; i < newNumLoops; ++i)
@@ -88,8 +80,6 @@ struct Schedule {
       numLoops = newNumLoops;
     }
     getPhi().antiDiag() = 1;
-    // llvm::errs() << "post truncate: ";
-    // CSHOWLN(getOmega());
   }
   auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
