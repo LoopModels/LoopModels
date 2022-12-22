@@ -29,6 +29,10 @@ turbo_module = shared_module('TurboLoop', 'lib/TurboLoop.cpp', dependencies : ll
 if get_option('test')
   gtest_dep = dependency('gtest', main : true, fallback : ['gtest', 'gtest_main_dep'])
   if gtest_dep.found()
+    
+    remark_test_exe = executable('remarks_test', 'test' / 'remarks_test.cpp', include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
+    test('remarks_test', remark_test_exe, depends: [turbo_module], args: [turbo_module.full_path(), meson.source_root() / 'test' / 'examples'])
+
     testdeps = [gtest_dep, llvm_dep]
 
     test_files = [
@@ -52,9 +56,6 @@ if get_option('test')
       test_exe = executable(f, 'test' / f + '.cpp', dependencies : testdeps, include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath, cpp_pch : 'include/pch' / f + '.hpp')
       test(f, test_exe)
     endforeach
-    
-    remark_test_exe = executable('remarks_test', 'test' / 'remarks_test.cpp', include_directories: incdir, cpp_args : debug_args, build_rpath : llvm_rpath)
-    test('remarks_test', remark_test_exe, depends: [turbo_module], args: [turbo_module.full_path(), meson.source_root() / 'test' / 'examples'])
   endif
 endif
 
