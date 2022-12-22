@@ -26,15 +26,22 @@ auto main(int argc, char **argv) -> int {
   std::array<char, 128> buftxt;
 
   int count = 0;
+  int failed = -1;
   while (fgets(bufopt.data(), sizeof(bufopt), fpopt) != nullptr) {
     if (fgets(buftxt.data(), sizeof(buftxt), fptxt) == nullptr)
       return 1001;
     if (int diff = strcmp(bufopt.data(), buftxt.data())) {
-      printf("line %d differed at %d\nopt: %s\ntxt: %s\n", count, diff,
+      printf("line %d differed at %d\ntxt: %s\nopt:\n%s\n", count, diff,
              bufopt.data(), buftxt.data());
-      return diff;
+      failed = count;
+      break;
     }
     ++count;
+  }
+  if (failed >= 0) {
+    while (fgets(bufopt.data(), sizeof(bufopt), fpopt) != nullptr)
+      puts(bufopt.data());
+    return ++failed;
   }
   if (count < 276)
     return 1002;
