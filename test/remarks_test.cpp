@@ -8,8 +8,8 @@ auto main(int argc, char **argv) -> int {
     return 1000;
   std::string modulePath = argv[1];
   std::string examplesPath = argv[2];
-  // puts(modulePath.c_str());
-  // puts(examplesPath.c_str());
+  printf("modulePath: %s\n", modulePath.c_str());
+  printf("examplesPath: %s\n", examplesPath.c_str());
   std::string fileRoot = examplesPath + std::string("/triangular_solve.");
   auto cmd =
     std::string(
@@ -17,7 +17,7 @@ auto main(int argc, char **argv) -> int {
     modulePath +
     std::string(" -passes='turbo-loop' -pass-remarks-analysis='turbo-loop' ") +
     fileRoot + std::string("ll 2>&1");
-  // puts(cmd.c_str());
+  printf("cmd: %s", cmd.c_str());
   std::string txtfile = fileRoot + std::string("txt");
 
   FILE *fpopt = popen(cmd.c_str(), "r");
@@ -29,8 +29,11 @@ auto main(int argc, char **argv) -> int {
   while (fgets(bufopt.data(), sizeof(bufopt), fpopt) != nullptr) {
     if (fgets(buftxt.data(), sizeof(buftxt), fptxt) == nullptr)
       return 1001;
-    if (int diff = strcmp(bufopt.data(), buftxt.data()))
+    if (int diff = strcmp(bufopt.data(), buftxt.data())) {
+      printf("line %d differed at %d\nopt: %s\ntxt: %s\n", count, diff,
+             bufopt.data(), buftxt.data());
       return diff;
+    }
     ++count;
   }
   if (count < 276)
