@@ -1,30 +1,29 @@
 #include <array>
 #include <cstdio>
 #include <cstring>
-#include <string>
 
 auto main(int argc, char **argv) -> int {
   if (argc != 3)
     return 1000;
-  std::string modulePath = argv[1];
-  std::string examplesPath = argv[2];
-  printf("modulePath: %s\n", modulePath.c_str());
-  printf("examplesPath: %s\n", examplesPath.c_str());
-  std::string fileRoot = examplesPath + std::string("/triangular_solve.");
-  auto cmd =
-    std::string(
-      "opt -mcpu=skylake-avx512 --disable-output -load-pass-plugin=") +
-    modulePath +
-    std::string(" -passes='turbo-loop' -pass-remarks-analysis='turbo-loop' ") +
-    fileRoot + std::string("ll 2>&1");
-  printf("cmd: %s", cmd.c_str());
-  std::string txtfile = fileRoot + std::string("txt");
+  char *modulePath = argv[1];
+  char *examplesPath = argv[2];
+  printf("modulePath: %s\n", modulePath);
+  printf("examplesPath: %s\n", examplesPath);
+  const char *testfile = "triangular_solve";
+  std::array<char, 512> bufopt;
+  sprintf(
+    bufopt.data(),
+    "opt -mcpu=skylake-avx512 --disable-output -load-pass-plugin=%s "
+    "-passes='turbo-loop' -pass-remarks-analysis='turbo-loop' %s/%s.ll 2>&1",
+    modulePath, examplesPath, testfile);
 
-  FILE *fpopt = popen(cmd.c_str(), "r");
-  FILE *fptxt = fopen(txtfile.c_str(), "r");
-  std::array<char, 128> bufopt;
-  std::array<char, 128> buftxt;
+  printf("cmd: %s", bufopt.data());
+  FILE *fpopt = popen(bufopt.data(), "r");
 
+  sprintf(bufopt.data(), "%s/%s.txt", examplesPath, testfile);
+  FILE *fptxt = fopen(bufopt.data(), "r");
+
+  std::array<char, 512> buftxt;
   int count = 0;
   int failed = -1;
   while (fgets(bufopt.data(), sizeof(bufopt), fpopt) != nullptr) {
