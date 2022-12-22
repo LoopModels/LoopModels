@@ -32,7 +32,7 @@ auto main(int argc, char **argv) -> int {
       return 1001;
     if (int diff = strcmp(bufopt.data(), buftxt.data())) {
       printf("line %d differed at %d\ntxt: %s\nopt:\n%s\n", count, diff,
-             bufopt.data(), buftxt.data());
+             buftxt.data(), bufopt.data());
       failed = count;
       break;
     }

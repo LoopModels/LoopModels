@@ -51,7 +51,7 @@ jobs:
     - run: brew install gcc llvm@15 ninja pkg-config cmake
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
-    - run: meson setup builddir/
+    - run: meson setup builddir -Db_santize=address,undefined -Db_coverage=true -Dtestremarks=false
       env:
         CXX: g++-12
         CXXFLAGS: "-stdlib=libstdc++"
