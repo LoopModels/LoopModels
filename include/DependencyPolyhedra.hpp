@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
@@ -72,102 +71,6 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     return E(i, 0);
   }
 
-  // static std::optional<llvm::SmallVector<std::pair<int, int>, 4>>
-  // matchingStrideConstraintPairs(const ArrayReference &ar0,
-  //                               const ArrayReference &ar1) {
-  //     // fast path; most common case
-  //     if (ar0.sizesMatch(ar1)) {
-  //         llvm::SmallVector<std::pair<int, int>, 4> dims;
-  //         size_t numDims = ar0.arrayDim();
-  //         dims.reserve(numDims);
-  //         for (size_t i = 0; i < numDims; ++i)
-  //             dims.emplace_back(i, i);
-  //         return dims;
-  //     }
-  //     llvm::errs() << "Sizes don't match!\n";
-  //     // Farkas: psi(x) >= 0 iff
-  //     // psi(x) = l_0 + lambda' * (b - A'*x) for some l_0, lambda >= 0
-  //     // psi(x) is an affine function.
-  //     // Here, we assume that function is either...
-  //     // if (boundAbove) {
-  //     //   w + u'N + alpha_delta + alpha_t'i_t - alpha_s'i_s
-  //     // else {
-  //     //   alpha_delta + alpha_t'i_t - alpha_s'i_s
-  //     // }
-  //     // N are the symbolic variables, like loop bounds.
-  //     // u and w are introduced variables.
-  //     //
-  //     // x = [i_s..., i_t...]
-  //     //
-  //     // or swap alpha signs if subInd < 0
-  //     //
-  //     // Returns an IntegerEqPolyhedra C'*y <= d
-  //     // where
-  //     // y = [alpha_delta, alpha_s..., alpha_t..., w, u...]
-  //     // for our cost function, we want to set `sum(u)` to zero
-  //     // Note y >= 0
-  //     //
-  //     // This is useful for eliminating indVars as well as for eliminating
-  //     `N`
-  //     // We have, for example...
-  //     // b = [I-1, 0, J-1, 0]
-  //     // A = [ 1  -1   0   0
-  //     //       0   0   1  -1 ]
-  //     // N = [I, J]
-  //     // x = [i_s, j_s, i_t, j_t]
-  //     //
-  //     // w + u'N + alpha_delta + alpha_t'i_t - alpha_s'i_s =
-  //     // l_0 + lambda' * (b - A'*x)
-  //     // w + alpha_delta + u_1 * I + u_2 * J + alpha_t_i * i_t + alpha_t_j
-  //     *
-  //     // j_t - alpha_s_i * i_s - alpha_s_j * j_s = l_0 + lambda_0 * (I - 1
-  //     -
-  //     // i_s) + lambda_1
-  //     // * (j_s) + lambda_2 * (J-1 - i_t) + lambda_3 * j_t
-  //     //
-  //     // (w + alpha_delta - l_0 + lambda_0 + lambda_2) + I*(u_1 - lambda_0)
-  //     +
-  //     // J*(u_2 - lambda_2) + i_t*(alpha_t_i + lambda_2) + j_t *
-  //     // (alpha_t_j-lambda_3) + i_s * (lambda_0 -alpha_s_i) + j_s *
-  //     // (-alpha_s_j-lambda_1) = 0
-  //     //
-  //     // Now...we assume that it is valid to transform this into a system
-  //     of
-  //     // equations 0 = w + alpha_delta - l_0 + lambda_0 + lambda_2 0 = u_1
-  //     -
-  //     // lambda_0 0 = u_2 - lambda_2 0 = alpha_t_i + lambda_2 0 = alpha_t_j
-  //     -
-  //     // lambda_3 0 = lambda_0 - alpha_s_i 0 = -alpha_s_j - lambda_1
-  //     //
-  //     // A[w*i + x*j]
-  //     // w*(i...)
-  //     // x*(j...)
-  //     // Delinearization seems like the weakest conditions...
-  //     //
-  //     // what about
-  //     // x is symbol, i and j are indvars
-  //     // A[i,j]
-  //     // A[i,x]
-  //     //
-  //     // if (!ar0.allConstantStrides())
-  //     //     return {};
-  //     // if (!ar1.allConstantStrides())
-  //     //     return {};
-  //     // if (ar0.stridesMatch(ar1)) {
-  //     //     return ar0.dim();
-  //     // }
-  //     // TODO: handle these examples that fail above but can be matched:
-  //     // A[0, i, 0, j], A[k, 0, l, 0]
-  //     // B[i, k], B[i, K] // k = 0:K-1
-  //     // B[i, k], B[i, J] // J's relation to k??? -- split loop?
-  //     // size_t dim = 0;
-  //     // auto axesix = ar0.axes.begin();
-  //     // auto axesiy = ar1.axes.begin();
-
-  //     return {};
-  // }
-
-  // static bool check(const ArrayReference &ar0, const ArrayReference &ar1) {
   static auto findFirstNonEqual(PtrVector<unsigned> x, PtrVector<unsigned> y)
     -> size_t {
     const size_t M = std::min(x.size(), y.size());
@@ -180,14 +83,14 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     -> IntMatrix {
     const size_t numLoopsCommon =
       findFirstNonEqual(x.getFusionOmega(), y.getFusionOmega());
-    const size_t xDim = x.ref.getArrayDim();
-    const size_t yDim = y.ref.getArrayDim();
+    const size_t xDim = x.getArrayDim();
+    const size_t yDim = y.getArrayDim();
     IntMatrix A(numLoopsCommon, xDim + yDim);
     if (!numLoopsCommon)
       return A;
     // indMats cols are [innerMostLoop, ..., outerMostLoop]
-    PtrMatrix<int64_t> indMatX = x.ref.indexMatrix();
-    PtrMatrix<int64_t> indMatY = y.ref.indexMatrix();
+    PtrMatrix<int64_t> indMatX = x.indexMatrix();
+    PtrMatrix<int64_t> indMatY = y.indexMatrix();
     for (size_t i = 0; i < numLoopsCommon; ++i) {
       A(i, _(begin, xDim)) = indMatX(i, _);
       A(i, _(xDim, end)) = indMatY(i, _);
@@ -196,16 +99,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     return orthogonalNullSpace(std::move(A));
   }
   //     // TODO: two steps:
-  //     // 1: gcd test
-  //     // 2: check polyhedra volume
-  //     // step 1
-
-  //     // step 2
-  //     const std::optional<llvm::SmallVector<std::pair<int, int>, 4>>
-  //         maybeDims = matchingStrideConstraintPairs(ar0, ar1);
-
-  //     return true;
-  // }
+  //     // gcd test
 
   //   DependencePolyhedra(aln0, aln1, ar0, ar1)
   //
@@ -247,26 +141,24 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   DependencePolyhedra(const MemoryAccess &ma0, const MemoryAccess &ma1)
     : SymbolicEqPolyhedra{} {
 
-    const ArrayReference &ar0 = ma0.ref;
-    const ArrayReference &ar1 = ma1.ref;
-    assert(ar0.sizesMatch(ar1));
-    auto [nc0, nv0] = ar0.loop->A.size();
-    auto [nc1, nv1] = ar1.loop->A.size();
-    numDep0Var = ar0.loop->getNumLoops();
-    size_t numDep1Var = ar1.loop->getNumLoops();
+    assert(ma0.sizesMatch(ma1));
+    auto [nc0, nv0] = ma0.loop->A.size();
+    auto [nc1, nv1] = ma1.loop->A.size();
+    numDep0Var = ma0.loop->getNumLoops();
+    size_t numDep1Var = ma1.loop->getNumLoops();
     size_t numVar = numDep0Var + numDep1Var;
     std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
-      oldToNewMaps{merge(ar0.loop->S, ar1.loop->S)};
+      oldToNewMaps{merge(ma0.loop->S, ma1.loop->S)};
     auto &oldToNewMap0 = oldToNewMaps.first;
     auto &oldToNewMap1 = oldToNewMaps.second;
-    assert(oldToNewMap0.size() == ar0.loop->S.size());
-    assert(oldToNewMap1.size() == ar1.loop->S.size());
+    assert(oldToNewMap0.size() == ma0.loop->S.size());
+    assert(oldToNewMap1.size() == ma1.loop->S.size());
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
     IntMatrix NS{nullSpace(ma0, ma1)};
     const size_t nullDim{NS.numRow()};
-    const size_t indexDim{ar0.getArrayDim()};
+    const size_t indexDim{ma0.getArrayDim()};
     nullStep.resize_for_overwrite(nullDim);
     for (size_t i = 0; i < nullDim; ++i) {
       int64_t s = 0;
@@ -278,30 +170,30 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     const size_t numSymbols = getNumSymbols();
     A.resize(nc + numVar, numSymbols + numVar + nullDim);
     E.resize(indexDim + nullDim, A.numCol());
-    // ar0 loop
+    // ma0 loop
     for (size_t i = 0; i < nc0; ++i) {
-      A(i, 0) = ar0.loop->A(i, 0);
+      A(i, 0) = ma0.loop->A(i, 0);
       for (size_t j = 0; j < oldToNewMap0.size(); ++j)
-        A(i, 1 + oldToNewMap0[j]) = ar0.loop->A(i, 1 + j);
+        A(i, 1 + oldToNewMap0[j]) = ma0.loop->A(i, 1 + j);
       for (size_t j = 0; j < numDep0Var; ++j)
-        A(i, j + numSymbols) = ar0.loop->A(i, j + ar0.loop->getNumSymbols());
+        A(i, j + numSymbols) = ma0.loop->A(i, j + ma0.loop->getNumSymbols());
     }
     for (size_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = ar1.loop->A(i, 0);
+      A(nc0 + i, 0) = ma1.loop->A(i, 0);
       for (size_t j = 0; j < oldToNewMap1.size(); ++j)
-        A(nc0 + i, 1 + oldToNewMap1[j]) = ar1.loop->A(i, 1 + j);
+        A(nc0 + i, 1 + oldToNewMap1[j]) = ma1.loop->A(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
         A(nc0 + i, j + numSymbols + numDep0Var) =
-          ar1.loop->A(i, j + ar1.loop->getNumSymbols());
+          ma1.loop->A(i, j + ma1.loop->getNumSymbols());
     }
     A(_(nc, end), _(numSymbols, numSymbols + numVar)).diag() = 1;
     // L254: Assertion `col < numCol()` failed
     // indMats are [innerMostLoop, ..., outerMostLoop] x arrayDim
     // offsetMats are arrayDim x numSymbols
-    PtrMatrix<int64_t> A0 = ar0.indexMatrix();
-    PtrMatrix<int64_t> A1 = ar1.indexMatrix();
-    PtrMatrix<int64_t> O0 = ar0.offsetMatrix();
-    PtrMatrix<int64_t> O1 = ar1.offsetMatrix();
+    PtrMatrix<int64_t> A0 = ma0.indexMatrix();
+    PtrMatrix<int64_t> A1 = ma1.indexMatrix();
+    PtrMatrix<int64_t> O0 = ma0.offsetMatrix();
+    PtrMatrix<int64_t> O1 = ma1.offsetMatrix();
     // E(i,:)* indVars = q[i]
     // e.g. i_0 + j_0 + off_0 = i_1 + j_1 + off_1
     // i_0 + j_0 - i_1 - j_1 = off_1 - off_0
@@ -561,72 +453,6 @@ struct Dependence {
   [[no_unique_address]] MemoryAccess *in;
   [[no_unique_address]] MemoryAccess *out;
   [[no_unique_address]] bool forward;
-  // Dependence(DependencePolyhedra depPoly,
-  //            IntegerEqPolyhedra dependenceSatisfaction,
-  //            IntegerEqPolyhedra dependenceBounding, MemoryAccess *in,
-  //            MemoryAccess *out, const bool forward)
-  //     : depPoly(std::move(depPoly)),
-  //       dependenceSatisfaction(std::move(dependenceSatisfaction)),
-  //       dependenceBounding(std::move(dependenceBounding)), in(in),
-  //       out(out), forward(forward){};
-  // if there is no time dimension, it returns a 0xdim matrix and `R == 0`
-  // else, it returns a square matrix, where the first `R` rows correspond
-  // to time-axis.
-  // static std::pair<IntMatrix, int64_t>
-  // transformationMatrix(const ArrayReference &xRef, const ArrayReference
-  // &yRef,
-  //                      const size_t numLoopsCommon) {
-  //     const size_t xDim = xRef.arrayDim();
-  //     const size_t yDim = yRef.arrayDim();
-  //     PtrMatrix<const int64_t> indMatX = xRef.indexMatrix();
-  //     PtrMatrix<const int64_t> indMatY = yRef.indexMatrix();
-  //     IntMatrix A(numLoopsCommon, xDim + yDim);
-  //     for (size_t i = 0; i < numLoopsCommon; ++i) {
-  //         for (size_t j = 0; j < xDim; ++j) {
-  //             A(i, j) = indMatX(i, j);
-  //         }
-  //         for (size_t j = 0; j < yDim; ++j) {
-  //             A(i, j + xDim) = indMatY(i, j);
-  //         }
-  //     }
-  //     IntMatrix N = NormalForm::nullSpace(A);
-  //     const auto [R, D] = N.size();
-  //     if (R) {
-  //         N.resizeRows(D);
-  //         A = NormalForm::removeRedundantRows(A.transpose());
-  //         assert(D - R == A.numRow());
-  //         for (size_t r = R; r < D; ++r) {
-  //             for (size_t d = 0; d < D; ++d) {
-  //                 N(r, d) = A(r - R, d);
-  //             }
-  //         }
-  //     }
-  //     return std::make_pair(N, R);
-  //     // IntMatrix B = NormalForm::removeRedundantRows(A.transpose());
-  //     // const auto [R, D] = B.size();
-  //     // if (R < D) {
-  //     //     IntMatrix N = NormalForm::nullSpace(A.transpose());
-  //     //     assert(N.numRow() == D - R);
-  //     //     A.resizeRows(D);
-  //     //     for (size_t r = R; r < D; ++r) {
-  //     //         for (size_t d = 0; d < D; ++d) {
-  //     //             A(r, d) = N(r - R, d);
-  //     //         }
-  //     //     }
-  //     // }
-  //     // return std::make_pair(A, R);
-  // }
-
-  // static std::pair<IntMatrix, int64_t>
-  // transformationMatrix(const MemoryAccess &x, const MemoryAccess &y) {
-  //     return transformationMatrix(
-  //         x.ref, y.ref,
-  //         findFirstNonEqualEven(x.schedule.getOmega(),
-  //                               y.schedule.getOmega()) >>
-  //             1);
-  // }
-  // emplaces dependencies without any repeat accesses to the same memory
-  // returns
   [[nodiscard]] auto isInactive(size_t depth) const -> bool {
     return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
   }
@@ -804,10 +630,8 @@ struct Dependence {
   // }
   [[nodiscard]] auto isSatisfied(const Schedule &schIn,
                                  const Schedule &schOut) const -> bool {
-    const ArrayReference &refIn = in->ref;
-    const ArrayReference &refOut = out->ref;
-    size_t numLoopsIn = refIn.getNumLoops();
-    size_t numLoopsOut = refOut.getNumLoops();
+    size_t numLoopsIn = in->getNumLoops();
+    size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     Vector<int64_t> schv;
@@ -854,10 +678,8 @@ struct Dependence {
   [[nodiscard]] auto isSatisfied(llvm::ArrayRef<unsigned> inFusOmega,
                                  llvm::ArrayRef<unsigned> outFusOmega) const
     -> bool {
-    const ArrayReference &refIn = in->ref;
-    const ArrayReference &refOut = out->ref;
-    size_t numLoopsIn = refIn.getNumLoops();
-    size_t numLoopsOut = refOut.getNumLoops();
+    size_t numLoopsIn = in->getNumLoops();
+    size_t numLoopsOut = out->getNumLoops();
     size_t numLoopsCommon = std::min(numLoopsIn, numLoopsOut);
     size_t numLoopsTotal = numLoopsIn + numLoopsOut;
     Vector<int64_t> schv;
@@ -939,8 +761,8 @@ struct Dependence {
                              Col nonTimeDim) -> bool {
     const Simplex &fxy = p.first;
     const Simplex &fyx = p.second;
-    const size_t numLoopsX = x.ref.getNumLoops();
-    const size_t numLoopsY = y.ref.getNumLoops();
+    const size_t numLoopsX = x.getNumLoops();
+    const size_t numLoopsY = y.getNumLoops();
 #ifndef NDEBUG
     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
@@ -1001,8 +823,8 @@ struct Dependence {
                              size_t numLambda, Col nonTimeDim) -> bool {
     const Simplex &fxy = p.first;
     const Simplex &fyx = p.second;
-    const size_t numLoopsX = x.ref.getNumLoops();
-    const size_t numLoopsY = y.ref.getNumLoops();
+    const size_t numLoopsX = x.getNumLoops();
+    const size_t numLoopsY = y.getNumLoops();
 #ifndef NDEBUG
     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
@@ -1206,7 +1028,7 @@ struct Dependence {
 
   static auto check(llvm::SmallVectorImpl<Dependence> &deps, MemoryAccess &x,
                     MemoryAccess &y) -> size_t {
-    if (x.ref.gcdKnownIndependent(y.ref))
+    if (x.gcdKnownIndependent(y))
       return 0;
     DependencePolyhedra dxy(x, y);
     assert(x.getNumLoops() == dxy.getDim0());

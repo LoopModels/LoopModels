@@ -1,4 +1,3 @@
-#include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Loops.hpp"

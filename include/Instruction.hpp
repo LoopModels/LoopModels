@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
 #include "./Predicate.hpp"
+#include "MemoryAccess.hpp"
 #include <algorithm>
 #include <bit>
 #include <concepts>
@@ -154,7 +154,7 @@ struct Instruction {
   [[no_unique_address]] llvm::Type *type;
   [[no_unique_address]] std::variant<std::monostate, llvm::Instruction *,
                                      llvm::ConstantInt *, llvm::ConstantFP *,
-                                     ArrayReference *>
+                                     MemoryAccess *>
     ptr;
   [[no_unique_address]] Predicate::Set predicates;
   [[no_unique_address]] llvm::MutableArrayRef<Instruction *> operands;
@@ -250,7 +250,7 @@ struct Instruction {
   struct ExtractValue {
     auto operator()(auto) const -> llvm::Value * { return nullptr; }
     auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
-    auto operator()(ArrayReference *v) const -> llvm::Value * {
+    auto operator()(MemoryAccess *v) const -> llvm::Value * {
       return v->loadOrStore;
     }
   };
@@ -274,7 +274,7 @@ struct Instruction {
         return I->getParent();
       return nullptr;
     }
-    auto operator()(ArrayReference *v) const -> llvm::BasicBlock * {
+    auto operator()(MemoryAccess *v) const -> llvm::BasicBlock * {
       return v->loadOrStore->getParent();
     }
   };
@@ -961,7 +961,7 @@ struct Instruction {
       else
         return {};
     }
-    auto operator()(ArrayReference *ref) const -> llvm::Align {
+    auto operator()(MemoryAccess *ref) const -> llvm::Align {
       return ref->getAlign();
     }
   };
