@@ -21,13 +21,13 @@ jobs:
     - run: meson setup builddirgcc -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: g++
-    - run: meson test -C builddirgcc
+    - run: meson test --print-errorlogs -C builddirgcc
     - run: meson compile -C builddirgcc
     - run: ninja coverage -C builddirgcc
     - run: meson setup builddirclang -Db_santize=address,undefined -Db_coverage=true
       env:
         CXX: clang++-15
-    - run: meson test -C builddirclang
+    - run: meson test --print-errorlogs -C builddirclang
     - run: meson compile -C builddirclang/
     - run: ninja coverage -C builddirclang
     - uses: actions/upload-artifact@v1
@@ -55,7 +55,7 @@ jobs:
       env:
         CXX: g++-12
         CXXFLAGS: "-stdlib=libstdc++"
-    - run: meson test -C builddir/
+    - run: meson test --print-errorlogs -C builddir/
       env: 
         CXX: g++-12
     - run: brew install googletest
@@ -67,7 +67,7 @@ jobs:
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CPPFLAGS: "-I/usr/local/opt/llvm/include"
         CXXFLAGS: "-stdlib=libc++"
-    - run: meson test -C builddir/
+    - run: meson test --print-errorlogs -C builddir/
     - run: meson compile -C builddir/
     - run: ninja coverage -C builddir
     - uses: actions/upload-artifact@v1
@@ -94,7 +94,7 @@ jobs:
   #   - run: meson setup builddir
   #     env:
   #       CXX: g++
-  #   - run: meson test -C builddir/ -v
+  #   - run: meson test --print-errorlogs -C builddir/ -v
   #   - uses: actions/upload-artifact@v1
   #     if: failure()
   #     with:
