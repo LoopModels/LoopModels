@@ -3,8 +3,9 @@
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "../include/MemoryAccess.hpp"
 #include "../include/TestUtilities.hpp"
-#include "MemoryAccess.hpp"
+#include "./ArrayReference.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -15,28 +16,6 @@
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Type.h>
-
-struct ArrayReference {
-  const llvm::SCEVUnknown *basePointer;
-  AffineLoopNest<> &loop;
-  IntMatrix indMat;
-  IntMatrix offMat;
-  llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  ArrayReference(const llvm::SCEVUnknown *p, AffineLoopNest<> &l, size_t dim)
-    : basePointer(p), loop(l), indMat(loop.getNumLoops(), dim), offMat(dim, 1) {
-  }
-
-  auto indexMatrix() -> MutPtrMatrix<int64_t> { return indMat; }
-  auto offsetMatrix() -> MutPtrMatrix<int64_t> { return offMat; }
-};
-auto createMemAccess(ArrayReference &ar, llvm::Instruction *I,
-                     llvm::ArrayRef<unsigned> omegas) -> MemoryAccess {
-  MemoryAccess mem{ar.basePointer, ar.loop, I, ar.sizes, {}, omegas};
-  mem.resize(size_t(ar.offsetMatrix().numRow()));
-  mem.indexMatrix() = ar.indexMatrix();
-  mem.offsetMatrix() = ar.offsetMatrix();
-  return mem;
-}
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(DependenceTest, BasicAssertions) {

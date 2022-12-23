@@ -1,9 +1,9 @@
-#include "../include/ArrayReference.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/Orthogonalize.hpp"
 #include "../include/TestUtilities.hpp"
+#include "./ArrayReference.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -69,9 +69,10 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
   newArrayRefs.reserve(numRow);
   i = 0;
   for (auto a : ai) {
-    newArrayRefs.emplace_back(*a, &ret.first,
-                              KS(_, _(i, i + a->getArrayDim())));
-    i += a->getArrayDim();
+    Col j = i + a->getArrayDim();
+    newArrayRefs.emplace_back(*a, &ret.first, KS(_, _(i, j)));
+    EXPECT_EQ(newArrayRefs.back().indexMatrix(), KS(_, _(i, j)));
+    i = j;
   }
   return ret;
 }
@@ -105,7 +106,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   // we have three array refs
   // W[i+m, j+n]
   // llvm::SmallVector<std::pair<MPoly,MPoly>>
-  ArrayReference War{scevW, &aln, 2};
+  ArrayReference War{scevW, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = War.indexMatrix();
     IndMat(0, 0) = 1; // m
@@ -116,10 +117,10 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     War.sizes[0] = SE.getAddExpr(N, SE.getAddExpr(J, SE.getMinusOne(Int64)));
     War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "War = " << War << "\n";
+  // llvm::errs() << "War = " << War << "\n";
 
   // B[i, j]
-  ArrayReference Bar{scevB, &aln, 2};
+  ArrayReference Bar{scevB, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = Bar.indexMatrix();
     IndMat(2, 0) = 1; // i
@@ -127,10 +128,10 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     Bar.sizes[0] = J;
     Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Bar = " << Bar << "\n";
+  // llvm::errs() << "Bar = " << Bar << "\n";
 
   // C[m, n]
-  ArrayReference Car{scevC, &aln, 2};
+  ArrayReference Car{scevC, aln, 2};
   {
     MutPtrMatrix<int64_t> IndMat = Car.indexMatrix();
     IndMat(0, 0) = 1; // m
@@ -138,7 +139,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
     Car.sizes[0] = N;
     Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Car = " << Car << "\n";
+  // llvm::errs() << "Car = " << Car << "\n";
 
   llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
   llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
@@ -154,6 +155,10 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
   for (auto &&ar : newArrayRefs)
     ar.loop = &newAln;
+  // for (size_t i = 0; i < newArrayRefs.size(); ++i)
+  //   llvm::errs() << "newArrayRefs[" << i
+  //                << "].indexMatrix() = " << newArrayRefs[i].indexMatrix()
+  //                << "\n";
   EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 0)), 1);
   EXPECT_EQ(countNonZero(newArrayRefs[0].indexMatrix()(_, 1)), 1);
   EXPECT_EQ(countNonZero(newArrayRefs[1].indexMatrix()(_, 0)), 1);
@@ -178,9 +183,6 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   auto loop0Count = countSigns(newAln.A, 0 + newAln.getNumSymbols());
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);
-  llvm::errs() << "New ArrayReferences:\n";
-  for (auto &ar : newArrayRefs)
-    llvm::errs() << ar << "\n";
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -233,7 +235,7 @@ TEST(BadMul, BasicAssertions) {
     War.sizes[0] = N;
     War.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "War = " << War << "\n";
+  // llvm::errs() << "War = " << War << "\n";
 
   // B[j, l - j] // M x K
   ArrayReference Bar(scevB, aln, 2); //, axes, indTo
@@ -245,7 +247,7 @@ TEST(BadMul, BasicAssertions) {
     Bar.sizes[0] = K;
     Bar.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Bar = " << Bar << "\n";
+  // llvm::errs() << "Bar = " << Bar << "\n";
 
   // C[l-j,i-l] // K x N
   ArrayReference Car(scevC, aln, 2); //, axes, indTo
@@ -258,7 +260,7 @@ TEST(BadMul, BasicAssertions) {
     Car.sizes[0] = N;
     Car.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Car = " << Car << "\n";
+  // llvm::errs() << "Car = " << Car << "\n";
 
   llvm::SmallVector<ArrayReference, 0> allArrayRefs{War, Bar, Car};
   llvm::SmallVector<ArrayReference *> ai{&allArrayRefs[0], &allArrayRefs[1],
@@ -291,9 +293,8 @@ TEST(BadMul, BasicAssertions) {
   EXPECT_EQ(loop0Count.second, 0);
 
   llvm::errs() << "New ArrayReferences:\n";
-  for (auto &ar : newArrayRefs)
-    llvm::errs() << ar << "\n"
-                 << "\n";
+  // for (auto &ar : newArrayRefs)
+  //   llvm::errs() << ar << "\n\n";
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
