@@ -95,18 +95,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopPreHeader</b> (
 <tr class="memitem:a64d7c1746ed756d30f0d4dafd4846097"><td class="memItemLeft" align="right" valign="top"><a id="a64d7c1746ed756d30f0d4dafd4846097"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>fillAffineIndices</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt; v, <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; int64_t &gt; &amp;offsets, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;symbolicOffsets, const llvm::SCEV *S, int64_t mlt, size_t numPeeled) -&gt; uint64_t</td></tr>
 <tr class="separator:a64d7c1746ed756d30f0d4dafd4846097"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cc0a0952b056ccc938a107497124b10"><td class="memItemLeft" align="right" valign="top"><a id="a0cc0a0952b056ccc938a107497124b10"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>arrayRef</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::Instruction *ptr, const llvm::SCEV *elSize) -&gt; std::optional&lt; <a class="el" href="structArrayReference.html">ArrayReference</a> &gt;</td></tr>
-<tr class="separator:a0cc0a0952b056ccc938a107497124b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26291920f2e08ea42b60eeb444520713"><td class="memItemLeft" align="right" valign="top"><a id="a26291920f2e08ea42b60eeb444520713"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>arrayRef</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::Instruction *ptr, const llvm::SCEV *elSize, llvm::Instruction *loadOrStore, llvm::MutableArrayRef&lt; unsigned &gt; omegas) -&gt; bool</td></tr>
+<tr class="separator:a26291920f2e08ea42b60eeb444520713"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80eb6e4b8e5ee251b4537aa953e8dfbe"><td class="memItemLeft" align="right" valign="top"><a id="a80eb6e4b8e5ee251b4537aa953e8dfbe"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoopTree</b> (llvm::Loop *L) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> *</td></tr>
 <tr class="separator:a80eb6e4b8e5ee251b4537aa953e8dfbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a663c0e5dd579fb987c84f7d8ee08780f"><td class="memItemLeft" align="right" valign="top"><a id="a663c0e5dd579fb987c84f7d8ee08780f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addLoad</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::LoadInst *I, llvm::SmallVector&lt; unsigned &gt; &amp;omega) -&gt; bool</td></tr>
-<tr class="separator:a663c0e5dd579fb987c84f7d8ee08780f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60986d9a8df22f1c914febba36bd7270"><td class="memItemLeft" align="right" valign="top"><a id="a60986d9a8df22f1c914febba36bd7270"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>addStore</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::StoreInst *I, llvm::SmallVector&lt; unsigned &gt; &amp;omega) -&gt; bool</td></tr>
-<tr class="separator:a60986d9a8df22f1c914febba36bd7270"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a07265aef669a4cbaf26c17d6aef64f14"><td class="memItemLeft" align="right" valign="top"><a id="a07265aef669a4cbaf26c17d6aef64f14"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>addRef</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, LoadOrStoreInst auto *I, llvm::SmallVector&lt; unsigned &gt; &amp;omega) -&gt; bool</td></tr>
+<tr class="separator:a07265aef669a4cbaf26c17d6aef64f14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3a68744c7029472e282b03b014abc7cd"><td class="memItemLeft" align="right" valign="top"><a id="a3a68744c7029472e282b03b014abc7cd"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>parseBB</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;LT, llvm::BasicBlock *BB, llvm::SmallVector&lt; unsigned &gt; &amp;omega)</td></tr>
 <tr class="separator:a3a68744c7029472e282b03b014abc7cd"><td class="memSeparator" colspan="2">&#160;</td></tr>

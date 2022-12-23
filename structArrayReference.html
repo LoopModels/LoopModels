@@ -130,6 +130,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>allConstantIndices</b
 <tr class="memitem:a15d19f67bb002f71616f96109c365e02"><td class="memItemLeft" align="right" valign="top"><a id="a15d19f67bb002f71616f96109c365e02"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (const <a class="el" href="structArrayReference.html">ArrayReference</a> &amp;x) const -&gt; bool</td></tr>
 <tr class="separator:a15d19f67bb002f71616f96109c365e02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03f5adfb096462bdfebf1cbae0de872d"><td class="memItemLeft" align="right" valign="top"><a id="a03f5adfb096462bdfebf1cbae0de872d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ArrayReference</b> (const llvm::SCEVUnknown *p, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;&gt; &amp;l, size_t dim)</td></tr>
+<tr class="separator:a03f5adfb096462bdfebf1cbae0de872d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d3f6e08d8a26e16c15c1490c9ba3e4f"><td class="memItemLeft" align="right" valign="top"><a id="a3d3f6e08d8a26e16c15c1490c9ba3e4f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>indexMatrix</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a3d3f6e08d8a26e16c15c1490c9ba3e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77e221474ba01803db673a227a0517c5"><td class="memItemLeft" align="right" valign="top"><a id="a77e221474ba01803db673a227a0517c5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a77e221474ba01803db673a227a0517c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -146,21 +155,30 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a75e06cc7422ba901d717aa3627c7d7a2"><td class="memItemLeft" align="right" valign="top"><a id="a75e06cc7422ba901d717aa3627c7d7a2"></a>
 llvm::SmallVector&lt; int64_t, 16 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>indices</b></td></tr>
 <tr class="separator:a75e06cc7422ba901d717aa3627c7d7a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad374ce241fb45dae63df02bb6f80d9b7"><td class="memItemLeft" align="right" valign="top"><a id="ad374ce241fb45dae63df02bb6f80d9b7"></a>
+<tr class="memitem:a2441471ec5292e14e63589155dd25ea5"><td class="memItemLeft" align="right" valign="top"><a id="a2441471ec5292e14e63589155dd25ea5"></a>
 const llvm::SCEVUnknown *&#160;</td><td class="memItemRight" valign="bottom"><b>basePointer</b></td></tr>
-<tr class="separator:ad374ce241fb45dae63df02bb6f80d9b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a2441471ec5292e14e63589155dd25ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae7a1938fa9adb951065d51a74ab9abe2"><td class="memItemLeft" align="right" valign="top"><a id="ae7a1938fa9adb951065d51a74ab9abe2"></a>
 <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
 <tr class="separator:ae7a1938fa9adb951065d51a74ab9abe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41e61cca0809181be7c92259375d93cd"><td class="memItemLeft" align="right" valign="top"><a id="a41e61cca0809181be7c92259375d93cd"></a>
 llvm::Instruction *&#160;</td><td class="memItemRight" valign="bottom"><b>loadOrStore</b></td></tr>
 <tr class="separator:a41e61cca0809181be7c92259375d93cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abdf130b316a4919177a5b57fb267ad7a"><td class="memItemLeft" align="right" valign="top"><a id="abdf130b316a4919177a5b57fb267ad7a"></a>
+<tr class="memitem:ae297c1ca4db6c2b7841c32dedf109988"><td class="memItemLeft" align="right" valign="top"><a id="ae297c1ca4db6c2b7841c32dedf109988"></a>
 llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sizes</b></td></tr>
-<tr class="separator:abdf130b316a4919177a5b57fb267ad7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae297c1ca4db6c2b7841c32dedf109988"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a77db2f598caae25b34280bc877dad57c"><td class="memItemLeft" align="right" valign="top"><a id="a77db2f598caae25b34280bc877dad57c"></a>
 llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>symbolicOffsets</b></td></tr>
 <tr class="separator:a77db2f598caae25b34280bc877dad57c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a489107dbc1959782b1ddab2e99f3eb30"><td class="memItemLeft" align="right" valign="top"><a id="a489107dbc1959782b1ddab2e99f3eb30"></a>
+<a class="el" href="structAffineLoopNest.html">AffineLoopNest</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
+<tr class="separator:a489107dbc1959782b1ddab2e99f3eb30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30d5127b0b4f037092c71ceacab31c2a"><td class="memItemLeft" align="right" valign="top"><a id="a30d5127b0b4f037092c71ceacab31c2a"></a>
+IntMatrix&#160;</td><td class="memItemRight" valign="bottom"><b>indMat</b></td></tr>
+<tr class="separator:a30d5127b0b4f037092c71ceacab31c2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6e43cadff64d5af7dea008823347c68"><td class="memItemLeft" align="right" valign="top"><a id="ab6e43cadff64d5af7dea008823347c68"></a>
+IntMatrix&#160;</td><td class="memItemRight" valign="bottom"><b>offMat</b></td></tr>
+<tr class="separator:ab6e43cadff64d5af7dea008823347c68"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -170,8 +188,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> 
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><code>foo</code> and <code>bar</code> can share the same <code><a class="el" href="structAffineLoopNest.html">AffineLoopNest</a></code> (of depth 3), but <code>baz</code> needs its own (of depth 2): for i = I, j = J baz(i,j,...) for k = K foo(i,j,k,...) end end for i = I, j = J, k = K bar(i,j,k,...) end NOTE: strides are in row major order! this is because we want stride ranks to be in decreasing order </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this struct was generated from the following files:<ul>
 <li>include/<a class="el" href="ArrayReference_8hpp_source.html">ArrayReference.hpp</a></li>
+<li>test/dependence_test.cpp</li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['val_179',['Val',['../structVal.html',1,'']]],
-  ['variantequal_180',['VariantEqual',['../structllvm_1_1DenseMapInfo_3_1_1Instruction_1_1Identifier_01_4_1_1VariantEqual.html',1,'llvm::DenseMapInfo']]],
-  ['vector_181',['Vector',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]],
-  ['vector_3c_20int64_5ft_20_3e_182',['Vector&lt; int64_t &gt;',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]],
-  ['vector_3c_20rational_20_3e_183',['Vector&lt; Rational &gt;',['../structLinearAlgebra_1_1Vector.html',1,'LinearAlgebra']]]
+  ['testloopfunction_178',['TestLoopFunction',['../structTestLoopFunction.html',1,'']]],
+  ['transpose_179',['Transpose',['../structLinearAlgebra_1_1Transpose.html',1,'LinearAlgebra']]],
+  ['turbolooppass_180',['TurboLoopPass',['../classTurboLoopPass.html',1,'']]],
+  ['typealignment_181',['typeAlignment',['../structArrayReference.html#a8d40893e36897a4d7251fc6699d93c84',1,'ArrayReference::typeAlignment()'],['../structMemoryAccess.html#a0062ff34fe54995918590f2b87fd2db2',1,'MemoryAccess::typeAlignment()']]]
 ];

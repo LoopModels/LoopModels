@@ -1,11 +1,5 @@
 var searchData=
 [
-  ['offsetbegin_278',['OffsetBegin',['../structLinearAlgebra_1_1OffsetBegin.html',1,'LinearAlgebra']]],
-  ['offsetend_279',['OffsetEnd',['../structLinearAlgebra_1_1OffsetEnd.html',1,'LinearAlgebra']]],
-  ['one_280',['One',['../structOne.html',1,'']]],
-  ['opcode_281',['OpCode',['../structInstruction_1_1Intrinsic_1_1OpCode.html',1,'Instruction::Intrinsic']]],
-  ['optional_282',['Optional',['../structOptional.html',1,'']]],
-  ['optional_3c_20t_20_2a_20_3e_283',['Optional&lt; T * &gt;',['../structOptional_3_01T_01_5_01_4.html',1,'']]],
-  ['optional_3c_20t_20_3e_284',['Optional&lt; T &gt;',['../structOptional_3_01T_01_4.html',1,'']]],
-  ['outneighbors_285',['OutNeighbors',['../structLinearProgramLoopBlock_1_1OutNeighbors.html',1,'LinearProgramLoopBlock']]]
+  ['notnull_280',['NotNull',['../structNotNull.html',1,'']]],
+  ['notnull_3c_20affineloopnest_3c_3e_20_3e_281',['NotNull&lt; AffineLoopNest&lt;&gt; &gt;',['../structNotNull.html',1,'']]]
 ];

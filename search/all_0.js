@@ -5,11 +5,10 @@ var searchData=
   ['addnodeindex_2',['addNodeIndex',['../structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5',1,'MemoryAccess']]],
   ['addsymbol_3',['addSymbol',['../structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1',1,'AffineLoopNest']]],
   ['affineloopnest_4',['AffineLoopNest',['../structAffineLoopNest.html',1,'']]],
-  ['affineloopnest_3c_20false_20_3e_5',['AffineLoopNest&lt; false &gt;',['../structAffineLoopNest.html',1,'']]],
-  ['affineloopnest_3c_20true_20_3e_6',['AffineLoopNest&lt; true &gt;',['../structAffineLoopNest.html',1,'']]],
-  ['allocate_7',['Allocate',['../structMergingCost_1_1Allocate.html',1,'MergingCost']]],
-  ['arrayreference_8',['ArrayReference',['../structArrayReference.html',1,'']]],
-  ['axisint_9',['AxisInt',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3acolumn_20_3e_10',['AxisInt&lt; AxisType::Column &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3arowstride_20_3e_11',['AxisInt&lt; AxisType::RowStride &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
+  ['affineloopnest_3c_20true_20_3e_5',['AffineLoopNest&lt; true &gt;',['../structAffineLoopNest.html',1,'']]],
+  ['allocate_6',['Allocate',['../structMergingCost_1_1Allocate.html',1,'MergingCost']]],
+  ['arrayreference_7',['ArrayReference',['../structArrayReference.html',1,'']]],
+  ['axisint_8',['AxisInt',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
+  ['axisint_3c_20axistype_3a_3acolumn_20_3e_9',['AxisInt&lt; AxisType::Column &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
+  ['axisint_3c_20axistype_3a_3arowstride_20_3e_10',['AxisInt&lt; AxisType::RowStride &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
 ];
