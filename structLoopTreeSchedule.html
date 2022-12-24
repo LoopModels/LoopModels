@@ -81,25 +81,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepth</b> () const
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5ba614d062e116ee1a28a60878a53918"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoopTreeSchedule.html#a5ba614d062e116ee1a28a60878a53918">loopNest</a></td></tr>
-<tr class="separator:a5ba614d062e116ee1a28a60878a53918"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18842e0010f93a4ca75a11d611ab884d"><td class="memItemLeft" align="right" valign="top"><a id="a18842e0010f93a4ca75a11d611ab884d"></a>
-llvm::SmallVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>memAccesses</b></td></tr>
-<tr class="separator:a18842e0010f93a4ca75a11d611ab884d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af9f9a8f6df43fadf70a572e02a168d17"><td class="memItemLeft" align="right" valign="top"><a id="af9f9a8f6df43fadf70a572e02a168d17"></a>
-llvm::SmallVector&lt; LoopAndExit &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subTrees</b></td></tr>
+<tr class="memitem:a3d5d0f1fc08e1e87e42b210d4fb72eab"><td class="memItemLeft" align="right" valign="top"><a id="a3d5d0f1fc08e1e87e42b210d4fb72eab"></a>
+<a class="el" href="structInstructionBlock.html">InstructionBlock</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoopTreeSchedule.html#a3d5d0f1fc08e1e87e42b210d4fb72eab">header</a></td></tr>
+<tr class="memdesc:a3d5d0f1fc08e1e87e42b210d4fb72eab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Header of the loop. <br /></td></tr>
+<tr class="separator:a3d5d0f1fc08e1e87e42b210d4fb72eab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9f9a8f6df43fadf70a572e02a168d17"><td class="memItemLeft" align="right" valign="top">llvm::SmallVector&lt; LoopAndExit &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoopTreeSchedule.html#af9f9a8f6df43fadf70a572e02a168d17">subTrees</a></td></tr>
 <tr class="separator:af9f9a8f6df43fadf70a572e02a168d17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada3d4ebd7858643e10afd62c0168b5cd"><td class="memItemLeft" align="right" valign="top"><a id="ada3d4ebd7858643e10afd62c0168b5cd"></a>
-InstructionBlock *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoopTreeSchedule.html#ada3d4ebd7858643e10afd62c0168b5cd">preHeader</a></td></tr>
-<tr class="memdesc:ada3d4ebd7858643e10afd62c0168b5cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loop pre-header block for this loop tree. <br /></td></tr>
-<tr class="separator:ada3d4ebd7858643e10afd62c0168b5cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4cff5646eb5347a3ce250de5e4405d25"><td class="memItemLeft" align="right" valign="top"><a id="a4cff5646eb5347a3ce250de5e4405d25"></a>
-InstructionBlock *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLoopTreeSchedule.html#a4cff5646eb5347a3ce250de5e4405d25">exitBlock</a></td></tr>
-<tr class="memdesc:a4cff5646eb5347a3ce250de5e4405d25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loop exit block for this loop tree. <br /></td></tr>
-<tr class="separator:a4cff5646eb5347a3ce250de5e4405d25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae60c556905987d7a4e88c562a868c4d6"><td class="memItemLeft" align="right" valign="top"><a id="ae60c556905987d7a4e88c562a868c4d6"></a>
-<a class="el" href="structLoopTreeSchedule.html">LoopTreeSchedule</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>parentLoop</b> {nullptr}</td></tr>
-<tr class="separator:ae60c556905987d7a4e88c562a868c4d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03d710b17ff67d9a31345ee8b206715a"><td class="memItemLeft" align="right" valign="top"><a id="a03d710b17ff67d9a31345ee8b206715a"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>depth</b></td></tr>
 <tr class="separator:a03d710b17ff67d9a31345ee8b206715a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -114,18 +101,18 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>unrollPredcedence<
 <tr class="separator:a4da1baf5eb341b81f3512c46ddd34379"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a5ba614d062e116ee1a28a60878a53918"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5ba614d062e116ee1a28a60878a53918">&#9670;&nbsp;</a></span>loopNest</h2>
+<a id="af9f9a8f6df43fadf70a572e02a168d17"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9f9a8f6df43fadf70a572e02a168d17">&#9670;&nbsp;</a></span>subTrees</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;true&gt; LoopTreeSchedule::loopNest</td>
+          <td class="memname">llvm::SmallVector&lt;LoopAndExit&gt; LoopTreeSchedule::subTrees</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>First block of the loop body. Also, the preheader of subTrees.front().first; </p>
+<p>Variable number of sub loops and their associated exits. For the inner most loop, <code>subTrees.empty()</code>. </p>
 
 </div>
 </div>
