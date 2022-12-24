@@ -49,7 +49,8 @@
 // directly leads to another, which would be important for whether two loops may
 // be fused.
 
-auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
+auto __attribute__((visibility("default")))
+TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   -> llvm::PreservedAnalyses {
   // llvm::LoopNest LA = FAM.getResult<llvm::LoopNestAnalysis>(F);
   // llvm::AssumptionCache &AC = FAM.getResult<llvm::AssumptionAnalysis>(F);
@@ -107,9 +108,9 @@ auto TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   }
   return llvm::PreservedAnalyses::none();
 }
-auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
-                       llvm::ArrayRef<llvm::PassBuilder::PipelineElement>)
-  -> bool {
+auto __attribute__((visibility("default")))
+PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
+                  llvm::ArrayRef<llvm::PassBuilder::PipelineElement>) -> bool {
   if (Name == "turbo-loop") {
     // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::LoopSimplifyPass()));
     // FPM.addPass(llvm::createFunctionToLoopPassAdaptor(llvm::IndVarSimplifyPass()));
@@ -119,7 +120,7 @@ auto PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,
   return false;
 }
 
-void RegisterCB(llvm::PassBuilder &PB) {
+void __attribute__((visibility("default"))) RegisterCB(llvm::PassBuilder &PB) {
   PB.registerVectorizerStartEPCallback(
     [](llvm::FunctionPassManager &PM, llvm::OptimizationLevel) {
       PM.addPass(TurboLoopPass());
@@ -127,7 +128,7 @@ void RegisterCB(llvm::PassBuilder &PB) {
   PB.registerPipelineParsingCallback(PipelineParsingCB);
 }
 
-extern "C" auto LLVM_ATTRIBUTE_WEAK llvmGetPassPluginInfo()
-  -> ::llvm::PassPluginLibraryInfo {
+extern "C" auto __attribute__((visibility("default"))) LLVM_ATTRIBUTE_WEAK
+llvmGetPassPluginInfo() -> ::llvm::PassPluginLibraryInfo {
   return {LLVM_PLUGIN_API_VERSION, "TurboLoop", "v0.1", RegisterCB};
 }
