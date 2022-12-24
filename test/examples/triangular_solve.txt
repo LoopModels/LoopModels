@@ -55,9 +55,17 @@ Loop 0 lower bounds: i_0 >= 0
 Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[0]
-ref = ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ref = Store:   store double %64, double addrspace(13)* %65, align 8, !dbg !61, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
+Schedule Omega: [ 0, 0, 1 ]
+AffineLoopNest:
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -1 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  0
    0  1 ]
@@ -65,9 +73,19 @@ s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 
 Schedule Out:
-nodeIndex = BitSet[1]; ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+nodeIndex = BitSet[1]; ref = Load:   %83 = load double, double addrspace(13)* %82, align 8, !dbg !89, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 0 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -102,9 +120,17 @@ Loop 0 lower bounds: i_0 >= 0
 Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[0]
-ref = ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+ref = Store:   store double %64, double addrspace(13)* %65, align 8, !dbg !61, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
+Schedule Omega: [ 0, 0, 1 ]
+AffineLoopNest:
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -1 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  0
    0  1 ]
@@ -112,9 +138,19 @@ s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 
 Schedule Out:
-nodeIndex = BitSet[1]; ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+nodeIndex = BitSet[1]; ref = Store:   store double %89, double addrspace(13)* %82, align 8, !dbg !95, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 2 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -151,9 +187,19 @@ Loop 0 lower bounds: i_0 >= 0
 Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[1]
-ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ref = Load:   %83 = load double, double addrspace(13)* %82, align 8, !dbg !89, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 0 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -162,9 +208,19 @@ s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 
 Schedule Out:
-nodeIndex = BitSet[1]; ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+nodeIndex = BitSet[1]; ref = Store:   store double %89, double addrspace(13)* %82, align 8, !dbg !95, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 2 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -201,9 +257,19 @@ Loop 0 lower bounds: i_0 >= 0
 Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[1]
-ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+ref = Store:   store double %89, double addrspace(13)* %82, align 8, !dbg !95, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 2 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -212,9 +278,19 @@ s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 
 Schedule Out:
-nodeIndex = BitSet[1]; ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+nodeIndex = BitSet[1]; ref = Load:   %83 = load double, double addrspace(13)* %82, align 8, !dbg !89, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 0 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 s.getPhi()
 [  1  1  0
    0  0  1
@@ -223,27 +299,53 @@ s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 LoopBlock schedule (#mem accesses = 5):
 
-Ref = ArrayReference %52 (dim = 2, num loops: 2, element size: 8):
+Ref = Load:   %64 = load double, double addrspace(13)* %63, align 8, !dbg !55, !tbaa !59
+ArrayReference %52 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
+Schedule Omega: [ 0, 0, 0 ]
+AffineLoopNest:
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -1 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 nodeIndex = 0
 s.getPhi()
 [  1  0
    0  1 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
-Ref = ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
+Ref = Store:   store double %64, double addrspace(13)* %65, align 8, !dbg !61, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 2, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1 , i_0 ]
+Schedule Omega: [ 0, 0, 1 ]
+AffineLoopNest:
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -1 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 nodeIndex = 0
 s.getPhi()
 [  1  0
    0  1 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
-Ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+Ref = Load:   %83 = load double, double addrspace(13)* %82, align 8, !dbg !89, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 0 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 nodeIndex = 1
 s.getPhi()
 [  1  1  0
@@ -251,9 +353,19 @@ s.getPhi()
    0  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
-Ref = ArrayReference %58 (dim = 2, num loops: 3, element size: 8):
+Ref = Load:   %87 = load double, double addrspace(13)* %86, align 8, !dbg !89, !tbaa !59
+ArrayReference %58 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %23 ]
 Subscripts: [ i_1  + i_2  + 1, i_1 ]
+Schedule Omega: [ 0, 1, 0, 1 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 nodeIndex = 1
 s.getPhi()
 [  1  1  0
@@ -261,9 +373,19 @@ s.getPhi()
    0  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
-Ref = ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
+Ref = Store:   store double %89, double addrspace(13)* %82, align 8, !dbg !95, !tbaa !59
+ArrayReference %55 (dim = 2, num loops: 3, element size: 8):
 Sizes: [ unknown, %20 ]
 Subscripts: [ i_1  + i_2  + 1, i_0 ]
+Schedule Omega: [ 0, 1, 0, 2 ]
+AffineLoopNest:
+Loop 2 lower bounds: i_2 >= 0
+Loop 2 upper bounds: i_2 <= -2 + %23 - i_1
+Loop 1 lower bounds: i_1 >= 0
+Loop 1 upper bounds: i_1 <= -2 + %23
+Loop 0 lower bounds: i_0 >= 0
+Loop 0 upper bounds: i_0 <= -1 + %20
+
 nodeIndex = 1
 s.getPhi()
 [  1  1  0

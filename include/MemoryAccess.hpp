@@ -1,6 +1,8 @@
 #pragma once
-#include "ArrayReference.hpp"
 #include "BitSets.hpp"
+#include "Loops.hpp"
+#include <cstring>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
@@ -10,7 +12,13 @@
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
-  [[no_unique_address]] ArrayReference ref;
+  [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
+  [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
+  [[no_unique_address]] NotNull<AffineLoopNest<>> loop;
+  [[no_unique_address]] llvm::Instruction *loadOrStore;
+  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
+  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
+    symbolicOffsets;
   // omegas order is [outer <-> inner]
   [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
   [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
@@ -19,41 +27,107 @@ struct MemoryAccess {
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
-  [[nodiscard]] auto isLoad() const -> bool { return ref.isLoad(); }
-  auto getInstruction() -> llvm::Instruction * { return ref.loadOrStore; }
+  [[nodiscard]] auto isLoad() const -> bool {
+    return llvm::isa<llvm::LoadInst>(loadOrStore);
+  }
+  // TODO: `constexpr` once `llvm::SmallVector` supports it
+  [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
+  [[nodiscard]] auto getNumSymbols() const -> size_t {
+    return 1 + symbolicOffsets.size();
+  }
+  [[nodiscard]] auto getNumLoops() const -> size_t {
+    assert(loop->getNumLoops() + 1 == omegas.size());
+    return loop->getNumLoops();
+  }
+
+  [[nodiscard]] auto getAlign() const -> llvm::Align {
+    if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
+      return l->getAlign();
+    else if (auto s = llvm::cast<llvm::StoreInst>(loadOrStore))
+      return s->getAlign();
+// note cast not dyn_cast for store
+// not a load or store
+#if __cplusplus >= 202202L
+    std::unreachable();
+#else
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
+    __builtin_unreachable();
+#endif
+#endif
+#endif
+    return llvm::Align(1);
+  }
+  // static inline size_t requiredData(size_t dim, size_t numLoops){
+  // 	return dim*numLoops +
+  // }
+  // indexMatrix()' * i == indices
+  // indexMatrix() returns a getNumLoops() x arrayDim() matrix.
+  // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
+  // getNumLoops() x arrayDim()
+  [[nodiscard]] auto indexMatrix() -> MutPtrMatrix<int64_t> {
+    const size_t d = getArrayDim();
+    return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
+  }
+  [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
+    const size_t d = getArrayDim();
+    return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
+  }
+  [[nodiscard]] auto offsetMatrix() -> MutPtrMatrix<int64_t> {
+    const size_t d = getArrayDim();
+    const size_t numSymbols = getNumSymbols();
+    return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
+                                 numSymbols, numSymbols};
+  }
+  [[nodiscard]] auto offsetMatrix() const -> PtrMatrix<int64_t> {
+    const size_t d = getArrayDim();
+    const size_t numSymbols = getNumSymbols();
+    return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d, numSymbols,
+                              numSymbols};
+  }
+  [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
+    return loadOrStore;
+  }
   [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
-    return ref.loadOrStore;
+    return loadOrStore;
   }
-  auto getLoad() -> llvm::LoadInst * {
-    return llvm::dyn_cast<llvm::LoadInst>(ref.loadOrStore);
+  [[nodiscard]] auto getLoad() -> llvm::LoadInst * {
+    return llvm::dyn_cast<llvm::LoadInst>(loadOrStore);
   }
-  auto getStore() -> llvm::StoreInst * {
-    return llvm::dyn_cast<llvm::StoreInst>(ref.loadOrStore);
+  [[nodiscard]] auto getStore() -> llvm::StoreInst * {
+    return llvm::dyn_cast<llvm::StoreInst>(loadOrStore);
+  }
+  /// initialize alignment from an elSize SCEV.
+  static auto typeAlignment(const llvm::SCEV *S) -> llvm::Align {
+    if (auto *C = llvm::dyn_cast<llvm::SCEVConstant>(S))
+      return llvm::Align(C->getAPInt().getZExtValue());
+    return llvm::Align{1};
+  }
+  void resize(size_t d) {
+    sizes.resize(d);
+    indices.resize(d * (getNumLoops() + getNumSymbols()));
   }
 
   inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
   inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
   /// add a node index
   inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
-  MemoryAccess(ArrayReference r, llvm::Instruction *user,
-               llvm::SmallVector<unsigned, 8> omegas)
-    : ref(std::move(r)), omegas(std::move(omegas)) {
-    ref.loadOrStore = user;
-  };
-  MemoryAccess(ArrayReference r, llvm::Instruction *user) : ref(std::move(r)) {
-    ref.loadOrStore = user;
-  };
-  MemoryAccess(ArrayReference r, llvm::Instruction *user,
+  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
+               llvm::Instruction *user,
+               llvm::SmallVector<const llvm::SCEV *, 3> sz,
+               llvm::SmallVector<const llvm::SCEV *, 3> off,
+               llvm::SmallVector<unsigned, 8> o)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
+      omegas(std::move(o)){};
+  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
+               llvm::Instruction *user,
+               llvm::SmallVector<const llvm::SCEV *, 3> sz,
+               llvm::SmallVector<const llvm::SCEV *, 3> off,
                llvm::ArrayRef<unsigned> o)
-    : ref(std::move(r)), omegas(o.begin(), o.end()) {
-    ref.loadOrStore = user;
-  };
-  MemoryAccess(ArrayReference r, llvm::SmallVector<unsigned, 8> omegas)
-    : ref(std::move(r)), omegas(std::move(omegas)){};
-  MemoryAccess(ArrayReference r) : ref(std::move(r)){};
-  MemoryAccess(ArrayReference r, llvm::ArrayRef<unsigned> o)
-    : ref(std::move(r)), omegas(o.begin(), o.end()){};
-  // MemoryAccess(const MemoryAccess &MA) = default;
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
+      omegas(o.begin(), o.end()){};
 
   // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
   // inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
@@ -68,17 +142,6 @@ struct MemoryAccess {
       allEqual &= (omegas[n] == x.omegas[n]);
     return allEqual;
   }
-  [[nodiscard]] inline auto getNumLoops() const -> size_t {
-    size_t numLoops = ref.getNumLoops();
-    assert(numLoops + 1 == omegas.size());
-    return numLoops;
-  }
-  inline auto indexMatrix() -> MutPtrMatrix<int64_t> {
-    return ref.indexMatrix();
-  }
-  [[nodiscard]] inline auto indexMatrix() const -> PtrMatrix<int64_t> {
-    return ref.indexMatrix();
-  }
   // note returns true if unset
   // inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
   [[nodiscard]] inline auto getFusionOmega() const -> PtrVector<unsigned> {
@@ -89,10 +152,33 @@ struct MemoryAccess {
   // }
   inline auto truncateSchedule() -> MemoryAccess * {
     // we're truncating down to `ref.getNumLoops()`, discarding outer most
-    size_t dropCount = omegas.size() - (ref.getNumLoops() + 1);
+    size_t dropCount = omegas.size() - (getNumLoops() + 1);
     if (dropCount)
       omegas.erase(omegas.begin(), omegas.begin() + dropCount);
     return this;
+  }
+  [[nodiscard]] auto isLoopIndependent() const -> bool {
+    return LinearAlgebra::allZero(indices);
+  }
+  [[nodiscard]] auto allConstantIndices() const -> bool {
+    return symbolicOffsets.size() == 0;
+  }
+  // Assumes strides and offsets are sorted
+  [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
+    if (getArrayDim() != x.getArrayDim())
+      return false;
+    for (size_t i = 0; i < getArrayDim(); ++i)
+      if (sizes[i] != x.sizes[i])
+        return false;
+    return true;
+  }
+  [[nodiscard]] constexpr static auto gcdKnownIndependent(const MemoryAccess &)
+    -> bool {
+    // TODO: handle this!
+    // consider `x[2i]` vs `x[2i + 1]`, the former
+    // will have a stride of `2`, and the latter of `x[2i+1]`
+    // Additionally, in the future, we do
+    return false;
   }
 };
 
@@ -104,9 +190,60 @@ auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
     os << "Store: ";
   if (auto instr = m.getInstruction())
     os << *instr;
-  os << "\n"
-     << m.ref << "\nSchedule Omega: " << m.getFusionOmega()
-     << "\nAffineLoopNest:\n"
-     << *m.ref.loop;
-  return os;
+  os << "\nArrayReference " << *m.basePointer << " (dim = " << m.getArrayDim()
+     << ", num loops: " << m.getNumLoops();
+  if (m.sizes.size())
+    os << ", element size: " << *m.sizes.back();
+  os << "):\n";
+  PtrMatrix<int64_t> A{m.indexMatrix()};
+  os << "Sizes: [";
+  if (m.sizes.size()) {
+    os << " unknown";
+    for (ptrdiff_t i = 0; i < ptrdiff_t(A.numCol()) - 1; ++i)
+      os << ", " << *m.sizes[i];
+  }
+  os << " ]\nSubscripts: [ ";
+  size_t numLoops = size_t(A.numRow());
+  for (size_t i = 0; i < A.numCol(); ++i) {
+    if (i)
+      os << ", ";
+    bool printPlus = false;
+    for (size_t j = numLoops; j-- > 0;) {
+      if (int64_t Aji = A(j, i)) {
+        if (printPlus) {
+          if (Aji <= 0) {
+            Aji *= -1;
+            os << " - ";
+          } else
+            os << " + ";
+        }
+        if (Aji != 1)
+          os << Aji << '*';
+        os << "i_" << numLoops - j - 1 << " ";
+        printPlus = true;
+      }
+    }
+    PtrMatrix<int64_t> offs = m.offsetMatrix();
+    for (size_t j = 0; j < offs.numCol(); ++j) {
+      if (int64_t offij = offs(i, j)) {
+        if (printPlus) {
+          if (offij <= 0) {
+            offij *= -1;
+            os << " - ";
+          } else
+            os << " + ";
+        }
+        if (j) {
+          if (offij != 1)
+            os << offij << '*';
+          os << *m.loop->S[j - 1];
+        } else
+          os << offij;
+        printPlus = true;
+      }
+    }
+  }
+  return os << "]\nSchedule Omega: " << m.getFusionOmega()
+            << "\nAffineLoopNest:\n"
+            << *m.loop;
 }

@@ -212,7 +212,7 @@ simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEV *S)
 // A * x >= 0
 // if constexpr(NonNegative)
 //   x >= 0
-template <bool NonNegative>
+template <bool NonNegative = true>
 struct AffineLoopNest
   : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
               llvm::SmallVector<const llvm::SCEV *>, NonNegative> {

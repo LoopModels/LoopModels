@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
 #include "./Instruction.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
@@ -70,7 +69,6 @@ struct CPURegisterFile {
 };
 struct CPUExecutionModel {};
 
-struct InstructionBlock;
 struct LoopTreeSchedule;
 
 // Plan for cost modeling:
@@ -122,16 +120,19 @@ struct LoopTreeSchedule;
 /// subTrees[i].second is the preheader for
 /// subTrees[i+1].first, which has exit block
 /// subTrees[i+1].second
-using LoopAndExit = std::pair<LoopTreeSchedule *, InstructionBlock>;
+
+struct ScheduledMemoryAccess {
+  MemoryAccess access;
+};
 
 struct LoopTreeSchedule {
   /// First block of the loop body. Also, the preheader of
   /// subTrees.front().first;
-  [[no_unique_address]] AffineLoopNest<false> *loopNest;
+  [[no_unique_address]] AffineLoopNest<true> loopNest;
   // schedule commented out, as we're assuming we applied the rotation
   // to the array reference.
   // [[no_unique_address]] Schedule *schedule;
-  [[no_unique_address]] InstructionBlock enteringBlock;
+  [[no_unique_address]] llvm::SmallVector<MemoryAccess *> memAccesses;
   [[no_unique_address]] llvm::SmallVector<LoopAndExit> subTrees;
   /// Loop pre-header block for this loop tree.
   [[no_unique_address]] InstructionBlock *preHeader;

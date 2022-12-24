@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
@@ -173,7 +172,6 @@ resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
 struct LinearProgramLoopBlock {
-  // llvm::SmallVector<ArrayReference, 0> refs;
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -284,11 +282,9 @@ struct LinearProgramLoopBlock {
     // TODO: handle predicates
     for (size_t i = 1; i < memory.size(); ++i) {
       MemoryAccess &mai = *memory[i];
-      ArrayReference &refI = mai.ref;
       for (size_t j = 0; j < i; ++j) {
         MemoryAccess &maj = *memory[j];
-        ArrayReference &refJ = maj.ref;
-        if ((refI.basePointer != refJ.basePointer) ||
+        if ((mai.basePointer != maj.basePointer) ||
             ((mai.isLoad()) && (maj.isLoad())))
           continue;
         addEdge(mai, maj);
@@ -627,7 +623,7 @@ struct LinearProgramLoopBlock {
       if (r == edge.in->getNumLoops())
         continue;
       // TODO handle linearly dependent acceses, filtering them out
-      if (r == edge.in->ref.getArrayDim()) {
+      if (r == edge.in->getArrayDim()) {
         // indMat indvars are indexed from outside<->inside
         // phi indvars are indexed from inside<->outside
         // so, indMat is indvars[outside<->inside] x array dim
@@ -767,7 +763,7 @@ struct LinearProgramLoopBlock {
   }
   void validateMemory() {
     for (auto mem : memory)
-      assert(1 + mem->ref.getNumLoops() == mem->omegas.size());
+      assert(1 + mem->getNumLoops() == mem->omegas.size());
   }
   void validateEdges() {
     for (auto &edge : edges) {
@@ -1321,14 +1317,14 @@ struct LinearProgramLoopBlock {
       for (size_t inIndex : edge.in->nodeIndex) {
         const Schedule &sin = lblock.nodes[inIndex].schedule;
         os << "Schedule In: nodeIndex = " << edge.in->nodeIndex
-           << "\nref = " << edge.in->ref << "\ns.getPhi()" << sin.getPhi()
+           << "\nref = " << *edge.in << "\ns.getPhi()" << sin.getPhi()
            << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }
       for (size_t outIndex : edge.out->nodeIndex) {
         const Schedule &sout = lblock.nodes[outIndex].schedule;
         os << "\n\nSchedule Out:\nnodeIndex = " << edge.out->nodeIndex
-           << "; ref = " << edge.out->ref << "\ns.getPhi()" << sout.getPhi()
+           << "; ref = " << *edge.out << "\ns.getPhi()" << sout.getPhi()
            << "\ns.getFusionOmega() = " << sout.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
       }
@@ -1337,7 +1333,7 @@ struct LinearProgramLoopBlock {
     os << "\nLoopBlock schedule (#mem accesses = " << lblock.memory.size()
        << "):\n\n";
     for (auto mem : lblock.memory) {
-      os << "Ref = " << mem->ref;
+      os << "Ref = " << *mem;
       for (size_t nodeIndex : mem->nodeIndex) {
         const Schedule &s = lblock.nodes[nodeIndex].schedule;
         os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()

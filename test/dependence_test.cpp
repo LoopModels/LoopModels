@@ -1,16 +1,20 @@
-#include "../include/ArrayReference.hpp"
 #include "../include/DependencyPolyhedra.hpp"
 #include "../include/LoopBlock.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "../include/MemoryAccess.hpp"
 #include "../include/TestUtilities.hpp"
+#include "./ArrayReference.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolutionExpressions.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/IR/Type.h>
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -85,7 +89,6 @@ TEST(DependenceTest, BasicAssertions) {
     Asrc.sizes[0] = M;
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
   // A[i+1, j]
   ArrayReference Atgt01(scevA, loop, 2);
@@ -98,7 +101,6 @@ TEST(DependenceTest, BasicAssertions) {
     Atgt01.sizes[0] = M;
     Atgt01.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "AaxesTgt0 = \n" << Atgt01 << "\n";
 
   // A[i, j+1]
   ArrayReference Atgt10(scevA, loop, 2);
@@ -111,14 +113,13 @@ TEST(DependenceTest, BasicAssertions) {
     Atgt10.sizes[0] = M;
     Atgt10.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "AaxesTgt1 = \n" << Atgt10 << "\n";
 
   //
   llvm::SmallVector<unsigned, 8> schLoad0(3);
   llvm::SmallVector<unsigned, 8> schStore(3);
   schStore[2] = 2;
-  MemoryAccess msrc{Asrc, Astore11, schStore};
-  MemoryAccess mtgt01{Atgt01, Aload01, schLoad0};
+  MemoryAccess msrc{createMemAccess(Asrc, Astore11, schStore)};
+  MemoryAccess mtgt01{createMemAccess(Atgt01, Aload01, schLoad0)};
   DependencePolyhedra dep0(msrc, mtgt01);
   EXPECT_FALSE(dep0.isEmpty());
   dep0.pruneBounds();
@@ -131,7 +132,7 @@ TEST(DependenceTest, BasicAssertions) {
 
   llvm::SmallVector<unsigned, 8> schLoad1(3);
   schLoad1[2] = 1;
-  MemoryAccess mtgt10{Atgt10, Aload10, schLoad1};
+  MemoryAccess mtgt10{createMemAccess(Atgt10, Aload10, schLoad1)};
   DependencePolyhedra dep1(msrc, mtgt10);
   EXPECT_FALSE(dep1.isEmpty());
   dep1.pruneBounds();
@@ -206,7 +207,6 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
     Asrc.sizes[0] = loop.S[0];
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Asrc = " << Asrc << "\n";
 
   // A[j, i]
   ArrayReference Atgt(scevA, loop, 2);
@@ -218,13 +218,12 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
     Atgt.sizes[0] = loop.S[0];
     Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Atgt = " << Atgt << "\n";
 
   llvm::SmallVector<unsigned, 8> schLoad(3);
   llvm::SmallVector<unsigned, 8> schStore(3);
   schStore[2] = 1;
-  MemoryAccess msrc{Asrc, Astoreij, schStore};
-  MemoryAccess mtgt{Atgt, Aloadji, schLoad};
+  MemoryAccess msrc{createMemAccess(Asrc, Astoreij, schStore)};
+  MemoryAccess mtgt{createMemAccess(Atgt, Aloadji, schLoad)};
   DependencePolyhedra dep(msrc, mtgt);
   llvm::errs() << "Dep = \n" << dep << "\n";
   EXPECT_TRUE(dep.isEmpty());
@@ -292,7 +291,6 @@ TEST(RankDeficientLoad, BasicAssertions) {
     Asrc.sizes[0] = loop.S[0];
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
   // A[i, i]
   ArrayReference Atgt(scevA, loop, 2);
@@ -303,13 +301,12 @@ TEST(RankDeficientLoad, BasicAssertions) {
     Atgt.sizes[0] = loop.S[0];
     Atgt.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "AaxesTgt = \n" << Atgt << "\n";
 
   llvm::SmallVector<unsigned, 8> schLoad(2 + 1);
   llvm::SmallVector<unsigned, 8> schStore(2 + 1);
   schStore[2] = 1;
-  MemoryAccess msrc{Asrc, Astoreij, schStore};
-  MemoryAccess mtgt{Atgt, Aloadii, schLoad};
+  MemoryAccess msrc{createMemAccess(Asrc, Astoreij, schStore)};
+  MemoryAccess mtgt{createMemAccess(Atgt, Aloadii, schLoad)};
 
   llvm::SmallVector<Dependence, 1> deps;
   EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 1);
@@ -395,13 +392,12 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
     Aref.sizes[1] = SE.getAddExpr(I, K);
     Aref.sizes[2] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Aref = " << Aref << "\n";
 
   llvm::SmallVector<unsigned, 8> schLoad(3 + 1);
   llvm::SmallVector<unsigned, 8> schStore(3 + 1);
   schStore[3] = 1;
-  MemoryAccess msrc{Aref, Astore, schStore};
-  MemoryAccess mtgt{Aref, Aload, schLoad};
+  MemoryAccess msrc{createMemAccess(Aref, Astore, schStore)};
+  MemoryAccess mtgt{createMemAccess(Aref, Aload, schLoad)};
 
   llvm::SmallVector<Dependence, 2> deps;
   EXPECT_EQ(Dependence::check(deps, msrc, mtgt), 2);
@@ -534,7 +530,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // ind mat, loops currently indexed from outside-in
   LinearProgramLoopBlock lblock;
   // B[n, m]
-  ArrayReference BmnInd{scevB, &loopMN, 2};
+  ArrayReference BmnInd{scevB, loopMN, 2};
   {
     MutPtrMatrix<int64_t> IndMat = BmnInd.indexMatrix();
     //     l  d
@@ -543,7 +539,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     BmnInd.sizes[0] = M;
     BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Bmn = " << BmnInd << "\n";
   // A[n, m]
   ArrayReference Amn2Ind{scevA, loopMN, 2};
   {
@@ -554,7 +549,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Amn2Ind.sizes[0] = M;
     Amn2Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Amn2 = " << Amn2Ind << "\n";
   // A[n, m]
   ArrayReference Amn3Ind{scevA, loopMNK, 2};
   {
@@ -565,7 +559,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     Amn3Ind.sizes[0] = M;
     Amn3Ind.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Amn3 = " << Amn3Ind << "\n";
   // A[k, m]
   ArrayReference AmkInd{scevA, loopMNK, 2};
   {
@@ -576,7 +569,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     AmkInd.sizes[0] = M;
     AmkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Amk = " << AmkInd << "\n";
   // U[k, n]
   ArrayReference UnkInd{scevU, loopMNK, 2};
   {
@@ -587,7 +579,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     UnkInd.sizes[0] = N;
     UnkInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Unk = " << UnkInd << "\n";
   // U[n, n]
   ArrayReference UnnInd{scevU, loopMN, 2};
   {
@@ -598,7 +589,6 @@ TEST(TriangularExampleTest, BasicAssertions) {
     UnnInd.sizes[0] = N;
     UnnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Unn = " << UnnInd << "\n";
 
   // for (m = 0; m < M; ++m){
   //   for (n = 0; n < N; ++n){
@@ -620,12 +610,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> sch2_0_0(2 + 1);
   llvm::SmallVector<unsigned, 8> sch2_0_1 = sch2_0_0;
   // A(n,m) = -> B(n,m) <-
-  MemoryAccess mSch2_0_0(BmnInd, Bload, sch2_0_0);
+  MemoryAccess mSch2_0_0(createMemAccess(BmnInd, Bload, sch2_0_0));
   lblock.memory.push_back(&mSch2_0_0);
   sch2_0_1[2] = 1;
   llvm::SmallVector<unsigned, 8> sch2_1_0 = sch2_0_1;
   // -> A(n,m) <- = B(n,m)
-  MemoryAccess mSch2_0_1(Amn2Ind, Astore0, sch2_0_1);
+  MemoryAccess mSch2_0_1(createMemAccess(Amn2Ind, Astore0, sch2_0_1));
   assert(mSch2_0_1.getInstruction() == Astore0);
   assert(mSch2_0_1.getStore() == Astore0);
   lblock.memory.push_back(&mSch2_0_1);
@@ -633,18 +623,18 @@ TEST(TriangularExampleTest, BasicAssertions) {
   sch2_1_0[2] = 0;
   llvm::SmallVector<unsigned, 8> sch2_1_1 = sch2_1_0;
   // A(n,m) = -> A(n,m) <- / U(n,n); // sch2
-  MemoryAccess mSch2_1_0(Amn2Ind, Aload0, sch2_1_0);
+  MemoryAccess mSch2_1_0(createMemAccess(Amn2Ind, Aload0, sch2_1_0));
   assert(mSch2_1_0.getInstruction() == Aload0);
   assert(mSch2_1_0.getLoad() == Aload0);
   lblock.memory.push_back(&mSch2_1_0);
   sch2_1_1[2] = 1;
   llvm::SmallVector<unsigned, 8> sch2_1_2 = sch2_1_1;
   // A(n,m) = A(n,m) / -> U(n,n) <-;
-  MemoryAccess mSch2_1_1(UnnInd, Uloadnn, sch2_1_1);
+  MemoryAccess mSch2_1_1(createMemAccess(UnnInd, Uloadnn, sch2_1_1));
   lblock.memory.push_back(&mSch2_1_1);
   sch2_1_2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
-  MemoryAccess mSch2_1_2(Amn2Ind, AstoreFDiv, sch2_1_2);
+  MemoryAccess mSch2_1_2(createMemAccess(Amn2Ind, AstoreFDiv, sch2_1_2));
   lblock.memory.push_back(&mSch2_1_2);
 
   llvm::SmallVector<unsigned, 8> sch3_0(3 + 1);
@@ -652,26 +642,26 @@ TEST(TriangularExampleTest, BasicAssertions) {
   sch3_0[2] = 3;
   llvm::SmallVector<unsigned, 8> sch3_1 = sch3_0;
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
-  MemoryAccess mSch3_0(UnkInd, Uloadnk, sch3_0);
+  MemoryAccess mSch3_0(createMemAccess(UnkInd, Uloadnk, sch3_0));
   lblock.memory.push_back(&mSch3_0);
   sch3_1[3] = 1;
   llvm::SmallVector<unsigned, 8> sch3_2 = sch3_1;
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
-  MemoryAccess mSch3_1(Amn3Ind, Aload1mn, sch3_1);
+  MemoryAccess mSch3_1(createMemAccess(Amn3Ind, Aload1mn, sch3_1));
   lblock.memory.push_back(&mSch3_1);
   sch3_2[3] = 2;
   llvm::SmallVector<unsigned, 8> sch3_3 = sch3_2;
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
-  MemoryAccess mSch3_2(AmkInd, Aload1mk, sch3_2);
+  MemoryAccess mSch3_2(createMemAccess(AmkInd, Aload1mk, sch3_2));
   lblock.memory.push_back(&mSch3_2);
   sch3_3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
-  MemoryAccess mSch3_3(AmkInd, Astore2mk, sch3_3);
+  MemoryAccess mSch3_3(createMemAccess(AmkInd, Astore2mk, sch3_3));
   lblock.memory.push_back(&mSch3_3);
 
-  // for (m = 0; m < M; ++m){
+  // for (m = 0; m < M; ++m){createMemAccess(
   //   for (n = 0; n < N; ++n){
-  //     A(n,m) = B(n,m); // sch2_0_{0-1}
+  //     A(n,m) = B(n,m); // sch2_0_{0-1)}
   //   }
   //   for (n = 0; n < N; ++n){
   //     A(n,m) = A(n,m) / U(n,n); // sch2_2_{0-2}
@@ -1089,24 +1079,25 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch0_7[1] = 7;
   LinearProgramLoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess, 0> iOuterMem;
-  iOuterMem.emplace_back(xInd1, Xstore_0, sch0_0); // 0
+  iOuterMem.emplace_back(createMemAccess(xInd1, Xstore_0, sch0_0)); // 0
 
-  iOuterMem.emplace_back(AIndIOuter, Aload_m, sch0_1_0);  // 1
-  iOuterMem.emplace_back(xInd2IOuter, Xload_0, sch0_1_1); // 2
+  iOuterMem.emplace_back(createMemAccess(AIndIOuter, Aload_m, sch0_1_0));  // 1
+  iOuterMem.emplace_back(createMemAccess(xInd2IOuter, Xload_0, sch0_1_1)); // 2
 
-  iOuterMem.emplace_back(xInd2IOuter, Xstore_1, sch0_1_2); // 3
+  iOuterMem.emplace_back(createMemAccess(xInd2IOuter, Xstore_1, sch0_1_2)); // 3
 
-  iOuterMem.emplace_back(xInd1, Xload_1, sch0_2);  // 4
-  iOuterMem.emplace_back(xInd1, Xstore_2, sch0_3); // 5
+  iOuterMem.emplace_back(createMemAccess(xInd1, Xload_1, sch0_2));  // 4
+  iOuterMem.emplace_back(createMemAccess(xInd1, Xstore_2, sch0_3)); // 5
 
-  iOuterMem.emplace_back(sInd1, Sstore_0, sch0_4);         // 6
-  iOuterMem.emplace_back(AIndIOuter, Aload_s, sch0_5_0);   // 7
-  iOuterMem.emplace_back(xInd2IOuter, Xload_2, sch0_5_1);  // 8
-  iOuterMem.emplace_back(sInd2IOuter, Sload_0, sch0_5_2);  // 9
-  iOuterMem.emplace_back(sInd2IOuter, Sstore_1, sch0_5_3); // 10
+  iOuterMem.emplace_back(createMemAccess(sInd1, Sstore_0, sch0_4));        // 6
+  iOuterMem.emplace_back(createMemAccess(AIndIOuter, Aload_s, sch0_5_0));  // 7
+  iOuterMem.emplace_back(createMemAccess(xInd2IOuter, Xload_2, sch0_5_1)); // 8
+  iOuterMem.emplace_back(createMemAccess(sInd2IOuter, Sload_0, sch0_5_2)); // 9
+  iOuterMem.emplace_back(
+    createMemAccess(sInd2IOuter, Sstore_1, sch0_5_3)); // 10
 
-  iOuterMem.emplace_back(sInd1, Sload_1, sch0_6);  // 11
-  iOuterMem.emplace_back(sInd1, Sstore_2, sch0_7); // 12
+  iOuterMem.emplace_back(createMemAccess(sInd1, Sload_1, sch0_6));  // 11
+  iOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch0_7)); // 12
   for (auto &&mem : iOuterMem)
     iOuterLoopNest.memory.push_back(&mem);
 
@@ -1127,7 +1118,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
     memAccessIds[iOuterLoopNest.memory[i]] = i;
   for (auto &e : iOuterLoopNest.edges) {
-    llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
+    llvm::errs() << "\nEdge for array " << e.out->basePointer
                  << ", in ID: " << memAccessIds[e.in]
                  << "; out ID: " << memAccessIds[e.out] << "\n";
   }
@@ -1147,7 +1138,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto mem : iOuterLoopNest.memory) {
     llvm::errs() << "mem->nodeIndex =" << mem->nodeIndex << ";";
-    llvm::errs() << "mem->ref =" << mem->ref << "\n";
+    llvm::errs() << "mem =" << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = iOuterLoopNest.nodes[nodeIndex].schedule;
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
@@ -1158,10 +1149,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
   LinearProgramLoopBlock jOuterLoopNest;
   llvm::SmallVector<MemoryAccess, 0> jOuterMem;
-  jOuterMem.emplace_back(xInd1, Xstore_0, sch0_0); // 0
+  jOuterMem.emplace_back(createMemAccess(xInd1, Xstore_0, sch0_0)); // 0
   llvm::SmallVector<unsigned, 8> sch0_1(1 + 1);
   sch0_1[1] = 1;
-  jOuterMem.emplace_back(sInd1, Sstore_0, sch0_1); // 6
+  jOuterMem.emplace_back(createMemAccess(sInd1, Sstore_0, sch0_1)); // 6
   llvm::SmallVector<unsigned, 8> sch1_0_0(2 + 1);
   sch1_0_0[0] = 1;
   llvm::SmallVector<unsigned, 8> sch1_0_1(2 + 1);
@@ -1170,17 +1161,17 @@ TEST(MeanStDevTest0, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> sch1_0_2(2 + 1);
   sch1_0_2[0] = 1;
   sch1_0_2[2] = 2;
-  jOuterMem.emplace_back(AIndJOuter, Aload_m, sch1_0_0);   // 1
-  jOuterMem.emplace_back(xInd2JOuter, Xload_0, sch1_0_1);  // 2
-  jOuterMem.emplace_back(xInd2JOuter, Xstore_1, sch1_0_2); // 3
+  jOuterMem.emplace_back(createMemAccess(AIndJOuter, Aload_m, sch1_0_0));   // 1
+  jOuterMem.emplace_back(createMemAccess(xInd2JOuter, Xload_0, sch1_0_1));  // 2
+  jOuterMem.emplace_back(createMemAccess(xInd2JOuter, Xstore_1, sch1_0_2)); // 3
 
   llvm::SmallVector<unsigned, 8> sch2_0(1 + 1);
   sch2_0[0] = 2;
   llvm::SmallVector<unsigned, 8> sch2_1(1 + 1);
   sch2_1[0] = 2;
   sch2_1[1] = 1;
-  jOuterMem.emplace_back(xInd1, Xload_1, sch2_0);  // 4
-  jOuterMem.emplace_back(xInd1, Xstore_2, sch2_1); // 5
+  jOuterMem.emplace_back(createMemAccess(xInd1, Xload_1, sch2_0));  // 4
+  jOuterMem.emplace_back(createMemAccess(xInd1, Xstore_2, sch2_1)); // 5
 
   llvm::SmallVector<unsigned, 8> sch3_0_0(2 + 1);
   sch3_0_0[0] = 3;
@@ -1194,18 +1185,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
   sch3_0_3[0] = 3;
   sch3_0_3[2] = 3;
 
-  jOuterMem.emplace_back(AIndJOuter, Aload_s, sch3_0_0);   // 7
-  jOuterMem.emplace_back(xInd2JOuter, Xload_2, sch3_0_1);  // 8
-  jOuterMem.emplace_back(sInd2JOuter, Sload_0, sch3_0_2);  // 9
-  jOuterMem.emplace_back(sInd2JOuter, Sstore_1, sch3_0_3); // 10
+  jOuterMem.emplace_back(createMemAccess(AIndJOuter, Aload_s, sch3_0_0));  // 7
+  jOuterMem.emplace_back(createMemAccess(xInd2JOuter, Xload_2, sch3_0_1)); // 8
+  jOuterMem.emplace_back(createMemAccess(sInd2JOuter, Sload_0, sch3_0_2)); // 9
+  jOuterMem.emplace_back(
+    createMemAccess(sInd2JOuter, Sstore_1, sch3_0_3)); // 10
 
   llvm::SmallVector<unsigned, 8> sch4_0(1 + 1);
   sch4_0[0] = 4;
   llvm::SmallVector<unsigned, 8> sch4_1(1 + 1);
   sch4_1[0] = 4;
   sch4_1[1] = 1;
-  jOuterMem.emplace_back(sInd1, Sload_1, sch4_0);  // 11
-  jOuterMem.emplace_back(sInd1, Sstore_2, sch4_1); // 12
+  jOuterMem.emplace_back(createMemAccess(sInd1, Sload_1, sch4_0));  // 11
+  jOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch4_1)); // 12
 
   for (auto &&mem : jOuterMem)
     jOuterLoopNest.memory.push_back(&mem);
@@ -1322,7 +1314,6 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     Asrc.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     Asrc.sizes[0] = I;
   }
-  llvm::errs() << "AaxesSrc = " << Asrc << "\n";
 
   // A[i+1, j]
   ArrayReference Atgt0(scevA, loop, 2);
@@ -1336,7 +1327,6 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     Atgt0.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     Atgt0.sizes[0] = I;
   }
-  llvm::errs() << "AaxesTgt0 = \n" << Atgt0 << "\n";
 
   // A[i, j+1]
   ArrayReference Atgt1(scevA, loop, 2);
@@ -1349,14 +1339,13 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     Atgt1.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
     Atgt1.sizes[0] = I;
   }
-  llvm::errs() << "AaxesTgt1 = \n" << Atgt1 << "\n";
 
   //
   llvm::SmallVector<unsigned, 8> schLoad0(2 + 1);
   llvm::SmallVector<unsigned, 8> schStore(2 + 1);
   schStore[2] = 2;
-  MemoryAccess msrc{Asrc, Astore, schStore};
-  MemoryAccess mtgt0{Atgt0, Aload_ip1_j, schLoad0};
+  MemoryAccess msrc{createMemAccess(Asrc, Astore, schStore)};
+  MemoryAccess mtgt0{createMemAccess(Atgt0, Aload_ip1_j, schLoad0)};
   DependencePolyhedra dep0(msrc, mtgt0);
   EXPECT_FALSE(dep0.isEmpty());
   dep0.pruneBounds();
@@ -1369,7 +1358,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   llvm::SmallVector<unsigned, 8> schLoad1(2 + 1);
   schLoad1[2] = 1;
-  MemoryAccess mtgt1{Atgt1, Aload_i_jp1, schLoad1};
+  MemoryAccess mtgt1{createMemAccess(Atgt1, Aload_i_jp1, schLoad1)};
   DependencePolyhedra dep1(msrc, mtgt1);
   EXPECT_FALSE(dep1.isEmpty());
   dep1.pruneBounds();
@@ -1378,7 +1367,6 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_EQ(dep1.getNumEqualityConstraints(), 2);
   assert(dep1.getNumInequalityConstraints() == 4);
   assert(dep1.getNumEqualityConstraints() == 2);
-  // MemoryAccess mtgt1{Atgt1,nullptr,schLoad,true};
   llvm::SmallVector<Dependence, 1> dc;
   EXPECT_EQ(dc.size(), 0);
   EXPECT_EQ(Dependence::check(dc, msrc, mtgt0), 1);
@@ -1391,11 +1379,11 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     d.dependenceSatisfaction.tableau.numRow() - 1, _)));
 
   LinearProgramLoopBlock loopBlock;
-  MemoryAccess mSchLoad0(Atgt0, Aload_ip1_j, schLoad0);
+  MemoryAccess mSchLoad0(createMemAccess(Atgt0, Aload_ip1_j, schLoad0));
   loopBlock.memory.push_back(&mSchLoad0);
-  MemoryAccess mSchLoad1(Atgt1, Aload_i_jp1, schLoad1);
+  MemoryAccess mSchLoad1(createMemAccess(Atgt1, Aload_i_jp1, schLoad1));
   loopBlock.memory.push_back(&mSchLoad1);
-  MemoryAccess mSchStore(Asrc, Astore, schStore);
+  MemoryAccess mSchStore(createMemAccess(Asrc, Astore, schStore));
   loopBlock.memory.push_back(&mSchStore);
 
   EXPECT_TRUE(loopBlock.optimize().has_value());
@@ -1404,7 +1392,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   for (size_t i = 0; i < loopBlock.memory.size(); ++i)
     memAccessIds[loopBlock.memory[i]] = i;
   for (auto &e : loopBlock.edges) {
-    llvm::errs() << "\nEdge for array " << e.out->ref.basePointer
+    llvm::errs() << "\nEdge for array " << e.out->basePointer
                  << ", in ID: " << memAccessIds[e.in]
                  << "; out ID: " << memAccessIds[e.out] << "\n";
   }
@@ -1528,7 +1516,6 @@ TEST(ConvReversePass, BasicAssertions) {
     BmnInd.sizes[0] = I;
     BmnInd.sizes[1] = SE.getConstant(Int64, 8, /*isSigned=*/false);
   }
-  llvm::errs() << "Bmn = " << BmnInd << "\n";
   // A[n, m]
   ArrayReference AmnInd{scevA, loop, 2};
   {
@@ -1566,28 +1553,28 @@ TEST(ConvReversePass, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> sch_0(4 + 1);
   llvm::SmallVector<unsigned, 8> sch_1 = sch_0;
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
-  MemoryAccess msch_0(BmnInd, Bload, sch_0);
+  MemoryAccess msch_0(createMemAccess(BmnInd, Bload, sch_0));
   loopBlock.memory.push_back(&msch_0);
   sch_1[4] = 1;
   llvm::SmallVector<unsigned, 8> sch_2 = sch_1;
   //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
-  MemoryAccess msch_1(AmnInd, Aload, sch_1);
+  MemoryAccess msch_1(createMemAccess(AmnInd, Aload, sch_1));
   loopBlock.memory.push_back(&msch_1);
   sch_2[4] = 2;
   llvm::SmallVector<unsigned, 8> sch_3 = sch_2;
   //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
-  MemoryAccess msch_2(CmijnInd, Cload, sch_2);
+  MemoryAccess msch_2(createMemAccess(CmijnInd, Cload, sch_2));
   loopBlock.memory.push_back(&msch_2);
   sch_3[4] = 3;
   //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
-  MemoryAccess msch_3(CmijnInd, Cstore, sch_3);
+  MemoryAccess msch_3(createMemAccess(CmijnInd, Cstore, sch_3));
   loopBlock.memory.push_back(&msch_3);
 
   std::optional<BitSet<>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
   for (auto &mem : loopBlock.memory) {
     llvm::errs() << "mem->nodeIndex: " << mem->nodeIndex << "; ";
-    llvm::errs() << "mem->ref: " << mem->ref << "\n";
+    llvm::errs() << "mem: " << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = loopBlock.nodes[nodeIndex].schedule;
       llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "./ArrayReference.hpp"
 #include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
@@ -57,6 +56,10 @@
     numLoops += countNumLoopsPlusLeaves(SL);
   return numLoops;
 }
+template <typename T>
+concept LoadOrStoreInst =
+  std::same_as<llvm::LoadInst, std::remove_cvref_t<T>> ||
+  std::same_as<llvm::StoreInst, std::remove_cvref_t<T>>;
 
 // requires `isRecursivelyLCSSAForm`
 class TurboLoopPass : public llvm::PassInfoMixin<TurboLoopPass> {
@@ -362,36 +365,37 @@ public:
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
   }
-  auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize)
-    -> std::optional<ArrayReference> {
+  auto arrayRef(LoopTree &LT, llvm::Instruction *ptr, const llvm::SCEV *elSize,
+                llvm::Instruction *loadOrStore,
+                llvm::MutableArrayRef<unsigned> omegas) -> bool {
     llvm::Loop *L = LT.loop;
     // code modified from
     // https://llvm.org/doxygen/Delinearization_8cpp_source.html#l00582
-    // llvm::Value *po = llvm::getPointerOperand(ptr);
-    // if (!po)
-    //     return {};
-    // llvm::errs() << "ptr operand: " << *po << "\n";
     const llvm::SCEV *accessFn = SE->getSCEVAtScope(ptr, L);
 
     const llvm::SCEV *pb = SE->getPointerBase(accessFn);
     const auto *basePointer = llvm::dyn_cast<llvm::SCEVUnknown>(pb);
     // Do not delinearize if we cannot find the base pointer.
-    if (!basePointer && ORE && LT.loop) {
-      remark("ArrayRefDeliniarize", LT.loop,
-             "ArrayReference failed because !basePointer\n", ptr);
-    }
     if (!basePointer) {
+      if (ORE && L) {
+        remark("ArrayRefDeliniarize", LT.loop,
+               "ArrayReference failed because !basePointer\n", ptr);
+      }
       conditionOnLoop(L);
-      return {};
+      return true;
     }
     accessFn = SE->getMinusSCEV(accessFn, basePointer);
     llvm::SmallVector<const llvm::SCEV *, 3> subscripts, sizes;
     llvm::delinearize(*SE, accessFn, subscripts, sizes, elSize);
     assert(subscripts.size() == sizes.size());
     AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
-    if (sizes.size() == 0)
-      return ArrayReference(basePointer, &aln, std::move(sizes),
-                            std::move(subscripts));
+    if (sizes.size() == 0) {
+      LT.memAccesses.emplace_back(basePointer, aln, loadOrStore,
+                                  std::move(sizes), std::move(subscripts),
+                                  omegas);
+      ++omegas.back();
+      return false;
+    }
     size_t numLoops{aln.getNumLoops()};
     // numLoops x arrayDim
     // IntMatrix R(numLoops, subscripts.size());
@@ -449,60 +453,36 @@ public:
       }
       Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
     }
-    ArrayReference ref(basePointer, &aln, std::move(sizes),
-                       std::move(symbolicOffsets));
+    LT.memAccesses.emplace_back(basePointer, aln, loadOrStore, std::move(sizes),
+                                std::move(symbolicOffsets), omegas);
+    ++omegas.back();
+    MemoryAccess &ref = LT.memAccesses.back();
     ref.resize(subscripts.size());
     ref.indexMatrix() = Rt.transpose();
     ref.offsetMatrix() = Bt;
-    return ref;
+    return false;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
   auto getLoopTree(llvm::Loop *L) -> LoopTree * { return loopMap[L]; }
-  auto addLoad(LoopTree &LT, llvm::LoadInst *I,
-               llvm::SmallVector<unsigned> &omega) -> bool {
+  auto addRef(LoopTree &LT, LoadOrStoreInst auto *I,
+              llvm::SmallVector<unsigned> &omega) -> bool {
     llvm::Value *ptr = I->getPointerOperand();
     // llvm::Type *type = I->getPointerOperandType();
     const llvm::SCEV *elSize = SE->getElementSize(I);
     // TODO: support top level array refs
     if (LT.loop) {
       if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (std::optional<ArrayReference> re = arrayRef(LT, iptr, elSize)) {
-          re->loadOrStore = I;
-          LT.memAccesses.emplace_back(std::move(*re), I, omega);
-          ++omega.back();
+        if (!arrayRef(LT, iptr, elSize, I, omega)) {
           return false;
+        } else if (ORE) [[unlikely]] {
+          llvm::SmallVector<char> x;
+          llvm::raw_svector_ostream os(x);
+          if (llvm::isa<llvm::LoadInst>(I))
+            os << "No affine representation for load: " << *I << "\n";
+          else
+            os << "No affine representation for store: " << *I << "\n";
+          remark("AddAffineLoad", LT.loop, os.str(), I);
         }
-      }
-      if (LT.loop && ORE) {
-        llvm::SmallVector<char> x;
-        llvm::raw_svector_ostream os(x);
-        os << "No affine representation for load: " << *I << "\n";
-        remark("AddAffineLoad", LT.loop, os.str(), I);
-      }
-      return true;
-    }
-    return false;
-  }
-  auto addStore(LoopTree &LT, llvm::StoreInst *I,
-                llvm::SmallVector<unsigned> &omega) -> bool {
-    llvm::Value *ptr = I->getPointerOperand();
-    // llvm::Type *type = I->getPointerOperandType();
-    const llvm::SCEV *elSize = SE->getElementSize(I);
-    // TODO: support top level array refs
-    if (LT.loop) {
-      if (auto *iptr = llvm::dyn_cast<llvm::Instruction>(ptr)) {
-        if (std::optional<ArrayReference> re = arrayRef(LT, iptr, elSize)) {
-          re->loadOrStore = I;
-          LT.memAccesses.emplace_back(std::move(*re), I, omega);
-          ++omega.back();
-          return false;
-        }
-      }
-      if (LT.loop && ORE) {
-        llvm::SmallVector<char> x;
-        llvm::raw_svector_ostream os(x);
-        os << "No affine representation for store: " << *I << "\n";
-        remark("AddAffineStore", LT.loop, os.str(), I);
       }
       return true;
     }
@@ -517,11 +497,11 @@ public:
         assert(LT.loop->contains(&I));
       if (I.mayReadFromMemory()) {
         if (auto *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
-          if (addLoad(LT, LI, omega))
+          if (addRef(LT, LI, omega))
             return;
       } else if (I.mayWriteToMemory())
         if (auto *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
-          if (addStore(LT, SI, omega))
+          if (addRef(LT, SI, omega))
             return;
     }
   }
