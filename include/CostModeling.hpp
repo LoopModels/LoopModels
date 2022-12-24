@@ -120,25 +120,21 @@ struct LoopTreeSchedule;
 /// subTrees[i].second is the preheader for
 /// subTrees[i+1].first, which has exit block
 /// subTrees[i+1].second
-
 struct ScheduledMemoryAccess {
-  MemoryAccess access;
+  MemoryAccess *access;
 };
+struct InstructionBlock {
+  [[no_unique_address]] llvm::SmallVector<ScheduledMemoryAccess> memAccesses;
+};
+struct LoopTreeSchedule;
+using LoopAndExit = std::pair<LoopTreeSchedule *, InstructionBlock *>;
 
 struct LoopTreeSchedule {
-  /// First block of the loop body. Also, the preheader of
-  /// subTrees.front().first;
-  [[no_unique_address]] AffineLoopNest<true> loopNest;
-  // schedule commented out, as we're assuming we applied the rotation
-  // to the array reference.
-  // [[no_unique_address]] Schedule *schedule;
-  [[no_unique_address]] llvm::SmallVector<MemoryAccess *> memAccesses;
+  /// Header of the loop.
+  [[no_unique_address]] InstructionBlock header;
+  /// Variable number of sub loops and their associated exits.
+  /// For the inner most loop, `subTrees.empty()`.
   [[no_unique_address]] llvm::SmallVector<LoopAndExit> subTrees;
-  /// Loop pre-header block for this loop tree.
-  [[no_unique_address]] InstructionBlock *preHeader;
-  /// Loop exit block for this loop tree.
-  [[no_unique_address]] InstructionBlock *exitBlock;
-  [[no_unique_address]] LoopTreeSchedule *parentLoop{nullptr};
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
