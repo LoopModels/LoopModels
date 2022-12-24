@@ -14,6 +14,7 @@ else
 endif
 add_global_arguments('-fno-rtti', language : 'cpp')
 add_global_arguments('-fno-exceptions', language : 'cpp')
+add_global_arguments('-fvisibility=hidden', language : 'cpp')
 
 llvm_rpath = llvm_dep.get_variable(configtool: 'libdir')
 debug_args = ['-Wall', '-Wextra', '-Wpedantic']
