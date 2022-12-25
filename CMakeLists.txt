@@ -53,6 +53,10 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Found LLVM_CMAKE_DIR ${LLVM_CMAKE_DIR}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
+if(APPLE)
+  include_directories(BEFORE /usr/local/opt/llvm/include)
+  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+endif()
 # # "LLVM_TARGETS_TO_BUILD X86;AArch64"
 # # ---- google/benchmark ----
 # CPMFindPackage(
