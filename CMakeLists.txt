@@ -66,6 +66,12 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 #   set_target_properties(benchmark PROPERTIES CXX_STANDARD 11)
 # endif()
 
+message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
+if(ENABLE_TEST_COVERAGE)
+  compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
+  link_options(-fprofile-arcs -ftest-coverage)
+  link_libraries(gcov)
+endif()
 
 # ---- Add source files ----
 
