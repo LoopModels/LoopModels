@@ -36,11 +36,18 @@ endif()
 file(GLOB tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 # list(FILTER tests EXCLUDE REGEX "remarks.*")
 # for remarks test
+find_package(LLVM REQUIRED CONFIG)
+list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
+# include(AddLLVM)
+include(${LLVM_DIR}/AddLLVM.cmake)
+
+
 
 add_executable(${PROJECT_NAME} ${tests})
 # target_link_libraries(${PROJECT_NAME} doctest::doctest Greeter::Greeter)
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
+message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} LoopModels)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
