@@ -15,6 +15,9 @@ include(../cmake/tools.cmake)
 
 include(../cmake/CPM.cmake)
 
+# ---- compile_commands.json ----
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # CPMAddPackage("gh:onqtam/doctest@2.4.9")
 CPMAddPackage("gh:TheLartians/Format.cmake@1.7.3")
 CPMFindPackage(
