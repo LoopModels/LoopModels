@@ -53,6 +53,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../incl
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest_main LLVM)
+set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set_target_properties(${PROJECT_NAME} PROPERTIES 
   ENVIRONMENT

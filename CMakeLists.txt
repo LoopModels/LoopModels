@@ -79,6 +79,7 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/lib/*.c
 # Note: for header-only libraries change all PUBLIC flags to INTERFACE and create an interface
 # target: add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME} MODULE ${headers} ${sources})
+set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
