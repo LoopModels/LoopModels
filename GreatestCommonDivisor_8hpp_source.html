@@ -79,19 +79,19 @@ $(function() {
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;limits&gt;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;tuple&gt;</span></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;constexpr <span class="keyword">inline</span> <span class="keyword">auto</span> abs(std::signed_integral <span class="keyword">auto</span> x) noexcept {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;constexpr <span class="keyword">inline</span> <span class="keyword">auto</span> constexpr_abs(std::signed_integral <span class="keyword">auto</span> x) noexcept {</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keywordflow">return</span> x &lt; 0 ? -x : x;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;}</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;constexpr <span class="keyword">auto</span> gcd(int64_t x, int64_t y) -&gt; int64_t {</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keywordflow">if</span> (x == 0)</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordflow">return</span> abs(y);</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordflow">return</span> constexpr_abs(y);</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span> (y == 0)</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">return</span> abs(x);</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">return</span> constexpr_abs(x);</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  assert(x != std::numeric_limits&lt;int64_t&gt;::min());</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  assert(y != std::numeric_limits&lt;int64_t&gt;::min());</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  int64_t a = abs(x);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  int64_t b = abs(y);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  int64_t a = constexpr_abs(x);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  int64_t b = constexpr_abs(y);</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordflow">if</span> ((a == 1) | (b == 1))</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordflow">return</span> 1;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  int64_t az = std::countr_zero(uint64_t(x));</div>
@@ -103,14 +103,14 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    int64_t d = a - b;</div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    az = std::countr_zero(uint64_t(d));</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    b = std::min(a, b);</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    a = abs(d);</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    a = constexpr_abs(d);</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  }</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="keywordflow">return</span> b &lt;&lt; k;</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;}</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;constexpr <span class="keyword">auto</span> lcm(int64_t x, int64_t y) -&gt; int64_t {</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordflow">if</span> (abs(x) == 1)</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordflow">if</span> (constexpr_abs(x) == 1)</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    <span class="keywordflow">return</span> y;</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keywordflow">if</span> (abs(y) == 1)</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keywordflow">if</span> (constexpr_abs(y) == 1)</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordflow">return</span> x;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keywordflow">return</span> x * (y / gcd(x, y));</div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;}</div>

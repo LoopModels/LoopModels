@@ -121,7 +121,7 @@ $(function() {
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 1; v &lt; numSyms; ++v) {</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordflow">if</span> (int64_t Acv = A(c, v)) {</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        os &lt;&lt; (Acv &gt; 0 ? <span class="stringliteral">&quot; + &quot;</span> : <span class="stringliteral">&quot; - &quot;</span>);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        Acv = abs(Acv);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        Acv = constexpr_abs(Acv);</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordflow">if</span> (Acv != 1)</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;          os &lt;&lt; Acv &lt;&lt; <span class="stringliteral">&quot;*&quot;</span>;</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        os &lt;&lt; *syms[v - 1];</div>
@@ -189,7 +189,7 @@ $(function() {
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  int64_t Eis = Es[i];</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;  <span class="comment">// we now subsitute the equality expression with the minimum number</span></div>
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="comment">// of terms.</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keywordflow">if</span> (abs(Eis) == 1) {</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;  <span class="keywordflow">if</span> (constexpr_abs(Eis) == 1) {</div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numConstraints; ++j) {</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;      <span class="keywordflow">if</span> (j == rowMinNonZero)</div>
 <div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keywordflow">continue</span>;</div>
@@ -241,7 +241,7 @@ $(function() {
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  int64_t s = 2 * (Eis &gt; 0) - 1;</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  <span class="comment">// we now subsitute the equality expression with the minimum number</span></div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="comment">// of terms.</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordflow">if</span> (abs(Eis) == 1) {</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordflow">if</span> (constexpr_abs(Eis) == 1) {</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; A.numRow(); ++j)</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;      <span class="keywordflow">if</span> (int64_t Aij = A(j, i))</div>
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;        A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;</div>
