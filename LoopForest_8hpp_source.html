@@ -146,7 +146,7 @@ $(function() {
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">return</span> affineLoop.getNumLoops();</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  }</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keyword">friend</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="structLoopTree.html">LoopTree</a> &amp;tree)</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keyword">friend</span> <span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> <a class="code" href="structLoopTree.html">LoopTree</a> &amp;tree)</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    -&gt; llvm::raw_ostream &amp; {</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordflow">if</span> (tree.loop)</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;      os &lt;&lt; (*tree.loop) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span> &lt;&lt; tree.affineLoop &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
