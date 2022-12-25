@@ -27,13 +27,10 @@ jobs:
     - run: cmake --build builddirclang/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - run: gcovr --xml builddirgcc/test/CMakeFiles/LoopModelsTests.dir/
-    - run: gcovr --xml builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
-    - run: gcovr --xml builddirclang/test/CMakeFiles/LoopModelsTests.dir/
-    - run: gcovr --xml builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
+    - run: gcovr --xml coverage.xml
     - uses: codecov/codecov-action@v3
       with:
-        files: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirclang/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml, builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml
+        files: coverage.xml
   macos:
     runs-on: macos-latest
     steps:
@@ -64,11 +61,8 @@ jobs:
     # - run: cmake --build builddirgcc/test --target test
     #   env:
     #     CTEST_OUTPUT_ON_FAILURE: 1
-    # - run: gcovr --xml builddirgcc/test/CMakeFiles/LoopModelsTests.dir/
-    # - run: gcovr --xml builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
-    - run: gcovr --xml builddirclang/test/CMakeFiles/LoopModelsTests.dir/
-    - run: gcovr --xml builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
+    - run: gcovr --xml coverage.xml
     - uses: codecov/codecov-action@v3
       with:
-        files: builddirclang/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml #, builddirgcc/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml
+        files: coverage.xml
 
