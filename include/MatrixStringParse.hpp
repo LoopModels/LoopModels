@@ -20,8 +20,6 @@
       numRows += 1;
       ++cur;
       continue;
-    } else if (c == ']') {
-      break;
     }
     size_t sz = 0;
     int64_t ll = std::stoll(s + cur, &sz, 10);
