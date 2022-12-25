@@ -30,7 +30,7 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         gcov: true
-        gcov_include: include/Math.hpp
+	gcov_include: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda builddirclang/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda
   macos:
     runs-on: macos-latest
     steps:
@@ -63,5 +63,5 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         gcov: true
-        gcov_include: include, lib
+	gcov_include: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda builddirclang/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda
 
