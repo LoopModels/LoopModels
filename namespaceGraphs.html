@@ -77,6 +77,21 @@ Functions</h2></td></tr>
 <tr class="memitem:a01c809ddf99553eec330c5c3ef311029"><td class="memItemLeft" align="right" valign="top"><a id="a01c809ddf99553eec330c5c3ef311029"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>printRange</b> (llvm::raw_ostream &amp;os, AbstractRange auto &amp;r) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:a01c809ddf99553eec330c5c3ef311029"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bbf19bf9cd02860cceb12c33057295d"><td class="memItemLeft" align="right" valign="top"><a id="a8bbf19bf9cd02860cceb12c33057295d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisited</b> (AbstractGraph auto &amp;g)</td></tr>
+<tr class="separator:a8bbf19bf9cd02860cceb12c33057295d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a623c275a15009467a7040f99875b3b02"><td class="memItemLeft" align="right" valign="top"><a id="a623c275a15009467a7040f99875b3b02"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>weakVisit</b> (AbstractGraph auto &amp;g, llvm::SmallVectorImpl&lt; unsigned &gt; &amp;sorted, unsigned v)</td></tr>
+<tr class="separator:a623c275a15009467a7040f99875b3b02"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadddc9f066bf718f87f19d5b814e6ab7"><td class="memItemLeft" align="right" valign="top"><a id="aadddc9f066bf718f87f19d5b814e6ab7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>weaklyConnectedComponents</b> (AbstractGraph auto &amp;g)</td></tr>
+<tr class="separator:aadddc9f066bf718f87f19d5b814e6ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a81363bae26cf265fa36928b047b9e15c"><td class="memItemLeft" align="right" valign="top"><a id="a81363bae26cf265fa36928b047b9e15c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>strongConnect</b> (AbstractGraph auto &amp;g, llvm::SmallVector&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt; &amp;components, llvm::SmallVector&lt; unsigned &gt; &amp;stack, llvm::MutableArrayRef&lt; std::tuple&lt; unsigned, unsigned, bool &gt;&gt; indexLowLinkOnStack, size_t index, size_t v) -&gt; size_t</td></tr>
+<tr class="separator:a81363bae26cf265fa36928b047b9e15c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9807dcf289635a3a58aa80027dfbd184"><td class="memItemLeft" align="right" valign="top"><a id="a9807dcf289635a3a58aa80027dfbd184"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>stronglyConnectedComponents</b> (AbstractGraph auto &amp;g) -&gt; llvm::SmallVector&lt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt;&gt;</td></tr>
+<tr class="separator:a9807dcf289635a3a58aa80027dfbd184"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2348720d793905973173d23733c1ab0c"><td class="memItemLeft" align="right" valign="top"><a id="a2348720d793905973173d23733c1ab0c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>print</b> (const AbstractGraph auto &amp;g, llvm::raw_ostream &amp;os=llvm::errs()) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:a2348720d793905973173d23733c1ab0c"><td class="memSeparator" colspan="2">&#160;</td></tr>

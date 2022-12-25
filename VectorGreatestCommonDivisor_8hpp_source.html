@@ -75,13 +75,13 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160; </div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">using</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>;</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keyword">auto</span> gcd(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> x) -&gt; int64_t {</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  int64_t g = std::abs(x[0]);</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> gcd(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> x) -&gt; int64_t {</div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  int64_t g = abs(x[0]);</div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; x.size(); ++i)</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    g = gcd(g, x[i]);</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordflow">return</span> g;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;}</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;[[maybe_unused]] <span class="keyword">static</span> <span class="keywordtype">void</span> normalizeByGCD(<a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> x) {</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> normalizeByGCD(<a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> x) {</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> N = x.size()) {</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="keywordflow">if</span> (N == 1) {</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;      x[0] = 1;</div>
@@ -94,8 +94,8 @@ $(function() {
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;      x /= g;</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  }</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:768</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:709</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
