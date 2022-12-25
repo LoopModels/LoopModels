@@ -50,11 +50,12 @@ jobs:
     - run: cmake --build builddirclang/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - run: echo $(ld.lld --version)
     - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_PREFIX_PATH=/usr/local
       env:
         CXX: g++-12
         LDFLAGS: "-L/usr/local/opt/gcc/lib/gcc/12 -Wl,-rpath,/usr/local/opt/gcc/lib/gcc/12 -L/usr/local/opt/llvm/lib"
-        CXXFLAGS: "-stdlib=libstdc++ -I/usr/local/opt/llvm/include/ -I/usr/local/include/"
+        CXXFLAGS: "-stdlib=libstdc++ -I/usr/local/opt/llvm/include/ -I/usr/local/include/ -fuse-ld=ld.lld"
         C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
         CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
     - run: cmake --build builddirgcc/test -j4
