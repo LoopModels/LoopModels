@@ -38,7 +38,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
-    - run: brew install gcc llvm@15 ninja pkg-config cmake gcovr mold
+    - run: brew install llvm@15 ninja pkg-config cmake gcovr # gcc
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
     - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_TEST_COVERAGE=1
@@ -53,20 +53,22 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - run: echo $(pkgutil --pkg-info=com.apple.pkg.CLTools_Executables)
-    - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_PREFIX_PATH=/usr/local
-      env:
-        CXX: g++-12
-        LDFLAGS: "-L/usr/local/opt/gcc/lib/gcc/12 -Wl,-rpath,/usr/local/opt/gcc/lib/gcc/12 -L/usr/local/opt/llvm/lib"
-        CXXFLAGS: "-stdlib=libstdc++ -I/usr/local/opt/llvm/include/ -I/usr/local/include/ -fuse-ld=mold"
-        C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
-        CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
-    - run: cmake --build builddirgcc/test -j4
-    - run: cmake --build builddirgcc/test --target test
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-    - run: gcovr --xml builddirgcc/test/CMakeFiles/LoopModelsTests.dir/
+    # - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_PREFIX_PATH=/usr/local
+    #   env:
+    #     CXX: g++-12
+    #     LDFLAGS: "-L/usr/local/opt/gcc/lib/gcc/12 -Wl,-rpath,/usr/local/opt/gcc/lib/gcc/12 -L/usr/local/opt/llvm/lib"
+    #     CXXFLAGS: "-stdlib=libstdc++ -I/usr/local/opt/llvm/include/ -I/usr/local/include/"
+    #     C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
+    #     CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include/ -I/usr/local/include/"
+    # - run: cmake --build builddirgcc/test -j4
+    # - run: cmake --build builddirgcc/test --target test
+    #   env:
+    #     CTEST_OUTPUT_ON_FAILURE: 1
+    # - run: gcovr --xml builddirgcc/test/CMakeFiles/LoopModelsTests.dir/
+    # - run: gcovr --xml builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
     - run: gcovr --xml builddirclang/test/CMakeFiles/LoopModelsTests.dir/
+    - run: gcovr --xml builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/
     - uses: codecov/codecov-action@v3
       with:
-        files: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirclang/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml, builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml
+        files: builddirclang/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirclang/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml #, builddirgcc/test/CMakeFiles/LoopModelsTests.dir/coverage.xml, builddirgcc/test/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/coverage.xml
 
