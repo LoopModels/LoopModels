@@ -68,8 +68,8 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
 if(ENABLE_TEST_COVERAGE)
-  add_compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
-  link_options(-fprofile-arcs -ftest-coverage)
+  add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
   message(STATUS "Lib coverage enabled.")
 endif()
 
