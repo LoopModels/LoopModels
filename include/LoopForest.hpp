@@ -102,7 +102,7 @@ struct LoopTree {
   [[nodiscard]] auto end() const { return subLoops.end(); }
   [[nodiscard]] auto size() const -> size_t { return subLoops.size(); }
 
-  inline void split(llvm::BumpPtrAllocator &alloc,
+  static void split(llvm::BumpPtrAllocator &alloc,
                     llvm::SmallVectorImpl<LoopTree *> &trees,
                     llvm::SmallVectorImpl<Predicate::Map> &paths,
                     llvm::SmallVectorImpl<LoopTree *> &subTree) {
