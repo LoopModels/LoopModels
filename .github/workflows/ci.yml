@@ -52,6 +52,7 @@ jobs:
     - run: cmake --build builddirclang/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+    - run: echo $(pkgutil --pkg-info=com.apple.pkg.CLTools_Executables)
     - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_PREFIX_PATH=/usr/local
       env:
         CXX: g++-12
