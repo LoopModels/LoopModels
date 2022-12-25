@@ -30,7 +30,6 @@ jobs:
     - run: gcovr --xml builddirgcc/test/CMakeFiles/LoopModelsTests.dir
     - uses: codecov/codecov-action@v3
       with:
-        gcov: true
 	files: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/coverage.xml
   macos:
     runs-on: macos-latest
