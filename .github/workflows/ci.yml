@@ -41,7 +41,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc llvm@15 ninja pkg-config cmake ninja gcovr
+    - run: brew install gcc llvm@15 ninja pkg-config cmake ninja-build gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
     # - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
