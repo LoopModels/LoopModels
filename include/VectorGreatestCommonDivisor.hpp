@@ -5,7 +5,7 @@
 using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
 
 inline auto gcd(PtrVector<int64_t> x) -> int64_t {
-  int64_t g = abs(x[0]);
+  int64_t g = constexpr_abs(x[0]);
   for (size_t i = 1; i < x.size(); ++i)
     g = gcd(g, x[i]);
   return g;

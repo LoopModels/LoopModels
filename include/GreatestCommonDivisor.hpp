@@ -8,19 +8,19 @@
 #include <limits>
 #include <tuple>
 
-constexpr inline auto abs(std::signed_integral auto x) noexcept {
+constexpr inline auto constexpr_abs(std::signed_integral auto x) noexcept {
   return x < 0 ? -x : x;
 }
 
 constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
   if (x == 0)
-    return abs(y);
+    return constexpr_abs(y);
   else if (y == 0)
-    return abs(x);
+    return constexpr_abs(x);
   assert(x != std::numeric_limits<int64_t>::min());
   assert(y != std::numeric_limits<int64_t>::min());
-  int64_t a = abs(x);
-  int64_t b = abs(y);
+  int64_t a = constexpr_abs(x);
+  int64_t b = constexpr_abs(y);
   if ((a == 1) | (b == 1))
     return 1;
   int64_t az = std::countr_zero(uint64_t(x));
@@ -32,14 +32,14 @@ constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
     int64_t d = a - b;
     az = std::countr_zero(uint64_t(d));
     b = std::min(a, b);
-    a = abs(d);
+    a = constexpr_abs(d);
   }
   return b << k;
 }
 constexpr auto lcm(int64_t x, int64_t y) -> int64_t {
-  if (abs(x) == 1)
+  if (constexpr_abs(x) == 1)
     return y;
-  if (abs(y) == 1)
+  if (constexpr_abs(y) == 1)
     return x;
   return x * (y / gcd(x, y));
 }

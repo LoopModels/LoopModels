@@ -712,7 +712,7 @@ struct AffineLoopNest
         if (printed)
           os << (xi > 0 ? " + " : " - ");
         printed = true;
-        int64_t absxi = abs(xi);
+        int64_t absxi = constexpr_abs(xi);
         if (absxi != 1)
           os << absxi << " * ";
         os << *S[i - 1];
@@ -750,7 +750,7 @@ struct AffineLoopNest
             os << " - ";
           else if (printed)
             os << " + ";
-          lakj = abs(lakj);
+          lakj = constexpr_abs(lakj);
           if (lakj != 1)
             os << lakj << "*";
           os << "i_" << numVarMinus1 - k;

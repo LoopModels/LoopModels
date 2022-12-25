@@ -17,7 +17,7 @@ namespace NormalForm {
 
 constexpr inline auto gcdxScale(int64_t a, int64_t b)
   -> std::tuple<int64_t, int64_t, int64_t, int64_t> {
-  if (abs(a) == 1)
+  if (constexpr_abs(a) == 1)
     return std::make_tuple(a, 0, a, b);
   auto [g, p, q] = gcdx(a, b);
   return std::make_tuple(p, q, a / g, b / g);
@@ -163,7 +163,7 @@ inline auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
     } else {
       zeroSupDiagonal(A, K, i, M, N);
       int64_t Aii = A(i, i);
-      if (abs(Aii) != 1) {
+      if (constexpr_abs(Aii) != 1) {
         // including this row renders the matrix not unimodular!
         // therefore, we drop the row.
         dropCol(A, i, M, --N);

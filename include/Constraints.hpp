@@ -55,7 +55,7 @@ inline auto printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
     for (size_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A(c, v)) {
         os << (Acv > 0 ? " + " : " - ");
-        Acv = abs(Acv);
+        Acv = constexpr_abs(Acv);
         if (Acv != 1)
           os << Acv << "*";
         os << *syms[v - 1];
@@ -123,7 +123,7 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> size_t {
   int64_t Eis = Es[i];
   // we now subsitute the equality expression with the minimum number
   // of terms.
-  if (abs(Eis) == 1) {
+  if (constexpr_abs(Eis) == 1) {
     for (size_t j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero)
         continue;
@@ -175,7 +175,7 @@ inline auto substituteEqualityImpl(
   int64_t s = 2 * (Eis > 0) - 1;
   // we now subsitute the equality expression with the minimum number
   // of terms.
-  if (abs(Eis) == 1) {
+  if (constexpr_abs(Eis) == 1) {
     for (size_t j = 0; j < A.numRow(); ++j)
       if (int64_t Aij = A(j, i))
         A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
