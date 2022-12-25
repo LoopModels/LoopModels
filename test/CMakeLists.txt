@@ -7,15 +7,6 @@ project(LoopModelsTests LANGUAGES CXX)
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
-# ---- code coverage ----
-
-message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
-if(ENABLE_TEST_COVERAGE)
-  add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
-  message(STATUS "Lib coverage enabled.")
-endif()
-
 # --- Import tools ----
 
 include(../cmake/tools.cmake)
@@ -89,4 +80,14 @@ enable_testing()
 # include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
+
+# ---- code coverage ----
+
+message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
+if(ENABLE_TEST_COVERAGE)
+  add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
+  message(STATUS "Lib coverage enabled.")
+endif()
+
 

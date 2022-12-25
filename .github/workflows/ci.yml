@@ -30,7 +30,7 @@ jobs:
     - uses: codecov/codecov-action@v3
       with:
         gcov: true
-        gcov_include: include, lib
+        gcov_include: include/Math.hpp
   macos:
     runs-on: macos-latest
     steps:
