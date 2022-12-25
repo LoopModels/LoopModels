@@ -62,6 +62,5 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
     - uses: codecov/codecov-action@v3
       with:
-        gcov: true
-	gcov_include: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda
+        gcov_include: builddirgcc/test/CMakeFiles/LoopModelsTests.dir/bitset_test.cpp.gcda
 
