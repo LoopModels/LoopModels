@@ -42,7 +42,6 @@ list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(${LLVM_DIR}/AddLLVM.cmake)
 
 if(APPLE)
-  include_directories(BEFORE /usr/local/opt/llvm/include)
   set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 endif()
 
