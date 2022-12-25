@@ -36,7 +36,7 @@ endif()
 file(GLOB tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 # list(FILTER tests EXCLUDE REGEX "remarks.*")
 # for remarks test
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM 15 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
 include(${LLVM_DIR}/AddLLVM.cmake)
