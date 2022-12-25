@@ -4,8 +4,8 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/MemoryAccess.hpp"
-#include "../include/TestUtilities.hpp"
 #include "./ArrayReference.hpp"
+#include "./TestUtilities.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

@@ -2,8 +2,8 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/Orthogonalize.hpp"
-#include "../include/TestUtilities.hpp"
 #include "./ArrayReference.hpp"
+#include "./TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
