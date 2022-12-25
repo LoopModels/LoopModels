@@ -43,15 +43,15 @@ jobs:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CXXFLAGS: "-stdlib=libc++ -I/usr/local/opt/llvm/include -I/usr/local/include"
-	C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
-	CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
     - run: cmake --build builddirclang/test -j4
       env:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
         CXXFLAGS: "-stdlib=libc++ -I/usr/local/opt/llvm/include -I/usr/local/include"
-	C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
-	CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
     - run: cmake --build builddirclang/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
@@ -60,8 +60,8 @@ jobs:
         CXX: g++-12
         LDFLAGS: "-L/usr/local/opt/gcc/lib/gcc/12 -Wl,-rpath,/usr/local/opt/gcc/lib/gcc/12 -L/usr/local/opt/llvm/lib"
         CXXFLAGS: "-stdlib=libstdc++ -I/usr/local/opt/llvm/include -I/usr/local/include"
-	C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
-	CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        C_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
+        CPLUS_INCLUDE_PATH: "-I/usr/local/opt/llvm/include -I/usr/local/include"
     - run: cmake --build builddirgcc/test -j4
     - run: cmake --build builddirgcc/test --target test
       env:
