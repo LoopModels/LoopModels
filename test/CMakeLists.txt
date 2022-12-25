@@ -41,11 +41,6 @@ list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
 include(${LLVM_DIR}/AddLLVM.cmake)
 
-if(APPLE)
-  set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-endif()
-
-
 add_executable(${PROJECT_NAME} ${tests})
 # target_link_libraries(${PROJECT_NAME} doctest::doctest Greeter::Greeter)
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
