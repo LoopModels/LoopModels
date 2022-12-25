@@ -27,7 +27,7 @@ jobs:
     - run: cmake --build builddirclang/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - run: gcovr --xml coverage.xml
+    - run: gcovr --xml=coverage.xml gcovr --json=coverage.json --txt=coverage.txt
     - uses: codecov/codecov-action@v3
       with:
         files: coverage.xml
@@ -61,7 +61,7 @@ jobs:
     # - run: cmake --build builddirgcc/test --target test
     #   env:
     #     CTEST_OUTPUT_ON_FAILURE: 1
-    - run: gcovr --xml coverage.xml
+    - run: gcovr --xml=coverage.xml gcovr --json=coverage.json --txt=coverage.txt
     - uses: codecov/codecov-action@v3
       with:
         files: coverage.xml
