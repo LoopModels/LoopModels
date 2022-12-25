@@ -45,16 +45,6 @@ jobs:
     - run: brew install gcc llvm@15 ninja pkg-config cmake
     - run: pip install meson ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
-    # - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
-    - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_CXX_FLAGS="-fuse-ld=lld"
-      env:
-        CXX: g++-12
-        CXXFLAGS: "-stdlib=libstdc++"
-    - run: cmake --build builddirgcc/test -j4
-    - run: cmake --build builddirgcc/test --target test
-      env:
-        CTEST_OUTPUT_ON_FAILURE: 1
-    - run: brew install googletest
     - run: echo $(which clang++)
     # - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
     - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_CXX_FLAGS="-fuse-ld=lld"
@@ -65,6 +55,15 @@ jobs:
         CXXFLAGS: "-stdlib=libc++"
     - run: cmake --build builddirclang/test -j4
     - run: cmake --build builddirclang/test --target test
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+    # - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
+    - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_CXX_FLAGS="-fuse-ld=lld"
+      env:
+        CXX: g++-12
+        CXXFLAGS: "-stdlib=libstdc++"
+    - run: cmake --build builddirgcc/test -j4
+    - run: cmake --build builddirgcc/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - uses: codecov/codecov-action@v3
