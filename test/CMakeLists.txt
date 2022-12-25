@@ -11,9 +11,9 @@ option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
 if(ENABLE_TEST_COVERAGE)
-  compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
+  add_compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
   link_options(-fprofile-arcs -ftest-coverage)
-  link_libraries(gcov)
+  message(STATUS "Lib coverage enabled.")
 endif()
 
 # --- Import tools ----

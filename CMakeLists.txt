@@ -68,9 +68,9 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
 if(ENABLE_TEST_COVERAGE)
-  compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
+  add_compile_options(-O0 -g -fprofile-arcs -ftest-coverage)
   link_options(-fprofile-arcs -ftest-coverage)
-  link_libraries(gcov)
+  message(STATUS "Lib coverage enabled.")
 endif()
 
 # ---- Add source files ----
@@ -90,9 +90,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition)
-  add_compile_options (-fdiagnostics-color=always)
+  add_compile_options(-fdiagnostics-color=always)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options (-fcolor-diagnostics)
+  add_compile_options(-fcolor-diagnostics)
 endif ()
 
 # being a cross-platform target, we enforce standards conformance on MSVC
