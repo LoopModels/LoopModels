@@ -774,7 +774,8 @@ struct AffineLoopNest
     printBound(os, i, -1);
   }
   // prints loops from inner most to outer most.
-  friend auto operator<<(llvm::raw_ostream &os, const AffineLoopNest &alnb)
+  friend inline auto operator<<(llvm::raw_ostream &os,
+                                const AffineLoopNest &alnb)
     -> llvm::raw_ostream & {
     AffineLoopNest<NonNegative> aln{alnb};
     size_t numLoopsMinus1 = aln.getNumLoops() - 1;

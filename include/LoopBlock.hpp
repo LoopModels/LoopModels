@@ -1292,8 +1292,8 @@ struct LinearProgramLoopBlock {
     return optOrth(fullGraph());
   }
 
-  friend auto operator<<(llvm::raw_ostream &os,
-                         const LinearProgramLoopBlock &lblock)
+  friend inline auto operator<<(llvm::raw_ostream &os,
+                                const LinearProgramLoopBlock &lblock)
     -> llvm::raw_ostream & {
     os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
     for (size_t i = 0; i < lblock.nodes.size(); ++i) {

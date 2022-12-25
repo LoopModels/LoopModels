@@ -1,8 +1,8 @@
+#include "../include/Constraints.hpp"
 #include "../include/Loops.hpp"
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/TestUtilities.hpp"
-#include "Constraints.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -12,9 +12,9 @@
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(FourierMotzkin, BasicAssertions) {
-  auto A{stringToIntMatrix("[-2 1 0 -1 -1 0; -1 0 1 0 0 -1]")};
+  auto A{"[-2 1 0 -1 -1 0; -1 0 1 0 0 -1]"_mat};
   fourierMotzkinNonNegative(A, 3);
-  auto B{stringToIntMatrix("[-2 1 0 0 -1 0; -1 0 1 0 0 -1]")};
+  auto B{"[-2 1 0 0 -1 0; -1 0 1 0 0 -1]"_mat};
   llvm::errs() << "A = " << A << "\nB = " << B << "\n";
   EXPECT_EQ(A, B);
 }
@@ -44,7 +44,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   // m >= 0
   // -2 + M - m >= 0
   // 1 + m >= 0
-  auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+  auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 1);
   AffineLoopNest<true> &aff = tlf.alns[0];
@@ -54,7 +54,7 @@ TEST(TrivialPruneBounds, BasicAssertions) {
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
   EXPECT_EQ(aff.A.numRow(), 1);
-  EXPECT_EQ(aff.A, stringToIntMatrix("[-2 1 -1]"));
+  EXPECT_EQ(aff.A, "[-2 1 -1]"_mat);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -63,8 +63,7 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
   // I >= 1
   // i <= J - 1
   // J >= 1
-  auto A{stringToIntMatrix(
-    "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]")};
+  auto A{"[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff = tlf.alns[0];
@@ -80,16 +79,16 @@ TEST(TrivialPruneBounds2, BasicAssertions) {
 TEST(LessTrivialPruneBounds, BasicAssertions) {
 
   // Ax * b >= 0
-  IntMatrix A{stringToIntMatrix("[-3 1 1 1 -1 -1 -1; "
-                                "0 0 0 0 1 1 1; "
-                                "-2 1 0 1 -1 0 -1; "
-                                "0 0 0 0 1 0 1; "
-                                "0 0 0 0 0 1 0; "
-                                "-1 0 1 0 0 -1 0; "
-                                "-1 1 0 0 -1 0 0; "
-                                "0 0 0 0 1 0 0; "
-                                "0 0 0 0 0 0 1; "
-                                "-1 0 0 1 0 0 -1]")};
+  IntMatrix A{"[-3 1 1 1 -1 -1 -1; "
+              "0 0 0 0 1 1 1; "
+              "-2 1 0 1 -1 0 -1; "
+              "0 0 0 0 1 0 1; "
+              "0 0 0 0 0 1 0; "
+              "-1 0 1 0 0 -1 0; "
+              "-1 1 0 0 -1 0 0; "
+              "0 0 0 0 1 0 0; "
+              "0 0 0 0 0 0 1; "
+              "-1 0 0 1 0 0 -1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
@@ -119,14 +118,14 @@ TEST(AffineTest0, BasicAssertions) {
   // the loop is
   // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
   //
-  IntMatrix A{stringToIntMatrix("[-1 1 0 -1 0 0; "
-                                "0 0 0 1 0 0; "
-                                "-1 0 1 0 -1 0; "
-                                "0 0 0 0 1 0; "
-                                "-1 0 1 0 0 -1; "
-                                "-1 0 0 0 -1 1; "
-                                "0 1 0 0 0 0; "
-                                "0 0 1 0 0 0]")};
+  IntMatrix A{"[-1 1 0 -1 0 0; "
+              "0 0 0 1 0 0; "
+              "-1 0 1 0 -1 0; "
+              "0 0 0 0 1 0; "
+              "-1 0 1 0 0 -1; "
+              "-1 0 0 0 -1 1; "
+              "0 1 0 0 0 0; "
+              "0 0 1 0 0 0]"_mat};
 
   TestLoopFunction tlf;
   llvm::errs() << "About to construct affine obj\n";
@@ -147,8 +146,7 @@ TEST(AffineTest0, BasicAssertions) {
   aff.dump();
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  AffineLoopNest<false> affp021{
-    aff.rotate(stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]"))};
+  AffineLoopNest<false> affp021{aff.rotate("[1 0 0; 0 0 1; 0 1 0]"_mat)};
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
   affp021.dump();
@@ -168,11 +166,11 @@ TEST(AffineTest0, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(NonUnimodularExperiment, BasicAssertions) {
   llvm::errs() << "Starting affine test 1\n";
-  IntMatrix A{stringToIntMatrix("[0 2 1 -1; "
-                                "-2 0 -1 1; "
-                                "0 2 1 1; "
-                                "-2 0 -1 -1; "
-                                " 0 1 0 0]")};
+  IntMatrix A{"[0 2 1 -1; "
+              "-2 0 -1 1; "
+              "0 2 1 1; "
+              "-2 0 -1 -1; "
+              " 0 1 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff = tlf.alns.back();
@@ -184,16 +182,16 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   aff.pruneBounds();
   EXPECT_TRUE(aff.isEmpty());
 
-  A = stringToIntMatrix("[0 2 1 -1; "
-                        "-2 0 -1 1; "
-                        "0 2 1 1; "
-                        "8 0 -1 -1; "
-                        " 0 1 0 0]");
+  A = "[0 2 1 -1; "
+      "-2 0 -1 1; "
+      "0 2 1 1; "
+      "8 0 -1 -1; "
+      " 0 1 0 0]"_mat;
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff2 = tlf.alns.back();
   EXPECT_FALSE(aff2.isEmpty());
 
-  AffineLoopNest<false> affp10{aff2.rotate(stringToIntMatrix("[0 1; 1 0]"))};
+  AffineLoopNest<false> affp10{aff2.rotate("[0 1; 1 0]"_mat)};
   llvm::errs() << "Swapped order:\n";
   affp10.dump();
 

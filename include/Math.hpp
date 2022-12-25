@@ -80,7 +80,8 @@ enum class AxisType {
   RowStride,
 
 };
-auto operator<<(llvm::raw_ostream &os, AxisType x) -> llvm::raw_ostream & {
+[[maybe_unused]] inline auto operator<<(llvm::raw_ostream &os, AxisType x)
+  -> llvm::raw_ostream & {
   switch (x) {
   case AxisType::Row:
     return os << "Row";
@@ -168,7 +169,7 @@ template <AxisType T> struct AxisInt {
   }
   constexpr auto operator*() const -> V { return value; }
 
-  friend auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
+  friend inline auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
     -> llvm::raw_ostream & {
     return os << T << "{" << *x << "}";
   }
@@ -504,18 +505,20 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 };
 
 static inline constexpr struct Begin {
-  friend auto operator<<(llvm::raw_ostream &os, Begin) -> llvm::raw_ostream & {
+  friend inline auto operator<<(llvm::raw_ostream &os, Begin)
+    -> llvm::raw_ostream & {
     return os << 0;
   }
 } begin;
 static inline constexpr struct End {
-  friend auto operator<<(llvm::raw_ostream &os, End) -> llvm::raw_ostream & {
+  friend inline auto operator<<(llvm::raw_ostream &os, End)
+    -> llvm::raw_ostream & {
     return os << "end";
   }
 } end;
 struct OffsetBegin {
   [[no_unique_address]] size_t offset;
-  friend auto operator<<(llvm::raw_ostream &os, OffsetBegin r)
+  friend inline auto operator<<(llvm::raw_ostream &os, OffsetBegin r)
     -> llvm::raw_ostream & {
     return os << r.offset;
   }
@@ -542,7 +545,7 @@ inline auto operator+(OffsetBegin y, ScalarValueIndex auto x) -> OffsetBegin {
 }
 struct OffsetEnd {
   [[no_unique_address]] size_t offset;
-  friend auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
+  friend inline auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
     -> llvm::raw_ostream & {
     return os << "end - " << r.offset;
   }
@@ -593,7 +596,7 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     return std::reverse_iterator{begin()};
   }
   [[nodiscard]] constexpr auto size() const { return e - b; }
-  friend auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
+  friend inline auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
     -> llvm::raw_ostream & {
     return os << "[" << r.b << ":" << r.e << ")";
   }
@@ -639,16 +642,20 @@ static inline constexpr struct Colon {
 } _; // NOLINT(bugprone-reserved-identifier)
 
 #ifndef NDEBUG
-void checkIndex(size_t X, size_t x) { assert(x < X); }
-void checkIndex(size_t X, End) { assert(X > 0); }
-void checkIndex(size_t X, Begin) { assert(X > 0); }
-void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
-void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
-template <typename B> void checkIndex(size_t X, Range<B, size_t> x) {
+static inline void checkIndex(size_t X, size_t x) { assert(x < X); }
+[[maybe_unused]] inline void checkIndex(size_t X, End) { assert(X > 0); }
+[[maybe_unused]] inline void checkIndex(size_t X, Begin) { assert(X > 0); }
+[[maybe_unused]] inline void checkIndex(size_t X, OffsetEnd x) {
+  assert(x.offset < X);
+}
+[[maybe_unused]] inline void checkIndex(size_t X, OffsetBegin x) {
+  assert(x.offset < X);
+}
+template <typename B> inline void checkIndex(size_t X, Range<B, size_t> x) {
   assert(x.e <= X);
 }
-template <typename B, typename E> void checkIndex(size_t, Range<B, E>) {}
-void checkIndex(size_t, Colon) {}
+template <typename B, typename E> inline void checkIndex(size_t, Range<B, E>) {}
+[[maybe_unused]] inline void checkIndex(size_t, Colon) {}
 #endif
 
 constexpr auto canonicalize(size_t e, size_t) -> size_t { return e; }
@@ -2162,7 +2169,7 @@ auto printVector(llvm::raw_ostream &os, const llvm::SmallVectorImpl<T> &a)
 }
 
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
+inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
   -> llvm::raw_ostream & {
   return printVector(os, A);
 }
@@ -2439,7 +2446,7 @@ template <typename T> struct SmallSparseMatrix {
 };
 
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
+inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   -> llvm::raw_ostream & {
   size_t k = 0;
   os << "[ ";
@@ -2470,11 +2477,13 @@ auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   return os;
 }
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
+inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
+  -> llvm::raw_ostream & {
   return printMatrix(os, A);
 }
 template <AbstractMatrix T>
-auto operator<<(llvm::raw_ostream &os, const T &A) -> llvm::raw_ostream & {
+inline auto operator<<(llvm::raw_ostream &os, const T &A)
+  -> llvm::raw_ostream & {
   Matrix<std::remove_const_t<typename T::eltype>> B{A};
   return printMatrix(os, PtrMatrix<typename T::eltype>(B));
 }

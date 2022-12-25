@@ -223,7 +223,7 @@ struct Polyhedra {
       dropEmptyConstraints(E);
   }
 
-  friend auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
     -> llvm::raw_ostream & {
     auto &&os2 =
       printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());

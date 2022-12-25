@@ -75,7 +75,7 @@ struct LoopTree {
     return affineLoop.getNumLoops();
   }
 
-  friend auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
+  friend inline auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
     if (tree.loop)
       os << (*tree.loop) << "\n" << tree.affineLoop << "\n";

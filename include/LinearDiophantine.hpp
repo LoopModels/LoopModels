@@ -4,7 +4,7 @@
 #include <tuple>
 
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-auto linearDiophantine(int64_t c, int64_t a, int64_t b)
+inline auto linearDiophantine(int64_t c, int64_t a, int64_t b)
   -> std::optional<std::tuple<int64_t, int64_t>> {
   if (c == 0)
     return std::make_tuple(int64_t(0), int64_t(0));
@@ -22,7 +22,7 @@ auto linearDiophantine(int64_t c, int64_t a, int64_t b)
 }
 
 // d = a*x; x = d/a
-auto linearDiophantine(int64_t d, std::tuple<int64_t> a)
+inline auto linearDiophantine(int64_t d, std::tuple<int64_t> a)
   -> std::optional<std::tuple<int64_t>> {
   int64_t a0 = std::get<0>(a);
   if (d == 0) {
@@ -35,25 +35,27 @@ auto linearDiophantine(int64_t d, std::tuple<int64_t> a)
   return {};
 }
 // d = a[0]*x + a[1]*y;
-auto linearDiophantine(int64_t d, std::tuple<int64_t, int64_t> a)
+inline auto linearDiophantine(int64_t d, std::tuple<int64_t, int64_t> a)
   -> std::optional<std::tuple<int64_t, int64_t>> {
   return linearDiophantine(d, std::get<0>(a), std::get<1>(a));
 }
 
 template <size_t N> struct Val {};
 template <typename Tuple, std::size_t... Is, size_t N>
-auto pop_front_impl(const Tuple &tuple, std::index_sequence<Is...>, Val<N>) {
+inline auto pop_front_impl(const Tuple &tuple, std::index_sequence<Is...>,
+                           Val<N>) {
   return std::make_tuple(std::get<N + Is>(tuple)...);
 }
 
-template <typename Tuple, size_t N> auto pop_front(const Tuple &tuple, Val<N>) {
+template <typename Tuple, size_t N>
+inline auto pop_front(const Tuple &tuple, Val<N>) {
   return pop_front_impl(
     tuple, std::make_index_sequence<std::tuple_size<Tuple>::value - N>(),
     Val<N>());
 }
 
 template <typename Tuple>
-auto linearDiophantine(int64_t d, Tuple a) -> std::optional<Tuple> {
+inline auto linearDiophantine(int64_t d, Tuple a) -> std::optional<Tuple> {
   int64_t a0 = std::get<0>(a);
   int64_t a1 = std::get<1>(a);
   auto aRem = pop_front(a, Val<2>());

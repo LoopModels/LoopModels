@@ -15,8 +15,7 @@ TEST(BasicCompare, BasicAssertions) {
   // Move all the variables to one side of the inequality and make it larger
   // than zero and represent them in a matrix A, such that we could have
   // assembled Ax >= 0
-  IntMatrix A =
-    stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]");
+  IntMatrix A = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 -1 0 1]"_mat;
   auto comp = LinearSymbolicComparator::construct(std::move(A), false);
   Vector<int64_t> query{-1, 0, 0, 1, 0};
 
@@ -26,8 +25,8 @@ TEST(BasicCompare, BasicAssertions) {
   // TEST column deficient rank case of A
   //  We add two more constraints to the last example
   //  we add x >= a; b >= a
-  IntMatrix A2 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
-                                   "-1 0 1; -1 1 0 0 0; -1 0 0 1 0]");
+  IntMatrix A2 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
+                 "-1 0 1; -1 1 0 0 0; -1 0 0 1 0]"_mat;
   auto comp2 = LinearSymbolicComparator::construct(std::move(A2), false);
   Vector<int64_t> query2{-1, 0, 0, 0, 1};
   Vector<int64_t> query3{0, 0, 0, -1, 1};
@@ -37,8 +36,8 @@ TEST(BasicCompare, BasicAssertions) {
   // TEST on non identity diagonal case
   // We change the final constraint to x >= 2a + b
   // Vector representation of the diagonal matrix will become [1, ... , 1, 2]
-  IntMatrix A3 = stringToIntMatrix("[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
-                                   "-1 0 1; -1 1 0 0 0; -2 -1 0 1 0]");
+  IntMatrix A3 = "[-1 0 1 0 0; 0 -1 1 0 0; 0 0 -1 1 0; 0 0 "
+                 "-1 0 1; -1 1 0 0 0; -2 -1 0 1 0]"_mat;
   auto comp3 = LinearSymbolicComparator::construct(std::move(A3), false);
   // Vector<int64_t> query2{-1, 0, 0, 1, 0};
   //  Vector<int64_t> query3{0, 0, 0, -1, 1};
@@ -58,12 +57,11 @@ TEST(BasicCompare, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(V2Matrix, BasicAssertions) {
-  IntMatrix A = stringToIntMatrix(
-    "[0 -1 0 1 0 0; 0 0 -1 1 0 0; 0 0 0 1 -1 0; 0 0 0 1 0 -1]");
-  // IntMatrix A = stringToIntMatrix(" [1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0
+  IntMatrix A = "[0 -1 0 1 0 0; 0 0 -1 1 0 0; 0 0 0 1 -1 0; 0 0 0 1 0 -1]"_mat;
+  // IntMatrix A = " [1 0 0 0 0 0 0 0 0 0 1 1; 0 1 0 0 0 0 0
   // 0 0 0 -1 0; 0 0 1 0 0 0 0 0 0 0 0 1; 0 0 0 1 0 0 0 0 0 0 0 0; 0 0 0 0 1 0
   // 0 0 0 0 -1 0; 0 0 0 0 0 1 0 0 0 0 0 -1; 0 0 0 0 0 0 1 0 0 0 1 1; 0 0 0 0
-  // 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]");
+  // 0 0 0 1 0 0 -1 0; 0 0 0 0 0 0 0 0 1 0 0 1; 0 0 0 0 0 0 0 0 0 1 0 0]"_mat;
   auto comp = LinearSymbolicComparator::construct(A, false);
   auto [H, U] = NormalForm::hermite(std::move(A));
   IntMatrix Ht = H.transpose();
@@ -86,7 +84,7 @@ TEST(V2Matrix, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest, BasicAssertions) {
-  auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+  auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   auto comp = LinearSymbolicComparator::construct(A);
   Vector<int64_t> query0{-1, 0, 0};
   Vector<int64_t> query1{1, 0, 0};
@@ -97,7 +95,7 @@ TEST(ConstantTest, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(ConstantTest2, BasicAssertions) {
-  auto A{stringToIntMatrix("[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]")};
+  auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   auto comp = LinearSymbolicComparator::construct(A, false);
   Vector<int64_t> query0{-1, 0, 0};
   Vector<int64_t> query1{1, 0, 0};
@@ -107,10 +105,10 @@ TEST(ConstantTest2, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(EqTest, BasicAssertions) {
-  IntMatrix A{stringToIntMatrix(
+  IntMatrix A{
     "[-2 1 0 -1 0 0 0; 0 0 0 1 0 0 0; -2 0 1 0 -1 0 0; 0 0 0 0 1 0 0; -2 1 "
-    "0 0 0 -1 0; 0 0 0 0 0 1 0; -2 0 1 0 0 0 -1; 0 0 0 0 0 0 1]")};
-  IntMatrix E{stringToIntMatrix("[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]")};
+    "0 0 0 -1 0; 0 0 0 0 0 1 0; -2 0 1 0 0 0 -1; 0 0 0 0 0 0 1]"_mat};
+  IntMatrix E{"[1 0 0 1 0 -1 0; 1 0 0 0 1 0 -1]"_mat};
   auto comp = LinearSymbolicComparator::construct(A, E);
   Vector<int64_t> diff = A(7, _) - A(3, _);
   EXPECT_TRUE(comp.greaterEqual(diff));
@@ -122,13 +120,13 @@ TEST(EqTest, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TestEmpty, BasicAssertions) {
-  IntMatrix A{stringToIntMatrix(
+  IntMatrix A{
     "[0 0 1 0 0 0; -1 1 -1 0 0 0; 0 0 0 1 0 0; -1 0 1 -1 0 0; 0 0 0 0 1 0; "
-    "-1 1 0 0 -1 0; 0 0 0 0 0 1; -1 0 0 0 1 -1]")};
+    "-1 1 0 0 -1 0; 0 0 0 0 0 1; -1 0 0 0 1 -1]"_mat};
   // Empty
-  IntMatrix E0{stringToIntMatrix("[0 0 1 0 0 -1; 0 0 0 1 -1 0]")};
+  IntMatrix E0{"[0 0 1 0 0 -1; 0 0 0 1 -1 0]"_mat};
   // not Empty
-  IntMatrix E1{stringToIntMatrix("[0 0 1 0 -1 0; 0 0 0 1 0 -1]")};
+  IntMatrix E1{"[0 0 1 0 -1 0; 0 0 0 1 0 -1]"_mat};
   Vector<int64_t> zeros{0, 0, 0, 0, 0, 0};
   auto compEmpty = LinearSymbolicComparator::construct(A, E0);
   // contradiction, 0 can't be less than 0
