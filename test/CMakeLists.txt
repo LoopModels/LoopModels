@@ -84,7 +84,7 @@ gtest_discover_tests(${PROJECT_NAME})
 # ---- code coverage ----
 
 if(ENABLE_TEST_COVERAGE)
-  target_compile_options(LoopModels PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(LoopModels PUBLIC -fprofile-arcs -ftest-coverage)
+  target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
 endif()
 
