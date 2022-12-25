@@ -25,7 +25,7 @@ CPMFindPackage(
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.12.1
   VERSION 1.10.0
-  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
+  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt" "BUILD_GMOCK OFF"
 )
 
 if(TEST_INSTALLED_VERSION)
