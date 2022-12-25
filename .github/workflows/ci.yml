@@ -9,13 +9,12 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: pip install ninja gcovr
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
         sudo wget https://apt.llvm.org/llvm.sh
         sudo chmod +x llvm.sh
         sudo ./llvm.sh 15 all
-        sudo apt install g++ libgtest-dev ninja-build pkg-config cmake
+        sudo apt install g++ libgtest-dev ninja-build pkg-config cmake ninja gcovr
         sudo ln -s $(which opt-15) /usr/local/bin/opt
         # ln -s /usr/bin/llvm-config-15 ~/.local/bin/llvm-config
     # - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
@@ -42,8 +41,7 @@ jobs:
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc llvm@15 ninja pkg-config cmake
-    - run: pip install ninja gcovr
+    - run: brew install gcc llvm@15 ninja pkg-config cmake ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
     # - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
