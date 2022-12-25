@@ -12,7 +12,7 @@
 // end
 
 // if `A` can be unimodularized, returns the inverse of the unimodularized `A`
-[[nodiscard]] [[maybe_unused]] static auto unimodularize(IntMatrix A)
+[[nodiscard]] inline auto unimodularize(IntMatrix A)
   -> std::optional<SquareMatrix<int64_t>> {
   std::optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> OHNF =
     NormalForm::hermite(std::move(A));

@@ -245,12 +245,11 @@ struct Rational {
   }
   void dump() const { llvm::errs() << *this << "\n"; }
 };
-[[maybe_unused]] inline auto gcd(Rational x, Rational y)
-  -> std::optional<Rational> {
+constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
   return Rational{gcd(x.numerator, y.numerator),
                   lcm(x.denominator, y.denominator)};
 }
-[[maybe_unused]] inline auto denomLCM(PtrVector<Rational> x) -> int64_t {
+inline auto denomLCM(PtrVector<Rational> x) -> int64_t {
   int64_t l = 1;
   for (auto r : x)
     l = lcm(l, r.denominator);

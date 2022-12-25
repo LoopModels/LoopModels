@@ -36,26 +36,26 @@ namespace LinearAlgebra {
 
 inline auto isZero(auto x) -> bool { return x == 0; }
 
-[[maybe_unused]] static auto allZero(const auto &x) -> bool {
+inline auto allZero(const auto &x) -> bool {
   for (auto &a : x)
     if (!isZero(a))
       return false;
   return true;
 }
-[[maybe_unused]] static auto allGEZero(const auto &x) -> bool {
+inline auto allGEZero(const auto &x) -> bool {
   for (auto &a : x)
     if (a < 0)
       return false;
   return true;
 }
-[[maybe_unused]] static auto allLEZero(const auto &x) -> bool {
+inline auto allLEZero(const auto &x) -> bool {
   for (auto &a : x)
     if (a > 0)
       return false;
   return true;
 }
 
-[[maybe_unused]] static auto countNonZero(const auto &x) -> size_t {
+inline auto countNonZero(const auto &x) -> size_t {
   size_t i = 0;
   for (auto &a : x)
     i += (a != 0);
@@ -80,7 +80,7 @@ enum class AxisType {
   RowStride,
 
 };
-[[maybe_unused]] inline auto operator<<(llvm::raw_ostream &os, AxisType x)
+inline auto operator<<(llvm::raw_ostream &os, AxisType x)
   -> llvm::raw_ostream & {
   switch (x) {
   case AxisType::Row:
@@ -643,19 +643,15 @@ static inline constexpr struct Colon {
 
 #ifndef NDEBUG
 static inline void checkIndex(size_t X, size_t x) { assert(x < X); }
-[[maybe_unused]] inline void checkIndex(size_t X, End) { assert(X > 0); }
-[[maybe_unused]] inline void checkIndex(size_t X, Begin) { assert(X > 0); }
-[[maybe_unused]] inline void checkIndex(size_t X, OffsetEnd x) {
-  assert(x.offset < X);
-}
-[[maybe_unused]] inline void checkIndex(size_t X, OffsetBegin x) {
-  assert(x.offset < X);
-}
+inline void checkIndex(size_t X, End) { assert(X > 0); }
+inline void checkIndex(size_t X, Begin) { assert(X > 0); }
+inline void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
+inline void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
 template <typename B> inline void checkIndex(size_t X, Range<B, size_t> x) {
   assert(x.e <= X);
 }
 template <typename B, typename E> inline void checkIndex(size_t, Range<B, E>) {}
-[[maybe_unused]] inline void checkIndex(size_t, Colon) {}
+inline void checkIndex(size_t, Colon) {}
 #endif
 
 constexpr auto canonicalize(size_t e, size_t) -> size_t { return e; }
@@ -1295,9 +1291,9 @@ constexpr auto unwrapRow(auto x) { return x; }
 constexpr auto unwrapCol(auto x) { return x; }
 
 template <typename T>
-[[maybe_unused]] constexpr inline auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const ScalarColIndex auto nn) -> T & {
+constexpr inline auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const ScalarColIndex auto nn) -> T & {
   auto m = unwrapRow(mm);
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
@@ -1307,9 +1303,9 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
   return *(ptr + (canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
 }
 template <typename T>
-[[maybe_unused]] constexpr inline auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const ScalarColIndex auto nn) -> const T & {
+constexpr inline auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const ScalarColIndex auto nn) -> const T & {
   auto m = unwrapRow(mm);
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
@@ -1327,9 +1323,9 @@ concept AbstractSlice = requires(T t, size_t M) {
                         };
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const AbstractSlice auto n) -> PtrMatrix<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const AbstractSlice auto n) -> PtrMatrix<T> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
@@ -1339,9 +1335,9 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
   return PtrMatrix<T>{ptr + nr.b + X * mr.b, mr.e - mr.b, nr.e - nr.b, X};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const AbstractSlice auto n) -> MutPtrMatrix<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const AbstractSlice auto n) -> MutPtrMatrix<T> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
@@ -1353,9 +1349,9 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
 }
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const AbstractSlice auto n) -> PtrVector<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const AbstractSlice auto n) -> PtrVector<T> {
   auto m = unwrapRow(mm);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1366,9 +1362,9 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
   return PtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const AbstractSlice auto n) -> MutPtrVector<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const AbstractSlice auto n) -> MutPtrVector<T> {
   auto m = unwrapRow(mm);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1380,9 +1376,10 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
 }
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarColIndex auto nn) -> StridedVector<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const ScalarColIndex auto nn)
+  -> StridedVector<T> {
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1393,9 +1390,10 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
   return StridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarColIndex auto nn) -> MutStridedVector<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const ScalarColIndex auto nn)
+  -> MutStridedVector<T> {
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -2208,11 +2206,11 @@ inline void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
     std::swap(A(m, i), A(m, j));
 }
 template <typename T>
-[[maybe_unused]] static void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
+inline void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
   std::swap(A[i], A[j]);
 }
 template <typename T>
-[[maybe_unused]] static void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
+inline void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
   std::swap(A[i], A[j]);
 }
 
@@ -2277,8 +2275,7 @@ requires is_uint_v<64, T>
 }
 
 template <typename T>
-[[maybe_unused]] static auto findMax(llvm::ArrayRef<T> x)
-  -> std::pair<size_t, T> {
+inline auto findMax(llvm::ArrayRef<T> x) -> std::pair<size_t, T> {
   size_t i = 0;
   T max = std::numeric_limits<T>::min();
   for (size_t j = 0; j < x.size(); ++j) {

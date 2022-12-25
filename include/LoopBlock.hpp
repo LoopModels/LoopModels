@@ -24,8 +24,7 @@
 #include <llvm/Support/raw_ostream.h>
 
 template <std::integral I>
-[[maybe_unused]] static void insertSortedUnique(llvm::SmallVectorImpl<I> &v,
-                                                const I &x) {
+inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
   for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
     if (*it < x)
       continue;
@@ -111,8 +110,8 @@ struct CarriedDependencyFlag {
   // resets all but `d` deps
   constexpr void resetDeepDeps(size_t d) { flag &= resetMaskFlag(d); }
 };
-[[maybe_unused]] static void
-resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v, size_t d) {
+inline void resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v,
+                          size_t d) {
   uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
   for (auto &&x : v)
     x.flag &= mask;

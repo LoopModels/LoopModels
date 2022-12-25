@@ -46,8 +46,7 @@
 #include <ranges>
 #include <utility>
 
-[[maybe_unused]] static auto countNumLoopsPlusLeaves(const llvm::Loop *L)
-  -> size_t {
+inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
   if (subLoops.size() == 0)
     return 1;

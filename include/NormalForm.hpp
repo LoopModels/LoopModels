@@ -14,9 +14,6 @@
 #include <utility>
 
 namespace NormalForm {
-constexpr inline auto abs(std::signed_integral auto x) noexcept {
-  return x < 0 ? -x : x;
-}
 
 constexpr inline auto gcdxScale(int64_t a, int64_t b)
   -> std::tuple<int64_t, int64_t, int64_t, int64_t> {
@@ -166,7 +163,7 @@ inline auto orthogonalizeBang(MutPtrMatrix<int64_t> A)
     } else {
       zeroSupDiagonal(A, K, i, M, N);
       int64_t Aii = A(i, i);
-      if (std::abs(Aii) != 1) {
+      if (abs(Aii) != 1) {
         // including this row renders the matrix not unimodular!
         // therefore, we drop the row.
         dropCol(A, i, M, --N);
@@ -350,8 +347,7 @@ inline auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
       reduceColumn(A, Col{c}, Row{r++});
   return numNonZeroRows(A);
 }
-[[maybe_unused]] constexpr static void simplifySystem(EmptyMatrix<int64_t>,
-                                                      size_t = 0) {}
+constexpr void simplifySystem(EmptyMatrix<int64_t>, size_t = 0) {}
 inline void simplifySystem(IntMatrix &E, size_t colInit = 0) {
   E.truncate(simplifySystemImpl(E, colInit));
 }
