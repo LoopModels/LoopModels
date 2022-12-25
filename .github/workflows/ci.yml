@@ -31,6 +31,9 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - uses: codecov/codecov-action@v3
+      with:
+        gcov: true
+        gcov_include: include, lib
   macos:
     runs-on: macos-latest
     steps:
@@ -64,4 +67,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - uses: codecov/codecov-action@v3
+      with:
+        gcov: true
+        gcov_include: include, lib
 
