@@ -43,7 +43,7 @@ jobs:
       with:
         python-version: '3.x'
     - run: brew install gcc llvm@15 ninja pkg-config cmake
-    - run: pip install meson ninja gcovr
+    - run: pip install ninja gcovr
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
     # - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Address;Undefined' -DENABLE_TEST_COVERAGE=1
@@ -68,24 +68,3 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
     - uses: codecov/codecov-action@v3
 
-  # https://discourse.llvm.org/t/no-llvm-config-exe-or-llvmconfig-cmake-in-pre-built-windows/57692
-  # Windows doesn't provide llvm-config.exe
-  # windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #   - uses: actions/checkout@v1
-  #   - uses: actions/setup-python@v1
-  #     with:
-  #       python-version: '3.x'
-  #   - run: pip install meson ninja
-  #   - run: choco install llvm --force
-  #   - run: llvm-config --libdir
-  #   - run: meson setup builddir
-  #     env:
-  #       CXX: g++
-  #   - run: meson test --print-errorlogs -C builddir/ -v
-  #   - uses: actions/upload-artifact@v1
-  #     if: failure()
-  #     with:
-  #       name: Windows_Meson_Testlog
-  #       path: builddir/meson-logs/testlog.txt
