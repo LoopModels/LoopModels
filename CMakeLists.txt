@@ -83,13 +83,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition)
-endif()
+  add_compile_options (-fdiagnostics-color=always)
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options (-fcolor-diagnostics)
+endif ()
+
 # being a cross-platform target, we enforce standards conformance on MSVC
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
 # Link dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE LLVM)
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
   ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>

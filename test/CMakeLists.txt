@@ -43,8 +43,9 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 add_dependencies(${PROJECT_NAME} LoopModels)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} gtest gtest_main LLVM)
+target_link_libraries(${PROJECT_NAME} PRIVATE gtest_main LLVM)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set_target_properties(${PROJECT_NAME} PROPERTIES 
   ENVIRONMENT
