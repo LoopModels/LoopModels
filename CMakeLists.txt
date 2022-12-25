@@ -66,12 +66,12 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 #   set_target_properties(benchmark PROPERTIES CXX_STANDARD 11)
 # endif()
 
-message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
-if(ENABLE_TEST_COVERAGE)
-  add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-  target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
-  message(STATUS "Lib coverage enabled.")
-endif()
+# message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
+# if(ENABLE_TEST_COVERAGE)
+#   add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
+#   target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage)
+#   message(STATUS "Lib coverage enabled.")
+# endif()
 
 # ---- Add source files ----
 
