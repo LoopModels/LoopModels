@@ -2386,332 +2386,330 @@ $(function() {
 <div class="line"><a name="l02316"></a><span class="lineno"> 2316</span>&#160;          TriviallyCopyableMatrixOrScalar B&gt;</div>
 <div class="line"><a name="l02317"></a><span class="lineno"> 2317</span>&#160;ElementwiseMatrixBinaryOp(OP, A, B) -&gt; ElementwiseMatrixBinaryOp&lt;OP, A, B&gt;;</div>
 <div class="line"><a name="l02318"></a><span class="lineno"> 2318</span>&#160; </div>
-<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> Scalar <span class="keyword">auto</span> &amp;x) { <span class="keywordflow">return</span> x; }</div>
-<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x) {</div>
-<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160;  <span class="keywordflow">return</span> x.view();</div>
-<div class="line"><a name="l02322"></a><span class="lineno"> 2322</span>&#160;}</div>
-<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> AbstractMatrixCore <span class="keyword">auto</span> &amp;x) {</div>
-<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160;  <span class="keywordflow">return</span> x.view();</div>
-<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;}</div>
+<div class="line"><a name="l02319"></a><span class="lineno"> 2319</span>&#160;<span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> Scalar <span class="keyword">auto</span> &amp;x) { <span class="keywordflow">return</span> x; }</div>
+<div class="line"><a name="l02320"></a><span class="lineno"> 2320</span>&#160;<span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x) { <span class="keywordflow">return</span> x.view(); }</div>
+<div class="line"><a name="l02321"></a><span class="lineno"> 2321</span>&#160;<span class="keyword">inline</span> constexpr <span class="keyword">auto</span> view(<span class="keyword">const</span> AbstractMatrixCore <span class="keyword">auto</span> &amp;x) {</div>
+<div class="line"><a name="l02322"></a><span class="lineno"> 2322</span>&#160;  <span class="keywordflow">return</span> x.view();</div>
+<div class="line"><a name="l02323"></a><span class="lineno"> 2323</span>&#160;}</div>
+<div class="line"><a name="l02324"></a><span class="lineno"> 2324</span>&#160; </div>
+<div class="line"><a name="l02325"></a><span class="lineno"> 2325</span>&#160;constexpr <span class="keyword">auto</span> bin2(std::integral <span class="keyword">auto</span> x) { <span class="keywordflow">return</span> (x * (x - 1)) &gt;&gt; 1; }</div>
 <div class="line"><a name="l02326"></a><span class="lineno"> 2326</span>&#160; </div>
-<div class="line"><a name="l02327"></a><span class="lineno"> 2327</span>&#160;constexpr <span class="keyword">auto</span> bin2(std::integral <span class="keyword">auto</span> x) { <span class="keywordflow">return</span> (x * (x - 1)) &gt;&gt; 1; }</div>
-<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160; </div>
-<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l02330"></a><span class="lineno"> 2330</span>&#160;<span class="keyword">auto</span> printMatrix(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A) -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;  <span class="comment">// llvm::raw_ostream &amp;printMatrix(llvm::raw_ostream &amp;os, T const &amp;A) {</span></div>
-<div class="line"><a name="l02332"></a><span class="lineno"> 2332</span>&#160;  <span class="keyword">auto</span> [m, n] = A.size();</div>
-<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;  <span class="keywordflow">if</span> (!m)</div>
-<div class="line"><a name="l02334"></a><span class="lineno"> 2334</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;[ ]&quot;</span>;</div>
-<div class="line"><a name="l02335"></a><span class="lineno"> 2335</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; m; i++) {</div>
-<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160;    <span class="keywordflow">if</span> (i)</div>
-<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  &quot;</span>;</div>
-<div class="line"><a name="l02338"></a><span class="lineno"> 2338</span>&#160;    <span class="keywordflow">else</span></div>
-<div class="line"><a name="l02339"></a><span class="lineno"> 2339</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n[ &quot;</span>;</div>
-<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span>(n)) {</div>
-<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n - 1; j++) {</div>
-<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160;        <span class="keyword">auto</span> Aij = A(i, j);</div>
-<div class="line"><a name="l02343"></a><span class="lineno"> 2343</span>&#160;        <span class="keywordflow">if</span> (Aij &gt;= 0)</div>
-<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l02345"></a><span class="lineno"> 2345</span>&#160;        os &lt;&lt; Aij &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160;      }</div>
-<div class="line"><a name="l02347"></a><span class="lineno"> 2347</span>&#160;    }</div>
-<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;    <span class="keywordflow">if</span> (n) {</div>
-<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;      <span class="keyword">auto</span> Aij = A(i, n - 1);</div>
-<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160;      <span class="keywordflow">if</span> (Aij &gt;= 0)</div>
-<div class="line"><a name="l02351"></a><span class="lineno"> 2351</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;      os &lt;&lt; Aij;</div>
-<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;    }</div>
-<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;    <span class="keywordflow">if</span> (i != m - 1)</div>
-<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160;  }</div>
-<div class="line"><a name="l02357"></a><span class="lineno"> 2357</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]&quot;</span>;</div>
-<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160;  <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l02359"></a><span class="lineno"> 2359</span>&#160;}</div>
-<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160; </div>
-<div class="line"><a name="l02361"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix.html"> 2361</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a> {</div>
-<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160;  <span class="comment">// non-zeros</span></div>
-<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;T&gt; nonZeros{};</div>
-<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;  <span class="comment">// masks, the upper 8 bits give the number of elements in previous rows</span></div>
-<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;  <span class="comment">// the remaining 24 bits are a mask indicating non-zeros within this row</span></div>
-<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> maxElemPerRow = 24;</div>
-<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;uint32_t&gt; rows;</div>
-<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> col;</div>
-<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> {</div>
-<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{rows.size()};</div>
-<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;  }</div>
-<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> { <span class="keywordflow">return</span> col; }</div>
-<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> numRows, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> numCols)</div>
-<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160;    : rows{llvm::SmallVector&lt;uint32_t&gt;(<span class="keywordtype">size_t</span>(numRows))}, col{numCols} {</div>
-<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;    assert(<span class="keywordtype">size_t</span>(col) &lt;= maxElemPerRow);</div>
-<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;  }</div>
-<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;  <span class="keyword">auto</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) <span class="keyword">const</span> -&gt; T {</div>
-<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160;    assert(j &lt; col);</div>
-<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;    uint32_t r(rows[<span class="keywordtype">size_t</span>(i)]);</div>
-<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
-<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;    <span class="keywordflow">if</span> (r &amp; (jshift)) {</div>
-<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;      <span class="comment">// offset from previous rows</span></div>
-<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;      uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
-<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;      uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
-<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;      <span class="keywordflow">return</span> nonZeros[rowOffset + prevRowOffset];</div>
-<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;      <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;    }</div>
-<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;  }</div>
-<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; T {</div>
-<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
-<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;  }</div>
-<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;  <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) {</div>
-<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;    assert(j &lt; col);</div>
-<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;inserting &quot;</span> &lt;&lt; x &lt;&lt; <span class="stringliteral">&quot; at &quot;</span> &lt;&lt; size_t(i) &lt;&lt; <span class="stringliteral">&quot;, &quot;</span></div>
-<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;                 &lt;&lt; size_t(j) &lt;&lt; <span class="stringliteral">&quot;; rows.size() = &quot;</span> &lt;&lt; rows.size() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;    uint32_t r{rows[size_t(i)]};</div>
-<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
-<div class="line"><a name="l02399"></a><span class="lineno"> 2399</span>&#160;    <span class="comment">// offset from previous rows</span></div>
-<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;    uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
-<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;    uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
-<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;    <span class="keywordtype">size_t</span> k = rowOffset + prevRowOffset;</div>
-<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;    <span class="keywordflow">if</span> (r &amp; jshift) {</div>
-<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;      nonZeros[k] = std::move(x);</div>
-<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;    } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;      nonZeros.insert(nonZeros.begin() + k, std::move(x));</div>
-<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;      rows[size_t(i)] = r | jshift;</div>
-<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = <span class="keywordtype">size_t</span>(i) + 1; k &lt; rows.size(); ++k)</div>
-<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;        rows[k] += uint32_t(1) &lt;&lt; maxElemPerRow;</div>
-<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160;    }</div>
-<div class="line"><a name="l02411"></a><span class="lineno"> 2411</span>&#160;  }</div>
-<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160; </div>
-<div class="line"><a name="l02413"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html"> 2413</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l02414"></a><span class="lineno"> 2414</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
-<div class="line"><a name="l02415"></a><span class="lineno"> 2415</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> i, j;</div>
-<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;    <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j}); }</div>
-<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;    <span class="keywordtype">void</span> operator=(T x) {</div>
-<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
-<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;    }</div>
-<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;  };</div>
-<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
-<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;  }</div>
-<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160;  <span class="keyword">operator</span> <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;T&gt;</a>() {</div>
-<div class="line"><a name="l02426"></a><span class="lineno"> 2426</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;T&gt;</a> A(Row{numRow()}, Col{numCol()});</div>
-<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160;    assert(numRow() == A.numRow());</div>
-<div class="line"><a name="l02428"></a><span class="lineno"> 2428</span>&#160;    assert(numCol() == A.numCol());</div>
-<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160;    <span class="keywordtype">size_t</span> k = 0;</div>
-<div class="line"><a name="l02430"></a><span class="lineno"> 2430</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numRow(); ++i) {</div>
-<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;      uint32_t m = rows[i] &amp; 0x00ffffff;</div>
-<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;      <span class="keywordtype">size_t</span> j = 0;</div>
-<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;      <span class="keywordflow">while</span> (m) {</div>
-<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        uint32_t tz = std::countr_zero(m);</div>
-<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        m &gt;&gt;= tz + 1;</div>
-<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;        j += tz;</div>
-<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;        A(i, j++) = nonZeros[k++];</div>
-<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;      }</div>
-<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160;    }</div>
-<div class="line"><a name="l02440"></a><span class="lineno"> 2440</span>&#160;    assert(k == nonZeros.size());</div>
-<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;    <span class="keywordflow">return</span> A;</div>
-<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160;  }</div>
-<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160;};</div>
-<div class="line"><a name="l02444"></a><span class="lineno"> 2444</span>&#160; </div>
-<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> <span class="keyword">const</span> &amp;A)</div>
-<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l02448"></a><span class="lineno"> 2448</span>&#160;  <span class="keywordtype">size_t</span> k = 0;</div>
-<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;[ &quot;</span>;</div>
-<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) {</div>
-<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;    <span class="keywordflow">if</span> (i)</div>
-<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  &quot;</span>;</div>
-<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;    uint32_t m = A.rows[i] &amp; 0x00ffffff;</div>
-<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;    <span class="keywordtype">size_t</span> j = 0;</div>
-<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;    <span class="keywordflow">while</span> (m) {</div>
-<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160;      <span class="keywordflow">if</span> (j)</div>
-<div class="line"><a name="l02457"></a><span class="lineno"> 2457</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;      uint32_t tz = std::countr_zero(m);</div>
-<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160;      m &gt;&gt;= (tz + 1);</div>
-<div class="line"><a name="l02460"></a><span class="lineno"> 2460</span>&#160;      j += (tz + 1);</div>
-<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;      <span class="keywordflow">while</span> (tz--)</div>
-<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; 0 &quot;</span>;</div>
-<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160;      <span class="keyword">const</span> T &amp;x = A.nonZeros[k++];</div>
-<div class="line"><a name="l02464"></a><span class="lineno"> 2464</span>&#160;      <span class="keywordflow">if</span> (x &gt;= 0)</div>
-<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;      os &lt;&lt; x;</div>
-<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;    }</div>
-<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160;    <span class="keywordflow">for</span> (; j &lt; A.numCol(); ++j)</div>
-<div class="line"><a name="l02469"></a><span class="lineno"> 2469</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  0&quot;</span>;</div>
-<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;  }</div>
-<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]&quot;</span>;</div>
-<div class="line"><a name="l02473"></a><span class="lineno"> 2473</span>&#160;  assert(k == A.nonZeros.size());</div>
-<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;  <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;}</div>
-<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A)</div>
-<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l02479"></a><span class="lineno"> 2479</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, A);</div>
-<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;}</div>
-<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt;</div>
-<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> T &amp;A)</div>
-<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;std::remove_const_t&lt;typename T::eltype&gt;</a>&gt; B{A};</div>
-<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;typename T::eltype&gt;</a>(B));</div>
-<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;}</div>
-<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160; </div>
-<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a) {</div>
-<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
-<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160;  <span class="keywordflow">return</span> ElementwiseUnaryOp&lt;Sub, decltype(AA)&gt;{.op = Sub{}, .a = AA};</div>
-<div class="line"><a name="l02491"></a><span class="lineno"> 2491</span>&#160;}</div>
-<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a) {</div>
-<div class="line"><a name="l02493"></a><span class="lineno"> 2493</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
-<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160;  <span class="keywordflow">return</span> ElementwiseUnaryOp&lt;Sub, decltype(AA)&gt;{.op = Sub{}, .a = AA};</div>
-<div class="line"><a name="l02495"></a><span class="lineno"> 2495</span>&#160;}</div>
-<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160;static_assert(AbstractMatrix&lt;ElementwiseUnaryOp&lt;Sub, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
-<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160;static_assert(AbstractMatrix&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160; </div>
-<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));</div>
-<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160;}</div>
-<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Add{}, view(a), view(b));</div>
-<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160;}</div>
-<div class="line"><a name="l02505"></a><span class="lineno"> 2505</span>&#160;constexpr <span class="keyword">auto</span> operator+(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02506"></a><span class="lineno"> 2506</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));</div>
-<div class="line"><a name="l02507"></a><span class="lineno"> 2507</span>&#160;}</div>
-<div class="line"><a name="l02508"></a><span class="lineno"> 2508</span>&#160;constexpr <span class="keyword">auto</span> operator+(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02509"></a><span class="lineno"> 2509</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Add{}, view(a), view(b));</div>
-<div class="line"><a name="l02510"></a><span class="lineno"> 2510</span>&#160;}</div>
-<div class="line"><a name="l02511"></a><span class="lineno"> 2511</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02512"></a><span class="lineno"> 2512</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));</div>
-<div class="line"><a name="l02513"></a><span class="lineno"> 2513</span>&#160;}</div>
-<div class="line"><a name="l02514"></a><span class="lineno"> 2514</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02515"></a><span class="lineno"> 2515</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));</div>
-<div class="line"><a name="l02516"></a><span class="lineno"> 2516</span>&#160;}</div>
-<div class="line"><a name="l02517"></a><span class="lineno"> 2517</span>&#160;constexpr <span class="keyword">auto</span> operator-(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02518"></a><span class="lineno"> 2518</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));</div>
-<div class="line"><a name="l02519"></a><span class="lineno"> 2519</span>&#160;}</div>
-<div class="line"><a name="l02520"></a><span class="lineno"> 2520</span>&#160;constexpr <span class="keyword">auto</span> operator-(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02521"></a><span class="lineno"> 2521</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));</div>
-<div class="line"><a name="l02522"></a><span class="lineno"> 2522</span>&#160;}</div>
-<div class="line"><a name="l02523"></a><span class="lineno"> 2523</span>&#160;constexpr <span class="keyword">auto</span> operator/(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02524"></a><span class="lineno"> 2524</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));</div>
-<div class="line"><a name="l02525"></a><span class="lineno"> 2525</span>&#160;}</div>
-<div class="line"><a name="l02526"></a><span class="lineno"> 2526</span>&#160;constexpr <span class="keyword">auto</span> operator/(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02527"></a><span class="lineno"> 2527</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Div{}, view(a), view(b));</div>
-<div class="line"><a name="l02528"></a><span class="lineno"> 2528</span>&#160;}</div>
-<div class="line"><a name="l02529"></a><span class="lineno"> 2529</span>&#160;constexpr <span class="keyword">auto</span> operator/(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02530"></a><span class="lineno"> 2530</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));</div>
-<div class="line"><a name="l02531"></a><span class="lineno"> 2531</span>&#160;}</div>
-<div class="line"><a name="l02532"></a><span class="lineno"> 2532</span>&#160;constexpr <span class="keyword">auto</span> operator/(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02533"></a><span class="lineno"> 2533</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Div{}, view(a), view(b));</div>
-<div class="line"><a name="l02534"></a><span class="lineno"> 2534</span>&#160;}</div>
-<div class="line"><a name="l02535"></a><span class="lineno"> 2535</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a,</div>
-<div class="line"><a name="l02536"></a><span class="lineno"> 2536</span>&#160;                         <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02537"></a><span class="lineno"> 2537</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
-<div class="line"><a name="l02538"></a><span class="lineno"> 2538</span>&#160;  <span class="keyword">auto</span> BB{b.view()};</div>
-<div class="line"><a name="l02539"></a><span class="lineno"> 2539</span>&#160;  assert(<span class="keywordtype">size_t</span>(AA.numCol()) == <span class="keywordtype">size_t</span>(BB.numRow()));</div>
-<div class="line"><a name="l02540"></a><span class="lineno"> 2540</span>&#160;  <span class="keywordflow">return</span> MatMatMul&lt;decltype(AA), decltype(BB)&gt;{.a = AA, .b = BB};</div>
-<div class="line"><a name="l02541"></a><span class="lineno"> 2541</span>&#160;}</div>
-<div class="line"><a name="l02542"></a><span class="lineno"> 2542</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a,</div>
-<div class="line"><a name="l02543"></a><span class="lineno"> 2543</span>&#160;                         <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02544"></a><span class="lineno"> 2544</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
-<div class="line"><a name="l02545"></a><span class="lineno"> 2545</span>&#160;  <span class="keyword">auto</span> BB{b.view()};</div>
-<div class="line"><a name="l02546"></a><span class="lineno"> 2546</span>&#160;  assert(<span class="keywordtype">size_t</span>(AA.numCol()) == BB.size());</div>
-<div class="line"><a name="l02547"></a><span class="lineno"> 2547</span>&#160;  <span class="keywordflow">return</span> MatVecMul&lt;decltype(AA), decltype(BB)&gt;{.a = AA, .b = BB};</div>
-<div class="line"><a name="l02548"></a><span class="lineno"> 2548</span>&#160;}</div>
-<div class="line"><a name="l02549"></a><span class="lineno"> 2549</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, std::integral <span class="keyword">auto</span> b) {</div>
-<div class="line"><a name="l02550"></a><span class="lineno"> 2550</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));</div>
-<div class="line"><a name="l02551"></a><span class="lineno"> 2551</span>&#160;}</div>
-<div class="line"><a name="l02552"></a><span class="lineno"> 2552</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a,</div>
-<div class="line"><a name="l02553"></a><span class="lineno"> 2553</span>&#160;                         <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02554"></a><span class="lineno"> 2554</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
-<div class="line"><a name="l02555"></a><span class="lineno"> 2555</span>&#160;}</div>
-<div class="line"><a name="l02556"></a><span class="lineno"> 2556</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, std::integral <span class="keyword">auto</span> b) {</div>
-<div class="line"><a name="l02557"></a><span class="lineno"> 2557</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
-<div class="line"><a name="l02558"></a><span class="lineno"> 2558</span>&#160;}</div>
-<div class="line"><a name="l02559"></a><span class="lineno"> 2559</span>&#160;constexpr <span class="keyword">auto</span> operator*(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02560"></a><span class="lineno"> 2560</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));</div>
-<div class="line"><a name="l02561"></a><span class="lineno"> 2561</span>&#160;}</div>
-<div class="line"><a name="l02562"></a><span class="lineno"> 2562</span>&#160;constexpr <span class="keyword">auto</span> operator*(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02563"></a><span class="lineno"> 2563</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
-<div class="line"><a name="l02564"></a><span class="lineno"> 2564</span>&#160;}</div>
-<div class="line"><a name="l02565"></a><span class="lineno"> 2565</span>&#160; </div>
-<div class="line"><a name="l02566"></a><span class="lineno"> 2566</span>&#160;<span class="comment">// constexpr auto operator*(AbstractMatrix auto &amp;A, AbstractVector auto &amp;x) {</span></div>
-<div class="line"><a name="l02567"></a><span class="lineno"> 2567</span>&#160;<span class="comment">//     auto AA{A.view()};</span></div>
-<div class="line"><a name="l02568"></a><span class="lineno"> 2568</span>&#160;<span class="comment">//     auto xx{x.view()};</span></div>
-<div class="line"><a name="l02569"></a><span class="lineno"> 2569</span>&#160;<span class="comment">//     return MatMul&lt;decltype(AA), decltype(xx)&gt;{.a = AA, .b = xx};</span></div>
-<div class="line"><a name="l02570"></a><span class="lineno"> 2570</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l02571"></a><span class="lineno"> 2571</span>&#160; </div>
-<div class="line"><a name="l02572"></a><span class="lineno"> 2572</span>&#160;<span class="keyword">template</span> &lt;AbstractVector V&gt;</div>
-<div class="line"><a name="l02573"></a><span class="lineno"> 2573</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> Transpose&lt;V&gt; &amp;a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
-<div class="line"><a name="l02574"></a><span class="lineno"> 2574</span>&#160;  <span class="keyword">typename</span> V::eltype s = 0;</div>
-<div class="line"><a name="l02575"></a><span class="lineno"> 2575</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; b.size(); ++i)</div>
-<div class="line"><a name="l02576"></a><span class="lineno"> 2576</span>&#160;    s += a.a(i) * b(i);</div>
-<div class="line"><a name="l02577"></a><span class="lineno"> 2577</span>&#160;  <span class="keywordflow">return</span> s;</div>
-<div class="line"><a name="l02578"></a><span class="lineno"> 2578</span>&#160;}</div>
-<div class="line"><a name="l02579"></a><span class="lineno"> 2579</span>&#160; </div>
-<div class="line"><a name="l02580"></a><span class="lineno"> 2580</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l02581"></a><span class="lineno"> 2581</span>&#160;static_assert(AbstractVector&lt;<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l02582"></a><span class="lineno"> 2582</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> &amp;&gt;);</div>
-<div class="line"><a name="l02583"></a><span class="lineno"> 2583</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix&gt;);</div>
-<div class="line"><a name="l02584"></a><span class="lineno"> 2584</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix &amp;&gt;);</div>
-<div class="line"><a name="l02585"></a><span class="lineno"> 2585</span>&#160; </div>
-<div class="line"><a name="l02586"></a><span class="lineno"> 2586</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 4&gt;</a>&gt;);</div>
-<div class="line"><a name="l02587"></a><span class="lineno"> 2587</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 0&gt;</a>&gt;);</div>
-<div class="line"><a name="l02588"></a><span class="lineno"> 2588</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 4&gt;</a>&gt;);</div>
-<div class="line"><a name="l02589"></a><span class="lineno"> 2589</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 0&gt;</a>&gt;);</div>
-<div class="line"><a name="l02590"></a><span class="lineno"> 2590</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l02591"></a><span class="lineno"> 2591</span>&#160; </div>
-<div class="line"><a name="l02592"></a><span class="lineno"> 2592</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 4&gt;</a>&gt;);</div>
-<div class="line"><a name="l02593"></a><span class="lineno"> 2593</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 0&gt;</a>&gt;);</div>
-<div class="line"><a name="l02594"></a><span class="lineno"> 2594</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 4&gt;</a>&gt;);</div>
-<div class="line"><a name="l02595"></a><span class="lineno"> 2595</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 0&gt;</a>&gt;);</div>
+<div class="line"><a name="l02327"></a><span class="lineno"> 2327</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l02328"></a><span class="lineno"> 2328</span>&#160;<span class="keyword">auto</span> printMatrix(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A) -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l02329"></a><span class="lineno"> 2329</span>&#160;  <span class="comment">// llvm::raw_ostream &amp;printMatrix(llvm::raw_ostream &amp;os, T const &amp;A) {</span></div>
+<div class="line"><a name="l02330"></a><span class="lineno"> 2330</span>&#160;  <span class="keyword">auto</span> [m, n] = A.size();</div>
+<div class="line"><a name="l02331"></a><span class="lineno"> 2331</span>&#160;  <span class="keywordflow">if</span> (!m)</div>
+<div class="line"><a name="l02332"></a><span class="lineno"> 2332</span>&#160;    <span class="keywordflow">return</span> os &lt;&lt; <span class="stringliteral">&quot;[ ]&quot;</span>;</div>
+<div class="line"><a name="l02333"></a><span class="lineno"> 2333</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; m; i++) {</div>
+<div class="line"><a name="l02334"></a><span class="lineno"> 2334</span>&#160;    <span class="keywordflow">if</span> (i)</div>
+<div class="line"><a name="l02335"></a><span class="lineno"> 2335</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  &quot;</span>;</div>
+<div class="line"><a name="l02336"></a><span class="lineno"> 2336</span>&#160;    <span class="keywordflow">else</span></div>
+<div class="line"><a name="l02337"></a><span class="lineno"> 2337</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n[ &quot;</span>;</div>
+<div class="line"><a name="l02338"></a><span class="lineno"> 2338</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span>(n)) {</div>
+<div class="line"><a name="l02339"></a><span class="lineno"> 2339</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; n - 1; j++) {</div>
+<div class="line"><a name="l02340"></a><span class="lineno"> 2340</span>&#160;        <span class="keyword">auto</span> Aij = A(i, j);</div>
+<div class="line"><a name="l02341"></a><span class="lineno"> 2341</span>&#160;        <span class="keywordflow">if</span> (Aij &gt;= 0)</div>
+<div class="line"><a name="l02342"></a><span class="lineno"> 2342</span>&#160;          os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l02343"></a><span class="lineno"> 2343</span>&#160;        os &lt;&lt; Aij &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l02344"></a><span class="lineno"> 2344</span>&#160;      }</div>
+<div class="line"><a name="l02345"></a><span class="lineno"> 2345</span>&#160;    }</div>
+<div class="line"><a name="l02346"></a><span class="lineno"> 2346</span>&#160;    <span class="keywordflow">if</span> (n) {</div>
+<div class="line"><a name="l02347"></a><span class="lineno"> 2347</span>&#160;      <span class="keyword">auto</span> Aij = A(i, n - 1);</div>
+<div class="line"><a name="l02348"></a><span class="lineno"> 2348</span>&#160;      <span class="keywordflow">if</span> (Aij &gt;= 0)</div>
+<div class="line"><a name="l02349"></a><span class="lineno"> 2349</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l02350"></a><span class="lineno"> 2350</span>&#160;      os &lt;&lt; Aij;</div>
+<div class="line"><a name="l02351"></a><span class="lineno"> 2351</span>&#160;    }</div>
+<div class="line"><a name="l02352"></a><span class="lineno"> 2352</span>&#160;    <span class="keywordflow">if</span> (i != m - 1)</div>
+<div class="line"><a name="l02353"></a><span class="lineno"> 2353</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l02354"></a><span class="lineno"> 2354</span>&#160;  }</div>
+<div class="line"><a name="l02355"></a><span class="lineno"> 2355</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]&quot;</span>;</div>
+<div class="line"><a name="l02356"></a><span class="lineno"> 2356</span>&#160;  <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l02357"></a><span class="lineno"> 2357</span>&#160;}</div>
+<div class="line"><a name="l02358"></a><span class="lineno"> 2358</span>&#160; </div>
+<div class="line"><a name="l02359"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix.html"> 2359</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a> {</div>
+<div class="line"><a name="l02360"></a><span class="lineno"> 2360</span>&#160;  <span class="comment">// non-zeros</span></div>
+<div class="line"><a name="l02361"></a><span class="lineno"> 2361</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;T&gt; nonZeros{};</div>
+<div class="line"><a name="l02362"></a><span class="lineno"> 2362</span>&#160;  <span class="comment">// masks, the upper 8 bits give the number of elements in previous rows</span></div>
+<div class="line"><a name="l02363"></a><span class="lineno"> 2363</span>&#160;  <span class="comment">// the remaining 24 bits are a mask indicating non-zeros within this row</span></div>
+<div class="line"><a name="l02364"></a><span class="lineno"> 2364</span>&#160;  <span class="keyword">static</span> constexpr <span class="keywordtype">size_t</span> maxElemPerRow = 24;</div>
+<div class="line"><a name="l02365"></a><span class="lineno"> 2365</span>&#160;  [[no_unique_address]] llvm::SmallVector&lt;uint32_t&gt; rows;</div>
+<div class="line"><a name="l02366"></a><span class="lineno"> 2366</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> col;</div>
+<div class="line"><a name="l02367"></a><span class="lineno"> 2367</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numRow() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> {</div>
+<div class="line"><a name="l02368"></a><span class="lineno"> 2368</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{rows.size()};</div>
+<div class="line"><a name="l02369"></a><span class="lineno"> 2369</span>&#160;  }</div>
+<div class="line"><a name="l02370"></a><span class="lineno"> 2370</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> numCol() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> { <span class="keywordflow">return</span> col; }</div>
+<div class="line"><a name="l02371"></a><span class="lineno"> 2371</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> numRows, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> numCols)</div>
+<div class="line"><a name="l02372"></a><span class="lineno"> 2372</span>&#160;    : rows{llvm::SmallVector&lt;uint32_t&gt;(<span class="keywordtype">size_t</span>(numRows))}, col{numCols} {</div>
+<div class="line"><a name="l02373"></a><span class="lineno"> 2373</span>&#160;    assert(<span class="keywordtype">size_t</span>(col) &lt;= maxElemPerRow);</div>
+<div class="line"><a name="l02374"></a><span class="lineno"> 2374</span>&#160;  }</div>
+<div class="line"><a name="l02375"></a><span class="lineno"> 2375</span>&#160;  <span class="keyword">auto</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) <span class="keyword">const</span> -&gt; T {</div>
+<div class="line"><a name="l02376"></a><span class="lineno"> 2376</span>&#160;    assert(j &lt; col);</div>
+<div class="line"><a name="l02377"></a><span class="lineno"> 2377</span>&#160;    uint32_t r(rows[<span class="keywordtype">size_t</span>(i)]);</div>
+<div class="line"><a name="l02378"></a><span class="lineno"> 2378</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
+<div class="line"><a name="l02379"></a><span class="lineno"> 2379</span>&#160;    <span class="keywordflow">if</span> (r &amp; (jshift)) {</div>
+<div class="line"><a name="l02380"></a><span class="lineno"> 2380</span>&#160;      <span class="comment">// offset from previous rows</span></div>
+<div class="line"><a name="l02381"></a><span class="lineno"> 2381</span>&#160;      uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
+<div class="line"><a name="l02382"></a><span class="lineno"> 2382</span>&#160;      uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
+<div class="line"><a name="l02383"></a><span class="lineno"> 2383</span>&#160;      <span class="keywordflow">return</span> nonZeros[rowOffset + prevRowOffset];</div>
+<div class="line"><a name="l02384"></a><span class="lineno"> 2384</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l02385"></a><span class="lineno"> 2385</span>&#160;      <span class="keywordflow">return</span> 0;</div>
+<div class="line"><a name="l02386"></a><span class="lineno"> 2386</span>&#160;    }</div>
+<div class="line"><a name="l02387"></a><span class="lineno"> 2387</span>&#160;  }</div>
+<div class="line"><a name="l02388"></a><span class="lineno"> 2388</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; T {</div>
+<div class="line"><a name="l02389"></a><span class="lineno"> 2389</span>&#160;    <span class="keywordflow">return</span> get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
+<div class="line"><a name="l02390"></a><span class="lineno"> 2390</span>&#160;  }</div>
+<div class="line"><a name="l02391"></a><span class="lineno"> 2391</span>&#160;  <span class="keywordtype">void</span> insert(T x, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a> i, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a> j) {</div>
+<div class="line"><a name="l02392"></a><span class="lineno"> 2392</span>&#160;    assert(j &lt; col);</div>
+<div class="line"><a name="l02393"></a><span class="lineno"> 2393</span>&#160;    llvm::errs() &lt;&lt; <span class="stringliteral">&quot;inserting &quot;</span> &lt;&lt; x &lt;&lt; <span class="stringliteral">&quot; at &quot;</span> &lt;&lt; size_t(i) &lt;&lt; <span class="stringliteral">&quot;, &quot;</span></div>
+<div class="line"><a name="l02394"></a><span class="lineno"> 2394</span>&#160;                 &lt;&lt; size_t(j) &lt;&lt; <span class="stringliteral">&quot;; rows.size() = &quot;</span> &lt;&lt; rows.size() &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l02395"></a><span class="lineno"> 2395</span>&#160;    uint32_t r{rows[size_t(i)]};</div>
+<div class="line"><a name="l02396"></a><span class="lineno"> 2396</span>&#160;    uint32_t jshift = uint32_t(1) &lt;&lt; size_t(j);</div>
+<div class="line"><a name="l02397"></a><span class="lineno"> 2397</span>&#160;    <span class="comment">// offset from previous rows</span></div>
+<div class="line"><a name="l02398"></a><span class="lineno"> 2398</span>&#160;    uint32_t prevRowOffset = r &gt;&gt; maxElemPerRow;</div>
+<div class="line"><a name="l02399"></a><span class="lineno"> 2399</span>&#160;    uint32_t rowOffset = std::popcount(r &amp; (jshift - 1));</div>
+<div class="line"><a name="l02400"></a><span class="lineno"> 2400</span>&#160;    <span class="keywordtype">size_t</span> k = rowOffset + prevRowOffset;</div>
+<div class="line"><a name="l02401"></a><span class="lineno"> 2401</span>&#160;    <span class="keywordflow">if</span> (r &amp; jshift) {</div>
+<div class="line"><a name="l02402"></a><span class="lineno"> 2402</span>&#160;      nonZeros[k] = std::move(x);</div>
+<div class="line"><a name="l02403"></a><span class="lineno"> 2403</span>&#160;    } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l02404"></a><span class="lineno"> 2404</span>&#160;      nonZeros.insert(nonZeros.begin() + k, std::move(x));</div>
+<div class="line"><a name="l02405"></a><span class="lineno"> 2405</span>&#160;      rows[size_t(i)] = r | jshift;</div>
+<div class="line"><a name="l02406"></a><span class="lineno"> 2406</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = <span class="keywordtype">size_t</span>(i) + 1; k &lt; rows.size(); ++k)</div>
+<div class="line"><a name="l02407"></a><span class="lineno"> 2407</span>&#160;        rows[k] += uint32_t(1) &lt;&lt; maxElemPerRow;</div>
+<div class="line"><a name="l02408"></a><span class="lineno"> 2408</span>&#160;    }</div>
+<div class="line"><a name="l02409"></a><span class="lineno"> 2409</span>&#160;  }</div>
+<div class="line"><a name="l02410"></a><span class="lineno"> 2410</span>&#160; </div>
+<div class="line"><a name="l02411"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html"> 2411</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l02412"></a><span class="lineno"> 2412</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> *A;</div>
+<div class="line"><a name="l02413"></a><span class="lineno"> 2413</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> i, j;</div>
+<div class="line"><a name="l02414"></a><span class="lineno"> 2414</span>&#160;    <span class="keyword">operator</span> T()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> A-&gt;get(<a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j}); }</div>
+<div class="line"><a name="l02415"></a><span class="lineno"> 2415</span>&#160;    <span class="keywordtype">void</span> operator=(T x) {</div>
+<div class="line"><a name="l02416"></a><span class="lineno"> 2416</span>&#160;      A-&gt;insert(std::move(x), <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Row</a>{i}, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">Col</a>{j});</div>
+<div class="line"><a name="l02417"></a><span class="lineno"> 2417</span>&#160;      <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l02418"></a><span class="lineno"> 2418</span>&#160;    }</div>
+<div class="line"><a name="l02419"></a><span class="lineno"> 2419</span>&#160;  };</div>
+<div class="line"><a name="l02420"></a><span class="lineno"> 2420</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i, <span class="keywordtype">size_t</span> j) -&gt; <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a> {</div>
+<div class="line"><a name="l02421"></a><span class="lineno"> 2421</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">Reference</a>{<span class="keyword">this</span>, i, j};</div>
+<div class="line"><a name="l02422"></a><span class="lineno"> 2422</span>&#160;  }</div>
+<div class="line"><a name="l02423"></a><span class="lineno"> 2423</span>&#160;  <span class="keyword">operator</span> <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;T&gt;</a>() {</div>
+<div class="line"><a name="l02424"></a><span class="lineno"> 2424</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;T&gt;</a> A(Row{numRow()}, Col{numCol()});</div>
+<div class="line"><a name="l02425"></a><span class="lineno"> 2425</span>&#160;    assert(numRow() == A.numRow());</div>
+<div class="line"><a name="l02426"></a><span class="lineno"> 2426</span>&#160;    assert(numCol() == A.numCol());</div>
+<div class="line"><a name="l02427"></a><span class="lineno"> 2427</span>&#160;    <span class="keywordtype">size_t</span> k = 0;</div>
+<div class="line"><a name="l02428"></a><span class="lineno"> 2428</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numRow(); ++i) {</div>
+<div class="line"><a name="l02429"></a><span class="lineno"> 2429</span>&#160;      uint32_t m = rows[i] &amp; 0x00ffffff;</div>
+<div class="line"><a name="l02430"></a><span class="lineno"> 2430</span>&#160;      <span class="keywordtype">size_t</span> j = 0;</div>
+<div class="line"><a name="l02431"></a><span class="lineno"> 2431</span>&#160;      <span class="keywordflow">while</span> (m) {</div>
+<div class="line"><a name="l02432"></a><span class="lineno"> 2432</span>&#160;        uint32_t tz = std::countr_zero(m);</div>
+<div class="line"><a name="l02433"></a><span class="lineno"> 2433</span>&#160;        m &gt;&gt;= tz + 1;</div>
+<div class="line"><a name="l02434"></a><span class="lineno"> 2434</span>&#160;        j += tz;</div>
+<div class="line"><a name="l02435"></a><span class="lineno"> 2435</span>&#160;        A(i, j++) = nonZeros[k++];</div>
+<div class="line"><a name="l02436"></a><span class="lineno"> 2436</span>&#160;      }</div>
+<div class="line"><a name="l02437"></a><span class="lineno"> 2437</span>&#160;    }</div>
+<div class="line"><a name="l02438"></a><span class="lineno"> 2438</span>&#160;    assert(k == nonZeros.size());</div>
+<div class="line"><a name="l02439"></a><span class="lineno"> 2439</span>&#160;    <span class="keywordflow">return</span> A;</div>
+<div class="line"><a name="l02440"></a><span class="lineno"> 2440</span>&#160;  }</div>
+<div class="line"><a name="l02441"></a><span class="lineno"> 2441</span>&#160;};</div>
+<div class="line"><a name="l02442"></a><span class="lineno"> 2442</span>&#160; </div>
+<div class="line"><a name="l02443"></a><span class="lineno"> 2443</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l02444"></a><span class="lineno"> 2444</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix&lt;T&gt;</a> <span class="keyword">const</span> &amp;A)</div>
+<div class="line"><a name="l02445"></a><span class="lineno"> 2445</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l02446"></a><span class="lineno"> 2446</span>&#160;  <span class="keywordtype">size_t</span> k = 0;</div>
+<div class="line"><a name="l02447"></a><span class="lineno"> 2447</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot;[ &quot;</span>;</div>
+<div class="line"><a name="l02448"></a><span class="lineno"> 2448</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) {</div>
+<div class="line"><a name="l02449"></a><span class="lineno"> 2449</span>&#160;    <span class="keywordflow">if</span> (i)</div>
+<div class="line"><a name="l02450"></a><span class="lineno"> 2450</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  &quot;</span>;</div>
+<div class="line"><a name="l02451"></a><span class="lineno"> 2451</span>&#160;    uint32_t m = A.rows[i] &amp; 0x00ffffff;</div>
+<div class="line"><a name="l02452"></a><span class="lineno"> 2452</span>&#160;    <span class="keywordtype">size_t</span> j = 0;</div>
+<div class="line"><a name="l02453"></a><span class="lineno"> 2453</span>&#160;    <span class="keywordflow">while</span> (m) {</div>
+<div class="line"><a name="l02454"></a><span class="lineno"> 2454</span>&#160;      <span class="keywordflow">if</span> (j)</div>
+<div class="line"><a name="l02455"></a><span class="lineno"> 2455</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l02456"></a><span class="lineno"> 2456</span>&#160;      uint32_t tz = std::countr_zero(m);</div>
+<div class="line"><a name="l02457"></a><span class="lineno"> 2457</span>&#160;      m &gt;&gt;= (tz + 1);</div>
+<div class="line"><a name="l02458"></a><span class="lineno"> 2458</span>&#160;      j += (tz + 1);</div>
+<div class="line"><a name="l02459"></a><span class="lineno"> 2459</span>&#160;      <span class="keywordflow">while</span> (tz--)</div>
+<div class="line"><a name="l02460"></a><span class="lineno"> 2460</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; 0 &quot;</span>;</div>
+<div class="line"><a name="l02461"></a><span class="lineno"> 2461</span>&#160;      <span class="keyword">const</span> T &amp;x = A.nonZeros[k++];</div>
+<div class="line"><a name="l02462"></a><span class="lineno"> 2462</span>&#160;      <span class="keywordflow">if</span> (x &gt;= 0)</div>
+<div class="line"><a name="l02463"></a><span class="lineno"> 2463</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line"><a name="l02464"></a><span class="lineno"> 2464</span>&#160;      os &lt;&lt; x;</div>
+<div class="line"><a name="l02465"></a><span class="lineno"> 2465</span>&#160;    }</div>
+<div class="line"><a name="l02466"></a><span class="lineno"> 2466</span>&#160;    <span class="keywordflow">for</span> (; j &lt; A.numCol(); ++j)</div>
+<div class="line"><a name="l02467"></a><span class="lineno"> 2467</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;  0&quot;</span>;</div>
+<div class="line"><a name="l02468"></a><span class="lineno"> 2468</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"><a name="l02469"></a><span class="lineno"> 2469</span>&#160;  }</div>
+<div class="line"><a name="l02470"></a><span class="lineno"> 2470</span>&#160;  os &lt;&lt; <span class="stringliteral">&quot; ]&quot;</span>;</div>
+<div class="line"><a name="l02471"></a><span class="lineno"> 2471</span>&#160;  assert(k == A.nonZeros.size());</div>
+<div class="line"><a name="l02472"></a><span class="lineno"> 2472</span>&#160;  <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l02473"></a><span class="lineno"> 2473</span>&#160;}</div>
+<div class="line"><a name="l02474"></a><span class="lineno"> 2474</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l02475"></a><span class="lineno"> 2475</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;T&gt;</a> A)</div>
+<div class="line"><a name="l02476"></a><span class="lineno"> 2476</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l02477"></a><span class="lineno"> 2477</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, A);</div>
+<div class="line"><a name="l02478"></a><span class="lineno"> 2478</span>&#160;}</div>
+<div class="line"><a name="l02479"></a><span class="lineno"> 2479</span>&#160;<span class="keyword">template</span> &lt;AbstractMatrix T&gt;</div>
+<div class="line"><a name="l02480"></a><span class="lineno"> 2480</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(llvm::raw_ostream &amp;os, <span class="keyword">const</span> T &amp;A)</div>
+<div class="line"><a name="l02481"></a><span class="lineno"> 2481</span>&#160;  -&gt; llvm::raw_ostream &amp; {</div>
+<div class="line"><a name="l02482"></a><span class="lineno"> 2482</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;std::remove_const_t&lt;typename T::eltype&gt;</a>&gt; B{A};</div>
+<div class="line"><a name="l02483"></a><span class="lineno"> 2483</span>&#160;  <span class="keywordflow">return</span> printMatrix(os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;typename T::eltype&gt;</a>(B));</div>
+<div class="line"><a name="l02484"></a><span class="lineno"> 2484</span>&#160;}</div>
+<div class="line"><a name="l02485"></a><span class="lineno"> 2485</span>&#160; </div>
+<div class="line"><a name="l02486"></a><span class="lineno"> 2486</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a) {</div>
+<div class="line"><a name="l02487"></a><span class="lineno"> 2487</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
+<div class="line"><a name="l02488"></a><span class="lineno"> 2488</span>&#160;  <span class="keywordflow">return</span> ElementwiseUnaryOp&lt;Sub, decltype(AA)&gt;{.op = Sub{}, .a = AA};</div>
+<div class="line"><a name="l02489"></a><span class="lineno"> 2489</span>&#160;}</div>
+<div class="line"><a name="l02490"></a><span class="lineno"> 2490</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a) {</div>
+<div class="line"><a name="l02491"></a><span class="lineno"> 2491</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
+<div class="line"><a name="l02492"></a><span class="lineno"> 2492</span>&#160;  <span class="keywordflow">return</span> ElementwiseUnaryOp&lt;Sub, decltype(AA)&gt;{.op = Sub{}, .a = AA};</div>
+<div class="line"><a name="l02493"></a><span class="lineno"> 2493</span>&#160;}</div>
+<div class="line"><a name="l02494"></a><span class="lineno"> 2494</span>&#160;static_assert(AbstractMatrix&lt;ElementwiseUnaryOp&lt;Sub, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>&gt;&gt;);</div>
+<div class="line"><a name="l02495"></a><span class="lineno"> 2495</span>&#160;static_assert(AbstractMatrix&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l02496"></a><span class="lineno"> 2496</span>&#160; </div>
+<div class="line"><a name="l02497"></a><span class="lineno"> 2497</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02498"></a><span class="lineno"> 2498</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));</div>
+<div class="line"><a name="l02499"></a><span class="lineno"> 2499</span>&#160;}</div>
+<div class="line"><a name="l02500"></a><span class="lineno"> 2500</span>&#160;constexpr <span class="keyword">auto</span> operator+(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02501"></a><span class="lineno"> 2501</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Add{}, view(a), view(b));</div>
+<div class="line"><a name="l02502"></a><span class="lineno"> 2502</span>&#160;}</div>
+<div class="line"><a name="l02503"></a><span class="lineno"> 2503</span>&#160;constexpr <span class="keyword">auto</span> operator+(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02504"></a><span class="lineno"> 2504</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Add{}, view(a), view(b));</div>
+<div class="line"><a name="l02505"></a><span class="lineno"> 2505</span>&#160;}</div>
+<div class="line"><a name="l02506"></a><span class="lineno"> 2506</span>&#160;constexpr <span class="keyword">auto</span> operator+(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02507"></a><span class="lineno"> 2507</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Add{}, view(a), view(b));</div>
+<div class="line"><a name="l02508"></a><span class="lineno"> 2508</span>&#160;}</div>
+<div class="line"><a name="l02509"></a><span class="lineno"> 2509</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02510"></a><span class="lineno"> 2510</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));</div>
+<div class="line"><a name="l02511"></a><span class="lineno"> 2511</span>&#160;}</div>
+<div class="line"><a name="l02512"></a><span class="lineno"> 2512</span>&#160;constexpr <span class="keyword">auto</span> operator-(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02513"></a><span class="lineno"> 2513</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));</div>
+<div class="line"><a name="l02514"></a><span class="lineno"> 2514</span>&#160;}</div>
+<div class="line"><a name="l02515"></a><span class="lineno"> 2515</span>&#160;constexpr <span class="keyword">auto</span> operator-(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02516"></a><span class="lineno"> 2516</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Sub{}, view(a), view(b));</div>
+<div class="line"><a name="l02517"></a><span class="lineno"> 2517</span>&#160;}</div>
+<div class="line"><a name="l02518"></a><span class="lineno"> 2518</span>&#160;constexpr <span class="keyword">auto</span> operator-(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02519"></a><span class="lineno"> 2519</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Sub{}, view(a), view(b));</div>
+<div class="line"><a name="l02520"></a><span class="lineno"> 2520</span>&#160;}</div>
+<div class="line"><a name="l02521"></a><span class="lineno"> 2521</span>&#160;constexpr <span class="keyword">auto</span> operator/(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02522"></a><span class="lineno"> 2522</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));</div>
+<div class="line"><a name="l02523"></a><span class="lineno"> 2523</span>&#160;}</div>
+<div class="line"><a name="l02524"></a><span class="lineno"> 2524</span>&#160;constexpr <span class="keyword">auto</span> operator/(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02525"></a><span class="lineno"> 2525</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Div{}, view(a), view(b));</div>
+<div class="line"><a name="l02526"></a><span class="lineno"> 2526</span>&#160;}</div>
+<div class="line"><a name="l02527"></a><span class="lineno"> 2527</span>&#160;constexpr <span class="keyword">auto</span> operator/(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02528"></a><span class="lineno"> 2528</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Div{}, view(a), view(b));</div>
+<div class="line"><a name="l02529"></a><span class="lineno"> 2529</span>&#160;}</div>
+<div class="line"><a name="l02530"></a><span class="lineno"> 2530</span>&#160;constexpr <span class="keyword">auto</span> operator/(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02531"></a><span class="lineno"> 2531</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Div{}, view(a), view(b));</div>
+<div class="line"><a name="l02532"></a><span class="lineno"> 2532</span>&#160;}</div>
+<div class="line"><a name="l02533"></a><span class="lineno"> 2533</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a,</div>
+<div class="line"><a name="l02534"></a><span class="lineno"> 2534</span>&#160;                         <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02535"></a><span class="lineno"> 2535</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
+<div class="line"><a name="l02536"></a><span class="lineno"> 2536</span>&#160;  <span class="keyword">auto</span> BB{b.view()};</div>
+<div class="line"><a name="l02537"></a><span class="lineno"> 2537</span>&#160;  assert(<span class="keywordtype">size_t</span>(AA.numCol()) == <span class="keywordtype">size_t</span>(BB.numRow()));</div>
+<div class="line"><a name="l02538"></a><span class="lineno"> 2538</span>&#160;  <span class="keywordflow">return</span> MatMatMul&lt;decltype(AA), decltype(BB)&gt;{.a = AA, .b = BB};</div>
+<div class="line"><a name="l02539"></a><span class="lineno"> 2539</span>&#160;}</div>
+<div class="line"><a name="l02540"></a><span class="lineno"> 2540</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a,</div>
+<div class="line"><a name="l02541"></a><span class="lineno"> 2541</span>&#160;                         <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02542"></a><span class="lineno"> 2542</span>&#160;  <span class="keyword">auto</span> AA{a.view()};</div>
+<div class="line"><a name="l02543"></a><span class="lineno"> 2543</span>&#160;  <span class="keyword">auto</span> BB{b.view()};</div>
+<div class="line"><a name="l02544"></a><span class="lineno"> 2544</span>&#160;  assert(<span class="keywordtype">size_t</span>(AA.numCol()) == BB.size());</div>
+<div class="line"><a name="l02545"></a><span class="lineno"> 2545</span>&#160;  <span class="keywordflow">return</span> MatVecMul&lt;decltype(AA), decltype(BB)&gt;{.a = AA, .b = BB};</div>
+<div class="line"><a name="l02546"></a><span class="lineno"> 2546</span>&#160;}</div>
+<div class="line"><a name="l02547"></a><span class="lineno"> 2547</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;a, std::integral <span class="keyword">auto</span> b) {</div>
+<div class="line"><a name="l02548"></a><span class="lineno"> 2548</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));</div>
+<div class="line"><a name="l02549"></a><span class="lineno"> 2549</span>&#160;}</div>
+<div class="line"><a name="l02550"></a><span class="lineno"> 2550</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a,</div>
+<div class="line"><a name="l02551"></a><span class="lineno"> 2551</span>&#160;                         <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02552"></a><span class="lineno"> 2552</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
+<div class="line"><a name="l02553"></a><span class="lineno"> 2553</span>&#160;}</div>
+<div class="line"><a name="l02554"></a><span class="lineno"> 2554</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;a, std::integral <span class="keyword">auto</span> b) {</div>
+<div class="line"><a name="l02555"></a><span class="lineno"> 2555</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
+<div class="line"><a name="l02556"></a><span class="lineno"> 2556</span>&#160;}</div>
+<div class="line"><a name="l02557"></a><span class="lineno"> 2557</span>&#160;constexpr <span class="keyword">auto</span> operator*(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02558"></a><span class="lineno"> 2558</span>&#160;  <span class="keywordflow">return</span> ElementwiseMatrixBinaryOp(Mul{}, view(a), view(b));</div>
+<div class="line"><a name="l02559"></a><span class="lineno"> 2559</span>&#160;}</div>
+<div class="line"><a name="l02560"></a><span class="lineno"> 2560</span>&#160;constexpr <span class="keyword">auto</span> operator*(Scalar <span class="keyword">auto</span> a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02561"></a><span class="lineno"> 2561</span>&#160;  <span class="keywordflow">return</span> ElementwiseVectorBinaryOp(Mul{}, view(a), view(b));</div>
+<div class="line"><a name="l02562"></a><span class="lineno"> 2562</span>&#160;}</div>
+<div class="line"><a name="l02563"></a><span class="lineno"> 2563</span>&#160; </div>
+<div class="line"><a name="l02564"></a><span class="lineno"> 2564</span>&#160;<span class="comment">// constexpr auto operator*(AbstractMatrix auto &amp;A, AbstractVector auto &amp;x) {</span></div>
+<div class="line"><a name="l02565"></a><span class="lineno"> 2565</span>&#160;<span class="comment">//     auto AA{A.view()};</span></div>
+<div class="line"><a name="l02566"></a><span class="lineno"> 2566</span>&#160;<span class="comment">//     auto xx{x.view()};</span></div>
+<div class="line"><a name="l02567"></a><span class="lineno"> 2567</span>&#160;<span class="comment">//     return MatMul&lt;decltype(AA), decltype(xx)&gt;{.a = AA, .b = xx};</span></div>
+<div class="line"><a name="l02568"></a><span class="lineno"> 2568</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l02569"></a><span class="lineno"> 2569</span>&#160; </div>
+<div class="line"><a name="l02570"></a><span class="lineno"> 2570</span>&#160;<span class="keyword">template</span> &lt;AbstractVector V&gt;</div>
+<div class="line"><a name="l02571"></a><span class="lineno"> 2571</span>&#160;constexpr <span class="keyword">auto</span> operator*(<span class="keyword">const</span> Transpose&lt;V&gt; &amp;a, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;b) {</div>
+<div class="line"><a name="l02572"></a><span class="lineno"> 2572</span>&#160;  <span class="keyword">typename</span> V::eltype s = 0;</div>
+<div class="line"><a name="l02573"></a><span class="lineno"> 2573</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; b.size(); ++i)</div>
+<div class="line"><a name="l02574"></a><span class="lineno"> 2574</span>&#160;    s += a.a(i) * b(i);</div>
+<div class="line"><a name="l02575"></a><span class="lineno"> 2575</span>&#160;  <span class="keywordflow">return</span> s;</div>
+<div class="line"><a name="l02576"></a><span class="lineno"> 2576</span>&#160;}</div>
+<div class="line"><a name="l02577"></a><span class="lineno"> 2577</span>&#160; </div>
+<div class="line"><a name="l02578"></a><span class="lineno"> 2578</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l02579"></a><span class="lineno"> 2579</span>&#160;static_assert(AbstractVector&lt;<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l02580"></a><span class="lineno"> 2580</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> &amp;&gt;);</div>
+<div class="line"><a name="l02581"></a><span class="lineno"> 2581</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix&gt;);</div>
+<div class="line"><a name="l02582"></a><span class="lineno"> 2582</span>&#160;static_assert(AbstractMatrix&lt;IntMatrix &amp;&gt;);</div>
+<div class="line"><a name="l02583"></a><span class="lineno"> 2583</span>&#160; </div>
+<div class="line"><a name="l02584"></a><span class="lineno"> 2584</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 4&gt;</a>&gt;);</div>
+<div class="line"><a name="l02585"></a><span class="lineno"> 2585</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 0&gt;</a>&gt;);</div>
+<div class="line"><a name="l02586"></a><span class="lineno"> 2586</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 4&gt;</a>&gt;);</div>
+<div class="line"><a name="l02587"></a><span class="lineno"> 2587</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 0&gt;</a>&gt;);</div>
+<div class="line"><a name="l02588"></a><span class="lineno"> 2588</span>&#160;static_assert(std::copyable&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l02589"></a><span class="lineno"> 2589</span>&#160; </div>
+<div class="line"><a name="l02590"></a><span class="lineno"> 2590</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 4&gt;</a>&gt;);</div>
+<div class="line"><a name="l02591"></a><span class="lineno"> 2591</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 4, 0&gt;</a>&gt;);</div>
+<div class="line"><a name="l02592"></a><span class="lineno"> 2592</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 4&gt;</a>&gt;);</div>
+<div class="line"><a name="l02593"></a><span class="lineno"> 2593</span>&#160;static_assert(DerivedMatrix&lt;<a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 0, 0&gt;</a>&gt;);</div>
+<div class="line"><a name="l02594"></a><span class="lineno"> 2594</span>&#160;static_assert(DerivedMatrix&lt;IntMatrix&gt;);</div>
+<div class="line"><a name="l02595"></a><span class="lineno"> 2595</span>&#160;static_assert(DerivedMatrix&lt;IntMatrix&gt;);</div>
 <div class="line"><a name="l02596"></a><span class="lineno"> 2596</span>&#160;static_assert(DerivedMatrix&lt;IntMatrix&gt;);</div>
-<div class="line"><a name="l02597"></a><span class="lineno"> 2597</span>&#160;static_assert(DerivedMatrix&lt;IntMatrix&gt;);</div>
-<div class="line"><a name="l02598"></a><span class="lineno"> 2598</span>&#160;static_assert(DerivedMatrix&lt;IntMatrix&gt;);</div>
-<div class="line"><a name="l02599"></a><span class="lineno"> 2599</span>&#160; </div>
-<div class="line"><a name="l02600"></a><span class="lineno"> 2600</span>&#160;static_assert(std::is_same_v&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;::eltype</a>, int64_t&gt;);</div>
-<div class="line"><a name="l02601"></a><span class="lineno"> 2601</span>&#160;static_assert(std::is_same_v&lt;IntMatrix::eltype, int64_t&gt;);</div>
-<div class="line"><a name="l02602"></a><span class="lineno"> 2602</span>&#160; </div>
-<div class="line"><a name="l02603"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView.html"> 2603</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> I&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView.html">SliceView</a> {</div>
-<div class="line"><a name="l02604"></a><span class="lineno"> 2604</span>&#160;  <span class="keyword">using</span> eltype = T;</div>
-<div class="line"><a name="l02605"></a><span class="lineno"> 2605</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
-<div class="line"><a name="l02606"></a><span class="lineno"> 2606</span>&#160;  [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
-<div class="line"><a name="l02607"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html"> 2607</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> {</div>
-<div class="line"><a name="l02608"></a><span class="lineno"> 2608</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
-<div class="line"><a name="l02609"></a><span class="lineno"> 2609</span>&#160;    [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
-<div class="line"><a name="l02610"></a><span class="lineno"> 2610</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> j;</div>
-<div class="line"><a name="l02611"></a><span class="lineno"> 2611</span>&#160;    <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> &amp;k) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> j == k.j; }</div>
-<div class="line"><a name="l02612"></a><span class="lineno"> 2612</span>&#160;    <span class="keyword">auto</span> operator++() -&gt; <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> &amp; {</div>
-<div class="line"><a name="l02613"></a><span class="lineno"> 2613</span>&#160;      ++j;</div>
-<div class="line"><a name="l02614"></a><span class="lineno"> 2614</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><a name="l02615"></a><span class="lineno"> 2615</span>&#160;    }</div>
-<div class="line"><a name="l02616"></a><span class="lineno"> 2616</span>&#160;    <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
-<div class="line"><a name="l02617"></a><span class="lineno"> 2617</span>&#160;    <span class="keyword">auto</span> operator*() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
-<div class="line"><a name="l02618"></a><span class="lineno"> 2618</span>&#160;    <span class="keyword">auto</span> operator-&gt;() -&gt; T * { <span class="keywordflow">return</span> &amp;a[i[j]]; }</div>
-<div class="line"><a name="l02619"></a><span class="lineno"> 2619</span>&#160;    <span class="keyword">auto</span> operator-&gt;() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T * { <span class="keywordflow">return</span> &amp;a[i[j]]; }</div>
-<div class="line"><a name="l02620"></a><span class="lineno"> 2620</span>&#160;  };</div>
-<div class="line"><a name="l02621"></a><span class="lineno"> 2621</span>&#160;  constexpr <span class="keyword">auto</span> begin() -&gt; <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> { <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a>{a, i, 0}; }</div>
-<div class="line"><a name="l02622"></a><span class="lineno"> 2622</span>&#160;  constexpr <span class="keyword">auto</span> end() -&gt; Iterator { <span class="keywordflow">return</span> Iterator{a, i, i.size()}; }</div>
-<div class="line"><a name="l02623"></a><span class="lineno"> 2623</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> j) -&gt; T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
-<div class="line"><a name="l02624"></a><span class="lineno"> 2624</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
-<div class="line"><a name="l02625"></a><span class="lineno"> 2625</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() const -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> i.size(); }</div>
-<div class="line"><a name="l02626"></a><span class="lineno"> 2626</span>&#160;  constexpr <span class="keyword">auto</span> view() -&gt; SliceView&lt;T, I&gt; { <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
-<div class="line"><a name="l02627"></a><span class="lineno"> 2627</span>&#160;};</div>
-<div class="line"><a name="l02628"></a><span class="lineno"> 2628</span>&#160; </div>
-<div class="line"><a name="l02629"></a><span class="lineno"> 2629</span>&#160;static_assert(AbstractVector&lt;SliceView&lt;int64_t, unsigned&gt;&gt;);</div>
-<div class="line"><a name="l02630"></a><span class="lineno"> 2630</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
-<div class="line"><a name="l02631"></a><span class="lineno"> 2631</span>&#160; </div>
-<div class="line"><a name="l02632"></a><span class="lineno"> 2632</span>&#160;<span class="comment">// exports:</span></div>
-<div class="line"><a name="l02633"></a><span class="lineno"> 2633</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
-<div class="line"><a name="l02634"></a><span class="lineno"> 2634</span>&#160;<span class="keyword">using</span> LinearAlgebra::_;</div>
-<div class="line"><a name="l02635"></a><span class="lineno"> 2635</span>&#160;<span class="keyword">using</span> LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,</div>
-<div class="line"><a name="l02636"></a><span class="lineno"> 2636</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>, <a class="code" href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a>,</div>
-<div class="line"><a name="l02637"></a><span class="lineno"> 2637</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a>, <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::IntMatrix</a>,</div>
-<div class="line"><a name="l02638"></a><span class="lineno"> 2638</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
-<div class="line"><a name="l02639"></a><span class="lineno"> 2639</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a>,</div>
-<div class="line"><a name="l02640"></a><span class="lineno"> 2640</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a>,</div>
-<div class="line"><a name="l02641"></a><span class="lineno"> 2641</span>&#160;  <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a>, <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a>,</div>
-<div class="line"><a name="l02642"></a><span class="lineno"> 2642</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a>, LinearAlgebra::begin, LinearAlgebra::end,</div>
-<div class="line"><a name="l02643"></a><span class="lineno"> 2643</span>&#160;  LinearAlgebra::swap, <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>,</div>
-<div class="line"><a name="l02644"></a><span class="lineno"> 2644</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Col</a>;</div>
+<div class="line"><a name="l02597"></a><span class="lineno"> 2597</span>&#160; </div>
+<div class="line"><a name="l02598"></a><span class="lineno"> 2598</span>&#160;static_assert(std::is_same_v&lt;<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t&gt;::eltype</a>, int64_t&gt;);</div>
+<div class="line"><a name="l02599"></a><span class="lineno"> 2599</span>&#160;static_assert(std::is_same_v&lt;IntMatrix::eltype, int64_t&gt;);</div>
+<div class="line"><a name="l02600"></a><span class="lineno"> 2600</span>&#160; </div>
+<div class="line"><a name="l02601"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView.html"> 2601</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> I&gt; <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView.html">SliceView</a> {</div>
+<div class="line"><a name="l02602"></a><span class="lineno"> 2602</span>&#160;  <span class="keyword">using</span> eltype = T;</div>
+<div class="line"><a name="l02603"></a><span class="lineno"> 2603</span>&#160;  [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
+<div class="line"><a name="l02604"></a><span class="lineno"> 2604</span>&#160;  [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
+<div class="line"><a name="l02605"></a><span class="lineno"><a class="line" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html"> 2605</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> {</div>
+<div class="line"><a name="l02606"></a><span class="lineno"> 2606</span>&#160;    [[no_unique_address]] <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> a;</div>
+<div class="line"><a name="l02607"></a><span class="lineno"> 2607</span>&#160;    [[no_unique_address]] llvm::ArrayRef&lt;I&gt; i;</div>
+<div class="line"><a name="l02608"></a><span class="lineno"> 2608</span>&#160;    [[no_unique_address]] <span class="keywordtype">size_t</span> j;</div>
+<div class="line"><a name="l02609"></a><span class="lineno"> 2609</span>&#160;    <span class="keyword">auto</span> operator==(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> &amp;k) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> j == k.j; }</div>
+<div class="line"><a name="l02610"></a><span class="lineno"> 2610</span>&#160;    <span class="keyword">auto</span> operator++() -&gt; <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> &amp; {</div>
+<div class="line"><a name="l02611"></a><span class="lineno"> 2611</span>&#160;      ++j;</div>
+<div class="line"><a name="l02612"></a><span class="lineno"> 2612</span>&#160;      <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><a name="l02613"></a><span class="lineno"> 2613</span>&#160;    }</div>
+<div class="line"><a name="l02614"></a><span class="lineno"> 2614</span>&#160;    <span class="keyword">auto</span> operator*() -&gt; T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
+<div class="line"><a name="l02615"></a><span class="lineno"> 2615</span>&#160;    <span class="keyword">auto</span> operator*() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
+<div class="line"><a name="l02616"></a><span class="lineno"> 2616</span>&#160;    <span class="keyword">auto</span> operator-&gt;() -&gt; T * { <span class="keywordflow">return</span> &amp;a[i[j]]; }</div>
+<div class="line"><a name="l02617"></a><span class="lineno"> 2617</span>&#160;    <span class="keyword">auto</span> operator-&gt;() <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T * { <span class="keywordflow">return</span> &amp;a[i[j]]; }</div>
+<div class="line"><a name="l02618"></a><span class="lineno"> 2618</span>&#160;  };</div>
+<div class="line"><a name="l02619"></a><span class="lineno"> 2619</span>&#160;  constexpr <span class="keyword">auto</span> begin() -&gt; <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a> { <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">Iterator</a>{a, i, 0}; }</div>
+<div class="line"><a name="l02620"></a><span class="lineno"> 2620</span>&#160;  constexpr <span class="keyword">auto</span> end() -&gt; Iterator { <span class="keywordflow">return</span> Iterator{a, i, i.size()}; }</div>
+<div class="line"><a name="l02621"></a><span class="lineno"> 2621</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> j) -&gt; T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
+<div class="line"><a name="l02622"></a><span class="lineno"> 2622</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> j) <span class="keyword">const</span> -&gt; <span class="keyword">const</span> T &amp; { <span class="keywordflow">return</span> a[i[j]]; }</div>
+<div class="line"><a name="l02623"></a><span class="lineno"> 2623</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> size() const -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> i.size(); }</div>
+<div class="line"><a name="l02624"></a><span class="lineno"> 2624</span>&#160;  constexpr <span class="keyword">auto</span> view() -&gt; SliceView&lt;T, I&gt; { <span class="keywordflow">return</span> *<span class="keyword">this</span>; }</div>
+<div class="line"><a name="l02625"></a><span class="lineno"> 2625</span>&#160;};</div>
+<div class="line"><a name="l02626"></a><span class="lineno"> 2626</span>&#160; </div>
+<div class="line"><a name="l02627"></a><span class="lineno"> 2627</span>&#160;static_assert(AbstractVector&lt;SliceView&lt;int64_t, unsigned&gt;&gt;);</div>
+<div class="line"><a name="l02628"></a><span class="lineno"> 2628</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
+<div class="line"><a name="l02629"></a><span class="lineno"> 2629</span>&#160; </div>
+<div class="line"><a name="l02630"></a><span class="lineno"> 2630</span>&#160;<span class="comment">// exports:</span></div>
+<div class="line"><a name="l02631"></a><span class="lineno"> 2631</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
+<div class="line"><a name="l02632"></a><span class="lineno"> 2632</span>&#160;<span class="keyword">using</span> LinearAlgebra::_;</div>
+<div class="line"><a name="l02633"></a><span class="lineno"> 2633</span>&#160;<span class="keyword">using</span> LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,</div>
+<div class="line"><a name="l02634"></a><span class="lineno"> 2634</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>, <a class="code" href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a>,</div>
+<div class="line"><a name="l02635"></a><span class="lineno"> 2635</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a>, <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::IntMatrix</a>,</div>
+<div class="line"><a name="l02636"></a><span class="lineno"> 2636</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
+<div class="line"><a name="l02637"></a><span class="lineno"> 2637</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a>,</div>
+<div class="line"><a name="l02638"></a><span class="lineno"> 2638</span>&#160;  <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a>,</div>
+<div class="line"><a name="l02639"></a><span class="lineno"> 2639</span>&#160;  <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a>, <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a>,</div>
+<div class="line"><a name="l02640"></a><span class="lineno"> 2640</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a>, LinearAlgebra::begin, LinearAlgebra::end,</div>
+<div class="line"><a name="l02641"></a><span class="lineno"> 2641</span>&#160;  LinearAlgebra::swap, <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>,</div>
+<div class="line"><a name="l02642"></a><span class="lineno"> 2642</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Col</a>;</div>
 <div class="ttc" id="astructLinearAlgebra_1_1Add_html"><div class="ttname"><a href="structLinearAlgebra_1_1Add.html">LinearAlgebra::Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:330</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:98</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ConstMatrixCore_html"><div class="ttname"><a href="structLinearAlgebra_1_1ConstMatrixCore.html">LinearAlgebra::ConstMatrixCore</a></div><div class="ttdoc">A CRTP type defining const methods for matrices.</div><div class="ttdef"><b>Definition:</b> Math.hpp:1430</div></div>
@@ -2735,10 +2733,10 @@ $(function() {
 <div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:567</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SliceView_1_1Iterator_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">LinearAlgebra::SliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2607</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SliceView_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView.html">LinearAlgebra::SliceView</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2603</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2413</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2361</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SliceView_1_1Iterator_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView_1_1Iterator.html">LinearAlgebra::SliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2605</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SliceView_html"><div class="ttname"><a href="structLinearAlgebra_1_1SliceView.html">LinearAlgebra::SliceView</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2601</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_1_1Reference_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix_1_1Reference.html">LinearAlgebra::SmallSparseMatrix::Reference</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2411</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SmallSparseMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2359</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SquareMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1886</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1837</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1StandardizeRangeBound_html"><div class="ttname"><a href="structLinearAlgebra_1_1StandardizeRangeBound.html">LinearAlgebra::StandardizeRangeBound</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:609</div></div>
