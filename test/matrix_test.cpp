@@ -14,9 +14,6 @@ TEST(SparseIndexingTest, BasicAssertions) {
   Asparse(2, 1) = 4;
   Asparse(2, 2) = -2;
   IntMatrix A = Asparse;
-  // llvm::errs() << "A.size() = ("<<A.numRow()<<", "<<A.numCol()<<")\n";
-  // llvm::errs() << "\nAsparse = \n" << Asparse << "\n";
-  // llvm::errs() << "\nA = \n" << A << "\n" << "\n";
   for (size_t i = 0; i < 3; ++i)
     for (size_t j = 0; j < 4; ++j)
       EXPECT_TRUE(A(i, j) == Asparse(i, j));
@@ -121,10 +118,6 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   c.push_back(14);
   c.push_back(6);
   EXPECT_EQ(b, c);
-  // llvm::errs() << "B = \n"<<B<<"\n";
-  // llvm::errs() << "C = \n"<<C<<"\n";
-  // IntMatrix B;
-  // B = A*4;
   IntMatrix A1x1(Row{1}, Col{1});
   IntMatrix A2x2(Row{2}, Col{2});
   A1x1.antiDiag() = 1;

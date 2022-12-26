@@ -2316,11 +2316,9 @@ template <TriviallyCopyable OP, TriviallyCopyableMatrixOrScalar A,
           TriviallyCopyableMatrixOrScalar B>
 ElementwiseMatrixBinaryOp(OP, A, B) -> ElementwiseMatrixBinaryOp<OP, A, B>;
 
-static inline constexpr auto view(const Scalar auto &x) { return x; }
-static inline constexpr auto view(const AbstractVector auto &x) {
-  return x.view();
-}
-static inline constexpr auto view(const AbstractMatrixCore auto &x) {
+inline constexpr auto view(const Scalar auto &x) { return x; }
+inline constexpr auto view(const AbstractVector auto &x) { return x.view(); }
+inline constexpr auto view(const AbstractMatrixCore auto &x) {
   return x.view();
 }
 
