@@ -30,7 +30,7 @@ jobs:
     - run: gcovr --xml=coverage.xml --json=coverage.json --txt=coverage.txt
     - uses: codecov/codecov-action@v3
       with:
-        files: coverage.xml
+        files: coverage.xml, coverage.json, coverage.txt
   macos:
     runs-on: macos-latest
     steps:
@@ -64,5 +64,5 @@ jobs:
     - run: gcovr --xml=coverage.xml --json=coverage.json --txt=coverage.txt
     - uses: codecov/codecov-action@v3
       with:
-        files: coverage.xml
+        files: coverage.xml, coverage.json, coverage.txt
 
