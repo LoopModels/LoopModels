@@ -13,7 +13,7 @@ jobs:
         sudo ./llvm.sh 15 all
         sudo apt install g++-12 libgtest-dev ninja-build pkg-config cmake gcovr
         sudo ln -s $(which opt-15) /usr/local/bin/opt
-    - run: configure.debug
+    - run: ./configure.debug
       env:
         CXX: g++-12
     - run: cmake --build build/test
@@ -38,7 +38,7 @@ jobs:
     - run: brew install llvm@15 ninja pkg-config cmake gcovr # gcc
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
-    - run: configure.debug -DCMAKE_PREFIX_PATH=/usr/local
+    - run: ./configure.debug -DCMAKE_PREFIX_PATH=/usr/local
       env:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
