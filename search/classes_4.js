@@ -6,10 +6,9 @@ var searchData=
   ['emptycomparator_220',['EmptyComparator',['../structEmptyComparator.html',1,'']]],
   ['emptymatrix_221',['EmptyMatrix',['../structEmptyMatrix.html',1,'']]],
   ['emptyvector_222',['EmptyVector',['../structEmptyVector.html',1,'']]],
-  ['end_223',['End',['../structBitSet64_1_1Iterator_1_1End.html',1,'BitSet64::Iterator']]],
-  ['endsentinel_224',['EndSentinel',['../structEndSentinel.html',1,'']]],
-  ['equals_225',['Equals',['../structEquals.html',1,'']]],
-  ['extractalignment_226',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
-  ['extractbasicblock_227',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
-  ['extractvalue_228',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
+  ['endsentinel_223',['EndSentinel',['../structEndSentinel.html',1,'']]],
+  ['equals_224',['Equals',['../structEquals.html',1,'']]],
+  ['extractalignment_225',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
+  ['extractbasicblock_226',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
+  ['extractvalue_227',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
 ];

@@ -9,6 +9,5 @@ var searchData=
   ['allocate_6',['Allocate',['../structMergingCost_1_1Allocate.html',1,'MergingCost']]],
   ['arrayreference_7',['ArrayReference',['../structArrayReference.html',1,'']]],
   ['axisint_8',['AxisInt',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3acolumn_20_3e_9',['AxisInt&lt; AxisType::Column &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]],
-  ['axisint_3c_20axistype_3a_3arowstride_20_3e_10',['AxisInt&lt; AxisType::RowStride &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
+  ['axisint_3c_20axistype_3a_3acolumn_2c_20i_20_3e_9',['AxisInt&lt; AxisType::Column, I &gt;',['../structLinearAlgebra_1_1AxisInt.html',1,'LinearAlgebra']]]
 ];

@@ -7,10 +7,9 @@ var searchData=
   ['emptymask_43',['emptyMask',['../structPredicate_1_1Intersection.html#aa490ae09b4cd35d39a821182dbcc9348',1,'Predicate::Intersection']]],
   ['emptymatrix_44',['EmptyMatrix',['../structEmptyMatrix.html',1,'']]],
   ['emptyvector_45',['EmptyVector',['../structEmptyVector.html',1,'']]],
-  ['end_46',['End',['../structBitSet64_1_1Iterator_1_1End.html',1,'BitSet64::Iterator']]],
-  ['endsentinel_47',['EndSentinel',['../structEndSentinel.html',1,'']]],
-  ['equals_48',['Equals',['../structEquals.html',1,'']]],
-  ['extractalignment_49',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
-  ['extractbasicblock_50',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
-  ['extractvalue_51',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
+  ['endsentinel_46',['EndSentinel',['../structEndSentinel.html',1,'']]],
+  ['equals_47',['Equals',['../structEquals.html',1,'']]],
+  ['extractalignment_48',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
+  ['extractbasicblock_49',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
+  ['extractvalue_50',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
 ];
