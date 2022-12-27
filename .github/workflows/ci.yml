@@ -4,6 +4,9 @@ jobs:
 
   linux:
     runs-on: ubuntu-22.04
+    include:
+      compiler: gcc
+      gcc: 12
     steps:
     - uses: actions/checkout@v1
     - run: |
@@ -11,11 +14,11 @@ jobs:
         sudo wget https://apt.llvm.org/llvm.sh
         sudo chmod +x llvm.sh
         sudo ./llvm.sh 15 all
-        sudo apt install g++ libgtest-dev ninja-build pkg-config cmake gcovr
+        sudo apt install libgtest-dev ninja-build pkg-config cmake gcovr
         sudo ln -s $(which opt-15) /usr/local/bin/opt
     - run: cmake -G Ninja -S test -B builddirgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1
       env:
-        CXX: g++
+        CXX: g++-12
     - run: cmake --build builddirgcc/test -j4
     - run: cmake --build builddirgcc/test --target test
       env:
