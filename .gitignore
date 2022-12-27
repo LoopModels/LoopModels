@@ -1,5 +1,4 @@
-build/
-release_build*/
+build*/
 *#*
 *~
 .cache
@@ -9,5 +8,5 @@ builddir/
 .vscode/
 latex/
 html/
-subprojects/*
-!subprojects/*.wrap
+coverage.*
+coverage-final.json
