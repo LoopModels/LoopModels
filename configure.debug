@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cmake -G Ninja -S test -B build/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 "$@"
