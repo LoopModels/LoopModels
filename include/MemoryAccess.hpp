@@ -182,7 +182,7 @@ struct MemoryAccess {
   }
 };
 
-auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
+inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   -> llvm::raw_ostream & {
   if (m.isLoad())
     os << "Load: ";

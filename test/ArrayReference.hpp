@@ -1,6 +1,7 @@
+
 #pragma once
+#include "../include/Loops.hpp"
 #include "../include/MemoryAccess.hpp"
-#include "Loops.hpp"
 #include <cstdint>
 
 struct ArrayReference {
@@ -22,8 +23,8 @@ struct ArrayReference {
     return size_t(offMat.numRow());
   }
 };
-auto createMemAccess(ArrayReference &ar, llvm::Instruction *I,
-                     llvm::ArrayRef<unsigned> omegas) -> MemoryAccess {
+inline auto createMemAccess(ArrayReference &ar, llvm::Instruction *I,
+                            llvm::ArrayRef<unsigned> omegas) -> MemoryAccess {
   MemoryAccess mem{ar.basePointer, *ar.loop, I, ar.sizes, {}, omegas};
   mem.resize(size_t(ar.offsetMatrix().numRow()));
   mem.indexMatrix() = ar.indexMatrix();

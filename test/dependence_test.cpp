@@ -4,8 +4,8 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/MemoryAccess.hpp"
-#include "../include/TestUtilities.hpp"
 #include "./ArrayReference.hpp"
+#include "./TestUtilities.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -31,10 +31,10 @@ TEST(DependenceTest, BasicAssertions) {
   //   -2  0  1  0 -1      J
   //    0  0  0  0  1 ]    i
   //                       j ]
-  IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
-                                    "0 0 0 0 1; "
-                                    "-2 0 1 -1 0; "
-                                    "0 0 0 1 0]")};
+  IntMatrix Aloop{"[-2 1 0 0 -1; "
+                  "0 0 0 0 1; "
+                  "-2 0 1 -1 0; "
+                  "0 0 0 1 0]"_mat};
   TestLoopFunction tlf;
 
   tlf.addLoop(std::move(Aloop), 2);
@@ -161,10 +161,10 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   //   for(j = 0:i-1)
   //     A(j,i) = A(i,j)
   //
-  IntMatrix Aloop{stringToIntMatrix("[-1 1 0 -1; "
-                                    "0 0 0 1; "
-                                    "-1 0 -1 1; "
-                                    "0 0 1 0]")};
+  IntMatrix Aloop{"[-1 1 0 -1; "
+                  "0 0 0 1; "
+                  "-1 0 -1 1; "
+                  "0 0 1 0]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(Aloop), 2);
@@ -248,10 +248,10 @@ TEST(RankDeficientLoad, BasicAssertions) {
   //  -1   1           <=    0
   //   0  -1 ]               0     ]
   //
-  IntMatrix Aloop{stringToIntMatrix("[-1 1 0 -1; "
-                                    "0 0 0 1; "
-                                    "0 0 -1 1; "
-                                    "0 0 1 0]")};
+  IntMatrix Aloop{"[-1 1 0 -1; "
+                  "0 0 0 1; "
+                  "0 0 -1 1; "
+                  "0 0 1 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(Aloop), 2);
   auto &loop = tlf.alns.front();
@@ -332,12 +332,12 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   //   0   0  1 ]               K - 1
   //   0   0 -1 ]               0     ]
   //
-  IntMatrix Aloop{stringToIntMatrix("[-1 1 0 0 0 0 -1; "
-                                    "0 0 0 0 0 0 1; "
-                                    "-1 0 1 0 0 -1 0; "
-                                    "0 0 0 0 0 1 0; "
-                                    "-1 0 0 1 -1 0 0; "
-                                    "0 0 0 0 1 0 0]")};
+  IntMatrix Aloop{"[-1 1 0 0 0 0 -1; "
+                  "0 0 0 0 0 0 1; "
+                  "-1 0 1 0 0 -1 0; "
+                  "0 0 0 0 0 1 0; "
+                  "-1 0 0 1 -1 0 0; "
+                  "0 0 0 0 1 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(Aloop), 3);
   auto &loop = tlf.alns.front();
@@ -409,16 +409,16 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TriangularExampleTest, BasicAssertions) {
-  IntMatrix AMN{stringToIntMatrix("[-1 1 0 0 -1; "
-                                  "0 0 0 0 1; "
-                                  "-1 0 1 -1 0; "
-                                  "0 0 0 1 0]")};
-  IntMatrix AMNK{stringToIntMatrix("[-1 1 0 0 0 -1; "
-                                   "0 0 0 0 0 1; "
-                                   "-1 0 1 0 -1 0; "
-                                   "0 0 0 0 1 0; "
-                                   "-1 0 1 -1 0 0; "
-                                   "-1 0 0 1 -1 0]")};
+  IntMatrix AMN{"[-1 1 0 0 -1; "
+                "0 0 0 0 1; "
+                "-1 0 1 -1 0; "
+                "0 0 0 1 0]"_mat};
+  IntMatrix AMNK{"[-1 1 0 0 0 -1; "
+                 "0 0 0 0 0 1; "
+                 "-1 0 1 0 -1 0; "
+                 "0 0 0 0 1 0; "
+                 "-1 0 1 -1 0 0; "
+                 "-1 0 0 1 -1 0]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(AMN), 2);
@@ -811,8 +811,8 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // the scheduler swaps the order, making `n` outermost,
   // and `m` as innermost
   // orig order (inner <-> outer): k, n, m
-  // IntMatrix optPhi3{stringToIntMatrix("[0 0 1; 1 0 0; 0 1 0]")};
-  IntMatrix optPhi3{stringToIntMatrix("[1 0 0; 0 0 1; 0 1 0]")};
+  // IntMatrix optPhi3{"[0 0 1; 1 0 0; 0 1 0]"_mat};
+  IntMatrix optPhi3{"[1 0 0; 0 0 1; 0 1 0]"_mat};
   // phi3 loop order is [k, m, n]
   // so the schedule below places `k` as the outermost loop,
   // followed by `m`, and `n` as innermost. `n` is the reduction loop.
@@ -868,19 +868,19 @@ TEST(MeanStDevTest0, BasicAssertions) {
   // for (i = 0; i < I; ++i)
   //   s(i) = sqrt(s(i) / (J-1));
   TestLoopFunction tlf;
-  IntMatrix TwoLoopsMat{stringToIntMatrix("[-1 1 0 0 -1; "
-                                          "0 0 0 0 1; "
-                                          "-1 0 1 -1 0; "
-                                          "0 0 0 1 0]")};
+  IntMatrix TwoLoopsMat{"[-1 1 0 0 -1; "
+                        "0 0 0 0 1; "
+                        "-1 0 1 -1 0; "
+                        "0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(TwoLoopsMat), 2);
-  IntMatrix OneLoopMat{stringToIntMatrix("[-1 1 -1; "
-                                         "0 0 1]")};
+  IntMatrix OneLoopMat{"[-1 1 -1; "
+                       "0 0 1]"_mat};
   tlf.addLoop(std::move(OneLoopMat), 1);
 
-  IntMatrix TwoLoopsMatJI{stringToIntMatrix("[-1 0 1 0 -1; "
-                                            "0 0 0 0 1; "
-                                            "-1 1 0 -1 0; "
-                                            "0 0 0 1 0]")};
+  IntMatrix TwoLoopsMatJI{"[-1 0 1 0 -1; "
+                          "0 0 0 0 1; "
+                          "-1 1 0 -1 0; "
+                          "0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(TwoLoopsMatJI), 2);
   AffineLoopNest<true> &loopJI = tlf.alns[0];
   AffineLoopNest<true> &loopI = tlf.alns[1];
@@ -1242,10 +1242,10 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   TestLoopFunction tlf;
   auto &builder = tlf.builder;
-  IntMatrix Aloop{stringToIntMatrix("[-2 1 0 0 -1; "
-                                    "0 0 0 0 1; "
-                                    "-2 0 1 -1 0; "
-                                    "0 0 0 1 0]")};
+  IntMatrix Aloop{"[-2 1 0 0 -1; "
+                  "0 0 0 0 1; "
+                  "-2 0 1 -1 0; "
+                  "0 0 0 1 0]"_mat};
   tlf.addLoop(std::move(Aloop), 2);
   AffineLoopNest<true> &loop = tlf.alns.front();
 
@@ -1434,14 +1434,14 @@ TEST(ConvReversePass, BasicAssertions) {
   // }
   TestLoopFunction tlf;
   auto &builder = tlf.builder;
-  IntMatrix Aloop{stringToIntMatrix("[-1 0 1 0 0 0 0 0 -1; "
-                                    "0 0 0 0 0 0 0 0 1; "
-                                    "-1 1 0 0 0 0 0 -1 0; "
-                                    "0 0 0 0 0 0 0 1 0; "
-                                    "-1 0 0 0 1 0 -1 0 0; "
-                                    "0 0 0 0 0 0 1 0 0; "
-                                    "-1 0 0 1 0 -1 0 0 0; "
-                                    "0 0 0 0 0 1 0 0 0]")};
+  IntMatrix Aloop{"[-1 0 1 0 0 0 0 0 -1; "
+                  "0 0 0 0 0 0 0 0 1; "
+                  "-1 1 0 0 0 0 0 -1 0; "
+                  "0 0 0 0 0 0 0 1 0; "
+                  "-1 0 0 0 1 0 -1 0 0; "
+                  "0 0 0 0 0 0 1 0 0; "
+                  "-1 0 0 1 0 -1 0 0 0; "
+                  "0 0 0 0 0 1 0 0 0]"_mat};
   tlf.addLoop(std::move(Aloop), 4);
   AffineLoopNest<true> &loop = tlf.alns.front();
 

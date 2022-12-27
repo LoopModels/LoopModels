@@ -29,13 +29,12 @@
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
 
-static inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v)
-  -> bool {
+inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return v && SE.getSCEV(v)->isOne();
 }
 
-[[nodiscard]] [[maybe_unused]] static auto
-getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
+[[nodiscard]] inline auto getBackedgeTakenCount(llvm::ScalarEvolution &SE,
+                                                llvm::Loop *L)
   -> const llvm::SCEV * {
   auto b = L->getBounds(SE);
   if (!b || (!isKnownOne(SE, b->getStepValue())))
@@ -65,8 +64,8 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
   return SE.getMinusSCEV(UB, LB, llvm::SCEV::NoWrapMask);
 }
 
-[[nodiscard]] [[maybe_unused]] static auto noWrapSCEV(llvm::ScalarEvolution &SE,
-                                                      const llvm::SCEV *S)
+[[nodiscard]] inline auto noWrapSCEV(llvm::ScalarEvolution &SE,
+                                     const llvm::SCEV *S)
   -> const llvm::SCEV * {
   if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
     return SE.getAddExpr(noWrapSCEV(SE, ex->getOperand(0)),
@@ -120,8 +119,7 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
 //             return c->getSExtValue();
 //     return {};
 // }
-[[maybe_unused]] static auto getConstantInt(const llvm::SCEV *v)
-  -> std::optional<int64_t> {
+inline auto getConstantInt(const llvm::SCEV *v) -> std::optional<int64_t> {
   if (const auto *sc = llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
     llvm::ConstantInt *c = sc->getValue();
     // we need bit width of 64, for sake of negative numbers
@@ -132,8 +130,7 @@ getBackedgeTakenCount(llvm::ScalarEvolution &SE, llvm::Loop *L)
 }
 
 template <typename T>
-[[maybe_unused]] static auto findFirst(llvm::ArrayRef<T> v, const T &x)
-  -> Optional<size_t> {
+inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<size_t> {
   for (size_t i = 0; i < v.size(); ++i)
     if (v[i] == x)
       return i;
@@ -142,7 +139,7 @@ template <typename T>
 
 /// returns 1-based index, to match the pattern we use where index 0 refers to a
 /// constant offset this function returns 0 if S not found in `symbols`.
-[[maybe_unused]] [[nodiscard]] static auto
+[[nodiscard]] inline auto
 findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
                   const llvm::SCEV *S) -> size_t {
   for (size_t i = 0; i < symbols.size();)
@@ -151,8 +148,8 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
   return 0;
 }
 
-[[maybe_unused]] [[nodiscard]] static auto
-getMinMaxValueSCEV(llvm::ScalarEvolution &SE, const llvm::SCEVAddRecExpr *S)
+[[nodiscard]] inline auto getMinMaxValueSCEV(llvm::ScalarEvolution &SE,
+                                             const llvm::SCEVAddRecExpr *S)
   -> std::pair<const llvm::SCEV *, const llvm::SCEV *> {
   // if (!SE.containsAddRecurrence(S))
   // 	return S;
@@ -170,15 +167,15 @@ getMinMaxValueSCEV(llvm::ScalarEvolution &SE, const llvm::SCEVAddRecExpr *S)
   return std::make_pair(S, S);
 }
 // TODO: strengthen through recursion
-[[maybe_unused]] [[nodiscard]] static auto
-getMinMaxValueSCEV(llvm::ScalarEvolution &SE, const llvm::SCEV *S)
+[[nodiscard]] inline auto getMinMaxValueSCEV(llvm::ScalarEvolution &SE,
+                                             const llvm::SCEV *S)
   -> std::pair<const llvm::SCEV *, const llvm::SCEV *> {
   if (const auto *T = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
     return getMinMaxValueSCEV(SE, T);
   return std::make_pair(S, S);
 }
-[[maybe_unused]] [[nodiscard]] static auto
-simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEVMinMaxExpr *S)
+[[nodiscard]] inline auto simplifyMinMax(llvm::ScalarEvolution &SE,
+                                         const llvm::SCEVMinMaxExpr *S)
   -> const llvm::SCEV * {
   // FIXME: This is probably a bit aggressive...
   bool isMin =
@@ -201,8 +198,8 @@ simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEVMinMaxExpr *S)
   }
   return S;
 }
-[[maybe_unused]] [[nodiscard]] static auto
-simplifyMinMax(llvm::ScalarEvolution &SE, const llvm::SCEV *S)
+[[nodiscard]] inline auto simplifyMinMax(llvm::ScalarEvolution &SE,
+                                         const llvm::SCEV *S)
   -> const llvm::SCEV * {
   if (const auto *MM = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(S))
     return simplifyMinMax(SE, MM);
@@ -715,7 +712,7 @@ struct AffineLoopNest
         if (printed)
           os << (xi > 0 ? " + " : " - ");
         printed = true;
-        int64_t absxi = std::abs(xi);
+        int64_t absxi = constexpr_abs(xi);
         if (absxi != 1)
           os << absxi << " * ";
         os << *S[i - 1];
@@ -753,7 +750,7 @@ struct AffineLoopNest
             os << " - ";
           else if (printed)
             os << " + ";
-          lakj = std::abs(lakj);
+          lakj = constexpr_abs(lakj);
           if (lakj != 1)
             os << lakj << "*";
           os << "i_" << numVarMinus1 - k;
@@ -774,7 +771,8 @@ struct AffineLoopNest
     printBound(os, i, -1);
   }
   // prints loops from inner most to outer most.
-  friend auto operator<<(llvm::raw_ostream &os, const AffineLoopNest &alnb)
+  friend inline auto operator<<(llvm::raw_ostream &os,
+                                const AffineLoopNest &alnb)
     -> llvm::raw_ostream & {
     AffineLoopNest<NonNegative> aln{alnb};
     size_t numLoopsMinus1 = aln.getNumLoops() - 1;

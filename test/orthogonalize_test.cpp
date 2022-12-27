@@ -2,8 +2,8 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/Orthogonalize.hpp"
-#include "../include/TestUtilities.hpp"
 #include "./ArrayReference.hpp"
+#include "./TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -83,14 +83,14 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   //   W[m + i, n + j] += C[i,j] * B[m,n]
   //
   // Loops: m, n, i, j
-  IntMatrix A{stringToIntMatrix("[-1 1 0 0 0 -1 0 0 0; "
-                                "0 0 0 0 0 1 0 0 0; "
-                                "-1 0 1 0 0 0 -1 0 0; "
-                                "0 0 0 0 0 0 1 0 0; "
-                                "-1 0 0 1 0 0 0 -1 0; "
-                                "0 0 0 0 0 0 0 1 0; "
-                                "-1 0 0 0 1 0 0 0 -1; "
-                                "0 0 0 0 0 0 0 0 1]")};
+  IntMatrix A{"[-1 1 0 0 0 -1 0 0 0; "
+              "0 0 0 0 0 1 0 0 0; "
+              "-1 0 1 0 0 0 -1 0 0; "
+              "0 0 0 0 0 0 1 0 0; "
+              "-1 0 0 1 0 0 0 -1 0; "
+              "0 0 0 0 0 0 0 1 0; "
+              "-1 0 0 0 1 0 0 0 -1; "
+              "0 0 0 0 0 0 0 0 1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 4);
@@ -187,16 +187,16 @@ TEST(OrthogonalizeTest, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BadMul, BasicAssertions) {
-  IntMatrix A{stringToIntMatrix("[-3 1 1 1 -1 0 0; "
-                                "0 0 0 0 1 0 0; "
-                                "-2 1 0 1 0 -1 0; "
-                                "0 0 0 0 0 1 0; "
-                                "0 0 0 0 1 -1 0; "
-                                "-1 0 1 0 -1 1 0; "
-                                "-1 1 0 0 0 0 -1; "
-                                "0 0 0 0 0 0 1; "
-                                "0 0 0 0 0 1 -1; "
-                                "-1 0 0 1 0 -1 1]")};
+  IntMatrix A{"[-3 1 1 1 -1 0 0; "
+              "0 0 0 0 1 0 0; "
+              "-2 1 0 1 0 -1 0; "
+              "0 0 0 0 0 1 0; "
+              "0 0 0 0 1 -1 0; "
+              "-1 0 1 0 -1 1 0; "
+              "-1 1 0 0 0 0 -1; "
+              "0 0 0 0 0 0 1; "
+              "0 0 0 0 0 1 -1; "
+              "-1 0 0 1 0 -1 1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);

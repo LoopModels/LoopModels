@@ -75,7 +75,7 @@ struct LoopTree {
     return affineLoop.getNumLoops();
   }
 
-  friend auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
+  friend inline auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
     if (tree.loop)
       os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
@@ -102,10 +102,10 @@ struct LoopTree {
   [[nodiscard]] auto end() const { return subLoops.end(); }
   [[nodiscard]] auto size() const -> size_t { return subLoops.size(); }
 
-  [[maybe_unused]] static void
-  split(llvm::BumpPtrAllocator &alloc, llvm::SmallVectorImpl<LoopTree *> &trees,
-        llvm::SmallVectorImpl<Predicate::Map> &paths,
-        llvm::SmallVectorImpl<LoopTree *> &subTree) {
+  static void split(llvm::BumpPtrAllocator &alloc,
+                    llvm::SmallVectorImpl<LoopTree *> &trees,
+                    llvm::SmallVectorImpl<Predicate::Map> &paths,
+                    llvm::SmallVectorImpl<LoopTree *> &subTree) {
     if (subTree.size()) {
       assert(1 + subTree.size() == paths.size());
       auto *newTree =

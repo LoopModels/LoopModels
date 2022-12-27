@@ -36,26 +36,26 @@ namespace LinearAlgebra {
 
 inline auto isZero(auto x) -> bool { return x == 0; }
 
-[[maybe_unused]] static auto allZero(const auto &x) -> bool {
+inline auto allZero(const auto &x) -> bool {
   for (auto &a : x)
     if (!isZero(a))
       return false;
   return true;
 }
-[[maybe_unused]] static auto allGEZero(const auto &x) -> bool {
+inline auto allGEZero(const auto &x) -> bool {
   for (auto &a : x)
     if (a < 0)
       return false;
   return true;
 }
-[[maybe_unused]] static auto allLEZero(const auto &x) -> bool {
+inline auto allLEZero(const auto &x) -> bool {
   for (auto &a : x)
     if (a > 0)
       return false;
   return true;
 }
 
-[[maybe_unused]] static auto countNonZero(const auto &x) -> size_t {
+inline auto countNonZero(const auto &x) -> size_t {
   size_t i = 0;
   for (auto &a : x)
     i += (a != 0);
@@ -80,7 +80,8 @@ enum class AxisType {
   RowStride,
 
 };
-auto operator<<(llvm::raw_ostream &os, AxisType x) -> llvm::raw_ostream & {
+inline auto operator<<(llvm::raw_ostream &os, AxisType x)
+  -> llvm::raw_ostream & {
   switch (x) {
   case AxisType::Row:
     return os << "Row";
@@ -168,7 +169,7 @@ template <AxisType T> struct AxisInt {
   }
   constexpr auto operator*() const -> V { return value; }
 
-  friend auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
+  friend inline auto operator<<(llvm::raw_ostream &os, AxisInt<T> x)
     -> llvm::raw_ostream & {
     return os << T << "{" << *x << "}";
   }
@@ -504,18 +505,20 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
 };
 
 static inline constexpr struct Begin {
-  friend auto operator<<(llvm::raw_ostream &os, Begin) -> llvm::raw_ostream & {
+  friend inline auto operator<<(llvm::raw_ostream &os, Begin)
+    -> llvm::raw_ostream & {
     return os << 0;
   }
 } begin;
 static inline constexpr struct End {
-  friend auto operator<<(llvm::raw_ostream &os, End) -> llvm::raw_ostream & {
+  friend inline auto operator<<(llvm::raw_ostream &os, End)
+    -> llvm::raw_ostream & {
     return os << "end";
   }
 } end;
 struct OffsetBegin {
   [[no_unique_address]] size_t offset;
-  friend auto operator<<(llvm::raw_ostream &os, OffsetBegin r)
+  friend inline auto operator<<(llvm::raw_ostream &os, OffsetBegin r)
     -> llvm::raw_ostream & {
     return os << r.offset;
   }
@@ -542,7 +545,7 @@ inline auto operator+(OffsetBegin y, ScalarValueIndex auto x) -> OffsetBegin {
 }
 struct OffsetEnd {
   [[no_unique_address]] size_t offset;
-  friend auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
+  friend inline auto operator<<(llvm::raw_ostream &os, OffsetEnd r)
     -> llvm::raw_ostream & {
     return os << "end - " << r.offset;
   }
@@ -593,7 +596,7 @@ template <std::integral B, std::integral E> struct Range<B, E> {
     return std::reverse_iterator{begin()};
   }
   [[nodiscard]] constexpr auto size() const { return e - b; }
-  friend auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
+  friend inline auto operator<<(llvm::raw_ostream &os, Range<B, E> r)
     -> llvm::raw_ostream & {
     return os << "[" << r.b << ":" << r.e << ")";
   }
@@ -639,16 +642,16 @@ static inline constexpr struct Colon {
 } _; // NOLINT(bugprone-reserved-identifier)
 
 #ifndef NDEBUG
-void checkIndex(size_t X, size_t x) { assert(x < X); }
-void checkIndex(size_t X, End) { assert(X > 0); }
-void checkIndex(size_t X, Begin) { assert(X > 0); }
-void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
-void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
-template <typename B> void checkIndex(size_t X, Range<B, size_t> x) {
+static inline void checkIndex(size_t X, size_t x) { assert(x < X); }
+inline void checkIndex(size_t X, End) { assert(X > 0); }
+inline void checkIndex(size_t X, Begin) { assert(X > 0); }
+inline void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
+inline void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
+template <typename B> inline void checkIndex(size_t X, Range<B, size_t> x) {
   assert(x.e <= X);
 }
-template <typename B, typename E> void checkIndex(size_t, Range<B, E>) {}
-void checkIndex(size_t, Colon) {}
+template <typename B, typename E> inline void checkIndex(size_t, Range<B, E>) {}
+inline void checkIndex(size_t, Colon) {}
 #endif
 
 constexpr auto canonicalize(size_t e, size_t) -> size_t { return e; }
@@ -1288,9 +1291,9 @@ constexpr auto unwrapRow(auto x) { return x; }
 constexpr auto unwrapCol(auto x) { return x; }
 
 template <typename T>
-[[maybe_unused]] constexpr inline auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const ScalarColIndex auto nn) -> T & {
+constexpr inline auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const ScalarColIndex auto nn) -> T & {
   auto m = unwrapRow(mm);
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
@@ -1300,9 +1303,9 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
   return *(ptr + (canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
 }
 template <typename T>
-[[maybe_unused]] constexpr inline auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const ScalarColIndex auto nn) -> const T & {
+constexpr inline auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const ScalarColIndex auto nn) -> const T & {
   auto m = unwrapRow(mm);
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
@@ -1320,9 +1323,9 @@ concept AbstractSlice = requires(T t, size_t M) {
                         };
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const AbstractSlice auto n) -> PtrMatrix<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const AbstractSlice auto n) -> PtrMatrix<T> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
@@ -1332,9 +1335,9 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
   return PtrMatrix<T>{ptr + nr.b + X * mr.b, mr.e - mr.b, nr.e - nr.b, X};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const AbstractSlice auto n) -> MutPtrMatrix<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const AbstractSlice auto n) -> MutPtrMatrix<T> {
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
@@ -1346,9 +1349,9 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
 }
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const AbstractSlice auto n) -> PtrVector<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const AbstractSlice auto n) -> PtrVector<T> {
   auto m = unwrapRow(mm);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1359,9 +1362,9 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
   return PtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
-          const AbstractSlice auto n) -> MutPtrVector<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const ScalarRowIndex auto mm,
+                                const AbstractSlice auto n) -> MutPtrVector<T> {
   auto m = unwrapRow(mm);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1373,9 +1376,10 @@ matrixGet(T *ptr, Row M, Col N, RowStride X, const ScalarRowIndex auto mm,
 }
 
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarColIndex auto nn) -> StridedVector<T> {
+inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const ScalarColIndex auto nn)
+  -> StridedVector<T> {
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -1386,9 +1390,10 @@ matrixGet(const T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
   return StridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
 }
 template <typename T>
-[[maybe_unused]] inline constexpr auto
-matrixGet(T *ptr, Row M, Col N, RowStride X, const AbstractSlice auto m,
-          const ScalarColIndex auto nn) -> MutStridedVector<T> {
+inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+                                const AbstractSlice auto m,
+                                const ScalarColIndex auto nn)
+  -> MutStridedVector<T> {
   auto n = unwrapCol(nn);
 #ifndef NDEBUG
   checkIndex(size_t(M), m);
@@ -2162,7 +2167,7 @@ auto printVector(llvm::raw_ostream &os, const llvm::SmallVectorImpl<T> &a)
 }
 
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
+inline auto operator<<(llvm::raw_ostream &os, PtrVector<T> const &A)
   -> llvm::raw_ostream & {
   return printVector(os, A);
 }
@@ -2201,11 +2206,11 @@ inline void swap(MutPtrMatrix<int64_t> A, Col i, Col j) {
     std::swap(A(m, i), A(m, j));
 }
 template <typename T>
-[[maybe_unused]] static void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
+inline void swap(llvm::SmallVectorImpl<T> &A, Col i, Col j) {
   std::swap(A[i], A[j]);
 }
 template <typename T>
-[[maybe_unused]] static void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
+inline void swap(llvm::SmallVectorImpl<T> &A, Row i, Row j) {
   std::swap(A[i], A[j]);
 }
 
@@ -2270,8 +2275,7 @@ requires is_uint_v<64, T>
 }
 
 template <typename T>
-[[maybe_unused]] static auto findMax(llvm::ArrayRef<T> x)
-  -> std::pair<size_t, T> {
+inline auto findMax(llvm::ArrayRef<T> x) -> std::pair<size_t, T> {
   size_t i = 0;
   T max = std::numeric_limits<T>::min();
   for (size_t j = 0; j < x.size(); ++j) {
@@ -2312,11 +2316,9 @@ template <TriviallyCopyable OP, TriviallyCopyableMatrixOrScalar A,
           TriviallyCopyableMatrixOrScalar B>
 ElementwiseMatrixBinaryOp(OP, A, B) -> ElementwiseMatrixBinaryOp<OP, A, B>;
 
-static inline constexpr auto view(const Scalar auto &x) { return x; }
-static inline constexpr auto view(const AbstractVector auto &x) {
-  return x.view();
-}
-static inline constexpr auto view(const AbstractMatrixCore auto &x) {
+inline constexpr auto view(const Scalar auto &x) { return x; }
+inline constexpr auto view(const AbstractVector auto &x) { return x.view(); }
+inline constexpr auto view(const AbstractMatrixCore auto &x) {
   return x.view();
 }
 
@@ -2439,7 +2441,7 @@ template <typename T> struct SmallSparseMatrix {
 };
 
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
+inline auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   -> llvm::raw_ostream & {
   size_t k = 0;
   os << "[ ";
@@ -2470,11 +2472,13 @@ auto operator<<(llvm::raw_ostream &os, SmallSparseMatrix<T> const &A)
   return os;
 }
 template <typename T>
-auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
+inline auto operator<<(llvm::raw_ostream &os, PtrMatrix<T> A)
+  -> llvm::raw_ostream & {
   return printMatrix(os, A);
 }
 template <AbstractMatrix T>
-auto operator<<(llvm::raw_ostream &os, const T &A) -> llvm::raw_ostream & {
+inline auto operator<<(llvm::raw_ostream &os, const T &A)
+  -> llvm::raw_ostream & {
   Matrix<std::remove_const_t<typename T::eltype>> B{A};
   return printMatrix(os, PtrMatrix<typename T::eltype>(B));
 }

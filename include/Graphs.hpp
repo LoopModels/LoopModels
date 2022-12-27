@@ -13,7 +13,7 @@ concept AbstractRange = requires(R r) {
                           { r.begin() };
                           { r.end() };
                         };
-auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
+inline auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
   -> llvm::raw_ostream & {
   os << "[ ";
   bool needComma = false;
@@ -59,14 +59,13 @@ concept AbstractGraph =
                         { g.maxVertexId() } -> std::convertible_to<size_t>;
                       };
 
-[[maybe_unused]] static void clearVisited(AbstractGraph auto &g) {
+inline void clearVisited(AbstractGraph auto &g) {
   for (auto &&v : g)
     v.unVisit();
 }
 
-[[maybe_unused]] static void weakVisit(AbstractGraph auto &g,
-                                       llvm::SmallVectorImpl<unsigned> &sorted,
-                                       unsigned v) {
+inline void weakVisit(AbstractGraph auto &g,
+                      llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
   g.visit(v);
   for (auto j : g.outNeighbors(v))
     if (!g.wasVisited(j))
@@ -74,7 +73,7 @@ concept AbstractGraph =
   sorted.push_back(v);
 }
 
-[[maybe_unused]] static auto weaklyConnectedComponents(AbstractGraph auto &g) {
+inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
   llvm::SmallVector<llvm::SmallVector<unsigned>> components;
   g.clearVisited();
   for (auto j : g.vertexIds()) {
@@ -88,7 +87,7 @@ concept AbstractGraph =
   return components;
 }
 
-[[maybe_unused]] static auto
+inline auto
 strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
@@ -126,7 +125,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   return index;
 }
 
-[[maybe_unused]] static auto stronglyConnectedComponents(AbstractGraph auto &g)
+inline auto stronglyConnectedComponents(AbstractGraph auto &g)
   -> llvm::SmallVector<BitSet<>> {
   llvm::SmallVector<BitSet<>> components;
   size_t maxId = g.maxVertexId();
@@ -143,8 +142,8 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   return components;
 }
 
-auto print(const AbstractGraph auto &g, llvm::raw_ostream &os = llvm::errs())
-  -> llvm::raw_ostream & {
+inline auto print(const AbstractGraph auto &g,
+                  llvm::raw_ostream &os = llvm::errs()) -> llvm::raw_ostream & {
   for (auto i : g.vertexIds()) {
     os << "Vertex " << i << ":";
     printRange(os << "\ninNeighbors: ", g.inNeighbors(i));

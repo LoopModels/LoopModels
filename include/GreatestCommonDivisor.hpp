@@ -1,19 +1,26 @@
 #pragma once
+#include <algorithm>
 #include <bit>
 #include <cassert>
 #include <cmath>
+#include <concepts>
 #include <cstdint>
+#include <limits>
 #include <tuple>
 
-[[maybe_unused]] static auto gcd(int64_t x, int64_t y) -> int64_t {
+constexpr inline auto constexpr_abs(std::signed_integral auto x) noexcept {
+  return x < 0 ? -x : x;
+}
+
+constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
   if (x == 0)
-    return std::abs(y);
+    return constexpr_abs(y);
   else if (y == 0)
-    return std::abs(x);
+    return constexpr_abs(x);
   assert(x != std::numeric_limits<int64_t>::min());
   assert(y != std::numeric_limits<int64_t>::min());
-  int64_t a = std::abs(x);
-  int64_t b = std::abs(y);
+  int64_t a = constexpr_abs(x);
+  int64_t b = constexpr_abs(y);
   if ((a == 1) | (b == 1))
     return 1;
   int64_t az = std::countr_zero(uint64_t(x));
@@ -25,20 +32,21 @@
     int64_t d = a - b;
     az = std::countr_zero(uint64_t(d));
     b = std::min(a, b);
-    a = std::abs(d);
+    a = constexpr_abs(d);
   }
   return b << k;
 }
-[[maybe_unused]] static auto lcm(int64_t x, int64_t y) -> int64_t {
-  if (std::abs(x) == 1)
+constexpr auto lcm(int64_t x, int64_t y) -> int64_t {
+  if (constexpr_abs(x) == 1)
     return y;
-  if (std::abs(y) == 1)
+  if (constexpr_abs(y) == 1)
     return x;
   return x * (y / gcd(x, y));
 }
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-template <std::integral T> auto gcdx(T a, T b) -> std::tuple<T, T, T> {
+template <
+  std::integral T> // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+constexpr auto gcdx(T a, T b) -> std::tuple<T, T, T> {
   T old_r = a;
   T r = b;
   T old_s = 1;
@@ -76,10 +84,4 @@ constexpr auto divgcd(int64_t x, int64_t y) -> std::pair<int64_t, int64_t> {
   } else {
     return std::make_pair(0, 0);
   }
-}
-
-template <typename T, typename S> void divExact(T &x, S const &y) {
-  auto d = x / y;
-  assert(d * y == x);
-  x = d;
 }

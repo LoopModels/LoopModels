@@ -7,7 +7,7 @@
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SimplexTest, BasicAssertions) {
-  IntMatrix A{stringToIntMatrix("[10 3 2 1; 15 2 5 3]")};
+  IntMatrix A{"[10 3 2 1; 15 2 5 3]"_mat};
   IntMatrix B{0, 4};
   std::optional<Simplex> optS{Simplex::positiveVariables(A, B)};
   EXPECT_TRUE(optS.has_value());
@@ -25,7 +25,7 @@ TEST(SimplexTest, BasicAssertions) {
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LexMinSimplexTest, BasicAssertions) {
-  IntMatrix tableau{stringToIntMatrix(
+  IntMatrix tableau{
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
@@ -938,7 +938,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
-    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]")};
+    "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]"_mat};
 
   tableau(_(0, 2), _) = -5859553999884210514;
   Simplex simp{tableau};
@@ -999,7 +999,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LexMinSimplexTest2, BasicAssertions) {
-  IntMatrix tableau{stringToIntMatrix(
+  IntMatrix tableau{
     "[140296676906080 140296676906080 94205055383680 94205055383680 0 0 0 "
     "-1 0 0 0 0 0 1 -1 0 1 0 -1 0 0 0 0 0 1 0 -1 1 0 0 0 -1 0 0 0 0 0 1 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 -1 -1 0 -1 4 6 6 "
@@ -1193,7 +1193,7 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     "1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
-    "-1]")};
+    "-1]"_mat};
   Simplex simp{tableau};
   Vector<Rational> sol(15);
   EXPECT_EQ(sol.size(), 15);

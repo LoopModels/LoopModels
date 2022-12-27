@@ -236,7 +236,7 @@ struct Rational {
   constexpr void negate() { numerator = -numerator; }
   constexpr operator bool() const { return numerator != 0; }
 
-  friend auto operator<<(llvm::raw_ostream &os, const Rational &x)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Rational &x)
     -> llvm::raw_ostream & {
     os << x.numerator;
     if (x.denominator != 1)
@@ -245,11 +245,11 @@ struct Rational {
   }
   void dump() const { llvm::errs() << *this << "\n"; }
 };
-auto gcd(Rational x, Rational y) -> std::optional<Rational> {
+constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
   return Rational{gcd(x.numerator, y.numerator),
                   lcm(x.denominator, y.denominator)};
 }
-auto denomLCM(PtrVector<Rational> x) -> int64_t {
+inline auto denomLCM(PtrVector<Rational> x) -> int64_t {
   int64_t l = 1;
   for (auto r : x)
     l = lcm(l, r.denominator);

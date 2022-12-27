@@ -25,13 +25,11 @@ enum struct Relation : uint8_t {
   Empty = 3,
 };
 
-[[maybe_unused]] static constexpr auto operator&(Relation a, Relation b)
-  -> Relation {
+constexpr auto operator&(Relation a, Relation b) -> Relation {
   return static_cast<Relation>(static_cast<uint8_t>(a) |
                                static_cast<uint8_t>(b));
 }
-[[maybe_unused]] static constexpr auto operator|(Relation a, Relation b)
-  -> Relation {
+constexpr auto operator|(Relation a, Relation b) -> Relation {
   return static_cast<Relation>(static_cast<uint8_t>(a) &
                                static_cast<uint8_t>(b));
 }

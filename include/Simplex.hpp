@@ -762,7 +762,7 @@ struct Simplex {
       }
     }
   }
-  friend auto operator<<(llvm::raw_ostream &os, const Simplex &s)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Simplex &s)
     -> llvm::raw_ostream & {
     return os << "\nSimplex; tableau = " << s.tableau;
   }

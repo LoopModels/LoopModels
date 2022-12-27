@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include <type_traits>
 
-[[maybe_unused]] static auto printPositive(llvm::raw_ostream &os, size_t stop)
+inline auto printPositive(llvm::raw_ostream &os, size_t stop)
   -> llvm::raw_ostream & {
   for (size_t i = 0; i < stop; ++i)
     os << "v_" << i << " >= 0\n";
@@ -223,7 +223,7 @@ struct Polyhedra {
       dropEmptyConstraints(E);
   }
 
-  friend auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
     -> llvm::raw_ostream & {
     auto &&os2 =
       printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());

@@ -228,7 +228,7 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
   }
   auto operator==(const BitSet &bs) const -> bool { return data == bs.data; }
 
-  friend auto operator<<(llvm::raw_ostream &os, BitSet const &x)
+  friend inline auto operator<<(llvm::raw_ostream &os, BitSet const &x)
     -> llvm::raw_ostream & {
     os << "BitSet[";
     auto it = x.begin();

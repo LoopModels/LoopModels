@@ -359,7 +359,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     // assert(bw.E.numRow() == bw.q.size());
     // return pair;
   }
-  friend auto operator<<(llvm::raw_ostream &os, const DependencePolyhedra &p)
+  friend inline auto operator<<(llvm::raw_ostream &os,
+                                const DependencePolyhedra &p)
     -> llvm::raw_ostream & {
     return printConstraints(
       printPositive(printConstraints(os << "\n", p.A, p.S), p.getNumDynamic()),
@@ -1048,7 +1049,7 @@ struct Dependence {
     }
   }
 
-  friend auto operator<<(llvm::raw_ostream &os, const Dependence &d)
+  friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
     if (d.forward)
