@@ -14,6 +14,12 @@ TEST(SparseIndexingTest, BasicAssertions) {
   Asparse(2, 1) = 4;
   Asparse(2, 2) = -2;
   IntMatrix A = Asparse;
+  {
+    IntMatrix A2(Row{3}, Col{4});
+    MutPtrMatrix MA2 = A2;
+    MA2 = Asparse;
+    EXPECT_EQ(A, A2);
+  }
   for (size_t i = 0; i < 3; ++i)
     for (size_t j = 0; j < 4; ++j)
       EXPECT_TRUE(A(i, j) == Asparse(i, j));

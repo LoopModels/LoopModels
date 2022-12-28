@@ -94,6 +94,7 @@ struct ScheduledNode {
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
     return schedule.getPhi()(d, _);
   }
+  auto getSchedule() -> Schedule & { return schedule; }
 };
 
 struct CarriedDependencyFlag {
@@ -180,7 +181,8 @@ struct LinearProgramLoopBlock {
   // and all other other shared schedule parameters are aliases (i.e.,
   // identical)?
   // using VertexType = ScheduledNode;
-  [[no_unique_address]] llvm::SmallVector<MemoryAccess *> memory;
+private:
+  [[no_unique_address]] llvm::SmallVector<MemoryAccess *, 14> memory;
   [[no_unique_address]] llvm::SmallVector<ScheduledNode, 0> nodes;
   // llvm::SmallVector<unsigned> memoryToNodeMap;
   [[no_unique_address]] llvm::SmallVector<Dependence, 0> edges;
@@ -203,6 +205,8 @@ struct LinearProgramLoopBlock {
   [[no_unique_address]] size_t numBounding{0};
   [[no_unique_address]] size_t numConstraints{0};
   [[no_unique_address]] size_t numActiveEdges{0};
+
+public:
   void clear() {
     memory.clear();
     nodes.clear();
@@ -225,6 +229,15 @@ struct LinearProgramLoopBlock {
   }
   auto getMemoryAccesses() -> llvm::MutableArrayRef<MemoryAccess *> {
     return memory;
+  }
+  auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
+  auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
+  auto getNodes() -> llvm::MutableArrayRef<ScheduledNode> { return nodes; }
+  auto getEdges() -> llvm::MutableArrayRef<Dependence> { return edges; }
+  [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
+  [[nodiscard]] auto numEdges() const -> size_t { return edges.size(); }
+  [[nodiscard]] auto numMemoryAccesses() const -> size_t {
+    return memory.size();
   }
   struct OutNeighbors {
     LinearProgramLoopBlock &loopBlock;
@@ -372,15 +385,6 @@ struct LinearProgramLoopBlock {
     for (auto inIndex : inIndexSet)
       for (auto outIndex : outIndexSet)
         connect(inIndex, outIndex);
-  }
-  void connect(const Dependence &e) {
-    for (auto inIndex : e.in->nodeIndex)
-      for (auto outIndex : e.out->nodeIndex)
-        if (inIndex != outIndex) {
-          llvm::errs() << "Connecting inIndex = " << inIndex
-                       << "; outIndex = " << outIndex << "\n";
-          connect(inIndex, outIndex);
-        }
   }
   [[nodiscard]] auto calcNumStores() const -> size_t {
     size_t numStores = 0;
