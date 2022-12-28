@@ -45,7 +45,7 @@ list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(${LLVM_DIR}/AddLLVM.cmake)
 
 add_executable(${PROJECT_NAME} ${tests})
-# target_link_libraries(${PROJECT_NAME} doctest::doctest Greeter::Greeter)
+
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
@@ -80,6 +80,11 @@ if(ENABLE_TEST_COVERAGE)
   target_link_options(LoopModels PUBLIC --coverage)
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
+  add_custom_target(clean_coverage
+    COMMAND rm ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
+    COMMAND rm ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
+    COMMENT "Clearing out old coverage data.")
+  add_dependencies(${PROJECT_NAME} clean_coverage)
   message(STATUS "Test coverage enabled.")
 endif()
 
@@ -95,5 +100,7 @@ enable_testing()
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})
 
+# ---- Add opt tests ----
+# find_program(OPT NAME opt PATHS LLVM_BINARY_DIR)
 
 

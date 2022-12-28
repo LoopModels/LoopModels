@@ -19,6 +19,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
       EXPECT_TRUE(A(i, j) == Asparse(i, j));
   // EXPECT_EQ(A(i, j), Asparse(i, j));
   IntMatrix B(Row{4}, Col{5});
+  EXPECT_FALSE(B.isSquare());
   B(0, 0) = 3;
   B(0, 1) = -1;
   B(0, 2) = 0;
@@ -63,9 +64,13 @@ TEST(SparseIndexingTest, BasicAssertions) {
   EXPECT_TRUE(C == C2);
   IntMatrix At = A.transpose();
   IntMatrix Bt = B.transpose();
+  C2 += At.transpose() * Bt.transpose();
+  EXPECT_TRUE(C * 2 == C2);
   EXPECT_TRUE(C == At.transpose() * B);
   EXPECT_TRUE(C == A * Bt.transpose());
   EXPECT_TRUE(C == At.transpose() * Bt.transpose());
+  C2 -= A * Bt.transpose();
+  EXPECT_TRUE(C == C2);
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -119,6 +124,7 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   c.push_back(6);
   EXPECT_EQ(b, c);
   IntMatrix A1x1(Row{1}, Col{1});
+  EXPECT_TRUE(A1x1.isSquare());
   IntMatrix A2x2(Row{2}, Col{2});
   A1x1.antiDiag() = 1;
   EXPECT_EQ(A1x1(0, 0), 1);

@@ -2133,6 +2133,22 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     }
     return A;
   }
+  auto operator+=(const AbstractMatrix auto &A) {
+    MutPtrMatrix(*this) += A;
+    return *this;
+  }
+  auto operator-=(const AbstractMatrix auto &A) {
+    MutPtrMatrix(*this) -= A;
+    return *this;
+  }
+  auto operator*=(const AbstractMatrix auto &A) {
+    MutPtrMatrix(*this) *= A;
+    return *this;
+  }
+  auto operator/=(const AbstractMatrix auto &A) {
+    MutPtrMatrix(*this) /= A;
+    return *this;
+  }
 };
 using IntMatrix = Matrix<int64_t>;
 static_assert(std::same_as<IntMatrix::eltype, int64_t>);
