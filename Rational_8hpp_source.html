@@ -330,38 +330,9 @@ $(function() {
 <div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>&gt;);</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;static_assert(AbstractVector&lt;<a class="code" href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a>&lt;</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                <a class="code" href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a>, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;Rational&gt;</a>&gt;&gt;);</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160; </div>
-<div class="line"><a name="l00263"></a><span class="lineno"><a class="line" href="structRationalVector.html">  263</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structRationalVector.html">RationalVector</a> {</div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  <span class="keyword">using</span> <a class="code" href="structRational.html">eltype</a> = <a class="code" href="structRational.html">Rational</a>;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 2, 0, 32&gt;</a> data;</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160; </div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structRational.html">Rational</a>{data(0, i), data(1, i)};</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  }</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structRational.html">Rational</a>{data(0, i), data(1, i)};</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  }</div>
-<div class="line"><a name="l00273"></a><span class="lineno"><a class="line" href="structRationalVector_1_1Reference.html">  273</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structRationalVector_1_1Reference.html">Reference</a> {</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Matrix.html">Matrix&lt;int64_t, 2, 0, 32&gt;</a> &amp;data;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordtype">size_t</span> i;</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keyword">auto</span> operator=(<a class="code" href="structRational.html">Rational</a> r) -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;      data(0, i) = r.numerator;</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;      data(1, i) = r.denominator;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      <span class="keywordflow">return</span> r;</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    }</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <span class="keyword">operator</span> <a class="code" href="structRational.html">Rational</a>() { <span class="keywordflow">return</span> <a class="code" href="structRational.html">Rational</a>{data(0, i), data(1, i)}; }</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  };</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;  <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structRationalVector_1_1Reference.html">Reference</a> { <span class="keywordflow">return</span> <a class="code" href="structRationalVector_1_1Reference.html">Reference</a>{data, i}; }</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i) -&gt; Reference { <span class="keywordflow">return</span> Reference{data, i}; }</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;  <span class="keyword">auto</span> size() const -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> size_t(data.numCol()); }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;};</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;static_assert(AbstractVector&lt;RationalVector&gt;);</div>
-<div class="ttc" id="astructLinearAlgebra_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:487</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:2002</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:943</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Sub_html"><div class="ttname"><a href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:438</div></div>
-<div class="ttc" id="astructRationalVector_1_1Reference_html"><div class="ttname"><a href="structRationalVector_1_1Reference.html">RationalVector::Reference</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:273</div></div>
-<div class="ttc" id="astructRationalVector_html"><div class="ttname"><a href="structRationalVector.html">RationalVector</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:263</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1ElementwiseVectorBinaryOp_html"><div class="ttname"><a href="structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html">LinearAlgebra::ElementwiseVectorBinaryOp</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:382</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Sub_html"><div class="ttname"><a href="structLinearAlgebra_1_1Sub.html">LinearAlgebra::Sub</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:333</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:16</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
