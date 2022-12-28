@@ -606,19 +606,18 @@ TEST(TriangularExampleTest, BasicAssertions) {
   //   foo(arg...) // [ 0, _, 2 ]
   // }
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
-  lblock.memory.reserve(9);
   llvm::SmallVector<unsigned, 8> sch2_0_0(2 + 1);
   llvm::SmallVector<unsigned, 8> sch2_0_1 = sch2_0_0;
   // A(n,m) = -> B(n,m) <-
   MemoryAccess mSch2_0_0(createMemAccess(BmnInd, Bload, sch2_0_0));
-  lblock.memory.push_back(&mSch2_0_0);
+  lblock.addMemory(&mSch2_0_0);
   sch2_0_1[2] = 1;
   llvm::SmallVector<unsigned, 8> sch2_1_0 = sch2_0_1;
   // -> A(n,m) <- = B(n,m)
   MemoryAccess mSch2_0_1(createMemAccess(Amn2Ind, Astore0, sch2_0_1));
   assert(mSch2_0_1.getInstruction() == Astore0);
   assert(mSch2_0_1.getStore() == Astore0);
-  lblock.memory.push_back(&mSch2_0_1);
+  lblock.addMemory(&mSch2_0_1);
   sch2_1_0[1] = 1;
   sch2_1_0[2] = 0;
   llvm::SmallVector<unsigned, 8> sch2_1_1 = sch2_1_0;
@@ -626,16 +625,16 @@ TEST(TriangularExampleTest, BasicAssertions) {
   MemoryAccess mSch2_1_0(createMemAccess(Amn2Ind, Aload0, sch2_1_0));
   assert(mSch2_1_0.getInstruction() == Aload0);
   assert(mSch2_1_0.getLoad() == Aload0);
-  lblock.memory.push_back(&mSch2_1_0);
+  lblock.addMemory(&mSch2_1_0);
   sch2_1_1[2] = 1;
   llvm::SmallVector<unsigned, 8> sch2_1_2 = sch2_1_1;
   // A(n,m) = A(n,m) / -> U(n,n) <-;
   MemoryAccess mSch2_1_1(createMemAccess(UnnInd, Uloadnn, sch2_1_1));
-  lblock.memory.push_back(&mSch2_1_1);
+  lblock.addMemory(&mSch2_1_1);
   sch2_1_2[2] = 2;
   // -> A(n,m) <- = A(n,m) / U(n,n); // sch2
   MemoryAccess mSch2_1_2(createMemAccess(Amn2Ind, AstoreFDiv, sch2_1_2));
-  lblock.memory.push_back(&mSch2_1_2);
+  lblock.addMemory(&mSch2_1_2);
 
   llvm::SmallVector<unsigned, 8> sch3_0(3 + 1);
   sch3_0[1] = 1;
@@ -643,21 +642,21 @@ TEST(TriangularExampleTest, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> sch3_1 = sch3_0;
   // A(k,m) = A(k,m) - A(n,m)* -> U(k,n) <-;
   MemoryAccess mSch3_0(createMemAccess(UnkInd, Uloadnk, sch3_0));
-  lblock.memory.push_back(&mSch3_0);
+  lblock.addMemory(&mSch3_0);
   sch3_1[3] = 1;
   llvm::SmallVector<unsigned, 8> sch3_2 = sch3_1;
   // A(k,m) = A(k,m) - -> A(n,m) <- *U(k,n);
   MemoryAccess mSch3_1(createMemAccess(Amn3Ind, Aload1mn, sch3_1));
-  lblock.memory.push_back(&mSch3_1);
+  lblock.addMemory(&mSch3_1);
   sch3_2[3] = 2;
   llvm::SmallVector<unsigned, 8> sch3_3 = sch3_2;
   // A(k,m) = -> A(k,m) <- - A(n,m)*U(k,n);
   MemoryAccess mSch3_2(createMemAccess(AmkInd, Aload1mk, sch3_2));
-  lblock.memory.push_back(&mSch3_2);
+  lblock.addMemory(&mSch3_2);
   sch3_3[3] = 3;
   // -> A(k,m) <- = A(k,m) - A(n,m)*U(k,n);
   MemoryAccess mSch3_3(createMemAccess(AmkInd, Astore2mk, sch3_3));
-  lblock.memory.push_back(&mSch3_3);
+  lblock.addMemory(&mSch3_3);
 
   // for (m = 0; m < M; ++m){createMemAccess(
   //   for (n = 0; n < N; ++n){
@@ -818,9 +817,9 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // followed by `m`, and `n` as innermost. `n` is the reduction loop.
   // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
   // assert(!optFail);
-  for (auto mem : lblock.memory) {
+  for (auto mem : lblock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = lblock.nodes[nodeIndex].schedule;
+      Schedule &s = lblock.getNode(nodeIndex).schedule;
       if (mem->getNumLoops() == 2) {
         EXPECT_EQ(s.getPhi(), optPhi2);
       } else {
@@ -1099,31 +1098,38 @@ TEST(MeanStDevTest0, BasicAssertions) {
   iOuterMem.emplace_back(createMemAccess(sInd1, Sload_1, sch0_6));  // 11
   iOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch0_7)); // 12
   for (auto &&mem : iOuterMem)
-    iOuterLoopNest.memory.push_back(&mem);
+    iOuterLoopNest.addMemory(&mem);
 
   llvm::SmallVector<Dependence, 0> d;
   d.reserve(4);
-  Dependence::check(d, *iOuterLoopNest.memory[3], *iOuterLoopNest.memory[5]);
+  Dependence::check(d, *iOuterLoopNest.getMemoryAccess(3),
+                    *iOuterLoopNest.getMemoryAccess(5));
   EXPECT_TRUE(d.back().forward);
-  Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[3]);
+  Dependence::check(d, *iOuterLoopNest.getMemoryAccess(5),
+                    *iOuterLoopNest.getMemoryAccess(3));
   EXPECT_FALSE(d.back().forward);
-  Dependence::check(d, *iOuterLoopNest.memory[4], *iOuterLoopNest.memory[5]);
+  Dependence::check(d, *iOuterLoopNest.getMemoryAccess(4),
+                    *iOuterLoopNest.getMemoryAccess(5));
   EXPECT_TRUE(d.back().forward);
-  Dependence::check(d, *iOuterLoopNest.memory[5], *iOuterLoopNest.memory[4]);
+  Dependence::check(d, *iOuterLoopNest.getMemoryAccess(5),
+                    *iOuterLoopNest.getMemoryAccess(4));
   EXPECT_FALSE(d.back().forward);
 
   std::optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
-  for (size_t i = 0; i < iOuterLoopNest.memory.size(); ++i)
-    memAccessIds[iOuterLoopNest.memory[i]] = i;
-  for (auto &e : iOuterLoopNest.edges) {
+  llvm::MutableArrayRef<MemoryAccess *> mem =
+    iOuterLoopNest.getMemoryAccesses();
+  for (size_t i = 0; i < mem.size(); ++i)
+    memAccessIds[mem[i]] = i;
+  for (auto &e : iOuterLoopNest.getEdges()) {
     llvm::errs() << "\nEdge for array " << e.out->basePointer
                  << ", in ID: " << memAccessIds[e.in]
                  << "; out ID: " << memAccessIds[e.out] << "\n";
   }
-  for (size_t i = 0; i < iOuterLoopNest.nodes.size(); ++i) {
-    const auto &v = iOuterLoopNest.nodes[i];
+  auto nodes = iOuterLoopNest.getNodes();
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    const auto &v = nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
     for (auto m : v.memory)
       llvm::errs() << m << ", ";
@@ -1136,11 +1142,12 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << "\n";
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
-  for (auto mem : iOuterLoopNest.memory) {
+  for (auto mem : mem) {
     llvm::errs() << "mem->nodeIndex =" << mem->nodeIndex << ";";
     llvm::errs() << "mem =" << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = iOuterLoopNest.nodes[nodeIndex].schedule;
+      Schedule &s = nodes[nodeIndex].schedule;
+      EXPECT_EQ(&s, &iOuterLoopNest.getNode(nodeIndex).getSchedule());
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
       llvm::errs() << "s.getOffsetOmega() =" << s.getOffsetOmega() << "\n";
@@ -1200,14 +1207,14 @@ TEST(MeanStDevTest0, BasicAssertions) {
   jOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch4_1)); // 12
 
   for (auto &&mem : jOuterMem)
-    jOuterLoopNest.memory.push_back(&mem);
+    jOuterLoopNest.addMemory(&mem);
 
   EXPECT_TRUE(jOuterLoopNest.optimize().has_value());
-  for (auto &edge : jOuterLoopNest.edges)
+  for (auto &edge : jOuterLoopNest.getEdges())
     llvm::errs() << "\nedge = " << edge << "\n";
 
-  for (size_t i = 0; i < jOuterLoopNest.nodes.size(); ++i) {
-    const auto &v = jOuterLoopNest.nodes[i];
+  for (size_t i = 0; i < jOuterLoopNest.numNodes(); ++i) {
+    const auto &v = jOuterLoopNest.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
     for (auto m : v.memory)
       llvm::errs() << m << ", ";
@@ -1224,9 +1231,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   optS.diag() = 1;
   IntMatrix optSinnerUndef = optS;
   optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
-  for (auto mem : jOuterLoopNest.memory) {
+  for (auto mem : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = jOuterLoopNest.nodes[nodeIndex].schedule;
+      Schedule &s = jOuterLoopNest.getNode(nodeIndex).schedule;
       if (s.getNumLoops() == 1)
         EXPECT_EQ(s.getPhi()(0, 0), 1);
       else if (s.getFusionOmega()(1) < 3)
@@ -1380,24 +1387,24 @@ TEST(DoubleDependenceTest, BasicAssertions) {
 
   LinearProgramLoopBlock loopBlock;
   MemoryAccess mSchLoad0(createMemAccess(Atgt0, Aload_ip1_j, schLoad0));
-  loopBlock.memory.push_back(&mSchLoad0);
+  loopBlock.addMemory(&mSchLoad0);
   MemoryAccess mSchLoad1(createMemAccess(Atgt1, Aload_i_jp1, schLoad1));
-  loopBlock.memory.push_back(&mSchLoad1);
+  loopBlock.addMemory(&mSchLoad1);
   MemoryAccess mSchStore(createMemAccess(Asrc, Astore, schStore));
-  loopBlock.memory.push_back(&mSchStore);
+  loopBlock.addMemory(&mSchStore);
 
   EXPECT_TRUE(loopBlock.optimize().has_value());
-  EXPECT_EQ(loopBlock.edges.size(), 2);
+  EXPECT_EQ(loopBlock.numEdges(), 2);
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
-  for (size_t i = 0; i < loopBlock.memory.size(); ++i)
-    memAccessIds[loopBlock.memory[i]] = i;
-  for (auto &e : loopBlock.edges) {
+  for (size_t i = 0; i < loopBlock.numMemoryAccesses(); ++i)
+    memAccessIds[loopBlock.getMemoryAccess(i)] = i;
+  for (auto &e : loopBlock.getEdges()) {
     llvm::errs() << "\nEdge for array " << e.out->basePointer
                  << ", in ID: " << memAccessIds[e.in]
                  << "; out ID: " << memAccessIds[e.out] << "\n";
   }
-  for (size_t i = 0; i < loopBlock.nodes.size(); ++i) {
-    const auto &v = loopBlock.nodes[i];
+  for (size_t i = 0; i < loopBlock.numNodes(); ++i) {
+    const auto &v = loopBlock.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
     for (auto m : v.memory)
       llvm::errs() << m << ", ";
@@ -1413,9 +1420,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   optPhi(0, _) = 1;
   optPhi(1, _) = std::numeric_limits<int64_t>::min();
   // Graphs::print(iOuterLoopNest.fullGraph());
-  for (auto &mem : loopBlock.memory) {
+  for (auto &mem : loopBlock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = loopBlock.nodes[nodeIndex].schedule;
+      Schedule &s = loopBlock.getNode(nodeIndex).schedule;
       EXPECT_EQ(s.getPhi(), optPhi);
     }
   }
@@ -1554,29 +1561,29 @@ TEST(ConvReversePass, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> sch_1 = sch_0;
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
   MemoryAccess msch_0(createMemAccess(BmnInd, Bload, sch_0));
-  loopBlock.memory.push_back(&msch_0);
+  loopBlock.addMemory(&msch_0);
   sch_1[4] = 1;
   llvm::SmallVector<unsigned, 8> sch_2 = sch_1;
   //         C[m+i,j+n] = C[m+i,j+n] + -> A[m,n] <- * B[i,j];
   MemoryAccess msch_1(createMemAccess(AmnInd, Aload, sch_1));
-  loopBlock.memory.push_back(&msch_1);
+  loopBlock.addMemory(&msch_1);
   sch_2[4] = 2;
   llvm::SmallVector<unsigned, 8> sch_3 = sch_2;
   //         C[m+i,j+n] = -> C[m+i,j+n] <- + A[m,n] * B[i,j];
   MemoryAccess msch_2(createMemAccess(CmijnInd, Cload, sch_2));
-  loopBlock.memory.push_back(&msch_2);
+  loopBlock.addMemory(&msch_2);
   sch_3[4] = 3;
   //         -> C[m+i,j+n] <- = C[m+i,j+n] + A[m,n] * B[i,j];
   MemoryAccess msch_3(createMemAccess(CmijnInd, Cstore, sch_3));
-  loopBlock.memory.push_back(&msch_3);
+  loopBlock.addMemory(&msch_3);
 
   std::optional<BitSet<>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
-  for (auto &mem : loopBlock.memory) {
+  for (auto &mem : loopBlock.getMemoryAccesses()) {
     llvm::errs() << "mem->nodeIndex: " << mem->nodeIndex << "; ";
     llvm::errs() << "mem: " << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = loopBlock.nodes[nodeIndex].schedule;
+      Schedule &s = loopBlock.getNode(nodeIndex).schedule;
       llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";
       llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";
