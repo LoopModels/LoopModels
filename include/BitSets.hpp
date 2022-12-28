@@ -1,5 +1,4 @@
 #pragma once
-#include "./Math.hpp"
 #include <bit>
 #include <cassert>
 #include <cstddef>
@@ -66,8 +65,8 @@ struct BitSetIterator {
 
 /// A set of `size_t` elements.
 /// Initially constructed
-template <unsigned PreallocatedStorage = 1> struct BitSet {
-  [[no_unique_address]] llvm::SmallVector<uint64_t, PreallocatedStorage> data;
+template <typename T = llvm::SmallVector<uint64_t, 1>> struct BitSet {
+  [[no_unique_address]] T data;
   // size_t operator[](size_t i) const {
   //     return data[i];
   // } // allow `getindex` but not `setindex`
@@ -75,7 +74,8 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
   static constexpr auto numElementsNeeded(size_t N) -> size_t {
     return (N + 63) >> 6;
   }
-  BitSet(size_t N) : data(llvm::SmallVector<uint64_t>(numElementsNeeded(N))) {}
+  BitSet(size_t N) : data(numElementsNeeded(N)) {}
+
   static auto dense(size_t N) -> BitSet {
     BitSet b;
     b.data.resize(numElementsNeeded(N), std::numeric_limits<uint64_t>::max());
@@ -148,17 +148,19 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
       data[d] &= (~mask);
     return contained;
   }
+  static void set(uint64_t &d, size_t r, bool b) {
+    uint64_t mask = uint64_t(1) << r;
+    if (b == ((d & mask) != 0))
+      return;
+    if (b)
+      d |= mask;
+    else
+      d &= (~mask);
+  }
   static void set(llvm::MutableArrayRef<uint64_t> data, size_t x, bool b) {
     size_t d = x >> size_t(6);
     uint64_t r = uint64_t(x) & uint64_t(63);
-    uint64_t mask = uint64_t(1) << r;
-    uint64_t dd = data[d];
-    if (b == ((dd & mask) != 0))
-      return;
-    if (b)
-      data[d] = dd | mask;
-    else
-      data[d] = dd & (~mask);
+    set(data[d], r, b);
   }
 
   struct Reference {
@@ -188,8 +190,8 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
     return false;
   }
   void setUnion(const BitSet &bs) {
-    size_t O = bs.data.size(), T = data.size();
-    if (O > T)
+    size_t O = bs.data.size(), N = data.size();
+    if (O > N)
       data.resize(O);
     for (size_t i = 0; i < O; ++i) {
       uint64_t d = data[i] | bs.data[i];
@@ -249,73 +251,14 @@ template <unsigned PreallocatedStorage = 1> struct BitSet {
   }
 };
 
+template <unsigned N> using FixedSizeBitSet = BitSet<std::array<uint64_t, N>>;
 // BitSet with length 64
-struct BitSet64 {
-  uint64_t u;
-  BitSet64() : u(0) {}
-  BitSet64(uint64_t u) : u(u) {}
-  struct Reference {
-    uint64_t &u;
-    size_t i;
-    constexpr operator bool() const { return (u >> i) != 0; }
-    void operator=(bool b) {
-      uint64_t flag = uint64_t(1) << i;
-      if (b)
-        u |= flag;
-      else
-        u &= ~flag;
-      return;
-    }
-  };
-  constexpr auto operator[](size_t i) -> bool { return Reference{u, i}; }
-  constexpr auto operator[](size_t i) const -> bool { return (u >> i) != 0; }
-  struct Iterator {
-    uint64_t u;
-    size_t i{0};
-    struct End {};
-    auto operator++() -> size_t {
-      auto tz = std::countr_zero(u);
-      i += ++tz;
-      u >>= tz;
-      return i;
-    }
-    auto operator++(int) -> size_t {
-      size_t ii = i;
-      auto tz = std::countr_zero(u);
-      i += ++tz;
-      u >>= tz;
-      return ii;
-    }
-    auto operator*() -> size_t { return i; }
-    auto operator==(End) -> bool { return !u; }
-  };
-  [[nodiscard]] auto begin() const -> Iterator { return Iterator{u}; }
-  [[nodiscard]] auto end() const -> Iterator::End { return Iterator::End{}; }
-  struct ReverseIterator {
-    uint64_t u;
-    size_t i;
-    auto operator==(Iterator::End) -> bool { return !u; }
-  };
-  [[nodiscard]] auto rbegin() const -> ReverseIterator {
-    return ReverseIterator{u, size_t(64) - size_t(std::countl_zero(u))};
-  }
-  [[nodiscard]] auto rend() const -> Iterator::End { return Iterator::End{}; }
-  void set(size_t i) {
-    u |= (uint64_t(1) << i);
-    return;
-  }
-  void pushFirst(bool b) { u = (u << 1) | b; }
-  void erase(size_t i) { // erase `i` (0-indexed) and shift all remaining
-    // `i = 5`, then `mLower = 31` (`000...011111`)
-    uint64_t mLower = (uint64_t(1) << i) - 1;
-    uint64_t mUpper = ~mLower; // (`111...100000`)
-    u = (u & mLower) | ((u + mUpper) >> 1);
-  }
-};
+using BitSet64 = FixedSizeBitSet<1>;
 
-template <typename T, unsigned N = 1> struct BitSliceView {
+template <typename T, typename S = llvm::SmallVector<uint64_t, 1>>
+struct BitSliceView {
   [[no_unique_address]] llvm::MutableArrayRef<T> a;
-  [[no_unique_address]] const BitSet<N> &i;
+  [[no_unique_address]] const BitSet<S> &i;
   struct Iterator {
     [[no_unique_address]] llvm::MutableArrayRef<T> a;
     [[no_unique_address]] BitSetIterator it;
