@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: LinearAlgebra::MutPtrMatrix&lt; T &gt; Struct Template Reference</title>
+<title>LoopModels: LinearAlgebra::MutPtrMatrix&lt; T, I, J, K &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -71,185 +71,119 @@ $(function() {
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structLinearAlgebra_1_1MutPtrMatrix-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">LinearAlgebra::MutPtrMatrix&lt; T &gt; Struct Template Reference</div>  </div>
+<div class="title">LinearAlgebra::MutPtrMatrix&lt; T, I, J, K &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="dynheader">
-Inheritance diagram for LinearAlgebra::MutPtrMatrix&lt; T &gt;:</div>
+Inheritance diagram for LinearAlgebra::MutPtrMatrix&lt; T, I, J, K &gt;:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="structLinearAlgebra_1_1MutPtrMatrix.png" usemap="#LinearAlgebra::MutPtrMatrix_3C_20T_20_3E_map" alt=""/>
-  <map id="LinearAlgebra::MutPtrMatrix_3C_20T_20_3E_map" name="LinearAlgebra::MutPtrMatrix_3C_20T_20_3E_map">
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;" shape="rect" coords="0,56,337,80"/>
-<area href="structLinearAlgebra_1_1ConstMatrixCore.html" title="A CRTP type defining const methods for matrices." alt="LinearAlgebra::ConstMatrixCore&lt; T, A &gt;" shape="rect" coords="0,0,337,24"/>
+  <img src="structLinearAlgebra_1_1MutPtrMatrix.png" usemap="#LinearAlgebra::MutPtrMatrix_3C_20T_2C_20I_2C_20J_2C_20K_20_3E_map" alt=""/>
+  <map id="LinearAlgebra::MutPtrMatrix_3C_20T_2C_20I_2C_20J_2C_20K_20_3E_map" name="LinearAlgebra::MutPtrMatrix_3C_20T_2C_20I_2C_20J_2C_20K_20_3E_map">
+<area href="structLinearAlgebra_1_1ConstMatrixCore.html" alt="LinearAlgebra::ConstMatrixCore&lt; T, MutPtrMatrix&lt; T, I, J, K &gt; &gt;" shape="rect" coords="0,0,382,24"/>
+<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T, I, J, K &gt; &gt;" shape="rect" coords="392,0,774,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:ab218db95047a3ab601a805c729c15db1"><td class="memItemLeft" align="right" valign="top"><a id="ab218db95047a3ab601a805c729c15db1"></a>
+<tr class="memitem:a04d8cc3f42fa97a9a9084c39260eba9a"><td class="memItemLeft" align="right" valign="top"><a id="a04d8cc3f42fa97a9a9084c39260eba9a"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>CBase</b> = <a class="el" href="structLinearAlgebra_1_1ConstMatrixCore.html">ConstMatrixCore</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, I, J, K &gt; &gt;</td></tr>
+<tr class="separator:a04d8cc3f42fa97a9a9084c39260eba9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94e456898d0cfcc806d6a54a66bfecdb"><td class="memItemLeft" align="right" valign="top"><a id="a94e456898d0cfcc806d6a54a66bfecdb"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>MBase</b> = <a class="el" href="structLinearAlgebra_1_1MutMatrixCore.html">MutMatrixCore</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, I, J, K &gt; &gt;</td></tr>
+<tr class="separator:a94e456898d0cfcc806d6a54a66bfecdb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a144c49dee326f7047268d627ce380a44"><td class="memItemLeft" align="right" valign="top"><a id="a144c49dee326f7047268d627ce380a44"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = std::remove_reference_t&lt; T &gt;</td></tr>
-<tr class="separator:ab218db95047a3ab601a805c729c15db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_structLinearAlgebra_1_1MutMatrixCore"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structLinearAlgebra_1_1MutMatrixCore')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structLinearAlgebra_1_1MutMatrixCore.html">LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;</a></td></tr>
-<tr class="memitem:a1e9478c2dcf43dd9e761cb6539116fe5 inherit pub_types_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a1e9478c2dcf43dd9e761cb6539116fe5"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>CMC</b> = <a class="el" href="structLinearAlgebra_1_1ConstMatrixCore.html">ConstMatrixCore</a>&lt; T, <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; &gt;</td></tr>
-<tr class="separator:a1e9478c2dcf43dd9e761cb6539116fe5 inherit pub_types_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a144c49dee326f7047268d627ce380a44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a33e1c2244b6513a93069379cdb7448db"><td class="memItemLeft" align="right" valign="top"><a id="a33e1c2244b6513a93069379cdb7448db"></a>
+<tr class="memitem:a5f166b55d55f7891bc90189c1a47572a"><td class="memItemLeft" align="right" valign="top"><a id="a5f166b55d55f7891bc90189c1a47572a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () -&gt; T *</td></tr>
-<tr class="separator:a33e1c2244b6513a93069379cdb7448db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21cffb68f63296a850ccffc64d30e19f"><td class="memItemLeft" align="right" valign="top"><a id="a21cffb68f63296a850ccffc64d30e19f"></a>
+<tr class="separator:a5f166b55d55f7891bc90189c1a47572a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8daf24a3663802b55a43082ffe89574"><td class="memItemLeft" align="right" valign="top"><a id="ad8daf24a3663802b55a43082ffe89574"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const -&gt; const T *</td></tr>
-<tr class="separator:a21cffb68f63296a850ccffc64d30e19f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d3f504afa69bce7ecd24e7073cf6f09"><td class="memItemLeft" align="right" valign="top"><a id="a0d3f504afa69bce7ecd24e7073cf6f09"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a></td></tr>
-<tr class="separator:a0d3f504afa69bce7ecd24e7073cf6f09"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17b7c5ed644a0ee9c44c089e64fc4616"><td class="memItemLeft" align="right" valign="top"><a id="a17b7c5ed644a0ee9c44c089e64fc4616"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a></td></tr>
-<tr class="separator:a17b7c5ed644a0ee9c44c089e64fc4616"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75055e69e70fcfce20183f87806abcd9"><td class="memItemLeft" align="right" valign="top"><a id="a75055e69e70fcfce20183f87806abcd9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a></td></tr>
-<tr class="separator:a75055e69e70fcfce20183f87806abcd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77646210b1e50d0ed56f8c4bc24b4356"><td class="memItemLeft" align="right" valign="top"><a id="a77646210b1e50d0ed56f8c4bc24b4356"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>_numRow</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a77646210b1e50d0ed56f8c4bc24b4356"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8876f9d0f103a081fa6f801a6fbbbe7d"><td class="memItemLeft" align="right" valign="top"><a id="a8876f9d0f103a081fa6f801a6fbbbe7d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>_numCol</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a8876f9d0f103a081fa6f801a6fbbbe7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0bdd2559427d4e36b68f1c8969708daa"><td class="memItemLeft" align="right" valign="top"><a id="a0bdd2559427d4e36b68f1c8969708daa"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>_rowStride</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a0bdd2559427d4e36b68f1c8969708daa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf85f2b37ec8b22d206af50a7619bce4"><td class="memItemLeft" align="right" valign="top"><a id="abf85f2b37ec8b22d206af50a7619bce4"></a>
+<tr class="separator:ad8daf24a3663802b55a43082ffe89574"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e578e237591417130a101b4847d75db"><td class="memItemLeft" align="right" valign="top"><a id="a2e578e237591417130a101b4847d75db"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const</td></tr>
+<tr class="separator:a2e578e237591417130a101b4847d75db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bd8875814d5d16273206348e26beeb5"><td class="memItemLeft" align="right" valign="top"><a id="a2bd8875814d5d16273206348e26beeb5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const</td></tr>
+<tr class="separator:a2bd8875814d5d16273206348e26beeb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26754e5cfa51e6c1810496c841bca903"><td class="memItemLeft" align="right" valign="top"><a id="a26754e5cfa51e6c1810496c841bca903"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const</td></tr>
+<tr class="separator:a26754e5cfa51e6c1810496c841bca903"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0d3018ffba69155019f1766fa97ddc9"><td class="memItemLeft" align="right" valign="top"><a id="ac0d3018ffba69155019f1766fa97ddc9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:abf85f2b37ec8b22d206af50a7619bce4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81070ae095cd8ab80264dd6324aaf8fd"><td class="memItemLeft" align="right" valign="top"><a id="a81070ae095cd8ab80264dd6324aaf8fd"></a>
+<tr class="separator:ac0d3018ffba69155019f1766fa97ddc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a142cddb61f0643cd838b7dad04574a7e"><td class="memItemLeft" align="right" valign="top"><a id="a142cddb61f0643cd838b7dad04574a7e"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrMatrix&lt; T &gt;</b> () const</td></tr>
-<tr class="separator:a81070ae095cd8ab80264dd6324aaf8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fb05349f53374f30894c3a91622e80e"><td class="memItemLeft" align="right" valign="top"><a id="a1fb05349f53374f30894c3a91622e80e"></a>
+<tr class="separator:a142cddb61f0643cd838b7dad04574a7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16c4673346466b9f1fcedfebb164862c"><td class="memItemLeft" align="right" valign="top"><a id="a16c4673346466b9f1fcedfebb164862c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1SmallSparseMatrix.html">SmallSparseMatrix</a>&lt; T &gt; &amp;A) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a1fb05349f53374f30894c3a91622e80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae4836b63c69d5022968ecd67715f83ec"><td class="memItemLeft" align="right" valign="top"><a id="ae4836b63c69d5022968ecd67715f83ec"></a>
+<tr class="separator:a16c4673346466b9f1fcedfebb164862c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86aacdc02348c852d9b151f5087b8719"><td class="memItemLeft" align="right" valign="top"><a id="a86aacdc02348c852d9b151f5087b8719"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; A) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:ae4836b63c69d5022968ecd67715f83ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1da5e6aef2538963a5f000af59aafe34"><td class="memItemLeft" align="right" valign="top"><a id="a1da5e6aef2538963a5f000af59aafe34"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt; &amp;A)=default</td></tr>
-<tr class="separator:a1da5e6aef2538963a5f000af59aafe34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1325c1fbe43610cc69fc3169b75253d"><td class="memItemLeft" align="right" valign="top"><a id="aa1325c1fbe43610cc69fc3169b75253d"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *mem, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN)</td></tr>
-<tr class="separator:aa1325c1fbe43610cc69fc3169b75253d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3421505300efd2085bfb9b2c08a29d4d"><td class="memItemLeft" align="right" valign="top"><a id="a3421505300efd2085bfb9b2c08a29d4d"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *mem, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> XX)</td></tr>
-<tr class="separator:a3421505300efd2085bfb9b2c08a29d4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac37d3f142210176924c9b66cd3309062"><td class="memTemplParams" colspan="2"><a id="ac37d3f142210176924c9b66cd3309062"></a>
-template&lt;typename ARM &gt; </td></tr>
-<tr class="memitem:ac37d3f142210176924c9b66cd3309062"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>MutPtrMatrix</b> (ARM &amp;A)</td></tr>
-<tr class="separator:ac37d3f142210176924c9b66cd3309062"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0c3144e5ffd5468241c27a7c18e84ac9"><td class="memItemLeft" align="right" valign="top"><a id="a0c3144e5ffd5468241c27a7c18e84ac9"></a>
+<tr class="separator:a86aacdc02348c852d9b151f5087b8719"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae268e2ab3c5afe9330af9305c6d1ca8a"><td class="memItemLeft" align="right" valign="top"><a id="ae268e2ab3c5afe9330af9305c6d1ca8a"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (const <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T, I, J, K &gt; &amp;A)=default</td></tr>
+<tr class="separator:ae268e2ab3c5afe9330af9305c6d1ca8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a916aa93a7062b9cc6f170975d5cbf0af"><td class="memItemLeft" align="right" valign="top"><a id="a916aa93a7062b9cc6f170975d5cbf0af"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *mem, IsRow auto MM, IsCol auto NN)</td></tr>
+<tr class="separator:a916aa93a7062b9cc6f170975d5cbf0af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09479e34a320f73f8177f81aba4eab40"><td class="memItemLeft" align="right" valign="top"><a id="a09479e34a320f73f8177f81aba4eab40"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrMatrix</b> (T *mem, IsRow auto MM, IsCol auto NN, IsRowStride auto XX)</td></tr>
+<tr class="separator:a09479e34a320f73f8177f81aba4eab40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8834ea7842753560ce1ec3d433429f18"><td class="memItemLeft" align="right" valign="top"><a id="a8834ea7842753560ce1ec3d433429f18"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const AbstractMatrix auto &amp;B) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a0c3144e5ffd5468241c27a7c18e84ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64f467e450febc0b10bf7de0b36041b2"><td class="memItemLeft" align="right" valign="top"><a id="a64f467e450febc0b10bf7de0b36041b2"></a>
+<tr class="separator:a8834ea7842753560ce1ec3d433429f18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69497ab14df799a2cb1751e3fd994507"><td class="memItemLeft" align="right" valign="top"><a id="a69497ab14df799a2cb1751e3fd994507"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const std::integral auto b) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a64f467e450febc0b10bf7de0b36041b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fd2aa78c124cc02a2a2c4b31b45858e"><td class="memItemLeft" align="right" valign="top"><a id="a9fd2aa78c124cc02a2a2c4b31b45858e"></a>
+<tr class="separator:a69497ab14df799a2cb1751e3fd994507"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abea102289323fbbce30734042a318f2e"><td class="memItemLeft" align="right" valign="top"><a id="abea102289323fbbce30734042a318f2e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const AbstractMatrix auto &amp;B) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a9fd2aa78c124cc02a2a2c4b31b45858e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a461323e0e69cca192cabed54b08efba8"><td class="memItemLeft" align="right" valign="top"><a id="a461323e0e69cca192cabed54b08efba8"></a>
+<tr class="separator:abea102289323fbbce30734042a318f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a780a0c9156c7a65eb19692730835daa6"><td class="memItemLeft" align="right" valign="top"><a id="a780a0c9156c7a65eb19692730835daa6"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const AbstractMatrix auto &amp;B) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a461323e0e69cca192cabed54b08efba8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa60ee74fa60b6c46b74469558504866"><td class="memItemLeft" align="right" valign="top"><a id="afa60ee74fa60b6c46b74469558504866"></a>
+<tr class="separator:a780a0c9156c7a65eb19692730835daa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b3abb997379f6cfb896aa374070bb0a"><td class="memItemLeft" align="right" valign="top"><a id="a1b3abb997379f6cfb896aa374070bb0a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto b) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:afa60ee74fa60b6c46b74469558504866"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a899361825505dec6f7f125efc80c78d9"><td class="memItemLeft" align="right" valign="top"><a id="a899361825505dec6f7f125efc80c78d9"></a>
+<tr class="separator:a1b3abb997379f6cfb896aa374070bb0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3425771f34feab2407132105739fc68"><td class="memItemLeft" align="right" valign="top"><a id="aa3425771f34feab2407132105739fc68"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto b) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a899361825505dec6f7f125efc80c78d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecad840860dc00451ec0a1bd41eaa0f2"><td class="memItemLeft" align="right" valign="top"><a id="aecad840860dc00451ec0a1bd41eaa0f2"></a>
+<tr class="separator:aa3425771f34feab2407132105739fc68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac67fed7b8895f79e8e7866b0345b7d9e"><td class="memItemLeft" align="right" valign="top"><a id="ac67fed7b8895f79e8e7866b0345b7d9e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSquare</b> () const -&gt; bool</td></tr>
-<tr class="separator:aecad840860dc00451ec0a1bd41eaa0f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b6e1273b00d9983e2ccb4e3fb6154a4"><td class="memItemLeft" align="right" valign="top"><a id="a7b6e1273b00d9983e2ccb4e3fb6154a4"></a>
+<tr class="separator:ac67fed7b8895f79e8e7866b0345b7d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31a6b223ee430d560bd92425d873f041"><td class="memItemLeft" align="right" valign="top"><a id="a31a6b223ee430d560bd92425d873f041"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>transpose</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>&lt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;&gt;</td></tr>
-<tr class="separator:a7b6e1273b00d9983e2ccb4e3fb6154a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a4383a2717e737ce6965d38dc1db855"><td class="memItemLeft" align="right" valign="top"><a id="a4a4383a2717e737ce6965d38dc1db855"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N) const</td></tr>
-<tr class="separator:a4a4383a2717e737ce6965d38dc1db855"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1MutMatrixCore')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1MutMatrixCore.html">LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;</a></td></tr>
-<tr class="memitem:a8feca00995479bac8e766505ab72c141 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a8feca00995479bac8e766505ab72c141"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () -&gt; T *</td></tr>
-<tr class="separator:a8feca00995479bac8e766505ab72c141 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38d124b8a3218e9e38d0d5b26b410566 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a38d124b8a3218e9e38d0d5b26b410566"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const -&gt; const T *</td></tr>
-<tr class="separator:a38d124b8a3218e9e38d0d5b26b410566 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a487675752a6029db27a7e115d90d62c6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a487675752a6029db27a7e115d90d62c6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarRowIndex auto m, const ScalarColIndex auto n) -&gt; T &amp;</td></tr>
-<tr class="separator:a487675752a6029db27a7e115d90d62c6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec002880ab31d4e9fd68640d0a5119bb inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="aec002880ab31d4e9fd68640d0a5119bb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (auto m, auto n)</td></tr>
-<tr class="separator:aec002880ab31d4e9fd68640d0a5119bb inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24190a05742aae8c89624630735d40de inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a24190a05742aae8c89624630735d40de"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diag</b> ()</td></tr>
-<tr class="separator:a24190a05742aae8c89624630735d40de inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ddb2b154995bfe8528adf72f4d3cae6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a4ddb2b154995bfe8528adf72f4d3cae6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diag</b> () const</td></tr>
-<tr class="separator:a4ddb2b154995bfe8528adf72f4d3cae6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a087822beb53d3351debd26b687147922 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a087822beb53d3351debd26b687147922"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>antiDiag</b> ()</td></tr>
-<tr class="separator:a087822beb53d3351debd26b687147922 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a414c8aeab2e369bf21d80fe6b1313ff2 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a414c8aeab2e369bf21d80fe6b1313ff2"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>antiDiag</b> () const</td></tr>
-<tr class="separator:a414c8aeab2e369bf21d80fe6b1313ff2 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a994c24f5c238560cb4724da49b7d05ff inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a994c24f5c238560cb4724da49b7d05ff"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrMatrix&lt; T &gt;</b> ()</td></tr>
-<tr class="separator:a994c24f5c238560cb4724da49b7d05ff inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6357d8fecd45249e8144cf5b80f9c301 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a6357d8fecd45249e8144cf5b80f9c301"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a6357d8fecd45249e8144cf5b80f9c301 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b9c67cf2327116e9ff9386305c0578d inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a1b9c67cf2327116e9ff9386305c0578d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
-<tr class="separator:a1b9c67cf2327116e9ff9386305c0578d inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b65714567bb711c862e14ea7c5363b9 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a0b65714567bb711c862e14ea7c5363b9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a></td></tr>
-<tr class="separator:a0b65714567bb711c862e14ea7c5363b9 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f814e76776881226c7c71b6ce66d856 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a5f814e76776881226c7c71b6ce66d856"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a></td></tr>
-<tr class="separator:a5f814e76776881226c7c71b6ce66d856 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56f16879d2d7c8bd2e6e545f619d8345 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a56f16879d2d7c8bd2e6e545f619d8345"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a></td></tr>
-<tr class="separator:a56f16879d2d7c8bd2e6e545f619d8345 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae616dc8fba9bf0147229bb2baadb673f inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="ae616dc8fba9bf0147229bb2baadb673f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; std::pair&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
-<tr class="separator:ae616dc8fba9bf0147229bb2baadb673f inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a610ae5135351d5cea388c2f5a4ca2b8c inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a610ae5135351d5cea388c2f5a4ca2b8c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>transpose</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>&lt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;&gt;</td></tr>
-<tr class="separator:a610ae5135351d5cea388c2f5a4ca2b8c inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8423100dfafb349105ab7d273e2c3b0b inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a8423100dfafb349105ab7d273e2c3b0b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSquare</b> () const -&gt; bool</td></tr>
-<tr class="separator:a8423100dfafb349105ab7d273e2c3b0b inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66036f85530b68948ff9029d192af439 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a66036f85530b68948ff9029d192af439"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minRowCol</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a66036f85530b68948ff9029d192af439 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1ConstMatrixCore')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ConstMatrixCore.html">LinearAlgebra::ConstMatrixCore&lt; T, A &gt;</a></td></tr>
+<tr class="separator:a31a6b223ee430d560bd92425d873f041"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab50b77e49f63f737f69ea1cb7dee8c18"><td class="memItemLeft" align="right" valign="top"><a id="ab50b77e49f63f737f69ea1cb7dee8c18"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (IsRow auto M, IsCol auto N) const</td></tr>
+<tr class="separator:ab50b77e49f63f737f69ea1cb7dee8c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1ConstMatrixCore')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1ConstMatrixCore.html">LinearAlgebra::ConstMatrixCore&lt; T, MutPtrMatrix&lt; T, I, J, K &gt; &gt;</a></td></tr>
 <tr class="memitem:a38d124b8a3218e9e38d0d5b26b410566 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a38d124b8a3218e9e38d0d5b26b410566"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const -&gt; const T *</td></tr>
 <tr class="separator:a38d124b8a3218e9e38d0d5b26b410566 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b65714567bb711c862e14ea7c5363b9 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a0b65714567bb711c862e14ea7c5363b9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a></td></tr>
-<tr class="separator:a0b65714567bb711c862e14ea7c5363b9 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f814e76776881226c7c71b6ce66d856 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a5f814e76776881226c7c71b6ce66d856"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a></td></tr>
-<tr class="separator:a5f814e76776881226c7c71b6ce66d856 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a56f16879d2d7c8bd2e6e545f619d8345 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a56f16879d2d7c8bd2e6e545f619d8345"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a></td></tr>
-<tr class="separator:a56f16879d2d7c8bd2e6e545f619d8345 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a38d6a16c739eb67d7acd18b2ab062745 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a38d6a16c739eb67d7acd18b2ab062745"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const</td></tr>
+<tr class="separator:a38d6a16c739eb67d7acd18b2ab062745 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79c369ba25c1f0e1acf7ecdd100462b0 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a79c369ba25c1f0e1acf7ecdd100462b0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const</td></tr>
+<tr class="separator:a79c369ba25c1f0e1acf7ecdd100462b0 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16cc3f96f3fd9691315a0cdf47d55a43 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a16cc3f96f3fd9691315a0cdf47d55a43"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const</td></tr>
+<tr class="separator:a16cc3f96f3fd9691315a0cdf47d55a43 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0742e7fed680bedd46e23903d9f7fa18 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a0742e7fed680bedd46e23903d9f7fa18"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarRowIndex auto m, const ScalarColIndex auto n) const -&gt; const T &amp;</td></tr>
 <tr class="separator:a0742e7fed680bedd46e23903d9f7fa18 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a775670a4abd0fb4df12e8ac4e67ae60d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a775670a4abd0fb4df12e8ac4e67ae60d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (auto m, auto n) const</td></tr>
 <tr class="separator:a775670a4abd0fb4df12e8ac4e67ae60d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae616dc8fba9bf0147229bb2baadb673f inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="ae616dc8fba9bf0147229bb2baadb673f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; std::pair&lt; <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a>, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> &gt;</td></tr>
-<tr class="separator:ae616dc8fba9bf0147229bb2baadb673f inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50b68465d37e4f1703a6653a659700e4 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a50b68465d37e4f1703a6653a659700e4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
+<tr class="separator:a50b68465d37e4f1703a6653a659700e4 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4ddb2b154995bfe8528adf72f4d3cae6 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a4ddb2b154995bfe8528adf72f4d3cae6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diag</b> () const</td></tr>
 <tr class="separator:a4ddb2b154995bfe8528adf72f4d3cae6 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -262,30 +196,58 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minRowCol</
 <tr class="memitem:a8423100dfafb349105ab7d273e2c3b0b inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a8423100dfafb349105ab7d273e2c3b0b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSquare</b> () const -&gt; bool</td></tr>
 <tr class="separator:a8423100dfafb349105ab7d273e2c3b0b inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abed9c8226f6b805d3fc320792d8a0b7d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="abed9c8226f6b805d3fc320792d8a0b7d"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrMatrix&lt; T &gt;</b> () const</td></tr>
-<tr class="separator:abed9c8226f6b805d3fc320792d8a0b7d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac03075bae21f83a0786371788df79a00 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="ac03075bae21f83a0786371788df79a00"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrMatrix&lt; T, I, J, K &gt;</b> () const</td></tr>
+<tr class="separator:ac03075bae21f83a0786371788df79a00 inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b9c67cf2327116e9ff9386305c0578d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a1b9c67cf2327116e9ff9386305c0578d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
 <tr class="separator:a1b9c67cf2327116e9ff9386305c0578d inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a610ae5135351d5cea388c2f5a4ca2b8c inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a610ae5135351d5cea388c2f5a4ca2b8c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>transpose</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Transpose.html">Transpose</a>&lt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;&gt;</td></tr>
 <tr class="separator:a610ae5135351d5cea388c2f5a4ca2b8c inherit pub_methods_structLinearAlgebra_1_1ConstMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structLinearAlgebra_1_1MutMatrixCore')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structLinearAlgebra_1_1MutMatrixCore.html">LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T, I, J, K &gt; &gt;</a></td></tr>
+<tr class="memitem:a83177b7e7aa4ba26ac3ea0aa75dcab3d inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a83177b7e7aa4ba26ac3ea0aa75dcab3d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numRow</b> () const</td></tr>
+<tr class="separator:a83177b7e7aa4ba26ac3ea0aa75dcab3d inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33f03f060266e08ee3116fee2bd07393 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a33f03f060266e08ee3116fee2bd07393"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>numCol</b> () const</td></tr>
+<tr class="separator:a33f03f060266e08ee3116fee2bd07393 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8203c953ca95add9b019aee804443d1f inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a8203c953ca95add9b019aee804443d1f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>rowStride</b> () const</td></tr>
+<tr class="separator:a8203c953ca95add9b019aee804443d1f inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8feca00995479bac8e766505ab72c141 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a8feca00995479bac8e766505ab72c141"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () -&gt; T *</td></tr>
+<tr class="separator:a8feca00995479bac8e766505ab72c141 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a487675752a6029db27a7e115d90d62c6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a487675752a6029db27a7e115d90d62c6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarRowIndex auto m, const ScalarColIndex auto n) -&gt; T &amp;</td></tr>
+<tr class="separator:a487675752a6029db27a7e115d90d62c6 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec002880ab31d4e9fd68640d0a5119bb inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="aec002880ab31d4e9fd68640d0a5119bb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (auto m, auto n)</td></tr>
+<tr class="separator:aec002880ab31d4e9fd68640d0a5119bb inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24190a05742aae8c89624630735d40de inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a24190a05742aae8c89624630735d40de"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>diag</b> ()</td></tr>
+<tr class="separator:a24190a05742aae8c89624630735d40de inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a087822beb53d3351debd26b687147922 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a087822beb53d3351debd26b687147922"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>antiDiag</b> ()</td></tr>
+<tr class="separator:a087822beb53d3351debd26b687147922 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3668f65d81787ef37bf14b266998d071 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memItemLeft" align="right" valign="top"><a id="a3668f65d81787ef37bf14b266998d071"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrMatrix&lt; T, I, J, K &gt;</b> ()</td></tr>
+<tr class="separator:a3668f65d81787ef37bf14b266998d071 inherit pub_methods_structLinearAlgebra_1_1MutMatrixCore"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5118e696326ea99939aa52cf8a2019ab"><td class="memItemLeft" align="right" valign="top"><a id="a5118e696326ea99939aa52cf8a2019ab"></a>
+<tr class="memitem:a934304cede07d218cf8f8555b1ac5088"><td class="memItemLeft" align="right" valign="top"><a id="a934304cede07d218cf8f8555b1ac5088"></a>
 T *const&#160;</td><td class="memItemRight" valign="bottom"><b>mem</b></td></tr>
-<tr class="separator:a5118e696326ea99939aa52cf8a2019ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa34b3b5ba5f30219278a8675b2602dc9"><td class="memItemLeft" align="right" valign="top"><a id="aa34b3b5ba5f30219278a8675b2602dc9"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>M</b></td></tr>
-<tr class="separator:aa34b3b5ba5f30219278a8675b2602dc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae4c3862accc267fe40bc40238c6dea2"><td class="memItemLeft" align="right" valign="top"><a id="aae4c3862accc267fe40bc40238c6dea2"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
-<tr class="separator:aae4c3862accc267fe40bc40238c6dea2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d069f3ea7d1eb4ccd77a8630e56bc62"><td class="memItemLeft" align="right" valign="top"><a id="a2d069f3ea7d1eb4ccd77a8630e56bc62"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>X</b></td></tr>
-<tr class="separator:a2d069f3ea7d1eb4ccd77a8630e56bc62"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a934304cede07d218cf8f8555b1ac5088"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af6aa3059e90cd1aa5b0cd4dc21329b87"><td class="memItemLeft" align="right" valign="top"><a id="af6aa3059e90cd1aa5b0cd4dc21329b87"></a>
+I&#160;</td><td class="memItemRight" valign="bottom"><b>M</b></td></tr>
+<tr class="separator:af6aa3059e90cd1aa5b0cd4dc21329b87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac33f87d478eb370546ed00fc6b6fc5da"><td class="memItemLeft" align="right" valign="top"><a id="ac33f87d478eb370546ed00fc6b6fc5da"></a>
+J&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
+<tr class="separator:ac33f87d478eb370546ed00fc6b6fc5da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7651b723febc4143f4b6b04b0b92e131"><td class="memItemLeft" align="right" valign="top"><a id="a7651b723febc4143f4b6b04b0b92e131"></a>
+K&#160;</td><td class="memItemRight" valign="bottom"><b>X</b></td></tr>
+<tr class="separator:a7651b723febc4143f4b6b04b0b92e131"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Math_8hpp_source.html">Math.hpp</a></li>

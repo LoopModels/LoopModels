@@ -84,10 +84,10 @@ $(function() {
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> printConstraints(llvm::raw_ostream &amp;os, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A,</div>
 <div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                             llvm::ArrayRef&lt;const llvm::SCEV *&gt; syms,</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;                             <span class="keywordtype">bool</span> inequality = <span class="keyword">true</span>) -&gt; llvm::raw_ostream &amp; {</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">const</span> Row numConstraints = A.numRow();</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">const</span> Col numVar = A.numCol();</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; numConstraints = A.numRow();</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">const</span> Col&lt;&gt; numVar = A.numCol();</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">unsigned</span> numSyms = syms.size() + 1;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordflow">for</span> (Row c = 0; c &lt; numConstraints; ++c) {</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; c = 0; c &lt; numConstraints; ++c) {</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">bool</span> hasPrinted = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordtype">bool</span> allVarNonNegative = allGEZero(A(c, _(numSyms, numVar)));</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    int64_t sign = allVarNonNegative ? 1 : -1;</div>
@@ -137,23 +137,23 @@ $(function() {
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordflow">return</span> os;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;}</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eraseConstraintImpl(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Row i) {</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keyword">const</span> Row lastRow = A.numRow() - 1;</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eraseConstraintImpl(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> A, Row&lt;&gt; i) {</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; lastRow = A.numRow() - 1;</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  assert(lastRow &gt;= i);</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordflow">if</span> (lastRow != i)</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    A(i, _) = A(lastRow, _);</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;}</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eraseConstraint(IntMatrix &amp;A, Row i) {</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eraseConstraint(IntMatrix &amp;A, Row&lt;&gt; i) {</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  eraseConstraintImpl(A, i);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  A.truncate(Row{A.numRow() - 1});</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  A.truncate(A.numRow() - 1);</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;}</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> eraseConstraint(IntMatrix &amp;A, <span class="keywordtype">size_t</span> _i, <span class="keywordtype">size_t</span> _j) {</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  assert(_i != _j);</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordtype">size_t</span> i = std::min(_i, _j);</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keywordtype">size_t</span> j = std::max(_i, _j);</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [M, N] = A.size();</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keyword">const</span> Row lastRow = M - 1;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">const</span> Row penuRow = lastRow - 1;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; lastRow = M - 1;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; penuRow = lastRow - 1;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keywordflow">if</span> (j == penuRow) {</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="comment">// then we only need to copy one column (i to lastCol)</span></div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    eraseConstraint(A, i);</div>
@@ -165,12 +165,12 @@ $(function() {
 <div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;      A(j, n) = A(lastRow, n);</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    }</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  }</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  A.truncate(Row{penuRow});</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  A.truncate(penuRow);</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;}</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> substituteEqualityImpl(IntMatrix &amp;E, <span class="keyword">const</span> <span class="keywordtype">size_t</span> i) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [numConstraints, numVar] = E.size();</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  Col minNonZero = numVar + 1;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  Col&lt;&gt; minNonZero = numVar + 1;</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keyword">auto</span> rowMinNonZero = size_t(numConstraints);</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numConstraints; ++j)</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">if</span> (E(j, i)) {</div>
@@ -221,7 +221,7 @@ $(function() {
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  <span class="keyword">auto</span> [A, E] = AE;</div>
 <div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [numConstraints, numVar] = E.size();</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  Col minNonZero = numVar + 1;</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  Col&lt;&gt; minNonZero = numVar + 1;</div>
 <div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;  <span class="keyword">auto</span> rowMinNonZero = size_t(numConstraints);</div>
 <div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; numConstraints; ++j) {</div>
 <div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="keywordflow">if</span> (E(j, i)) {</div>
@@ -292,10 +292,10 @@ $(function() {
 <div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> slackEqualityConstraints(<a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C,</div>
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;                                     <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A,</div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;                                     <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> B) {</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="keyword">const</span> Col numVar = A.numCol();</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  <span class="keyword">const</span> Col&lt;&gt; numVar = A.numCol();</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  assert(numVar == B.numCol());</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  <span class="keyword">const</span> Row numSlack = A.numRow();</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  <span class="keyword">const</span> Row numStrict = B.numRow();</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; numSlack = A.numRow();</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; numStrict = B.numRow();</div>
 <div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  assert(C.numRow() == numSlack + numStrict);</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;  <span class="keywordtype">size_t</span> slackAndVar = size_t(numSlack) + size_t(numVar);</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  assert(<span class="keywordtype">size_t</span>(C.numCol()) == slackAndVar);</div>
@@ -306,7 +306,7 @@ $(function() {
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    C(s, _(numSlack, slackAndVar)) = A(s, _(begin, numVar));</div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;  }</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;  <span class="comment">// [0 B]</span></div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keywordflow">for</span> (Row s = 0; s &lt; numStrict; ++s) {</div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; s = 0; s &lt; numStrict; ++s) {</div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    C(s + numSlack, _(begin, numSlack)) = 0;</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    C(s + numSlack, _(numSlack, slackAndVar)) = B(s, _(begin, numVar));</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;  }</div>
@@ -317,8 +317,8 @@ $(function() {
 <div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  -&gt; std::pair&lt;size_t, size_t&gt; {</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  <span class="keywordtype">size_t</span> numNeg = 0;</div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  <span class="keywordtype">size_t</span> numPos = 0;</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  Row numRow = A.numRow();</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  <span class="keywordflow">for</span> (Row j = 0; j &lt; numRow; ++j) {</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  Row&lt;&gt; numRow = A.numRow();</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; j = 0; j &lt; numRow; ++j) {</div>
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;    int64_t Aij = A(j, i);</div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;    numNeg += (Aij &lt; 0);</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;    numPos += (Aij &gt; 0);</div>
@@ -329,8 +329,8 @@ $(function() {
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> fourierMotzkin(IntMatrix &amp;A, <span class="keywordtype">size_t</span> v) {</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  assert(v &lt; A.numCol());</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span> [numNeg, numPos] = countNonZeroSign(A, v);</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keyword">const</span> Row numRowsOld = A.numRow();</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  <span class="keyword">const</span> Row numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; numRowsOld = A.numRow();</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;  <span class="keyword">const</span> Row&lt;&gt; numRowsNew = numRowsOld - numNeg - numPos + numNeg * numPos + 1;</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="comment">// we need one extra, as on the last overwrite, we still need to</span></div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  <span class="comment">// read from two constraints we&#39;re deleting; we can&#39;t write into</span></div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="comment">// both of them. Thus, we use a little extra memory here,</span></div>
@@ -338,7 +338,7 @@ $(function() {
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <span class="keywordflow">if</span> ((numNeg == 0) | (numPos == 0)) {</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keywordflow">if</span> ((numNeg == 0) &amp; (numPos == 0))</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;      <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">for</span> (Row i = numRowsOld; i != 0;)</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">for</span> (Row&lt;&gt; i = numRowsOld; i != 0;)</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;      <span class="keywordflow">if</span> (A(--i, v))</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;        eraseConstraint(A, i);</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keywordflow">return</span>;</div>
@@ -407,7 +407,7 @@ $(function() {
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;        eraseConstraint(A, i);</div>
 <div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;    <span class="keywordflow">return</span>;</div>
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  }</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  A.resize(Row{numRowsNew});</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  A.resize(toRow(numRowsNew));</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  <span class="comment">// plan is to replace</span></div>
 <div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;  <span class="keywordtype">size_t</span> numRows = numRowsOld;</div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0, posCount = numPos; posCount; ++i) {</div>
@@ -471,7 +471,7 @@ $(function() {
 <div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    fourierMotzkin(A, v);</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;}</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> removeZeroRows(IntMatrix &amp;A) {</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="keywordflow">for</span> (Row i = A.numRow(); i;)</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; i = A.numRow(); i;)</div>
 <div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--i, _)))</div>
 <div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;      eraseConstraint(A, i);</div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;}</div>
@@ -490,7 +490,7 @@ $(function() {
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;}</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160; </div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> dropEmptyConstraints(IntMatrix &amp;A) {</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  <span class="keywordflow">for</span> (Row c = A.numRow(); c != 0;)</div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; c = A.numRow(); c != 0;)</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;    <span class="keywordflow">if</span> (allZero(A(--c, _)))</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;      eraseConstraint(A, c);</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;}</div>
@@ -528,13 +528,13 @@ $(function() {
 <div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;}</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160; </div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> deleteBounds(IntMatrix &amp;A, <span class="keywordtype">size_t</span> i) {</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="keywordflow">for</span> (Row j = A.numRow(); j != 0;)</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="keywordflow">for</span> (Row&lt;&gt; j = A.numRow(); j != 0;)</div>
 <div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    <span class="keywordflow">if</span> (A(--j, i))</div>
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;      eraseConstraint(A, j);</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;}</div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1551</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1748</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1708</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

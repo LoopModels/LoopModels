@@ -338,7 +338,7 @@ $(function() {
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;            <span class="keywordtype">bool</span> pos0 = <span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numCon = size_t(A.numRow()) + pos0;</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    numVar = size_t(A.numCol());</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    V.resizeForOverwrite(Row{numVar + numCon}, Col{2 * numCon});</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    V.resizeForOverwrite(toRow(numVar + numCon), toCol(2 * numCon));</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    V = 0;</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    V(0, 0) = pos0;</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="comment">// V = [A&#39; 0</span></div>
@@ -361,7 +361,7 @@ $(function() {
 <div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConExplicit = size_t(A.numRow()) + 1;</div>
 <div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numConTotal = numConExplicit + numNonNegative;</div>
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    numVar = size_t(A.numCol());</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    V.resizeForOverwrite(Row{numVar + numConTotal}, Col{2 * numConTotal});</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    V.resizeForOverwrite(toRow(numVar + numConTotal), toCol(2 * numConTotal));</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    V = 0;</div>
 <div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    V(0, 0) = 1;</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="comment">// B = [ A_0 A_1</span></div>
@@ -389,8 +389,8 @@ $(function() {
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numInEqConTotal = numInEqConExplicit + numNonNegative;</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numEqCon = size_t(E.numRow());</div>
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    numVar = size_t(A.numCol());</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    V.resizeForOverwrite(Row{numVar + numInEqConTotal},</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;                         Col{2 * numInEqConTotal + numEqCon});</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    V.resizeForOverwrite(toRow(numVar + numInEqConTotal),</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;                         toCol(2 * numInEqConTotal + numEqCon));</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;    V = 0;</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    V(0, 0) = 1;</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="comment">// B = [ A_0 A_1</span></div>
@@ -416,8 +416,8 @@ $(function() {
 <div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numInEqCon = size_t(A.numRow()) + pos0;</div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;    numVar = size_t(A.numCol());</div>
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numEqCon = size_t(E.numRow());</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    V.resizeForOverwrite(Row{numVar + numInEqCon},</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                         Col{2 * numInEqCon + numEqCon});</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;    V.resizeForOverwrite(toRow(numVar + numInEqCon),</div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                         toCol(2 * numInEqCon + numEqCon));</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    V = 0;</div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    <span class="comment">// V = [A&#39; E&#39; 0</span></div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    <span class="comment">//      S  0  I]</span></div>
@@ -435,8 +435,8 @@ $(function() {
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  }</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keywordtype">void</span> initCore() {</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keyword">auto</span> &amp;A = V;</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordtype">size_t</span> R = size_t(V.numRow());</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    U.resizeForOverwrite(Row{R}, Col{R});</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    Row&lt;&gt; R = V.numRow();</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    U.resizeForOverwrite(R, toCol(*R));</div>
 <div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    U = 0;</div>
 <div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; R; ++i)</div>
 <div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;      U(i, i) = 1;</div>
@@ -445,8 +445,8 @@ $(function() {
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">auto</span> &amp;H = A;</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keywordflow">while</span> ((R) &amp;&amp; allZero(H(R - 1, _)))</div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;      --R;</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    H.truncate(Row{R});</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    U.truncate(Row{R});</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    H.truncate(R);</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    U.truncate(R);</div>
 <div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="comment">// numRowTrunc = R;</span></div>
 <div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">if</span> (H.isSquare()) {</div>
 <div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      d.clear();</div>
@@ -479,13 +479,13 @@ $(function() {
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;  <span class="comment">// Note that this is only valid when the comparator was constructed</span></div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="comment">// with index `0` referring to &gt;= 0 constants (i.e., the default).</span></div>
 <div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  <span class="keyword">auto</span> isEmpty() -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a> b{<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>(U(_, 0))};</div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    StridedVector&lt;int64_t&gt; b{StridedVector&lt;int64_t&gt;(U(_, 0))};</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keywordflow">if</span> (d.size() == 0) {</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = <span class="keywordtype">size_t</span>(V.numRow()); i &lt; b.size(); ++i)</div>
 <div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        <span class="keywordflow">if</span> (b(i))</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keyword">auto</span> H = V;</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      Col oldn = H.numCol();</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      Col&lt;&gt; oldn = H.numCol();</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;      H.resize(oldn + 1);</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; H.numRow(); ++i)</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        H(i, oldn) = -b(i);</div>
@@ -515,7 +515,7 @@ $(function() {
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      IntMatrix expandW(toRow(numSlack), NSdim * 2 + 1);</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;        expandW(i, 0) = c(i);</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
@@ -525,7 +525,7 @@ $(function() {
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;        }</div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      }</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      IntMatrix Wcouple{toRow(0), expandW.numCol()};</div>
 <div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
 <div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
 <div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    }</div>
@@ -564,11 +564,11 @@ $(function() {
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;      b *= dinv;</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      <span class="keywordtype">size_t</span> numRowTrunc = size_t(U.numRow());</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b;</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      <span class="keyword">auto</span> NSdim = V.numCol() - numRowTrunc;</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      Col&lt;&gt; NSdim = V.numCol() - numRowTrunc;</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
 <div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;      IntMatrix expandW(numSlack, NSdim * 2 + 1);</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;      IntMatrix expandW(toRow(numSlack), NSdim * 2 + 1);</div>
 <div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
 <div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;        expandW(i, 0) = c(i);</div>
 <div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
@@ -578,7 +578,7 @@ $(function() {
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
 <div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        }</div>
 <div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      }</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      IntMatrix Wcouple{0, expandW.numCol()};</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      IntMatrix Wcouple{toRow(0), expandW.numCol()};</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    }</div>
@@ -618,11 +618,10 @@ $(function() {
 <div class="ttc" id="astructBaseComparator_html"><div class="ttname"><a href="structBaseComparator.html">BaseComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:101</div></div>
 <div class="ttc" id="astructEmptyComparator_html"><div class="ttname"><a href="structEmptyComparator.html">EmptyComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:16</div></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1089</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1198</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1708</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:954</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1292</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:267</div></div>
 <div class="ttc" id="astructLiteralComparator_html"><div class="ttname"><a href="structLiteralComparator.html">LiteralComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:53</div></div>
 </div><!-- fragment --></div><!-- contents -->

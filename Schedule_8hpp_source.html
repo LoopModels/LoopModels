@@ -149,38 +149,37 @@ $(function() {
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">return</span> {data.data(), numLoops}; <span class="comment">//</span></div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  }</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getFusionOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">return</span> {.mem = data.data() + getNumLoopsSquared(),</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            .N = size_t(numLoops) + 1};</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOffsetOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordflow">return</span> {.mem = data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;            .N = size_t(numLoops)};</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  }</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getFusionOmega() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  }</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOffsetOmega() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;            size_t(numLoops)};</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  }</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> fusedThrough(<span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;y,</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;                                  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsCommon) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    llvm::ArrayRef&lt;int64_t&gt; o0 = getFusionOmega();</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    llvm::ArrayRef&lt;int64_t&gt; o1 = y.getFusionOmega();</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordtype">bool</span> allEqual = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; numLoopsCommon; ++n)</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;      allEqual &amp;= (o0[n] == o1[n]);</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    <span class="keywordflow">return</span> allEqual;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  }</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> fusedThrough(<span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;y) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    <span class="keywordflow">return</span> fusedThrough(y, std::min(numLoops, y.numLoops));</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  }</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> numLoops; }</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;};</div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1858</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1837</div></div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared(), size_t(numLoops + 1)};</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  }</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOffsetOmega() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            size_t(numLoops)};</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  }</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getFusionOmega() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  }</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getOffsetOmega() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordflow">return</span> {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;            size_t(numLoops)};</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;  }</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> fusedThrough(<span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;y,</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;                                  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsCommon) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    llvm::ArrayRef&lt;int64_t&gt; o0 = getFusionOmega();</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    llvm::ArrayRef&lt;int64_t&gt; o1 = y.getFusionOmega();</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    <span class="keywordtype">bool</span> allEqual = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 0; n &lt; numLoopsCommon; ++n)</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;      allEqual &amp;= (o0[n] == o1[n]);</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    <span class="keywordflow">return</span> allEqual;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;  }</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> fusedThrough(<span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;y) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    <span class="keywordflow">return</span> fusedThrough(y, std::min(numLoops, y.numLoops));</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  }</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> numLoops; }</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;};</div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1198</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1970</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:954</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1950</div></div>
 <div class="ttc" id="astructSchedule_html"><div class="ttname"><a href="structSchedule.html">Schedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:30</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
