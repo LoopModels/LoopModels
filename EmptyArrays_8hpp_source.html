@@ -81,52 +81,49 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> begin() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numRow() -&gt; Row { <span class="keywordflow">return</span> Row{0}; }</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numCol() -&gt; Col { <span class="keywordflow">return</span> Col{0}; }</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> rowStride() -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a> {</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>{0};</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  }</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getConstCol() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> data() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span>, <span class="keywordtype">size_t</span>) -&gt; T { <span class="keywordflow">return</span> 0; }</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> size() -&gt; std::pair&lt;Row, Col&gt; {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordflow">return</span> std::make_pair(Row{0}, Col{0});</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  }</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> view() -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> { <span class="keywordflow">return</span> <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>{}; }</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;};</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;static_assert(AbstractMatrix&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>&gt;);</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;constexpr <span class="keyword">auto</span> matmul(<a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;const T&gt;</a>) -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>{};</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;}</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numRow() { <span class="keywordflow">return</span> Row&lt;Static&lt;size_t, 0&gt;&gt;{}; }</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="comment">// static constexpr auto numRow() -&gt; Row&lt;Static&lt;size_t, 0&gt;&gt; { return {}; }</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> numCol() -&gt; Col&lt;Static&lt;size_t, 0&gt;&gt; { <span class="keywordflow">return</span> {}; }</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> rowStride()</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    -&gt; <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride&lt;Static&lt;size_t, 0&gt;</a>&gt; {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  }</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> getConstCol() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> data() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  constexpr <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span>, <span class="keywordtype">size_t</span>) -&gt; T { <span class="keywordflow">return</span> 0; }</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> size()</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    -&gt; std::pair&lt;Row&lt;Static&lt;size_t, 0&gt;&gt;, Col&lt;Static&lt;size_t, 0&gt;&gt;&gt; {</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  }</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> view() -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> { <span class="keywordflow">return</span> <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>{}; }</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;};</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;static_assert(AbstractMatrix&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a>&gt;);</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;constexpr <span class="keyword">auto</span> matmul(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;const T&gt;</a>, <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>) -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;constexpr <span class="keyword">auto</span> matmul(<a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;const T&gt;</a>) -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>{};</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;}</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> S&gt;</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;concept MaybeMatrix =</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  std::is_same_v&lt;T, Matrix&lt;S&gt;&gt; || std::is_same_v&lt;T, EmptyMatrix&lt;S&gt;&gt;;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;constexpr <span class="keyword">auto</span> matmul(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;const T&gt;</a>, <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>) -&gt; <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;T&gt;</a>{};</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;}</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structEmptyVector.html">   43</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structEmptyVector.html">EmptyVector</a> {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> size() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; };</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> begin() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;};</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> S&gt;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;concept MaybeVector =</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  std::is_same_v&lt;T, EmptyVector&lt;S&gt;&gt; || std::is_same_v&lt;T, PtrVector&lt;S&gt;&gt; ||</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  std::is_same_v&lt;T, MutPtrVector&lt;S&gt;&gt; || std::is_same_v&lt;T, StridedVector&lt;S&gt;&gt; ||</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  std::is_same_v&lt;T, MutStridedVector&lt;S&gt;&gt; || std::is_same_v&lt;T, Vector&lt;S&gt;&gt; ||</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  std::is_same_v&lt;T, llvm::SmallVector&lt;S&gt;&gt;;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> S&gt;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;concept MaybeMatrix =</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  std::is_same_v&lt;T, Matrix&lt;S&gt;&gt; || std::is_same_v&lt;T, EmptyMatrix&lt;S&gt;&gt;;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="structEmptyVector.html">   47</a></span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt; <span class="keyword">struct </span><a class="code" href="structEmptyVector.html">EmptyVector</a> {</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> size() -&gt; <span class="keywordtype">size_t</span> { <span class="keywordflow">return</span> 0; };</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> begin() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> end() -&gt; T * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;};</div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructEmptyVector_html"><div class="ttname"><a href="structEmptyVector.html">EmptyVector</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:43</div></div>
+<div class="ttc" id="astructEmptyVector_html"><div class="ttname"><a href="structEmptyVector.html">EmptyVector</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:47</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:99</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1599</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1640</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -83,21 +83,10 @@ Inheritance diagram for LinearAlgebra::ConstMatrixCore&lt; T, A &gt;:</div>
  <div class="center">
   <img src="structLinearAlgebra_1_1ConstMatrixCore.png" usemap="#LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map" alt=""/>
   <map id="LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map" name="LinearAlgebra::ConstMatrixCore_3C_20T_2C_20A_20_3E_map">
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, unsigned, unsigned, 64 &gt; &gt;" shape="rect" coords="0,56,432,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutSquarePtrMatrix&lt; T, I &gt; &gt;" shape="rect" coords="442,56,874,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, SquareMatrix&lt; T &gt; &gt;" shape="rect" coords="884,56,1316,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, Matrix&lt; T, 0, 0, 64 &gt; &gt;" shape="rect" coords="1326,56,1758,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;" shape="rect" coords="1768,56,2200,80"/>
-<area href="structLinearAlgebra_1_1PtrMatrix.html" alt="LinearAlgebra::PtrMatrix&lt; int64_t &gt;" shape="rect" coords="2210,56,2642,80"/>
-<area href="structLinearAlgebra_1_1MutMatrixCore.html" alt="LinearAlgebra::MutMatrixCore&lt; T, A &gt;" shape="rect" coords="2652,56,3084,80"/>
-<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; T, I, J, S &gt;" shape="rect" coords="0,112,432,136"/>
-<area href="structLinearAlgebra_1_1MutSquarePtrMatrix.html" alt="LinearAlgebra::MutSquarePtrMatrix&lt; T, I &gt;" shape="rect" coords="442,112,874,136"/>
-<area href="structLinearAlgebra_1_1SquareMatrix.html" alt="LinearAlgebra::SquareMatrix&lt; T, I, STORAGE &gt;" shape="rect" coords="884,112,1316,136"/>
-<area href="structLinearAlgebra_1_1Matrix_3_01T_00_01Static_3_01size__t_00_01M_01_4_00_01Static_3_01size__t_00_01N_01_4_00_010_01_4.html" alt="LinearAlgebra::Matrix&lt; T, Static&lt; size_t, M &gt;, Static&lt; size_t, N &gt;, 0 &gt;" shape="rect" coords="1326,112,1758,136"/>
-<area href="structLinearAlgebra_1_1MutPtrMatrix.html" alt="LinearAlgebra::MutPtrMatrix&lt; T, I, J, K &gt;" shape="rect" coords="1768,112,2200,136"/>
-<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; int64_t, 2, 0, 32 &gt;" shape="rect" coords="3094,112,3526,136"/>
-<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; int64_t, 0, 0, 0 &gt;" shape="rect" coords="3094,168,3526,192"/>
-<area href="structLinearAlgebra_1_1SquareMatrix.html" alt="LinearAlgebra::SquareMatrix&lt; Rational &gt;" shape="rect" coords="3094,224,3526,248"/>
+<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; int64_t, 2, 0, 32 &gt;" shape="rect" coords="0,56,250,80"/>
+<area href="structLinearAlgebra_1_1Matrix.html" alt="LinearAlgebra::Matrix&lt; int64_t, 0, 0, 0 &gt;" shape="rect" coords="260,56,510,80"/>
+<area href="structLinearAlgebra_1_1PtrMatrix.html" alt="LinearAlgebra::PtrMatrix&lt; int64_t &gt;" shape="rect" coords="520,56,770,80"/>
+<area href="structLinearAlgebra_1_1SquareMatrix.html" alt="LinearAlgebra::SquareMatrix&lt; Rational &gt;" shape="rect" coords="780,56,1030,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -136,9 +125,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minRowCol</
 <tr class="memitem:a8423100dfafb349105ab7d273e2c3b0b"><td class="memItemLeft" align="right" valign="top"><a id="a8423100dfafb349105ab7d273e2c3b0b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSquare</b> () const -&gt; bool</td></tr>
 <tr class="separator:a8423100dfafb349105ab7d273e2c3b0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abed9c8226f6b805d3fc320792d8a0b7d"><td class="memItemLeft" align="right" valign="top"><a id="abed9c8226f6b805d3fc320792d8a0b7d"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator PtrMatrix&lt; T &gt;</b> () const</td></tr>
-<tr class="separator:abed9c8226f6b805d3fc320792d8a0b7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac03075bae21f83a0786371788df79a00"><td class="memTemplParams" colspan="2"><a id="ac03075bae21f83a0786371788df79a00"></a>
+template&lt;IntConvertible I, IntConvertible J, IntConvertible K&gt; </td></tr>
+<tr class="memitem:ac03075bae21f83a0786371788df79a00"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator PtrMatrix&lt; T, I, J, K &gt;</b> () const</td></tr>
+<tr class="separator:ac03075bae21f83a0786371788df79a00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b9c67cf2327116e9ff9386305c0578d"><td class="memItemLeft" align="right" valign="top"><a id="a1b9c67cf2327116e9ff9386305c0578d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; T &gt;</td></tr>
 <tr class="separator:a1b9c67cf2327116e9ff9386305c0578d"><td class="memSeparator" colspan="2">&#160;</td></tr>
