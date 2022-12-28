@@ -5,6 +5,9 @@
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "ControlFlowMerging.hpp"
+#include "LoopBlock.hpp"
+#include "LoopForest.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -143,6 +146,20 @@ struct LoopTreeSchedule {
     return subTrees.size();
   }
   [[nodiscard]] auto getDepth() const -> size_t { return depth; }
+
+  void init(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+            llvm::BumpPtrAllocator &tAlloc, LoopTree *loopForest,
+            LinearProgramLoopBlock &LB, llvm::TargetTransformInfo &TTI,
+            unsigned int vectorBits) {
+    // TODO: can we shorten the life span of the instructions we
+    // allocate here to `lalloc`? I.e., do we need them to live on after
+    // this forest is scheduled?
+    buildInstructionGraph(alloc, cache, LB);
+    mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
+    for (auto &node : LB.getNodes()) {
+      // now we walk the scheduled nodes to build the loop tree.
+    }
+  }
 };
 
 struct LoopForestSchedule {

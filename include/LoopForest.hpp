@@ -35,6 +35,10 @@ struct LoopTree {
   [[no_unique_address]] LoopTree *parentLoop{nullptr};
   [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
 
+  auto getPaths() -> llvm::MutableArrayRef<Predicate::Map> { return paths; }
+  auto getPaths() const -> llvm::ArrayRef<Predicate::Map> { return paths; }
+  auto getSubLoops() -> llvm::MutableArrayRef<LoopTree *> { return subLoops; }
+  auto getSubLoops() const -> llvm::ArrayRef<LoopTree *> { return subLoops; }
   [[nodiscard]] auto isLoopSimplifyForm() const -> bool {
     return loop->isLoopSimplifyForm();
   }

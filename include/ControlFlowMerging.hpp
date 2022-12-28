@@ -3,6 +3,7 @@
 #include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
 #include "./Predicate.hpp"
+#include "LoopForest.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -27,7 +28,7 @@ void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
     // that are outside of LB, as we don't care about that part of the
     // graph.
     Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
-    inst->ptr = &mem->ref;
+    inst->ptr = mem;
   }
 }
 
@@ -439,4 +440,14 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
   }
   // free memory
   tAlloc.Reset();
+}
+
+void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                       LoopTree *loopForest, llvm::TargetTransformInfo &TTI,
+                       llvm::BumpPtrAllocator &tAlloc,
+                       unsigned int vectorBits) {
+  for (auto &predMap : loopForest->getPaths())
+    mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);
+  for (auto *subLoop : loopForest->getSubLoops())
+    mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);
 }
