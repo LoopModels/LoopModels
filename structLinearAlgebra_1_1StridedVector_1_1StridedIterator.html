@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: RationalPtrVector Struct Reference</title>
+<title>LoopModels: LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,47 +59,47 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><b>LinearAlgebra</b></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a></li>  </ul>
+</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structRationalPtrVector-members.html">List of all members</a>  </div>
+<a href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">RationalPtrVector Struct Reference</div>  </div>
+<div class="title">LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a720161884b45c0e204a85f1b9ed657ff"><td class="memItemLeft" align="right" valign="top"><a id="a720161884b45c0e204a85f1b9ed657ff"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a720161884b45c0e204a85f1b9ed657ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a14757aee0fc304ef45c41678bc9d4616"><td class="memItemLeft" align="right" valign="top"><a id="a14757aee0fc304ef45c41678bc9d4616"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a14757aee0fc304ef45c41678bc9d4616"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab18a8ee018092e4f54bda19d42cc1c1e"><td class="memItemLeft" align="right" valign="top"><a id="ab18a8ee018092e4f54bda19d42cc1c1e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (size_t i) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:ab18a8ee018092e4f54bda19d42cc1c1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a043f92f571969236fc6d993f3e475fb6"><td class="memItemLeft" align="right" valign="top"><a id="a043f92f571969236fc6d993f3e475fb6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a043f92f571969236fc6d993f3e475fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a757aba9cc7e6e3d30cf874444a018f98"><td class="memItemLeft" align="right" valign="top"><a id="a757aba9cc7e6e3d30cf874444a018f98"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structRationalPtrVector.html">RationalPtrVector</a></td></tr>
-<tr class="separator:a757aba9cc7e6e3d30cf874444a018f98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb85066d36fce321b2c1cfd48af7c6da"><td class="memItemLeft" align="right" valign="top"><a id="adb85066d36fce321b2c1cfd48af7c6da"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> ()</td></tr>
+<tr class="separator:adb85066d36fce321b2c1cfd48af7c6da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa84e7157bc44ee9b0821f69e9d09fa06"><td class="memItemLeft" align="right" valign="top"><a id="aa84e7157bc44ee9b0821f69e9d09fa06"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> ()</td></tr>
+<tr class="separator:aa84e7157bc44ee9b0821f69e9d09fa06"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9632f8bc8ac7315a396365f96f10ce01"><td class="memItemLeft" align="right" valign="top"><a id="a9632f8bc8ac7315a396365f96f10ce01"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () -&gt; const T &amp;</td></tr>
+<tr class="separator:a9632f8bc8ac7315a396365f96f10ce01"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3fead1a07872813b462f964138fd126"><td class="memItemLeft" align="right" valign="top"><a id="af3fead1a07872813b462f964138fd126"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:af3fead1a07872813b462f964138fd126"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a891dc207cb121bdb2b5c49eab6730db2"><td class="memItemLeft" align="right" valign="top"><a id="a891dc207cb121bdb2b5c49eab6730db2"></a>
-<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t, <a class="el" href="structStatic.html">Static</a>&lt; size_t, 2 &gt;, unsigned, unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>data</b></td></tr>
-<tr class="separator:a891dc207cb121bdb2b5c49eab6730db2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24740af97612418d152f1a5f93cd1d80"><td class="memItemLeft" align="right" valign="top"><a id="a24740af97612418d152f1a5f93cd1d80"></a>
+const T *&#160;</td><td class="memItemRight" valign="bottom"><b>d</b></td></tr>
+<tr class="separator:a24740af97612418d152f1a5f93cd1d80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a211f01053f999d41b1cb901ed68e9e1f"><td class="memItemLeft" align="right" valign="top"><a id="a211f01053f999d41b1cb901ed68e9e1f"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>x</b></td></tr>
+<tr class="separator:a211f01053f999d41b1cb901ed68e9e1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/<a class="el" href="Rational_8hpp_source.html">Rational.hpp</a></li>
+<li>include/<a class="el" href="Math_8hpp_source.html">Math.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

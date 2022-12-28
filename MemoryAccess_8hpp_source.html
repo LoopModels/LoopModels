@@ -138,23 +138,23 @@ $(function() {
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="comment">// getNumLoops() x arrayDim()</span></div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> indexMatrix() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> d = getArrayDim();</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordflow">return</span> {indices.data(), toRow(getNumLoops()), toCol(d), toRowStride(d)};</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>{indices.data(), getNumLoops(), d, d};</div>
 <div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  }</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> indexMatrix() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> d = getArrayDim();</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> {indices.data(), toRow(getNumLoops()), toCol(d), toRowStride(d)};</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>{indices.data(), getNumLoops(), d, d};</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  }</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> offsetMatrix() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> d = getArrayDim();</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numSymbols = getNumSymbols();</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> {indices.data() + getNumLoops() * d, toRow(d), toCol(numSymbols),</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            toRowStride(numSymbols)};</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a>{indices.data() + getNumLoops() * d, d,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                                 numSymbols, numSymbols};</div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  }</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> offsetMatrix() <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> d = getArrayDim();</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numSymbols = getNumSymbols();</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordflow">return</span> {indices.data() + getNumLoops() * d, toRow(d), toCol(numSymbols),</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            toRowStride(numSymbols)};</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a>{indices.data() + getNumLoops() * d, d, numSymbols,</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;                              numSymbols};</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  }</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getInstruction() -&gt; llvm::Instruction * {</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">return</span> loadOrStore;</div>
@@ -318,9 +318,9 @@ $(function() {
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;}</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:68</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1748</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1708</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:954</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1551</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:14</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a0062ff34fe54995918590f2b87fd2db2"><div class="ttname"><a href="structMemoryAccess.html#a0062ff34fe54995918590f2b87fd2db2">MemoryAccess::typeAlignment</a></div><div class="ttdeci">static auto typeAlignment(const llvm::SCEV *S) -&gt; llvm::Align</div><div class="ttdoc">initialize alignment from an elSize SCEV.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:101</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a245b41566ec8297df73f91e1829670d5"><div class="ttname"><a href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">MemoryAccess::addNodeIndex</a></div><div class="ttdeci">void addNodeIndex(unsigned i)</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:114</div></div>

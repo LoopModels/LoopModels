@@ -349,7 +349,7 @@ $(function() {
 <div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (<span class="keyword">const</span> <span class="keyword">auto</span> *ex = llvm::dyn_cast&lt;const llvm::SCEVAddExpr&gt;(v)) {</div>
 <div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      <span class="keyword">const</span> llvm::SCEV *op0 = ex-&gt;getOperand(0);</div>
 <div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="keyword">const</span> llvm::SCEV *op1 = ex-&gt;getOperand(1);</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      Row&lt;&gt; M = A.numRow();</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      Row M = A.numRow();</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;      minDepth = <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(B, L, op0, SE, lu, mlt, minDepth);</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      <span class="keywordflow">if</span> (M != A.numRow())</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        minDepth = <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(B, L, op1, SE, _(M, A.numRow()), mlt, minDepth);</div>
@@ -390,8 +390,8 @@ $(function() {
 <div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      <span class="keyword">const</span> llvm::SCEV *op1 = ex-&gt;getOperand(1);</div>
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;      <span class="keywordflow">if</span> (isMin ^</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;          (mlt &lt; 0)) { <span class="comment">// we can represent this as additional constraints</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        Row&lt;&gt; M = A.numRow();</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        Row&lt;&gt; Mp = M + lu.size();</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;        Row M = A.numRow();</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;        Row Mp = M + lu.size();</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;        A.resize(Mp);</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;        B.resize(Mp);</div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;        A(_(M, Mp), _) = A(lu, _);</div>
@@ -422,7 +422,7 @@ $(function() {
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  <span class="keyword">auto</span> addBackedgeTakenCount(IntMatrix &amp;B, llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *BT,</div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;                             llvm::ScalarEvolution &amp;SE, <span class="keywordtype">size_t</span> minDepth,</div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;                             llvm::OptimizationRemarkEmitter *ORE) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    Row&lt;&gt; M = A.numRow();</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    Row M = A.numRow();</div>
 <div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    A.resize(M + 1);</div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    B.resize(M + 1);</div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    minDepth = <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(B, L, BT, SE, _(M, M + 1), 1, minDepth);</div>
@@ -515,7 +515,7 @@ $(function() {
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;      }</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    }</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    <span class="keywordtype">size_t</span> depth = maxDepth - minDepth;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    Col&lt;&gt; N = A.numCol();</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    Col N = A.numCol();</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;    A.resize(N + depth);</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;    <span class="comment">// copy the included loops from B into A</span></div>
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;    A(_, _(N, N + depth)) = B(_, _(0, depth));</div>
@@ -535,7 +535,7 @@ $(function() {
 <div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;      <span class="keywordflow">if</span> (A(m, innermostLoopInd)) {</div>
 <div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;        <span class="comment">// B(_(m,end-1),_) = B(_(m+1,end),_);</span></div>
 <div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;        <span class="comment">// make sure we&#39;re explicit about the order we copy rows</span></div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;        Row&lt;&gt; M = B.numRow() - 1;</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;        Row M = B.numRow() - 1;</div>
 <div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> r = m; r &lt; M; ++r)</div>
 <div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;          B(r, _) = B(r + 1, _);</div>
 <div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;        B.resize(M);</div>
@@ -858,13 +858,13 @@ $(function() {
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:215</div></div>
 <div class="ttc" id="astructAffineLoopNest_html_a1833ffa972772f61f2dc3270234833f1"><div class="ttname"><a href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">AffineLoopNest::addSymbol</a></div><div class="ttdeci">auto addSymbol(IntMatrix &amp;B, llvm::Loop *L, const llvm::SCEV *v, llvm::ScalarEvolution &amp;SE, Range&lt; size_t, size_t &gt; lu, int64_t mlt, size_t minDepth) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> Loops.hpp:273</div></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1708</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:954</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:671</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1292</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:567</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:267</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
-<div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:68</div></div>
+<div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
