@@ -1441,11 +1441,7 @@ template <typename T, typename A> struct ConstMatrixCore {
     return static_cast<const A *>(this)->rowStride();
   }
 
-  constexpr auto operator()(const ScalarRowIndex auto m,
-                            const ScalarColIndex auto n) const -> const T & {
-    return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
-  }
-  constexpr auto operator()(auto m, auto n) const {
+  constexpr auto operator()(auto m, auto n) const -> decltype(auto) {
     return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
   }
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
@@ -1484,11 +1480,7 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
 
   constexpr auto data() -> T * { return static_cast<A *>(this)->data(); }
 
-  constexpr auto operator()(const ScalarRowIndex auto m,
-                            const ScalarColIndex auto n) -> T & {
-    return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
-  }
-  constexpr auto operator()(auto m, auto n) {
+  constexpr auto operator()(auto m, auto n) -> decltype(auto) {
     return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
   }
   constexpr auto diag() {
@@ -1548,6 +1540,11 @@ template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
 };
 static_assert(std::same_as<PtrMatrix<int64_t>::eltype, int64_t>);
 static_assert(HasEltype<PtrMatrix<int64_t>>);
+static_assert(
+  std::same_as<
+    PtrMatrix<int64_t>::eltype,
+    std::decay_t<decltype(std::declval<PtrMatrix<int64_t>>()(0, 0))>>);
+
 template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   using MutMatrixCore<T, MutPtrMatrix<T>>::size,
     MutMatrixCore<T, MutPtrMatrix<T>>::diag,
@@ -1577,8 +1574,8 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   }
 
   auto operator=(const SmallSparseMatrix<T> &A) -> MutPtrMatrix<T> {
-    assert(M == A.numRow());
-    assert(N == A.numCol());
+    assert(numRow() == A.numRow());
+    assert(numCol() == A.numCol());
     size_t k = 0;
     for (size_t i = 0; i < M; ++i) {
       uint32_t m = A.rows[i] & 0x00ffffff;
@@ -1616,16 +1613,16 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
     return *this;
   }
   auto operator+=(const AbstractMatrix auto &B) -> MutPtrMatrix<T> {
-    assert(M == B.numRow());
-    assert(N == B.numCol());
+    assert(numRow() == B.numRow());
+    assert(numCol() == B.numCol());
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c)
         (*this)(r, c) += B(r, c);
     return *this;
   }
   auto operator-=(const AbstractMatrix auto &B) -> MutPtrMatrix<T> {
-    assert(M == B.numRow());
-    assert(N == B.numCol());
+    assert(numRow() == B.numRow());
+    assert(numCol() == B.numCol());
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c)
         (*this)(r, c) -= B(r, c);
@@ -2346,13 +2343,13 @@ auto printMatrix(llvm::raw_ostream &os, PtrMatrix<T> A) -> llvm::raw_ostream & {
   auto [m, n] = A.size();
   if (!m)
     return os << "[ ]";
-  for (size_t i = 0; i < m; i++) {
+  for (Row i = 0; i < m; i++) {
     if (i)
       os << "  ";
     else
       os << "\n[ ";
-    if (size_t(n)) {
-      for (size_t j = 0; j < n - 1; j++) {
+    if (n) {
+      for (Col j = 0; j < n - 1; j++) {
         auto Aij = A(i, j);
         if (Aij >= 0)
           os << " ";

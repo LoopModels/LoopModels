@@ -595,7 +595,7 @@ struct Simplex {
   static auto positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B)
     -> std::optional<Simplex> {
     size_t numVar = size_t(A.numCol());
-    assert(numVar == B.numCol());
+    assert(numVar == size_t(B.numCol()));
     Simplex simplex{};
     size_t numSlack = simplex.numSlackVar = size_t(A.numRow());
     size_t numStrict = size_t(B.numRow());

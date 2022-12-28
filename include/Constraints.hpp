@@ -83,8 +83,8 @@ inline void eraseConstraint(IntMatrix &A, Row i) {
 }
 inline void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
   assert(_i != _j);
-  size_t i = std::min(_i, _j);
-  size_t j = std::max(_i, _j);
+  Row i = std::min(_i, _j);
+  Row j = std::max(_i, _j);
   const auto [M, N] = A.size();
   const Row lastRow = M - 1;
   const Row penuRow = lastRow - 1;
@@ -102,15 +102,15 @@ inline void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
   A.truncate(Row{penuRow});
 }
 
-inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> size_t {
+inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> Row {
   const auto [numConstraints, numVar] = E.size();
   Col minNonZero = numVar + 1;
-  auto rowMinNonZero = size_t(numConstraints);
-  for (size_t j = 0; j < numConstraints; ++j)
+  Row rowMinNonZero = numConstraints;
+  for (Row j = 0; j < numConstraints; ++j)
     if (E(j, i)) {
       size_t nonZero = 0;
 
-      for (size_t v = 0; v < numVar; ++v)
+      for (Col v = 0; v < numVar; ++v)
         nonZero += (E(j, v) != 0);
       if (nonZero < minNonZero) {
         minNonZero = nonZero;
@@ -124,14 +124,14 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> size_t {
   // we now subsitute the equality expression with the minimum number
   // of terms.
   if (constexpr_abs(Eis) == 1) {
-    for (size_t j = 0; j < numConstraints; ++j) {
+    for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero)
         continue;
       if (int64_t Eij = E(j, i))
         E(j, _) = Eis * E(j, _) - Eij * Es;
     }
   } else {
-    for (size_t j = 0; j < numConstraints; ++j) {
+    for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero)
         continue;
       if (int64_t Eij = E(j, i)) {
@@ -143,24 +143,24 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> size_t {
   return rowMinNonZero;
 }
 inline auto substituteEquality(IntMatrix &E, const size_t i) -> bool {
-  size_t rowMinNonZero = substituteEqualityImpl(E, i);
-  if (rowMinNonZero == E.numRow())
+  Row minNonZero = substituteEqualityImpl(E, i);
+  if (minNonZero == E.numRow())
     return true;
-  eraseConstraint(E, rowMinNonZero);
+  eraseConstraint(E, minNonZero);
   return false;
 }
 
 inline auto substituteEqualityImpl(
   std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AE, const size_t i)
-  -> size_t {
+  -> Row {
   auto [A, E] = AE;
   const auto [numConstraints, numVar] = E.size();
   Col minNonZero = numVar + 1;
-  auto rowMinNonZero = size_t(numConstraints);
-  for (size_t j = 0; j < numConstraints; ++j) {
+  Row rowMinNonZero = numConstraints;
+  for (Row j = 0; j < numConstraints; ++j) {
     if (E(j, i)) {
       size_t nonZero = 0;
-      for (size_t v = 0; v < numVar; ++v)
+      for (Col v = 0; v < numVar; ++v)
         nonZero += (E(j, v) != 0);
       if (nonZero < minNonZero) {
         minNonZero = nonZero;
@@ -176,17 +176,17 @@ inline auto substituteEqualityImpl(
   // we now subsitute the equality expression with the minimum number
   // of terms.
   if (constexpr_abs(Eis) == 1) {
-    for (size_t j = 0; j < A.numRow(); ++j)
+    for (Row j = 0; j < A.numRow(); ++j)
       if (int64_t Aij = A(j, i))
         A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
-    for (size_t j = 0; j < numConstraints; ++j) {
+    for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero)
         continue;
       if (int64_t Eij = E(j, i))
         E(j, _) = Eis * E(j, _) - Eij * Es;
     }
   } else {
-    for (size_t j = 0; j < A.numRow(); ++j) {
+    for (Row j = 0; j < A.numRow(); ++j) {
       if (int64_t Aij = A(j, i)) {
         int64_t g = gcd(Aij, Eis);
         assert(g > 0);
@@ -194,7 +194,7 @@ inline auto substituteEqualityImpl(
         A(j, _) = ((s * Eis) / g) * A(j, _) - ((s * Aij) / g) * Es;
       }
     }
-    for (size_t j = 0; j < numConstraints; ++j) {
+    for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero)
         continue;
       if (int64_t Eij = E(j, i)) {
@@ -213,11 +213,11 @@ constexpr auto substituteEquality(IntMatrix &, EmptyMatrix<int64_t>, size_t)
 inline auto substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i)
   -> bool {
 
-  size_t rowMinNonZero =
+  Row minNonZero =
     substituteEqualityImpl(std::make_pair(MutPtrMatrix(A), MutPtrMatrix(E)), i);
-  if (rowMinNonZero == E.numRow())
+  if (minNonZero == E.numRow())
     return true;
-  eraseConstraint(E, rowMinNonZero);
+  eraseConstraint(E, minNonZero);
   return false;
 }
 

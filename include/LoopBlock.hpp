@@ -775,7 +775,7 @@ public:
       // 2 == 1 for const offset + 1 for w
       assert(2 + edge.depPoly.getNumLambda() + edge.getNumPhiCoefficients() +
                edge.getNumOmegaCoefficients() ==
-             edge.dependenceSatisfaction.getConstraints().numCol());
+             size_t(edge.dependenceSatisfaction.getConstraints().numCol()));
     }
   }
   void instantiateOmniSimplex(const Graph &g, size_t d,

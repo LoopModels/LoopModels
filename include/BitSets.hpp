@@ -62,6 +62,12 @@ struct BitSetIterator {
     return (it == j.it) && (istate == j.istate);
   }
 };
+constexpr auto operator==(EndSentinel, const BitSetIterator &it) -> bool {
+  return it.it == it.end && (it.istate == 0);
+}
+constexpr auto operator!=(EndSentinel, const BitSetIterator &it) -> bool {
+  return it.it != it.end || (it.istate != 0);
+}
 
 /// A set of `size_t` elements.
 /// Initially constructed
@@ -375,5 +381,12 @@ static_assert(std::ranges::range<BitSliceView<int64_t>>);
 static_assert(std::ranges::range<const BitSliceView<int64_t>>);
 // static_assert(std::ranges::forward_range<BitSliceView<int64_t>>);
 static_assert(std::ranges::forward_range<const BitSliceView<int64_t>>);
+
+static_assert(std::sentinel_for<EndSentinel, BitSetIterator>);
+auto fooTest(const BitSet<> &bs) -> bool {
+  auto b = std::ranges::begin(bs);
+  auto e = std::ranges::end(bs);
+  return b == e;
+}
 
 static_assert(std::ranges::range<BitSet<>>);

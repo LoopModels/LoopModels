@@ -125,7 +125,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
 auto isHNF(PtrMatrix<int64_t> A) -> bool {
   const auto [M, N] = A.size();
   // l is lead
-  size_t l = 0;
+  Col l = 0;
   for (size_t m = 0; m < M; ++m) {
     // all entries must be 0
     for (size_t n = 0; n < l; ++n)
