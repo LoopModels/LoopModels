@@ -65,7 +65,6 @@ $(function() {
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="structLinearProgramLoopBlock-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -102,6 +101,27 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccesses</b>
 <tr class="memitem:a43d83c35bc51e70936ad945abd9f543e"><td class="memItemLeft" align="right" valign="top"><a id="a43d83c35bc51e70936ad945abd9f543e"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccesses</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;</td></tr>
 <tr class="separator:a43d83c35bc51e70936ad945abd9f543e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac84935407e55a56890464e70c4d26248"><td class="memItemLeft" align="right" valign="top"><a id="ac84935407e55a56890464e70c4d26248"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemoryAccess</b> (size_t i) -&gt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *</td></tr>
+<tr class="separator:ac84935407e55a56890464e70c4d26248"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c96533c9ad334601cf7770457bc3dd3"><td class="memItemLeft" align="right" valign="top"><a id="a7c96533c9ad334601cf7770457bc3dd3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNode</b> (size_t i) -&gt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;</td></tr>
+<tr class="separator:a7c96533c9ad334601cf7770457bc3dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a857ed4a49491f9bd6b36c3cbedd5e8ba"><td class="memItemLeft" align="right" valign="top"><a id="a857ed4a49491f9bd6b36c3cbedd5e8ba"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &gt;</td></tr>
+<tr class="separator:a857ed4a49491f9bd6b36c3cbedd5e8ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94275e45e210e841de2c350fd6dc01a4"><td class="memItemLeft" align="right" valign="top"><a id="a94275e45e210e841de2c350fd6dc01a4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdges</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structDependence.html">Dependence</a> &gt;</td></tr>
+<tr class="separator:a94275e45e210e841de2c350fd6dc01a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa79288a1b82169777a183f85237f8599"><td class="memItemLeft" align="right" valign="top"><a id="aa79288a1b82169777a183f85237f8599"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>numNodes</b> () const -&gt; size_t</td></tr>
+<tr class="separator:aa79288a1b82169777a183f85237f8599"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6d81ddbf07e802f1fdb4d953370e5962"><td class="memItemLeft" align="right" valign="top"><a id="a6d81ddbf07e802f1fdb4d953370e5962"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>numEdges</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a6d81ddbf07e802f1fdb4d953370e5962"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86a2b8f97f39d0dc4d4d3e207f33b79a"><td class="memItemLeft" align="right" valign="top"><a id="a86a2b8f97f39d0dc4d4d3e207f33b79a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>numMemoryAccesses</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a86a2b8f97f39d0dc4d4d3e207f33b79a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a54c4ce2a218a9e11dbb5a00639548bf0"><td class="memItemLeft" align="right" valign="top"><a id="a54c4ce2a218a9e11dbb5a00639548bf0"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (size_t idx) -&gt; <a class="el" href="structLinearProgramLoopBlock_1_1OutNeighbors.html">OutNeighbors</a></td></tr>
 <tr class="separator:a54c4ce2a218a9e11dbb5a00639548bf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,9 +145,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (unsigned
 <tr class="memitem:a5f9e910a4dd543d80d7200d20f0114cf"><td class="memItemLeft" align="right" valign="top"><a id="a5f9e910a4dd543d80d7200d20f0114cf"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;inIndexSet, const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;outIndexSet)</td></tr>
 <tr class="separator:a5f9e910a4dd543d80d7200d20f0114cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae0083e16cb12989951eacdbdfc2495f8"><td class="memItemLeft" align="right" valign="top"><a id="ae0083e16cb12989951eacdbdfc2495f8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>connect</b> (const <a class="el" href="structDependence.html">Dependence</a> &amp;e)</td></tr>
-<tr class="separator:ae0083e16cb12989951eacdbdfc2495f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a38b8e6e6c334ba725c32e7412bdf0fe9"><td class="memItemLeft" align="right" valign="top"><a id="a38b8e6e6c334ba725c32e7412bdf0fe9"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>calcNumStores</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a38b8e6e6c334ba725c32e7412bdf0fe9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -246,48 +263,6 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMasks</
 <tr class="memitem:a18b91c94c3f0fa2966f7ff2bb4fdc7f0"><td class="memItemLeft" align="right" valign="top"><a id="a18b91c94c3f0fa2966f7ff2bb4fdc7f0"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>nonZeroMask</b> (const AbstractMatrix auto A) -&gt; uint64_t</td></tr>
 <tr class="separator:a18b91c94c3f0fa2966f7ff2bb4fdc7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a5b76da2bff1e3667d449f8ea473d7fbc"><td class="memItemLeft" align="right" valign="top"><a id="a5b76da2bff1e3667d449f8ea473d7fbc"></a>
-llvm::SmallVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>memory</b></td></tr>
-<tr class="separator:a5b76da2bff1e3667d449f8ea473d7fbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a445fc89726e74b5f89c352ad1dfbfa28"><td class="memItemLeft" align="right" valign="top"><a id="a445fc89726e74b5f89c352ad1dfbfa28"></a>
-llvm::SmallVector&lt; <a class="el" href="structScheduledNode.html">ScheduledNode</a>, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b></td></tr>
-<tr class="separator:a445fc89726e74b5f89c352ad1dfbfa28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a668d79d168585ddf20b7c66d7e9fb78f"><td class="memItemLeft" align="right" valign="top"><a id="a668d79d168585ddf20b7c66d7e9fb78f"></a>
-llvm::SmallVector&lt; <a class="el" href="structDependence.html">Dependence</a>, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>edges</b></td></tr>
-<tr class="separator:a668d79d168585ddf20b7c66d7e9fb78f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b348ae6439eb6b90700b360561fcb0f"><td class="memItemLeft" align="right" valign="top"><a id="a6b348ae6439eb6b90700b360561fcb0f"></a>
-llvm::SmallVector&lt; <a class="el" href="structCarriedDependencyFlag.html">CarriedDependencyFlag</a>, 16 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>carriedDeps</b></td></tr>
-<tr class="separator:a6b348ae6439eb6b90700b360561fcb0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab02c3a1299b3574381fb9f79d09e89b2"><td class="memItemLeft" align="right" valign="top"><a id="ab02c3a1299b3574381fb9f79d09e89b2"></a>
-llvm::DenseMap&lt; llvm::User *, unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>userToMemory</b></td></tr>
-<tr class="separator:ab02c3a1299b3574381fb9f79d09e89b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7454f56b3cb833c19f59b8ac714e9b2"><td class="memItemLeft" align="right" valign="top"><a id="ac7454f56b3cb833c19f59b8ac714e9b2"></a>
-<a class="el" href="structSimplex.html">Simplex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>omniSimplex</b></td></tr>
-<tr class="separator:ac7454f56b3cb833c19f59b8ac714e9b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a170bf272f9c30f3641bb57ddd50e2255"><td class="memItemLeft" align="right" valign="top"><a id="a170bf272f9c30f3641bb57ddd50e2255"></a>
-<a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; <a class="el" href="structRational.html">Rational</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>sol</b></td></tr>
-<tr class="separator:a170bf272f9c30f3641bb57ddd50e2255"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3b7e85e22f4ad304a905e45768626a5"><td class="memItemLeft" align="right" valign="top"><a id="af3b7e85e22f4ad304a905e45768626a5"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numPhiCoefs</b> {0}</td></tr>
-<tr class="separator:af3b7e85e22f4ad304a905e45768626a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44c22e2fe10d677df4c8415a82d0c762"><td class="memItemLeft" align="right" valign="top"><a id="a44c22e2fe10d677df4c8415a82d0c762"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numOmegaCoefs</b> {0}</td></tr>
-<tr class="separator:a44c22e2fe10d677df4c8415a82d0c762"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada8522f85e2ee53f5844dc66506cf7a8"><td class="memItemLeft" align="right" valign="top"><a id="ada8522f85e2ee53f5844dc66506cf7a8"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numLambda</b> {0}</td></tr>
-<tr class="separator:ada8522f85e2ee53f5844dc66506cf7a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a726c32bcfd47ce19c90ce0077439be92"><td class="memItemLeft" align="right" valign="top"><a id="a726c32bcfd47ce19c90ce0077439be92"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numBounding</b> {0}</td></tr>
-<tr class="separator:a726c32bcfd47ce19c90ce0077439be92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af199692fdf2ef66e72cc16bec56ff22d"><td class="memItemLeft" align="right" valign="top"><a id="af199692fdf2ef66e72cc16bec56ff22d"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numConstraints</b> {0}</td></tr>
-<tr class="separator:af199692fdf2ef66e72cc16bec56ff22d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac92f552873ee73a0124442cc88c56310"><td class="memItemLeft" align="right" valign="top"><a id="ac92f552873ee73a0124442cc88c56310"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>numActiveEdges</b> {0}</td></tr>
-<tr class="separator:ac92f552873ee73a0124442cc88c56310"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
