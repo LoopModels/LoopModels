@@ -158,6 +158,8 @@ struct LoopTreeSchedule {
     mergeInstructions(alloc, cache, loopForest, TTI, tAlloc, vectorBits);
     for (auto &node : LB.getNodes()) {
       // now we walk the scheduled nodes to build the loop tree.
+      Schedule &sch = node.getSchedule();
+      // no
     }
   }
 };

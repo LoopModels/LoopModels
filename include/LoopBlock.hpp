@@ -34,6 +34,12 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
   }
   v.push_back(x);
 }
+/// ScheduledNode
+/// Represents a set of memory accesses that are optimized together in the LP.
+/// These instructions are all connected directly by through registers.
+/// E.g., `A[i] = B[i] + C[i]` is a single node
+/// because we load from `B[i]` and `C[i]` into registers, compute, and
+/// `A[i]`;
 struct ScheduledNode {
   [[no_unique_address]] BitSet<> memory{};
   [[no_unique_address]] BitSet<> inNeighbors{};
@@ -45,6 +51,28 @@ struct ScheduledNode {
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
+
+  constexpr auto getMemory() -> BitSet<> & { return memory; }
+  constexpr auto getInNeighbors() -> BitSet<> & { return inNeighbors; }
+  constexpr auto getOutNeighbors() -> BitSet<> & { return outNeighbors; }
+  constexpr auto getSchedule() -> Schedule & { return schedule; }
+  [[nodiscard]] constexpr auto getMemory() const -> const BitSet<> & {
+    return memory;
+  }
+  [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet<> & {
+    return inNeighbors;
+  }
+  [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet<> & {
+    return outNeighbors;
+  }
+  [[nodiscard]] constexpr auto getSchedule() const -> const Schedule & {
+    return schedule;
+  }
+  [[nodiscard]] constexpr auto isVisited() const -> bool { return visited; }
+  void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
+  void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
+  void init() { schedule.init(getNumLoops()); }
+
   void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
     mem->addNodeIndex(nodeIndex);
     memory.insert(memId);
@@ -75,26 +103,9 @@ struct ScheduledNode {
     return _(phiOffset - numLoops, phiOffset);
   }
 
-  auto operator|(const ScheduledNode &s) const -> ScheduledNode {
-    uint8_t nL = std::max(numLoops, s.numLoops);
-    return {memory | s.memory,
-            (inNeighbors | s.inNeighbors),
-            (outNeighbors | s.outNeighbors),
-            Schedule(nL),
-            0,
-            0,
-            nL};
-  }
-  auto operator|=(const ScheduledNode &s) -> ScheduledNode & {
-    memory |= s.memory;
-    outNeighbors |= s.outNeighbors;
-    numLoops = std::max(numLoops, s.numLoops);
-    return *this;
-  }
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
     return schedule.getPhi()(d, _);
   }
-  auto getSchedule() -> Schedule & { return schedule; }
 };
 
 struct CarriedDependencyFlag {
@@ -322,6 +333,7 @@ public:
           continue; // load is not a part of the LoopBlock
         unsigned memId = memAccess->getSecond();
         MemoryAccess *store = memory[memId];
+        // this store will be treated as a load
         node.addMemory(memId, store, nodeIndex);
         return true;
       }
@@ -413,7 +425,7 @@ public:
     for (auto &e : edges)
       connect(e.in->nodeIndex, e.out->nodeIndex);
     for (auto &&node : nodes)
-      node.schedule.init(node.getNumLoops());
+      node.init();
     // now that we've assigned each MemoryAccess to a NodeIndex, we
     // build the actual graph
   }
