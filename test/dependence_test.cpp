@@ -819,7 +819,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // assert(!optFail);
   for (auto mem : lblock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = lblock.getNode(nodeIndex).schedule;
+      Schedule &s = lblock.getNode(nodeIndex).getSchedule();
       if (mem->getNumLoops() == 2) {
         EXPECT_EQ(s.getPhi(), optPhi2);
       } else {
@@ -1131,22 +1131,16 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < nodes.size(); ++i) {
     const auto &v = nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory)
+    for (auto m : v.getMemory())
       llvm::errs() << m << ", ";
-    llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\n";
+    llvm::errs() << v;
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto mem : mem) {
     llvm::errs() << "mem->nodeIndex =" << mem->nodeIndex << ";";
     llvm::errs() << "mem =" << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = nodes[nodeIndex].schedule;
+      Schedule &s = nodes[nodeIndex].getSchedule();
       EXPECT_EQ(&s, &iOuterLoopNest.getNode(nodeIndex).getSchedule());
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega() =" << s.getFusionOmega() << "\n";
@@ -1216,15 +1210,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < jOuterLoopNest.numNodes(); ++i) {
     const auto &v = jOuterLoopNest.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory)
+    for (auto m : v.getMemory())
       llvm::errs() << m << ", ";
-    llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\n";
+    llvm::errs() << v;
   }
   IntMatrix optS(2);
   // we want diag, as that represents swapping loops
@@ -1233,7 +1221,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
   for (auto mem : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = jOuterLoopNest.getNode(nodeIndex).schedule;
+      Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
       if (s.getNumLoops() == 1)
         EXPECT_EQ(s.getPhi()(0, 0), 1);
       else if (s.getFusionOmega()(1) < 3)
@@ -1406,15 +1394,9 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   for (size_t i = 0; i < loopBlock.numNodes(); ++i) {
     const auto &v = loopBlock.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.memory)
+    for (auto m : v.getMemory())
       llvm::errs() << m << ", ";
-    llvm::errs() << "\ninNeighbors = ";
-    for (auto m : v.inNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\noutNeighbors = ";
-    for (auto m : v.outNeighbors)
-      llvm::errs() << m << ", ";
-    llvm::errs() << "\n";
+    llvm::errs() << v;
   }
   IntMatrix optPhi(2, 2);
   optPhi(0, _) = 1;
@@ -1422,7 +1404,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = loopBlock.getNode(nodeIndex).schedule;
+      Schedule &s = loopBlock.getNode(nodeIndex).getSchedule();
       EXPECT_EQ(s.getPhi(), optPhi);
     }
   }
@@ -1583,7 +1565,7 @@ TEST(ConvReversePass, BasicAssertions) {
     llvm::errs() << "mem->nodeIndex: " << mem->nodeIndex << "; ";
     llvm::errs() << "mem: " << mem << "\n";
     for (size_t nodeIndex : mem->nodeIndex) {
-      Schedule &s = loopBlock.getNode(nodeIndex).schedule;
+      Schedule &s = loopBlock.getNode(nodeIndex).getSchedule();
       llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";
       llvm::errs() << "s.getOffsetOmega(): " << s.getOffsetOmega() << "\n";

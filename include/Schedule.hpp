@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./Math.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -81,36 +82,34 @@ struct Schedule {
     }
     getPhi().antiDiag() = 1;
   }
-  constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+  // TODO: workaround for data.data() not being constexpr?
+  [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
     return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
   }
-  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
+  [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data.data(), numLoops}; //
   }
-  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
     return {.mem = data.data() + getNumLoopsSquared(),
             .N = size_t(numLoops) + 1};
   }
-  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
     return {.mem = data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
             .N = size_t(numLoops)};
   }
-  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
   }
-  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
             size_t(numLoops)};
   }
   [[nodiscard]] auto fusedThrough(const Schedule &y,
                                   const size_t numLoopsCommon) const -> bool {
-    llvm::ArrayRef<int64_t> o0 = getFusionOmega();
-    llvm::ArrayRef<int64_t> o1 = y.getFusionOmega();
-    bool allEqual = true;
-    for (size_t n = 0; n < numLoopsCommon; ++n)
-      allEqual &= (o0[n] == o1[n]);
-    return allEqual;
+    auto o = getFusionOmega();
+    return std::equal(o.begin(), o.begin() + numLoopsCommon,
+                      y.getFusionOmega().begin());
   }
   [[nodiscard]] auto fusedThrough(const Schedule &y) const -> bool {
     return fusedThrough(y, std::min(numLoops, y.numLoops));

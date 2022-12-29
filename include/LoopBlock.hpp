@@ -4,11 +4,11 @@
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
 #include "./Math.hpp"
+#include "./MemoryAccess.hpp"
 #include "./NormalForm.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
-#include "MemoryAccess.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -103,29 +103,28 @@ public:
     -> Range<size_t, size_t> {
     return _(phiOffset - numLoops, phiOffset);
   }
-  [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+  [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     return schedule.getPhi();
   }
-  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
+  [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return schedule.getPhi();
   }
-  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return schedule.getOffsetOmega();
   }
-  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
     return schedule.getOffsetOmega();
   }
-  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
     return schedule.getFusionOmega();
   }
-  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
     return schedule.getFusionOmega();
   }
-  [[nodiscard]] constexpr auto getSchedule(size_t d) const
-    -> PtrVector<int64_t> {
+  [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
     return getPhi()(d, _);
   }
-  [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+  [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
     return getPhi()(d, _);
   }
   void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
@@ -149,6 +148,17 @@ public:
   }
   void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
 };
+inline auto operator<<(llvm::raw_ostream &os, const ScheduledNode &node)
+  -> llvm::raw_ostream & {
+  os << "inNeighbors = ";
+  for (auto m : node.getInNeighbors())
+    os << "v_" << m << ", ";
+  os << "\noutNeighbors = ";
+  for (auto m : node.getOutNeighbors())
+    os << "v_" << m << ", ";
+  return os << "\n";
+  ;
+}
 
 struct CarriedDependencyFlag {
   [[no_unique_address]] uint32_t flag{0};
@@ -1339,17 +1349,11 @@ public:
     -> llvm::raw_ostream & {
     os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
     for (size_t i = 0; i < lblock.nodes.size(); ++i) {
-      const auto &v = lblock.nodes[i];
+      const auto &v = lblock.getNode(i);
       os << "v_" << i << ":\nmem =\n";
       for (auto m : v.getMemory())
         os << *lblock.memory[m]->getInstruction() << "\n";
-      os << "inNeighbors = ";
-      for (auto m : v.getInNeighbors())
-        os << "v_" << m << ", ";
-      os << "\noutNeighbors = ";
-      for (auto m : v.getOutNeighbors())
-        os << "v_" << m << ", ";
-      os << "\n\n";
+      os << v << "\n";
     }
     // BitSet
     // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
