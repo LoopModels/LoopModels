@@ -8,9 +8,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
-#include <llvm/Support/raw_ostream.h>
 
 // For `== 0` constraints
 struct EmptyComparator {

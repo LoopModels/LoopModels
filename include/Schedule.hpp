@@ -90,6 +90,18 @@ struct Schedule {
   [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data.data(), numLoops}; //
   }
+  [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
+    return data.data()[getNumLoopsSquared() + i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
+    return data.data()[getNumLoopsSquared() + size_t(numLoops) + 1 + i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
+    return data.data()[getNumLoopsSquared() + i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
+    return data.data()[getNumLoopsSquared() + size_t(numLoops) + 1 + i];
+  }
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
     return {.mem = data.data() + getNumLoopsSquared(),
             .N = size_t(numLoops) + 1};

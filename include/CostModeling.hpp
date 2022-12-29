@@ -8,6 +8,10 @@
 #include "ControlFlowMerging.hpp"
 #include "LoopBlock.hpp"
 #include "LoopForest.hpp"
+#include <algorithm>
+#include <any>
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/SmallVector.h>
@@ -130,14 +134,14 @@ struct InstructionBlock {
   [[no_unique_address]] llvm::SmallVector<ScheduledMemoryAccess> memAccesses;
 };
 struct LoopTreeSchedule;
-using LoopAndExit = std::pair<LoopTreeSchedule *, InstructionBlock *>;
+using LoopAndExit = std::pair<LoopTreeSchedule, InstructionBlock>;
 
 struct LoopTreeSchedule {
   /// Header of the loop.
   [[no_unique_address]] InstructionBlock header;
   /// Variable number of sub loops and their associated exits.
   /// For the inner most loop, `subTrees.empty()`.
-  [[no_unique_address]] llvm::SmallVector<LoopAndExit> subTrees;
+  [[no_unique_address]] llvm::SmallVector<LoopAndExit *> subTrees;
   [[no_unique_address]] uint8_t depth;
   [[no_unique_address]] uint8_t vectorizationFactor{1};
   [[no_unique_address]] uint8_t unrollFactor{1};
@@ -145,8 +149,64 @@ struct LoopTreeSchedule {
   [[nodiscard]] auto getNumSubTrees() const -> size_t {
     return subTrees.size();
   }
+  auto getLoopAndExit(llvm::BumpPtrAllocator &tAlloc, size_t i)
+    -> LoopAndExit * {
+    if (LoopAndExit *ret = subTrees[i])
+      return ret;
+    auto *loopAndExit = tAlloc.Allocate<LoopAndExit>();
+    return subTrees[i] = loopAndExit;
+  }
+  auto getLoop(llvm::BumpPtrAllocator &tAlloc, size_t i)
+    -> std::tuple<InstructionBlock *, LoopTreeSchedule *, InstructionBlock *> {
+    InstructionBlock *H;
+    LoopTreeSchedule *L;
+    InstructionBlock *E;
+    if (!i) {
+      H = &header;
+    } else {
+      auto *loopAndExit = getLoopAndExit(tAlloc, i - 1);
+      H = &loopAndExit->second;
+    }
+    auto *loopAndExit = getLoopAndExit(tAlloc, i);
+    L = &loopAndExit->first;
+    E = &loopAndExit->second;
+    return {H, L, E};
+  }
   [[nodiscard]] auto getDepth() const -> size_t { return depth; }
-
+  /// Adds the schedule corresponding for the innermost loop.
+  void addInnermostSchedule(llvm::BumpPtrAllocator &alloc,
+                            Instruction::Cache &cache,
+                            llvm::BumpPtrAllocator &tAlloc,
+                            LoopTree *loopForest, LinearProgramLoopBlock &LB,
+                            ScheduledNode &node, llvm::TargetTransformInfo &TTI,
+                            unsigned int vectorBits, Schedule &sch,
+                            size_t depth) {
+    // TODO: emplace all memory accesses that occur here
+  }
+  // this method descends
+  void addSchedule(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+                   llvm::BumpPtrAllocator &tAlloc, LoopTree *loopForest,
+                   LinearProgramLoopBlock &LB, ScheduledNode &node,
+                   llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
+                   Schedule &sch, size_t depth) {
+    if (depth == sch.getNumLoops()) {
+      assert(sch.getFusionOmega(depth) == 0);
+      return addInnermostSchedule(alloc, cache, tAlloc, loopForest, LB, node,
+                                  TTI, vectorBits, sch, depth);
+    }
+    size_t i = sch.getFusionOmega(depth);
+    if (i >= subTrees.size())
+      subTrees.resize(i + 1);
+    auto [H, L, E] = getLoop(tAlloc, i);
+    // TODO: emplace all memory access that occur here in either H or E.
+    // what we need is to first check:
+    // 1. can we hoist the memory access out of the remaining inner loops?
+    // 2. if so, do we place before or after the loop?
+    // To hoist out, we need the intersection polyheda between the memory access
+    // and all accesses explicitly dependent on inner loops to be empty.
+    L->addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,
+                   sch, depth + 1);
+  }
   void init(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
             llvm::BumpPtrAllocator &tAlloc, LoopTree *loopForest,
             LinearProgramLoopBlock &LB, llvm::TargetTransformInfo &TTI,
@@ -159,7 +219,9 @@ struct LoopTreeSchedule {
     for (auto &node : LB.getNodes()) {
       // now we walk the scheduled nodes to build the loop tree.
       Schedule &sch = node.getSchedule();
-      // no
+      // TODO: preprocess all memory accesses to compute their rotated indMats
+      addSchedule(alloc, cache, tAlloc, loopForest, LB, node, TTI, vectorBits,
+                  sch, 0);
     }
   }
 };
