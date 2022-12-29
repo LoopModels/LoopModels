@@ -1868,7 +1868,7 @@ struct MutSquarePtrMatrix : MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   [[nodiscard]] constexpr auto rowStride() const -> RowStride {
     return RowStride{M};
   }
-  MutSquarePtrMatrix(T *mem, size_t m) : mem(mem), M(m){};
+  constexpr MutSquarePtrMatrix(T *mem, size_t m) : mem(mem), M(m){};
   constexpr auto data() -> T * { return mem; }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
   constexpr operator SquarePtrMatrix<T>() const {

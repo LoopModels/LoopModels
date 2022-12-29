@@ -81,25 +81,25 @@ struct Schedule {
     }
     getPhi().antiDiag() = 1;
   }
-  auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+  constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
     return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
   }
-  [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
+  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data.data(), numLoops}; //
   }
-  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
     return {.mem = data.data() + getNumLoopsSquared(),
             .N = size_t(numLoops) + 1};
   }
-  [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
     return {.mem = data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
             .N = size_t(numLoops)};
   }
-  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
   }
-  [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
+  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
             size_t(numLoops)};
   }
@@ -115,5 +115,7 @@ struct Schedule {
   [[nodiscard]] auto fusedThrough(const Schedule &y) const -> bool {
     return fusedThrough(y, std::min(numLoops, y.numLoops));
   }
-  [[nodiscard]] auto getNumLoops() const -> size_t { return numLoops; }
+  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+    return numLoops;
+  }
 };

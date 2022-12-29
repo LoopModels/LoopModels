@@ -41,17 +41,18 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
 /// because we load from `B[i]` and `C[i]` into registers, compute, and
 /// `A[i]`;
 struct ScheduledNode {
+private:
   [[no_unique_address]] BitSet<> memory{};
   [[no_unique_address]] BitSet<> inNeighbors{};
   [[no_unique_address]] BitSet<> outNeighbors{};
   [[no_unique_address]] Schedule schedule{};
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
-  [[no_unique_address]] uint32_t carriedDependence{0};
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
 
+public:
   constexpr auto getMemory() -> BitSet<> & { return memory; }
   constexpr auto getInNeighbors() -> BitSet<> & { return inNeighbors; }
   constexpr auto getOutNeighbors() -> BitSet<> & { return outNeighbors; }
@@ -68,22 +69,22 @@ struct ScheduledNode {
   [[nodiscard]] constexpr auto getSchedule() const -> const Schedule & {
     return schedule;
   }
-  [[nodiscard]] constexpr auto isVisited() const -> bool { return visited; }
   void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
   void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
   void init() { schedule.init(getNumLoops()); }
-
   void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
     mem->addNodeIndex(nodeIndex);
     memory.insert(memId);
     numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
   }
-  [[nodiscard]] auto wasVisited() const -> bool { return visited; }
+  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
   constexpr void unVisit() { visited = false; }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return numLoops;
   }
+  // 'phiIsScheduled()` means that `phi`'s schedule has been
+  // set for the outer `rank` loops.
   [[nodiscard]] constexpr auto phiIsScheduled(size_t d) const -> bool {
     return d < rank;
   }
@@ -102,11 +103,51 @@ struct ScheduledNode {
     -> Range<size_t, size_t> {
     return _(phiOffset - numLoops, phiOffset);
   }
-
-  [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
-    return schedule.getPhi()(d, _);
+  [[nodiscard]] constexpr auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+    return schedule.getPhi();
   }
-  auto getSchedule() -> Schedule & { return schedule; }
+  [[nodiscard]] constexpr auto getPhi() const -> SquarePtrMatrix<int64_t> {
+    return schedule.getPhi();
+  }
+  [[nodiscard]] constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+    return schedule.getOffsetOmega();
+  }
+  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
+    return schedule.getOffsetOmega();
+  }
+  [[nodiscard]] constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+    return schedule.getFusionOmega();
+  }
+  [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+    return schedule.getFusionOmega();
+  }
+  [[nodiscard]] constexpr auto getSchedule(size_t d) const
+    -> PtrVector<int64_t> {
+    return getPhi()(d, _);
+  }
+  [[nodiscard]] constexpr auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+    return getPhi()(d, _);
+  }
+  void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
+    // indMat indvars are indexed from outside<->inside
+    // phi indvars are indexed from inside<->outside
+    // so, indMat is indvars[outside<->inside] x array dim
+    // phi is loop[outside<->inside] x
+    // indvars[inside<->outside]
+    MutPtrMatrix<int64_t> phi = getPhi();
+    const size_t indR = size_t(indMat.numRow());
+    const size_t phiOffset = size_t(phi.numCol()) - indR;
+    for (size_t i = 0; i < r; ++i) {
+      phi(i, _(begin, phiOffset)) = 0;
+      phi(i, _(phiOffset, phiOffset + indR)) = indMat(_, i);
+    }
+    rank = r;
+  }
+  constexpr void unschedulePhi() { rank = 0; }
+  [[nodiscard]] constexpr auto getOmegaOffset() const -> size_t {
+    return omegaOffset;
+  }
+  void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
 };
 
 struct CarriedDependencyFlag {
@@ -244,6 +285,9 @@ public:
   }
   auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
+  [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
+    return nodes[i];
+  }
   auto getNodes() -> llvm::MutableArrayRef<ScheduledNode> { return nodes; }
   auto getEdges() -> llvm::MutableArrayRef<Dependence> { return edges; }
   [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
@@ -389,8 +433,8 @@ public:
         checkUserForLoads(visited, node, user, nodeIndex);
   }
   void connect(unsigned inIndex, unsigned outIndex) {
-    nodes[inIndex].outNeighbors.insert(outIndex);
-    nodes[outIndex].inNeighbors.insert(inIndex);
+    nodes[inIndex].addOutNeighbor(outIndex);
+    nodes[outIndex].addInNeighbor(inIndex);
   }
   // the order of parameters is irrelevant, so swapping is irrelevant
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
@@ -458,16 +502,16 @@ public:
       return *this;
     }
     [[nodiscard]] auto inNeighbors(size_t i) -> BitSet<> & {
-      return nodes[i].inNeighbors;
+      return nodes[i].getInNeighbors();
     }
     [[nodiscard]] auto outNeighbors(size_t i) -> BitSet<> & {
-      return nodes[i].outNeighbors;
+      return nodes[i].getOutNeighbors();
     }
     [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet<> & {
-      return nodes[i].inNeighbors;
+      return nodes[i].getInNeighbors();
     }
     [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet<> & {
-      return nodes[i].outNeighbors;
+      return nodes[i].getOutNeighbors();
     }
     [[nodiscard]] auto containsNode(size_t i) const -> bool {
       return nodeIds.contains(i);
@@ -527,7 +571,7 @@ public:
     }
     [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
     [[nodiscard]] auto wasVisited(size_t i) const -> bool {
-      return nodes[i].visited;
+      return nodes[i].wasVisited();
     }
     void visit(size_t i) { nodes[i].visit(); }
     void unVisit(size_t i) { nodes[i].unVisit(); }
@@ -640,19 +684,7 @@ public:
         continue;
       // TODO handle linearly dependent acceses, filtering them out
       if (r == edge.in->getArrayDim()) {
-        // indMat indvars are indexed from outside<->inside
-        // phi indvars are indexed from inside<->outside
-        // so, indMat is indvars[outside<->inside] x array dim
-        // phi is loop[outside<->inside] x
-        // indvars[inside<->outside]
-        MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
-        const size_t indR = size_t(indMat.numRow());
-        const size_t phiOffset = size_t(phi.numCol()) - indR;
-        for (size_t rr = 0; rr < r; ++rr) {
-          phi(rr, _(begin, phiOffset)) = 0;
-          phi(rr, _(phiOffset, phiOffset + indR)) = indMat(_, rr);
-        }
-        node.rank = r;
+        node.schedulePhi(indMat, r);
         tryOrth = true;
       }
     }
@@ -660,7 +692,7 @@ public:
       if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth))
         return opt;
       for (auto &&n : nodes)
-        n.rank = 0;
+        n.unschedulePhi();
     }
     return optimize(std::move(g), 0, maxDepth);
   }
@@ -748,14 +780,14 @@ public:
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g, const ScheduledNode &node,
                                     size_t d) const -> bool {
-    for (auto memId : node.memory)
+    for (auto memId : node.getMemory())
       if (hasActiveEdges(g, *memory[memId], d))
         return true;
     return false;
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g,
                                     const ScheduledNode &node) const -> bool {
-    for (auto memId : node.memory)
+    for (auto memId : node.getMemory())
       if (hasActiveEdges(g, *memory[memId]))
         return true;
     return false;
@@ -904,8 +936,8 @@ public:
                 C(_(cc, ccc), _(m, phiChild)) =
                   bndPc(_, _(end - P, end)) + bndPp;
               }
-              C(_(c, cc), outNode.omegaOffset) = satO(_, 0) + satO(_, 1);
-              C(_(cc, ccc), outNode.omegaOffset) = bndO(_, 0) + bndO(_, 1);
+              C(_(c, cc), outNode.getOmegaOffset()) = satO(_, 0) + satO(_, 1);
+              C(_(cc, ccc), outNode.getOmegaOffset()) = bndO(_, 0) + bndO(_, 1);
             }
           } else {
             // llvm::errs() << "outNodeIndex != inNodeIndex\n";
@@ -915,12 +947,12 @@ public:
               updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc);
             // Omegas are included regardless of rotation
             if (d < edge.out->getNumLoops()) {
-              C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
-              C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
+              C(_(c, cc), outNode.getOmegaOffset()) = satO(_, !edge.forward);
+              C(_(cc, ccc), outNode.getOmegaOffset()) = bndO(_, !edge.forward);
             }
             if (d < edge.in->getNumLoops()) {
-              C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
-              C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
+              C(_(c, cc), inNode.getOmegaOffset()) = satO(_, edge.forward);
+              C(_(cc, ccc), inNode.getOmegaOffset()) = bndO(_, edge.forward);
             }
           }
           c = ccc;
@@ -985,29 +1017,26 @@ public:
       if (depth >= node.getNumLoops())
         continue;
       if (!hasActiveEdges(g, node)) {
-        node.schedule.getOffsetOmega()(depth) =
-          std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega()(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.schedule.getPhi()(depth, _) =
-            std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      Rational sOmega = sol(node.omegaOffset - 1);
+      Rational sOmega = sol(node.getOmegaOffset() - 1);
       // TODO: handle s.denominator != 1
       if (!node.phiIsScheduled(depth)) {
-        auto phi = node.schedule.getPhi()(depth, _);
+        auto phi = node.getSchedule(depth);
         auto s = sol(node.getPhiOffsetRange() - 1);
         int64_t baseDenom = sOmega.denominator;
         int64_t l = lcm(denomLCM(s), baseDenom);
         for (size_t i = 0; i < phi.size(); ++i)
           assert(((s(i).numerator * l) / (s(i).denominator)) >= 0);
         if (l == 1) {
-          node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
+          node.getOffsetOmega()(depth) = sOmega.numerator;
           for (size_t i = 0; i < phi.size(); ++i)
             phi(i) = s(i).numerator;
         } else {
-          node.schedule.getOffsetOmega()(depth) =
-            (sOmega.numerator * l) / baseDenom;
+          node.getOffsetOmega()(depth) = (sOmega.numerator * l) / baseDenom;
           for (size_t i = 0; i < phi.size(); ++i)
             phi(i) = (s(i).numerator * l) / (s(i).denominator);
         }
@@ -1016,13 +1045,13 @@ public:
         //     sol(node.getPhiOffset() - 1) *
         //     denomLCM(sol(node.getPhiOffset() - 1));
       } else {
-        node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
+        node.getOffsetOmega()(depth) = sOmega.numerator;
       }
 #ifndef NDEBUG
       if (!node.phiIsScheduled(depth)) {
         int64_t l = denomLCM(sol(node.getPhiOffsetRange() - 1));
-        for (size_t i = 0; i < node.schedule.getPhi().numCol(); ++i)
-          assert(node.schedule.getPhi()(depth, i) ==
+        for (size_t i = 0; i < node.getPhi().numCol(); ++i)
+          assert(node.getPhi()(depth, i) ==
                  sol(node.getPhiOffsetRange() - 1)(i) * l);
       }
 #endif
@@ -1053,7 +1082,7 @@ public:
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
         continue;
-      A = node.schedule.getPhi()(_(0, depth), _).transpose();
+      A = node.getPhi()(_(0, depth), _).transpose();
       NormalForm::nullSpace11(N, A);
       auto c{omniSimplex.addConstraintAndVar()};
       c(0) = 1;
@@ -1102,27 +1131,24 @@ public:
       if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
         continue;
       if (!hasActiveEdges(g, node)) {
-        node.schedule.getOffsetOmega()(depth) =
-          std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega()(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.schedule.getPhi()(depth, _) =
-            std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      node.schedule.getOffsetOmega()(depth) = 0;
-      MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
-      phi(depth, _) = std::numeric_limits<int64_t>::min();
+      node.getOffsetOmega()(depth) = 0;
+      node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
     }
   }
   void resetPhiOffsets() {
     for (auto &&node : nodes)
-      node.phiOffset = std::numeric_limits<unsigned>::max();
+      node.resetPhiOffset();
   }
   [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
     for (size_t inIndex : e.in->nodeIndex) {
       for (size_t outIndex : e.out->nodeIndex) {
-        Schedule *first = &(nodes[inIndex].schedule);
-        Schedule *second = &(nodes[outIndex].schedule);
+        Schedule *first = &(nodes[inIndex].getSchedule());
+        Schedule *second = &(nodes[outIndex].getSchedule());
         if (!e.forward)
           std::swap(first, second);
         if (!e.isSatisfied(*first, *second, d))
@@ -1176,7 +1202,7 @@ public:
       if (!canFuse(*gp, gi, d)) {
         // do not fuse
         for (auto &&v : *gp)
-          v.schedule.getFusionOmega()[d] = unfusedOffset;
+          v.getFusionOmega()[d] = unfusedOffset;
         ++unfusedOffset;
         // gi is the new base graph
         gp = &gi;
@@ -1186,7 +1212,7 @@ public:
     }
     // set omegas for gp
     for (auto &&v : *gp)
-      v.schedule.getFusionOmega()[d] = unfusedOffset;
+      v.getFusionOmega()[d] = unfusedOffset;
     ++d;
     // size_t numSat = satDeps.size();
     for (auto i : baseGraphs)
@@ -1246,7 +1272,7 @@ public:
       BitSet nodeIds = g.nodeIds;
       llvm::SmallVector<Schedule, 0> oldSchedules;
       for (auto &n : g)
-        oldSchedules.push_back(n.schedule);
+        oldSchedules.push_back(n.getSchedule());
       llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
       resetDeepDeps(carriedDeps, d);
 
@@ -1268,7 +1294,7 @@ public:
       std::swap(g.nodeIds, nodeIds);
       auto oldNodeIter = oldSchedules.begin();
       for (auto &&n : g)
-        n.schedule = *(oldNodeIter++);
+        n.getSchedule() = *(oldNodeIter++);
       std::swap(carriedDeps, oldCarriedDeps);
     }
     return depSatLevel;
@@ -1315,13 +1341,13 @@ public:
     for (size_t i = 0; i < lblock.nodes.size(); ++i) {
       const auto &v = lblock.nodes[i];
       os << "v_" << i << ":\nmem =\n";
-      for (auto m : v.memory)
+      for (auto m : v.getMemory())
         os << *lblock.memory[m]->getInstruction() << "\n";
       os << "inNeighbors = ";
-      for (auto m : v.inNeighbors)
+      for (auto m : v.getInNeighbors())
         os << "v_" << m << ", ";
       os << "\noutNeighbors = ";
-      for (auto m : v.outNeighbors)
+      for (auto m : v.getOutNeighbors())
         os << "v_" << m << ", ";
       os << "\n\n";
     }
@@ -1331,14 +1357,14 @@ public:
     for (auto &edge : lblock.edges) {
       os << "\n\tEdge = " << edge;
       for (size_t inIndex : edge.in->nodeIndex) {
-        const Schedule &sin = lblock.nodes[inIndex].schedule;
+        const Schedule &sin = lblock.getNode(inIndex).getSchedule();
         os << "Schedule In: nodeIndex = " << edge.in->nodeIndex
            << "\nref = " << *edge.in << "\ns.getPhi()" << sin.getPhi()
            << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }
       for (size_t outIndex : edge.out->nodeIndex) {
-        const Schedule &sout = lblock.nodes[outIndex].schedule;
+        const Schedule &sout = lblock.getNode(outIndex).getSchedule();
         os << "\n\nSchedule Out:\nnodeIndex = " << edge.out->nodeIndex
            << "; ref = " << *edge.out << "\ns.getPhi()" << sout.getPhi()
            << "\ns.getFusionOmega() = " << sout.getFusionOmega()
@@ -1351,7 +1377,7 @@ public:
     for (auto mem : lblock.memory) {
       os << "Ref = " << *mem;
       for (size_t nodeIndex : mem->nodeIndex) {
-        const Schedule &s = lblock.nodes[nodeIndex].schedule;
+        const Schedule &s = lblock.getNode(nodeIndex).getSchedule();
         os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
            << "\ns.getFusionOmega() = " << s.getFusionOmega()
            << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
