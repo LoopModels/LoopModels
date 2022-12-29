@@ -662,7 +662,7 @@ $(function() {
 <div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> positiveVariables(<a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> A, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> B)</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;    -&gt; std::optional&lt;Simplex&gt; {</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;    <span class="keywordtype">size_t</span> numVar = size_t(A.numCol());</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    assert(numVar == <span class="keywordtype">size_t</span>(B.numCol()));</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    assert(numVar == B.numCol());</div>
 <div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;    <a class="code" href="structSimplex.html">Simplex</a> simplex{};</div>
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;    <span class="keywordtype">size_t</span> numSlack = simplex.numSlackVar = size_t(A.numRow());</div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;    <span class="keywordtype">size_t</span> numStrict = size_t(B.numRow());</div>
@@ -1086,11 +1086,11 @@ $(function() {
 <div class="line"><a name="l01019"></a><span class="lineno"> 1019</span>&#160;<span class="comment">  */</span></div>
 <div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;};</div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt&lt; AxisType::RowStride &gt;</a></div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1762</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1548</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1765</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1551</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1140</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1502</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1510</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:567</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1089</div></div>
