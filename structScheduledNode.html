@@ -69,9 +69,47 @@ $(function() {
 <div class="title">ScheduledNode Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memItemLeft" align="right" valign="top"><a id="a11fd25bf0026933478ec6d6ffc6d65af"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e3b188f31713fa4befee3a0bc7837be"><td class="memItemLeft" align="right" valign="top"><a id="a6e3b188f31713fa4befee3a0bc7837be"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a6e3b188f31713fa4befee3a0bc7837be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a600fa652111ca102c725b7d57b6d05b5"><td class="memItemLeft" align="right" valign="top"><a id="a600fa652111ca102c725b7d57b6d05b5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a600fa652111ca102c725b7d57b6d05b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a525c534cdc84dd44711de39e3823c32d"><td class="memItemLeft" align="right" valign="top"><a id="a525c534cdc84dd44711de39e3823c32d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
+<tr class="separator:a525c534cdc84dd44711de39e3823c32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7abc4650779e8af6748d91932497482d"><td class="memItemLeft" align="right" valign="top"><a id="a7abc4650779e8af6748d91932497482d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a7abc4650779e8af6748d91932497482d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e647a125bbfe2c8d7f7de34289de1ac"><td class="memItemLeft" align="right" valign="top"><a id="a3e647a125bbfe2c8d7f7de34289de1ac"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a3e647a125bbfe2c8d7f7de34289de1ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe8c28743911a980c25bd275bf5d80f2"><td class="memItemLeft" align="right" valign="top"><a id="afe8c28743911a980c25bd275bf5d80f2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:afe8c28743911a980c25bd275bf5d80f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4082b21c45377cf583cd9b03dc857ed5"><td class="memItemLeft" align="right" valign="top"><a id="a4082b21c45377cf583cd9b03dc857ed5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; const <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
+<tr class="separator:a4082b21c45377cf583cd9b03dc857ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abeef90f23d38ea3e494396e476c1cc63"><td class="memItemLeft" align="right" valign="top"><a id="abeef90f23d38ea3e494396e476c1cc63"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isVisited</b> () const -&gt; bool</td></tr>
+<tr class="separator:abeef90f23d38ea3e494396e476c1cc63"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memItemLeft" align="right" valign="top"><a id="a0b9d93971e4027db5d36861adf2d4a2a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addOutNeighbor</b> (unsigned int i)</td></tr>
+<tr class="separator:a0b9d93971e4027db5d36861adf2d4a2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa0df04e793e7bc0527dd9146b475631b"><td class="memItemLeft" align="right" valign="top"><a id="aa0df04e793e7bc0527dd9146b475631b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>addInNeighbor</b> (unsigned int i)</td></tr>
+<tr class="separator:aa0df04e793e7bc0527dd9146b475631b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memItemLeft" align="right" valign="top"><a id="a0ce1598c2900abd98cd60ca0e21d62b8"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> ()</td></tr>
+<tr class="separator:a0ce1598c2900abd98cd60ca0e21d62b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a187ab74e6d4c17b0438a43de11b067e6"><td class="memItemLeft" align="right" valign="top"><a id="a187ab74e6d4c17b0438a43de11b067e6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>addMemory</b> (unsigned memId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *mem, unsigned nodeIndex)</td></tr>
 <tr class="separator:a187ab74e6d4c17b0438a43de11b067e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -102,18 +140,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffse
 <tr class="memitem:afad9151ed5b8f5a93389cf6f3a1dfc8a"><td class="memItemLeft" align="right" valign="top"><a id="afad9151ed5b8f5a93389cf6f3a1dfc8a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffsetRange</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt;</td></tr>
 <tr class="separator:afad9151ed5b8f5a93389cf6f3a1dfc8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fe1d074543e2994f7f71e975935e3de"><td class="memItemLeft" align="right" valign="top"><a id="a2fe1d074543e2994f7f71e975935e3de"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|</b> (const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;s) const -&gt; <a class="el" href="structScheduledNode.html">ScheduledNode</a></td></tr>
-<tr class="separator:a2fe1d074543e2994f7f71e975935e3de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a778cb795d1b841a881402f54792a475b"><td class="memItemLeft" align="right" valign="top"><a id="a778cb795d1b841a881402f54792a475b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator|=</b> (const <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;s) -&gt; <a class="el" href="structScheduledNode.html">ScheduledNode</a> &amp;</td></tr>
-<tr class="separator:a778cb795d1b841a881402f54792a475b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9033626f496a09911ecb3656404e1619"><td class="memItemLeft" align="right" valign="top"><a id="a9033626f496a09911ecb3656404e1619"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> (size_t d) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a9033626f496a09911ecb3656404e1619"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35e50f38dc5c26f53e6e4256be176e24"><td class="memItemLeft" align="right" valign="top"><a id="a35e50f38dc5c26f53e6e4256be176e24"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
-<tr class="separator:a35e50f38dc5c26f53e6e4256be176e24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -148,7 +177,9 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>rank</b> {0}</td><
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>visited</b> {false}</td></tr>
 <tr class="separator:a1d2e6b1d385abb90a2eaccd8a8e58ccf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><a class="el" href="structScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a></li>
 </ul>
 </div><!-- contents -->
