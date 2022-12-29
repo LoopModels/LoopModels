@@ -106,6 +106,7 @@ struct ScheduledNode {
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
     return schedule.getPhi()(d, _);
   }
+  auto getSchedule() -> Schedule & { return schedule; }
 };
 
 struct CarriedDependencyFlag {

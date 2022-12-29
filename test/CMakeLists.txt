@@ -5,6 +5,7 @@ project(LoopModelsTests LANGUAGES CXX)
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
+option(ENABLE_TEST_EXCEPTIONS "Enable test coverage" ON)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
 # --- Import tools ----
@@ -61,6 +62,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
+target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
+if (ENABLE_TEST_EXCEPTIONS)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fexceptions)
+else()
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
+endif()
+
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
@@ -68,7 +76,7 @@ if(NOT TEST_INSTALLED_VERSION)
     # target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Werror)
   elseif(MSVC)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
+    # target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)
   endif()
 endif()
 
