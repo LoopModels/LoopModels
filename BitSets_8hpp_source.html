@@ -452,13 +452,7 @@ $(function() {
 <div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;static_assert(std::ranges::forward_range&lt;<span class="keyword">const</span> <a class="code" href="structBitSliceView.html">BitSliceView&lt;int64_t&gt;</a>&gt;);</div>
 <div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160; </div>
 <div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;static_assert(std::sentinel_for&lt;EndSentinel, BitSetIterator&gt;);</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<span class="keyword">auto</span> fooTest(<span class="keyword">const</span> <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> &amp;bs) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keyword">auto</span> b = std::ranges::begin(bs);</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  <span class="keyword">auto</span> e = std::ranges::end(bs);</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  <span class="keywordflow">return</span> b == e;</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;}</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160; </div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSet.html">BitSet&lt;&gt;</a>&gt;);</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;static_assert(std::ranges::range&lt;<a class="code" href="structBitSet.html">BitSet&lt;&gt;</a>&gt;);</div>
 <div class="ttc" id="astructBitSetIterator_html"><div class="ttname"><a href="structBitSetIterator.html">BitSetIterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:27</div></div>
 <div class="ttc" id="astructBitSet_1_1Reference_html"><div class="ttname"><a href="structBitSet_1_1Reference.html">BitSet::Reference</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:172</div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:74</div></div>
