@@ -420,13 +420,13 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
     if (d.size() == 0) {
       for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b(i))
+        if (b[i])
           return false;
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
       for (size_t i = 0; i < H.numRow(); ++i)
-        H(i, oldn) = -b(i);
+        H(i, oldn) = -b[i];
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -438,15 +438,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     else {
       size_t numSlack = size_t(V.numRow()) - numEquations;
       // Vector<int64_t> dinv = d; // copy
-      auto Dlcm = d[0];
+      int64_t Dlcm = d[0];
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
       for (size_t i = 1; i < d.size(); ++i)
-        Dlcm = lcm(Dlcm, d(i));
-      Vector<int64_t> b2;
-      b2.resizeForOverwrite(d.size());
-      for (size_t i = 0; i < d.size(); ++i)
-        b2(i) = -b(i) * Dlcm / d(i);
+        Dlcm = lcm(Dlcm, d[i]);
+      Vector<int64_t> b2 = -b * Dlcm / d;
       size_t numRowTrunc = size_t(U.numRow());
       Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
       auto NSdim = V.numCol() - numRowTrunc;
@@ -455,7 +452,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       // where y2 = y2+ - y2-
       IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);
       for (size_t i = 0; i < numSlack; ++i) {
-        expandW(i, 0) = c(i);
+        expandW(i, 0) = c[i];
         // expandW(i, 0) *= Dlcm;
         for (size_t j = 0; j < NSdim; ++j) {
           auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;
@@ -474,13 +471,13 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     // Full column rank case
     if (d.size() == 0) {
       for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b(i))
+        if (b[i])
           return false;
       auto H = V;
-      auto oldn = H.numCol();
+      Col oldn = H.numCol();
       H.resize(oldn + 1);
       for (size_t i = 0; i < H.numRow(); ++i)
-        H(i, oldn) = b(i);
+        H(i, oldn) = b[i];
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -496,10 +493,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
       for (size_t i = 1; i < dinv.size(); ++i)
-        Dlcm = lcm(Dlcm, dinv(i));
-      for (size_t i = 0; i < dinv.size(); ++i)
-        dinv(i) = Dlcm / dinv(i);
-      b *= dinv;
+        Dlcm = lcm(Dlcm, dinv[i]);
+      for (size_t i = 0; i < dinv.size(); ++i) {
+        auto x = Dlcm / dinv[i];
+        dinv[i] = x;
+        b[i] *= x;
+      }
       size_t numRowTrunc = size_t(U.numRow());
       Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b;
       auto NSdim = V.numCol() - numRowTrunc;
@@ -508,7 +507,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       // where y2 = y2+ - y2-
       IntMatrix expandW(numSlack, NSdim * 2 + 1);
       for (size_t i = 0; i < numSlack; ++i) {
-        expandW(i, 0) = c(i);
+        expandW(i, 0) = c[i];
         // expandW(i, 0) *= Dlcm;
         for (size_t j = 0; j < NSdim; ++j) {
           auto val = V(i + numEquations, numRowTrunc + j) * Dlcm;

@@ -1,12 +1,10 @@
 #pragma once
 #include "./Math.hpp"
 #include <cstddef>
-#include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
 template <typename T> struct EmptyMatrix {
   using eltype = T;
-  static constexpr auto getLinearElement(size_t) -> T { return 0; }
   static constexpr auto begin() -> T * { return nullptr; }
   static constexpr auto end() -> T * { return nullptr; }
 
@@ -25,7 +23,7 @@ template <typename T> struct EmptyMatrix {
   static constexpr auto view() -> EmptyMatrix<T> { return EmptyMatrix<T>{}; }
 };
 
-static_assert(AbstractMatrix<EmptyMatrix<int64_t>>);
+static_assert(AbstractMatrix<EmptyMatrix<ptrdiff_t>>);
 
 template <typename T>
 constexpr auto matmul(EmptyMatrix<T>, PtrMatrix<const T>) -> EmptyMatrix<T> {

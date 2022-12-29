@@ -65,7 +65,7 @@ inline auto countNonZero(const auto &x) -> size_t {
 template <typename T>
 concept AbstractVector =
   HasEltype<T> && requires(T t, size_t i) {
-                    { t(i) } -> std::convertible_to<eltype_t<T>>;
+                    { t[i] } -> std::convertible_to<eltype_t<T>>;
                     { t.size() } -> std::convertible_to<size_t>;
                     { t.view() };
                     // {
@@ -300,7 +300,7 @@ inline auto copyto(AbstractVector auto &y, const AbstractVector auto &x)
   const size_t M = x.size();
   y.extendOrAssertSize(M);
   for (size_t i = 0; i < M; ++i)
-    y(i) = x(i);
+    y[i] = x[i];
   return y;
 }
 inline auto copyto(AbstractMatrixCore auto &A, const AbstractMatrixCore auto &B)
@@ -345,12 +345,20 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
   using eltype = typename A::eltype;
   [[no_unique_address]] const Op op;
   [[no_unique_address]] const A a;
-  auto operator()(size_t i) const { return op(a(i)); }
   auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
   [[nodiscard]] constexpr auto numRow() const -> Row { return a.numRow(); }
   [[nodiscard]] constexpr auto numCol() const -> Col { return a.numCol(); }
+  [[nodiscard]] constexpr auto view() const { return *this; };
+};
+template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
+  using eltype = typename A::eltype;
+  [[no_unique_address]] const Op op;
+  [[no_unique_address]] const A a;
+  auto operator[](size_t i) const { return op(a[i]); }
+
+  [[nodiscard]] constexpr auto size() const { return a.size(); }
   [[nodiscard]] constexpr auto view() const { return *this; };
 };
 // scalars broadcast
@@ -360,7 +368,7 @@ constexpr auto get(const std::integral auto A, size_t, size_t) { return A; }
 constexpr auto get(const std::floating_point auto A, size_t, size_t) {
   return A;
 }
-inline auto get(const AbstractVector auto &A, size_t i) { return A(i); }
+inline auto get(const AbstractVector auto &A, size_t i) { return A[i]; }
 inline auto get(const AbstractMatrix auto &A, size_t i, size_t j) {
   return A(i, j);
 }
@@ -385,7 +393,7 @@ struct ElementwiseVectorBinaryOp {
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
   ElementwiseVectorBinaryOp(Op op, A a, B b) : op(op), a(a), b(b) {}
-  auto operator()(size_t i) const { return op(get(a, i), get(b, i)); }
+  auto operator[](size_t i) const { return op(get(a, i), get(b, i)); }
   [[nodiscard]] constexpr auto size() const -> size_t {
     if constexpr (AbstractVector<A> && AbstractVector<B>) {
       const size_t N = a.size();
@@ -475,7 +483,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   [[no_unique_address]] B b;
   auto operator()(size_t i, size_t j) const {
     static_assert(AbstractMatrix<B>, "B should be an AbstractMatrix");
-    auto s = (a(i, 0) * b(0, j)) * 0;
+    eltype s = 0;
     for (size_t k = 0; k < size_t(a.numCol()); ++k)
       s += a(i, k) * b(k, j);
     return s;
@@ -491,11 +499,11 @@ template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
   using eltype = promote_eltype_t<A, B>;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  auto operator()(size_t i) const {
+  auto operator[](size_t i) const {
     static_assert(AbstractVector<B>, "B should be an AbstractVector");
-    auto s = (a(i, 0) * b(0)) * 0;
+    eltype s = 0;
     for (size_t k = 0; k < a.numCol(); ++k)
-      s += a(i, k) * b(k);
+      s += a(i, k) * b[k];
     return s;
   }
   [[nodiscard]] constexpr auto size() const -> size_t {
@@ -722,20 +730,14 @@ template <typename T> struct PtrVector {
 #endif
     return mem[canonicalize(i, N)];
   }
-  constexpr auto operator()(const ScalarIndex auto i) const -> const T & {
-#ifndef NDEBUG
-    checkIndex(size_t(N), i);
-#endif
-    return mem[canonicalize(i, N)];
-  }
-  constexpr auto operator()(Range<size_t, size_t> i) const -> PtrVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
     return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) const -> PtrVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
   [[nodiscard]] constexpr auto begin() const -> const T * { return mem; }
   [[nodiscard]] constexpr auto end() const -> const T * { return mem + N; }
@@ -773,19 +775,7 @@ template <typename T> struct MutPtrVector {
 #endif
     return mem[canonicalize(i, N)];
   }
-  constexpr auto operator()(const ScalarIndex auto i) -> T & {
-#ifndef NDEBUG
-    checkIndex(size_t(N), i);
-#endif
-    return mem[canonicalize(i, N)];
-  }
   constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
-#ifndef NDEBUG
-    checkIndex(size_t(N), i);
-#endif
-    return mem[canonicalize(i, N)];
-  }
-  constexpr auto operator()(const ScalarIndex auto i) const -> const T & {
 #ifndef NDEBUG
     checkIndex(size_t(N), i);
 #endif
@@ -815,23 +805,23 @@ template <typename T> struct MutPtrVector {
   constexpr MutPtrVector(llvm::MutableArrayRef<T> x)
     : mem(x.data()), N(x.size()) {}
   constexpr MutPtrVector(T *mem, size_t N) : mem(mem), N(N) {}
-  constexpr auto operator()(Range<size_t, size_t> i) -> MutPtrVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) -> MutPtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
     return MutPtrVector<T>{mem + i.b, i.e - i.b};
   }
-  constexpr auto operator()(Range<size_t, size_t> i) const -> PtrVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
     return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) -> MutPtrVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) const -> PtrVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
   constexpr auto begin() -> T * { return mem; }
   constexpr auto end() -> T * { return mem + N; }
@@ -876,25 +866,25 @@ template <typename T> struct MutPtrVector {
   auto operator+=(const AbstractVector auto &x) -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i)
-      mem[i] += x(i);
+      mem[i] += x[i];
     return *this;
   }
   auto operator-=(const AbstractVector auto &x) -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i)
-      mem[i] -= x(i);
+      mem[i] -= x[i];
     return *this;
   }
   auto operator*=(const AbstractVector auto &x) -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i)
-      mem[i] *= x(i);
+      mem[i] *= x[i];
     return *this;
   }
   auto operator/=(const AbstractVector auto &x) -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i)
-      mem[i] /= x(i);
+      mem[i] /= x[i];
     return *this;
   }
   auto operator+=(const std::integral auto x) -> MutPtrVector<T> {
@@ -950,32 +940,26 @@ template <typename T> struct Vector {
   constexpr auto operator[](const ScalarIndex auto i) -> T & {
     return data[canonicalize(i, data.size())];
   }
-  constexpr auto operator()(const ScalarIndex auto i) -> T & {
-    return data[canonicalize(i, data.size())];
-  }
   constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
     return data[canonicalize(i, data.size())];
   }
-  constexpr auto operator()(const ScalarIndex auto i) const -> const T & {
-    return data[canonicalize(i, data.size())];
-  }
-  constexpr auto operator()(Range<size_t, size_t> i) -> MutPtrVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) -> MutPtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= data.size());
     return MutPtrVector<T>{data.data() + i.b, i.e - i.b};
   }
-  constexpr auto operator()(Range<size_t, size_t> i) const -> PtrVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= data.size());
     return PtrVector<T>{.mem = data.data() + i.b, .N = i.e - i.b};
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) -> MutPtrVector<T> {
-    return (*this)(canonicalizeRange(i, data.size()));
+  constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
+    return (*this)[canonicalizeRange(i, data.size())];
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) const -> PtrVector<T> {
-    return (*this)(canonicalizeRange(i, data.size()));
+  constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
+    return (*this)[canonicalizeRange(i, data.size())];
   }
   constexpr auto operator[](size_t i) -> T & { return data[i]; }
   constexpr auto operator[](size_t i) const -> const T & { return data[i]; }
@@ -1001,7 +985,7 @@ template <typename T> struct Vector {
     const size_t N = x.size();
     data.resize_for_overwrite(N);
     for (size_t n = 0; n < N; ++n)
-      data[n] = x(n);
+      data[n] = x[n];
   }
   void resize(size_t N) { data.resize(N); }
   void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
@@ -1106,23 +1090,28 @@ template <typename T> struct StridedVector {
     auto operator*() -> const T & { return *d; }
     auto operator==(const StridedIterator y) const -> bool { return d == y.d; }
   };
-  constexpr auto begin() const { return StridedIterator{d, size_t(x)}; }
-  constexpr auto end() const { return StridedIterator{d + x * N, size_t(x)}; }
-  constexpr auto rbegin() const { return std::reverse_iterator(end()); }
-  constexpr auto rend() const { return std::reverse_iterator(begin()); }
+  [[nodiscard]] constexpr auto begin() const {
+    return StridedIterator{d, size_t(x)};
+  }
+  [[nodiscard]] constexpr auto end() const {
+    return StridedIterator{d + x * N, size_t(x)};
+  }
+  [[nodiscard]] constexpr auto rbegin() const {
+    return std::reverse_iterator(end());
+  }
+  [[nodiscard]] constexpr auto rend() const {
+    return std::reverse_iterator(begin());
+  }
   constexpr auto operator[](size_t i) const -> const T & {
     return d[size_t(x * i)];
   }
-  constexpr auto operator()(size_t i) const -> const T & {
-    return d[size_t(x * i)];
-  }
 
-  constexpr auto operator()(Range<size_t, size_t> i) const -> StridedVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) const -> StridedVector<T> {
     return StridedVector<T>{.d = d + x * i.b, .N = i.e - i.b, .x = x};
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) const -> StridedVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) const -> StridedVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
 
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
@@ -1134,7 +1123,9 @@ template <typename T> struct StridedVector {
         return false;
     return true;
   }
-  constexpr auto view() const -> StridedVector<T> { return *this; }
+  [[nodiscard]] constexpr auto view() const -> StridedVector<T> {
+    return *this;
+  }
   void extendOrAssertSize(size_t M) const { assert(N == M); }
 };
 template <typename T> struct MutStridedVector {
@@ -1170,24 +1161,19 @@ template <typename T> struct MutStridedVector {
   constexpr auto operator[](size_t i) const -> const T & {
     return d[size_t(x * i)];
   }
-  constexpr auto operator()(size_t i) -> T & { return d[size_t(x * i)]; }
-  constexpr auto operator()(size_t i) const -> const T & {
-    return d[size_t(x * i)];
-  }
-
-  constexpr auto operator()(Range<size_t, size_t> i) -> MutStridedVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) -> MutStridedVector<T> {
     return MutStridedVector<T>{.d = d + x * i.b, .N = i.e - i.b, .x = x};
   }
-  constexpr auto operator()(Range<size_t, size_t> i) const -> StridedVector<T> {
+  constexpr auto operator[](Range<size_t, size_t> i) const -> StridedVector<T> {
     return StridedVector<T>{.d = d + x * i.b, .N = i.e - i.b, .x = x};
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) -> MutStridedVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) -> MutStridedVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
   template <typename F, typename L>
-  constexpr auto operator()(Range<F, L> i) const -> StridedVector<T> {
-    return (*this)(canonicalizeRange(i, N));
+  constexpr auto operator[](Range<F, L> i) const -> StridedVector<T> {
+    return (*this)[canonicalizeRange(i, N)];
   }
 
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
@@ -1223,7 +1209,7 @@ template <typename T> struct MutStridedVector {
   auto operator+=(T x) -> MutStridedVector<T> & {
     MutStridedVector<T> &self = *this;
     for (size_t i = 0; i < N; ++i)
-      self(i) += x;
+      self[i] += x;
     return self;
   }
   auto operator+=(const AbstractVector auto &x) -> MutStridedVector<T> & {
@@ -1231,7 +1217,7 @@ template <typename T> struct MutStridedVector {
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i)
-      self(i) += x(i);
+      self[i] += x[i];
     return self;
   }
   auto operator-=(const AbstractVector auto &x) -> MutStridedVector<T> & {
@@ -1239,7 +1225,7 @@ template <typename T> struct MutStridedVector {
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i)
-      self(i) -= x(i);
+      self[i] -= x[i];
     return self;
   }
   auto operator*=(const AbstractVector auto &x) -> MutStridedVector<T> & {
@@ -1247,7 +1233,7 @@ template <typename T> struct MutStridedVector {
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i)
-      self(i) *= x(i);
+      self[i] *= x[i];
     return self;
   }
   auto operator/=(const AbstractVector auto &x) -> MutStridedVector<T> & {
@@ -1255,12 +1241,14 @@ template <typename T> struct MutStridedVector {
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i)
-      self(i) /= x(i);
+      self[i] /= x[i];
     return self;
   }
   void extendOrAssertSize(size_t M) const { assert(N == M); }
 };
 
+static_assert(AbstractVector<StridedVector<int64_t>>);
+static_assert(!AbstractMatrix<StridedVector<int64_t>>);
 template <typename T>
 concept DerivedMatrix =
   requires(T t, const T ct) {
@@ -2588,6 +2576,11 @@ constexpr auto operator*(const Transpose<V> &a, const AbstractVector auto &b) {
   return s;
 }
 
+static_assert(
+  AbstractVector<decltype(-std::declval<StridedVector<int64_t>>())>);
+static_assert(
+  AbstractVector<decltype(-std::declval<StridedVector<int64_t>>() * 0)>);
+
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(AbstractVector<const Vector<int64_t>>);
 static_assert(AbstractVector<Vector<int64_t> &>);
@@ -2631,8 +2624,8 @@ template <typename T, typename I> struct SliceView {
   };
   constexpr auto begin() -> Iterator { return Iterator{a, i, 0}; }
   constexpr auto end() -> Iterator { return Iterator{a, i, i.size()}; }
-  auto operator()(size_t j) -> T & { return a[i[j]]; }
-  auto operator()(size_t j) const -> const T & { return a[i[j]]; }
+  auto operator[](size_t j) -> T & { return a[i[j]]; }
+  auto operator[](size_t j) const -> const T & { return a[i[j]]; }
   [[nodiscard]] constexpr auto size() const -> size_t { return i.size(); }
   constexpr auto view() -> SliceView<T, I> { return *this; }
 };

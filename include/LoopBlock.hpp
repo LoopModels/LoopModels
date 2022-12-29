@@ -109,6 +109,18 @@ public:
   [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return schedule.getPhi();
   }
+  [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
+    return schedule.getOffsetOmega()[i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
+    return schedule.getOffsetOmega()[i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
+    return schedule.getFusionOmega()[i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
+    return schedule.getFusionOmega()[i];
+  }
   [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
     return schedule.getOffsetOmega();
   }
@@ -898,11 +910,11 @@ public:
                 if (outNode.phiIsScheduled(d)) {
                   // add it constants
                   auto sch = outNode.getSchedule(d);
-                  C(_(c, cc), 0) -= satPc * sch(_(end - satPc.numCol(), end)) +
-                                    satPp * sch(_(end - satPp.numCol(), end));
+                  C(_(c, cc), 0) -= satPc * sch[_(end - satPc.numCol(), end)] +
+                                    satPp * sch[_(end - satPp.numCol(), end)];
                   C(_(cc, ccc), 0) -=
-                    bndPc * sch(_(end - bndPc.numCol(), end)) +
-                    bndPp * sch(_(end - satPp.numCol(), end));
+                    bndPc * sch[_(end - bndPc.numCol(), end)] +
+                    bndPp * sch[_(end - satPp.numCol(), end)];
                 } else {
                   // FIXME: phiChild = [14:18), 4 cols
                   // while Dependence seems to indicate 2
@@ -919,8 +931,8 @@ public:
                 // inner -> outer
                 // so we need to drop inner most if one has less
                 auto sch = outNode.getSchedule(d);
-                auto schP = sch(_(end - satPp.numCol(), end));
-                auto schC = sch(_(end - satPc.numCol(), end));
+                auto schP = sch[_(end - satPp.numCol(), end)];
+                auto schC = sch[_(end - satPc.numCol(), end)];
                 C(_(c, cc), 0) -= satPc * schC + satPp * schP;
                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
               } else if (satPc.numCol() < satPp.numCol()) {
@@ -978,8 +990,8 @@ public:
       auto sch = node.getSchedule(d);
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
-      C(_(c, cc), 0) -= sat * sch(_(end - sat.numCol(), end));
-      C(_(cc, ccc), 0) -= bnd * sch(_(end - bnd.numCol(), end));
+      C(_(c, cc), 0) -= sat * sch[_(end - sat.numCol(), end)];
+      C(_(cc, ccc), 0) -= bnd * sch[_(end - bnd.numCol(), end)];
     } else {
       assert(sat.numCol() == bnd.numCol());
       // add it to C
@@ -989,7 +1001,7 @@ public:
     }
   }
   [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet<> {
-    if (allZero(sol(_(begin, numBounding + numActiveEdges))))
+    if (allZero(sol[_(begin, numBounding + numActiveEdges)]))
       return {};
     size_t u = 0, w = numBounding;
     BitSet deactivated;
@@ -1000,7 +1012,7 @@ public:
       Col uu = u + edge.dependenceBounding.getConstraints().numCol() -
                (2 + edge.depPoly.getNumLambda() + edge.getNumPhiCoefficients() +
                 edge.getNumOmegaCoefficients());
-      if ((sol(w++) != 0) || (!(allZero(sol(_(u, uu)))))) {
+      if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
         for (size_t inIndex : edge.in->nodeIndex)
@@ -1027,42 +1039,42 @@ public:
       if (depth >= node.getNumLoops())
         continue;
       if (!hasActiveEdges(g, node)) {
-        node.getOffsetOmega()(depth) = std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega()[depth] = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
           node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      Rational sOmega = sol(node.getOmegaOffset() - 1);
+      Rational sOmega = sol[node.getOmegaOffset() - 1];
       // TODO: handle s.denominator != 1
       if (!node.phiIsScheduled(depth)) {
         auto phi = node.getSchedule(depth);
-        auto s = sol(node.getPhiOffsetRange() - 1);
+        auto s = sol[node.getPhiOffsetRange() - 1];
         int64_t baseDenom = sOmega.denominator;
         int64_t l = lcm(denomLCM(s), baseDenom);
         for (size_t i = 0; i < phi.size(); ++i)
-          assert(((s(i).numerator * l) / (s(i).denominator)) >= 0);
+          assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
         if (l == 1) {
-          node.getOffsetOmega()(depth) = sOmega.numerator;
+          node.getOffsetOmega(depth) = sOmega.numerator;
           for (size_t i = 0; i < phi.size(); ++i)
-            phi(i) = s(i).numerator;
+            phi[i] = s[i].numerator;
         } else {
-          node.getOffsetOmega()(depth) = (sOmega.numerator * l) / baseDenom;
+          node.getOffsetOmega(depth) = (sOmega.numerator * l) / baseDenom;
           for (size_t i = 0; i < phi.size(); ++i)
-            phi(i) = (s(i).numerator * l) / (s(i).denominator);
+            phi[i] = (s[i].numerator * l) / (s[i].denominator);
         }
         assert(!(allZero(phi)));
         // node.schedule.getPhi()(depth, _) =
         //     sol(node.getPhiOffset() - 1) *
         //     denomLCM(sol(node.getPhiOffset() - 1));
       } else {
-        node.getOffsetOmega()(depth) = sOmega.numerator;
+        node.getOffsetOmega(depth) = sOmega.numerator;
       }
 #ifndef NDEBUG
       if (!node.phiIsScheduled(depth)) {
-        int64_t l = denomLCM(sol(node.getPhiOffsetRange() - 1));
+        int64_t l = denomLCM(sol[node.getPhiOffsetRange() - 1]);
         for (size_t i = 0; i < node.getPhi().numCol(); ++i)
           assert(node.getPhi()(depth, i) ==
-                 sol(node.getPhiOffsetRange() - 1)(i) * l);
+                 sol[node.getPhiOffsetRange() - 1][i] * l);
       }
 #endif
     }
@@ -1081,9 +1093,9 @@ public:
         if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node)))
           continue;
         auto c{omniSimplex.addConstraintAndVar()};
-        c(0) = 1;
-        c(node.getPhiOffsetRange()) = 1;
-        c(end) = -1; // for >=
+        c[0] = 1;
+        c[node.getPhiOffsetRange()] = 1;
+        c[end] = -1; // for >=
       }
       return;
     }
@@ -1095,12 +1107,12 @@ public:
       A = node.getPhi()(_(0, depth), _).transpose();
       NormalForm::nullSpace11(N, A);
       auto c{omniSimplex.addConstraintAndVar()};
-      c(0) = 1;
-      MutPtrVector<int64_t> cc{c(node.getPhiOffsetRange())};
+      c[0] = 1;
+      MutPtrVector<int64_t> cc{c[node.getPhiOffsetRange()]};
       // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
       for (size_t m = 0; m < N.numRow(); ++m)
         cc += N(m, _) * lexSign(N(m, _));
-      c(end) = -1; // for >=
+      c[end] = -1; // for >=
     }
     assert(!allZero(omniSimplex.getConstraints()(end, _)));
   }
@@ -1141,12 +1153,12 @@ public:
       if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
         continue;
       if (!hasActiveEdges(g, node)) {
-        node.getOffsetOmega()(depth) = std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
           node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      node.getOffsetOmega()(depth) = 0;
+      node.getOffsetOmega(depth) = 0;
       node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
     }
   }

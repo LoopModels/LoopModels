@@ -1224,7 +1224,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
       Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
       if (s.getNumLoops() == 1)
         EXPECT_EQ(s.getPhi()(0, 0), 1);
-      else if (s.getFusionOmega()(1) < 3)
+      else if (s.getFusionOmega()[1] < 3)
         EXPECT_EQ(s.getPhi(), optSinnerUndef);
       else
         EXPECT_EQ(s.getPhi(), optS);

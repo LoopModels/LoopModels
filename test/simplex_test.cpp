@@ -953,40 +953,40 @@ TEST(LexMinSimplexTest, BasicAssertions) {
   }
   EXPECT_EQ(solSum, 3);
   for (size_t i = 0; i < 37; ++i)
-    EXPECT_EQ(sol(i), (i == 28) || (i == 30) || (i == 33));
+    EXPECT_EQ(sol[i], (i == 28) || (i == 30) || (i == 33));
   {
     // test that we didn't invalidate the simplex
     // note that we do not initiate feasible
     auto C{simp.getCost()};
-    C(0) = 0;
-    C(_(1, 37)) = 1;
-    C(_(37, end)) = 0;
+    C[0] = 0;
+    C[_(1, 37)] = 1;
+    C[_(37, end)] = 0;
     EXPECT_EQ(simp.run(), -3);
     Vector<Rational> sol2 = simp.getSolution();
     size_t sum = 0;
     for (size_t i = 0; i < 38; ++i) {
-      Rational r = sol2(i);
+      Rational r = sol2[i];
       sum += r.numerator;
       EXPECT_EQ(r.denominator, 1);
     }
     EXPECT_EQ(sum, 3);
     for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
+      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
   }
   {
     // test new simplex
     Simplex simp2{tableau};
     EXPECT_FALSE(simp2.initiateFeasible());
     auto C{simp2.getCost()};
-    C(0) = 0;
-    C(_(1, 37)) = 1;
-    C(_(37, end)) = 0;
+    C[0] = 0;
+    C[_(1, 37)] = 1;
+    C[_(37, end)] = 0;
     EXPECT_EQ(simp2.run(), -3);
     Vector<Rational> sol2 = simp2.getSolution();
     size_t sum = 0;
     Rational rsum = 0; // test summing rationals
     for (size_t i = 0; i < 38; ++i) {
-      Rational r = sol2(i);
+      Rational r = sol2[i];
       sum += r.numerator;
       EXPECT_EQ(r.denominator, 1);
       rsum += r;
@@ -994,7 +994,7 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     EXPECT_EQ(sum, 3);
     EXPECT_EQ(rsum, 3);
     for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
+      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
   }
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -1217,14 +1217,14 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     // test that we didn't invalidate the simplex
     // note that we do not initiate feasible
     auto C{simp.getCost()};
-    C(0) = 0;
-    C(_(1, 11)) = 1;
-    C(_(11, end)) = 0;
+    C[0] = 0;
+    C[_(1, 11)] = 1;
+    C[_(11, end)] = 0;
     EXPECT_EQ(simp.run(), 0);
     Vector<Rational> sol2 = simp.getSolution();
     size_t sum = 0;
     for (size_t i = 0; i < 10; ++i) {
-      Rational r = sol2(i);
+      Rational r = sol2[i];
       sum += r.numerator;
       EXPECT_EQ(r.denominator, 1);
     }

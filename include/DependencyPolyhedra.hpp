@@ -660,8 +660,8 @@ struct Dependence {
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      schv(_(begin, numLoopsIn)) = inPhi(i, _);
-      schv(_(numLoopsIn, numLoopsTotal)) = outPhi(i, _);
+      schv[_(begin, numLoopsIn)] = inPhi(i, _);
+      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(i, _);
       int64_t inO = inOffOmega[i], outO = outOffOmega[i];
       // forward means offset is 2nd - 1st
       schv[numLoopsTotal] = outO - inO;
@@ -703,8 +703,8 @@ struct Dependence {
       // }
       assert(i != numLoopsCommon);
       schv = 0;
-      schv(numLoopsIn - i - 1) = 1;
-      schv(numLoopsTotal - i - 1) = 1;
+      schv[numLoopsIn - i - 1] = 1;
+      schv[numLoopsTotal - i - 1] = 1;
       // forward means offset is 2nd - 1st
       schv[numLoopsTotal] = 0;
       // dependenceSatisfaction is phi_t - phi_s >= 0
@@ -728,10 +728,10 @@ struct Dependence {
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
-    sch(_(begin, numLoopsX)) = sx.getPhi()(d, _(end - numLoopsX, end));
-    sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _(end - numLoopsY, end));
-    sch(numLoopsTotal) = sx.getOffsetOmega()[d];
-    sch(numLoopsTotal + 1) = sy.getOffsetOmega()[d];
+    sch[_(begin, numLoopsX)] = sx.getPhi()(d, _(end - numLoopsX, end));
+    sch[_(numLoopsX, numLoopsTotal)] = sy.getPhi()(d, _(end - numLoopsY, end));
+    sch[numLoopsTotal] = sx.getOffsetOmega()[d];
+    sch[numLoopsTotal + 1] = sy.getOffsetOmega()[d];
     return dependenceSatisfaction.satisfiable(sch, numLambda);
   }
   [[nodiscard]] auto isSatisfied(size_t d) const -> bool {
@@ -743,8 +743,8 @@ struct Dependence {
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
     Vector<int64_t> sch(numLoopsTotal + 2);
     assert(sch.size() == numLoopsTotal + 2);
-    sch(numLoopsX - d - 1) = 1;
-    sch(numLoopsTotal - d - 1) = 1;
+    sch[numLoopsX - d - 1] = 1;
+    sch[numLoopsTotal - d - 1] = 1;
     // sch(numLoopsTotal) = x[d];
     // sch(numLoopsTotal + 1) = y[d];
     return dependenceSatisfaction.satisfiable(sch, numLambda);
@@ -792,10 +792,10 @@ struct Dependence {
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      sch(_(begin, numLoopsX)) = xPhi(i, _);
-      sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
-      sch(numLoopsTotal) = xOffOmega[i];
-      sch(numLoopsTotal + 1) = yOffOmega[i];
+      sch[_(begin, numLoopsX)] = xPhi(i, _);
+      sch[_(numLoopsX, numLoopsTotal)] = yPhi(i, _);
+      sch[numLoopsTotal] = xOffOmega[i];
+      sch[numLoopsTotal + 1] = yOffOmega[i];
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
         assert(!fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)));
@@ -851,8 +851,8 @@ struct Dependence {
       // }
       assert(i != numLoopsCommon);
       sch = 0;
-      sch(numLoopsX - 1 - i) = 1;
-      sch(numLoopsTotal - 1 - i) = 1;
+      sch[numLoopsX - 1 - i]= 1;
+      sch[numLoopsTotal - 1 - i] = 1;
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
         assert(!fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)));
