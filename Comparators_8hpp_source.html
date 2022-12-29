@@ -482,13 +482,13 @@ $(function() {
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;    <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a> b{<a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a>(U(_, 0))};</div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;    <span class="keywordflow">if</span> (d.size() == 0) {</div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = <span class="keywordtype">size_t</span>(V.numRow()); i &lt; b.size(); ++i)</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        <span class="keywordflow">if</span> (b(i))</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;        <span class="keywordflow">if</span> (b[i])</div>
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;      <span class="keyword">auto</span> H = V;</div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;      Col oldn = H.numCol();</div>
 <div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;      H.resize(oldn + 1);</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; H.numRow(); ++i)</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        H(i, oldn) = -b(i);</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;        H(i, oldn) = -b[i];</div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;      NormalForm::solveSystem(H);</div>
 <div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numEquations; i &lt; H.numRow(); ++i)</div>
 <div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> rhs = H(i, oldn))</div>
@@ -500,129 +500,128 @@ $(function() {
 <div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;    <span class="keywordflow">else</span> {</div>
 <div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;      <span class="keywordtype">size_t</span> numSlack = size_t(V.numRow()) - numEquations;</div>
 <div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;      <span class="comment">// Vector&lt;int64_t&gt; dinv = d; // copy</span></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;      <span class="keyword">auto</span> Dlcm = d[0];</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;      int64_t Dlcm = d[0];</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;      <span class="comment">// We represent D martix as a vector, and multiply the lcm to the</span></div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;      <span class="comment">// linear equation to avoid store D^(-1) as rational type</span></div>
 <div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; d.size(); ++i)</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;        Dlcm = lcm(Dlcm, d(i));</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> b2;</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      b2.resizeForOverwrite(d.size());</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; d.size(); ++i)</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;        b2(i) = -b(i) * Dlcm / d(i);</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;      <span class="keywordtype">size_t</span> numRowTrunc = size_t(U.numRow());</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b2;</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      <span class="keyword">auto</span> NSdim = V.numCol() - numRowTrunc;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;        expandW(i, 0) = c(i);</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; NSdim; ++j) {</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;          <span class="keyword">auto</span> val = V(i + numEquations, numRowTrunc + j) * Dlcm;</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;          expandW(i, j + 1) = -val;</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;        }</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      }</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;    }</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;  }</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> greaterEqual(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> query) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> b = U(_, _(begin, query.size())) * query;</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;    <span class="comment">// Full column rank case</span></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;    <span class="keywordflow">if</span> (d.size() == 0) {</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = <span class="keywordtype">size_t</span>(V.numRow()); i &lt; b.size(); ++i)</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;        <span class="keywordflow">if</span> (b(i))</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;      <span class="keyword">auto</span> H = V;</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;      <span class="keyword">auto</span> oldn = H.numCol();</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;      H.resize(oldn + 1);</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; H.numRow(); ++i)</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;        H(i, oldn) = b(i);</div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;      NormalForm::solveSystem(H);</div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numEquations; i &lt; H.numRow(); ++i)</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> rhs = H(i, oldn))</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;          <span class="keywordflow">if</span> ((rhs &gt; 0) != (H(i, i) &gt; 0))</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    }</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;    <span class="comment">// Column rank deficient case</span></div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;    <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;      <span class="keywordtype">size_t</span> numSlack = size_t(V.numRow()) - numEquations;</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> dinv = d; <span class="comment">// copy</span></div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;      <span class="keyword">auto</span> Dlcm = dinv[0];</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;      <span class="comment">// We represent D martix as a vector, and multiply the lcm to the</span></div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;      <span class="comment">// linear equation to avoid store D^(-1) as rational type</span></div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; dinv.size(); ++i)</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;        Dlcm = lcm(Dlcm, dinv(i));</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; dinv.size(); ++i)</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;        dinv(i) = Dlcm / dinv(i);</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;      b *= dinv;</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      <span class="keywordtype">size_t</span> numRowTrunc = size_t(U.numRow());</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b;</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      <span class="keyword">auto</span> NSdim = V.numCol() - numRowTrunc;</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;      IntMatrix expandW(numSlack, NSdim * 2 + 1);</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;        expandW(i, 0) = c(i);</div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; NSdim; ++j) {</div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;          <span class="keyword">auto</span> val = V(i + numEquations, numRowTrunc + j) * Dlcm;</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;          expandW(i, j + 1) = -val;</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;        }</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      }</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      IntMatrix Wcouple{0, expandW.numCol()};</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    }</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;  }</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;};</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160; </div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;static_assert(Comparator&lt;LinearSymbolicComparator&gt;);</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160; </div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;<span class="keyword">static</span> constexpr <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;, <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a> &amp;,</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;                                     <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;) {}</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;A, IntMatrix &amp;E,</div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;                                  <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;C) {</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVar = size_t(E.numCol());</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;  assert(A.numCol() == numVar);</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;  <span class="keywordflow">if</span> (A.numRow() &lt;= 1)</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> o = <span class="keywordtype">size_t</span>(A.numRow()) - 1; o &gt; 0;) {</div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = o--; i &lt; A.numRow(); ++i) {</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      <span class="keywordtype">bool</span> isNeg = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; numVar; ++v) {</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;        <span class="keywordflow">if</span> (A(i, v) != -A(o, v)) {</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;          isNeg = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;          <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;        }</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      }</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      <span class="keywordflow">if</span> (isNeg &amp;&amp; C.equalNegative(A(i, _), A(o, _))) {</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;        <span class="keywordtype">size_t</span> e = size_t(E.numRow());</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;        E.resize(e + 1, numVar);</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; numVar; ++v)</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;          E(e, v) = A(i, v);</div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;        eraseConstraint(A, i, o);</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;        <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;      }</div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;    }</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  }</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;}</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;        Dlcm = lcm(Dlcm, d[i]);</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> b2 = -b * Dlcm / d;</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      <span class="keywordtype">size_t</span> numRowTrunc = size_t(U.numRow());</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b2;</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;      <span class="keyword">auto</span> NSdim = V.numCol() - numRowTrunc;</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;        expandW(i, 0) = c[i];</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; NSdim; ++j) {</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;          <span class="keyword">auto</span> val = V(i + numEquations, numRowTrunc + j) * Dlcm;</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;          expandW(i, j + 1) = -val;</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;        }</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;      }</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;      IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    }</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;  }</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> greaterEqual(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> query) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> b = U(_, _(begin, query.size())) * query;</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;    <span class="comment">// Full column rank case</span></div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;    <span class="keywordflow">if</span> (d.size() == 0) {</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = <span class="keywordtype">size_t</span>(V.numRow()); i &lt; b.size(); ++i)</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;        <span class="keywordflow">if</span> (b[i])</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;      <span class="keyword">auto</span> H = V;</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;      Col oldn = H.numCol();</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;      H.resize(oldn + 1);</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; H.numRow(); ++i)</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;        H(i, oldn) = b[i];</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;      NormalForm::solveSystem(H);</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numEquations; i &lt; H.numRow(); ++i)</div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;        <span class="keywordflow">if</span> (<span class="keyword">auto</span> rhs = H(i, oldn))</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;          <span class="keywordflow">if</span> ((rhs &gt; 0) != (H(i, i) &gt; 0))</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    }</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;    <span class="comment">// Column rank deficient case</span></div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;    <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;      <span class="keywordtype">size_t</span> numSlack = size_t(V.numRow()) - numEquations;</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> dinv = d; <span class="comment">// copy</span></div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;      <span class="keyword">auto</span> Dlcm = dinv[0];</div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;      <span class="comment">// We represent D martix as a vector, and multiply the lcm to the</span></div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;      <span class="comment">// linear equation to avoid store D^(-1) as rational type</span></div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 1; i &lt; dinv.size(); ++i)</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;        Dlcm = lcm(Dlcm, dinv[i]);</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; dinv.size(); ++i) {</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;        <span class="keyword">auto</span> x = Dlcm / dinv[i];</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;        dinv[i] = x;</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;        b[i] *= x;</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;      }</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;      <span class="keywordtype">size_t</span> numRowTrunc = size_t(U.numRow());</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;      <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b;</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;      <span class="keyword">auto</span> NSdim = V.numCol() - numRowTrunc;</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      <span class="comment">// expand W stores [c -JV2 JV2]</span></div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="comment">//  we use simplex to solve [-JV2 JV2][y2+ y2-]&#39; &lt;= JV1D^(-1)Uq</span></div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;      <span class="comment">// where y2 = y2+ - y2-</span></div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;      IntMatrix expandW(numSlack, NSdim * 2 + 1);</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numSlack; ++i) {</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;        expandW(i, 0) = c[i];</div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;        <span class="comment">// expandW(i, 0) *= Dlcm;</span></div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; NSdim; ++j) {</div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;          <span class="keyword">auto</span> val = V(i + numEquations, numRowTrunc + j) * Dlcm;</div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;          expandW(i, j + 1) = -val;</div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;          expandW(i, NSdim + 1 + j) = val;</div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;        }</div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;      }</div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      IntMatrix Wcouple{0, expandW.numCol()};</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      std::optional&lt;Simplex&gt; optS{Simplex::positiveVariables(expandW, Wcouple)};</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      <span class="keywordflow">return</span> optS.has_value();</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    }</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  }</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;};</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160; </div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;static_assert(Comparator&lt;LinearSymbolicComparator&gt;);</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160; </div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;<span class="keyword">static</span> constexpr <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;, <a class="code" href="structEmptyMatrix.html">EmptyMatrix&lt;int64_t&gt;</a> &amp;,</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;                                     <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;) {}</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> moveEqualities(IntMatrix &amp;A, IntMatrix &amp;E,</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;                                  <span class="keyword">const</span> Comparator <span class="keyword">auto</span> &amp;C) {</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numVar = size_t(E.numCol());</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;  assert(A.numCol() == numVar);</div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;  <span class="keywordflow">if</span> (A.numRow() &lt;= 1)</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> o = <span class="keywordtype">size_t</span>(A.numRow()) - 1; o &gt; 0;) {</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = o--; i &lt; A.numRow(); ++i) {</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;      <span class="keywordtype">bool</span> isNeg = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; numVar; ++v) {</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;        <span class="keywordflow">if</span> (A(i, v) != -A(o, v)) {</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;          isNeg = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;          <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;        }</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;      }</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;      <span class="keywordflow">if</span> (isNeg &amp;&amp; C.equalNegative(A(i, _), A(o, _))) {</div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;        <span class="keywordtype">size_t</span> e = size_t(E.numRow());</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;        E.resize(e + 1, numVar);</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; numVar; ++v)</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;          E(e, v) = A(i, v);</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;        eraseConstraint(A, i, o);</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;        <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;      }</div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;    }</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  }</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;}</div>
 <div class="ttc" id="astructBaseComparator_html"><div class="ttname"><a href="structBaseComparator.html">BaseComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:101</div></div>
 <div class="ttc" id="astructEmptyComparator_html"><div class="ttname"><a href="structEmptyComparator.html">EmptyComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:16</div></div>
-<div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:7</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1502</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1089</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
+<div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:6</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:766</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1490</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1073</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:932</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:267</div></div>
 <div class="ttc" id="astructLiteralComparator_html"><div class="ttname"><a href="structLiteralComparator.html">LiteralComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:53</div></div>
 </div><!-- fragment --></div><!-- contents -->

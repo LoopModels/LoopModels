@@ -357,7 +357,7 @@ $(function() {
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;        <span class="keywordflow">if</span> (loopInd &gt;= 0) {</div>
 <div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;          <span class="keywordflow">if</span> (<span class="keyword">auto</span> c = getConstantInt(x-&gt;getOperand(1))) {</div>
 <div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;            <span class="comment">// we want the innermost loop to have index 0</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;            v(end - loopInd) += *c;</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;            v[end - loopInd] += *c;</div>
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;            <span class="keywordflow">return</span> fillAffineIndices(v, offsets, symbolicOffsets,</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;                                     x-&gt;getOperand(0), mlt, numPeeled);</div>
 <div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;          } <span class="keywordflow">else</span></div>
@@ -748,9 +748,9 @@ $(function() {
 <div class="ttc" id="aclassTurboLoopPass_html_aeef5b3c39dc10c8350ef7b89efff46de"><div class="ttname"><a href="classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de">TurboLoopPass::pushLoopTree</a></div><div class="ttdeci">auto pushLoopTree(llvm::SmallVectorImpl&lt; LoopTree * &gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:157</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:300</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
-<div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:237</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:766</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:932</div></div>
+<div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:249</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:23</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:14</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1249</div></div>

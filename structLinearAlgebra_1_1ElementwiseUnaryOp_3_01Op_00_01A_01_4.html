@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: LinearAlgebra::MatVecMul&lt; A, B &gt; Struct Template Reference</title>
+<title>LoopModels: LinearAlgebra::ElementwiseUnaryOp&lt; Op, A &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -61,7 +61,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>LinearAlgebra</b></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1MatVecMul.html">MatVecMul</a></li>  </ul>
+<li class="navelem"><b>LinearAlgebra</b></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1ElementwiseUnaryOp_3_01Op_00_01A_01_4.html">ElementwiseUnaryOp&lt; Op, A &gt;</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -69,38 +69,38 @@ $(function() {
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structLinearAlgebra_1_1MatVecMul-members.html">List of all members</a>  </div>
+<a href="structLinearAlgebra_1_1ElementwiseUnaryOp_3_01Op_00_01A_01_4-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">LinearAlgebra::MatVecMul&lt; A, B &gt; Struct Template Reference</div>  </div>
+<div class="title">LinearAlgebra::ElementwiseUnaryOp&lt; Op, A &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
-<tr class="memitem:aec49126c7a8bd76e2522ef07fe5b4d64"><td class="memItemLeft" align="right" valign="top"><a id="aec49126c7a8bd76e2522ef07fe5b4d64"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = promote_eltype_t&lt; A, B &gt;</td></tr>
-<tr class="separator:aec49126c7a8bd76e2522ef07fe5b4d64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa450336d2225221f5927358e0b5d16e2"><td class="memItemLeft" align="right" valign="top"><a id="aa450336d2225221f5927358e0b5d16e2"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = typename A::eltype</td></tr>
+<tr class="separator:aa450336d2225221f5927358e0b5d16e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0dec02327683acfb6cf37c61a8a22e4d"><td class="memItemLeft" align="right" valign="top"><a id="a0dec02327683acfb6cf37c61a8a22e4d"></a>
+<tr class="memitem:add673c5d3b4e6e7f28f3e7a0b6e0dc20"><td class="memItemLeft" align="right" valign="top"><a id="add673c5d3b4e6e7f28f3e7a0b6e0dc20"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (size_t i) const</td></tr>
-<tr class="separator:a0dec02327683acfb6cf37c61a8a22e4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52504465f911ec97f437e90cb3644c52"><td class="memItemLeft" align="right" valign="top"><a id="a52504465f911ec97f437e90cb3644c52"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a52504465f911ec97f437e90cb3644c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1246cfede176a705e45e2de3aa0e89c8"><td class="memItemLeft" align="right" valign="top"><a id="a1246cfede176a705e45e2de3aa0e89c8"></a>
+<tr class="separator:add673c5d3b4e6e7f28f3e7a0b6e0dc20"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abf3c8d7e76f63f2c15d2c5cbff3b9e96"><td class="memItemLeft" align="right" valign="top"><a id="abf3c8d7e76f63f2c15d2c5cbff3b9e96"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const</td></tr>
+<tr class="separator:abf3c8d7e76f63f2c15d2c5cbff3b9e96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace4038f9df518c41f683ba2e24b209b8"><td class="memItemLeft" align="right" valign="top"><a id="ace4038f9df518c41f683ba2e24b209b8"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const</td></tr>
-<tr class="separator:a1246cfede176a705e45e2de3aa0e89c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ace4038f9df518c41f683ba2e24b209b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5d8ee71d69cbf9212154eaccf11a99ed"><td class="memItemLeft" align="right" valign="top"><a id="a5d8ee71d69cbf9212154eaccf11a99ed"></a>
-A&#160;</td><td class="memItemRight" valign="bottom"><b>a</b></td></tr>
-<tr class="separator:a5d8ee71d69cbf9212154eaccf11a99ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f0efeb0c29b5eeabaa8c99c61ade050"><td class="memItemLeft" align="right" valign="top"><a id="a7f0efeb0c29b5eeabaa8c99c61ade050"></a>
-B&#160;</td><td class="memItemRight" valign="bottom"><b>b</b></td></tr>
-<tr class="separator:a7f0efeb0c29b5eeabaa8c99c61ade050"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5928b0ab0bef6dc730a503c3b3ffc9a"><td class="memItemLeft" align="right" valign="top"><a id="ab5928b0ab0bef6dc730a503c3b3ffc9a"></a>
+const Op&#160;</td><td class="memItemRight" valign="bottom"><b>op</b></td></tr>
+<tr class="separator:ab5928b0ab0bef6dc730a503c3b3ffc9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86c6ca0b117fb7ab9b6bb7bb7a450a56"><td class="memItemLeft" align="right" valign="top"><a id="a86c6ca0b117fb7ab9b6bb7bb7a450a56"></a>
+const A&#160;</td><td class="memItemRight" valign="bottom"><b>a</b></td></tr>
+<tr class="separator:a86c6ca0b117fb7ab9b6bb7bb7a450a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Math_8hpp_source.html">Math.hpp</a></li>

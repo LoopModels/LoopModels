@@ -270,14 +270,14 @@ $(function() {
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <span class="comment">// view of tableau dropping const column</span></div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> tableauView;</div>
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a> consts;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keyword">auto</span> operator()(<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> i) <span class="keyword">const</span> -&gt; <a class="code" href="structRational.html">Rational</a> {</div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;      int64_t j = tableauView(0, i);</div>
 <div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;      <span class="keywordflow">if</span> (j &lt; 0)</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;        <span class="keywordflow">return</span> 0;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;      <span class="keywordflow">return</span> Rational::create(consts(j), tableauView(j + numExtraRows, i));</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;      <span class="keywordflow">return</span> Rational::create(consts[j], tableauView(j + numExtraRows, i));</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    }</div>
 <div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> B, <span class="keyword">typename</span> E&gt;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;B, E&gt;</a> r) -&gt; <a class="code" href="structSimplex_1_1Solution.html">Solution</a> {</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keyword">auto</span> operator[](<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;B, E&gt;</a> r) -&gt; <a class="code" href="structSimplex_1_1Solution.html">Solution</a> {</div>
 <div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;      <span class="keywordflow">return</span> <a class="code" href="structSimplex_1_1Solution.html">Solution</a>{tableauView(_, r), consts};</div>
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    }</div>
 <div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    [[nodiscard]] <span class="keyword">auto</span> size() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -372,23 +372,23 @@ $(function() {
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;        basicCons[i + numVar] = a;</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;        C(a, numVar + i) = 1;</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;        <span class="comment">// we now zero out the implicit cost of `1`</span></div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        costs(_(begin, numVar)) -= C(a, _(begin, numVar));</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;        costs[_(begin, numVar)] -= C(a, _(begin, numVar));</div>
 <div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;      }</div>
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;      <span class="comment">// false/0 means feasible</span></div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      <span class="comment">// true/non-zero infeasible</span></div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;      <span class="keywordflow">if</span> (runCore() != 0)</div>
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;      <span class="keywordflow">for</span> (ptrdiff_t c = 0; c &lt; C.numRow(); ++c) {</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordflow">if</span> (basicVars(c) &gt;= numVar) {</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;        <span class="keywordflow">if</span> (basicVars[c] &gt;= numVar) {</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;          assert(C(c, 0) == 0);</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;          assert(c == basicCons(basicVars(c)));</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;          assert(C(c, basicVars(c)) &gt;= 0);</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;          assert(c == basicCons[basicVars[c]]);</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;          assert(C(c, basicVars[c]) &gt;= 0);</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;          <span class="comment">// find var to make basic in its place</span></div>
 <div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;          <span class="keywordflow">for</span> (ptrdiff_t v = numVar; v != 0;) {</div>
 <div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;            <span class="comment">// search for a non-basic variable</span></div>
 <div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;            <span class="comment">// (basicConstraints&lt;0)</span></div>
 <div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;            assert(v &gt; 1);</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;            <span class="keywordflow">if</span> ((basicCons(--v) &gt;= 0) || (C(c, v) == 0))</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;            <span class="keywordflow">if</span> ((basicCons[--v] &gt;= 0) || (C(c, v) == 0))</div>
 <div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;              <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;            <span class="keywordflow">if</span> (C(c, v) &lt; 0)</div>
 <div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;              C(c, _) *= -1;</div>
@@ -508,17 +508,17 @@ $(function() {
 <div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;    <a class="code" href="structLinearAlgebra_1_1StridedVector.html">StridedVector&lt;int64_t&gt;</a> basicVars{getBasicVariables()};</div>
 <div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;    <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> basicConstraints{getBasicConstraints()};</div>
 <div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 1; v &lt; C.numCol(); ++v) {</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;      int64_t c = basicConstraints(v);</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;      int64_t c = basicConstraints[v];</div>
 <div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;      <span class="keywordflow">if</span> (c &lt; 0)</div>
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;      assert(allZero(C(_(1, 1 + c), v)));</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;      assert(allZero(C(_(2 + c, end), v)));</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;      assert(<span class="keywordtype">size_t</span>(basicVars(c)) == v);</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;      assert(<span class="keywordtype">size_t</span>(basicVars[c]) == v);</div>
 <div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;    }</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> c = 1; c &lt; C.numRow(); ++c) {</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      int64_t v = basicVars(c - 1);</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;      int64_t v = basicVars[c - 1];</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;      <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span>(v) &lt; basicConstraints.size()) {</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;        assert(c - 1 == <span class="keywordtype">size_t</span>(basicConstraints(v)));</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;        assert(c - 1 == <span class="keywordtype">size_t</span>(basicConstraints[v]));</div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;        assert(C(c, v) &gt;= 0);</div>
 <div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;      }</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;      assert(C(c, 0) &gt;= 0);</div>
@@ -567,7 +567,7 @@ $(function() {
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C{getCostsAndConstraints()};</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicConstraints{getBasicConstraints()};</div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    int64_t c = basicConstraints(v);</div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    int64_t c = basicConstraints[v];</div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <span class="keywordflow">if</span> (c &lt; 0)</div>
 <div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;    <span class="comment">// we try to zero `v` or at least minimize it.</span></div>
@@ -586,7 +586,7 @@ $(function() {
 <div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C{getCostsAndConstraints()};</div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">MutStridedVector&lt;int64_t&gt;</a> basicVars{getBasicVariables()};</div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicConstraints{getBasicConstraints()};</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    int64_t c = basicConstraints(v);</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;    int64_t c = basicConstraints[v];</div>
 <div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;    int64_t cc = c++;</div>
 <div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;    <span class="keywordflow">if</span> ((cc &lt; 0) || (C(c, 0)))</div>
 <div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;      <span class="keywordflow">return</span> cc &gt;= 0;</div>
@@ -594,7 +594,7 @@ $(function() {
 <div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    assertCanonical();</div>
 <div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> ev = ptrdiff_t(C.numCol()); ev &gt; v + 1;) {</div>
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;      <span class="comment">// search for a non-basic variable (basicConstraints&lt;0)</span></div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      <span class="keywordflow">if</span> ((basicConstraints(--ev) &gt;= 0) || (C(c, ev) == 0))</div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      <span class="keywordflow">if</span> ((basicConstraints[--ev] &gt;= 0) || (C(c, ev) == 0))</div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;      <span class="keywordflow">if</span> (C(c, ev) &lt; 0)</div>
 <div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;        C(c, _) *= -1;</div>
@@ -626,7 +626,7 @@ $(function() {
 <div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;    <span class="comment">//     C(0, v) = (u - l) + u - v;</span></div>
 <div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    C(0, _(l, u)) = 1;</div>
 <div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = l; v &lt; u; ++v) {</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;      int64_t c = basicConstraints(v);</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;      int64_t c = basicConstraints[v];</div>
 <div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;      <span class="keywordflow">if</span> (c &gt;= 0)</div>
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;        NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);</div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;    }</div>
@@ -652,8 +652,8 @@ $(function() {
 <div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicConstraints{getBasicConstraints()};</div>
 <div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = 0; v &lt; sol.size();) {</div>
 <div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;      <span class="keywordtype">size_t</span> sv = v++;</div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;      int64_t c = basicConstraints(v);</div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;      sol(sv) = c &gt;= 0 ? Rational::create(C(c, 0), C(c, v)) : <a class="code" href="structRational.html">Rational</a>{0, 1};</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;      int64_t c = basicConstraints[v];</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;      sol[sv] = c &gt;= 0 ? Rational::create(C(c, 0), C(c, v)) : <a class="code" href="structRational.html">Rational</a>{0, 1};</div>
 <div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;    }</div>
 <div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  }</div>
 <div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;  <span class="comment">// A(:,1:end)*x &lt;= A(:,0)</span></div>
@@ -815,7 +815,7 @@ $(function() {
 <div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="keyword">auto</span> basicVars{getBasicVariables()};</div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    <span class="comment">// llvm::errs() &lt;&lt; &quot;Simplex solution:&quot; &lt;&lt; &quot;\n&quot;;</span></div>
 <div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; basicVars.size(); ++i) {</div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;      <span class="keywordtype">size_t</span> v = basicVars(i);</div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;      <span class="keywordtype">size_t</span> v = basicVars[i];</div>
 <div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;      <span class="keywordflow">if</span> (v &lt;= numSlackVar)</div>
 <div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;        <span class="keywordflow">continue</span>;</div>
 <div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      <span class="keywordflow">if</span> (C(i, 0)) {</div>
@@ -1085,18 +1085,19 @@ $(function() {
 <div class="line"><a name="l01018"></a><span class="lineno"> 1018</span>&#160;<span class="comment">  }</span></div>
 <div class="line"><a name="l01019"></a><span class="lineno"> 1019</span>&#160;<span class="comment">  */</span></div>
 <div class="line"><a name="l01020"></a><span class="lineno"> 1020</span>&#160;};</div>
+<div class="line"><a name="l01021"></a><span class="lineno"> 1021</span>&#160;static_assert(AbstractVector&lt;Simplex::Solution&gt;);</div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt&lt; AxisType::RowStride &gt;</a></div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1762</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1548</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1140</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1502</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:567</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1089</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1750</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1536</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:766</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1131</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1490</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:575</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1073</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:932</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:7</div></div>
-<div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:16</div></div>
+<div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 <div class="ttc" id="astructSimplex_1_1Solution_html"><div class="ttname"><a href="structSimplex_1_1Solution.html">Simplex::Solution</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:200</div></div>
 <div class="ttc" id="astructSimplex_html"><div class="ttname"><a href="structSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:19</div></div>
 </div><!-- fragment --></div><!-- contents -->

@@ -715,8 +715,8 @@ $(function() {
 <div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;      <span class="comment">//   present at that level</span></div>
 <div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;      <span class="comment">// }</span></div>
 <div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;      assert(i != numLoopsCommon);</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;      schv(_(begin, numLoopsIn)) = inPhi(i, _);</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;      schv(_(numLoopsIn, numLoopsTotal)) = outPhi(i, _);</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;      schv[_(begin, numLoopsIn)] = inPhi(i, _);</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(i, _);</div>
 <div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;      int64_t inO = inOffOmega[i], outO = outOffOmega[i];</div>
 <div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
 <div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      schv[numLoopsTotal] = outO - inO;</div>
@@ -758,8 +758,8 @@ $(function() {
 <div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;      <span class="comment">// }</span></div>
 <div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;      assert(i != numLoopsCommon);</div>
 <div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;      schv = 0;</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      schv(numLoopsIn - i - 1) = 1;</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;      schv(numLoopsTotal - i - 1) = 1;</div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;      schv[numLoopsIn - i - 1] = 1;</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;      schv[numLoopsTotal - i - 1] = 1;</div>
 <div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;      <span class="comment">// forward means offset is 2nd - 1st</span></div>
 <div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;      schv[numLoopsTotal] = 0;</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;      <span class="comment">// dependenceSatisfaction is phi_t - phi_s &gt;= 0</span></div>
@@ -783,10 +783,10 @@ $(function() {
 <div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsTotal = numLoopsX + numLoopsY;</div>
 <div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> sch;</div>
 <div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;    sch.resizeForOverwrite(numLoopsTotal + 2);</div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;    sch(_(begin, numLoopsX)) = sx.getPhi()(d, _(end - numLoopsX, end));</div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _(end - numLoopsY, end));</div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    sch(numLoopsTotal) = sx.getOffsetOmega()[d];</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    sch(numLoopsTotal + 1) = sy.getOffsetOmega()[d];</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;    sch[_(begin, numLoopsX)] = sx.getPhi()(d, _(end - numLoopsX, end));</div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;    sch[_(numLoopsX, numLoopsTotal)] = sy.getPhi()(d, _(end - numLoopsY, end));</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;    sch[numLoopsTotal] = sx.getOffsetOmega()[d];</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    sch[numLoopsTotal + 1] = sy.getOffsetOmega()[d];</div>
 <div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction.satisfiable(sch, numLambda);</div>
 <div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;  }</div>
 <div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> isSatisfied(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; <span class="keywordtype">bool</span> {</div>
@@ -798,8 +798,8 @@ $(function() {
 <div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span> numLoopsTotal = numLoopsX + numLoopsY;</div>
 <div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> sch(numLoopsTotal + 2);</div>
 <div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;    assert(sch.size() == numLoopsTotal + 2);</div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    sch(numLoopsX - d - 1) = 1;</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    sch(numLoopsTotal - d - 1) = 1;</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;    sch[numLoopsX - d - 1] = 1;</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;    sch[numLoopsTotal - d - 1] = 1;</div>
 <div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;    <span class="comment">// sch(numLoopsTotal) = x[d];</span></div>
 <div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;    <span class="comment">// sch(numLoopsTotal + 1) = y[d];</span></div>
 <div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;    <span class="keywordflow">return</span> dependenceSatisfaction.satisfiable(sch, numLambda);</div>
@@ -847,10 +847,10 @@ $(function() {
 <div class="line"><a name="l00792"></a><span class="lineno">  792</span>&#160;      <span class="comment">//   present at that level</span></div>
 <div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;      <span class="comment">// }</span></div>
 <div class="line"><a name="l00794"></a><span class="lineno">  794</span>&#160;      assert(i != numLoopsCommon);</div>
-<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;      sch(_(begin, numLoopsX)) = xPhi(i, _);</div>
-<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;      sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);</div>
-<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;      sch(numLoopsTotal) = xOffOmega[i];</div>
-<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;      sch(numLoopsTotal + 1) = yOffOmega[i];</div>
+<div class="line"><a name="l00795"></a><span class="lineno">  795</span>&#160;      sch[_(begin, numLoopsX)] = xPhi(i, _);</div>
+<div class="line"><a name="l00796"></a><span class="lineno">  796</span>&#160;      sch[_(numLoopsX, numLoopsTotal)] = yPhi(i, _);</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;      sch[numLoopsTotal] = xOffOmega[i];</div>
+<div class="line"><a name="l00798"></a><span class="lineno">  798</span>&#160;      sch[numLoopsTotal + 1] = yOffOmega[i];</div>
 <div class="line"><a name="l00799"></a><span class="lineno">  799</span>&#160;      <span class="keywordflow">if</span> (fxy.unSatisfiableZeroRem(sch, numLambda, <span class="keywordtype">size_t</span>(nonTimeDim))) {</div>
 <div class="line"><a name="l00800"></a><span class="lineno">  800</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l00801"></a><span class="lineno">  801</span>&#160;        assert(!fyx.unSatisfiableZeroRem(sch, numLambda, <span class="keywordtype">size_t</span>(nonTimeDim)));</div>
@@ -906,8 +906,8 @@ $(function() {
 <div class="line"><a name="l00851"></a><span class="lineno">  851</span>&#160;      <span class="comment">// }</span></div>
 <div class="line"><a name="l00852"></a><span class="lineno">  852</span>&#160;      assert(i != numLoopsCommon);</div>
 <div class="line"><a name="l00853"></a><span class="lineno">  853</span>&#160;      sch = 0;</div>
-<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;      sch(numLoopsX - 1 - i) = 1;</div>
-<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;      sch(numLoopsTotal - 1 - i) = 1;</div>
+<div class="line"><a name="l00854"></a><span class="lineno">  854</span>&#160;      sch[numLoopsX - 1 - i]= 1;</div>
+<div class="line"><a name="l00855"></a><span class="lineno">  855</span>&#160;      sch[numLoopsTotal - 1 - i] = 1;</div>
 <div class="line"><a name="l00856"></a><span class="lineno">  856</span>&#160;      <span class="keywordflow">if</span> (fxy.unSatisfiableZeroRem(sch, numLambda, <span class="keywordtype">size_t</span>(nonTimeDim))) {</div>
 <div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l00858"></a><span class="lineno">  858</span>&#160;        assert(!fyx.unSatisfiableZeroRem(sch, numLambda, <span class="keywordtype">size_t</span>(nonTimeDim)));</div>
@@ -1123,13 +1123,13 @@ $(function() {
 <div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;};</div>
 <div class="ttc" id="astructDependencePolyhedra_html"><div class="ttname"><a href="structDependencePolyhedra.html">DependencePolyhedra</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:31</div></div>
 <div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:372</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1548</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:764</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1502</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:705</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1834</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1089</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:942</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1536</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:766</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1490</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:713</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1SquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1822</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1073</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:932</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:14</div></div>
 <div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructSchedule_html"><div class="ttname"><a href="structSchedule.html">Schedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:31</div></div>

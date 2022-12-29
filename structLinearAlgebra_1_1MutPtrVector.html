@@ -86,15 +86,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2a515296d9981d10ca46fe7da45bf888"><td class="memItemLeft" align="right" valign="top"><a id="a2a515296d9981d10ca46fe7da45bf888"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) -&gt; T &amp;</td></tr>
 <tr class="separator:a2a515296d9981d10ca46fe7da45bf888"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f77f5683376edc2c5665ea257930b7e"><td class="memItemLeft" align="right" valign="top"><a id="a0f77f5683376edc2c5665ea257930b7e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i) -&gt; T &amp;</td></tr>
-<tr class="separator:a0f77f5683376edc2c5665ea257930b7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb6b064c6be21c6b863427d1813dd2bd"><td class="memItemLeft" align="right" valign="top"><a id="afb6b064c6be21c6b863427d1813dd2bd"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) const -&gt; const T &amp;</td></tr>
 <tr class="separator:afb6b064c6be21c6b863427d1813dd2bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf20d14692760bec3e3d369c90d2847e"><td class="memItemLeft" align="right" valign="top"><a id="adf20d14692760bec3e3d369c90d2847e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (const ScalarIndex auto i) const -&gt; const T &amp;</td></tr>
-<tr class="separator:adf20d14692760bec3e3d369c90d2847e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a768f5111e1d273feb7611822d47f0a6a"><td class="memItemLeft" align="right" valign="top"><a id="a768f5111e1d273feb7611822d47f0a6a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>front</b> () -&gt; T &amp;</td></tr>
 <tr class="separator:a768f5111e1d273feb7611822d47f0a6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,20 +113,20 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrVector</b>
 <tr class="memitem:a0073c1e18b65032e8e40e0e9010d1fc5"><td class="memItemLeft" align="right" valign="top"><a id="a0073c1e18b65032e8e40e0e9010d1fc5"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>MutPtrVector</b> (T *mem, size_t N)</td></tr>
 <tr class="separator:a0073c1e18b65032e8e40e0e9010d1fc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad79f40346c3b676e594cea8966e0e614"><td class="memItemLeft" align="right" valign="top"><a id="ad79f40346c3b676e594cea8966e0e614"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:ad79f40346c3b676e594cea8966e0e614"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c7607251b6b9aed034e7533a442b38e"><td class="memItemLeft" align="right" valign="top"><a id="a6c7607251b6b9aed034e7533a442b38e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt; i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:a6c7607251b6b9aed034e7533a442b38e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4f1bdea60f7299b1230a2dc495bc2f76"><td class="memTemplParams" colspan="2"><a id="a4f1bdea60f7299b1230a2dc495bc2f76"></a>
+<tr class="memitem:a90627553583ebe873ca8cb75bd2f8397"><td class="memItemLeft" align="right" valign="top"><a id="a90627553583ebe873ca8cb75bd2f8397"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a90627553583ebe873ca8cb75bd2f8397"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a838b9bc5354e70efb1f01ef800dce6fe"><td class="memItemLeft" align="right" valign="top"><a id="a838b9bc5354e70efb1f01ef800dce6fe"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt; i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a838b9bc5354e70efb1f01ef800dce6fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a34ac6e4270b7c7f62cd49572b38a5b"><td class="memTemplParams" colspan="2"><a id="a5a34ac6e4270b7c7f62cd49572b38a5b"></a>
 template&lt;typename F , typename L &gt; </td></tr>
-<tr class="memitem:a4f1bdea60f7299b1230a2dc495bc2f76"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; F, L &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:a4f1bdea60f7299b1230a2dc495bc2f76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10f5bb0c9c4b9d3cfcf737f4ca8b3110"><td class="memTemplParams" colspan="2"><a id="a10f5bb0c9c4b9d3cfcf737f4ca8b3110"></a>
+<tr class="memitem:a5a34ac6e4270b7c7f62cd49572b38a5b"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; F, L &gt; i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a5a34ac6e4270b7c7f62cd49572b38a5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d75f085b951364696d7907425171da4"><td class="memTemplParams" colspan="2"><a id="a2d75f085b951364696d7907425171da4"></a>
 template&lt;typename F , typename L &gt; </td></tr>
-<tr class="memitem:a10f5bb0c9c4b9d3cfcf737f4ca8b3110"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator()</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; F, L &gt; i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
-<tr class="separator:a10f5bb0c9c4b9d3cfcf737f4ca8b3110"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d75f085b951364696d7907425171da4"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator[]</b> (<a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; F, L &gt; i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
+<tr class="separator:a2d75f085b951364696d7907425171da4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8000d175d76dd5cb847198c338001330"><td class="memItemLeft" align="right" valign="top"><a id="a8000d175d76dd5cb847198c338001330"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> () -&gt; T *</td></tr>
 <tr class="separator:a8000d175d76dd5cb847198c338001330"><td class="memSeparator" colspan="2">&#160;</td></tr>
