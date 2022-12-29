@@ -20,7 +20,7 @@ jobs:
     - run: cmake --build build/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_TEST_COVERAGE=1 -DENABLE_TEST_EXCEPTIONS=OFF
+    - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_TEST_COVERAGE=1 -DENABLE_TEST_EXCEPTIONS=OFF
       env:
         CXX: clang++-15
     - run: cmake --build builddirclang/test
