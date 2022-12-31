@@ -73,6 +73,11 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a4663ea40276508a876f294b5e70ce768"><td class="memItemLeft" align="right" valign="top"><a id="a4663ea40276508a876f294b5e70ce768"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
+<tr class="separator:a4663ea40276508a876f294b5e70ce768"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afeebee9881046b7a8a5160060f26b84e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e">getMemAccesses</a> (llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> &gt;</td></tr>
+<tr class="separator:afeebee9881046b7a8a5160060f26b84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memItemLeft" align="right" valign="top"><a id="a11fd25bf0026933478ec6d6ffc6d65af"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
 <tr class="separator:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -187,7 +192,35 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="afeebee9881046b7a8a5160060f26b84e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afeebee9881046b7a8a5160060f26b84e">&#9670;&nbsp;</a></span>getMemAccesses()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto ScheduledNode::getMemAccesses </td>
+          <td>(</td>
+          <td class="paramtype">llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;&#160;</td>
+          <td class="paramname"><em>memAccess</em></td><td>)</td>
+          <td> const -&gt; llvm::SmallVector&lt;<a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Return the memory accesses after applying the <a class="el" href="structSchedule.html">Schedule</a>. indMat is [innerLoop&lt;-&gt;outerLoop] x arrayDim Phi is [outerLoop&lt;-&gt;innerLoop] x [innerLoop&lt;-&gt;outerLoop] if <code>i</code> and <code>j</code> are the old and new index vectors, respectively and <code>E</code> be an <a href="https://en.wikipedia.org/wiki/Exchange_matrix">exchange matrix</a> then we have <code>j = E*Phi * i + omega</code> <code>i = (E*Phi) \ (j - omega)</code> We'll let <code>EP = E*Phi</code> for simplicity. Additionally, the mapping to the array's dimensions was given by &lsquo;d = indMat&rsquo; * i + offsetMat * {1, symbols}<code> Where</code>d<code>is the index per dimension. So in terms of</code>j<code>, we have </code>d = indMat' * (EP \ (j - omega)) + offsetMat * {1, symbols}<code> </code>d = (indMat' / EP) * (j - omega) + offsetMat * {1, symbols}<code> </code>indMatNew' = indMat' / EP<code> </code>d = indMatNew' * j - indMatNew' * omega + offsetMat * {1, symbols}<code> </code>offsetMatNew = hcat( offsetMat(_,0) - indMatNew' * omega, offsetMat(_,_(1,end)) )` Thus, we calculate our updated memory accesses in this fashion. If <code>EP == I</code>, or equivalently if <code>E == P</code>, then we can skip the solves. If we also have that <code>omega == 0</code>, then we can return the original memory accesses, or at least a copy with <code>load/store</code> set appropriately. </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a></li>
 </ul>
 </div><!-- contents -->
