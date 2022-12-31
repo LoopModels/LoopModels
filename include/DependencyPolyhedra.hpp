@@ -369,6 +369,10 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
 }; // namespace DependencePolyhedra
 
+/// Dependence
+/// Represents a dependence relationship between two memory accesses.
+/// It contains simplices representing constraints that affine schedules
+/// are allowed to take.
 struct Dependence {
   // Plan here is...
   // depPoly gives the constraints
@@ -851,7 +855,7 @@ struct Dependence {
       // }
       assert(i != numLoopsCommon);
       sch = 0;
-      sch[numLoopsX - 1 - i]= 1;
+      sch[numLoopsX - 1 - i] = 1;
       sch[numLoopsTotal - 1 - i] = 1;
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG

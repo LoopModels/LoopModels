@@ -45,16 +45,16 @@ TEST(OrthogonalizationTest, BasicAssertions) {
       EXPECT_TRUE(K * A == I4);
     } else {
       // llvm::errs() << "K= " << K << "\nB= " << B << "\n";
-      LinearAlgebra::printVector(llvm::errs() << "included = ", included)
-        << "\n";
+      // LinearAlgebra::printVector(llvm::errs() << "included = ", included)
+      // << "\n";
       if (auto optlu = LU::fact(K)) {
         if (auto optA2 = (*optlu).inv()) {
           SquareMatrix<Rational> &A2 = *optA2;
           for (size_t n = 0; n < 4; ++n) {
             for (size_t j = 0; j < included.size(); ++j) {
-              llvm::errs() << "A2(" << n << ", " << j << ") = " << A2(n, j)
-                           << "; B(" << n << ", " << included[j]
-                           << ") = " << B(n, included[j]) << "\n";
+              // llvm::errs() << "A2(" << n << ", " << j << ") = " << A2(n, j)
+              //              << "; B(" << n << ", " << included[j]
+              //              << ") = " << B(n, included[j]) << "\n";
               EXPECT_EQ(A2(n, j), B(n, included[j]));
             }
           }
@@ -104,9 +104,9 @@ TEST(OrthogonalizationTest, BasicAssertions) {
   B(3, 5) = 1;
   llvm::errs() << "B_orth_motivating_example = " << B << "\n";
   auto [K, included] = NormalForm::orthogonalize(B);
-  LinearAlgebra::printVector(llvm::errs() << "K = " << K << "\nincluded = ",
-                             included)
-    << "\n";
+  // LinearAlgebra::printVector(llvm::errs() << "K = " << K << "\nincluded = ",
+  //                            included)
+  //   << "\n";
   EXPECT_EQ(included.size(), 4);
   for (size_t i = 0; i < 4; ++i)
     EXPECT_EQ(included[i], i);

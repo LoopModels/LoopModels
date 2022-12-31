@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
@@ -34,6 +35,18 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
   }
   v.push_back(x);
 }
+/// Represents a memory access that has been rotated according to some affine
+/// transform.
+struct ScheduledMemoryAccess {
+  MemoryAccess *access;
+  // may be `false` while `access->isStore()==true`
+  // which indicates a reload from this address.
+  bool isStore;
+  ScheduledMemoryAccess(MemoryAccess *access, const Schedule &schedule,
+                        bool isStore)
+    : access(access), isStore(isStore) {}
+};
+
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
 /// These instructions are all connected directly by through registers.
@@ -46,6 +59,7 @@ private:
   [[no_unique_address]] BitSet<> inNeighbors{};
   [[no_unique_address]] BitSet<> outNeighbors{};
   [[no_unique_address]] Schedule schedule{};
+  [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
   [[no_unique_address]] uint8_t numLoops{0};
@@ -53,6 +67,44 @@ private:
   [[no_unique_address]] bool visited{false};
 
 public:
+  ScheduledNode(unsigned int sId, MemoryAccess *store, unsigned int nodeIndex)
+    : storeId(sId) {
+    addMemory(sId, store, nodeIndex);
+  }
+  /// Return the memory accesses after applying the Schedule.
+  /// indMat is [innerLoop<->outerLoop] x arrayDim
+  /// Phi is [outerLoop<->innerLoop] x [innerLoop<->outerLoop]
+  /// if `i` and `j` are the old and new index vectors, respectively
+  /// and `E` be an [exchange
+  /// matrix](https://en.wikipedia.org/wiki/Exchange_matrix) then we have
+  ///  `j = E*Phi * i + omega`
+  ///  `i = (E*Phi) \ (j - omega)`
+  /// We'll let `EP = E*Phi` for simplicity.
+  /// Additionally, the mapping to the array's dimensions was given by
+  /// `d = indMat' * i + offsetMat * {1, symbols}`
+  /// Where `d` is the index per dimension.
+  /// So in terms of `j`, we have
+  /// `d = indMat' * (EP \ (j - omega)) + offsetMat * {1, symbols}`
+  /// `d = (indMat' / EP) * (j - omega) + offsetMat * {1, symbols}`
+  /// `indMatNew' = indMat' / EP`
+  /// `d = indMatNew' * j - indMatNew' * omega + offsetMat * {1, symbols}`
+  /// `offsetMatNew = hcat(
+  ///                   offsetMat(_,0) - indMatNew' * omega,
+  ///                   offsetMat(_,_(1,end))
+  ///                )`
+  /// Thus, we calculate our updated memory accesses in this fashion.
+  /// If `EP == I`, or equivalently if `E == P`, then we can skip the solves.
+  /// If we also have that `omega == 0`, then we can return the original
+  /// memory accesses, or at least a copy with `load/store` set appropriately.
+  [[nodiscard]] auto
+  getMemAccesses(llvm::ArrayRef<MemoryAccess *> memAccess) const
+    -> llvm::SmallVector<ScheduledMemoryAccess> {
+    llvm::SmallVector<ScheduledMemoryAccess> accesses;
+    accesses.reserve(memory.size());
+    for (auto i : memory)
+      accesses.emplace_back(memAccess[i], schedule, i == storeId);
+    return accesses;
+  }
   constexpr auto getMemory() -> BitSet<> & { return memory; }
   constexpr auto getInNeighbors() -> BitSet<> & { return inNeighbors; }
   constexpr auto getOutNeighbors() -> BitSet<> & { return outNeighbors; }
@@ -484,8 +536,7 @@ public:
       if (mai->isLoad())
         continue;
       unsigned nodeIndex = nodes.size();
-      ScheduledNode &node = nodes.emplace_back();
-      node.addMemory(i, mai, nodeIndex);
+      ScheduledNode &node = nodes.emplace_back(i, mai, nodeIndex);
       searchOperandsForLoads(visited, node, mai->getInstruction(), nodeIndex);
       visited.clear();
     }

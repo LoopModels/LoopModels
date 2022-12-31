@@ -1,6 +1,7 @@
 #pragma once
-#include "BitSets.hpp"
-#include "Loops.hpp"
+#include "./BitSets.hpp"
+#include "./Loops.hpp"
+#include <cstddef>
 #include <cstring>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/InstrTypes.h>
@@ -8,16 +9,29 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_ostream.h>
 
+static constexpr auto memoryAccessRequiredIndexSize(size_t arrayDim,
+                                                    size_t numLoops,
+                                                    size_t numSymbols)
+  -> size_t {
+  return arrayDim * numLoops + arrayDim * numSymbols;
+}
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
-  [[no_unique_address]] llvm::SmallVector<int64_t, 16> indices;
-  [[no_unique_address]] const llvm::SCEVUnknown *basePointer;
+  static constexpr size_t stackArrayDims = 3;
+  static constexpr size_t stackNumLoops = 4;
+  static constexpr size_t stackNumSymbols = 1;
+  [[no_unique_address]] llvm::SmallVector<
+    int64_t, memoryAccessRequiredIndexSize(stackArrayDims, stackNumLoops,
+                                           stackNumSymbols)>
+    indices;
+  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] NotNull<AffineLoopNest<>> loop;
-  [[no_unique_address]] llvm::Instruction *loadOrStore;
-  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, 3>
+  [[no_unique_address]] NotNull<llvm::Instruction> loadOrStore;
+  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, stackArrayDims>
+    sizes;
+  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, stackArrayDims>
     symbolicOffsets;
   // omegas order is [outer <-> inner]
   [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
@@ -28,7 +42,7 @@ struct MemoryAccess {
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] auto isLoad() const -> bool {
-    return llvm::isa<llvm::LoadInst>(loadOrStore);
+    return loadOrStore.isa<llvm::LoadInst>();
   }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
@@ -41,9 +55,9 @@ struct MemoryAccess {
   }
 
   [[nodiscard]] auto getAlign() const -> llvm::Align {
-    if (auto l = llvm::dyn_cast<llvm::LoadInst>(loadOrStore))
+    if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>())
       return l->getAlign();
-    else if (auto s = llvm::cast<llvm::StoreInst>(loadOrStore))
+    else if (auto s = loadOrStore.cast<llvm::StoreInst>())
       return s->getAlign();
 // note cast not dyn_cast for store
 // not a load or store
@@ -61,10 +75,17 @@ struct MemoryAccess {
   // static inline size_t requiredData(size_t dim, size_t numLoops){
   // 	return dim*numLoops +
   // }
-  // indexMatrix()' * i == indices
-  // indexMatrix() returns a getNumLoops() x arrayDim() matrix.
-  // e.g. [ 1 1; 0 1] corresponds to A[i, i + j]
-  // getNumLoops() x arrayDim()
+  /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// Maps loop indVars to array indices
+  /// Letting `i` be the indVars and `d` the indices:
+  /// indexMatrix()' * i == d
+  /// e.g. `indVars = [i, j]` and indexMatrix = [ 1 1; 0 1]
+  /// corresponds to A[i, i + j]
+  /// Note that `[i, j]` refers to loops in
+  /// innermost -> outermost order, i.e.
+  /// for (j : J)
+  ///   for (i : I)
+  ///      A[i, i + j]
   [[nodiscard]] auto indexMatrix() -> MutPtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
@@ -85,17 +106,17 @@ struct MemoryAccess {
     return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d, numSymbols,
                               numSymbols};
   }
-  [[nodiscard]] auto getInstruction() -> llvm::Instruction * {
+  [[nodiscard]] auto getInstruction() -> NotNull<llvm::Instruction> {
     return loadOrStore;
   }
-  [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
+  [[nodiscard]] auto getInstruction() const -> NotNull<llvm::Instruction> {
     return loadOrStore;
   }
   [[nodiscard]] auto getLoad() -> llvm::LoadInst * {
-    return llvm::dyn_cast<llvm::LoadInst>(loadOrStore);
+    return loadOrStore.dyn_cast<llvm::LoadInst>();
   }
   [[nodiscard]] auto getStore() -> llvm::StoreInst * {
-    return llvm::dyn_cast<llvm::StoreInst>(loadOrStore);
+    return loadOrStore.dyn_cast<llvm::StoreInst>();
   }
   /// initialize alignment from an elSize SCEV.
   static auto typeAlignment(const llvm::SCEV *S) -> llvm::Align {
@@ -105,7 +126,8 @@ struct MemoryAccess {
   }
   void resize(size_t d) {
     sizes.resize(d);
-    indices.resize(d * (getNumLoops() + getNumSymbols()));
+    indices.resize(
+      memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
   }
 
   inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }

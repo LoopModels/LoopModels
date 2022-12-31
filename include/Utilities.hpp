@@ -1,6 +1,7 @@
 #pragma once
 #include <concepts>
 #include <limits>
+#include <llvm/Support/Casting.h>
 #include <optional>
 #include <utility>
 
@@ -196,6 +197,21 @@ template <typename T> struct NotNull {
 #endif
     }
     return value;
+  }
+  template <typename C> [[nodiscard]] auto dyn_cast() -> C * {
+    return llvm::dyn_cast<C>(value);
+  }
+  template <typename C> [[nodiscard]] auto cast() -> NotNull<C> {
+    return NotNull<C>{llvm::cast<C>(value)};
+  }
+  template <typename C> [[nodiscard]] auto dyn_cast() const -> C * {
+    return llvm::dyn_cast<C>(value);
+  }
+  template <typename C> [[nodiscard]] auto cast() const -> NotNull<C> {
+    return NotNull<C>{llvm::cast<C>(value)};
+  }
+  template <typename C> [[nodiscard]] auto isa() const -> bool {
+    return llvm::isa<C>(value);
   }
 
 private:
