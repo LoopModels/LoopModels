@@ -35,8 +35,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
   default:
     break;
   }
-  if (isOne(x))
-    return T(One());
+  if (isOne(x)) return T(One());
   int64_t t = std::countr_zero(i) + 1;
   i >>= t;
   // T z(std::move(x));
@@ -46,8 +45,7 @@ template <typename TRC> auto powBySquare(TRC &&x, size_t i) {
     b = z;
     z *= b;
   }
-  if (i == 0)
-    return z;
+  if (i == 0) return z;
   T y(z);
   while (i) {
     t = std::countr_zero(i) + 1;
@@ -94,8 +92,7 @@ template <HasMul T> void powBySquare(T &z, T &a, T &b, T const &x, size_t i) {
     b.mul(z, z);
     std::swap(b, z);
   }
-  if (i == 0)
-    return;
+  if (i == 0) return;
   a = z;
   while (i) {
     t = std::countr_zero(i) + 1;
@@ -127,8 +124,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
   default:
     break;
   }
-  if (isOne(x))
-    return T(One());
+  if (isOne(x)) return T(One());
   int64_t t = std::countr_zero(i) + 1;
   i >>= t;
   // T z(std::move(x));
@@ -138,8 +134,7 @@ template <HasMul TRC> auto powBySquare(TRC &&x, size_t i) {
     b.mul(z, z);
     std::swap(b, z);
   }
-  if (i == 0)
-    return z;
+  if (i == 0) return z;
   T y(z);
   while (i) {
     t = std::countr_zero(i) + 1;

@@ -774,8 +774,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     bool notZero = !allZero(reverse.depPoly.getEqSymbols(i));
     // we should only find 1 non-zero
     EXPECT_FALSE((nonZeroInd != -1) & notZero);
-    if (notZero)
-      nonZeroInd = i;
+    if (notZero) nonZeroInd = i;
   }
   // v_1 is `n` for the load
   // v_4 is `n` for the store
@@ -1097,8 +1096,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
 
   iOuterMem.emplace_back(createMemAccess(sInd1, Sload_1, sch0_6));  // 11
   iOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch0_7)); // 12
-  for (auto &&mem : iOuterMem)
-    iOuterLoopNest.addMemory(&mem);
+  for (auto &&mem : iOuterMem) iOuterLoopNest.addMemory(&mem);
 
   llvm::SmallVector<Dependence, 0> d;
   d.reserve(4);
@@ -1120,8 +1118,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
   llvm::MutableArrayRef<MemoryAccess *> mem =
     iOuterLoopNest.getMemoryAccesses();
-  for (size_t i = 0; i < mem.size(); ++i)
-    memAccessIds[mem[i]] = i;
+  for (size_t i = 0; i < mem.size(); ++i) memAccessIds[mem[i]] = i;
   for (auto &e : iOuterLoopNest.getEdges()) {
     llvm::errs() << "\nEdge for array " << e.out->basePointer
                  << ", in ID: " << memAccessIds[e.in]
@@ -1131,8 +1128,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < nodes.size(); ++i) {
     const auto &v = nodes[i];
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.getMemory())
-      llvm::errs() << m << ", ";
+    for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
@@ -1200,8 +1196,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   jOuterMem.emplace_back(createMemAccess(sInd1, Sload_1, sch4_0));  // 11
   jOuterMem.emplace_back(createMemAccess(sInd1, Sstore_2, sch4_1)); // 12
 
-  for (auto &&mem : jOuterMem)
-    jOuterLoopNest.addMemory(&mem);
+  for (auto &&mem : jOuterMem) jOuterLoopNest.addMemory(&mem);
 
   EXPECT_TRUE(jOuterLoopNest.optimize().has_value());
   for (auto &edge : jOuterLoopNest.getEdges())
@@ -1210,8 +1205,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < jOuterLoopNest.numNodes(); ++i) {
     const auto &v = jOuterLoopNest.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.getMemory())
-      llvm::errs() << m << ", ";
+    for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
   IntMatrix optS(2);
@@ -1222,12 +1216,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (auto mem : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->nodeIndex) {
       Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
-      if (s.getNumLoops() == 1)
-        EXPECT_EQ(s.getPhi()(0, 0), 1);
-      else if (s.getFusionOmega()[1] < 3)
-        EXPECT_EQ(s.getPhi(), optSinnerUndef);
-      else
-        EXPECT_EQ(s.getPhi(), optS);
+      if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
+      else if (s.getFusionOmega()[1] < 3) EXPECT_EQ(s.getPhi(), optSinnerUndef);
+      else EXPECT_EQ(s.getPhi(), optS);
     }
   }
 }
@@ -1394,8 +1385,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   for (size_t i = 0; i < loopBlock.numNodes(); ++i) {
     const auto &v = loopBlock.getNode(i);
     llvm::errs() << "v_" << i << ":\nmem = ";
-    for (auto m : v.getMemory())
-      llvm::errs() << m << ", ";
+    for (auto m : v.getMemory()) llvm::errs() << m << ", ";
     llvm::errs() << v;
   }
   IntMatrix optPhi(2, 2);

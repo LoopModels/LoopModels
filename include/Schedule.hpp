@@ -68,8 +68,7 @@ struct Schedule {
   Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size() - 1) {
     data.resize(requiredScheduleStorage(numLoops));
     MutPtrVector<int64_t> o{getFusionOmega()};
-    for (size_t i = 0; i < omega.size(); ++i)
-      o[i] = omega[i];
+    for (size_t i = 0; i < omega.size(); ++i) o[i] = omega[i];
   }
   void truncate(size_t newNumLoops) {
     if (newNumLoops < numLoops) {

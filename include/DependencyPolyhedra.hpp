@@ -59,15 +59,13 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
     -> std::optional<int64_t> {
     for (size_t j = 1; j < getNumSymbols(); ++j)
-      if (A(i, j))
-        return {};
+      if (A(i, j)) return {};
     return A(i, 0);
   }
   [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
     -> std::optional<int64_t> {
     for (size_t j = 1; j < getNumSymbols(); ++j)
-      if (E(i, j))
-        return {};
+      if (E(i, j)) return {};
     return E(i, 0);
   }
 
@@ -75,8 +73,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     -> size_t {
     const size_t M = std::min(x.size(), y.size());
     for (size_t i = 0; i < M; ++i)
-      if (x[i] != y[i])
-        return i;
+      if (x[i] != y[i]) return i;
     return M;
   }
   static auto nullSpace(const MemoryAccess &x, const MemoryAccess &y)
@@ -86,8 +83,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     const size_t xDim = x.getArrayDim();
     const size_t yDim = y.getArrayDim();
     IntMatrix A(numLoopsCommon, xDim + yDim);
-    if (!numLoopsCommon)
-      return A;
+    if (!numLoopsCommon) return A;
     // indMats cols are [innerMostLoop, ..., outerMostLoop]
     PtrMatrix<int64_t> indMatX = x.indexMatrix();
     PtrMatrix<int64_t> indMatY = y.indexMatrix();
@@ -109,8 +105,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   // Where x = [inds0..., inds1..., time..]
   auto symbolIndex(const llvm::SCEV *v) -> unsigned int {
     for (unsigned int i = 0; i < S.size(); ++i)
-      if (S[i] == v)
-        return i;
+      if (S[i] == v) return i;
     return std::numeric_limits<unsigned int>::max();
   }
   auto merge(llvm::ArrayRef<const llvm::SCEV *> s0,
@@ -162,8 +157,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     nullStep.resize_for_overwrite(nullDim);
     for (size_t i = 0; i < nullDim; ++i) {
       int64_t s = 0;
-      for (size_t j = 0; j < NS.numCol(); ++j)
-        s += NS(i, j) * NS(i, j);
+      for (size_t j = 0; j < NS.numCol(); ++j) s += NS(i, j) * NS(i, j);
       nullStep[i] = s;
     }
     //           column meansing in in order
@@ -201,8 +195,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
       E(i, 0) = O0(i, 0);
       for (size_t j = 0; j < O0.numCol() - 1; ++j)
         E(i, 1 + oldToNewMap0[j]) = O0(i, 1 + j);
-      for (size_t j = 0; j < numDep0Var; ++j)
-        E(i, j + numSymbols) = A0(j, i);
+      for (size_t j = 0; j < numDep0Var; ++j) E(i, j + numSymbols) = A0(j, i);
       E(i, 0) -= O1(i, 0);
       for (size_t j = 0; j < O1.numCol() - 1; ++j)
         E(i, 1 + oldToNewMap1[j]) -= O1(i, 1 + j);
@@ -782,8 +775,7 @@ struct Dependence {
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i])
-        return o2idiff > 0;
+      if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i]) return o2idiff > 0;
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -840,8 +832,7 @@ struct Dependence {
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i])
-        return yFusOmega[i] > xFusOmega[i];
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -1033,14 +1024,12 @@ struct Dependence {
 
   static auto check(llvm::SmallVectorImpl<Dependence> &deps, MemoryAccess &x,
                     MemoryAccess &y) -> size_t {
-    if (x.gcdKnownIndependent(y))
-      return 0;
+    if (x.gcdKnownIndependent(y)) return 0;
     DependencePolyhedra dxy(x, y);
     assert(x.getNumLoops() == dxy.getDim0());
     assert(y.getNumLoops() == dxy.getDim1());
     assert(x.getNumLoops() + y.getNumLoops() == dxy.getNumPhiCoefficients());
-    if (dxy.isEmpty())
-      return 0;
+    if (dxy.isEmpty()) return 0;
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
@@ -1056,17 +1045,13 @@ struct Dependence {
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
-    if (d.forward)
-      os << "x -> y:";
-    else
-      os << "y -> x:";
+    if (d.forward) os << "x -> y:";
+    else os << "y -> x:";
     // os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
     //    << "\nSchedule Constraints:" << d.dependenceSatisfaction
     //    << "\nBounding Constraints:" << d.dependenceBounding;
-    if (d.in)
-      os << "\n\tInput:\n" << *d.in;
-    if (d.out)
-      os << "\n\tOutput:\n" << *d.out;
+    if (d.in) os << "\n\tInput:\n" << *d.in;
+    if (d.out) os << "\n\tOutput:\n" << *d.out;
     return os << "\n";
   }
 };

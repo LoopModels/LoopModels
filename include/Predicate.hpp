@@ -135,15 +135,12 @@ struct Intersection {
   [[nodiscard]] constexpr auto compactUnion(Intersection other) const
     -> std::variant<std::monostate, Intersection,
                     std::pair<Intersection, Intersection>> {
-    if (isEmpty())
-      return other;
-    else if (other.isEmpty())
-      return *this;
+    if (isEmpty()) return other;
+    else if (other.isEmpty()) return *this;
     uint64_t x = predicates, y = other.predicates;
     // 010000 = 010100 & 010000
     uint64_t intersect = x & y;
-    if (x == intersect || y == intersect)
-      return Intersection{intersect};
+    if (x == intersect || y == intersect) return Intersection{intersect};
     // 011100 = 010100 | 011000
     // 010000 = 010100 & 011000
     // we can't handle (a & b) | (a & !b & c) because
@@ -160,16 +157,13 @@ struct Intersection {
         ~(mask | (mask << 1)); // 0s `b`, meaning b can be either.
       uint64_t w = remUnionMask & x;
       uint64_t z = remUnionMask & y;
-      if (w == z)
-        return Intersection{w};
+      if (w == z) return Intersection{w};
       // if we now have
       //  a     |  a & c
       // 010000 | 010001
       uint64_t wz = w & z;
-      if (wz == w)
-        return std::make_pair(*this, Intersection{z});
-      else if (wz == z)
-        return std::make_pair(Intersection{w}, other);
+      if (wz == w) return std::make_pair(*this, Intersection{z});
+      else if (wz == z) return std::make_pair(Intersection{w}, other);
     }
     return {};
   }
@@ -239,8 +233,7 @@ struct Set {
   /// (a & b) | (a & c) | (a & !c) = (a & b) | a = a
   /// TODO: handle more cases? Smarter algorithm that applies rewrite rules?
   auto operator|=(Intersection other) -> Set & {
-    if (other.isEmpty())
-      return *this;
+    if (other.isEmpty()) return *this;
     else if (intersectUnion.empty()) {
       intersectUnion.push_back(other);
       return *this;
@@ -295,11 +288,9 @@ struct Set {
   /// [(a & b) | (c & d)] | [(e & f) | (g & h)] =
   ///   [(a & b) | (c & d) | (e & f) | (g & h)]
   auto operator|=(const Set &other) -> Set & {
-    if (intersectUnion.empty())
-      intersectUnion = other.intersectUnion;
+    if (intersectUnion.empty()) intersectUnion = other.intersectUnion;
     else
-      for (auto &&pred : other.intersectUnion)
-        *this |= pred;
+      for (auto &&pred : other.intersectUnion) *this |= pred;
     return *this;
   }
   [[nodiscard]] auto operator|(Intersection other) const & -> Set {
@@ -321,8 +312,7 @@ struct Set {
       intersectUnion[i] &= pred;
       if (intersectUnion[i].isEmpty())
         intersectUnion.erase(intersectUnion.begin() + i);
-      else
-        ++i;
+      else ++i;
     }
     return *this;
   }
@@ -332,16 +322,14 @@ struct Set {
   [[nodiscard]] auto begin() const { return intersectUnion.begin(); }
   [[nodiscard]] auto end() const { return intersectUnion.end(); }
   [[nodiscard]] auto operator&=(Set &pred) -> Set & {
-    for (auto p : pred)
-      (*this) &= p;
+    for (auto p : pred) (*this) &= p;
     return *this;
   }
   [[nodiscard]] auto isEmpty() const -> bool { return intersectUnion.empty(); }
   [[nodiscard]] auto operator&(const Set &other) const {
     Set ret;
     for (auto &&pred : intersectUnion)
-      for (auto &&otherPred : other)
-        ret |= pred & otherPred;
+      for (auto &&otherPred : other) ret |= pred & otherPred;
     return ret;
   }
   /// returns a pair intersections
@@ -371,8 +359,7 @@ struct Set {
   [[nodiscard]] auto intersectionIsEmpty(const Set &other) const -> bool {
     for (auto pred : intersectUnion)
       for (auto otherPred : other)
-        if (!((pred & otherPred).isEmpty()))
-          return false;
+        if (!((pred & otherPred).isEmpty())) return false;
     return true;
   }
 

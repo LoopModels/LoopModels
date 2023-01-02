@@ -137,8 +137,7 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] inline auto equal(PtrVector<int64_t> x,
                                   PtrVector<int64_t> y) const -> bool {
     // check cheap trivial first
-    if (x == y)
-      return true;
+    if (x == y) return true;
     llvm::SmallVector<int64_t> delta(getNumConstTerms());
     return (greaterEqual(delta, x, y) && greaterEqual(delta, y, x));
   }
@@ -230,8 +229,7 @@ template <typename T> struct BaseComparator {
     assert(y.size() >= N);
     bool allEqual = true;
     for (size_t i = 0; i < N; ++i) allEqual &= (x[i] + y[i]) == 0;
-    if (allEqual)
-      return true;
+    if (allEqual) return true;
     llvm::SmallVector<int64_t, 8> delta(N);
     for (size_t i = 0; i < N; ++i) delta[i] = x[i] + y[i];
     return equal(delta);
@@ -409,8 +407,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
     if (d.size() == 0) {
       for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b[i])
-          return false;
+        if (b[i]) return false;
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
@@ -418,8 +415,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
-          if ((rhs > 0) != (H(i, i) > 0))
-            return false;
+          if ((rhs > 0) != (H(i, i) > 0)) return false;
       return true;
     }
     // Column rank deficient case
@@ -457,8 +453,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     // Full column rank case
     if (d.size() == 0) {
       for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b[i])
-          return false;
+        if (b[i]) return false;
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
@@ -466,8 +461,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
-          if ((rhs > 0) != (H(i, i) > 0))
-            return false;
+          if ((rhs > 0) != (H(i, i) > 0)) return false;
       return true;
     }
     // Column rank deficient case
@@ -513,8 +507,7 @@ static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
                                   const Comparator auto &C) {
   const size_t numVar = size_t(E.numCol());
   assert(A.numCol() == numVar);
-  if (A.numRow() <= 1)
-    return;
+  if (A.numRow() <= 1) return;
   for (size_t o = size_t(A.numRow()) - 1; o > 0;) {
     for (size_t i = o--; i < A.numRow(); ++i) {
       bool isNeg = true;

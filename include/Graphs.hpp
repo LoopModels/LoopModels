@@ -18,8 +18,7 @@ inline auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
   os << "[ ";
   bool needComma = false;
   for (auto x : r) {
-    if (needComma)
-      os << ", ";
+    if (needComma) os << ", ";
     os << x;
     needComma = true;
   }
@@ -60,16 +59,14 @@ concept AbstractGraph =
                       };
 
 inline void clearVisited(AbstractGraph auto &g) {
-  for (auto &&v : g)
-    v.unVisit();
+  for (auto &&v : g) v.unVisit();
 }
 
 inline void weakVisit(AbstractGraph auto &g,
                       llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
   g.visit(v);
   for (auto j : g.outNeighbors(v))
-    if (!g.wasVisited(j))
-      weakVisit(g, sorted, j);
+    if (!g.wasVisited(j)) weakVisit(g, sorted, j);
   sorted.push_back(v);
 }
 
@@ -77,8 +74,7 @@ inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
   llvm::SmallVector<llvm::SmallVector<unsigned>> components;
   g.clearVisited();
   for (auto j : g.vertexIds()) {
-    if (g.wasVisited(j))
-      continue;
+    if (g.wasVisited(j)) continue;
     components.emplace_back();
     llvm::SmallVector<unsigned> &sorted = components.back();
     weakVisit(g, sorted, j);

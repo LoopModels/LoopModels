@@ -21,8 +21,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
     EXPECT_EQ(A, A2);
   }
   for (size_t i = 0; i < 3; ++i)
-    for (size_t j = 0; j < 4; ++j)
-      EXPECT_TRUE(A(i, j) == Asparse(i, j));
+    for (size_t j = 0; j < 4; ++j) EXPECT_TRUE(A(i, j) == Asparse(i, j));
   // EXPECT_EQ(A(i, j), Asparse(i, j));
   IntMatrix B(Row{4}, Col{5});
   EXPECT_FALSE(B.isSquare());
@@ -97,8 +96,7 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   EXPECT_EQ(A4, C);
   IntMatrix Z = A * 4 - A4;
   for (size_t i = 0; i < Z.numRow(); ++i)
-    for (size_t j = 0; j < Z.numCol(); ++j)
-      EXPECT_FALSE(Z(i, j));
+    for (size_t j = 0; j < Z.numCol(); ++j) EXPECT_FALSE(Z(i, j));
   auto D{
     "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
     "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "
@@ -143,7 +141,6 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     IntMatrix A(Row{i}, Col{i});
     A.antiDiag() = 1;
     for (size_t j = 0; j < i; ++j)
-      for (size_t k = 0; k < i; ++k)
-        EXPECT_EQ(A(j, k), k + j == i - 1);
+      for (size_t k = 0; k < i; ++k) EXPECT_EQ(A(j, k), k + j == i - 1);
   }
 }

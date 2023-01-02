@@ -36,28 +36,22 @@ inline auto printConstraints(llvm::raw_ostream &os, PtrMatrix<int64_t> A,
           }
         }
         if (Acv != 1) {
-          if (Acv == -1)
-            os << "-";
-          else
-            os << Acv;
+          if (Acv == -1) os << "-";
+          else os << Acv;
         }
         os << "v_" << v - numSyms;
         hasPrinted = true;
       }
     }
-    if (!hasPrinted)
-      os << '0';
-    if (inequality)
-      os << (allVarNonNegative ? " >= " : " <= ");
-    else
-      os << " == ";
+    if (!hasPrinted) os << '0';
+    if (inequality) os << (allVarNonNegative ? " >= " : " <= ");
+    else os << " == ";
     os << A(c, 0);
     for (size_t v = 1; v < numSyms; ++v) {
       if (int64_t Acv = A(c, v)) {
         os << (Acv > 0 ? " + " : " - ");
         Acv = constexpr_abs(Acv);
-        if (Acv != 1)
-          os << Acv << "*";
+        if (Acv != 1) os << Acv << "*";
         os << *syms[v - 1];
       }
     }
@@ -74,8 +68,7 @@ inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
 inline void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
   const Row lastRow = A.numRow() - 1;
   assert(lastRow >= i);
-  if (lastRow != i)
-    A(i, _) = A(lastRow, _);
+  if (lastRow != i) A(i, _) = A(lastRow, _);
 }
 inline void eraseConstraint(IntMatrix &A, Row i) {
   eraseConstraintImpl(A, i);
@@ -110,30 +103,25 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> Row {
     if (E(j, i)) {
       size_t nonZero = 0;
 
-      for (Col v = 0; v < numVar; ++v)
-        nonZero += (E(j, v) != 0);
+      for (Col v = 0; v < numVar; ++v) nonZero += (E(j, v) != 0);
       if (nonZero < minNonZero) {
         minNonZero = nonZero;
         rowMinNonZero = j;
       }
     }
-  if (rowMinNonZero == numConstraints)
-    return rowMinNonZero;
+  if (rowMinNonZero == numConstraints) return rowMinNonZero;
   auto Es = E(rowMinNonZero, _);
   int64_t Eis = Es[i];
   // we now subsitute the equality expression with the minimum number
   // of terms.
   if (constexpr_abs(Eis) == 1) {
     for (Row j = 0; j < numConstraints; ++j) {
-      if (j == rowMinNonZero)
-        continue;
-      if (int64_t Eij = E(j, i))
-        E(j, _) = Eis * E(j, _) - Eij * Es;
+      if (j == rowMinNonZero) continue;
+      if (int64_t Eij = E(j, i)) E(j, _) = Eis * E(j, _) - Eij * Es;
     }
   } else {
     for (Row j = 0; j < numConstraints; ++j) {
-      if (j == rowMinNonZero)
-        continue;
+      if (j == rowMinNonZero) continue;
       if (int64_t Eij = E(j, i)) {
         int64_t g = gcd(Eij, Eis);
         E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
@@ -144,8 +132,7 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> Row {
 }
 inline auto substituteEquality(IntMatrix &E, const size_t i) -> bool {
   Row minNonZero = substituteEqualityImpl(E, i);
-  if (minNonZero == E.numRow())
-    return true;
+  if (minNonZero == E.numRow()) return true;
   eraseConstraint(E, minNonZero);
   return false;
 }
@@ -160,16 +147,14 @@ inline auto substituteEqualityImpl(
   for (Row j = 0; j < numConstraints; ++j) {
     if (E(j, i)) {
       size_t nonZero = 0;
-      for (Col v = 0; v < numVar; ++v)
-        nonZero += (E(j, v) != 0);
+      for (Col v = 0; v < numVar; ++v) nonZero += (E(j, v) != 0);
       if (nonZero < minNonZero) {
         minNonZero = nonZero;
         rowMinNonZero = j;
       }
     }
   }
-  if (rowMinNonZero == numConstraints)
-    return rowMinNonZero;
+  if (rowMinNonZero == numConstraints) return rowMinNonZero;
   auto Es = E(rowMinNonZero, _);
   int64_t Eis = Es[i];
   int64_t s = 2 * (Eis > 0) - 1;
@@ -177,13 +162,10 @@ inline auto substituteEqualityImpl(
   // of terms.
   if (constexpr_abs(Eis) == 1) {
     for (Row j = 0; j < A.numRow(); ++j)
-      if (int64_t Aij = A(j, i))
-        A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
+      if (int64_t Aij = A(j, i)) A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
     for (Row j = 0; j < numConstraints; ++j) {
-      if (j == rowMinNonZero)
-        continue;
-      if (int64_t Eij = E(j, i))
-        E(j, _) = Eis * E(j, _) - Eij * Es;
+      if (j == rowMinNonZero) continue;
+      if (int64_t Eij = E(j, i)) E(j, _) = Eis * E(j, _) - Eij * Es;
     }
   } else {
     for (Row j = 0; j < A.numRow(); ++j) {
@@ -195,8 +177,7 @@ inline auto substituteEqualityImpl(
       }
     }
     for (Row j = 0; j < numConstraints; ++j) {
-      if (j == rowMinNonZero)
-        continue;
+      if (j == rowMinNonZero) continue;
       if (int64_t Eij = E(j, i)) {
         int64_t g = gcd(Eij, Eis);
         E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
@@ -215,8 +196,7 @@ inline auto substituteEquality(IntMatrix &A, IntMatrix &E, const size_t i)
 
   Row minNonZero =
     substituteEqualityImpl(std::make_pair(MutPtrMatrix(A), MutPtrMatrix(E)), i);
-  if (minNonZero == E.numRow())
-    return true;
+  if (minNonZero == E.numRow()) return true;
   eraseConstraint(E, minNonZero);
   return false;
 }
@@ -270,11 +250,9 @@ inline void fourierMotzkin(IntMatrix &A, size_t v) {
   // both of them. Thus, we use a little extra memory here,
   // and then truncate.
   if ((numNeg == 0) | (numPos == 0)) {
-    if ((numNeg == 0) & (numPos == 0))
-      return;
+    if ((numNeg == 0) & (numPos == 0)) return;
     for (Row i = numRowsOld; i != 0;)
-      if (A(--i, v))
-        eraseConstraint(A, i);
+      if (A(--i, v)) eraseConstraint(A, i);
     return;
   }
   A.resize(numRowsNew);
@@ -282,13 +260,11 @@ inline void fourierMotzkin(IntMatrix &A, size_t v) {
   for (size_t i = 0, numRows = size_t(numRowsOld), posCount = numPos; posCount;
        ++i) {
     int64_t Aiv = A(i, v);
-    if (Aiv <= 0)
-      continue;
+    if (Aiv <= 0) continue;
     --posCount;
     for (size_t negCount = numNeg, j = 0; negCount; ++j) {
       int64_t Ajv = A(j, v);
-      if (Ajv >= 0)
-        continue;
+      if (Ajv >= 0) continue;
       // for the last `negCount`, we overwrite `A(i, k)`
       // last posCount does not get overwritten
       --negCount;
@@ -308,12 +284,9 @@ inline void fourierMotzkin(IntMatrix &A, size_t v) {
       if (allZero) {
         eraseConstraint(A, c);
         if (posCount)
-          if (negCount)
-            --numRows;
-          else
-            --i;
-        else
-          --j;
+          if (negCount) --numRows;
+          else --i;
+        else --j;
       }
     }
     if (posCount == 0) // last posCount not overwritten, so we erase
@@ -334,11 +307,9 @@ inline void fourierMotzkinNonNegative(IntMatrix &A, size_t v) {
   // both of them. Thus, we use a little extra memory here,
   // and then truncate.
   if ((numNeg == 0) | (numPosP1 == 0)) {
-    if ((numNeg == 0) & (numPosP1 == 0))
-      return;
+    if ((numNeg == 0) & (numPosP1 == 0)) return;
     for (size_t i = numRowsOld; i != 0;)
-      if (A(--i, v))
-        eraseConstraint(A, i);
+      if (A(--i, v)) eraseConstraint(A, i);
     return;
   }
   A.resize(Row{numRowsNew});
@@ -346,13 +317,11 @@ inline void fourierMotzkinNonNegative(IntMatrix &A, size_t v) {
   size_t numRows = numRowsOld;
   for (size_t i = 0, posCount = numPos; posCount; ++i) {
     int64_t Aiv = A(i, v);
-    if (Aiv <= 0)
-      continue;
+    if (Aiv <= 0) continue;
     --posCount;
     for (size_t negCount = numNeg, j = 0; negCount; ++j) {
       int64_t Ajv = A(j, v);
-      if (Ajv >= 0)
-        continue;
+      if (Ajv >= 0) continue;
       // for the last `negCount`, we overwrite `A(i, k)`
       // note that `A(i,k)` is the positive element
       size_t c = --negCount ? numRows++ : i;
@@ -370,17 +339,14 @@ inline void fourierMotzkinNonNegative(IntMatrix &A, size_t v) {
       }
       if (allZero) {
         eraseConstraint(A, c);
-        if (negCount)
-          --numRows;
-        else
-          --i;
+        if (negCount) --numRows;
+        else --i;
       }
     }
   }
   for (size_t negCount = numNeg, j = 0; negCount; ++j) {
     int64_t Ajv = A(j, v);
-    if (Ajv >= 0)
-      continue;
+    if (Ajv >= 0) continue;
     // we can always overwrite the old negCount here
     --negCount;
     bool allZero = true;
@@ -389,8 +355,7 @@ inline void fourierMotzkinNonNegative(IntMatrix &A, size_t v) {
       A(j, k) = Ajk;
       allZero &= (Ajk == 0);
     }
-    if (allZero)
-      eraseConstraint(A, j--);
+    if (allZero) eraseConstraint(A, j--);
   }
 }
 // inline constexpr bool substituteEquality(IntMatrix &,
@@ -401,13 +366,11 @@ inline void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
   fourierMotzkin(A, v);
 }
 inline void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
-  if (substituteEquality(A, E, v))
-    fourierMotzkin(A, v);
+  if (substituteEquality(A, E, v)) fourierMotzkin(A, v);
 }
 inline void removeZeroRows(IntMatrix &A) {
   for (Row i = A.numRow(); i;)
-    if (allZero(A(--i, _)))
-      eraseConstraint(A, i);
+    if (allZero(A(--i, _))) eraseConstraint(A, i);
 }
 
 // A is an inequality matrix, A*x >= 0
@@ -425,17 +388,14 @@ inline void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
 
 inline void dropEmptyConstraints(IntMatrix &A) {
   for (Row c = A.numRow(); c != 0;)
-    if (allZero(A(--c, _)))
-      eraseConstraint(A, c);
+    if (allZero(A(--c, _))) eraseConstraint(A, c);
 }
 
 inline auto uniqueConstraint(PtrMatrix<int64_t> A, size_t C) -> bool {
   for (size_t c = 0; c < C; ++c) {
     bool allEqual = true;
-    for (size_t r = 0; r < A.numCol(); ++r)
-      allEqual &= (A(c, r) == A(C, r));
-    if (allEqual)
-      return false;
+    for (size_t r = 0; r < A.numCol(); ++r) allEqual &= (A(c, r) == A(C, r));
+    if (allEqual) return false;
   }
   return true;
 }
@@ -456,13 +416,11 @@ inline auto equalsNegative(llvm::ArrayRef<int64_t> x, llvm::ArrayRef<int64_t> y)
   -> bool {
   assert(x.size() == y.size());
   for (size_t i = 0; i < x.size(); ++i)
-    if (x[i] + y[i])
-      return false;
+    if (x[i] + y[i]) return false;
   return true;
 }
 
 inline void deleteBounds(IntMatrix &A, size_t i) {
   for (Row j = A.numRow(); j != 0;)
-    if (A(--j, i))
-      eraseConstraint(A, j);
+    if (A(--j, i)) eraseConstraint(A, j);
 }

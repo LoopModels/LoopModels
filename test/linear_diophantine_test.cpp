@@ -86,10 +86,8 @@ TEST(LinearDiophantineTest, BasicAssertions) {
     auto opt1 = linearDiophantine(d * a0, std::make_tuple(a0));
     EXPECT_TRUE(opt1.has_value());
     if (opt1.has_value()) {
-      if (a0)
-        EXPECT_EQ(std::get<0>(*opt1), d);
-      else
-        EXPECT_EQ(std::get<0>(*opt1), 0);
+      if (a0) EXPECT_EQ(std::get<0>(*opt1), d);
+      else EXPECT_EQ(std::get<0>(*opt1), 0);
     }
     if (std::abs(a0) > 1) {
       // guaranteed coprime

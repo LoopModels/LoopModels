@@ -109,10 +109,8 @@ struct Rational {
     -> std::optional<Rational> {
     auto [xd, yn] = divgcd(denominator, y);
     int64_t n;
-    if (__builtin_mul_overflow(numerator, yn, &n))
-      return {};
-    else
-      return Rational{n, xd};
+    if (__builtin_mul_overflow(numerator, yn, &n)) return {};
+    else return Rational{n, xd};
   }
   [[nodiscard]] constexpr auto safeMul(Rational y) const
     -> std::optional<Rational> {
@@ -122,10 +120,8 @@ struct Rational {
       int64_t n, d;
       bool o1 = __builtin_mul_overflow(xn, yn, &n);
       bool o2 = __builtin_mul_overflow(xd, yd, &d);
-      if (o1 | o2)
-        return {};
-      else
-        return Rational{n, d};
+      if (o1 | o2) return {};
+      else return Rational{n, d};
     } else {
       return Rational{0, 1};
     }
@@ -197,12 +193,9 @@ struct Rational {
     return (numerator != y.numerator) | (denominator != y.denominator);
   }
   [[nodiscard]] constexpr auto isEqual(int64_t y) const -> bool {
-    if (denominator == 1)
-      return (numerator == y);
-    else if (denominator == -1)
-      return (numerator == -y);
-    else
-      return false;
+    if (denominator == 1) return (numerator == y);
+    else if (denominator == -1) return (numerator == -y);
+    else return false;
   }
   constexpr auto operator==(int y) const -> bool { return isEqual(y); }
   constexpr auto operator==(int64_t y) const -> bool { return isEqual(y); }
@@ -241,8 +234,7 @@ struct Rational {
   friend inline auto operator<<(llvm::raw_ostream &os, const Rational &x)
     -> llvm::raw_ostream & {
     os << x.numerator;
-    if (x.denominator != 1)
-      os << " // " << x.denominator;
+    if (x.denominator != 1) os << " // " << x.denominator;
     return os;
   }
   void dump() const { llvm::errs() << *this << "\n"; }
@@ -253,8 +245,7 @@ constexpr auto gcd(Rational x, Rational y) -> std::optional<Rational> {
 }
 inline auto denomLCM(PtrVector<Rational> x) -> int64_t {
   int64_t l = 1;
-  for (auto r : x)
-    l = lcm(l, r.denominator);
+  for (auto r : x) l = lcm(l, r.denominator);
   return l;
 }
 

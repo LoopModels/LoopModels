@@ -22,8 +22,7 @@ void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
                            Instruction::Cache &cache,
                            LinearProgramLoopBlock &LB) {
   for (auto mem : LB.getMemoryAccesses()) {
-    if (mem->nodeIndex.isEmpty())
-      continue;
+    if (mem->nodeIndex.isEmpty()) continue;
     // TODO: add a means for cache.get to stop adding operands
     // that are outside of LB, as we don't care about that part of the
     // graph.
@@ -40,8 +39,7 @@ inline void merge(llvm::SmallPtrSetImpl<Instruction *> &merged,
 struct ReMapper {
   llvm::DenseMap<Instruction *, Instruction *> reMap;
   auto operator[](Instruction *I) -> Instruction * {
-    if (auto f = reMap.find(I); f != reMap.end())
-      return f->second;
+    if (auto f = reMap.find(I); f != reMap.end()) return f->second;
     return I;
   }
   void remapFromTo(Instruction *I, Instruction *J) { reMap[I] = J; }
@@ -98,13 +96,11 @@ struct MergingCost {
     return nullptr;
   }
   auto findMerge(Instruction *key) -> Instruction * {
-    if (auto it = mergeMap.find(key); it != mergeMap.end())
-      return it->second;
+    if (auto it = mergeMap.find(key); it != mergeMap.end()) return it->second;
     return nullptr;
   }
   auto findMerge(Instruction *key) const -> Instruction * {
-    if (auto it = mergeMap.find(key); it != mergeMap.end())
-      return it->second;
+    if (auto it = mergeMap.find(key); it != mergeMap.end()) return it->second;
     return nullptr;
   }
   /// isMerged(Instruction *key) const -> bool
@@ -120,8 +116,7 @@ struct MergingCost {
   auto isMerged(Instruction *I, Instruction *J) const -> bool {
     Instruction *K = J;
     do {
-      if (I == K)
-        return true;
+      if (I == K) return true;
       K = findMerge(K);
     } while (K && K != J);
     return false;
@@ -261,8 +256,7 @@ struct MergingCost {
         }
       }
       // we couldn't find any candidates
-      if (!merged)
-        selector.select(i, opA, opB);
+      if (!merged) selector.select(i, opA, opB);
     }
     return selector;
   };
@@ -287,12 +281,10 @@ struct MergingCost {
     // TODO:
     // increase cost by numSelects, decrease cost by `I`'s cost
     unsigned int W = vectorBits / B->getNumScalarBits();
-    if (numSelects)
-      cost += numSelects * B->selectCost(TTI, W);
+    if (numSelects) cost += numSelects * B->selectCost(TTI, W);
     cost -= B->getCost(TTI, W).recipThroughput;
     auto mB = findMerge(B);
-    if (mB)
-      cycleUpdateMerged(merged, B, mB);
+    if (mB) cycleUpdateMerged(merged, B, mB);
     // fuse the merge map cycles
     if (auto mA = findMerge(A)) {
       cycleUpdateMerged(merged, A, mA);
@@ -329,11 +321,9 @@ void mergeInstructions(
   llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *I,
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
-  if (mergingCosts.front()->visited(I))
-    return;
+  if (mergingCosts.front()->visited(I)) return;
   for (auto C : mergingCosts) {
-    if (C->visited(I))
-      return;
+    if (C->visited(I)) return;
     C->initAncestors(alloc, I);
   }
   auto op = I->getOpType();
@@ -345,8 +335,7 @@ void mergeInstructions(
     // check legality
     // illegal if:
     // 1. pred intersection not empty
-    if (!preds.intersectionIsEmpty(pair.second))
-      continue;
+    if (!preds.intersectionIsEmpty(pair.second)) continue;
     // 2. one op descends from another
     // because of our traversal pattern, this should not happen
     // unless a fusion took place
@@ -359,8 +348,7 @@ void mergeInstructions(
     // invalidation, we use an indexed loop
     for (size_t i = 0; i < numMerges; ++i) {
       MergingCost *C = mergingCosts[i];
-      if (C->getAncestors(I)->contains(other))
-        continue;
+      if (C->getAncestors(I)->contains(other)) continue;
       // we shouldn't have to check the opposite condition
       // if (C->getAncestors(other)->contains(I))
       // because we are traversing in topological order
@@ -404,8 +392,7 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
                        Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
                        llvm::BumpPtrAllocator &tAlloc,
                        unsigned int vectorBits) {
-  if (!predMap.isDivergent())
-    return;
+  if (!predMap.isDivergent()) return;
   // there is a divergence in the control flow that we can ideally merge
   auto &opMap = *alloc.Allocate<llvm::DenseMap<
     std::pair<Instruction::Intrinsic, llvm::Type *>,

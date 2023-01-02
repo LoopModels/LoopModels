@@ -13,16 +13,13 @@ constexpr inline auto constexpr_abs(std::signed_integral auto x) noexcept {
 }
 
 constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
-  if (x == 0)
-    return constexpr_abs(y);
-  else if (y == 0)
-    return constexpr_abs(x);
+  if (x == 0) return constexpr_abs(y);
+  else if (y == 0) return constexpr_abs(x);
   assert(x != std::numeric_limits<int64_t>::min());
   assert(y != std::numeric_limits<int64_t>::min());
   int64_t a = constexpr_abs(x);
   int64_t b = constexpr_abs(y);
-  if ((a == 1) | (b == 1))
-    return 1;
+  if ((a == 1) | (b == 1)) return 1;
   int64_t az = std::countr_zero(uint64_t(x));
   int64_t bz = std::countr_zero(uint64_t(y));
   b >>= bz;
@@ -37,10 +34,8 @@ constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
   return b << k;
 }
 constexpr auto lcm(int64_t x, int64_t y) -> int64_t {
-  if (constexpr_abs(x) == 1)
-    return y;
-  if (constexpr_abs(y) == 1)
-    return x;
+  if (constexpr_abs(x) == 1) return y;
+  if (constexpr_abs(y) == 1) return x;
   return x * (y / gcd(x, y));
 }
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm

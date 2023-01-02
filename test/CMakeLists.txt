@@ -38,8 +38,7 @@ endif()
 # ---- Create binary ----
 
 file(GLOB tests CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
-# list(FILTER tests EXCLUDE REGEX "remarks.*")
-# for remarks test
+# list(FILTER tests EXCLUDE REGEX "remarks.*") for remarks test
 find_package(LLVM 15 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
@@ -57,13 +56,12 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest_main LLVM)
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-set_target_properties(${PROJECT_NAME} PROPERTIES 
-  ENVIRONMENT
-  WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
-if (ENABLE_TEST_EXCEPTIONS)
+if(ENABLE_TEST_EXCEPTIONS)
   target_compile_options(${PROJECT_NAME} PRIVATE -fexceptions)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
@@ -88,10 +86,12 @@ if(ENABLE_TEST_COVERAGE)
   target_link_options(LoopModels PUBLIC --coverage)
   target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g --coverage)
   target_link_options(${PROJECT_NAME} PUBLIC --coverage)
-  add_custom_target(clean_coverage
+  add_custom_target(
+    clean_coverage
     COMMAND rm -f ${PROJECT_BINARY_DIR}/CMakeFiles/LoopModelsTests.dir/*.gcda
     COMMAND rm -f ${PROJECT_BINARY_DIR}/_deps/loopmodels-build/CMakeFiles/LoopModels.dir/lib/*.gcda
-    COMMENT "Clearing out old coverage data.")
+    COMMENT "Clearing out old coverage data."
+  )
   add_dependencies(${PROJECT_NAME} clean_coverage)
   message(STATUS "Test coverage enabled.")
 endif()
@@ -110,5 +110,3 @@ gtest_discover_tests(${PROJECT_NAME})
 
 # ---- Add opt tests ----
 # find_program(OPT NAME opt PATHS LLVM_BINARY_DIR)
-
-

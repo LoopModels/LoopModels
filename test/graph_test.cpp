@@ -59,8 +59,7 @@ static_assert(Graphs::AbstractGraph<MockGraph>);
 // std::ranges::any_of not supported by libc++
 template <std::ranges::range A, typename T> bool anyEquals(A a, T y) {
   for (auto x : a)
-    if (x == y)
-      return true;
+    if (x == y) return true;
   return false;
 }
 
@@ -95,8 +94,7 @@ TEST(GraphTest, BasicAssertions) {
   auto scc0 = Graphs::stronglyConnectedComponents(G);
   auto scc1 = Graphs::stronglyConnectedComponents(G);
   EXPECT_EQ(scc0, scc1);
-  for (auto &v : scc0)
-    llvm::errs() << "SCC: " << v << "\n";
+  for (auto &v : scc0) llvm::errs() << "SCC: " << v << "\n";
   // NOTE: currently using inNeighbors instead of outNeighbors, so in
   // topological order.
   EXPECT_EQ(scc0[0].size(), size_t(1));

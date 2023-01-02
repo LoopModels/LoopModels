@@ -6,10 +6,8 @@
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 inline auto linearDiophantine(int64_t c, int64_t a, int64_t b)
   -> std::optional<std::tuple<int64_t, int64_t>> {
-  if (c == 0)
-    return std::make_tuple(int64_t(0), int64_t(0));
-  else if ((a | b) == 0)
-    return {};
+  if (c == 0) return std::make_tuple(int64_t(0), int64_t(0));
+  else if ((a | b) == 0) return {};
   auto [g, x, y] = gcdx(a, b);
   int64_t cDivG = g == 1 ? c : c / g;
   if (cDivG * g == c) {
@@ -29,8 +27,7 @@ inline auto linearDiophantine(int64_t d, std::tuple<int64_t> a)
     return std::make_tuple(int64_t(0));
   } else if (a0) {
     int64_t x = d / a0;
-    if (a0 * x == d)
-      return std::make_tuple(x);
+    if (a0 * x == d) return std::make_tuple(x);
   }
   return {};
 }

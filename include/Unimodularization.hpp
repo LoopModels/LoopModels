@@ -16,11 +16,9 @@
   -> std::optional<SquareMatrix<int64_t>> {
   std::optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> OHNF =
     NormalForm::hermite(std::move(A));
-  if (!OHNF.has_value())
-    return {};
+  if (!OHNF.has_value()) return {};
   auto &[H, U] = *OHNF;
   for (size_t m = 0; m < H.numCol(); ++m)
-    if (H(m, m) != 1)
-      return {};
+    if (H(m, m) != 1) return {};
   return std::move(U);
 }

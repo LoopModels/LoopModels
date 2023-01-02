@@ -41,11 +41,9 @@ struct CPURegisterFile {
   static auto estimateNumPredicateRegisters(llvm::LLVMContext &C,
                                             llvm::TargetTransformInfo &TTI)
     -> uint8_t {
-    if (TTI.supportsScalableVectors())
-      return 8;
+    if (TTI.supportsScalableVectors()) return 8;
     // hacky check for AVX512
-    if (hasAVX512(C, TTI))
-      return 7; // 7, because k0 is reserved for unmasked
+    if (hasAVX512(C, TTI)) return 7; // 7, because k0 is reserved for unmasked
     return 0;
   }
   // returns vector width in bits
@@ -61,8 +59,7 @@ struct CPURegisterFile {
       llvm::InstructionCost nextCost = TTI.getArithmeticInstrCost(
         llvm::Instruction::FAdd,
         llvm::FixedVectorType::get(f32, twiceMaxVectorWidth *= 2));
-      if (nextCost > prevCost)
-        break;
+      if (nextCost > prevCost) break;
       prevCost = nextCost;
     }
     return 16 * twiceMaxVectorWidth;
@@ -149,8 +146,7 @@ struct LoopTreeSchedule {
   }
   auto getLoopAndExit(llvm::BumpPtrAllocator &tAlloc, size_t i)
     -> LoopAndExit * {
-    if (LoopAndExit *ret = subTrees[i])
-      return ret;
+    if (LoopAndExit *ret = subTrees[i]) return ret;
     auto *loopAndExit = tAlloc.Allocate<LoopAndExit>();
     return subTrees[i] = loopAndExit;
   }
@@ -198,8 +194,7 @@ struct LoopTreeSchedule {
                                   TTI, vectorBits, sch, d);
     }
     size_t i = sch.getFusionOmega(d);
-    if (i >= subTrees.size())
-      subTrees.resize(i + 1);
+    if (i >= subTrees.size()) subTrees.resize(i + 1);
     // TODO: emplace all memory access that occur here in either H or E.
     // what we need is to first check:
     // 1. can we hoist the memory access out of the remaining inner loops?

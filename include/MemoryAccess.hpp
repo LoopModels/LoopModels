@@ -55,10 +55,8 @@ struct MemoryAccess {
   }
 
   [[nodiscard]] auto getAlign() const -> llvm::Align {
-    if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>())
-      return l->getAlign();
-    else if (auto s = loadOrStore.cast<llvm::StoreInst>())
-      return s->getAlign();
+    if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
+    else if (auto s = loadOrStore.cast<llvm::StoreInst>()) return s->getAlign();
 // note cast not dyn_cast for store
 // not a load or store
 #if __cplusplus >= 202202L
@@ -175,8 +173,7 @@ struct MemoryAccess {
   inline auto truncateSchedule() -> MemoryAccess * {
     // we're truncating down to `ref.getNumLoops()`, discarding outer most
     size_t dropCount = omegas.size() - (getNumLoops() + 1);
-    if (dropCount)
-      omegas.erase(omegas.begin(), omegas.begin() + dropCount);
+    if (dropCount) omegas.erase(omegas.begin(), omegas.begin() + dropCount);
     return this;
   }
   [[nodiscard]] auto isLoopIndependent() const -> bool {
@@ -187,11 +184,9 @@ struct MemoryAccess {
   }
   // Assumes strides and offsets are sorted
   [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
-    if (getArrayDim() != x.getArrayDim())
-      return false;
+    if (getArrayDim() != x.getArrayDim()) return false;
     for (size_t i = 0; i < getArrayDim(); ++i)
-      if (sizes[i] != x.sizes[i])
-        return false;
+      if (sizes[i] != x.sizes[i]) return false;
     return true;
   }
   [[nodiscard]] constexpr static auto gcdKnownIndependent(const MemoryAccess &)
@@ -206,16 +201,12 @@ struct MemoryAccess {
 
 inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   -> llvm::raw_ostream & {
-  if (m.isLoad())
-    os << "Load: ";
-  else
-    os << "Store: ";
-  if (auto instr = m.getInstruction())
-    os << *instr;
+  if (m.isLoad()) os << "Load: ";
+  else os << "Store: ";
+  if (auto instr = m.getInstruction()) os << *instr;
   os << "\nArrayReference " << *m.basePointer << " (dim = " << m.getArrayDim()
      << ", num loops: " << m.getNumLoops();
-  if (m.sizes.size())
-    os << ", element size: " << *m.sizes.back();
+  if (m.sizes.size()) os << ", element size: " << *m.sizes.back();
   os << "):\n";
   PtrMatrix<int64_t> A{m.indexMatrix()};
   os << "Sizes: [";
@@ -227,8 +218,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   os << " ]\nSubscripts: [ ";
   size_t numLoops = size_t(A.numRow());
   for (size_t i = 0; i < A.numCol(); ++i) {
-    if (i)
-      os << ", ";
+    if (i) os << ", ";
     bool printPlus = false;
     for (size_t j = numLoops; j-- > 0;) {
       if (int64_t Aji = A(j, i)) {
@@ -236,11 +226,9 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
           if (Aji <= 0) {
             Aji *= -1;
             os << " - ";
-          } else
-            os << " + ";
+          } else os << " + ";
         }
-        if (Aji != 1)
-          os << Aji << '*';
+        if (Aji != 1) os << Aji << '*';
         os << "i_" << numLoops - j - 1 << " ";
         printPlus = true;
       }
@@ -252,15 +240,12 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
           if (offij <= 0) {
             offij *= -1;
             os << " - ";
-          } else
-            os << " + ";
+          } else os << " + ";
         }
         if (j) {
-          if (offij != 1)
-            os << offij << '*';
+          if (offij != 1) os << offij << '*';
           os << *m.loop->S[j - 1];
-        } else
-          os << offij;
+        } else os << offij;
         printPlus = true;
       }
     }

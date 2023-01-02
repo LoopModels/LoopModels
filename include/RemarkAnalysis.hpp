@@ -14,8 +14,7 @@ remarkAnalysis(const llvm::StringRef remarkName, llvm::Loop *L,
     codeRegion = I->getParent();
     // If there is no debug location attached to the instruction, revert
     // back to using the loop's.
-    if (I->getDebugLoc())
-      DL = I->getDebugLoc();
+    if (I->getDebugLoc()) DL = I->getDebugLoc();
   }
 
   return {"turbo-loop", remarkName, DL, codeRegion};

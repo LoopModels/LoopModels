@@ -44,11 +44,9 @@ struct LoopTree {
   }
   // mostly to get a loop to print
   [[nodiscard]] auto getOuterLoop() const -> llvm::Loop * {
-    if (loop)
-      return loop;
+    if (loop) return loop;
     for (auto *subLoop : subLoops)
-      if (auto *L = subLoop->getOuterLoop())
-        return L;
+      if (auto *L = subLoop->getOuterLoop()) return L;
     return nullptr;
   }
   LoopTree(const LoopTree &) = default;
@@ -71,8 +69,7 @@ struct LoopTree {
 #ifndef NDEBUG
     if (loop)
       for (auto &&chain : paths)
-        for (auto &&pbb : chain)
-          assert(loop->contains(pbb.first));
+        for (auto &&pbb : chain) assert(loop->contains(pbb.first));
 #endif
   }
   [[nodiscard]] auto getNumLoops() const -> size_t {
@@ -81,12 +78,9 @@ struct LoopTree {
 
   friend inline auto operator<<(llvm::raw_ostream &os, const LoopTree &tree)
     -> llvm::raw_ostream & {
-    if (tree.loop)
-      os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
-    else
-      os << "top-level:\n";
-    for (auto branch : tree.subLoops)
-      os << *branch;
+    if (tree.loop) os << (*tree.loop) << "\n" << tree.affineLoop << "\n";
+    else os << "top-level:\n";
+    for (auto branch : tree.subLoops) os << *branch;
     return os << "\n";
   }
   // NOLINTNEXTLINE(*-nodiscard)
@@ -97,8 +91,7 @@ struct LoopTree {
       tree->addZeroLowerBounds(loopMap);
       tree->parentLoop = this;
     }
-    if (loop)
-      loopMap.insert(std::make_pair(loop, this));
+    if (loop) loopMap.insert(std::make_pair(loop, this));
   }
   auto begin() { return subLoops.begin(); }
   auto end() { return subLoops.end(); }
@@ -121,13 +114,9 @@ struct LoopTree {
   }
   void dumpAllMemAccess() const {
     llvm::errs() << "dumpAllMemAccess for ";
-    if (loop)
-      llvm::errs() << *loop << "\n";
-    else
-      llvm::errs() << "toplevel\n";
-    for (auto &mem : memAccesses)
-      llvm::errs() << "mem = " << mem << "\n";
-    for (auto sL : subLoops)
-      sL->dumpAllMemAccess();
+    if (loop) llvm::errs() << *loop << "\n";
+    else llvm::errs() << "toplevel\n";
+    for (auto &mem : memAccesses) llvm::errs() << "mem = " << mem << "\n";
+    for (auto sL : subLoops) sL->dumpAllMemAccess();
   }
 };
