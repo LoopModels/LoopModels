@@ -90,112 +90,48 @@ template <typename T> Optional(T) -> Optional<T>;
 template <typename T> Optional(T *) -> Optional<T *>;
 template <typename T> Optional(T &) -> Optional<T &>;
 
+constexpr void invariant(bool condition) {
+  assert(condition && "invariant violation");
+  if (!condition) {
+#if __cplusplus >= 202202L
+    std::unreachable();
+#else
+#ifdef __has_builtin
+#if __has_builtin(__builtin_unreachable)
+    __builtin_unreachable();
+#endif
+#endif
+#endif
+  }
+}
+
 // TODO: communicate not-null to the compiler somehow?
 template <typename T> struct NotNull {
   NotNull() = delete;
   constexpr NotNull(T &v) : value(&v) {}
-  constexpr NotNull(T *v) : value(v) {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
-  }
+  constexpr NotNull(T *v) : value(v) { invariant(value != nullptr); }
   constexpr explicit operator bool() const {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return true;
   }
   constexpr auto operator->() -> T * {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return value;
   }
   constexpr auto operator*() -> T & {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return *value;
   }
   constexpr auto operator->() const -> const T * {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return value;
   }
   constexpr auto operator*() const -> const T & {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return *value;
   }
   constexpr operator T *() {
-    if (value == nullptr) {
-      assert(value != nullptr);
-#if __cplusplus >= 202202L
-      std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-      __builtin_unreachable();
-#endif
-#endif
-#endif
-    }
+    invariant(value != nullptr);
     return value;
   }
   template <typename C> [[nodiscard]] auto dyn_cast() -> C * {

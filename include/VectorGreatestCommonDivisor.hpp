@@ -1,25 +1,35 @@
 #pragma once
 #include "./GreatestCommonDivisor.hpp"
 #include "./Math.hpp"
+#include <cstddef>
+#include <cstdint>
 
 using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
 
 inline auto gcd(PtrVector<int64_t> x) -> int64_t {
+  const size_t N = x.size();
+  if (!N) return 1;
   int64_t g = constexpr_abs(x[0]);
-  for (size_t i = 1; i < x.size(); ++i)
-    g = gcd(g, x[i]);
+  for (size_t n = 1; (n < N) & (g != 1); ++n) g = gcd(g, x[n]);
   return g;
 }
 inline void normalizeByGCD(MutPtrVector<int64_t> x) {
-  if (size_t N = x.size()) {
-    if (N == 1) {
-      x[0] = 1;
-      return;
-    }
+  size_t N = x.size();
+  switch (N) {
+  case 0:
+    return;
+  case 1:
+    x[0] = 1;
+    return;
+  default:
     int64_t g = gcd(x[0], x[1]);
-    for (size_t n = 2; (n < N) & (g != 1); ++n)
-      g = gcd(g, x[n]);
-    if (g > 1)
-      x /= g;
+    for (size_t n = 2; (n < N) & (g != 1); ++n) g = gcd(g, x[n]);
+    if (g > 1) x /= g;
   }
+}
+
+inline auto lcm(AbstractVector auto x) -> int64_t {
+  int64_t l = x[0];
+  for (int64_t xi : x[_(1, end)]) l = lcm(l, xi);
+  return l;
 }

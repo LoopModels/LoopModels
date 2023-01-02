@@ -26,8 +26,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
   SquareMatrix<int64_t> I4 = SquareMatrix<int64_t>::identity(4);
   for (size_t i = 0; i < numIters; ++i) {
     for (size_t n = 0; n < 4; ++n)
-      for (size_t m = 0; m < 8; ++m)
-        B(n, m) = distrib(gen);
+      for (size_t m = 0; m < 8; ++m) B(n, m) = distrib(gen);
     // llvm::errs() << "\nB = " << B << "\n";
     auto [K, included] = NormalForm::orthogonalize(B);
     orthCount += included.size();
@@ -37,8 +36,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
     if (included.size() == 4) {
       for (size_t n = 0; n < 4; ++n) {
         size_t m = 0;
-        for (auto mb : included)
-          A(n, m++) = B(n, mb);
+        for (auto mb : included) A(n, m++) = B(n, mb);
       }
       llvm::errs() << "K=\n" << K << "\n";
       llvm::errs() << "A=\n" << A << "\n";
@@ -108,8 +106,7 @@ TEST(OrthogonalizationTest, BasicAssertions) {
   //                            included)
   //   << "\n";
   EXPECT_EQ(included.size(), 4);
-  for (size_t i = 0; i < 4; ++i)
-    EXPECT_EQ(included[i], i);
+  for (size_t i = 0; i < 4; ++i) EXPECT_EQ(included[i], i);
   for (size_t n = 0; n < 4; ++n) {
     size_t m = 0;
     for (auto mb : included) {
@@ -129,20 +126,15 @@ auto isHNF(PtrMatrix<int64_t> A) -> bool {
   for (size_t m = 0; m < M; ++m) {
     // all entries must be 0
     for (size_t n = 0; n < l; ++n)
-      if (A(m, n))
-        return false;
+      if (A(m, n)) return false;
     // now search for next lead
-    while ((l < N) && A(m, l) == 0)
-      ++l;
-    if (l == N)
-      continue;
+    while ((l < N) && A(m, l) == 0) ++l;
+    if (l == N) continue;
     int64_t Aml = A(m, l);
-    if (Aml < 0)
-      return false;
+    if (Aml < 0) return false;
     for (size_t r = 0; r < m; ++r) {
       int64_t Arl = A(r, l);
-      if ((Arl >= Aml) || (Arl < 0))
-        return false;
+      if ((Arl >= Aml) || (Arl < 0)) return false;
     }
   }
   return true;
@@ -171,8 +163,7 @@ TEST(Hermite, BasicAssertions) {
     EXPECT_TRUE(isHNF(H));
     EXPECT_TRUE(H == U * A4x3);
 
-    for (size_t i = 0; i < 3; ++i)
-      A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
+    for (size_t i = 0; i < 3; ++i) A4x3(2, i) = A4x3(0, i) + A4x3(1, i);
     llvm::errs() << "\n\n\n=======\n\nA=\n" << A4x3 << "\n";
     auto [H2, U2] = NormalForm::hermite(A4x3);
     llvm::errs() << "H=\n" << H2 << "\nU=\n" << U2 << "\n";
@@ -234,13 +225,7 @@ TEST(Hermite, BasicAssertions) {
     EXPECT_TRUE(H3 == U3 * A);
   }
   {
-    IntMatrix A(Row{2}, Col{3});
-    A(0, 0) = -3;
-    A(0, 1) = -1;
-    A(0, 2) = 1;
-    A(1, 0) = 0;
-    A(1, 1) = 0;
-    A(1, 2) = -2;
+    IntMatrix A = "[-3 -1 1; 0 0 -2]"_mat;
     std::optional<std::pair<IntMatrix, SquareMatrix<int64_t>>> B =
       NormalForm::hermite(A);
     EXPECT_TRUE(B.has_value());
@@ -250,42 +235,8 @@ TEST(Hermite, BasicAssertions) {
     llvm::errs() << "A = \n" << A << "\nH =\n" << H << "\nU =\n" << U << "\n";
   }
   {
-    IntMatrix A(Row{3}, Col{11});
-    A(0, 0) = 3;
-    A(0, 1) = 3;
-    A(0, 2) = -3;
-    A(0, 3) = 1;
-    A(0, 4) = 0;
-    A(0, 5) = -1;
-    A(0, 6) = -2;
-    A(0, 7) = 1;
-    A(0, 8) = 1;
-    A(0, 9) = 2;
-    A(0, 10) = -1;
-
-    A(1, 0) = 3;
-    A(1, 1) = 3;
-    A(1, 2) = -3;
-    A(1, 3) = 1;
-    A(1, 4) = 1;
-    A(1, 5) = -3;
-    A(1, 6) = 2;
-    A(1, 7) = 0;
-    A(1, 8) = 3;
-    A(1, 9) = 0;
-    A(1, 10) = -3;
-
-    A(2, 0) = 2;
-    A(2, 1) = -3;
-    A(2, 2) = -2;
-    A(2, 3) = -1;
-    A(2, 4) = 1;
-    A(2, 5) = -2;
-    A(2, 6) = 3;
-    A(2, 7) = 3;
-    A(2, 8) = 3;
-    A(2, 9) = 3;
-    A(2, 10) = -3;
+    IntMatrix A =
+      "[3 3 -3 1 0 -1 -2 1 1 2 -1; 3 3 -3 1 1 -3 2 0 3 0 -3; 2 -3 -2 -1 1 -2 3 3 3 3 -3]"_mat;
     auto [H, U] = NormalForm::hermite(A);
     EXPECT_TRUE(isHNF(H));
     EXPECT_TRUE(U * A == H);
@@ -313,8 +264,7 @@ TEST(NullSpaceTests, BasicAssertions) {
       NS = NormalForm::nullSpace(B);
       nullDim += size_t(NS.numRow());
       Z = NS * B;
-      for (auto &z : Z.mem)
-        EXPECT_EQ(z, 0);
+      for (auto &z : Z.mem) EXPECT_EQ(z, 0);
       EXPECT_EQ(NormalForm::nullSpace(std::move(NS)).numRow(), 0);
     }
     llvm::errs() << "Average tested null dim = "
@@ -350,10 +300,12 @@ TEST(SimplifySystemTests, BasicAssertions) {
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(BareissTests, BasicAssertions) {
   IntMatrix A = "[-4 3 -2 2 -5; -5 1 -1 2 -5; -1 0 5 -3 2; -4 5 -4 -2 -4]"_mat;
-  NormalForm::bareiss(A);
+  auto piv = NormalForm::bareiss(A);
   IntMatrix B =
     "[-4 3 -2 2 -5; 0 11 -6 2 -5; 0 0 56 -37 32; 0 0 0 -278 136]"_mat;
   EXPECT_EQ(A, B);
+  llvm::SmallVector<size_t> truePiv{0, 1, 2, 3};
+  EXPECT_EQ(piv, truePiv);
 
   IntMatrix C = "[-2 -2 -1 -2 -1; 1 1 2 2 -2; -2 2 2 -1 "
                 "-1; 0 0 -2 1 -1; -1 -2 2 1 -1]"_mat;

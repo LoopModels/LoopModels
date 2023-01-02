@@ -5,6 +5,7 @@
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Simplex.hpp"
+#include "./VectorGreatestCommonDivisor.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -107,8 +108,7 @@ template <typename T> struct BaseComparator {
     assert(delta.size() >= N);
     assert(x.size() >= N);
     assert(y.size() >= N);
-    for (size_t n = 0; n < N; ++n)
-      delta[n] = x[n] - y[n];
+    for (size_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     return static_cast<const T *>(this)->greaterEqual(delta);
   }
   [[nodiscard]] inline auto greaterEqual(PtrVector<int64_t> x,
@@ -126,8 +126,7 @@ template <typename T> struct BaseComparator {
     assert(N <= x.size());
     assert(N <= y.size());
     llvm::SmallVector<int64_t> delta(N);
-    for (size_t n = 0; n < N; ++n)
-      delta[n] = x[n] - y[n];
+    for (size_t n = 0; n < N; ++n) delta[n] = x[n] - y[n];
     --delta[0];
     return static_cast<const T *>(this)->greaterEqual(delta);
   }
@@ -152,11 +151,9 @@ template <typename T> struct BaseComparator {
   [[nodiscard]] inline auto lessEqual(MutPtrVector<int64_t> x) const -> bool {
     const size_t N = getNumConstTerms();
     assert(N <= x.size());
-    for (size_t n = 0; n < N; ++n)
-      x[n] *= -1;
+    for (size_t n = 0; n < N; ++n) x[n] *= -1;
     bool ret = static_cast<const T *>(this)->greaterEqual(x);
-    for (size_t n = 0; n < N; ++n)
-      x[n] *= -1;
+    for (size_t n = 0; n < N; ++n) x[n] *= -1;
     return ret;
   }
   [[nodiscard]] inline auto lessEqual(PtrVector<int64_t> x) const -> bool {
@@ -185,12 +182,10 @@ template <typename T> struct BaseComparator {
     assert(N <= x.size());
     int64_t x0 = x[0];
     x[0] = -x0 - 1;
-    for (size_t i = 1; i < N; ++i)
-      x[i] *= -1;
+    for (size_t i = 1; i < N; ++i) x[i] *= -1;
     bool ret = static_cast<const T *>(this)->greaterEqual(x);
     x[0] = x0;
-    for (size_t i = 1; i < N; ++i)
-      x[i] *= -1;
+    for (size_t i = 1; i < N; ++i) x[i] *= -1;
     return ret;
   }
   [[nodiscard]] inline auto less(PtrVector<int64_t> x) const -> bool {
@@ -234,13 +229,11 @@ template <typename T> struct BaseComparator {
     assert(x.size() >= N);
     assert(y.size() >= N);
     bool allEqual = true;
-    for (size_t i = 0; i < N; ++i)
-      allEqual &= (x[i] + y[i]) == 0;
+    for (size_t i = 0; i < N; ++i) allEqual &= (x[i] + y[i]) == 0;
     if (allEqual)
       return true;
     llvm::SmallVector<int64_t, 8> delta(N);
-    for (size_t i = 0; i < N; ++i)
-      delta[i] = x[i] + y[i];
+    for (size_t i = 0; i < N; ++i) delta[i] = x[i] + y[i];
     return equal(delta);
   }
 };
@@ -374,13 +367,11 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     size_t R = size_t(V.numRow());
     U.resizeForOverwrite(Row{R}, Col{R});
     U = 0;
-    for (size_t i = 0; i < R; ++i)
-      U(i, i) = 1;
+    for (size_t i = 0; i < R; ++i) U(i, i) = 1;
     // We will have query of the form Ax = q;
     NormalForm::simplifySystemImpl(NormalForm::solvePair(A, U));
     auto &H = A;
-    while ((R) && allZero(H(R - 1, _)))
-      --R;
+    while ((R) && allZero(H(R - 1, _))) --R;
     H.truncate(Row{R});
     U.truncate(Row{R});
     // numRowTrunc = R;
@@ -423,8 +414,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
-      for (size_t i = 0; i < H.numRow(); ++i)
-        H(i, oldn) = -b[i];
+      for (size_t i = 0; i < H.numRow(); ++i) H(i, oldn) = -b[i];
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -436,11 +426,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     else {
       size_t numSlack = size_t(V.numRow()) - numEquations;
       // Vector<int64_t> dinv = d; // copy
-      int64_t Dlcm = d[0];
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
-      for (size_t i = 1; i < d.size(); ++i)
-        Dlcm = lcm(Dlcm, d[i]);
+      int64_t Dlcm = lcm(d);
       Vector<int64_t> b2 = -b * Dlcm / d;
       size_t numRowTrunc = size_t(U.numRow());
       Vector<int64_t> c = V(_(numEquations, end), _(begin, numRowTrunc)) * b2;
@@ -474,8 +462,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
-      for (size_t i = 0; i < H.numRow(); ++i)
-        H(i, oldn) = b[i];
+      for (size_t i = 0; i < H.numRow(); ++i) H(i, oldn) = b[i];
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -487,11 +474,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     else {
       size_t numSlack = size_t(V.numRow()) - numEquations;
       Vector<int64_t> dinv = d; // copy
-      auto Dlcm = dinv[0];
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
-      for (size_t i = 1; i < dinv.size(); ++i)
-        Dlcm = lcm(Dlcm, dinv[i]);
+      size_t Dlcm = lcm(dinv);
       for (size_t i = 0; i < dinv.size(); ++i) {
         auto x = Dlcm / dinv[i];
         dinv[i] = x;
@@ -542,8 +527,7 @@ static inline void moveEqualities(IntMatrix &A, IntMatrix &E,
       if (isNeg && C.equalNegative(A(i, _), A(o, _))) {
         size_t e = size_t(E.numRow());
         E.resize(e + 1, numVar);
-        for (size_t v = 0; v < numVar; ++v)
-          E(e, v) = A(i, v);
+        for (size_t v = 0; v < numVar; ++v) E(e, v) = A(i, v);
         eraseConstraint(A, i, o);
         break;
       }
