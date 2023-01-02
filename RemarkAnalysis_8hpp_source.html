@@ -85,12 +85,11 @@ $(function() {
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    codeRegion = I-&gt;getParent();</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <span class="comment">// If there is no debug location attached to the instruction, revert</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    <span class="comment">// back to using the loop&#39;s.</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordflow">if</span> (I-&gt;getDebugLoc())</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;      DL = I-&gt;getDebugLoc();</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  }</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keywordflow">return</span> {<span class="stringliteral">&quot;turbo-loop&quot;</span>, remarkName, DL, codeRegion};</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;}</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordflow">if</span> (I-&gt;getDebugLoc()) DL = I-&gt;getDebugLoc();</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  }</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keywordflow">return</span> {<span class="stringliteral">&quot;turbo-loop&quot;</span>, remarkName, DL, codeRegion};</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
