@@ -79,7 +79,7 @@ $(function() {
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> gcd(<a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> x) -&gt; int64_t {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> N = x.size();</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordflow">if</span> (!N) <span class="keywordflow">return</span> 1;</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keywordflow">if</span> (!N) <span class="keywordflow">return</span> 0;</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  int64_t g = constexpr_abs(x[0]);</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> n = 1; (n &lt; N) &amp; (g != 1); ++n) g = gcd(g, x[n]);</div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keywordflow">return</span> g;</div>
