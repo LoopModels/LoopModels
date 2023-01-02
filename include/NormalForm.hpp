@@ -570,23 +570,10 @@ inline void solveSystem(IntMatrix &A) {
   auto B = IntMatrix::identity(A.numCol());
   solveSystem(A, B);
   int64_t s = lcm(A.diag());
-  for (size_t i = 0; i < A.numRow(); ++i) B(i, _) *= s / A(i, i);
+  if (s != 1)
+    for (size_t i = 0; i < A.numRow(); ++i) B(i, _) *= s / A(i, i);
   return std::make_pair(B, s);
 }
-// MULTIVERSION IntMatrix removeRedundantRows(IntMatrix A) {
-//     const auto [M, N] = A.size();
-//     for (size_t r = 0, c = 0; c < M && r < M; ++c)
-//         if (!pivotRows(A, c, M, r)) {
-//             zeroSupDiagonal(A, c, r++);
-//             reduceSubDiagonal(A, c, r++);
-//         }
-//     size_t R = M;
-//     while ((R > 0) && allZero(A(R - 1,_))) {
-//         --R;
-//     }
-//     A.truncateRows(R);
-//     return A;
-// }
 
 inline void nullSpace11(IntMatrix &B, IntMatrix &A) {
   const Row M = A.numRow();

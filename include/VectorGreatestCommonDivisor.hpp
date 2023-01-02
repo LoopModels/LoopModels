@@ -8,7 +8,7 @@ using LinearAlgebra::PtrVector, LinearAlgebra::MutPtrVector;
 
 inline auto gcd(PtrVector<int64_t> x) -> int64_t {
   const size_t N = x.size();
-  if (!N) return 1;
+  if (!N) return 0;
   int64_t g = constexpr_abs(x[0]);
   for (size_t n = 1; (n < N) & (g != 1); ++n) g = gcd(g, x[n]);
   return g;
