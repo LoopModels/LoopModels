@@ -2673,38 +2673,34 @@ $(function() {
 <div class="line"><a name="l02603"></a><span class="lineno"> 2603</span>&#160; </div>
 <div class="line"><a name="l02604"></a><span class="lineno"> 2604</span>&#160;static_assert(AbstractVector&lt;SliceView&lt;int64_t, unsigned&gt;&gt;);</div>
 <div class="line"><a name="l02605"></a><span class="lineno"> 2605</span>&#160; </div>
-<div class="line"><a name="l02606"></a><span class="lineno"> 2606</span>&#160;<span class="comment">// We care about these mostly for test framework printing</span></div>
-<div class="line"><a name="l02607"></a><span class="lineno"> 2607</span>&#160;<span class="comment">// these will print on errors in comparisons. Most comparisons</span></div>
-<div class="line"><a name="l02608"></a><span class="lineno"> 2608</span>&#160;<span class="comment">// leading to informative printing are probably going to involve</span></div>
-<div class="line"><a name="l02609"></a><span class="lineno"> 2609</span>&#160;<span class="comment">// vectors or matrices, so we define the adapter here.</span></div>
-<div class="line"><a name="l02610"></a><span class="lineno"> 2610</span>&#160;<span class="comment">// ADT requires `operator&lt;&lt;` be a friend, or at least defined</span></div>
-<div class="line"><a name="l02611"></a><span class="lineno"> 2611</span>&#160;<span class="comment">// in the same name space. We go for same namespace.</span></div>
-<div class="line"><a name="l02612"></a><span class="lineno"> 2612</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l02613"></a><span class="lineno"> 2613</span>&#160;concept RawOStreamPrint = requires(llvm::raw_ostream &amp;os, <span class="keyword">const</span> T &amp;t) {</div>
-<div class="line"><a name="l02614"></a><span class="lineno"> 2614</span>&#160;                            { os &lt;&lt; t } -&gt; std::same_as&lt;llvm::raw_ostream &amp;&gt;;</div>
-<div class="line"><a name="l02615"></a><span class="lineno"> 2615</span>&#160;                          };</div>
-<div class="line"><a name="l02616"></a><span class="lineno"> 2616</span>&#160; </div>
-<div class="line"><a name="l02617"></a><span class="lineno"> 2617</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(std::ostream &amp;os, <span class="keyword">const</span> RawOStreamPrint <span class="keyword">auto</span> &amp;x)</div>
-<div class="line"><a name="l02618"></a><span class="lineno"> 2618</span>&#160;  -&gt; std::ostream &amp; {</div>
-<div class="line"><a name="l02619"></a><span class="lineno"> 2619</span>&#160;  llvm::raw_os_ostream(os) &lt;&lt; x;</div>
-<div class="line"><a name="l02620"></a><span class="lineno"> 2620</span>&#160;  <span class="keywordflow">return</span> os;</div>
-<div class="line"><a name="l02621"></a><span class="lineno"> 2621</span>&#160;}</div>
-<div class="line"><a name="l02622"></a><span class="lineno"> 2622</span>&#160; </div>
-<div class="line"><a name="l02623"></a><span class="lineno"> 2623</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
-<div class="line"><a name="l02624"></a><span class="lineno"> 2624</span>&#160; </div>
-<div class="line"><a name="l02625"></a><span class="lineno"> 2625</span>&#160;<span class="comment">// exports:</span></div>
-<div class="line"><a name="l02626"></a><span class="lineno"> 2626</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
-<div class="line"><a name="l02627"></a><span class="lineno"> 2627</span>&#160;<span class="keyword">using</span> LinearAlgebra::_;</div>
-<div class="line"><a name="l02628"></a><span class="lineno"> 2628</span>&#160;<span class="keyword">using</span> LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,</div>
-<div class="line"><a name="l02629"></a><span class="lineno"> 2629</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>, <a class="code" href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a>,</div>
-<div class="line"><a name="l02630"></a><span class="lineno"> 2630</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a>, <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::IntMatrix</a>,</div>
-<div class="line"><a name="l02631"></a><span class="lineno"> 2631</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
-<div class="line"><a name="l02632"></a><span class="lineno"> 2632</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a>,</div>
-<div class="line"><a name="l02633"></a><span class="lineno"> 2633</span>&#160;  <a class="code" href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a>, <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a>,</div>
-<div class="line"><a name="l02634"></a><span class="lineno"> 2634</span>&#160;  <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a>, LinearAlgebra::begin,</div>
-<div class="line"><a name="l02635"></a><span class="lineno"> 2635</span>&#160;  LinearAlgebra::end, LinearAlgebra::swap, <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a>,</div>
-<div class="line"><a name="l02636"></a><span class="lineno"> 2636</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Col</a>,</div>
-<div class="line"><a name="l02637"></a><span class="lineno"> 2637</span>&#160;  LinearAlgebra::CarInd;</div>
+<div class="line"><a name="l02606"></a><span class="lineno"> 2606</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> adaptOStream(std::ostream &amp;os, <span class="keyword">const</span> <span class="keyword">auto</span> &amp;x) -&gt; std::ostream &amp; {</div>
+<div class="line"><a name="l02607"></a><span class="lineno"> 2607</span>&#160;  llvm::raw_os_ostream(os) &lt;&lt; x;</div>
+<div class="line"><a name="l02608"></a><span class="lineno"> 2608</span>&#160;  <span class="keywordflow">return</span> os;</div>
+<div class="line"><a name="l02609"></a><span class="lineno"> 2609</span>&#160;}</div>
+<div class="line"><a name="l02610"></a><span class="lineno"> 2610</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(std::ostream &amp;os, <span class="keyword">const</span> AbstractVector <span class="keyword">auto</span> &amp;x)</div>
+<div class="line"><a name="l02611"></a><span class="lineno"> 2611</span>&#160;  -&gt; std::ostream &amp; {</div>
+<div class="line"><a name="l02612"></a><span class="lineno"> 2612</span>&#160;  <span class="keywordflow">return</span> adaptOStream(os, x);</div>
+<div class="line"><a name="l02613"></a><span class="lineno"> 2613</span>&#160;}</div>
+<div class="line"><a name="l02614"></a><span class="lineno"> 2614</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> operator&lt;&lt;(std::ostream &amp;os, <span class="keyword">const</span> AbstractMatrix <span class="keyword">auto</span> &amp;x)</div>
+<div class="line"><a name="l02615"></a><span class="lineno"> 2615</span>&#160;  -&gt; std::ostream &amp; {</div>
+<div class="line"><a name="l02616"></a><span class="lineno"> 2616</span>&#160;  <span class="keywordflow">return</span> adaptOStream(os, x);</div>
+<div class="line"><a name="l02617"></a><span class="lineno"> 2617</span>&#160;}</div>
+<div class="line"><a name="l02618"></a><span class="lineno"> 2618</span>&#160; </div>
+<div class="line"><a name="l02619"></a><span class="lineno"> 2619</span>&#160;} <span class="comment">// namespace LinearAlgebra</span></div>
+<div class="line"><a name="l02620"></a><span class="lineno"> 2620</span>&#160; </div>
+<div class="line"><a name="l02621"></a><span class="lineno"> 2621</span>&#160;<span class="comment">// exports:</span></div>
+<div class="line"><a name="l02622"></a><span class="lineno"> 2622</span>&#160;<span class="comment">// NOLINTNEXTLINE(bugprone-reserved-identifier)</span></div>
+<div class="line"><a name="l02623"></a><span class="lineno"> 2623</span>&#160;<span class="keyword">using</span> LinearAlgebra::_;</div>
+<div class="line"><a name="l02624"></a><span class="lineno"> 2624</span>&#160;<span class="keyword">using</span> LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,</div>
+<div class="line"><a name="l02625"></a><span class="lineno"> 2625</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a>, <a class="code" href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a>,</div>
+<div class="line"><a name="l02626"></a><span class="lineno"> 2626</span>&#160;  <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a>, <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">LinearAlgebra::SquareMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::IntMatrix</a>,</div>
+<div class="line"><a name="l02627"></a><span class="lineno"> 2627</span>&#160;  <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>,</div>
+<div class="line"><a name="l02628"></a><span class="lineno"> 2628</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a>, <a class="code" href="structLinearAlgebra_1_1SmallSparseMatrix.html">LinearAlgebra::SmallSparseMatrix</a>,</div>
+<div class="line"><a name="l02629"></a><span class="lineno"> 2629</span>&#160;  <a class="code" href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a>, <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a>,</div>
+<div class="line"><a name="l02630"></a><span class="lineno"> 2630</span>&#160;  <a class="code" href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a>, <a class="code" href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a>, LinearAlgebra::begin,</div>
+<div class="line"><a name="l02631"></a><span class="lineno"> 2631</span>&#160;  LinearAlgebra::end, LinearAlgebra::swap, <a class="code" href="structLinearAlgebra_1_1SquarePtrMatrix.html">LinearAlgebra::SquarePtrMatrix</a>,</div>
+<div class="line"><a name="l02632"></a><span class="lineno"> 2632</span>&#160;  <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Row</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::RowStride</a>, <a class="code" href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::Col</a>,</div>
+<div class="line"><a name="l02633"></a><span class="lineno"> 2633</span>&#160;  LinearAlgebra::CarInd;</div>
 <div class="ttc" id="astructLinearAlgebra_1_1Add_html"><div class="ttname"><a href="structLinearAlgebra_1_1Add.html">LinearAlgebra::Add</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:327</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:95</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1ConstMatrixCore_html"><div class="ttname"><a href="structLinearAlgebra_1_1ConstMatrixCore.html">LinearAlgebra::ConstMatrixCore</a></div><div class="ttdoc">A CRTP type defining const methods for matrices.</div><div class="ttdef"><b>Definition:</b> Math.hpp:1402</div></div>
