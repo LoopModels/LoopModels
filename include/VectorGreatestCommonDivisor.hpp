@@ -33,6 +33,15 @@ inline auto lcm(AbstractVector auto x) -> int64_t {
   for (int64_t xi : x[_(1, end)]) l = lcm(l, xi);
   return l;
 }
+inline auto lcmNonUnity(AbstractVector auto x) -> std::pair<int64_t, bool> {
+  int64_t l = x[0];
+  bool nonUnity = (l != 1);
+  for (int64_t xi : x[_(1, end)]) {
+    nonUnity |= (xi != 1);
+    l = lcm(l, xi);
+  }
+  return {l, nonUnity};
+}
 inline auto lcmSkipZero(AbstractVector auto x) -> int64_t {
   int64_t l = 1;
   for (int64_t xi : x)

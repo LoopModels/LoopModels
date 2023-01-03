@@ -4,7 +4,6 @@
 
 #include "./TypePromotion.hpp"
 #include "./Utilities.hpp"
-#include "BitSets.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -17,9 +16,11 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
 #include <numeric>
 #include <optional>
+#include <ostream>
 #include <sched.h>
 #include <string>
 #include <tuple>
@@ -75,7 +76,6 @@ enum class AxisType {
   Row,
   Column,
   RowStride,
-
 };
 inline auto operator<<(llvm::raw_ostream &os, AxisType x)
   -> llvm::raw_ostream & {
@@ -2602,6 +2602,24 @@ template <typename T, typename I> struct SliceView {
 };
 
 static_assert(AbstractVector<SliceView<int64_t, unsigned>>);
+
+// We care about these mostly for test framework printing
+// these will print on errors in comparisons. Most comparisons
+// leading to informative printing are probably going to involve
+// vectors or matrices, so we define the adapter here.
+// ADT requires `operator<<` be a friend, or at least defined
+// in the same name space. We go for same namespace.
+template <typename T>
+concept RawOStreamPrint = requires(llvm::raw_ostream &os, const T &t) {
+                            { os << t } -> std::same_as<llvm::raw_ostream &>;
+                          };
+
+inline auto operator<<(std::ostream &os, const RawOStreamPrint auto &x)
+  -> std::ostream & {
+  llvm::raw_os_ostream(os) << x;
+  return os;
+}
+
 } // namespace LinearAlgebra
 
 // exports:

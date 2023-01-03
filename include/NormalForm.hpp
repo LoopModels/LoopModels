@@ -568,12 +568,15 @@ inline void solveSystem(MutPtrMatrix<int64_t> A) {
 /// Given a matrix \f$\textbf{A}\f$, returns a matrix \f$\textbf{B}\f$ and a
 /// scalar \f$s\f$ such that \f$\frac{1}{s}\textbf{B} = \textbf{A}^{-1}\f$.
 /// NOTE: This function assumes non-singular
+/// D0 * B^{-1} = Binv0
+/// (s/s) * D0 * B^{-1} = Binv0
+/// s * B^{-1} = (s/D0) * Binv0
 [[nodiscard]] inline auto scaledInv(SquareMatrix<int64_t, 4> A)
   -> std::pair<SquareMatrix<int64_t, 4>, int64_t> {
   auto B = SquareMatrix<int64_t, 4>::identity(A.numCol());
   solveSystem(A, B);
-  int64_t s = lcm(A.diag());
-  if (s != 1)
+  auto [s, nonUnity] = lcmNonUnity(A.diag());
+  if (nonUnity)
     for (size_t i = 0; i < A.numRow(); ++i) B(i, _) *= s / A(i, i);
   return std::make_pair(B, s);
 }

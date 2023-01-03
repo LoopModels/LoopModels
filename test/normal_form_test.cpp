@@ -333,13 +333,18 @@ TEST(InvTest, BasicAssertions) {
         if (NormalForm::rank(B) == dim) break;
       }
       // D0 * B^{-1} = Binv0
-      // D0^{-1} * Binv0 = B^{-1}
+      // D0 = Binv0 * B
       auto [D0, Binv0] = NormalForm::inv(B);
       auto [Binv1, s] = NormalForm::scaledInv(B);
       EXPECT_TRUE(D0.isDiagonal());
-      EXPECT_TRUE((Binv0 * B) == D0);
+      EXPECT_EQ((Binv0 * B), D0);
       D1.diag() = s;
-      EXPECT_TRUE(B * Binv1 == D1);
+      if (B * Binv1 != D1) {
+        llvm::errs() << "\nB = " << B << "\nD0 = " << D0
+                     << "\nBinv0 = " << Binv0 << "\nBinv1 = " << Binv1
+                     << "\ns = " << s << "\n";
+      }
+      EXPECT_EQ(B * Binv1, D1);
     }
   }
 }

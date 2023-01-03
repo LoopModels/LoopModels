@@ -1,7 +1,11 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "gtest/gtest.h"
+#include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <llvm/Support/raw_ostream.h>
+#include <string>
 
 // Demonstrate some basic assertions.
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -143,4 +147,20 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     for (size_t j = 0; j < i; ++j)
       for (size_t k = 0; k < i; ++k) EXPECT_EQ(A(j, k), k + j == i - 1);
   }
+}
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(ArrayPrint, BasicAssertions) {
+  std::string s;
+  llvm::raw_string_ostream os(s);
+  auto A{
+    "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]"_mat};
+  os << A;
+  EXPECT_EQ(os.str(), testing::PrintToString(A));
+  Vector<int64_t> v;
+  for (size_t i = 0; i < 10; ++i) v.push_back(i);
+  s.clear();
+  os << v;
+  EXPECT_EQ(os.str(), testing::PrintToString(v));
 }

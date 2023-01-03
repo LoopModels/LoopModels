@@ -34,9 +34,12 @@ constexpr auto gcd(int64_t x, int64_t y) -> int64_t {
   return b << k;
 }
 constexpr auto lcm(int64_t x, int64_t y) -> int64_t {
-  if (constexpr_abs(x) == 1) return y;
-  if (constexpr_abs(y) == 1) return x;
-  return x * (y / gcd(x, y));
+  int64_t ax = constexpr_abs(x);
+  int64_t ay = constexpr_abs(y);
+  if (ax == 1) return ay;
+  if (ay == 1) return ax;
+  if (ax == ay) return ax;
+  return ax * (ay / gcd(ax, ay));
 }
 // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
 template <
