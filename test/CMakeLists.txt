@@ -26,7 +26,8 @@ CPMFindPackage(
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.12.1
   VERSION 1.12.1
-  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt" "BUILD_GMOCK OFF"
+  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt ON" "BUILD_GMOCK OFF"
+          "gtest_hide_internal_symbols ON"
 )
 
 if(TEST_INSTALLED_VERSION)
@@ -52,6 +53,35 @@ message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} LoopModels)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
+target_precompile_headers(
+  ${PROJECT_NAME}
+  PRIVATE
+  <cstddef>
+  <algorithm>
+  <bit>
+  <cassert>
+  <cmath>
+  <concepts>
+  <cstddef>
+  <cstdint>
+  <gtest/gtest.h>
+  <iterator>
+  <limits>
+  <llvm/ADT/ArrayRef.h>
+  <llvm/ADT/Optional.h>
+  <llvm/ADT/SmallVector.h>
+  <llvm/Support/raw_os_ostream.h>
+  <llvm/Support/raw_ostream.h>
+  <numeric>
+  <optional>
+  <ostream>
+  <random>
+  <sched.h>
+  <string>
+  <tuple>
+  <type_traits>
+  <utility>
+)
 # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest_main LLVM)
 set(CXX_STANDARD_REQUIRED ON)

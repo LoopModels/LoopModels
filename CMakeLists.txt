@@ -91,8 +91,50 @@ target_link_libraries(${PROJECT_NAME} PRIVATE LLVM)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                         $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+  ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+)
+target_precompile_headers(
+  ${PROJECT_NAME}
+  PRIVATE
+  <algorithm>
+  <bit>
+  <cassert>
+  <cmath>
+  <cstddef>
+  <cstdint>
+  <limits>
+  <llvm/ADT/ArrayRef.h>
+  <llvm/ADT/SmallPtrSet.h>
+  <llvm/ADT/SmallVector.h>
+  <llvm/Analysis/AssumptionCache.h>
+  <llvm/Analysis/Delinearization.h>
+  <llvm/Analysis/LoopInfo.h>
+  <llvm/Analysis/OptimizationRemarkEmitter.h>
+  <llvm/Analysis/ScalarEvolution.h>
+  <llvm/Analysis/ScalarEvolutionExpressions.h>
+  <llvm/Analysis/TargetLibraryInfo.h>
+  <llvm/Analysis/TargetTransformInfo.h>
+  <llvm/IR/BasicBlock.h>
+  <llvm/IR/CFG.h>
+  <llvm/IR/Constant.h>
+  <llvm/IR/Constants.h>
+  <llvm/IR/DataLayout.h>
+  <llvm/IR/Dominators.h>
+  <llvm/IR/IRBuilder.h>
+  <llvm/IR/InstrTypes.h>
+  <llvm/IR/Instruction.h>
+  <llvm/IR/Instructions.h>
+  <llvm/IR/PassManager.h>
+  <llvm/IR/Type.h>
+  <llvm/IR/Value.h>
+  <llvm/Support/Casting.h>
+  <llvm/Support/Debug.h>
+  <llvm/Support/raw_ostream.h>
+  <llvm/Transforms/Utils/LoopUtils.h>
+  <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+  <ranges>
+  <utility>
 )
 
 # ---- Create an installable target ----
