@@ -2603,21 +2603,17 @@ template <typename T, typename I> struct SliceView {
 
 static_assert(AbstractVector<SliceView<int64_t, unsigned>>);
 
-// We care about these mostly for test framework printing
-// these will print on errors in comparisons. Most comparisons
-// leading to informative printing are probably going to involve
-// vectors or matrices, so we define the adapter here.
-// ADT requires `operator<<` be a friend, or at least defined
-// in the same name space. We go for same namespace.
-template <typename T>
-concept RawOStreamPrint = requires(llvm::raw_ostream &os, const T &t) {
-                            { os << t } -> std::same_as<llvm::raw_ostream &>;
-                          };
-
-inline auto operator<<(std::ostream &os, const RawOStreamPrint auto &x)
-  -> std::ostream & {
+inline auto adaptOStream(std::ostream &os, const auto &x) -> std::ostream & {
   llvm::raw_os_ostream(os) << x;
   return os;
+}
+inline auto operator<<(std::ostream &os, const AbstractVector auto &x)
+  -> std::ostream & {
+  return adaptOStream(os, x);
+}
+inline auto operator<<(std::ostream &os, const AbstractMatrix auto &x)
+  -> std::ostream & {
+  return adaptOStream(os, x);
 }
 
 } // namespace LinearAlgebra
