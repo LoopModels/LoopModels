@@ -2,6 +2,7 @@
 #include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "../include/NormalForm.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <llvm/ADT/SmallVector.h>
@@ -315,4 +316,30 @@ TEST(BareissTests, BasicAssertions) {
   EXPECT_EQ(C, D);
   auto truePivots = llvm::SmallVector<size_t, 16>{0, 2, 2, 3, 4};
   EXPECT_EQ(pivots, truePivots);
+}
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(InvTest, BasicAssertions) {
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> distrib(-10, 10);
+  const size_t numIters = 1000;
+  for (size_t dim = 1; dim < 5; ++dim) {
+    IntMatrix B(Row{dim}, Col{dim});
+    SquareMatrix<int64_t> D1 = SquareMatrix<int64_t>::identity(dim);
+    for (size_t i = 0; i < numIters; ++i) {
+      while (true) {
+        for (size_t n = 0; n < dim * dim; ++n) B.data()[n] = distrib(gen);
+        if (NormalForm::rank(B) == dim) break;
+      }
+      // D0 * B^{-1} = Binv0
+      // D0^{-1} * Binv0 = B^{-1}
+      auto [D0, Binv0] = NormalForm::inv(B);
+      auto [Binv1, s] = NormalForm::scaledInv(B);
+      EXPECT_TRUE(D0.isDiagonal());
+      EXPECT_TRUE((Binv0 * B) == D0);
+      D1.diag() = s;
+      EXPECT_TRUE(B * Binv1 == D1);
+    }
+  }
 }

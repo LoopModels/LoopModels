@@ -470,7 +470,7 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
       Vector<int64_t> dinv = d; // copy
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
-      size_t Dlcm = lcm(dinv);
+      int64_t Dlcm = lcm(dinv);
       for (size_t i = 0; i < dinv.size(); ++i) {
         auto x = Dlcm / dinv[i];
         dinv[i] = x;

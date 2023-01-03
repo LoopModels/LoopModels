@@ -33,3 +33,9 @@ inline auto lcm(AbstractVector auto x) -> int64_t {
   for (int64_t xi : x[_(1, end)]) l = lcm(l, xi);
   return l;
 }
+inline auto lcmSkipZero(AbstractVector auto x) -> int64_t {
+  int64_t l = 1;
+  for (int64_t xi : x)
+    if (xi) l = lcm(l, xi);
+  return l;
+}

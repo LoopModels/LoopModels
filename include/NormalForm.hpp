@@ -462,7 +462,7 @@ zeroColumn(std::pair<MutPtrMatrix<int64_t>, MutPtrMatrix<int64_t>> AB, Col c,
   }
 }
 // use row `r` to zero the remaining rows of column `c`
-inline void zeroColumn(IntMatrix &A, Col c, Row r) {
+inline void zeroColumn(MutPtrMatrix<int64_t> A, Col c, Row r) {
   const Col N = A.numCol();
   const Row M = A.numRow();
   for (size_t j = 0; j < r; ++j) {
@@ -534,14 +534,14 @@ inline void bareiss(IntMatrix &A, llvm::SmallVectorImpl<size_t> &pivots) {
 /// a matrix \f$\textbf{W}\f$ that diagonalizes \f$\textbf{A}\f$.
 /// Once \f$\textbf{A}\f$ has been diagonalized, the solution is trivial.
 /// Both inputs are overwritten with the product of the left multiplications.
-inline void solveSystem(IntMatrix &A, IntMatrix &B) {
+inline void solveSystem(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B) {
   const auto [M, N] = A.size();
   auto AB = solvePair(A, B);
   for (auto [r, c] = CarInd{0, 0}; c < N && r < M; ++c)
     if (!pivotRows(AB, c, M, r)) zeroColumn(AB, c, r++);
 }
 // diagonalizes A(1:K,1:K)
-inline void solveSystem(IntMatrix &A, size_t K) {
+inline void solveSystem(MutPtrMatrix<int64_t> A, size_t K) {
   const auto [M, N] = A.size();
   for (auto [r, c] = CarInd{0, 0}; c < K && r < M; ++c)
     if (!pivotRows(A, c, M, r)) zeroColumn(A, c, r++);
@@ -550,24 +550,27 @@ inline void solveSystem(IntMatrix &A, size_t K) {
 // returns `true` if the solve failed, `false` otherwise
 // diagonals contain denominators.
 // Assumes the last column is the vector to solve for.
-inline void solveSystem(IntMatrix &A) {
+inline void solveSystem(MutPtrMatrix<int64_t> A) {
   solveSystem(A, size_t(A.numCol()) - 1);
 }
 /// inv(A) -> (D, B)
 /// Given a matrix \f$\textbf{A}\f$, returns two matrices \f$\textbf{D}\f$ and
 /// \f$\textbf{B}\f$ so that \f$\textbf{D}^{-1}\textbf{B} = \textbf{A}^{-1}\f$,
 /// and \f$\textbf{D}\f$ is diagonal.
-[[nodiscard]] inline auto inv(IntMatrix A) -> std::pair<IntMatrix, IntMatrix> {
-  auto B = IntMatrix::identity(A.numCol());
+/// NOTE: This function assumes non-singular
+[[nodiscard]] inline auto inv(SquareMatrix<int64_t, 4> A)
+  -> std::pair<IntMatrix, SquareMatrix<int64_t, 4>> {
+  auto B = SquareMatrix<int64_t, 4>::identity(A.numCol());
   solveSystem(A, B);
   return std::make_pair(A, B);
 }
 /// inv(A) -> (B, s)
 /// Given a matrix \f$\textbf{A}\f$, returns a matrix \f$\textbf{B}\f$ and a
 /// scalar \f$s\f$ such that \f$\frac{1}{s}\textbf{B} = \textbf{A}^{-1}\f$.
-[[nodiscard]] inline auto scaledInv(IntMatrix A)
-  -> std::pair<IntMatrix, int64_t> {
-  auto B = IntMatrix::identity(A.numCol());
+/// NOTE: This function assumes non-singular
+[[nodiscard]] inline auto scaledInv(SquareMatrix<int64_t, 4> A)
+  -> std::pair<SquareMatrix<int64_t, 4>, int64_t> {
+  auto B = SquareMatrix<int64_t, 4>::identity(A.numCol());
   solveSystem(A, B);
   int64_t s = lcm(A.diag());
   if (s != 1)

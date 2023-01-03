@@ -200,12 +200,12 @@ template <AxisType T>
 constexpr auto operator%(AxisInt<T> x, AxisInt<T> y) -> AxisInt<T> {
   return (*x) % (*y);
 }
-template <AxisType T>
-constexpr auto operator==(AxisInt<T> x, AxisInt<T> y) -> bool {
+template <AxisType S, AxisType T>
+constexpr auto operator==(AxisInt<S> x, AxisInt<T> y) -> bool {
   return *x == *y;
 }
-template <AxisType T>
-constexpr auto operator!=(AxisInt<T> x, AxisInt<T> y) -> bool {
+template <AxisType S, AxisType T>
+constexpr auto operator!=(AxisInt<S> x, AxisInt<T> y) -> bool {
   return *x != *y;
 }
 template <AxisType T>
@@ -340,8 +340,8 @@ struct Div {
 
 template <typename Op, typename A> struct ElementwiseUnaryOp {
   using eltype = typename A::eltype;
-  [[no_unique_address]] const Op op;
-  [[no_unique_address]] const A a;
+  [[no_unique_address]] Op op;
+  [[no_unique_address]] A a;
   auto operator()(size_t i, size_t j) const { return op(a(i, j)); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
@@ -351,8 +351,8 @@ template <typename Op, typename A> struct ElementwiseUnaryOp {
 };
 template <typename Op, AbstractVector A> struct ElementwiseUnaryOp<Op, A> {
   using eltype = typename A::eltype;
-  [[no_unique_address]] const Op op;
-  [[no_unique_address]] const A a;
+  [[no_unique_address]] Op op;
+  [[no_unique_address]] A a;
   auto operator[](size_t i) const { return op(a[i]); }
 
   [[nodiscard]] constexpr auto size() const { return a.size(); }
@@ -382,8 +382,15 @@ template <typename T>
 concept VectorOrScalar = AbstractVector<T> || Scalar<T>;
 template <typename T>
 concept MatrixOrScalar = AbstractMatrix<T> || Scalar<T>;
+template <typename T>
+concept TriviallyCopyableVectorOrScalar =
+  std::is_trivially_copyable_v<T> && VectorOrScalar<T>;
+template <typename T>
+concept TriviallyCopyableMatrixOrScalar =
+  std::is_trivially_copyable_v<T> && MatrixOrScalar<T>;
 
-template <typename Op, VectorOrScalar A, VectorOrScalar B>
+template <typename Op, TriviallyCopyableVectorOrScalar A,
+          TriviallyCopyableVectorOrScalar B>
 struct ElementwiseVectorBinaryOp {
   using eltype = promote_eltype_t<A, B>;
   [[no_unique_address]] Op op;
@@ -405,7 +412,8 @@ struct ElementwiseVectorBinaryOp {
   [[nodiscard]] constexpr auto view() const -> auto & { return *this; };
 };
 
-template <typename Op, MatrixOrScalar A, MatrixOrScalar B>
+template <typename Op, TriviallyCopyableMatrixOrScalar A,
+          TriviallyCopyableMatrixOrScalar B>
 struct ElementwiseMatrixBinaryOp {
   using eltype = promote_eltype_t<A, B>;
   [[no_unique_address]] Op op;
@@ -1051,8 +1059,8 @@ static_assert(!AbstractVector<int64_t>);
 template <typename T> struct StridedVector {
   static_assert(!std::is_const_v<T>, "const T is redundant");
   using eltype = T;
-  [[no_unique_address]] const T *const d;
-  [[no_unique_address]] const size_t N;
+  [[no_unique_address]] const T *d;
+  [[no_unique_address]] size_t N;
   [[no_unique_address]] RowStride x;
   struct StridedIterator {
     [[no_unique_address]] const T *d;
@@ -1218,6 +1226,13 @@ template <typename T> struct MutStridedVector {
 
 static_assert(AbstractVector<StridedVector<int64_t>>);
 static_assert(!AbstractMatrix<StridedVector<int64_t>>);
+static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
+// static_assert(std::is_trivially_copyable_v<MutStridedVector<int64_t>>);
+static_assert(std::is_trivially_copyable_v<
+              ElementwiseUnaryOp<Sub, StridedVector<int64_t>>>);
+static_assert(TriviallyCopyableVectorOrScalar<
+              ElementwiseUnaryOp<Sub, StridedVector<int64_t>>>);
+
 template <typename T>
 concept DerivedMatrix =
   requires(T t, const T ct) {
@@ -1440,6 +1455,12 @@ template <typename T, typename A> struct ConstMatrixCore {
       for (size_t j = 0; j < N; ++j)
         if (A(i, j) != (i + j == N - 1)) return false;
     }
+  }
+  [[nodiscard]] auto isDiagonal() const -> bool {
+    for (Row r = 0; r < numRow(); ++r)
+      for (Col c = 0; c < numCol(); ++c)
+        if (r != c && (*this)(r, c) != 0) return false;
+    return true;
   }
 };
 template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
@@ -1845,8 +1866,8 @@ struct MutSquarePtrMatrix : MutMatrixCore<T, MutSquarePtrMatrix<T>> {
 };
 
 template <typename T, unsigned STORAGE = 8>
-struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T>> {
-  using Base = MutMatrixCore<T, SquareMatrix<T>>;
+struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
+  using Base = MutMatrixCore<T, SquareMatrix<T, STORAGE>>;
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
@@ -1858,6 +1879,12 @@ struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T>> {
 
   SquareMatrix(size_t m)
     : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
+
+  SquareMatrix(AbstractMatrix auto A) {
+    M = size_t(A.numRow());
+    mem.resize_for_overwrite(M * M);
+    copyto(*this, A);
+  }
 
   [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
   [[nodiscard]] constexpr auto numCol() const -> Col { return Col{M}; }
@@ -1877,15 +1904,15 @@ struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T>> {
   auto operator[](size_t i) -> T & { return mem[i]; }
   auto operator[](size_t i) const -> const T & { return mem[i]; }
 
-  static auto identity(size_t N) -> SquareMatrix<T> {
-    SquareMatrix<T> A(N);
+  static auto identity(size_t N) -> SquareMatrix<T, STORAGE> {
+    SquareMatrix<T, STORAGE> A(N);
     for (size_t r = 0; r < N; ++r) A(r, r) = 1;
     return A;
   }
-  inline static auto identity(Row N) -> SquareMatrix<T> {
+  inline static auto identity(Row N) -> SquareMatrix<T, STORAGE> {
     return identity(size_t(N));
   }
-  inline static auto identity(Col N) -> SquareMatrix<T> {
+  inline static auto identity(Col N) -> SquareMatrix<T, STORAGE> {
     return identity(size_t(N));
   }
   constexpr operator MutSquarePtrMatrix<T>() {
@@ -1893,6 +1920,11 @@ struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T>> {
   }
   constexpr operator SquarePtrMatrix<T>() const {
     return SquarePtrMatrix<T>(mem.data(), M);
+  }
+  void extendOrAssertSize(Row R, Col C) {
+    assert(R == C && "Matrix must be square");
+    M = size_t(R);
+    mem.resize_for_overwrite(M * M);
   }
 };
 
@@ -2035,6 +2067,7 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     }
     N = *NN;
   }
+  void extendOrAssertSize(Row R, Col C) { resizeForOverwrite(R, C); }
   void erase(Col i) {
     assert(i < N);
     for (size_t m = 0; m < M; ++m)
@@ -2248,13 +2281,6 @@ inline auto findMax(llvm::ArrayRef<T> x) -> std::pair<size_t, T> {
 
 template <typename T>
 concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
-
-template <typename T>
-concept TriviallyCopyableVectorOrScalar =
-  std::is_trivially_copyable_v<T> && VectorOrScalar<T>;
-template <typename T>
-concept TriviallyCopyableMatrixOrScalar =
-  std::is_trivially_copyable_v<T> && MatrixOrScalar<T>;
 
 static_assert(std::copy_constructible<PtrMatrix<int64_t>>);
 // static_assert(std::is_trivially_copyable_v<MutPtrMatrix<int64_t>>);
@@ -2586,8 +2612,8 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
   LinearAlgebra::Matrix, LinearAlgebra::SquareMatrix, LinearAlgebra::IntMatrix,
   LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt,
   LinearAlgebra::AxisInt, LinearAlgebra::SmallSparseMatrix,
-  LinearAlgebra::SquareMatrix, LinearAlgebra::StridedVector,
-  LinearAlgebra::MutStridedVector, LinearAlgebra::MutSquarePtrMatrix,
-  LinearAlgebra::Range, LinearAlgebra::begin, LinearAlgebra::end,
-  LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
-  LinearAlgebra::RowStride, LinearAlgebra::Col, LinearAlgebra::CarInd;
+  LinearAlgebra::StridedVector, LinearAlgebra::MutStridedVector,
+  LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::Range, LinearAlgebra::begin,
+  LinearAlgebra::end, LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix,
+  LinearAlgebra::Row, LinearAlgebra::RowStride, LinearAlgebra::Col,
+  LinearAlgebra::CarInd;

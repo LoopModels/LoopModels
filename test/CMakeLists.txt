@@ -5,7 +5,7 @@ project(LoopModelsTests LANGUAGES CXX)
 # ---- Options ----
 
 option(ENABLE_TEST_COVERAGE "Enable test coverage" OFF)
-option(ENABLE_TEST_EXCEPTIONS "Enable test coverage" ON)
+option(ENABLE_TEST_EXCEPTIONS "Enable test exceptions" OFF)
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
 # --- Import tools ----
@@ -25,7 +25,7 @@ CPMFindPackage(
   NAME googletest
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.12.1
-  VERSION 1.10.0
+  VERSION 1.12.1
   OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt" "BUILD_GMOCK OFF"
 )
 

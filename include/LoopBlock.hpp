@@ -73,19 +73,19 @@ public:
   /// Return the memory accesses after applying the Schedule.
   /// Let
   /// \f{eqnarray*}{
-  /// D &=& \text{the dimension of the array}\\
-  /// N &=& \text{depth of the loop nest}\\
-  /// V &=& \text{runtime variables}\\
-  /// \textbf{i}\in\mathbb{R}^N &=& \text{the old index vector}\\
-  /// \textbf{j}\in\mathbb{R}^N &=& \text{the new index vector}\\
-  /// \textbf{x}\in\mathbb{R}^D &=& \text{the indices into the array}\\
-  /// \textbf{M}\in\mathbb{R}^{N \times D} &=& \text{map from loop ind vars to array indices}\\
-  /// \boldsymbol{\Phi}\in\mathbb{R}^{N \times N} &=& \text{the schedule matrix}\\
-  /// \boldsymbol{\Phi}_*\in\mathbb{R}^{N \times N} &=& \textbf{E}\boldsymbol{\Phi}\\
-  /// \boldsymbol{\omega}\in\mathbb{R}^N &=& \text{the offset vector}\\
-  /// \textbf{c}\in\mathbb{R}^{N} &=& \text{the constant offset vector}\\
-  /// \textbf{C}\in\mathbb{R}^{N \times V} &=& \text{runtime variable coefficient matrix}\\
-  /// \textbf{s}\in\mathbb{R}^V &=& \text{the symbolic runtime variables}\\
+  /// D &=& \text{the dimension of the array}\\ %
+  /// N &=& \text{depth of the loop nest}\\ %
+  /// V &=& \text{runtime variables}\\ %
+  /// \textbf{i}\in\mathbb{R}^N &=& \text{the old index vector}\\ %
+  /// \textbf{j}\in\mathbb{R}^N &=& \text{the new index vector}\\ %
+  /// \textbf{x}\in\mathbb{R}^D &=& \text{the indices into the array}\\ %
+  /// \textbf{M}\in\mathbb{R}^{N \times D} &=& \text{map from loop ind vars to array indices}\\ %
+  /// \boldsymbol{\Phi}\in\mathbb{R}^{N \times N} &=& \text{the schedule matrix}\\ %
+  /// \boldsymbol{\Phi}_*\in\mathbb{R}^{N \times N} &=& \textbf{E}\boldsymbol{\Phi}\\ %
+  /// \boldsymbol{\omega}\in\mathbb{R}^N &=& \text{the offset vector}\\ %
+  /// \textbf{c}\in\mathbb{R}^{N} &=& \text{the constant offset vector}\\ %
+  /// \textbf{C}\in\mathbb{R}^{N \times V} &=& \text{runtime variable coefficient matrix}\\ %
+  /// \textbf{s}\in\mathbb{R}^V &=& \text{the symbolic runtime variables}\\ %
   /// \f}
   /// 
   /// Where \f$\textbf{E}\f$ is an [exchange matrix](https://en.wikipedia.org/wiki/Exchange_matrix).
@@ -94,15 +94,15 @@ public:
   /// corrects this.
   /// We have
   /// \f{eqnarray*}{
-  /// \textbf{j} &=& \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\
-  /// \textbf{i} &=& \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\
-  /// \textbf{x} &=& \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\
-  /// \textbf{x} &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\
-  /// \textbf{M}'_* &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\
-  /// \textbf{x} &=& \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\
-  /// \textbf{x} &=& \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\
-  /// \textbf{c}_* &=& \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\
-  /// \textbf{x} &=& \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\
+  /// \textbf{j} &=& \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ %
+  /// \textbf{i} &=& \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\ %
+  /// \textbf{x} &=& \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ %
+  /// \textbf{x} &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
+  /// \textbf{M}'_* &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\ %
+  /// \textbf{x} &=& \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
+  /// \textbf{x} &=& \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ %
+  /// \textbf{c}_* &=& \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ %
+  /// \textbf{x} &=& \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ %
   /// \f}
   /// Therefore, to update the memory accesses, we must simply compute the updated
   /// \f$\textbf{c}_*\f$ and \f$\textbf{M}'_*\f$.
@@ -112,8 +112,10 @@ public:
   getMemAccesses(llvm::ArrayRef<MemoryAccess *> memAccess) const
     -> llvm::SmallVector<ScheduledMemoryAccess> {
     // First, we invert the schedule matrix.
-    auto [Pinv, s] = NormalForm::scaledInv(schedule.getPhi());
-
+    SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
+    auto [Pinv, s] = NormalForm::scaledInv(Phi);
+    if (s == 1) {
+    }
     llvm::SmallVector<ScheduledMemoryAccess> accesses;
     accesses.reserve(memory.size());
     for (auto i : memory)
