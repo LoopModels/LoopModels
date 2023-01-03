@@ -620,39 +620,39 @@ $(function() {
 <div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;  solveSystem(A, B);</div>
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  <span class="keywordflow">return</span> std::make_pair(A, B);</div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;}</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> scaledInv(<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;</a> A)</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;  -&gt; std::pair&lt;SquareMatrix&lt;int64_t, 4&gt;, int64_t&gt; {</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;  <span class="keyword">auto</span> B = <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;::identity</a>(A.numCol());</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  solveSystem(A, B);</div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  int64_t s = lcm(A.diag());</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;  <span class="keywordflow">if</span> (s != 1)</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) B(i, _) *= s / A(i, i);</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  <span class="keywordflow">return</span> std::make_pair(B, s);</div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;}</div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160; </div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> nullSpace11(IntMatrix &amp;B, IntMatrix &amp;A) {</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;  <span class="keyword">const</span> Row M = A.numRow();</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  B.resizeForOverwrite(M, Col{size_t(M)});</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;  B = 0;</div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;  B.diag() = 1;</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  solveSystem(A, B);</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  Row R = numNonZeroRows(A);</div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;  <span class="comment">// slice B[_(R,end), :]</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;  <span class="keywordflow">if</span> (!R) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;  <span class="comment">// we keep last D columns</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  Row D = M - R;</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;  <span class="keywordtype">size_t</span> o = size_t(R * M);</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  <span class="comment">// we keep `D` columns</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> d = 0; d &lt; M * D; ++d) B.mem[d] = B.mem[d + o];</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  B.truncate(D);</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;}</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> nullSpace(IntMatrix A) -&gt; IntMatrix {</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;  IntMatrix B;</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;  nullSpace11(B, A);</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;  <span class="keywordflow">return</span> B;</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;}</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160; </div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> scaledInv(<a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;</a> A)</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  -&gt; std::pair&lt;SquareMatrix&lt;int64_t, 4&gt;, int64_t&gt; {</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;  <span class="keyword">auto</span> B = <a class="code" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix&lt;int64_t, 4&gt;::identity</a>(A.numCol());</div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;  solveSystem(A, B);</div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;  <span class="keyword">auto</span> [s, nonUnity] = lcmNonUnity(A.diag());</div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;  <span class="keywordflow">if</span> (nonUnity)</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; A.numRow(); ++i) B(i, _) *= s / A(i, i);</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;  <span class="keywordflow">return</span> std::make_pair(B, s);</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;}</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160; </div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;<span class="keyword">inline</span> <span class="keywordtype">void</span> nullSpace11(IntMatrix &amp;B, IntMatrix &amp;A) {</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;  <span class="keyword">const</span> Row M = A.numRow();</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;  B.resizeForOverwrite(M, Col{size_t(M)});</div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;  B = 0;</div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;  B.diag() = 1;</div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;  solveSystem(A, B);</div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;  Row R = numNonZeroRows(A);</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  <span class="comment">// slice B[_(R,end), :]</span></div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;  <span class="keywordflow">if</span> (!R) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  <span class="comment">// we keep last D columns</span></div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  Row D = M - R;</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  <span class="keywordtype">size_t</span> o = size_t(R * M);</div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  <span class="comment">// we keep `D` columns</span></div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> d = 0; d &lt; M * D; ++d) B.mem[d] = B.mem[d + o];</div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;  B.truncate(D);</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;}</div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span> nullSpace(IntMatrix A) -&gt; IntMatrix {</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;  IntMatrix B;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  nullSpace11(B, A);</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  <span class="keywordflow">return</span> B;</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;}</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160; </div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;} <span class="comment">// namespace NormalForm</span></div>
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:6</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1540</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutSquarePtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutSquarePtrMatrix.html">LinearAlgebra::MutSquarePtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1841</div></div>
