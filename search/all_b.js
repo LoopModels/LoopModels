@@ -21,7 +21,7 @@ var searchData=
   ['mutmatrixcore_3c_20t_2c_20matrix_3c_20t_2c_20m_2c_200_2c_20s_20_3e_20_3e_113',['MutMatrixCore&lt; T, Matrix&lt; T, M, 0, S &gt; &gt;',['../structLinearAlgebra_1_1MutMatrixCore.html',1,'LinearAlgebra']]],
   ['mutmatrixcore_3c_20t_2c_20mutptrmatrix_3c_20t_20_3e_20_3e_114',['MutMatrixCore&lt; T, MutPtrMatrix&lt; T &gt; &gt;',['../structLinearAlgebra_1_1MutMatrixCore.html',1,'LinearAlgebra']]],
   ['mutmatrixcore_3c_20t_2c_20mutsquareptrmatrix_3c_20t_20_3e_20_3e_115',['MutMatrixCore&lt; T, MutSquarePtrMatrix&lt; T &gt; &gt;',['../structLinearAlgebra_1_1MutMatrixCore.html',1,'LinearAlgebra']]],
-  ['mutmatrixcore_3c_20t_2c_20squarematrix_3c_20t_20_3e_20_3e_116',['MutMatrixCore&lt; T, SquareMatrix&lt; T &gt; &gt;',['../structLinearAlgebra_1_1MutMatrixCore.html',1,'LinearAlgebra']]],
+  ['mutmatrixcore_3c_20t_2c_20squarematrix_3c_20t_2c_208_20_3e_20_3e_116',['MutMatrixCore&lt; T, SquareMatrix&lt; T, 8 &gt; &gt;',['../structLinearAlgebra_1_1MutMatrixCore.html',1,'LinearAlgebra']]],
   ['mutptrmatrix_117',['MutPtrMatrix',['../structLinearAlgebra_1_1MutPtrMatrix.html',1,'LinearAlgebra']]],
   ['mutptrvector_118',['MutPtrVector',['../structLinearAlgebra_1_1MutPtrVector.html',1,'LinearAlgebra']]],
   ['mutsquareptrmatrix_119',['MutSquarePtrMatrix',['../structLinearAlgebra_1_1MutSquarePtrMatrix.html',1,'LinearAlgebra']]],
