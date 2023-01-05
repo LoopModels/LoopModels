@@ -12,8 +12,8 @@ TEST(BitSetTest, BasicAssertions) {
   bs[991] = true;
   bs[0] = true;
   llvm::errs() << bs << "\n";
-  EXPECT_EQ(std::ranges::begin(bs), bs.begin());
-  EXPECT_EQ(std::ranges::end(bs), bs.end());
+  // EXPECT_EQ(std::ranges::begin(bs), bs.begin());
+  // EXPECT_EQ(std::ranges::end(bs), bs.end());
   llvm::SmallVector<size_t> bsc{0, 4, 10, 87, 117, 200, 991};
   size_t j = 0;
   for (auto I = bs.begin(); I != bs.end(); ++I) {

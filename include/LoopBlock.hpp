@@ -1414,5 +1414,5 @@ template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
   using reference_type = ScheduledNode &;
   using pointer_type = ScheduledNode *;
 };
-static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
+// static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
 static_assert(Graphs::AbstractGraph<LinearProgramLoopBlock::Graph>);

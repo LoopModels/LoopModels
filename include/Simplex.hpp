@@ -334,9 +334,11 @@ struct Simplex {
   [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
     -> Optional<unsigned int> {
     // Bland's algorithm; guaranteed to terminate
-    for (unsigned int i = 1; i < costs.size(); ++i)
-      if (costs[i] < 0) return i;
-    return {};
+    auto f = costs.begin();
+    auto l = costs.end();
+    auto neg = std::find_if(f + 1, l, [](int64_t c) { return c < 0; });
+    if (neg == l) return {};
+    return unsigned(std::distance(f, neg));
   }
   [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
                                                size_t enteringVariable)

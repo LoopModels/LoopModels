@@ -6,6 +6,7 @@
 #include "./Utilities.hpp"
 #include <algorithm>
 #include <bit>
+#include <bits/iterator_concepts.h>
 #include <cassert>
 #include <cmath>
 #include <concepts>
@@ -21,7 +22,7 @@
 #include <numeric>
 #include <optional>
 #include <ostream>
-#include <sched.h>
+#include <ranges>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -36,28 +37,19 @@
 struct Rational;
 namespace LinearAlgebra {
 
-inline auto isZero(auto x) -> bool { return x == 0; }
-
 inline auto allZero(const auto &x) -> bool {
-  for (auto &a : x)
-    if (!isZero(a)) return false;
-  return true;
+  // return std::all_of(x.begin(), x.end(), [](auto x) { return x == 0; });
+  return std::ranges::all_of(x, [](auto x) { return x == 0; });
 }
 inline auto allGEZero(const auto &x) -> bool {
-  for (auto &a : x)
-    if (a < 0) return false;
-  return true;
+  return std::ranges::all_of(x, [](auto x) { return x >= 0; });
 }
 inline auto allLEZero(const auto &x) -> bool {
-  for (auto &a : x)
-    if (a > 0) return false;
-  return true;
+  return std::ranges::all_of(x, [](auto x) { return x <= 0; });
 }
 
 inline auto countNonZero(const auto &x) -> size_t {
-  size_t i = 0;
-  for (auto &a : x) i += (a != 0);
-  return i;
+  return std::ranges::count_if(x, [](auto x) { return x != 0; });
 }
 
 template <typename T>
@@ -1098,18 +1090,70 @@ template <typename T> struct StridedVector {
   [[no_unique_address]] size_t N;
   [[no_unique_address]] RowStride x;
   struct StridedIterator {
+    using value_type = const T;
     [[no_unique_address]] const T *d;
     [[no_unique_address]] size_t x;
-    auto operator++() {
+    constexpr auto operator++() -> StridedIterator & {
       d += x;
       return *this;
     }
-    auto operator--() {
+    constexpr auto operator--() -> StridedIterator & {
       d -= x;
       return *this;
     }
-    auto operator*() -> const T & { return *d; }
-    auto operator==(const StridedIterator y) const -> bool { return d == y.d; }
+    constexpr auto operator++(int) {
+      auto tmp = *this;
+      d += x;
+      return tmp;
+    }
+    constexpr auto operator--(int) {
+      auto tmp = *this;
+      d -= x;
+      return tmp;
+    }
+    auto operator[](ptrdiff_t y) const -> const T & { return d[y * x]; }
+    auto operator-(StridedIterator y) const -> ptrdiff_t {
+      return (d - y.d) / x;
+    }
+    auto operator+(ptrdiff_t y) const -> StridedIterator {
+      return {d + y * x, x};
+    }
+    auto operator-(ptrdiff_t y) const -> StridedIterator {
+      return {d + y * x, x};
+    }
+    auto operator+=(ptrdiff_t y) -> StridedIterator & {
+      d += y * x;
+      return *this;
+    }
+    auto operator-=(ptrdiff_t y) -> StridedIterator & {
+      d -= y * x;
+      return *this;
+    }
+    constexpr auto operator*() const -> const T & { return *d; }
+    constexpr auto operator->() const -> const T * { return d; }
+    constexpr auto operator==(const StridedIterator y) const -> bool {
+      return d == y.d;
+    }
+    constexpr auto operator!=(const StridedIterator y) const -> bool {
+      return d != y.d;
+    }
+    constexpr auto operator>(const StridedIterator y) const -> bool {
+      return d > y.d;
+    }
+    constexpr auto operator<(const StridedIterator y) const -> bool {
+      return d < y.d;
+    }
+    constexpr auto operator>=(const StridedIterator y) const -> bool {
+      return d >= y.d;
+    }
+    constexpr auto operator<=(const StridedIterator y) const -> bool {
+      return d <= y.d;
+    }
+    friend auto operator+(ptrdiff_t y,
+                          typename StridedVector<T>::StridedIterator x) ->
+      typename StridedVector<T>::StridedIterator {
+      return {x.d + y * x.x, x.x};
+    }
   };
   [[nodiscard]] constexpr auto begin() const {
     return StridedIterator{d, size_t(x)};
@@ -1123,6 +1167,9 @@ template <typename T> struct StridedVector {
   [[nodiscard]] constexpr auto rend() const {
     return std::reverse_iterator(begin());
   }
+  // [[nodiscard]] constexpr auto begin() const {
+  //   return std::ranges::stride_view{llvm::ArrayRef<T>{d, N}, x};
+  // }
   constexpr auto operator[](size_t i) const -> const T & {
     return d[size_t(x * i)];
   }
@@ -1154,28 +1201,93 @@ template <typename T> struct MutStridedVector {
   [[no_unique_address]] const size_t N;
   [[no_unique_address]] RowStride x;
   struct StridedIterator {
+    using value_type = T;
+
     [[no_unique_address]] T *d;
     [[no_unique_address]] size_t x;
-    auto operator++() {
+    constexpr auto operator++() -> StridedIterator & {
       d += x;
       return *this;
     }
-    auto operator--() {
+    constexpr auto operator--() -> StridedIterator & {
       d -= x;
       return *this;
     }
-    auto operator*() -> T & { return *d; }
-    auto operator==(const StridedIterator y) const -> bool { return d == y.d; }
+    constexpr auto operator++(int) {
+      auto tmp = *this;
+      d += x;
+      return tmp;
+    }
+    constexpr auto operator--(int) {
+      auto tmp = *this;
+      d -= x;
+      return tmp;
+    }
+    auto operator[](ptrdiff_t y) const -> T & { return d[y * x]; }
+    auto operator-(StridedIterator y) const -> ptrdiff_t {
+      return (d - y.d) / x;
+    }
+    auto operator+(ptrdiff_t y) const -> StridedIterator {
+      return {d + y * x, x};
+    }
+    auto operator-(ptrdiff_t y) const -> StridedIterator {
+      return {d + y * x, x};
+    }
+    auto operator+=(ptrdiff_t y) -> StridedIterator & {
+      d += y * x;
+      return *this;
+    }
+    auto operator-=(ptrdiff_t y) -> StridedIterator & {
+      d -= y * x;
+      return *this;
+    }
+    constexpr auto operator->() const -> T * { return d; }
+    constexpr auto operator*() const -> T & { return *d; }
+    // constexpr auto operator->() -> T * { return d; }
+    // constexpr auto operator*() -> T & { return *d; }
+    // constexpr auto operator->() const -> const T * { return d; }
+    // constexpr auto operator*() const -> const T & { return *d; }
+    constexpr auto operator==(const StridedIterator y) const -> bool {
+      return d == y.d;
+    }
+    constexpr auto operator!=(const StridedIterator y) const -> bool {
+      return d != y.d;
+    }
+    constexpr auto operator>(const StridedIterator y) const -> bool {
+      return d > y.d;
+    }
+    constexpr auto operator<(const StridedIterator y) const -> bool {
+      return d < y.d;
+    }
+    constexpr auto operator>=(const StridedIterator y) const -> bool {
+      return d >= y.d;
+    }
+    constexpr auto operator<=(const StridedIterator y) const -> bool {
+      return d <= y.d;
+    }
+    friend auto operator+(ptrdiff_t y,
+                          typename MutStridedVector<T>::StridedIterator x) ->
+      typename MutStridedVector<T>::StridedIterator {
+      return {x.d + y * x.x, x.x};
+    }
   };
   // FIXME: if `x` == 0, then it will not iterate!
   constexpr auto begin() { return StridedIterator{d, size_t(x)}; }
   constexpr auto end() { return StridedIterator{d + x * N, size_t(x)}; }
-  constexpr auto begin() const { return StridedIterator{d, size_t(x)}; }
-  constexpr auto end() const { return StridedIterator{d + x * N, size_t(x)}; }
+  [[nodiscard]] constexpr auto begin() const {
+    return StridedIterator{d, size_t(x)};
+  }
+  [[nodiscard]] constexpr auto end() const {
+    return StridedIterator{d + x * N, size_t(x)};
+  }
   constexpr auto rbegin() { return std::reverse_iterator(end()); }
   constexpr auto rend() { return std::reverse_iterator(begin()); }
-  constexpr auto rbegin() const { return std::reverse_iterator(end()); }
-  constexpr auto rend() const { return std::reverse_iterator(begin()); }
+  [[nodiscard]] constexpr auto rbegin() const {
+    return std::reverse_iterator(end());
+  }
+  [[nodiscard]] constexpr auto rend() const {
+    return std::reverse_iterator(begin());
+  }
   constexpr auto operator[](size_t i) -> T & { return d[size_t(x * i)]; }
   constexpr auto operator[](size_t i) const -> const T & {
     return d[size_t(x * i)];
@@ -1209,7 +1321,7 @@ template <typename T> struct MutStridedVector {
     const T *const p = d;
     return StridedVector<T>{.d = p, .N = N, .x = x};
   }
-  constexpr auto view() const -> StridedVector<T> {
+  [[nodiscard]] constexpr auto view() const -> StridedVector<T> {
     return StridedVector<T>{.d = d, .N = N, .x = x};
   }
   auto operator=(const T &y) -> MutStridedVector<T> & {
@@ -1258,6 +1370,32 @@ template <typename T> struct MutStridedVector {
   }
   void extendOrAssertSize(size_t M) const { assert(N == M); }
 };
+static_assert(
+  std::weakly_incrementable<StridedVector<int64_t>::StridedIterator>);
+static_assert(
+  std::input_or_output_iterator<StridedVector<int64_t>::StridedIterator>);
+
+static_assert(std::indirectly_readable<StridedVector<int64_t>::StridedIterator>,
+              "failed indirectly readable");
+static_assert(
+  std::indirectly_readable<MutStridedVector<int64_t>::StridedIterator>,
+  "failed indirectly readable");
+static_assert(
+  std::output_iterator<MutStridedVector<int64_t>::StridedIterator, int>,
+  "failed output iterator");
+static_assert(std::forward_iterator<StridedVector<int64_t>::StridedIterator>,
+              "failed forward iterator");
+static_assert(std::input_iterator<StridedVector<int64_t>::StridedIterator>,
+              "failed input iterator");
+static_assert(
+  std::bidirectional_iterator<StridedVector<int64_t>::StridedIterator>,
+  "failed bidirectional iterator");
+
+static_assert(std::totally_ordered<StridedVector<int64_t>::StridedIterator>,
+              "failed random access iterator");
+static_assert(
+  std::random_access_iterator<StridedVector<int64_t>::StridedIterator>,
+  "failed random access iterator");
 
 static_assert(AbstractVector<StridedVector<int64_t>>);
 static_assert(!AbstractMatrix<StridedVector<int64_t>>);
@@ -2313,20 +2451,6 @@ requires is_uint_v<64, T>
 }
 
 template <typename T>
-inline auto findMax(llvm::ArrayRef<T> x) -> std::pair<size_t, T> {
-  size_t i = 0;
-  T max = std::numeric_limits<T>::min();
-  for (size_t j = 0; j < x.size(); ++j) {
-    T xj = x[j];
-    if (max < xj) {
-      max = xj;
-      i = j;
-    }
-  }
-  return std::make_pair(i, max);
-}
-
-template <typename T>
 concept TriviallyCopyable = std::is_trivially_copyable_v<T>;
 
 static_assert(std::copy_constructible<PtrMatrix<int64_t>>);
@@ -2598,6 +2722,7 @@ static_assert(
   AbstractVector<decltype(-std::declval<StridedVector<int64_t>>())>);
 static_assert(
   AbstractVector<decltype(-std::declval<StridedVector<int64_t>>() * 0)>);
+static_assert(std::ranges::range<StridedVector<int64_t>>);
 
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(AbstractVector<const Vector<int64_t>>);

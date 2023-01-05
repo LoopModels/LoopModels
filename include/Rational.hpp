@@ -220,11 +220,6 @@ struct Rational {
   constexpr auto operator>=(int y) const -> bool {
     return *this >= Rational(y);
   }
-
-  friend constexpr auto isZero(Rational x) -> bool { return x.numerator == 0; }
-  friend constexpr auto isOne(Rational x) -> bool {
-    return (x.numerator == x.denominator);
-  }
   [[nodiscard]] constexpr auto isInteger() const -> bool {
     return denominator == 1;
   }

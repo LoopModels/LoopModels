@@ -50,8 +50,7 @@ message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 add_dependencies(${PROJECT_NAME} LoopModels)
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include)
-target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS})
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
@@ -75,7 +74,7 @@ target_precompile_headers(
   <optional>
   <ostream>
   <random>
-  <sched.h>
+  <ranges>
   <string>
   <tuple>
   <type_traits>
@@ -97,9 +96,9 @@ else()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2)
+  target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=8)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=8 -fconcepts-diagnostics-depth=4)
 endif()
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)

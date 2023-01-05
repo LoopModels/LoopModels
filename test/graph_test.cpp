@@ -2,6 +2,7 @@
 #include "../include/Graphs.hpp"
 #include "../include/Math.hpp"
 #include <algorithm>
+#include <concepts>
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -14,32 +15,38 @@ struct MockVertex {
   BitSet<> inNeighbors;
   BitSet<> outNeighbors;
   bool visited{false};
-  bool wasVisited() const { return visited; }
+  [[nodiscard]] auto wasVisited() const -> bool { return visited; }
   void visit() { visited = true; }
   void unVisit() { visited = false; }
 };
 
 struct MockGraph {
   llvm::SmallVector<MockVertex> vertices;
-  size_t getNumVertices() const { return vertices.size(); }
-  size_t maxVertexId() const { return vertices.size(); }
+  [[nodiscard]] auto getNumVertices() const -> size_t {
+    return vertices.size();
+  }
+  [[nodiscard]] auto maxVertexId() const -> size_t { return vertices.size(); }
   // BitSet vertexIds() const { return BitSet::dense(getNumVertices()); }
-  Range<size_t, size_t> vertexIds() const { return _(0, getNumVertices()); }
+  [[nodiscard]] auto vertexIds() const -> Range<size_t, size_t> {
+    return _(0, getNumVertices());
+  }
   // BitSet &vertexIds() { return vids; }
-  BitSet<> &inNeighbors(size_t i) { return vertices[i].inNeighbors; }
-  BitSet<> &outNeighbors(size_t i) { return vertices[i].outNeighbors; }
-  const BitSet<> &inNeighbors(size_t i) const {
+  auto inNeighbors(size_t i) -> BitSet<> & { return vertices[i].inNeighbors; }
+  auto outNeighbors(size_t i) -> BitSet<> & { return vertices[i].outNeighbors; }
+  [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet<> & {
     return vertices[i].inNeighbors;
   }
-  const BitSet<> &outNeighbors(size_t i) const {
+  [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet<> & {
     return vertices[i].outNeighbors;
   }
   auto begin() { return vertices.begin(); }
   auto end() { return vertices.end(); }
-  bool wasVisited(size_t i) const { return vertices[i].wasVisited(); }
+  [[nodiscard]] auto wasVisited(size_t i) const -> bool {
+    return vertices[i].wasVisited();
+  }
   void visit(size_t i) { vertices[i].visit(); }
   void unVisit(size_t i) { vertices[i].unVisit(); }
-  MockVertex &operator[](size_t i) { return vertices[i]; }
+  auto operator[](size_t i) -> MockVertex & { return vertices[i]; }
   void connect(size_t parent, size_t child) {
     MockVertex &p{vertices[parent]}, &c{vertices[child]};
     p.outNeighbors.insert(child);
@@ -57,7 +64,7 @@ template <> struct std::iterator_traits<MockGraph> {
 static_assert(Graphs::AbstractGraph<MockGraph>);
 
 // std::ranges::any_of not supported by libc++
-template <std::ranges::range A, typename T> bool anyEquals(A a, T y) {
+auto anyEquals(auto a, std::integral auto y) -> bool {
   for (auto x : a)
     if (x == y) return true;
   return false;
@@ -69,6 +76,7 @@ template <std::ranges::range A, typename T> bool anyEquals(A a, T y) {
 // };
 // template <typename T> static Equal<T> equals(T x) { return Equal<T>{x}; }
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(GraphTest, BasicAssertions) {
   // graph
   //      0 -> 1 <---
