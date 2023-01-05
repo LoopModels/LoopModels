@@ -313,8 +313,8 @@ inline auto copyto(AbstractMatrixCore auto &A, const AbstractMatrixCore auto &B)
   return A;
 }
 
-auto operator==(const AbstractMatrix auto &A, const AbstractMatrix auto &B)
-  -> bool {
+[[gnu::flatten]] auto operator==(const AbstractMatrix auto &A,
+                                 const AbstractMatrix auto &B) -> bool {
   const Row M = B.numRow();
   const Col N = B.numCol();
   if ((M != A.numRow()) || (N != A.numCol())) return false;
@@ -716,7 +716,7 @@ constexpr auto operator-(Range<B, E> r, size_t x) {
 template <typename T> struct PtrVector {
   static_assert(!std::is_const_v<T>, "const T is redundant");
   using eltype = T;
-  [[no_unique_address]] const T *const mem;
+  [[no_unique_address]] NotNull<const T> mem;
   [[no_unique_address]] const size_t N;
   auto operator==(AbstractVector auto &x) -> bool {
     if (N != x.size()) return false;
@@ -725,28 +725,37 @@ template <typename T> struct PtrVector {
     return true;
   }
   [[nodiscard]] constexpr auto front() const -> const T & { return mem[0]; }
-  constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
+  [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) const
+    -> const T & {
 #ifndef NDEBUG
     checkIndex(size_t(N), i);
 #endif
     return mem[canonicalize(i, N)];
   }
-  constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<size_t, size_t> i) const
+    -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
     return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
   }
   template <typename F, typename L>
-  constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) const
+    -> PtrVector<T> {
     return (*this)[canonicalizeRange(i, N)];
   }
-  [[nodiscard]] constexpr auto begin() const -> const T * { return mem; }
-  [[nodiscard]] constexpr auto end() const -> const T * { return mem + N; }
+  [[gnu::returns_nonnull]] [[nodiscard]] constexpr auto begin() const
+    -> const T * {
+    return mem;
+  }
+  [[gnu::returns_nonnull]] [[nodiscard]] constexpr auto end() const
+    -> const T * {
+    return mem + N;
+  }
   [[nodiscard]] constexpr auto rbegin() const {
-    return std::reverse_iterator(mem + N);
+    return std::reverse_iterator(end());
   }
   [[nodiscard]] constexpr auto rend() const {
-    return std::reverse_iterator(mem);
+    return std::reverse_iterator(begin());
   }
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
   constexpr operator llvm::ArrayRef<T>() const {
@@ -768,15 +777,16 @@ template <typename T> struct MutPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
   using eltype = T;
   // using eltype = std::remove_const_t<T>;
-  [[no_unique_address]] T *const mem{nullptr};
-  [[no_unique_address]] const size_t N{0};
-  constexpr auto operator[](const ScalarIndex auto i) -> T & {
+  [[no_unique_address]] NotNull<T> mem;
+  [[no_unique_address]] const size_t N;
+  [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
     checkIndex(size_t(N), i);
 #endif
     return mem[canonicalize(i, N)];
   }
-  constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
+  [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) const
+    -> const T & {
 #ifndef NDEBUG
     checkIndex(size_t(N), i);
 #endif
@@ -824,10 +834,16 @@ template <typename T> struct MutPtrVector {
   constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
     return (*this)[canonicalizeRange(i, N)];
   }
-  constexpr auto begin() -> T * { return mem; }
-  constexpr auto end() -> T * { return mem + N; }
-  [[nodiscard]] constexpr auto begin() const -> const T * { return mem; }
-  [[nodiscard]] constexpr auto end() const -> const T * { return mem + N; }
+  [[gnu::returns_nonnull]] constexpr auto begin() -> T * { return mem; }
+  [[gnu::returns_nonnull]] constexpr auto end() -> T * { return mem + N; }
+  [[gnu::returns_nonnull]] [[nodiscard]] constexpr auto begin() const
+    -> const T * {
+    return mem;
+  }
+  [[gnu::returns_nonnull]] [[nodiscard]] constexpr auto end() const
+    -> const T * {
+    return mem + N;
+  }
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
   constexpr operator PtrVector<T>() const {
     return PtrVector<T>{.mem = mem, .N = N};
@@ -852,50 +868,61 @@ template <typename T> struct MutPtrVector {
   // PtrVector<T> view() const {
   //     return PtrVector<T>{.mem = mem, .N = N};
   // };
-  auto operator=(PtrVector<T> x) -> MutPtrVector<T> { return copyto(*this, x); }
-  auto operator=(MutPtrVector<T> x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator=(PtrVector<T> x) -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  auto operator=(const AbstractVector auto &x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator=(MutPtrVector<T> x) -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  auto operator=(std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator=(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
+    return copyto(*this, x);
+  }
+  [[gnu::flatten]] auto operator=(std::integral auto x) -> MutPtrVector<T> {
     for (auto &&y : *this) y = x;
     return *this;
   }
-  auto operator+=(const AbstractVector auto &x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator+=(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] += x[i];
     return *this;
   }
-  auto operator-=(const AbstractVector auto &x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator-=(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] -= x[i];
     return *this;
   }
-  auto operator*=(const AbstractVector auto &x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator*=(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] *= x[i];
     return *this;
   }
-  auto operator/=(const AbstractVector auto &x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator/=(const AbstractVector auto &x)
+    -> MutPtrVector<T> {
     assert(N == x.size());
     for (size_t i = 0; i < N; ++i) mem[i] /= x[i];
     return *this;
   }
-  auto operator+=(const std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator+=(const std::integral auto x)
+    -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] += x;
     return *this;
   }
-  auto operator-=(const std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator-=(const std::integral auto x)
+    -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] -= x;
     return *this;
   }
-  auto operator*=(const std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator*=(const std::integral auto x)
+    -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] *= x;
     return *this;
   }
-  auto operator/=(const std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator/=(const std::integral auto x)
+    -> MutPtrVector<T> {
     for (size_t i = 0; i < N; ++i) mem[i] /= x;
     return *this;
   }
@@ -929,32 +956,40 @@ template <typename T> struct Vector {
   Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
   Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
 
-  constexpr auto operator[](const ScalarIndex auto i) -> T & {
+  [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     return data[canonicalize(i, data.size())];
   }
-  constexpr auto operator[](const ScalarIndex auto i) const -> const T & {
+  [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) const
+    -> const T & {
     return data[canonicalize(i, data.size())];
   }
-  constexpr auto operator[](Range<size_t, size_t> i) -> MutPtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<size_t, size_t> i)
+    -> MutPtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= data.size());
     return MutPtrVector<T>{data.data() + i.b, i.e - i.b};
   }
-  constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<size_t, size_t> i) const
+    -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= data.size());
     return PtrVector<T>{.mem = data.data() + i.b, .N = i.e - i.b};
   }
   template <typename F, typename L>
-  constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
     return (*this)[canonicalizeRange(i, data.size())];
   }
   template <typename F, typename L>
-  constexpr auto operator[](Range<F, L> i) const -> PtrVector<T> {
+  [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) const
+    -> PtrVector<T> {
     return (*this)[canonicalizeRange(i, data.size())];
   }
-  constexpr auto operator[](size_t i) -> T & { return data[i]; }
-  constexpr auto operator[](size_t i) const -> const T & { return data[i]; }
+  [[gnu::flatten]] constexpr auto operator[](size_t i) -> T & {
+    return data[i];
+  }
+  [[gnu::flatten]] constexpr auto operator[](size_t i) const -> const T & {
+    return data[i];
+  }
   // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
   constexpr auto begin() { return data.begin(); }
   constexpr auto end() { return data.end(); }
@@ -1263,7 +1298,7 @@ constexpr auto unwrapRow(auto x) { return x; }
 constexpr auto unwrapCol(auto x) { return x; }
 
 template <typename T>
-constexpr inline auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+constexpr inline auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
                                 const ScalarRowIndex auto mm,
                                 const ScalarColIndex auto nn) -> T & {
   auto m = unwrapRow(mm);
@@ -1272,10 +1307,11 @@ constexpr inline auto matrixGet(T *ptr, Row M, Col N, RowStride X,
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
 #endif
-  return *(ptr + (canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
+  return *(ptr +
+           size_t(canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
 }
 template <typename T>
-constexpr inline auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+constexpr inline auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
                                 const ScalarRowIndex auto mm,
                                 const ScalarColIndex auto nn) -> const T & {
   auto m = unwrapRow(mm);
@@ -1284,7 +1320,8 @@ constexpr inline auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
   checkIndex(size_t(M), m);
   checkIndex(size_t(N), n);
 #endif
-  return *(ptr + (canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
+  return *(ptr +
+           size_t(canonicalize(n, size_t(N)) + X * canonicalize(m, size_t(M))));
 }
 
 template <typename T>
@@ -1295,7 +1332,7 @@ concept AbstractSlice = requires(T t, size_t M) {
                         };
 
 template <typename T>
-inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
                                 const AbstractSlice auto n) -> PtrMatrix<T> {
 #ifndef NDEBUG
@@ -1304,10 +1341,11 @@ inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return PtrMatrix<T>{ptr + nr.b + X * mr.b, mr.e - mr.b, nr.e - nr.b, X};
+  return PtrMatrix<T>{ptr + size_t(nr.b + X * mr.b), mr.e - mr.b, nr.e - nr.b,
+                      X};
 }
 template <typename T>
-inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
                                 const AbstractSlice auto n) -> MutPtrMatrix<T> {
 #ifndef NDEBUG
@@ -1316,12 +1354,12 @@ inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return MutPtrMatrix<T>{ptr + nr.b + X * mr.b, Row{mr.e - mr.b},
+  return MutPtrMatrix<T>{ptr + size_t(nr.b + X * mr.b), Row{mr.e - mr.b},
                          Col{nr.e - nr.b}, X};
 }
 
 template <typename T>
-inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
                                 const ScalarRowIndex auto mm,
                                 const AbstractSlice auto n) -> PtrVector<T> {
   auto m = unwrapRow(mm);
@@ -1331,10 +1369,10 @@ inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
 #endif
   size_t mi = canonicalize(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return PtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
+  return PtrVector<T>{ptr + size_t(nr.b + X * mi), nr.e - nr.b};
 }
 template <typename T>
-inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
                                 const ScalarRowIndex auto mm,
                                 const AbstractSlice auto n) -> MutPtrVector<T> {
   auto m = unwrapRow(mm);
@@ -1344,11 +1382,11 @@ inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
 #endif
   size_t mi = canonicalize(m, size_t(M));
   Range<size_t, size_t> nr = canonicalizeRange(n, size_t(N));
-  return MutPtrVector<T>{ptr + nr.b + X * mi, nr.e - nr.b};
+  return MutPtrVector<T>{ptr + size_t(nr.b + X * mi), nr.e - nr.b};
 }
 
 template <typename T>
-inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<const T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
                                 const ScalarColIndex auto nn)
   -> StridedVector<T> {
@@ -1359,10 +1397,10 @@ inline constexpr auto matrixGet(const T *ptr, Row M, Col N, RowStride X,
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   size_t ni = canonicalize(n, size_t(N));
-  return StridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
+  return StridedVector<T>{ptr + size_t(ni + X * mr.b), mr.e - mr.b, X};
 }
 template <typename T>
-inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
+inline constexpr auto matrixGet(NotNull<T> ptr, Row M, Col N, RowStride X,
                                 const AbstractSlice auto m,
                                 const ScalarColIndex auto nn)
   -> MutStridedVector<T> {
@@ -1373,7 +1411,7 @@ inline constexpr auto matrixGet(T *ptr, Row M, Col N, RowStride X,
 #endif
   Range<size_t, size_t> mr = canonicalizeRange(m, size_t(M));
   size_t ni = canonicalize(n, size_t(N));
-  return MutStridedVector<T>{ptr + ni + X * mr.b, mr.e - mr.b, X};
+  return MutStridedVector<T>{ptr + size_t(ni + X * mr.b), mr.e - mr.b, X};
 }
 
 constexpr auto isSquare(const AbstractMatrix auto &A) -> bool {
@@ -1400,7 +1438,7 @@ constexpr auto antiDiag(PtrMatrix<T> A) -> StridedVector<T> {
 
 /// A CRTP type defining const methods for matrices.
 template <typename T, typename A> struct ConstMatrixCore {
-  [[nodiscard]] constexpr auto data() const -> const T * {
+  [[nodiscard]] constexpr auto data() const -> NotNull<const T> {
     return static_cast<const A *>(this)->data();
   }
   [[nodiscard]] constexpr auto numRow() const -> Row {
@@ -1413,7 +1451,8 @@ template <typename T, typename A> struct ConstMatrixCore {
     return static_cast<const A *>(this)->rowStride();
   }
 
-  constexpr auto operator()(auto m, auto n) const -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator()(auto m, auto n) const
+    -> decltype(auto) {
     return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
   }
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
@@ -1470,9 +1509,9 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     CMC::operator ::LinearAlgebra::PtrMatrix<T>, CMC::view, CMC::transpose,
     CMC::isSquare, CMC::minRowCol;
 
-  constexpr auto data() -> T * { return static_cast<A *>(this)->data(); }
+  constexpr auto data() -> NotNull<T> { return static_cast<A *>(this)->data(); }
 
-  constexpr auto operator()(auto m, auto n) -> decltype(auto) {
+  [[gnu::flatten]] constexpr auto operator()(auto m, auto n) -> decltype(auto) {
     return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
   }
   constexpr auto diag() {
@@ -1500,13 +1539,13 @@ template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
   using eltype = std::remove_reference_t<T>;
   static_assert(!std::is_const_v<T>, "const T is redundant");
 
-  [[no_unique_address]] const T *const mem;
+  [[no_unique_address]] NotNull<const T> mem;
   [[no_unique_address]] unsigned int M, N, X;
   // [[no_unique_address]] Row M;
   // [[no_unique_address]] Col N;
   // [[no_unique_address]] RowStride X;
 
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
+  [[nodiscard]] constexpr auto data() const -> NotNull<const T> { return mem; }
   [[nodiscard]] constexpr auto _numRow() const -> unsigned { return M; }
   [[nodiscard]] constexpr auto _numCol() const -> unsigned { return N; }
   [[nodiscard]] constexpr auto _rowStride() const -> unsigned { return X; }
@@ -1565,7 +1604,8 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
     return PtrMatrix<T>(data(), _numRow(), _numCol(), _rowStride());
   }
 
-  auto operator=(const SmallSparseMatrix<T> &A) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator=(const SmallSparseMatrix<T> &A)
+    -> MutPtrMatrix<T> {
     assert(numRow() == A.numRow());
     assert(numCol() == A.numCol());
     size_t k = 0;
@@ -1582,7 +1622,7 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
     assert(k == A.nonZeros.size());
     return *this;
   }
-  auto operator=(MutPtrMatrix<T> A) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator=(MutPtrMatrix<T> A) -> MutPtrMatrix<T> {
     return copyto(*this, PtrMatrix<T>(A));
   }
   // rule of 5 requires...
@@ -1595,34 +1635,40 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   constexpr MutPtrMatrix(ARM &A)
     : mem(A.data()), M(A.numRow()), N(A.numCol()), X(A.rowStride()) {}
 
-  auto operator=(const AbstractMatrix auto &B) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator=(const AbstractMatrix auto &B)
+    -> MutPtrMatrix<T> {
     return copyto(*this, B);
   }
-  auto operator=(const std::integral auto b) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator=(const std::integral auto b)
+    -> MutPtrMatrix<T> {
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) = b;
     return *this;
   }
-  auto operator+=(const AbstractMatrix auto &B) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator+=(const AbstractMatrix auto &B)
+    -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) += B(r, c);
     return *this;
   }
-  auto operator-=(const AbstractMatrix auto &B) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator-=(const AbstractMatrix auto &B)
+    -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) -= B(r, c);
     return *this;
   }
-  auto operator*=(const std::integral auto b) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator*=(const std::integral auto b)
+    -> MutPtrMatrix<T> {
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) *= b;
     return *this;
   }
-  auto operator/=(const std::integral auto b) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator/=(const std::integral auto b)
+    -> MutPtrMatrix<T> {
     const size_t M = numRow();
     const size_t N = numCol();
     for (size_t r = 0; r < M; ++r)
@@ -1860,7 +1906,8 @@ struct MutSquarePtrMatrix : MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   constexpr operator SquarePtrMatrix<T>() const {
     return SquarePtrMatrix<T>{mem, M};
   }
-  auto operator=(const AbstractMatrix auto &B) -> MutSquarePtrMatrix<T> {
+  [[gnu::flatten]] auto operator=(const AbstractMatrix auto &B)
+    -> MutSquarePtrMatrix<T> {
     return copyto(*this, B);
   }
 };
@@ -2089,7 +2136,7 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     assert(MM <= M);
     M = *MM;
   }
-  auto operator=(T x) -> Matrix<T, 0, 0, S> & {
+  [[gnu::flatten]] auto operator=(T x) -> Matrix<T, 0, 0, S> & {
     const Row M = numRow();
     const Col N = numCol();
     for (size_t r = 0; r < M; ++r)
@@ -2115,19 +2162,19 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     }
     return A;
   }
-  auto operator+=(const AbstractMatrix auto &A) {
+  [[gnu::flatten]] auto operator+=(const AbstractMatrix auto &A) {
     MutPtrMatrix(*this) += A;
     return *this;
   }
-  auto operator-=(const AbstractMatrix auto &A) {
+  [[gnu::flatten]] auto operator-=(const AbstractMatrix auto &A) {
     MutPtrMatrix(*this) -= A;
     return *this;
   }
-  auto operator*=(const AbstractMatrix auto &A) {
+  [[gnu::flatten]] auto operator*=(const AbstractMatrix auto &A) {
     MutPtrMatrix(*this) *= A;
     return *this;
   }
-  auto operator/=(const AbstractMatrix auto &A) {
+  [[gnu::flatten]] auto operator/=(const AbstractMatrix auto &A) {
     MutPtrMatrix(*this) /= A;
     return *this;
   }

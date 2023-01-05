@@ -56,19 +56,7 @@ struct MemoryAccess {
 
   [[nodiscard]] auto getAlign() const -> llvm::Align {
     if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
-    else if (auto s = loadOrStore.cast<llvm::StoreInst>()) return s->getAlign();
-// note cast not dyn_cast for store
-// not a load or store
-#if __cplusplus >= 202202L
-    std::unreachable();
-#else
-#ifdef __has_builtin
-#if __has_builtin(__builtin_unreachable)
-    __builtin_unreachable();
-#endif
-#endif
-#endif
-    return llvm::Align(1);
+    else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
   // static inline size_t requiredData(size_t dim, size_t numLoops){
   // 	return dim*numLoops +
@@ -203,7 +191,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   -> llvm::raw_ostream & {
   if (m.isLoad()) os << "Load: ";
   else os << "Store: ";
-  if (auto instr = m.getInstruction()) os << *instr;
+  os << *m.getInstruction();
   os << "\nArrayReference " << *m.basePointer << " (dim = " << m.getArrayDim()
      << ", num loops: " << m.getNumLoops();
   if (m.sizes.size()) os << ", element size: " << *m.sizes.back();

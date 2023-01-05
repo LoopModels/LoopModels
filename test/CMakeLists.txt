@@ -26,8 +26,7 @@ CPMFindPackage(
   GITHUB_REPOSITORY google/googletest
   GIT_TAG release-1.12.1
   VERSION 1.12.1
-  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt ON" "BUILD_GMOCK OFF"
-          "gtest_hide_internal_symbols ON"
+  OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
 )
 
 if(TEST_INSTALLED_VERSION)
@@ -83,7 +82,7 @@ target_precompile_headers(
   <utility>
 )
 # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE gtest_main LLVM)
+target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM)
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set_target_properties(
@@ -97,6 +96,11 @@ else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2)
+endif()
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
