@@ -12,15 +12,10 @@ var searchData=
   ['intrin_72',['Intrin',['../structInstruction_1_1Intrinsic_1_1Intrin.html',1,'Instruction::Intrinsic']]],
   ['intrinsic_73',['Intrinsic',['../structInstruction_1_1Intrinsic.html',1,'Instruction::Intrinsic'],['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic::Intrinsic()']]],
   ['isempty_74',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
-  ['ismerged_75',['isMerged',['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool'],['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool']]],
+  ['ismerged_75',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
   ['isshuffle_76',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
   ['isvalueloadorstore_77',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]],
   ['iterator_78',['Iterator',['../structBitSliceView_1_1Iterator.html',1,'BitSliceView&lt; T, S &gt;::Iterator'],['../structLinearAlgebra_1_1Range_3_01B_00_01E_01_4_1_1Iterator.html',1,'LinearAlgebra::Range&lt; B, E &gt;::Iterator'],['../structLinearAlgebra_1_1SliceView_1_1Iterator.html',1,'LinearAlgebra::SliceView&lt; T, I &gt;::Iterator']]],
-  ['iterator_5ftraits_3c_20bitsetiterator_20_3e_79',['iterator_traits&lt; BitSetIterator &gt;',['../structstd_1_1iterator__traits_3_01BitSetIterator_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20bitsliceview_3c_20int64_5ft_20_3e_3a_3aconstiterator_20_3e_80',['iterator_traits&lt; BitSliceView&lt; int64_t &gt;::ConstIterator &gt;',['../structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1ConstIterator_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20bitsliceview_3c_20int64_5ft_20_3e_3a_3aiterator_20_3e_81',['iterator_traits&lt; BitSliceView&lt; int64_t &gt;::Iterator &gt;',['../structstd_1_1iterator__traits_3_01BitSliceView_3_01int64__t_01_4_1_1Iterator_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20bitsliceview_3c_20schedulednode_20_3e_3a_3aconstiterator_20_3e_82',['iterator_traits&lt; BitSliceView&lt; ScheduledNode &gt;::ConstIterator &gt;',['../structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1ConstIterator_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20bitsliceview_3c_20schedulednode_20_3e_3a_3aiterator_20_3e_83',['iterator_traits&lt; BitSliceView&lt; ScheduledNode &gt;::Iterator &gt;',['../structstd_1_1iterator__traits_3_01BitSliceView_3_01ScheduledNode_01_4_1_1Iterator_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20linearprogramloopblock_3a_3agraph_20_3e_84',['iterator_traits&lt; LinearProgramLoopBlock::Graph &gt;',['../structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html',1,'std']]],
-  ['iterator_5ftraits_3c_20mockgraph_20_3e_85',['iterator_traits&lt; MockGraph &gt;',['../structstd_1_1iterator__traits_3_01MockGraph_01_4.html',1,'std']]]
+  ['iterator_5ftraits_3c_20linearprogramloopblock_3a_3agraph_20_3e_79',['iterator_traits&lt; LinearProgramLoopBlock::Graph &gt;',['../structstd_1_1iterator__traits_3_01LinearProgramLoopBlock_1_1Graph_01_4.html',1,'std']]],
+  ['iterator_5ftraits_3c_20mockgraph_20_3e_80',['iterator_traits&lt; MockGraph &gt;',['../structstd_1_1iterator__traits_3_01MockGraph_01_4.html',1,'std']]]
 ];
