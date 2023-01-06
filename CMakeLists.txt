@@ -72,10 +72,9 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/lib/*.c
 # target: add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME} MODULE ${headers} ${sources})
 set(CXX_STANDARD_REQUIRED ON)
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
-target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti -fno-exceptions)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition)
   add_compile_options(-fdiagnostics-color=always)

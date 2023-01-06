@@ -7,12 +7,14 @@
 #include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
 #include "./Simplex.hpp"
+#include "Utilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 #include <tuple>
 #include <utility>
@@ -33,10 +35,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   [[no_unique_address]] size_t numDep0Var; // loops dep 0
   // size_t numDep1Var; // loops dep 1
   [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
-
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
   [[nodiscard]] constexpr auto getDim0() const -> size_t { return numDep0Var; }
+  // getDynSym() + 1 == getNumSym()
+  [[nodiscard]] constexpr auto getDynSym() const -> size_t { return S.size(); }
   [[nodiscard]] auto getDim1() const -> size_t {
     return getNumVar() - numDep0Var - nullStep.size() - S.size();
   }
@@ -445,12 +448,58 @@ struct Dependence {
   //
   //
   //
+private:
   [[no_unique_address]] DependencePolyhedra depPoly;
   [[no_unique_address]] Simplex dependenceSatisfaction;
   [[no_unique_address]] Simplex dependenceBounding;
-  [[no_unique_address]] MemoryAccess *in;
-  [[no_unique_address]] MemoryAccess *out;
+  [[no_unique_address]] NotNull<MemoryAccess> in;
+  [[no_unique_address]] NotNull<MemoryAccess> out;
   [[no_unique_address]] bool forward;
+  [[no_unique_address]] bool active;
+  Dependence(DependencePolyhedra poly, std::pair<Simplex, Simplex> depSatBound,
+             std::pair<NotNull<MemoryAccess>, NotNull<MemoryAccess>> inOut,
+             bool forward)
+    : depPoly(std::move(poly)),
+      dependenceSatisfaction(std::move(depSatBound).first),
+      dependenceBounding(std::move(depSatBound).second), in(inOut.first),
+      out(inOut.second), forward(forward) {
+    in->addEdgeOut(this);
+    out->addEdgeIn(this);
+  }
+
+public:
+  [[nodiscard]] constexpr auto isActive() const -> bool { return active; }
+  [[nodiscard]] constexpr auto nodesIn() const -> const BitSet<> & {
+    return in->getNodes();
+  }
+  [[nodiscard]] constexpr auto nodesOut() const -> const BitSet<> & {
+    return out->getNodes();
+  }
+  [[nodiscard]] constexpr auto getDynSym() const -> size_t {
+    return depPoly.getDynSym();
+  }
+  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
+  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
+  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
+  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
+  [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
+    return in->indexMatrix();
+  }
+  [[nodiscard]] auto getOutIndMat() const -> PtrMatrix<int64_t> {
+    return out->indexMatrix();
+  }
+  // returns the memory access pair, placing the store first in the pair
+  [[nodiscard]] auto getStoreAndOther() const
+    -> std::pair<NotNull<MemoryAccess>, NotNull<MemoryAccess>> {
+    if (in->isStore()) return {in, out};
+    else return {out, in};
+  }
+  [[nodiscard]] auto getInNumLoops() const -> size_t {
+    return in->getNumLoops();
+  }
+  [[nodiscard]] auto getOutNumLoops() const -> size_t {
+    return out->getNumLoops();
+  }
   [[nodiscard]] auto isInactive(size_t depth) const -> bool {
     return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
   }
@@ -463,8 +512,13 @@ struct Dependence {
   [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
     return depPoly.getNumPhiCoefficients();
   }
-  static constexpr auto getNumOmegaCoefficients() -> size_t {
+  [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
     return DependencePolyhedra::getNumOmegaCoefficients();
+  }
+  [[nodiscard]] constexpr auto getNumDepDistCoefs() const -> size_t {
+    return size_t(dependenceBounding.getConstraints().numCol()) -
+           (2 + depPoly.getNumLambda() + getNumPhiCoefficients() +
+            getNumOmegaCoefficients());
   }
   [[nodiscard]] auto getNumConstraints() const -> size_t {
     return dependenceBounding.getNumConstraints() +
@@ -871,9 +925,9 @@ struct Dependence {
     // assert(false);
     // return false;
   }
-  static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
+  static auto timelessCheck(llvm::BumpPtrAllocator &alloc,
                             DependencePolyhedra dxy, MemoryAccess &x,
-                            MemoryAccess &y) {
+                            MemoryAccess &y) -> Dependence * {
     std::pair<Simplex, Simplex> pair(dxy.farkasPair());
     const size_t numLambda = dxy.getNumLambda();
     assert(dxy.getTimeDim() == 0);
@@ -881,23 +935,24 @@ struct Dependence {
       // pair.first.truncateVars(pair.first.getNumVar() -
       //                         dxy.getNumSymbols());
       pair.first.truncateVars(2 + numLambda + dxy.getNumScheduleCoefficients());
-      deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
-                                   std::move(pair.second), &x, &y, true});
+      return new (alloc)
+        Dependence{std::move(dxy), std::move(pair), {&x, &y}, true};
     } else {
       // pair.second.truncateVars(pair.second.getNumVar() -
       // dxy.getNumSymbols());
       pair.second.truncateVars(2 + numLambda +
                                dxy.getNumScheduleCoefficients());
-      deps.emplace_back(Dependence{std::move(dxy), std::move(pair.second),
-                                   std::move(pair.first), &y, &x, false});
+      std::swap(pair.first, pair.second);
+      return new (alloc)
+        Dependence{std::move(dxy), std::move(pair), {&y, &x}, false};
     }
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static void timeCheck(llvm::SmallVectorImpl<Dependence> &deps,
-                        DependencePolyhedra dxy, MemoryAccess &x,
-                        MemoryAccess &y) {
+  static auto timeCheck(llvm::BumpPtrAllocator &alloc, DependencePolyhedra dxy,
+                        MemoryAccess &x, MemoryAccess &y)
+    -> std::pair<Optional<Dependence *>, Optional<Dependence *>> {
     std::pair<Simplex, Simplex> pair(dxy.farkasPair());
     // copy backup
     std::pair<Simplex, Simplex> farkasBackups = pair;
@@ -909,7 +964,7 @@ struct Dependence {
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
     assert(numLambda == dxy.getNumLambda());
-    MemoryAccess *in = &x, *out = &y;
+    NotNull<MemoryAccess> in = &x, out = &y;
     const bool isFwd =
       checkDirection(pair, x, y, numLambda, dxy.A.numCol() - dxy.getTimeDim());
     if (isFwd) {
@@ -919,10 +974,9 @@ struct Dependence {
       std::swap(pair.first, pair.second);
     }
     pair.first.truncateVars(2 + numLambda + numScheduleCoefs);
-    deps.emplace_back(Dependence{dxy, std::move(pair.first),
-                                 std::move(pair.second), in, out, isFwd});
+    auto dep0 = new (alloc) Dependence{dxy, std::move(pair), {in, out}, isFwd};
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
+           dep0->getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy.getTimeDim();
     assert(timeDim);
@@ -930,11 +984,11 @@ struct Dependence {
     const size_t numVar = numVarOld - timeDim;
     // const size_t numBoundingCoefs = numVarKeep - numLambda;
     // remove the time dims from the deps
-    deps.back().depPoly.truncateVars(numVar);
-    deps.back().depPoly.nullStep.clear();
+    dep0->depPoly.truncateVars(numVar);
+    dep0->depPoly.nullStep.clear();
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
-    // deps.back().depPoly.removeExtraVariables(numVar);
+           dep0->getNumPhiCoefficients());
+    // dep0->depPoly.removeExtraVariables(numVar);
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
@@ -1015,31 +1069,31 @@ struct Dependence {
     dxy.truncateVars(numVar);
     dxy.nullStep.clear();
     farkasBackups.first.truncateVars(2 + numLambda + numScheduleCoefs);
-    deps.emplace_back(Dependence{std::move(dxy), std::move(farkasBackups.first),
-                                 std::move(farkasBackups.second), out, in,
-                                 !isFwd});
+    auto dep1 = new (alloc)
+      Dependence{std::move(dxy), std::move(farkasBackups), {out, in}, !isFwd};
+    dep0->in->addEdgeOut(dep0);
+    dep0->out->addEdgeIn(dep0);
+    dep1->in->addEdgeOut(dep1);
+    dep1->out->addEdgeIn(dep1);
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
+           dep0->getNumPhiCoefficients());
+    return {dep0, dep1};
   }
 
-  static auto check(llvm::SmallVectorImpl<Dependence> &deps, MemoryAccess &x,
-                    MemoryAccess &y) -> size_t {
-    if (x.gcdKnownIndependent(y)) return 0;
+  static auto check(llvm::BumpPtrAllocator &alloc, MemoryAccess &x,
+                    MemoryAccess &y)
+    -> std::pair<Optional<Dependence *>, Optional<Dependence *>> {
+    if (x.gcdKnownIndependent(y)) return {};
     DependencePolyhedra dxy(x, y);
     assert(x.getNumLoops() == dxy.getDim0());
     assert(y.getNumLoops() == dxy.getDim1());
     assert(x.getNumLoops() + y.getNumLoops() == dxy.getNumPhiCoefficients());
-    if (dxy.isEmpty()) return 0;
+    if (dxy.isEmpty()) return {};
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
-    if (dxy.getTimeDim()) {
-      timeCheck(deps, std::move(dxy), x, y);
-      return 2;
-    } else {
-      timelessCheck(deps, std::move(dxy), x, y);
-      return 1;
-    }
+    if (dxy.getTimeDim()) return timeCheck(alloc, std::move(dxy), x, y);
+    else return {timelessCheck(alloc, std::move(dxy), x, y), nullptr};
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
