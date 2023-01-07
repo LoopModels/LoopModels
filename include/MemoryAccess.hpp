@@ -47,8 +47,10 @@ struct MemoryAccess {
     symbolicOffsets;
   // omegas order is [outer <-> inner]
   [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
-  [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesIn;
-  [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesOut;
+  [[no_unique_address]] BitSet<> edgesIn;
+  [[no_unique_address]] BitSet<> edgesOut;
+  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesIn;
+  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesOut;
   [[no_unique_address]] BitSet<> nodeIndex;
   [[no_unique_address]] size_t denominator{1};
   // unsigned (instead of ptr) as we build up edges
@@ -93,6 +95,7 @@ struct MemoryAccess {
     const size_t d = getArrayDim();
     return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
   }
+  /// indexMatrix() -> getNumLoops() x arrayDim()
   [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
@@ -133,8 +136,10 @@ struct MemoryAccess {
       memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
   }
 
-  inline void addEdgeIn(NotNull<Dependence> i) { edgesIn.push_back(i); }
-  inline void addEdgeOut(NotNull<Dependence> i) { edgesOut.push_back(i); }
+  // inline void addEdgeIn(NotNull<Dependence> i) { edgesIn.push_back(i); }
+  // inline void addEdgeOut(NotNull<Dependence> i) { edgesOut.push_back(i); }
+  inline void addEdgeIn(size_t i) { edgesIn.insert(i); }
+  inline void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
   inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
