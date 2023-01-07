@@ -76,7 +76,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4663ea40276508a876f294b5e70ce768"><td class="memItemLeft" align="right" valign="top"><a id="a4663ea40276508a876f294b5e70ce768"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
 <tr class="separator:a4663ea40276508a876f294b5e70ce768"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afeebee9881046b7a8a5160060f26b84e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e">getMemAccesses</a> (llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> &gt;</td></tr>
+<tr class="memitem:afeebee9881046b7a8a5160060f26b84e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e">getMemAccesses</a> (llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; ScheduledMemoryAccess &gt;</td></tr>
 <tr class="separator:afeebee9881046b7a8a5160060f26b84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memItemLeft" align="right" valign="top"><a id="a11fd25bf0026933478ec6d6ffc6d65af"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
@@ -191,7 +191,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()
 <tr class="separator:a85b99ca4bdd98276a1e7c125d9a1f7f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="structScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; </p>
+<div class="textblock"><p>Represents a memory access that has been rotated according to some affine transform. <a class="el" href="structScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="afeebee9881046b7a8a5160060f26b84e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afeebee9881046b7a8a5160060f26b84e">&#9670;&nbsp;</a></span>getMemAccesses()</h2>
@@ -207,7 +207,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()
           <td>(</td>
           <td class="paramtype">llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;&#160;</td>
           <td class="paramname"><em>memAccess</em></td><td>)</td>
-          <td> const -&gt; llvm::SmallVector&lt;<a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>&gt; </td>
+          <td> const -&gt; llvm::SmallVector&lt;ScheduledMemoryAccess&gt; </td>
         </tr>
       </table>
   </td>
