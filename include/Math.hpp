@@ -6,7 +6,6 @@
 #include "./Utilities.hpp"
 #include <algorithm>
 #include <bit>
-#include <bits/iterator_concepts.h>
 #include <cassert>
 #include <cmath>
 #include <concepts>
