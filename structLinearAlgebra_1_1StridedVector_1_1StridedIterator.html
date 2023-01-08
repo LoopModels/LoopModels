@@ -66,28 +66,78 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">LinearAlgebra::StridedVector&lt; T &gt;::StridedIterator Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:aa547351d09118c7d96b53a9be85778a8"><td class="memItemLeft" align="right" valign="top"><a id="aa547351d09118c7d96b53a9be85778a8"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = const T</td></tr>
+<tr class="separator:aa547351d09118c7d96b53a9be85778a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:adb85066d36fce321b2c1cfd48af7c6da"><td class="memItemLeft" align="right" valign="top"><a id="adb85066d36fce321b2c1cfd48af7c6da"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> ()</td></tr>
-<tr class="separator:adb85066d36fce321b2c1cfd48af7c6da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa84e7157bc44ee9b0821f69e9d09fa06"><td class="memItemLeft" align="right" valign="top"><a id="aa84e7157bc44ee9b0821f69e9d09fa06"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> ()</td></tr>
-<tr class="separator:aa84e7157bc44ee9b0821f69e9d09fa06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9632f8bc8ac7315a396365f96f10ce01"><td class="memItemLeft" align="right" valign="top"><a id="a9632f8bc8ac7315a396365f96f10ce01"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () -&gt; const T &amp;</td></tr>
-<tr class="separator:a9632f8bc8ac7315a396365f96f10ce01"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3fead1a07872813b462f964138fd126"><td class="memItemLeft" align="right" valign="top"><a id="af3fead1a07872813b462f964138fd126"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
-<tr class="separator:af3fead1a07872813b462f964138fd126"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12cde4ff6fd1e10c67836f9072f7460e"><td class="memItemLeft" align="right" valign="top"><a id="a12cde4ff6fd1e10c67836f9072f7460e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> &amp;</td></tr>
+<tr class="separator:a12cde4ff6fd1e10c67836f9072f7460e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abc6f2000689e3399d28a9b29f445b3bb"><td class="memItemLeft" align="right" valign="top"><a id="abc6f2000689e3399d28a9b29f445b3bb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> &amp;</td></tr>
+<tr class="separator:abc6f2000689e3399d28a9b29f445b3bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a3cd5617c6aad837f76cd301f6c4d3c"><td class="memItemLeft" align="right" valign="top"><a id="a8a3cd5617c6aad837f76cd301f6c4d3c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator++</b> (int)</td></tr>
+<tr class="separator:a8a3cd5617c6aad837f76cd301f6c4d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a935539220b2fe0b4af59af840214987e"><td class="memItemLeft" align="right" valign="top"><a id="a935539220b2fe0b4af59af840214987e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator--</b> (int)</td></tr>
+<tr class="separator:a935539220b2fe0b4af59af840214987e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d4c057f8f519202bed1f7ba9809cf18"><td class="memItemLeft" align="right" valign="top"><a id="a4d4c057f8f519202bed1f7ba9809cf18"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (ptrdiff_t y) const -&gt; const T &amp;</td></tr>
+<tr class="separator:a4d4c057f8f519202bed1f7ba9809cf18"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4aec992776ba60099b7de8f79dbeda5"><td class="memItemLeft" align="right" valign="top"><a id="ad4aec992776ba60099b7de8f79dbeda5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (<a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; ptrdiff_t</td></tr>
+<tr class="separator:ad4aec992776ba60099b7de8f79dbeda5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a481370c8a07c685e8f3144b33caa7e87"><td class="memItemLeft" align="right" valign="top"><a id="a481370c8a07c685e8f3144b33caa7e87"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (ptrdiff_t y) const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a></td></tr>
+<tr class="separator:a481370c8a07c685e8f3144b33caa7e87"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae481231b6d89992e5d907123984657a5"><td class="memItemLeft" align="right" valign="top"><a id="ae481231b6d89992e5d907123984657a5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (ptrdiff_t y) const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a></td></tr>
+<tr class="separator:ae481231b6d89992e5d907123984657a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24fe957623ba0e88268a5ecca0d69bbf"><td class="memItemLeft" align="right" valign="top"><a id="a24fe957623ba0e88268a5ecca0d69bbf"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (ptrdiff_t y) -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> &amp;</td></tr>
+<tr class="separator:a24fe957623ba0e88268a5ecca0d69bbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85b345a78877cfb3a7461d282ab46b54"><td class="memItemLeft" align="right" valign="top"><a id="a85b345a78877cfb3a7461d282ab46b54"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (ptrdiff_t y) -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> &amp;</td></tr>
+<tr class="separator:a85b345a78877cfb3a7461d282ab46b54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a228277e16e0d52f9ae8b6d08dabe54b3"><td class="memItemLeft" align="right" valign="top"><a id="a228277e16e0d52f9ae8b6d08dabe54b3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> () const -&gt; const T &amp;</td></tr>
+<tr class="separator:a228277e16e0d52f9ae8b6d08dabe54b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb82cbc9762cf6b1fc7476bc8a535f33"><td class="memItemLeft" align="right" valign="top"><a id="abb82cbc9762cf6b1fc7476bc8a535f33"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-&gt;</b> () const -&gt; const T *</td></tr>
+<tr class="separator:abb82cbc9762cf6b1fc7476bc8a535f33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc426b5101b0e3cdc13169d9e32eb6e5"><td class="memItemLeft" align="right" valign="top"><a id="afc426b5101b0e3cdc13169d9e32eb6e5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:afc426b5101b0e3cdc13169d9e32eb6e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf7d5f07474d4b24a8edf9d1c55fddd4"><td class="memItemLeft" align="right" valign="top"><a id="adf7d5f07474d4b24a8edf9d1c55fddd4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:adf7d5f07474d4b24a8edf9d1c55fddd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7bbf1ab28d566fc89a2d59a844cdc6c"><td class="memItemLeft" align="right" valign="top"><a id="ab7bbf1ab28d566fc89a2d59a844cdc6c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:ab7bbf1ab28d566fc89a2d59a844cdc6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f196a05e90cc10e1ba6a27ac2a6e619"><td class="memItemLeft" align="right" valign="top"><a id="a2f196a05e90cc10e1ba6a27ac2a6e619"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:a2f196a05e90cc10e1ba6a27ac2a6e619"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a187caa09faddc4adf8e1b042499f5a89"><td class="memItemLeft" align="right" valign="top"><a id="a187caa09faddc4adf8e1b042499f5a89"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:a187caa09faddc4adf8e1b042499f5a89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4eb0b75f6018ecb879796c09bb8fe0f"><td class="memItemLeft" align="right" valign="top"><a id="ab4eb0b75f6018ecb879796c09bb8fe0f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;=</b> (const <a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> y) const -&gt; bool</td></tr>
+<tr class="separator:ab4eb0b75f6018ecb879796c09bb8fe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -97,6 +147,12 @@ const T *&#160;</td><td class="memItemRight" valign="bottom"><b>d</b></td></tr>
 <tr class="memitem:a211f01053f999d41b1cb901ed68e9e1f"><td class="memItemLeft" align="right" valign="top"><a id="a211f01053f999d41b1cb901ed68e9e1f"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>x</b></td></tr>
 <tr class="separator:a211f01053f999d41b1cb901ed68e9e1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a077ffeee8ca9a7d57bd4e55ee2494527"><td class="memItemLeft" align="right" valign="top"><a id="a077ffeee8ca9a7d57bd4e55ee2494527"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (ptrdiff_t y, typename <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; T &gt;::<a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a> x) -&gt; typename <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; T &gt;::<a class="el" href="structLinearAlgebra_1_1StridedVector_1_1StridedIterator.html">StridedIterator</a></td></tr>
+<tr class="separator:a077ffeee8ca9a7d57bd4e55ee2494527"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="Math_8hpp_source.html">Math.hpp</a></li>

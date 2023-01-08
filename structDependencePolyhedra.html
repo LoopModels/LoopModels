@@ -91,6 +91,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTimeDim</b> () con
 <tr class="memitem:a67f89c2048237183b5fc23b9fbfa0020"><td class="memItemLeft" align="right" valign="top"><a id="a67f89c2048237183b5fc23b9fbfa0020"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDim0</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a67f89c2048237183b5fc23b9fbfa0020"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a773a06e213652bb096adc6439e764834"><td class="memItemLeft" align="right" valign="top"><a id="a773a06e213652bb096adc6439e764834"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a773a06e213652bb096adc6439e764834"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac3fc1bebd8bfee81747cd41fac4d2dd3"><td class="memItemLeft" align="right" valign="top"><a id="ac3fc1bebd8bfee81747cd41fac4d2dd3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDim1</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ac3fc1bebd8bfee81747cd41fac4d2dd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -100,9 +103,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPhiCoefficients
 <tr class="memitem:a96f42cf2f2e8dd09da68d69e989d2d39"><td class="memItemLeft" align="right" valign="top"><a id="a96f42cf2f2e8dd09da68d69e989d2d39"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumScheduleCoefficients</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a96f42cf2f2e8dd09da68d69e989d2d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab3af86b9f8f61e3d72b9048515c78528"><td class="memItemLeft" align="right" valign="top"><a id="ab3af86b9f8f61e3d72b9048515c78528"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbols</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:ab3af86b9f8f61e3d72b9048515c78528"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac34ff039dab1d3367bd1e06e4ab87b98"><td class="memItemLeft" align="right" valign="top"><a id="ac34ff039dab1d3367bd1e06e4ab87b98"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbols</b> (size_t i) -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:ac34ff039dab1d3367bd1e06e4ab87b98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1077b8751e9126cd08f652e47b2e224"><td class="memItemLeft" align="right" valign="top"><a id="ab1077b8751e9126cd08f652e47b2e224"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInEqSymbols</b> (size_t i) const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:ab1077b8751e9126cd08f652e47b2e224"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,21 +118,21 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCompTimeInEqOffset
 <tr class="memitem:a86210ff0134e443451fcd59bb9c70d96"><td class="memItemLeft" align="right" valign="top"><a id="a86210ff0134e443451fcd59bb9c70d96"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCompTimeEqOffset</b> (size_t i) const -&gt; std::optional&lt; int64_t &gt;</td></tr>
 <tr class="separator:a86210ff0134e443451fcd59bb9c70d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a623766d20e5cc27eb543dfd606a2dd2a"><td class="memItemLeft" align="right" valign="top"><a id="a623766d20e5cc27eb543dfd606a2dd2a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b> (const llvm::SCEV *v) -&gt; unsigned int</td></tr>
-<tr class="separator:a623766d20e5cc27eb543dfd606a2dd2a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea44bebbba6cbf60261b0293a1f0dcc5"><td class="memItemLeft" align="right" valign="top"><a id="aea44bebbba6cbf60261b0293a1f0dcc5"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; std::pair&lt; llvm::SmallVector&lt; unsigned int &gt;, llvm::SmallVector&lt; unsigned int &gt;&gt;</td></tr>
-<tr class="separator:aea44bebbba6cbf60261b0293a1f0dcc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48a36d4abe74abe1984abf2dc7d57593"><td class="memItemLeft" align="right" valign="top"><a id="a48a36d4abe74abe1984abf2dc7d57593"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>symbolIndex</b> (const llvm::SCEV *v) -&gt; <a class="el" href="structOptional.html">Optional</a>&lt; unsigned int &gt;</td></tr>
+<tr class="separator:a48a36d4abe74abe1984abf2dc7d57593"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aedae310f79aaaee4fa5fb8a4a118ef62"><td class="memItemLeft" align="right" valign="top"><a id="aedae310f79aaaee4fa5fb8a4a118ef62"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>merge</b> (llvm::ArrayRef&lt; const llvm::SCEV * &gt; s0, llvm::ArrayRef&lt; const llvm::SCEV * &gt; s1) -&gt; std::array&lt; llvm::SmallVector&lt; unsigned int &gt;, 2 &gt;</td></tr>
+<tr class="separator:aedae310f79aaaee4fa5fb8a4a118ef62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9b0cb544ddac6f18487b319071ce80d"><td class="memItemLeft" align="right" valign="top"><a id="aa9b0cb544ddac6f18487b319071ce80d"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>DependencePolyhedra</b> (const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;ma0, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;ma1)</td></tr>
 <tr class="separator:aa9b0cb544ddac6f18487b319071ce80d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e2b05bcf552279bebe09bcff001d73f"><td class="memItemLeft" align="right" valign="top"><a id="a5e2b05bcf552279bebe09bcff001d73f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLambda</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a5e2b05bcf552279bebe09bcff001d73f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68120f554ae2614455d13db85523877b"><td class="memItemLeft" align="right" valign="top"><a id="a68120f554ae2614455d13db85523877b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>farkasPair</b> () const -&gt; std::pair&lt; <a class="el" href="structSimplex.html">Simplex</a>, <a class="el" href="structSimplex.html">Simplex</a> &gt;</td></tr>
-<tr class="separator:a68120f554ae2614455d13db85523877b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ce756a45c8ba1e974808e8287b919db"><td class="memItemLeft" align="right" valign="top"><a id="a5ce756a45c8ba1e974808e8287b919db"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLambda</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a5ce756a45c8ba1e974808e8287b919db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c86ebcf8b00a7c4c3f9714f839330ea"><td class="memItemLeft" align="right" valign="top"><a id="a2c86ebcf8b00a7c4c3f9714f839330ea"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>farkasPair</b> () const -&gt; std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt;</td></tr>
+<tr class="separator:a2c86ebcf8b00a7c4c3f9714f839330ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structPolyhedra"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structPolyhedra')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structPolyhedra.html">Polyhedra&lt; I64Matrix, CmptrType, SymbolVec, NonNegative &gt;</a></td></tr>
 <tr class="memitem:a4844c33c643b4016305f94251edb90b8 inherit pub_methods_structPolyhedra"><td class="memItemLeft" align="right" valign="top"><a id="a4844c33c643b4016305f94251edb90b8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Polyhedra</b> (IntMatrix Ain)</td></tr>

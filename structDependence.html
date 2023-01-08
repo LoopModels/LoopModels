@@ -64,16 +64,68 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="structDependence-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">Dependence Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="DependencyPolyhedra_8hpp_source.html">DependencyPolyhedra.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aa748fb9b8aab077231271a0dd286d084"><td class="memItemLeft" align="right" valign="top"><a id="aa748fb9b8aab077231271a0dd286d084"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>pushToEdgeVector</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structDependence.html">Dependence</a> &gt;&gt; &amp;vec)</td></tr>
+<tr class="separator:aa748fb9b8aab077231271a0dd286d084"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00b6dcb1235e77972a20cab710529d76"><td class="memItemLeft" align="right" valign="top"><a id="a00b6dcb1235e77972a20cab710529d76"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>arrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
+<tr class="separator:a00b6dcb1235e77972a20cab710529d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f03cfecfe1734c6c395bf3184269536"><td class="memItemLeft" align="right" valign="top"><a id="a8f03cfecfe1734c6c395bf3184269536"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDependence.html#a8f03cfecfe1734c6c395bf3184269536">isForward</a> () const -&gt; bool</td></tr>
+<tr class="memdesc:a8f03cfecfe1734c6c395bf3184269536"><td class="mdescLeft">&#160;</td><td class="mdescRight">indicates whether forward is non-empty <br /></td></tr>
+<tr class="separator:a8f03cfecfe1734c6c395bf3184269536"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1999cbc3419c1322663a02d854868852"><td class="memItemLeft" align="right" valign="top"><a id="a1999cbc3419c1322663a02d854868852"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesIn</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a1999cbc3419c1322663a02d854868852"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afec24e2d72a4999086d4c9b89aebeaa6"><td class="memItemLeft" align="right" valign="top"><a id="afec24e2d72a4999086d4c9b89aebeaa6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesOut</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:afec24e2d72a4999086d4c9b89aebeaa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0565ad171ed19541045d3c1b7dc05f3"><td class="memItemLeft" align="right" valign="top"><a id="ab0565ad171ed19541045d3c1b7dc05f3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ab0565ad171ed19541045d3c1b7dc05f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15bc51d1b5458827ae5991cd6166919a"><td class="memItemLeft" align="right" valign="top"><a id="a15bc51d1b5458827ae5991cd6166919a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputIsLoad</b> () const -&gt; bool</td></tr>
+<tr class="separator:a15bc51d1b5458827ae5991cd6166919a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c9f731b5044afb4f2afc6287ba7f2b2"><td class="memItemLeft" align="right" valign="top"><a id="a7c9f731b5044afb4f2afc6287ba7f2b2"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputIsLoad</b> () const -&gt; bool</td></tr>
+<tr class="separator:a7c9f731b5044afb4f2afc6287ba7f2b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a821fbe491abfdc5c5d47447d95a221"><td class="memItemLeft" align="right" valign="top"><a id="a4a821fbe491abfdc5c5d47447d95a221"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputIsStore</b> () const -&gt; bool</td></tr>
+<tr class="separator:a4a821fbe491abfdc5c5d47447d95a221"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a036eb57c9781c59f365106db36f57770"><td class="memItemLeft" align="right" valign="top"><a id="a036eb57c9781c59f365106db36f57770"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputIsStore</b> () const -&gt; bool</td></tr>
+<tr class="separator:a036eb57c9781c59f365106db36f57770"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cc677c17009dae397e882a80eb727a4"><td class="memItemLeft" align="right" valign="top"><a id="a6cc677c17009dae397e882a80eb727a4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDependence.html#a6cc677c17009dae397e882a80eb727a4">getInIndMat</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a6cc677c17009dae397e882a80eb727a4"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structDependence.html#a6cc677c17009dae397e882a80eb727a4" title="getInIndMat() -&gt; getInNumLoops() x arrayDim()">getInIndMat()</a> -&gt; getInNumLoops() x arrayDim() <br /></td></tr>
+<tr class="separator:a6cc677c17009dae397e882a80eb727a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a42ac0a8c783d95ac08f2155a9640125b"><td class="memItemLeft" align="right" valign="top"><a id="a42ac0a8c783d95ac08f2155a9640125b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDependence.html#a42ac0a8c783d95ac08f2155a9640125b">getOutIndMat</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a42ac0a8c783d95ac08f2155a9640125b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structDependence.html#a42ac0a8c783d95ac08f2155a9640125b" title="getOutIndMat() -&gt; getOutNumLoops() x arrayDim()">getOutIndMat()</a> -&gt; getOutNumLoops() x arrayDim() <br /></td></tr>
+<tr class="separator:a42ac0a8c783d95ac08f2155a9640125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1295a3d97f4bdd81c24d7620daeba235"><td class="memItemLeft" align="right" valign="top"><a id="a1295a3d97f4bdd81c24d7620daeba235"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInOutPair</b> () const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt;</td></tr>
+<tr class="separator:a1295a3d97f4bdd81c24d7620daeba235"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9854dbd4b1136111eb5785d04aad3c6"><td class="memItemLeft" align="right" valign="top"><a id="af9854dbd4b1136111eb5785d04aad3c6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoreAndOther</b> () const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt;</td></tr>
+<tr class="separator:af9854dbd4b1136111eb5785d04aad3c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd65a0620667baba212d53e556cc9985"><td class="memItemLeft" align="right" valign="top"><a id="abd65a0620667baba212d53e556cc9985"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNumLoops</b> () const -&gt; size_t</td></tr>
+<tr class="separator:abd65a0620667baba212d53e556cc9985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad09ef7e5b9c145d4056fb6855c160286"><td class="memItemLeft" align="right" valign="top"><a id="ad09ef7e5b9c145d4056fb6855c160286"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNumLoops</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ad09ef7e5b9c145d4056fb6855c160286"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a378b41b8447ffd5654e06790047aefb7"><td class="memItemLeft" align="right" valign="top"><a id="a378b41b8447ffd5654e06790047aefb7"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t depth) const -&gt; bool</td></tr>
 <tr class="separator:a378b41b8447ffd5654e06790047aefb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -86,15 +138,36 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () 
 <tr class="memitem:acff21bf8b15961bbc5328553d6982f96"><td class="memItemLeft" align="right" valign="top"><a id="acff21bf8b15961bbc5328553d6982f96"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPhiCoefficients</b> () const -&gt; size_t</td></tr>
 <tr class="separator:acff21bf8b15961bbc5328553d6982f96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a676bc6892ddc2eab6338d79b46a64bbd"><td class="memItemLeft" align="right" valign="top"><a id="a676bc6892ddc2eab6338d79b46a64bbd"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a676bc6892ddc2eab6338d79b46a64bbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c831cbd989b7d524d893ea35709b67f"><td class="memItemLeft" align="right" valign="top"><a id="a7c831cbd989b7d524d893ea35709b67f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatConstants</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a7c831cbd989b7d524d893ea35709b67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ad713effe61fe090681fb3da270483b"><td class="memItemLeft" align="right" valign="top"><a id="a3ad713effe61fe090681fb3da270483b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndConstants</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a3ad713effe61fe090681fb3da270483b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e0b0a576f02470a194d4084fe217eee"><td class="memItemLeft" align="right" valign="top"><a id="a3e0b0a576f02470a194d4084fe217eee"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDepSatConstraintVar</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a3e0b0a576f02470a194d4084fe217eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a03668427d75732bdbe01f18b849988"><td class="memItemLeft" align="right" valign="top"><a id="a6a03668427d75732bdbe01f18b849988"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDepBndConstraintVar</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a6a03668427d75732bdbe01f18b849988"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af64a237bc8a00bab161573e2c640ad4e"><td class="memItemLeft" align="right" valign="top"><a id="af64a237bc8a00bab161573e2c640ad4e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynamicBoundingVar</b> () const -&gt; size_t</td></tr>
+<tr class="separator:af64a237bc8a00bab161573e2c640ad4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefd2f16bbfce6e12c0bb37ac2cc578e6"><td class="memItemLeft" align="right" valign="top"><a id="aefd2f16bbfce6e12c0bb37ac2cc578e6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>validate</b> ()</td></tr>
+<tr class="separator:aefd2f16bbfce6e12c0bb37ac2cc578e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc84acf1a7bc6f51b53d37767470f89d"><td class="memItemLeft" align="right" valign="top"><a id="adc84acf1a7bc6f51b53d37767470f89d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepPoly</b> () -&gt; <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a></td></tr>
+<tr class="separator:adc84acf1a7bc6f51b53d37767470f89d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ca33bf80759d3ec18f7f2edfb628c97"><td class="memItemLeft" align="right" valign="top"><a id="a9ca33bf80759d3ec18f7f2edfb628c97"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; size_t</td></tr>
+<tr class="separator:a9ca33bf80759d3ec18f7f2edfb628c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cfa36f88e9546393551ba3f12967c3d"><td class="memItemLeft" align="right" valign="top"><a id="a0cfa36f88e9546393551ba3f12967c3d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatConstants</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a0cfa36f88e9546393551ba3f12967c3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0026b2efe73ae3638da8c4f2cf723aff"><td class="memItemLeft" align="right" valign="top"><a id="a0026b2efe73ae3638da8c4f2cf723aff"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndConstants</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a0026b2efe73ae3638da8c4f2cf723aff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70fb4ca7f2a3617bcbfdad383068e981"><td class="memItemLeft" align="right" valign="top"><a id="a70fb4ca7f2a3617bcbfdad383068e981"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a70fb4ca7f2a3617bcbfdad383068e981"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad15b9e86244d16ea071075d7b1c4f2fb"><td class="memItemLeft" align="right" valign="top"><a id="ad15b9e86244d16ea071075d7b1c4f2fb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:ad15b9e86244d16ea071075d7b1c4f2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afd16a5c136e3f908e2d6e1109d2c6d12"><td class="memItemLeft" align="right" valign="top"><a id="afd16a5c136e3f908e2d6e1109d2c6d12"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatLambda</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:afd16a5c136e3f908e2d6e1109d2c6d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -155,42 +228,21 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:aa3cfe49806135dc1170e16f268cb83a9"><td class="memItemLeft" align="right" valign="top"><a id="aa3cfe49806135dc1170e16f268cb83a9"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumOmegaCoefficients</b> () -&gt; size_t</td></tr>
 <tr class="separator:aa3cfe49806135dc1170e16f268cb83a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c04d1e11c10be65e53ee583db1e2f2e"><td class="memItemLeft" align="right" valign="top"><a id="a9c04d1e11c10be65e53ee583db1e2f2e"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::pair&lt; <a class="el" href="structSimplex.html">Simplex</a>, <a class="el" href="structSimplex.html">Simplex</a> &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, const <a class="el" href="structSchedule.html">Schedule</a> &amp;xSchedule, const <a class="el" href="structSchedule.html">Schedule</a> &amp;ySchedule, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:a9c04d1e11c10be65e53ee583db1e2f2e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a342bb07703f903e8be9da7a8a48298c5"><td class="memItemLeft" align="right" valign="top"><a id="a342bb07703f903e8be9da7a8a48298c5"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::pair&lt; <a class="el" href="structSimplex.html">Simplex</a>, <a class="el" href="structSimplex.html">Simplex</a> &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
-<tr class="separator:a342bb07703f903e8be9da7a8a48298c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a93e249c5354ceda760c310b10424a64a"><td class="memItemLeft" align="right" valign="top"><a id="a93e249c5354ceda760c310b10424a64a"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>timelessCheck</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structDependence.html">Dependence</a> &gt; &amp;deps, <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a> dxy, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y)</td></tr>
-<tr class="separator:a93e249c5354ceda760c310b10424a64a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00700313aafb534c880b12e183e53f54"><td class="memItemLeft" align="right" valign="top"><a id="a00700313aafb534c880b12e183e53f54"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>timeCheck</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structDependence.html">Dependence</a> &gt; &amp;deps, <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a> dxy, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y)</td></tr>
-<tr class="separator:a00700313aafb534c880b12e183e53f54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a222e6bc866461f19b8d24a50661c31f1"><td class="memItemLeft" align="right" valign="top"><a id="a222e6bc866461f19b8d24a50661c31f1"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structDependence.html">Dependence</a> &gt; &amp;deps, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y) -&gt; size_t</td></tr>
-<tr class="separator:a222e6bc866461f19b8d24a50661c31f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a487bfab9a4acc0b65da18346af1d321d"><td class="memItemLeft" align="right" valign="top"><a id="a487bfab9a4acc0b65da18346af1d321d"></a>
-<a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a>&#160;</td><td class="memItemRight" valign="bottom"><b>depPoly</b></td></tr>
-<tr class="separator:a487bfab9a4acc0b65da18346af1d321d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ada2d9f58be554c6d1aa6d6f5194a63d7"><td class="memItemLeft" align="right" valign="top"><a id="ada2d9f58be554c6d1aa6d6f5194a63d7"></a>
-<a class="el" href="structSimplex.html">Simplex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dependenceSatisfaction</b></td></tr>
-<tr class="separator:ada2d9f58be554c6d1aa6d6f5194a63d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7474d7b83e806cf32eb9a3c6f98249a9"><td class="memItemLeft" align="right" valign="top"><a id="a7474d7b83e806cf32eb9a3c6f98249a9"></a>
-<a class="el" href="structSimplex.html">Simplex</a>&#160;</td><td class="memItemRight" valign="bottom"><b>dependenceBounding</b></td></tr>
-<tr class="separator:a7474d7b83e806cf32eb9a3c6f98249a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa513c429d8009d7b169bf04fdd169342"><td class="memItemLeft" align="right" valign="top"><a id="aa513c429d8009d7b169bf04fdd169342"></a>
-<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>in</b></td></tr>
-<tr class="separator:aa513c429d8009d7b169bf04fdd169342"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9568ec88af55537b7b8f640b49c2d555"><td class="memItemLeft" align="right" valign="top"><a id="a9568ec88af55537b7b8f640b49c2d555"></a>
-<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>out</b></td></tr>
-<tr class="separator:a9568ec88af55537b7b8f640b49c2d555"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a263522428b19acfdfe3bdcd9958d1e77"><td class="memItemLeft" align="right" valign="top"><a id="a263522428b19acfdfe3bdcd9958d1e77"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>forward</b></td></tr>
-<tr class="separator:a263522428b19acfdfe3bdcd9958d1e77"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad725df69de9be8cc0840ba11203fa699"><td class="memItemLeft" align="right" valign="top"><a id="ad725df69de9be8cc0840ba11203fa699"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, const <a class="el" href="structSchedule.html">Schedule</a> &amp;xSchedule, const <a class="el" href="structSchedule.html">Schedule</a> &amp;ySchedule, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
+<tr class="separator:ad725df69de9be8cc0840ba11203fa699"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43145eb7ad840b228b458e32e30fca76"><td class="memItemLeft" align="right" valign="top"><a id="a43145eb7ad840b228b458e32e30fca76"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkDirection</b> (const std::array&lt; <a class="el" href="structSimplex.html">Simplex</a>, 2 &gt; &amp;p, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, const <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y, size_t numLambda, Col nonTimeDim) -&gt; bool</td></tr>
+<tr class="separator:a43145eb7ad840b228b458e32e30fca76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af340d48207cbcb14a43bb00ca0499cb7"><td class="memItemLeft" align="right" valign="top"><a id="af340d48207cbcb14a43bb00ca0499cb7"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>timelessCheck</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a> dxy, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y) -&gt; <a class="el" href="structDependence.html">Dependence</a> *</td></tr>
+<tr class="separator:af340d48207cbcb14a43bb00ca0499cb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abfdfcb2c70ed138dbb862371d8b4fdfa"><td class="memItemLeft" align="right" valign="top"><a id="abfdfcb2c70ed138dbb862371d8b4fdfa"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>timeCheck</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a> dxy, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y) -&gt; std::array&lt; <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="structDependence.html">Dependence</a> * &gt;, 2 &gt;</td></tr>
+<tr class="separator:abfdfcb2c70ed138dbb862371d8b4fdfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a47dc8cfc5068b4abc55105eafa489ea5"><td class="memItemLeft" align="right" valign="top"><a id="a47dc8cfc5068b4abc55105eafa489ea5"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (llvm::BumpPtrAllocator &amp;alloc, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;y) -&gt; std::array&lt; <a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="structDependence.html">Dependence</a> * &gt;, 2 &gt;</td></tr>
+<tr class="separator:a47dc8cfc5068b4abc55105eafa489ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -198,7 +250,9 @@ Friends</h2></td></tr>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structDependence.html">Dependence</a> &amp;d) -&gt; llvm::raw_ostream &amp;</td></tr>
 <tr class="separator:a1a8f7a1c387c26e22d8cf5723a4a72b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p><a class="el" href="structDependence.html">Dependence</a> Represents a dependence relationship between two memory accesses. It contains simplices representing constraints that affine schedules are allowed to take. </p>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="DependencyPolyhedra_8hpp_source.html">DependencyPolyhedra.hpp</a></li>
 </ul>
 </div><!-- contents -->
