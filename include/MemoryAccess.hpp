@@ -29,7 +29,7 @@ private:
   }
   static constexpr auto memoryTotalRequired(size_t arrayDim, size_t numLoops,
                                             size_t numSymbols) -> size_t {
-    return arrayDim * numLoops + numLoops + arrayDim * numSymbols + 1;
+    return arrayDim * numLoops + numLoops + arrayDim * numSymbols;
   }
 
   NotNull<const llvm::SCEVUnknown> basePointer;
@@ -50,23 +50,12 @@ private:
   BitSet<> edgesIn;
   BitSet<> edgesOut;
   BitSet<> nodeIndex;
+  // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
-  // This seems like such a neat trick; it's a shame that it emits
-  // warnings despite being supported as a gnu extension?
+  // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
   // https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wzero-length-array"
-#else
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-#endif
-  int64_t mem[0]; // NOLINT(modernize-avoid-c-arrays)
-#ifdef __clang__
-#pragma clang diagnostic pop
-#else
-#pragma GCC diagnostic pop
-#endif
+  // https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation
+  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] constexpr auto data() -> NotNull<int64_t> { return mem; }
   [[nodiscard]] constexpr auto data() const -> NotNull<const int64_t> {
@@ -92,7 +81,7 @@ public:
                         PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
     size_t numLoops = loopRef.getNumLoops();
     assert(o.size() == numLoops + 1);
-    size_t memNeeded = numLoops + 1;
+    size_t memNeeded = numLoops;
     auto *mem =
       alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
     auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
