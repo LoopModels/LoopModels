@@ -1,39 +1,41 @@
 #pragma once
 #include "./BitSets.hpp"
 #include "./Loops.hpp"
+#include "Math.hpp"
 #include "Utilities.hpp"
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 
 struct Dependence;
 
-inline constexpr auto memoryAccessRequiredIndexSize(size_t arrayDim,
-                                                    size_t numLoops,
-                                                    size_t numSymbols)
-  -> size_t {
-  return arrayDim * numLoops + arrayDim * numSymbols;
-}
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
 private:
+  static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops,
+                                          size_t numSymbols) -> size_t {
+    return arrayDim * numLoops + arrayDim * numSymbols;
+  }
+  static constexpr auto memoryTotalRequired(size_t arrayDim, size_t numLoops,
+                                            size_t numSymbols) -> size_t {
+    return arrayDim * numLoops + numLoops + arrayDim * numSymbols + 1;
+  }
+
   static constexpr size_t stackArrayDims = 3;
   static constexpr size_t stackNumLoops = 4;
   static constexpr size_t stackNumSymbols = 1;
-  [[no_unique_address]] llvm::SmallVector<
-    int64_t, memoryAccessRequiredIndexSize(stackArrayDims, stackNumLoops,
-                                           stackNumSymbols)>
-    indices;
-  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
-  [[no_unique_address]] NotNull<AffineLoopNest<>> loop;
+  NotNull<const llvm::SCEVUnknown> basePointer;
+  NotNull<AffineLoopNest<>> loop;
   // This field will store either the loaded instruction, or the store
   // instruction. This means that we can check if this MemoryAccess is a load
   // via checking `!loadOrStore.isa<llvm::StoreInst>()`.
@@ -42,22 +44,64 @@ private:
   // actual load instruction, that instruction is equivalent to the loaded
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
-  [[no_unique_address]] NotNull<llvm::Instruction> loadOrStore;
-  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, stackArrayDims>
-    sizes;
-  [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, stackArrayDims>
-    symbolicOffsets;
+  NotNull<llvm::Instruction> loadOrStore;
+  llvm::SmallVector<const llvm::SCEV *, stackArrayDims> sizes;
+  llvm::SmallVector<const llvm::SCEV *, stackArrayDims> symbolicOffsets;
   // omegas order is [outer <-> inner]
-  [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
-  [[no_unique_address]] BitSet<> edgesIn;
-  [[no_unique_address]] BitSet<> edgesOut;
-  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesIn;
-  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesOut;
-  [[no_unique_address]] BitSet<> nodeIndex;
+  llvm::SmallVector<unsigned, 8> omegas;
+  BitSet<> edgesIn;
+  BitSet<> edgesOut;
+  BitSet<> nodeIndex;
+  // `struct hack` - we can over allocate on construction of the MemoryAccess
+  // and then access the extra memory without need for `reinterpret_cast`
+  // through this pointer.
+  // https://www.geeksforgeeks.org/struct-hack/
+  // I am not sure to what extent this is kosher.
+  int64_t mem[0]; // NOLINT(modernize-avoid-c-arrays)
+  //
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
+  [[nodiscard]] constexpr auto data() -> NotNull<int64_t> { return mem; }
+  [[nodiscard]] constexpr auto data() const -> NotNull<const int64_t> {
+    return mem;
+  }
+  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
+               llvm::Instruction *user,
+               llvm::SmallVector<const llvm::SCEV *, 3> sz,
+               llvm::SmallVector<const llvm::SCEV *, 3> off,
+               llvm::SmallVector<unsigned, 8> o)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
+      omegas(std::move(o)){};
+  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
+               llvm::Instruction *user,
+               llvm::SmallVector<const llvm::SCEV *, 3> sz,
+               llvm::SmallVector<const llvm::SCEV *, 3> off,
+               llvm::ArrayRef<unsigned> o)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
+      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
+      omegas(o.begin(), o.end()){};
+
 public:
+  static auto
+  construct(llvm::BumpPtrAllocator &alloc, const llvm::SCEVUnknown *arrayPtr,
+            AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+            PtrMatrix<int64_t> indMatT,
+            std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
+            PtrMatrix<int64_t> offsets, llvm::ArrayRef<unsigned> o)
+    -> NotNull<MemoryAccess> {
+    auto [sz, off] = std::move(szOff);
+    size_t arrayDim = sz.size();
+    size_t numLoops = loopRef.getNumLoops();
+    size_t numSymbols = size_t(offsets.numCol());
+    size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
+    auto *mem =
+      alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
+    auto *ma = new (mem)
+      MemoryAccess(arrayPtr, loopRef, user, std::move(sz), std::move(off), o);
+    return ma;
+  }
   [[nodiscard]] constexpr auto inputEdges() const -> const BitSet<> & {
     return edgesIn;
   }
@@ -116,23 +160,23 @@ public:
   ///      A[i, i + j]
   [[nodiscard]] auto indexMatrix() -> MutPtrMatrix<int64_t> {
     const size_t d = getArrayDim();
-    return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
+    return MutPtrMatrix<int64_t>{data(), getNumLoops(), d, d};
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
   [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
     const size_t d = getArrayDim();
-    return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
+    return PtrMatrix<int64_t>{data(), getNumLoops(), d, d};
   }
   [[nodiscard]] auto offsetMatrix() -> MutPtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
-    return MutPtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d,
-                                 numSymbols, numSymbols};
+    return MutPtrMatrix<int64_t>{data() + getNumLoops() * d, d, numSymbols,
+                                 numSymbols};
   }
   [[nodiscard]] auto offsetMatrix() const -> PtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     const size_t numSymbols = getNumSymbols();
-    return PtrMatrix<int64_t>{indices.data() + getNumLoops() * d, d, numSymbols,
+    return PtrMatrix<int64_t>{data() + getNumLoops() * d, d, numSymbols,
                               numSymbols};
   }
   [[nodiscard]] auto getInstruction() -> NotNull<llvm::Instruction> {
@@ -154,9 +198,9 @@ public:
     return llvm::Align{1};
   }
   void resize(size_t d) {
-    sizes.resize(d);
-    indices.resize(
-      memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
+    // sizes.resize(d);
+    // indices.resize(
+    //   memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
   }
   [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
     return basePointer;
@@ -167,22 +211,6 @@ public:
   inline void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
   inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
-  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user,
-               llvm::SmallVector<const llvm::SCEV *, 3> sz,
-               llvm::SmallVector<const llvm::SCEV *, 3> off,
-               llvm::SmallVector<unsigned, 8> o)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
-      omegas(std::move(o)){};
-  MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user,
-               llvm::SmallVector<const llvm::SCEV *, 3> sz,
-               llvm::SmallVector<const llvm::SCEV *, 3> off,
-               llvm::ArrayRef<unsigned> o)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
-      omegas(o.begin(), o.end()){};
 
   // inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
   // inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
@@ -209,9 +237,6 @@ public:
     size_t dropCount = omegas.size() - (getNumLoops() + 1);
     if (dropCount) omegas.erase(omegas.begin(), omegas.begin() + dropCount);
     return this;
-  }
-  [[nodiscard]] auto isLoopIndependent() const -> bool {
-    return LinearAlgebra::allZero(indices);
   }
   [[nodiscard]] auto allConstantIndices() const -> bool {
     return symbolicOffsets.size() == 0;
