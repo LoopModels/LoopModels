@@ -5,8 +5,8 @@
 #include "./EmptyArrays.hpp"
 #include "./Math.hpp"
 #include "./Polyhedra.hpp"
+#include "./RemarkAnalysis.hpp"
 #include "./Utilities.hpp"
-#include "RemarkAnalysis.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>

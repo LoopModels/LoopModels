@@ -5,7 +5,7 @@
 #include "./EmptyArrays.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
-#include "VectorGreatestCommonDivisor.hpp"
+#include "./VectorGreatestCommonDivisor.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>

@@ -73,7 +73,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     return E(i, 0);
   }
 
-  static auto findFirstNonEqual(PtrVector<unsigned> x, PtrVector<unsigned> y)
+  static auto findFirstNonEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
     -> size_t {
     const size_t M = std::min(x.size(), y.size());
     return std::mismatch(x.begin(), x.begin() + M, y.begin()).first - x.begin();
@@ -903,8 +903,8 @@ public:
     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
-    PtrVector<unsigned> xFusOmega = x.getFusionOmega();
-    PtrVector<unsigned> yFusOmega = y.getFusionOmega();
+    PtrVector<int64_t> xFusOmega = x.getFusionOmega();
+    PtrVector<int64_t> yFusOmega = y.getFusionOmega();
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop

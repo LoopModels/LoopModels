@@ -730,7 +730,7 @@ template <typename T> struct PtrVector {
     -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
-    return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
+    return PtrVector<T>{mem + i.b, i.e - i.b};
   }
   template <typename F, typename L>
   [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) const
@@ -766,6 +766,8 @@ template <typename T> struct PtrVector {
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
 
   void extendOrAssertSize(size_t M) const { assert(M == N); }
+  constexpr PtrVector(NotNull<const T> mem, size_t N) : mem(mem), N(N) {}
+  PtrVector(llvm::ArrayRef<T> x) : mem(x.data()), N(x.size()) {}
 };
 template <typename T> struct MutPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
@@ -804,7 +806,6 @@ template <typename T> struct MutPtrVector {
   }
   [[nodiscard]] constexpr auto isEmpty() const -> bool { return N == 0; }
   // copy constructor
-  // MutPtrVector(const MutPtrVector<T> &x) : mem(x.mem), N(x.N) {}
   constexpr MutPtrVector() = default;
   constexpr MutPtrVector(const MutPtrVector<T> &x) = default;
   constexpr MutPtrVector(llvm::MutableArrayRef<T> x)
@@ -818,7 +819,7 @@ template <typename T> struct MutPtrVector {
   constexpr auto operator[](Range<size_t, size_t> i) const -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
-    return PtrVector<T>{.mem = mem + i.b, .N = i.e - i.b};
+    return PtrVector<T>{mem + i.b, i.e - i.b};
   }
   template <typename F, typename L>
   constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
@@ -839,9 +840,7 @@ template <typename T> struct MutPtrVector {
     return mem + N;
   }
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
-  constexpr operator PtrVector<T>() const {
-    return PtrVector<T>{.mem = mem, .N = N};
-  }
+  constexpr operator PtrVector<T>() const { return PtrVector<T>{mem, N}; }
   constexpr operator llvm::ArrayRef<T>() const {
     return llvm::ArrayRef<T>{mem, N};
   }
@@ -859,9 +858,6 @@ template <typename T> struct MutPtrVector {
     return llvm::ArrayRef<T>(*this) == x;
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-  // PtrVector<T> view() const {
-  //     return PtrVector<T>{.mem = mem, .N = N};
-  // };
   [[gnu::flatten]] auto operator=(PtrVector<T> x) -> MutPtrVector<T> {
     return copyto(*this, x);
   }
@@ -924,6 +920,8 @@ template <typename T> struct MutPtrVector {
 };
 template <typename T> PtrVector(T *, size_t) -> PtrVector<T>;
 template <typename T> MutPtrVector(T *, size_t) -> MutPtrVector<T>;
+template <typename T> PtrVector(NotNull<T>, size_t) -> PtrVector<T>;
+template <typename T> MutPtrVector(NotNull<T>, size_t) -> MutPtrVector<T>;
 
 //
 // Vectors
@@ -933,13 +931,13 @@ template <typename T> constexpr auto view(llvm::SmallVectorImpl<T> &x) {
   return MutPtrVector<T>{x.data(), x.size()};
 }
 template <typename T> constexpr auto view(const llvm::SmallVectorImpl<T> &x) {
-  return PtrVector<T>{.mem = x.data(), .N = x.size()};
+  return PtrVector<T>{x.data(), x.size()};
 }
 template <typename T> constexpr auto view(llvm::MutableArrayRef<T> x) {
   return MutPtrVector<T>{x.data(), x.size()};
 }
 template <typename T> constexpr auto view(llvm::ArrayRef<T> x) {
-  return PtrVector<T>{.mem = x.data(), .N = x.size()};
+  return PtrVector<T>{x.data(), x.size()};
 }
 
 template <typename T> struct Vector {
@@ -967,7 +965,7 @@ template <typename T> struct Vector {
     -> PtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= data.size());
-    return PtrVector<T>{.mem = data.data() + i.b, .N = i.e - i.b};
+    return PtrVector<T>{data.data() + i.b, i.e - i.b};
   }
   template <typename F, typename L>
   [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
@@ -990,11 +988,8 @@ template <typename T> struct Vector {
   [[nodiscard]] constexpr auto begin() const { return data.begin(); }
   [[nodiscard]] constexpr auto end() const { return data.end(); }
   [[nodiscard]] constexpr auto size() const -> size_t { return data.size(); }
-  // MutPtrVector<T> view() {
-  //     return MutPtrVector<T>{.mem = data.data(), .N = data.size()};
-  // };
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> {
-    return PtrVector<T>{.mem = data.data(), .N = data.size()};
+    return PtrVector<T>{data.data(), data.size()};
   };
   template <typename A> void push_back(A &&x) {
     data.push_back(std::forward<A>(x));
@@ -1014,7 +1009,7 @@ template <typename T> struct Vector {
     return MutPtrVector<T>{data.data(), data.size()};
   }
   constexpr operator PtrVector<T>() const {
-    return PtrVector<T>{.mem = data.data(), .N = data.size()};
+    return PtrVector<T>{data.data(), data.size()};
   }
   constexpr operator llvm::MutableArrayRef<T>() {
     return llvm::MutableArrayRef<T>{data.data(), data.size()};
@@ -1828,7 +1823,7 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
 };
 template <typename T> constexpr auto ptrVector(T *p, size_t M) {
   if constexpr (std::is_const_v<T>)
-    return PtrVector<std::remove_const_t<T>>{.mem = p, .N = M};
+    return PtrVector<std::remove_const_t<T>>{p, M};
   else return MutPtrVector<T>{p, M};
 }
 
@@ -1842,16 +1837,6 @@ template <AbstractRowMajorMatrix T> PtrMatrix(T &A) -> PtrMatrix<eltype_t<T>>;
 template <AbstractRowMajorMatrix T>
 MutPtrMatrix(T &A) -> MutPtrMatrix<eltype_t<T>>;
 
-// template <typename T>
-// constexpr auto ptrmat(T *ptr, size_t numRow, size_t numCol, size_t stride) {
-//     if constexpr (std::is_const_v<T>) {
-//         return PtrMatrix<std::remove_const_t<T>>{
-//             .mem = ptr, .M = numRow, .N = numCol, .X = stride};
-//     } else {
-//         return MutPtrMatrix<T>{
-//             .mem = ptr, .M = numRow, .N = numCol, .X = stride};
-//     }
-// }
 static_assert(sizeof(PtrMatrix<int64_t>) <=
               4 * sizeof(unsigned int) + sizeof(int64_t *));
 static_assert(sizeof(MutPtrMatrix<int64_t>) <=

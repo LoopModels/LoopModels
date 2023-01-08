@@ -1,8 +1,8 @@
 #pragma once
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
+#include "./Rational.hpp"
 #include "./VectorGreatestCommonDivisor.hpp"
-#include "Rational.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 

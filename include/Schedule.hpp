@@ -102,12 +102,11 @@ struct Schedule {
     return data.data()[getNumLoopsSquared() + size_t(numLoops) + 1 + i];
   }
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
-    return {.mem = data.data() + getNumLoopsSquared(),
-            .N = size_t(numLoops) + 1};
+    return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
   }
   [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {.mem = data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
-            .N = size_t(numLoops)};
+    return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
+            size_t(numLoops)};
   }
   [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
