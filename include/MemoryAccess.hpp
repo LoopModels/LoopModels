@@ -1,6 +1,8 @@
 #pragma once
 #include "./BitSets.hpp"
 #include "./Loops.hpp"
+#include "Utilities.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstring>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
@@ -9,7 +11,9 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/raw_ostream.h>
 
-static constexpr auto memoryAccessRequiredIndexSize(size_t arrayDim,
+struct Dependence;
+
+inline constexpr auto memoryAccessRequiredIndexSize(size_t arrayDim,
                                                     size_t numLoops,
                                                     size_t numSymbols)
   -> size_t {
@@ -28,6 +32,14 @@ struct MemoryAccess {
     indices;
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   [[no_unique_address]] NotNull<AffineLoopNest<>> loop;
+  // This field will store either the loaded instruction, or the store
+  // instruction. This means that we can check if this MemoryAccess is a load
+  // via checking `!loadOrStore.isa<llvm::StoreInst>()`.
+  // This allows us to create dummy loads (i.e. reloads of stores) via assigning
+  // the stored value to `loadOrStore`. In the common case that we do have an
+  // actual load instruction, that instruction is equivalent to the loaded
+  // value, meaning that is the stored instruction, and thus we still have
+  // access to it when it is available.
   [[no_unique_address]] NotNull<llvm::Instruction> loadOrStore;
   [[no_unique_address]] llvm::SmallVector<const llvm::SCEV *, stackArrayDims>
     sizes;
@@ -35,15 +47,23 @@ struct MemoryAccess {
     symbolicOffsets;
   // omegas order is [outer <-> inner]
   [[no_unique_address]] llvm::SmallVector<unsigned, 8> omegas;
-  [[no_unique_address]] llvm::SmallVector<unsigned> edgesIn;
-  [[no_unique_address]] llvm::SmallVector<unsigned> edgesOut;
+  [[no_unique_address]] BitSet<> edgesIn;
+  [[no_unique_address]] BitSet<> edgesOut;
+  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesIn;
+  // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesOut;
   [[no_unique_address]] BitSet<> nodeIndex;
+  [[no_unique_address]] size_t denominator{1};
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
-  [[nodiscard]] auto isLoad() const -> bool {
-    return loadOrStore.isa<llvm::LoadInst>();
+  [[nodiscard]] constexpr auto getNodes() -> BitSet<> & { return nodeIndex; }
+  [[nodiscard]] constexpr auto getNodes() const -> const BitSet<> & {
+    return nodeIndex;
   }
+  [[nodiscard]] auto isStore() const -> bool {
+    return loadOrStore.isa<llvm::StoreInst>();
+  }
+  [[nodiscard]] auto isLoad() const -> bool { return !isStore(); }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto getArrayDim() const -> size_t { return sizes.size(); }
   [[nodiscard]] auto getNumSymbols() const -> size_t {
@@ -58,6 +78,7 @@ struct MemoryAccess {
     if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
     else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
+  [[nodiscard]] constexpr auto isActive() const -> bool { return denominator; }
   // static inline size_t requiredData(size_t dim, size_t numLoops){
   // 	return dim*numLoops +
   // }
@@ -76,6 +97,7 @@ struct MemoryAccess {
     const size_t d = getArrayDim();
     return MutPtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
   }
+  /// indexMatrix() -> getNumLoops() x arrayDim()
   [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return PtrMatrix<int64_t>{indices.data(), getNumLoops(), d, d};
@@ -116,8 +138,10 @@ struct MemoryAccess {
       memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
   }
 
-  inline void addEdgeIn(unsigned i) { edgesIn.push_back(i); }
-  inline void addEdgeOut(unsigned i) { edgesOut.push_back(i); }
+  // inline void addEdgeIn(NotNull<Dependence> i) { edgesIn.push_back(i); }
+  // inline void addEdgeOut(NotNull<Dependence> i) { edgesOut.push_back(i); }
+  inline void addEdgeIn(size_t i) { edgesIn.insert(i); }
+  inline void addEdgeOut(size_t i) { edgesOut.insert(i); }
   /// add a node index
   inline void addNodeIndex(unsigned i) { nodeIndex.insert(i); }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
@@ -143,12 +167,10 @@ struct MemoryAccess {
   // size_t getNumLoops() const { return ref->getNumLoops(); }
   // size_t getNumAxes() const { return ref->axes.size(); }
   // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-  inline auto fusedThrough(MemoryAccess &x) -> bool {
-    bool allEqual = true;
+  auto fusedThrough(MemoryAccess &x) -> bool {
     size_t numLoopsCommon = std::min(getNumLoops(), x.getNumLoops());
-    for (size_t n = 0; n < numLoopsCommon; ++n)
-      allEqual &= (omegas[n] == x.omegas[n]);
-    return allEqual;
+    return std::equal(omegas.begin(), omegas.begin() + numLoopsCommon,
+                      x.omegas.begin());
   }
   // note returns true if unset
   // inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
@@ -172,10 +194,8 @@ struct MemoryAccess {
   }
   // Assumes strides and offsets are sorted
   [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
-    if (getArrayDim() != x.getArrayDim()) return false;
-    for (size_t i = 0; i < getArrayDim(); ++i)
-      if (sizes[i] != x.sizes[i]) return false;
-    return true;
+    return std::equal(sizes.begin(), sizes.end(), x.sizes.begin(),
+                      x.sizes.end());
   }
   [[nodiscard]] constexpr static auto gcdKnownIndependent(const MemoryAccess &)
     -> bool {

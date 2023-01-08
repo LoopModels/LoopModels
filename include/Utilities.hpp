@@ -21,21 +21,6 @@ template <typename T> struct Optional {
   constexpr auto operator*() -> T & { return getValue(); }
 };
 
-template <typename T> struct Optional<T *> {
-  [[no_unique_address]] T *value{nullptr};
-  [[nodiscard]] constexpr auto hasValue() const -> bool {
-    return value != nullptr;
-  }
-  [[nodiscard]] constexpr auto getValue() -> T & {
-    assert(hasValue());
-    return *value;
-  }
-  [[nodiscard]] constexpr auto operator*() -> T & { return getValue(); }
-  constexpr explicit operator bool() const { return hasValue(); }
-  constexpr auto operator->() -> T * { return value; }
-  constexpr Optional() = default;
-  constexpr Optional(T *v) : value(v) {}
-};
 template <std::signed_integral T> struct Optional<T> {
   static constexpr T null = std::numeric_limits<T>::min();
   [[no_unique_address]] T value{null};
@@ -205,3 +190,23 @@ private:
 };
 template <typename T> NotNull(T &) -> NotNull<T>;
 template <typename T> NotNull(T *) -> NotNull<T *>;
+
+template <typename T> struct Optional<T *> {
+  [[no_unique_address]] T *value{nullptr};
+  [[nodiscard]] constexpr auto hasValue() const -> bool {
+    return value != nullptr;
+  }
+  [[nodiscard]] constexpr auto getValue() -> T & {
+    assert(hasValue());
+    return *value;
+  }
+  [[nodiscard]] constexpr auto operator*() -> T & { return getValue(); }
+  [[nodiscard]] constexpr operator NotNull<T>() { return value; }
+  constexpr explicit operator bool() const { return hasValue(); }
+  constexpr auto operator->() -> T * {
+    assert(hasValue());
+    return value;
+  }
+  constexpr Optional() = default;
+  constexpr Optional(T *v) : value(v) {}
+};
