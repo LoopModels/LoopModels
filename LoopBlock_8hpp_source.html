@@ -104,15 +104,15 @@ $(function() {
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  }</div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  v.push_back(x);</div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;}</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">// struct ScheduledMemoryAccess {</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//   MemoryAccess *access;</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="comment">//   // may be `false` while `access-&gt;isStore()==true`</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">//   // which indicates a reload from this address.</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">//   bool isStore;</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">//   ScheduledMemoryAccess(MemoryAccess *access, const Schedule &amp;schedule,</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">//                         bool isStore)</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">//     : access(access), isStore(isStore) {}</span></div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// };</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="structScheduledMemoryAccess.html">   38</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <a class="code" href="structMemoryAccess.html">MemoryAccess</a> *access;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">// may be `false` while `access-&gt;isStore()==true`</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="comment">// which indicates a reload from this address.</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keywordtype">bool</span> isStore;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *access, <span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;schedule,</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;                        <span class="keywordtype">bool</span> isStore)</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    : access(access), isStore(isStore) {}</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;};</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
 <div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="structScheduledNode.html">   54</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structScheduledNode.html">ScheduledNode</a> {</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">private</span>:</div>
@@ -684,7 +684,7 @@ $(function() {
 <div class="line"><a name="l00770"></a><span class="lineno">  770</span>&#160;      <span class="keyword">const</span> <a class="code" href="structDependence.html">Dependence</a> &amp;edge = *edges[e];</div>
 <div class="line"><a name="l00771"></a><span class="lineno">  771</span>&#160;      <span class="keywordtype">size_t</span> mlt = edge.nodesIn().size() * edge.nodesOut().size();</div>
 <div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;      a += mlt * edge.getNumLambda();</div>
-<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      b += mlt * edge.getDynSym();</div>
+<div class="line"><a name="l00773"></a><span class="lineno">  773</span>&#160;      b += mlt * edge.getDynSymDim();</div>
 <div class="line"><a name="l00774"></a><span class="lineno">  774</span>&#160;      c += mlt * edge.getNumConstraints();</div>
 <div class="line"><a name="l00775"></a><span class="lineno">  775</span>&#160;      ae += mlt;</div>
 <div class="line"><a name="l00776"></a><span class="lineno">  776</span>&#160;    }</div>
@@ -1257,7 +1257,7 @@ $(function() {
 <div class="line"><a name="l01346"></a><span class="lineno"> 1346</span>&#160;    <span class="comment">// memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};</span></div>
 <div class="line"><a name="l01347"></a><span class="lineno"> 1347</span>&#160;    os &lt;&lt; <span class="stringliteral">&quot;\nLoopBlock Edges (#edges = &quot;</span> &lt;&lt; lblock.edges.size() &lt;&lt; <span class="stringliteral">&quot;):&quot;</span>;</div>
 <div class="line"><a name="l01348"></a><span class="lineno"> 1348</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;edge : lblock.edges) {</div>
-<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tEdge = &quot;</span> &lt;&lt; edge;</div>
+<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;      os &lt;&lt; <span class="stringliteral">&quot;\n\tEdge = &quot;</span> &lt;&lt; *edge;</div>
 <div class="line"><a name="l01350"></a><span class="lineno"> 1350</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> inIndex : edge-&gt;nodesIn()) {</div>
 <div class="line"><a name="l01351"></a><span class="lineno"> 1351</span>&#160;        <span class="keyword">const</span> <a class="code" href="structSchedule.html">Schedule</a> &amp;sin = lblock.getNode(inIndex).getSchedule();</div>
 <div class="line"><a name="l01352"></a><span class="lineno"> 1352</span>&#160;        os &lt;&lt; <span class="stringliteral">&quot;Schedule In: nodeIndex = &quot;</span> &lt;&lt; edge-&gt;nodesIn() &lt;&lt; <span class="stringliteral">&quot;\ns.getPhi()&quot;</span></div>
@@ -1301,7 +1301,7 @@ $(function() {
 <div class="ttc" id="astructBitSliceView_1_1Iterator_html"><div class="ttname"><a href="structBitSliceView_1_1Iterator.html">BitSliceView::Iterator</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:245</div></div>
 <div class="ttc" id="astructBitSliceView_html"><div class="ttname"><a href="structBitSliceView.html">BitSliceView</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:242</div></div>
 <div class="ttc" id="astructCarriedDependencyFlag_html"><div class="ttname"><a href="structCarriedDependencyFlag.html">CarriedDependencyFlag</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:242</div></div>
-<div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:371</div></div>
+<div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:368</div></div>
 <div class="ttc" id="astructDependence_html_a42ac0a8c783d95ac08f2155a9640125b"><div class="ttname"><a href="structDependence.html#a42ac0a8c783d95ac08f2155a9640125b">Dependence::getOutIndMat</a></div><div class="ttdeci">auto getOutIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getOutIndMat() -&gt; getOutNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:489</div></div>
 <div class="ttc" id="astructDependence_html_a6cc677c17009dae397e882a80eb727a4"><div class="ttname"><a href="structDependence.html#a6cc677c17009dae397e882a80eb727a4">Dependence::getInIndMat</a></div><div class="ttdeci">auto getInIndMat() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdoc">getInIndMat() -&gt; getInNumLoops() x arrayDim()</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:485</div></div>
 <div class="ttc" id="astructDependence_html_a8f03cfecfe1734c6c395bf3184269536"><div class="ttname"><a href="structDependence.html#a8f03cfecfe1734c6c395bf3184269536">Dependence::isForward</a></div><div class="ttdeci">constexpr auto isForward() const -&gt; bool</div><div class="ttdoc">indicates whether forward is non-empty</div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:470</div></div>
@@ -1325,10 +1325,11 @@ $(function() {
 <div class="ttc" id="astructLinearProgramLoopBlock_html_a8c9fd983b91fbf28ff04ffcc7def0560"><div class="ttname"><a href="structLinearProgramLoopBlock.html#a8c9fd983b91fbf28ff04ffcc7def0560">LinearProgramLoopBlock::searchValueForStores</a></div><div class="ttdeci">auto searchValueForStores(llvm::SmallPtrSet&lt; llvm::User *, 32 &gt; &amp;visited, ScheduledNode &amp;node, llvm::User *user, unsigned nodeIndex) -&gt; bool</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:455</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html_aad26576b4763d758bf1f49c03a1adaf1"><div class="ttname"><a href="structLinearProgramLoopBlock.html#aad26576b4763d758bf1f49c03a1adaf1">LinearProgramLoopBlock::optimize</a></div><div class="ttdeci">auto optimize(Graph g, size_t d, size_t maxDepth) -&gt; std::optional&lt; BitSet&lt;&gt;&gt;</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:1303</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:25</div></div>
-<div class="ttc" id="astructMemoryAccess_html_a245b41566ec8297df73f91e1829670d5"><div class="ttname"><a href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">MemoryAccess::addNodeIndex</a></div><div class="ttdeci">void addNodeIndex(unsigned i)</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:144</div></div>
+<div class="ttc" id="astructMemoryAccess_html_a245b41566ec8297df73f91e1829670d5"><div class="ttname"><a href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">MemoryAccess::addNodeIndex</a></div><div class="ttdeci">void addNodeIndex(unsigned i)</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:146</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:8</div></div>
 <div class="ttc" id="astructRational_html"><div class="ttname"><a href="structRational.html">Rational</a></div><div class="ttdef"><b>Definition:</b> Rational.hpp:18</div></div>
 <div class="ttc" id="astructSchedule_html"><div class="ttname"><a href="structSchedule.html">Schedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:31</div></div>
+<div class="ttc" id="astructScheduledMemoryAccess_html"><div class="ttname"><a href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:38</div></div>
 <div class="ttc" id="astructScheduledNode_html"><div class="ttname"><a href="structScheduledNode.html">ScheduledNode</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:54</div></div>
 <div class="ttc" id="astructScheduledNode_html_afeebee9881046b7a8a5160060f26b84e"><div class="ttname"><a href="structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e">ScheduledNode::getMemAccesses</a></div><div class="ttdeci">auto getMemAccesses(llvm::ArrayRef&lt; MemoryAccess * &gt; memAccess) const -&gt; llvm::SmallVector&lt; ScheduledMemoryAccess &gt;</div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:112</div></div>
 <div class="ttc" id="astructSimplex_html"><div class="ttname"><a href="structSimplex.html">Simplex</a></div><div class="ttdef"><b>Definition:</b> Simplex.hpp:19</div></div>

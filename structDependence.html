@@ -78,19 +78,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aa748fb9b8aab077231271a0dd286d084"><td class="memItemLeft" align="right" valign="top"><a id="aa748fb9b8aab077231271a0dd286d084"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>pushToEdgeVector</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structDependence.html">Dependence</a> &gt;&gt; &amp;vec)</td></tr>
 <tr class="separator:aa748fb9b8aab077231271a0dd286d084"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00b6dcb1235e77972a20cab710529d76"><td class="memItemLeft" align="right" valign="top"><a id="a00b6dcb1235e77972a20cab710529d76"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>arrayPointer</b> () -&gt; const llvm::SCEV *</td></tr>
+<tr class="separator:a00b6dcb1235e77972a20cab710529d76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f03cfecfe1734c6c395bf3184269536"><td class="memItemLeft" align="right" valign="top"><a id="a8f03cfecfe1734c6c395bf3184269536"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDependence.html#a8f03cfecfe1734c6c395bf3184269536">isForward</a> () const -&gt; bool</td></tr>
 <tr class="memdesc:a8f03cfecfe1734c6c395bf3184269536"><td class="mdescLeft">&#160;</td><td class="mdescRight">indicates whether forward is non-empty <br /></td></tr>
 <tr class="separator:a8f03cfecfe1734c6c395bf3184269536"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a055ff4165f4f6cb9ac7f6140bd48a7b3"><td class="memItemLeft" align="right" valign="top"><a id="a055ff4165f4f6cb9ac7f6140bd48a7b3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesIn</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a055ff4165f4f6cb9ac7f6140bd48a7b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6986e2071c6579400504807eefb2a560"><td class="memItemLeft" align="right" valign="top"><a id="a6986e2071c6579400504807eefb2a560"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesOut</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a6986e2071c6579400504807eefb2a560"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad58192cb458a032647cec88b07358f51"><td class="memItemLeft" align="right" valign="top"><a id="ad58192cb458a032647cec88b07358f51"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSym</b> () const -&gt; size_t</td></tr>
-<tr class="separator:ad58192cb458a032647cec88b07358f51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1999cbc3419c1322663a02d854868852"><td class="memItemLeft" align="right" valign="top"><a id="a1999cbc3419c1322663a02d854868852"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesIn</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:a1999cbc3419c1322663a02d854868852"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afec24e2d72a4999086d4c9b89aebeaa6"><td class="memItemLeft" align="right" valign="top"><a id="afec24e2d72a4999086d4c9b89aebeaa6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodesOut</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
+<tr class="separator:afec24e2d72a4999086d4c9b89aebeaa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0565ad171ed19541045d3c1b7dc05f3"><td class="memItemLeft" align="right" valign="top"><a id="ab0565ad171ed19541045d3c1b7dc05f3"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDynSymDim</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ab0565ad171ed19541045d3c1b7dc05f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a15bc51d1b5458827ae5991cd6166919a"><td class="memItemLeft" align="right" valign="top"><a id="a15bc51d1b5458827ae5991cd6166919a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputIsLoad</b> () const -&gt; bool</td></tr>
 <tr class="separator:a15bc51d1b5458827ae5991cd6166919a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,6 +114,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="stru
 auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDependence.html#a42ac0a8c783d95ac08f2155a9640125b">getOutIndMat</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="memdesc:a42ac0a8c783d95ac08f2155a9640125b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structDependence.html#a42ac0a8c783d95ac08f2155a9640125b" title="getOutIndMat() -&gt; getOutNumLoops() x arrayDim()">getOutIndMat()</a> -&gt; getOutNumLoops() x arrayDim() <br /></td></tr>
 <tr class="separator:a42ac0a8c783d95ac08f2155a9640125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1295a3d97f4bdd81c24d7620daeba235"><td class="memItemLeft" align="right" valign="top"><a id="a1295a3d97f4bdd81c24d7620daeba235"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInOutPair</b> () const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt;</td></tr>
+<tr class="separator:a1295a3d97f4bdd81c24d7620daeba235"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af9854dbd4b1136111eb5785d04aad3c6"><td class="memItemLeft" align="right" valign="top"><a id="af9854dbd4b1136111eb5785d04aad3c6"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoreAndOther</b> () const -&gt; std::array&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;, 2 &gt;</td></tr>
 <tr class="separator:af9854dbd4b1136111eb5785d04aad3c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,18 +126,18 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNumLoops</b> () 
 <tr class="memitem:ad09ef7e5b9c145d4056fb6855c160286"><td class="memItemLeft" align="right" valign="top"><a id="ad09ef7e5b9c145d4056fb6855c160286"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ad09ef7e5b9c145d4056fb6855c160286"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41bf173c3f6ba6033bf9f3cc3b98f236"><td class="memItemLeft" align="right" valign="top"><a id="a41bf173c3f6ba6033bf9f3cc3b98f236"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t depth) const -&gt; bool</td></tr>
-<tr class="separator:a41bf173c3f6ba6033bf9f3cc3b98f236"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f1369007d2d5c7fc324a539128e2a3c"><td class="memItemLeft" align="right" valign="top"><a id="a8f1369007d2d5c7fc324a539128e2a3c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLambda</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a8f1369007d2d5c7fc324a539128e2a3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a986241973954c8fccb3c2bcbc260dfa0"><td class="memItemLeft" align="right" valign="top"><a id="a986241973954c8fccb3c2bcbc260dfa0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a986241973954c8fccb3c2bcbc260dfa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a262a65d8411a6aef1369e3619d640457"><td class="memItemLeft" align="right" valign="top"><a id="a262a65d8411a6aef1369e3619d640457"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPhiCoefficients</b> () const -&gt; size_t</td></tr>
-<tr class="separator:a262a65d8411a6aef1369e3619d640457"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a378b41b8447ffd5654e06790047aefb7"><td class="memItemLeft" align="right" valign="top"><a id="a378b41b8447ffd5654e06790047aefb7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInactive</b> (size_t depth) const -&gt; bool</td></tr>
+<tr class="separator:a378b41b8447ffd5654e06790047aefb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbac0aecfb64de898d191bb6d11ef87e"><td class="memItemLeft" align="right" valign="top"><a id="abbac0aecfb64de898d191bb6d11ef87e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLambda</b> () const -&gt; size_t</td></tr>
+<tr class="separator:abbac0aecfb64de898d191bb6d11ef87e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac32c22cabd8775fe4add5858749a1d9f"><td class="memItemLeft" align="right" valign="top"><a id="ac32c22cabd8775fe4add5858749a1d9f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumSymbols</b> () const -&gt; size_t</td></tr>
+<tr class="separator:ac32c22cabd8775fe4add5858749a1d9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acff21bf8b15961bbc5328553d6982f96"><td class="memItemLeft" align="right" valign="top"><a id="acff21bf8b15961bbc5328553d6982f96"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumPhiCoefficients</b> () const -&gt; size_t</td></tr>
+<tr class="separator:acff21bf8b15961bbc5328553d6982f96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e0b0a576f02470a194d4084fe217eee"><td class="memItemLeft" align="right" valign="top"><a id="a3e0b0a576f02470a194d4084fe217eee"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDepSatConstraintVar</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a3e0b0a576f02470a194d4084fe217eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -144,6 +150,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumDynam
 <tr class="memitem:aefd2f16bbfce6e12c0bb37ac2cc578e6"><td class="memItemLeft" align="right" valign="top"><a id="aefd2f16bbfce6e12c0bb37ac2cc578e6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>validate</b> ()</td></tr>
 <tr class="separator:aefd2f16bbfce6e12c0bb37ac2cc578e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc84acf1a7bc6f51b53d37767470f89d"><td class="memItemLeft" align="right" valign="top"><a id="adc84acf1a7bc6f51b53d37767470f89d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDepPoly</b> () -&gt; <a class="el" href="structDependencePolyhedra.html">DependencePolyhedra</a></td></tr>
+<tr class="separator:adc84acf1a7bc6f51b53d37767470f89d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ca33bf80759d3ec18f7f2edfb628c97"><td class="memItemLeft" align="right" valign="top"><a id="a9ca33bf80759d3ec18f7f2edfb628c97"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstraints</b> () const -&gt; size_t</td></tr>
 <tr class="separator:a9ca33bf80759d3ec18f7f2edfb628c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,48 +162,54 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatConst
 <tr class="memitem:a0026b2efe73ae3638da8c4f2cf723aff"><td class="memItemLeft" align="right" valign="top"><a id="a0026b2efe73ae3638da8c4f2cf723aff"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndConstants</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a0026b2efe73ae3638da8c4f2cf723aff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84344d5a12ccf10490c5c70da31acd60"><td class="memItemLeft" align="right" valign="top"><a id="a84344d5a12ccf10490c5c70da31acd60"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatLambda</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a84344d5a12ccf10490c5c70da31acd60"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e64f2b629465491ea925ff9d9f5a6ea"><td class="memItemLeft" align="right" valign="top"><a id="a8e64f2b629465491ea925ff9d9f5a6ea"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndLambda</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a8e64f2b629465491ea925ff9d9f5a6ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a208a6ead7ec418b1deac2197b87e4c63"><td class="memItemLeft" align="right" valign="top"><a id="a208a6ead7ec418b1deac2197b87e4c63"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhiCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a208a6ead7ec418b1deac2197b87e4c63"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1837f26626ccd6e3698d871ca1034c5"><td class="memItemLeft" align="right" valign="top"><a id="ab1837f26626ccd6e3698d871ca1034c5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhi0Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:ab1837f26626ccd6e3698d871ca1034c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4cadab8f318151405e4475a817ed722"><td class="memItemLeft" align="right" valign="top"><a id="af4cadab8f318151405e4475a817ed722"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhi1Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:af4cadab8f318151405e4475a817ed722"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc201c006ff5484de0ff7ea4f6cdd1fa"><td class="memItemLeft" align="right" valign="top"><a id="adc201c006ff5484de0ff7ea4f6cdd1fa"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhiCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:adc201c006ff5484de0ff7ea4f6cdd1fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a370cb8927ab349379bd2eb6450ba1292"><td class="memItemLeft" align="right" valign="top"><a id="a370cb8927ab349379bd2eb6450ba1292"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhi0Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a370cb8927ab349379bd2eb6450ba1292"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aec666cd1dd95648d2483ba7c8a6ed5e1"><td class="memItemLeft" align="right" valign="top"><a id="aec666cd1dd95648d2483ba7c8a6ed5e1"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhi1Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:aec666cd1dd95648d2483ba7c8a6ed5e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a376b57fae6154964215b7b28973b85da"><td class="memItemLeft" align="right" valign="top"><a id="a376b57fae6154964215b7b28973b85da"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatOmegaCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a376b57fae6154964215b7b28973b85da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41c53acace9e8d0e5a11b1f47de66532"><td class="memItemLeft" align="right" valign="top"><a id="a41c53acace9e8d0e5a11b1f47de66532"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndOmegaCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a41c53acace9e8d0e5a11b1f47de66532"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25c16a9797b8802de0467bc096bda29f"><td class="memItemLeft" align="right" valign="top"><a id="a25c16a9797b8802de0467bc096bda29f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatW</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:a25c16a9797b8802de0467bc096bda29f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd141c46c4ec6824466eac71c74cea22"><td class="memItemLeft" align="right" valign="top"><a id="abd141c46c4ec6824466eac71c74cea22"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="separator:abd141c46c4ec6824466eac71c74cea22"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10079cb557a36bf1ddcfcaaf6e33992a"><td class="memItemLeft" align="right" valign="top"><a id="a10079cb557a36bf1ddcfcaaf6e33992a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitSatisfaction</b> () const -&gt; std::tuple&lt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;&gt;</td></tr>
-<tr class="separator:a10079cb557a36bf1ddcfcaaf6e33992a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4eb8d2c7e9ecefa67677c154d6658cc"><td class="memItemLeft" align="right" valign="top"><a id="af4eb8d2c7e9ecefa67677c154d6658cc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitBounding</b> () const -&gt; std::tuple&lt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;&gt;</td></tr>
-<tr class="separator:af4eb8d2c7e9ecefa67677c154d6658cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70fb4ca7f2a3617bcbfdad383068e981"><td class="memItemLeft" align="right" valign="top"><a id="a70fb4ca7f2a3617bcbfdad383068e981"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a70fb4ca7f2a3617bcbfdad383068e981"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad15b9e86244d16ea071075d7b1c4f2fb"><td class="memItemLeft" align="right" valign="top"><a id="ad15b9e86244d16ea071075d7b1c4f2fb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndConstraints</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:ad15b9e86244d16ea071075d7b1c4f2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afd16a5c136e3f908e2d6e1109d2c6d12"><td class="memItemLeft" align="right" valign="top"><a id="afd16a5c136e3f908e2d6e1109d2c6d12"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatLambda</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:afd16a5c136e3f908e2d6e1109d2c6d12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ebe0989a74b5f95fa9c206bc86ae1ac"><td class="memItemLeft" align="right" valign="top"><a id="a6ebe0989a74b5f95fa9c206bc86ae1ac"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndLambda</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a6ebe0989a74b5f95fa9c206bc86ae1ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a593ccb42c6229b7d4ddc606e11273b58"><td class="memItemLeft" align="right" valign="top"><a id="a593ccb42c6229b7d4ddc606e11273b58"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhiCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a593ccb42c6229b7d4ddc606e11273b58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe9cb7fa46cdabacba54469b482672b1"><td class="memItemLeft" align="right" valign="top"><a id="afe9cb7fa46cdabacba54469b482672b1"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhi0Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:afe9cb7fa46cdabacba54469b482672b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c33bedff3166076c68e1c6793ba7c29"><td class="memItemLeft" align="right" valign="top"><a id="a8c33bedff3166076c68e1c6793ba7c29"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatPhi1Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a8c33bedff3166076c68e1c6793ba7c29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0523090bb60b58ade2d2e09b09a0a6d"><td class="memItemLeft" align="right" valign="top"><a id="ab0523090bb60b58ade2d2e09b09a0a6d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhiCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:ab0523090bb60b58ade2d2e09b09a0a6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36c4fd793a262e967c8b71be91eca8b4"><td class="memItemLeft" align="right" valign="top"><a id="a36c4fd793a262e967c8b71be91eca8b4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhi0Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a36c4fd793a262e967c8b71be91eca8b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f0432a935a22d68d85ac3fa938eca0e"><td class="memItemLeft" align="right" valign="top"><a id="a4f0432a935a22d68d85ac3fa938eca0e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndPhi1Coefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a4f0432a935a22d68d85ac3fa938eca0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc2f2e3d4b923096ff4af1cdfba96985"><td class="memItemLeft" align="right" valign="top"><a id="adc2f2e3d4b923096ff4af1cdfba96985"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatOmegaCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:adc2f2e3d4b923096ff4af1cdfba96985"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a82c478a1cb8f5001c76912cfeb6ec35b"><td class="memItemLeft" align="right" valign="top"><a id="a82c478a1cb8f5001c76912cfeb6ec35b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndOmegaCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a82c478a1cb8f5001c76912cfeb6ec35b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a093677a9894b4a4e38c0f2be245ec3cd"><td class="memItemLeft" align="right" valign="top"><a id="a093677a9894b4a4e38c0f2be245ec3cd"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSatW</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:a093677a9894b4a4e38c0f2be245ec3cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3406604c71694938c2ce24943a548bc"><td class="memItemLeft" align="right" valign="top"><a id="ad3406604c71694938c2ce24943a548bc"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getBndCoefs</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
+<tr class="separator:ad3406604c71694938c2ce24943a548bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5986a476a45074942d1d48e54c25384f"><td class="memItemLeft" align="right" valign="top"><a id="a5986a476a45074942d1d48e54c25384f"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitSatisfaction</b> () const -&gt; std::tuple&lt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;&gt;</td></tr>
+<tr class="separator:a5986a476a45074942d1d48e54c25384f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3951e0510ef39f4dd26989f57e20bd9a"><td class="memItemLeft" align="right" valign="top"><a id="a3951e0510ef39f4dd26989f57e20bd9a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>splitBounding</b> () const -&gt; std::tuple&lt; <a class="el" href="structLinearAlgebra_1_1StridedVector.html">StridedVector</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;&gt;</td></tr>
+<tr class="separator:a3951e0510ef39f4dd26989f57e20bd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a43dbbde1bff43d075737097312b7cfca"><td class="memItemLeft" align="right" valign="top"><a id="a43dbbde1bff43d075737097312b7cfca"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSatisfied</b> (const <a class="el" href="structSchedule.html">Schedule</a> &amp;schIn, const <a class="el" href="structSchedule.html">Schedule</a> &amp;schOut) const -&gt; bool</td></tr>
 <tr class="separator:a43dbbde1bff43d075737097312b7cfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
