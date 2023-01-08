@@ -80,12 +80,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPaths</b> () -&gt;
 <tr class="memitem:aac842a0f1ed5159e5407457de95cd3fd"><td class="memItemLeft" align="right" valign="top"><a id="aac842a0f1ed5159e5407457de95cd3fd"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPaths</b> () const -&gt; llvm::ArrayRef&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt;</td></tr>
 <tr class="separator:aac842a0f1ed5159e5407457de95cd3fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1356d766d6636f203902b648834ee1d"><td class="memItemLeft" align="right" valign="top"><a id="af1356d766d6636f203902b648834ee1d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSubLoops</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;</td></tr>
-<tr class="separator:af1356d766d6636f203902b648834ee1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a784fb2f96c8ade6abf0daf7a0ba5ca15"><td class="memItemLeft" align="right" valign="top"><a id="a784fb2f96c8ade6abf0daf7a0ba5ca15"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSubLoops</b> () const -&gt; llvm::ArrayRef&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;</td></tr>
-<tr class="separator:a784fb2f96c8ade6abf0daf7a0ba5ca15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52a8c9f89b9f02ad81870e6d82dbd350"><td class="memItemLeft" align="right" valign="top"><a id="a52a8c9f89b9f02ad81870e6d82dbd350"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSubLoops</b> () -&gt; llvm::MutableArrayRef&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt;</td></tr>
+<tr class="separator:a52a8c9f89b9f02ad81870e6d82dbd350"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcdde8ab5ef753b4288f15d969b732e6"><td class="memItemLeft" align="right" valign="top"><a id="abcdde8ab5ef753b4288f15d969b732e6"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSubLoops</b> () const -&gt; llvm::ArrayRef&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt;</td></tr>
+<tr class="separator:abcdde8ab5ef753b4288f15d969b732e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49ca95e7251697bba5cf45527acc2190"><td class="memItemLeft" align="right" valign="top"><a id="a49ca95e7251697bba5cf45527acc2190"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopSimplifyForm</b> () const -&gt; bool</td></tr>
 <tr class="separator:a49ca95e7251697bba5cf45527acc2190"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -104,15 +104,15 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const 
 <tr class="memitem:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memItemLeft" align="right" valign="top"><a id="ac836944aef0bd253ff09a9e4a7287d7d"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="el" href="structLoopTree.html">LoopTree</a> &amp;=default</td></tr>
 <tr class="separator:ac836944aef0bd253ff09a9e4a7287d7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae94104e58229cd24900039b656ad0519"><td class="memItemLeft" align="right" valign="top"><a id="ae94104e58229cd24900039b656ad0519"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; paths)</td></tr>
-<tr class="separator:ae94104e58229cd24900039b656ad0519"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a380752869fb42a4d00f5f15ee2043c96"><td class="memItemLeft" align="right" valign="top"><a id="a380752869fb42a4d00f5f15ee2043c96"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; paths)</td></tr>
+<tr class="separator:a380752869fb42a4d00f5f15ee2043c96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8708b1f957180ce0edd9ec2147d8ceb"><td class="memItemLeft" align="right" valign="top"><a id="ac8708b1f957180ce0edd9ec2147d8ceb"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE, <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> paths)</td></tr>
 <tr class="separator:ac8708b1f957180ce0edd9ec2147d8ceb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3bc48ae3fcae1375bf9cb4601c755133"><td class="memItemLeft" align="right" valign="top"><a id="a3bc48ae3fcae1375bf9cb4601c755133"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::Loop *L, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; aln, llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; paths)</td></tr>
-<tr class="separator:a3bc48ae3fcae1375bf9cb4601c755133"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9c1ab12c0d712cccb46e90b49afa6ce"><td class="memItemLeft" align="right" valign="top"><a id="ac9c1ab12c0d712cccb46e90b49afa6ce"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (llvm::Loop *L, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; aln, llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; sL, llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; paths)</td></tr>
+<tr class="separator:ac9c1ab12c0d712cccb46e90b49afa6ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memItemLeft" align="right" valign="top"><a id="ab9cb2aac21f4ca6e045d387d70833c7c"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; size_t</td></tr>
 <tr class="separator:ab9cb2aac21f4ca6e045d387d70833c7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -143,30 +143,30 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>dumpAllMemAccess</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aaa86cfca7e9051f24dd8d7a35b68a8fd"><td class="memItemLeft" align="right" valign="top"><a id="aaa86cfca7e9051f24dd8d7a35b68a8fd"></a>
-static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;paths, llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;subTree)</td></tr>
-<tr class="separator:aaa86cfca7e9051f24dd8d7a35b68a8fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af839c3990d9df2dda3e7d8d6e2e16d67"><td class="memItemLeft" align="right" valign="top"><a id="af839c3990d9df2dda3e7d8d6e2e16d67"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;trees, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;paths, llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;subTree)</td></tr>
+<tr class="separator:af839c3990d9df2dda3e7d8d6e2e16d67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a4373811944eb9ca6f1b72efb73a5bec3"><td class="memItemLeft" align="right" valign="top"><a id="a4373811944eb9ca6f1b72efb73a5bec3"></a>
 llvm::Loop *&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
 <tr class="separator:a4373811944eb9ca6f1b72efb73a5bec3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d0227c2a030a1b5ac3f1fd26a479352"><td class="memItemLeft" align="right" valign="top"><a id="a6d0227c2a030a1b5ac3f1fd26a479352"></a>
-llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subLoops</b></td></tr>
-<tr class="separator:a6d0227c2a030a1b5ac3f1fd26a479352"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46f9985a0befab74c885d502cbc403a3"><td class="memItemLeft" align="right" valign="top"><a id="a46f9985a0befab74c885d502cbc403a3"></a>
+llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>subLoops</b></td></tr>
+<tr class="separator:a46f9985a0befab74c885d502cbc403a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af0e01210bccf8cd59a75112f08b833f7"><td class="memItemLeft" align="right" valign="top"><a id="af0e01210bccf8cd59a75112f08b833f7"></a>
 llvm::SmallVector&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>paths</b></td></tr>
 <tr class="separator:af0e01210bccf8cd59a75112f08b833f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ade55af6d62fd46d8352542f0c365fadb"><td class="memItemLeft" align="right" valign="top"><a id="ade55af6d62fd46d8352542f0c365fadb"></a>
 <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>affineLoop</b></td></tr>
 <tr class="separator:ade55af6d62fd46d8352542f0c365fadb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b480f09d1a582089b0d959a754d0eab"><td class="memItemLeft" align="right" valign="top"><a id="a9b480f09d1a582089b0d959a754d0eab"></a>
-<a class="el" href="structLoopTree.html">LoopTree</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>parentLoop</b> {nullptr}</td></tr>
-<tr class="separator:a9b480f09d1a582089b0d959a754d0eab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aee1cd5c7cfdb6d3fd8fdde4ca731a20d"><td class="memItemLeft" align="right" valign="top"><a id="aee1cd5c7cfdb6d3fd8fdde4ca731a20d"></a>
-llvm::SmallVector&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a>, 0 &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>memAccesses</b> {}</td></tr>
-<tr class="separator:aee1cd5c7cfdb6d3fd8fdde4ca731a20d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51b6985ec3880b4c066aecb16af232dd"><td class="memItemLeft" align="right" valign="top"><a id="a51b6985ec3880b4c066aecb16af232dd"></a>
+<a class="el" href="structOptional.html">Optional</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>parentLoop</b> {nullptr}</td></tr>
+<tr class="separator:a51b6985ec3880b4c066aecb16af232dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d4cb9d9808ca1b4e15ab7f3d2140dab"><td class="memItemLeft" align="right" valign="top"><a id="a2d4cb9d9808ca1b4e15ab7f3d2140dab"></a>
+llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>memAccesses</b> {}</td></tr>
+<tr class="separator:a2d4cb9d9808ca1b4e15ab7f3d2140dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>

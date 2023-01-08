@@ -72,6 +72,14 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a343e8ad8af62a3d1303005ad852c1d39"><td class="memItemLeft" align="right" valign="top"><a id="a343e8ad8af62a3d1303005ad852c1d39"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a343e8ad8af62a3d1303005ad852c1d39"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
+<tr class="separator:a343e8ad8af62a3d1303005ad852c1d39"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a685e16ba012a1a0373eeb6c1d21a5666"><td class="memItemLeft" align="right" valign="top"><a id="a685e16ba012a1a0373eeb6c1d21a5666"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a685e16ba012a1a0373eeb6c1d21a5666">getFusionOmega</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt;</td></tr>
+<tr class="memdesc:a685e16ba012a1a0373eeb6c1d21a5666"><td class="mdescLeft">&#160;</td><td class="mdescRight">omegas order is [outer &lt;-&gt; inner] <br /></td></tr>
+<tr class="separator:a685e16ba012a1a0373eeb6c1d21a5666"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11d0f5428305d51ac8f5eb5854c35a78"><td class="memItemLeft" align="right" valign="top"><a id="a11d0f5428305d51ac8f5eb5854c35a78"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
 <tr class="separator:a11d0f5428305d51ac8f5eb5854c35a78"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -90,12 +98,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b
 <tr class="memitem:a020b59bb864ab16a66f7cb6dc2eccdc3"><td class="memItemLeft" align="right" valign="top"><a id="a020b59bb864ab16a66f7cb6dc2eccdc3"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNodes</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
 <tr class="separator:a020b59bb864ab16a66f7cb6dc2eccdc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ec27e2f244fddf5e512a20f2f8b19f2"><td class="memItemLeft" align="right" valign="top"><a id="a8ec27e2f244fddf5e512a20f2f8b19f2"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; const llvm::SmallVector&lt; const llvm::SCEV *, stackArrayDims &gt; &amp;</td></tr>
-<tr class="separator:a8ec27e2f244fddf5e512a20f2f8b19f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a1545761eb57d9c254fde9e9b94b56e"><td class="memItemLeft" align="right" valign="top"><a id="a7a1545761eb57d9c254fde9e9b94b56e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; const llvm::SmallVector&lt; const llvm::SCEV *, stackArrayDims &gt; &amp;</td></tr>
-<tr class="separator:a7a1545761eb57d9c254fde9e9b94b56e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97764b32618eae923ba73dc771eebec4"><td class="memItemLeft" align="right" valign="top"><a id="a97764b32618eae923ba73dc771eebec4"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSizes</b> () const -&gt; const llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;</td></tr>
+<tr class="separator:a97764b32618eae923ba73dc771eebec4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55120dd1caa41b01a00b91d8cbc3cfca"><td class="memItemLeft" align="right" valign="top"><a id="a55120dd1caa41b01a00b91d8cbc3cfca"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSymbolicOffsets</b> () const -&gt; const llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; &amp;</td></tr>
+<tr class="separator:a55120dd1caa41b01a00b91d8cbc3cfca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a985e9e2f717c2b8cdcc76d9ae5812ca1"><td class="memItemLeft" align="right" valign="top"><a id="a985e9e2f717c2b8cdcc76d9ae5812ca1"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isStore</b> () const -&gt; bool</td></tr>
 <tr class="separator:a985e9e2f717c2b8cdcc76d9ae5812ca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,9 +124,7 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () const
 <tr class="separator:ab9995b068dc4bb0e4444c50ac8b46b96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3e9f24fe6b5cb0b59091cea5dfdfcb0"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:af3e9f24fe6b5cb0b59091cea5dfdfcb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="memItemLeft" align="right" valign="top"><a id="a2d1006fd9552a0ef88f8fa33fac6c133"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133">indexMatrix</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
-<tr class="memdesc:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() <br /></td></tr>
+<tr class="memitem:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133">indexMatrix</a> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;</td></tr>
 <tr class="separator:a2d1006fd9552a0ef88f8fa33fac6c133"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7cf0bb59a38e25ce01c82713ac665a7a"><td class="memItemLeft" align="right" valign="top"><a id="a7cf0bb59a38e25ce01c82713ac665a7a"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>offsetMatrix</b> () -&gt; <a class="el" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix</a>&lt; int64_t &gt;</td></tr>
@@ -138,9 +144,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoad</b> () -&gt; 
 <tr class="memitem:a5bfa7420a8f6e5507c11c0093b5870e3"><td class="memItemLeft" align="right" valign="top"><a id="a5bfa7420a8f6e5507c11c0093b5870e3"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStore</b> () -&gt; llvm::StoreInst *</td></tr>
 <tr class="separator:a5bfa7420a8f6e5507c11c0093b5870e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a117826887fa2f9726dc6c845a00a2f87"><td class="memItemLeft" align="right" valign="top"><a id="a117826887fa2f9726dc6c845a00a2f87"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t d)</td></tr>
-<tr class="separator:a117826887fa2f9726dc6c845a00a2f87"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5cae482709b9c7165059d125c9c46fb7"><td class="memItemLeft" align="right" valign="top"><a id="a5cae482709b9c7165059d125c9c46fb7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getArrayPointer</b> () const -&gt; const llvm::SCEV *</td></tr>
 <tr class="separator:a5cae482709b9c7165059d125c9c46fb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,15 +157,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdgeOut</b> (size_
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">addNodeIndex</a> (unsigned i)</td></tr>
 <tr class="memdesc:a245b41566ec8297df73f91e1829670d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a node index <br /></td></tr>
 <tr class="separator:a245b41566ec8297df73f91e1829670d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70f52db80815ed467c61c33ec0bd2bc0"><td class="memItemLeft" align="right" valign="top"><a id="a70f52db80815ed467c61c33ec0bd2bc0"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThrough</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x) -&gt; bool</td></tr>
-<tr class="separator:a70f52db80815ed467c61c33ec0bd2bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84286762ace543f370f25c19e02bbd96"><td class="memItemLeft" align="right" valign="top"><a id="a84286762ace543f370f25c19e02bbd96"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; unsigned &gt;</td></tr>
-<tr class="separator:a84286762ace543f370f25c19e02bbd96"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f6b3782393f2717cde261c53e9c4db4"><td class="memItemLeft" align="right" valign="top"><a id="a6f6b3782393f2717cde261c53e9c4db4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>truncateSchedule</b> () -&gt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *</td></tr>
-<tr class="separator:a6f6b3782393f2717cde261c53e9c4db4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cdf23f253f0a3e47d52e6b2f688f050"><td class="memItemLeft" align="right" valign="top"><a id="a4cdf23f253f0a3e47d52e6b2f688f050"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThrough</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;other) -&gt; bool</td></tr>
+<tr class="separator:a4cdf23f253f0a3e47d52e6b2f688f050"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04b801a49a84cc09c8d24fcdcb12f157"><td class="memItemLeft" align="right" valign="top"><a id="a04b801a49a84cc09c8d24fcdcb12f157"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>peelLoops</b> (size_t numToPeel)</td></tr>
+<tr class="separator:a04b801a49a84cc09c8d24fcdcb12f157"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc433034fc754e8307d0c673ca22e518"><td class="memItemLeft" align="right" valign="top"><a id="afc433034fc754e8307d0c673ca22e518"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>allConstantIndices</b> () const -&gt; bool</td></tr>
 <tr class="separator:afc433034fc754e8307d0c673ca22e518"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,9 +172,12 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (const
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6ebfe2027683b7b025ed526355f0d743"><td class="memItemLeft" align="right" valign="top"><a id="a6ebfe2027683b7b025ed526355f0d743"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::BumpPtrAllocator &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; indMatT, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; offsets, llvm::ArrayRef&lt; unsigned &gt; o) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
-<tr class="separator:a6ebfe2027683b7b025ed526355f0d743"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85f34f4b13994f5cf211638de9114581"><td class="memItemLeft" align="right" valign="top"><a id="a85f34f4b13994f5cf211638de9114581"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::BumpPtrAllocator &amp;alloc, const llvm::SCEVUnknown *arrayPointer, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; unsigned &gt; o) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a85f34f4b13994f5cf211638de9114581"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e8bbac4e138d6aeef6558cf7b8116a4"><td class="memItemLeft" align="right" valign="top"><a id="a8e8bbac4e138d6aeef6558cf7b8116a4"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::BumpPtrAllocator &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; indMatT, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; offsets, <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; unsigned &gt; o) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a8e8bbac4e138d6aeef6558cf7b8116a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0062ff34fe54995918590f2b87fd2db2"><td class="memItemLeft" align="right" valign="top"><a id="a0062ff34fe54995918590f2b87fd2db2"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a0062ff34fe54995918590f2b87fd2db2">typeAlignment</a> (const llvm::SCEV *S) -&gt; llvm::Align</td></tr>
 <tr class="memdesc:a0062ff34fe54995918590f2b87fd2db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize alignment from an elSize SCEV. <br /></td></tr>
@@ -185,7 +188,7 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="af3e9f24fe6b5cb0b59091cea5dfdfcb0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af3e9f24fe6b5cb0b59091cea5dfdfcb0">&#9670;&nbsp;</a></span>indexMatrix()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#af3e9f24fe6b5cb0b59091cea5dfdfcb0">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -206,7 +209,33 @@ constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>gcdK
   </tr>
 </table>
 </div><div class="memdoc">
-<p><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (j : J) for (i : I) A[i, i + j] </p>
+<p><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order Maps loop indVars to array indices Letting <code>i</code> be the indVars and <code>d</code> the indices: <a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a>' * i == d e.g. <code>indVars = [i, j]</code> and indexMatrix = [ 1 1; 0 1] corresponds to A[i, i + j] Note that <code>[i, j]</code> refers to loops in innermost -&gt; outermost order, i.e. for (j : J) for (i : I) A[i, i + j] </p>
+
+</div>
+</div>
+<a id="a2d1006fd9552a0ef88f8fa33fac6c133"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d1006fd9552a0ef88f8fa33fac6c133">&#9670;&nbsp;</a></span>indexMatrix() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto MemoryAccess::indexMatrix </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt;int64_t&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p><a class="el" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix()</a> -&gt; getNumLoops() x arrayDim() loops are in [innermost -&gt; outermost] order </p>
 
 </div>
 </div>

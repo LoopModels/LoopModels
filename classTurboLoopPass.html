@@ -84,11 +84,11 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>run</b> (llvm::Functi
 <tr class="separator:af9807d01afcf6c6e021e6e72d5cae415"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61d15982d3d7c2d1918da31c454a2f10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10">initializeLoopForest</a> ()</td></tr>
 <tr class="separator:a61d15982d3d7c2d1918da31c454a2f10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeef5b3c39dc10c8350ef7b89efff46de"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#aeef5b3c39dc10c8350ef7b89efff46de">pushLoopTree</a> (llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</td></tr>
-<tr class="separator:aeef5b3c39dc10c8350ef7b89efff46de"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae9df924206cb37b193e723f9c1af21ec"><td class="memItemLeft" align="right" valign="top"><a id="ae9df924206cb37b193e723f9c1af21ec"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;branches, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;branchBlocks, llvm::BasicBlock *BB, llvm::Loop *L)</td></tr>
-<tr class="separator:ae9df924206cb37b193e723f9c1af21ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4025e06e8ef75d99d76d71894bb266d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTurboLoopPass.html#aa4025e06e8ef75d99d76d71894bb266d">pushLoopTree</a> (llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E) -&gt; size_t</td></tr>
+<tr class="separator:aa4025e06e8ef75d99d76d71894bb266d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf193cbe627299124cc525581865c825"><td class="memItemLeft" align="right" valign="top"><a id="acf193cbe627299124cc525581865c825"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>split</b> (llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;branches, llvm::SmallVectorImpl&lt; <a class="el" href="structPredicate_1_1Map.html">Predicate::Map</a> &gt; &amp;branchBlocks, llvm::BasicBlock *BB, llvm::Loop *L)</td></tr>
+<tr class="separator:acf193cbe627299124cc525581865c825"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5c4a65020e14d0d99344a6521a373bb0"><td class="memItemLeft" align="right" valign="top"><a id="a5c4a65020e14d0d99344a6521a373bb0"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopPreHeader</b> (const llvm::BasicBlock *BB) const -&gt; bool</td></tr>
 <tr class="separator:a5c4a65020e14d0d99344a6521a373bb0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -164,9 +164,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>blackListAllDe
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a2ecbf7435c8a0d0db4db065691547c52"><td class="memItemLeft" align="right" valign="top"><a id="a2ecbf7435c8a0d0db4db065691547c52"></a>
-llvm::SmallVector&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopForests</b></td></tr>
-<tr class="separator:a2ecbf7435c8a0d0db4db065691547c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27af78594f3825302e6c922473a50dbf"><td class="memItemLeft" align="right" valign="top"><a id="a27af78594f3825302e6c922473a50dbf"></a>
+llvm::SmallVector&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopForests</b></td></tr>
+<tr class="separator:a27af78594f3825302e6c922473a50dbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a64be941fbe1d9c48653e4eae2cc2f6bc"><td class="memItemLeft" align="right" valign="top"><a id="a64be941fbe1d9c48653e4eae2cc2f6bc"></a>
 llvm::DenseMap&lt; llvm::Loop *, <a class="el" href="structLoopTree.html">LoopTree</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loopMap</b></td></tr>
 <tr class="separator:a64be941fbe1d9c48653e4eae2cc2f6bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -229,8 +229,8 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b>
 
 </div>
 </div>
-<a id="aeef5b3c39dc10c8350ef7b89efff46de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeef5b3c39dc10c8350ef7b89efff46de">&#9670;&nbsp;</a></span>pushLoopTree()</h2>
+<a id="aa4025e06e8ef75d99d76d71894bb266d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4025e06e8ef75d99d76d71894bb266d">&#9670;&nbsp;</a></span>pushLoopTree()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -241,7 +241,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>registerCount</b>
         <tr>
           <td class="memname">auto TurboLoopPass::pushLoopTree </td>
           <td>(</td>
-          <td class="paramtype">llvm::SmallVectorImpl&lt; <a class="el" href="structLoopTree.html">LoopTree</a> * &gt; &amp;&#160;</td>
+          <td class="paramtype">llvm::SmallVectorImpl&lt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structLoopTree.html">LoopTree</a> &gt;&gt; &amp;&#160;</td>
           <td class="paramname"><em>pForest</em>, </td>
         </tr>
         <tr>
