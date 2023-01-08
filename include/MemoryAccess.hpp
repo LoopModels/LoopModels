@@ -1,8 +1,8 @@
 #pragma once
 #include "./BitSets.hpp"
 #include "./Loops.hpp"
-#include "Math.hpp"
-#include "Utilities.hpp"
+#include "./Math.hpp"
+#include "./Utilities.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +14,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
+#include <strings.h>
 
 struct Dependence;
 
@@ -31,9 +32,6 @@ private:
     return arrayDim * numLoops + numLoops + arrayDim * numSymbols + 1;
   }
 
-  static constexpr size_t stackArrayDims = 3;
-  static constexpr size_t stackNumLoops = 4;
-  static constexpr size_t stackNumSymbols = 1;
   NotNull<const llvm::SCEVUnknown> basePointer;
   NotNull<AffineLoopNest<>> loop;
   // This field will store either the loaded instruction, or the store
@@ -45,62 +43,91 @@ private:
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  llvm::SmallVector<const llvm::SCEV *, stackArrayDims> sizes;
-  llvm::SmallVector<const llvm::SCEV *, stackArrayDims> symbolicOffsets;
-  // omegas order is [outer <-> inner]
-  llvm::SmallVector<unsigned, 8> omegas;
+  llvm::SmallVector<const llvm::SCEV *, 3> sizes;
+  llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
+  // unsigned (instead of ptr) as we build up edges
+  // and I don't want to relocate pointers when resizing vector
   BitSet<> edgesIn;
   BitSet<> edgesOut;
   BitSet<> nodeIndex;
-  // `struct hack` - we can over allocate on construction of the MemoryAccess
-  // and then access the extra memory without need for `reinterpret_cast`
-  // through this pointer.
-  // https://www.geeksforgeeks.org/struct-hack/
-  // I am not sure to what extent this is kosher.
+  // I wish there were some way to opt into "I'm using a c99 extension"
+  // This seems like such a neat trick; it's a shame that it emits
+  // warnings despite being supported as a gnu extension?
+  // https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-length-array"
+#else
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
   int64_t mem[0]; // NOLINT(modernize-avoid-c-arrays)
-  //
-  // unsigned (instead of ptr) as we build up edges
-  // and I don't want to relocate pointers when resizing vector
+#ifdef __clang__
+#pragma clang diagnostic pop
+#else
+#pragma GCC diagnostic pop
+#endif
   // schedule indicated by `1` top bit, remainder indicates loop
   [[nodiscard]] constexpr auto data() -> NotNull<int64_t> { return mem; }
   [[nodiscard]] constexpr auto data() const -> NotNull<const int64_t> {
     return mem;
   }
+  [[nodiscard]] auto omegaOffset() const -> size_t {
+    return memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());
+  }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user,
                llvm::SmallVector<const llvm::SCEV *, 3> sz,
-               llvm::SmallVector<const llvm::SCEV *, 3> off,
-               llvm::SmallVector<unsigned, 8> o)
+               llvm::SmallVector<const llvm::SCEV *, 3> off)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
-      omegas(std::move(o)){};
+      sizes(std::move(sz)), symbolicOffsets(std::move(off)){};
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
-               llvm::Instruction *user,
-               llvm::SmallVector<const llvm::SCEV *, 3> sz,
-               llvm::SmallVector<const llvm::SCEV *, 3> off,
-               llvm::ArrayRef<unsigned> o)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      sizes(std::move(sz)), symbolicOffsets(std::move(off)),
-      omegas(o.begin(), o.end()){};
+               llvm::Instruction *user)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
 
 public:
+  static auto construct(llvm::BumpPtrAllocator &alloc,
+                        const llvm::SCEVUnknown *arrayPointer,
+                        AffineLoopNest<true> &loopRef, llvm::Instruction *user,
+                        PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
+    size_t numLoops = loopRef.getNumLoops();
+    assert(o.size() == numLoops + 1);
+    size_t memNeeded = numLoops + 1;
+    auto *mem =
+      alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
+    auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
+    ma->getFusionOmega() = o;
+    return ma;
+  }
   static auto
   construct(llvm::BumpPtrAllocator &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMatT,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
-            PtrMatrix<int64_t> offsets, llvm::ArrayRef<unsigned> o)
+            PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
     -> NotNull<MemoryAccess> {
     auto [sz, off] = std::move(szOff);
     size_t arrayDim = sz.size();
     size_t numLoops = loopRef.getNumLoops();
+    assert(o.size() == numLoops + 1);
     size_t numSymbols = size_t(offsets.numCol());
     size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
       alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
     auto *ma = new (mem)
-      MemoryAccess(arrayPtr, loopRef, user, std::move(sz), std::move(off), o);
+      MemoryAccess(arrayPtr, loopRef, user, std::move(sz), std::move(off));
+    ma->indexMatrix() = indMatT.transpose();
+    ma->offsetMatrix() = offsets;
+    ma->getFusionOmega() = o;
     return ma;
+  }
+  /// omegas order is [outer <-> inner]
+  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
+    return {data() + omegaOffset(), getNumLoops() + 1};
+  }
+  /// omegas order is [outer <-> inner]
+  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
+    return {data() + omegaOffset(), getNumLoops() + 1};
   }
   [[nodiscard]] constexpr auto inputEdges() const -> const BitSet<> & {
     return edgesIn;
@@ -119,11 +146,11 @@ public:
     return nodeIndex;
   }
   [[nodiscard]] auto getSizes() const
-    -> const llvm::SmallVector<const llvm::SCEV *, stackArrayDims> & {
+    -> const llvm::SmallVector<const llvm::SCEV *, 3> & {
     return sizes;
   }
   [[nodiscard]] auto getSymbolicOffsets() const
-    -> const llvm::SmallVector<const llvm::SCEV *, stackArrayDims> & {
+    -> const llvm::SmallVector<const llvm::SCEV *, 3> & {
     return symbolicOffsets;
   }
   [[nodiscard]] auto isStore() const -> bool {
@@ -136,7 +163,6 @@ public:
     return 1 + symbolicOffsets.size();
   }
   [[nodiscard]] auto getNumLoops() const -> size_t {
-    assert(loop->getNumLoops() + 1 == omegas.size());
     return loop->getNumLoops();
   }
 
@@ -148,6 +174,7 @@ public:
   // 	return dim*numLoops +
   // }
   /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// loops are in [innermost -> outermost] order
   /// Maps loop indVars to array indices
   /// Letting `i` be the indVars and `d` the indices:
   /// indexMatrix()' * i == d
@@ -163,6 +190,7 @@ public:
     return MutPtrMatrix<int64_t>{data(), getNumLoops(), d, d};
   }
   /// indexMatrix() -> getNumLoops() x arrayDim()
+  /// loops are in [innermost -> outermost] order
   [[nodiscard]] auto indexMatrix() const -> PtrMatrix<int64_t> {
     const size_t d = getArrayDim();
     return PtrMatrix<int64_t>{data(), getNumLoops(), d, d};
@@ -197,11 +225,6 @@ public:
       return llvm::Align(C->getAPInt().getZExtValue());
     return llvm::Align{1};
   }
-  void resize(size_t d) {
-    // sizes.resize(d);
-    // indices.resize(
-    //   memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
-  }
   [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
     return basePointer;
   }
@@ -218,25 +241,43 @@ public:
   // size_t getNumLoops() const { return ref->getNumLoops(); }
   // size_t getNumAxes() const { return ref->axes.size(); }
   // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-  auto fusedThrough(MemoryAccess &x) -> bool {
-    size_t numLoopsCommon = std::min(getNumLoops(), x.getNumLoops());
-    return std::equal(omegas.begin(), omegas.begin() + numLoopsCommon,
-                      x.omegas.begin());
+  auto fusedThrough(MemoryAccess &other) -> bool {
+    size_t numLoopsCommon = std::min(getNumLoops(), other.getNumLoops());
+    auto thisOmega = getFusionOmega();
+    auto otherOmega = other.getFusionOmega();
+    return std::equal(thisOmega.begin(), thisOmega.begin() + numLoopsCommon,
+                      otherOmega.begin());
   }
   // note returns true if unset
   // inline PtrMatrix<int64_t> getPhi() const { return schedule.getPhi(); }
-  [[nodiscard]] inline auto getFusionOmega() const -> PtrVector<unsigned> {
-    return PtrVector<unsigned>{omegas.data(), omegas.size()};
-  }
   // inline PtrVector<int64_t> getSchedule(size_t loop) const {
   //     return schedule.getPhi()(loop, _);
   // }
   // FIXME: needs to truncate indexMatrix, offsetVector, etc
-  inline auto truncateSchedule() -> MemoryAccess * {
-    // we're truncating down to `ref.getNumLoops()`, discarding outer most
-    size_t dropCount = omegas.size() - (getNumLoops() + 1);
-    if (dropCount) omegas.erase(omegas.begin(), omegas.begin() + dropCount);
-    return this;
+  void peelLoops(size_t numToPeel) {
+    assert(numToPeel > 0 && "Shouldn't be peeling 0 loops");
+    assert(numToPeel <= getNumLoops() && "Cannot peel more loops than exist");
+    // we're dropping the outer-most `numToPeel` loops
+    // current memory layout:
+    // - indexMatrix (getNumLoops() x getArrayDim())
+    // - offsetMatrix (getArrayDim() x getNumSymbols())
+    // - fusionOmegas (getNumLoops()+1)
+    //
+    // indexMatrix rows are in innermost -> outermost order
+    // fusionOmegas are in outer<->inner order
+    // so we copy `offsetMatrix` `numToPeel * getArrayDim()` elements earlier
+    int64_t *p = data();
+    // When copying overlapping ranges, std::copy is appropriate when copying to
+    // the left (beginning of the destination range is outside the source range)
+    // while std::copy_backward is appropriate when copying to the right (end of
+    // the destination range is outside the source range).
+    // https://en.cppreference.com/w/cpp/algorithm/copy
+    int64_t *offOld = p + getArrayDim() * getNumLoops();
+    int64_t *fusOld = offOld + getArrayDim() * getNumSymbols();
+    int64_t *offNew = p + getArrayDim() * (getNumLoops() - numToPeel);
+    int64_t *fusNew = offNew + getArrayDim() * getNumSymbols();
+    std::copy(offOld, fusOld, offNew);
+    std::copy(fusOld + numToPeel, fusOld + getNumLoops() + 1, fusNew);
   }
   [[nodiscard]] auto allConstantIndices() const -> bool {
     return symbolicOffsets.size() == 0;

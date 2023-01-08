@@ -2,8 +2,8 @@
 
 #include "./Instruction.hpp"
 #include "./LoopBlock.hpp"
+#include "./LoopForest.hpp"
 #include "./Predicate.hpp"
-#include "LoopForest.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

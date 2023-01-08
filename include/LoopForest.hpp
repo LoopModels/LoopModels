@@ -4,6 +4,7 @@
 #include "./Instruction.hpp"
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
+#include "./Utilities.hpp"
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -22,7 +23,7 @@
 
 struct LoopTree {
   [[no_unique_address]] llvm::Loop *loop;
-  [[no_unique_address]] llvm::SmallVector<LoopTree *> subLoops;
+  [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> subLoops;
   // length number of sub loops + 1
   // - this loop's header to first loop preheader
   // - first loop's exit to next loop's preheader...
@@ -32,20 +33,24 @@ struct LoopTree {
   // in addition to requiring simplify form, we require a single exit block
   [[no_unique_address]] llvm::SmallVector<Predicate::Map> paths;
   [[no_unique_address]] AffineLoopNest<true> affineLoop;
-  [[no_unique_address]] LoopTree *parentLoop{nullptr};
-  [[no_unique_address]] llvm::SmallVector<MemoryAccess, 0> memAccesses{};
+  [[no_unique_address]] Optional<LoopTree *> parentLoop{nullptr};
+  [[no_unique_address]] llvm::SmallVector<NotNull<MemoryAccess>> memAccesses{};
 
   auto getPaths() -> llvm::MutableArrayRef<Predicate::Map> { return paths; }
   auto getPaths() const -> llvm::ArrayRef<Predicate::Map> { return paths; }
-  auto getSubLoops() -> llvm::MutableArrayRef<LoopTree *> { return subLoops; }
-  auto getSubLoops() const -> llvm::ArrayRef<LoopTree *> { return subLoops; }
+  auto getSubLoops() -> llvm::MutableArrayRef<NotNull<LoopTree>> {
+    return subLoops;
+  }
+  auto getSubLoops() const -> llvm::ArrayRef<NotNull<LoopTree>> {
+    return subLoops;
+  }
   [[nodiscard]] auto isLoopSimplifyForm() const -> bool {
     return loop->isLoopSimplifyForm();
   }
   // mostly to get a loop to print
   [[nodiscard]] auto getOuterLoop() const -> llvm::Loop * {
     if (loop) return loop;
-    for (auto *subLoop : subLoops)
+    for (auto subLoop : subLoops)
       if (auto *L = subLoop->getOuterLoop()) return L;
     return nullptr;
   }
@@ -53,7 +58,7 @@ struct LoopTree {
   LoopTree(LoopTree &&) = default;
   auto operator=(const LoopTree &) -> LoopTree & = default;
   auto operator=(LoopTree &&) -> LoopTree & = default;
-  LoopTree(llvm::SmallVector<LoopTree *> sL,
+  LoopTree(llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> paths)
     : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
 
@@ -62,7 +67,7 @@ struct LoopTree {
     : loop(L), paths({std::move(paths)}), affineLoop(L, BT, SE) {}
 
   LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
-           llvm::SmallVector<LoopTree *> sL,
+           llvm::SmallVector<NotNull<LoopTree>> sL,
            llvm::SmallVector<Predicate::Map> paths)
     : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
       affineLoop(std::move(aln)) {
@@ -93,16 +98,16 @@ struct LoopTree {
     }
     if (loop) loopMap.insert(std::make_pair(loop, this));
   }
-  auto begin() { return subLoops.begin(); }
-  auto end() { return subLoops.end(); }
+  [[nodiscard]] auto begin() { return subLoops.begin(); }
+  [[nodiscard]] auto end() { return subLoops.end(); }
   [[nodiscard]] auto begin() const { return subLoops.begin(); }
   [[nodiscard]] auto end() const { return subLoops.end(); }
   [[nodiscard]] auto size() const -> size_t { return subLoops.size(); }
 
   static void split(llvm::BumpPtrAllocator &alloc,
-                    llvm::SmallVectorImpl<LoopTree *> &trees,
+                    llvm::SmallVectorImpl<NotNull<LoopTree>> &trees,
                     llvm::SmallVectorImpl<Predicate::Map> &paths,
-                    llvm::SmallVectorImpl<LoopTree *> &subTree) {
+                    llvm::SmallVectorImpl<NotNull<LoopTree>> &subTree) {
     if (subTree.size()) {
       assert(1 + subTree.size() == paths.size());
       auto *newTree =

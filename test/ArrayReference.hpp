@@ -2,7 +2,9 @@
 #pragma once
 #include "../include/Loops.hpp"
 #include "../include/MemoryAccess.hpp"
+#include "Math.hpp"
 #include <cstdint>
+#include <llvm/Support/Allocator.h>
 
 struct ArrayReference {
   const llvm::SCEVUnknown *basePointer;
@@ -23,11 +25,12 @@ struct ArrayReference {
     return size_t(offMat.numRow());
   }
 };
-inline auto createMemAccess(ArrayReference &ar, llvm::Instruction *I,
-                            llvm::ArrayRef<unsigned> omegas) -> MemoryAccess {
-  MemoryAccess mem{ar.basePointer, *ar.loop, I, ar.sizes, {}, omegas};
-  mem.resize(size_t(ar.offsetMatrix().numRow()));
-  mem.indexMatrix() = ar.indexMatrix();
-  mem.offsetMatrix() = ar.offsetMatrix();
-  return mem;
+inline auto createMemAccess(llvm::BumpPtrAllocator &alloc, ArrayReference &ar,
+                            llvm::Instruction *I,
+                            llvm::ArrayRef<unsigned> omegas)
+  -> NotNull<MemoryAccess> {
+
+  IntMatrix indMatT(ar.indMat.transpose());
+  return MemoryAccess::construct(alloc, ar.basePointer, *ar.loop, I, indMatT,
+                                 {ar.sizes, {}}, ar.offsetMatrix(), omegas);
 }

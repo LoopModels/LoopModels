@@ -1,6 +1,6 @@
 #pragma once
+#include "./Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "Math.hpp"
 #include <cstdint>
 
 /// Represents a memory access that has been rotated according to some affine
@@ -48,12 +48,12 @@ struct ScheduledMemoryAccess {
   [[no_unique_address]] MemoryAccess *access;
   // may be `false` while `access->isStore()==true`
   // which indicates a reload from this address.
-  [[no_unique_address]] size_t denominator{1};
+  [[no_unique_address]] int64_t denominator{1};
   [[no_unique_address]] bool isStore;
   ScheduledMemoryAccess(MemoryAccess *access, PtrMatrix<int64_t> Pinv,
                         int64_t denominator, PtrVector<int64_t> omega,
                         bool isStore)
-    : access(access), isStore(isStore) {
+    : access(access), denominator(denominator), isStore(isStore) {
     IntMatrix MStarT = access->indexMatrix().transpose() * Pinv;
     Vector<int64_t> omegaStar = access->offsetMatrix()(_, 0) - MStarT * omega;
   }

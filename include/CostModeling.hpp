@@ -1,13 +1,13 @@
 #pragma once
 
+#include "./ControlFlowMerging.hpp"
 #include "./Instruction.hpp"
+#include "./LoopBlock.hpp"
+#include "./LoopForest.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
-#include "ControlFlowMerging.hpp"
-#include "LoopBlock.hpp"
-#include "LoopForest.hpp"
 #include <algorithm>
 #include <any>
 #include <cassert>
