@@ -90,11 +90,18 @@ set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 if(ENABLE_TEST_EXCEPTIONS)
   target_compile_options(${PROJECT_NAME} PRIVATE -fexceptions)
 else()
   target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions)
+endif()
+
+if(NOT ((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES
+                                                     "([Aa]ddress);([Uu]ndefined)"))
+)
+  # we use rtti, which is incompatible with the vptr check:
+  # https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-rtti)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
