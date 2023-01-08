@@ -118,12 +118,13 @@ $(function() {
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;      std::fill(seen.begin(), seen.end(), <span class="keyword">false</span>);</div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;      <span class="comment">// Find if the applicant &#39;u&#39; can get a job</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keywordflow">if</span> (bipartiteMatch(bpGraph, u, seen, matchR)) result++;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    }</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  }</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="keywordflow">return</span> std::make_pair(result, matchR);</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;}</div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1934</div></div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;      <span class="keywordflow">if</span> (bipartiteMatch(bpGraph, u, seen, matchR))</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        result++;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    }</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  }</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keywordflow">return</span> std::make_pair(result, matchR);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;}</div>
+<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1765</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
