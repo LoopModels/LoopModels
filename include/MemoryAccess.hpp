@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Analysis/ScalarEvolutionExpressions.h>
 #include <llvm/IR/InstrTypes.h>
 #include <llvm/IR/Instruction.h>
@@ -23,6 +24,7 @@ inline constexpr auto memoryAccessRequiredIndexSize(size_t arrayDim,
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
+private:
   static constexpr size_t stackArrayDims = 3;
   static constexpr size_t stackNumLoops = 4;
   static constexpr size_t stackNumSymbols = 1;
@@ -52,13 +54,33 @@ struct MemoryAccess {
   // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesIn;
   // [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edgesOut;
   [[no_unique_address]] BitSet<> nodeIndex;
-  [[no_unique_address]] size_t denominator{1};
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
+public:
+  [[nodiscard]] constexpr auto inputEdges() const -> const BitSet<> & {
+    return edgesIn;
+  }
+  [[nodiscard]] constexpr auto outputEdges() const -> const BitSet<> & {
+    return edgesOut;
+  }
+  [[nodiscard]] constexpr auto getNodeIndex() const -> const BitSet<> & {
+    return nodeIndex;
+  }
+  [[nodiscard]] constexpr auto getLoop() const -> NotNull<AffineLoopNest<>> {
+    return loop;
+  }
   [[nodiscard]] constexpr auto getNodes() -> BitSet<> & { return nodeIndex; }
   [[nodiscard]] constexpr auto getNodes() const -> const BitSet<> & {
     return nodeIndex;
+  }
+  [[nodiscard]] auto getSizes() const
+    -> const llvm::SmallVector<const llvm::SCEV *, stackArrayDims> & {
+    return sizes;
+  }
+  [[nodiscard]] auto getSymbolicOffsets() const
+    -> const llvm::SmallVector<const llvm::SCEV *, stackArrayDims> & {
+    return symbolicOffsets;
   }
   [[nodiscard]] auto isStore() const -> bool {
     return loadOrStore.isa<llvm::StoreInst>();
@@ -78,7 +100,6 @@ struct MemoryAccess {
     if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
     else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
-  [[nodiscard]] constexpr auto isActive() const -> bool { return denominator; }
   // static inline size_t requiredData(size_t dim, size_t numLoops){
   // 	return dim*numLoops +
   // }
@@ -137,7 +158,9 @@ struct MemoryAccess {
     indices.resize(
       memoryAccessRequiredIndexSize(d, getNumLoops(), getNumSymbols()));
   }
-
+  [[nodiscard]] constexpr auto getArrayPointer() const -> const llvm::SCEV * {
+    return basePointer;
+  }
   // inline void addEdgeIn(NotNull<Dependence> i) { edgesIn.push_back(i); }
   // inline void addEdgeOut(NotNull<Dependence> i) { edgesOut.push_back(i); }
   inline void addEdgeIn(size_t i) { edgesIn.insert(i); }
@@ -180,6 +203,7 @@ struct MemoryAccess {
   // inline PtrVector<int64_t> getSchedule(size_t loop) const {
   //     return schedule.getPhi()(loop, _);
   // }
+  // FIXME: needs to truncate indexMatrix, offsetVector, etc
   inline auto truncateSchedule() -> MemoryAccess * {
     // we're truncating down to `ref.getNumLoops()`, discarding outer most
     size_t dropCount = omegas.size() - (getNumLoops() + 1);
@@ -212,16 +236,16 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   if (m.isLoad()) os << "Load: ";
   else os << "Store: ";
   os << *m.getInstruction();
-  os << "\nArrayReference " << *m.basePointer << " (dim = " << m.getArrayDim()
-     << ", num loops: " << m.getNumLoops();
-  if (m.sizes.size()) os << ", element size: " << *m.sizes.back();
+  os << "\nArrayReference " << *m.getArrayPointer()
+     << " (dim = " << m.getArrayDim() << ", num loops: " << m.getNumLoops();
+  if (m.getArrayDim()) os << ", element size: " << *m.getSizes().back();
   os << "):\n";
   PtrMatrix<int64_t> A{m.indexMatrix()};
   os << "Sizes: [";
-  if (m.sizes.size()) {
+  if (m.getArrayDim()) {
     os << " unknown";
     for (ptrdiff_t i = 0; i < ptrdiff_t(A.numCol()) - 1; ++i)
-      os << ", " << *m.sizes[i];
+      os << ", " << *m.getSizes()[i];
   }
   os << " ]\nSubscripts: [ ";
   size_t numLoops = size_t(A.numRow());
@@ -252,7 +276,7 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
         }
         if (j) {
           if (offij != 1) os << offij << '*';
-          os << *m.loop->S[j - 1];
+          os << *m.getLoop()->S[j - 1];
         } else os << offij;
         printPlus = true;
       }
@@ -260,5 +284,5 @@ inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   }
   return os << "]\nSchedule Omega: " << m.getFusionOmega()
             << "\nAffineLoopNest:\n"
-            << *m.loop;
+            << *m.getLoop();
 }

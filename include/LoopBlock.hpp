@@ -7,6 +7,7 @@
 #include "./MemoryAccess.hpp"
 #include "./NormalForm.hpp"
 #include "./Schedule.hpp"
+#include "./ScheduledMemoryAccess.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
 #include <cstddef>
@@ -33,17 +34,6 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
   }
   v.push_back(x);
 }
-/// Represents a memory access that has been rotated according to some affine
-/// transform.
-struct ScheduledMemoryAccess {
-  MemoryAccess *access;
-  // may be `false` while `access->isStore()==true`
-  // which indicates a reload from this address.
-  bool isStore;
-  ScheduledMemoryAccess(MemoryAccess *access, const Schedule &schedule,
-                        bool isStore)
-    : access(access), isStore(isStore) {}
-};
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -69,45 +59,6 @@ public:
     : storeId(sId) {
     addMemory(sId, store, nodeIndex);
   }
-  // clang-format off
-  /// Return the memory accesses after applying the Schedule.
-  /// Let
-  /// \f{eqnarray*}{
-  /// D &=& \text{the dimension of the array}\\ %
-  /// N &=& \text{depth of the loop nest}\\ %
-  /// V &=& \text{runtime variables}\\ %
-  /// \textbf{i}\in\mathbb{R}^N &=& \text{the old index vector}\\ %
-  /// \textbf{j}\in\mathbb{R}^N &=& \text{the new index vector}\\ %
-  /// \textbf{x}\in\mathbb{R}^D &=& \text{the indices into the array}\\ %
-  /// \textbf{M}\in\mathbb{R}^{N \times D} &=& \text{map from loop ind vars to array indices}\\ %
-  /// \boldsymbol{\Phi}\in\mathbb{R}^{N \times N} &=& \text{the schedule matrix}\\ %
-  /// \boldsymbol{\Phi}_*\in\mathbb{R}^{N \times N} &=& \textbf{E}\boldsymbol{\Phi}\\ %
-  /// \boldsymbol{\omega}\in\mathbb{R}^N &=& \text{the offset vector}\\ %
-  /// \textbf{c}\in\mathbb{R}^{N} &=& \text{the constant offset vector}\\ %
-  /// \textbf{C}\in\mathbb{R}^{N \times V} &=& \text{runtime variable coefficient matrix}\\ %
-  /// \textbf{s}\in\mathbb{R}^V &=& \text{the symbolic runtime variables}\\ %
-  /// \f}
-  /// 
-  /// Where \f$\textbf{E}\f$ is an [exchange matrix](https://en.wikipedia.org/wiki/Exchange_matrix).
-  /// The rows of \f$\boldsymbol{\Phi}\f$ are sorted from the outermost loop to
-  /// the innermost loop, the opposite ordering used elsewhere. \f$\boldsymbol{\Phi}_*\f$
-  /// corrects this.
-  /// We have
-  /// \f{eqnarray*}{
-  /// \textbf{j} &=& \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ %
-  /// \textbf{i} &=& \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\ %
-  /// \textbf{x} &=& \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ %
-  /// \textbf{x} &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
-  /// \textbf{M}'_* &=& \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\ %
-  /// \textbf{x} &=& \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ %
-  /// \textbf{x} &=& \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ %
-  /// \textbf{c}_* &=& \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ %
-  /// \textbf{x} &=& \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ %
-  /// \f}
-  /// Therefore, to update the memory accesses, we must simply compute the updated
-  /// \f$\textbf{c}_*\f$ and \f$\textbf{M}'_*\f$.
-  /// We can also test for the case where \f$\boldsymbol{\Phi} = \textbf{E}\f$, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi}_* = \textbf{I}$.
-  // clang-format on
   [[nodiscard]] auto
   getMemAccesses(llvm::ArrayRef<MemoryAccess *> memAccess) const
     -> llvm::SmallVector<ScheduledMemoryAccess> {
@@ -119,7 +70,8 @@ public:
     llvm::SmallVector<ScheduledMemoryAccess> accesses;
     accesses.reserve(memory.size());
     for (auto i : memory)
-      accesses.emplace_back(memAccess[i], schedule, i == storeId);
+      accesses.emplace_back(memAccess[i], Pinv, s, schedule.getFusionOmega(),
+                            i == storeId);
     return accesses;
   }
   constexpr auto getMemory() -> BitSet<> & { return memory; }
@@ -438,7 +390,7 @@ public:
       MemoryAccess &mai = *memory[i];
       for (size_t j = 0; j < i; ++j) {
         MemoryAccess &maj = *memory[j];
-        if ((mai.basePointer != maj.basePointer) ||
+        if ((mai.getArrayPointer() != maj.getArrayPointer()) ||
             ((mai.isLoad()) && (maj.isLoad())))
           continue;
         addEdge(mai, maj);
@@ -717,8 +669,8 @@ public:
   }
   auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
     auto [store, other] = edge.getStoreAndOther();
-    size_t index = *store->nodeIndex.begin();
-    if (other->nodeIndex.contains(index)) return index;
+    size_t index = *store->getNodeIndex().begin();
+    if (other->getNodeIndex().contains(index)) return index;
     return {};
   }
   auto optOrth(Graph g) -> std::optional<BitSet<>> {
@@ -802,17 +754,17 @@ public:
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g,
                                     const MemoryAccess &mem) const -> bool {
-    for (auto e : mem.edgesIn)
+    for (auto e : mem.inputEdges())
       if (!g.isInactive(e)) return true;
-    for (auto e : mem.edgesOut)
+    for (auto e : mem.outputEdges())
       if (!g.isInactive(e)) return true;
     return false;
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g, const MemoryAccess &mem,
                                     size_t d) const -> bool {
-    for (auto e : mem.edgesIn)
+    for (auto e : mem.inputEdges())
       if (!g.isInactive(e, d)) return true;
-    for (auto e : mem.edgesOut)
+    for (auto e : mem.outputEdges())
       if (!g.isInactive(e, d)) return true;
     return false;
   }
@@ -843,10 +795,6 @@ public:
     numOmegaCoefs = o - p;
   }
 #ifndef NDEBUG
-  void validateMemory() {
-    for (auto mem : memory)
-      assert(1 + mem->getNumLoops() == mem->omegas.size());
-  }
   void validateEdges() {
     for (auto &edge : edges) edge->validate();
   }
@@ -1325,7 +1273,6 @@ public:
     connectGraph();
     carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
-    validateMemory();
     validateEdges();
 #endif
     return optOrth(fullGraph());
@@ -1366,7 +1313,7 @@ public:
        << "):\n\n";
     for (auto mem : lblock.memory) {
       os << "Ref = " << *mem;
-      for (size_t nodeIndex : mem->nodeIndex) {
+      for (size_t nodeIndex : mem->getNodeIndex()) {
         const Schedule &s = lblock.getNode(nodeIndex).getSchedule();
         os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
            << "\ns.getFusionOmega() = " << s.getFusionOmega()

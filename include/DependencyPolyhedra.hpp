@@ -136,17 +136,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     : SymbolicEqPolyhedra{} {
 
     assert(ma0.sizesMatch(ma1));
-    auto [nc0, nv0] = ma0.loop->A.size();
-    auto [nc1, nv1] = ma1.loop->A.size();
-    numDep0Var = ma0.loop->getNumLoops();
-    size_t numDep1Var = ma1.loop->getNumLoops();
+    NotNull<AffineLoopNest<>> loop0 = ma0.getLoop();
+    NotNull<AffineLoopNest<>> loop1 = ma1.getLoop();
+    auto [nc0, nv0] = loop0->A.size();
+    auto [nc1, nv1] = loop1->A.size();
+    numDep0Var = loop0->getNumLoops();
+    size_t numDep1Var = loop1->getNumLoops();
     size_t numVar = numDep0Var + numDep1Var;
     std::array<llvm::SmallVector<unsigned int>, 2> oldToNewMaps{
-      merge(ma0.loop->S, ma1.loop->S)};
+      merge(loop0->S, loop1->S)};
     auto &oldToNewMap0 = oldToNewMaps[0];
     auto &oldToNewMap1 = oldToNewMaps[1];
-    assert(oldToNewMap0.size() == ma0.loop->S.size());
-    assert(oldToNewMap1.size() == ma1.loop->S.size());
+    assert(oldToNewMap0.size() == loop0->S.size());
+    assert(oldToNewMap1.size() == loop1->S.size());
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
@@ -165,19 +167,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (size_t i = 0; i < nc0; ++i) {
-      A(i, 0) = ma0.loop->A(i, 0);
+      A(i, 0) = loop0->A(i, 0);
       for (size_t j = 0; j < oldToNewMap0.size(); ++j)
-        A(i, 1 + oldToNewMap0[j]) = ma0.loop->A(i, 1 + j);
+        A(i, 1 + oldToNewMap0[j]) = loop0->A(i, 1 + j);
       for (size_t j = 0; j < numDep0Var; ++j)
-        A(i, j + numSymbols) = ma0.loop->A(i, j + ma0.loop->getNumSymbols());
+        A(i, j + numSymbols) = loop0->A(i, j + loop0->getNumSymbols());
     }
     for (size_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = ma1.loop->A(i, 0);
+      A(nc0 + i, 0) = loop1->A(i, 0);
       for (size_t j = 0; j < oldToNewMap1.size(); ++j)
-        A(nc0 + i, 1 + oldToNewMap1[j]) = ma1.loop->A(i, 1 + j);
+        A(nc0 + i, 1 + oldToNewMap1[j]) = loop1->A(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
         A(nc0 + i, j + numSymbols + numDep0Var) =
-          ma1.loop->A(i, j + ma1.loop->getNumSymbols());
+          loop1->A(i, j + loop1->getNumSymbols());
     }
     A(_(nc, end), _(numSymbols, numSymbols + numVar)).diag() = 1;
     // L254: Assertion `col < numCol()` failed
@@ -463,8 +465,8 @@ public:
     out->addEdgeIn(vec.size());
     vec.push_back(this);
   }
-  [[nodiscard]] constexpr auto arrayPointer() -> const llvm::SCEV * {
-    return in->basePointer;
+  [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
+    return in->getArrayPointer();
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }

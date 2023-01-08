@@ -876,7 +876,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
   // assert(!optFail);
   for (auto mem : lblock.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->nodeIndex) {
+    for (size_t nodeIndex : mem->getNodeIndex()) {
       Schedule &s = lblock.getNode(nodeIndex).getSchedule();
       if (mem->getNumLoops() == 2) {
         EXPECT_EQ(s.getPhi(), optPhi2);
@@ -1192,7 +1192,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   for (size_t i = 0; i < mem.size(); ++i) memAccessIds[mem[i]] = i;
   for (auto &e : iOuterLoopNest.getEdges()) {
     auto [in, out] = e->getInOutPair();
-    llvm::errs() << "\nEdge for array " << e->arrayPointer()
+    llvm::errs() << "\nEdge for array " << e->getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1205,9 +1205,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto mem : mem) {
-    llvm::errs() << "mem->nodeIndex =" << mem->nodeIndex << ";";
+    llvm::errs() << "mem->nodeIndex =" << mem->getNodeIndex() << ";";
     llvm::errs() << "mem =" << mem << "\n";
-    for (size_t nodeIndex : mem->nodeIndex) {
+    for (size_t nodeIndex : mem->getNodeIndex()) {
       Schedule &s = nodes[nodeIndex].getSchedule();
       EXPECT_EQ(&s, &iOuterLoopNest.getNode(nodeIndex).getSchedule());
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
@@ -1286,7 +1286,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   IntMatrix optSinnerUndef = optS;
   optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
   for (auto mem : jOuterLoopNest.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->nodeIndex) {
+    for (size_t nodeIndex : mem->getNodeIndex()) {
       Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
       if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
       else if (s.getFusionOmega()[1] < 3) EXPECT_EQ(s.getPhi(), optSinnerUndef);
@@ -1449,7 +1449,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     memAccessIds[loopBlock.getMemoryAccess(i)] = i;
   for (auto &e : loopBlock.getEdges()) {
     auto [in, out] = e->getInOutPair();
-    llvm::errs() << "\nEdge for array " << e->arrayPointer()
+    llvm::errs() << "\nEdge for array " << e->getArrayPointer()
                  << ", in ID: " << memAccessIds[in]
                  << "; out ID: " << memAccessIds[out] << "\n";
   }
@@ -1464,7 +1464,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   optPhi(1, _) = std::numeric_limits<int64_t>::min();
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->nodeIndex) {
+    for (size_t nodeIndex : mem->getNodeIndex()) {
       Schedule &s = loopBlock.getNode(nodeIndex).getSchedule();
       EXPECT_EQ(s.getPhi(), optPhi);
     }
@@ -1623,9 +1623,9 @@ TEST(ConvReversePass, BasicAssertions) {
   std::optional<BitSet<>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
-    llvm::errs() << "mem->nodeIndex: " << mem->nodeIndex << "; ";
+    llvm::errs() << "mem->nodeIndex: " << mem->getNodeIndex() << "; ";
     llvm::errs() << "mem: " << mem << "\n";
-    for (size_t nodeIndex : mem->nodeIndex) {
+    for (size_t nodeIndex : mem->getNodeIndex()) {
       Schedule &s = loopBlock.getNode(nodeIndex).getSchedule();
       llvm::errs() << "s.getPhi(): " << s.getPhi() << "\n";
       llvm::errs() << "s.getFusionOmega(): " << s.getFusionOmega() << "\n";

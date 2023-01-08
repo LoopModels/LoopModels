@@ -243,7 +243,7 @@ struct Instruction {
     auto operator()(auto) const -> llvm::Value * { return nullptr; }
     auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
     auto operator()(MemoryAccess *v) const -> llvm::Value * {
-      return v->loadOrStore;
+      return v->getInstruction();
     }
   };
   [[nodiscard]] auto getValue() -> llvm::Value * {
@@ -266,7 +266,7 @@ struct Instruction {
       return nullptr;
     }
     auto operator()(MemoryAccess *v) const -> llvm::BasicBlock * {
-      return v->loadOrStore->getParent();
+      return v->getInstruction()->getParent();
     }
   };
   [[nodiscard]] auto getBasicBlock() -> llvm::BasicBlock * {
