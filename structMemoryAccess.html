@@ -154,12 +154,6 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>addEdgeOut</b> (size_
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">addNodeIndex</a> (unsigned i)</td></tr>
 <tr class="memdesc:a245b41566ec8297df73f91e1829670d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">add a node index <br /></td></tr>
 <tr class="separator:a245b41566ec8297df73f91e1829670d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fdc4ab39604816f4954eb812c4011dc"><td class="memItemLeft" align="right" valign="top"><a id="a9fdc4ab39604816f4954eb812c4011dc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; sz, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; off, llvm::SmallVector&lt; unsigned, 8 &gt; o)</td></tr>
-<tr class="separator:a9fdc4ab39604816f4954eb812c4011dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84664e54ae35edb5dbf02407916b4478"><td class="memItemLeft" align="right" valign="top"><a id="a84664e54ae35edb5dbf02407916b4478"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MemoryAccess</b> (const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; sz, llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt; off, llvm::ArrayRef&lt; unsigned &gt; o)</td></tr>
-<tr class="separator:a84664e54ae35edb5dbf02407916b4478"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70f52db80815ed467c61c33ec0bd2bc0"><td class="memItemLeft" align="right" valign="top"><a id="a70f52db80815ed467c61c33ec0bd2bc0"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>fusedThrough</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> &amp;x) -&gt; bool</td></tr>
 <tr class="separator:a70f52db80815ed467c61c33ec0bd2bc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,9 +163,6 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>getFusionOmega</b> ()
 <tr class="memitem:a6f6b3782393f2717cde261c53e9c4db4"><td class="memItemLeft" align="right" valign="top"><a id="a6f6b3782393f2717cde261c53e9c4db4"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>truncateSchedule</b> () -&gt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *</td></tr>
 <tr class="separator:a6f6b3782393f2717cde261c53e9c4db4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad00d464cadfa6a53cdad36c6d917a665"><td class="memItemLeft" align="right" valign="top"><a id="ad00d464cadfa6a53cdad36c6d917a665"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>isLoopIndependent</b> () const -&gt; bool</td></tr>
-<tr class="separator:ad00d464cadfa6a53cdad36c6d917a665"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc433034fc754e8307d0c673ca22e518"><td class="memItemLeft" align="right" valign="top"><a id="afc433034fc754e8307d0c673ca22e518"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>allConstantIndices</b> () const -&gt; bool</td></tr>
 <tr class="separator:afc433034fc754e8307d0c673ca22e518"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -181,6 +172,9 @@ auto&#160;</td><td class="memItemRight" valign="bottom"><b>sizesMatch</b> (const
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a6ebfe2027683b7b025ed526355f0d743"><td class="memItemLeft" align="right" valign="top"><a id="a6ebfe2027683b7b025ed526355f0d743"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::BumpPtrAllocator &amp;alloc, const llvm::SCEVUnknown *arrayPtr, <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; true &gt; &amp;loopRef, llvm::Instruction *user, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; indMatT, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; offsets, llvm::ArrayRef&lt; unsigned &gt; o) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a6ebfe2027683b7b025ed526355f0d743"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0062ff34fe54995918590f2b87fd2db2"><td class="memItemLeft" align="right" valign="top"><a id="a0062ff34fe54995918590f2b87fd2db2"></a>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structMemoryAccess.html#a0062ff34fe54995918590f2b87fd2db2">typeAlignment</a> (const llvm::SCEV *S) -&gt; llvm::Align</td></tr>
 <tr class="memdesc:a0062ff34fe54995918590f2b87fd2db2"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize alignment from an elSize SCEV. <br /></td></tr>
