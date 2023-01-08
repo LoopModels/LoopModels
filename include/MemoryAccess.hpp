@@ -56,8 +56,10 @@ struct MemoryAccess {
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
   // schedule indicated by `1` top bit, remainder indicates loop
-  [[nodiscard]] auto getNodes() -> BitSet<> & { return nodeIndex; }
-  [[nodiscard]] auto getNodes() const -> const BitSet<> & { return nodeIndex; }
+  [[nodiscard]] constexpr auto getNodes() -> BitSet<> & { return nodeIndex; }
+  [[nodiscard]] constexpr auto getNodes() const -> const BitSet<> & {
+    return nodeIndex;
+  }
   [[nodiscard]] auto isStore() const -> bool {
     return loadOrStore.isa<llvm::StoreInst>();
   }
@@ -165,7 +167,7 @@ struct MemoryAccess {
   // size_t getNumLoops() const { return ref->getNumLoops(); }
   // size_t getNumAxes() const { return ref->axes.size(); }
   // std::shared_ptr<AffineLoopNest> loop() { return ref->loop; }
-  constexpr auto fusedThrough(MemoryAccess &x) -> bool {
+  auto fusedThrough(MemoryAccess &x) -> bool {
     size_t numLoopsCommon = std::min(getNumLoops(), x.getNumLoops());
     return std::equal(omegas.begin(), omegas.begin() + numLoopsCommon,
                       x.omegas.begin());
@@ -191,7 +193,7 @@ struct MemoryAccess {
     return symbolicOffsets.size() == 0;
   }
   // Assumes strides and offsets are sorted
-  [[nodiscard]] constexpr auto sizesMatch(const MemoryAccess &x) const -> bool {
+  [[nodiscard]] auto sizesMatch(const MemoryAccess &x) const -> bool {
     return std::equal(sizes.begin(), sizes.end(), x.sizes.begin(),
                       x.sizes.end());
   }

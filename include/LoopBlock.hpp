@@ -35,15 +35,15 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
 }
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
-// struct ScheduledMemoryAccess {
-//   MemoryAccess *access;
-//   // may be `false` while `access->isStore()==true`
-//   // which indicates a reload from this address.
-//   bool isStore;
-//   ScheduledMemoryAccess(MemoryAccess *access, const Schedule &schedule,
-//                         bool isStore)
-//     : access(access), isStore(isStore) {}
-// };
+struct ScheduledMemoryAccess {
+  MemoryAccess *access;
+  // may be `false` while `access->isStore()==true`
+  // which indicates a reload from this address.
+  bool isStore;
+  ScheduledMemoryAccess(MemoryAccess *access, const Schedule &schedule,
+                        bool isStore)
+    : access(access), isStore(isStore) {}
+};
 
 /// ScheduledNode
 /// Represents a set of memory accesses that are optimized together in the LP.
@@ -770,7 +770,7 @@ public:
       const Dependence &edge = *edges[e];
       size_t mlt = edge.nodesIn().size() * edge.nodesOut().size();
       a += mlt * edge.getNumLambda();
-      b += mlt * edge.getDynSym();
+      b += mlt * edge.getDynSymDim();
       c += mlt * edge.getNumConstraints();
       ae += mlt;
     }
@@ -1346,7 +1346,7 @@ public:
     // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
     for (auto &edge : lblock.edges) {
-      os << "\n\tEdge = " << edge;
+      os << "\n\tEdge = " << *edge;
       for (size_t inIndex : edge->nodesIn()) {
         const Schedule &sin = lblock.getNode(inIndex).getSchedule();
         os << "Schedule In: nodeIndex = " << edge->nodesIn() << "\ns.getPhi()"

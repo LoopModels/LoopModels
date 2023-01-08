@@ -16,6 +16,7 @@
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolution.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 #include <tuple>
@@ -38,31 +39,27 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   // size_t numDep1Var; // loops dep 1
   [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
   // TODO: `constexpr` once `llvm::SmallVector` supports it
-  [[nodiscard]] constexpr auto getTimeDim() const -> size_t {
-    return nullStep.size();
-  }
+  [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
   [[nodiscard]] constexpr auto getDim0() const -> size_t { return numDep0Var; }
   // getDynSym() + 1 == getNumSym()
-  [[nodiscard]] constexpr auto getDynSym() const -> size_t { return S.size(); }
-  [[nodiscard]] constexpr auto getDim1() const -> size_t {
+  [[nodiscard]] auto getDynSymDim() const -> size_t { return S.size(); }
+  [[nodiscard]] auto getDim1() const -> size_t {
     return getNumVar() - numDep0Var - nullStep.size() - S.size();
   }
-  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
+  [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
     return getNumVar() - nullStep.size() - S.size();
   }
   static constexpr auto getNumOmegaCoefficients() -> size_t { return 2; }
-  [[nodiscard]] constexpr auto getNumScheduleCoefficients() const -> size_t {
+  [[nodiscard]] auto getNumScheduleCoefficients() const -> size_t {
     return getNumPhiCoefficients() + getNumOmegaCoefficients();
   }
   constexpr auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
     return A(i, _(begin, getNumSymbols()));
   }
-  [[nodiscard]] constexpr auto getInEqSymbols(size_t i) const
-    -> PtrVector<int64_t> {
+  [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
     return A(i, _(begin, getNumSymbols()));
   }
-  [[nodiscard]] constexpr auto getEqSymbols(size_t i) const
-    -> PtrVector<int64_t> {
+  [[nodiscard]] auto getEqSymbols(size_t i) const -> PtrVector<int64_t> {
     return E(i, _(begin, getNumSymbols()));
   }
   [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
@@ -466,16 +463,19 @@ public:
     out->addEdgeIn(vec.size());
     vec.push_back(this);
   }
+  [[nodiscard]] constexpr auto arrayPointer() -> const llvm::SCEV * {
+    return in->basePointer;
+  }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] constexpr auto nodesIn() const -> const BitSet<> & {
+  [[nodiscard]] auto nodesIn() const -> const BitSet<> & {
     return in->getNodes();
   }
-  [[nodiscard]] constexpr auto nodesOut() const -> const BitSet<> & {
+  [[nodiscard]] auto nodesOut() const -> const BitSet<> & {
     return out->getNodes();
   }
-  [[nodiscard]] constexpr auto getDynSym() const -> size_t {
-    return depPoly.getDynSym();
+  [[nodiscard]] auto getDynSymDim() const -> size_t {
+    return depPoly.getDynSymDim();
   }
   [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
   [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
@@ -489,6 +489,10 @@ public:
   [[nodiscard]] auto getOutIndMat() const -> PtrMatrix<int64_t> {
     return out->indexMatrix();
   }
+  [[nodiscard]] constexpr auto getInOutPair() const
+    -> std::array<NotNull<MemoryAccess>, 2> {
+    return {in, out};
+  }
   // returns the memory access pair, placing the store first in the pair
   [[nodiscard]] auto getStoreAndOther() const
     -> std::array<NotNull<MemoryAccess>, 2> {
@@ -501,16 +505,16 @@ public:
   [[nodiscard]] auto getOutNumLoops() const -> size_t {
     return out->getNumLoops();
   }
-  [[nodiscard]] constexpr auto isInactive(size_t depth) const -> bool {
+  [[nodiscard]] auto isInactive(size_t depth) const -> bool {
     return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
   }
-  [[nodiscard]] constexpr auto getNumLambda() const -> size_t {
+  [[nodiscard]] auto getNumLambda() const -> size_t {
     return depPoly.getNumLambda() << 1;
   }
-  [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
+  [[nodiscard]] auto getNumSymbols() const -> size_t {
     return depPoly.getNumSymbols();
   }
-  [[nodiscard]] constexpr auto getNumPhiCoefficients() const -> size_t {
+  [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
     return depPoly.getNumPhiCoefficients();
   }
   [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
@@ -533,6 +537,7 @@ public:
              getNumOmegaCoefficients() ==
            size_t(dependenceSatisfaction.getConstraints().numCol()));
   }
+  [[nodiscard]] auto getDepPoly() -> DependencePolyhedra { return depPoly; }
   [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
     return dependenceBounding.getNumConstraints() +
            dependenceSatisfaction.getNumConstraints();
@@ -545,69 +550,73 @@ public:
     -> StridedVector<int64_t> {
     return dependenceBounding.getConstants();
   }
-  [[nodiscard]] constexpr auto getSatLambda() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, _(1, 1 + depPoly.getNumLambda()));
+  [[nodiscard]] constexpr auto getSatConstraints() const -> PtrMatrix<int64_t> {
+    return dependenceSatisfaction.getConstraints();
   }
-  [[nodiscard]] constexpr auto getBndLambda() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
-      _, _(1, 1 + depPoly.getNumLambda()));
+  [[nodiscard]] constexpr auto getBndConstraints() const -> PtrMatrix<int64_t> {
+    return dependenceBounding.getConstraints();
   }
-  [[nodiscard]] constexpr auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+  [[nodiscard]] auto getSatLambda() const -> PtrMatrix<int64_t> {
+    return getSatConstraints()(_, _(1, 1 + depPoly.getNumLambda()));
+  }
+  [[nodiscard]] auto getBndLambda() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(_, _(1, 1 + depPoly.getNumLambda()));
+  }
+  [[nodiscard]] auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
-  [[nodiscard]] constexpr auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, _(1 + depPoly.getNumLambda(),
-           1 + depPoly.getNumLambda() + depPoly.getDim0()));
-  }
-  [[nodiscard]] constexpr auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
-           1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
-  }
-  [[nodiscard]] constexpr auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
-      _, _(1 + depPoly.getNumLambda(),
-           1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
-  }
-  [[nodiscard]] constexpr auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+  [[nodiscard]] auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + depPoly.getDim0()));
   }
-  [[nodiscard]] constexpr auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+  [[nodiscard]] auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
-  [[nodiscard]] constexpr auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+  [[nodiscard]] auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(
+      _, _(1 + depPoly.getNumLambda(),
+           1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
+  }
+  [[nodiscard]] auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(
+      _, _(1 + depPoly.getNumLambda(),
+           1 + depPoly.getNumLambda() + depPoly.getDim0()));
+  }
+  [[nodiscard]] auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(
+      _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
+           1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
+  }
+  [[nodiscard]] auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients()));
   }
-  [[nodiscard]] constexpr auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+  [[nodiscard]] auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(
       _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients()));
   }
-  [[nodiscard]] constexpr auto getSatW() const -> StridedVector<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
-           getNumOmegaCoefficients());
+  [[nodiscard]] auto getSatW() const -> StridedVector<int64_t> {
+    return getSatConstraints()(_, 1 + depPoly.getNumLambda() +
+                                    getNumPhiCoefficients() +
+                                    getNumOmegaCoefficients());
   }
-  [[nodiscard]] constexpr auto getBndCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(_, _(1 + depPoly.getNumLambda() +
-                                                      getNumPhiCoefficients() +
-                                                      getNumOmegaCoefficients(),
-                                                    end));
+  [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
+    return getBndConstraints()(_, _(1 + depPoly.getNumLambda() +
+                                      getNumPhiCoefficients() +
+                                      getNumOmegaCoefficients(),
+                                    end));
   }
 
-  [[nodiscard]] constexpr auto splitSatisfaction() const
+  [[nodiscard]] auto splitSatisfaction() const
     -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                   StridedVector<int64_t>> {
@@ -618,7 +627,7 @@ public:
     return std::make_tuple(getSatConstants(), getSatLambda(), phiCoefsIn,
                            phiCoefsOut, getSatOmegaCoefs(), getSatW());
   }
-  [[nodiscard]] constexpr auto splitBounding() const
+  [[nodiscard]] auto splitBounding() const
     -> std::tuple<StridedVector<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>, PtrMatrix<int64_t>, PtrMatrix<int64_t>,
                   PtrMatrix<int64_t>> {
@@ -870,15 +879,14 @@ public:
 #endif
         return false;
       }
-      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
+      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)))
 #ifndef NDEBUG
-        // llvm::errs()
-        //     << "Dependence decided by backward violation with i = "
-        //     << i
-        //     << "\n";
+      // llvm::errs()
+      //     << "Dependence decided by backward violation with i = "
+      //     << i
+      //     << "\n";
 #endif
         return true;
-      }
     }
     // assert(false);
     // return false;
@@ -925,15 +933,14 @@ public:
 #endif
         return false;
       }
-      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
+      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)))
 #ifndef NDEBUG
-        // llvm::errs()
-        //     << "Dependence decided by backward violation with i = "
-        //     << i
-        //     << "\n";
+      // llvm::errs()
+      //     << "Dependence decided by backward violation with i = "
+      //     << i
+      //     << "\n";
 #endif
         return true;
-      }
     }
     // assert(false);
     // return false;
