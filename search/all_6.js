@@ -6,8 +6,7 @@ var searchData=
   ['geteltype_3c_20rational_20_3e_56',['GetEltype&lt; Rational &gt;',['../structGetEltype_3_01Rational_01_4.html',1,'']]],
   ['getinindmat_57',['getInIndMat',['../structDependence.html#a6cc677c17009dae397e882a80eb727a4',1,'Dependence']]],
   ['getinstruction_58',['getInstruction',['../structInstruction_1_1Cache.html#aaf47a0672c609c80320e37508c4ed16a',1,'Instruction::Cache']]],
-  ['getmemaccesses_59',['getMemAccesses',['../structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e',1,'ScheduledNode']]],
-  ['getoutindmat_60',['getOutIndMat',['../structDependence.html#a42ac0a8c783d95ac08f2155a9640125b',1,'Dependence']]],
-  ['graph_61',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
-  ['graphs_62',['Graphs',['../namespaceGraphs.html',1,'']]]
+  ['getoutindmat_59',['getOutIndMat',['../structDependence.html#a42ac0a8c783d95ac08f2155a9640125b',1,'Dependence']]],
+  ['graph_60',['Graph',['../structLinearProgramLoopBlock_1_1Graph.html',1,'LinearProgramLoopBlock']]],
+  ['graphs_61',['Graphs',['../namespaceGraphs.html',1,'']]]
 ];

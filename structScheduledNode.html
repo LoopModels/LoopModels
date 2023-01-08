@@ -76,7 +76,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4663ea40276508a876f294b5e70ce768"><td class="memItemLeft" align="right" valign="top"><a id="a4663ea40276508a876f294b5e70ce768"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledNode</b> (unsigned int sId, <a class="el" href="structMemoryAccess.html">MemoryAccess</a> *store, unsigned int nodeIndex)</td></tr>
 <tr class="separator:a4663ea40276508a876f294b5e70ce768"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afeebee9881046b7a8a5160060f26b84e"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structScheduledNode.html#afeebee9881046b7a8a5160060f26b84e">getMemAccesses</a> (llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> &gt;</td></tr>
+<tr class="memitem:afeebee9881046b7a8a5160060f26b84e"><td class="memItemLeft" align="right" valign="top"><a id="afeebee9881046b7a8a5160060f26b84e"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemAccesses</b> (llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; ScheduledMemoryAccess &gt;</td></tr>
 <tr class="separator:afeebee9881046b7a8a5160060f26b84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memItemLeft" align="right" valign="top"><a id="a11fd25bf0026933478ec6d6ffc6d65af"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
@@ -192,41 +193,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPhiOffset</b> ()
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="structScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; </p>
-</div><h2 class="groupheader">Member Function Documentation</h2>
-<a id="afeebee9881046b7a8a5160060f26b84e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afeebee9881046b7a8a5160060f26b84e">&#9670;&nbsp;</a></span>getMemAccesses()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto ScheduledNode::getMemAccesses </td>
-          <td>(</td>
-          <td class="paramtype">llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt;&#160;</td>
-          <td class="paramname"><em>memAccess</em></td><td>)</td>
-          <td> const -&gt; llvm::SmallVector&lt;<a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>&gt; </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Return the memory accesses after applying the <a class="el" href="structSchedule.html">Schedule</a>. Let </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} D &amp;=&amp; \text{the dimension of the array}\\ % N &amp;=&amp; \text{depth of the loop nest}\\ % V &amp;=&amp; \text{runtime variables}\\ % \textbf{i}\in\mathbb{R}^N &amp;=&amp; \text{the old index vector}\\ % \textbf{j}\in\mathbb{R}^N &amp;=&amp; \text{the new index vector}\\ % \textbf{x}\in\mathbb{R}^D &amp;=&amp; \text{the indices into the array}\\ % \textbf{M}\in\mathbb{R}^{N \times D} &amp;=&amp; \text{map from loop ind vars to array indices}\\ % \boldsymbol{\Phi}\in\mathbb{R}^{N \times N} &amp;=&amp; \text{the schedule matrix}\\ % \boldsymbol{\Phi}_*\in\mathbb{R}^{N \times N} &amp;=&amp; \textbf{E}\boldsymbol{\Phi}\\ % \boldsymbol{\omega}\in\mathbb{R}^N &amp;=&amp; \text{the offset vector}\\ % \textbf{c}\in\mathbb{R}^{N} &amp;=&amp; \text{the constant offset vector}\\ % \textbf{C}\in\mathbb{R}^{N \times V} &amp;=&amp; \text{runtime variable coefficient matrix}\\ % \textbf{s}\in\mathbb{R}^V &amp;=&amp; \text{the symbolic runtime variables}\\ % \end{eqnarray*}" src="form_0.png"/>
-</p>
-<p>Where <img class="formulaInl" alt="$\textbf{E}$" src="form_1.png"/> is an <a href="https://en.wikipedia.org/wiki/Exchange_matrix">exchange matrix</a>. The rows of <img class="formulaInl" alt="$\boldsymbol{\Phi}$" src="form_2.png"/> are sorted from the outermost loop to the innermost loop, the opposite ordering used elsewhere. <img class="formulaInl" alt="$\boldsymbol{\Phi}_*$" src="form_3.png"/> corrects this. We have </p><p class="formulaDsp">
-<img class="formulaDsp" alt="\begin{eqnarray*} \textbf{j} &amp;=&amp; \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ % \textbf{i} &amp;=&amp; \boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right)\\ % \textbf{x} &amp;=&amp; \textbf{M}'\textbf{i} + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}_*^{-1}\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{M}'_* &amp;=&amp; \textbf{M}'\boldsymbol{\Phi}_*^{-1}\\ % \textbf{x} &amp;=&amp; \textbf{M}'_*\left(j - \boldsymbol{\omega}\right) + \textbf{c} + \textbf{Cs} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j - \textbf{M}'_*\boldsymbol{\omega} + \textbf{c} + \textbf{Cs} \\ % \textbf{c}_* &amp;=&amp; \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ % \textbf{x} &amp;=&amp; \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ % \end{eqnarray*}" src="form_4.png"/>
-</p>
-<p> Therefore, to update the memory accesses, we must simply compute the updated <img class="formulaInl" alt="$\textbf{c}_*$" src="form_5.png"/> and <img class="formulaInl" alt="$\textbf{M}'_*$" src="form_6.png"/>. We can also test for the case where <img class="formulaInl" alt="$\boldsymbol{\Phi} = \textbf{E}$" src="form_7.png"/>, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi}_* = \textbf{I}$. </p>
-
-</div>
-</div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+</div><hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a></li>
 </ul>
 </div><!-- contents -->
