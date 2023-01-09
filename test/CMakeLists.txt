@@ -112,7 +112,7 @@ endif()
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra)
+    target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
     # target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Werror)
   elseif(MSVC)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
