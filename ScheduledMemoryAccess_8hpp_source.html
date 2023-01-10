@@ -82,17 +82,16 @@ $(function() {
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="comment">// which indicates a reload from this address.</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  [[no_unique_address]] int64_t denominator{1};</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  [[no_unique_address]] <span class="keywordtype">bool</span> isStore;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *access, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> Pinv,</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                        int64_t denominator, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega,</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;                        <span class="keywordtype">bool</span> isStore)</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    : access(access), denominator(denominator), isStore(isStore) {</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    IntMatrix MStarT = access-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>().transpose() * Pinv;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> omegaStar = access-&gt;offsetMatrix()(_, 0) - MStarT * omega;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;};</div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1668</div></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *ma, <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> Pinv,</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;                        int64_t denom, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;int64_t&gt;</a> omega, <span class="keywordtype">bool</span> isStr)</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    : access(ma), denominator(denom), isStore(isStr) {</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    IntMatrix MStarT = ma-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>().transpose() * Pinv;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector&lt;int64_t&gt;</a> omegaStar = ma-&gt;offsetMatrix()(_, 0) - MStarT * omega;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  }</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;};</div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1688</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:710</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:943</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:951</div></div>
 <div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:24</div></div>
 <div class="ttc" id="astructMemoryAccess_html_af3e9f24fe6b5cb0b59091cea5dfdfcb0"><div class="ttname"><a href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">MemoryAccess::indexMatrix</a></div><div class="ttdeci">auto indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:177</div></div>
 <div class="ttc" id="astructScheduledMemoryAccess_html"><div class="ttname"><a href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a></div><div class="ttdef"><b>Definition:</b> ScheduledMemoryAccess.hpp:47</div></div>

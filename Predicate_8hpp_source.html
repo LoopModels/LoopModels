@@ -108,7 +108,7 @@ $(function() {
 <div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structPredicate_1_1Intersection.html">   42</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structPredicate_1_1Intersection.html">Intersection</a> {</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  [[no_unique_address]] uint64_t predicates;</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a>(uint64_t predicates) : predicates(predicates) {}</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a>(uint64_t pred) : predicates(pred) {}</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  constexpr <a class="code" href="structPredicate_1_1Intersection.html">Intersection</a>(<span class="keywordtype">size_t</span> index, Relation value)</div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    : predicates(<span class="keyword">static_cast&lt;</span>uint64_t<span class="keyword">&gt;</span>(value) &lt;&lt; (2 * index)) {}</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) <span class="keyword">const</span> -&gt; Relation {</div>

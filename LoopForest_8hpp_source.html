@@ -130,21 +130,21 @@ $(function() {
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="keyword">auto</span> operator=(<span class="keyword">const</span> <a class="code" href="structLoopTree.html">LoopTree</a> &amp;) -&gt; <a class="code" href="structLoopTree.html">LoopTree</a> &amp; = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keyword">auto</span> operator=(<a class="code" href="structLoopTree.html">LoopTree</a> &amp;&amp;) -&gt; <a class="code" href="structLoopTree.html">LoopTree</a> &amp; = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; sL,</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; paths)</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    : loop(<span class="keyword">nullptr</span>), subLoops(std::move(sL)), paths(std::move(paths)) {}</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; pth)</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    : loop(<span class="keyword">nullptr</span>), subLoops(std::move(sL)), paths(std::move(pth)) {}</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *BT, llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;           <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> paths)</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    : loop(L), paths({std::move(paths)}), affineLoop(L, BT, SE) {}</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;           <a class="code" href="structPredicate_1_1Map.html">Predicate::Map</a> pth)</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    : loop(L), paths({std::move(pth)}), affineLoop(L, BT, SE) {}</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <a class="code" href="structLoopTree.html">LoopTree</a>(llvm::Loop *L, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> aln,</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;           llvm::SmallVector&lt;<a class="code" href="structNotNull.html">NotNull&lt;LoopTree&gt;</a>&gt; sL,</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; paths)</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;           llvm::SmallVector&lt;Predicate::Map&gt; pth)</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    : loop(L), subLoops(std::move(sL)), paths(std::move(pth)),</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;      affineLoop(std::move(aln)) {</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#ifndef NDEBUG</span></div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordflow">if</span> (loop)</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;chain : paths)</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;chain : pth)</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;&amp;pbb : chain) assert(loop-&gt;contains(pbb.first));</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  }</div>
@@ -200,7 +200,7 @@ $(function() {
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:24</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:94</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional&lt; LoopTree * &gt;</a></div></div>
-<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1201</div></div>
+<div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1200</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
