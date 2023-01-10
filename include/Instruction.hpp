@@ -1,7 +1,7 @@
 #pragma once
 
 #include "./Predicate.hpp"
-#include "MemoryAccess.hpp"
+#include "./ScheduledMemoryAccess.hpp"
 #include <algorithm>
 #include <bit>
 #include <concepts>
@@ -150,7 +150,7 @@ struct Instruction {
   [[no_unique_address]] llvm::Type *type;
   [[no_unique_address]] std::variant<std::monostate, llvm::Instruction *,
                                      llvm::ConstantInt *, llvm::ConstantFP *,
-                                     MemoryAccess *>
+                                     ScheduledMemoryAccess *>
     ptr;
   [[no_unique_address]] Predicate::Set predicates;
   [[no_unique_address]] llvm::MutableArrayRef<Instruction *> operands;
@@ -241,7 +241,7 @@ struct Instruction {
   struct ExtractValue {
     auto operator()(auto) const -> llvm::Value * { return nullptr; }
     auto operator()(llvm::Value *v) const -> llvm::Value * { return v; }
-    auto operator()(MemoryAccess *v) const -> llvm::Value * {
+    auto operator()(ScheduledMemoryAccess *v) const -> llvm::Value * {
       return v->getInstruction();
     }
   };
@@ -264,7 +264,7 @@ struct Instruction {
       if (auto *I = llvm::dyn_cast<llvm::Instruction>(v)) return I->getParent();
       return nullptr;
     }
-    auto operator()(MemoryAccess *v) const -> llvm::BasicBlock * {
+    auto operator()(ScheduledMemoryAccess *v) const -> llvm::BasicBlock * {
       return v->getInstruction()->getParent();
     }
   };
@@ -920,7 +920,7 @@ struct Instruction {
         return store->getAlign();
       else return {};
     }
-    auto operator()(MemoryAccess *ref) const -> llvm::Align {
+    auto operator()(ScheduledMemoryAccess *ref) const -> llvm::Align {
       return ref->getAlign();
     }
   };

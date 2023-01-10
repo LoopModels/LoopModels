@@ -40,20 +40,28 @@
 /// \textbf{c}_* &=& \textbf{c} - \textbf{M}'_*\boldsymbol{\omega} \\ %
 /// \textbf{x} &=& \textbf{M}'_*j + \textbf{c}_* + \textbf{Cs} \\ %
 /// \f}
-/// Therefore, to update the memory accesses, we must simply compute the updated
+/// Therefore, to update the memory accesses from the old induction variables $i$
+/// to the new variables $j$, we must simply compute the updated
 /// \f$\textbf{c}_*\f$ and \f$\textbf{M}'_*\f$.
 /// We can also test for the case where \f$\boldsymbol{\Phi} = \textbf{E}\f$, or equivalently that $\textbf{E}\boldsymbol{\Phi} = \boldsymbol{\Phi}_* = \textbf{I}$.
+/// Note that to get the new AffineLoopNest, we call
+/// `oldLoop->rotate(PhiInv)`
 // clang-format on
 struct ScheduledMemoryAccess {
+  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
+  NotNull<AffineLoopNest<false>> loop;
   [[no_unique_address]] MemoryAccess *access;
   // may be `false` while `access->isStore()==true`
   // which indicates a reload from this address.
   [[no_unique_address]] int64_t denominator{1};
+  [[no_unique_address]] llvm::Align alignment;
   [[no_unique_address]] bool isStore;
+  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
   ScheduledMemoryAccess(MemoryAccess *ma, PtrMatrix<int64_t> Pinv,
                         int64_t denom, PtrVector<int64_t> omega, bool isStr)
     : access(ma), denominator(denom), isStore(isStr) {
     IntMatrix MStarT = ma->indexMatrix().transpose() * Pinv;
     Vector<int64_t> omegaStar = ma->offsetMatrix()(_, 0) - MStarT * omega;
   }
+  auto getAlign() -> llvm::Align { return alignment; }
 };

@@ -16,8 +16,6 @@
 #include <llvm/Support/raw_ostream.h>
 #include <strings.h>
 
-struct Dependence;
-
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
@@ -34,6 +32,7 @@ private:
 
   NotNull<const llvm::SCEVUnknown> basePointer;
   NotNull<AffineLoopNest<>> loop;
+
   // This field will store either the loaded instruction, or the store
   // instruction. This means that we can check if this MemoryAccess is a load
   // via checking `!loadOrStore.isa<llvm::StoreInst>()`.
@@ -108,6 +107,7 @@ public:
     ma->indexMatrix() = indMatT.transpose();
     ma->offsetMatrix() = offsets;
     ma->getFusionOmega() = o;
+
     return ma;
   }
   /// omegas order is [outer <-> inner]

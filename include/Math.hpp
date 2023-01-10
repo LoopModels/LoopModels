@@ -16,8 +16,10 @@
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/IR/Instruction.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Transforms/Utils/LoopUtils.h>
 #include <numeric>
 #include <optional>
 #include <ostream>

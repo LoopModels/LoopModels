@@ -201,6 +201,13 @@ struct AffineLoopNest
   auto findIndex(const llvm::SCEV *v) const -> size_t {
     return findSymbolicIndex(S, v);
   }
+  /// A.rotate( R )
+  /// A(_,const) + A(_,var)*var >= 0
+  /// this method applies rotation matrix R
+  /// A(_,const) + (A(_,var)*R)*(R^{-1}*var) >= 0
+  /// So that our new loop nest has matrix
+  /// [A(_,const) (A(_,var)*R)]
+  /// while the new `var' is `(R^{-1}*var)`
   [[nodiscard]] auto rotate(PtrMatrix<int64_t> R) const
     -> AffineLoopNest<false> {
     size_t numExtraVar = 0;
