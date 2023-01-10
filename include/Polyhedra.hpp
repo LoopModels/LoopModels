@@ -79,11 +79,11 @@ struct Polyhedra {
   Polyhedra(IntMatrix Ain, I64Matrix Ein)
     : E(std::move(Ein)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, SymbolVec S)
-    : E{}, S(std::move(S)), A(std::move(Ain)),
+  Polyhedra(IntMatrix Ain, SymbolVec SV)
+    : E{}, S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec S)
-    : E(std::move(Ein)), S(std::move(S)), A(std::move(Ain)),
+  Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
+    : E(std::move(Ein)), S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
 
   inline void initializeComparator() {

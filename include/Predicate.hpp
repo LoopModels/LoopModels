@@ -42,7 +42,7 @@ constexpr auto operator|(Relation a, Relation b) -> Relation {
 struct Intersection {
   [[no_unique_address]] uint64_t predicates;
   constexpr Intersection() = default;
-  constexpr Intersection(uint64_t predicates) : predicates(predicates) {}
+  constexpr Intersection(uint64_t pred) : predicates(pred) {}
   constexpr Intersection(size_t index, Relation value)
     : predicates(static_cast<uint64_t>(value) << (2 * index)) {}
   constexpr auto operator[](size_t index) const -> Relation {

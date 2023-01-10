@@ -59,21 +59,21 @@ struct LoopTree {
   auto operator=(const LoopTree &) -> LoopTree & = default;
   auto operator=(LoopTree &&) -> LoopTree & = default;
   LoopTree(llvm::SmallVector<NotNull<LoopTree>> sL,
-           llvm::SmallVector<Predicate::Map> paths)
-    : loop(nullptr), subLoops(std::move(sL)), paths(std::move(paths)) {}
+           llvm::SmallVector<Predicate::Map> pth)
+    : loop(nullptr), subLoops(std::move(sL)), paths(std::move(pth)) {}
 
   LoopTree(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
-           Predicate::Map paths)
-    : loop(L), paths({std::move(paths)}), affineLoop(L, BT, SE) {}
+           Predicate::Map pth)
+    : loop(L), paths({std::move(pth)}), affineLoop(L, BT, SE) {}
 
   LoopTree(llvm::Loop *L, AffineLoopNest<true> aln,
            llvm::SmallVector<NotNull<LoopTree>> sL,
-           llvm::SmallVector<Predicate::Map> paths)
-    : loop(L), subLoops(std::move(sL)), paths(std::move(paths)),
+           llvm::SmallVector<Predicate::Map> pth)
+    : loop(L), subLoops(std::move(sL)), paths(std::move(pth)),
       affineLoop(std::move(aln)) {
 #ifndef NDEBUG
     if (loop)
-      for (auto &&chain : paths)
+      for (auto &&chain : pth)
         for (auto &&pbb : chain) assert(loop->contains(pbb.first));
 #endif
   }

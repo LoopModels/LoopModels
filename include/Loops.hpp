@@ -60,54 +60,22 @@ inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
   return SE.getMinusSCEV(UB, LB, llvm::SCEV::NoWrapMask);
 }
 
-[[nodiscard]] inline auto noWrapSCEV(llvm::ScalarEvolution &SE,
-                                     const llvm::SCEV *S)
-  -> const llvm::SCEV * {
-  if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-    return SE.getAddExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                         noWrapSCEV(SE, ex->getOperand(1)),
-                         llvm::SCEV::NoWrapMask);
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-    return SE.getMulExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                         noWrapSCEV(SE, ex->getOperand(1)),
-                         llvm::SCEV::NoWrapMask);
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMaxExpr>(S)) {
-    return SE.getUMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMaxExpr>(S)) {
-    return SE.getUMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMinExpr>(S)) {
-    return SE.getUMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMaxExpr>(S)) {
-    return SE.getSMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMinExpr>(S)) {
-    return SE.getSMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-    return SE.getUDivExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVPtrToIntExpr>(S)) {
-    return SE.getPtrToIntExpr(noWrapSCEV(SE, ex->getOperand(0)), ex->getType());
-  } else if (const auto *ex =
-               llvm::dyn_cast<const llvm::SCEVSignExtendExpr>(S)) {
-    return SE.getSignExtendExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                                ex->getType());
-  } else if (const auto *ex =
-               llvm::dyn_cast<const llvm::SCEVZeroExtendExpr>(S)) {
-    return SE.getZeroExtendExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                                ex->getType());
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVTruncateExpr>(S)) {
-    return SE.getTruncateExpr(noWrapSCEV(SE, ex->getOperand(0)), ex->getType());
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMinExpr>(S)) {
-    return SE.getSMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
+struct NoWrapRewriter : public llvm::SCEVRewriteVisitor<NoWrapRewriter> {
+  NoWrapRewriter(llvm::ScalarEvolution &ScEv) : SCEVRewriteVisitor(ScEv) {}
+  auto visitAddRecExpr(const llvm::SCEVAddRecExpr *ex) -> const llvm::SCEV * {
+    llvm::SmallVector<const llvm::SCEV *, 2> Operands;
+    for (const llvm::SCEV *Op : ex->operands()) Operands.push_back(visit(Op));
+    return SE.getAddRecExpr(Operands, ex->getLoop(), llvm::SCEV::NoWrapMask);
   }
-  return S;
-}
+  auto visitMulExpr(const llvm::SCEVMulExpr *ex) -> const llvm::SCEV * {
+    return SE.getMulExpr(visit(ex->getOperand(0)), visit(ex->getOperand(1)),
+                         llvm::SCEV::NoWrapMask);
+  }
+  auto visitAddExpr(const llvm::SCEVAddExpr *ex) -> const llvm::SCEV * {
+    return SE.getAddExpr(visit(ex->getOperand(0)), visit(ex->getOperand(1)),
+                         llvm::SCEV::NoWrapMask);
+  }
+};
 
 // static std::optional<int64_t> getConstantInt(llvm::Value *v) {
 //     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
@@ -271,29 +239,29 @@ struct AffineLoopNest
     } else if (std::optional<int64_t> c = getConstantInt(v)) {
       A(lu, 0) += mlt * (*c);
       return minDepth;
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
-      const llvm::SCEV *op0 = ex->getOperand(0);
-      const llvm::SCEV *op1 = ex->getOperand(1);
+    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
+      const llvm::SCEV *op0 = ar->getOperand(0);
+      const llvm::SCEV *op1 = ar->getOperand(1);
       Row M = A.numRow();
       minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
       if (M != A.numRow())
         minDepth = addSymbol(B, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
       return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
-      if (auto op = getConstantInt(ex->getOperand(0))) {
-        return addSymbol(B, L, ex->getOperand(1), SE, lu, mlt * (*op),
+    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
+      if (auto op0 = getConstantInt(m->getOperand(0))) {
+        return addSymbol(B, L, m->getOperand(1), SE, lu, mlt * (*op0),
                          minDepth);
-      } else if (auto op = getConstantInt(ex->getOperand(1))) {
-        return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt * (*op),
+      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+        return addSymbol(B, L, m->getOperand(0), SE, lu, mlt * (*op1),
                          minDepth);
       }
     } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
       size_t recDepth = x->getLoop()->getLoopDepth();
       if (x->isAffine()) {
         minDepth = addSymbol(B, L, x->getOperand(0), SE, lu, mlt, minDepth);
-        if (auto c = getConstantInt(x->getOperand(1))) {
+        if (auto opc = getConstantInt(x->getOperand(1))) {
           // swap order vs recDepth to go inner<->outer
-          B(lu, B.numCol() - recDepth) = mlt * (*c);
+          B(lu, B.numCol() - recDepth) = mlt * (*opc);
           return minDepth;
         }
         v =
@@ -305,13 +273,13 @@ struct AffineLoopNest
       // 0 means we support all loops, as the outer most depth is 1
       // Depth of 0 means toplevel.
       minDepth = std::max(minDepth, recDepth);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
-      auto S = simplifyMinMax(SE, ex);
-      if (S != v) return addSymbol(B, L, S, SE, lu, mlt, minDepth);
+    } else if (const auto *mm = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
+      auto Sm = simplifyMinMax(SE, mm);
+      if (Sm != v) return addSymbol(B, L, Sm, SE, lu, mlt, minDepth);
       bool isMin =
-        llvm::isa<llvm::SCEVSMinExpr>(ex) || llvm::isa<llvm::SCEVUMinExpr>(ex);
-      const llvm::SCEV *op0 = ex->getOperand(0);
-      const llvm::SCEV *op1 = ex->getOperand(1);
+        llvm::isa<llvm::SCEVSMinExpr>(mm) || llvm::isa<llvm::SCEVUMinExpr>(mm);
+      const llvm::SCEV *op0 = mm->getOperand(0);
+      const llvm::SCEV *op1 = mm->getOperand(1);
       if (isMin ^
           (mlt < 0)) { // we can represent this as additional constraints
         Row M = A.numRow();
@@ -531,14 +499,14 @@ struct AffineLoopNest
     pruneBounds();
   }
 
-  AffineLoopNest(IntMatrix A, llvm::SmallVector<const llvm::SCEV *> symbols)
+  AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
     : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                 llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(A), std::move(symbols)){};
-  AffineLoopNest(IntMatrix A)
+        std::move(Am), std::move(sym)){};
+  AffineLoopNest(IntMatrix Am)
     : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                 llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(A)){};
+        std::move(Am)){};
   AffineLoopNest() = default;
 
   [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {

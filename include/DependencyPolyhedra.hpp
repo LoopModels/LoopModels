@@ -453,11 +453,11 @@ private:
   [[no_unique_address]] NotNull<MemoryAccess> out;
   [[no_unique_address]] bool forward;
   Dependence(DependencePolyhedra poly, std::array<Simplex, 2> depSatBound,
-             std::array<NotNull<MemoryAccess>, 2> inOut, bool forward)
+             std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
     : depPoly(std::move(poly)),
       dependenceSatisfaction(std::move(depSatBound)[0]),
       dependenceBounding(std::move(depSatBound)[1]), in(inOut[0]),
-      out(inOut[1]), forward(forward) {}
+      out(inOut[1]), forward(fwd) {}
 
 public:
   void pushToEdgeVector(llvm::SmallVectorImpl<NotNull<Dependence>> &vec) {

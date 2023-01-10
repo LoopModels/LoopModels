@@ -168,10 +168,10 @@ public:
     // indvars[inside<->outside]
     MutPtrMatrix<int64_t> phi = getPhi();
     const size_t indR = size_t(indMat.numRow());
-    const size_t phiOffset = size_t(phi.numCol()) - indR;
+    const size_t phiOff = size_t(phi.numCol()) - indR;
     for (size_t i = 0; i < r; ++i) {
-      phi(i, _(begin, phiOffset)) = 0;
-      phi(i, _(phiOffset, phiOffset + indR)) = indMat(_, i);
+      phi(i, _(begin, phiOff)) = 0;
+      phi(i, _(phiOff, phiOff + indR)) = indMat(_, i);
     }
     rank = r;
   }

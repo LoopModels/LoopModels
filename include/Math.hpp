@@ -37,20 +37,20 @@ struct Rational;
 namespace LinearAlgebra {
 
 inline auto allZero(const auto &x) -> bool {
-  return std::all_of(x.begin(), x.end(), [](auto x) { return x == 0; });
+  return std::all_of(x.begin(), x.end(), [](auto a) { return a == 0; });
   // return std::ranges::all_of(x, [](auto x) { return x == 0; });
 }
 inline auto allGEZero(const auto &x) -> bool {
-  return std::all_of(x.begin(), x.end(), [](auto x) { return x >= 0; });
+  return std::all_of(x.begin(), x.end(), [](auto a) { return a >= 0; });
   // return std::ranges::all_of(x, [](auto x) { return x >= 0; });
 }
 inline auto allLEZero(const auto &x) -> bool {
-  return std::all_of(x.begin(), x.end(), [](auto x) { return x <= 0; });
+  return std::all_of(x.begin(), x.end(), [](auto a) { return a <= 0; });
   // return std::ranges::all_of(x, [](auto x) { return x <= 0; });
 }
 
 inline auto countNonZero(const auto &x) -> size_t {
-  return std::count_if(x.begin(), x.end(), [](auto x) { return x != 0; });
+  return std::count_if(x.begin(), x.end(), [](auto a) { return a != 0; });
   // return std::ranges::count_if(x, [](auto x) { return x != 0; });
 }
 
@@ -91,7 +91,7 @@ template <AxisType T> struct AxisInt {
   [[no_unique_address]] V value{0};
   // [[no_unique_address]] unsigned int value{0};
   constexpr AxisInt() = default;
-  constexpr AxisInt(V value) : value(value) {}
+  constexpr AxisInt(V v) : value(v) {}
   explicit constexpr operator size_t() const { return value; }
   explicit constexpr operator ptrdiff_t() const { return value; }
   explicit constexpr operator unsigned() const { return value; }
@@ -390,7 +390,7 @@ struct ElementwiseVectorBinaryOp {
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  ElementwiseVectorBinaryOp(Op op, A a, B b) : op(op), a(a), b(b) {}
+  ElementwiseVectorBinaryOp(Op _op, A _a, B _b) : op(_op), a(_a), b(_b) {}
   auto operator[](size_t i) const { return op(get(a, i), get(b, i)); }
   [[nodiscard]] constexpr auto size() const -> size_t {
     if constexpr (AbstractVector<A> && AbstractVector<B>) {
@@ -413,7 +413,7 @@ struct ElementwiseMatrixBinaryOp {
   [[no_unique_address]] Op op;
   [[no_unique_address]] A a;
   [[no_unique_address]] B b;
-  ElementwiseMatrixBinaryOp(Op op, A a, B b) : op(op), a(a), b(b) {}
+  ElementwiseMatrixBinaryOp(Op _op, A _a, B _b) : op(_op), a(_a), b(_b) {}
   auto operator()(size_t i, size_t j) const {
     return op(get(a, i, j), get(b, i, j));
   }
@@ -579,7 +579,7 @@ template <std::integral B, std::integral E> struct Range<B, E> {
   // wrapper that allows dereferencing
   struct Iterator {
     [[no_unique_address]] B i;
-    constexpr auto operator==(E e) -> bool { return i == e; }
+    constexpr auto operator==(E other) -> bool { return i == other; }
     auto operator++() -> Iterator & {
       ++i;
       return *this;
@@ -764,9 +764,13 @@ template <typename T> struct PtrVector {
     return llvm::ArrayRef<std::remove_const_t<T>>(*this) == x;
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-
+#ifndef NDEBUG
   void extendOrAssertSize(size_t M) const { assert(M == N); }
-  constexpr PtrVector(NotNull<const T> mem, size_t N) : mem(mem), N(N) {}
+#else
+  // two defs to avoid unused parameter compiler warning in release builds
+  static constexpr void extendOrAssertSize(size_t) {}
+#endif
+  constexpr PtrVector(NotNull<const T> pt, size_t NN) : mem(pt), N(NN) {}
   PtrVector(llvm::ArrayRef<T> x) : mem(x.data()), N(x.size()) {}
 };
 template <typename T> struct MutPtrVector {
@@ -810,7 +814,7 @@ template <typename T> struct MutPtrVector {
   constexpr MutPtrVector(const MutPtrVector<T> &x) = default;
   constexpr MutPtrVector(llvm::MutableArrayRef<T> x)
     : mem(x.data()), N(x.size()) {}
-  constexpr MutPtrVector(T *mem, size_t N) : mem(mem), N(N) {}
+  constexpr MutPtrVector(T *pt, size_t NN) : mem(pt), N(NN) {}
   constexpr auto operator[](Range<size_t, size_t> i) -> MutPtrVector<T> {
     assert(i.b <= i.e);
     assert(i.e <= N);
@@ -916,7 +920,11 @@ template <typename T> struct MutPtrVector {
     for (size_t i = 0; i < N; ++i) mem[i] /= x;
     return *this;
   }
+#ifndef NDEBUG
   void extendOrAssertSize(size_t M) const { assert(M == N); }
+#else
+  static constexpr void extendOrAssertSize(size_t) {}
+#endif
 };
 template <typename T> PtrVector(T *, size_t) -> PtrVector<T>;
 template <typename T> MutPtrVector(T *, size_t) -> MutPtrVector<T>;
@@ -1066,7 +1074,11 @@ template <typename T> struct Vector {
   }
   template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {}
   void clear() { data.clear(); }
+#ifndef NDEBUG
   void extendOrAssertSize(size_t N) const { assert(N == data.size()); }
+#else
+  constexpr void extendOrAssertSize(size_t) const {}
+#endif
   void extendOrAssertSize(size_t N) {
     if (N != data.size()) data.resize_for_overwrite(N);
   }
@@ -1089,41 +1101,41 @@ template <typename T> struct StridedVector {
   struct StridedIterator {
     using value_type = const T;
     [[no_unique_address]] const T *d;
-    [[no_unique_address]] size_t x;
+    [[no_unique_address]] size_t xx;
     constexpr auto operator++() -> StridedIterator & {
-      d += x;
+      d += xx;
       return *this;
     }
     constexpr auto operator--() -> StridedIterator & {
-      d -= x;
+      d -= xx;
       return *this;
     }
     constexpr auto operator++(int) {
       auto tmp = *this;
-      d += x;
+      d += xx;
       return tmp;
     }
     constexpr auto operator--(int) {
       auto tmp = *this;
-      d -= x;
+      d -= xx;
       return tmp;
     }
-    auto operator[](ptrdiff_t y) const -> const T & { return d[y * x]; }
+    auto operator[](ptrdiff_t y) const -> const T & { return d[y * xx]; }
     auto operator-(StridedIterator y) const -> ptrdiff_t {
-      return (d - y.d) / x;
+      return (d - y.d) / xx;
     }
     auto operator+(ptrdiff_t y) const -> StridedIterator {
-      return {d + y * x, x};
+      return {d + y * xx, xx};
     }
     auto operator-(ptrdiff_t y) const -> StridedIterator {
-      return {d + y * x, x};
+      return {d + y * xx, xx};
     }
     auto operator+=(ptrdiff_t y) -> StridedIterator & {
-      d += y * x;
+      d += y * xx;
       return *this;
     }
     auto operator-=(ptrdiff_t y) -> StridedIterator & {
-      d -= y * x;
+      d -= y * xx;
       return *this;
     }
     constexpr auto operator*() const -> const T & { return *d; }
@@ -1147,9 +1159,9 @@ template <typename T> struct StridedVector {
       return d <= y.d;
     }
     friend auto operator+(ptrdiff_t y,
-                          typename StridedVector<T>::StridedIterator x) ->
+                          typename StridedVector<T>::StridedIterator a) ->
       typename StridedVector<T>::StridedIterator {
-      return {x.d + y * x.x, x.x};
+      return {a.d + y * a.xx, a.xx};
     }
   };
   [[nodiscard]] constexpr auto begin() const {
@@ -1180,16 +1192,20 @@ template <typename T> struct StridedVector {
   }
 
   [[nodiscard]] constexpr auto size() const -> size_t { return N; }
-  auto operator==(StridedVector<T> x) const -> bool {
-    if (size() != x.size()) return false;
+  auto operator==(StridedVector<T> a) const -> bool {
+    if (size() != a.size()) return false;
     for (size_t i = 0; i < size(); ++i)
-      if ((*this)[i] != x[i]) return false;
+      if ((*this)[i] != a[i]) return false;
     return true;
   }
   [[nodiscard]] constexpr auto view() const -> StridedVector<T> {
     return *this;
   }
+#ifndef NDEBUG
   void extendOrAssertSize(size_t M) const { assert(N == M); }
+#else
+  static constexpr void extendOrAssertSize(size_t) {}
+#endif
 };
 template <typename T> struct MutStridedVector {
   static_assert(!std::is_const_v<T>, "T should not be const");
@@ -1201,41 +1217,41 @@ template <typename T> struct MutStridedVector {
     using value_type = T;
 
     [[no_unique_address]] T *d;
-    [[no_unique_address]] size_t x;
+    [[no_unique_address]] size_t xx;
     constexpr auto operator++() -> StridedIterator & {
-      d += x;
+      d += xx;
       return *this;
     }
     constexpr auto operator--() -> StridedIterator & {
-      d -= x;
+      d -= xx;
       return *this;
     }
     constexpr auto operator++(int) {
       auto tmp = *this;
-      d += x;
+      d += xx;
       return tmp;
     }
     constexpr auto operator--(int) {
       auto tmp = *this;
-      d -= x;
+      d -= xx;
       return tmp;
     }
-    auto operator[](ptrdiff_t y) const -> T & { return d[y * x]; }
+    auto operator[](ptrdiff_t y) const -> T & { return d[y * xx]; }
     auto operator-(StridedIterator y) const -> ptrdiff_t {
-      return (d - y.d) / x;
+      return (d - y.d) / xx;
     }
     auto operator+(ptrdiff_t y) const -> StridedIterator {
-      return {d + y * x, x};
+      return {d + y * xx, xx};
     }
     auto operator-(ptrdiff_t y) const -> StridedIterator {
-      return {d + y * x, x};
+      return {d + y * xx, xx};
     }
     auto operator+=(ptrdiff_t y) -> StridedIterator & {
-      d += y * x;
+      d += y * xx;
       return *this;
     }
     auto operator-=(ptrdiff_t y) -> StridedIterator & {
-      d -= y * x;
+      d -= y * xx;
       return *this;
     }
     constexpr auto operator->() const -> T * { return d; }
@@ -1263,9 +1279,9 @@ template <typename T> struct MutStridedVector {
       return d <= y.d;
     }
     friend auto operator+(ptrdiff_t y,
-                          typename MutStridedVector<T>::StridedIterator x) ->
+                          typename MutStridedVector<T>::StridedIterator a) ->
       typename MutStridedVector<T>::StridedIterator {
-      return {x.d + y * x.x, x.x};
+      return {a.d + y * a.xx, a.xx};
     }
   };
   // FIXME: if `x` == 0, then it will not iterate!
@@ -1325,47 +1341,51 @@ template <typename T> struct MutStridedVector {
     for (size_t i = 0; i < N; ++i) d[size_t(x * i)] = y;
     return *this;
   }
-  auto operator=(const AbstractVector auto &x) -> MutStridedVector<T> & {
-    return copyto(*this, x);
+  auto operator=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+    return copyto(*this, a);
   }
-  auto operator=(const MutStridedVector<T> &x) -> MutStridedVector<T> & {
-    if (this == &x) return *this;
-    return copyto(*this, x);
+  auto operator=(const MutStridedVector<T> &a) -> MutStridedVector<T> & {
+    if (this == &a) return *this;
+    return copyto(*this, a);
   }
-  auto operator+=(T x) -> MutStridedVector<T> & {
+  auto operator+=(T a) -> MutStridedVector<T> & {
     MutStridedVector<T> &self = *this;
-    for (size_t i = 0; i < N; ++i) self[i] += x;
+    for (size_t i = 0; i < N; ++i) self[i] += a;
     return self;
   }
-  auto operator+=(const AbstractVector auto &x) -> MutStridedVector<T> & {
-    const size_t M = x.size();
-    MutStridedVector<T> &self = *this;
-    assert(M == N);
-    for (size_t i = 0; i < M; ++i) self[i] += x[i];
-    return self;
-  }
-  auto operator-=(const AbstractVector auto &x) -> MutStridedVector<T> & {
-    const size_t M = x.size();
+  auto operator+=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+    const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
-    for (size_t i = 0; i < M; ++i) self[i] -= x[i];
+    for (size_t i = 0; i < M; ++i) self[i] += a[i];
     return self;
   }
-  auto operator*=(const AbstractVector auto &x) -> MutStridedVector<T> & {
-    const size_t M = x.size();
+  auto operator-=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+    const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
-    for (size_t i = 0; i < M; ++i) self[i] *= x[i];
+    for (size_t i = 0; i < M; ++i) self[i] -= a[i];
     return self;
   }
-  auto operator/=(const AbstractVector auto &x) -> MutStridedVector<T> & {
-    const size_t M = x.size();
+  auto operator*=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+    const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
-    for (size_t i = 0; i < M; ++i) self[i] /= x[i];
+    for (size_t i = 0; i < M; ++i) self[i] *= a[i];
     return self;
   }
+  auto operator/=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+    const size_t M = a.size();
+    MutStridedVector<T> &self = *this;
+    assert(M == N);
+    for (size_t i = 0; i < M; ++i) self[i] /= a[i];
+    return self;
+  }
+#ifndef NDEBUG
   void extendOrAssertSize(size_t M) const { assert(N == M); }
+#else
+  static constexpr void extendOrAssertSize(size_t) {}
+#endif
 };
 static_assert(
   std::weakly_incrementable<StridedVector<int64_t>::StridedIterator>);
@@ -1696,13 +1716,17 @@ template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
   [[nodiscard]] constexpr auto transpose() const -> Transpose<PtrMatrix<T>> {
     return Transpose<PtrMatrix<T>>{*this};
   }
-  constexpr PtrMatrix(const T *const mem, const Row M, const Col N,
-                      const RowStride X)
-    : mem(mem), M(M), N(N), X(X) {}
+  constexpr PtrMatrix(const T *const pt, const Row MM, const Col NN,
+                      const RowStride XX)
+    : mem(pt), M(MM), N(NN), X(XX) {}
+#ifndef NDEBUG
   void extendOrAssertSize(Row MM, Col NN) const {
     assert(MM == M);
     assert(NN == N);
   }
+#else
+  static constexpr void extendOrAssertSize(Row, Col) {}
+#endif
 };
 static_assert(std::same_as<PtrMatrix<int64_t>::eltype, int64_t>);
 static_assert(HasEltype<PtrMatrix<int64_t>>);
@@ -1762,10 +1786,10 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   }
   // rule of 5 requires...
   constexpr MutPtrMatrix(const MutPtrMatrix<T> &A) = default;
-  constexpr MutPtrMatrix(T *mem, Row MM, Col NN)
-    : mem(mem), M(MM), N(NN), X(NN){};
-  constexpr MutPtrMatrix(T *mem, Row MM, Col NN, RowStride XX)
-    : mem(mem), M(MM), N(NN), X(XX){};
+  constexpr MutPtrMatrix(T *pt, Row MM, Col NN)
+    : mem(pt), M(MM), N(NN), X(NN){};
+  constexpr MutPtrMatrix(T *pt, Row MM, Col NN, RowStride XX)
+    : mem(pt), M(MM), N(NN), X(XX){};
   template <typename ARM>
   constexpr MutPtrMatrix(ARM &A)
     : mem(A.data()), M(A.numRow()), N(A.numCol()), X(A.rowStride()) {}
@@ -1804,8 +1828,6 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   }
   [[gnu::flatten]] auto operator/=(const std::integral auto b)
     -> MutPtrMatrix<T> {
-    const size_t M = numRow();
-    const size_t N = numCol();
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) /= b;
     return *this;
@@ -1816,10 +1838,14 @@ template <typename T> struct MutPtrMatrix : MutMatrixCore<T, MutPtrMatrix<T>> {
   [[nodiscard]] constexpr auto transpose() const -> Transpose<PtrMatrix<T>> {
     return Transpose<PtrMatrix<T>>{view()};
   }
-  void extendOrAssertSize(Row M, Col N) const {
-    assert(numRow() == M);
-    assert(numCol() == N);
+#ifndef NDEBUG
+  void extendOrAssertSize(Row MM, Col NN) const {
+    assert(numRow() == MM);
+    assert(numCol() == NN);
   }
+#else
+  static constexpr void extendOrAssertSize(Row, Col) {}
+#endif
 };
 template <typename T> constexpr auto ptrVector(T *p, size_t M) {
   if constexpr (std::is_const_v<T>)
@@ -1997,7 +2023,7 @@ struct SquarePtrMatrix : ConstMatrixCore<T, SquarePtrMatrix<T>> {
   static_assert(!std::is_const_v<T>, "const T is redundant");
   [[no_unique_address]] const T *const mem;
   [[no_unique_address]] const size_t M;
-  constexpr SquarePtrMatrix(const T *const mem, size_t m) : mem(mem), M(m){};
+  constexpr SquarePtrMatrix(const T *const pt, size_t MM) : mem(pt), M(MM){};
 
   [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
   [[nodiscard]] constexpr auto numCol() const -> Col { return Col{M}; }
@@ -2025,7 +2051,7 @@ struct MutSquarePtrMatrix : MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   [[nodiscard]] constexpr auto rowStride() const -> RowStride {
     return RowStride{M};
   }
-  constexpr MutSquarePtrMatrix(T *mem, size_t m) : mem(mem), M(m){};
+  constexpr MutSquarePtrMatrix(T *pt, size_t MM) : mem(pt), M(MM){};
   constexpr auto data() -> T * { return mem; }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
   constexpr operator SquarePtrMatrix<T>() const {
@@ -2093,11 +2119,15 @@ struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
   constexpr operator SquarePtrMatrix<T>() const {
     return SquarePtrMatrix<T>(mem.data(), M);
   }
+#ifndef NDEBUG
   void extendOrAssertSize(Row R, Col C) {
     assert(R == C && "Matrix must be square");
     M = size_t(R);
     mem.resize_for_overwrite(M * M);
   }
+#else
+  static constexpr void extendOrAssertSize(Row, Col) {}
+#endif
 };
 
 template <typename T, size_t S>
@@ -2116,11 +2146,11 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
 
   constexpr auto data() -> T * { return mem.data(); }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem.data(); }
-  Matrix(llvm::SmallVector<T, S> content, Row M, Col N)
-    : mem(std::move(content)), M(M), N(N), X(RowStride(*N)){};
+  Matrix(llvm::SmallVector<T, S> content, Row MM, Col NN)
+    : mem(std::move(content)), M(MM), N(NN), X(RowStride(*NN)){};
 
-  Matrix(Row M, Col N)
-    : mem(llvm::SmallVector<T, S>(M * N)), M(M), N(N), X(RowStride(*N)){};
+  Matrix(Row MM, Col NN)
+    : mem(llvm::SmallVector<T, S>(MM * NN)), M(MM), N(NN), X(RowStride(*NN)){};
 
   Matrix() = default;
   Matrix(SquareMatrix<T> &&A) : mem(std::move(A.mem)), M(A.M), N(A.M), X(A.M){};
@@ -2262,8 +2292,6 @@ struct Matrix<T, 0, 0, S> : MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     M = *MM;
   }
   [[gnu::flatten]] auto operator=(T x) -> Matrix<T, 0, 0, S> & {
-    const Row M = numRow();
-    const Col N = numCol();
     for (size_t r = 0; r < M; ++r)
       for (size_t c = 0; c < N; ++c) (*this)(r, c) = x;
     return *this;
@@ -2539,8 +2567,8 @@ template <typename T> struct SmallSparseMatrix {
     } else {
       nonZeros.insert(nonZeros.begin() + k, std::move(x));
       rows[size_t(i)] = r | jshift;
-      for (size_t k = size_t(i) + 1; k < rows.size(); ++k)
-        rows[k] += uint32_t(1) << maxElemPerRow;
+      for (size_t l = size_t(i) + 1; l < rows.size(); ++l)
+        rows[l] += uint32_t(1) << maxElemPerRow;
     }
   }
 

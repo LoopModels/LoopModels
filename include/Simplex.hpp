@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
 #include <tuple>
 
@@ -285,49 +286,52 @@ struct Simplex {
     llvm::SmallVector<unsigned> augmentVars{};
     for (unsigned i = 0; i < basicVars.size(); ++i)
       if (basicVars[i] == -1) augmentVars.push_back(i);
-    if (augmentVars.size()) {
-      addVars(augmentVars.size()); // NOTE: invalidates all refs
-      MutPtrMatrix<int64_t> C{getConstraints()};
-      MutStridedVector<int64_t> basicVars{getBasicVariables()};
-      MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-      MutPtrVector<int64_t> costs{getCost()};
-      tableau(1, _) = 0;
-      for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
-        ptrdiff_t a = augmentVars[i];
-        basicVars[a] = i + numVar;
-        basicCons[i + numVar] = a;
-        C(a, numVar + i) = 1;
-        // we now zero out the implicit cost of `1`
-        costs[_(begin, numVar)] -= C(a, _(begin, numVar));
-      }
-      // false/0 means feasible
-      // true/non-zero infeasible
-      if (runCore() != 0) return true;
-      for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
-        if (basicVars[c] >= numVar) {
-          assert(C(c, 0) == 0);
-          assert(c == basicCons[basicVars[c]]);
-          assert(C(c, basicVars[c]) >= 0);
-          // find var to make basic in its place
-          for (ptrdiff_t v = numVar; v != 0;) {
-            // search for a non-basic variable
-            // (basicConstraints<0)
-            assert(v > 1);
-            if ((basicCons[--v] >= 0) || (C(c, v) == 0)) continue;
-            if (C(c, v) < 0) C(c, _) *= -1;
-            for (size_t i = 0; i < C.numRow(); ++i)
-              if (i != size_t(c))
-                NormalForm::zeroWithRowOperation(C, i, c, v, 0);
-            basicVars[c] = v;
-            basicCons[v] = c;
-            break;
-          }
+    if (augmentVars.size())
+      if (removeAugmentVars(augmentVars, numVar)) return true;
+    assertCanonical();
+    return false;
+  }
+  auto removeAugmentVars(llvm::ArrayRef<unsigned> augmentVars, ptrdiff_t numVar)
+    -> bool {
+    addVars(augmentVars.size()); // NOTE: invalidates all refs
+    MutPtrMatrix<int64_t> C{getConstraints()};
+    MutStridedVector<int64_t> basicVars{getBasicVariables()};
+    MutPtrVector<int64_t> basicCons{getBasicConstraints()};
+    MutPtrVector<int64_t> costs{getCost()};
+    tableau(1, _) = 0;
+    for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
+      ptrdiff_t a = augmentVars[i];
+      basicVars[a] = i + numVar;
+      basicCons[i + numVar] = a;
+      C(a, numVar + i) = 1;
+      // we now zero out the implicit cost of `1`
+      costs[_(begin, numVar)] -= C(a, _(begin, numVar));
+    }
+    // false/0 means feasible
+    // true/non-zero infeasible
+    if (runCore() != 0) return true;
+    for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
+      if (basicVars[c] >= numVar) {
+        assert(C(c, 0) == 0);
+        assert(c == basicCons[basicVars[c]]);
+        assert(C(c, basicVars[c]) >= 0);
+        // find var to make basic in its place
+        for (ptrdiff_t v = numVar; v != 0;) {
+          // search for a non-basic variable
+          // (basicConstraints<0)
+          assert(v > 1);
+          if ((basicCons[--v] >= 0) || (C(c, v) == 0)) continue;
+          if (C(c, v) < 0) C(c, _) *= -1;
+          for (size_t i = 0; i < C.numRow(); ++i)
+            if (i != size_t(c)) NormalForm::zeroWithRowOperation(C, i, c, v, 0);
+          basicVars[c] = v;
+          basicCons[v] = c;
+          break;
         }
       }
-      // all augment vars are now 0
-      truncateVars(numVar);
     }
-    assertCanonical();
+    // all augment vars are now 0
+    truncateVars(numVar);
     return false;
   }
   // 1 based to match getBasicConstraints

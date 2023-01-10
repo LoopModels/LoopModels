@@ -50,11 +50,10 @@ struct ScheduledMemoryAccess {
   // which indicates a reload from this address.
   [[no_unique_address]] int64_t denominator{1};
   [[no_unique_address]] bool isStore;
-  ScheduledMemoryAccess(MemoryAccess *access, PtrMatrix<int64_t> Pinv,
-                        int64_t denominator, PtrVector<int64_t> omega,
-                        bool isStore)
-    : access(access), denominator(denominator), isStore(isStore) {
-    IntMatrix MStarT = access->indexMatrix().transpose() * Pinv;
-    Vector<int64_t> omegaStar = access->offsetMatrix()(_, 0) - MStarT * omega;
+  ScheduledMemoryAccess(MemoryAccess *ma, PtrMatrix<int64_t> Pinv,
+                        int64_t denom, PtrVector<int64_t> omega, bool isStr)
+    : access(ma), denominator(denom), isStore(isStr) {
+    IntMatrix MStarT = ma->indexMatrix().transpose() * Pinv;
+    Vector<int64_t> omegaStar = ma->offsetMatrix()(_, 0) - MStarT * omega;
   }
 };

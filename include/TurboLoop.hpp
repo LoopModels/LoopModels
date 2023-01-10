@@ -116,7 +116,10 @@ public:
     llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
     // Track position within the loop nest
     llvm::SmallVector<unsigned> omega;
-    pushLoopTree(loopForests, nullptr, revLI, H, E);
+    {
+      NoWrapRewriter nwr(*SE);
+      pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);
+    }
     for (auto &forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
   ///
@@ -150,7 +153,8 @@ public:
   /// sub-loop's exit block to this.
   auto pushLoopTree(llvm::SmallVectorImpl<NotNull<LoopTree>> &pForest,
                     llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
-                    llvm::BasicBlock *H, llvm::BasicBlock *E) -> size_t {
+                    llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    NoWrapRewriter &nwr) -> size_t {
 
     if (size_t numSubLoops = subLoops.size()) {
       // branches of this tree;
@@ -162,9 +166,9 @@ public:
       size_t interiorDepth = 0;
       for (size_t i = 0; i < numSubLoops; ++i) {
         llvm::Loop *subLoop = subLoops[i];
-        if (size_t depth =
-              pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
-                           subLoop->getHeader(), subLoop->getExitingBlock())) {
+        if (size_t depth = pushLoopTree(
+              branches, subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
+              subLoop->getExitingBlock(), nwr)) {
           // pushLoopTree succeeded, and we have `depth` inner loops
           // within `subLoop` (inclusive, i.e. `depth == 1` would
           // indicate that `subLoop` doesn't have any subLoops itself,
@@ -218,9 +222,8 @@ public:
       // we're at the bottom of the recursion
       if (auto predMapAbridged =
             Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *BTNW = noWrapSCEV(*SE, BT);
-        auto *newTree =
-          new (allocator) LoopTree{L, BTNW, *SE, {std::move(*predMapAbridged)}};
+        auto *newTree = new (allocator)
+          LoopTree{L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
         pForest.push_back(newTree);
         return 1;
       }
@@ -245,9 +248,9 @@ public:
         if (!BI->isConditional()) return LI->isLoopHeader(BI->getSuccessor(0));
     return false;
   }
-  inline static auto containsPeeled(const llvm::SCEV *S, size_t numPeeled)
+  inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
     -> bool {
-    return llvm::SCEVExprContains(S, [numPeeled](const llvm::SCEV *S) {
+    return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
       if (auto r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
         if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
       return false;
@@ -270,13 +273,13 @@ public:
         flag |= uint64_t(1) << y->getLoop()->getLoopDepth();
       for (size_t i = 0; i < x->getNumOperands(); ++i)
         flag |= blackListAllDependentLoops(x->getOperand(i));
-    } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
+    } else if (const auto *c = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
+      for (size_t i = 0; i < c->getNumOperands(); ++i)
+        flag |= blackListAllDependentLoops(c->getOperand(i));
       return flag;
-    } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
+    } else if (const auto *d = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
+      for (size_t i = 0; i < d->getNumOperands(); ++i)
+        flag |= blackListAllDependentLoops(d->getOperand(i));
       return flag;
     }
     return flag;
@@ -330,22 +333,22 @@ public:
     } else if (std::optional<int64_t> c = getConstantInt(S)) {
       offsets[0] += *c;
       return 0;
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-      return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
+    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
+      return fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(0),
                                mlt, numPeeled) |
-             fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(1),
+             fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(1),
                                mlt, numPeeled);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-      if (auto op = getConstantInt(ex->getOperand(0))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(1),
-                                 mlt * (*op), numPeeled);
+    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
+      if (auto op0 = getConstantInt(m->getOperand(0))) {
+        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
+                                 mlt * (*op0), numPeeled);
 
-      } else if (auto op = getConstantInt(ex->getOperand(1))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
-                                 mlt * (*op), numPeeled);
+      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
+                                 mlt * (*op1), numPeeled);
       }
-    } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
-      return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
+    } else if (const auto *ca = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
+      return fillAffineIndices(v, offsets, symbolicOffsets, ca->getOperand(0),
                                mlt, numPeeled);
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
@@ -473,11 +476,11 @@ public:
     for (llvm::Instruction &I : *BB) {
       if (LT.loop) assert(LT.loop->contains(&I));
       if (I.mayReadFromMemory()) {
-        if (auto *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
-          if (addRef(LT, LI, omega)) return;
+        if (auto *LInst = llvm::dyn_cast<llvm::LoadInst>(&I))
+          if (addRef(LT, LInst, omega)) return;
       } else if (I.mayWriteToMemory())
-        if (auto *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
-          if (addRef(LT, SI, omega)) return;
+        if (auto *SInst = llvm::dyn_cast<llvm::StoreInst>(&I))
+          if (addRef(LT, SInst, omega)) return;
     }
   }
   void visit(LoopTree &LT, Predicate::Map &map,
