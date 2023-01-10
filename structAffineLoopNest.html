@@ -88,8 +88,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops
 <tr class="memitem:a63489ba1782354820cec69596358f034"><td class="memItemLeft" align="right" valign="top"><a id="a63489ba1782354820cec69596358f034"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>findIndex</b> (const llvm::SCEV *v) const -&gt; size_t</td></tr>
 <tr class="separator:a63489ba1782354820cec69596358f034"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66b9b17886e1f1322b8b16072dbc6c0d"><td class="memItemLeft" align="right" valign="top"><a id="a66b9b17886e1f1322b8b16072dbc6c0d"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>rotate</b> (<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; R) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;</td></tr>
+<tr class="memitem:a66b9b17886e1f1322b8b16072dbc6c0d"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#a66b9b17886e1f1322b8b16072dbc6c0d">rotate</a> (<a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; R) const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt;</td></tr>
 <tr class="separator:a66b9b17886e1f1322b8b16072dbc6c0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1833ffa972772f61f2dc3270234833f1"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a> (IntMatrix &amp;B, llvm::Loop *L, const llvm::SCEV *v, llvm::ScalarEvolution &amp;SE, <a class="el" href="structLinearAlgebra_1_1Range.html">Range</a>&lt; size_t, size_t &gt; lu, int64_t mlt, size_t minDepth) -&gt; size_t</td></tr>
 <tr class="separator:a1833ffa972772f61f2dc3270234833f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -335,6 +334,35 @@ template&lt;bool NonNegative = true&gt; </div>
 </table>
 </div><div class="memdoc">
 <p>add a symbol to row <code>r</code> of A we try to break down value <code>v</code>, so that adding N, N - 1, N - 3 only adds the variable <code>N</code>, and adds the constant offsets </p>
+
+</div>
+</div>
+<a id="a66b9b17886e1f1322b8b16072dbc6c0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66b9b17886e1f1322b8b16072dbc6c0d">&#9670;&nbsp;</a></span>rotate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;bool NonNegative = true&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; NonNegative &gt;::rotate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt;&#160;</td>
+          <td class="paramname"><em>R</em></td><td>)</td>
+          <td> const -&gt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt;false&gt; </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>A.rotate( R ) A(_,const) + A(_,var)*var &gt;= 0 this method applies rotation matrix R A(_,const) + (A(_,var)*R)*(R^{-1}*var) &gt;= 0 So that our new loop nest has matrix [A(_,const) (A(_,var)*R)] while the new &lsquo;var&rsquo; is <code>(R^{-1}*var)</code> </p>
 
 </div>
 </div>

@@ -87,98 +87,98 @@ $(function() {
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/raw_ostream.h&gt;</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &lt;strings.h&gt;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="keyword">struct </span><a class="code" href="structDependence.html">Dependence</a>;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// TODO:</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// refactor to use GraphTraits.h</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structMemoryAccess.html">   24</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structMemoryAccess.html">MemoryAccess</a> {</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryOmegaOffset(<span class="keywordtype">size_t</span> arrayDim, <span class="keywordtype">size_t</span> numLoops,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                                          <span class="keywordtype">size_t</span> numSymbols) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordflow">return</span> arrayDim * numLoops + arrayDim * numSymbols;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  }</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryTotalRequired(<span class="keywordtype">size_t</span> arrayDim, <span class="keywordtype">size_t</span> numLoops,</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;                                            <span class="keywordtype">size_t</span> numSymbols) -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keywordflow">return</span> arrayDim * numLoops + numLoops + arrayDim * numSymbols;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  }</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;const llvm::SCEVUnknown&gt;</a> basePointer;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; loop;</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// This field will store either the loaded instruction, or the store</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// instruction. This means that we can check if this MemoryAccess is a load</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="comment">// via checking `!loadOrStore.isa&lt;llvm::StoreInst&gt;()`.</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">// This allows us to create dummy loads (i.e. reloads of stores) via assigning</span></div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="comment">// the stored value to `loadOrStore`. In the common case that we do have an</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">// actual load instruction, that instruction is equivalent to the loaded</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">// value, meaning that is the stored instruction, and thus we still have</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <span class="comment">// access to it when it is available.</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;llvm::Instruction&gt;</a> loadOrStore;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; symbolicOffsets;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// unsigned (instead of ptr) as we build up edges</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="comment">// and I don&#39;t want to relocate pointers when resizing vector</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> edgesIn;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> edgesOut;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> nodeIndex;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="comment">// This is a flexible length array, declared as a length-1 array</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="comment">// I wish there were some way to opt into &quot;I&#39;m using a c99 extension&quot;</span></div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:</span></div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <span class="comment">// https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  int64_t mem[1]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <span class="comment">// schedule indicated by `1` top bit, remainder indicates loop</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;int64_t&gt;</a> { <span class="keywordflow">return</span> mem; }</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const int64_t&gt;</a> {</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keywordflow">return</span> mem;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  }</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> omegaOffset() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keywordflow">return</span> memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  }</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;               llvm::Instruction *user,</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;               llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sz,</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;               llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; off)</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;      sizes(std::move(sz)), symbolicOffsets(std::move(off)){};</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;               llvm::Instruction *user)</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> construct(llvm::BumpPtrAllocator &amp;alloc,</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                        <span class="keyword">const</span> llvm::SCEVUnknown *arrayPointer,</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                        <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> o) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordtype">size_t</span> numLoops = loopRef.getNumLoops();</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    assert(o.size() == numLoops + 1);</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = numLoops;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keyword">auto</span> *mem =</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      alloc.Allocate&lt;<span class="keywordtype">char</span>&gt;(<span class="keyword">sizeof</span>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t));</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keyword">auto</span> *ma = <span class="keyword">new</span> (mem) <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(arrayPointer, loopRef, user);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a>() = o;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordflow">return</span> ma;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  construct(llvm::BumpPtrAllocator &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> indMatT,</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;            <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> offsets, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> o)</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keyword">auto</span> [sz, off] = std::move(szOff);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordtype">size_t</span> arrayDim = sz.size();</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordtype">size_t</span> numLoops = loopRef.getNumLoops();</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    assert(o.size() == numLoops + 1);</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">size_t</span> numSymbols = size_t(offsets.numCol());</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keyword">auto</span> *mem =</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      alloc.Allocate&lt;<span class="keywordtype">char</span>&gt;(<span class="keyword">sizeof</span>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t));</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <span class="keyword">auto</span> *ma = <span class="keyword">new</span> (mem)</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;      <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(arrayPtr, loopRef, user, std::move(sz), std::move(off));</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>() = indMatT.transpose();</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    ma-&gt;offsetMatrix() = offsets;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    ma-&gt;getFusionOmega() = o;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">// TODO:</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">// refactor to use GraphTraits.h</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structMemoryAccess.html">   22</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structMemoryAccess.html">MemoryAccess</a> {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryOmegaOffset(<span class="keywordtype">size_t</span> arrayDim, <span class="keywordtype">size_t</span> numLoops,</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;                                          <span class="keywordtype">size_t</span> numSymbols) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordflow">return</span> arrayDim * numLoops + arrayDim * numSymbols;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  }</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keyword">static</span> constexpr <span class="keyword">auto</span> memoryTotalRequired(<span class="keywordtype">size_t</span> arrayDim, <span class="keywordtype">size_t</span> numLoops,</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;                                            <span class="keywordtype">size_t</span> numSymbols) -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordflow">return</span> arrayDim * numLoops + numLoops + arrayDim * numSymbols;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  }</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;const llvm::SCEVUnknown&gt;</a> basePointer;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;AffineLoopNest&lt;&gt;</a>&gt; loop;</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <span class="comment">// This field will store either the loaded instruction, or the store</span></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  <span class="comment">// instruction. This means that we can check if this MemoryAccess is a load</span></div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">// via checking `!loadOrStore.isa&lt;llvm::StoreInst&gt;()`.</span></div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="comment">// This allows us to create dummy loads (i.e. reloads of stores) via assigning</span></div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="comment">// the stored value to `loadOrStore`. In the common case that we do have an</span></div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  <span class="comment">// actual load instruction, that instruction is equivalent to the loaded</span></div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">// value, meaning that is the stored instruction, and thus we still have</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="comment">// access to it when it is available.</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;llvm::Instruction&gt;</a> loadOrStore;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; symbolicOffsets;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">// unsigned (instead of ptr) as we build up edges</span></div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="comment">// and I don&#39;t want to relocate pointers when resizing vector</span></div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> edgesIn;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> edgesOut;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <a class="code" href="structBitSet.html">BitSet&lt;&gt;</a> nodeIndex;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="comment">// This is a flexible length array, declared as a length-1 array</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="comment">// I wish there were some way to opt into &quot;I&#39;m using a c99 extension&quot;</span></div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="comment">// so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:</span></div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="comment">// https://gcc.gnu.org/onlinedocs/gcc/Zero-Length.html</span></div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="comment">// https://developers.redhat.com/articles/2022/09/29/benefits-limitations-flexible-array-members#flexible_array_members_vs__pointer_implementation</span></div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  int64_t mem[1]; <span class="comment">// NOLINT(modernize-avoid-c-arrays)</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  <span class="comment">// schedule indicated by `1` top bit, remainder indicates loop</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;int64_t&gt;</a> { <span class="keywordflow">return</span> mem; }</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> data() <span class="keyword">const</span> -&gt; <a class="code" href="structNotNull.html">NotNull&lt;const int64_t&gt;</a> {</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordflow">return</span> mem;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  }</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> omegaOffset() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> memoryOmegaOffset(getArrayDim(), getNumLoops(), getNumSymbols());</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;               llvm::Instruction *user,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;               llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sz,</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;               llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; off)</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;      sizes(std::move(sz)), symbolicOffsets(std::move(off)){};</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(<span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr, <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef,</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;               llvm::Instruction *user)</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span> construct(llvm::BumpPtrAllocator &amp;alloc,</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;                        <span class="keyword">const</span> llvm::SCEVUnknown *arrayPointer,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;                        <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;                        <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> o) -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keywordtype">size_t</span> numLoops = loopRef.getNumLoops();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    assert(o.size() == numLoops + 1);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = numLoops;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keyword">auto</span> *mem =</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      alloc.Allocate&lt;<span class="keywordtype">char</span>&gt;(<span class="keyword">sizeof</span>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t));</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keyword">auto</span> *ma = <span class="keyword">new</span> (mem) <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(arrayPointer, loopRef, user);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a>() = o;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordflow">return</span> ma;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  }</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">static</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  construct(llvm::BumpPtrAllocator &amp;alloc, <span class="keyword">const</span> llvm::SCEVUnknown *arrayPtr,</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;            <a class="code" href="structAffineLoopNest.html">AffineLoopNest&lt;true&gt;</a> &amp;loopRef, llvm::Instruction *user,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;            <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> indMatT,</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;            std::array&lt;llvm::SmallVector&lt;const llvm::SCEV *, 3&gt;, 2&gt; szOff,</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            <a class="code" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix&lt;int64_t&gt;</a> offsets, <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;unsigned&gt;</a> o)</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    -&gt; <a class="code" href="structNotNull.html">NotNull&lt;MemoryAccess&gt;</a> {</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keyword">auto</span> [sz, off] = std::move(szOff);</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keywordtype">size_t</span> arrayDim = sz.size();</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordtype">size_t</span> numLoops = loopRef.getNumLoops();</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    assert(o.size() == numLoops + 1);</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordtype">size_t</span> numSymbols = size_t(offsets.numCol());</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">size_t</span> memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keyword">auto</span> *mem =</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;      alloc.Allocate&lt;<span class="keywordtype">char</span>&gt;(<span class="keyword">sizeof</span>(<a class="code" href="structMemoryAccess.html">MemoryAccess</a>) + memNeeded * <span class="keyword">sizeof</span>(int64_t));</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keyword">auto</span> *ma = <span class="keyword">new</span> (mem)</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;      <a class="code" href="structMemoryAccess.html">MemoryAccess</a>(arrayPtr, loopRef, user, std::move(sz), std::move(off));</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    ma-&gt;<a class="code" href="structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0">indexMatrix</a>() = indMatT.transpose();</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    ma-&gt;offsetMatrix() = offsets;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    ma-&gt;getFusionOmega() = o;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    <span class="keywordflow">return</span> ma;</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  }</div>
 <div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">  114</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39">getFusionOmega</a>() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
@@ -396,13 +396,12 @@ $(function() {
 <div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;}</div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructBitSet_html"><div class="ttname"><a href="structBitSet.html">BitSet</a></div><div class="ttdef"><b>Definition:</b> BitSets.hpp:73</div></div>
-<div class="ttc" id="astructDependence_html"><div class="ttname"><a href="structDependence.html">Dependence</a></div><div class="ttdef"><b>Definition:</b> DependencyPolyhedra.hpp:370</div></div>
 <div class="ttc" id="astructInstruction_html"><div class="ttname"><a href="structInstruction.html">Instruction</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:74</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1738</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:776</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1688</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:710</div></div>
-<div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:24</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1740</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:778</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:1690</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:712</div></div>
+<div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:22</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a0062ff34fe54995918590f2b87fd2db2"><div class="ttname"><a href="structMemoryAccess.html#a0062ff34fe54995918590f2b87fd2db2">MemoryAccess::typeAlignment</a></div><div class="ttdeci">static auto typeAlignment(const llvm::SCEV *S) -&gt; llvm::Align</div><div class="ttdoc">initialize alignment from an elSize SCEV.</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:212</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a245b41566ec8297df73f91e1829670d5"><div class="ttname"><a href="structMemoryAccess.html#a245b41566ec8297df73f91e1829670d5">MemoryAccess::addNodeIndex</a></div><div class="ttdeci">void addNodeIndex(unsigned i)</div><div class="ttdoc">add a node index</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:225</div></div>
 <div class="ttc" id="astructMemoryAccess_html_a2d1006fd9552a0ef88f8fa33fac6c133"><div class="ttname"><a href="structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133">MemoryAccess::indexMatrix</a></div><div class="ttdeci">auto indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:183</div></div>

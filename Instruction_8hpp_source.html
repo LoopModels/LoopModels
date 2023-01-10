@@ -72,7 +72,7 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;./Predicate.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;MemoryAccess.hpp&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;./ScheduledMemoryAccess.hpp&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;bit&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;concepts&gt;</span></div>
@@ -217,7 +217,7 @@ $(function() {
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;  [[no_unique_address]] llvm::Type *type;</div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;  [[no_unique_address]] std::variant&lt;std::monostate, llvm::Instruction *,</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;                                     llvm::ConstantInt *, llvm::ConstantFP *,</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                                     <a class="code" href="structMemoryAccess.html">MemoryAccess</a> *&gt;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;                                     <a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> *&gt;</div>
 <div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    ptr;</div>
 <div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;  [[no_unique_address]] <a class="code" href="structPredicate_1_1Set.html">Predicate::Set</a> predicates;</div>
 <div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;  [[no_unique_address]] llvm::MutableArrayRef&lt;Instruction *&gt; operands;</div>
@@ -306,7 +306,7 @@ $(function() {
 <div class="line"><a name="l00241"></a><span class="lineno"><a class="line" href="structInstruction_1_1ExtractValue.html">  241</a></span>&#160;  <span class="keyword">struct </span><a class="code" href="structInstruction_1_1ExtractValue.html">ExtractValue</a> {</div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keyword">auto</span> operator()(<span class="keyword">auto</span>) <span class="keyword">const</span> -&gt; llvm::Value * { <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
 <div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <span class="keyword">auto</span> operator()(llvm::Value *v) <span class="keyword">const</span> -&gt; llvm::Value * { <span class="keywordflow">return</span> v; }</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *v) <span class="keyword">const</span> -&gt; llvm::Value * {</div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> *v) <span class="keyword">const</span> -&gt; llvm::Value * {</div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;      <span class="keywordflow">return</span> v-&gt;getInstruction();</div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    }</div>
 <div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  };</div>
@@ -329,7 +329,7 @@ $(function() {
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;      <span class="keywordflow">if</span> (<span class="keyword">auto</span> *I = llvm::dyn_cast&lt;llvm::Instruction&gt;(v)) <span class="keywordflow">return</span> I-&gt;getParent();</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    }</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *v) <span class="keyword">const</span> -&gt; llvm::BasicBlock * {</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> *v) <span class="keyword">const</span> -&gt; llvm::BasicBlock * {</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;      <span class="keywordflow">return</span> v-&gt;getInstruction()-&gt;getParent();</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    }</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  };</div>
@@ -959,7 +959,7 @@ $(function() {
 <div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160;        <span class="keywordflow">return</span> store-&gt;getAlign();</div>
 <div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160;      <span class="keywordflow">else</span> <span class="keywordflow">return</span> {};</div>
 <div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;    }</div>
-<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structMemoryAccess.html">MemoryAccess</a> *ref) <span class="keyword">const</span> -&gt; llvm::Align {</div>
+<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;    <span class="keyword">auto</span> operator()(<a class="code" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> *ref) <span class="keyword">const</span> -&gt; llvm::Align {</div>
 <div class="line"><a name="l00924"></a><span class="lineno">  924</span>&#160;      <span class="keywordflow">return</span> ref-&gt;getAlign();</div>
 <div class="line"><a name="l00925"></a><span class="lineno">  925</span>&#160;    }</div>
 <div class="line"><a name="l00926"></a><span class="lineno">  926</span>&#160;  };</div>
@@ -1506,13 +1506,13 @@ $(function() {
 <div class="ttc" id="astructInstruction_html_a79a97b7e7551dab3035b126828c6fa5d"><div class="ttname"><a href="structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d">Instruction::isShuffle</a></div><div class="ttdeci">auto isShuffle() const -&gt; bool</div><div class="ttdoc">fall back in case we need value operand</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:639</div></div>
 <div class="ttc" id="astructInstruction_html_a7c9e374d023ab4f16d882484fb87f325"><div class="ttname"><a href="structInstruction.html#a7c9e374d023ab4f16d882484fb87f325">Instruction::selectCost</a></div><div class="ttdeci">auto selectCost(llvm::TargetTransformInfo &amp;TTI, unsigned int vectorWidth) -&gt; llvm::InstructionCost</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:866</div></div>
 <div class="ttc" id="astructInstruction_html_ab525733a4cc5ea3ba5a153b0d009425e"><div class="ttname"><a href="structInstruction.html#ab525733a4cc5ea3ba5a153b0d009425e">Instruction::replaceAllOtherUsesWith</a></div><div class="ttdeci">void replaceAllOtherUsesWith(Instruction *I)</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1081</div></div>
-<div class="ttc" id="astructMemoryAccess_html"><div class="ttname"><a href="structMemoryAccess.html">MemoryAccess</a></div><div class="ttdef"><b>Definition:</b> MemoryAccess.hpp:24</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Utilities.hpp:8</div></div>
 <div class="ttc" id="astructPredicate_1_1Intersection_html"><div class="ttname"><a href="structPredicate_1_1Intersection.html">Predicate::Intersection</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:42</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html"><div class="ttname"><a href="structPredicate_1_1Map.html">Predicate::Map</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1200</div></div>
 <div class="ttc" id="astructPredicate_1_1Map_html_ad329a3160de985d1a1b3ac4c1e37f492"><div class="ttname"><a href="structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492">Predicate::Map::descend</a></div><div class="ttdeci">static auto descend(llvm::BumpPtrAllocator &amp;alloc, Instruction::Cache &amp;cache, llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L) -&gt; std::optional&lt; Map &gt;</div><div class="ttdef"><b>Definition:</b> Instruction.hpp:1372</div></div>
 <div class="ttc" id="astructPredicate_1_1Set_html"><div class="ttname"><a href="structPredicate_1_1Set.html">Predicate::Set</a></div><div class="ttdef"><b>Definition:</b> Predicate.hpp:199</div></div>
 <div class="ttc" id="astructRecipThroughputLatency_html"><div class="ttname"><a href="structRecipThroughputLatency.html">RecipThroughputLatency</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:62</div></div>
+<div class="ttc" id="astructScheduledMemoryAccess_html"><div class="ttname"><a href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a></div><div class="ttdef"><b>Definition:</b> ScheduledMemoryAccess.hpp:50</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
