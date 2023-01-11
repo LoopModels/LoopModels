@@ -9,6 +9,7 @@
 #include <limits>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 #include <tuple>
 
 // #define VERBOSESIMPLEX
@@ -288,7 +289,9 @@ struct Simplex {
       if (basicVars[i] == -1) augmentVars.push_back(i);
     if (augmentVars.size())
       if (removeAugmentVars(augmentVars, numVar)) return true;
+#ifndef NDEBUG
     assertCanonical();
+#endif
     return false;
   }
   auto removeAugmentVars(llvm::ArrayRef<unsigned> augmentVars, ptrdiff_t numVar)
@@ -446,8 +449,8 @@ struct Simplex {
       assert(C(c, 0) >= 0);
     }
   }
-#else
-  static constexpr void assertCanonical() {}
+// #else
+//   static constexpr void assertCanonical() {}
 #endif
 
   // don't touch variables lex < v
@@ -508,8 +511,10 @@ struct Simplex {
     int64_t c = basicConstraints[v];
     int64_t cc = c++;
     if ((cc < 0) || (C(c, 0))) return cc >= 0;
-    // search for entering variable
+// search for entering variable
+#ifndef NDEBUG
     assertCanonical();
+#endif
     for (auto ev = ptrdiff_t(C.numCol()); ev > v + 1;) {
       // search for a non-basic variable (basicConstraints<0)
       if ((basicConstraints[--ev] >= 0) || (C(c, ev) == 0)) continue;
@@ -524,7 +529,9 @@ struct Simplex {
       basicConstraints[ev] = cc;
       break;
     }
+#ifndef NDEBUG
     assertCanonical();
+#endif
     return false;
   }
   // lex min the range [l, u), not touching any variable lex < l
@@ -556,8 +563,10 @@ struct Simplex {
     assertCanonical();
 #endif
     for (size_t v = 0; v < sol.size();) lexMinimize(++v);
+#ifndef NDEBUG
     copySolution(sol);
     assertCanonical();
+#endif
   }
   void copySolution(Vector<Rational> &sol) {
     MutPtrMatrix<int64_t> C{getConstraints()};

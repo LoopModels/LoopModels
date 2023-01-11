@@ -954,9 +954,9 @@ template <typename T> struct Vector {
   using eltype = T;
   [[no_unique_address]] llvm::SmallVector<T, 16> data;
 
-  Vector(int N) : data(llvm::SmallVector<T>(N)){};
-  Vector(size_t N = 0) : data(llvm::SmallVector<T>(N)){};
-  Vector(llvm::SmallVector<T> A) : data(std::move(A)){};
+  Vector(int N) : data(llvm::SmallVector<T, 16>(N)){};
+  Vector(size_t N = 0) : data(llvm::SmallVector<T, 16>(N)){};
+  Vector(llvm::SmallVector<T, 16> A) : data(std::move(A)){};
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     return data[canonicalize(i, data.size())];
@@ -1007,7 +1007,7 @@ template <typename T> struct Vector {
   template <typename... A> void emplace_back(A &&...x) {
     data.emplace_back(std::forward<A>(x)...);
   }
-  Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T>{}) {
+  Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T, 16>{}) {
     const size_t N = x.size();
     data.resize_for_overwrite(N);
     for (size_t n = 0; n < N; ++n) data[n] = x[n];
@@ -2128,7 +2128,10 @@ struct SquareMatrix : MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
     mem.resize_for_overwrite(M * M);
   }
 #else
-  static constexpr void extendOrAssertSize(Row, Col) {}
+  void extendOrAssertSize(Row R, Col) {
+    M = size_t(R);
+    mem.resize_for_overwrite(M * M);
+  }
 #endif
 };
 
