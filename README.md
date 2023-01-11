@@ -184,3 +184,30 @@ For ILP optimization, we take the lexicographical minimum of the `[dependence di
 
 In contrast, schedules represent loops in an outer <-> inner order, as that is the order we solve them. That is columns of `Phi` and elements from `omega` are in outer <-> inner order.
 
+#### Benchmarks
+
+You may first want to install `libpmf`, for example on Fedora
+```
+sudo dnf install libpfm-devel libpfm-static
+```
+or on Debian(-based) systems:
+```
+sudo apt-get install libpfm4-dev
+```
+`libpmf` is only necessary if you want perf counters.
+For example
+```sh
+CXX=clang++ CXXFLAGS="" cmake -G Ninja -S benchmark buildclang/benchmark -DCMAKE_BUILD_TYPE=Release
+cmake --build buildclang/benchmark
+buildclang/benchmark/LoopModelsBenchmarks --benchmark_perf_counters=CYCLES,INSTRUCTIONS,CACHE-MISSES
+
+CXX=g++ CXXFLAGS="" cmake -G Ninja -S benchmark buildgcc/benchmark -DCMAKE_BUILD_TYPE=Release
+cmake --build buildgcc/benchmark
+buildgcc/benchmark/LoopModelsBenchmarks --benchmark_perf_counters=CYCLES,INSTRUCTIONS,CACHE-MISSES
+```
+Only up to 3 arguments may be passed to `--benchmark_perf_counter` at a time.
+Additional options include `BRANCHES`, and architecture-specific event names like you'd use with `perf`.
+Some options you can try include:
+`cpu-cycles`,`task-clock`,`instructions`,`branch-instructions`,`branch-misses`, `L1-dcache-load-misses`, `L1-dcache-loads`, `cache-misses`, `cache-references`.
+
+Google benchmark calls [pfm_get_os_event_encoding](https://man7.org/linux/man-pages/man3/pfm_get_os_event_encoding.3.html).
