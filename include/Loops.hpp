@@ -230,6 +230,23 @@ struct AffineLoopNest
     ret.pruneBounds();
     return ret;
   }
+  /// like rotate(identityMatrix)
+  [[nodiscard]] auto explicitLowerBounds() -> AffineLoopNest<false> {
+    if constexpr (!NonNegative) return *this;
+    const size_t numExtraVar = getNumLoops();
+    const size_t numConst = getNumSymbols();
+    const auto [M, N] = A.size();
+    AffineLoopNest<false> ret;
+    ret.S = S;
+    IntMatrix &B = ret.A;
+    B.resizeForOverwrite(M + numExtraVar, N);
+    B(_(0, M), _) = A;
+    B(_(M, end), _) = 0;
+    B(_(M, end), _(numConst, end)).diag() = 1;
+    ret.initializeComparator();
+    ret.pruneBounds();
+    return ret;
+  }
 
   /// add a symbol to row `r` of A
   /// we try to break down value `v`, so that adding

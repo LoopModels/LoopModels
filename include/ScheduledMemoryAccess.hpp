@@ -1,7 +1,10 @@
 #pragma once
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
+#include "Utilities.hpp"
+#include <cstddef>
 #include <cstdint>
+#include <llvm/Support/Allocator.h>
 
 /// Represents a memory access that has been rotated according to some affine
 /// transform.
@@ -48,20 +51,32 @@
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
 struct ScheduledMemoryAccess {
+private:
   [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
   NotNull<AffineLoopNest<false>> loop;
-  [[no_unique_address]] MemoryAccess *access;
   // may be `false` while `access->isStore()==true`
   // which indicates a reload from this address.
-  [[no_unique_address]] int64_t denominator{1};
   [[no_unique_address]] llvm::Align alignment;
   [[no_unique_address]] bool isStore;
   int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
-  ScheduledMemoryAccess(MemoryAccess *ma, PtrMatrix<int64_t> Pinv,
+  ScheduledMemoryAccess(NotNull<MemoryAccess> ma, PtrMatrix<int64_t> Pinv,
                         int64_t denom, PtrVector<int64_t> omega, bool isStr)
     : access(ma), denominator(denom), isStore(isStr) {
     IntMatrix MStarT = ma->indexMatrix().transpose() * Pinv;
     Vector<int64_t> omegaStar = ma->offsetMatrix()(_, 0) - MStarT * omega;
   }
-  auto getAlign() -> llvm::Align { return alignment; }
+
+public:
+  auto construct(llvm::BumpPtrAllocator &alloc)
+    -> NotNull<ScheduledMemoryAccess> {
+    auto *ret =
+      alloc.Allocate<ScheduledMemoryAccess>(1, alignof(ScheduledMemoryAccess));
+    return new (ret) ScheduledMemoryAccess(*this);
+  }
+  constexpr auto getAlign() -> llvm::Align { return alignment; }
+  constexpr auto getDenominator() -> int64_t & { return mem[0]; }
+
+  [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
+    return mem[0];
+  }
 };

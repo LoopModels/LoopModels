@@ -11,7 +11,7 @@ jobs:
 
       - name: install and run doxygen
         run: |
-          sudo apt-get install doxygen
+          sudo apt-get install doxygen texlive texlive-binaries ghostscript
           doxygen
 
       - name: Deploy 🚀
