@@ -478,6 +478,7 @@ template <typename A> struct Transpose {
     return std::make_pair(numRow(), numCol());
   }
 };
+template <typename A> Transpose(A) -> Transpose<A>;
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
   using eltype = promote_eltype_t<A, B>;
   [[no_unique_address]] A a;
@@ -494,6 +495,7 @@ template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {
     return std::make_pair(numRow(), numCol());
   }
   [[nodiscard]] constexpr auto view() const { return *this; };
+  [[nodiscard]] constexpr auto transpose() const { return Transpose{*this}; };
 };
 template <AbstractMatrix A, AbstractVector B> struct MatVecMul {
   using eltype = promote_eltype_t<A, B>;

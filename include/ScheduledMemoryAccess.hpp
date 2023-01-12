@@ -1,6 +1,7 @@
 #pragma once
 #include "./Math.hpp"
 #include "./MemoryAccess.hpp"
+#include "Loops.hpp"
 #include "Utilities.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -11,6 +12,7 @@
 // clang-format off
 /// Return the memory accesses after applying the Schedule.
 /// Let
+/// 
 /// \f{eqnarray*}{
 /// D &=& \text{the dimension of the array}\\ %
 /// N &=& \text{depth of the loop nest}\\ %
@@ -30,7 +32,7 @@
 /// Where \f$\textbf{E}\f$ is an [exchange matrix](https://en.wikipedia.org/wiki/Exchange_matrix).
 /// The rows of \f$\boldsymbol{\Phi}\f$ are sorted from the outermost loop to
 /// the innermost loop, the opposite ordering used elsewhere. \f$\boldsymbol{\Phi}_*\f$
-/// corrects this.
+/// corrects this. 
 /// We have
 /// \f{eqnarray*}{
 /// \textbf{j} &=& \boldsymbol{\Phi}_*\textbf{i} + \boldsymbol{\omega}\\ %
@@ -52,31 +54,75 @@
 // clang-format on
 struct ScheduledMemoryAccess {
 private:
-  [[no_unique_address]] NotNull<const llvm::SCEVUnknown> basePointer;
+  NotNull<MemoryAccess> oldMemAccess;
   NotNull<AffineLoopNest<false>> loop;
-  // may be `false` while `access->isStore()==true`
+  uint8_t dim;
+  uint8_t depth;
+  // may be `false` while `oldMemAccess->isStore()==true`
   // which indicates a reload from this address.
-  [[no_unique_address]] llvm::Align alignment;
-  [[no_unique_address]] bool isStore;
+  [[no_unique_address]] bool isStoreFlag;
   int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
-  ScheduledMemoryAccess(NotNull<MemoryAccess> ma, PtrMatrix<int64_t> Pinv,
+  ScheduledMemoryAccess(NotNull<AffineLoopNest<false>> explicitLoop,
+                        NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
                         int64_t denom, PtrVector<int64_t> omega, bool isStr)
-    : access(ma), denominator(denom), isStore(isStr) {
-    IntMatrix MStarT = ma->indexMatrix().transpose() * Pinv;
-    Vector<int64_t> omegaStar = ma->offsetMatrix()(_, 0) - MStarT * omega;
+    : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {
+    PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
+    dim = size_t(M.numCol());
+    depth = size_t(M.numRow());
+    MutPtrMatrix<int64_t> MStar{indexMatrix()};
+    MStar = (M.transpose() * Pinv).transpose();
+    getDenominator() = denom;
+    getOffsetOmega() = ma->offsetMatrix()(_, 0) - MStar * omega;
   }
 
 public:
-  auto construct(llvm::BumpPtrAllocator &alloc)
+  static auto construct(llvm::BumpPtrAllocator &alloc,
+                        NotNull<AffineLoopNest<false>> explicitLoop,
+                        NotNull<MemoryAccess> ma, bool isStr,
+                        SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+                        PtrVector<int64_t> omega)
     -> NotNull<ScheduledMemoryAccess> {
-    auto *ret =
-      alloc.Allocate<ScheduledMemoryAccess>(1, alignof(ScheduledMemoryAccess));
-    return new (ret) ScheduledMemoryAccess(*this);
-  }
-  constexpr auto getAlign() -> llvm::Align { return alignment; }
-  constexpr auto getDenominator() -> int64_t & { return mem[0]; }
 
+    size_t memNeeded = ma->getNumLoops() * (1 + ma->getArrayDim());
+    auto *ptr = alloc.Allocate<char>(sizeof(ScheduledMemoryAccess) +
+                                     memNeeded * sizeof(int64_t));
+    return new (ptr)
+      ScheduledMemoryAccess(explicitLoop, ma, Pinv, denom, omega, isStr);
+  }
+  [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
+  [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return dim; }
+  [[nodiscard]] auto getInstruction() const -> llvm::Instruction * {
+    return oldMemAccess->getInstruction();
+  }
+  auto getAlign() -> llvm::Align { return oldMemAccess->getAlign(); }
+  constexpr auto getDenominator() -> int64_t & { return mem[0]; }
   [[nodiscard]] constexpr auto getDenominator() const -> int64_t {
     return mem[0];
+  }
+  // constexpr auto getFusionOmega() -> MutPtrVector<int64_t> {
+  //   return {mem + 1, getNumLoops()+1};
+  // }
+  // [[nodiscard]] constexpr auto getFusionOmega() const -> PtrVector<int64_t> {
+  //   return {mem + 1, getNumLoops()+1};
+  // }
+  constexpr auto getOffsetOmega() -> MutPtrVector<int64_t> {
+    return {mem + 1, getNumLoops()};
+  }
+  [[nodiscard]] constexpr auto getOffsetOmega() const -> PtrVector<int64_t> {
+    return {mem + 1, getNumLoops()};
+  }
+  /// indexMatrix() -> arrayDim() x getNumLoops()
+  constexpr auto indexMatrix() -> MutPtrMatrix<int64_t> {
+    return {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),
+            getNumLoops()};
+  }
+  /// indexMatrix() -> arrayDim() x getNumLoops()
+  [[nodiscard]] constexpr auto indexMatrix() const -> PtrMatrix<int64_t> {
+    return {mem + 1 + getNumLoops(), getArrayDim(), getNumLoops(),
+            getNumLoops()};
+  }
+  [[nodiscard]] auto isStore() -> bool { return isStoreFlag; }
+  [[nodiscard]] auto getLoop() -> NotNull<AffineLoopNest<false>> {
+    return loop;
   }
 };

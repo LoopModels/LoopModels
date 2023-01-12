@@ -159,9 +159,6 @@ public:
     if (auto l = loadOrStore.dyn_cast<llvm::LoadInst>()) return l->getAlign();
     else return loadOrStore.cast<llvm::StoreInst>()->getAlign();
   }
-  // static inline size_t requiredData(size_t dim, size_t numLoops){
-  // 	return dim*numLoops +
-  // }
   /// indexMatrix() -> getNumLoops() x arrayDim()
   /// loops are in [innermost -> outermost] order
   /// Maps loop indVars to array indices

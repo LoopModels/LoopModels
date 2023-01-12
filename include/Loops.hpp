@@ -25,6 +25,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
@@ -208,17 +209,19 @@ struct AffineLoopNest
   /// So that our new loop nest has matrix
   /// [A(_,const) (A(_,var)*R)]
   /// while the new `var' is `(R^{-1}*var)`
-  [[nodiscard]] auto rotate(PtrMatrix<int64_t> R) const
-    -> AffineLoopNest<false> {
+  [[nodiscard]] auto rotate(llvm::BumpPtrAllocator &alloc,
+                            PtrMatrix<int64_t> R) const
+    -> NotNull<AffineLoopNest<false>> {
     size_t numExtraVar = 0;
     if constexpr (NonNegative) numExtraVar = getNumLoops();
     assert(R.numCol() == numExtraVar);
     assert(R.numRow() == numExtraVar);
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    AffineLoopNest<false> ret;
-    ret.S = S;
-    IntMatrix &B = ret.A;
+    NotNull<AffineLoopNest<false>> ret =
+      alloc.Allocate<AffineLoopNest<false>>();
+    ret->S = S;
+    IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
     B(_(0, M), _(begin, numConst)) = A(_, _(begin, numConst));
     B(_(0, M), _(numConst, end)) = A(_, _(numConst, end)) * R;
@@ -226,25 +229,27 @@ struct AffineLoopNest
       B(_(M, end), _(0, numConst)) = 0;
       B(_(M, end), _(numConst, end)) = R;
     }
-    ret.initializeComparator();
-    ret.pruneBounds();
+    ret->initializeComparator();
+    ret->pruneBounds();
     return ret;
   }
   /// like rotate(identityMatrix)
-  [[nodiscard]] auto explicitLowerBounds() -> AffineLoopNest<false> {
-    if constexpr (!NonNegative) return *this;
+  [[nodiscard]] auto explicitLowerBounds(llvm::BumpPtrAllocator &alloc)
+    -> NotNull<AffineLoopNest<false>> {
+    if constexpr (!NonNegative) return this;
     const size_t numExtraVar = getNumLoops();
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    AffineLoopNest<false> ret;
-    ret.S = S;
-    IntMatrix &B = ret.A;
+    NotNull<AffineLoopNest<false>> ret =
+      alloc.Allocate<AffineLoopNest<false>>();
+    ret->S = S;
+    IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
     B(_(0, M), _) = A;
     B(_(M, end), _) = 0;
     B(_(M, end), _(numConst, end)).diag() = 1;
-    ret.initializeComparator();
-    ret.pruneBounds();
+    ret->initializeComparator();
+    ret->pruneBounds();
     return ret;
   }
 

@@ -10,6 +10,7 @@
 #include "./ScheduledMemoryAccess.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
+#include "Loops.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -60,18 +61,24 @@ public:
     addMemory(sId, store, nodeIndex);
   }
   [[nodiscard]] auto
-  getMemAccesses(llvm::ArrayRef<MemoryAccess *> memAccess) const
-    -> llvm::SmallVector<ScheduledMemoryAccess> {
+  getMemAccesses(llvm::BumpPtrAllocator &alloc,
+                 llvm::ArrayRef<MemoryAccess *> memAccess) const
+    -> llvm::SmallVector<ScheduledMemoryAccess *> {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     if (s == 1) {
     }
-    llvm::SmallVector<ScheduledMemoryAccess> accesses;
+    llvm::SmallVector<ScheduledMemoryAccess *> accesses;
     accesses.reserve(memory.size());
-    for (auto i : memory)
-      accesses.emplace_back(memAccess[i], Pinv, s, schedule.getFusionOmega(),
-                            i == storeId);
+    for (auto i : memory) {
+      // TODO: cache!
+      NotNull<AffineLoopNest<false>> loop =
+        memAccess[i]->getLoop()->rotate(alloc, Pinv);
+      accesses.push_back(ScheduledMemoryAccess::construct(
+        alloc, loop, memAccess[i], i == storeId, Pinv, s,
+        schedule.getFusionOmega()));
+    }
     return accesses;
   }
   constexpr auto getMemory() -> BitSet<> & { return memory; }
