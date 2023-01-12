@@ -10,7 +10,8 @@ var searchData=
   ['emptyvector_46',['EmptyVector',['../structEmptyVector.html',1,'']]],
   ['endsentinel_47',['EndSentinel',['../structEndSentinel.html',1,'']]],
   ['equals_48',['Equals',['../structEquals.html',1,'']]],
-  ['extractalignment_49',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
-  ['extractbasicblock_50',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
-  ['extractvalue_51',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
+  ['explicitlowerbounds_49',['explicitLowerBounds',['../structAffineLoopNest.html#a83fdd5bc2a684f66d0868d0409edc8e8',1,'AffineLoopNest']]],
+  ['extractalignment_50',['ExtractAlignment',['../structInstruction_1_1ExtractAlignment.html',1,'Instruction']]],
+  ['extractbasicblock_51',['ExtractBasicBlock',['../structInstruction_1_1ExtractBasicBlock.html',1,'Instruction']]],
+  ['extractvalue_52',['ExtractValue',['../structInstruction_1_1ExtractValue.html',1,'Instruction']]]
 ];

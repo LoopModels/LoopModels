@@ -63,7 +63,6 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structScheduledMemoryAccess-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ScheduledMemoryAccess Struct Reference</div>  </div>
@@ -74,36 +73,18 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad9d0dbfc1121e05a8acc5a6c03888377"><td class="memItemLeft" align="right" valign="top"><a id="ad9d0dbfc1121e05a8acc5a6c03888377"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ScheduledMemoryAccess</b> (<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *ma, <a class="el" href="structLinearAlgebra_1_1PtrMatrix.html">PtrMatrix</a>&lt; int64_t &gt; Pinv, int64_t denom, <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; int64_t &gt; omega, bool isStr)</td></tr>
-<tr class="separator:ad9d0dbfc1121e05a8acc5a6c03888377"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebf9336deadf5238838e86e3cf4a9168"><td class="memItemLeft" align="right" valign="top"><a id="aebf9336deadf5238838e86e3cf4a9168"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () -&gt; llvm::Align</td></tr>
-<tr class="separator:aebf9336deadf5238838e86e3cf4a9168"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a226381f5972adf1023841c2a523ddf61"><td class="memItemLeft" align="right" valign="top"><a id="a226381f5972adf1023841c2a523ddf61"></a>
-<a class="el" href="structNotNull.html">NotNull</a>&lt; const llvm::SCEVUnknown &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>basePointer</b></td></tr>
-<tr class="separator:a226381f5972adf1023841c2a523ddf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa545421f7b0719a9c21e47adbc7d80b7"><td class="memItemLeft" align="right" valign="top"><a id="aa545421f7b0719a9c21e47adbc7d80b7"></a>
-<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structAffineLoopNest.html">AffineLoopNest</a>&lt; false &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>loop</b></td></tr>
-<tr class="separator:aa545421f7b0719a9c21e47adbc7d80b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6e1dfc6d8c78413463c7fd20b19c619"><td class="memItemLeft" align="right" valign="top"><a id="ae6e1dfc6d8c78413463c7fd20b19c619"></a>
-<a class="el" href="structMemoryAccess.html">MemoryAccess</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>access</b></td></tr>
-<tr class="separator:ae6e1dfc6d8c78413463c7fd20b19c619"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad984e193f2563107388e6a618c497138"><td class="memItemLeft" align="right" valign="top"><a id="ad984e193f2563107388e6a618c497138"></a>
-int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>denominator</b> {1}</td></tr>
-<tr class="separator:ad984e193f2563107388e6a618c497138"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc92dcaf247045e35fdec2b08eb1e1a8"><td class="memItemLeft" align="right" valign="top"><a id="abc92dcaf247045e35fdec2b08eb1e1a8"></a>
-llvm::Align&#160;</td><td class="memItemRight" valign="bottom"><b>alignment</b></td></tr>
-<tr class="separator:abc92dcaf247045e35fdec2b08eb1e1a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b27f69536393ea84e6f7c370d4a034a"><td class="memItemLeft" align="right" valign="top"><a id="a5b27f69536393ea84e6f7c370d4a034a"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isStore</b></td></tr>
-<tr class="separator:a5b27f69536393ea84e6f7c370d4a034a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6eeec2d5b9261720e1d488bb60262c40"><td class="memItemLeft" align="right" valign="top"><a id="a6eeec2d5b9261720e1d488bb60262c40"></a>
-int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>mem</b> [1]</td></tr>
-<tr class="separator:a6eeec2d5b9261720e1d488bb60262c40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e34b1e38451159ba1539871843972d0"><td class="memItemLeft" align="right" valign="top"><a id="a1e34b1e38451159ba1539871843972d0"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> (llvm::BumpPtrAllocator &amp;alloc) -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structScheduledMemoryAccess.html">ScheduledMemoryAccess</a> &gt;</td></tr>
+<tr class="separator:a1e34b1e38451159ba1539871843972d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee492147d0010c84ea7b5a0476f360da"><td class="memItemLeft" align="right" valign="top"><a id="aee492147d0010c84ea7b5a0476f360da"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAlign</b> () -&gt; llvm::Align</td></tr>
+<tr class="separator:aee492147d0010c84ea7b5a0476f360da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36c8a221de046d9d166f6de6ec690db1"><td class="memItemLeft" align="right" valign="top"><a id="a36c8a221de046d9d166f6de6ec690db1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDenominator</b> () -&gt; int64_t &amp;</td></tr>
+<tr class="separator:a36c8a221de046d9d166f6de6ec690db1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a819b44714b732bbc2f30954bba4249bc"><td class="memItemLeft" align="right" valign="top"><a id="a819b44714b732bbc2f30954bba4249bc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDenominator</b> () const -&gt; int64_t</td></tr>
+<tr class="separator:a819b44714b732bbc2f30954bba4249bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Represents a memory access that has been rotated according to some affine transform. Return the memory accesses after applying the <a class="el" href="structSchedule.html">Schedule</a>. Let </p><p class="formulaDsp">
