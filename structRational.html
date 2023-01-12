@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Rational Struct Reference</title>
+<title>LoopModels: Rational&lt; T &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -68,146 +68,144 @@ $(function() {
 <a href="#friends">Friends</a> &#124;
 <a href="structRational-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Rational Struct Reference</div>  </div>
+<div class="title">Rational&lt; T &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a13b18935d9cdd11baaa9e517798ea67f"><td class="memItemLeft" align="right" valign="top"><a id="a13b18935d9cdd11baaa9e517798ea67f"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Rational</b> (int64_t coef)</td></tr>
-<tr class="separator:a13b18935d9cdd11baaa9e517798ea67f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2bc686d90637cc23d89618f0972e942e"><td class="memItemLeft" align="right" valign="top"><a id="a2bc686d90637cc23d89618f0972e942e"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Rational</b> (int coef)</td></tr>
-<tr class="separator:a2bc686d90637cc23d89618f0972e942e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1d74cefc74f421c4fb7b8d22a40e389"><td class="memItemLeft" align="right" valign="top"><a id="ac1d74cefc74f421c4fb7b8d22a40e389"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Rational</b> (int64_t n, int64_t d)</td></tr>
-<tr class="separator:ac1d74cefc74f421c4fb7b8d22a40e389"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24f2451f274a53f9897803c340607c36"><td class="memItemLeft" align="right" valign="top"><a id="a24f2451f274a53f9897803c340607c36"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeAdd</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a> &gt;</td></tr>
-<tr class="separator:a24f2451f274a53f9897803c340607c36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0328cd625560df65ba0ff04099492391"><td class="memItemLeft" align="right" valign="top"><a id="a0328cd625560df65ba0ff04099492391"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a0328cd625560df65ba0ff04099492391"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a119f2d0fb39ae0c8fd98a14ecff96729"><td class="memItemLeft" align="right" valign="top"><a id="a119f2d0fb39ae0c8fd98a14ecff96729"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (<a class="el" href="structRational.html">Rational</a> y) -&gt; <a class="el" href="structRational.html">Rational</a> &amp;</td></tr>
-<tr class="separator:a119f2d0fb39ae0c8fd98a14ecff96729"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65b4387e7227879d7812eb4798b16b72"><td class="memItemLeft" align="right" valign="top"><a id="a65b4387e7227879d7812eb4798b16b72"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeSub</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a> &gt;</td></tr>
-<tr class="separator:a65b4387e7227879d7812eb4798b16b72"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32562682db23f2626c2cb1a9b715fe54"><td class="memItemLeft" align="right" valign="top"><a id="a32562682db23f2626c2cb1a9b715fe54"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a32562682db23f2626c2cb1a9b715fe54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad63dfe9179508ead25b06830c626fda3"><td class="memItemLeft" align="right" valign="top"><a id="ad63dfe9179508ead25b06830c626fda3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (<a class="el" href="structRational.html">Rational</a> y) -&gt; <a class="el" href="structRational.html">Rational</a> &amp;</td></tr>
-<tr class="separator:ad63dfe9179508ead25b06830c626fda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a849e9f6c36b2fc7516da14ed3adc47ff"><td class="memItemLeft" align="right" valign="top"><a id="a849e9f6c36b2fc7516da14ed3adc47ff"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeMul</b> (int64_t y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a> &gt;</td></tr>
-<tr class="separator:a849e9f6c36b2fc7516da14ed3adc47ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a8e1335958189580f245f2680406211"><td class="memItemLeft" align="right" valign="top"><a id="a4a8e1335958189580f245f2680406211"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeMul</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a> &gt;</td></tr>
-<tr class="separator:a4a8e1335958189580f245f2680406211"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a67de533d46da8d81759440756f449a"><td class="memItemLeft" align="right" valign="top"><a id="a8a67de533d46da8d81759440756f449a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (int64_t y) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a8a67de533d46da8d81759440756f449a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af797b62dd998e2d0f38382a59156c844"><td class="memItemLeft" align="right" valign="top"><a id="af797b62dd998e2d0f38382a59156c844"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:af797b62dd998e2d0f38382a59156c844"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c5907a29ec8a78a36d123c3c4c575c9"><td class="memItemLeft" align="right" valign="top"><a id="a7c5907a29ec8a78a36d123c3c4c575c9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (<a class="el" href="structRational.html">Rational</a> y) -&gt; <a class="el" href="structRational.html">Rational</a> &amp;</td></tr>
-<tr class="separator:a7c5907a29ec8a78a36d123c3c4c575c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed94acca270033761d6490f8ffc3557f"><td class="memItemLeft" align="right" valign="top"><a id="aed94acca270033761d6490f8ffc3557f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inv</b> () const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:aed94acca270033761d6490f8ffc3557f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac60a8a2b3b09c8306991fa5e3a79174c"><td class="memItemLeft" align="right" valign="top"><a id="ac60a8a2b3b09c8306991fa5e3a79174c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeDiv</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a> &gt;</td></tr>
-<tr class="separator:ac60a8a2b3b09c8306991fa5e3a79174c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f788976452adde697618eba6bb68efb"><td class="memItemLeft" align="right" valign="top"><a id="a5f788976452adde697618eba6bb68efb"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a5f788976452adde697618eba6bb68efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acef4aa8ac935b72dead1ddde035088e5"><td class="memItemLeft" align="right" valign="top"><a id="acef4aa8ac935b72dead1ddde035088e5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fnmadd</b> (<a class="el" href="structRational.html">Rational</a> a, <a class="el" href="structRational.html">Rational</a> b) -&gt; bool</td></tr>
-<tr class="separator:acef4aa8ac935b72dead1ddde035088e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94bf679a58837f2ee7523ffd7f8755d3"><td class="memItemLeft" align="right" valign="top"><a id="a94bf679a58837f2ee7523ffd7f8755d3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>div</b> (<a class="el" href="structRational.html">Rational</a> a) -&gt; bool</td></tr>
-<tr class="separator:a94bf679a58837f2ee7523ffd7f8755d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a092a27d0f6351a1c338c267a2b42d34f"><td class="memItemLeft" align="right" valign="top"><a id="a092a27d0f6351a1c338c267a2b42d34f"></a>
+<tr class="memitem:a64b26df6cb6fb4bec96be4d6ee93a048"><td class="memItemLeft" align="right" valign="top"><a id="a64b26df6cb6fb4bec96be4d6ee93a048"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Rational</b> (T coef)</td></tr>
+<tr class="separator:a64b26df6cb6fb4bec96be4d6ee93a048"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3a245e5f36eb826b59d51761a46f44a3"><td class="memItemLeft" align="right" valign="top"><a id="a3a245e5f36eb826b59d51761a46f44a3"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Rational</b> (T n, T d)</td></tr>
+<tr class="separator:a3a245e5f36eb826b59d51761a46f44a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89973393d7da59ec467688aff807877d"><td class="memItemLeft" align="right" valign="top"><a id="a89973393d7da59ec467688aff807877d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeAdd</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;&gt;</td></tr>
+<tr class="separator:a89973393d7da59ec467688aff807877d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa825ad9fa656aed18f6f3f5ba12b09a6"><td class="memItemLeft" align="right" valign="top"><a id="aa825ad9fa656aed18f6f3f5ba12b09a6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:aa825ad9fa656aed18f6f3f5ba12b09a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a669321a07a5c976db1dc9b20b4c6f7e0"><td class="memItemLeft" align="right" valign="top"><a id="a669321a07a5c976db1dc9b20b4c6f7e0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:a669321a07a5c976db1dc9b20b4c6f7e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3b83b657c2476c578fe47b89fab9c6e"><td class="memItemLeft" align="right" valign="top"><a id="af3b83b657c2476c578fe47b89fab9c6e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeSub</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;&gt;</td></tr>
+<tr class="separator:af3b83b657c2476c578fe47b89fab9c6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a067be866c258849445f7de8403b11e27"><td class="memItemLeft" align="right" valign="top"><a id="a067be866c258849445f7de8403b11e27"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:a067be866c258849445f7de8403b11e27"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa5ad2809ca35272199fbca60e7377007"><td class="memItemLeft" align="right" valign="top"><a id="aa5ad2809ca35272199fbca60e7377007"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:aa5ad2809ca35272199fbca60e7377007"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e576544cfbd936d77c7deca982674e5"><td class="memItemLeft" align="right" valign="top"><a id="a2e576544cfbd936d77c7deca982674e5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeMul</b> (T y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;&gt;</td></tr>
+<tr class="separator:a2e576544cfbd936d77c7deca982674e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aab4d0c1299bbc5bceb9e21cd9ba818fb"><td class="memItemLeft" align="right" valign="top"><a id="aab4d0c1299bbc5bceb9e21cd9ba818fb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeMul</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;&gt;</td></tr>
+<tr class="separator:aab4d0c1299bbc5bceb9e21cd9ba818fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd31f8adf17c113ed1499baca26a57e4"><td class="memItemLeft" align="right" valign="top"><a id="abd31f8adf17c113ed1499baca26a57e4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (T y) const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:abd31f8adf17c113ed1499baca26a57e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac552308de9aa52c40959b3d8013973e2"><td class="memItemLeft" align="right" valign="top"><a id="ac552308de9aa52c40959b3d8013973e2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:ac552308de9aa52c40959b3d8013973e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56ea4659eac903b22a577e8d451e93a4"><td class="memItemLeft" align="right" valign="top"><a id="a56ea4659eac903b22a577e8d451e93a4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:a56ea4659eac903b22a577e8d451e93a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afdcfe614aa54fb640d7e824ecf3d29ef"><td class="memItemLeft" align="right" valign="top"><a id="afdcfe614aa54fb640d7e824ecf3d29ef"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inv</b> () const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:afdcfe614aa54fb640d7e824ecf3d29ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf78b662e2f40c68af058c57a55911b7"><td class="memItemLeft" align="right" valign="top"><a id="adf78b662e2f40c68af058c57a55911b7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>safeDiv</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; std::optional&lt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;&gt;</td></tr>
+<tr class="separator:adf78b662e2f40c68af058c57a55911b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc9b3daa1047656c3458d527608b4b66"><td class="memItemLeft" align="right" valign="top"><a id="acc9b3daa1047656c3458d527608b4b66"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:acc9b3daa1047656c3458d527608b4b66"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1330ca933bde361c888540728548e384"><td class="memItemLeft" align="right" valign="top"><a id="a1330ca933bde361c888540728548e384"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>fnmadd</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; a, <a class="el" href="structRational.html">Rational</a>&lt; T &gt; b) -&gt; bool</td></tr>
+<tr class="separator:a1330ca933bde361c888540728548e384"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f4743c1d07659aec1094901da0fc125"><td class="memItemLeft" align="right" valign="top"><a id="a2f4743c1d07659aec1094901da0fc125"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>div</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; a) -&gt; bool</td></tr>
+<tr class="separator:a2f4743c1d07659aec1094901da0fc125"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a4ec270bda95d64aeffcda2f0e6e55c"><td class="memItemLeft" align="right" valign="top"><a id="a8a4ec270bda95d64aeffcda2f0e6e55c"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator double</b> ()</td></tr>
-<tr class="separator:a092a27d0f6351a1c338c267a2b42d34f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aedaec77ad40a74a412d938c6c190054b"><td class="memItemLeft" align="right" valign="top"><a id="aedaec77ad40a74a412d938c6c190054b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:aedaec77ad40a74a412d938c6c190054b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a857c06cbf0d39be84aac26deb0b171b8"><td class="memItemLeft" align="right" valign="top"><a id="a857c06cbf0d39be84aac26deb0b171b8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:a857c06cbf0d39be84aac26deb0b171b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09e13601a4ae26d29031a31c0c10857b"><td class="memItemLeft" align="right" valign="top"><a id="a09e13601a4ae26d29031a31c0c10857b"></a>
+<tr class="separator:a8a4ec270bda95d64aeffcda2f0e6e55c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae7892c4d842efb1dfc6feb38befe1002"><td class="memItemLeft" align="right" valign="top"><a id="ae7892c4d842efb1dfc6feb38befe1002"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:ae7892c4d842efb1dfc6feb38befe1002"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a871f341c5b10bc92c9880235e6b961c1"><td class="memItemLeft" align="right" valign="top"><a id="a871f341c5b10bc92c9880235e6b961c1"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a871f341c5b10bc92c9880235e6b961c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a014c6a93f07c88ff3790241e2a312034"><td class="memItemLeft" align="right" valign="top"><a id="a014c6a93f07c88ff3790241e2a312034"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isEqual</b> (int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:a09e13601a4ae26d29031a31c0c10857b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bb7f421ed1aab2fdceddc74774cc904"><td class="memItemLeft" align="right" valign="top"><a id="a9bb7f421ed1aab2fdceddc74774cc904"></a>
+<tr class="separator:a014c6a93f07c88ff3790241e2a312034"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3f377651ad01d267ae2d97f206de070"><td class="memItemLeft" align="right" valign="top"><a id="ae3f377651ad01d267ae2d97f206de070"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (int y) const -&gt; bool</td></tr>
-<tr class="separator:a9bb7f421ed1aab2fdceddc74774cc904"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae810a27de0d64aabe71f119b78946fe"><td class="memItemLeft" align="right" valign="top"><a id="aae810a27de0d64aabe71f119b78946fe"></a>
+<tr class="separator:ae3f377651ad01d267ae2d97f206de070"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c0770c6fd84e9d58412c3cc2529d092"><td class="memItemLeft" align="right" valign="top"><a id="a8c0770c6fd84e9d58412c3cc2529d092"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:aae810a27de0d64aabe71f119b78946fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed1918fbcad02572eb04e9dd68e78b47"><td class="memItemLeft" align="right" valign="top"><a id="aed1918fbcad02572eb04e9dd68e78b47"></a>
+<tr class="separator:a8c0770c6fd84e9d58412c3cc2529d092"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a294cc85920a7fc786392f3de9daaa380"><td class="memItemLeft" align="right" valign="top"><a id="a294cc85920a7fc786392f3de9daaa380"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (int y) const -&gt; bool</td></tr>
-<tr class="separator:aed1918fbcad02572eb04e9dd68e78b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb62900a005f2a771eafed668585607e"><td class="memItemLeft" align="right" valign="top"><a id="aeb62900a005f2a771eafed668585607e"></a>
+<tr class="separator:a294cc85920a7fc786392f3de9daaa380"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b8cfdfe9c64690462f2b374d265b0d7"><td class="memItemLeft" align="right" valign="top"><a id="a9b8cfdfe9c64690462f2b374d265b0d7"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator!=</b> (int64_t y) const -&gt; bool</td></tr>
-<tr class="separator:aeb62900a005f2a771eafed668585607e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ea4914124814f77422c5ee668f092b5"><td class="memItemLeft" align="right" valign="top"><a id="a7ea4914124814f77422c5ee668f092b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:a7ea4914124814f77422c5ee668f092b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a439a11d8d06635d70681b3cb3e9ca088"><td class="memItemLeft" align="right" valign="top"><a id="a439a11d8d06635d70681b3cb3e9ca088"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;=</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:a439a11d8d06635d70681b3cb3e9ca088"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4476bff73e72f2a2037f2e52bb717a42"><td class="memItemLeft" align="right" valign="top"><a id="a4476bff73e72f2a2037f2e52bb717a42"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:a4476bff73e72f2a2037f2e52bb717a42"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad96f8fc57f0df682c1585a2587246765"><td class="memItemLeft" align="right" valign="top"><a id="ad96f8fc57f0df682c1585a2587246765"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (<a class="el" href="structRational.html">Rational</a> y) const -&gt; bool</td></tr>
-<tr class="separator:ad96f8fc57f0df682c1585a2587246765"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a658b27ac0bf366cbc072e9021296f8fb"><td class="memItemLeft" align="right" valign="top"><a id="a658b27ac0bf366cbc072e9021296f8fb"></a>
+<tr class="separator:a9b8cfdfe9c64690462f2b374d265b0d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5be780369add5596fee3ef5c09847db8"><td class="memItemLeft" align="right" valign="top"><a id="a5be780369add5596fee3ef5c09847db8"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a5be780369add5596fee3ef5c09847db8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8392a7dfd543e83b65cee4f14ddecb89"><td class="memItemLeft" align="right" valign="top"><a id="a8392a7dfd543e83b65cee4f14ddecb89"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a8392a7dfd543e83b65cee4f14ddecb89"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78bfcdf4e54914e3a8537ebcab75d294"><td class="memItemLeft" align="right" valign="top"><a id="a78bfcdf4e54914e3a8537ebcab75d294"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a78bfcdf4e54914e3a8537ebcab75d294"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a856913af1937ab24bacfc8a9fd9c8771"><td class="memItemLeft" align="right" valign="top"><a id="a856913af1937ab24bacfc8a9fd9c8771"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (<a class="el" href="structRational.html">Rational</a>&lt; T &gt; y) const -&gt; bool</td></tr>
+<tr class="separator:a856913af1937ab24bacfc8a9fd9c8771"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a890439c6c249ed47438f3f3e7b058dfb"><td class="memItemLeft" align="right" valign="top"><a id="a890439c6c249ed47438f3f3e7b058dfb"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&gt;=</b> (int y) const -&gt; bool</td></tr>
-<tr class="separator:a658b27ac0bf366cbc072e9021296f8fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b6d966a05101583311409062b87f8c0"><td class="memItemLeft" align="right" valign="top"><a id="a0b6d966a05101583311409062b87f8c0"></a>
+<tr class="separator:a890439c6c249ed47438f3f3e7b058dfb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a262811605b7bc30956e04d5f434d694a"><td class="memItemLeft" align="right" valign="top"><a id="a262811605b7bc30956e04d5f434d694a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isInteger</b> () const -&gt; bool</td></tr>
-<tr class="separator:a0b6d966a05101583311409062b87f8c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91873a91742d9c0718ad51c079f5fbd3"><td class="memItemLeft" align="right" valign="top"><a id="a91873a91742d9c0718ad51c079f5fbd3"></a>
+<tr class="separator:a262811605b7bc30956e04d5f434d694a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9e9ef0c05c87ee2b90a00e6c225c78f8"><td class="memItemLeft" align="right" valign="top"><a id="a9e9ef0c05c87ee2b90a00e6c225c78f8"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>negate</b> ()</td></tr>
-<tr class="separator:a91873a91742d9c0718ad51c079f5fbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3e51bf54aa51b88af76741dcc19ce87"><td class="memItemLeft" align="right" valign="top"><a id="aa3e51bf54aa51b88af76741dcc19ce87"></a>
+<tr class="separator:a9e9ef0c05c87ee2b90a00e6c225c78f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1312dacbc708495a2556c20089b196d3"><td class="memItemLeft" align="right" valign="top"><a id="a1312dacbc708495a2556c20089b196d3"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> () const</td></tr>
-<tr class="separator:aa3e51bf54aa51b88af76741dcc19ce87"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05311379e7af083c22108e96528eb282"><td class="memItemLeft" align="right" valign="top"><a id="a05311379e7af083c22108e96528eb282"></a>
+<tr class="separator:a1312dacbc708495a2556c20089b196d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bc9dd4cf4e5d2c10b87037ef70ea5c0"><td class="memItemLeft" align="right" valign="top"><a id="a5bc9dd4cf4e5d2c10b87037ef70ea5c0"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> () const</td></tr>
-<tr class="separator:a05311379e7af083c22108e96528eb282"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5bc9dd4cf4e5d2c10b87037ef70ea5c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a71d18eb35e68f6bcc3ab4f1d5a2fe2c1"><td class="memItemLeft" align="right" valign="top"><a id="a71d18eb35e68f6bcc3ab4f1d5a2fe2c1"></a>
-constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (int64_t n, int64_t d) -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:a71d18eb35e68f6bcc3ab4f1d5a2fe2c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadab8bb806abd8d5da4c13dc0abf77cd"><td class="memItemLeft" align="right" valign="top"><a id="aadab8bb806abd8d5da4c13dc0abf77cd"></a>
-constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createPositiveDenominator</b> (int64_t n, int64_t d) -&gt; <a class="el" href="structRational.html">Rational</a></td></tr>
-<tr class="separator:aadab8bb806abd8d5da4c13dc0abf77cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3dd76ee76ff79daddc728329950fa43c"><td class="memItemLeft" align="right" valign="top"><a id="a3dd76ee76ff79daddc728329950fa43c"></a>
+constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>create</b> (T n, T d) -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:a3dd76ee76ff79daddc728329950fa43c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa70ef8d7af16a9bd34c601227774cee7"><td class="memItemLeft" align="right" valign="top"><a id="aa70ef8d7af16a9bd34c601227774cee7"></a>
+constexpr static auto&#160;</td><td class="memItemRight" valign="bottom"><b>createPositiveDenominator</b> (T n, T d) -&gt; <a class="el" href="structRational.html">Rational</a>&lt; T &gt;</td></tr>
+<tr class="separator:aa70ef8d7af16a9bd34c601227774cee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:aba9c58f017f162b0df8debbcba4976e5"><td class="memItemLeft" align="right" valign="top"><a id="aba9c58f017f162b0df8debbcba4976e5"></a>
-int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>numerator</b> {0}</td></tr>
-<tr class="separator:aba9c58f017f162b0df8debbcba4976e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae7933986c97385c6f868710adc6fdb58"><td class="memItemLeft" align="right" valign="top"><a id="ae7933986c97385c6f868710adc6fdb58"></a>
-int64_t&#160;</td><td class="memItemRight" valign="bottom"><b>denominator</b> {1}</td></tr>
-<tr class="separator:ae7933986c97385c6f868710adc6fdb58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada69479a0f522b8a0513744b4932b150"><td class="memItemLeft" align="right" valign="top"><a id="ada69479a0f522b8a0513744b4932b150"></a>
+T&#160;</td><td class="memItemRight" valign="bottom"><b>numerator</b> {0}</td></tr>
+<tr class="separator:ada69479a0f522b8a0513744b4932b150"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ad418811c5504667d499c7c21175d37"><td class="memItemLeft" align="right" valign="top"><a id="a0ad418811c5504667d499c7c21175d37"></a>
+T&#160;</td><td class="memItemRight" valign="bottom"><b>denominator</b> {1}</td></tr>
+<tr class="separator:a0ad418811c5504667d499c7c21175d37"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a25c9d7493022109468c29ffc4650bc48"><td class="memItemLeft" align="right" valign="top"><a id="a25c9d7493022109468c29ffc4650bc48"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structRational.html">Rational</a> &amp;x) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a25c9d7493022109468c29ffc4650bc48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adde7cc95968a24170c6ee85ceb571293"><td class="memItemLeft" align="right" valign="top"><a id="adde7cc95968a24170c6ee85ceb571293"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structRational.html">Rational</a>&lt; T &gt; &amp;x) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:adde7cc95968a24170c6ee85ceb571293"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<hr/>The documentation for this struct was generated from the following files:<ul>
+<li>include/<a class="el" href="Math_8hpp_source.html">Math.hpp</a></li>
 <li>include/<a class="el" href="Rational_8hpp_source.html">Rational.hpp</a></li>
 </ul>
 </div><!-- contents -->
