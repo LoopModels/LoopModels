@@ -1,11 +1,11 @@
 #include "../include/LinearDiophantine.hpp"
-#include "../include/Math.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <random>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LinearDiophantineTest, BasicAssertions) {
   {
     std::vector perm{2, 3, 4};
@@ -83,11 +83,13 @@ TEST(LinearDiophantineTest, BasicAssertions) {
       EXPECT_EQ(1, a0 * x0 + a1 * x1 + a2 * x2 + a3 * x3 + a4 * x4 + a5 * x5 +
                      a6 * x6);
     }
-    auto opt1 = linearDiophantine(d * a0, std::make_tuple(a0));
-    EXPECT_TRUE(opt1.has_value());
-    if (opt1.has_value()) {
-      if (a0) EXPECT_EQ(std::get<0>(*opt1), d);
-      else EXPECT_EQ(std::get<0>(*opt1), 0);
+    {
+      auto opt1 = linearDiophantine(d * a0, std::make_tuple(a0));
+      EXPECT_TRUE(opt1.has_value());
+      if (opt1.has_value()) {
+        if (a0) EXPECT_EQ(std::get<0>(*opt1), d);
+        else EXPECT_EQ(std::get<0>(*opt1), 0);
+      }
     }
     if (std::abs(a0) > 1) {
       // guaranteed coprime

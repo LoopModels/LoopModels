@@ -292,14 +292,15 @@ concept AbstractRowMajorMatrix =
                          { t.rowStride() } -> std::same_as<RowStride>;
                        };
 
-inline auto copyto(AbstractVector auto &y, const AbstractVector auto &x)
-  -> auto & {
+[[gnu::flatten]] inline auto copyto(AbstractVector auto &y,
+                                    const AbstractVector auto &x) -> auto & {
   const size_t M = x.size();
   y.extendOrAssertSize(M);
   for (size_t i = 0; i < M; ++i) y[i] = x[i];
   return y;
 }
-inline auto copyto(AbstractMatrixCore auto &A, const AbstractMatrixCore auto &B)
+[[gnu::flatten]] inline auto copyto(AbstractMatrixCore auto &A,
+                                    const AbstractMatrixCore auto &B)
   -> auto & {
   const Row M = B.numRow();
   const Col N = B.numCol();
@@ -1341,44 +1342,50 @@ template <typename T> struct MutStridedVector {
   [[nodiscard]] constexpr auto view() const -> StridedVector<T> {
     return StridedVector<T>{.d = d, .N = N, .x = x};
   }
-  auto operator=(const T &y) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator=(const T &y) -> MutStridedVector<T> & {
     for (size_t i = 0; i < N; ++i) d[size_t(x * i)] = y;
     return *this;
   }
-  auto operator=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator=(const AbstractVector auto &a)
+    -> MutStridedVector<T> & {
     return copyto(*this, a);
   }
-  auto operator=(const MutStridedVector<T> &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator=(const MutStridedVector<T> &a)
+    -> MutStridedVector<T> & {
     if (this == &a) return *this;
     return copyto(*this, a);
   }
-  auto operator+=(T a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator+=(T a) -> MutStridedVector<T> & {
     MutStridedVector<T> &self = *this;
     for (size_t i = 0; i < N; ++i) self[i] += a;
     return self;
   }
-  auto operator+=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator+=(const AbstractVector auto &a)
+    -> MutStridedVector<T> & {
     const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i) self[i] += a[i];
     return self;
   }
-  auto operator-=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator-=(const AbstractVector auto &a)
+    -> MutStridedVector<T> & {
     const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i) self[i] -= a[i];
     return self;
   }
-  auto operator*=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator*=(const AbstractVector auto &a)
+    -> MutStridedVector<T> & {
     const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);
     for (size_t i = 0; i < M; ++i) self[i] *= a[i];
     return self;
   }
-  auto operator/=(const AbstractVector auto &a) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator/=(const AbstractVector auto &a)
+    -> MutStridedVector<T> & {
     const size_t M = a.size();
     MutStridedVector<T> &self = *this;
     assert(M == N);

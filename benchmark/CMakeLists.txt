@@ -46,11 +46,10 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4)
 endif()
 
-
-if (ENABLE_NATIVE_COMPILATION)
+if(ENABLE_NATIVE_COMPILATION)
   target_compile_options(${PROJECT_NAME} PRIVATE -march=native)
   check_cxx_compiler_flag("-mprefer-vector-width=512" VEC512)
-  if (VEC512)
+  if(VEC512)
     target_compile_options(${PROJECT_NAME} PRIVATE -mprefer-vector-width=512)
   endif()
 endif()
@@ -59,7 +58,6 @@ set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )
 
-target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -Wall -Wshadow -Wextra)
-
-
-
+target_compile_options(
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -Wall -Wshadow -Wextra
+)

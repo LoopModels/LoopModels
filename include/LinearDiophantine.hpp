@@ -12,7 +12,6 @@ inline auto linearDiophantine(int64_t c, int64_t a, int64_t b)
   int64_t cDivG = g == 1 ? c : c / g;
   if (cDivG * g == c) {
     // g = a*x + b*y;
-    int64_t cDivG = c / g;
     return std::make_tuple(x * cDivG, y * cDivG);
   } else {
     return {};

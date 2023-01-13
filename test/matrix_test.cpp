@@ -142,10 +142,10 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   EXPECT_EQ(A2x2(1, 0), 1);
   EXPECT_EQ(A2x2(1, 1), 0);
   for (size_t i = 1; i < 20; ++i) {
-    IntMatrix A(Row{i}, Col{i});
-    A.antiDiag() = 1;
+    IntMatrix F(Row{i}, Col{i});
+    F.antiDiag() = 1;
     for (size_t j = 0; j < i; ++j)
-      for (size_t k = 0; k < i; ++k) EXPECT_EQ(A(j, k), k + j == i - 1);
+      for (size_t k = 0; k < i; ++k) EXPECT_EQ(F(j, k), k + j == i - 1);
   }
 }
 

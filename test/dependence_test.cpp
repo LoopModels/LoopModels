@@ -989,17 +989,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
   auto Sstore_2 =
     tlf.CreateStore(tlf.CreateSqrt(tlf.CreateFDiv(Sload_1, Jfp)), ptrS, iv);
 
-  // llvm::Function *sqrt =
-  //   llvm::Intrinsic::getDeclaration(&tlf.mod, llvm::Intrinsic::sqrt,
-  //   Float64);
-  // llvm::FunctionType *sqrtTyp =
-  //   llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
-
-  // auto Sstore_2 = builder.CreateAlignedStore(
-  //   builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
-  //   builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *,
-  //   1>{iv}), llvm::MaybeAlign(8));
-
   // Now, create corresponding schedules
   // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
   // LoopBlock jOuterLoopNest;
@@ -1178,10 +1167,10 @@ TEST(MeanStDevTest0, BasicAssertions) {
     llvm::errs() << v;
   }
   // Graphs::print(iOuterLoopNest.fullGraph());
-  for (auto mem : mem) {
-    llvm::errs() << "mem->nodeIndex =" << mem->getNodeIndex() << ";";
-    llvm::errs() << "mem =" << mem << "\n";
-    for (size_t nodeIndex : mem->getNodeIndex()) {
+  for (auto memi : mem) {
+    llvm::errs() << "mem->nodeIndex =" << memi->getNodeIndex() << ";";
+    llvm::errs() << "mem =" << memi << "\n";
+    for (size_t nodeIndex : memi->getNodeIndex()) {
       Schedule &s = nodes[nodeIndex].getSchedule();
       EXPECT_EQ(&s, &iOuterLoopNest.getNode(nodeIndex).getSchedule());
       llvm::errs() << "s.getPhi() =" << s.getPhi() << "\n";
@@ -1248,7 +1237,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   jOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sload_1, sch4_0));  // 11
   jOuterMem.emplace_back(createMemAccess(alloc, sInd1, Sstore_2, sch4_1)); // 12
 
-  for (auto &&mem : jOuterMem) jOuterLoopNest.addMemory(mem);
+  for (auto &&memj : jOuterMem) jOuterLoopNest.addMemory(memj);
 
   EXPECT_TRUE(jOuterLoopNest.optimize().has_value());
   for (auto &edge : jOuterLoopNest.getEdges())
@@ -1265,8 +1254,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
   optS.diag() = 1;
   IntMatrix optSinnerUndef = optS;
   optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
-  for (auto mem : jOuterLoopNest.getMemoryAccesses()) {
-    for (size_t nodeIndex : mem->getNodeIndex()) {
+  for (auto memi : jOuterLoopNest.getMemoryAccesses()) {
+    for (size_t nodeIndex : memi->getNodeIndex()) {
       Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
       if (s.getNumLoops() == 1) EXPECT_EQ(s.getPhi()(0, 0), 1);
       else if (s.getFusionOmega()[1] < 3) EXPECT_EQ(s.getPhi(), optSinnerUndef);

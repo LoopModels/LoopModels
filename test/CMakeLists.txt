@@ -108,12 +108,20 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=8)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=8 -fconcepts-diagnostics-depth=4)
+
+  # if((USE_SANITIZER MATCHES "([Aa]ddress)") OR (USE_SANITIZER MATCHES "([Aa]ddress);([Uu]ndefined)"
+  #                                              )
+  # )
+  #   target_compile_options(${PROJECT_NAME} PRIVATE -static-libasan)
+  #   target_compile_options(LoopModels PRIVATE -static-libasan)
+  # endif()
 endif()
 # enable compiler warnings
 if(NOT TEST_INSTALLED_VERSION)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    # -Werror?
     target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
-    # target_compile_options(LoopModels PUBLIC -Wall -Wpedantic -Wextra -Werror)
+    target_compile_options(${PROJECT_NAME} PUBLIC -Wall -Wpedantic -Wextra -Wshadow)
   elseif(MSVC)
     target_compile_options(LoopModels PUBLIC /W4 /WX)
     # target_compile_definitions(${PROJECT_NAME} PUBLIC DOCTEST_CONFIG_USE_STD_HEADERS)

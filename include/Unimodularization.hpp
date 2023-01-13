@@ -1,5 +1,4 @@
 #pragma once
-#include "./LinearDiophantine.hpp"
 #include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include <cstddef>

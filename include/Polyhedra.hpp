@@ -65,22 +65,22 @@ struct Polyhedra {
   // constants, loop vars, symbolic vars
   // this is because of hnf prioritizing diagonalizing leading rows
   // empty fields sorted first to make it easier for compiler to alias them
-  [[no_unique_address]] I64Matrix E;
-  [[no_unique_address]] SymbolVec S;
-  [[no_unique_address]] IntMatrix A;
-  [[no_unique_address]] CmptrType C;
+  [[no_unique_address]] I64Matrix E{};
+  [[no_unique_address]] SymbolVec S{};
+  [[no_unique_address]] IntMatrix A{};
+  [[no_unique_address]] CmptrType C{};
 
   static constexpr bool hasEqualities =
     !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
   Polyhedra() = default;
   Polyhedra(IntMatrix Ain)
-    : E{}, A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
+    : A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
   Polyhedra(IntMatrix Ain, I64Matrix Ein)
     : E(std::move(Ein)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
   Polyhedra(IntMatrix Ain, SymbolVec SV)
-    : E{}, S(std::move(SV)), A(std::move(Ain)),
+    : S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
   Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
     : E(std::move(Ein)), S(std::move(SV)), A(std::move(Ain)),

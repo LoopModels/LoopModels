@@ -1,4 +1,3 @@
-#include "../include/LinearDiophantine.hpp"
 #include "../include/Math.hpp"
 #include "../include/Unimodularization.hpp"
 #include <cstdint>
@@ -6,6 +5,7 @@
 #include <iostream>
 #include <random>
 
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(UnimodularizationTest, BasicAssertions) {
   IntMatrix VE(4, 2);
   VE(0, 0) = 0;
@@ -19,6 +19,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
   llvm::errs() << "VE=\n" << VE << "\n";
   auto VB = unimodularize(VE);
   EXPECT_TRUE(VB.has_value());
+  assert(VB.has_value());
   llvm::errs() << "VB:\n" << *VB << "\n";
 
   IntMatrix A23(3, 2);
@@ -30,6 +31,7 @@ TEST(UnimodularizationTest, BasicAssertions) {
   A23(2, 1) = 0;
   auto B = unimodularize(A23);
   EXPECT_TRUE(B.has_value());
+  assert(B.has_value());
   llvm::errs() << "B:\n" << *B << "\n";
   // EXPECT_EQ(j, length(bsc));
   // EXPECT_EQ(j, length(bs));

@@ -218,8 +218,8 @@ struct AffineLoopNest
     assert(R.numRow() == numExtraVar);
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    NotNull<AffineLoopNest<false>> ret =
-      alloc.Allocate<AffineLoopNest<false>>();
+    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
     ret->S = S;
     IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
@@ -240,8 +240,8 @@ struct AffineLoopNest
     const size_t numExtraVar = getNumLoops();
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    NotNull<AffineLoopNest<false>> ret =
-      alloc.Allocate<AffineLoopNest<false>>();
+    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
     ret->S = S;
     IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
