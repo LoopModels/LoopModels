@@ -52,7 +52,7 @@
 /// Note that to get the new AffineLoopNest, we call
 /// `oldLoop->rotate(PhiInv)`
 // clang-format on
-struct ScheduledMemoryAccess {
+struct Address {
 private:
   NotNull<MemoryAccess> oldMemAccess;
   NotNull<AffineLoopNest<false>> loop;
@@ -62,9 +62,9 @@ private:
   // which indicates a reload from this address.
   [[no_unique_address]] bool isStoreFlag;
   int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
-  ScheduledMemoryAccess(NotNull<AffineLoopNest<false>> explicitLoop,
-                        NotNull<MemoryAccess> ma, SquarePtrMatrix<int64_t> Pinv,
-                        int64_t denom, PtrVector<int64_t> omega, bool isStr)
+  Address(NotNull<AffineLoopNest<false>> explicitLoop, NotNull<MemoryAccess> ma,
+          SquarePtrMatrix<int64_t> Pinv, int64_t denom,
+          PtrVector<int64_t> omega, bool isStr)
     : oldMemAccess(ma), loop(explicitLoop), isStoreFlag(isStr) {
     PtrMatrix<int64_t> M = oldMemAccess->indexMatrix();
     dim = size_t(M.numCol());
@@ -80,14 +80,11 @@ public:
                         NotNull<AffineLoopNest<false>> explicitLoop,
                         NotNull<MemoryAccess> ma, bool isStr,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
-                        PtrVector<int64_t> omega)
-    -> NotNull<ScheduledMemoryAccess> {
+                        PtrVector<int64_t> omega) -> NotNull<Address> {
 
-    size_t memNeeded = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *ptr = alloc.Allocate<char>(sizeof(ScheduledMemoryAccess) +
-                                     memNeeded * sizeof(int64_t));
-    return new (ptr)
-      ScheduledMemoryAccess(explicitLoop, ma, Pinv, denom, omega, isStr);
+    size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
+    auto *pt = alloc.Allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
+    return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr);
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }
   [[nodiscard]] constexpr auto getArrayDim() const -> size_t { return dim; }

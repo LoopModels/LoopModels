@@ -274,7 +274,7 @@ TEST(BadMul, BasicAssertions) {
   for (auto &ar : newArrayRefs) ar.loop = &newAln;
 
   // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
-  llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
+  // llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
   auto loop2Count = countSigns(newAln.A, 2 + newAln.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);
   EXPECT_EQ(loop2Count.second, 0);
@@ -287,7 +287,7 @@ TEST(BadMul, BasicAssertions) {
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);
 
-  llvm::errs() << "New ArrayReferences:\n";
+  // llvm::errs() << "New ArrayReferences:\n";
   // for (auto &ar : newArrayRefs)
   //   llvm::errs() << ar << "\n\n";
 }

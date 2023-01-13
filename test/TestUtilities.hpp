@@ -2,6 +2,7 @@
 #include "./Loops.hpp"
 #include "./Math.hpp"
 #include <cstdint>
+#include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/AssumptionCache.h>
 #include <llvm/Analysis/LoopInfo.h>
@@ -11,6 +12,7 @@
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Dominators.h>
 #include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
@@ -36,7 +38,8 @@ struct TestLoopFunction {
   llvm::SmallVector<AffineLoopNest<true>, 0> alns;
   llvm::SmallVector<std::string, 0> names;
   // llvm::SmallVector<llvm::Value*> symbols;
-  llvm::Value *ptr;
+  llvm::Value *ptrToLoadFrom;
+  llvm::SmallPtrSet<llvm::Value *, 32> symsToDelete;
   size_t ptrIntOffset{0};
 
   void addLoop(IntMatrix A, size_t numLoops) {
@@ -68,7 +71,7 @@ struct TestLoopFunction {
     return builder.CreateAlignedLoad(
       typ,
       builder.CreateGEP(
-        builder.getInt64Ty(), ptr,
+        builder.getInt64Ty(), ptrToLoadFrom,
         llvm::SmallVector<llvm::Value *, 1>{builder.getInt64(ptrIntOffset++)}),
       llvm::MaybeAlign(8), names.back());
   }
@@ -86,14 +89,86 @@ struct TestLoopFunction {
       F{llvm::Function::Create(
         FT, llvm::GlobalValue::LinkageTypes::ExternalLinkage, "foo", mod)},
       dl{&mod}, TTI{dl}, targetTripple{}, TLII{targetTripple}, TLI{TLII},
-      AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{}, ptr{builder.CreateIntToPtr(
-                                                       builder.getInt64(16000),
-                                                       builder.getInt64Ty())} {
+      AC{*F, &TTI}, SE{*F, TLI, AC, DT, LI}, alns{},
+      ptrToLoadFrom{
+        builder.CreateIntToPtr(builder.getInt64(16000), builder.getInt64Ty())} {
 
     fmf.set();
     builder.setFastMathFlags(fmf);
   }
   auto getSCEVUnknown(llvm::Value *v) -> const llvm::SCEVUnknown * {
     return llvm::dyn_cast<llvm::SCEVUnknown>(SE.getUnknown(v));
+  }
+  ~TestLoopFunction() = default;
+  // ~TestLoopFunction() {
+  //   for (auto s : symsToDelete) s->deleteValue();
+  // }
+  auto CreateLoad(llvm::Value *ptr, llvm::Value *offset) -> llvm::LoadInst * {
+    llvm::Type *Float64 = builder.getDoubleTy();
+    auto load_m = builder.CreateAlignedLoad(
+      Float64,
+      builder.CreateGEP(Float64, ptr,
+                        llvm::SmallVector<llvm::Value *, 1>{offset}),
+      llvm::MaybeAlign(8));
+    symsToDelete.insert(load_m);
+    return load_m;
+  }
+  auto CreateStore(llvm::Value *val, llvm::Value *ptr, llvm::Value *offset)
+    -> llvm::StoreInst * {
+    llvm::Type *Float64 = builder.getDoubleTy();
+    auto store_m = builder.CreateAlignedStore(
+      val,
+      builder.CreateGEP(Float64, ptr,
+                        llvm::SmallVector<llvm::Value *, 1>{offset}),
+      llvm::MaybeAlign(8));
+    symsToDelete.insert(store_m);
+    return store_m;
+  }
+  auto getZeroF64() -> llvm::Value * {
+    auto z = llvm::ConstantFP::getZero(builder.getDoubleTy());
+    symsToDelete.insert(z);
+    return z;
+  }
+  auto CreateUIToF64(llvm::Value *v) -> llvm::Value * {
+    auto uitofp = builder.CreateUIToFP(v, builder.getDoubleTy());
+    symsToDelete.insert(uitofp);
+    return uitofp;
+  }
+  auto CreateFAdd(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
+    auto fadd = builder.CreateFAdd(lhs, rhs);
+    symsToDelete.insert(fadd);
+    return fadd;
+  }
+  auto CreateFSub(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
+    auto fsub = builder.CreateFSub(lhs, rhs);
+    symsToDelete.insert(fsub);
+    return fsub;
+  }
+  auto CreateFMul(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
+    auto fmul = builder.CreateFMul(lhs, rhs);
+    symsToDelete.insert(fmul);
+    return fmul;
+  }
+  auto CreateFDiv(llvm::Value *lhs, llvm::Value *rhs) -> llvm::Value * {
+    auto fdiv = builder.CreateFDiv(lhs, rhs);
+    symsToDelete.insert(fdiv);
+    return fdiv;
+  }
+  auto CreateFDiv(llvm::Value *lhs, llvm::Value *rhs, const char *s)
+    -> llvm::Value * {
+    auto fdiv = builder.CreateFDiv(lhs, rhs, s);
+    symsToDelete.insert(fdiv);
+    return fdiv;
+  }
+  auto CreateSqrt(llvm::Value *v) -> llvm::Value * {
+    llvm::Type *Float64 = builder.getDoubleTy();
+    llvm::Function *sqrt =
+      llvm::Intrinsic::getDeclaration(&mod, llvm::Intrinsic::sqrt, Float64);
+    llvm::FunctionType *sqrtTyp =
+      llvm::Intrinsic::getType(ctx, llvm::Intrinsic::sqrt, {Float64});
+    auto sqrtCall = builder.CreateCall(sqrtTyp, sqrt, {v});
+    // auto sqrtCall = builder.CreateUnaryIntrinsic(llvm::Intrinsic::sqrt, v);
+    symsToDelete.insert(sqrtCall);
+    return sqrtCall;
   }
 };

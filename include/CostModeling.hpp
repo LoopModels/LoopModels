@@ -126,7 +126,7 @@ struct LoopTreeSchedule;
 /// subTrees[i+1].second
 
 struct InstructionBlock {
-  [[no_unique_address]] llvm::SmallVector<ScheduledMemoryAccess> memAccesses;
+  [[no_unique_address]] llvm::SmallVector<Address *> memAccesses;
 };
 struct LoopTreeSchedule;
 using LoopAndExit = std::pair<LoopTreeSchedule, InstructionBlock>;

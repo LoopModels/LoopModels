@@ -82,7 +82,7 @@ public:
     assert(o.size() == numLoops + 1);
     size_t memNeeded = numLoops;
     auto *mem =
-      alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
+      alloc.Allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
     ma->getFusionOmega() = o;
     return ma;
@@ -101,7 +101,7 @@ public:
     size_t numSymbols = size_t(offsets.numCol());
     size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
-      alloc.Allocate<char>(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t));
+      alloc.Allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem)
       MemoryAccess(arrayPtr, loopRef, user, std::move(sz), std::move(off));
     ma->indexMatrix() = indMatT.transpose();

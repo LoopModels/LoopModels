@@ -1,5 +1,6 @@
 #pragma once
 
+#include "./Address.hpp"
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
@@ -7,7 +8,6 @@
 #include "./MemoryAccess.hpp"
 #include "./NormalForm.hpp"
 #include "./Schedule.hpp"
-#include "./ScheduledMemoryAccess.hpp"
 #include "./Simplex.hpp"
 #include "./Utilities.hpp"
 #include "Loops.hpp"
@@ -63,21 +63,21 @@ public:
   [[nodiscard]] auto
   getMemAccesses(llvm::BumpPtrAllocator &alloc,
                  llvm::ArrayRef<MemoryAccess *> memAccess) const
-    -> llvm::SmallVector<ScheduledMemoryAccess *> {
+    -> llvm::SmallVector<Address *> {
     // First, we invert the schedule matrix.
     SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
     auto [Pinv, s] = NormalForm::scaledInv(Phi);
     if (s == 1) {
     }
-    llvm::SmallVector<ScheduledMemoryAccess *> accesses;
+    llvm::SmallVector<Address *> accesses;
     accesses.reserve(memory.size());
     for (auto i : memory) {
       // TODO: cache!
       NotNull<AffineLoopNest<false>> loop =
         memAccess[i]->getLoop()->rotate(alloc, Pinv);
-      accesses.push_back(ScheduledMemoryAccess::construct(
-        alloc, loop, memAccess[i], i == storeId, Pinv, s,
-        schedule.getFusionOmega()));
+      accesses.push_back(Address::construct(alloc, loop, memAccess[i],
+                                            i == storeId, Pinv, s,
+                                            schedule.getFusionOmega()));
     }
     return accesses;
   }

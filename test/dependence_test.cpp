@@ -947,7 +947,6 @@ TEST(MeanStDevTest0, BasicAssertions) {
   llvm::IRBuilder<> &builder = tlf.builder;
 
   // create arrays
-  llvm::Type *Float64 = builder.getDoubleTy();
   llvm::Value *ptrX = tlf.createArray();
   llvm::Value *ptrA = tlf.createArray();
   llvm::Value *ptrS = tlf.createArray();
@@ -960,78 +959,46 @@ TEST(MeanStDevTest0, BasicAssertions) {
   const llvm::SCEV *J = loopJI.S[1];
   llvm::Value *Iv = llvm::dyn_cast<llvm::SCEVUnknown>(I)->getValue();
   llvm::Value *Jv = llvm::dyn_cast<llvm::SCEVUnknown>(J)->getValue();
-  auto Jfp = builder.CreateUIToFP(Jv, Float64);
+  auto Jfp = tlf.CreateUIToF64(Jv);
   auto zero = builder.getInt64(0);
   auto one = builder.getInt64(1);
   llvm::Value *iv = builder.CreateAdd(zero, one);
   llvm::Value *jv = builder.CreateAdd(zero, one);
 
   llvm::Value *Aoffset = builder.CreateAdd(iv, builder.CreateMul(jv, Iv));
-  auto Aload_m = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
-    llvm::MaybeAlign(8));
-  auto Aload_s = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrA,
-                      llvm::SmallVector<llvm::Value *, 1>{Aoffset}),
-    llvm::MaybeAlign(8));
+  auto Aload_m = tlf.CreateLoad(ptrA, Aoffset);
+  auto Aload_s = tlf.CreateLoad(ptrA, Aoffset);
+  auto Xload_0 = tlf.CreateLoad(ptrX, iv);
+  auto Xload_1 = tlf.CreateLoad(ptrX, iv);
+  auto Xload_2 = tlf.CreateLoad(ptrX, iv);
 
-  auto Xload_0 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Xload_1 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Xload_2 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
+  auto zeroFP = tlf.getZeroF64();
+  auto Xstore_0 = tlf.CreateStore(zeroFP, ptrX, iv);
+  auto Xstore_1 = tlf.CreateStore(tlf.CreateFAdd(Xload_0, Aload_m), ptrX, iv);
+  auto Xstore_2 = tlf.CreateStore(tlf.CreateFDiv(Xload_1, Jfp), ptrX, iv);
 
-  auto zeroFP = llvm::ConstantFP::getZero(Float64);
-  auto Xstore_0 = builder.CreateAlignedStore(
-    zeroFP,
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Xstore_1 = builder.CreateAlignedStore(
-    builder.CreateFAdd(Xload_0, Aload_m),
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Xstore_2 = builder.CreateAlignedStore(
-    builder.CreateFDiv(Xload_1, Jfp),
-    builder.CreateGEP(Float64, ptrX, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
+  auto Sload_0 = tlf.CreateLoad(ptrS, iv);
+  auto Sload_1 = tlf.CreateLoad(ptrS, iv);
 
-  auto Sload_0 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Sload_1 = builder.CreateAlignedLoad(
-    Float64,
-    builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto Sstore_0 = builder.CreateAlignedStore(
-    zeroFP,
-    builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  auto diff = builder.CreateFSub(Aload_s, Xload_2);
+  auto Sstore_0 = tlf.CreateStore(zeroFP, ptrS, iv);
+  auto diff = tlf.CreateFSub(Aload_s, Xload_2);
   // llvm::Intrinsic::fmuladd
-  auto Sstore_1 = builder.CreateAlignedStore(
-    builder.CreateFAdd(Sload_0, builder.CreateFMul(diff, diff)),
-    builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
-  llvm::Function *sqrt =
-    llvm::Intrinsic::getDeclaration(&tlf.mod, llvm::Intrinsic::sqrt, Float64);
-  llvm::FunctionType *sqrtTyp =
-    llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
+  auto Sstore_1 = tlf.CreateStore(
+    tlf.CreateFAdd(Sload_0, tlf.CreateFMul(diff, diff)), ptrS, iv);
 
-  auto Sstore_2 = builder.CreateAlignedStore(
-    builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
-    builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *, 1>{iv}),
-    llvm::MaybeAlign(8));
+  auto Sstore_2 =
+    tlf.CreateStore(tlf.CreateSqrt(tlf.CreateFDiv(Sload_1, Jfp)), ptrS, iv);
+
+  // llvm::Function *sqrt =
+  //   llvm::Intrinsic::getDeclaration(&tlf.mod, llvm::Intrinsic::sqrt,
+  //   Float64);
+  // llvm::FunctionType *sqrtTyp =
+  //   llvm::Intrinsic::getType(tlf.ctx, llvm::Intrinsic::sqrt, {Float64});
+
+  // auto Sstore_2 = builder.CreateAlignedStore(
+  //   builder.CreateCall(sqrtTyp, sqrt, {builder.CreateFDiv(Sload_1, Jfp)}),
+  //   builder.CreateGEP(Float64, ptrS, llvm::SmallVector<llvm::Value *,
+  //   1>{iv}), llvm::MaybeAlign(8));
 
   // Now, create corresponding schedules
   // IntMatrix ILoop{IJLoop(_(0,2),_(0,3))};
