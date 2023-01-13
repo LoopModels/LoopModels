@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['map_94',['Map',['../structPredicate_1_1Map.html',1,'Predicate']]],
-  ['maskedreference_95',['MaskedReference',['../structLinearAlgebra_1_1MaskedReference.html',1,'LinearAlgebra']]],
+  ['map_95',['Map',['../structPredicate_1_1Map.html',1,'Predicate']]],
   ['matmatmul_96',['MatMatMul',['../structLinearAlgebra_1_1MatMatMul.html',1,'LinearAlgebra']]],
   ['matrix_97',['Matrix',['../structLinearAlgebra_1_1Matrix.html',1,'LinearAlgebra']]],
   ['matrix_3c_20int64_5ft_2c_200_2c_200_2c_200_20_3e_98',['Matrix&lt; int64_t, 0, 0, 0 &gt;',['../structLinearAlgebra_1_1Matrix.html',1,'LinearAlgebra']]],
