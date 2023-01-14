@@ -121,7 +121,7 @@ struct Polyhedra {
         if (!broke) {
           for (size_t i = 0; i < dyn; ++i) {
             diff = A(j, _);
-            --diff[end - i];
+            --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(A, j);
               initializeComparator();

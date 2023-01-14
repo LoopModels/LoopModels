@@ -54,18 +54,18 @@ struct Simplex {
   }
   auto addConstraint() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol(), tableau.rowStride());
-    tableau(end, _) = 0;
-    return tableau(end, _(numExtraCols, end));
+    tableau(last, _) = 0;
+    return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintAndVar() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
-    tableau(end, _) = 0;
-    return tableau(end, _(numExtraCols, end));
+    tableau(last, _) = 0;
+    return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
     tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
-    tableau(_(end - i, end), _) = 0;
-    return tableau(_(end - i, end), _(numExtraCols, end));
+    tableau(_(last - i, end), _) = 0;
+    return tableau(_(last - i, end), _(numExtraCols, end));
   }
   void reserve(size_t numCon, size_t numVar) {
     tableau.reserve(

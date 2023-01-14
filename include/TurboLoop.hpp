@@ -313,7 +313,7 @@ public:
         if (loopInd >= 0) {
           if (auto c = getConstantInt(x->getOperand(1))) {
             // we want the innermost loop to have index 0
-            v[end - loopInd] += *c;
+            v[last - loopInd] += *c;
             return fillAffineIndices(v, offsets, symbolicOffsets,
                                      x->getOperand(0), mlt, numPeeled);
           } else blackList |= (uint64_t(1) << uint64_t(loopInd));

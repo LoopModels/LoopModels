@@ -312,8 +312,9 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     // but AA' is
     B = A * A.transpose();
     // llvm::errs() << "A'A =\n" << B << "\n";
-    for (size_t m = 0; m < M; ++m)
+    for (size_t m = 0; m < M; ++m) {
       for (size_t n = 0; n < N; ++n)
         if (m != n) EXPECT_EQ(B(m, n), 0);
+    }
   }
 }

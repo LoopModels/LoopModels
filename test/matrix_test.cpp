@@ -164,3 +164,10 @@ TEST(ArrayPrint, BasicAssertions) {
   os << v;
   EXPECT_EQ(os.str(), testing::PrintToString(v));
 }
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(OffsetEnd, BasicAssertions) {
+  auto A{"[3 3 3 3; 2 2 2 2; 1 1 1 1; 0 0 0 0]"_mat};
+  auto B = IntMatrix{Row{4}, Col{4}};
+  for (size_t i = 0; i < 4; ++i) B(last - i, _) = i;
+  EXPECT_EQ(A, B);
+}

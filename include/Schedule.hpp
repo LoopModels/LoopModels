@@ -58,12 +58,12 @@ struct Schedule {
   void init(size_t nLoops) {
     numLoops = nLoops;
     data.resize(requiredScheduleStorage(nLoops));
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   }
   Schedule() = default;
   Schedule(size_t nLoops) : numLoops(nLoops) {
     data.resize(requiredScheduleStorage(nLoops));
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   };
   Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size() - 1) {
     data.resize(requiredScheduleStorage(numLoops));
@@ -79,7 +79,7 @@ struct Schedule {
       data.truncate(requiredScheduleStorage(newNumLoops));
       numLoops = newNumLoops;
     }
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   }
   // TODO: workaround for data.data() not being constexpr?
   [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
@@ -88,6 +88,12 @@ struct Schedule {
   }
   [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data.data(), numLoops}; //
+  }
+  [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
+    return getPhi()(last - d, _);
+  }
+  [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+    return getPhi()(last - d, _);
   }
   [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
     return data.data()[getNumLoopsSquared() + i];

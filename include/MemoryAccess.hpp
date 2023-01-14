@@ -107,7 +107,6 @@ public:
     ma->indexMatrix() = indMatT.transpose();
     ma->offsetMatrix() = offsets;
     ma->getFusionOmega() = o;
-
     return ma;
   }
   /// omegas order is [outer <-> inner]

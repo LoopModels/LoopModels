@@ -162,23 +162,23 @@ public:
     return schedule.getFusionOmega();
   }
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
-    return getPhi()(d, _);
+    return schedule.getSchedule(d);
   }
   [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
-    return getPhi()(d, _);
+    return schedule.getSchedule(d);
   }
   void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
-    // indMat indvars are indexed from outside<->inside
+    // indMat indvars are indexed from inside<->outside
     // phi indvars are indexed from inside<->outside
-    // so, indMat is indvars[outside<->inside] x array dim
-    // phi is loop[outside<->inside] x
+    // so, indMat is indvars[inside<->outside] x array dim
+    // phi is loop[inside<->outside] x
     // indvars[inside<->outside]
-    MutPtrMatrix<int64_t> phi = getPhi();
+    MutSquarePtrMatrix<int64_t> phi = getPhi();
     const size_t indR = size_t(indMat.numRow());
     const size_t phiOff = size_t(phi.numCol()) - indR;
     for (size_t i = 0; i < r; ++i) {
-      phi(i, _(begin, phiOff)) = 0;
-      phi(i, _(phiOff, phiOff + indR)) = indMat(_, i);
+      phi(last - i, _(begin, phiOff)) = 0;
+      phi(last - i, _(phiOff, phiOff + indR)) = indMat(_, i);
     }
     rank = r;
   }
@@ -1024,7 +1024,7 @@ public:
       if (!node.phiIsScheduled(depth)) {
         int64_t l = denomLCM(sol[node.getPhiOffsetRange() - 1]);
         for (size_t i = 0; i < node.getPhi().numCol(); ++i)
-          assert(node.getPhi()(depth, i) ==
+          assert(node.getPhi()(last - depth, i) ==
                  sol[node.getPhiOffsetRange() - 1][i] * l);
       }
 #endif
@@ -1044,7 +1044,7 @@ public:
         auto c{omniSimplex.addConstraintAndVar()};
         c[0] = 1;
         c[node.getPhiOffsetRange()] = 1;
-        c[end] = -1; // for >=
+        c[last] = -1; // for >=
       }
       return;
     }
@@ -1053,16 +1053,16 @@ public:
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
         continue;
-      A = node.getPhi()(_(0, depth), _).transpose();
+      A = node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
       auto c{omniSimplex.addConstraintAndVar()};
       c[0] = 1;
       MutPtrVector<int64_t> cc{c[node.getPhiOffsetRange()]};
       // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
       for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
-      c[end] = -1; // for >=
+      c[last] = -1; // for >=
     }
-    assert(!allZero(omniSimplex.getConstraints()(end, _)));
+    assert(!allZero(omniSimplex.getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
     -> uint64_t {
@@ -1189,7 +1189,7 @@ public:
     }
     instantiateOmniSimplex(g, d);
     addIndependentSolutionConstraints(g, d);
-    assert(!allZero(omniSimplex.getConstraints()(end, _)));
+    assert(!allZero(omniSimplex.getConstraints()(last, _)));
     if (omniSimplex.initiateFeasible()) {
       // llvm::errs() << "optimizeLevel = " << d << ": infeasible
       // solution!!!\n";

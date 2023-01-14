@@ -152,7 +152,7 @@ TEST(DependenceTest, BasicAssertions) {
   EXPECT_TRUE(d.isForward());
   llvm::errs() << d << "\n";
   assert(d.isForward());
-  assert(!allZero(d.getSatConstraints()(end - 1, _)));
+  assert(!allZero(d.getSatConstraints()(last, _)));
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -865,13 +865,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // orig order (inner <-> outer): n, m
   IntMatrix optPhi2(2, 2);
   // phi2 loop order is
-  optPhi2.diag() = 1;
+  optPhi2.antiDiag() = 1;
   // the scheduler swaps the order, making `n` outermost,
   // and `m` as innermost
   // orig order (inner <-> outer): k, n, m
-  // IntMatrix optPhi3{"[0 0 1; 1 0 0; 0 1 0]"_mat};
-  IntMatrix optPhi3{"[1 0 0; 0 0 1; 0 1 0]"_mat};
-  // phi3 loop order is [k, m, n]
+  IntMatrix optPhi3{"[0 1 0; 0 0 1; 1 0 0]"_mat};
+  // phi3 loop order (inner<->outer) is [n, m, k]
   // so the schedule below places `k` as the outermost loop,
   // followed by `m`, and `n` as innermost. `n` is the reduction loop.
   // optPhi3(end, _) = std::numeric_limits<int64_t>::min();
@@ -1251,9 +1250,9 @@ TEST(MeanStDevTest0, BasicAssertions) {
   }
   IntMatrix optS(2);
   // we want diag, as that represents swapping loops
-  optS.diag() = 1;
+  optS.antiDiag() = 1;
   IntMatrix optSinnerUndef = optS;
-  optSinnerUndef(1, _) = std::numeric_limits<int64_t>::min();
+  optSinnerUndef(0, _) = std::numeric_limits<int64_t>::min();
   for (auto memi : jOuterLoopNest.getMemoryAccesses()) {
     for (size_t nodeIndex : memi->getNodeIndex()) {
       Schedule &s = jOuterLoopNest.getNode(nodeIndex).getSchedule();
@@ -1401,7 +1400,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   EXPECT_TRUE(d->isForward());
   llvm::errs() << *d << "\n";
   assert(d->isForward());
-  assert(!allZero(d->getSatConstraints()(end - 1, _)));
+  assert(!allZero(d->getSatConstraints()(last, _)));
 
   LinearProgramLoopBlock loopBlock;
   MemoryAccess *mSchLoad0(createMemAccess(alloc, Atgt0, Aload_ip1_j, schLoad0));
@@ -1429,8 +1428,8 @@ TEST(DoubleDependenceTest, BasicAssertions) {
     llvm::errs() << v;
   }
   IntMatrix optPhi(2, 2);
-  optPhi(0, _) = 1;
-  optPhi(1, _) = std::numeric_limits<int64_t>::min();
+  optPhi(0, _) = std::numeric_limits<int64_t>::min();
+  optPhi(1, _) = 1;
   // Graphs::print(iOuterLoopNest.fullGraph());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
     for (size_t nodeIndex : mem->getNodeIndex()) {

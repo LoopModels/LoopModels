@@ -612,10 +612,9 @@ public:
                                     getNumOmegaCoefficients());
   }
   [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
-    return getBndConstraints()(_, _(1 + depPoly.getNumLambda() +
-                                      getNumPhiCoefficients() +
-                                      getNumOmegaCoefficients(),
-                                    end));
+    size_t lb = 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
+                getNumOmegaCoefficients();
+    return getBndConstraints()(_, _(lb, end));
   }
 
   [[nodiscard]] auto splitSatisfaction() const
@@ -737,8 +736,8 @@ public:
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      schv[_(begin, numLoopsIn)] = inPhi(i, _);
-      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(i, _);
+      schv[_(begin, numLoopsIn)] = inPhi(last - i, _);
+      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(last - i, _);
       int64_t inO = inOffOmega[i], outO = outOffOmega[i];
       // forward means offset is 2nd - 1st
       schv[numLoopsTotal] = outO - inO;
@@ -798,15 +797,15 @@ public:
   [[nodiscard]] auto isSatisfied(const Schedule &sx, const Schedule &sy,
                                  size_t d) const -> bool {
     const size_t numLambda = depPoly.getNumLambda();
-    const size_t numLoopsX = depPoly.getDim0();
-    const size_t numLoopsY = depPoly.getDim1();
+    const size_t nLoopX = depPoly.getDim0();
+    const size_t nLoopY = depPoly.getDim1();
     // const size_t numLoopsX = sx.getNumLoops();
     // const size_t numLoopsY = sy.getNumLoops();
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
+    const size_t numLoopsTotal = nLoopX + nLoopY;
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
-    sch[_(begin, numLoopsX)] = sx.getPhi()(d, _(end - numLoopsX, end));
-    sch[_(numLoopsX, numLoopsTotal)] = sy.getPhi()(d, _(end - numLoopsY, end));
+    sch[_(begin, nLoopX)] = sx.getSchedule(d)[_(end - nLoopX, end)];
+    sch[_(nLoopX, numLoopsTotal)] = sy.getSchedule(d)[_(end - nLoopY, end)];
     sch[numLoopsTotal] = sx.getOffsetOmega()[d];
     sch[numLoopsTotal + 1] = sy.getOffsetOmega()[d];
     return dependenceSatisfaction.satisfiable(sch, numLambda);
@@ -867,8 +866,8 @@ public:
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      sch[_(begin, numLoopsX)] = xPhi(i, _);
-      sch[_(numLoopsX, numLoopsTotal)] = yPhi(i, _);
+      sch[_(begin, numLoopsX)] = xPhi(last - i, _);
+      sch[_(numLoopsX, numLoopsTotal)] = yPhi(last - i, _);
       sch[numLoopsTotal] = xOffOmega[i];
       sch[numLoopsTotal + 1] = yOffOmega[i];
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {

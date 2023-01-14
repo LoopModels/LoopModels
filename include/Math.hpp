@@ -569,7 +569,7 @@ constexpr auto operator-(OffsetEnd y, ScalarValueIndex auto x) -> OffsetEnd {
 constexpr auto operator+(OffsetEnd y, ScalarValueIndex auto x) -> OffsetEnd {
   return OffsetEnd{y.offset - size_t(x)};
 }
-
+static constexpr inline OffsetEnd last{1};
 template <typename T>
 concept RelativeOffset = std::same_as<T, End> || std::same_as<T, OffsetEnd> ||
                          std::same_as<T, Begin> || std::same_as<T, OffsetBegin>;
@@ -650,39 +650,39 @@ static inline constexpr struct Colon {
     return Range{standardizeRangeBound(B), standardizeRangeBound(E)};
   }
 } _; // NOLINT(bugprone-reserved-identifier)
-
-#ifndef NDEBUG
-static inline void checkIndex(size_t X, size_t x) { assert(x < X); }
-inline void checkIndex(size_t X, End) { assert(X > 0); }
-inline void checkIndex(size_t X, Begin) { assert(X > 0); }
-inline void checkIndex(size_t X, OffsetEnd x) { assert(x.offset < X); }
-inline void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
-template <typename B> inline void checkIndex(size_t X, Range<B, size_t> x) {
-  assert(x.e <= X);
-}
-template <typename B, typename E> inline void checkIndex(size_t, Range<B, E>) {}
-inline void checkIndex(size_t, Colon) {}
-#endif
-
 constexpr auto canonicalize(size_t e, size_t) -> size_t { return e; }
 constexpr auto canonicalize(Begin, size_t) -> size_t { return 0; }
 constexpr auto canonicalize(OffsetBegin b, size_t) -> size_t {
   return b.offset;
 }
-constexpr auto canonicalize(End, size_t M) -> size_t { return M - 1; }
+constexpr auto canonicalize(End, size_t M) -> size_t { return M; }
 constexpr auto canonicalize(OffsetEnd e, size_t M) -> size_t {
-  return M - 1 - e.offset;
-}
-
-constexpr auto canonicalizeForRange(size_t e, size_t) -> size_t { return e; }
-constexpr auto canonicalizeForRange(Begin, size_t) -> size_t { return 0; }
-constexpr auto canonicalizeForRange(OffsetBegin b, size_t) -> size_t {
-  return b.offset;
-}
-constexpr auto canonicalizeForRange(End, size_t M) -> size_t { return M; }
-constexpr auto canonicalizeForRange(OffsetEnd e, size_t M) -> size_t {
   return M - e.offset;
 }
+template <typename B, typename E>
+constexpr auto canonicalizeRange(Range<B, E> r, size_t M)
+  -> Range<size_t, size_t> {
+  return Range<size_t, size_t>{canonicalize(r.b, M), canonicalize(r.e, M)};
+}
+constexpr auto canonicalizeRange(Colon, size_t M) -> Range<size_t, size_t> {
+  return Range<size_t, size_t>{0, M};
+}
+
+#ifndef NDEBUG
+static inline void checkIndex(size_t X, size_t x) { assert(x < X); }
+inline void checkIndex(size_t X, Begin) { assert(X > 0); }
+inline void checkIndex(size_t X, OffsetEnd x) { assert((x.offset - 1) < X); }
+inline void checkIndex(size_t X, OffsetBegin x) { assert(x.offset < X); }
+inline void checkIndex(size_t X, Range<size_t, size_t> x) {
+  assert(x.e >= x.b);
+  assert(X >= x.e);
+}
+template <typename B, typename E>
+inline void checkIndex(size_t M, Range<B, E> r) {
+  checkIndex(M, canonicalizeRange(r, M));
+}
+inline void checkIndex(size_t, Colon) {}
+#endif
 
 // Union type
 template <typename T>
@@ -692,16 +692,6 @@ concept ScalarRelativeIndex =
 
 template <typename T>
 concept ScalarIndex = std::integral<T> || ScalarRelativeIndex<T>;
-
-template <typename B, typename E>
-constexpr auto canonicalizeRange(Range<B, E> r, size_t M)
-  -> Range<size_t, size_t> {
-  return Range<size_t, size_t>{canonicalizeForRange(r.b, M),
-                               canonicalizeForRange(r.e, M)};
-}
-constexpr auto canonicalizeRange(Colon, size_t M) -> Range<size_t, size_t> {
-  return Range<size_t, size_t>{0, M};
-}
 
 template <typename B, typename E>
 constexpr auto operator+(Range<B, E> r, size_t x) {
@@ -2831,4 +2821,4 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
   LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::Range, LinearAlgebra::begin,
   LinearAlgebra::end, LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix,
   LinearAlgebra::Row, LinearAlgebra::RowStride, LinearAlgebra::Col,
-  LinearAlgebra::CarInd;
+  LinearAlgebra::CarInd, LinearAlgebra::last;

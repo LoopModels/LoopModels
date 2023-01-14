@@ -56,17 +56,17 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[0]
 s.getPhi()
-[  1  0
-   0  1 ]
+[  0  1
+   1  0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 
 Schedule Out:
 nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 	Edge = Dependence Poly y -> x:
@@ -98,17 +98,17 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[0]
 s.getPhi()
-[  1  0
-   0  1 ]
+[  0  1
+   1  0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 
 Schedule Out:
 nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 	Edge = Dependence Poly y -> x:
@@ -142,18 +142,18 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 
 Schedule Out:
 nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 	Edge = Dependence Poly x -> y:
@@ -187,18 +187,18 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 Schedule In: nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 
 Schedule Out:
 nodeIndex = BitSet[1]
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 LoopBlock schedule (#mem accesses = 5):
@@ -216,8 +216,8 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 nodeIndex = 0
 s.getPhi()
-[  1  0
-   0  1 ]
+[  0  1
+   1  0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 Ref = Store:   store double %64, double addrspace(13)* %65, align 8, !dbg !61, !tbaa !59
@@ -233,8 +233,8 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 nodeIndex = 0
 s.getPhi()
-[  1  0
-   0  1 ]
+[  0  1
+   1  0 ]
 s.getFusionOmega() = [ 0, 0, 0 ]
 s.getOffsetOmega() = [ 1, 0 ]
 Ref = Load:   %83 = load double, double addrspace(13)* %82, align 8, !dbg !89, !tbaa !59
@@ -252,9 +252,9 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 nodeIndex = 1
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 Ref = Load:   %87 = load double, double addrspace(13)* %86, align 8, !dbg !89, !tbaa !59
@@ -272,9 +272,9 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 nodeIndex = 1
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 Ref = Store:   store double %89, double addrspace(13)* %82, align 8, !dbg !95, !tbaa !59
@@ -292,9 +292,9 @@ Loop 0 upper bounds: i_0 <= -1 + %20
 
 nodeIndex = 1
 s.getPhi()
-[  1  1  0
+[  0  1  0
    0  0  1
-   0  1  0 ]
+   1  1  0 ]
 s.getFusionOmega() = [ 0, 0, 0, 0 ]
 s.getOffsetOmega() = [ 0, 0, 0 ]
 
