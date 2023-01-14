@@ -348,7 +348,7 @@ $(function() {
 <div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;        <span class="keywordflow">if</span> (loopInd &gt;= 0) {</div>
 <div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;          <span class="keywordflow">if</span> (<span class="keyword">auto</span> c = getConstantInt(x-&gt;getOperand(1))) {</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;            <span class="comment">// we want the innermost loop to have index 0</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;            v[end - loopInd] += *c;</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;            v[last - loopInd] += *c;</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;            <span class="keywordflow">return</span> fillAffineIndices(v, offsets, symbolicOffsets,</div>
 <div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                                     x-&gt;getOperand(0), mlt, numPeeled);</div>
 <div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;          } <span class="keywordflow">else</span> blackList |= (uint64_t(1) &lt;&lt; uint64_t(loopInd));</div>
@@ -717,8 +717,8 @@ $(function() {
 <div class="ttc" id="aclassTurboLoopPass_html_ac430c03ee4d721c534b9a5816a513597"><div class="ttname"><a href="classTurboLoopPass.html#ac430c03ee4d721c534b9a5816a513597">TurboLoopPass::pushLoopTree</a></div><div class="ttdeci">auto pushLoopTree(llvm::SmallVectorImpl&lt; NotNull&lt; LoopTree &gt;&gt; &amp;pForest, llvm::Loop *L, llvm::ArrayRef&lt; llvm::Loop * &gt; subLoops, llvm::BasicBlock *H, llvm::BasicBlock *E, NoWrapRewriter &amp;nwr) -&gt; size_t</div><div class="ttdef"><b>Definition:</b> TurboLoop.hpp:154</div></div>
 <div class="ttc" id="astructAffineLoopNest_html"><div class="ttname"><a href="structAffineLoopNest.html">AffineLoopNest&lt; true &gt;</a></div></div>
 <div class="ttc" id="astructInstruction_1_1Cache_html"><div class="ttname"><a href="structInstruction_1_1Cache.html">Instruction::Cache</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:290</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:781</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:956</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:771</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Math.hpp:946</div></div>
 <div class="ttc" id="astructLinearProgramLoopBlock_html"><div class="ttname"><a href="structLinearProgramLoopBlock.html">LinearProgramLoopBlock</a></div><div class="ttdef"><b>Definition:</b> LoopBlock.hpp:274</div></div>
 <div class="ttc" id="astructLoopTree_html"><div class="ttname"><a href="structLoopTree.html">LoopTree</a></div><div class="ttdef"><b>Definition:</b> LoopForest.hpp:24</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:64</div></div>
