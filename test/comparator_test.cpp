@@ -1,6 +1,6 @@
-#include "../include/Comparators.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
+#include "Math/Comparators.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -78,8 +78,7 @@ TEST(V2Matrix, BasicAssertions) {
   auto NScol = NS.numCol();
   auto offset = Vt.numRow() - NS.numRow();
   for (size_t i = 0; i < NSrow; ++i)
-    for (size_t j = 0; j < NScol; ++j)
-      EXPECT_EQ(NS(i, j), Vt(offset + i, j));
+    for (size_t j = 0; j < NScol; ++j) EXPECT_EQ(NS(i, j), Vt(offset + i, j));
 }
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)

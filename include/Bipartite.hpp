@@ -1,5 +1,5 @@
 #pragma once
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 
 bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
                     llvm::SmallVectorImpl<bool> &seen,
@@ -49,8 +49,7 @@ maxBipartiteMatch(Matrix<bool, 0, 0> &bpGraph) {
       std::fill(seen.begin(), seen.end(), false);
 
       // Find if the applicant 'u' can get a job
-      if (bipartiteMatch(bpGraph, u, seen, matchR))
-        result++;
+      if (bipartiteMatch(bpGraph, u, seen, matchR)) result++;
     }
   }
   return std::make_pair(result, matchR);

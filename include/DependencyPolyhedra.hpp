@@ -1,18 +1,24 @@
 #pragma once
 
 #include "./Loops.hpp"
-#include "./Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Orthogonalize.hpp"
-#include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
-#include "./Simplex.hpp"
+#include "Math/Comparisons.hpp"
+#include "Math/Math.hpp"
+#include "Math/Orthogonalize.hpp"
+#include "Math/Polyhedra.hpp"
+#include "Math/Simplex.hpp"
+#include "Utilities/Valid.hpp"
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/Optional.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Analysis/ScalarEvolution.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
 #include <tuple>
 #include <utility>
@@ -33,10 +39,11 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   [[no_unique_address]] size_t numDep0Var; // loops dep 0
   // size_t numDep1Var; // loops dep 1
   [[no_unique_address]] llvm::SmallVector<int64_t, 2> nullStep;
-
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto getTimeDim() const -> size_t { return nullStep.size(); }
   [[nodiscard]] constexpr auto getDim0() const -> size_t { return numDep0Var; }
+  // getDynSym() + 1 == getNumSym()
+  [[nodiscard]] auto getDynSymDim() const -> size_t { return S.size(); }
   [[nodiscard]] auto getDim1() const -> size_t {
     return getNumVar() - numDep0Var - nullStep.size() - S.size();
   }
@@ -47,7 +54,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   [[nodiscard]] auto getNumScheduleCoefficients() const -> size_t {
     return getNumPhiCoefficients() + getNumOmegaCoefficients();
   }
-  auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
+  constexpr auto getSymbols(size_t i) -> MutPtrVector<int64_t> {
     return A(i, _(begin, getNumSymbols()));
   }
   [[nodiscard]] auto getInEqSymbols(size_t i) const -> PtrVector<int64_t> {
@@ -58,26 +65,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   }
   [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
     -> std::optional<int64_t> {
-    for (size_t j = 1; j < getNumSymbols(); ++j)
-      if (A(i, j))
-        return {};
+    if (!allZero(A(i, _(1, getNumSymbols())))) return {};
     return A(i, 0);
   }
   [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
     -> std::optional<int64_t> {
-    for (size_t j = 1; j < getNumSymbols(); ++j)
-      if (E(i, j))
-        return {};
+    if (!allZero(E(i, _(1, getNumSymbols())))) return {};
     return E(i, 0);
   }
 
-  static auto findFirstNonEqual(PtrVector<unsigned> x, PtrVector<unsigned> y)
+  static auto findFirstNonEqual(PtrVector<int64_t> x, PtrVector<int64_t> y)
     -> size_t {
     const size_t M = std::min(x.size(), y.size());
-    for (size_t i = 0; i < M; ++i)
-      if (x[i] != y[i])
-        return i;
-    return M;
+    return std::mismatch(x.begin(), x.begin() + M, y.begin()).first - x.begin();
   }
   static auto nullSpace(const MemoryAccess &x, const MemoryAccess &y)
     -> IntMatrix {
@@ -86,8 +86,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     const size_t xDim = x.getArrayDim();
     const size_t yDim = y.getArrayDim();
     IntMatrix A(numLoopsCommon, xDim + yDim);
-    if (!numLoopsCommon)
-      return A;
+    if (!numLoopsCommon) return A;
     // indMats cols are [innerMostLoop, ..., outerMostLoop]
     PtrMatrix<int64_t> indMatX = x.indexMatrix();
     PtrMatrix<int64_t> indMatY = y.indexMatrix();
@@ -107,32 +106,28 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   // Produces
   // A*x <= b
   // Where x = [inds0..., inds1..., time..]
-  auto symbolIndex(const llvm::SCEV *v) -> unsigned int {
-    for (unsigned int i = 0; i < S.size(); ++i)
-      if (S[i] == v)
-        return i;
-    return std::numeric_limits<unsigned int>::max();
+  auto symbolIndex(const llvm::SCEV *v) -> Optional<unsigned int> {
+    auto it = std::find(S.begin(), S.end(), v);
+    if (it == S.end()) return {};
+    return it - S.begin();
   }
   auto merge(llvm::ArrayRef<const llvm::SCEV *> s0,
              llvm::ArrayRef<const llvm::SCEV *> s1)
-    -> std::pair<llvm::SmallVector<unsigned int>,
-                 llvm::SmallVector<unsigned int>> {
+    -> std::array<llvm::SmallVector<unsigned int>, 2> {
     S.reserve(s0.size() + s1.size());
-    std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
-      ret;
-    ret.first.reserve(s0.size());
-    ret.second.reserve(s1.size());
+    std::array<llvm::SmallVector<unsigned int>, 2> ret;
+    ret[0].reserve(s0.size());
+    ret[1].reserve(s1.size());
     for (size_t i = 0; i < s0.size(); ++i) {
-      ret.first.push_back(i);
+      ret[0].push_back(i);
       S.push_back(s0[i]);
     }
     for (auto i : s1) {
-      unsigned int j = symbolIndex(i);
-      if (j == std::numeric_limits<unsigned int>::max()) {
-        ret.second.push_back(S.size());
-        S.push_back(i);
+      if (Optional<unsigned int> j = symbolIndex(i)) {
+        ret[1].push_back(*j);
       } else {
-        ret.second.push_back(j);
+        ret[1].push_back(S.size());
+        S.push_back(i);
       }
     }
     return ret;
@@ -142,17 +137,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     : SymbolicEqPolyhedra{} {
 
     assert(ma0.sizesMatch(ma1));
-    auto [nc0, nv0] = ma0.loop->A.size();
-    auto [nc1, nv1] = ma1.loop->A.size();
-    numDep0Var = ma0.loop->getNumLoops();
-    size_t numDep1Var = ma1.loop->getNumLoops();
+    NotNull<AffineLoopNest<>> loop0 = ma0.getLoop();
+    NotNull<AffineLoopNest<>> loop1 = ma1.getLoop();
+    auto [nc0, nv0] = loop0->A.size();
+    auto [nc1, nv1] = loop1->A.size();
+    numDep0Var = loop0->getNumLoops();
+    size_t numDep1Var = loop1->getNumLoops();
     size_t numVar = numDep0Var + numDep1Var;
-    std::pair<llvm::SmallVector<unsigned int>, llvm::SmallVector<unsigned int>>
-      oldToNewMaps{merge(ma0.loop->S, ma1.loop->S)};
-    auto &oldToNewMap0 = oldToNewMaps.first;
-    auto &oldToNewMap1 = oldToNewMaps.second;
-    assert(oldToNewMap0.size() == ma0.loop->S.size());
-    assert(oldToNewMap1.size() == ma1.loop->S.size());
+    std::array<llvm::SmallVector<unsigned int>, 2> oldToNewMaps{
+      merge(loop0->S, loop1->S)};
+    auto &oldToNewMap0 = oldToNewMaps[0];
+    auto &oldToNewMap1 = oldToNewMaps[1];
+    assert(oldToNewMap0.size() == loop0->S.size());
+    assert(oldToNewMap1.size() == loop1->S.size());
 
     // numDep1Var = nv1;
     const Row nc = nc0 + nc1;
@@ -162,8 +159,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     nullStep.resize_for_overwrite(nullDim);
     for (size_t i = 0; i < nullDim; ++i) {
       int64_t s = 0;
-      for (size_t j = 0; j < NS.numCol(); ++j)
-        s += NS(i, j) * NS(i, j);
+      for (size_t j = 0; j < NS.numCol(); ++j) s += NS(i, j) * NS(i, j);
       nullStep[i] = s;
     }
     //           column meansing in in order
@@ -172,19 +168,19 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     E.resize(indexDim + nullDim, A.numCol());
     // ma0 loop
     for (size_t i = 0; i < nc0; ++i) {
-      A(i, 0) = ma0.loop->A(i, 0);
+      A(i, 0) = loop0->A(i, 0);
       for (size_t j = 0; j < oldToNewMap0.size(); ++j)
-        A(i, 1 + oldToNewMap0[j]) = ma0.loop->A(i, 1 + j);
+        A(i, 1 + oldToNewMap0[j]) = loop0->A(i, 1 + j);
       for (size_t j = 0; j < numDep0Var; ++j)
-        A(i, j + numSymbols) = ma0.loop->A(i, j + ma0.loop->getNumSymbols());
+        A(i, j + numSymbols) = loop0->A(i, j + loop0->getNumSymbols());
     }
     for (size_t i = 0; i < nc1; ++i) {
-      A(nc0 + i, 0) = ma1.loop->A(i, 0);
+      A(nc0 + i, 0) = loop1->A(i, 0);
       for (size_t j = 0; j < oldToNewMap1.size(); ++j)
-        A(nc0 + i, 1 + oldToNewMap1[j]) = ma1.loop->A(i, 1 + j);
+        A(nc0 + i, 1 + oldToNewMap1[j]) = loop1->A(i, 1 + j);
       for (size_t j = 0; j < numDep1Var; ++j)
         A(nc0 + i, j + numSymbols + numDep0Var) =
-          ma1.loop->A(i, j + ma1.loop->getNumSymbols());
+          loop1->A(i, j + loop1->getNumSymbols());
     }
     A(_(nc, end), _(numSymbols, numSymbols + numVar)).diag() = 1;
     // L254: Assertion `col < numCol()` failed
@@ -201,8 +197,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
       E(i, 0) = O0(i, 0);
       for (size_t j = 0; j < O0.numCol() - 1; ++j)
         E(i, 1 + oldToNewMap0[j]) = O0(i, 1 + j);
-      for (size_t j = 0; j < numDep0Var; ++j)
-        E(i, j + numSymbols) = A0(j, i);
+      for (size_t j = 0; j < numDep0Var; ++j) E(i, j + numSymbols) = A0(j, i);
       E(i, 0) -= O1(i, 0);
       for (size_t j = 0; j < O1.numCol() - 1; ++j)
         E(i, 1 + oldToNewMap1[j]) -= O1(i, 1 + j);
@@ -223,7 +218,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   static constexpr auto getNumLambda(Row numIneq, Row numEq) -> size_t {
     return 1 + size_t(numIneq) + 2 * size_t(numEq);
   }
-  [[nodiscard]] auto getNumLambda() const -> size_t {
+  [[nodiscard]] constexpr auto getNumLambda() const -> size_t {
     return getNumLambda(A.numRow(), E.numRow());
   }
   // `direction = true` means second dep follow first
@@ -237,7 +232,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   // constraint order corresponds to old variables, will be in same order
   //
   // Time parameters are carried over into farkas polys
-  [[nodiscard]] auto farkasPair() const -> std::pair<Simplex, Simplex> {
+  [[nodiscard]] auto farkasPair() const -> std::array<Simplex, 2> {
 
     const size_t numEqualityConstraintsOld = size_t(E.numRow());
     const size_t numInequalityConstraintsOld = size_t(A.numRow());
@@ -263,8 +258,8 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const size_t numVarNew = numVarInterest + numLambda;
     assert(getNumLambda() == numLambda);
-    std::pair<Simplex, Simplex> pair;
-    Simplex &fw(pair.first);
+    std::array<Simplex, 2> pair;
+    Simplex &fw(pair[0]);
     fw.resize(numConstraintsNew, numVarNew + 1);
     MutPtrMatrix<int64_t> fC{fw.getConstraints()(_, _(1, end))};
     fC(_, 0) = 0;
@@ -312,7 +307,7 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
       fC(i, i + numScheduleCoefs + numLambda) = -1;
 
     // so far, both have been identical
-    Simplex &bw(pair.second);
+    Simplex &bw(pair[1]);
     bw.resize(numConstraintsNew, numVarNew + 1);
     MutPtrMatrix<int64_t> bC{bw.getConstraints()(_, _(1, end))};
 
@@ -369,12 +364,15 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
 
 }; // namespace DependencePolyhedra
 
+/// Dependence
+/// Represents a dependence relationship between two memory accesses.
+/// It contains simplices representing constraints that affine schedules
+/// are allowed to take.
 struct Dependence {
   // Plan here is...
   // depPoly gives the constraints
   // dependenceFwd gives forward constraints
   // dependenceBwd gives forward constraints
-  // isForward() indicates whether forward is non-empty
   // isBackward() indicates whether backward is non-empty
   // bounding constraints, used for ILP solve, are reverse,
   // i.e. fwd uses dependenceBwd and bwd uses dependenceFwd.
@@ -448,12 +446,70 @@ struct Dependence {
   //
   //
   //
+  using BitSet = MemoryAccess::BitSet;
+
+private:
   [[no_unique_address]] DependencePolyhedra depPoly;
   [[no_unique_address]] Simplex dependenceSatisfaction;
   [[no_unique_address]] Simplex dependenceBounding;
-  [[no_unique_address]] MemoryAccess *in;
-  [[no_unique_address]] MemoryAccess *out;
+  [[no_unique_address]] NotNull<MemoryAccess> in;
+  [[no_unique_address]] NotNull<MemoryAccess> out;
   [[no_unique_address]] bool forward;
+  Dependence(DependencePolyhedra poly, std::array<Simplex, 2> depSatBound,
+             std::array<NotNull<MemoryAccess>, 2> inOut, bool fwd)
+    : depPoly(std::move(poly)),
+      dependenceSatisfaction(std::move(depSatBound)[0]),
+      dependenceBounding(std::move(depSatBound)[1]), in(inOut[0]),
+      out(inOut[1]), forward(fwd) {}
+
+public:
+  void pushToEdgeVector(llvm::SmallVectorImpl<NotNull<Dependence>> &vec) {
+    in->addEdgeOut(vec.size());
+    out->addEdgeIn(vec.size());
+    vec.push_back(this);
+  }
+  [[nodiscard]] constexpr auto getArrayPointer() -> const llvm::SCEV * {
+    return in->getArrayPointer();
+  }
+  /// indicates whether forward is non-empty
+  [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
+  [[nodiscard]] auto nodesIn() const -> const BitSet & {
+    return in->getNodes();
+  }
+  [[nodiscard]] auto nodesOut() const -> const BitSet & {
+    return out->getNodes();
+  }
+  [[nodiscard]] auto getDynSymDim() const -> size_t {
+    return depPoly.getDynSymDim();
+  }
+  [[nodiscard]] auto inputIsLoad() const -> bool { return in->isLoad(); }
+  [[nodiscard]] auto outputIsLoad() const -> bool { return out->isLoad(); }
+  [[nodiscard]] auto inputIsStore() const -> bool { return in->isStore(); }
+  [[nodiscard]] auto outputIsStore() const -> bool { return out->isStore(); }
+  /// getInIndMat() -> getInNumLoops() x arrayDim()
+  [[nodiscard]] auto getInIndMat() const -> PtrMatrix<int64_t> {
+    return in->indexMatrix();
+  }
+  /// getOutIndMat() -> getOutNumLoops() x arrayDim()
+  [[nodiscard]] auto getOutIndMat() const -> PtrMatrix<int64_t> {
+    return out->indexMatrix();
+  }
+  [[nodiscard]] constexpr auto getInOutPair() const
+    -> std::array<NotNull<MemoryAccess>, 2> {
+    return {in, out};
+  }
+  // returns the memory access pair, placing the store first in the pair
+  [[nodiscard]] auto getStoreAndOther() const
+    -> std::array<NotNull<MemoryAccess>, 2> {
+    if (in->isStore()) return {in, out};
+    else return {out, in};
+  }
+  [[nodiscard]] auto getInNumLoops() const -> size_t {
+    return in->getNumLoops();
+  }
+  [[nodiscard]] auto getOutNumLoops() const -> size_t {
+    return out->getNumLoops();
+  }
   [[nodiscard]] auto isInactive(size_t depth) const -> bool {
     return (depth >= std::min(out->getNumLoops(), in->getNumLoops()));
   }
@@ -466,79 +522,102 @@ struct Dependence {
   [[nodiscard]] auto getNumPhiCoefficients() const -> size_t {
     return depPoly.getNumPhiCoefficients();
   }
-  static constexpr auto getNumOmegaCoefficients() -> size_t {
+  [[nodiscard]] static constexpr auto getNumOmegaCoefficients() -> size_t {
     return DependencePolyhedra::getNumOmegaCoefficients();
   }
-  [[nodiscard]] auto getNumConstraints() const -> size_t {
+  [[nodiscard]] constexpr auto getNumDepSatConstraintVar() const -> size_t {
+    return size_t(dependenceSatisfaction.getConstraints().numCol());
+  }
+  [[nodiscard]] constexpr auto getNumDepBndConstraintVar() const -> size_t {
+    return size_t(dependenceBounding.getConstraints().numCol());
+  }
+  // returns `w`
+  [[nodiscard]] constexpr auto getNumDynamicBoundingVar() const -> size_t {
+    return getNumDepBndConstraintVar() - getNumDepSatConstraintVar();
+  }
+  void validate() {
+    assert(getInNumLoops() + getOutNumLoops() == getNumPhiCoefficients());
+    // 2 == 1 for const offset + 1 for w
+    assert(2 + depPoly.getNumLambda() + getNumPhiCoefficients() +
+             getNumOmegaCoefficients() ==
+           size_t(dependenceSatisfaction.getConstraints().numCol()));
+  }
+  [[nodiscard]] auto getDepPoly() -> DependencePolyhedra { return depPoly; }
+  [[nodiscard]] constexpr auto getNumConstraints() const -> size_t {
     return dependenceBounding.getNumConstraints() +
            dependenceSatisfaction.getNumConstraints();
   }
-  [[nodiscard]] auto getSatConstants() const -> StridedVector<int64_t> {
+  [[nodiscard]] constexpr auto getSatConstants() const
+    -> StridedVector<int64_t> {
     return dependenceSatisfaction.getConstants();
   }
-  [[nodiscard]] auto getBndConstants() const -> StridedVector<int64_t> {
+  [[nodiscard]] constexpr auto getBndConstants() const
+    -> StridedVector<int64_t> {
     return dependenceBounding.getConstants();
   }
+  [[nodiscard]] constexpr auto getSatConstraints() const -> PtrMatrix<int64_t> {
+    return dependenceSatisfaction.getConstraints();
+  }
+  [[nodiscard]] constexpr auto getBndConstraints() const -> PtrMatrix<int64_t> {
+    return dependenceBounding.getConstraints();
+  }
   [[nodiscard]] auto getSatLambda() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, _(1, 1 + depPoly.getNumLambda()));
+    return getSatConstraints()(_, _(1, 1 + depPoly.getNumLambda()));
   }
   [[nodiscard]] auto getBndLambda() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
-      _, _(1, 1 + depPoly.getNumLambda()));
+    return getBndConstraints()(_, _(1, 1 + depPoly.getNumLambda()));
   }
   [[nodiscard]] auto getSatPhiCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
   [[nodiscard]] auto getSatPhi0Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + depPoly.getDim0()));
   }
   [[nodiscard]] auto getSatPhi1Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
   [[nodiscard]] auto getBndPhiCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+    return getBndConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
   [[nodiscard]] auto getBndPhi0Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+    return getBndConstraints()(
       _, _(1 + depPoly.getNumLambda(),
            1 + depPoly.getNumLambda() + depPoly.getDim0()));
   }
   [[nodiscard]] auto getBndPhi1Coefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+    return getBndConstraints()(
       _, _(1 + depPoly.getNumLambda() + depPoly.getDim0(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients()));
   }
   [[nodiscard]] auto getSatOmegaCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
+    return getSatConstraints()(
       _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients()));
   }
   [[nodiscard]] auto getBndOmegaCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(
+    return getBndConstraints()(
       _, _(1 + depPoly.getNumLambda() + getNumPhiCoefficients(),
            1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
              getNumOmegaCoefficients()));
   }
   [[nodiscard]] auto getSatW() const -> StridedVector<int64_t> {
-    return dependenceSatisfaction.getConstraints()(
-      _, 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
-           getNumOmegaCoefficients());
+    return getSatConstraints()(_, 1 + depPoly.getNumLambda() +
+                                    getNumPhiCoefficients() +
+                                    getNumOmegaCoefficients());
   }
   [[nodiscard]] auto getBndCoefs() const -> PtrMatrix<int64_t> {
-    return dependenceBounding.getConstraints()(_, _(1 + depPoly.getNumLambda() +
-                                                      getNumPhiCoefficients() +
-                                                      getNumOmegaCoefficients(),
-                                                    end));
+    size_t lb = 1 + depPoly.getNumLambda() + getNumPhiCoefficients() +
+                getNumOmegaCoefficients();
+    return getBndConstraints()(_, _(lb, end));
   }
 
   [[nodiscard]] auto splitSatisfaction() const
@@ -660,8 +739,8 @@ struct Dependence {
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      schv(_(begin, numLoopsIn)) = inPhi(i, _);
-      schv(_(numLoopsIn, numLoopsTotal)) = outPhi(i, _);
+      schv[_(begin, numLoopsIn)] = inPhi(last - i, _);
+      schv[_(numLoopsIn, numLoopsTotal)] = outPhi(last - i, _);
       int64_t inO = inOffOmega[i], outO = outOffOmega[i];
       // forward means offset is 2nd - 1st
       schv[numLoopsTotal] = outO - inO;
@@ -703,8 +782,8 @@ struct Dependence {
       // }
       assert(i != numLoopsCommon);
       schv = 0;
-      schv(numLoopsIn - i - 1) = 1;
-      schv(numLoopsTotal - i - 1) = 1;
+      schv[numLoopsIn - i - 1] = 1;
+      schv[numLoopsTotal - i - 1] = 1;
       // forward means offset is 2nd - 1st
       schv[numLoopsTotal] = 0;
       // dependenceSatisfaction is phi_t - phi_s >= 0
@@ -721,17 +800,17 @@ struct Dependence {
   [[nodiscard]] auto isSatisfied(const Schedule &sx, const Schedule &sy,
                                  size_t d) const -> bool {
     const size_t numLambda = depPoly.getNumLambda();
-    const size_t numLoopsX = depPoly.getDim0();
-    const size_t numLoopsY = depPoly.getDim1();
+    const size_t nLoopX = depPoly.getDim0();
+    const size_t nLoopY = depPoly.getDim1();
     // const size_t numLoopsX = sx.getNumLoops();
     // const size_t numLoopsY = sy.getNumLoops();
-    const size_t numLoopsTotal = numLoopsX + numLoopsY;
+    const size_t numLoopsTotal = nLoopX + nLoopY;
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
-    sch(_(begin, numLoopsX)) = sx.getPhi()(d, _(end - numLoopsX, end));
-    sch(_(numLoopsX, numLoopsTotal)) = sy.getPhi()(d, _(end - numLoopsY, end));
-    sch(numLoopsTotal) = sx.getOffsetOmega()[d];
-    sch(numLoopsTotal + 1) = sy.getOffsetOmega()[d];
+    sch[_(begin, nLoopX)] = sx.getSchedule(d)[_(end - nLoopX, end)];
+    sch[_(nLoopX, numLoopsTotal)] = sy.getSchedule(d)[_(end - nLoopY, end)];
+    sch[numLoopsTotal] = sx.getOffsetOmega()[d];
+    sch[numLoopsTotal + 1] = sy.getOffsetOmega()[d];
     return dependenceSatisfaction.satisfiable(sch, numLambda);
   }
   [[nodiscard]] auto isSatisfied(size_t d) const -> bool {
@@ -743,8 +822,8 @@ struct Dependence {
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
     Vector<int64_t> sch(numLoopsTotal + 2);
     assert(sch.size() == numLoopsTotal + 2);
-    sch(numLoopsX - d - 1) = 1;
-    sch(numLoopsTotal - d - 1) = 1;
+    sch[numLoopsX - d - 1] = 1;
+    sch[numLoopsTotal - d - 1] = 1;
     // sch(numLoopsTotal) = x[d];
     // sch(numLoopsTotal + 1) = y[d];
     return dependenceSatisfaction.satisfiable(sch, numLambda);
@@ -755,13 +834,12 @@ struct Dependence {
   //                    : isSatisfied(out->getFusedOmega(),
   //                    in->getFusedOmega(), d);
   // }
-  static auto checkDirection(const std::pair<Simplex, Simplex> &p,
+  static auto checkDirection(const std::array<Simplex, 2> &p,
                              const MemoryAccess &x, const MemoryAccess &y,
                              const Schedule &xSchedule,
                              const Schedule &ySchedule, size_t numLambda,
                              Col nonTimeDim) -> bool {
-    const Simplex &fxy = p.first;
-    const Simplex &fyx = p.second;
+    const auto &[fxy, fyx] = p;
     const size_t numLoopsX = x.getNumLoops();
     const size_t numLoopsY = y.getNumLoops();
 #ifndef NDEBUG
@@ -778,8 +856,7 @@ struct Dependence {
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i])
-        return o2idiff > 0;
+      if (int64_t o2idiff = yFusOmega[i] - xFusOmega[i]) return o2idiff > 0;
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -792,10 +869,10 @@ struct Dependence {
       //   present at that level
       // }
       assert(i != numLoopsCommon);
-      sch(_(begin, numLoopsX)) = xPhi(i, _);
-      sch(_(numLoopsX, numLoopsTotal)) = yPhi(i, _);
-      sch(numLoopsTotal) = xOffOmega[i];
-      sch(numLoopsTotal + 1) = yOffOmega[i];
+      sch[_(begin, numLoopsX)] = xPhi(last - i, _);
+      sch[_(numLoopsX, numLoopsTotal)] = yPhi(last - i, _);
+      sch[numLoopsTotal] = xOffOmega[i];
+      sch[numLoopsTotal + 1] = yOffOmega[i];
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
         assert(!fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)));
@@ -806,38 +883,35 @@ struct Dependence {
 #endif
         return false;
       }
-      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
+      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)))
 #ifndef NDEBUG
-        // llvm::errs()
-        //     << "Dependence decided by backward violation with i = "
-        //     << i
-        //     << "\n";
+      // llvm::errs()
+      //     << "Dependence decided by backward violation with i = "
+      //     << i
+      //     << "\n";
 #endif
         return true;
-      }
     }
     // assert(false);
     // return false;
   }
-  static auto checkDirection(const std::pair<Simplex, Simplex> &p,
+  static auto checkDirection(const std::array<Simplex, 2> &p,
                              const MemoryAccess &x, const MemoryAccess &y,
                              size_t numLambda, Col nonTimeDim) -> bool {
-    const Simplex &fxy = p.first;
-    const Simplex &fyx = p.second;
+    const auto &[fxy, fyx] = p;
     const size_t numLoopsX = x.getNumLoops();
     const size_t numLoopsY = y.getNumLoops();
 #ifndef NDEBUG
     const size_t numLoopsCommon = std::min(numLoopsX, numLoopsY);
 #endif
     const size_t numLoopsTotal = numLoopsX + numLoopsY;
-    PtrVector<unsigned> xFusOmega = x.getFusionOmega();
-    PtrVector<unsigned> yFusOmega = y.getFusionOmega();
+    PtrVector<int64_t> xFusOmega = x.getFusionOmega();
+    PtrVector<int64_t> yFusOmega = y.getFusionOmega();
     Vector<int64_t> sch;
     sch.resizeForOverwrite(numLoopsTotal + 2);
     // i iterates from outer-most to inner most common loop
     for (size_t i = 0; /*i <= numLoopsCommon*/; ++i) {
-      if (yFusOmega[i] != xFusOmega[i])
-        return yFusOmega[i] > xFusOmega[i];
+      if (yFusOmega[i] != xFusOmega[i]) return yFusOmega[i] > xFusOmega[i];
       // we should not be able to reach `numLoopsCommon`
       // because at the very latest, this last schedule value
       // should be different, because either:
@@ -851,8 +925,8 @@ struct Dependence {
       // }
       assert(i != numLoopsCommon);
       sch = 0;
-      sch(numLoopsX - 1 - i) = 1;
-      sch(numLoopsTotal - 1 - i) = 1;
+      sch[numLoopsX - 1 - i] = 1;
+      sch[numLoopsTotal - 1 - i] = 1;
       if (fxy.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
 #ifndef NDEBUG
         assert(!fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)));
@@ -863,49 +937,48 @@ struct Dependence {
 #endif
         return false;
       }
-      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim))) {
+      if (fyx.unSatisfiableZeroRem(sch, numLambda, size_t(nonTimeDim)))
 #ifndef NDEBUG
-        // llvm::errs()
-        //     << "Dependence decided by backward violation with i = "
-        //     << i
-        //     << "\n";
+      // llvm::errs()
+      //     << "Dependence decided by backward violation with i = "
+      //     << i
+      //     << "\n";
 #endif
         return true;
-      }
     }
     // assert(false);
     // return false;
   }
-  static void timelessCheck(llvm::SmallVectorImpl<Dependence> &deps,
+  static auto timelessCheck(llvm::BumpPtrAllocator &alloc,
                             DependencePolyhedra dxy, MemoryAccess &x,
-                            MemoryAccess &y) {
-    std::pair<Simplex, Simplex> pair(dxy.farkasPair());
+                            MemoryAccess &y) -> Dependence * {
+    std::array<Simplex, 2> pair(dxy.farkasPair());
     const size_t numLambda = dxy.getNumLambda();
     assert(dxy.getTimeDim() == 0);
     if (checkDirection(pair, x, y, numLambda, dxy.A.numCol())) {
-      // pair.first.truncateVars(pair.first.getNumVar() -
+      // pair[0].truncateVars(pair[0].getNumVar() -
       //                         dxy.getNumSymbols());
-      pair.first.truncateVars(2 + numLambda + dxy.getNumScheduleCoefficients());
-      deps.emplace_back(Dependence{std::move(dxy), std::move(pair.first),
-                                   std::move(pair.second), &x, &y, true});
+      pair[0].truncateVars(2 + numLambda + dxy.getNumScheduleCoefficients());
+      return new (alloc)
+        Dependence{std::move(dxy), std::move(pair), {&x, &y}, true};
     } else {
-      // pair.second.truncateVars(pair.second.getNumVar() -
+      // pair[1].truncateVars(pair[1].getNumVar() -
       // dxy.getNumSymbols());
-      pair.second.truncateVars(2 + numLambda +
-                               dxy.getNumScheduleCoefficients());
-      deps.emplace_back(Dependence{std::move(dxy), std::move(pair.second),
-                                   std::move(pair.first), &y, &x, false});
+      pair[1].truncateVars(2 + numLambda + dxy.getNumScheduleCoefficients());
+      std::swap(pair[0], pair[1]);
+      return new (alloc)
+        Dependence{std::move(dxy), std::move(pair), {&y, &x}, false};
     }
   }
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static void timeCheck(llvm::SmallVectorImpl<Dependence> &deps,
-                        DependencePolyhedra dxy, MemoryAccess &x,
-                        MemoryAccess &y) {
-    std::pair<Simplex, Simplex> pair(dxy.farkasPair());
+  static auto timeCheck(llvm::BumpPtrAllocator &alloc, DependencePolyhedra dxy,
+                        MemoryAccess &x, MemoryAccess &y)
+    -> std::array<Optional<Dependence *>, 2> {
+    std::array<Simplex, 2> pair(dxy.farkasPair());
     // copy backup
-    std::pair<Simplex, Simplex> farkasBackups = pair;
+    std::array<Simplex, 2> farkasBackups = pair;
     const size_t numInequalityConstraintsOld =
       dxy.getNumInequalityConstraints();
     const size_t numEqualityConstraintsOld = dxy.getNumEqualityConstraints();
@@ -914,20 +987,19 @@ struct Dependence {
     const size_t numLambda = posEqEnd + numEqualityConstraintsOld;
     const size_t numScheduleCoefs = dxy.getNumScheduleCoefficients();
     assert(numLambda == dxy.getNumLambda());
-    MemoryAccess *in = &x, *out = &y;
+    NotNull<MemoryAccess> in = &x, out = &y;
     const bool isFwd =
       checkDirection(pair, x, y, numLambda, dxy.A.numCol() - dxy.getTimeDim());
     if (isFwd) {
-      std::swap(farkasBackups.first, farkasBackups.second);
+      std::swap(farkasBackups[0], farkasBackups[1]);
     } else {
       std::swap(in, out);
-      std::swap(pair.first, pair.second);
+      std::swap(pair[0], pair[1]);
     }
-    pair.first.truncateVars(2 + numLambda + numScheduleCoefs);
-    deps.emplace_back(Dependence{dxy, std::move(pair.first),
-                                 std::move(pair.second), in, out, isFwd});
+    pair[0].truncateVars(2 + numLambda + numScheduleCoefs);
+    auto dep0 = new (alloc) Dependence{dxy, std::move(pair), {in, out}, isFwd};
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
+           dep0->getNumPhiCoefficients());
     // pair is invalid
     const size_t timeDim = dxy.getTimeDim();
     assert(timeDim);
@@ -935,18 +1007,18 @@ struct Dependence {
     const size_t numVar = numVarOld - timeDim;
     // const size_t numBoundingCoefs = numVarKeep - numLambda;
     // remove the time dims from the deps
-    deps.back().depPoly.truncateVars(numVar);
-    deps.back().depPoly.nullStep.clear();
+    dep0->depPoly.truncateVars(numVar);
+    dep0->depPoly.nullStep.clear();
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
-    // deps.back().depPoly.removeExtraVariables(numVar);
+           dep0->getNumPhiCoefficients());
+    // dep0->depPoly.removeExtraVariables(numVar);
     // now we need to check the time direction for all times
     // anything approaching 16 time dimensions would be absolutely
     // insane
     llvm::SmallVector<bool, 16> timeDirection(timeDim);
     size_t t = 0;
-    auto fE{farkasBackups.first.getConstraints()(_, _(1, end))};
-    auto sE{farkasBackups.second.getConstraints()(_, _(1, end))};
+    auto fE{farkasBackups[0].getConstraints()(_, _(1, end))};
+    auto sE{farkasBackups[1].getConstraints()(_, _(1, end))};
     do {
       // set `t`th timeDim to +1/-1
       // basically, what we do here is set it to `step` and pretend it was
@@ -971,8 +1043,8 @@ struct Dependence {
         sE(0, c + posEqEnd) += Ecv;
       }
       // pair = farkasBackups;
-      // pair.first.removeExtraVariables(numVarKeep);
-      // pair.second.removeExtraVariables(numVarKeep);
+      // pair[0].removeExtraVariables(numVarKeep);
+      // pair[1].removeExtraVariables(numVarKeep);
       // farkasBacklups is swapped with respect to
       // checkDirection(..., *in, *out);
       timeDirection[t] = checkDirection(farkasBackups, *out, *in, numLambda,
@@ -1019,50 +1091,39 @@ struct Dependence {
     } while (++t < timeDim);
     dxy.truncateVars(numVar);
     dxy.nullStep.clear();
-    farkasBackups.first.truncateVars(2 + numLambda + numScheduleCoefs);
-    deps.emplace_back(Dependence{std::move(dxy), std::move(farkasBackups.first),
-                                 std::move(farkasBackups.second), out, in,
-                                 !isFwd});
+    farkasBackups[0].truncateVars(2 + numLambda + numScheduleCoefs);
+    auto dep1 = new (alloc)
+      Dependence{std::move(dxy), std::move(farkasBackups), {out, in}, !isFwd};
     assert(out->getNumLoops() + in->getNumLoops() ==
-           deps.back().getNumPhiCoefficients());
+           dep0->getNumPhiCoefficients());
+    return {dep0, dep1};
   }
 
-  static auto check(llvm::SmallVectorImpl<Dependence> &deps, MemoryAccess &x,
-                    MemoryAccess &y) -> size_t {
-    if (x.gcdKnownIndependent(y))
-      return 0;
+  static auto check(llvm::BumpPtrAllocator &alloc, MemoryAccess &x,
+                    MemoryAccess &y) -> std::array<Optional<Dependence *>, 2> {
+    if (x.gcdKnownIndependent(y)) return {};
     DependencePolyhedra dxy(x, y);
     assert(x.getNumLoops() == dxy.getDim0());
     assert(y.getNumLoops() == dxy.getDim1());
     assert(x.getNumLoops() + y.getNumLoops() == dxy.getNumPhiCoefficients());
-    if (dxy.isEmpty())
-      return 0;
+    if (dxy.isEmpty()) return {};
     // note that we set boundAbove=true, so we reverse the
     // dependence direction for the dependency we week, we'll
     // discard the program variables x then y
-    if (dxy.getTimeDim()) {
-      timeCheck(deps, std::move(dxy), x, y);
-      return 2;
-    } else {
-      timelessCheck(deps, std::move(dxy), x, y);
-      return 1;
-    }
+    if (dxy.getTimeDim()) return timeCheck(alloc, std::move(dxy), x, y);
+    else return {timelessCheck(alloc, std::move(dxy), x, y), nullptr};
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Dependence &d)
     -> llvm::raw_ostream & {
     os << "Dependence Poly ";
-    if (d.forward)
-      os << "x -> y:";
-    else
-      os << "y -> x:";
+    if (d.forward) os << "x -> y:";
+    else os << "y -> x:";
     // os << d.depPoly << "\nA = " << d.depPoly.A << "\nE = " << d.depPoly.E
     //    << "\nSchedule Constraints:" << d.dependenceSatisfaction
     //    << "\nBounding Constraints:" << d.dependenceBounding;
-    if (d.in)
-      os << "\n\tInput:\n" << *d.in;
-    if (d.out)
-      os << "\n\tOutput:\n" << *d.out;
+    if (d.in) os << "\n\tInput:\n" << *d.in;
+    if (d.out) os << "\n\tOutput:\n" << *d.out;
     return os << "\n";
   }
 };

@@ -1,0 +1,2 @@
+CXXFLAGS="" CXX=g++ cmake -G Ninja -S benchmark buildgcc/benchmark -DCMAKE_BUILD_TYPE=Release
+CXXFLAGS="" CXX=clang++ cmake -G Ninja -S benchmark buildclang/benchmark -DCMAKE_BUILD_TYPE=Release

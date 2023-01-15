@@ -1,18 +1,22 @@
 #pragma once
 
+#include "./Address.hpp"
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
-#include "./Math.hpp"
-#include "./NormalForm.hpp"
+#include "./Loops.hpp"
+#include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
-#include "./Simplex.hpp"
-#include "./Utilities.hpp"
-#include "MemoryAccess.hpp"
+#include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
+#include "Math/Simplex.hpp"
+#include "Utilities/Optional.hpp"
+#include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/DenseMap.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ADT/SmallVector.h>
@@ -26,36 +30,92 @@
 template <std::integral I>
 inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
   for (auto it = v.begin(), ite = v.end(); it != ite; ++it) {
-    if (*it < x)
-      continue;
-    if (*it > x)
-      v.insert(it, x);
+    if (*it < x) continue;
+    if (*it > x) v.insert(it, x);
     return;
   }
   v.push_back(x);
 }
+
+/// ScheduledNode
+/// Represents a set of memory accesses that are optimized together in the LP.
+/// These instructions are all connected directly by through registers.
+/// E.g., `A[i] = B[i] + C[i]` is a single node
+/// because we load from `B[i]` and `C[i]` into registers, compute, and
+/// `A[i]`;
 struct ScheduledNode {
-  [[no_unique_address]] BitSet<> memory{};
-  [[no_unique_address]] BitSet<> inNeighbors{};
-  [[no_unique_address]] BitSet<> outNeighbors{};
+  using BitSet = ::MemoryAccess::BitSet;
+
+private:
+  [[no_unique_address]] BitSet memory{};
+  [[no_unique_address]] BitSet inNeighbors{};
+  [[no_unique_address]] BitSet outNeighbors{};
   [[no_unique_address]] Schedule schedule{};
+  [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
   [[no_unique_address]] uint32_t omegaOffset{0}; // used in LoopBlock
-  [[no_unique_address]] uint32_t carriedDependence{0};
   [[no_unique_address]] uint8_t numLoops{0};
   [[no_unique_address]] uint8_t rank{0};
   [[no_unique_address]] bool visited{false};
+
+public:
+  ScheduledNode(unsigned int sId, MemoryAccess *store, unsigned int nodeIndex)
+    : storeId(sId) {
+    addMemory(sId, store, nodeIndex);
+  }
+  [[nodiscard]] auto
+  getMemAccesses(llvm::BumpPtrAllocator &alloc,
+                 llvm::ArrayRef<MemoryAccess *> memAccess) const
+    -> llvm::SmallVector<Address *> {
+    // First, we invert the schedule matrix.
+    SquarePtrMatrix<int64_t> Phi = schedule.getPhi();
+    auto [Pinv, s] = NormalForm::scaledInv(Phi);
+    if (s == 1) {
+    }
+    llvm::SmallVector<Address *> accesses;
+    accesses.reserve(memory.size());
+    for (auto i : memory) {
+      // TODO: cache!
+      NotNull<AffineLoopNest<false>> loop =
+        memAccess[i]->getLoop()->rotate(alloc, Pinv);
+      accesses.push_back(Address::construct(alloc, loop, memAccess[i],
+                                            i == storeId, Pinv, s,
+                                            schedule.getFusionOmega()));
+    }
+    return accesses;
+  }
+  constexpr auto getMemory() -> BitSet & { return memory; }
+  constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
+  constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
+  constexpr auto getSchedule() -> Schedule & { return schedule; }
+  [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
+    return memory;
+  }
+  [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet & {
+    return inNeighbors;
+  }
+  [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
+    return outNeighbors;
+  }
+  [[nodiscard]] constexpr auto getSchedule() const -> const Schedule & {
+    return schedule;
+  }
+  void addOutNeighbor(unsigned int i) { outNeighbors.insert(i); }
+  void addInNeighbor(unsigned int i) { inNeighbors.insert(i); }
+  void init() { schedule.init(getNumLoops()); }
   void addMemory(unsigned memId, MemoryAccess *mem, unsigned nodeIndex) {
     mem->addNodeIndex(nodeIndex);
     memory.insert(memId);
     numLoops = std::max(numLoops, uint8_t(mem->getNumLoops()));
   }
-  [[nodiscard]] auto wasVisited() const -> bool { return visited; }
+  [[nodiscard]] constexpr auto wasVisited() const -> bool { return visited; }
   constexpr void visit() { visited = true; }
   constexpr void unVisit() { visited = false; }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return numLoops;
   }
+  // 'phiIsScheduled()` means that `phi`'s schedule has been
+  // set for the outer `rank` loops.
   [[nodiscard]] constexpr auto phiIsScheduled(size_t d) const -> bool {
     return d < rank;
   }
@@ -74,28 +134,72 @@ struct ScheduledNode {
     -> Range<size_t, size_t> {
     return _(phiOffset - numLoops, phiOffset);
   }
-
-  auto operator|(const ScheduledNode &s) const -> ScheduledNode {
-    uint8_t nL = std::max(numLoops, s.numLoops);
-    return {memory | s.memory,
-            (inNeighbors | s.inNeighbors),
-            (outNeighbors | s.outNeighbors),
-            Schedule(nL),
-            0,
-            0,
-            nL};
+  [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+    return schedule.getPhi();
   }
-  auto operator|=(const ScheduledNode &s) -> ScheduledNode & {
-    memory |= s.memory;
-    outNeighbors |= s.outNeighbors;
-    numLoops = std::max(numLoops, s.numLoops);
-    return *this;
+  [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
+    return schedule.getPhi();
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
+    return schedule.getOffsetOmega()[i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
+    return schedule.getOffsetOmega()[i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
+    return schedule.getFusionOmega()[i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
+    return schedule.getFusionOmega()[i];
+  }
+  [[nodiscard]] auto getOffsetOmega() -> MutPtrVector<int64_t> {
+    return schedule.getOffsetOmega();
+  }
+  [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
+    return schedule.getOffsetOmega();
+  }
+  [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
+    return schedule.getFusionOmega();
+  }
+  [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
+    return schedule.getFusionOmega();
   }
   [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
-    return schedule.getPhi()(d, _);
+    return schedule.getSchedule(d);
   }
-  auto getSchedule() -> Schedule & { return schedule; }
+  [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+    return schedule.getSchedule(d);
+  }
+  void schedulePhi(PtrMatrix<int64_t> indMat, size_t r) {
+    // indMat indvars are indexed from inside<->outside
+    // phi indvars are indexed from inside<->outside
+    // so, indMat is indvars[inside<->outside] x array dim
+    // phi is loop[inside<->outside] x
+    // indvars[inside<->outside]
+    MutSquarePtrMatrix<int64_t> phi = getPhi();
+    const size_t indR = size_t(indMat.numRow());
+    const size_t phiOff = size_t(phi.numCol()) - indR;
+    for (size_t i = 0; i < r; ++i) {
+      phi(last - i, _(begin, phiOff)) = 0;
+      phi(last - i, _(phiOff, phiOff + indR)) = indMat(_, i);
+    }
+    rank = r;
+  }
+  constexpr void unschedulePhi() { rank = 0; }
+  [[nodiscard]] constexpr auto getOmegaOffset() const -> size_t {
+    return omegaOffset;
+  }
+  void resetPhiOffset() { phiOffset = std::numeric_limits<unsigned>::max(); }
 };
+inline auto operator<<(llvm::raw_ostream &os, const ScheduledNode &node)
+  -> llvm::raw_ostream & {
+  os << "inNeighbors = ";
+  for (auto m : node.getInNeighbors()) os << "v_" << m << ", ";
+  os << "\noutNeighbors = ";
+  for (auto m : node.getOutNeighbors()) os << "v_" << m << ", ";
+  return os << "\n";
+  ;
+}
 
 struct CarriedDependencyFlag {
   [[no_unique_address]] uint32_t flag{0};
@@ -114,8 +218,7 @@ struct CarriedDependencyFlag {
 inline void resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v,
                           size_t d) {
   uint32_t mask = CarriedDependencyFlag::resetMaskFlag(d);
-  for (auto &&x : v)
-    x.flag &= mask;
+  for (auto &&x : v) x.flag &= mask;
 }
 
 /// A loop block is a block of the program that may include multiple loops.
@@ -172,6 +275,7 @@ inline void resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v,
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
 struct LinearProgramLoopBlock {
+  using BitSet = ::MemoryAccess::BitSet;
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -185,12 +289,14 @@ private:
   [[no_unique_address]] llvm::SmallVector<MemoryAccess *, 14> memory;
   [[no_unique_address]] llvm::SmallVector<ScheduledNode, 0> nodes;
   // llvm::SmallVector<unsigned> memoryToNodeMap;
-  [[no_unique_address]] llvm::SmallVector<Dependence, 0> edges;
+  [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edges;
+  /// Flag indicating which depths carries dependencies
+  /// One per node; held separately so we can copy/etc
   [[no_unique_address]] llvm::SmallVector<CarriedDependencyFlag, 16>
     carriedDeps;
   // llvm::SmallVector<bool> visited; // visited, for traversing graph
   [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
-  // [[no_unique_address]] llvm::BumpPtrAllocator allocator;
+  [[no_unique_address]] llvm::BumpPtrAllocator allocator;
   // llvm::SmallVector<llvm::Value *> symbols;
   [[no_unique_address]] Simplex omniSimplex;
   // we may turn off edges because we've exceeded its loop depth
@@ -208,13 +314,18 @@ private:
 
 public:
   void clear() {
+    // TODO: maybe we shouldn't have to manually call destructors?
+    // That would require handling more memory allocations via
+    // `allocator`, though.
+    // Some objects may need to reallocate/resize.
     memory.clear();
     nodes.clear();
+    for (auto &&x : edges) x->~Dependence();
     edges.clear();
     carriedDeps.clear();
     userToMemory.clear();
     sol.clear();
-    // allocator.Reset();
+    allocator.Reset();
   }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto numVerticies() const -> size_t { return nodes.size(); }
@@ -232,8 +343,13 @@ public:
   }
   auto getMemoryAccess(size_t i) -> MemoryAccess * { return memory[i]; }
   auto getNode(size_t i) -> ScheduledNode & { return nodes[i]; }
+  [[nodiscard]] auto getNode(size_t i) const -> const ScheduledNode & {
+    return nodes[i];
+  }
   auto getNodes() -> llvm::MutableArrayRef<ScheduledNode> { return nodes; }
-  auto getEdges() -> llvm::MutableArrayRef<Dependence> { return edges; }
+  auto getEdges() -> llvm::MutableArrayRef<NotNull<Dependence>> {
+    return edges;
+  }
   [[nodiscard]] auto numNodes() const -> size_t { return nodes.size(); }
   [[nodiscard]] auto numEdges() const -> size_t { return edges.size(); }
   [[nodiscard]] auto numMemoryAccesses() const -> size_t {
@@ -249,8 +365,7 @@ public:
   }
   [[nodiscard]] auto calcMaxDepth() const -> size_t {
     size_t d = 0;
-    for (auto &mem : memory)
-      d = std::max(d, mem->getNumLoops());
+    for (auto &mem : memory) d = std::max(d, mem->getNumLoops());
     return d;
   }
 
@@ -279,14 +394,11 @@ public:
   void addEdge(MemoryAccess &mai, MemoryAccess &maj) {
     // note, axes should be fully delinearized, so should line up
     // as a result of preprocessing.
-    if (size_t numDeps = Dependence::check(edges, mai, maj)) {
-      size_t numEdges = edges.size();
-      size_t e = numEdges - numDeps;
-      do {
-        edges[e].in->addEdgeOut(e);
-        edges[e].out->addEdgeIn(e);
-      } while (++e < numEdges);
-    }
+    auto [d0, d1] = Dependence::check(allocator, mai, maj);
+    if (!d0) return;
+    d0->pushToEdgeVector(edges);
+    if (!d1) return;
+    d1->pushToEdgeVector(edges);
   }
   /// fills all the edges between memory accesses, checking for
   /// dependencies.
@@ -296,7 +408,7 @@ public:
       MemoryAccess &mai = *memory[i];
       for (size_t j = 0; j < i; ++j) {
         MemoryAccess &maj = *memory[j];
-        if ((mai.basePointer != maj.basePointer) ||
+        if ((mai.getArrayPointer() != maj.getArrayPointer()) ||
             ((mai.isLoad()) && (maj.isLoad())))
           continue;
         addEdge(mai, maj);
@@ -314,14 +426,14 @@ public:
                        ScheduledNode &node, llvm::User *user,
                        unsigned nodeIndex) -> bool {
     for (llvm::User *use : user->users()) {
-      if (visited.contains(use))
-        continue;
+      if (visited.contains(use)) continue;
       if (llvm::isa<llvm::StoreInst>(use)) {
         auto memAccess = userToMemory.find(use);
         if (memAccess == userToMemory.end())
           continue; // load is not a part of the LoopBlock
         unsigned memId = memAccess->getSecond();
         MemoryAccess *store = memory[memId];
+        // this store will be treated as a load
         node.addMemory(memId, store, nodeIndex);
         return true;
       }
@@ -331,8 +443,7 @@ public:
   void checkUserForLoads(llvm::SmallPtrSet<llvm::User *, 32> &visited,
                          ScheduledNode &node, llvm::User *user,
                          unsigned nodeIndex) {
-    if (!user || visited.contains(user))
-      return;
+    if (!user || visited.contains(user)) return;
     if (llvm::isa<llvm::LoadInst>(user)) {
       auto memAccess = userToMemory.find(user);
       if (memAccess == userToMemory.end())
@@ -376,20 +487,18 @@ public:
         checkUserForLoads(visited, node, user, nodeIndex);
   }
   void connect(unsigned inIndex, unsigned outIndex) {
-    nodes[inIndex].outNeighbors.insert(outIndex);
-    nodes[outIndex].inNeighbors.insert(inIndex);
+    nodes[inIndex].addOutNeighbor(outIndex);
+    nodes[outIndex].addInNeighbor(inIndex);
   }
   // the order of parameters is irrelevant, so swapping is irrelevant
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  void connect(const BitSet<> &inIndexSet, const BitSet<> &outIndexSet) {
+  void connect(const BitSet &inIndexSet, const BitSet &outIndexSet) {
     for (auto inIndex : inIndexSet)
-      for (auto outIndex : outIndexSet)
-        connect(inIndex, outIndex);
+      for (auto outIndex : outIndexSet) connect(inIndex, outIndex);
   }
   [[nodiscard]] auto calcNumStores() const -> size_t {
     size_t numStores = 0;
-    for (auto &m : memory)
-      numStores += !(m->isLoad());
+    for (auto &m : memory) numStores += !(m->isLoad());
     return numStores;
   }
   /// When connecting a graph, we draw direct connections between stores and
@@ -402,28 +511,24 @@ public:
     nodes.reserve(calcNumStores());
     for (unsigned i = 0; i < memory.size(); ++i) {
       MemoryAccess *mai = memory[i];
-      if (mai->isLoad())
-        continue;
+      if (mai->isLoad()) continue;
       unsigned nodeIndex = nodes.size();
-      ScheduledNode &node = nodes.emplace_back();
-      node.addMemory(i, mai, nodeIndex);
+      ScheduledNode &node = nodes.emplace_back(i, mai, nodeIndex);
       searchOperandsForLoads(visited, node, mai->getInstruction(), nodeIndex);
       visited.clear();
     }
-    for (auto &e : edges)
-      connect(e.in->nodeIndex, e.out->nodeIndex);
-    for (auto &&node : nodes)
-      node.schedule.init(node.getNumLoops());
+    for (auto &e : edges) connect(e->nodesIn(), e->nodesOut());
+    for (auto &&node : nodes) node.init();
     // now that we've assigned each MemoryAccess to a NodeIndex, we
     // build the actual graph
   }
   struct Graph {
     // a subset of Nodes
-    BitSet<> nodeIds;
-    BitSet<> activeEdges;
+    BitSet nodeIds{};
+    BitSet activeEdges{};
     llvm::MutableArrayRef<MemoryAccess *> mem;
     llvm::MutableArrayRef<ScheduledNode> nodes;
-    llvm::ArrayRef<Dependence> edges;
+    llvm::ArrayRef<NotNull<Dependence>> edges;
     // llvm::SmallVector<bool> visited;
     // BitSet visited;
     auto operator&(const Graph &g) -> Graph {
@@ -444,25 +549,24 @@ public:
       activeEdges |= g.activeEdges;
       return *this;
     }
-    [[nodiscard]] auto inNeighbors(size_t i) -> BitSet<> & {
-      return nodes[i].inNeighbors;
+    [[nodiscard]] auto inNeighbors(size_t i) -> BitSet & {
+      return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) -> BitSet<> & {
-      return nodes[i].outNeighbors;
+    [[nodiscard]] auto outNeighbors(size_t i) -> BitSet & {
+      return nodes[i].getOutNeighbors();
     }
-    [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet<> & {
-      return nodes[i].inNeighbors;
+    [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet & {
+      return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet<> & {
-      return nodes[i].outNeighbors;
+    [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet & {
+      return nodes[i].getOutNeighbors();
     }
     [[nodiscard]] auto containsNode(size_t i) const -> bool {
       return nodeIds.contains(i);
     }
-    [[nodiscard]] auto containsNode(BitSet<> &b) const -> bool {
+    [[nodiscard]] auto containsNode(BitSet &b) const -> bool {
       for (size_t i : b)
-        if (nodeIds.contains(i))
-          return true;
+        if (nodeIds.contains(i)) return true;
       return false;
     }
     [[nodiscard]] auto missingNode(size_t i) const -> bool {
@@ -477,10 +581,9 @@ public:
     /// if any are not missing, returns false
     /// only returns true if every one of them is missing.
     [[nodiscard]] auto missingNode(const Dependence &e) const -> bool {
-      for (auto inIndex : e.in->nodeIndex)
-        for (auto outIndex : e.out->nodeIndex)
-          if (!missingNode(inIndex, outIndex))
-            return false;
+      for (auto inIndex : e.nodesIn())
+        for (auto outIndex : e.nodesOut())
+          if (!missingNode(inIndex, outIndex)) return false;
       return true;
     }
 
@@ -492,29 +595,29 @@ public:
       return missingNode(edge);
     }
     [[nodiscard]] auto isInactive(size_t e, size_t d) const -> bool {
-      return !(activeEdges[e]) || isInactive(edges[e], d);
+      return !(activeEdges[e]) || isInactive(*edges[e], d);
     }
     [[nodiscard]] auto isInactive(size_t e) const -> bool {
-      return !(activeEdges[e]) || isInactive(edges[e]);
+      return !(activeEdges[e]) || isInactive(*edges[e]);
     }
     [[nodiscard]] auto isActive(size_t e, size_t d) const -> bool {
-      return (activeEdges[e]) && (!isInactive(edges[e], d));
+      return (activeEdges[e]) && (!isInactive(*edges[e], d));
     }
     [[nodiscard]] auto isActive(size_t e) const -> bool {
-      return (activeEdges[e]) && (!isInactive(edges[e]));
+      return (activeEdges[e]) && (!isInactive(*edges[e]));
     }
     [[nodiscard]] constexpr auto begin()
-      -> BitSliceView<ScheduledNode>::Iterator {
-      return BitSliceView<ScheduledNode>{nodes, nodeIds}.begin();
+      -> BitSliceView<ScheduledNode, BitSet>::Iterator {
+      return BitSliceView{nodes, nodeIds}.begin();
     }
     [[nodiscard]] constexpr auto begin() const
-      -> BitSliceView<ScheduledNode>::ConstIterator {
-      const BitSliceView<ScheduledNode> bsv{nodes, nodeIds};
+      -> BitSliceView<ScheduledNode, BitSet>::ConstIterator {
+      const BitSliceView bsv{nodes, nodeIds};
       return bsv.begin();
     }
     [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
     [[nodiscard]] auto wasVisited(size_t i) const -> bool {
-      return nodes[i].visited;
+      return nodes[i].wasVisited();
     }
     void visit(size_t i) { nodes[i].visit(); }
     void unVisit(size_t i) { nodes[i].unVisit(); }
@@ -524,55 +627,50 @@ public:
     [[nodiscard]] auto maxVertexId() const -> size_t {
       return nodeIds.maxValue();
     }
-    [[nodiscard]] constexpr auto vertexIds() -> BitSet<> & { return nodeIds; }
-    [[nodiscard]] constexpr auto vertexIds() const -> const BitSet<> & {
+    [[nodiscard]] constexpr auto vertexIds() -> BitSet & { return nodeIds; }
+    [[nodiscard]] constexpr auto vertexIds() const -> const BitSet & {
       return nodeIds;
     }
-    [[nodiscard]] auto subGraph(const BitSet<> &components) -> Graph {
+    [[nodiscard]] auto subGraph(const BitSet &components) -> Graph {
       return {components, activeEdges, mem, nodes, edges};
     }
-    [[nodiscard]] auto split(const llvm::SmallVector<BitSet<>> &components)
+    [[nodiscard]] auto split(const llvm::SmallVector<BitSet> &components)
       -> llvm::SmallVector<Graph, 0> {
       llvm::SmallVector<Graph, 0> graphs;
       graphs.reserve(components.size());
-      for (auto &c : components)
-        graphs.push_back(subGraph(c));
+      for (auto &c : components) graphs.push_back(subGraph(c));
       return graphs;
     }
     [[nodiscard]] auto calcMaxDepth() const -> size_t {
-      if (nodeIds.data.size() == 0)
-        return 0;
+      if (nodeIds.data.size() == 0) return 0;
       size_t d = 0;
-      for (auto n : nodeIds)
-        d = std::max(d, nodes[n].getNumLoops());
+      for (auto n : nodeIds) d = std::max(d, nodes[n].getNumLoops());
       return d;
     }
   };
   // bool connects(const Dependence &e, Graph &g0, Graph &g1, size_t d) const
   // {
-  //     return ((e.in->getNumLoops() > d) && (e.out->getNumLoops() > d)) &&
+  //     return ((e.getInNumLoops() > d) && (e.getOutNumLoops() > d)) &&
   //            connects(e, g0, g1);
   // }
   auto connects(const Dependence &e, Graph &g0, Graph &g1) const -> bool {
-    if (!e.in->isLoad()) {
+    if (!e.inputIsLoad()) {
       // e.in is a store
-      size_t nodeIn = *e.in->nodeIndex.begin();
+      size_t nodeIn = *e.nodesIn().begin();
       bool g0ContainsNodeIn = g0.nodeIds.contains(nodeIn);
       bool g1ContainsNodeIn = g1.nodeIds.contains(nodeIn);
-      if (!(g0ContainsNodeIn || g1ContainsNodeIn))
-        return false;
-      for (size_t nodeOut : e.out->nodeIndex)
+      if (!(g0ContainsNodeIn || g1ContainsNodeIn)) return false;
+      for (size_t nodeOut : e.nodesOut())
         if ((g0ContainsNodeIn && g1.nodeIds.contains(nodeOut)) ||
             (g1ContainsNodeIn && g0.nodeIds.contains(nodeOut)))
           return true;
     } else {
       // e.out must be a store
-      size_t nodeOut = *e.out->nodeIndex.begin();
+      size_t nodeOut = *e.nodesOut().begin();
       bool g0ContainsNodeOut = g0.nodeIds.contains(nodeOut);
       bool g1ContainsNodeOut = g1.nodeIds.contains(nodeOut);
-      if (!(g0ContainsNodeOut || g1ContainsNodeOut))
-        return false;
-      for (auto nodeIn : e.in->nodeIndex)
+      if (!(g0ContainsNodeOut || g1ContainsNodeOut)) return false;
+      for (auto nodeIn : e.nodesIn())
         if ((g0ContainsNodeOut && g1.nodeIds.contains(nodeIn)) ||
             (g1ContainsNodeOut && g0.nodeIds.contains(nodeIn)))
           return true;
@@ -580,99 +678,69 @@ public:
     return false;
   }
   auto fullGraph() -> Graph {
-    return {BitSet<>::dense(nodes.size()), BitSet<>::dense(edges.size()),
-            memory, nodes, edges};
+    return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
+            nodes, edges};
   }
   void fillUserToMemoryMap() {
     for (unsigned i = 0; i < memory.size(); ++i)
       userToMemory.insert(std::make_pair(memory[i]->getInstruction(), i));
   }
   auto getOverlapIndex(const Dependence &edge) -> Optional<size_t> {
-    MemoryAccess *store;
-    MemoryAccess *other;
-    if (edge.in->isLoad()) {
-      // edge.out is a store
-      store = edge.out;
-      other = edge.in;
-    } else {
-      // edge.in is a store
-      store = edge.in;
-      other = edge.out;
-    }
-    size_t index = *store->nodeIndex.begin();
-    if (other->nodeIndex.contains(index))
-      return index;
+    auto [store, other] = edge.getStoreAndOther();
+    size_t index = *store->getNodeIndex().begin();
+    if (other->getNodeIndex().contains(index)) return index;
     return {};
   }
-  auto optOrth(Graph g) -> std::optional<BitSet<>> {
+  auto optOrth(Graph g) -> std::optional<BitSet> {
 
     const size_t maxDepth = calcMaxDepth();
     // check for orthogonalization opportunities
     bool tryOrth = false;
     for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (edge.in->isLoad() == edge.out->isLoad())
-        continue;
+      Dependence &edge = *edges[e];
+      if (edge.inputIsLoad() == edge.outputIsLoad()) continue;
       Optional<size_t> maybeIndex = getOverlapIndex(edge);
-      if (!maybeIndex)
-        continue;
+      if (!maybeIndex) continue;
       size_t index = *maybeIndex;
       ScheduledNode &node = nodes[index];
-      if (node.phiIsScheduled(0) ||
-          (edge.in->indexMatrix() != edge.out->indexMatrix()))
+      if (node.phiIsScheduled(0) || (edge.getInIndMat() != edge.getOutIndMat()))
         continue;
-      PtrMatrix<int64_t> indMat = edge.in->indexMatrix();
+      PtrMatrix<int64_t> indMat = edge.getInIndMat();
       size_t r = NormalForm::rank(indMat);
-      if (r == edge.in->getNumLoops())
-        continue;
+      if (r == edge.getInNumLoops()) continue;
       // TODO handle linearly dependent acceses, filtering them out
-      if (r == edge.in->getArrayDim()) {
-        // indMat indvars are indexed from outside<->inside
-        // phi indvars are indexed from inside<->outside
-        // so, indMat is indvars[outside<->inside] x array dim
-        // phi is loop[outside<->inside] x
-        // indvars[inside<->outside]
-        MutPtrMatrix<int64_t> phi = node.schedule.getPhi();
-        const size_t indR = size_t(indMat.numRow());
-        const size_t phiOffset = size_t(phi.numCol()) - indR;
-        for (size_t rr = 0; rr < r; ++rr) {
-          phi(rr, _(begin, phiOffset)) = 0;
-          phi(rr, _(phiOffset, phiOffset + indR)) = indMat(_, rr);
-        }
-        node.rank = r;
+      if (r == indMat.numCol()) {
+        node.schedulePhi(indMat, r);
         tryOrth = true;
       }
     }
     if (tryOrth) {
-      if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth))
-        return opt;
-      for (auto &&n : nodes)
-        n.rank = 0;
+      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
+      for (auto &&n : nodes) n.unschedulePhi();
     }
-    return optimize(std::move(g), 0, maxDepth);
+    return optimize(g, 0, maxDepth);
   }
   [[nodiscard]] auto countNumLambdas(const Graph &g, size_t d) const -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
-      c += ((g.isInactive(e, d)) ? 0 : edges[e].getNumLambda());
+      c += ((g.isInactive(e, d)) ? 0 : edges[e]->getNumLambda());
     return c;
   }
   [[nodiscard]] auto countNumBoundingCoefs(const Graph &g, size_t d) const
     -> size_t {
     size_t c = 0;
     for (size_t e = 0; e < edges.size(); ++e)
-      c += (g.isInactive(e, d) ? 0 : edges[e].getNumSymbols());
+      c += (g.isInactive(e, d) ? 0 : edges[e]->getNumSymbols());
     return c;
   }
   void countAuxParamsAndConstraints(const Graph &g, size_t d) {
     size_t a = 0, b = 0, c = 0, ae = 0;
     for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d))
-        continue;
-      const Dependence &edge = edges[e];
-      size_t mlt = edge.in->nodeIndex.size() * edge.out->nodeIndex.size();
+      if (g.isInactive(e, d)) continue;
+      const Dependence &edge = *edges[e];
+      size_t mlt = edge.nodesIn().size() * edge.nodesOut().size();
       a += mlt * edge.getNumLambda();
-      b += mlt * edge.depPoly.S.size();
+      b += mlt * edge.getDynSymDim();
       c += mlt * edge.getNumConstraints();
       ae += mlt;
     }
@@ -687,8 +755,7 @@ public:
   }
   void addMemory(MemoryAccess *m) {
 #ifndef NDEBUG
-    for (auto o : memory)
-      assert(o->getInstruction() != m->getInstruction());
+    for (auto o : memory) assert(o->getInstruction() != m->getInstruction());
 #endif
     memory.push_back(m);
   }
@@ -705,79 +772,51 @@ public:
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g,
                                     const MemoryAccess &mem) const -> bool {
-    for (auto &e : mem.edgesIn)
-      if (!g.isInactive(e))
-        return true;
-    // else
-    //     llvm::errs() << "hasActiveEdge In false for: " << edges[e];
-    for (auto &e : mem.edgesOut)
-      if (!g.isInactive(e))
-        return true;
-    // else
-    //     llvm::errs() << "hasActiveEdge Out false for: " << edges[e];
+    for (auto e : mem.inputEdges())
+      if (!g.isInactive(e)) return true;
+    for (auto e : mem.outputEdges())
+      if (!g.isInactive(e)) return true;
     return false;
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g, const MemoryAccess &mem,
                                     size_t d) const -> bool {
-    for (auto &e : mem.edgesIn)
-      if (!g.isInactive(e, d))
-        return true;
-    // else
-    //     llvm::errs() << "hasActiveEdge In d = " << d
-    //                  << " false for: " << edges[e];
-    for (auto &e : mem.edgesOut)
-      if (!g.isInactive(e, d))
-        return true;
-    // else
-    //     llvm::errs() << "hasActiveEdge Out d = " << d
-    //                  << " false for: " << edges[e];
+    for (auto e : mem.inputEdges())
+      if (!g.isInactive(e, d)) return true;
+    for (auto e : mem.outputEdges())
+      if (!g.isInactive(e, d)) return true;
     return false;
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g, const ScheduledNode &node,
                                     size_t d) const -> bool {
-    for (auto memId : node.memory)
-      if (hasActiveEdges(g, *memory[memId], d))
-        return true;
+    for (auto memId : node.getMemory())
+      if (hasActiveEdges(g, *memory[memId], d)) return true;
     return false;
   }
   [[nodiscard]] auto hasActiveEdges(const Graph &g,
                                     const ScheduledNode &node) const -> bool {
-    for (auto memId : node.memory)
-      if (hasActiveEdges(g, *memory[memId]))
-        return true;
+    for (auto memId : node.getMemory())
+      if (hasActiveEdges(g, *memory[memId])) return true;
     return false;
   }
   void setScheduleMemoryOffsets(const Graph &g, size_t d) {
     size_t pInit = numBounding + numActiveEdges + 1, p = pInit;
     for (auto &&node : nodes) {
-      if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
-        continue;
-      if (!node.phiIsScheduled(d))
-        p = node.updatePhiOffset(p);
+      if ((d >= node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
+      if (!node.phiIsScheduled(d)) p = node.updatePhiOffset(p);
     }
     numPhiCoefs = p - pInit;
     size_t o = p;
     for (auto &&node : nodes) {
-      if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d)))
-        continue;
+      if ((d > node.getNumLoops()) || (!hasActiveEdges(g, node, d))) continue;
       o = node.updateOmegaOffset(o);
     }
     numOmegaCoefs = o - p;
   }
-  void validateMemory() {
-    for (auto mem : memory)
-      assert(1 + mem->getNumLoops() == mem->omegas.size());
-  }
+#ifndef NDEBUG
   void validateEdges() {
-    for (auto &edge : edges) {
-      assert(edge.in->getNumLoops() + edge.out->getNumLoops() ==
-             edge.getNumPhiCoefficients());
-      // 2 == 1 for const offset + 1 for w
-      assert(2 + edge.depPoly.getNumLambda() + edge.getNumPhiCoefficients() +
-               edge.getNumOmegaCoefficients() ==
-             edge.dependenceSatisfaction.getConstraints().numCol());
-    }
+    for (auto &edge : edges) edge->validate();
   }
+#endif
   void instantiateOmniSimplex(const Graph &g, size_t d,
                               bool satisfyDeps = false) {
     // defines numScheduleCoefs, numLambda, numBounding, and
@@ -800,11 +839,10 @@ public:
     Row c = 0;
     Col l = getLambdaOffset(), u = 1;
     for (size_t e = 0; e < edges.size(); ++e) {
-      Dependence &edge = edges[e];
-      if (g.isInactive(e, d))
-        continue;
-      BitSet<> &outNodeIndexSet = edge.out->nodeIndex;
-      BitSet<> &inNodeIndexSet = edge.in->nodeIndex;
+      Dependence &edge = *edges[e];
+      if (g.isInactive(e, d)) continue;
+      const BitSet &outNodeIndexSet = edge.nodesOut();
+      const BitSet &inNodeIndexSet = edge.nodesIn();
       const auto [satC, satL, satPp, satPc, satO, satW] =
         edge.splitSatisfaction();
       const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
@@ -829,25 +867,22 @@ public:
           Col uu = u + bndWU.numCol() - 1;
           C(_(cc, ccc), _(u, uu)) = bndWU(_, _(1, end));
           u = uu;
-          if (satisfyDeps)
-            C(_(c, cc), 0) = satC + satW;
-          else
-            C(_(c, cc), 0) = satC;
+          if (satisfyDeps) C(_(c, cc), 0) = satC + satW;
+          else C(_(c, cc), 0) = satC;
           C(_(cc, ccc), 0) = bndC;
           // now, handle Phi and Omega
           // phis are not constrained to be 0
           if (outNodeIndex == inNodeIndex) {
-            // llvm::errs() << "outNodeIndex == inNodeIndex\n";
             if (d < outNode.getNumLoops()) {
               if (satPc.numCol() == satPp.numCol()) {
                 if (outNode.phiIsScheduled(d)) {
                   // add it constants
                   auto sch = outNode.getSchedule(d);
-                  C(_(c, cc), 0) -= satPc * sch(_(end - satPc.numCol(), end)) +
-                                    satPp * sch(_(end - satPp.numCol(), end));
+                  C(_(c, cc), 0) -= satPc * sch[_(end - satPc.numCol(), end)] +
+                                    satPp * sch[_(end - satPp.numCol(), end)];
                   C(_(cc, ccc), 0) -=
-                    bndPc * sch(_(end - bndPc.numCol(), end)) +
-                    bndPp * sch(_(end - satPp.numCol(), end));
+                    bndPc * sch[_(end - bndPc.numCol(), end)] +
+                    bndPp * sch[_(end - satPp.numCol(), end)];
                 } else {
                   // FIXME: phiChild = [14:18), 4 cols
                   // while Dependence seems to indicate 2
@@ -864,8 +899,8 @@ public:
                 // inner -> outer
                 // so we need to drop inner most if one has less
                 auto sch = outNode.getSchedule(d);
-                auto schP = sch(_(end - satPp.numCol(), end));
-                auto schC = sch(_(end - satPc.numCol(), end));
+                auto schP = sch[_(end - satPp.numCol(), end)];
+                auto schC = sch[_(end - satPc.numCol(), end)];
                 C(_(c, cc), 0) -= satPc * schC + satPp * schP;
                 C(_(cc, ccc), 0) -= bndPc * schC + bndPp * schP;
               } else if (satPc.numCol() < satPp.numCol()) {
@@ -891,23 +926,25 @@ public:
                 C(_(cc, ccc), _(m, phiChild)) =
                   bndPc(_, _(end - P, end)) + bndPp;
               }
-              C(_(c, cc), outNode.omegaOffset) = satO(_, 0) + satO(_, 1);
-              C(_(cc, ccc), outNode.omegaOffset) = bndO(_, 0) + bndO(_, 1);
+              C(_(c, cc), outNode.getOmegaOffset()) = satO(_, 0) + satO(_, 1);
+              C(_(cc, ccc), outNode.getOmegaOffset()) = bndO(_, 0) + bndO(_, 1);
             }
           } else {
-            // llvm::errs() << "outNodeIndex != inNodeIndex\n";
-            if (d < edge.out->getNumLoops())
+            if (d < edge.getOutNumLoops())
               updateConstraints(C, outNode, satPc, bndPc, d, c, cc, ccc);
-            if (d < edge.in->getNumLoops())
+            if (d < edge.getInNumLoops())
               updateConstraints(C, inNode, satPp, bndPp, d, c, cc, ccc);
             // Omegas are included regardless of rotation
-            if (d < edge.out->getNumLoops()) {
-              C(_(c, cc), outNode.omegaOffset) = satO(_, !edge.forward);
-              C(_(cc, ccc), outNode.omegaOffset) = bndO(_, !edge.forward);
+            if (d < edge.getOutNumLoops()) {
+              C(_(c, cc), outNode.getOmegaOffset()) =
+                satO(_, !edge.isForward());
+              C(_(cc, ccc), outNode.getOmegaOffset()) =
+                bndO(_, !edge.isForward());
             }
-            if (d < edge.in->getNumLoops()) {
-              C(_(c, cc), inNode.omegaOffset) = satO(_, edge.forward);
-              C(_(cc, ccc), inNode.omegaOffset) = bndO(_, edge.forward);
+            if (d < edge.getInNumLoops()) {
+              C(_(c, cc), inNode.getOmegaOffset()) = satO(_, edge.isForward());
+              C(_(cc, ccc), inNode.getOmegaOffset()) =
+                bndO(_, edge.isForward());
             }
           }
           c = ccc;
@@ -923,8 +960,8 @@ public:
       auto sch = node.getSchedule(d);
       // order is inner <-> outer
       // so we need the end of schedule if it is larger
-      C(_(c, cc), 0) -= sat * sch(_(end - sat.numCol(), end));
-      C(_(cc, ccc), 0) -= bnd * sch(_(end - bnd.numCol(), end));
+      C(_(c, cc), 0) -= sat * sch[_(end - sat.numCol(), end)];
+      C(_(cc, ccc), 0) -= bnd * sch[_(end - bnd.numCol(), end)];
     } else {
       assert(sat.numCol() == bnd.numCol());
       // add it to C
@@ -933,24 +970,20 @@ public:
       C(_(cc, ccc), _(phiChild - bnd.numCol(), phiChild)) = bnd;
     }
   }
-  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet<> {
-    if (allZero(sol(_(begin, numBounding + numActiveEdges))))
-      return {};
+  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet {
+    if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
     size_t u = 0, w = numBounding;
     BitSet deactivated;
     for (size_t e = 0; e < edges.size(); ++e) {
-      if (g.isInactive(e, d))
-        continue;
-      const Dependence &edge = edges[e];
-      Col uu = u + edge.dependenceBounding.getConstraints().numCol() -
-               (2 + edge.depPoly.getNumLambda() + edge.getNumPhiCoefficients() +
-                edge.getNumOmegaCoefficients());
-      if ((sol(w++) != 0) || (!(allZero(sol(_(u, uu)))))) {
+      if (g.isInactive(e, d)) continue;
+      const Dependence &edge = *edges[e];
+      Col uu = u + edge.getNumDynamicBoundingVar();
+      if ((sol[w++] != 0) || (!(allZero(sol[_(u, uu)])))) {
         g.activeEdges.remove(e);
         deactivated.insert(e);
-        for (size_t inIndex : edge.in->nodeIndex)
+        for (size_t inIndex : edge.nodesIn())
           carriedDeps[inIndex].setCarriedDependency(d);
-        for (size_t outIndex : edge.out->nodeIndex)
+        for (size_t outIndex : edge.nodesOut())
           carriedDeps[outIndex].setCarriedDependency(d);
       }
       u = size_t(uu);
@@ -961,64 +994,56 @@ public:
 #ifndef NDEBUG
     if (depth & 1) {
       bool allZero = true;
-      for (auto &s : sol)
-        allZero &= (s == 0);
-      if (allZero)
-        llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
+      for (auto &s : sol) allZero &= (s == 0);
+      if (allZero) llvm::errs() << "omniSimplex = " << omniSimplex << "\n";
       assert(!allZero);
     }
 #endif
     for (auto &&node : nodes) {
-      if (depth >= node.getNumLoops())
-        continue;
+      if (depth >= node.getNumLoops()) continue;
       if (!hasActiveEdges(g, node)) {
-        node.schedule.getOffsetOmega()(depth) =
-          std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega()[depth] = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.schedule.getPhi()(depth, _) =
-            std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      Rational sOmega = sol(node.omegaOffset - 1);
+      Rational sOmega = sol[node.getOmegaOffset() - 1];
       // TODO: handle s.denominator != 1
       if (!node.phiIsScheduled(depth)) {
-        auto phi = node.schedule.getPhi()(depth, _);
-        auto s = sol(node.getPhiOffsetRange() - 1);
+        auto phi = node.getSchedule(depth);
+        auto s = sol[node.getPhiOffsetRange() - 1];
         int64_t baseDenom = sOmega.denominator;
         int64_t l = lcm(denomLCM(s), baseDenom);
         for (size_t i = 0; i < phi.size(); ++i)
-          assert(((s(i).numerator * l) / (s(i).denominator)) >= 0);
+          assert(((s[i].numerator * l) / (s[i].denominator)) >= 0);
         if (l == 1) {
-          node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
-          for (size_t i = 0; i < phi.size(); ++i)
-            phi(i) = s(i).numerator;
+          node.getOffsetOmega(depth) = sOmega.numerator;
+          for (size_t i = 0; i < phi.size(); ++i) phi[i] = s[i].numerator;
         } else {
-          node.schedule.getOffsetOmega()(depth) =
-            (sOmega.numerator * l) / baseDenom;
+          node.getOffsetOmega(depth) = (sOmega.numerator * l) / baseDenom;
           for (size_t i = 0; i < phi.size(); ++i)
-            phi(i) = (s(i).numerator * l) / (s(i).denominator);
+            phi[i] = (s[i].numerator * l) / (s[i].denominator);
         }
         assert(!(allZero(phi)));
         // node.schedule.getPhi()(depth, _) =
         //     sol(node.getPhiOffset() - 1) *
         //     denomLCM(sol(node.getPhiOffset() - 1));
       } else {
-        node.schedule.getOffsetOmega()(depth) = sOmega.numerator;
+        node.getOffsetOmega(depth) = sOmega.numerator;
       }
 #ifndef NDEBUG
       if (!node.phiIsScheduled(depth)) {
-        int64_t l = denomLCM(sol(node.getPhiOffsetRange() - 1));
-        for (size_t i = 0; i < node.schedule.getPhi().numCol(); ++i)
-          assert(node.schedule.getPhi()(depth, i) ==
-                 sol(node.getPhiOffsetRange() - 1)(i) * l);
+        int64_t l = denomLCM(sol[node.getPhiOffsetRange() - 1]);
+        for (size_t i = 0; i < node.getPhi().numCol(); ++i)
+          assert(node.getPhi()(last - depth, i) ==
+                 sol[node.getPhiOffsetRange() - 1][i] * l);
       }
 #endif
     }
   }
   [[nodiscard]] static auto lexSign(PtrVector<int64_t> x) -> int64_t {
     for (int64_t it : llvm::reverse(x))
-      if (it)
-        return 2 * (it > 0) - 1;
+      if (it) return 2 * (it > 0) - 1;
     return 0;
   }
   void addIndependentSolutionConstraints(const Graph &g, size_t depth) {
@@ -1026,12 +1051,11 @@ public:
     if (depth == 0) {
       // add ones >= 0
       for (auto &&node : nodes) {
-        if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node)))
-          continue;
+        if (node.phiIsScheduled(depth) || (!hasActiveEdges(g, node))) continue;
         auto c{omniSimplex.addConstraintAndVar()};
-        c(0) = 1;
-        c(node.getPhiOffsetRange()) = 1;
-        c(end) = -1; // for >=
+        c[0] = 1;
+        c[node.getPhiOffsetRange()] = 1;
+        c[last] = -1; // for >=
       }
       return;
     }
@@ -1040,24 +1064,22 @@ public:
       if (node.phiIsScheduled(depth) || (depth >= node.getNumLoops()) ||
           (!hasActiveEdges(g, node)))
         continue;
-      A = node.schedule.getPhi()(_(0, depth), _).transpose();
+      A = node.getPhi()(_(end - depth, end), _).transpose();
       NormalForm::nullSpace11(N, A);
       auto c{omniSimplex.addConstraintAndVar()};
-      c(0) = 1;
-      MutPtrVector<int64_t> cc{c(node.getPhiOffsetRange())};
+      c[0] = 1;
+      MutPtrVector<int64_t> cc{c[node.getPhiOffsetRange()]};
       // sum(N,dims=1) >= 1 after flipping row signs to be lex > 0
-      for (size_t m = 0; m < N.numRow(); ++m)
-        cc += N(m, _) * lexSign(N(m, _));
-      c(end) = -1; // for >=
+      for (size_t m = 0; m < N.numRow(); ++m) cc += N(m, _) * lexSign(N(m, _));
+      c[last] = -1; // for >=
     }
-    assert(!allZero(omniSimplex.getConstraints()(end, _)));
+    assert(!allZero(omniSimplex.getConstraints()(last, _)));
   }
   [[nodiscard]] static auto nonZeroMask(const AbstractVector auto &x)
     -> uint64_t {
     assert(x.size() <= 64);
     uint64_t m = 0;
-    for (auto y : x)
-      m = ((m << 1) | (y != 0));
+    for (auto y : x) m = ((m << 1) | (y != 0));
     return m;
   }
   static void nonZeroMasks(llvm::SmallVector<uint64_t> &masks,
@@ -1065,8 +1087,7 @@ public:
     const auto [M, N] = A.size();
     assert(N <= 64);
     masks.resize_for_overwrite(M);
-    for (size_t m = 0; m < M; ++m)
-      masks[m] = nonZeroMask(A(m, _));
+    for (size_t m = 0; m < M; ++m) masks[m] = nonZeroMask(A(m, _));
   }
   [[nodiscard]] static auto nonZeroMasks(const AbstractMatrix auto &A)
     -> llvm::SmallVector<uint64_t> {
@@ -1079,76 +1100,62 @@ public:
     const auto [M, N] = A.size();
     assert(N <= 64);
     uint64_t mask = 0;
-    for (size_t m = 0; m < M; ++m)
-      mask |= nonZeroMask(A(m, _));
+    for (size_t m = 0; m < M; ++m) mask |= nonZeroMask(A(m, _));
     return mask;
   }
   void setSchedulesIndependent(const Graph &g, size_t depth) {
     // IntMatrix A, N;
     for (auto &&node : nodes) {
-      if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth))
-        continue;
+      if ((depth >= node.getNumLoops()) || node.phiIsScheduled(depth)) continue;
       if (!hasActiveEdges(g, node)) {
-        node.schedule.getOffsetOmega()(depth) =
-          std::numeric_limits<int64_t>::min();
+        node.getOffsetOmega(depth) = std::numeric_limits<int64_t>::min();
         if (!node.phiIsScheduled(depth))
-          node.schedule.getPhi()(depth, _) =
-            std::numeric_limits<int64_t>::min();
+          node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
         continue;
       }
-      node.schedule.getOffsetOmega()(depth) = 0;
-      MutSquarePtrMatrix<int64_t> phi = node.schedule.getPhi();
-      phi(depth, _) = std::numeric_limits<int64_t>::min();
+      node.getOffsetOmega(depth) = 0;
+      node.getSchedule(depth) = std::numeric_limits<int64_t>::min();
     }
   }
   void resetPhiOffsets() {
-    for (auto &&node : nodes)
-      node.phiOffset = std::numeric_limits<unsigned>::max();
+    for (auto &&node : nodes) node.resetPhiOffset();
   }
   [[nodiscard]] auto isSatisfied(Dependence &e, size_t d) -> bool {
-    for (size_t inIndex : e.in->nodeIndex) {
-      for (size_t outIndex : e.out->nodeIndex) {
-        Schedule *first = &(nodes[inIndex].schedule);
-        Schedule *second = &(nodes[outIndex].schedule);
-        if (!e.forward)
-          std::swap(first, second);
-        if (!e.isSatisfied(*first, *second, d))
-          return false;
+    for (size_t inIndex : e.nodesIn()) {
+      for (size_t outIndex : e.nodesOut()) {
+        Schedule *first = &(nodes[inIndex].getSchedule());
+        Schedule *second = &(nodes[outIndex].getSchedule());
+        if (!e.isForward()) std::swap(first, second);
+        if (!e.isSatisfied(*first, *second, d)) return false;
       }
     }
     return true;
   }
   [[nodiscard]] auto canFuse(Graph &g0, Graph &g1, size_t d) -> bool {
     for (auto &e : edges) {
-      if ((e.in->getNumLoops() <= d) || (e.out->getNumLoops() <= d))
-        return false;
-      if (connects(e, g0, g1))
-        if (!isSatisfied(e, d))
-          return false;
+      if ((e->getInNumLoops() <= d) || (e->getOutNumLoops() <= d)) return false;
+      if (connects(*e, g0, g1))
+        if (!isSatisfied(*e, d)) return false;
     }
     return true;
   }
-  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet<>> {
-    auto components = Graphs::stronglyConnectedComponents(g);
-    if (components.size() <= 1)
-      return {};
+  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
+    llvm::SmallVector<BitSet> components;
+    Graphs::stronglyConnectedComponents(components, g);
+    if (components.size() <= 1) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
     // and then try to fuse again after if/where optimal schedules
     // allow it.
-    llvm::errs() << "splitting graph!\n";
     auto graphs = g.split(components);
     assert(graphs.size() == components.size());
     BitSet satDeps;
     for (auto &sg : graphs) {
-      if (d >= sg.calcMaxDepth())
-        continue;
+      if (d >= sg.calcMaxDepth()) continue;
       countAuxParamsAndConstraints(sg, d);
       setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet<>> sat = optimizeLevel(sg, d))
-        satDeps |= *sat;
-      else
-        return {}; // give up
+      if (std::optional<BitSet> sat = optimizeLevel(sg, d)) satDeps |= *sat;
+      else return {}; // give up
     }
     int64_t unfusedOffset = 0;
     // For now, just greedily try and fuse from top down
@@ -1162,8 +1169,7 @@ public:
       Graph &gi = graphs[i];
       if (!canFuse(*gp, gi, d)) {
         // do not fuse
-        for (auto &&v : *gp)
-          v.schedule.getFusionOmega()[d] = unfusedOffset;
+        for (auto &&v : *gp) v.getFusionOmega()[d] = unfusedOffset;
         ++unfusedOffset;
         // gi is the new base graph
         gp = &gi;
@@ -1172,13 +1178,12 @@ public:
         (*gp) |= gi;
     }
     // set omegas for gp
-    for (auto &&v : *gp)
-      v.schedule.getFusionOmega()[d] = unfusedOffset;
+    for (auto &&v : *gp) v.getFusionOmega()[d] = unfusedOffset;
     ++d;
     // size_t numSat = satDeps.size();
     for (auto i : baseGraphs)
-      if (std::optional<BitSet<>> sat =
-            optimize(std::move(graphs[i]), d, graphs[i].calcMaxDepth())) {
+      if (std::optional<BitSet> sat =
+            optimize(graphs[i], d, graphs[i].calcMaxDepth())) {
         // TODO: try and satisfy extra dependences
         // if ((numSat > 0) && (sat->size()>0)){}
         satDeps |= *sat;
@@ -1189,16 +1194,17 @@ public:
     return satDeps;
   }
   [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
-    -> std::optional<BitSet<>> {
+    -> std::optional<BitSet> {
     if (numPhiCoefs == 0) {
       setSchedulesIndependent(g, d);
       return BitSet{};
     }
     instantiateOmniSimplex(g, d);
     addIndependentSolutionConstraints(g, d);
-    assert(!allZero(omniSimplex.getConstraints()(end, _)));
+    assert(!allZero(omniSimplex.getConstraints()(last, _)));
     if (omniSimplex.initiateFeasible()) {
-      llvm::errs() << "optimizeLevel = " << d << ": infeasible solution!!!\n";
+      // llvm::errs() << "optimizeLevel = " << d << ": infeasible
+      // solution!!!\n";
       return {};
     }
     sol.resizeForOverwrite(getLambdaOffset() - 1);
@@ -1216,10 +1222,10 @@ public:
   // But that sort of seems like abstraction for the sake of
   // abstraction, rather than actually a good idea?
   [[nodiscard]] auto
-  optimizeSatDep(Graph g, size_t d, size_t maxDepth, BitSet<> depSatLevel,
-                 const BitSet<> // NOLINT(bugprone-easily-swappable-parameters)
+  optimizeSatDep(Graph g, size_t d, size_t maxDepth, BitSet depSatLevel,
+                 const BitSet   // NOLINT(bugprone-easily-swappable-parameters)
                    &depSatNest, // NOLINT(bugprone-easily-swappable-parameters)
-                 BitSet<> activeEdges) -> BitSet<> {
+                 BitSet activeEdges) -> BitSet {
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
     // what we want to know is, can we satisfy all the deps
@@ -1232,8 +1238,7 @@ public:
       std::swap(g.activeEdges, activeEdges);
       BitSet nodeIds = g.nodeIds;
       llvm::SmallVector<Schedule, 0> oldSchedules;
-      for (auto &n : g)
-        oldSchedules.push_back(n.schedule);
+      for (auto &n : g) oldSchedules.push_back(n.getSchedule());
       llvm::SmallVector<CarriedDependencyFlag, 16> oldCarriedDeps = carriedDeps;
       resetDeepDeps(carriedDeps, d);
 
@@ -1247,15 +1252,14 @@ public:
         // lexMinimize(g, sol, d);
         updateSchedules(g, d);
         BitSet depSat = deactivateSatisfiedEdges(g, d);
-        if (std::optional<BitSet<>> depSatN = optimize(g, d + 1, maxDepth))
+        if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
           return depSat |= *depSatN;
       }
       // we failed, so reset solved schedules
       std::swap(g.activeEdges, activeEdges);
       std::swap(g.nodeIds, nodeIds);
       auto oldNodeIter = oldSchedules.begin();
-      for (auto &&n : g)
-        n.schedule = *(oldNodeIter++);
+      for (auto &&n : g) n.getSchedule() = *(oldNodeIter++);
       std::swap(carriedDeps, oldCarriedDeps);
     }
     return depSatLevel;
@@ -1264,32 +1268,30 @@ public:
   /// receives graph by value, so that it is not invalidated when
   /// recursing
   [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
-    -> std::optional<BitSet<>> {
-    if (d >= maxDepth)
-      return BitSet{};
+    -> std::optional<BitSet> {
+    if (d >= maxDepth) return BitSet{};
     countAuxParamsAndConstraints(g, d);
     setScheduleMemoryOffsets(g, d);
     // if we fail on this level, break the graph
     BitSet activeEdgesBackup = g.activeEdges;
-    if (std::optional<BitSet<>> depSat = optimizeLevel(g, d)) {
+    if (std::optional<BitSet> depSat = optimizeLevel(g, d)) {
       const size_t numSat = depSat->size();
-      if (std::optional<BitSet<>> depSatNest = optimize(g, d + 1, maxDepth)) {
+      if (std::optional<BitSet> depSatNest = optimize(g, d + 1, maxDepth)) {
         if (numSat && depSatNest->size())
-          return optimizeSatDep(std::move(g), d, maxDepth, std::move(*depSat),
-                                *depSatNest, std::move(activeEdgesBackup));
+          return optimizeSatDep(g, d, maxDepth, *depSat, *depSatNest,
+                                activeEdgesBackup);
         return *depSat |= *depSatNest;
       }
     }
-    return breakGraph(std::move(g), d);
+    return breakGraph(g, d);
   }
   // returns true on failure
-  [[nodiscard]] auto optimize() -> std::optional<BitSet<>> {
+  [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
     fillUserToMemoryMap();
     connectGraph();
     carriedDeps.resize(nodes.size());
 #ifndef NDEBUG
-    validateMemory();
     validateEdges();
 #endif
     return optOrth(fullGraph());
@@ -1300,34 +1302,26 @@ public:
     -> llvm::raw_ostream & {
     os << "\nLoopBlock graph (#nodes = " << lblock.nodes.size() << "):\n";
     for (size_t i = 0; i < lblock.nodes.size(); ++i) {
-      const auto &v = lblock.nodes[i];
+      const auto &v = lblock.getNode(i);
       os << "v_" << i << ":\nmem =\n";
-      for (auto m : v.memory)
+      for (auto m : v.getMemory())
         os << *lblock.memory[m]->getInstruction() << "\n";
-      os << "inNeighbors = ";
-      for (auto m : v.inNeighbors)
-        os << "v_" << m << ", ";
-      os << "\noutNeighbors = ";
-      for (auto m : v.outNeighbors)
-        os << "v_" << m << ", ";
-      os << "\n\n";
+      os << v << "\n";
     }
     // BitSet
-    // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
     for (auto &edge : lblock.edges) {
-      os << "\n\tEdge = " << edge;
-      for (size_t inIndex : edge.in->nodeIndex) {
-        const Schedule &sin = lblock.nodes[inIndex].schedule;
-        os << "Schedule In: nodeIndex = " << edge.in->nodeIndex
-           << "\nref = " << *edge.in << "\ns.getPhi()" << sin.getPhi()
-           << "\ns.getFusionOmega() = " << sin.getFusionOmega()
+      os << "\n\tEdge = " << *edge;
+      for (size_t inIndex : edge->nodesIn()) {
+        const Schedule &sin = lblock.getNode(inIndex).getSchedule();
+        os << "Schedule In: nodeIndex = " << edge->nodesIn() << "\ns.getPhi()"
+           << sin.getPhi() << "\ns.getFusionOmega() = " << sin.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sin.getOffsetOmega();
       }
-      for (size_t outIndex : edge.out->nodeIndex) {
-        const Schedule &sout = lblock.nodes[outIndex].schedule;
-        os << "\n\nSchedule Out:\nnodeIndex = " << edge.out->nodeIndex
-           << "; ref = " << *edge.out << "\ns.getPhi()" << sout.getPhi()
+      for (size_t outIndex : edge->nodesOut()) {
+        const Schedule &sout = lblock.getNode(outIndex).getSchedule();
+        os << "\n\nSchedule Out:\nnodeIndex = " << edge->nodesOut()
+           << "\ns.getPhi()" << sout.getPhi()
            << "\ns.getFusionOmega() = " << sout.getFusionOmega()
            << "\ns.getOffsetOmega() = " << sout.getOffsetOmega();
       }
@@ -1337,8 +1331,8 @@ public:
        << "):\n\n";
     for (auto mem : lblock.memory) {
       os << "Ref = " << *mem;
-      for (size_t nodeIndex : mem->nodeIndex) {
-        const Schedule &s = lblock.nodes[nodeIndex].schedule;
+      for (size_t nodeIndex : mem->getNodeIndex()) {
+        const Schedule &s = lblock.getNode(nodeIndex).getSchedule();
         os << "\nnodeIndex = " << nodeIndex << "\ns.getPhi()" << s.getPhi()
            << "\ns.getFusionOmega() = " << s.getFusionOmega()
            << "\ns.getOffsetOmega() = " << s.getOffsetOmega() << "\n";
@@ -1355,5 +1349,5 @@ template <> struct std::iterator_traits<LinearProgramLoopBlock::Graph> {
   using reference_type = ScheduledNode &;
   using pointer_type = ScheduledNode *;
 };
-static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
+// static_assert(std::ranges::range<LinearProgramLoopBlock::Graph>);
 static_assert(Graphs::AbstractGraph<LinearProgramLoopBlock::Graph>);

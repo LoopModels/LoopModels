@@ -1,10 +1,10 @@
-#include "../include/DependencyPolyhedra.hpp"
-#include "../include/LoopBlock.hpp"
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "../include/MemoryAccess.hpp"
 #include "./TestUtilities.hpp"
+#include "DependencyPolyhedra.hpp"
+#include "LoopBlock.hpp"
+#include "Loops.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
+#include "MemoryAccess.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

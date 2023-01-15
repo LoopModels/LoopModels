@@ -1,30 +1,7 @@
-#include "Math/Math.hpp"
 #include "Math/Simplex.hpp"
-#include "MatrixStringParse.hpp"
-#include <cstddef>
-#include <gtest/gtest.h>
-#include <numeric>
+#include <benchmark/benchmark.h>
 
-// NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(SimplexTest, BasicAssertions) {
-  IntMatrix A{"[10 3 2 1; 15 2 5 3]"_mat};
-  IntMatrix B{0, 4};
-  std::optional<Simplex> optS{Simplex::positiveVariables(A, B)};
-  EXPECT_TRUE(optS.has_value());
-  assert(optS.has_value());
-  Simplex &S{*optS};
-  auto C{S.getCost()};
-  C[0] = 0;
-  C[1] = 0;
-  C[2] = 0;
-  C[3] = -2;
-  C[4] = -3;
-  C[5] = -4;
-  llvm::errs() << "S.tableau =" << S.tableau << "\n";
-  EXPECT_EQ(S.run(), 20);
-}
-// NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(LexMinSimplexTest, BasicAssertions) {
+static void BM_Simplex0(benchmark::State &state) {
   IntMatrix tableau{
     "[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
@@ -941,66 +918,23 @@ TEST(LexMinSimplexTest, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]"_mat};
 
   tableau(_(0, 2), _) = -5859553999884210514;
-  Simplex simp{tableau};
-  Vector<Rational> sol(37);
-  EXPECT_EQ(sol.size(), 37);
-  EXPECT_FALSE(simp.initiateFeasible());
-  simp.lexMinimize(sol);
-  size_t solSum = 0;
-  for (auto s : sol) {
-    solSum += s.numerator;
-    EXPECT_EQ(s.denominator, 1);
-  }
-  EXPECT_EQ(solSum, 3);
-  for (size_t i = 0; i < 37; ++i)
-    EXPECT_EQ(sol[i], (i == 28) || (i == 30) || (i == 33));
-  {
-    // test that we didn't invalidate the simplex
-    // note that we do not initiate feasible
-    auto C{simp.getCost()};
-    C[0] = 0;
-    C[_(1, 37)] = 1;
-    C[_(37, end)] = 0;
-    EXPECT_EQ(simp.run(), -3);
-    Vector<Rational> sol2 = simp.getSolution();
-    size_t sum = 0;
-    for (size_t i = 0; i < 38; ++i) {
-      Rational r = sol2[i];
-      sum += r.numerator;
-      EXPECT_EQ(r.denominator, 1);
+  Simplex simpBackup{tableau};
+  bool fail = simpBackup.initiateFeasible();
+  assert(!fail);
+  if (!fail) {
+    Simplex simp;
+    Vector<Rational> sol(37);
+    for (auto b : state) {
+      simp = simpBackup;
+      simp.lexMinimize(sol);
     }
-    EXPECT_EQ(sum, 3);
-    for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
-  }
-  {
-    // test new simplex
-    Simplex simp2{tableau};
-    EXPECT_FALSE(simp2.initiateFeasible());
-    auto C{simp2.getCost()};
-    C[0] = 0;
-    C[_(1, 37)] = 1;
-    C[_(37, end)] = 0;
-    EXPECT_EQ(simp2.run(), -3);
-    Vector<Rational> sol2 = simp2.getSolution();
-    size_t sum = 0;
-    Rational rsum = 0; // test summing rationals
-    for (size_t i = 0; i < 38; ++i) {
-      Rational r = sol2[i];
-      sum += r.numerator;
-      EXPECT_EQ(r.denominator, 1);
-      rsum += r;
-    }
-    EXPECT_EQ(sum, 3);
-    EXPECT_EQ(rsum, 3);
-    for (size_t i = 0; i < 37; ++i)
-      EXPECT_EQ(sol2[i], (i == 29) || (i == 31) || (i == 34));
   }
 }
-// NOLINTNEXTLINE(modernize-use-trailing-return-type)
-TEST(LexMinSimplexTest2, BasicAssertions) {
+BENCHMARK(BM_Simplex0);
+
+static void BM_Simplex1(benchmark::State &state) {
   IntMatrix tableau{
-    "[140296676906080 140296676906080 94205055383680 94205055383680 0 0 0 "
+    "[140296676906080 140296676906080 94205055383680 94205055383681 0 0 0 "
     "-1 0 0 0 0 0 1 -1 0 1 0 -1 0 0 0 0 0 1 0 -1 1 0 0 0 -1 0 0 0 0 0 1 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 -1 -1 0 -1 4 6 6 "
     "94205055384264 274877906950 0 0 0 1 0 -1 1 -1 -1 0 0 0 0 0 0 0 1 0 0 "
@@ -1194,42 +1128,16 @@ TEST(LexMinSimplexTest2, BasicAssertions) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "-1]"_mat};
-  Simplex simp{tableau};
-  Vector<Rational> sol(15);
-  EXPECT_EQ(sol.size(), 15);
-  EXPECT_FALSE(simp.initiateFeasible());
-  simp.lexMinimize(sol);
-  size_t solSum = 0;
-  for (size_t i = 0; i < 10; ++i) {
-    solSum += sol[i].numerator;
-    EXPECT_EQ(sol[i].denominator, 1);
-  }
-  EXPECT_FALSE(solSum);
-  for (size_t i = 10; i < sol.size(); ++i) {
-    solSum += sol[i] != 0;
-    // solSum += sol[i].numerator;
-    // EXPECT_EQ(sol[i].denominator, 1);
-  }
-  EXPECT_EQ(solSum, 2);
-  // for (size_t i = 0; i < 37; ++i)
-  //     EXPECT_EQ(sol(i), (i == 28) || (i == 30) || (i == 33));
-  {
-    // test that we didn't invalidate the simplex
-    // note that we do not initiate feasible
-    auto C{simp.getCost()};
-    C[0] = 0;
-    C[_(1, 11)] = 1;
-    C[_(11, end)] = 0;
-    EXPECT_EQ(simp.run(), 0);
-    Vector<Rational> sol2 = simp.getSolution();
-    size_t sum = 0;
-    for (size_t i = 0; i < 10; ++i) {
-      Rational r = sol2[i];
-      sum += r.numerator;
-      EXPECT_EQ(r.denominator, 1);
+  Simplex simpBackup{tableau};
+  bool fail = simpBackup.initiateFeasible();
+  assert(!fail);
+  if (!fail) {
+    Simplex simp;
+    Vector<Rational> sol(15);
+    for (auto b : state) {
+      simp = simpBackup;
+      simp.lexMinimize(sol);
     }
-    EXPECT_EQ(sum, 0);
-    // for (size_t i = 0; i < 37; ++i)
-    //     EXPECT_EQ(sol2(i), (i == 29) || (i == 31) || (i == 34));
   }
 }
+BENCHMARK(BM_Simplex1);

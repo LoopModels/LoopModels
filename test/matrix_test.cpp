@@ -1,7 +1,11 @@
-#include "../include/Math.hpp"
+#include "../include/Math/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "gtest/gtest.h"
+#include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <llvm/Support/raw_ostream.h>
+#include <string>
 
 // Demonstrate some basic assertions.
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
@@ -21,8 +25,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
     EXPECT_EQ(A, A2);
   }
   for (size_t i = 0; i < 3; ++i)
-    for (size_t j = 0; j < 4; ++j)
-      EXPECT_TRUE(A(i, j) == Asparse(i, j));
+    for (size_t j = 0; j < 4; ++j) EXPECT_TRUE(A(i, j) == Asparse(i, j));
   // EXPECT_EQ(A(i, j), Asparse(i, j));
   IntMatrix B(Row{4}, Col{5});
   EXPECT_FALSE(B.isSquare());
@@ -97,8 +100,7 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   EXPECT_EQ(A4, C);
   IntMatrix Z = A * 4 - A4;
   for (size_t i = 0; i < Z.numRow(); ++i)
-    for (size_t j = 0; j < Z.numCol(); ++j)
-      EXPECT_FALSE(Z(i, j));
+    for (size_t j = 0; j < Z.numCol(); ++j) EXPECT_FALSE(Z(i, j));
   auto D{
     "[-5 6 -1 -4 7 -9 6; -3 -5 -1 -2 -9 -4 -1; -4 7 -6 10 -2 2 9; -4 -7 -1 "
     "-7 5 9 -10; 5 -7 -5 -1 -3 -8 -8; 3 -6 4 10 9 0 -5; 0 -1 4 -4 -9 -3 "
@@ -140,10 +142,32 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
   EXPECT_EQ(A2x2(1, 0), 1);
   EXPECT_EQ(A2x2(1, 1), 0);
   for (size_t i = 1; i < 20; ++i) {
-    IntMatrix A(Row{i}, Col{i});
-    A.antiDiag() = 1;
+    IntMatrix F(Row{i}, Col{i});
+    F.antiDiag() = 1;
     for (size_t j = 0; j < i; ++j)
-      for (size_t k = 0; k < i; ++k)
-        EXPECT_EQ(A(j, k), k + j == i - 1);
+      for (size_t k = 0; k < i; ++k) EXPECT_EQ(F(j, k), k + j == i - 1);
   }
+}
+
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(ArrayPrint, BasicAssertions) {
+  std::string s;
+  llvm::raw_string_ostream os(s);
+  auto A{
+    "[3 -5 1 10 -4 6 4 4; 4 6 3 -1 6 1 -4 0; -7 -2 0 0 -10 -2 3 7; 2 -7 -5 "
+    "-5 -7 -5 1 -7; 2 -8 2 7 4 9 6 -3; -2 -8 -5 0 10 -4 5 -3]"_mat};
+  os << A;
+  EXPECT_EQ(os.str(), testing::PrintToString(A));
+  Vector<int64_t> v;
+  for (size_t i = 0; i < 10; ++i) v.push_back(i);
+  s.clear();
+  os << v;
+  EXPECT_EQ(os.str(), testing::PrintToString(v));
+}
+// NOLINTNEXTLINE(modernize-use-trailing-return-type)
+TEST(OffsetEnd, BasicAssertions) {
+  auto A{"[3 3 3 3; 2 2 2 2; 1 1 1 1; 0 0 0 0]"_mat};
+  auto B = IntMatrix{Row{4}, Col{4}};
+  for (size_t i = 0; i < 4; ++i) B(last - i, _) = i;
+  EXPECT_EQ(A, B);
 }

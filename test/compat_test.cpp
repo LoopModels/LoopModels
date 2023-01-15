@@ -1,8 +1,8 @@
-#include "../include/Constraints.hpp"
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "./TestUtilities.hpp"
+#include "Loops.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
+#include "TestUtilities.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>
@@ -146,7 +146,10 @@ TEST(AffineTest0, BasicAssertions) {
   aff.dump();
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  AffineLoopNest<false> affp021{aff.rotate("[1 0 0; 0 0 1; 0 1 0]"_mat)};
+  llvm::BumpPtrAllocator allocator;
+  NotNull<AffineLoopNest<false>> affp021ptr{
+    aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat)};
+  AffineLoopNest<false> &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
   affp021.dump();
@@ -190,10 +193,12 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff2 = tlf.alns.back();
   EXPECT_FALSE(aff2.isEmpty());
+  llvm::BumpPtrAllocator allocator;
+  NotNull<AffineLoopNest<false>> affp10{
+    aff2.rotate(allocator, "[0 1; 1 0]"_mat)};
 
-  AffineLoopNest<false> affp10{aff2.rotate("[0 1; 1 0]"_mat)};
   llvm::errs() << "Swapped order:\n";
-  affp10.dump();
+  affp10->dump();
 
-  EXPECT_FALSE(affp10.isEmpty());
+  EXPECT_FALSE(affp10->isEmpty());
 }

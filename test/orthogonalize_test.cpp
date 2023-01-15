@@ -1,9 +1,10 @@
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "../include/Orthogonalize.hpp"
-#include "./ArrayReference.hpp"
-#include "./TestUtilities.hpp"
+#include "ArrayReference.hpp"
+#include "Loops.hpp"
+#include "Math/Comparisons.hpp"
+#include "Math/Math.hpp"
+#include "Math/Orthogonalize.hpp"
+#include "MatrixStringParse.hpp"
+#include "TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -38,20 +39,17 @@ orthogonalize(llvm::SmallVectorImpl<ArrayReference *> const &ai)
   const size_t numLoops = alnp.getNumLoops();
   const size_t numSymbols = alnp.getNumSymbols();
   size_t numRow = 0;
-  for (auto a : ai)
-    numRow += a->getArrayDim();
+  for (auto a : ai) numRow += a->getArrayDim();
   IntMatrix S(numLoops, numRow);
   Col i = 0;
   for (auto a : ai) {
     PtrMatrix<int64_t> A = a->indexMatrix();
     for (size_t j = 0; j < numLoops; ++j)
-      for (size_t k = 0; k < A.numCol(); ++k)
-        S(j, i + k) = A(j, k);
+      for (size_t k = 0; k < A.numCol(); ++k) S(j, i + k) = A(j, k);
     i += A.numCol();
   }
   auto [K, included] = NormalForm::orthogonalize(S);
-  if (!included.size())
-    return {};
+  if (!included.size()) return {};
   // We let
   // L = K'*J
   // Originally, the loop bounds were
@@ -153,8 +151,7 @@ TEST(OrthogonalizeTest, BasicAssertions) {
   assert(orth.has_value());
   AffineLoopNest<true> &newAln = orth->first;
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
-  for (auto &&ar : newArrayRefs)
-    ar.loop = &newAln;
+  for (auto &&ar : newArrayRefs) ar.loop = &newAln;
   // for (size_t i = 0; i < newArrayRefs.size(); ++i)
   //   llvm::errs() << "newArrayRefs[" << i
   //                << "].indexMatrix() = " << newArrayRefs[i].indexMatrix()
@@ -275,11 +272,10 @@ TEST(BadMul, BasicAssertions) {
   AffineLoopNest<true> &newAln = orth->first;
   llvm::SmallVector<ArrayReference, 0> &newArrayRefs = orth->second;
 
-  for (auto &ar : newArrayRefs)
-    ar.loop = &newAln;
+  for (auto &ar : newArrayRefs) ar.loop = &newAln;
 
   // llvm::errs() << "b=" << PtrVector<MPoly>(newAln.aln->b);
-  llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
+  // llvm::errs() << "Skewed loop nest:\n" << newAln << "\n";
   auto loop2Count = countSigns(newAln.A, 2 + newAln.getNumSymbols());
   EXPECT_EQ(loop2Count.first, 1);
   EXPECT_EQ(loop2Count.second, 0);
@@ -292,7 +288,7 @@ TEST(BadMul, BasicAssertions) {
   EXPECT_EQ(loop0Count.first, 1);
   EXPECT_EQ(loop0Count.second, 0);
 
-  llvm::errs() << "New ArrayReferences:\n";
+  // llvm::errs() << "New ArrayReferences:\n";
   // for (auto &ar : newArrayRefs)
   //   llvm::errs() << ar << "\n\n";
 }
@@ -309,8 +305,7 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
   IntMatrix B(N, N);
   const size_t iters = 1000;
   for (size_t i = 0; i < iters; ++i) {
-    for (auto &&a : A)
-      a = distrib(gen);
+    for (auto &&a : A) a = distrib(gen);
     // llvm::errs() << "Random A =\n" << A << "\n";
     A = orthogonalize(std::move(A));
     // llvm::errs() << "Orthogonal A =\n" << A << "\n";
@@ -318,9 +313,9 @@ TEST(OrthogonalizeMatricesTest, BasicAssertions) {
     // but AA' is
     B = A * A.transpose();
     // llvm::errs() << "A'A =\n" << B << "\n";
-    for (size_t m = 0; m < M; ++m)
+    for (size_t m = 0; m < M; ++m) {
       for (size_t n = 0; n < N; ++n)
-        if (m != n)
-          EXPECT_EQ(B(m, n), 0);
+        if (m != n) EXPECT_EQ(B(m, n), 0);
+    }
   }
 }

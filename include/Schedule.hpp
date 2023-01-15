@@ -1,6 +1,7 @@
 #pragma once
 
-#include "./Math.hpp"
+#include "Math/Math.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -57,18 +58,17 @@ struct Schedule {
   void init(size_t nLoops) {
     numLoops = nLoops;
     data.resize(requiredScheduleStorage(nLoops));
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   }
   Schedule() = default;
   Schedule(size_t nLoops) : numLoops(nLoops) {
     data.resize(requiredScheduleStorage(nLoops));
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   };
   Schedule(llvm::ArrayRef<unsigned> omega) : numLoops(omega.size() - 1) {
     data.resize(requiredScheduleStorage(numLoops));
     MutPtrVector<int64_t> o{getFusionOmega()};
-    for (size_t i = 0; i < omega.size(); ++i)
-      o[i] = omega[i];
+    for (size_t i = 0; i < omega.size(); ++i) o[i] = omega[i];
   }
   void truncate(size_t newNumLoops) {
     if (newNumLoops < numLoops) {
@@ -79,22 +79,40 @@ struct Schedule {
       data.truncate(requiredScheduleStorage(newNumLoops));
       numLoops = newNumLoops;
     }
-    getPhi().antiDiag() = 1;
+    getPhi().diag() = 1;
   }
-  auto getPhi() -> MutSquarePtrMatrix<int64_t> {
+  // TODO: workaround for data.data() not being constexpr?
+  [[nodiscard]] auto getPhi() -> MutSquarePtrMatrix<int64_t> {
     // return MutSquarePtrMatrix<int64_t>(data.data(), numLoops);
     return MutSquarePtrMatrix<int64_t>{data.data(), numLoops};
   }
   [[nodiscard]] auto getPhi() const -> SquarePtrMatrix<int64_t> {
     return {data.data(), numLoops}; //
   }
+  [[nodiscard]] auto getSchedule(size_t d) const -> PtrVector<int64_t> {
+    return getPhi()(last - d, _);
+  }
+  [[nodiscard]] auto getSchedule(size_t d) -> MutPtrVector<int64_t> {
+    return getPhi()(last - d, _);
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) const -> int64_t {
+    return data.data()[getNumLoopsSquared() + i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) const -> int64_t {
+    return data.data()[getNumLoopsSquared() + size_t(numLoops) + 1 + i];
+  }
+  [[nodiscard]] auto getFusionOmega(size_t i) -> int64_t & {
+    return data.data()[getNumLoopsSquared() + i];
+  }
+  [[nodiscard]] auto getOffsetOmega(size_t i) -> int64_t & {
+    return data.data()[getNumLoopsSquared() + size_t(numLoops) + 1 + i];
+  }
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
-    return {.mem = data.data() + getNumLoopsSquared(),
-            .N = size_t(numLoops) + 1};
+    return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
   }
   [[nodiscard]] auto getOffsetOmega() const -> PtrVector<int64_t> {
-    return {.mem = data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
-            .N = size_t(numLoops)};
+    return {data.data() + getNumLoopsSquared() + size_t(numLoops) + 1,
+            size_t(numLoops)};
   }
   [[nodiscard]] auto getFusionOmega() -> MutPtrVector<int64_t> {
     return {data.data() + getNumLoopsSquared(), size_t(numLoops) + 1};
@@ -105,15 +123,14 @@ struct Schedule {
   }
   [[nodiscard]] auto fusedThrough(const Schedule &y,
                                   const size_t numLoopsCommon) const -> bool {
-    llvm::ArrayRef<int64_t> o0 = getFusionOmega();
-    llvm::ArrayRef<int64_t> o1 = y.getFusionOmega();
-    bool allEqual = true;
-    for (size_t n = 0; n < numLoopsCommon; ++n)
-      allEqual &= (o0[n] == o1[n]);
-    return allEqual;
+    auto o = getFusionOmega();
+    return std::equal(o.begin(), o.begin() + numLoopsCommon,
+                      y.getFusionOmega().begin());
   }
   [[nodiscard]] auto fusedThrough(const Schedule &y) const -> bool {
     return fusedThrough(y, std::min(numLoops, y.numLoops));
   }
-  [[nodiscard]] auto getNumLoops() const -> size_t { return numLoops; }
+  [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
+    return numLoops;
+  }
 };

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "./Comparators.hpp"
-#include "./Constraints.hpp"
-#include "./EmptyArrays.hpp"
-#include "./Math.hpp"
-#include "./Polyhedra.hpp"
-#include "./Utilities.hpp"
-#include "RemarkAnalysis.hpp"
+#include "./RemarkAnalysis.hpp"
+#include "Math/Comparators.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/Math.hpp"
+#include "Math/Polyhedra.hpp"
+#include "Utilities/Optional.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -25,6 +25,7 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Intrinsics.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
 #include <utility>
@@ -47,71 +48,35 @@ inline auto isKnownOne(llvm::ScalarEvolution &SE, llvm::Value *v) -> bool {
     const llvm::SCEV *m1 =
       SE.getMinusSCEV(umm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNUW);
     // Does checking known negative make sense if we have NUW?
-    if (SE.isKnownNegative(m0))
-      return m1;
-    if (SE.isKnownNegative(m1))
-      return m0;
+    if (SE.isKnownNegative(m0)) return m1;
+    if (SE.isKnownNegative(m1)) return m0;
   } else if (auto *smm = llvm::dyn_cast<llvm::SCEVSMaxExpr>(UB)) {
     const llvm::SCEV *m0 =
       SE.getMinusSCEV(smm->getOperand(0), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
     const llvm::SCEV *m1 =
       SE.getMinusSCEV(smm->getOperand(1), LB, llvm::SCEV::NoWrapFlags::FlagNSW);
-    if (SE.isKnownNegative(m0))
-      return m1;
-    if (SE.isKnownNegative(m1))
-      return m0;
+    if (SE.isKnownNegative(m0)) return m1;
+    if (SE.isKnownNegative(m1)) return m0;
   }
   return SE.getMinusSCEV(UB, LB, llvm::SCEV::NoWrapMask);
 }
 
-[[nodiscard]] inline auto noWrapSCEV(llvm::ScalarEvolution &SE,
-                                     const llvm::SCEV *S)
-  -> const llvm::SCEV * {
-  if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-    return SE.getAddExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                         noWrapSCEV(SE, ex->getOperand(1)),
-                         llvm::SCEV::NoWrapMask);
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-    return SE.getMulExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                         noWrapSCEV(SE, ex->getOperand(1)),
-                         llvm::SCEV::NoWrapMask);
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMaxExpr>(S)) {
-    return SE.getUMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMaxExpr>(S)) {
-    return SE.getUMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUMinExpr>(S)) {
-    return SE.getUMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMaxExpr>(S)) {
-    return SE.getSMaxExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMinExpr>(S)) {
-    return SE.getSMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-    return SE.getUDivExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVPtrToIntExpr>(S)) {
-    return SE.getPtrToIntExpr(noWrapSCEV(SE, ex->getOperand(0)), ex->getType());
-  } else if (const auto *ex =
-               llvm::dyn_cast<const llvm::SCEVSignExtendExpr>(S)) {
-    return SE.getSignExtendExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                                ex->getType());
-  } else if (const auto *ex =
-               llvm::dyn_cast<const llvm::SCEVZeroExtendExpr>(S)) {
-    return SE.getZeroExtendExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                                ex->getType());
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVTruncateExpr>(S)) {
-    return SE.getTruncateExpr(noWrapSCEV(SE, ex->getOperand(0)), ex->getType());
-  } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVSMinExpr>(S)) {
-    return SE.getSMinExpr(noWrapSCEV(SE, ex->getOperand(0)),
-                          noWrapSCEV(SE, ex->getOperand(1)));
+struct NoWrapRewriter : public llvm::SCEVRewriteVisitor<NoWrapRewriter> {
+  NoWrapRewriter(llvm::ScalarEvolution &ScEv) : SCEVRewriteVisitor(ScEv) {}
+  auto visitAddRecExpr(const llvm::SCEVAddRecExpr *ex) -> const llvm::SCEV * {
+    llvm::SmallVector<const llvm::SCEV *, 2> Operands;
+    for (const llvm::SCEV *Op : ex->operands()) Operands.push_back(visit(Op));
+    return SE.getAddRecExpr(Operands, ex->getLoop(), llvm::SCEV::NoWrapMask);
   }
-  return S;
-}
+  auto visitMulExpr(const llvm::SCEVMulExpr *ex) -> const llvm::SCEV * {
+    return SE.getMulExpr(visit(ex->getOperand(0)), visit(ex->getOperand(1)),
+                         llvm::SCEV::NoWrapMask);
+  }
+  auto visitAddExpr(const llvm::SCEVAddExpr *ex) -> const llvm::SCEV * {
+    return SE.getAddExpr(visit(ex->getOperand(0)), visit(ex->getOperand(1)),
+                         llvm::SCEV::NoWrapMask);
+  }
+};
 
 // static std::optional<int64_t> getConstantInt(llvm::Value *v) {
 //     if (llvm::ConstantInt *c = llvm::dyn_cast<llvm::ConstantInt>(v))
@@ -123,8 +88,7 @@ inline auto getConstantInt(const llvm::SCEV *v) -> std::optional<int64_t> {
   if (const auto *sc = llvm::dyn_cast<const llvm::SCEVConstant>(v)) {
     llvm::ConstantInt *c = sc->getValue();
     // we need bit width of 64, for sake of negative numbers
-    if (c->getBitWidth() <= 64)
-      return c->getSExtValue();
+    if (c->getBitWidth() <= 64) return c->getSExtValue();
   }
   return {};
 }
@@ -132,8 +96,7 @@ inline auto getConstantInt(const llvm::SCEV *v) -> std::optional<int64_t> {
 template <typename T>
 inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<size_t> {
   for (size_t i = 0; i < v.size(); ++i)
-    if (v[i] == x)
-      return i;
+    if (v[i] == x) return i;
   return {};
 }
 
@@ -143,8 +106,7 @@ inline auto findFirst(llvm::ArrayRef<T> v, const T &x) -> Optional<size_t> {
 findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
                   const llvm::SCEV *S) -> size_t {
   for (size_t i = 0; i < symbols.size();)
-    if (symbols[i++] == S)
-      return i;
+    if (symbols[i++] == S) return i;
   return 0;
 }
 
@@ -153,15 +115,13 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
   -> std::pair<const llvm::SCEV *, const llvm::SCEV *> {
   // if (!SE.containsAddRecurrence(S))
   // 	return S;
-  if ((!S) || (!(S->isAffine())))
-    return std::make_pair(S, S);
+  if ((!S) || (!(S->isAffine()))) return std::make_pair(S, S);
   auto opStart = S->getStart();
   auto opStep = S->getStepRecurrence(SE);
   auto opFinal = SE.getSCEVAtScope(S, nullptr);
   // auto opFinal = SE.getSCEVAtScope(S, S->getLoop()->getParentLoop());
   // FIXME: what if there are more AddRecs nested inside?
-  if (SE.isKnownNonNegative(opStep))
-    return std::make_pair(opStart, opFinal);
+  if (SE.isKnownNonNegative(opStep)) return std::make_pair(opStart, opFinal);
   else if (SE.isKnownNonPositive(opStep))
     return std::make_pair(opFinal, opStart);
   return std::make_pair(S, S);
@@ -242,18 +202,26 @@ struct AffineLoopNest
   auto findIndex(const llvm::SCEV *v) const -> size_t {
     return findSymbolicIndex(S, v);
   }
-  [[nodiscard]] auto rotate(PtrMatrix<int64_t> R) const
-    -> AffineLoopNest<false> {
+  /// A.rotate( R )
+  /// A(_,const) + A(_,var)*var >= 0
+  /// this method applies rotation matrix R
+  /// A(_,const) + (A(_,var)*R)*(R^{-1}*var) >= 0
+  /// So that our new loop nest has matrix
+  /// [A(_,const) (A(_,var)*R)]
+  /// while the new `var' is `(R^{-1}*var)`
+  [[nodiscard]] auto rotate(llvm::BumpPtrAllocator &alloc,
+                            PtrMatrix<int64_t> R) const
+    -> NotNull<AffineLoopNest<false>> {
     size_t numExtraVar = 0;
-    if constexpr (NonNegative)
-      numExtraVar = getNumLoops();
+    if constexpr (NonNegative) numExtraVar = getNumLoops();
     assert(R.numCol() == numExtraVar);
     assert(R.numRow() == numExtraVar);
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    AffineLoopNest<false> ret;
-    ret.S = S;
-    IntMatrix &B = ret.A;
+    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
+    ret->S = S;
+    IntMatrix &B = ret->A;
     B.resizeForOverwrite(M + numExtraVar, N);
     B(_(0, M), _(begin, numConst)) = A(_, _(begin, numConst));
     B(_(0, M), _(numConst, end)) = A(_, _(numConst, end)) * R;
@@ -261,8 +229,27 @@ struct AffineLoopNest
       B(_(M, end), _(0, numConst)) = 0;
       B(_(M, end), _(numConst, end)) = R;
     }
-    ret.initializeComparator();
-    ret.pruneBounds();
+    ret->initializeComparator();
+    ret->pruneBounds();
+    return ret;
+  }
+  /// like rotate(identityMatrix)
+  [[nodiscard]] auto explicitLowerBounds(llvm::BumpPtrAllocator &alloc)
+    -> NotNull<AffineLoopNest<false>> {
+    if constexpr (!NonNegative) return this;
+    const size_t numExtraVar = getNumLoops();
+    const size_t numConst = getNumSymbols();
+    const auto [M, N] = A.size();
+    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
+    ret->S = S;
+    IntMatrix &B = ret->A;
+    B.resizeForOverwrite(M + numExtraVar, N);
+    B(_(0, M), _) = A;
+    B(_(M, end), _) = 0;
+    B(_(M, end), _(numConst, end)).diag() = 1;
+    ret->initializeComparator();
+    ret->pruneBounds();
     return ret;
   }
 
@@ -281,29 +268,29 @@ struct AffineLoopNest
     } else if (std::optional<int64_t> c = getConstantInt(v)) {
       A(lu, 0) += mlt * (*c);
       return minDepth;
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
-      const llvm::SCEV *op0 = ex->getOperand(0);
-      const llvm::SCEV *op1 = ex->getOperand(1);
+    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(v)) {
+      const llvm::SCEV *op0 = ar->getOperand(0);
+      const llvm::SCEV *op1 = ar->getOperand(1);
       Row M = A.numRow();
       minDepth = addSymbol(B, L, op0, SE, lu, mlt, minDepth);
       if (M != A.numRow())
         minDepth = addSymbol(B, L, op1, SE, _(M, A.numRow()), mlt, minDepth);
       return addSymbol(B, L, op1, SE, lu, mlt, minDepth);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
-      if (auto op = getConstantInt(ex->getOperand(0))) {
-        return addSymbol(B, L, ex->getOperand(1), SE, lu, mlt * (*op),
+    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(v)) {
+      if (auto op0 = getConstantInt(m->getOperand(0))) {
+        return addSymbol(B, L, m->getOperand(1), SE, lu, mlt * (*op0),
                          minDepth);
-      } else if (auto op = getConstantInt(ex->getOperand(1))) {
-        return addSymbol(B, L, ex->getOperand(0), SE, lu, mlt * (*op),
+      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+        return addSymbol(B, L, m->getOperand(0), SE, lu, mlt * (*op1),
                          minDepth);
       }
     } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVAddRecExpr>(v)) {
       size_t recDepth = x->getLoop()->getLoopDepth();
       if (x->isAffine()) {
         minDepth = addSymbol(B, L, x->getOperand(0), SE, lu, mlt, minDepth);
-        if (auto c = getConstantInt(x->getOperand(1))) {
+        if (auto opc = getConstantInt(x->getOperand(1))) {
           // swap order vs recDepth to go inner<->outer
-          B(lu, B.numCol() - recDepth) = mlt * (*c);
+          B(lu, B.numCol() - recDepth) = mlt * (*opc);
           return minDepth;
         }
         v =
@@ -315,14 +302,13 @@ struct AffineLoopNest
       // 0 means we support all loops, as the outer most depth is 1
       // Depth of 0 means toplevel.
       minDepth = std::max(minDepth, recDepth);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
-      auto S = simplifyMinMax(SE, ex);
-      if (S != v)
-        return addSymbol(B, L, S, SE, lu, mlt, minDepth);
+    } else if (const auto *mm = llvm::dyn_cast<const llvm::SCEVMinMaxExpr>(v)) {
+      auto Sm = simplifyMinMax(SE, mm);
+      if (Sm != v) return addSymbol(B, L, Sm, SE, lu, mlt, minDepth);
       bool isMin =
-        llvm::isa<llvm::SCEVSMinExpr>(ex) || llvm::isa<llvm::SCEVUMinExpr>(ex);
-      const llvm::SCEV *op0 = ex->getOperand(0);
-      const llvm::SCEV *op1 = ex->getOperand(1);
+        llvm::isa<llvm::SCEVSMinExpr>(mm) || llvm::isa<llvm::SCEVUMinExpr>(mm);
+      const llvm::SCEV *op0 = mm->getOperand(0);
+      const llvm::SCEV *op1 = mm->getOperand(1);
       if (isMin ^
           (mlt < 0)) { // we can represent this as additional constraints
         Row M = A.numRow();
@@ -392,8 +378,7 @@ struct AffineLoopNest
           os << "Loop Bounds:\nInitial: " << b->getInitialIVValue()
              << "\nStep: " << *b->getStepValue()
              << "\nFinal: " << b->getFinalIVValue() << "\n";
-        for (auto s : S)
-          os << *s << "\n";
+        for (auto s : S) os << *s << "\n";
         llvm::OptimizationRemarkAnalysis analysis{
           remarkAnalysis("AffineLoopConstruction", L)};
         ORE->emit(analysis << os.str());
@@ -411,8 +396,7 @@ struct AffineLoopNest
   static auto construct(llvm::Loop *L, llvm::ScalarEvolution &SE)
     -> std::optional<AffineLoopNest<NonNegative>> {
     auto BT = getBackedgeTakenCount(SE, L);
-    if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT))
-      return {};
+    if (!BT || llvm::isa<llvm::SCEVCouldNotCompute>(BT)) return {};
     return AffineLoopNest<NonNegative>(L, BT, SE);
   }
   AffineLoopNest(llvm::Loop *L, const llvm::SCEV *BT, llvm::ScalarEvolution &SE,
@@ -438,8 +422,7 @@ struct AffineLoopNest
           if (!P) {
             // find P
             P = L;
-            for (size_t r = d + 1; r < maxDepth; ++r)
-              P = P->getParentLoop();
+            for (size_t r = d + 1; r < maxDepth; ++r) P = P->getParentLoop();
           }
           // TODO: find a more efficient way to get IntTyp
           llvm::Type *IntTyp = P->getInductionVariable(SE)->getType();
@@ -471,8 +454,7 @@ struct AffineLoopNest
         // B(_(m,end-1),_) = B(_(m+1,end),_);
         // make sure we're explicit about the order we copy rows
         Row M = B.numRow() - 1;
-        for (size_t r = m; r < M; ++r)
-          B(r, _) = B(r + 1, _);
+        for (size_t r = m; r < M; ++r) B(r, _) = B(r + 1, _);
         B.resize(M);
       }
     }
@@ -487,8 +469,7 @@ struct AffineLoopNest
     // basically, we move the outermost loops to the symbols section,
     // and add the appropriate addressees
     size_t oldNumLoops = getNumLoops();
-    if (numToRemove >= oldNumLoops)
-      return clear();
+    if (numToRemove >= oldNumLoops) return clear();
     size_t innermostLoopInd = getNumSymbols();
     size_t numRemainingLoops = oldNumLoops - numToRemove;
     auto [M, N] = A.size();
@@ -521,8 +502,7 @@ struct AffineLoopNest
           std::swap(A(m, innermostLoopInd + i),
                     A(m, innermostLoopInd + i + numToRemove));
 
-    for (size_t i = 0; i < numRemainingLoops; ++i)
-      L = L->getParentLoop();
+    for (size_t i = 0; i < numRemainingLoops; ++i) L = L->getParentLoop();
     // L is now inner most loop getting removed
     for (size_t i = 0; i < numToRemove; ++i) {
       llvm::Type *IntType = L->getInductionVariable(SE)->getType();
@@ -532,33 +512,30 @@ struct AffineLoopNest
     initializeComparator();
   }
   void addZeroLowerBounds() {
-    if (isEmpty())
-      return;
+    if (isEmpty()) return;
     if constexpr (NonNegative) {
       initializeComparator();
       return pruneBounds();
     }
     // return initializeComparator();
     auto [M, N] = A.size();
-    if (!N)
-      return;
+    if (!N) return;
     size_t numLoops = getNumLoops();
     A.resize(M + numLoops);
     A(_(M, M + numLoops), _) = 0;
-    for (size_t i = 0; i < numLoops; ++i)
-      A(M + i, N - numLoops + i) = 1;
+    for (size_t i = 0; i < numLoops; ++i) A(M + i, N - numLoops + i) = 1;
     initializeComparator();
     pruneBounds();
   }
 
-  AffineLoopNest(IntMatrix A, llvm::SmallVector<const llvm::SCEV *> symbols)
+  AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
     : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                 llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(A), std::move(symbols)){};
-  AffineLoopNest(IntMatrix A)
+        std::move(Am), std::move(sym)){};
+  AffineLoopNest(IntMatrix Am)
     : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
                 llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
-        std::move(A)){};
+        std::move(Am)){};
   AffineLoopNest() = default;
 
   [[nodiscard]] auto getProgVars(size_t j) const -> PtrVector<int64_t> {
@@ -567,8 +544,7 @@ struct AffineLoopNest
   void removeLoopBang(size_t i) {
     if constexpr (NonNegative)
       fourierMotzkinNonNegative(A, i + getNumSymbols());
-    else
-      fourierMotzkin(A, i + getNumSymbols());
+    else fourierMotzkin(A, i + getNumSymbols());
     initializeComparator();
     pruneBounds();
   }
@@ -613,8 +589,7 @@ struct AffineLoopNest
     while (true) {
       size_t xi = x[--i];
       ret[i] = tmp.bounds(xi);
-      if (i == 0)
-        break;
+      if (i == 0) break;
       tmp.removeLoopBang(xi);
     }
     return ret;
@@ -625,16 +600,14 @@ struct AffineLoopNest
     AffineLoopNest<NonNegative> tmp{*this};
     const size_t numPrevLoops = getNumLoops() - 1;
     for (size_t i = 0; i < numPrevLoops; ++i)
-      if (i != _i)
-        tmp.removeVariableAndPrune(i + getNumSymbols());
+      if (i != _i) tmp.removeVariableAndPrune(i + getNumSymbols());
     bool indep = true;
     const size_t numConst = getNumSymbols();
     for (size_t n = 0; n < tmp.A.numRow(); ++n)
       if ((tmp.A(n, _i + numConst) != 0) &&
           (tmp.A(n, numPrevLoops + numConst) != 0))
         indep = false;
-    if (indep)
-      return false;
+    if (indep) return false;
     AffineLoopNest<NonNegative> margi{tmp};
     margi.removeVariableAndPrune(numPrevLoops + getNumSymbols());
     AffineLoopNest<NonNegative> tmp2;
@@ -644,8 +617,7 @@ struct AffineLoopNest
     int64_t sign = 2 * extendLower - 1; // extendLower ? 1 : -1
     for (size_t c = 0; c < margi.getNumInequalityConstraints(); ++c) {
       int64_t b = sign * margi.A(c, _i + numConst);
-      if (b <= 0)
-        continue;
+      if (b <= 0) continue;
       tmp2 = tmp;
       // increment to increase bound
       // this is correct for both extending lower and extending upper
@@ -659,8 +631,7 @@ struct AffineLoopNest
       // if not, then we may have >0 iterations.
       for (size_t cc = 0; cc < tmp2.A.numRow(); ++cc) {
         int64_t d = tmp2.A(cc, _i + numConst);
-        if (d == 0)
-          continue;
+        if (d == 0) continue;
         d *= sign;
         for (size_t v = 0; v < tmp2.A.numCol(); ++v)
           tmp2.A(cc, v) = b * tmp2.A(cc, v) - d * margi.A(c, v);
@@ -669,8 +640,7 @@ struct AffineLoopNest
         if (tmp2.A(--cc, numPrevLoops + numConst) == 0)
           eraseConstraint(tmp2.A, cc);
       tmp2.initializeComparator();
-      if (!(tmp2.calcIsEmpty()))
-        return false;
+      if (!(tmp2.calcIsEmpty())) return false;
     }
     if constexpr (NonNegative) {
       if (extendLower) {
@@ -695,8 +665,7 @@ struct AffineLoopNest
           if (tmp.A(--cc, numPrevLoops + numConst) == 0)
             eraseConstraint(tmp.A, cc);
         tmp.initializeComparator();
-        if (!(tmp.calcIsEmpty()))
-          return false;
+        if (!(tmp.calcIsEmpty())) return false;
       }
     }
     return true;
@@ -705,16 +674,13 @@ struct AffineLoopNest
   void printSymbol(llvm::raw_ostream &os, PtrVector<int64_t> x,
                    int64_t mul) const {
     bool printed = x[0] != 0;
-    if (printed)
-      os << mul * x[0];
+    if (printed) os << mul * x[0];
     for (size_t i = 1; i < x.size(); ++i)
       if (int64_t xi = x[i] * mul) {
-        if (printed)
-          os << (xi > 0 ? " + " : " - ");
+        if (printed) os << (xi > 0 ? " + " : " - ");
         printed = true;
         int64_t absxi = constexpr_abs(xi);
-        if (absxi != 1)
-          os << absxi << " * ";
+        if (absxi != 1) os << absxi << " * ";
         os << *S[i - 1];
       }
   }
@@ -727,44 +693,34 @@ struct AffineLoopNest
     bool hasPrintedLine = false;
     for (size_t j = 0; j < A.numRow(); ++j) {
       int64_t Aji = A(j, i + numConst) * sign;
-      if (Aji <= 0)
-        continue;
+      if (Aji <= 0) continue;
       if (hasPrintedLine)
-        for (size_t k = 0; k < 21; ++k)
-          os << ' ';
+        for (size_t k = 0; k < 21; ++k) os << ' ';
       hasPrintedLine = true;
       if (A(j, i + numConst) != sign)
         os << Aji << "*i_" << numVarMinus1 - i
            << ((sign < 0) ? " <= " : " >= ");
-      else
-        os << "i_" << numVarMinus1 - i << ((sign < 0) ? " <= " : " >= ");
+      else os << "i_" << numVarMinus1 - i << ((sign < 0) ? " <= " : " >= ");
       PtrVector<int64_t> b = getProgVars(j);
       bool printed = !allZero(b);
-      if (printed)
-        printSymbol(os, b, -sign);
+      if (printed) printSymbol(os, b, -sign);
       for (size_t k = 0; k < numVar; ++k) {
-        if (k == i)
-          continue;
+        if (k == i) continue;
         if (int64_t lakj = A(j, k + numConst)) {
-          if (lakj * sign > 0)
-            os << " - ";
-          else if (printed)
-            os << " + ";
+          if (lakj * sign > 0) os << " - ";
+          else if (printed) os << " + ";
           lakj = constexpr_abs(lakj);
-          if (lakj != 1)
-            os << lakj << "*";
+          if (lakj != 1) os << lakj << "*";
           os << "i_" << numVarMinus1 - k;
           printed = true;
         }
       }
-      if (!printed)
-        os << 0;
+      if (!printed) os << 0;
       os << "\n";
     }
   }
   void printLowerBound(llvm::raw_ostream &os, size_t i) const {
-    if constexpr (NonNegative)
-      os << "i_" << getNumLoops() - 1 - i << " >= 0\n";
+    if constexpr (NonNegative) os << "i_" << getNumLoops() - 1 - i << " >= 0\n";
     printBound(os, i, 1);
   }
   void printUpperBound(llvm::raw_ostream &os, size_t i) const {
@@ -782,8 +738,7 @@ struct AffineLoopNest
       aln.printLowerBound(os, i);
       os << "Loop " << numLoopsMinus1 - i << " upper bounds: ";
       aln.printUpperBound(os, i);
-      if (i == numLoopsMinus1)
-        break;
+      if (i == numLoopsMinus1) break;
       aln.removeLoopBang(i++);
     }
     return os;

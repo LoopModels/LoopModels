@@ -4,9 +4,9 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "RemarkAnalysis.hpp"
+#include "./RemarkAnalysis.hpp"
 #include <algorithm>
 #include <bit>
 #include <cassert>
@@ -48,11 +48,9 @@
 
 inline auto countNumLoopsPlusLeaves(const llvm::Loop *L) -> size_t {
   const std::vector<llvm::Loop *> &subLoops = L->getSubLoops();
-  if (subLoops.size() == 0)
-    return 1;
+  if (subLoops.size() == 0) return 1;
   size_t numLoops = subLoops.size();
-  for (auto &SL : subLoops)
-    numLoops += countNumLoopsPlusLeaves(SL);
+  for (auto &SL : subLoops) numLoops += countNumLoopsPlusLeaves(SL);
   return numLoops;
 }
 template <typename T>
@@ -69,7 +67,7 @@ public:
   // one reason to prefer SmallVector is because it bounds checks `ifndef
   // NDEBUG`
   // [[no_unique_address]] llvm::SmallVector<LoopTree, 0> loopTrees;
-  [[no_unique_address]] llvm::SmallVector<LoopTree *> loopForests;
+  [[no_unique_address]] llvm::SmallVector<NotNull<LoopTree>> loopForests;
   [[no_unique_address]] llvm::DenseMap<llvm::Loop *, LoopTree *> loopMap;
   // [[no_unique_address]] BlockPredicates predicates;
   // llvm::AssumptionCache *AC;
@@ -96,22 +94,19 @@ public:
     auto RLI = llvm::reverse(*LI);
     auto RLIB = RLI.begin();
     auto RLIE = RLI.end();
-    if (RLIB == RLIE)
-      return;
+    if (RLIB == RLIE) return;
     // pushLoopTree wants a direct path from the last loop's exit block to
     // E; we drop loops until we find one for which this is trivial.
     llvm::BasicBlock *E = (*--RLIE)->getExitBlock();
     while (!E) {
-      if (RLIE == RLIB)
-        return;
+      if (RLIE == RLIB) return;
       E = (*--RLIE)->getExitingBlock();
     }
     // pushLoopTree wants a direct path from H to the first loop's header;
     // we drop loops until we find one for which this is trivial.
     llvm::BasicBlock *H = (*RLIB)->getLoopPreheader();
     while (!H) {
-      if (RLIE == RLIB)
-        return;
+      if (RLIE == RLIB) return;
       H = (*++RLIB)->getLoopPreheader();
     }
     // should normally be stack allocated; we want to avoid different
@@ -121,9 +116,11 @@ public:
     llvm::SmallVector<llvm::Loop *> revLI{RLIB, RLIE + 1};
     // Track position within the loop nest
     llvm::SmallVector<unsigned> omega;
-    pushLoopTree(loopForests, nullptr, revLI, H, E);
-    for (auto &forest : loopForests)
-      forest->addZeroLowerBounds(loopMap);
+    {
+      NoWrapRewriter nwr(*SE);
+      pushLoopTree(loopForests, nullptr, revLI, H, E, nwr);
+    }
+    for (auto &forest : loopForests) forest->addZeroLowerBounds(loopMap);
   }
   ///
   /// pushLoopTree
@@ -154,13 +151,14 @@ public:
   /// the first sub-loop's preheader
   /// 6. `llvm::BasicBlock *E`: Exit - we need a direct path from the last
   /// sub-loop's exit block to this.
-  auto pushLoopTree(llvm::SmallVectorImpl<LoopTree *> &pForest, llvm::Loop *L,
-                    llvm::ArrayRef<llvm::Loop *> subLoops, llvm::BasicBlock *H,
-                    llvm::BasicBlock *E) -> size_t {
+  auto pushLoopTree(llvm::SmallVectorImpl<NotNull<LoopTree>> &pForest,
+                    llvm::Loop *L, llvm::ArrayRef<llvm::Loop *> subLoops,
+                    llvm::BasicBlock *H, llvm::BasicBlock *E,
+                    NoWrapRewriter &nwr) -> size_t {
 
     if (size_t numSubLoops = subLoops.size()) {
       // branches of this tree;
-      llvm::SmallVector<LoopTree *> branches;
+      llvm::SmallVector<NotNull<LoopTree>> branches;
       branches.reserve(numSubLoops);
       llvm::SmallVector<Predicate::Map> branchBlocks;
       branchBlocks.reserve(numSubLoops + 1);
@@ -168,9 +166,9 @@ public:
       size_t interiorDepth = 0;
       for (size_t i = 0; i < numSubLoops; ++i) {
         llvm::Loop *subLoop = subLoops[i];
-        if (size_t depth =
-              pushLoopTree(branches, subLoop, subLoop->getSubLoops(),
-                           subLoop->getHeader(), subLoop->getExitingBlock())) {
+        if (size_t depth = pushLoopTree(
+              branches, subLoop, subLoop->getSubLoops(), subLoop->getHeader(),
+              subLoop->getExitingBlock(), nwr)) {
           // pushLoopTree succeeded, and we have `depth` inner loops
           // within `subLoop` (inclusive, i.e. `depth == 1` would
           // indicate that `subLoop` doesn't have any subLoops itself,
@@ -197,8 +195,7 @@ public:
               // reinsert last tree
               branches.push_back(lastTree);
             }
-            if (i + 1 < numSubLoops)
-              H = subLoops[i + 1]->getLoopPreheader();
+            if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
           }
           // for the next loop, we'll want a path to its preheader
           // from this loop's exit block.
@@ -206,10 +203,8 @@ public:
           // `depth == 0` indicates failure, therefore we need to
           // split loops
           anyFail = true;
-          if (branches.size())
-            split(branches, branchBlocks, H, L);
-          if (i + 1 < numSubLoops)
-            H = subLoops[i + 1]->getLoopPreheader();
+          if (branches.size()) split(branches, branchBlocks, H, L);
+          if (i + 1 < numSubLoops) H = subLoops[i + 1]->getLoopPreheader();
         }
       }
       if (!anyFail) {
@@ -220,17 +215,15 @@ public:
           return ++interiorDepth;
         }
       }
-      if (branches.size())
-        split(branches, branchBlocks, H, L);
+      if (branches.size()) split(branches, branchBlocks, H, L);
       return 0;
     } else if (auto BT = getBackedgeTakenCount(*SE, L);
                !llvm::isa<llvm::SCEVCouldNotCompute>(BT)) {
       // we're at the bottom of the recursion
       if (auto predMapAbridged =
             Predicate::Map::descend(allocator, instrCache, H, E, L)) {
-        auto *BTNW = noWrapSCEV(*SE, BT);
-        auto *newTree =
-          new (allocator) LoopTree{L, BTNW, *SE, {std::move(*predMapAbridged)}};
+        auto *newTree = new (allocator)
+          LoopTree{L, nwr.visit(BT), *SE, {std::move(*predMapAbridged)}};
         pForest.push_back(newTree);
         return 1;
       }
@@ -238,7 +231,7 @@ public:
     // Finally, we need `H` to have a direct path to `E`.
     return 0;
   }
-  void split(llvm::SmallVectorImpl<LoopTree *> &branches,
+  void split(llvm::SmallVectorImpl<NotNull<LoopTree>> &branches,
              llvm::SmallVectorImpl<Predicate::Map> &branchBlocks,
              llvm::BasicBlock *BB, llvm::Loop *L) {
 
@@ -252,16 +245,14 @@ public:
   auto isLoopPreHeader(const llvm::BasicBlock *BB) const -> bool {
     if (const llvm::Instruction *term = BB->getTerminator())
       if (const auto *BI = llvm::dyn_cast<llvm::BranchInst>(term))
-        if (!BI->isConditional())
-          return LI->isLoopHeader(BI->getSuccessor(0));
+        if (!BI->isConditional()) return LI->isLoopHeader(BI->getSuccessor(0));
     return false;
   }
-  inline static auto containsPeeled(const llvm::SCEV *S, size_t numPeeled)
+  inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)
     -> bool {
-    return llvm::SCEVExprContains(S, [numPeeled](const llvm::SCEV *S) {
+    return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {
       if (auto r = llvm::dyn_cast<llvm::SCEVAddRecExpr>(S))
-        if (r->getLoop()->getLoopDepth() <= numPeeled)
-          return true;
+        if (r->getLoop()->getLoopDepth() <= numPeeled) return true;
       return false;
     });
   }
@@ -282,13 +273,13 @@ public:
         flag |= uint64_t(1) << y->getLoop()->getLoopDepth();
       for (size_t i = 0; i < x->getNumOperands(); ++i)
         flag |= blackListAllDependentLoops(x->getOperand(i));
-    } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
+    } else if (const auto *c = llvm::dyn_cast<const llvm::SCEVCastExpr>(S)) {
+      for (size_t i = 0; i < c->getNumOperands(); ++i)
+        flag |= blackListAllDependentLoops(c->getOperand(i));
       return flag;
-    } else if (const auto *x = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
-      for (size_t i = 0; i < x->getNumOperands(); ++i)
-        flag |= blackListAllDependentLoops(x->getOperand(i));
+    } else if (const auto *d = llvm::dyn_cast<const llvm::SCEVUDivExpr>(S)) {
+      for (size_t i = 0; i < d->getNumOperands(); ++i)
+        flag |= blackListAllDependentLoops(d->getOperand(i));
       return flag;
     }
     return flag;
@@ -322,11 +313,10 @@ public:
         if (loopInd >= 0) {
           if (auto c = getConstantInt(x->getOperand(1))) {
             // we want the innermost loop to have index 0
-            v(end - loopInd) += *c;
+            v[last - loopInd] += *c;
             return fillAffineIndices(v, offsets, symbolicOffsets,
                                      x->getOperand(0), mlt, numPeeled);
-          } else
-            blackList |= (uint64_t(1) << uint64_t(loopInd));
+          } else blackList |= (uint64_t(1) << uint64_t(loopInd));
         }
         // we separate out the addition
         // the multiplication was either peeled or involved
@@ -339,27 +329,26 @@ public:
           x->getLoop(), x->getNoWrapFlags());
         addSymbolic(offsets, symbolicOffsets, addRec, mlt);
         return blackList;
-      } else if (loopInd >= 0)
-        blackList |= (uint64_t(1) << uint64_t(loopInd));
+      } else if (loopInd >= 0) blackList |= (uint64_t(1) << uint64_t(loopInd));
     } else if (std::optional<int64_t> c = getConstantInt(S)) {
       offsets[0] += *c;
       return 0;
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
-      return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
+    } else if (const auto *ar = llvm::dyn_cast<const llvm::SCEVAddExpr>(S)) {
+      return fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(0),
                                mlt, numPeeled) |
-             fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(1),
+             fillAffineIndices(v, offsets, symbolicOffsets, ar->getOperand(1),
                                mlt, numPeeled);
-    } else if (const auto *ex = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
-      if (auto op = getConstantInt(ex->getOperand(0))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(1),
-                                 mlt * (*op), numPeeled);
+    } else if (const auto *m = llvm::dyn_cast<const llvm::SCEVMulExpr>(S)) {
+      if (auto op0 = getConstantInt(m->getOperand(0))) {
+        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(1),
+                                 mlt * (*op0), numPeeled);
 
-      } else if (auto op = getConstantInt(ex->getOperand(1))) {
-        return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
-                                 mlt * (*op), numPeeled);
+      } else if (auto op1 = getConstantInt(m->getOperand(1))) {
+        return fillAffineIndices(v, offsets, symbolicOffsets, m->getOperand(0),
+                                 mlt * (*op1), numPeeled);
       }
-    } else if (const auto *ex = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
-      return fillAffineIndices(v, offsets, symbolicOffsets, ex->getOperand(0),
+    } else if (const auto *ca = llvm::dyn_cast<llvm::SCEVCastExpr>(S))
+      return fillAffineIndices(v, offsets, symbolicOffsets, ca->getOperand(0),
                                mlt, numPeeled);
     addSymbolic(offsets, symbolicOffsets, S, mlt);
     return blackList | blackListAllDependentLoops(S, numPeeled);
@@ -389,9 +378,8 @@ public:
     assert(subscripts.size() == sizes.size());
     AffineLoopNest<true> &aln = loopMap[L]->affineLoop;
     if (sizes.size() == 0) {
-      LT.memAccesses.emplace_back(basePointer, aln, loadOrStore,
-                                  std::move(sizes), std::move(subscripts),
-                                  omegas);
+      LT.memAccesses.push_back(MemoryAccess::construct(
+        allocator, basePointer, aln, loadOrStore, omegas));
       ++omegas.back();
       return false;
     }
@@ -429,14 +417,12 @@ public:
       // order of loops in Rt is innermost -> outermost
       size_t remainingLoops = numLoops - numExtraLoopsToPeel;
       llvm::Loop *P = L;
-      for (size_t i = 1; i < remainingLoops; ++i)
-        P = P->getParentLoop();
+      for (size_t i = 1; i < remainingLoops; ++i) P = P->getParentLoop();
       // remove
       conditionOnLoop(P->getParentLoop());
       for (size_t i = remainingLoops; i < numLoops; ++i) {
         P = P->getParentLoop();
-        if (allZero(Rt(_, i)))
-          continue;
+        if (allZero(Rt(_, i))) continue;
         // push the SCEV
         auto IntType = P->getInductionVariable(*SE)->getType();
         const llvm::SCEV *S = SE->getAddRecExpr(
@@ -452,13 +438,10 @@ public:
       }
       Rt.truncate(Col{numLoops - numExtraLoopsToPeel});
     }
-    LT.memAccesses.emplace_back(basePointer, aln, loadOrStore, std::move(sizes),
-                                std::move(symbolicOffsets), omegas);
+    LT.memAccesses.push_back(MemoryAccess::construct(
+      allocator, basePointer, aln, loadOrStore, Rt,
+      {std::move(sizes), std::move(symbolicOffsets)}, Bt, omegas));
     ++omegas.back();
-    MemoryAccess &ref = LT.memAccesses.back();
-    ref.resize(subscripts.size());
-    ref.indexMatrix() = Rt.transpose();
-    ref.offsetMatrix() = Bt;
     return false;
   }
   // LoopTree &getLoopTree(unsigned i) { return loopTrees[i]; }
@@ -478,8 +461,7 @@ public:
           llvm::raw_svector_ostream os(x);
           if (llvm::isa<llvm::LoadInst>(I))
             os << "No affine representation for load: " << *I << "\n";
-          else
-            os << "No affine representation for store: " << *I << "\n";
+          else os << "No affine representation for store: " << *I << "\n";
           remark("AddAffineLoad", LT.loop, os.str(), I);
         }
       }
@@ -492,24 +474,20 @@ public:
 
                llvm::SmallVector<unsigned> &omega) {
     for (llvm::Instruction &I : *BB) {
-      if (LT.loop)
-        assert(LT.loop->contains(&I));
+      if (LT.loop) assert(LT.loop->contains(&I));
       if (I.mayReadFromMemory()) {
-        if (auto *LI = llvm::dyn_cast<llvm::LoadInst>(&I))
-          if (addRef(LT, LI, omega))
-            return;
+        if (auto *LInst = llvm::dyn_cast<llvm::LoadInst>(&I))
+          if (addRef(LT, LInst, omega)) return;
       } else if (I.mayWriteToMemory())
-        if (auto *SI = llvm::dyn_cast<llvm::StoreInst>(&I))
-          if (addRef(LT, SI, omega))
-            return;
+        if (auto *SInst = llvm::dyn_cast<llvm::StoreInst>(&I))
+          if (addRef(LT, SInst, omega)) return;
     }
   }
   void visit(LoopTree &LT, Predicate::Map &map,
              llvm::SmallVector<unsigned> &omega,
              llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited,
              llvm::BasicBlock *BB) {
-    if ((!map.isInPath(BB)) || visited.contains(BB))
-      return;
+    if ((!map.isInPath(BB)) || visited.contains(BB)) return;
     visited.insert(BB);
     for (llvm::BasicBlock *pred : llvm::predecessors(BB))
       visit(LT, map, omega, visited, pred);
@@ -518,8 +496,7 @@ public:
   void parseBBMap(LoopTree &LT, Predicate::Map &map,
                   llvm::SmallVector<unsigned> &omega) {
     llvm::SmallPtrSet<llvm::BasicBlock *, 16> visited;
-    for (auto &pair : map)
-      visit(LT, map, omega, visited, pair.first);
+    for (auto &pair : map) visit(LT, map, omega, visited, pair.first);
   }
   // we fill omegas, we have loop pos only, not shifts
   // pR: 0
@@ -568,8 +545,8 @@ public:
   }
   // peelOuterLoops is recursive inwards
   void peelOuterLoops(LoopTree &LT, size_t numToPeel) {
-    for (auto SL : LT)
-      peelOuterLoops(*SL, numToPeel);
+    for (auto SL : LT) peelOuterLoops(*SL, numToPeel);
+    for (auto &MA : LT.memAccesses) MA->peelLoops(numToPeel);
     LT.affineLoop.removeOuterMost(numToPeel, LT.loop, *SE);
   }
   // conditionOnLoop(llvm::Loop *L)
@@ -601,18 +578,15 @@ public:
   // first in which case, just remove LoopIndex
   void conditionOnLoop(llvm::Loop *L) { conditionOnLoop(loopMap[L]); }
   void conditionOnLoop(LoopTree *LT) {
-    if (LT->parentLoop == nullptr)
-      return;
+    if (!LT->parentLoop) return;
     LoopTree &PT = *LT->parentLoop;
     size_t numLoops = LT->getNumLoops();
-    for (auto ST : *LT)
-      peelOuterLoops(*ST, numLoops);
+    for (auto ST : *LT) peelOuterLoops(*ST, numLoops);
 
     LT->parentLoop = nullptr; // LT is now top of the tree
     loopForests.push_back(LT);
-    llvm::SmallVector<LoopTree *> &friendLoops = PT.subLoops;
-    for (auto id : friendLoops)
-      llvm::errs() << ", " << id;
+    llvm::SmallVector<NotNull<LoopTree>> &friendLoops = PT.subLoops;
+    for (auto id : friendLoops) llvm::errs() << ", " << id;
     llvm::errs() << "\n";
     if (friendLoops.front() != LT) {
       // we're cutting off the front
@@ -629,7 +603,7 @@ public:
       size_t j = loopIndex + 1;
       if (j != numFriendLoops) {
         // we have some remaining paths we split off
-        llvm::SmallVector<LoopTree *> tmp;
+        llvm::SmallVector<NotNull<LoopTree>> tmp;
         tmp.reserve(numFriendLoops - j);
         // for paths, we're dropping LT
         // thus, our paths are paths(_(0,j)), paths(_(j,end))
@@ -678,22 +652,17 @@ public:
   }
   auto isLoopDependent(llvm::Value *v) const -> bool {
     for (auto &L : *LI)
-      if (!L->isLoopInvariant(v))
-        return true;
+      if (!L->isLoopInvariant(v)) return true;
     return false;
   }
   auto mayReadOrWriteMemory(llvm::Value *v) const -> bool {
     if (auto inst = llvm::dyn_cast<llvm::Instruction>(v))
-      if (inst->mayReadOrWriteMemory())
-        return true;
+      if (inst->mayReadOrWriteMemory()) return true;
     return false;
   }
   void fillLoopBlock(LoopTree &root) {
-    for (auto &&mem : root.memAccesses)
-      loopBlock.addMemory(mem.truncateSchedule());
-    // loopBlock.memory.push_back(mem.truncateSchedule());
-    for (size_t i = 0; i < root.subLoops.size(); ++i)
-      fillLoopBlock(*root.subLoops[i]);
+    for (auto &&mem : root.memAccesses) loopBlock.addMemory(mem);
+    for (auto &&sub : root.subLoops) fillLoopBlock(*sub);
   }
 
   // https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932

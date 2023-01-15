@@ -13,14 +13,14 @@ jobs:
         sudo ./llvm.sh 15 all
         sudo apt install g++-12 libgtest-dev ninja-build pkg-config cmake gcovr
         sudo ln -s $(which opt-15) /usr/local/bin/opt
-    - run: ./configure.debug -DENABLE_TEST_EXCEPTIONS=OFF
+    - run: cmake -G Ninja -S test -B build/test -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 -DCMAKE_BUILD_TYPE=Debug
       env:
         CXX: g++-12
     - run: cmake --build build/test
     - run: cmake --build build/test --target test
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
-    - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_TEST_COVERAGE=1 -DENABLE_TEST_EXCEPTIONS=OFF
+    - run: cmake -G Ninja -S test -B builddirclang/test -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local
       env:
         CXX: clang++-15
     - run: cmake --build builddirclang/test
@@ -40,7 +40,7 @@ jobs:
     - run: brew install llvm@15 ninja pkg-config cmake gcovr # gcc
     - run: echo "/usr/local/opt/llvm/bin" >> $GITHUB_PATH
     - run: echo $(which clang++)
-    - run: ./configure.debug -DCMAKE_PREFIX_PATH=/usr/local -DENABLE_TEST_EXCEPTIONS=OFF
+    - run: cmake -G Ninja -S test -B build/test -DUSE_SANITIZER='Undefined' -DCMAKE_PREFIX_PATH=/usr/local  -DCMAKE_BUILD_TYPE=Debug
       env:
         CXX: clang++
         LDFLAGS: "-L/usr/local/opt/llvm/lib/c++ -Wl,-rpath,/usr/local/opt/llvm/lib/c++ -L/usr/local/opt/llvm/lib"
@@ -63,8 +63,8 @@ jobs:
     # - run: cmake --build builddirgcc/test --target test
     #   env:
     #     CTEST_OUTPUT_ON_FAILURE: 1
-    - run: gcovr --exclude-throw-branches --exclude-unreachable-branches --xml=coverage.xml --json=coverage.json --txt=coverage.txt
-    - uses: codecov/codecov-action@v3
-      with:
-        files: coverage.xml, coverage.json, coverage.txt
+    # - run: gcovr --exclude-throw-branches --exclude-unreachable-branches --xml=coverage.xml --json=coverage.json --txt=coverage.txt
+    # - uses: codecov/codecov-action@v3
+    #   with:
+    #     files: coverage.xml, coverage.json, coverage.txt
 

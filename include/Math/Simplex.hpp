@@ -1,13 +1,15 @@
 #pragma once
 #include "./Constraints.hpp"
-#include "./Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
+#include "Math/Math.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
+#include <llvm/Support/raw_ostream.h>
 #include <tuple>
 
 // #define VERBOSESIMPLEX
@@ -52,18 +54,18 @@ struct Simplex {
   }
   auto addConstraint() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol(), tableau.rowStride());
-    tableau(end, _) = 0;
-    return tableau(end, _(numExtraCols, end));
+    tableau(last, _) = 0;
+    return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintAndVar() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
-    tableau(end, _) = 0;
-    return tableau(end, _(numExtraCols, end));
+    tableau(last, _) = 0;
+    return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
     tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
-    tableau(_(end - i, end), _) = 0;
-    return tableau(_(end - i, end), _(numExtraCols, end));
+    tableau(_(last - i, end), _) = 0;
+    return tableau(_(last - i, end), _(numExtraCols, end));
   }
   void reserve(size_t numCon, size_t numVar) {
     tableau.reserve(
@@ -83,8 +85,7 @@ struct Simplex {
     LinearAlgebra::RowStride newStride =
       max(tableau.numCol() + additionalCols, tableau.rowStride());
     tableau.reserve(tableau.numRow() + additionalRows, newStride);
-    if (newStride == tableau.rowStride())
-      return;
+    if (newStride == tableau.rowStride()) return;
     // copy memory, so that incrementally adding columns is cheap later.
     Col nC = tableau.numCol();
     tableau.resize(tableau.numRow(), nC, newStride);
@@ -203,14 +204,13 @@ struct Simplex {
     // view of tableau dropping const column
     PtrMatrix<int64_t> tableauView;
     StridedVector<int64_t> consts;
-    auto operator()(size_t i) const -> Rational {
+    auto operator[](size_t i) const -> Rational {
       int64_t j = tableauView(0, i);
-      if (j < 0)
-        return 0;
-      return Rational::create(consts(j), tableauView(j + numExtraRows, i));
+      if (j < 0) return 0;
+      return Rational::create(consts[j], tableauView(j + numExtraRows, i));
     }
     template <typename B, typename E>
-    auto operator()(Range<B, E> r) -> Solution {
+    auto operator[](Range<B, E> r) -> Solution {
       return Solution{tableauView(_, r), consts};
     }
     [[nodiscard]] auto size() const -> size_t {
@@ -245,20 +245,16 @@ struct Simplex {
         // close-open and close-close are out, open-open is in
         for (ptrdiff_t v = 1; v < numVar; ++v) {
           if (int64_t Ccv = C(c, v)) {
-            if (((basicCons[v] == -2) && (Ccv > 0)))
-              basicCons[v] = c;
-            else
-              basicCons[v] = -1;
+            if (((basicCons[v] == -2) && (Ccv > 0))) basicCons[v] = c;
+            else basicCons[v] = -1;
           }
         }
       } else {
         Ceq *= -1;
         for (ptrdiff_t v = 1; v < numVar; ++v) {
           if (int64_t Ccv = -C(c, v)) {
-            if (((basicCons[v] == -2) && (Ccv > 0)))
-              basicCons[v] = c;
-            else
-              basicCons[v] = -1;
+            if (((basicCons[v] == -2) && (Ccv > 0))) basicCons[v] = c;
+            else basicCons[v] = -1;
             C(c, v) = Ccv;
           }
         }
@@ -290,64 +286,66 @@ struct Simplex {
 #endif
     llvm::SmallVector<unsigned> augmentVars{};
     for (unsigned i = 0; i < basicVars.size(); ++i)
-      if (basicVars[i] == -1)
-        augmentVars.push_back(i);
-    if (augmentVars.size()) {
-      addVars(augmentVars.size()); // NOTE: invalidates all refs
-      MutPtrMatrix<int64_t> C{getConstraints()};
-      MutStridedVector<int64_t> basicVars{getBasicVariables()};
-      MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-      MutPtrVector<int64_t> costs{getCost()};
-      tableau(1, _) = 0;
-      for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
-        ptrdiff_t a = augmentVars[i];
-        basicVars[a] = i + numVar;
-        basicCons[i + numVar] = a;
-        C(a, numVar + i) = 1;
-        // we now zero out the implicit cost of `1`
-        costs(_(begin, numVar)) -= C(a, _(begin, numVar));
-      }
-      // false/0 means feasible
-      // true/non-zero infeasible
-      if (runCore() != 0)
-        return true;
-      for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
-        if (basicVars(c) >= numVar) {
-          assert(C(c, 0) == 0);
-          assert(c == basicCons(basicVars(c)));
-          assert(C(c, basicVars(c)) >= 0);
-          // find var to make basic in its place
-          for (ptrdiff_t v = numVar; v != 0;) {
-            // search for a non-basic variable
-            // (basicConstraints<0)
-            assert(v > 1);
-            if ((basicCons(--v) >= 0) || (C(c, v) == 0))
-              continue;
-            if (C(c, v) < 0)
-              C(c, _) *= -1;
-            for (size_t i = 0; i < C.numRow(); ++i)
-              if (i != size_t(c))
-                NormalForm::zeroWithRowOperation(C, i, c, v, 0);
-            basicVars[c] = v;
-            basicCons[v] = c;
-            break;
-          }
+      if (basicVars[i] == -1) augmentVars.push_back(i);
+    if (augmentVars.size())
+      if (removeAugmentVars(augmentVars, numVar)) return true;
+#ifndef NDEBUG
+    assertCanonical();
+#endif
+    return false;
+  }
+  auto removeAugmentVars(llvm::ArrayRef<unsigned> augmentVars, ptrdiff_t numVar)
+    -> bool {
+    addVars(augmentVars.size()); // NOTE: invalidates all refs
+    MutPtrMatrix<int64_t> C{getConstraints()};
+    MutStridedVector<int64_t> basicVars{getBasicVariables()};
+    MutPtrVector<int64_t> basicCons{getBasicConstraints()};
+    MutPtrVector<int64_t> costs{getCost()};
+    tableau(1, _) = 0;
+    for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
+      ptrdiff_t a = augmentVars[i];
+      basicVars[a] = i + numVar;
+      basicCons[i + numVar] = a;
+      C(a, numVar + i) = 1;
+      // we now zero out the implicit cost of `1`
+      costs[_(begin, numVar)] -= C(a, _(begin, numVar));
+    }
+    // false/0 means feasible
+    // true/non-zero infeasible
+    if (runCore() != 0) return true;
+    for (ptrdiff_t c = 0; c < C.numRow(); ++c) {
+      if (basicVars[c] >= numVar) {
+        assert(C(c, 0) == 0);
+        assert(c == basicCons[basicVars[c]]);
+        assert(C(c, basicVars[c]) >= 0);
+        // find var to make basic in its place
+        for (ptrdiff_t v = numVar; v != 0;) {
+          // search for a non-basic variable
+          // (basicConstraints<0)
+          assert(v > 1);
+          if ((basicCons[--v] >= 0) || (C(c, v) == 0)) continue;
+          if (C(c, v) < 0) C(c, _) *= -1;
+          for (size_t i = 0; i < C.numRow(); ++i)
+            if (i != size_t(c)) NormalForm::zeroWithRowOperation(C, i, c, v, 0);
+          basicVars[c] = v;
+          basicCons[v] = c;
+          break;
         }
       }
-      // all augment vars are now 0
-      truncateVars(numVar);
     }
-    assertCanonical();
+    // all augment vars are now 0
+    truncateVars(numVar);
     return false;
   }
   // 1 based to match getBasicConstraints
   [[nodiscard]] static auto getEnteringVariable(PtrVector<int64_t> costs)
     -> Optional<unsigned int> {
     // Bland's algorithm; guaranteed to terminate
-    for (unsigned int i = 1; i < costs.size(); ++i)
-      if (costs[i] < 0)
-        return i;
-    return {};
+    auto f = costs.begin();
+    auto l = costs.end();
+    auto neg = std::find_if(f + 1, l, [](int64_t c) { return c < 0; });
+    if (neg == l) return {};
+    return unsigned(std::distance(f, neg));
   }
   [[nodiscard]] static auto getLeavingVariable(MutPtrMatrix<int64_t> C,
                                                size_t enteringVariable)
@@ -361,8 +359,7 @@ struct Simplex {
       int64_t Civ = C(i, enteringVariable);
       if (Civ > 0) {
         int64_t Ci0 = C(i, 0);
-        if (Ci0 == 0)
-          return --i;
+        if (Ci0 == 0) return --i;
         assert(Ci0 > 0);
         if ((n * Ci0) < (Civ * d)) {
           n = Civ;
@@ -379,15 +376,13 @@ struct Simplex {
   auto makeBasic(MutPtrMatrix<int64_t> C, int64_t f,
                  unsigned int enteringVariable) -> int64_t {
     Optional<unsigned int> leaveOpt = getLeavingVariable(C, enteringVariable);
-    if (!leaveOpt)
-      return 0; // unbounded
+    if (!leaveOpt) return 0; // unbounded
     unsigned int leavingVariable = *leaveOpt;
     for (size_t i = 0; i < C.numRow(); ++i)
       if (i != leavingVariable + 1) {
         int64_t m = NormalForm::zeroWithRowOperation(
           C, i, leavingVariable + 1, enteringVariable, i == 0 ? f : 0);
-        if (i == 0)
-          f = m;
+        if (i == 0) f = m;
       }
     // update baisc vars and constraints
     MutStridedVector<int64_t> basicVars{getBasicVariables()};
@@ -411,11 +406,9 @@ struct Simplex {
     while (true) {
       // entering variable is the column
       Optional<unsigned int> enteringVariable = getEnteringVariable(C(0, _));
-      if (!enteringVariable)
-        return Rational::create(C(0, 0), f);
+      if (!enteringVariable) return Rational::create(C(0, 0), f);
       f = makeBasic(C, f, *enteringVariable);
-      if (f == 0)
-        return std::numeric_limits<int64_t>::max(); // unbounded
+      if (f == 0) return std::numeric_limits<int64_t>::max(); // unbounded
     }
   }
   // set basicVar's costs to 0, and then runCore()
@@ -441,24 +434,23 @@ struct Simplex {
     StridedVector<int64_t> basicVars{getBasicVariables()};
     PtrVector<int64_t> basicConstraints{getBasicConstraints()};
     for (size_t v = 1; v < C.numCol(); ++v) {
-      int64_t c = basicConstraints(v);
-      if (c < 0)
-        continue;
+      int64_t c = basicConstraints[v];
+      if (c < 0) continue;
       assert(allZero(C(_(1, 1 + c), v)));
       assert(allZero(C(_(2 + c, end), v)));
-      assert(size_t(basicVars(c)) == v);
+      assert(size_t(basicVars[c]) == v);
     }
     for (size_t c = 1; c < C.numRow(); ++c) {
-      int64_t v = basicVars(c - 1);
+      int64_t v = basicVars[c - 1];
       if (size_t(v) < basicConstraints.size()) {
-        assert(c - 1 == size_t(basicConstraints(v)));
+        assert(c - 1 == size_t(basicConstraints[v]));
         assert(C(c, v) >= 0);
       }
       assert(C(c, 0) >= 0);
     }
   }
-#else
-  static constexpr void assertCanonical() {}
+// #else
+//   static constexpr void assertCanonical() {}
 #endif
 
   // don't touch variables lex < v
@@ -470,12 +462,10 @@ struct Simplex {
       // get new entering variable
       Optional<unsigned int> enteringVariable =
         getEnteringVariable(C(0, _(v, end)));
-      if (!enteringVariable)
-        break;
+      if (!enteringVariable) break;
       auto ev = *enteringVariable + v;
       auto leaveOpt = getLeavingVariable(C, ev);
-      if (!leaveOpt)
-        break;
+      if (!leaveOpt) break;
       unsigned int _leavingVariable = *leaveOpt;
       unsigned int leavingVariable = _leavingVariable++;
       for (size_t i = 0; i < C.numRow(); ++i)
@@ -500,9 +490,8 @@ struct Simplex {
 #endif
     MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
     MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
-    int64_t c = basicConstraints(v);
-    if (c < 0)
-      return false;
+    int64_t c = basicConstraints[v];
+    if (c < 0) return false;
     // we try to zero `v` or at least minimize it.
     // implicitly, set cost to -1, and then see if we can make it
     // basic
@@ -519,21 +508,19 @@ struct Simplex {
     MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
     MutStridedVector<int64_t> basicVars{getBasicVariables()};
     MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
-    int64_t c = basicConstraints(v);
+    int64_t c = basicConstraints[v];
     int64_t cc = c++;
-    if ((cc < 0) || (C(c, 0)))
-      return cc >= 0;
-    // search for entering variable
+    if ((cc < 0) || (C(c, 0))) return cc >= 0;
+// search for entering variable
+#ifndef NDEBUG
     assertCanonical();
+#endif
     for (auto ev = ptrdiff_t(C.numCol()); ev > v + 1;) {
       // search for a non-basic variable (basicConstraints<0)
-      if ((basicConstraints(--ev) >= 0) || (C(c, ev) == 0))
-        continue;
-      if (C(c, ev) < 0)
-        C(c, _) *= -1;
+      if ((basicConstraints[--ev] >= 0) || (C(c, ev) == 0)) continue;
+      if (C(c, ev) < 0) C(c, _) *= -1;
       for (size_t i = 1; i < C.numRow(); ++i)
-        if (i != size_t(c))
-          NormalForm::zeroWithRowOperation(C, i, c, ev, 0);
+        if (i != size_t(c)) NormalForm::zeroWithRowOperation(C, i, c, ev, 0);
       int64_t oldBasicVar = basicVars[cc];
       assert(oldBasicVar == int64_t(v));
       basicVars[cc] = ev;
@@ -542,7 +529,9 @@ struct Simplex {
       basicConstraints[ev] = cc;
       break;
     }
+#ifndef NDEBUG
     assertCanonical();
+#endif
     return false;
   }
   // lex min the range [l, u), not touching any variable lex < l
@@ -559,13 +548,11 @@ struct Simplex {
     //     C(0, v) = (u - l) + u - v;
     C(0, _(l, u)) = 1;
     for (size_t v = l; v < u; ++v) {
-      int64_t c = basicConstraints(v);
-      if (c >= 0)
-        NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);
+      int64_t c = basicConstraints[v];
+      if (c >= 0) NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);
     }
     lexCoreOpt(l - 1);
-    for (size_t v = l; v < u; ++v)
-      makeZeroBasic(v);
+    for (size_t v = l; v < u; ++v) makeZeroBasic(v);
   }
   void lexMinimize(Range<size_t, size_t> r) { lexMinimize(r.b, r.e); }
   // lexicographically minimize vars [0, numVars)
@@ -575,18 +562,19 @@ struct Simplex {
     assert(inCanonicalForm);
     assertCanonical();
 #endif
-    for (size_t v = 0; v < sol.size();)
-      lexMinimize(++v);
+    for (size_t v = 0; v < sol.size();) lexMinimize(++v);
     copySolution(sol);
+#ifndef NDEBUG
     assertCanonical();
+#endif
   }
   void copySolution(Vector<Rational> &sol) {
     MutPtrMatrix<int64_t> C{getConstraints()};
     MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
     for (size_t v = 0; v < sol.size();) {
       size_t sv = v++;
-      int64_t c = basicConstraints(v);
-      sol(sv) = c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
+      int64_t c = basicConstraints[v];
+      sol[sv] = c >= 0 ? Rational::create(C(c, 0), C(c, v)) : Rational{0, 1};
     }
   }
   // A(:,1:end)*x <= A(:,0)
@@ -595,15 +583,14 @@ struct Simplex {
   static auto positiveVariables(PtrMatrix<int64_t> A, PtrMatrix<int64_t> B)
     -> std::optional<Simplex> {
     size_t numVar = size_t(A.numCol());
-    assert(numVar == B.numCol());
+    assert(numVar == size_t(B.numCol()));
     Simplex simplex{};
     size_t numSlack = simplex.numSlackVar = size_t(A.numRow());
     size_t numStrict = size_t(B.numRow());
     size_t numCon = numSlack + numStrict;
     size_t extraStride = 0;
     // see how many slack vars are infeasible as solution
-    for (unsigned i = 0; i < numSlack; ++i)
-      extraStride += A(i, 0) < 0;
+    for (unsigned i = 0; i < numSlack; ++i) extraStride += A(i, 0) < 0;
     // try to avoid reallocating
     size_t stride = numVar + numCon + extraStride + 2;
     simplex.resizeForOverwrite(numCon, numVar + numSlack, stride);
@@ -615,12 +602,9 @@ struct Simplex {
       simplex.getConstraints()(_(0, numCon), _(1, numVar + numSlack)),
       A(_(0, numSlack), _(1, numVar)), B(_(0, numStrict), _(1, numVar)));
     auto consts{simplex.getConstants()};
-    for (size_t i = 0; i < numSlack; ++i)
-      consts[i] = A(i, 0);
-    for (size_t i = 0; i < numStrict; ++i)
-      consts[i + numSlack] = B(i, 0);
-    if (simplex.initiateFeasible())
-      return {};
+    for (size_t i = 0; i < numSlack; ++i) consts[i] = A(i, 0);
+    for (size_t i = 0; i < numStrict; ++i) consts[i + numSlack] = B(i, 0);
+    if (simplex.initiateFeasible()) return {};
     return simplex;
   }
 
@@ -633,8 +617,7 @@ struct Simplex {
       MutPtrVector<int64_t> cost = simplex.getCost();
       for (size_t v = numSlackVar; v < cost.size(); ++v)
         cost[v] = -constraints(c, v);
-      if (simplex.run() != bumpedBound)
-        deleteConstraint(c--); // redundant
+      if (simplex.run() != bumpedBound) deleteConstraint(c--); // redundant
     }
   }
 
@@ -644,12 +627,10 @@ struct Simplex {
     MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
     MutPtrMatrix<int64_t> C{getConstraints()};
     // ensure sure `i` is basic
-    if (basicConstraints[i] < 0)
-      makeBasic(C, 0, i);
+    if (basicConstraints[i] < 0) makeBasic(C, 0, i);
     size_t ind = basicConstraints[i];
     size_t lastRow = size_t(C.numRow() - 1);
-    if (lastRow != ind)
-      swap(C, Row{ind}, Row{lastRow});
+    if (lastRow != ind) swap(C, Row{ind}, Row{lastRow});
     truncateConstraints(lastRow);
   }
   void removeExtraVariables(size_t i) {
@@ -661,8 +642,7 @@ struct Simplex {
   static auto toMask(PtrVector<int64_t> x) -> uint64_t {
     assert(x.size() <= 64);
     uint64_t m = 0;
-    for (auto y : x)
-      m = ((m << 1) | (y != 0));
+    for (auto y : x) m = ((m << 1) | (y != 0));
     return m;
   }
   [[nodiscard]] auto getBasicTrueVarMask() const -> uint64_t {
@@ -681,8 +661,7 @@ struct Simplex {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
-      if (y < 0)
-        return true;
+      if (y < 0) return true;
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
@@ -715,8 +694,7 @@ struct Simplex {
     // is it a valid solution to set the first `x.size()` variables to
     // `x`? first, check that >= 0 constraint is satisfied
     for (auto y : x)
-      if (y < 0)
-        return true;
+      if (y < 0) return true;
     // approach will be to move `x.size()` variables into the
     // equality constraints, and then check if the remaining sub-problem
     // is satisfiable.
@@ -748,9 +726,8 @@ struct Simplex {
     auto basicVars{getBasicVariables()};
     // llvm::errs() << "Simplex solution:" << "\n";
     for (size_t i = 0; i < basicVars.size(); ++i) {
-      size_t v = basicVars(i);
-      if (v <= numSlackVar)
-        continue;
+      size_t v = basicVars[i];
+      if (v <= numSlackVar) continue;
       if (C(i, 0)) {
         if (v < C.numCol()) {
           llvm::errs() << "v_" << v - numSlackVar << " = " << C(i, 0) << " / "
@@ -1018,3 +995,4 @@ struct Simplex {
   }
   */
 };
+static_assert(AbstractVector<Simplex::Solution>);

@@ -1,3 +1,6 @@
 #!/bin/bash
 
-cmake -G Ninja -S test -B build/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER='Undefined' -DENABLE_TEST_COVERAGE=1 "$@"
+sanitizers='Undefined'
+# sanitizers='Address;Undefined'
+CXXFLAGS="" CXX=g++ cmake -G Ninja -S test -B buildgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER=$sanitizers -DENABLE_TEST_COVERAGE=1 "$@"
+CXXFLAGS="" CXX=clang++ cmake -G Ninja -S test -B buildclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER=$sanitizers "$@"

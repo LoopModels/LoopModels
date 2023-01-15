@@ -1,11 +1,11 @@
 #pragma once
 
-#include "./Comparators.hpp"
-#include "./Constraints.hpp"
-#include "./EmptyArrays.hpp"
-#include "./Math.hpp"
-#include "./NormalForm.hpp"
-#include "VectorGreatestCommonDivisor.hpp"
+#include "Math/Comparators.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
+#include "Math/VectorGreatestCommonDivisor.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -19,8 +19,7 @@
 
 inline auto printPositive(llvm::raw_ostream &os, size_t stop)
   -> llvm::raw_ostream & {
-  for (size_t i = 0; i < stop; ++i)
-    os << "v_" << i << " >= 0\n";
+  for (size_t i = 0; i < stop; ++i) os << "v_" << i << " >= 0\n";
   return os;
 }
 
@@ -66,52 +65,46 @@ struct Polyhedra {
   // constants, loop vars, symbolic vars
   // this is because of hnf prioritizing diagonalizing leading rows
   // empty fields sorted first to make it easier for compiler to alias them
-  [[no_unique_address]] I64Matrix E;
-  [[no_unique_address]] SymbolVec S;
-  [[no_unique_address]] IntMatrix A;
-  [[no_unique_address]] CmptrType C;
+  [[no_unique_address]] I64Matrix E{};
+  [[no_unique_address]] SymbolVec S{};
+  [[no_unique_address]] IntMatrix A{};
+  [[no_unique_address]] CmptrType C{};
 
   static constexpr bool hasEqualities =
     !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
   Polyhedra() = default;
   Polyhedra(IntMatrix Ain)
-    : E{}, A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
+    : A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
   Polyhedra(IntMatrix Ain, I64Matrix Ein)
     : E(std::move(Ein)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, SymbolVec S)
-    : E{}, S(std::move(S)), A(std::move(Ain)),
+  Polyhedra(IntMatrix Ain, SymbolVec SV)
+    : S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec S)
-    : E(std::move(Ein)), S(std::move(S)), A(std::move(Ain)),
+  Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
+    : E(std::move(Ein)), S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
 
   inline void initializeComparator() {
-    if constexpr (NonNegative)
-      C.initNonNegative(A, E, getNumDynamic());
-    else
-      C.init(A, E);
+    if constexpr (NonNegative) C.initNonNegative(A, E, getNumDynamic());
+    else C.init(A, E);
   }
   auto calcIsEmpty() -> bool { return C.isEmpty(); }
   void pruneBounds() {
     if (calcIsEmpty()) {
       A.truncate(Row{0});
-      if constexpr (hasEqualities)
-        E.truncate(Row{0});
-    } else
-      pruneBoundsUnchecked();
+      if constexpr (hasEqualities) E.truncate(Row{0});
+    } else pruneBoundsUnchecked();
   }
   void pruneBoundsUnchecked() {
     const size_t dyn = getNumDynamic();
     Vector<int64_t> diff{size_t(A.numCol())};
-    if constexpr (hasEqualities)
-      removeRedundantRows(A, E);
+    if constexpr (hasEqualities) removeRedundantRows(A, E);
     for (auto j = size_t(A.numRow()); j;) {
       bool broke = false;
       for (size_t i = --j; i;) {
-        if (A.numRow() <= 1)
-          return;
+        if (A.numRow() <= 1) return;
         diff = A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(A, i);
@@ -128,7 +121,7 @@ struct Polyhedra {
         if (!broke) {
           for (size_t i = 0; i < dyn; ++i) {
             diff = A(j, _);
-            --diff(end - i);
+            --diff[last - i];
             if (C.greaterEqual(diff)) {
               eraseConstraint(A, j);
               initializeComparator();
@@ -139,8 +132,7 @@ struct Polyhedra {
       }
     }
     if constexpr (hasEqualities)
-      for (size_t i = 0; i < E.numRow(); ++i)
-        normalizeByGCD(E(i, _));
+      for (size_t i = 0; i < E.numRow(); ++i) normalizeByGCD(E(i, _));
   }
 
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
@@ -199,18 +191,13 @@ struct Polyhedra {
   void removeVariable(const size_t i) {
     if constexpr (hasEqualities) {
       if (substituteEquality(A, E, i)) {
-        if constexpr (NonNegative)
-          fourierMotzkinNonNegative(A, i);
-        else
-          fourierMotzkin(A, i);
+        if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
+        else fourierMotzkin(A, i);
       }
-      if (E.numRow() > 1)
-        NormalForm::simplifySystem(E);
+      if (E.numRow() > 1) NormalForm::simplifySystem(E);
     }
-    if constexpr (NonNegative)
-      fourierMotzkinNonNegative(A, i);
-    else
-      fourierMotzkin(A, i);
+    if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
+    else fourierMotzkin(A, i);
   }
   void removeVariableAndPrune(const size_t i) {
     removeVariable(i);
@@ -219,16 +206,14 @@ struct Polyhedra {
 
   void dropEmptyConstraints() {
     dropEmptyConstraints(A);
-    if constexpr (hasEqualities)
-      dropEmptyConstraints(E);
+    if constexpr (hasEqualities) dropEmptyConstraints(E);
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
     -> llvm::raw_ostream & {
     auto &&os2 =
       printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());
-    if constexpr (NonNegative)
-      printPositive(os2, p.getNumDynamic());
+    if constexpr (NonNegative) printPositive(os2, p.getNumDynamic());
     if constexpr (hasEqualities)
       return printConstraints(os2, p.E, llvm::ArrayRef<const llvm::SCEV *>(),
                               false);
@@ -245,8 +230,7 @@ struct Polyhedra {
     // return false;
   }
   void truncateVars(size_t numVar) {
-    if constexpr (hasEqualities)
-      E.truncate(Col{numVar});
+    if constexpr (hasEqualities) E.truncate(Col{numVar});
     A.truncate(Col{numVar});
   }
 };

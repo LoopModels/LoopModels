@@ -60,8 +60,7 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
   LI = &FAM.getResult<llvm::LoopAnalysis>(F);
   SE = &FAM.getResult<llvm::ScalarEvolutionAnalysis>(F);
   ORE = &FAM.getResult<llvm::OptimizationRemarkEmitterAnalysis>(F);
-  if (!ORE->enabled())
-    ORE = nullptr; // cheaper check
+  if (!ORE->enabled()) ORE = nullptr; // cheaper check
   if (ORE) {
     // llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis("RegisterCount",
     // *LI->begin())}; ORE->emit(analysis << "There are
@@ -80,19 +79,20 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
 
   // Builds the loopForest, constructing predicate chains and loop nests
   initializeLoopForest();
-  if (loopForests.empty())
-    return llvm::PreservedAnalyses::all();
+  if (loopForests.empty()) return llvm::PreservedAnalyses::all();
 
   // first, we try and parse the function to find sets of loop nests
   // then we search for sets of fusile loops
 
   // fills array refs
   parseNest();
-
+  bool changed = false;
   // TODO: fill schedules
   for (auto forest : loopForests) {
     fillLoopBlock(*forest);
-    std::optional<BitSet<>> optDeps = loopBlock.optimize();
+    std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
+    // NOTE: we're not actually changing anything yet
+    changed |= optDeps.has_value();
     if (ORE) {
       if (optDeps) {
         llvm::SmallVector<char, 512> str;
@@ -106,7 +106,8 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
     }
     loopBlock.clear();
   }
-  return llvm::PreservedAnalyses::none();
+  return changed ? llvm::PreservedAnalyses::none()
+                 : llvm::PreservedAnalyses::all();
 }
 auto __attribute__((visibility("default")))
 PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,

@@ -18,8 +18,7 @@ inline auto printRange(llvm::raw_ostream &os, AbstractRange auto &r)
   os << "[ ";
   bool needComma = false;
   for (auto x : r) {
-    if (needComma)
-      os << ", ";
+    if (needComma) os << ", ";
     os << x;
     needComma = true;
   }
@@ -60,16 +59,14 @@ concept AbstractGraph =
                       };
 
 inline void clearVisited(AbstractGraph auto &g) {
-  for (auto &&v : g)
-    v.unVisit();
+  for (auto &&v : g) v.unVisit();
 }
 
 inline void weakVisit(AbstractGraph auto &g,
                       llvm::SmallVectorImpl<unsigned> &sorted, unsigned v) {
   g.visit(v);
   for (auto j : g.outNeighbors(v))
-    if (!g.wasVisited(j))
-      weakVisit(g, sorted, j);
+    if (!g.wasVisited(j)) weakVisit(g, sorted, j);
   sorted.push_back(v);
 }
 
@@ -77,8 +74,7 @@ inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
   llvm::SmallVector<llvm::SmallVector<unsigned>> components;
   g.clearVisited();
   for (auto j : g.vertexIds()) {
-    if (g.wasVisited(j))
-      continue;
+    if (g.wasVisited(j)) continue;
     components.emplace_back();
     llvm::SmallVector<unsigned> &sorted = components.back();
     weakVisit(g, sorted, j);
@@ -87,8 +83,9 @@ inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
   return components;
 }
 
+template <typename B>
 inline auto
-strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
+strongConnect(AbstractGraph auto &g, llvm::SmallVectorImpl<B> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                 indexLowLinkOnStack,
@@ -105,7 +102,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
         vll = std::min(vll, wIndex);
       }
     } else { // not visited
-      strongConnect(g, components, stack, indexLowLinkOnStack, index, w);
+      strongConnect<B>(g, components, stack, indexLowLinkOnStack, index, w);
       unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
       vll = std::min(vll, std::get<1>(indexLowLinkOnStack[w]));
     }
@@ -113,7 +110,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
   if (vIndex == vLowLink) {
     components.emplace_back();
-    BitSet<> &component = components.back();
+    B &component = components.back();
     unsigned w;
     do {
       w = stack.back();
@@ -125,11 +122,11 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   return index;
 }
 
-inline auto stronglyConnectedComponents(AbstractGraph auto &g)
-  -> llvm::SmallVector<BitSet<>> {
-  llvm::SmallVector<BitSet<>> components;
+template <typename B>
+inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
+                                        AbstractGraph auto &g) {
   size_t maxId = g.maxVertexId();
-  components.reserve(maxId);
+  cmpts.reserve(maxId);
   llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
     maxId);
   llvm::SmallVector<unsigned> stack;
@@ -137,8 +134,12 @@ inline auto stronglyConnectedComponents(AbstractGraph auto &g)
   clearVisited(g);
   for (auto v : g.vertexIds())
     if (!g.wasVisited(v))
-      index =
-        strongConnect(g, components, stack, indexLowLinkOnStack, index, v);
+      index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
+}
+inline auto stronglyConnectedComponents(AbstractGraph auto &g)
+  -> llvm::SmallVector<BitSet<>> {
+  llvm::SmallVector<BitSet<>> components;
+  stronglyConnectedComponents(components, g);
   return components;
 }
 
