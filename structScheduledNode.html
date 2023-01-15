@@ -62,6 +62,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="structScheduledNode-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -71,6 +72,12 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="LoopBlock_8hpp_source.html">LoopBlock.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a5ff521c464caf98a8a4c3a7a72ba42a7"><td class="memItemLeft" align="right" valign="top"><a id="a5ff521c464caf98a8a4c3a7a72ba42a7"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>BitSet</b> = ::MemoryAccess::BitSet</td></tr>
+<tr class="separator:a5ff521c464caf98a8a4c3a7a72ba42a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a4663ea40276508a876f294b5e70ce768"><td class="memItemLeft" align="right" valign="top"><a id="a4663ea40276508a876f294b5e70ce768"></a>
@@ -79,27 +86,27 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a53de695712a758f29c53f500ed87a843"><td class="memItemLeft" align="right" valign="top"><a id="a53de695712a758f29c53f500ed87a843"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemAccesses</b> (llvm::BumpPtrAllocator &amp;alloc, llvm::ArrayRef&lt; <a class="el" href="structMemoryAccess.html">MemoryAccess</a> * &gt; memAccess) const -&gt; llvm::SmallVector&lt; <a class="el" href="structAddress.html">Address</a> * &gt;</td></tr>
 <tr class="separator:a53de695712a758f29c53f500ed87a843"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memItemLeft" align="right" valign="top"><a id="a11fd25bf0026933478ec6d6ffc6d65af"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a11fd25bf0026933478ec6d6ffc6d65af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e3b188f31713fa4befee3a0bc7837be"><td class="memItemLeft" align="right" valign="top"><a id="a6e3b188f31713fa4befee3a0bc7837be"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a6e3b188f31713fa4befee3a0bc7837be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a600fa652111ca102c725b7d57b6d05b5"><td class="memItemLeft" align="right" valign="top"><a id="a600fa652111ca102c725b7d57b6d05b5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a600fa652111ca102c725b7d57b6d05b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ed85a9e3b62c3e67839363608b721f2"><td class="memItemLeft" align="right" valign="top"><a id="a5ed85a9e3b62c3e67839363608b721f2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:a5ed85a9e3b62c3e67839363608b721f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9030ec235927b348db84e9067e1ed1d"><td class="memItemLeft" align="right" valign="top"><a id="ad9030ec235927b348db84e9067e1ed1d"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:ad9030ec235927b348db84e9067e1ed1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memItemLeft" align="right" valign="top"><a id="a6ca19cb14a3e0d62c3a9fd03b4a58e24"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () -&gt; <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:a6ca19cb14a3e0d62c3a9fd03b4a58e24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a525c534cdc84dd44711de39e3823c32d"><td class="memItemLeft" align="right" valign="top"><a id="a525c534cdc84dd44711de39e3823c32d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
 <tr class="separator:a525c534cdc84dd44711de39e3823c32d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7abc4650779e8af6748d91932497482d"><td class="memItemLeft" align="right" valign="top"><a id="a7abc4650779e8af6748d91932497482d"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a7abc4650779e8af6748d91932497482d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3e647a125bbfe2c8d7f7de34289de1ac"><td class="memItemLeft" align="right" valign="top"><a id="a3e647a125bbfe2c8d7f7de34289de1ac"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:a3e647a125bbfe2c8d7f7de34289de1ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe8c28743911a980c25bd275bf5d80f2"><td class="memItemLeft" align="right" valign="top"><a id="afe8c28743911a980c25bd275bf5d80f2"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a>&lt;&gt; &amp;</td></tr>
-<tr class="separator:afe8c28743911a980c25bd275bf5d80f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d3b676ee20d32d1d58f3788d841c593"><td class="memItemLeft" align="right" valign="top"><a id="a3d3b676ee20d32d1d58f3788d841c593"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMemory</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:a3d3b676ee20d32d1d58f3788d841c593"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad546ad19cff637815d27255ab592e2b7"><td class="memItemLeft" align="right" valign="top"><a id="ad546ad19cff637815d27255ab592e2b7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getInNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:ad546ad19cff637815d27255ab592e2b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7027ac308c1fbec90347b36dcd395dcd"><td class="memItemLeft" align="right" valign="top"><a id="a7027ac308c1fbec90347b36dcd395dcd"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOutNeighbors</b> () const -&gt; const <a class="el" href="structBitSet.html">BitSet</a> &amp;</td></tr>
+<tr class="separator:a7027ac308c1fbec90347b36dcd395dcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4082b21c45377cf583cd9b03dc857ed5"><td class="memItemLeft" align="right" valign="top"><a id="a4082b21c45377cf583cd9b03dc857ed5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () const -&gt; const <a class="el" href="structSchedule.html">Schedule</a> &amp;</td></tr>
 <tr class="separator:a4082b21c45377cf583cd9b03dc857ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
