@@ -1,8 +1,8 @@
 #pragma once
-#include "./Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "Loops.hpp"
-#include "Utilities.hpp"
+#include "Math/Math.hpp"
+#include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/Support/Allocator.h>

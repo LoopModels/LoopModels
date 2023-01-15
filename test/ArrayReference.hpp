@@ -2,7 +2,7 @@
 #pragma once
 #include "../include/Loops.hpp"
 #include "../include/MemoryAccess.hpp"
-#include "Math.hpp"
+#include "Math/Math.hpp"
 #include <cstdint>
 #include <llvm/Support/Allocator.h>
 

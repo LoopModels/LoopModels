@@ -1,12 +1,12 @@
 #pragma once
 
-#include "./Comparators.hpp"
-#include "./Constraints.hpp"
-#include "./EmptyArrays.hpp"
-#include "./Math.hpp"
-#include "./Polyhedra.hpp"
 #include "./RemarkAnalysis.hpp"
-#include "./Utilities.hpp"
+#include "Math/Comparators.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/Math.hpp"
+#include "Math/Polyhedra.hpp"
+#include "Utilities/Optional.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>

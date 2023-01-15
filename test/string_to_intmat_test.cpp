@@ -1,5 +1,5 @@
-#include "../include/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
+#include "Math/Math.hpp"
 #include <cstdio>
 #include <gtest/gtest.h>
 

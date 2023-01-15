@@ -1,5 +1,5 @@
 #pragma once
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include "./VectorGreatestCommonDivisor.hpp"

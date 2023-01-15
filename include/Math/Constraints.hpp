@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "./EmptyArrays.hpp"
-#include "./Math.hpp"
-#include "./NormalForm.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <llvm/Analysis/ScalarEvolution.h>

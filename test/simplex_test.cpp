@@ -1,6 +1,6 @@
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "../include/Simplex.hpp"
+#include "Math/Math.hpp"
+#include "Math/Simplex.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstddef>
 #include <gtest/gtest.h>
 #include <numeric>

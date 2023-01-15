@@ -1,6 +1,6 @@
 #pragma once
 #include "./BitSets.hpp"
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>

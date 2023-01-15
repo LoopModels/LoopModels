@@ -5,7 +5,7 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
 #include <algorithm>

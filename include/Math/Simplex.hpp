@@ -1,6 +1,6 @@
 #pragma once
 #include "./Constraints.hpp"
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
 #include <bit>

@@ -1,8 +1,8 @@
-#include "../include/Constraints.hpp"
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "./TestUtilities.hpp"
+#include "Loops.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
+#include "TestUtilities.hpp"
 #include <cstdint>
 #include <cstdio>
 #include <gtest/gtest.h>

@@ -1,8 +1,9 @@
 #pragma once
-#include "./EmptyArrays.hpp"
-#include "./GreatestCommonDivisor.hpp"
-#include "./Math.hpp"
-#include "./VectorGreatestCommonDivisor.hpp"
+#include "Math/Comparisons.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/GreatestCommonDivisor.hpp"
+#include "Math/Math.hpp"
+#include "Math/VectorGreatestCommonDivisor.hpp"
 #include <concepts>
 #include <cstddef>
 #include <cstdint>

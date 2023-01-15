@@ -1,5 +1,5 @@
 #pragma once
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include <cstddef>
 #include <llvm/ADT/SmallVector.h>
 

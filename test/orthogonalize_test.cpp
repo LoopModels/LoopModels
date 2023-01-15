@@ -1,9 +1,10 @@
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "../include/Orthogonalize.hpp"
-#include "./ArrayReference.hpp"
-#include "./TestUtilities.hpp"
+#include "ArrayReference.hpp"
+#include "Loops.hpp"
+#include "Math/Comparisons.hpp"
+#include "Math/Math.hpp"
+#include "Math/Orthogonalize.hpp"
+#include "MatrixStringParse.hpp"
+#include "TestUtilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>

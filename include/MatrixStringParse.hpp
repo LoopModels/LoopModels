@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

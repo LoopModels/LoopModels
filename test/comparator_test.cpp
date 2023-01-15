@@ -1,6 +1,6 @@
-#include "../include/Comparators.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
+#include "Math/Comparators.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>

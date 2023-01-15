@@ -26,18 +26,21 @@ if(benchmark_ADDED)
   set_target_properties(benchmark PROPERTIES CXX_STANDARD 11)
 endif()
 
+# file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 
 find_package(LLVM 15 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(${LLVM_DIR}/AddLLVM.cmake)
-
+# message(STATUS "headers: ${headers}")
+# add_executable(${PROJECT_NAME} ${headers} ${benchmarks})
 add_executable(${PROJECT_NAME} ${benchmarks})
 
 message(STATUS "PROJECT_BINARY_DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include ${LLVM_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -53,7 +56,12 @@ if(ENABLE_NATIVE_COMPILATION)
     target_compile_options(${PROJECT_NAME} PRIVATE -mprefer-vector-width=512)
   endif()
 endif()
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+set_target_properties(
+  ${PROJECT_NAME}
+  PROPERTIES CXX_STANDARD 20
+             CXX_VISIBILITY_PRESET hidden
+             VISIBILITY_INLINES_HIDDEN ON
+)
 set_target_properties(
   ${PROJECT_NAME} PROPERTIES ENVIRONMENT WORKING_DIRECTORY=${PROJECT_BINARY_DIR}
 )

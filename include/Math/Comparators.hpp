@@ -1,11 +1,11 @@
 #pragma once
 
-#include "./Constraints.hpp"
-#include "./EmptyArrays.hpp"
-#include "./Math.hpp"
-#include "./NormalForm.hpp"
-#include "./Simplex.hpp"
-#include "./VectorGreatestCommonDivisor.hpp"
+#include "Math/Constraints.hpp"
+#include "Math/EmptyArrays.hpp"
+#include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
+#include "Math/Simplex.hpp"
+#include "Math/VectorGreatestCommonDivisor.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>

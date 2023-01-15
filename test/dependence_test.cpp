@@ -1,11 +1,11 @@
-#include "../include/DependencyPolyhedra.hpp"
-#include "../include/LoopBlock.hpp"
-#include "../include/Loops.hpp"
-#include "../include/Math.hpp"
-#include "../include/MatrixStringParse.hpp"
-#include "../include/MemoryAccess.hpp"
 #include "./ArrayReference.hpp"
 #include "./TestUtilities.hpp"
+#include "DependencyPolyhedra.hpp"
+#include "LoopBlock.hpp"
+#include "Loops.hpp"
+#include "Math/Math.hpp"
+#include "MatrixStringParse.hpp"
+#include "MemoryAccess.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -860,7 +860,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
     }
   }
 
-  std::optional<BitSet<>> optDeps = lblock.optimize();
+  std::optional<BitSet<std::array<uint64_t, 2>>> optDeps = lblock.optimize();
   EXPECT_TRUE(optDeps.has_value());
   // orig order (inner <-> outer): n, m
   IntMatrix optPhi2(2, 2);
@@ -1146,7 +1146,8 @@ TEST(MeanStDevTest0, BasicAssertions) {
     EXPECT_FALSE(dt3);
     EXPECT_FALSE(d3->isForward());
   }
-  std::optional<BitSet<>> optDeps = iOuterLoopNest.optimize();
+  std::optional<BitSet<std::array<uint64_t, 2>>> optDeps =
+    iOuterLoopNest.optimize();
   EXPECT_TRUE(optDeps.has_value());
   llvm::DenseMap<MemoryAccess *, size_t> memAccessIds;
   llvm::MutableArrayRef<MemoryAccess *> mem =
@@ -1589,7 +1590,7 @@ TEST(ConvReversePass, BasicAssertions) {
   MemoryAccess *msch_3(createMemAccess(alloc, CmijnInd, Cstore, sch_3));
   loopBlock.addMemory(msch_3);
 
-  std::optional<BitSet<>> optRes = loopBlock.optimize();
+  std::optional<BitSet<std::array<uint64_t, 2>>> optRes = loopBlock.optimize();
   EXPECT_TRUE(optRes.has_value());
   for (auto &mem : loopBlock.getMemoryAccesses()) {
     llvm::errs() << "mem->nodeIndex: " << mem->getNodeIndex() << "; ";

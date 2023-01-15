@@ -1,13 +1,14 @@
 #pragma once
 
 #include "./Loops.hpp"
-#include "./Math.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Orthogonalize.hpp"
-#include "./Polyhedra.hpp"
 #include "./Schedule.hpp"
-#include "./Simplex.hpp"
-#include "./Utilities.hpp"
+#include "Math/Comparisons.hpp"
+#include "Math/Math.hpp"
+#include "Math/Orthogonalize.hpp"
+#include "Math/Polyhedra.hpp"
+#include "Math/Simplex.hpp"
+#include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -64,12 +65,12 @@ struct DependencePolyhedra : SymbolicEqPolyhedra {
   }
   [[nodiscard]] auto getCompTimeInEqOffset(size_t i) const
     -> std::optional<int64_t> {
-    if (!LinearAlgebra::allZero(A(i, _(1, getNumSymbols())))) return {};
+    if (!allZero(A(i, _(1, getNumSymbols())))) return {};
     return A(i, 0);
   }
   [[nodiscard]] auto getCompTimeEqOffset(size_t i) const
     -> std::optional<int64_t> {
-    if (!LinearAlgebra::allZero(E(i, _(1, getNumSymbols())))) return {};
+    if (!allZero(E(i, _(1, getNumSymbols())))) return {};
     return E(i, 0);
   }
 

@@ -1,4 +1,4 @@
-#include "../include/Math.hpp"
+#include "../include/Math/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
 #include "gtest/gtest.h"
 #include <cstddef>

@@ -4,13 +4,14 @@
 #include "./BitSets.hpp"
 #include "./DependencyPolyhedra.hpp"
 #include "./Graphs.hpp"
-#include "./Math.hpp"
+#include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
-#include "./NormalForm.hpp"
 #include "./Schedule.hpp"
-#include "./Simplex.hpp"
-#include "./Utilities.hpp"
-#include "Loops.hpp"
+#include "Math/Math.hpp"
+#include "Math/NormalForm.hpp"
+#include "Math/Simplex.hpp"
+#include "Utilities/Optional.hpp"
+#include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -523,8 +524,8 @@ public:
   }
   struct Graph {
     // a subset of Nodes
-    BitSet nodeIds;
-    BitSet activeEdges;
+    BitSet nodeIds{};
+    BitSet activeEdges{};
     llvm::MutableArrayRef<MemoryAccess *> mem;
     llvm::MutableArrayRef<ScheduledNode> nodes;
     llvm::ArrayRef<NotNull<Dependence>> edges;
@@ -1308,7 +1309,6 @@ public:
       os << v << "\n";
     }
     // BitSet
-    // memNodesWithOutEdges{BitSet::dense(lblock.memory.size())};
     os << "\nLoopBlock Edges (#edges = " << lblock.edges.size() << "):";
     for (auto &edge : lblock.edges) {
       os << "\n\tEdge = " << *edge;

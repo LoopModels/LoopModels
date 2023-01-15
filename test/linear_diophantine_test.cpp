@@ -1,4 +1,4 @@
-#include "../include/LinearDiophantine.hpp"
+#include "Math/LinearDiophantine.hpp"
 #include <algorithm>
 #include <cstdint>
 #include <gtest/gtest.h>

@@ -122,17 +122,11 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVectorImpl<B> &components,
   return index;
 }
 
-inline auto stronglyConnectedComponents(AbstractGraph auto &g)
-  -> llvm::SmallVector<BitSet<>> {
-  llvm::SmallVector<BitSet<>> components;
-  stronglyConnectedComponents(components, g);
-  return components;
-}
 template <typename B>
-inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &components,
+inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &cmpts,
                                         AbstractGraph auto &g) {
   size_t maxId = g.maxVertexId();
-  components.reserve(maxId);
+  cmpts.reserve(maxId);
   llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(
     maxId);
   llvm::SmallVector<unsigned> stack;
@@ -140,8 +134,12 @@ inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &components,
   clearVisited(g);
   for (auto v : g.vertexIds())
     if (!g.wasVisited(v))
-      index =
-        strongConnect(g, components, stack, indexLowLinkOnStack, index, v);
+      index = strongConnect(g, cmpts, stack, indexLowLinkOnStack, index, v);
+}
+inline auto stronglyConnectedComponents(AbstractGraph auto &g)
+  -> llvm::SmallVector<BitSet<>> {
+  llvm::SmallVector<BitSet<>> components;
+  stronglyConnectedComponents(components, g);
   return components;
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "./Loops.hpp"
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 #include <cstdint>
 #include <llvm/ADT/SmallPtrSet.h>
 #include <llvm/ADT/Triple.h>

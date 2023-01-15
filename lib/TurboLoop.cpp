@@ -86,11 +86,13 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
 
   // fills array refs
   parseNest();
-
+  bool changed = false;
   // TODO: fill schedules
   for (auto forest : loopForests) {
     fillLoopBlock(*forest);
-    std::optional<BitSet<>> optDeps = loopBlock.optimize();
+    std::optional<MemoryAccess::BitSet> optDeps = loopBlock.optimize();
+    // NOTE: we're not actually changing anything yet
+    changed |= optDeps.has_value();
     if (ORE) {
       if (optDeps) {
         llvm::SmallVector<char, 512> str;
@@ -104,7 +106,8 @@ TurboLoopPass::run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
     }
     loopBlock.clear();
   }
-  return llvm::PreservedAnalyses::none();
+  return changed ? llvm::PreservedAnalyses::none()
+                 : llvm::PreservedAnalyses::all();
 }
 auto __attribute__((visibility("default")))
 PipelineParsingCB(llvm::StringRef Name, llvm::FunctionPassManager &FPM,

@@ -1,5 +1,5 @@
-#include "../include/LinearAlgebra.hpp"
-#include "../include/Math.hpp"
+#include "Math/LinearAlgebra.hpp"
+#include "Math/Math.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>

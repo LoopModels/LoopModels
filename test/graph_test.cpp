@@ -1,6 +1,6 @@
-#include "../include/BitSets.hpp"
-#include "../include/Graphs.hpp"
-#include "../include/Math.hpp"
+#include "BitSets.hpp"
+#include "Graphs.hpp"
+#include "Math/Math.hpp"
 #include <algorithm>
 #include <concepts>
 #include <cstdint>

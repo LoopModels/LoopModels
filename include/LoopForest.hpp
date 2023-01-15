@@ -4,7 +4,7 @@
 #include "./Instruction.hpp"
 #include "./Loops.hpp"
 #include "./MemoryAccess.hpp"
-#include "./Utilities.hpp"
+#include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <iterator>
 #include <limits>

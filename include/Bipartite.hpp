@@ -1,5 +1,5 @@
 #pragma once
-#include "./Math.hpp"
+#include "Math/Math.hpp"
 
 bool bipartiteMatch(Matrix<bool, 0, 0> &bpGraph, size_t u,
                     llvm::SmallVectorImpl<bool> &seen,

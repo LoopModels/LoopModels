@@ -1,5 +1,5 @@
-#include "../include/Math.hpp"
-#include "../include/Unimodularization.hpp"
+#include "Math/Math.hpp"
+#include "Math/Unimodularization.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <iostream>
