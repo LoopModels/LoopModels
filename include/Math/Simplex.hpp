@@ -1,8 +1,8 @@
 #pragma once
 #include "./Constraints.hpp"
-#include "Math/Math.hpp"
 #include "./NormalForm.hpp"
 #include "./Rational.hpp"
+#include "Math/Math.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>
@@ -563,8 +563,8 @@ struct Simplex {
     assertCanonical();
 #endif
     for (size_t v = 0; v < sol.size();) lexMinimize(++v);
-#ifndef NDEBUG
     copySolution(sol);
+#ifndef NDEBUG
     assertCanonical();
 #endif
   }
