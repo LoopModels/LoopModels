@@ -288,6 +288,8 @@ public:
   }
 };
 
+static_assert(std::is_trivially_copyable_v<MemoryAccess>);
+
 inline auto operator<<(llvm::raw_ostream &os, const MemoryAccess &m)
   -> llvm::raw_ostream & {
   if (m.isLoad()) os << "Load: ";
