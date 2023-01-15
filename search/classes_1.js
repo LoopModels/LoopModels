@@ -1,8 +1,9 @@
 var searchData=
 [
-  ['basecomparator_202',['BaseComparator',['../structBaseComparator.html',1,'']]],
-  ['basecomparator_3c_20linearsymboliccomparator_20_3e_203',['BaseComparator&lt; LinearSymbolicComparator &gt;',['../structBaseComparator.html',1,'']]],
-  ['bitset_204',['BitSet',['../structBitSet.html',1,'']]],
-  ['bitsetiterator_205',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
-  ['bitsliceview_206',['BitSliceView',['../structBitSliceView.html',1,'']]]
+  ['basecomparator_203',['BaseComparator',['../structBaseComparator.html',1,'']]],
+  ['basecomparator_3c_20linearsymboliccomparator_20_3e_204',['BaseComparator&lt; LinearSymbolicComparator &gt;',['../structBaseComparator.html',1,'']]],
+  ['bitset_205',['BitSet',['../structBitSet.html',1,'']]],
+  ['bitsetiterator_206',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
+  ['bitsliceview_207',['BitSliceView',['../structBitSliceView.html',1,'']]],
+  ['bumpptrvector_208',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
 ];
