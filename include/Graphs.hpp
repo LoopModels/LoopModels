@@ -83,8 +83,9 @@ inline auto weaklyConnectedComponents(AbstractGraph auto &g) {
   return components;
 }
 
+template <typename B>
 inline auto
-strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
+strongConnect(AbstractGraph auto &g, llvm::SmallVectorImpl<B> &components,
               llvm::SmallVector<unsigned> &stack,
               llvm::MutableArrayRef<std::tuple<unsigned, unsigned, bool>>
                 indexLowLinkOnStack,
@@ -101,7 +102,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
         vll = std::min(vll, wIndex);
       }
     } else { // not visited
-      strongConnect(g, components, stack, indexLowLinkOnStack, index, w);
+      strongConnect<B>(g, components, stack, indexLowLinkOnStack, index, w);
       unsigned &vll = std::get<1>(indexLowLinkOnStack[v]);
       vll = std::min(vll, std::get<1>(indexLowLinkOnStack[w]));
     }
@@ -109,7 +110,7 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
   auto [vIndex, vLowLink, vOnStack] = indexLowLinkOnStack[v];
   if (vIndex == vLowLink) {
     components.emplace_back();
-    BitSet<> &component = components.back();
+    B &component = components.back();
     unsigned w;
     do {
       w = stack.back();
@@ -124,6 +125,12 @@ strongConnect(AbstractGraph auto &g, llvm::SmallVector<BitSet<>> &components,
 inline auto stronglyConnectedComponents(AbstractGraph auto &g)
   -> llvm::SmallVector<BitSet<>> {
   llvm::SmallVector<BitSet<>> components;
+  stronglyConnectedComponents(components, g);
+  return components;
+}
+template <typename B>
+inline void stronglyConnectedComponents(llvm::SmallVectorImpl<B> &components,
+                                        AbstractGraph auto &g) {
   size_t maxId = g.maxVertexId();
   components.reserve(maxId);
   llvm::SmallVector<std::tuple<unsigned, unsigned, bool>> indexLowLinkOnStack(

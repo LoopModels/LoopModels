@@ -238,10 +238,9 @@ template <unsigned N> using FixedSizeBitSet = BitSet<std::array<uint64_t, N>>;
 // BitSet with length 64
 using BitSet64 = FixedSizeBitSet<1>;
 
-template <typename T, typename S = llvm::SmallVector<uint64_t, 1>>
-struct BitSliceView {
+template <typename T, typename B = BitSet<>> struct BitSliceView {
   [[no_unique_address]] llvm::MutableArrayRef<T> a;
-  [[no_unique_address]] const BitSet<S> &i;
+  [[no_unique_address]] const B &i;
   struct Iterator {
     [[no_unique_address]] llvm::MutableArrayRef<T> a;
     [[no_unique_address]] BitSetIterator it;
@@ -300,7 +299,8 @@ struct BitSliceView {
   -> ptrdiff_t {
   return EndSentinel{} - v.it;
 }
-
+template <typename T, typename B>
+BitSliceView(llvm::MutableArrayRef<T>, const B &) -> BitSliceView<T, B>;
 // typedef
 // std::iterator_traits<BitSliceView<int64_t>::Iterator>::iterator_category;
 

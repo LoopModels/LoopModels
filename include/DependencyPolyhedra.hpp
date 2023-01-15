@@ -445,6 +445,8 @@ struct Dependence {
   //
   //
   //
+  using BitSet = MemoryAccess::BitSet;
+
 private:
   [[no_unique_address]] DependencePolyhedra depPoly;
   [[no_unique_address]] Simplex dependenceSatisfaction;
@@ -470,10 +472,10 @@ public:
   }
   /// indicates whether forward is non-empty
   [[nodiscard]] constexpr auto isForward() const -> bool { return forward; }
-  [[nodiscard]] auto nodesIn() const -> const BitSet<> & {
+  [[nodiscard]] auto nodesIn() const -> const BitSet & {
     return in->getNodes();
   }
-  [[nodiscard]] auto nodesOut() const -> const BitSet<> & {
+  [[nodiscard]] auto nodesOut() const -> const BitSet & {
     return out->getNodes();
   }
   [[nodiscard]] auto getDynSymDim() const -> size_t {

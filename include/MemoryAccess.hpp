@@ -2,8 +2,10 @@
 #include "./BitSets.hpp"
 #include "./Loops.hpp"
 #include "./Math.hpp"
+#include "./Memory.hpp"
 #include "./Utilities.hpp"
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -14,13 +16,16 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/raw_ostream.h>
-#include <strings.h>
 
 // TODO:
 // refactor to use GraphTraits.h
 // https://github.com/llvm/llvm-project/blob/main/llvm/include/llvm/ADT/GraphTraits.h
 struct MemoryAccess {
+  using BitSet = ::BitSet<std::array<uint64_t, 2>>;
+
 private:
+  // TODO: bail out gracefully if we need more than 128 elements
+  // TODO: better yet, have some mechanism for allocating more space.
   static constexpr auto memoryOmegaOffset(size_t arrayDim, size_t numLoops,
                                           size_t numSymbols) -> size_t {
     return arrayDim * numLoops + arrayDim * numSymbols;
@@ -32,7 +37,6 @@ private:
 
   NotNull<const llvm::SCEVUnknown> basePointer;
   NotNull<AffineLoopNest<>> loop;
-
   // This field will store either the loaded instruction, or the store
   // instruction. This means that we can check if this MemoryAccess is a load
   // via checking `!loadOrStore.isa<llvm::StoreInst>()`.
@@ -42,13 +46,15 @@ private:
   // value, meaning that is the stored instruction, and thus we still have
   // access to it when it is available.
   NotNull<llvm::Instruction> loadOrStore;
-  llvm::SmallVector<const llvm::SCEV *, 3> sizes;
-  llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
+  llvm::ArrayRef<const llvm::SCEV *> sizes;
+  llvm::ArrayRef<const llvm::SCEV *> symbolicOffsets;
+  // llvm::SmallVector<const llvm::SCEV *, 3> sizes;
+  // llvm::SmallVector<const llvm::SCEV *, 3> symbolicOffsets;
   // unsigned (instead of ptr) as we build up edges
   // and I don't want to relocate pointers when resizing vector
-  BitSet<> edgesIn;
-  BitSet<> edgesOut;
-  BitSet<> nodeIndex;
+  BitSet edgesIn;
+  BitSet edgesOut;
+  BitSet nodeIndex;
   // This is a flexible length array, declared as a length-1 array
   // I wish there were some way to opt into "I'm using a c99 extension"
   // so that I could use `mem[]` or `mem[0]` instead of `mem[1]`. See:
@@ -65,10 +71,9 @@ private:
   }
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user,
-               llvm::SmallVector<const llvm::SCEV *, 3> sz,
-               llvm::SmallVector<const llvm::SCEV *, 3> off)
-    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user),
-      sizes(std::move(sz)), symbolicOffsets(std::move(off)){};
+               std::array<llvm::ArrayRef<const llvm::SCEV *>, 2> szOff)
+    : basePointer(arrayPtr), loop(loopRef), loadOrStore(user), sizes(szOff[0]),
+      symbolicOffsets(szOff[1]){};
   MemoryAccess(const llvm::SCEVUnknown *arrayPtr, AffineLoopNest<true> &loopRef,
                llvm::Instruction *user)
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
@@ -94,7 +99,9 @@ public:
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
             PtrMatrix<int64_t> offsets, PtrVector<unsigned> o)
     -> NotNull<MemoryAccess> {
-    auto [sz, off] = std::move(szOff);
+    // we don't want to hold any other pointers that may need freeing
+    auto sz = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[0]});
+    auto off = copyRef(alloc, llvm::ArrayRef<const llvm::SCEV *>{szOff[1]});
     size_t arrayDim = sz.size();
     size_t numLoops = loopRef.getNumLoops();
     assert(o.size() == numLoops + 1);
@@ -102,8 +109,7 @@ public:
     size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
       alloc.Allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
-    auto *ma = new (mem)
-      MemoryAccess(arrayPtr, loopRef, user, std::move(sz), std::move(off));
+    auto *ma = new (mem) MemoryAccess(arrayPtr, loopRef, user, {sz, off});
     ma->indexMatrix() = indMatT.transpose();
     ma->offsetMatrix() = offsets;
     ma->getFusionOmega() = o;
@@ -117,28 +123,28 @@ public:
   [[nodiscard]] auto getFusionOmega() const -> PtrVector<int64_t> {
     return {data() + omegaOffset(), getNumLoops() + 1};
   }
-  [[nodiscard]] constexpr auto inputEdges() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto inputEdges() const -> const BitSet & {
     return edgesIn;
   }
-  [[nodiscard]] constexpr auto outputEdges() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto outputEdges() const -> const BitSet & {
     return edgesOut;
   }
-  [[nodiscard]] constexpr auto getNodeIndex() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto getNodeIndex() const -> const BitSet & {
     return nodeIndex;
   }
   [[nodiscard]] constexpr auto getLoop() const -> NotNull<AffineLoopNest<>> {
     return loop;
   }
-  [[nodiscard]] constexpr auto getNodes() -> BitSet<> & { return nodeIndex; }
-  [[nodiscard]] constexpr auto getNodes() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto getNodes() -> BitSet & { return nodeIndex; }
+  [[nodiscard]] constexpr auto getNodes() const -> const BitSet & {
     return nodeIndex;
   }
   [[nodiscard]] auto getSizes() const
-    -> const llvm::SmallVector<const llvm::SCEV *, 3> & {
+    -> const llvm::ArrayRef<const llvm::SCEV *> & {
     return sizes;
   }
   [[nodiscard]] auto getSymbolicOffsets() const
-    -> const llvm::SmallVector<const llvm::SCEV *, 3> & {
+    -> const llvm::ArrayRef<const llvm::SCEV *> & {
     return symbolicOffsets;
   }
   [[nodiscard]] auto isStore() const -> bool {
@@ -252,10 +258,10 @@ public:
     // fusionOmegas are in outer<->inner order
     // so we copy `offsetMatrix` `numToPeel * getArrayDim()` elements earlier
     int64_t *p = data();
-    // When copying overlapping ranges, std::copy is appropriate when copying to
-    // the left (beginning of the destination range is outside the source range)
-    // while std::copy_backward is appropriate when copying to the right (end of
-    // the destination range is outside the source range).
+    // When copying overlapping ranges, std::copy is appropriate when copying
+    // to the left (beginning of the destination range is outside the source
+    // range) while std::copy_backward is appropriate when copying to the
+    // right (end of the destination range is outside the source range).
     // https://en.cppreference.com/w/cpp/algorithm/copy
     int64_t *offOld = p + getArrayDim() * getNumLoops();
     int64_t *fusOld = offOld + getArrayDim() * getNumSymbols();

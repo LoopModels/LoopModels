@@ -43,10 +43,12 @@ inline void insertSortedUnique(llvm::SmallVectorImpl<I> &v, const I &x) {
 /// because we load from `B[i]` and `C[i]` into registers, compute, and
 /// `A[i]`;
 struct ScheduledNode {
+  using BitSet = ::MemoryAccess::BitSet;
+
 private:
-  [[no_unique_address]] BitSet<> memory{};
-  [[no_unique_address]] BitSet<> inNeighbors{};
-  [[no_unique_address]] BitSet<> outNeighbors{};
+  [[no_unique_address]] BitSet memory{};
+  [[no_unique_address]] BitSet inNeighbors{};
+  [[no_unique_address]] BitSet outNeighbors{};
   [[no_unique_address]] Schedule schedule{};
   [[no_unique_address]] uint32_t storeId;
   [[no_unique_address]] uint32_t phiOffset{0};   // used in LoopBlock
@@ -81,17 +83,17 @@ public:
     }
     return accesses;
   }
-  constexpr auto getMemory() -> BitSet<> & { return memory; }
-  constexpr auto getInNeighbors() -> BitSet<> & { return inNeighbors; }
-  constexpr auto getOutNeighbors() -> BitSet<> & { return outNeighbors; }
+  constexpr auto getMemory() -> BitSet & { return memory; }
+  constexpr auto getInNeighbors() -> BitSet & { return inNeighbors; }
+  constexpr auto getOutNeighbors() -> BitSet & { return outNeighbors; }
   constexpr auto getSchedule() -> Schedule & { return schedule; }
-  [[nodiscard]] constexpr auto getMemory() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto getMemory() const -> const BitSet & {
     return memory;
   }
-  [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto getInNeighbors() const -> const BitSet & {
     return inNeighbors;
   }
-  [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet<> & {
+  [[nodiscard]] constexpr auto getOutNeighbors() const -> const BitSet & {
     return outNeighbors;
   }
   [[nodiscard]] constexpr auto getSchedule() const -> const Schedule & {
@@ -272,6 +274,7 @@ inline void resetDeepDeps(llvm::MutableArrayRef<CarriedDependencyFlag> v,
 ///   f(m, ...); // Omega = [2, _, 0]
 /// }
 struct LinearProgramLoopBlock {
+  using BitSet = ::MemoryAccess::BitSet;
   // TODO: figure out how to handle the graph's dependencies based on
   // operation/instruction chains.
   // Perhaps implicitly via the graph when using internal orthogonalization
@@ -286,6 +289,8 @@ private:
   [[no_unique_address]] llvm::SmallVector<ScheduledNode, 0> nodes;
   // llvm::SmallVector<unsigned> memoryToNodeMap;
   [[no_unique_address]] llvm::SmallVector<NotNull<Dependence>> edges;
+  /// Flag indicating which depths carries dependencies
+  /// One per node; held separately so we can copy/etc
   [[no_unique_address]] llvm::SmallVector<CarriedDependencyFlag, 16>
     carriedDeps;
   // llvm::SmallVector<bool> visited; // visited, for traversing graph
@@ -308,8 +313,13 @@ private:
 
 public:
   void clear() {
+    // TODO: maybe we shouldn't have to manually call destructors?
+    // That would require handling more memory allocations via
+    // `allocator`, though.
+    // Some objects may need to reallocate/resize.
     memory.clear();
     nodes.clear();
+    for (auto &&x : edges) x->~Dependence();
     edges.clear();
     carriedDeps.clear();
     userToMemory.clear();
@@ -481,7 +491,7 @@ public:
   }
   // the order of parameters is irrelevant, so swapping is irrelevant
   // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
-  void connect(const BitSet<> &inIndexSet, const BitSet<> &outIndexSet) {
+  void connect(const BitSet &inIndexSet, const BitSet &outIndexSet) {
     for (auto inIndex : inIndexSet)
       for (auto outIndex : outIndexSet) connect(inIndex, outIndex);
   }
@@ -513,8 +523,8 @@ public:
   }
   struct Graph {
     // a subset of Nodes
-    BitSet<> nodeIds;
-    BitSet<> activeEdges;
+    BitSet nodeIds;
+    BitSet activeEdges;
     llvm::MutableArrayRef<MemoryAccess *> mem;
     llvm::MutableArrayRef<ScheduledNode> nodes;
     llvm::ArrayRef<NotNull<Dependence>> edges;
@@ -538,22 +548,22 @@ public:
       activeEdges |= g.activeEdges;
       return *this;
     }
-    [[nodiscard]] auto inNeighbors(size_t i) -> BitSet<> & {
+    [[nodiscard]] auto inNeighbors(size_t i) -> BitSet & {
       return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) -> BitSet<> & {
+    [[nodiscard]] auto outNeighbors(size_t i) -> BitSet & {
       return nodes[i].getOutNeighbors();
     }
-    [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet<> & {
+    [[nodiscard]] auto inNeighbors(size_t i) const -> const BitSet & {
       return nodes[i].getInNeighbors();
     }
-    [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet<> & {
+    [[nodiscard]] auto outNeighbors(size_t i) const -> const BitSet & {
       return nodes[i].getOutNeighbors();
     }
     [[nodiscard]] auto containsNode(size_t i) const -> bool {
       return nodeIds.contains(i);
     }
-    [[nodiscard]] auto containsNode(BitSet<> &b) const -> bool {
+    [[nodiscard]] auto containsNode(BitSet &b) const -> bool {
       for (size_t i : b)
         if (nodeIds.contains(i)) return true;
       return false;
@@ -596,12 +606,12 @@ public:
       return (activeEdges[e]) && (!isInactive(*edges[e]));
     }
     [[nodiscard]] constexpr auto begin()
-      -> BitSliceView<ScheduledNode>::Iterator {
-      return BitSliceView<ScheduledNode>{nodes, nodeIds}.begin();
+      -> BitSliceView<ScheduledNode, BitSet>::Iterator {
+      return BitSliceView{nodes, nodeIds}.begin();
     }
     [[nodiscard]] constexpr auto begin() const
-      -> BitSliceView<ScheduledNode>::ConstIterator {
-      const BitSliceView<ScheduledNode> bsv{nodes, nodeIds};
+      -> BitSliceView<ScheduledNode, BitSet>::ConstIterator {
+      const BitSliceView bsv{nodes, nodeIds};
       return bsv.begin();
     }
     [[nodiscard]] static constexpr auto end() -> EndSentinel { return {}; }
@@ -616,14 +626,14 @@ public:
     [[nodiscard]] auto maxVertexId() const -> size_t {
       return nodeIds.maxValue();
     }
-    [[nodiscard]] constexpr auto vertexIds() -> BitSet<> & { return nodeIds; }
-    [[nodiscard]] constexpr auto vertexIds() const -> const BitSet<> & {
+    [[nodiscard]] constexpr auto vertexIds() -> BitSet & { return nodeIds; }
+    [[nodiscard]] constexpr auto vertexIds() const -> const BitSet & {
       return nodeIds;
     }
-    [[nodiscard]] auto subGraph(const BitSet<> &components) -> Graph {
+    [[nodiscard]] auto subGraph(const BitSet &components) -> Graph {
       return {components, activeEdges, mem, nodes, edges};
     }
-    [[nodiscard]] auto split(const llvm::SmallVector<BitSet<>> &components)
+    [[nodiscard]] auto split(const llvm::SmallVector<BitSet> &components)
       -> llvm::SmallVector<Graph, 0> {
       llvm::SmallVector<Graph, 0> graphs;
       graphs.reserve(components.size());
@@ -667,8 +677,8 @@ public:
     return false;
   }
   auto fullGraph() -> Graph {
-    return {BitSet<>::dense(nodes.size()), BitSet<>::dense(edges.size()),
-            memory, nodes, edges};
+    return {BitSet::dense(nodes.size()), BitSet::dense(edges.size()), memory,
+            nodes, edges};
   }
   void fillUserToMemoryMap() {
     for (unsigned i = 0; i < memory.size(); ++i)
@@ -680,7 +690,7 @@ public:
     if (other->getNodeIndex().contains(index)) return index;
     return {};
   }
-  auto optOrth(Graph g) -> std::optional<BitSet<>> {
+  auto optOrth(Graph g) -> std::optional<BitSet> {
 
     const size_t maxDepth = calcMaxDepth();
     // check for orthogonalization opportunities
@@ -704,10 +714,10 @@ public:
       }
     }
     if (tryOrth) {
-      if (std::optional<BitSet<>> opt = optimize(g, 0, maxDepth)) return opt;
+      if (std::optional<BitSet> opt = optimize(g, 0, maxDepth)) return opt;
       for (auto &&n : nodes) n.unschedulePhi();
     }
-    return optimize(std::move(g), 0, maxDepth);
+    return optimize(g, 0, maxDepth);
   }
   [[nodiscard]] auto countNumLambdas(const Graph &g, size_t d) const -> size_t {
     size_t c = 0;
@@ -830,8 +840,8 @@ public:
     for (size_t e = 0; e < edges.size(); ++e) {
       Dependence &edge = *edges[e];
       if (g.isInactive(e, d)) continue;
-      const BitSet<> &outNodeIndexSet = edge.nodesOut();
-      const BitSet<> &inNodeIndexSet = edge.nodesIn();
+      const BitSet &outNodeIndexSet = edge.nodesOut();
+      const BitSet &inNodeIndexSet = edge.nodesIn();
       const auto [satC, satL, satPp, satPc, satO, satW] =
         edge.splitSatisfaction();
       const auto [bndC, bndL, bndPp, bndPc, bndO, bndWU] = edge.splitBounding();
@@ -959,7 +969,7 @@ public:
       C(_(cc, ccc), _(phiChild - bnd.numCol(), phiChild)) = bnd;
     }
   }
-  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet<> {
+  [[nodiscard]] auto deactivateSatisfiedEdges(Graph &g, size_t d) -> BitSet {
     if (allZero(sol[_(begin, numBounding + numActiveEdges)])) return {};
     size_t u = 0, w = numBounding;
     BitSet deactivated;
@@ -1128,8 +1138,9 @@ public:
     }
     return true;
   }
-  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet<>> {
-    auto components = Graphs::stronglyConnectedComponents(g);
+  [[nodiscard]] auto breakGraph(Graph g, size_t d) -> std::optional<BitSet> {
+    llvm::SmallVector<BitSet> components;
+    Graphs::stronglyConnectedComponents(components, g);
     if (components.size() <= 1) return {};
     // components are sorted in topological order.
     // We split all of them, solve independently,
@@ -1142,7 +1153,7 @@ public:
       if (d >= sg.calcMaxDepth()) continue;
       countAuxParamsAndConstraints(sg, d);
       setScheduleMemoryOffsets(sg, d);
-      if (std::optional<BitSet<>> sat = optimizeLevel(sg, d)) satDeps |= *sat;
+      if (std::optional<BitSet> sat = optimizeLevel(sg, d)) satDeps |= *sat;
       else return {}; // give up
     }
     int64_t unfusedOffset = 0;
@@ -1170,8 +1181,8 @@ public:
     ++d;
     // size_t numSat = satDeps.size();
     for (auto i : baseGraphs)
-      if (std::optional<BitSet<>> sat =
-            optimize(std::move(graphs[i]), d, graphs[i].calcMaxDepth())) {
+      if (std::optional<BitSet> sat =
+            optimize(graphs[i], d, graphs[i].calcMaxDepth())) {
         // TODO: try and satisfy extra dependences
         // if ((numSat > 0) && (sat->size()>0)){}
         satDeps |= *sat;
@@ -1182,7 +1193,7 @@ public:
     return satDeps;
   }
   [[nodiscard]] auto optimizeLevel(Graph &g, size_t d)
-    -> std::optional<BitSet<>> {
+    -> std::optional<BitSet> {
     if (numPhiCoefs == 0) {
       setSchedulesIndependent(g, d);
       return BitSet{};
@@ -1210,10 +1221,10 @@ public:
   // But that sort of seems like abstraction for the sake of
   // abstraction, rather than actually a good idea?
   [[nodiscard]] auto
-  optimizeSatDep(Graph g, size_t d, size_t maxDepth, BitSet<> depSatLevel,
-                 const BitSet<> // NOLINT(bugprone-easily-swappable-parameters)
+  optimizeSatDep(Graph g, size_t d, size_t maxDepth, BitSet depSatLevel,
+                 const BitSet   // NOLINT(bugprone-easily-swappable-parameters)
                    &depSatNest, // NOLINT(bugprone-easily-swappable-parameters)
-                 BitSet<> activeEdges) -> BitSet<> {
+                 BitSet activeEdges) -> BitSet {
     // if we're here, there are satisfied deps in both
     // depSatLevel and depSatNest
     // what we want to know is, can we satisfy all the deps
@@ -1240,7 +1251,7 @@ public:
         // lexMinimize(g, sol, d);
         updateSchedules(g, d);
         BitSet depSat = deactivateSatisfiedEdges(g, d);
-        if (std::optional<BitSet<>> depSatN = optimize(g, d + 1, maxDepth))
+        if (std::optional<BitSet> depSatN = optimize(g, d + 1, maxDepth))
           return depSat |= *depSatN;
       }
       // we failed, so reset solved schedules
@@ -1256,25 +1267,25 @@ public:
   /// receives graph by value, so that it is not invalidated when
   /// recursing
   [[nodiscard]] auto optimize(Graph g, size_t d, size_t maxDepth)
-    -> std::optional<BitSet<>> {
+    -> std::optional<BitSet> {
     if (d >= maxDepth) return BitSet{};
     countAuxParamsAndConstraints(g, d);
     setScheduleMemoryOffsets(g, d);
     // if we fail on this level, break the graph
     BitSet activeEdgesBackup = g.activeEdges;
-    if (std::optional<BitSet<>> depSat = optimizeLevel(g, d)) {
+    if (std::optional<BitSet> depSat = optimizeLevel(g, d)) {
       const size_t numSat = depSat->size();
-      if (std::optional<BitSet<>> depSatNest = optimize(g, d + 1, maxDepth)) {
+      if (std::optional<BitSet> depSatNest = optimize(g, d + 1, maxDepth)) {
         if (numSat && depSatNest->size())
-          return optimizeSatDep(std::move(g), d, maxDepth, std::move(*depSat),
-                                *depSatNest, std::move(activeEdgesBackup));
+          return optimizeSatDep(g, d, maxDepth, *depSat, *depSatNest,
+                                activeEdgesBackup);
         return *depSat |= *depSatNest;
       }
     }
-    return breakGraph(std::move(g), d);
+    return breakGraph(g, d);
   }
   // returns true on failure
-  [[nodiscard]] auto optimize() -> std::optional<BitSet<>> {
+  [[nodiscard]] auto optimize() -> std::optional<BitSet> {
     fillEdges();
     fillUserToMemoryMap();
     connectGraph();

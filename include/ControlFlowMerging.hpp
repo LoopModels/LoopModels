@@ -4,6 +4,7 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Predicate.hpp"
+#include "BitSets.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -21,14 +22,20 @@
 void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
                            Instruction::Cache &cache,
                            LinearProgramLoopBlock &LB) {
-  for (auto mem : LB.getMemoryAccesses()) {
-    if (mem->nodeIndex.isEmpty()) continue;
-    // TODO: add a means for cache.get to stop adding operands
-    // that are outside of LB, as we don't care about that part of the
-    // graph.
-    Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
-    inst->ptr = mem;
+  for (auto &node : LB.getNodes()) {
+    auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
+    for (auto *mem : access) {
+      // FIXME: this needs to duplicate reload instructions
+      Instruction *inst = cache.getInstruction(alloc, mem->getInstruction());
+      inst->ptr = mem;
+    }
   }
+  // for (auto mem : LB.getMemoryAccesses()) {
+  //   if (mem->nodeIndex.isEmpty()) continue;
+  //   // TODO: add a means for cache.get to stop adding operands
+  //   // that are outside of LB, as we don't care about that part of the
+  //   // graph.
+  // }
 }
 
 // merge all instructions from toMerge into merged
@@ -435,6 +442,6 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
                        unsigned int vectorBits) {
   for (auto &predMap : loopForest->getPaths())
     mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);
-  for (auto *subLoop : loopForest->getSubLoops())
+  for (auto subLoop : loopForest->getSubLoops())
     mergeInstructions(alloc, cache, subLoop, TTI, tAlloc, vectorBits);
 }
