@@ -208,3 +208,7 @@ constexpr auto unwrapRow(auto x) { return x; }
 constexpr auto unwrapCol(auto x) { return x; }
 
 } // namespace LinearAlgebra
+
+constexpr auto standardizeRangeBound(LinearAlgebra::RowOrCol auto x) {
+  return size_t(x);
+}

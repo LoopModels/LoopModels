@@ -1,5 +1,6 @@
 #pragma once
 #include "Utilities/Invariant.hpp"
+#include <cstddef>
 #include <llvm/Support/Casting.h>
 
 // TODO: communicate not-null to the compiler somehow?
@@ -95,6 +96,48 @@ template <typename T> struct NotNull {
   constexpr auto operator--(int) -> NotNull<T> {
     invariant(value != nullptr);
     return value--;
+  }
+  constexpr auto operator+=(size_t offset) -> NotNull<T> & {
+    invariant(value != nullptr);
+    value += offset;
+    return *this;
+  }
+  constexpr auto operator-=(size_t offset) -> NotNull<T> & {
+    invariant(value != nullptr);
+    value -= offset;
+    return *this;
+  }
+  // constexpr auto operator==(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value == other.value;
+  // }
+  // constexpr auto operator!=(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value != other.value;
+  // }
+  // constexpr auto operator<(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value < other.value;
+  // }
+  // constexpr auto operator<=(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value <= other.value;
+  // }
+  // constexpr auto operator>(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value > other.value;
+  // }
+  // constexpr auto operator>=(const NotNull<T> &other) const -> bool {
+  //   invariant(value != nullptr);
+  //   return value >= other.value;
+  // }
+  constexpr auto operator-(const NotNull<T> &other) const -> ptrdiff_t {
+    invariant(value != nullptr);
+    return value - other.value;
+  }
+  [[nodiscard]] constexpr auto isAligned(size_t x) const -> bool {
+    invariant(value != nullptr);
+    return (reinterpret_cast<size_t>(value) % x) == 0;
   }
 
 private:

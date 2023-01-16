@@ -794,7 +794,7 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
   LinearAlgebra::PtrMatrix, LinearAlgebra::MutPtrMatrix, LinearAlgebra::AxisInt,
   LinearAlgebra::AxisInt, LinearAlgebra::SmallSparseMatrix,
   LinearAlgebra::StridedVector, LinearAlgebra::MutStridedVector,
-  LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::Range, LinearAlgebra::begin,
-  LinearAlgebra::end, LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix,
-  LinearAlgebra::Row, LinearAlgebra::RowStride, LinearAlgebra::Col,
-  LinearAlgebra::CarInd, LinearAlgebra::last;
+  LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::begin, LinearAlgebra::end,
+  LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
+  LinearAlgebra::RowStride, LinearAlgebra::Col, LinearAlgebra::CarInd,
+  LinearAlgebra::last;
