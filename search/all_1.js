@@ -5,5 +5,6 @@ var searchData=
   ['bitset_15',['BitSet',['../structBitSet.html',1,'']]],
   ['bitsetiterator_16',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
   ['bitsliceview_17',['BitSliceView',['../structBitSliceView.html',1,'']]],
-  ['bumpptrvector_18',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
+  ['bumpalloc_18',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
+  ['bumpptrvector_19',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
 ];

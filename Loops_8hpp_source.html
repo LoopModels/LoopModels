@@ -316,7 +316,7 @@ $(function() {
 <div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160; </div>
 <div class="line"><a name="l00260"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">  260</a></span>&#160;  [[nodiscard]] <span class="keyword">auto</span> <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(IntMatrix &amp;B, llvm::Loop *L, <span class="keyword">const</span> llvm::SCEV *v,</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;                               llvm::ScalarEvolution &amp;SE,</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;                               <a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt,</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;                               <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt,</div>
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                               <span class="keywordtype">size_t</span> minDepth) -&gt; <span class="keywordtype">size_t</span> {</div>
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="comment">// first, we check if `v` in `Symbols`</span></div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">if</span> (<span class="keywordtype">size_t</span> i = findIndex(v)) {</div>
@@ -386,7 +386,7 @@ $(function() {
 <div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(v, lu, mlt);</div>
 <div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="keywordflow">return</span> minDepth;</div>
 <div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  }</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(<span class="keyword">const</span> llvm::SCEV *v, <a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt) {</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structAffineLoopNest.html#a1833ffa972772f61f2dc3270234833f1">addSymbol</a>(<span class="keyword">const</span> llvm::SCEV *v, <a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> lu, int64_t mlt) {</div>
 <div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;    assert(lu.size());</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    S.push_back(v);</div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    A.resize(A.numCol() + 1);</div>
@@ -809,13 +809,13 @@ $(function() {
 <div class="ttc" id="astructEmptyMatrix_html"><div class="ttname"><a href="structEmptyMatrix.html">EmptyMatrix</a></div><div class="ttdef"><b>Definition:</b> EmptyArrays.hpp:6</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:153</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:20</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:76</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:240</div></div>
 <div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:256</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:64</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:6</div></div>
+<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
 <div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:63</div></div>
+<div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:3</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

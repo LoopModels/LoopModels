@@ -120,22 +120,22 @@ $(function() {
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="comment">// constexpr MutPtrVector(llvm::MutableArrayRef&lt;T&gt; x)</span></div>
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="comment">//   : mem(x.data()), N(x.size()) {}</span></div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;  <span class="comment">// constexpr MutPtrVector(T *pt, size_t NN) : mem(pt), N(NN) {}</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;size_t, size_t&gt;</a> i) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> i) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    assert(i.b &lt;= i.e);</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    assert(i.e &lt;= Size);</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a>{mem + i.b, i.e - i.b};</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  }</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;size_t, size_t&gt;</a> i) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange.html">Range&lt;size_t, size_t&gt;</a> i) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    assert(i.b &lt;= i.e);</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    assert(i.e &lt;= Size);</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a>{mem + i.b, i.e - i.b};</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> L&gt;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;F, L&gt;</a> i) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange.html">Range&lt;F, L&gt;</a> i) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[canonicalizeRange(i, Size)];</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  }</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> F, <span class="keyword">typename</span> L&gt;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structLinearAlgebra_1_1Range.html">Range&lt;F, L&gt;</a> i) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  constexpr <span class="keyword">auto</span> operator[](<a class="code" href="structRange.html">Range&lt;F, L&gt;</a> i) <span class="keyword">const</span> -&gt; <a class="code" href="structLinearAlgebra_1_1PtrVector.html">PtrVector&lt;T&gt;</a> {</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">return</span> (*<span class="keyword">this</span>)[canonicalizeRange(i, Size)];</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  [[gnu::returns_nonnull]] constexpr <span class="keyword">auto</span> begin() -&gt; T * { <span class="keywordflow">return</span> mem; }</div>
@@ -237,8 +237,8 @@ $(function() {
 <div class="ttc" id="astructLinearAlgebra_1_1BumpPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1BumpPtrVector.html">LinearAlgebra::BumpPtrVector</a></div><div class="ttdef"><b>Definition:</b> BumpVector.hpp:7</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:86</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:20</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Range_html"><div class="ttname"><a href="structLinearAlgebra_1_1Range.html">LinearAlgebra::Range</a></div><div class="ttdef"><b>Definition:</b> Indexing.hpp:76</div></div>
-<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:6</div></div>
+<div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
+<div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:3</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
