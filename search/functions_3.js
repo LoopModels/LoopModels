@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['emptymask_354',['emptyMask',['../structPredicate_1_1Intersection.html#aa490ae09b4cd35d39a821182dbcc9348',1,'Predicate::Intersection']]],
-  ['explicitlowerbounds_355',['explicitLowerBounds',['../structAffineLoopNest.html#aace2c4b54bdd1ab46eedde632fcb395c',1,'AffineLoopNest']]]
+  ['descend_357',['descend',['../structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492',1,'Predicate::Map']]]
 ];

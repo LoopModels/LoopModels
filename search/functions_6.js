@@ -1,13 +1,8 @@
 var searchData=
 [
-  ['indexmatrix_362',['indexMatrix',['../structAddress.html#a944d66eb4736af541f573f74f8eba277',1,'Address::indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;'],['../structAddress.html#a340fbd656944acb792583c66186dd6ec',1,'Address::indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0',1,'MemoryAccess::indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133',1,'MemoryAccess::indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;']]],
-  ['initancestors_363',['initAncestors',['../structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269',1,'MergingCost']]],
-  ['initializeloopforest_364',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
-  ['intersectionisempty_365',['intersectionIsEmpty',['../structPredicate_1_1Set.html#ad4a7c78b6c53cec5eb5ee53e291359e3',1,'Predicate::Set']]],
-  ['intrinsic_366',['Intrinsic',['../structInstruction_1_1Intrinsic.html#a2ceb99f52e33be8c08e77fa0cd476a6b',1,'Instruction::Intrinsic']]],
-  ['isempty_367',['isEmpty',['../structPredicate_1_1Intersection.html#a955076f74163093f46e90c5f1877ad93',1,'Predicate::Intersection']]],
-  ['isforward_368',['isForward',['../structDependence.html#a8f03cfecfe1734c6c395bf3184269536',1,'Dependence']]],
-  ['ismerged_369',['isMerged',['../structMergingCost.html#af9b5ac0cc98e21087c9eefccb31bce58',1,'MergingCost::isMerged(Instruction *key) const -&gt; bool'],['../structMergingCost.html#a0b7381c441c4860be32aab9e6348620a',1,'MergingCost::isMerged(Instruction *I, Instruction *J) const -&gt; bool']]],
-  ['isshuffle_370',['isShuffle',['../structInstruction.html#a79a97b7e7551dab3035b126828c6fa5d',1,'Instruction']]],
-  ['isvalueloadorstore_371',['isValueLoadOrStore',['../structInstruction.html#a5d23d616588bd2d5b168945deffc7115',1,'Instruction']]]
+  ['getconflict_361',['getConflict',['../structPredicate_1_1Set.html#af27ae955d06bb795f220e9f19c602669',1,'Predicate::Set']]],
+  ['getfusionomega_362',['getFusionOmega',['../structMemoryAccess.html#a343e8ad8af62a3d1303005ad852c1d39',1,'MemoryAccess::getFusionOmega() -&gt; MutPtrVector&lt; int64_t &gt;'],['../structMemoryAccess.html#a685e16ba012a1a0373eeb6c1d21a5666',1,'MemoryAccess::getFusionOmega() const -&gt; PtrVector&lt; int64_t &gt;']]],
+  ['getinindmat_363',['getInIndMat',['../structDependence.html#a6cc677c17009dae397e882a80eb727a4',1,'Dependence']]],
+  ['getinstruction_364',['getInstruction',['../structInstruction_1_1Cache.html#aaf47a0672c609c80320e37508c4ed16a',1,'Instruction::Cache']]],
+  ['getoutindmat_365',['getOutIndMat',['../structDependence.html#a42ac0a8c783d95ac08f2155a9640125b',1,'Dependence']]]
 ];

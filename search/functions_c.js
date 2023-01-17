@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['searchoperandsforloads_381',['searchOperandsForLoads',['../structLinearProgramLoopBlock.html#a3ae170879d07bc766d1224bb15c9b97d',1,'LinearProgramLoopBlock']]],
-  ['searchvalueforstores_382',['searchValueForStores',['../structLinearProgramLoopBlock.html#a8c9fd983b91fbf28ff04ffcc7def0560',1,'LinearProgramLoopBlock']]],
-  ['selectcost_383',['selectCost',['../structInstruction.html#a7c9e374d023ab4f16d882484fb87f325',1,'Instruction']]]
+  ['reallocate_381',['reallocate',['../structBumpAlloc.html#a6a76e6f7de9051fea00955773e11a61b',1,'BumpAlloc']]],
+  ['removeemptymask_382',['removeEmptyMask',['../structPredicate_1_1Intersection.html#aa96f5013d74c11be8d75b23afd2431be',1,'Predicate::Intersection']]],
+  ['replaceallotheruseswith_383',['replaceAllOtherUsesWith',['../structInstruction.html#ab525733a4cc5ea3ba5a153b0d009425e',1,'Instruction']]],
+  ['replacealluseswith_384',['replaceAllUsesWith',['../structInstruction.html#a458dca4ec6b930aad5bb78e5f8c7d0f9',1,'Instruction']]],
+  ['rotate_385',['rotate',['../structAffineLoopNest.html#a5947c148786f1bb988b31428d3f5c549',1,'AffineLoopNest']]]
 ];

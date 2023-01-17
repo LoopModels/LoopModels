@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: BumpAlloc&lt; SlabSize, BumpUp, MinAlignment, AllocT &gt; Struct Template Reference</title>
+<title>LoopModels: BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -62,45 +62,112 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="structBumpAlloc-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">BumpAlloc&lt; SlabSize, BumpUp, MinAlignment, AllocT &gt; Struct Template Reference</div>  </div>
+<div class="title">BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="Allocators_8hpp_source.html">Allocators.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:aeafc31b98f26eac4a7cdf09d36df308a"><td class="memItemLeft" align="right" valign="top"><a id="aeafc31b98f26eac4a7cdf09d36df308a"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = std::byte</td></tr>
+<tr class="separator:aeafc31b98f26eac4a7cdf09d36df308a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad64942ed28b3046360f8a2221e05a08b"><td class="memItemLeft" align="right" valign="top"><a id="ad64942ed28b3046360f8a2221e05a08b"></a>
+<tr class="memitem:afe527fda25ed4e451f0f6fba0363e441"><td class="memItemLeft" align="right" valign="top"><a id="afe527fda25ed4e451f0f6fba0363e441"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (size_t Size, size_t Align) -&gt; void *</td></tr>
-<tr class="separator:ad64942ed28b3046360f8a2221e05a08b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa383e02e612508afd7db08577375d30f"><td class="memTemplParams" colspan="2"><a id="aa383e02e612508afd7db08577375d30f"></a>
+<tr class="separator:afe527fda25ed4e451f0f6fba0363e441"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac511dd44cb72d9a151c985d4f33e17de"><td class="memTemplParams" colspan="2"><a id="ac511dd44cb72d9a151c985d4f33e17de"></a>
 template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa383e02e612508afd7db08577375d30f"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>allocate</b> (size_t N) -&gt; T *</td></tr>
-<tr class="separator:aa383e02e612508afd7db08577375d30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa100c0a77eec3f9954679216e236d30b"><td class="memItemLeft" align="right" valign="top"><a id="aa100c0a77eec3f9954679216e236d30b"></a>
+<tr class="memitem:ac511dd44cb72d9a151c985d4f33e17de"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>allocate</b> (size_t N) -&gt; T *</td></tr>
+<tr class="separator:ac511dd44cb72d9a151c985d4f33e17de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3849cb6d43b53985a88028671b7eb5c1"><td class="memItemLeft" align="right" valign="top"><a id="a3849cb6d43b53985a88028671b7eb5c1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>deallocate</b> (void *Ptr, size_t Size)</td></tr>
-<tr class="separator:aa100c0a77eec3f9954679216e236d30b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a22d8eca2a40a6e6e04ec8a2d2cf361a0"><td class="memTemplParams" colspan="2"><a id="a22d8eca2a40a6e6e04ec8a2d2cf361a0"></a>
-template&lt;bool ForOverwrite = false&gt; </td></tr>
-<tr class="memitem:a22d8eca2a40a6e6e04ec8a2d2cf361a0"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>reallocate</b> (void *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</td></tr>
-<tr class="separator:a22d8eca2a40a6e6e04ec8a2d2cf361a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5bd51597019c84967d4e312670a5daec"><td class="memItemLeft" align="right" valign="top"><a id="a5bd51597019c84967d4e312670a5daec"></a>
+<tr class="separator:a3849cb6d43b53985a88028671b7eb5c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaa9c5fe4963eff0285898cf228868cb3"><td class="memTemplParams" colspan="2"><a id="aaa9c5fe4963eff0285898cf228868cb3"></a>
+template&lt;typename T &gt; </td></tr>
+<tr class="memitem:aaa9c5fe4963eff0285898cf228868cb3"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>deallocate</b> (T *Ptr, size_t N)</td></tr>
+<tr class="separator:aaa9c5fe4963eff0285898cf228868cb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a76e6f7de9051fea00955773e11a61b"><td class="memTemplParams" colspan="2">template&lt;bool ForOverwrite = false&gt; </td></tr>
+<tr class="memitem:a6a76e6f7de9051fea00955773e11a61b"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structBumpAlloc.html#a6a76e6f7de9051fea00955773e11a61b">reallocate</a> (std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</td></tr>
+<tr class="separator:a6a76e6f7de9051fea00955773e11a61b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b84e7933d309aa07d618c559c06d4b6"><td class="memItemLeft" align="right" valign="top"><a id="a8b84e7933d309aa07d618c559c06d4b6"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
-<tr class="separator:a5bd51597019c84967d4e312670a5daec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f74b7555c3e7c91953891be01d5293d"><td class="memTemplParams" colspan="2"><a id="a6f74b7555c3e7c91953891be01d5293d"></a>
+<tr class="separator:a8b84e7933d309aa07d618c559c06d4b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a233a1a12f17941b7a092662644221748"><td class="memTemplParams" colspan="2"><a id="a233a1a12f17941b7a092662644221748"></a>
 template&lt;bool ForOverwrite = false, typename T &gt; </td></tr>
-<tr class="memitem:a6f74b7555c3e7c91953891be01d5293d"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>reallocate</b> (T *Ptr, size_t OldSize, size_t NewSize) -&gt; T *</td></tr>
-<tr class="separator:a6f74b7555c3e7c91953891be01d5293d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a233a1a12f17941b7a092662644221748"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>reallocate</b> (T *Ptr, size_t OldSize, size_t NewSize) -&gt; T *</td></tr>
+<tr class="separator:a233a1a12f17941b7a092662644221748"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a756e45180ef67fba031cb1a345e7ffee"><td class="memItemLeft" align="right" valign="top"><a id="a756e45180ef67fba031cb1a345e7ffee"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>BumpAlloc</b> (<a class="el" href="structBumpAlloc.html">BumpAlloc</a> &amp;&amp;alloc) noexcept</td></tr>
+<tr class="separator:a756e45180ef67fba031cb1a345e7ffee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;size_t SlabSize = 4096, bool BumpUp = false, size_t MinAlignment = 8, typename AllocT = std::allocator&lt;std::byte&gt;&gt;<br />
-struct BumpAlloc&lt; SlabSize, BumpUp, MinAlignment, AllocT &gt;</h3>
+<div class="textblock"><h3>template&lt;size_t SlabSize = 4096, bool BumpUp = false, size_t MinAlignment = 8&gt;<br />
+struct BumpAlloc&lt; SlabSize, BumpUp, MinAlignment &gt;</h3>
 
 <p>The motivation of this file is to support realloc, allowing us to reasonably use this allocator to back containers. </p>
-</div><hr/>The documentation for this struct was generated from the following file:<ul>
+</div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="a6a76e6f7de9051fea00955773e11a61b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a76e6f7de9051fea00955773e11a61b">&#9670;&nbsp;</a></span>reallocate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;size_t SlabSize = 4096, bool BumpUp = false, size_t MinAlignment = 8&gt; </div>
+<div class="memtemplate">
+template&lt;bool ForOverwrite = false&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">auto <a class="el" href="structBumpAlloc.html">BumpAlloc</a>&lt; SlabSize, BumpUp, MinAlignment &gt;::reallocate </td>
+          <td>(</td>
+          <td class="paramtype">std::byte *&#160;</td>
+          <td class="paramname"><em>Ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>OldSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>NewSize</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>Align</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td> -&gt; void * </td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>reallocate&lt;ForOverwrite&gt;(void *Ptr, size_t OldSize, size_t NewSize, size_t Align) Should be safe with OldSize == 0, as it checks before copying </p>
+
+</div>
+</div>
+<hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Utilities/<a class="el" href="Allocators_8hpp_source.html">Allocators.hpp</a></li>
 </ul>
 </div><!-- contents -->
