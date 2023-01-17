@@ -1,18 +1,19 @@
 #pragma once
 #include "Math/Vector.hpp"
+#include "Utilities/Allocators.hpp"
 #include <cstdint>
-#include <llvm/Support/Allocator.h>
 
 namespace LinearAlgebra {
 template <typename T> struct BumpPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
   static_assert(std::is_trivially_destructible_v<T>);
   using eltype = T;
+  using iterator = T *;
   // using eltype = std::remove_const_t<T>;
   [[no_unique_address]] NotNull<T> mem;
   [[no_unique_address]] unsigned Size;
   [[no_unique_address]] unsigned Capacity;
-  [[no_unique_address]] llvm::BumpPtrAllocator &Allocator;
+  [[no_unique_address]] BumpAlloc<> &Alloc;
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
     checkIndex(size_t(Size), i);
@@ -154,11 +155,32 @@ template <typename T> struct BumpPtrVector {
     for (size_t i = 0; i < Size; ++i) mem[i] /= x;
     return *this;
   }
-#ifndef NDEBUG
-  void extendOrAssertSize(size_t M) const { assert(M == Size); }
-#else
-  static constexpr void extendOrAssertSize(size_t) {}
-#endif
+  void reserveForOverwrite(size_t N) {
+    if (N <= Capacity) return;
+    Alloc.reallocate<true>(mem, Capacity, N, alignof(T));
+    Capacity = N;
+  }
+  void reserve(size_t N) {
+    if (N <= Capacity) return;
+    Alloc.reallocate<false>(mem, Capacity, N, alignof(T));
+    Capacity = N;
+  }
+  void truncate(size_t N) {
+    assert(N <= Capacity);
+    Size = N;
+  }
+  void resize(size_t N) {
+    reserve(N);
+    Size = N;
+  }
+  void resizeForOverwrite(size_t N) {
+    reserveForOverwrite(N);
+    Size = N;
+  }
+  void extendOrAssertSize(size_t N) {
+    if (N != Size) resizeForOverwrite(N);
+  }
+  [[nodiscard]] auto get_allocator() -> BumpAlloc<> * { return &Alloc; }
 };
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);

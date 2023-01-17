@@ -2,29 +2,34 @@
 
 /// The motivation of this file is to support realloc, allowing us to reasonably
 /// use this allocator to back containers.
-#include "Utilities/Invariant.hpp"
+#include "Math/Utilities.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <llvm/ADT/SmallVector.h>
 #include <llvm/Support/Alignment.h>
 #include <llvm/Support/Compiler.h>
 #include <llvm/Support/MathExtras.h>
-#include <memory>
+#include <llvm/Support/MemAlloc.h>
 #include <type_traits>
 
-template <size_t SlabSize = 4096, bool BumpUp = false, size_t MinAlignment = 8,
-          typename AllocT = std::allocator<std::byte>>
+template <size_t SlabSize = 4096, bool BumpUp = false,
+          size_t MinAlignment = 8> // alignof(std::max_align_t)>
 struct BumpAlloc {
   static_assert(llvm::isPowerOf2_64(MinAlignment));
 
 public:
+  using value_type = std::byte;
   [[gnu::returns_nonnull]] auto allocate(size_t Size, size_t Align) -> void * {
     if (Size > SlabSize / 2) {
-      void *p = A.allocate(Size, Align);
-      customSlabs.emplace_back(p, Size);
+      // void *p = llvm::allocate_buffer(Size, Align);
+      // void *p = llvm::allocate_buffer(Size, MinAlignment);
+      // customSlabs.emplace_back(p, Size);
+      void *p = std::aligned_alloc(Align, Size);
+      customSlabs.emplace_back(p);
       return p;
     }
     auto p = (Align > MinAlignment) ? bumpAlloc(Size, Align) : bumpAlloc(Size);
@@ -44,8 +49,14 @@ public:
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
   }
+  template <typename T> void deallocate(T *Ptr, size_t N) {
+    deallocate((void *)(Ptr), N * sizeof(T));
+  }
+  /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize, size_t
+  /// Align)
+  /// Should be safe with OldSize == 0, as it checks before copying
   template <bool ForOverwrite = false>
-  [[gnu::returns_nonnull]] auto reallocate(void *Ptr, size_t OldSize,
+  [[gnu::returns_nonnull]] auto reallocate(std::byte *Ptr, size_t OldSize,
                                            size_t NewSize, size_t Align)
     -> void * {
     if (OldSize >= NewSize) return Ptr;
@@ -66,13 +77,15 @@ public:
         auto *old = reinterpret_cast<std::byte *>(Ptr);
         __asan_unpoison_memory_region(SlabCur, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
-        if constexpr (!ForOverwrite) std::copy(old, old + OldSize, SlabCur);
+        if constexpr (!ForOverwrite)
+          std::copy(old, old + OldSize, reinterpret_cast<std::byte *>(SlabCur));
         return SlabCur;
       }
     }
     // we need to allocate new memory
     auto NewPtr = allocate(NewSize, Align);
-    if constexpr (!ForOverwrite) memcpy(NewPtr, Ptr, OldSize);
+    if constexpr (!ForOverwrite)
+      std::copy(Ptr, Ptr + OldSize, reinterpret_cast<std::byte *>(NewPtr));
     deallocate(Ptr, OldSize);
     return NewPtr;
   }
@@ -84,7 +97,20 @@ public:
   [[gnu::returns_nonnull]] auto reallocate(T *Ptr, size_t OldSize,
                                            size_t NewSize) -> T * {
     return reinterpret_cast<T *>(reallocate<ForOverwrite>(
-      Ptr, OldSize * sizeof(T), NewSize * sizeof(T), alignof(T)));
+      reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
+      NewSize * sizeof(T), alignof(T)));
+  }
+  BumpAlloc() : slabs({}), customSlabs({}) { newSlab(); }
+  BumpAlloc(BumpAlloc &&alloc) noexcept {
+    slabs = std::move(alloc.slabs);
+    customSlabs = std::move(alloc.customSlabs);
+    SlabCur = alloc.SlabCur;
+    SlabEnd = alloc.SlabEnd;
+  }
+  ~BumpAlloc() {
+    for (auto Slab : slabs)
+      llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
+    resetCustomSlabs();
   }
 
 private:
@@ -107,35 +133,34 @@ private:
     i &= ~(alignment - 1);
     return p + (i - j);
   }
-  static constexpr auto toPowerOf2(size_t n) -> size_t {
-    size_t x = size_t(1) << ((8 * sizeof(n) - std::countl_zero(--n)));
-    invariant(x >= n);
-    return x;
-  }
   static constexpr auto bump(std::byte *ptr, size_t N) -> std::byte * {
     if constexpr (BumpUp) return ptr + N;
     else return ptr - N;
   }
-  static constexpr auto outOfSlab(std::byte *cur, std::byte *end) -> bool {
-    if constexpr (BumpUp) return cur >= end;
-    else return cur < end;
+  static constexpr auto outOfSlab(std::byte *cur, std::byte *lst) -> bool {
+    if constexpr (BumpUp) return cur >= lst;
+    else return cur < lst;
   }
   auto maybeNewSlab() -> bool {
     if (!outOfSlab(SlabCur, SlabEnd)) return false;
     newSlab();
     return true;
   }
-  void newSlab() {
-    std::byte *p = A.allocate(SlabSize);
-    slabs.push_back(p);
+  void initSlab(std::byte *p) {
     __asan_poison_memory_region(p, SlabSize);
     if constexpr (BumpUp) {
-      SlabCur = align(p);
+      SlabCur = p;
       SlabEnd = p + SlabSize;
     } else {
-      SlabCur = align(p + SlabSize);
+      SlabCur = p + SlabSize;
       SlabEnd = p;
     }
+  }
+  void newSlab() {
+    std::byte *p = reinterpret_cast<std::byte *>(
+      llvm::allocate_buffer(SlabSize, MinAlignment));
+    slabs.push_back(p);
+    initSlab(p);
   }
   // updates SlabCur and returns the allocated pointer
   [[gnu::returns_nonnull]] auto allocCore(size_t Size, size_t Align)
@@ -158,7 +183,7 @@ private:
     // we know we already have MinAlignment
     // and we need to preserve it.
     // Thus, we align `Size` and offset it.
-    invariant(SlabCur.isAligned(MinAlignment));
+    invariant((reinterpret_cast<size_t>(SlabCur) % MinAlignment) == 0);
 #if LLVM_ADDRESS_SANITIZER_BUILD
     SlabCur = bump(SlabCur, MinAlignment); // poisoned zone
 #endif
@@ -185,36 +210,45 @@ private:
   }
 
   void resetSlabs() {
-    if (size_t nSlabs = slabs.size()) {
-      if (nSlabs > 1) {
-        for (auto Slab : skipFirst(slabs)) A.deallocate(Slab, SlabSize);
-        slabs.truncate(1);
-      }
-      __asan_poison_memory_region(slabs.front(), SlabSize);
-      if constexpr (BumpUp) {
-        SlabCur = slabs.front();
-        SlabEnd = SlabCur + SlabSize;
-      } else {
-        SlabEnd = slabs.front();
-        SlabCur = SlabCur + SlabSize;
-      }
+    size_t nSlabs = slabs.size();
+    if (nSlabs == 0) return;
+    if (nSlabs > 1) {
+      for (size_t i = 1; i < nSlabs; ++i)
+        llvm::deallocate_buffer(slabs[i], SlabSize, MinAlignment);
+      // for (auto Slab : skipFirst(slabs))
+      // llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
+      slabs.truncate(1);
     }
+    initSlab(slabs.front());
   }
   void resetCustomSlabs() {
-    for (auto [Ptr, Size] : customSlabs) A.deallocate(Ptr, Size);
+    // for (auto [Ptr, Size] : customSlabs)
+    // llvm::deallocate_buffer(Ptr, Size, MinAlignment);
+    for (auto Ptr : customSlabs) std::free(Ptr);
     customSlabs.clear();
   }
 
-  ~BumpAlloc() {
-    for (auto Slab : slabs) A.deallocate(Slab, SlabSize);
-    resetCustomSlabs();
-  }
-  NotNull<std::byte> SlabCur;                                  // 8 bytes
-  NotNull<std::byte> SlabEnd;                                  // 8 bytes
-  llvm::SmallVector<NotNull<std::byte>, 2> slabs;              // 16 + 16 bytes
-  llvm::SmallVector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
-  [[no_unique_address]] AllocT A{};                            // 0 bytes
+  std::byte *SlabCur{nullptr};                    // 8 bytes
+  std::byte *SlabEnd{nullptr};                    // 8 bytes
+  llvm::SmallVector<NotNull<std::byte>, 2> slabs; // 16 + 16 bytes
+  // llvm::SmallVector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
+  llvm::SmallVector<void *, 0> customSlabs; // 16 bytes
 };
 static_assert(sizeof(BumpAlloc<>) == 64);
 static_assert(!std::is_trivially_copyable_v<BumpAlloc<>>);
 static_assert(!std::is_trivially_destructible_v<BumpAlloc<>>);
+static_assert(
+  std::same_as<std::allocator_traits<BumpAlloc<>>::size_type, size_t>);
+
+// // Alloc wrapper people can pass and store by value
+// // with a specific value type, so that it can act more like a
+// // `std::allocator`.
+// template <typename T, size_t SlabSize = 4096, bool BumpUp = false,
+//           size_t MinAlignment = 8>
+// struct WBumpAlloc {
+//   using value_type = T;
+
+// private:
+//   using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
+//   NotNull<Alloc> A;
+// };

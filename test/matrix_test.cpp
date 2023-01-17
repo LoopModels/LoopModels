@@ -1,13 +1,11 @@
 #include "../include/Math/Math.hpp"
 #include "../include/MatrixStringParse.hpp"
-#include "gtest/gtest.h"
 #include <cstddef>
 #include <cstdint>
 #include <gtest/gtest.h>
 #include <llvm/Support/raw_ostream.h>
 #include <string>
 
-// Demonstrate some basic assertions.
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(SparseIndexingTest, BasicAssertions) {
   SmallSparseMatrix<int64_t> Asparse(Row{3}, Col{4});

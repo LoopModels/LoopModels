@@ -1,3 +1,4 @@
+#pragma once
 #include "Math/NormalForm.hpp"
 #include "Math/Orthogonalize.hpp"
 #include "MatrixStringParse.hpp"

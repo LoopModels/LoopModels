@@ -81,10 +81,9 @@ set_target_properties(
 target_compile_options(${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition)
-  add_compile_options(-fdiagnostics-color=always)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition -fdiagnostics-color=always)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-fcolor-diagnostics)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fcolor-diagnostics)
 endif()
 
 # if(NOT ((USE_SANITIZER MATCHES "([Uu]ndefined)") OR (USE_SANITIZER MATCHES

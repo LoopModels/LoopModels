@@ -363,11 +363,6 @@ template <typename T> struct Vector {
   }
   template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {}
   void clear() { data.clear(); }
-#ifndef NDEBUG
-  void extendOrAssertSize(size_t N) const { assert(N == data.size()); }
-#else
-  constexpr void extendOrAssertSize(size_t) const {}
-#endif
   void extendOrAssertSize(size_t N) {
     if (N != data.size()) data.resize_for_overwrite(N);
   }

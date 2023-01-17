@@ -1,3 +1,4 @@
+#pragma once
 #include "Math/Simplex.hpp"
 #include <benchmark/benchmark.h>
 

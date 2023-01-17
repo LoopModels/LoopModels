@@ -15,6 +15,7 @@ include(../cmake/CPM.cmake)
 # ---- compile_commands.json ----
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+
 CPMAddPackage(
   NAME benchmark
   GITHUB_REPOSITORY google/benchmark
@@ -25,6 +26,19 @@ if(benchmark_ADDED)
   # enable c++11 to avoid compilation errors
   set_target_properties(benchmark PROPERTIES CXX_STANDARD 11)
 endif()
+
+CPMAddPackage(
+  NAME unordered_dense
+  GITHUB_REPOSITORY chriselrod/unordered_dense
+  GIT_TAG fnoexceptions
+)
+
+CPMFindPackage(
+  NAME absl
+  GITHUB_REPOSITORY abseil/abseil-cpp
+  VERSION 20220623
+)
+# set_target_properties(absl PROPERTIES CXX_STANDARD 17)
 
 # file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 file(GLOB benchmarks CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
@@ -41,12 +55,12 @@ message(STATUS "PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/../include ${PROJECT_SOURCE_DIR}/include ${LLVM_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM)
+target_link_libraries(${PROJECT_NAME} PRIVATE benchmark LLVM absl::base absl::flat_hash_map unordered_dense::unordered_dense)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2)
+  target_compile_options(${PROJECT_NAME} PRIVATE -ferror-limit=2 -fcolor-diagnostics)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4)
+  target_compile_options(${PROJECT_NAME} PRIVATE -fmax-errors=2 -fconcepts-diagnostics-depth=4 -fno-semantic-interposition -fdiagnostics-color=always)
 endif()
 
 if(ENABLE_NATIVE_COMPILATION)
