@@ -16,8 +16,8 @@
 // #include "Math/BumpVector.hpp"
 static void BM_llvmDenseMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
-    std::mt19937_64 mt;
     llvm::DenseMap<void *, uint64_t> map{};
     for (uint64_t i = 0; i < 256; ++i) {
       map[reinterpret_cast<void *>(mt() & mask)] = i;
@@ -29,8 +29,8 @@ static void BM_llvmDenseMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_llvmDenseMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_llvmSmallDenseMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
-    std::mt19937_64 mt;
     llvm::SmallDenseMap<void *, uint64_t> map{};
     for (uint64_t i = 0; i < 256; ++i) {
       map[reinterpret_cast<void *>(mt() & mask)] = i;
@@ -43,9 +43,9 @@ BENCHMARK(BM_llvmSmallDenseMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_BumpMapInsertErase(benchmark::State &state) {
   BumpAlloc<> alloc;
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
     BumpMap<void *, uint64_t> map(alloc);
-    std::mt19937_64 mt;
     for (uint64_t i = 0; i < 256; ++i) {
       map[reinterpret_cast<void *>(mt() & mask)] = i;
       map.erase(reinterpret_cast<void *>(mt() & mask));
@@ -57,8 +57,8 @@ static void BM_BumpMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_BumpMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_AbslMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
-    std::mt19937_64 mt;
     absl::flat_hash_map<void *, uint64_t> map;
     for (uint64_t i = 0; i < 256; ++i) {
       map.emplace(reinterpret_cast<void *>(mt() & mask), i);
@@ -70,8 +70,8 @@ static void BM_AbslMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_AbslMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_ankerlMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
-    std::mt19937_64 mt;
     ankerl::unordered_dense::map<void *, uint64_t> map;
     for (uint64_t i = 0; i < 256; ++i) {
       map.emplace(reinterpret_cast<void *>(mt() & mask), i);
@@ -83,8 +83,8 @@ static void BM_ankerlMapInsertErase(benchmark::State &state) {
 BENCHMARK(BM_ankerlMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_stdUnorderedMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
   for (auto b : state) {
-    std::mt19937_64 mt;
     std::unordered_map<void *, uint64_t> map;
     for (uint64_t i = 0; i < 256
 
@@ -101,6 +101,7 @@ BENCHMARK(BM_stdUnorderedMapInsertErase)->DenseRange(2, 8, 1);
 static void BM_llvmDenseMapSeq(benchmark::State &state) {
   for (auto b : state) {
     llvm::DenseMap<void *, uint64_t> map{};
+
     for (uint64_t i = 1; i <= uint64_t(state.range(0)); ++i)
       map[reinterpret_cast<void *>(8 * i)] = i;
     for (uint64_t i = 1; i <= uint64_t(state.range(0)); ++i)
