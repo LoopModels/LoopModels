@@ -1,6 +1,6 @@
 #pragma once
 
-#define BUMP_MAP_LLVM_USE_ALLOCATOR
+#define BUMP_ALLOC_LLVM_USE_ALLOCATOR
 /// The motivation of this file is to support realloc, allowing us to reasonably
 /// use this allocator to back containers.
 #include "Math/Utilities.hpp"
@@ -15,11 +15,11 @@
 #include <llvm/Support/MathExtras.h>
 #include <llvm/Support/MemAlloc.h>
 #include <type_traits>
-#ifndef BUMP_MAP_LLVM_USE_ALLOCATOR
+#ifndef BUMP_ALLOC_LLVM_USE_ALLOCATOR
 #include <cstdlib>
 #endif
 
-template <size_t SlabSize = 4096, bool BumpUp = false,
+template <size_t SlabSize = 16384, bool BumpUp = false,
           size_t MinAlignment = 8> // alignof(std::max_align_t)>
 struct BumpAlloc {
   static_assert(llvm::isPowerOf2_64(MinAlignment));
@@ -28,7 +28,7 @@ public:
   using value_type = std::byte;
   [[gnu::returns_nonnull]] auto allocate(size_t Size, size_t Align) -> void * {
     if (Size > SlabSize / 2) {
-#ifdef BUMP_MAP_LLVM_USE_ALLOCATOR
+#ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
       // void *p = llvm::allocate_buffer(Size, Align);
       void *p = llvm::allocate_buffer(Size, MinAlignment);
       customSlabs.emplace_back(p, Size);
@@ -49,18 +49,56 @@ public:
                   "BumpAlloc only supports trivially destructible types");
     return reinterpret_cast<T *>(allocate(N * sizeof(T), alignof(T)));
   }
-
+#ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
+  static constexpr auto contains(std::pair<void *, size_t> P, void *p) -> bool {
+    return P.first == p;
+  }
+  // static deallocateCustomSlab(std::pair<void *, size_t> slab) {
+  //   llvm::deallocate_buffer(slab.first, slab.second, MinAlignment);
+  // }
+#else
+  static constexpr auto contains(void *P, void *p) -> bool {
+    return P.first == p;
+  }
+  // static deallocateCustomSlab(void * slab) {
+  //   std::free(slab);
+  // }
+#endif
   void deallocate(void *Ptr, size_t Size) {
     (void)Ptr;
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
+    if constexpr (!BumpUp) {
+      if (Ptr == SlabCur) {
+        SlabCur += align(Size);
+        return;
+      }
+    }
+#ifdef BUMP_ALLOC_TRY_FREE
+    if (size_t numCSlabs = customSlabs.size()) {
+      for (size_t i = 0; i < std::min<size_t>(8, customSlabs.size()); ++i) {
+        if (contains(customSlabs[customSlabs.size() - 1 - i], Ptr)) {
+#ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
+          llvm::deallocate_buffer(Ptr, Size, MinAlignment);
+#else
+          std::free(Ptr);
+#endif
+          if (i)
+            std::swap(customSlabs[customSlabs.size() - 1],
+                      customSlabs[customSlabs.size() - 1 - i]);
+          customSlabs.pop_back();
+          return;
+        }
+      }
+    }
+#endif
   }
   template <typename T> void deallocate(T *Ptr, size_t N) {
     deallocate((void *)(Ptr), N * sizeof(T));
   }
-  /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize, size_t
-  /// Align)
-  /// Should be safe with OldSize == 0, as it checks before copying
+  /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize,
+  /// size_t Align) Should be safe with OldSize == 0, as it checks before
+  /// copying
   template <bool ForOverwrite = false>
   [[gnu::returns_nonnull]] auto reallocate(std::byte *Ptr, size_t OldSize,
                                            size_t NewSize, size_t Align)
@@ -163,7 +201,7 @@ private:
     }
   }
   void newSlab() {
-    std::byte *p = reinterpret_cast<std::byte *>(
+    auto *p = reinterpret_cast<std::byte *>(
       llvm::allocate_buffer(SlabSize, MinAlignment));
     slabs.push_back(p);
     initSlab(p);
@@ -228,7 +266,7 @@ private:
     initSlab(slabs.front());
   }
   void resetCustomSlabs() {
-#ifdef BUMP_MAP_LLVM_USE_ALLOCATOR
+#ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
     for (auto [Ptr, Size] : customSlabs)
       llvm::deallocate_buffer(Ptr, Size, MinAlignment);
 #else
@@ -240,7 +278,7 @@ private:
   std::byte *SlabCur{nullptr};                    // 8 bytes
   std::byte *SlabEnd{nullptr};                    // 8 bytes
   llvm::SmallVector<NotNull<std::byte>, 2> slabs; // 16 + 16 bytes
-#ifdef BUMP_MAP_LLVM_USE_ALLOCATOR
+#ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
   llvm::SmallVector<std::pair<void *, size_t>, 0> customSlabs; // 16 bytes
 #else
   llvm::SmallVector<void *, 0> customSlabs; // 16 bytes
