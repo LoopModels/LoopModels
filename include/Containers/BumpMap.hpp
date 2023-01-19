@@ -4,13 +4,12 @@
 #include <llvm/ADT/DenseMap.h>
 #include <variant>
 
-template <typename KeyT, typename ValueT,
+template <typename KeyT, typename ValueT, typename Alloc = BumpAlloc<>,
           typename KeyInfoT = llvm::DenseMapInfo<KeyT>,
-          typename BucketT = llvm::detail::DenseMapPair<KeyT, ValueT>,
-          typename Alloc = BumpAlloc<>>
+          typename BucketT = llvm::detail::DenseMapPair<KeyT, ValueT>>
 struct BumpMap
-  : public llvm::DenseMapBase<BumpMap<KeyT, ValueT, KeyInfoT, BucketT>, KeyT,
-                              ValueT, KeyInfoT, BucketT> {
+  : public llvm::DenseMapBase<BumpMap<KeyT, ValueT, Alloc, KeyInfoT, BucketT>,
+                              KeyT, ValueT, KeyInfoT, BucketT> {
   friend class llvm::DenseMapBase<BumpMap, KeyT, ValueT, KeyInfoT, BucketT>;
 
 private:
@@ -110,15 +109,55 @@ public:
   void grow(unsigned AtLeast) {
     unsigned OldNumBuckets = NumBuckets;
     BucketT *OldBuckets = Buckets;
-    allocateBuckets(std::max<unsigned>(
-      64, static_cast<unsigned>(llvm::NextPowerOf2(AtLeast - 1))));
-    assert(Buckets);
+    auto NewNumBuckets = std::max<unsigned>(
+      64, static_cast<unsigned>(llvm::NextPowerOf2(AtLeast - 1)));
     if (!OldBuckets) {
+      allocateBuckets(NewNumBuckets);
+      assert(Buckets);
       this->BaseT::initEmpty();
       return;
     }
-    this->moveFromOldBuckets(OldBuckets, OldBuckets + OldNumBuckets);
-    Allocator->deallocate(OldBuckets, OldNumBuckets);
+    NumBuckets = NewNumBuckets;
+    Buckets = Allocator->template reallocate<false, BucketT>(
+      Buckets, OldNumBuckets, NewNumBuckets);
+    const KeyT EmptyKey = BaseT::getEmptyKey();
+    for (size_t i = OldNumBuckets; i < NewNumBuckets; ++i)
+      new (Buckets + i) KeyT(EmptyKey);
+    const KeyT TombstoneKey = BaseT::getTombstoneKey();
+    for (BucketT *B = Buckets, *E = Buckets + OldNumBuckets; B != E; ++B) {
+      if (!KeyInfoT::isEqual(B->getFirst(), EmptyKey) &&
+          !KeyInfoT::isEqual(B->getFirst(), TombstoneKey)) {
+
+        auto &Val = B->getFirst();
+        unsigned BucketNo = BaseT::getHashValue(Val) & (NumBuckets - 1);
+        unsigned ProbeAmt = 0;
+        while (true) {
+          BucketT *ThisBucket = Buckets + BucketNo;
+          if (ThisBucket == B) break;
+          assert(!(KeyInfoT::isEqual(Val, ThisBucket->getFirst())));
+          if (KeyInfoT::isEqual(ThisBucket->getFirst(), EmptyKey)) [[likely]] {
+            ThisBucket->getFirst() = Val;
+            ThisBucket->getSecond() = B->getSecond();
+            Val = TombstoneKey;
+            setNumTombstones(getNumTombstones() + 1);
+            break;
+          }
+          // If this is a tombstone, remember it.  If Val ends up not in the
+          // map, we prefer to return it than something that would require more
+          // probing.
+          if (KeyInfoT::isEqual(ThisBucket->getFirst(), TombstoneKey)) {
+            // setNumTombstones(getNumTombstones() - 1);
+            Val = TombstoneKey;
+            ThisBucket->getFirst() = Val;
+            ThisBucket->getSecond() = B->getSecond();
+            break;
+          }
+          // Hash collision or a tombstone, continue quadratic probing.
+          BucketNo += ++ProbeAmt;
+          BucketNo &= (NumBuckets - 1);
+        }
+      }
+    }
   }
 
   void shrink_and_clear() {
@@ -163,14 +202,14 @@ private:
     Buckets = Allocator->template allocate<BucketT>(NumBuckets);
     return true;
   }
-  // void reallocateBuckets(unsigned Num) {
-  //   unsigned oldNumBuckets = NumBuckets;
-  //   NumBuckets = Num;
-  //   if (NumBuckets == 0) {
-  //     Buckets = nullptr;
-  //   } else {
-  //     Buckets = Allocator->template reallocate<false, BucketT>(
-  //       Buckets, oldNumBuckets, NumBuckets);
-  //   }
-  // }
+  void reallocateBuckets(unsigned Num) {
+    unsigned oldNumBuckets = NumBuckets;
+    NumBuckets = Num;
+    if (NumBuckets == 0) {
+      Buckets = nullptr;
+    } else {
+      Buckets = Allocator->template reallocate<false, BucketT>(
+        Buckets, oldNumBuckets, NumBuckets);
+    }
+  }
 };

@@ -44,7 +44,7 @@ public:
     return p;
   }
   template <typename T>
-  [[gnu::returns_nonnull]] auto allocate(size_t N) -> T * {
+  [[gnu::returns_nonnull, gnu::flatten]] auto allocate(size_t N) -> T * {
     static_assert(std::is_trivially_destructible_v<T>,
                   "BumpAlloc only supports trivially destructible types");
     return reinterpret_cast<T *>(allocate(N * sizeof(T), alignof(T)));
@@ -138,8 +138,9 @@ public:
     resetCustomSlabs();
   }
   template <bool ForOverwrite = false, typename T>
-  [[gnu::returns_nonnull]] auto reallocate(T *Ptr, size_t OldSize,
-                                           size_t NewSize) -> T * {
+  [[gnu::returns_nonnull, gnu::flatten]] auto reallocate(T *Ptr, size_t OldSize,
+                                                         size_t NewSize)
+    -> T * {
     return reinterpret_cast<T *>(reallocate<ForOverwrite>(
       reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
       NewSize * sizeof(T), alignof(T)));
