@@ -1,7 +1,4 @@
 var searchData=
 [
-  ['compactunion_361',['compactUnion',['../structPredicate_1_1Intersection.html#aaa2b904ea48bc52b82906c61c905274e',1,'Predicate::Intersection']]],
-  ['completeinstruction_362',['completeInstruction',['../structInstruction_1_1Cache.html#aac20cacdc313d51f3f26afc005bac40f',1,'Instruction::Cache']]],
-  ['connectgraph_363',['connectGraph',['../structLinearProgramLoopBlock.html#a07a5af74d3682d24abc08a0490b55da8',1,'LinearProgramLoopBlock']]],
-  ['createselect_364',['createSelect',['../structInstruction_1_1Cache.html#a37d61f99a3da1f930285614bdcca0898',1,'Instruction::Cache']]]
+  ['descend_360',['descend',['../structPredicate_1_1Map.html#ad329a3160de985d1a1b3ac4c1e37f492',1,'Predicate::Map']]]
 ];
