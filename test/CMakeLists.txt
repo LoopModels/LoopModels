@@ -28,6 +28,12 @@ CPMFindPackage(
   VERSION 1.12.1
   OPTIONS "INSTALL_GTEST OFF" "BUILD_GMOCK OFF" "gtest_hide_internal_symbols ON"
 )
+CPMAddPackage(
+  NAME unordered_dense
+  GITHUB_REPOSITORY chriselrod/unordered_dense
+  GIT_TAG fnoexceptions
+)
+
 
 if(TEST_INSTALLED_VERSION)
   find_package(LoopModels REQUIRED)
@@ -83,7 +89,7 @@ target_precompile_headers(
   <utility>
 )
 # target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM)
+target_link_libraries(${PROJECT_NAME} PRIVATE GTest::gtest_main LLVM unordered_dense::unordered_dense)
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
 set_target_properties(

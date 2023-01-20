@@ -130,8 +130,8 @@ public:
   /// size_t Align) Should be safe with OldSize == 0, as it checks before
   /// copying
   template <bool ForOverwrite = false>
-  [[gnu::returns_nonnull]] auto reallocate(std::byte *Ptr, size_t OldSize,
-                                           size_t NewSize, size_t Align)
+  [[gnu::returns_nonnull, nodiscard]] auto
+  reallocate(std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align)
     -> void * {
     if (OldSize >= NewSize) return Ptr;
     if (auto *p = tryReallocate(Ptr, OldSize, NewSize, Align)) {
@@ -173,9 +173,8 @@ public:
     resetCustomSlabs();
   }
   template <bool ForOverwrite = false, typename T>
-  [[gnu::returns_nonnull, gnu::flatten]] auto reallocate(T *Ptr, size_t OldSize,
-                                                         size_t NewSize)
-    -> T * {
+  [[gnu::returns_nonnull, gnu::flatten, nodiscard]] auto
+  reallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
     return reinterpret_cast<T *>(reallocate<ForOverwrite>(
       reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
       NewSize * sizeof(T), alignof(T)));
@@ -340,13 +339,16 @@ public:
   template <typename U> struct rebind {
     using other = WBumpAlloc<U>;
   };
-  WBumpAlloc(Alloc &A) : A(&A) {}
-  template <typename U> WBumpAlloc(WBumpAlloc<U> &other) {
-    {
-      { other.A; }
-    }
+  WBumpAlloc(Alloc &alloc) : A(&alloc) {}
+  WBumpAlloc(NotNull<Alloc> alloc) : A(alloc) {}
+  WBumpAlloc(const WBumpAlloc &other) : A(other.A) {}
+  template <typename U>
+  WBumpAlloc(WBumpAlloc<U> other) : A(other.get_allocator()) {}
+  [[nodiscard]] auto get_allocator() -> NotNull<Alloc> { return A; }
+  void deallocate(T *p, size_t n) { A->deallocate(p, n); }
+  [[gnu::returns_nonnull]] auto allocate(size_t n) -> T * {
+    return A->template allocate<T>(n);
   }
-  auto get_allocator() -> Alloc & { return *A; }
 
 private:
   NotNull<Alloc> A;

@@ -59,6 +59,12 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 # target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage) message(STATUS "Lib
 # coverage enabled.") endif()
 
+CPMAddPackage(
+  NAME unordered_dense
+  GITHUB_REPOSITORY chriselrod/unordered_dense
+  GIT_TAG fnoexceptions
+)
+
 # ---- Add source files ----
 
 # Note: globbing sources is considered bad practice as CMake's generators may not detect new files
@@ -94,7 +100,7 @@ endif()
 target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE LLVM)
+target_link_libraries(${PROJECT_NAME} PRIVATE LLVM unordered_dense::unordered_dense)
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
