@@ -25,6 +25,7 @@ struct BumpAlloc {
   static_assert(llvm::isPowerOf2_64(MinAlignment));
 
 public:
+  static constexpr bool BumpDown = !BumpUp;
   using value_type = std::byte;
   [[gnu::returns_nonnull]] auto allocate(size_t Size, size_t Align) -> void * {
     if (Size > SlabSize / 2) {
@@ -64,15 +65,15 @@ public:
   //   std::free(slab);
   // }
 #endif
-  void deallocate(void *Ptr, size_t Size) {
+  void deallocate(std::byte *Ptr, size_t Size) {
     (void)Ptr;
     (void)Size;
     __asan_poison_memory_region(Ptr, Size);
-    if constexpr (!BumpUp) {
-      if (Ptr == SlabCur) {
-        SlabCur += align(Size);
-        return;
-      }
+    if constexpr (BumpUp) {
+      if (Ptr + align(Size) == SlabCur) SlabCur = Ptr;
+    } else if (Ptr == SlabCur) {
+      SlabCur += align(Size);
+      return;
     }
 #ifdef BUMP_ALLOC_TRY_FREE
     if (size_t numCSlabs = customSlabs.size()) {
@@ -94,7 +95,36 @@ public:
 #endif
   }
   template <typename T> void deallocate(T *Ptr, size_t N) {
-    deallocate((void *)(Ptr), N * sizeof(T));
+    deallocate(reinterpret_cast<std::byte *>(Ptr), N * sizeof(T));
+  }
+  auto tryReallocate(std::byte *Ptr, size_t OldSize, size_t NewSize,
+                     size_t Align) -> std::byte * {
+    Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
+    if constexpr (BumpUp) {
+      if (Ptr == SlabCur - align(OldSize)) {
+        SlabCur = Ptr + align(NewSize);
+        if (!outOfSlab(SlabCur, SlabEnd)) {
+          __asan_unpoison_memory_region(Ptr + OldSize, NewSize - OldSize);
+          __msan_allocated_memory(Ptr + OldSize, NewSize - OldSize);
+          return Ptr;
+        }
+      }
+    } else if (Ptr == SlabCur) {
+      size_t extraSize = align(NewSize - OldSize, Align);
+      SlabCur -= extraSize;
+      if (!outOfSlab(SlabCur, SlabEnd)) {
+        __asan_unpoison_memory_region(SlabCur, extraSize);
+        __msan_allocated_memory(SlabCur, extraSize);
+        return SlabCur;
+      }
+    }
+    return nullptr;
+  }
+  template <typename T>
+  auto tryReallocate(T *Ptr, size_t OldSize, size_t NewSize) -> T * {
+    return reinterpret_cast<T *>(
+      tryReallocate(reinterpret_cast<std::byte *>(Ptr), OldSize * sizeof(T),
+                    NewSize * sizeof(T), alignof(T)));
   }
   /// reallocate<ForOverwrite>(void *Ptr, size_t OldSize, size_t NewSize,
   /// size_t Align) Should be safe with OldSize == 0, as it checks before
@@ -103,6 +133,12 @@ public:
   [[gnu::returns_nonnull]] auto reallocate(std::byte *Ptr, size_t OldSize,
                                            size_t NewSize, size_t Align)
     -> void * {
+    if (OldSize >= NewSize) return Ptr;
+    if (auto *p = tryReallocate(Ptr, OldSize, NewSize, Align)) {
+      if constexpr ((BumpDown) & (!ForOverwrite))
+        std::copy(Ptr, Ptr + OldSize, p);
+      return p;
+    }
     if (OldSize >= NewSize) return Ptr;
     Align = Align > MinAlignment ? toPowerOf2(Align) : MinAlignment;
     if constexpr (BumpUp) {
@@ -121,8 +157,7 @@ public:
         auto *old = reinterpret_cast<std::byte *>(Ptr);
         __asan_unpoison_memory_region(SlabCur, extraSize);
         __msan_allocated_memory(SlabCur, extraSize);
-        if constexpr (!ForOverwrite)
-          std::copy(old, old + OldSize, reinterpret_cast<std::byte *>(SlabCur));
+        if constexpr (!ForOverwrite) std::copy(old, old + OldSize, SlabCur);
         return SlabCur;
       }
     }
@@ -291,15 +326,32 @@ static_assert(!std::is_trivially_destructible_v<BumpAlloc<>>);
 static_assert(
   std::same_as<std::allocator_traits<BumpAlloc<>>::size_type, size_t>);
 
-// // Alloc wrapper people can pass and store by value
-// // with a specific value type, so that it can act more like a
-// // `std::allocator`.
-// template <typename T, size_t SlabSize = 4096, bool BumpUp = false,
-//           size_t MinAlignment = 8>
-// struct WBumpAlloc {
-//   using value_type = T;
+// Alloc wrapper people can pass and store by value
+// with a specific value type, so that it can act more like a
+// `std::allocator`.
+template <typename T, size_t SlabSize = 16384, bool BumpUp = false,
+          size_t MinAlignment = 8>
+struct WBumpAlloc {
+private:
+  using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
 
-// private:
-//   using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
-//   NotNull<Alloc> A;
-// };
+public:
+  using value_type = T;
+  template <typename U> struct rebind {
+    using other = WBumpAlloc<U>;
+  };
+  WBumpAlloc(Alloc &A) : A(&A) {}
+  template <typename U> WBumpAlloc(WBumpAlloc<U> &other) {
+    {
+      { other.A; }
+    }
+  }
+  auto get_allocator() -> Alloc & { return *A; }
+
+private:
+  NotNull<Alloc> A;
+};
+static_assert(std::same_as<
+              std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);
+static_assert(
+  std::same_as<std::allocator_traits<WBumpAlloc<int64_t>>::pointer, int64_t *>);

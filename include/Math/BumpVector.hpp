@@ -8,12 +8,27 @@ template <typename T> struct BumpPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
   static_assert(std::is_trivially_destructible_v<T>);
   using eltype = T;
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using size_type = unsigned;
+  using difference_type = int;
   using iterator = T *;
-  // using eltype = std::remove_const_t<T>;
-  [[no_unique_address]] NotNull<T> mem;
+  using const_iterator =const T *;
+  using pointer = T *;
+  using const_pointer = const T *;
+  using allocator_type = WBumpAlloc<T>;
+  
+    // using eltype = std::remove_const_t<T>;
+    [[no_unique_address]] T
+      mem;
   [[no_unique_address]] unsigned Size;
   [[no_unique_address]] unsigned Capacity;
   [[no_unique_address]] BumpAlloc<> &Alloc;
+
+  BumpPtrVector(BumpAlloc<> &a) : T(nullptr), Size(0),Capacity(0), Alloc(a) {}
+  BumpPtrVector(const WBumpAlloc<T> &a) : T(nullptr), Size(0),Capacity(0), Alloc(a.get_allocator()) {}
+  
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
 #ifndef NDEBUG
     checkIndex(size_t(Size), i);
@@ -180,7 +195,7 @@ template <typename T> struct BumpPtrVector {
   void extendOrAssertSize(size_t N) {
     if (N != Size) resizeForOverwrite(N);
   }
-  [[nodiscard]] auto get_allocator() -> BumpAlloc<> * { return &Alloc; }
+  [[nodiscard]] auto get_allocator() -> WBumpAlloc<T> { return &Alloc; }
 };
 static_assert(std::is_trivially_destructible_v<MutPtrVector<int64_t>>);
 static_assert(std::is_trivially_destructible_v<BumpPtrVector<int64_t>>);

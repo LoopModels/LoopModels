@@ -108,58 +108,52 @@ public:
   // }
   void grow(unsigned AtLeast) {
     unsigned OldNumBuckets = NumBuckets;
-    BucketT *OldBuckets = Buckets;
     auto NewNumBuckets = std::max<unsigned>(
       64, static_cast<unsigned>(llvm::NextPowerOf2(AtLeast - 1)));
-    if (!OldBuckets) {
-      allocateBuckets(NewNumBuckets);
-      assert(Buckets);
-      this->BaseT::initEmpty();
-      return;
-    }
-    NumBuckets = NewNumBuckets;
-    Buckets = Allocator->template reallocate<false, BucketT>(
-      Buckets, OldNumBuckets, NewNumBuckets);
+    BucketT *OldBuckets = allocateBucketsInit(NewNumBuckets);
+    assert(Buckets);
+    if (!OldBuckets) return;
+    moveFromOldBuckets(OldBuckets, OldNumBuckets);
+    Allocator->deallocate(OldBuckets, OldNumBuckets);
+  }
+  void moveFromOldBuckets(BucketT *OldBucketsBegin, unsigned OldNumBuckets) {
+    // this->initEmpty();
+
+    // Insert all the old elements.
     const KeyT EmptyKey = BaseT::getEmptyKey();
-    for (size_t i = OldNumBuckets; i < NewNumBuckets; ++i)
-      new (Buckets + i) KeyT(EmptyKey);
     const KeyT TombstoneKey = BaseT::getTombstoneKey();
-    for (BucketT *B = Buckets, *E = Buckets + OldNumBuckets; B != E; ++B) {
+    for (BucketT *B = OldBucketsBegin, *E = B + OldNumBuckets; B != E; ++B) {
       if (!KeyInfoT::isEqual(B->getFirst(), EmptyKey) &&
           !KeyInfoT::isEqual(B->getFirst(), TombstoneKey)) {
+        // Insert the key/value into the new table.
+        BucketT *DestBucket;
+        KeyT &Val = B->getFirst();
 
-        auto &Val = B->getFirst();
         unsigned BucketNo = BaseT::getHashValue(Val) & (NumBuckets - 1);
         unsigned ProbeAmt = 0;
         while (true) {
-          BucketT *ThisBucket = Buckets + BucketNo;
-          if (ThisBucket == B) break;
-          assert(!(KeyInfoT::isEqual(Val, ThisBucket->getFirst())));
-          if (KeyInfoT::isEqual(ThisBucket->getFirst(), EmptyKey)) [[likely]] {
-            ThisBucket->getFirst() = Val;
-            ThisBucket->getSecond() = B->getSecond();
-            Val = TombstoneKey;
-            setNumTombstones(getNumTombstones() + 1);
+          DestBucket = Buckets + BucketNo;
+          // Found Val's bucket?  If so, return it.
+          assert((!KeyInfoT::isEqual(Val, DestBucket->getFirst())) &&
+                 "Key already in new map?");
+          if (KeyInfoT::isEqual(DestBucket->getFirst(), EmptyKey) ||
+              KeyInfoT::isEqual(DestBucket->getFirst(), TombstoneKey))
+            [[likely]] {
             break;
           }
-          // If this is a tombstone, remember it.  If Val ends up not in the
-          // map, we prefer to return it than something that would require more
-          // probing.
-          if (KeyInfoT::isEqual(ThisBucket->getFirst(), TombstoneKey)) {
-            // setNumTombstones(getNumTombstones() - 1);
-            Val = TombstoneKey;
-            ThisBucket->getFirst() = Val;
-            ThisBucket->getSecond() = B->getSecond();
-            break;
-          }
-          // Hash collision or a tombstone, continue quadratic probing.
+          // Hash collision, continue quadratic probing.
           BucketNo += ++ProbeAmt;
           BucketNo &= (NumBuckets - 1);
         }
+        DestBucket->getFirst() = std::move(B->getFirst());
+        ::new (&DestBucket->getSecond()) ValueT(std::move(B->getSecond()));
+        setNumEntries(getNumEntries() + 1);
+        // Free the value.
+        B->getSecond().~ValueT();
       }
+      B->getFirst().~KeyT();
     }
   }
-
   void shrink_and_clear() {
     unsigned OldNumBuckets = NumBuckets;
     unsigned OldNumEntries = NumEntries;
@@ -202,14 +196,52 @@ private:
     Buckets = Allocator->template allocate<BucketT>(NumBuckets);
     return true;
   }
-  void reallocateBuckets(unsigned Num) {
-    unsigned oldNumBuckets = NumBuckets;
+  /// returns a pointer to the old buckets
+  /// the basic idea is to try and take advantage of realloc
+  /// Semantically, it is the same as `allocateBuckets` followed by calling
+  /// this->initEmpty();
+  ///
+  [[gnu::returns_nonnull]] auto allocateBucketsInit(unsigned Num) -> BucketT * {
+    BucketT *OrigBuckets = Buckets;
+    unsigned OldNumBuckets = NumBuckets;
+    const KeyT EmptyKey = BaseT::getEmptyKey();
+    setNumEntries(0);
+    setNumTombstones(0);
     NumBuckets = Num;
-    if (NumBuckets == 0) {
-      Buckets = nullptr;
-    } else {
-      Buckets = Allocator->template reallocate<false, BucketT>(
-        Buckets, oldNumBuckets, NumBuckets);
+    Buckets = Buckets
+                ? Allocator->tryReallocate(Buckets, OldNumBuckets, NumBuckets)
+                : nullptr;
+    if (Buckets) {
+      // now we'll allocate a temporary array of buckets
+      // we'll then copy the old buckets into it, while initializing the new
+      // buckets
+      BucketT *OldBuckets =
+        Allocator->template allocate<BucketT>(OldNumBuckets);
+      if constexpr (Alloc::BumpDown) {
+        assert(OrigBuckets == Buckets + (Num - OldNumBuckets));
+        BucketT *E = OrigBuckets;
+        for (BucketT *B = Buckets; B != E; ++B)
+          ::new (&B->getFirst()) KeyT(EmptyKey);
+        for (size_t i = 0; i < OldNumBuckets; ++i) {
+          BucketT *B = E + i;
+          OldBuckets[i] = *B;
+          ::new (&B->getFirst()) KeyT(EmptyKey);
+        }
+      } else {
+        for (size_t i = 0; i < OldNumBuckets; ++i) {
+          BucketT *B = Buckets + i;
+          OldBuckets[i] = *B;
+          ::new (&B->getFirst()) KeyT(EmptyKey);
+        }
+        for (BucketT *B = Buckets + OldNumBuckets, *E = Buckets + NumBuckets;
+             B != E; ++B)
+          ::new (&B->getFirst()) KeyT(EmptyKey);
+      }
+      return OldBuckets;
     }
+    Buckets = Allocator->template allocate<BucketT>(NumBuckets);
+    for (BucketT *B = Buckets, *E = B + NumBuckets; B != E; ++B)
+      ::new (&B->getFirst()) KeyT(EmptyKey);
+    return OrigBuckets;
   }
 };

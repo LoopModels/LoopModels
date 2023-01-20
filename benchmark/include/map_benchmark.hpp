@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Containers/BumpMap.hpp"
+#include "Math/BumpVector.hpp"
 #include "Utilities/Allocators.hpp"
 #include <absl/container/flat_hash_map.h>
 #include <ankerl/unordered_dense.h>
@@ -29,7 +30,6 @@ void InsertErase(std::mt19937_64 &mt, D &map, uint64_t mask) {
   }
 }
 
-// #include "Math/BumpVector.hpp"
 static void BM_llvmDenseMapInsertErase(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
@@ -125,6 +125,28 @@ static void BM_BumpMapInsertLookup(benchmark::State &state) {
 }
 // Register the function as a benchmark
 BENCHMARK(BM_BumpMapInsertLookup)->DenseRange(2, 8, 1);
+template <typename K, typename V>
+using amap =
+  ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,
+                               std::equal_to<K>,
+                               LinearAlgebra::BumpPtrVector<std::pair<K, V>>>;
+// template <typename K, typename V>
+// using aset = ankerl::unordered_dense::set<K,
+// ankerl::unordered_dense::hash<K>,
+//                                           std::equal_to<K>,
+//                                           LinearAlgebra::BumpPtrVector<K>>;
+static void BM_ankerlBumpMapInsertLookup(benchmark::State &state) {
+  BumpAlloc<> alloc;
+  uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
+  std::mt19937_64 mt;
+  for (auto b : state) {
+    amap<void *, uint64_t> map(alloc);
+    InsertLookup(mt, map, mask);
+    alloc.reset();
+  }
+}
+// Register the function as a benchmark
+BENCHMARK(BM_ankerlBumpMapInsertLookup)->DenseRange(2, 8, 1);
 static void BM_AbslMapInsertLookup(benchmark::State &state) {
   uint64_t mask = ((1ull << state.range(0)) - 1) << 3ull;
   std::mt19937_64 mt;
@@ -219,15 +241,6 @@ static void BM_AbslMapSeq(benchmark::State &state) {
 
 // Register the function as a benchmark
 BENCHMARK(BM_AbslMapSeq)->RangeMultiplier(2)->Range(1 << 2, 1 << 10);
-// template <typename K, typename V>
-// using amap =
-//   ankerl::unordered_dense::map<K, V, ankerl::unordered_dense::hash<K>,
-//                                std::equal_to<K>, BumpVector<std::pair<K,
-//                                V>>>;
-// template <typename K, typename V>
-// using aset = ankerl::unordered_dense::set<K,
-// ankerl::unordered_dense::hash<K>,
-//                                           std::equal_to<K>, BumpVector<K>>;
 
 static void BM_AnkerlMapSeq(benchmark::State &state) {
   for (auto b : state) {
