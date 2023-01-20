@@ -7,5 +7,6 @@ var searchData=
   ['bitsliceview_17',['BitSliceView',['../structBitSliceView.html',1,'']]],
   ['bumpalloc_18',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
   ['bumpmap_19',['BumpMap',['../structBumpMap.html',1,'BumpMap&lt; KeyT, ValueT, Alloc, KeyInfoT, BucketT &gt;'],['../structBumpMap.html#a7f0d8a565e49d2cb5a5850346a59953a',1,'BumpMap::BumpMap()']]],
-  ['bumpptrvector_20',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
+  ['bumpptrvector_20',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]],
+  ['bumpset_21',['BumpSet',['../classBumpSet.html',1,'']]]
 ];
