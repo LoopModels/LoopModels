@@ -89,8 +89,8 @@ $(function() {
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize = 16384, <span class="keywordtype">bool</span> BumpUp = <span class="keyword">false</span>,</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = 8&gt; <span class="comment">// alignof(std::max_align_t)&gt;</span></div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structBumpAlloc.html">   24</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structBumpAlloc.html">BumpAlloc</a> {</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = <span class="keyword">alignof</span>(std::max_align_t)&gt;</div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structBumpAlloc.html">   24</a></span>&#160;<span class="keyword">struct</span> <a class="code" href="structBumpAlloc.html">BumpAlloc</a> {</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  static_assert(llvm::isPowerOf2_64(MinAlignment));</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">public</span>:</div>
@@ -240,7 +240,7 @@ $(function() {
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  }</div>
 <div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  <span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> ForOverwrite = false, <span class="keyword">typename</span> T&gt;</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  [[gnu::returns_nonnull, gnu::flatten, nodiscard]] <span class="keyword">auto</span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <a class="code" href="structBumpAlloc.html#a6a76e6f7de9051fea00955773e11a61b">reallocate</a>(T *Ptr, <span class="keywordtype">size_t</span> OldSize, <span class="keywordtype">size_t</span> NewSize) -&gt; T * {</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  reallocate(T *Ptr, <span class="keywordtype">size_t</span> OldSize, <span class="keywordtype">size_t</span> NewSize) -&gt; T * {</div>
 <div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">reinterpret_cast&lt;</span>T *<span class="keyword">&gt;</span>(reallocate&lt;ForOverwrite&gt;(</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;      <span class="keyword">reinterpret_cast&lt;</span>std::byte *<span class="keyword">&gt;</span>(Ptr), OldSize * <span class="keyword">sizeof</span>(T),</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;      NewSize * <span class="keyword">sizeof</span>(T), <span class="keyword">alignof</span>(T)));</div>
@@ -400,8 +400,8 @@ $(function() {
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;<span class="comment">// with a specific value type, so that it can act more like a</span></div>
 <div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="comment">// `std::allocator`.</span></div>
 <div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> SlabSize = 16384, <span class="keywordtype">bool</span> BumpUp = <span class="keyword">false</span>,</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = 8&gt;</div>
-<div class="line"><a name="l00338"></a><span class="lineno"><a class="line" href="structWBumpAlloc.html">  338</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structWBumpAlloc.html">WBumpAlloc</a> {</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = <span class="keyword">alignof</span>(std::max_align_t)&gt;</div>
+<div class="line"><a name="l00338"></a><span class="lineno"><a class="line" href="structWBumpAlloc.html">  338</a></span>&#160;<span class="keyword">struct</span> <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a> {</div>
 <div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBumpAlloc.html">Alloc</a> = <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
 <div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160; </div>
@@ -428,6 +428,16 @@ $(function() {
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;              std::allocator_traits&lt;<a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;int64_t *&gt;</a>&gt;::size_type, <span class="keywordtype">size_t</span>&gt;);</div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;static_assert(</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  std::same_as&lt;std::allocator_traits&lt;<a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>&gt;::pointer, int64_t *&gt;);</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;<span class="keyword">auto</span> <span class="keyword">operator</span> <span class="keyword">new</span>(<span class="keywordtype">size_t</span> Size, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;Alloc)</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  -&gt; <span class="keywordtype">void</span> * {</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keywordflow">return</span> Alloc.allocate(Size, std::min&lt;size_t&gt;(llvm::NextPowerOf2(Size),</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;                                               <span class="keyword">alignof</span>(std::max_align_t)));</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;}</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160; </div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="keywordtype">void</span> <span class="keyword">operator</span> <span class="keyword">delete</span>(<span class="keywordtype">void</span> *, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;) {}</div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:24</div></div>
 <div class="ttc" id="astructBumpAlloc_html_a6a76e6f7de9051fea00955773e11a61b"><div class="ttname"><a href="structBumpAlloc.html#a6a76e6f7de9051fea00955773e11a61b">BumpAlloc::reallocate</a></div><div class="ttdeci">auto reallocate(std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</div><div class="ttdef"><b>Definition:</b> Allocators.hpp:134</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
