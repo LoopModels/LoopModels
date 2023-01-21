@@ -3,7 +3,7 @@ var searchData=
   ['identifierempty_68',['IdentifierEmpty',['../structInstruction_1_1IdentifierEmpty.html',1,'Instruction']]],
   ['identifiertombstone_69',['IdentifierTombstone',['../structInstruction_1_1IdentifierTombstone.html',1,'Instruction']]],
   ['indexmatrix_70',['indexMatrix',['../structAddress.html#a340fbd656944acb792583c66186dd6ec',1,'Address::indexMatrix()'],['../structMemoryAccess.html#a2d1006fd9552a0ef88f8fa33fac6c133',1,'MemoryAccess::indexMatrix() const -&gt; PtrMatrix&lt; int64_t &gt;'],['../structMemoryAccess.html#af3e9f24fe6b5cb0b59091cea5dfdfcb0',1,'MemoryAccess::indexMatrix() -&gt; MutPtrMatrix&lt; int64_t &gt;'],['../structAddress.html#a944d66eb4736af541f573f74f8eba277',1,'Address::indexMatrix()']]],
-  ['initancestors_71',['initAncestors',['../structMergingCost.html#ab8bf2641ddbde2a207031e37c37b9269',1,'MergingCost']]],
+  ['initancestors_71',['initAncestors',['../structMergingCost.html#aac70d5c2dafaec5277cb6ed6aceaacbc',1,'MergingCost']]],
   ['initializeloopforest_72',['initializeLoopForest',['../classTurboLoopPass.html#a61d15982d3d7c2d1918da31c454a2f10',1,'TurboLoopPass']]],
   ['instruction_73',['Instruction',['../structInstruction.html',1,'']]],
   ['instructionblock_74',['InstructionBlock',['../structInstructionBlock.html',1,'']]],
