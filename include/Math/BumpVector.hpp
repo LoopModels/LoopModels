@@ -2,6 +2,7 @@
 #include "Math/Vector.hpp"
 #include "Utilities/Allocators.hpp"
 #include <cstdint>
+#include <llvm/Support/Alignment.h>
 
 namespace LinearAlgebra {
 template <typename T> struct BumpPtrVector {
@@ -202,7 +203,7 @@ template <typename T> struct BumpPtrVector {
     if (Size > Capacity) [[unlikely]]
       reserve(Size + Size);
     T *p = mem + offset;
-    ::new (p) T(std::forward<Args>(args)...);
+    ::new ((void *)p) T(std::forward<Args>(args)...);
     return *p;
   }
   [[nodiscard]] constexpr auto empty() const -> bool { return Size == 0; }

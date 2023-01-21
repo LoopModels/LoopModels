@@ -191,6 +191,11 @@ public:
       llvm::deallocate_buffer(Slab, SlabSize, MinAlignment);
     resetCustomSlabs();
   }
+  template <typename T, typename... Args>
+  auto construct(Args &&...args) -> T * {
+    auto *p = allocate(sizeof(T), alignof(T));
+    return new (p) T(std::forward<Args>(args)...);
+  }
 
 private:
   static constexpr auto align(size_t x) -> size_t {

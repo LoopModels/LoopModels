@@ -10,6 +10,7 @@
 #include "Math/Math.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
+#include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
@@ -64,7 +65,7 @@ public:
     addMemory(sId, store, nodeIndex);
   }
   [[nodiscard]] auto
-  getMemAccesses(llvm::BumpPtrAllocator &alloc,
+  getMemAccesses(BumpAlloc<> &alloc,
                  llvm::ArrayRef<MemoryAccess *> memAccess) const
     -> llvm::SmallVector<Address *> {
     // First, we invert the schedule matrix.
@@ -296,7 +297,7 @@ private:
     carriedDeps;
   // llvm::SmallVector<bool> visited; // visited, for traversing graph
   [[no_unique_address]] llvm::DenseMap<llvm::User *, unsigned> userToMemory;
-  [[no_unique_address]] llvm::BumpPtrAllocator allocator;
+  [[no_unique_address]] BumpAlloc<> allocator;
   // llvm::SmallVector<llvm::Value *> symbols;
   [[no_unique_address]] Simplex omniSimplex;
   // we may turn off edges because we've exceeded its loop depth
@@ -325,7 +326,7 @@ public:
     carriedDeps.clear();
     userToMemory.clear();
     sol.clear();
-    allocator.Reset();
+    allocator.reset();
   }
   // TODO: `constexpr` once `llvm::SmallVector` supports it
   [[nodiscard]] auto numVerticies() const -> size_t { return nodes.size(); }

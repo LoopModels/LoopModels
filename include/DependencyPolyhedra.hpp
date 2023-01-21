@@ -8,6 +8,7 @@
 #include "Math/Orthogonalize.hpp"
 #include "Math/Polyhedra.hpp"
 #include "Math/Simplex.hpp"
+#include "Utilities/Allocators.hpp"
 #include "Utilities/Valid.hpp"
 #include <algorithm>
 #include <array>
@@ -949,9 +950,8 @@ public:
     // assert(false);
     // return false;
   }
-  static auto timelessCheck(llvm::BumpPtrAllocator &alloc,
-                            DependencePolyhedra dxy, MemoryAccess &x,
-                            MemoryAccess &y) -> Dependence * {
+  static auto timelessCheck(BumpAlloc<> &alloc, DependencePolyhedra dxy,
+                            MemoryAccess &x, MemoryAccess &y) -> Dependence * {
     std::array<Simplex, 2> pair(dxy.farkasPair());
     const size_t numLambda = dxy.getNumLambda();
     assert(dxy.getTimeDim() == 0);
@@ -973,7 +973,7 @@ public:
 
   // emplaces dependencies with repeat accesses to the same memory across
   // time
-  static auto timeCheck(llvm::BumpPtrAllocator &alloc, DependencePolyhedra dxy,
+  static auto timeCheck(BumpAlloc<> &alloc, DependencePolyhedra dxy,
                         MemoryAccess &x, MemoryAccess &y)
     -> std::array<Optional<Dependence *>, 2> {
     std::array<Simplex, 2> pair(dxy.farkasPair());
@@ -1099,8 +1099,8 @@ public:
     return {dep0, dep1};
   }
 
-  static auto check(llvm::BumpPtrAllocator &alloc, MemoryAccess &x,
-                    MemoryAccess &y) -> std::array<Optional<Dependence *>, 2> {
+  static auto check(BumpAlloc<> &alloc, MemoryAccess &x, MemoryAccess &y)
+    -> std::array<Optional<Dependence *>, 2> {
     if (x.gcdKnownIndependent(y)) return {};
     DependencePolyhedra dxy(x, y);
     assert(x.getNumLoops() == dxy.getDim0());

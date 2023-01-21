@@ -5,6 +5,8 @@
 #include "./LoopForest.hpp"
 #include "./Predicate.hpp"
 #include "BitSets.hpp"
+#include "Containers/BumpMapSet.hpp"
+#include "Utilities/Allocators.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -19,8 +21,7 @@
 #include <set>
 #include <sys/select.h>
 
-void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
-                           Instruction::Cache &cache,
+void buildInstructionGraph(BumpAlloc<> &alloc, Instruction::Cache &cache,
                            LinearProgramLoopBlock &LB) {
   for (auto &node : LB.getNodes()) {
     auto access = node.getMemAccesses(alloc, LB.getMemoryAccesses());
@@ -39,8 +40,7 @@ void buildInstructionGraph(llvm::BumpPtrAllocator &alloc,
 }
 
 // merge all instructions from toMerge into merged
-inline void merge(llvm::SmallPtrSetImpl<Instruction *> &merged,
-                  llvm::SmallPtrSetImpl<Instruction *> &toMerge) {
+inline void merge(aset<Instruction *> &merged, aset<Instruction *> &toMerge) {
   merged.insert(toMerge.begin(), toMerge.end());
 }
 struct ReMapper {
@@ -67,16 +67,16 @@ struct MergingCost {
   // yielding c -> e -> d -> a -> b -> c
   // that is, if we're fusing c and d, we can make each point toward
   // what the other one was pointing to, in order to link the chains.
-  llvm::DenseMap<Instruction *, Instruction *> mergeMap;
+  amap<Instruction *, Instruction *> mergeMap;
   llvm::SmallVector<std::pair<Instruction *, Instruction *>> mergeList;
-  llvm::DenseMap<Instruction *, llvm::SmallPtrSet<Instruction *, 16> *>
-    ancestorMap;
+  amap<Instruction *, aset<Instruction *> *> ancestorMap;
   llvm::InstructionCost cost;
   /// returns `true` if `key` was already in ancestors
   /// returns `false` if it had to initialize
-  auto initAncestors(llvm::BumpPtrAllocator &alloc, Instruction *key)
-    -> llvm::SmallPtrSet<Instruction *, 16> * {
-    auto *set = alloc.Allocate<llvm::SmallPtrSet<Instruction *, 16>>();
+  auto initAncestors(BumpAlloc<> &alloc, Instruction *key)
+    -> aset<Instruction *> * {
+
+    auto *set = alloc.construct<aset<Instruction *>>(alloc);
     /// instructions are considered their own ancestor for our purposes
     set->insert(key);
     for (auto *op : key->operands)
@@ -90,14 +90,13 @@ struct MergingCost {
   [[nodiscard]] auto visited(Instruction *key) const -> bool {
     return ancestorMap.count(key);
   }
-  auto getAncestors(llvm::BumpPtrAllocator &alloc, Instruction *key)
-    -> llvm::SmallPtrSet<Instruction *, 16> * {
+  auto getAncestors(BumpAlloc<> &alloc, Instruction *key)
+    -> aset<Instruction *> * {
     if (auto it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return initAncestors(alloc, key);
   }
-  auto getAncestors(Instruction *key)
-    -> llvm::SmallPtrSet<Instruction *, 16> * {
+  auto getAncestors(Instruction *key) -> aset<Instruction *> * {
     if (auto it = ancestorMap.find(key); it != ancestorMap.end())
       return it->second;
     return nullptr;
@@ -131,8 +130,8 @@ struct MergingCost {
   // follows the cycle, traversing H -> mergeMap[H] -> mergeMap[mergeMap[H]]
   // ... until it reaches E, updating the ancestorMap pointer at each level of
   // the recursion.
-  void cycleUpdateMerged(llvm::SmallPtrSet<Instruction *, 16> *ancestors,
-                         Instruction *E, Instruction *H) {
+  void cycleUpdateMerged(aset<Instruction *> *ancestors, Instruction *E,
+                         Instruction *H) {
     while (H != E) {
       ancestorMap[H] = ancestors;
       H = mergeMap[H];
@@ -143,7 +142,7 @@ struct MergingCost {
   }
 
   struct Allocate {
-    llvm::BumpPtrAllocator &alloc;
+    BumpAlloc<> &alloc;
     Instruction::Cache &cache;
     ReMapper &reMap;
   };
@@ -158,7 +157,7 @@ struct MergingCost {
     }
   };
   struct SelectAllocator {
-    llvm::BumpPtrAllocator &alloc;
+    BumpAlloc<> &alloc;
     Instruction::Cache &cache;
     ReMapper &reMap;
     llvm::MutableArrayRef<Instruction *> operands;
@@ -268,7 +267,7 @@ struct MergingCost {
     return selector;
   };
 
-  void merge(llvm::BumpPtrAllocator &alloc, llvm::TargetTransformInfo &TTI,
+  void merge(BumpAlloc<> &alloc, llvm::TargetTransformInfo &TTI,
              unsigned int vectorBits, Instruction *A, Instruction *B) {
     mergeList.emplace_back(A, B);
     auto aA = ancestorMap.find(B);
@@ -279,8 +278,7 @@ struct MergingCost {
     // we leave their ancestor PtrMaps intact.
     // in the new MergingCost where they're the same instruction,
     // we assign them the same ancestor Claptrap.
-    auto *merged =
-      new (alloc) llvm::SmallPtrSet<Instruction *, 16>(*aA->second);
+    auto *merged = new (alloc) aset<Instruction *>(*aA->second);
     merged->insert(aB->second->begin(), aB->second->end());
     aA->second = merged;
     aB->second = merged;
@@ -319,12 +317,10 @@ struct MergingCost {
 };
 
 void mergeInstructions(
-  llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
-  Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
-  unsigned int vectorBits,
-  llvm::DenseMap<std::pair<Instruction::Intrinsic, llvm::Type *>,
-                 llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
-    &opMap,
+  BumpAlloc<> &alloc, Instruction::Cache &cache, Predicate::Map &predMap,
+  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
+  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
+       llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>> &opMap,
   llvm::SmallVectorImpl<MergingCost *> &mergingCosts, Instruction *I,
   llvm::BasicBlock *BB, Predicate::Set &preds) {
   // have we already visited?
@@ -361,7 +357,7 @@ void mergeInstructions(
       // because we are traversing in topological order
       // that is, we haven't visited any descendants of `I`
       // so only an ancestor had a chance
-      auto *MC = new (alloc) MergingCost(*C);
+      auto *MC = alloc.construct<MergingCost>(*C);
       // MC is a copy of C, except we're now merging
       MC->merge(alloc, TTI, vectorBits, other, I);
     }
@@ -385,8 +381,8 @@ void mergeInstructions(
 }
 
 /// mergeInstructions(
-///    llvm::BumpPtrAllocator &alloc,
-///    llvm::BumpPtrAllocator &tmpAlloc,
+///    BumpAlloc<> &alloc,
+///    BumpAlloc<> &tmpAlloc,
 ///    Instruction::Cache &cache,
 ///    Predicate::Map &predMap
 /// )
@@ -395,17 +391,16 @@ void mergeInstructions(
 /// merging as it allocates a lot of memory that it can free when it is done.
 /// TODO: this algorithm is exponential in time and memory.
 /// Odds are that there's way smarter things we can do.
-void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
                        Predicate::Map &predMap, llvm::TargetTransformInfo &TTI,
-                       llvm::BumpPtrAllocator &tAlloc,
-                       unsigned int vectorBits) {
+                       BumpAlloc<> &tAlloc, unsigned int vectorBits) {
   if (!predMap.isDivergent()) return;
   // there is a divergence in the control flow that we can ideally merge
-  auto &opMap = *alloc.Allocate<llvm::DenseMap<
-    std::pair<Instruction::Intrinsic, llvm::Type *>,
-    llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>>();
+  amap<std::pair<Instruction::Intrinsic, llvm::Type *>,
+       llvm::SmallVector<std::pair<Instruction *, Predicate::Set>>>
+    opMap{};
   llvm::SmallVector<MergingCost *> mergingCosts;
-  mergingCosts.push_back(alloc.Allocate<MergingCost>());
+  mergingCosts.push_back(alloc.construct<MergingCost>());
   for (auto &pred : predMap) {
     for (llvm::Instruction &lI : *pred.first) {
       if (Instruction *I = cache[&lI]) {
@@ -433,13 +428,12 @@ void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
     reMap.remapFromTo(B, A);
   }
   // free memory
-  tAlloc.Reset();
+  tAlloc.reset();
 }
 
-void mergeInstructions(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+void mergeInstructions(BumpAlloc<> &alloc, Instruction::Cache &cache,
                        LoopTree *loopForest, llvm::TargetTransformInfo &TTI,
-                       llvm::BumpPtrAllocator &tAlloc,
-                       unsigned int vectorBits) {
+                       BumpAlloc<> &tAlloc, unsigned int vectorBits) {
   for (auto &predMap : loopForest->getPaths())
     mergeInstructions(alloc, cache, predMap, TTI, tAlloc, vectorBits);
   for (auto subLoop : loopForest->getSubLoops())
