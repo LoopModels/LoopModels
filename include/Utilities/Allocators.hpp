@@ -20,7 +20,7 @@
 #endif
 
 template <size_t SlabSize = 16384, bool BumpUp = false,
-          size_t MinAlignment = 8> // alignof(std::max_align_t)>
+          size_t MinAlignment = alignof(std::max_align_t)>
 struct BumpAlloc {
   static_assert(llvm::isPowerOf2_64(MinAlignment));
 
@@ -334,7 +334,7 @@ static_assert(
 // with a specific value type, so that it can act more like a
 // `std::allocator`.
 template <typename T, size_t SlabSize = 16384, bool BumpUp = false,
-          size_t MinAlignment = 8>
+          size_t MinAlignment = alignof(std::max_align_t)>
 struct WBumpAlloc {
 private:
   using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
@@ -362,3 +362,13 @@ static_assert(std::same_as<
               std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);
 static_assert(
   std::same_as<std::allocator_traits<WBumpAlloc<int64_t>>::pointer, int64_t *>);
+
+template <size_t SlabSize, bool BumpUp, size_t MinAlignment>
+auto operator new(size_t Size, BumpAlloc<SlabSize, BumpUp, MinAlignment> &Alloc)
+  -> void * {
+  return Alloc.allocate(Size, std::min<size_t>(llvm::NextPowerOf2(Size),
+                                               alignof(std::max_align_t)));
+}
+
+template <size_t SlabSize, bool BumpUp, size_t MinAlignment>
+void operator delete(void *, BumpAlloc<SlabSize, BumpUp, MinAlignment> &) {}
