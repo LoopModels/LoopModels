@@ -6,6 +6,7 @@
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
 #include "Math/Polyhedra.hpp"
+#include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include <bit>
 #include <cstddef>
@@ -209,8 +210,7 @@ struct AffineLoopNest
   /// So that our new loop nest has matrix
   /// [A(_,const) (A(_,var)*R)]
   /// while the new `var' is `(R^{-1}*var)`
-  [[nodiscard]] auto rotate(llvm::BumpPtrAllocator &alloc,
-                            PtrMatrix<int64_t> R) const
+  [[nodiscard]] auto rotate(BumpAlloc<> &alloc, PtrMatrix<int64_t> R) const
     -> NotNull<AffineLoopNest<false>> {
     size_t numExtraVar = 0;
     if constexpr (NonNegative) numExtraVar = getNumLoops();
@@ -218,7 +218,7 @@ struct AffineLoopNest
     assert(R.numRow() == numExtraVar);
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    auto pt = alloc.allocate<AffineLoopNest<false>>();
     NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
     ret->S = S;
     IntMatrix &B = ret->A;
@@ -234,13 +234,13 @@ struct AffineLoopNest
     return ret;
   }
   /// like rotate(identityMatrix)
-  [[nodiscard]] auto explicitLowerBounds(llvm::BumpPtrAllocator &alloc)
+  [[nodiscard]] auto explicitLowerBounds(BumpAlloc<> &alloc)
     -> NotNull<AffineLoopNest<false>> {
     if constexpr (!NonNegative) return this;
     const size_t numExtraVar = getNumLoops();
     const size_t numConst = getNumSymbols();
     const auto [M, N] = A.size();
-    auto pt = alloc.Allocate<AffineLoopNest<false>>();
+    auto pt = alloc.allocate<AffineLoopNest<false>>();
     NotNull<AffineLoopNest<false>> ret = new (pt) AffineLoopNest<false>{};
     ret->S = S;
     IntMatrix &B = ret->A;

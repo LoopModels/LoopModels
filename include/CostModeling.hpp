@@ -5,9 +5,9 @@
 #include "./LoopBlock.hpp"
 #include "./LoopForest.hpp"
 #include "./Loops.hpp"
-#include "Math/Math.hpp"
 #include "./MemoryAccess.hpp"
 #include "./Schedule.hpp"
+#include "Math/Math.hpp"
 #include <algorithm>
 #include <any>
 #include <cassert>
@@ -144,13 +144,12 @@ struct LoopTreeSchedule {
   [[nodiscard]] auto getNumSubTrees() const -> size_t {
     return subTrees.size();
   }
-  auto getLoopAndExit(llvm::BumpPtrAllocator &tAlloc, size_t i)
-    -> LoopAndExit * {
+  auto getLoopAndExit(BumpAlloc<> &tAlloc, size_t i) -> LoopAndExit * {
     if (LoopAndExit *ret = subTrees[i]) return ret;
-    auto *loopAndExit = tAlloc.Allocate<LoopAndExit>();
+    auto *loopAndExit = tAlloc.allocate<LoopAndExit>();
     return subTrees[i] = loopAndExit;
   }
-  auto getLoopTripple(llvm::BumpPtrAllocator &tAlloc, size_t i)
+  auto getLoopTripple(BumpAlloc<> &tAlloc, size_t i)
     -> std::tuple<InstructionBlock *, LoopTreeSchedule *, InstructionBlock *> {
     InstructionBlock *H;
     LoopTreeSchedule *L;
@@ -166,24 +165,23 @@ struct LoopTreeSchedule {
     E = &loopAndExit->second;
     return {H, L, E};
   }
-  auto getLoop(llvm::BumpPtrAllocator &tAlloc, size_t i) -> LoopTreeSchedule & {
+  auto getLoop(BumpAlloc<> &tAlloc, size_t i) -> LoopTreeSchedule & {
     return getLoopAndExit(tAlloc, i)->first;
   }
   [[nodiscard]] auto getDepth() const -> size_t { return depth; }
   /// Adds the schedule corresponding for the innermost loop.
-  void addInnermostSchedule(llvm::BumpPtrAllocator &alloc,
-                            Instruction::Cache &cache,
-                            llvm::BumpPtrAllocator &tAlloc,
-                            LoopTree *loopForest, LinearProgramLoopBlock &LB,
-                            ScheduledNode &node, llvm::TargetTransformInfo &TTI,
+  void addInnermostSchedule(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                            BumpAlloc<> &tAlloc, LoopTree *loopForest,
+                            LinearProgramLoopBlock &LB, ScheduledNode &node,
+                            llvm::TargetTransformInfo &TTI,
                             unsigned int vectorBits, Schedule &sch,
                             size_t depth) {
     // TODO: emplace all memory accesses that occur here
     assert(subTrees.empty());
   }
   // this method descends
-  void addMemory(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
-                 llvm::BumpPtrAllocator &tAlloc, LoopTree *loopForest,
+  void addMemory(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                 BumpAlloc<> &tAlloc, LoopTree *loopForest,
                  LinearProgramLoopBlock &LB, ScheduledNode &node,
                  llvm::TargetTransformInfo &TTI, unsigned int vectorBits,
                  Schedule &sch, size_t d) {
@@ -204,10 +202,9 @@ struct LoopTreeSchedule {
     getLoop(tAlloc, i).addMemory(alloc, cache, tAlloc, loopForest, LB, node,
                                  TTI, vectorBits, sch, d);
   }
-  void init(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
-            llvm::BumpPtrAllocator &tAlloc, LoopTree *loopForest,
-            LinearProgramLoopBlock &LB, llvm::TargetTransformInfo &TTI,
-            unsigned int vectorBits) {
+  void init(BumpAlloc<> &alloc, Instruction::Cache &cache, BumpAlloc<> &tAlloc,
+            LoopTree *loopForest, LinearProgramLoopBlock &LB,
+            llvm::TargetTransformInfo &TTI, unsigned int vectorBits) {
     // TODO: can we shorten the life span of the instructions we
     // allocate here to `lalloc`? I.e., do we need them to live on after
     // this forest is scheduled?
@@ -233,5 +230,5 @@ struct LoopForestSchedule {
   [[no_unique_address]] llvm::SmallVector<LoopAndExit> loopNests;
   [[no_unique_address]] llvm::SmallVector<llvm::SmallVector<LoopTreeSchedule *>>
     depthTrees;
-  [[no_unique_address]] llvm::BumpPtrAllocator &allocator;
+  [[no_unique_address]] BumpAlloc<> &allocator;
 };

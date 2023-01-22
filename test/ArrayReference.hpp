@@ -25,7 +25,7 @@ struct ArrayReference {
     return size_t(offMat.numRow());
   }
 };
-inline auto createMemAccess(llvm::BumpPtrAllocator &alloc, ArrayReference &ar,
+inline auto createMemAccess(BumpAlloc<> &alloc, ArrayReference &ar,
                             llvm::Instruction *I,
                             llvm::ArrayRef<unsigned> omegas)
   -> NotNull<MemoryAccess> {

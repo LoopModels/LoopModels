@@ -373,7 +373,7 @@ struct Set {
   //     return I;
   // }
   // PredicateSet() = default;
-  // PredicateSet(llvm::BumpPtrAllocator &alloc, Instruction::Cache
+  // PredicateSet(BumpAlloc<> &alloc, Instruction::Cache
   // &ic,
   //                    llvm::SmallVector<Instruction *> &predicates,
   //                    Predicates &pred) {

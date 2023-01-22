@@ -76,14 +76,14 @@ private:
   }
 
 public:
-  static auto construct(llvm::BumpPtrAllocator &alloc,
+  static auto construct(BumpAlloc<> &alloc,
                         NotNull<AffineLoopNest<false>> explicitLoop,
                         NotNull<MemoryAccess> ma, bool isStr,
                         SquarePtrMatrix<int64_t> Pinv, int64_t denom,
                         PtrVector<int64_t> omega) -> NotNull<Address> {
 
     size_t memSz = ma->getNumLoops() * (1 + ma->getArrayDim());
-    auto *pt = alloc.Allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
+    auto *pt = alloc.allocate(sizeof(Address) + memSz * sizeof(int64_t), 8);
     return new (pt) Address(explicitLoop, ma, Pinv, denom, omega, isStr);
   }
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t { return depth; }

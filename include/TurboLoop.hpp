@@ -77,7 +77,7 @@ public:
   [[no_unique_address]] llvm::ScalarEvolution *SE;
   [[no_unique_address]] llvm::OptimizationRemarkEmitter *ORE;
   [[no_unique_address]] LinearProgramLoopBlock loopBlock;
-  [[no_unique_address]] llvm::BumpPtrAllocator allocator;
+  [[no_unique_address]] BumpAlloc<> allocator;
   [[no_unique_address]] Instruction::Cache instrCache;
   [[no_unique_address]] unsigned registerCount;
 

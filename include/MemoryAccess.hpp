@@ -79,7 +79,7 @@ private:
     : basePointer(arrayPtr), loop(loopRef), loadOrStore(user){};
 
 public:
-  static auto construct(llvm::BumpPtrAllocator &alloc,
+  static auto construct(BumpAlloc<> &alloc,
                         const llvm::SCEVUnknown *arrayPointer,
                         AffineLoopNest<true> &loopRef, llvm::Instruction *user,
                         PtrVector<unsigned> o) -> NotNull<MemoryAccess> {
@@ -87,13 +87,13 @@ public:
     assert(o.size() == numLoops + 1);
     size_t memNeeded = numLoops;
     auto *mem =
-      alloc.Allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
+      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem) MemoryAccess(arrayPointer, loopRef, user);
     ma->getFusionOmega() = o;
     return ma;
   }
   static auto
-  construct(llvm::BumpPtrAllocator &alloc, const llvm::SCEVUnknown *arrayPtr,
+  construct(BumpAlloc<> &alloc, const llvm::SCEVUnknown *arrayPtr,
             AffineLoopNest<true> &loopRef, llvm::Instruction *user,
             PtrMatrix<int64_t> indMatT,
             std::array<llvm::SmallVector<const llvm::SCEV *, 3>, 2> szOff,
@@ -108,7 +108,7 @@ public:
     size_t numSymbols = size_t(offsets.numCol());
     size_t memNeeded = memoryTotalRequired(arrayDim, numLoops, numSymbols);
     auto *mem =
-      alloc.Allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
+      alloc.allocate(sizeof(MemoryAccess) + memNeeded * sizeof(int64_t), 8);
     auto *ma = new (mem) MemoryAccess(arrayPtr, loopRef, user, {sz, off});
     ma->indexMatrix() = indMatT.transpose();
     ma->offsetMatrix() = offsets;

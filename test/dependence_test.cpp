@@ -120,7 +120,7 @@ TEST(DependenceTest, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> schLoad0(3);
   llvm::SmallVector<unsigned, 8> schStore(3);
   schStore[2] = 2;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astore11, schStore)};
   MemoryAccess *mtgt01{createMemAccess(alloc, Atgt01, Aload01, schLoad0)};
   DependencePolyhedra dep0(*msrc, *mtgt01);
@@ -223,7 +223,7 @@ TEST(SymmetricIndependentTest, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> schLoad(3);
   llvm::SmallVector<unsigned, 8> schStore(3);
   schStore[2] = 1;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astoreij, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, Atgt, Aloadji, schLoad)};
   DependencePolyhedra dep(*msrc, *mtgt);
@@ -306,7 +306,7 @@ TEST(RankDeficientLoad, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> schLoad(2 + 1);
   llvm::SmallVector<unsigned, 8> schStore(2 + 1);
   schStore[2] = 1;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astoreij, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, Atgt, Aloadii, schLoad)};
 
@@ -399,7 +399,7 @@ TEST(TimeHidingInRankDeficiency, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> schLoad(3 + 1);
   llvm::SmallVector<unsigned, 8> schStore(3 + 1);
   schStore[3] = 1;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, Aref, Astore, schStore)};
   MemoryAccess *mtgt{createMemAccess(alloc, Aref, Aload, schLoad)};
 
@@ -612,7 +612,7 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // NOTE: shared ptrs get set to NULL when `lblock.memory` reallocs...
   llvm::SmallVector<unsigned, 8> sch2_0_0(2 + 1);
   llvm::SmallVector<unsigned, 8> sch2_0_1 = sch2_0_0;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   // A(n,m) = -> B(n,m) <-
   MemoryAccess *mSch2_0_0(createMemAccess(alloc, BmnInd, Bload, sch2_0_0));
   lblock.addMemory(mSch2_0_0);
@@ -1093,7 +1093,7 @@ TEST(MeanStDevTest0, BasicAssertions) {
   LinearProgramLoopBlock iOuterLoopNest;
   llvm::SmallVector<MemoryAccess *> iOuterMem;
 
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   iOuterMem.emplace_back(createMemAccess(alloc, xInd1, Xstore_0, sch0_0)); // 0
 
   iOuterMem.emplace_back(
@@ -1371,7 +1371,7 @@ TEST(DoubleDependenceTest, BasicAssertions) {
   llvm::SmallVector<unsigned, 8> schLoad0(2 + 1);
   llvm::SmallVector<unsigned, 8> schStore(2 + 1);
   schStore[2] = 2;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   MemoryAccess *msrc{createMemAccess(alloc, Asrc, Astore, schStore)};
   MemoryAccess *mtgt0{createMemAccess(alloc, Atgt0, Aload_ip1_j, schLoad0)};
   DependencePolyhedra dep0(*msrc, *mtgt0);
@@ -1571,7 +1571,7 @@ TEST(ConvReversePass, BasicAssertions) {
   LinearProgramLoopBlock loopBlock;
   llvm::SmallVector<unsigned, 8> sch_0(4 + 1);
   llvm::SmallVector<unsigned, 8> sch_1 = sch_0;
-  llvm::BumpPtrAllocator alloc;
+  BumpAlloc<> alloc;
   //         C[m+i,j+n] = C[m+i,j+n] + A[m,n] * -> B[i,j] <-;
   MemoryAccess *msch_0(createMemAccess(alloc, BmnInd, Bload, sch_0));
   loopBlock.addMemory(msch_0);

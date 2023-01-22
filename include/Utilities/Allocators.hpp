@@ -45,9 +45,9 @@ public:
     return p;
   }
   template <typename T>
-  [[gnu::returns_nonnull, gnu::flatten]] auto allocate(size_t N) -> T * {
+  [[gnu::returns_nonnull, gnu::flatten]] auto allocate(size_t N = 1) -> T * {
     static_assert(std::is_trivially_destructible_v<T>,
-                  "BumpAlloc only supports trivially destructible types");
+                  "BumpAlloc only supports trivially destructible types.");
     return reinterpret_cast<T *>(allocate(N * sizeof(T), alignof(T)));
   }
 #ifdef BUMP_ALLOC_LLVM_USE_ALLOCATOR
@@ -94,7 +94,7 @@ public:
     }
 #endif
   }
-  template <typename T> void deallocate(T *Ptr, size_t N) {
+  template <typename T> void deallocate(T *Ptr, size_t N = 1) {
     deallocate(reinterpret_cast<std::byte *>(Ptr), N * sizeof(T));
   }
   auto tryReallocate(std::byte *Ptr, size_t OldSize, size_t NewSize,

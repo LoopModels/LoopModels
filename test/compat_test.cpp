@@ -146,7 +146,7 @@ TEST(AffineTest0, BasicAssertions) {
   aff.dump();
   llvm::errs() << "About to run first set of bounds tests\n";
   llvm::errs() << "\nPermuting loops 1 and 2\n";
-  llvm::BumpPtrAllocator allocator;
+  BumpAlloc<> allocator;
   NotNull<AffineLoopNest<false>> affp021ptr{
     aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat)};
   AffineLoopNest<false> &affp021 = *affp021ptr;
@@ -193,7 +193,7 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(A), 2);
   AffineLoopNest<true> &aff2 = tlf.alns.back();
   EXPECT_FALSE(aff2.isEmpty());
-  llvm::BumpPtrAllocator allocator;
+  BumpAlloc<> allocator;
   NotNull<AffineLoopNest<false>> affp10{
     aff2.rotate(allocator, "[0 1; 1 0]"_mat)};
 

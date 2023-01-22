@@ -295,7 +295,7 @@ struct Instruction {
     [[no_unique_address]] llvm::SmallVector<Instruction *> predicates;
     // tmp is used in case we don't need an allocation
     // [[no_unique_address]] Instruction *tmp{nullptr};
-    // auto allocate(llvm::BumpPtrAllocator &alloc, Intrinsic id,
+    // auto allocate(BumpAlloc<> &alloc, Intrinsic id,
     //               llvm::Type *type) -> Instruction * {
     //     if (tmp) {
     //         tmp->id = id;
@@ -343,63 +343,61 @@ struct Instruction {
                       Instruction *op2) -> Instruction * {
       return argMapLoopup<3>(idt, {op0, op1, op2});
     }
-    auto createInstruction(llvm::BumpPtrAllocator &alloc, UniqueIdentifier uid,
+    auto createInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                            llvm::Type *typ) -> Instruction * {
       auto *i = new (alloc) Instruction(uid, typ);
       for (auto *op : i->operands) op->users.insert(i);
       argMap.insert({uid, i});
       return i;
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, UniqueIdentifier uid,
+    auto getInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                         llvm::Type *typ) {
       if (auto *i = (*this)[uid]) return i;
       return createInstruction(alloc, uid, typ);
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, UniqueIdentifier uid,
+    auto getInstruction(BumpAlloc<> &alloc, UniqueIdentifier uid,
                         llvm::Type *typ, Predicate::Set pred) {
       if (auto *i = (*this)[uid]) return i;
       auto *i = createInstruction(alloc, uid, typ);
       i->predicates = std::move(pred);
       return i;
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifier idt,
-                        llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, llvm::Type *typ) {
       UniqueIdentifier uid{idt, {}};
       return getInstruction(alloc, uid, typ);
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifier idt,
-                        Instruction *op0, llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Instruction *op0,
+                        llvm::Type *typ) {
       // stack allocate for check
       if (auto *i = argMapLoopup(idt, op0)) return i;
-      auto **opptr = alloc.Allocate<Instruction *>(1);
+      auto **opptr = alloc.allocate<Instruction *>(1);
       opptr[0] = op0;
       llvm::MutableArrayRef<Instruction *> ops(opptr, 1);
       UniqueIdentifier uid{idt, ops};
       return createInstruction(alloc, uid, typ);
     }
     template <size_t N>
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifier idt,
+    auto getInstruction(BumpAlloc<> &alloc, Identifier idt,
                         std::array<Instruction *, N> ops, llvm::Type *typ) {
       // stack allocate for check
       if (auto *i = argMapLoopup(idt, ops)) return i;
-      auto **opptr = alloc.Allocate<Instruction *>(2);
+      auto **opptr = alloc.allocate<Instruction *>(2);
       for (size_t n = 0; n < N; n++) opptr[n] = ops[n];
       llvm::MutableArrayRef<Instruction *> mops(opptr, N);
       UniqueIdentifier uid{idt, mops};
       return createInstruction(alloc, uid, typ);
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifier idt,
-                        Instruction *op0, Instruction *op1, llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Instruction *op0,
+                        Instruction *op1, llvm::Type *typ) {
       return getInstruction<2>(alloc, idt, {op0, op1}, typ);
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Identifier idt,
-                        Instruction *op0, Instruction *op1, Instruction *op2,
-                        llvm::Type *typ) {
+    auto getInstruction(BumpAlloc<> &alloc, Identifier idt, Instruction *op0,
+                        Instruction *op1, Instruction *op2, llvm::Type *typ) {
       return getInstruction<3>(alloc, idt, {op0, op1, op2}, typ);
     }
 
     /// This is the API for creating new instructions
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, llvm::Instruction *instr)
+    auto getInstruction(BumpAlloc<> &alloc, llvm::Instruction *instr)
       -> Instruction * {
       if (Instruction *i = (*this)[instr]) return i;
       UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, instr)};
@@ -407,10 +405,9 @@ struct Instruction {
       llvmToInternalMap[instr] = i;
       return i;
     }
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
+    auto getInstruction(BumpAlloc<> &alloc, Predicate::Map &predMap,
                         llvm::Instruction *instr) -> Instruction *;
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, llvm::Value *v)
-      -> Instruction * {
+    auto getInstruction(BumpAlloc<> &alloc, llvm::Value *v) -> Instruction * {
       if (Instruction *i = (*this)[v]) return i;
       UniqueIdentifier uid{getUniqueIdentifier(alloc, *this, v)};
       auto *i = getInstruction(alloc, uid, v->getType());
@@ -419,25 +416,25 @@ struct Instruction {
     }
     // if not in predMap, then operands don't get added, and
     // it won't be added to the argMap
-    auto getInstruction(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
+    auto getInstruction(BumpAlloc<> &alloc, Predicate::Map &predMap,
                         llvm::Value *v) -> Instruction *;
     [[nodiscard]] auto contains(llvm::Value *v) const -> bool {
       return llvmToInternalMap.count(v);
     }
-    auto createConstant(llvm::BumpPtrAllocator &alloc, llvm::Type *typ,
-                        int64_t c) -> Instruction * {
+    auto createConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
+      -> Instruction * {
       UniqueIdentifier uid{Identifier(c), {}};
       auto argMatch = argMap.find(uid);
       if (argMatch != argMap.end()) return argMatch->second;
       return new (alloc) Instruction(uid, typ);
     }
-    auto getConstant(llvm::BumpPtrAllocator &alloc, llvm::Type *typ, int64_t c)
+    auto getConstant(BumpAlloc<> &alloc, llvm::Type *typ, int64_t c)
       -> Instruction * {
       UniqueIdentifier uid{Identifier(c), {}};
       if (auto *i = (*this)[uid]) return i;
       return createConstant(alloc, typ, c);
     }
-    auto createCondition(llvm::BumpPtrAllocator &alloc, Predicate::Relation rel,
+    auto createCondition(BumpAlloc<> &alloc, Predicate::Relation rel,
                          Instruction *instr, bool swap = false)
       -> Instruction * {
       switch (rel) {
@@ -452,9 +449,8 @@ struct Instruction {
         return swap ? instr->negate(alloc, *this) : instr;
       }
     }
-    auto createCondition(llvm::BumpPtrAllocator &alloc,
-                         Predicate::Intersection pred, bool swap)
-      -> Instruction * {
+    auto createCondition(BumpAlloc<> &alloc, Predicate::Intersection pred,
+                         bool swap) -> Instruction * {
       size_t popCount = pred.popCount();
       if (popCount == 0) {
         // everything is true
@@ -482,8 +478,8 @@ struct Instruction {
       } while (ind < 32);
       return I;
     }
-    auto createSelect(llvm::BumpPtrAllocator &alloc, Instruction *A,
-                      Instruction *B) -> Instruction * {
+    auto createSelect(BumpAlloc<> &alloc, Instruction *A, Instruction *B)
+      -> Instruction * {
       auto idt = Intrinsic(Intrinsic::OpCode{llvm::Instruction::Select});
       // TODO: make predicate's instruction vector shared among all in
       // LoopTree?
@@ -526,21 +522,21 @@ struct Instruction {
     /// when filling a predMap, we may initially not complete an instruction
     /// if it didn't appear inside the predMap if it is added later, we then
     /// need to finish adding its operands.
-    auto completeInstruction(llvm::BumpPtrAllocator &, Predicate::Map &,
+    auto completeInstruction(BumpAlloc<> &, Predicate::Map &,
                              llvm::Instruction *) -> Instruction *;
   };
-  [[nodiscard]] auto static getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+  [[nodiscard]] auto static getUniqueIdentifier(BumpAlloc<> &alloc,
                                                 Cache &cache,
                                                 llvm::Instruction *v)
     -> UniqueIdentifier {
     return std::make_pair(Intrinsic(v), getOperands(alloc, cache, v));
   }
-  [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
-                                         Cache &cache) -> UniqueIdentifier {
+  [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc, Cache &cache)
+    -> UniqueIdentifier {
     llvm::Instruction *I = getInstruction();
     return std::make_pair(id, getOperands(alloc, cache, I));
   }
-  [[nodiscard]] auto static getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+  [[nodiscard]] auto static getUniqueIdentifier(BumpAlloc<> &alloc,
                                                 Cache &cache, llvm::Value *v)
     -> UniqueIdentifier {
     if (auto *I = llvm::dyn_cast<llvm::Instruction>(v))
@@ -548,18 +544,18 @@ struct Instruction {
     return {Intrinsic(v), {}};
   }
   [[nodiscard]] static auto
-  getUniqueIdentifier(llvm::BumpPtrAllocator &alloc, Predicate::Map &predMap,
-                      Cache &cache, llvm::Instruction *I) -> UniqueIdentifier {
+  getUniqueIdentifier(BumpAlloc<> &alloc, Predicate::Map &predMap, Cache &cache,
+                      llvm::Instruction *I) -> UniqueIdentifier {
     return std::make_pair(Intrinsic(I), getOperands(alloc, predMap, cache, I));
   }
-  [[nodiscard]] auto getUniqueIdentifier(llvm::BumpPtrAllocator &alloc,
+  [[nodiscard]] auto getUniqueIdentifier(BumpAlloc<> &alloc,
                                          Predicate::Map &predMap, Cache &cache)
     -> UniqueIdentifier {
     llvm::Instruction *I = getInstruction();
     return std::make_pair(id, getOperands(alloc, predMap, cache, I));
   }
-  [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
-                                        Cache &cache, llvm::Instruction *instr)
+  [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc, Cache &cache,
+                                        llvm::Instruction *instr)
     -> llvm::MutableArrayRef<Instruction *> {
     if (llvm::isa<llvm::LoadInst>(instr)) return {nullptr, size_t(0)};
     auto ops{instr->operands()};
@@ -568,12 +564,12 @@ struct Instruction {
     bool isStore = llvm::isa<llvm::StoreInst>(instr);
     auto OE = isStore ? (OI + 1) : ops.end();
     size_t numOps = isStore ? 1 : instr->getNumOperands();
-    auto **operands = alloc.Allocate<Instruction *>(numOps);
+    auto **operands = alloc.allocate<Instruction *>(numOps);
     Instruction **p = operands;
     for (; OI != OE; ++OI, ++p) *p = cache.getInstruction(alloc, *OI);
     return {operands, numOps};
   }
-  [[nodiscard]] static auto getOperands(llvm::BumpPtrAllocator &alloc,
+  [[nodiscard]] static auto getOperands(BumpAlloc<> &alloc,
                                         Predicate::Map &BBpreds, Cache &cache,
                                         llvm::Instruction *instr)
     -> llvm::MutableArrayRef<Instruction *> {
@@ -584,19 +580,19 @@ struct Instruction {
     bool isStore = llvm::isa<llvm::StoreInst>(instr);
     auto OE = isStore ? (OI + 1) : ops.end();
     size_t Nops = isStore ? 1 : instr->getNumOperands();
-    auto **operands = alloc.Allocate<Instruction *>(Nops);
+    auto **operands = alloc.allocate<Instruction *>(Nops);
     Instruction **p = operands;
     for (; OI != OE; ++OI, ++p) *p = cache.getInstruction(alloc, BBpreds, *OI);
     return {operands, Nops};
   }
-  static auto createIsolated(llvm::BumpPtrAllocator &alloc,
-                             llvm::Instruction *instr) -> Instruction * {
+  static auto createIsolated(BumpAlloc<> &alloc, llvm::Instruction *instr)
+    -> Instruction * {
     Intrinsic id{instr};
     auto *i = new (alloc) Instruction(id, instr->getType());
     return i;
   }
 
-  auto negate(llvm::BumpPtrAllocator &alloc, Cache &cache) -> Instruction * {
+  auto negate(BumpAlloc<> &alloc, Cache &cache) -> Instruction * {
     // first, check if its parent is a negation
     if (isInstruction(llvm::Instruction::Xor) && (getNumOperands() == 2)) {
       // !x where `x isa bool` is represented as `x ^ true`
@@ -1257,9 +1253,8 @@ struct Map {
   // void visit(llvm::BasicBlock *BB) { map.insert(std::make_pair(BB,
   // Set())); } void visit(llvm::Instruction *inst) {
   // visit(inst->getParent()); }
-  [[nodiscard]] auto addPredicate(llvm::BumpPtrAllocator &alloc,
-                                  Instruction::Cache &cache, llvm::Value *value)
-    -> size_t {
+  [[nodiscard]] auto addPredicate(BumpAlloc<> &alloc, Instruction::Cache &cache,
+                                  llvm::Value *value) -> size_t {
     auto *I = cache.getInstruction(alloc, *this, value);
     assert(cache.predicates.size() <= 32 && "too many predicates");
     for (size_t i = 0; i < cache.predicates.size(); ++i)
@@ -1290,7 +1285,7 @@ struct Map {
   // 2. We are ignoring cycles for now; we must ensure this is done
   // correctly
   [[nodiscard]] static auto
-  descendBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+  descendBlock(BumpAlloc<> &alloc, Instruction::Cache &cache,
                llvm::SmallPtrSet<llvm::BasicBlock *, 16> &visited,
                Predicate::Map &predMap, llvm::BasicBlock *BBsrc,
                llvm::BasicBlock *BBdst, Predicate::Intersection predicate,
@@ -1369,7 +1364,7 @@ struct Map {
   /// We bail if there are more than 32 conditions; control flow that
   /// branchy is probably not worth trying to vectorize.
   [[nodiscard]] static auto
-  descend(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+  descend(BumpAlloc<> &alloc, Instruction::Cache &cache,
           llvm::BasicBlock *start, llvm::BasicBlock *stop, llvm::Loop *L)
     -> std::optional<Map> {
     Predicate::Map pm;
@@ -1383,7 +1378,7 @@ struct Map {
 }; // struct Map
 } // namespace Predicate
 
-auto Instruction::Cache::getInstruction(llvm::BumpPtrAllocator &alloc,
+auto Instruction::Cache::getInstruction(BumpAlloc<> &alloc,
                                         Predicate::Map &predMap,
                                         llvm::Instruction *instr)
   -> Instruction * {
@@ -1399,7 +1394,7 @@ auto Instruction::Cache::getInstruction(llvm::BumpPtrAllocator &alloc,
   llvmToInternalMap[instr] = i;
   return i;
 }
-auto Instruction::Cache::completeInstruction(llvm::BumpPtrAllocator &alloc,
+auto Instruction::Cache::completeInstruction(BumpAlloc<> &alloc,
                                              Predicate::Map &predMap,
                                              llvm::Instruction *I)
   -> Instruction * {
@@ -1420,7 +1415,7 @@ auto Instruction::Cache::completeInstruction(llvm::BumpPtrAllocator &alloc,
   }
   return i;
 }
-auto Instruction::Cache::getInstruction(llvm::BumpPtrAllocator &alloc,
+auto Instruction::Cache::getInstruction(BumpAlloc<> &alloc,
                                         Predicate::Map &predMap, llvm::Value *v)
   -> Instruction * {
 
@@ -1438,7 +1433,7 @@ struct InstructionBlock {
     [[no_unique_address]] llvm::SmallVector<Instruction *, 14> instructions;
     // [[no_unique_address]] LoopTreeSchedule *loopTree{nullptr};
 
-    InstructionBlock(llvm::BumpPtrAllocator &alloc, Instruction::Cache &cache,
+    InstructionBlock(BumpAlloc<> &alloc, Instruction::Cache &cache,
                      llvm::BasicBlock *BB) {
         for (auto &I : *BB) {
             instructions.push_back(cache.get(alloc, &I));

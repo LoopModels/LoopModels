@@ -177,7 +177,7 @@ struct MergingCost {
   };
   static auto init(Allocate a, Instruction *A) -> SelectAllocator {
     size_t numOps = A->getNumOperands();
-    auto **operandsPtr = a.alloc.Allocate<Instruction *>(numOps);
+    auto **operandsPtr = a.alloc.allocate<Instruction *>(numOps);
     llvm::MutableArrayRef<Instruction *> operands(operandsPtr, numOps);
     return SelectAllocator{a.alloc, a.cache, a.reMap, operands};
   }
