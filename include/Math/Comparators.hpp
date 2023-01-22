@@ -3,8 +3,10 @@
 #include "Math/Constraints.hpp"
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
+#include "Math/Matrix.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/Simplex.hpp"
+#include "Math/Vector.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include <cassert>
 #include <cstddef>
@@ -253,19 +255,25 @@ concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
                        { t.lessEqual(x, y) } -> std::convertible_to<bool>;
                      };
 
-struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
-  [[no_unique_address]] IntMatrix U;
-  [[no_unique_address]] IntMatrix V;
-  [[no_unique_address]] Vector<int64_t> d;
+template <typename T>
+struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
   [[no_unique_address]] size_t numVar;
   [[no_unique_address]] size_t numEquations;
-  using BaseComparator<LinearSymbolicComparator>::greaterEqual;
+  using ThisT = BaseSymbolicComparator<T>;
+  using BaseT = BaseComparator<ThisT>;
+  using BaseT::greaterEqual;
   [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
+
+  constexpr auto getV() -> auto & { return static_cast<T *>(this)->getVImpl(); }
+  constexpr auto getU() -> auto & { return static_cast<T *>(this)->getUImpl(); }
+  constexpr auto getD() -> auto & { return static_cast<T *>(this)->getDImpl(); }
+
   void init(PtrMatrix<int64_t> A, EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
             bool pos0 = true) {
     const size_t numCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
-    V.resizeForOverwrite(Row{numVar + numCon}, Col{2 * numCon});
+    auto &&V = getV();
+    V.extendOrAssertSize(Row{numVar + numCon}, Col{2 * numCon});
     V = 0;
     V(0, 0) = pos0;
     // V = [A' 0
@@ -288,7 +296,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     const size_t numConExplicit = size_t(A.numRow()) + 1;
     const size_t numConTotal = numConExplicit + numNonNegative;
     numVar = size_t(A.numCol());
-    V.resizeForOverwrite(Row{numVar + numConTotal}, Col{2 * numConTotal});
+    auto &&V = getV();
+    V.extendOrAssertSize(Row{numVar + numConTotal}, Col{2 * numConTotal});
     V = 0;
     V(0, 0) = 1;
     // B = [ A_0 A_1
@@ -316,7 +325,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
     const size_t numEqCon = size_t(E.numRow());
     numVar = size_t(A.numCol());
-    V.resizeForOverwrite(Row{numVar + numInEqConTotal},
+    auto &&V = getV();
+    V.extendOrAssertSize(Row{numVar + numInEqConTotal},
                          Col{2 * numInEqConTotal + numEqCon});
     V = 0;
     V(0, 0) = 1;
@@ -343,7 +353,8 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     const size_t numInEqCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     const size_t numEqCon = size_t(E.numRow());
-    V.resizeForOverwrite(Row{numVar + numInEqCon},
+    auto &&V = getV();
+    V.extendOrAssertSize(Row{numVar + numInEqCon},
                          Col{2 * numInEqCon + numEqCon});
     V = 0;
     // V = [A' E' 0
@@ -361,18 +372,21 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     initCore();
   }
   void initCore() {
-    auto &A = V;
+    auto &&V = getV();
+    auto &&A = V;
     size_t R = size_t(V.numRow());
-    U.resizeForOverwrite(Row{R}, Col{R});
+    auto &&U = getU();
+    U.extendOrAssertSize(Row{R}, Col{R});
     U = 0;
     for (size_t i = 0; i < R; ++i) U(i, i) = 1;
     // We will have query of the form Ax = q;
     NormalForm::simplifySystemImpl(NormalForm::solvePair(A, U));
-    auto &H = A;
+    auto &&H = A;
     while ((R) && allZero(H(R - 1, _))) --R;
     H.truncate(Row{R});
     U.truncate(Row{R});
     // numRowTrunc = R;
+    auto &d = getD();
     if (H.isSquare()) {
       d.clear();
       return;
@@ -384,26 +398,12 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     V = Vt.transpose();
   }
 
-  static auto construct(PtrMatrix<int64_t> Ap,
-                        EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
-                        bool pos0 = true) -> LinearSymbolicComparator {
-    LinearSymbolicComparator cmp;
-    cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
-    return cmp;
-  };
-  static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
-    -> LinearSymbolicComparator {
-    return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
-  };
-  static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
-                        bool pos0 = true) -> LinearSymbolicComparator {
-    LinearSymbolicComparator cmp;
-    cmp.init(Ap, Ep, pos0);
-    return cmp;
-  };
   // Note that this is only valid when the comparator was constructed
   // with index `0` referring to >= 0 constants (i.e., the default).
   auto isEmpty() -> bool {
+    auto &&V = getV();
+    auto &&U = getU();
+    auto &&d = getD();
     StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
     if (d.size() == 0) {
       for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
@@ -449,6 +449,9 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     return true;
   }
   [[nodiscard]] auto greaterEqual(PtrVector<int64_t> query) const -> bool {
+    auto &&V = getV();
+    auto &&U = getU();
+    auto &&d = getD();
     Vector<int64_t> b = U(_, _(begin, query.size())) * query;
     // Full column rank case
     if (d.size() == 0) {
@@ -498,7 +501,71 @@ struct LinearSymbolicComparator : BaseComparator<LinearSymbolicComparator> {
     }
   }
 };
+struct LinearSymbolicComparator
+  : public BaseSymbolicComparator<LinearSymbolicComparator> {
+  [[no_unique_address]] IntMatrix U;
+  [[no_unique_address]] IntMatrix V;
+  [[no_unique_address]] Vector<int64_t> d;
+  constexpr auto getUImpl() -> IntMatrix & { return U; }
+  constexpr auto getVImpl() -> IntMatrix & { return V; }
+  constexpr auto getDImpl() -> Vector<int64_t> & { return d; }
+  static auto construct(PtrMatrix<int64_t> Ap,
+                        EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
+                        bool pos0 = true) -> LinearSymbolicComparator {
+    LinearSymbolicComparator cmp;
+    cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
+    return cmp;
+  };
+  static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
+    -> LinearSymbolicComparator {
+    return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
+  };
+  static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
+                        bool pos0 = true) -> LinearSymbolicComparator {
+    LinearSymbolicComparator cmp;
+    cmp.init(Ap, Ep, pos0);
+    return cmp;
+  };
+};
+struct SymbolicComparator : public BaseSymbolicComparator<SymbolicComparator> {
+  size_t numInEqCon;
+  size_t numEqCon;
+  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
+  constexpr auto getUImpl() -> MutSquarePtrMatrix<int64_t> {
+    return MutSquarePtrMatrix<int64_t>{mem, numVar + numInEqCon};
+  }
+  constexpr auto getVImpl() -> MutPtrMatrix<int64_t> {
+    // A = V
+    // H = A
+    // H.truncate(Row());
+    // size is H.numCol() * H.numCol()
+    Col numCol = 2 * numInEqCon + numEqCon;
+    return MutPtrMatrix<int64_t>{mem, Row{numVar + numInEqCon}, numCol, numCol};
+  }
+  constexpr auto getDImpl() -> MutPtrVector<int64_t> {
+    // d = Ht.diag()
+    return MutPtrVector<int64_t>{mem, numVar + numCon};
+  }
+  static auto construct(PtrMatrix<int64_t> Ap,
+                        EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
+                        bool pos0 = true) -> LinearSymbolicComparator {
+    LinearSymbolicComparator cmp;
+    cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
+    return cmp;
+  };
+  static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
+    -> LinearSymbolicComparator {
+    return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
+  };
+  static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
+                        bool pos0 = true) -> LinearSymbolicComparator {
+    LinearSymbolicComparator cmp;
+    cmp.init(Ap, Ep, pos0);
+    return cmp;
+  };
+};
 
+static_assert(Comparator<SymbolicComparator>);
 static_assert(Comparator<LinearSymbolicComparator>);
 
 static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,

@@ -60,7 +60,7 @@ inline auto printPositive(llvm::raw_ostream &os, size_t stop)
 ///
 template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType,
           MaybeVector<const llvm::SCEV *> SymbolVec, bool NonNegative>
-struct Polyhedra {
+struct BasePolyhedra {
   // order of vars:
   // constants, loop vars, symbolic vars
   // this is because of hnf prioritizing diagonalizing leading rows
