@@ -241,28 +241,28 @@ $(function() {
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="comment">//   x &gt;= 0</span></div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">bool</span> NonNegative = true&gt;</div>
 <div class="line"><a name="l00174"></a><span class="lineno"><a class="line" href="structAffineLoopNest.html">  174</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structAffineLoopNest.html">AffineLoopNest</a></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  : <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;EmptyMatrix&lt;int64_t&gt;, LinearSymbolicComparator,</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  : Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, LinearSymbolicComparator,</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;              llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt; {</div>
 <div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;,</div>
 <div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;                  NonNegative&gt;::getNumDynamic;</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;,</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;                  NonNegative&gt;::getNumSymbols;</div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;,</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;                  NonNegative&gt;::pruneBounds;</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;,</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;                  NonNegative&gt;::initializeComparator;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;::isEmpty;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;::A;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;::C;</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <span class="keyword">using</span> <a class="code" href="structPolyhedra.html">Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;</a>, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  <span class="keyword">using</span> Polyhedra&lt;EmptyMatrix&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;                  llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;::S;</div>
 <div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160; </div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getNumLoops() <span class="keyword">const</span> -&gt; <span class="keywordtype">size_t</span> {</div>
@@ -586,11 +586,11 @@ $(function() {
 <div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;  }</div>
 <div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160; </div>
 <div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(IntMatrix Am, llvm::SmallVector&lt;const llvm::SCEV *&gt; sym)</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    : <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;    : Polyhedra&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;                llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;(</div>
 <div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;        std::move(Am), std::move(sym)){};</div>
 <div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>(IntMatrix Am)</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    : <a class="code" href="structPolyhedra.html">Polyhedra</a>&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;    : Polyhedra&lt;<a class="code" href="structEmptyMatrix.html">EmptyMatrix</a>&lt;int64_t&gt;, <a class="code" href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a>,</div>
 <div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;                llvm::SmallVector&lt;const llvm::SCEV *&gt;, NonNegative&gt;(</div>
 <div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;        std::move(Am)){};</div>
 <div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;  <a class="code" href="structAffineLoopNest.html">AffineLoopNest</a>() = <span class="keywordflow">default</span>;</div>
@@ -811,11 +811,10 @@ $(function() {
 <div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:153</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:20</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:240</div></div>
-<div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:256</div></div>
+<div class="ttc" id="astructLinearSymbolicComparator_html"><div class="ttname"><a href="structLinearSymbolicComparator.html">LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:505</div></div>
 <div class="ttc" id="astructNoWrapRewriter_html"><div class="ttname"><a href="structNoWrapRewriter.html">NoWrapRewriter</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:65</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructOptional_html"><div class="ttname"><a href="structOptional.html">Optional</a></div><div class="ttdef"><b>Definition:</b> Optional.hpp:9</div></div>
-<div class="ttc" id="astructPolyhedra_html"><div class="ttname"><a href="structPolyhedra.html">Polyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:63</div></div>
 <div class="ttc" id="astructRange_html"><div class="ttname"><a href="structRange.html">Range</a></div><div class="ttdef"><b>Definition:</b> Iterators.hpp:3</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
