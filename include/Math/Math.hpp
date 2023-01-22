@@ -228,6 +228,7 @@ template <typename A> struct Transpose {
   [[nodiscard]] constexpr auto size() const -> std::pair<Row, Col> {
     return std::make_pair(numRow(), numCol());
   }
+  Transpose(A b) : a(b) {}
 };
 template <typename A> Transpose(A) -> Transpose<A>;
 template <AbstractMatrix A, AbstractMatrix B> struct MatMatMul {

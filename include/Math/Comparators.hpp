@@ -296,8 +296,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const size_t numConExplicit = size_t(A.numRow()) + 1;
     const size_t numConTotal = numConExplicit + numNonNegative;
     numVar = size_t(A.numCol());
-    auto &&V = getV();
-    V.extendOrAssertSize(Row{numVar + numConTotal}, Col{2 * numConTotal});
+    auto &&V = getV(Row{numVar + numConTotal}, Col{2 * numConTotal});
     V = 0;
     V(0, 0) = 1;
     // B = [ A_0 A_1
@@ -325,9 +324,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
     const size_t numEqCon = size_t(E.numRow());
     numVar = size_t(A.numCol());
-    auto &&V = getV();
-    V.extendOrAssertSize(Row{numVar + numInEqConTotal},
-                         Col{2 * numInEqConTotal + numEqCon});
+    auto &&V =
+      getV(Row{numVar + numInEqConTotal}, Col{2 * numInEqConTotal + numEqCon});
+
     V = 0;
     V(0, 0) = 1;
     // B = [ A_0 A_1
@@ -371,30 +370,37 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     initCore();
   }
+  // sets U, V, and d.
+  // needs to also set their size, which is only determined here.
+
   void initCore() {
+    // numVar + numInEq x 2*numInEq + numEq
     auto &&V = getV();
-    auto &&A = V;
-    size_t R = size_t(V.numRow());
-    auto &&U = getU();
-    U.extendOrAssertSize(Row{R}, Col{R});
+    Row R = V.numRow();
+    auto &&U = getU(); // numVar + numInEq x numVar + numInEq
+    U.extendOrAssertSize(R, Col{size_t(R)});
     U = 0;
-    for (size_t i = 0; i < R; ++i) U(i, i) = 1;
+    U.diag() = 1;
     // We will have query of the form Ax = q;
-    NormalForm::simplifySystemImpl(NormalForm::solvePair(A, U));
-    auto &&H = A;
-    while ((R) && allZero(H(R - 1, _))) --R;
-    H.truncate(Row{R});
-    U.truncate(Row{R});
-    // numRowTrunc = R;
+    NormalForm::simplifySystemImpl(NormalForm::solvePair(V, U));
+    while ((R) && allZero(V(R - 1, _))) --R;
+    V.truncate(R);
+    // upper bounded by numVar + numInEq x numVar + numInEq
+    U.truncate(R);
     auto &d = getD();
-    if (H.isSquare()) {
+    if (V.isSquare()) {
       d.clear();
       return;
     }
-    IntMatrix Ht = H.transpose();
-    auto Vt = IntMatrix::identity(size_t(Ht.numRow()));
+    // H (aliasing V and A) copied
+    auto Vt = IntMatrix::identity(size_t(V.numCol()));
+    IntMatrix Ht = V.transpose();
     NormalForm::solveSystem(Ht, Vt);
+    // upper bounded by numVar + numInEq
+    // smaller based on rank
     d = Ht.diag();
+    // upper bounded by 2*numInEq + numEq x 2*numInEq + numEq
+    // fewer cols based on rank?
     V = Vt.transpose();
   }
 
@@ -466,9 +472,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
         if (auto rhs = H(i, oldn))
           if ((rhs > 0) != (H(i, i) > 0)) return false;
       return true;
-    }
-    // Column rank deficient case
-    else {
+    } else {
+      // Column rank deficient case
       size_t numSlack = size_t(V.numRow()) - numEquations;
       Vector<int64_t> dinv = d; // copy
       // We represent D martix as a vector, and multiply the lcm to the
@@ -509,6 +514,19 @@ struct LinearSymbolicComparator
   constexpr auto getUImpl() -> IntMatrix & { return U; }
   constexpr auto getVImpl() -> IntMatrix & { return V; }
   constexpr auto getDImpl() -> Vector<int64_t> & { return d; }
+
+  auto getUImpl(Row r, Col c) -> IntMatrix & {
+    U.resizeForOverwrite(r, c);
+    return U;
+  }
+  auto getVImpl(Row r, Col c) -> IntMatrix & {
+    V.resizeForOverwrite(r, c);
+    return V;
+  }
+  auto getDImpl(size_t N) -> Vector<int64_t> & {
+    d.resizeForOverwrite(N);
+    return d;
+  }
   static auto construct(PtrMatrix<int64_t> Ap,
                         EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
                         bool pos0 = true) -> LinearSymbolicComparator {
@@ -528,23 +546,31 @@ struct LinearSymbolicComparator
   };
 };
 struct SymbolicComparator : public BaseSymbolicComparator<SymbolicComparator> {
-  size_t numInEqCon;
-  size_t numEqCon;
+
   int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
-  constexpr auto getUImpl() -> MutSquarePtrMatrix<int64_t> {
-    return MutSquarePtrMatrix<int64_t>{mem, numVar + numInEqCon};
+  // R x numVar + numInEq
+  constexpr auto getUImpl() -> MutPtrMatrix<int64_t> {
+    return {mem, numVar + numInEqCon};
   }
+  // offset by (numVar + numInEq)*(numVar + numInEq)
   constexpr auto getVImpl() -> MutPtrMatrix<int64_t> {
     // A = V
     // H = A
     // H.truncate(Row());
     // size is H.numCol() * H.numCol()
     Col numCol = 2 * numInEqCon + numEqCon;
-    return MutPtrMatrix<int64_t>{mem, Row{numVar + numInEqCon}, numCol, numCol};
+    return {mem, Row{numVar + numInEqCon}, numCol, numCol};
   }
+  // size D
   constexpr auto getDImpl() -> MutPtrVector<int64_t> {
     // d = Ht.diag()
-    return MutPtrVector<int64_t>{mem, numVar + numCon};
+    return {mem, numVar + numCon};
+  }
+  constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
+  constexpr auto getVImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
+  constexpr auto getDImpl(size_t N) -> MutPtrVector<int64_t> {
+    // d = Ht.diag()
+    return {mem, numVar + numCon};
   }
   static auto construct(PtrMatrix<int64_t> Ap,
                         EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
