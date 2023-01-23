@@ -5,7 +5,7 @@ var searchData=
   ['basepolyhedra_15',['BasePolyhedra',['../structBasePolyhedra.html',1,'']]],
   ['basesymboliccomparator_16',['BaseSymbolicComparator',['../structBaseSymbolicComparator.html',1,'']]],
   ['basesymboliccomparator_3c_20linearsymboliccomparator_20_3e_17',['BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;',['../structBaseSymbolicComparator.html',1,'']]],
-  ['basesymboliccomparator_3c_20symboliccomparator_20_3e_18',['BaseSymbolicComparator&lt; SymbolicComparator &gt;',['../structBaseSymbolicComparator.html',1,'']]],
+  ['basesymboliccomparator_3c_20ptrsymboliccomparator_20_3e_18',['BaseSymbolicComparator&lt; PtrSymbolicComparator &gt;',['../structBaseSymbolicComparator.html',1,'']]],
   ['bitset_19',['BitSet',['../structBitSet.html',1,'']]],
   ['bitsetiterator_20',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
   ['bitsliceview_21',['BitSliceView',['../structBitSliceView.html',1,'']]],

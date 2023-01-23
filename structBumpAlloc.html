@@ -62,6 +62,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#nested-classes">Classes</a> &#124;
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
@@ -74,6 +75,11 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="Allocators_8hpp_source.html">Allocators.hpp</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
+Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classBumpAlloc_1_1CheckPoint.html">CheckPoint</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:aeafc31b98f26eac4a7cdf09d36df308a"><td class="memItemLeft" align="right" valign="top"><a id="aeafc31b98f26eac4a7cdf09d36df308a"></a>
@@ -120,6 +126,15 @@ template&lt;bool ForOverwrite = false, typename T &gt; </td></tr>
 template&lt;typename T , typename... Args&gt; </td></tr>
 <tr class="memitem:a3dce7a05b4b280d34b622222cc4427a8"><td class="memTemplItemLeft" align="right" valign="top">auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>construct</b> (Args &amp;&amp;...args) -&gt; T *</td></tr>
 <tr class="separator:a3dce7a05b4b280d34b622222cc4427a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a56747cb1312a6353d34c248f5e0af859"><td class="memItemLeft" align="right" valign="top"><a id="a56747cb1312a6353d34c248f5e0af859"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isPointInSlab</b> (std::byte *p) -&gt; bool</td></tr>
+<tr class="separator:a56747cb1312a6353d34c248f5e0af859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0f90517114a047504fb04f50b1a523b"><td class="memItemLeft" align="right" valign="top"><a id="ad0f90517114a047504fb04f50b1a523b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>checkPoint</b> () -&gt; <a class="el" href="classBumpAlloc_1_1CheckPoint.html">CheckPoint</a></td></tr>
+<tr class="separator:ad0f90517114a047504fb04f50b1a523b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55b57bd03852330959a8e93118520ac1"><td class="memItemLeft" align="right" valign="top"><a id="a55b57bd03852330959a8e93118520ac1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>checkPoint</b> (<a class="el" href="classBumpAlloc_1_1CheckPoint.html">CheckPoint</a> p)</td></tr>
+<tr class="separator:a55b57bd03852330959a8e93118520ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
