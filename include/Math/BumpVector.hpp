@@ -5,6 +5,8 @@
 #include <llvm/Support/Alignment.h>
 
 namespace LinearAlgebra {
+// BumpPtrVector
+// Has reference semantics.
 template <typename T> struct BumpPtrVector {
   static_assert(!std::is_const_v<T>, "T shouldn't be const");
   static_assert(std::is_trivially_destructible_v<T>);

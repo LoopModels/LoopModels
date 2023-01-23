@@ -356,9 +356,9 @@ static_assert(
 // `std::allocator`.
 template <typename T, size_t SlabSize = 16384, bool BumpUp = false,
           size_t MinAlignment = alignof(std::max_align_t)>
-struct WBumpAlloc {
-private:
+class WBumpAlloc {
   using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
+  NotNull<Alloc> A;
 
 public:
   using value_type = T;
@@ -375,9 +375,6 @@ public:
   [[gnu::returns_nonnull]] auto allocate(size_t n) -> T * {
     return A->template allocate<T>(n);
   }
-
-private:
-  NotNull<Alloc> A;
 };
 static_assert(std::same_as<
               std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);

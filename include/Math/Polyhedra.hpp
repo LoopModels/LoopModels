@@ -73,16 +73,16 @@ struct BasePolyhedra {
   static constexpr bool hasEqualities =
     !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
 
-  Polyhedra() = default;
-  Polyhedra(IntMatrix Ain)
+  BasePolyhedra() = default;
+  BasePolyhedra(IntMatrix Ain)
     : A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, I64Matrix Ein)
+  BasePolyhedra(IntMatrix Ain, I64Matrix Ein)
     : E(std::move(Ein)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, SymbolVec SV)
+  BasePolyhedra(IntMatrix Ain, SymbolVec SV)
     : S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
-  Polyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
+  BasePolyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
     : E(std::move(Ein)), S(std::move(SV)), A(std::move(Ain)),
       C(LinearSymbolicComparator::construct(A)){};
 
@@ -209,7 +209,7 @@ struct BasePolyhedra {
     if constexpr (hasEqualities) dropEmptyConstraints(E);
   }
 
-  friend inline auto operator<<(llvm::raw_ostream &os, const Polyhedra &p)
+  friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
     -> llvm::raw_ostream & {
     auto &&os2 =
       printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());
@@ -236,14 +236,14 @@ struct BasePolyhedra {
 };
 
 using SymbolicPolyhedra =
-  Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-            llvm::SmallVector<const llvm::SCEV *>, false>;
+  BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                llvm::SmallVector<const llvm::SCEV *>, false>;
 using NonNegativeSymbolicPolyhedra =
-  Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-            llvm::SmallVector<const llvm::SCEV *>, true>;
+  BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                llvm::SmallVector<const llvm::SCEV *>, true>;
 using SymbolicEqPolyhedra =
-  Polyhedra<IntMatrix, LinearSymbolicComparator,
-            llvm::SmallVector<const llvm::SCEV *>, false>;
+  BasePolyhedra<IntMatrix, LinearSymbolicComparator,
+                llvm::SmallVector<const llvm::SCEV *>, false>;
 using NonNegativeSymbolicEqPolyhedra =
-  Polyhedra<IntMatrix, LinearSymbolicComparator,
-            llvm::SmallVector<const llvm::SCEV *>, true>;
+  BasePolyhedra<IntMatrix, LinearSymbolicComparator,
+                llvm::SmallVector<const llvm::SCEV *>, true>;

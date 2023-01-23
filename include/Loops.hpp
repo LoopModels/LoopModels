@@ -172,34 +172,17 @@ findSymbolicIndex(llvm::ArrayRef<const llvm::SCEV *> symbols,
 //   x >= 0
 template <bool NonNegative = true>
 struct AffineLoopNest
-  : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-              llvm::SmallVector<const llvm::SCEV *>, NonNegative> {
-
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>,
-                  NonNegative>::getNumDynamic;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>,
-                  NonNegative>::getNumSymbols;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>,
-                  NonNegative>::pruneBounds;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>,
-                  NonNegative>::initializeComparator;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>::isEmpty;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>::A;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>::C;
-  using Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>::S;
+  : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                  llvm::SmallVector<const llvm::SCEV *>, NonNegative> {
+  using BaseT =
+    BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                  llvm::SmallVector<const llvm::SCEV *>, NonNegative>;
+  using BaseT::getNumDynamic, BaseT::getNumSymbols, BaseT::pruneBounds,
+    BaseT::initializeComparator, BaseT::isEmpty, BaseT::A, BaseT::C, BaseT::S;
 
   [[nodiscard]] constexpr auto getNumLoops() const -> size_t {
     return getNumDynamic();
   }
-
   auto findIndex(const llvm::SCEV *v) const -> size_t {
     return findSymbolicIndex(S, v);
   }
@@ -529,12 +512,12 @@ struct AffineLoopNest
   }
 
   AffineLoopNest(IntMatrix Am, llvm::SmallVector<const llvm::SCEV *> sym)
-    : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
         std::move(Am), std::move(sym)){};
   AffineLoopNest(IntMatrix Am)
-    : Polyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
-                llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
+    : BasePolyhedra<EmptyMatrix<int64_t>, LinearSymbolicComparator,
+                    llvm::SmallVector<const llvm::SCEV *>, NonNegative>(
         std::move(Am)){};
   AffineLoopNest() = default;
 

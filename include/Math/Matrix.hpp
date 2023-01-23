@@ -3,6 +3,7 @@
 #include "Math/Indexing.hpp"
 #include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
+#include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
 
@@ -266,12 +267,18 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *const mem;
   [[no_unique_address]] unsigned int M, N, X;
   // [[no_unique_address]] Col N;
   // [[no_unique_address]] RowStride X;
+  [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
+    return copyto(*this, PtrMatrix<T>(B));
+  }
+  [[gnu::flatten]] auto operator=(AbstractMatrix auto B) -> MutPtrMatrix<T> {
+    return copyto(*this, PtrMatrix<T>(B));
+  }
 
   [[nodiscard]] constexpr auto data() -> T * { return mem; }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
@@ -702,6 +709,7 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     X = *XX;
     N = *NN;
   }
+  // set size and 0.
   void setSize(Row r, Col c) {
     M = *r;
     N = *c;
@@ -798,5 +806,21 @@ using IntMatrix = Matrix<int64_t>;
 static_assert(std::same_as<IntMatrix::eltype, int64_t>);
 static_assert(AbstractMatrix<IntMatrix>);
 static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
+
+template <typename T>
+inline auto matrix(std::allocator<T>, size_t M, size_t N)
+  -> Matrix<T, 0, 0, 64> {
+  return Matrix<T, 0, 0, 64>(M, N);
+}
+template <typename T>
+constexpr auto matrix(WBumpAlloc<T> alloc, size_t M, size_t N)
+  -> DenseMutPtrMatrix<T> {
+  return {alloc.allocate(M * N), M, N};
+}
+template <typename T>
+constexpr auto matrix(BumpAlloc<> &alloc, size_t M, size_t N)
+  -> DenseMutPtrMatrix<T> {
+  return {alloc.allocate<T>(M * N), M, N};
+}
 
 } // namespace LinearAlgebra
