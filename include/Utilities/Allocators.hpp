@@ -196,6 +196,27 @@ public:
     auto *p = allocate(sizeof(T), alignof(T));
     return new (p) T(std::forward<Args>(args)...);
   }
+  constexpr auto isPointInSlab(std::byte *p) -> bool {
+    if constexpr (BumpUp) return ((p + SlabSize) >= SlabEnd) && (p < SlabEnd);
+    else return (p > SlabEnd) && (p <= (SlabEnd + SlabSize));
+  }
+  class CheckPoint {
+    std::byte *p;
+    constexpr auto isInSlab(std::byte *send) -> bool {
+      if constexpr (BumpUp) return ((p + SlabSize) >= send) && (p < send);
+      else return (p > send) && (p <= (send + SlabSize));
+    }
+  };
+  [[nodiscard]] auto checkPoint() -> CheckPoint { return SlabCur; }
+  void checkPoint(CheckPoint p) {
+    if (p.isInSlab(SlabEnd)) {
+#if LLVM_ADDRESS_SANITIZER_BUILD
+      if constexpr (BumpUp) __asan_poison_memory_region(p, SlabCur - p);
+      else __asan_poison_memory_region(SlabCur, p - SlabCur);
+#endif
+      SlabCur = p;
+    } else initSlab(slabs.back());
+  }
 
 private:
   static constexpr auto align(size_t x) -> size_t {

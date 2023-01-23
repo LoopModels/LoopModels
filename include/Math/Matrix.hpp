@@ -262,6 +262,11 @@ static_assert(
 template <typename T>
 struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
   using eltype = std::remove_reference_t<T>;
+  using Base = MutMatrixCore<T, MutPtrMatrix<T>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *const mem;
   [[no_unique_address]] unsigned int M, N, X;
@@ -305,6 +310,11 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
 template <typename T>
 struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
   using eltype = std::remove_reference_t<T>;
+  using Base = MutMatrixCore<T, DenseMutPtrMatrix<T>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *const mem;
   [[no_unique_address]] unsigned int M, N;
@@ -324,7 +334,7 @@ struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
   }
 
   // rule of 5 requires...
-  constexpr DenseMutPtrMatrix(const MutPtrMatrix<T> &A) = default;
+  constexpr DenseMutPtrMatrix(const DenseMutPtrMatrix<T> &A) = default;
   constexpr DenseMutPtrMatrix(T *pt, Row MM, Col NN) : mem(pt), M(MM), N(NN){};
   template <typename ARM>
   constexpr DenseMutPtrMatrix(ARM &A)
@@ -335,6 +345,8 @@ struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
   [[nodiscard]] constexpr auto isSquare() const -> bool {
     return size_t(M) == size_t(N);
   }
+  [[nodiscard]] constexpr auto begin() -> T * { return mem; }
+  [[nodiscard]] constexpr auto end() -> T * { return mem + M * N; }
 #ifndef NDEBUG
   void extendOrAssertSize(Row MM, Col NN) const {
     assert(numRow() == MM);
@@ -425,6 +437,7 @@ static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
 template <typename T, size_t M = 0, size_t N = 0, size_t S = 64>
 struct Matrix : public MutMatrixCore<T, Matrix<T, M, N, S>> {
   using Base = MutMatrixCore<T, Matrix<T, M, N, S>>;
+
   // using eltype = std::remove_cv_t<T>;
   using eltype = std::remove_reference_t<T>;
   // static_assert(M * N == S,
@@ -522,6 +535,8 @@ struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   constexpr operator SquarePtrMatrix<T>() const {
     return SquarePtrMatrix<T>{mem, M};
   }
+  constexpr auto begin() -> T * { return mem; }
+  constexpr auto end() -> T * { return mem + M * M; }
 };
 
 template <typename T, unsigned STORAGE = 8>
@@ -596,7 +611,7 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
   [[no_unique_address]] unsigned int M = 0, N = 0, X = 0;
@@ -622,8 +637,8 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     for (size_t m = 0; m < M; ++m)
       for (size_t n = 0; n < N; ++n) mem[size_t(X * m + n)] = A(m, n);
   }
-  constexpr auto begin() { return mem.begin(); }
-  constexpr auto end() { return mem.begin() + rowStride() * M; }
+  [[nodiscard]] constexpr auto begin() { return mem.begin(); }
+  [[nodiscard]] constexpr auto end() { return mem.begin() + rowStride() * M; }
   [[nodiscard]] constexpr auto begin() const { return mem.begin(); }
   [[nodiscard]] constexpr auto end() const {
     return mem.begin() + rowStride() * M;
@@ -641,7 +656,7 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
   }
   static auto identity(size_t MM) -> Matrix<T, 0, 0, S> {
     Matrix<T, 0, 0, S> A(MM, MM);
-    for (size_t i = 0; i < MM; ++i) A(i, i) = 1;
+    A.diag() = 1;
     return A;
   }
   inline static auto identity(Row N) -> Matrix<T, 0, 0, S> {
@@ -687,6 +702,13 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     X = *XX;
     N = *NN;
   }
+  void setSize(Row r, Col c) {
+    M = *r;
+    N = *c;
+    X = *c;
+    mem.clear();
+    mem.resize(X * M);
+  }
   void resize(Row MM, Col NN) { resize(MM, NN, max(NN, X)); }
   void reserve(Row MM, Col NN) { reserve(MM, max(NN, X)); }
   void reserve(Row MM, RowStride NN) { mem.reserve(NN * MM); }
@@ -694,6 +716,10 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
   void clearReserve(Row MM, RowStride XX) {
     clear();
     mem.reserve(XX * MM);
+  }
+  void clearReserve(size_t L) {
+    clear();
+    mem.reserve(L);
   }
   void resizeForOverwrite(Row MM, Col NN, RowStride XX) {
     assert(XX >= NN);

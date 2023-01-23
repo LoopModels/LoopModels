@@ -8,6 +8,8 @@
 #include "Math/Simplex.hpp"
 #include "Math/Vector.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
+#include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -257,31 +259,47 @@ concept Comparator = requires(T t, PtrVector<int64_t> x, int64_t y) {
 
 template <typename T>
 struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
-  [[no_unique_address]] size_t numVar;
-  [[no_unique_address]] size_t numEquations;
+  [[no_unique_address]] unsigned int numVar;
+  [[no_unique_address]] unsigned int numEquations;
   using ThisT = BaseSymbolicComparator<T>;
   using BaseT = BaseComparator<ThisT>;
   using BaseT::greaterEqual;
   [[nodiscard]] auto getNumConstTermsImpl() const -> size_t { return numVar; }
 
-  constexpr auto getV() -> auto & { return static_cast<T *>(this)->getVImpl(); }
-  constexpr auto getU() -> auto & { return static_cast<T *>(this)->getUImpl(); }
-  constexpr auto getD() -> auto & { return static_cast<T *>(this)->getDImpl(); }
+  constexpr auto getV() -> DenseMutPtrMatrix<int64_t> {
+    return static_cast<T *>(this)->getVImpl();
+  }
+  constexpr auto getU() -> DenseMutPtrMatrix<int64_t> {
+    return static_cast<T *>(this)->getUImpl();
+  }
+  constexpr auto getD() -> MutPtrVector<int64_t> {
+    return static_cast<T *>(this)->getDImpl();
+  }
+  constexpr auto getV(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+    return static_cast<T *>(this)->getVImpl(r, c);
+  }
+  constexpr auto getU(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+    return static_cast<T *>(this)->getUImpl(r, c);
+  }
+  constexpr auto getD(Row n) -> MutPtrVector<int64_t> {
+    return static_cast<T *>(this)->getDImpl(n);
+  }
+  void setURank(Row r) { static_cast<T *>(this)->setURankImpl(r); }
 
   void init(PtrMatrix<int64_t> A, EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
             bool pos0 = true) {
     const size_t numCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
-    auto &&V = getV();
-    V.extendOrAssertSize(Row{numVar + numCon}, Col{2 * numCon});
-    V = 0;
-    V(0, 0) = pos0;
+    Row rowV = numVar + numCon;
+    Col colV = 2 * numCon;
+    auto &&B = getV(rowV, colV);
+    B(0, 0) = pos0;
     // V = [A' 0
     //      S  I]
-    V(_(begin, numVar), _(pos0, numCon)) = A.transpose();
+    B(_(begin, numVar), _(pos0, numCon)) = A.transpose();
     for (size_t j = 0; j < numCon; ++j) {
-      V(j + numVar, j) = -1;
-      V(j + numVar, j + numCon) = 1;
+      B(j + numVar, j) = -1;
+      B(j + numVar, j + numCon) = 1;
     }
     numEquations = numCon;
     initCore();
@@ -296,9 +314,10 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const size_t numConExplicit = size_t(A.numRow()) + 1;
     const size_t numConTotal = numConExplicit + numNonNegative;
     numVar = size_t(A.numCol());
-    auto &&V = getV(Row{numVar + numConTotal}, Col{2 * numConTotal});
-    V = 0;
-    V(0, 0) = 1;
+    Row rowV = Row{numVar + numConTotal};
+    Col colV = Col{2 * numConTotal};
+    auto &&B = getV(rowV, colV);
+    B(0, 0) = 1;
     // B = [ A_0 A_1
     //        0   I  ]
     // V = [B' 0
@@ -306,12 +325,12 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A_0'  0  0
     //      A_1'  I  0
     //      S_0  S_1 I]
-    V(_(begin, numVar), _(1, numConExplicit)) = A.transpose();
+    B(_(begin, numVar), _(1, numConExplicit)) = A.transpose();
     for (size_t j = 0; j < numNonNegative; ++j)
-      V(j + numVar - numNonNegative, numConExplicit + j) = 1;
+      B(j + numVar - numNonNegative, numConExplicit + j) = 1;
     for (size_t j = 0; j < numConTotal; ++j) {
-      V(j + numVar, j) = -1;
-      V(j + numVar, j + numConTotal) = 1;
+      B(j + numVar, j) = -1;
+      B(j + numVar, j + numConTotal) = 1;
     }
     numEquations = numConTotal;
     initCore();
@@ -324,11 +343,11 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const size_t numInEqConTotal = numInEqConExplicit + numNonNegative;
     const size_t numEqCon = size_t(E.numRow());
     numVar = size_t(A.numCol());
-    auto &&V =
-      getV(Row{numVar + numInEqConTotal}, Col{2 * numInEqConTotal + numEqCon});
-
-    V = 0;
-    V(0, 0) = 1;
+    Row rowV = Row{numVar + numInEqConTotal};
+    Col colV = Col{2 * numInEqConTotal + numEqCon};
+    auto &&B = getV(rowV, colV);
+    B(0, 0) = 1;
+    // B is `A` augmented with the implicit non-negative constraints
     // B = [ A_0 A_1
     //        0   I  ]
     // V = [B' E' 0
@@ -337,14 +356,16 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     //      A_1'  I  E_1' 0
     //      S_0  S_1  0   I]
     numEquations = numInEqConTotal + numEqCon;
-    V(_(begin, numVar), _(1, numInEqConExplicit)) = A.transpose();
-    V(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)) =
+    B(_(begin, numVar), _(1, numInEqConExplicit)) = A.transpose();
+    B(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)) =
       E.transpose();
-    for (size_t j = 0; j < numNonNegative; ++j)
-      V(j + numVar - numNonNegative, numInEqConExplicit + j) = 1;
+    if (numNonNegative)
+      B(_(numVar - numNonNegative, numVar),
+        _(numInEqConExplicit, numInEqConExplicit + numNonNegative))
+        .diag() = 1;
     for (size_t j = 0; j < numInEqConTotal; ++j) {
-      V(j + numVar, j) = -1;
-      V(j + numVar, j + numEquations) = 1;
+      B(j + numVar, j) = -1;
+      B(j + numVar, j + numEquations) = 1;
     }
     initCore();
   }
@@ -352,56 +373,55 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     const size_t numInEqCon = size_t(A.numRow()) + pos0;
     numVar = size_t(A.numCol());
     const size_t numEqCon = size_t(E.numRow());
-    auto &&V = getV();
-    V.extendOrAssertSize(Row{numVar + numInEqCon},
-                         Col{2 * numInEqCon + numEqCon});
-    V = 0;
+    Row rowV = Row{numVar + numInEqCon};
+    Col colV = Col{2 * numInEqCon + numEqCon};
+    auto &&B = getV(rowV, colV);
     // V = [A' E' 0
     //      S  0  I]
-    V(0, 0) = pos0;
-    V(_(begin, numVar), _(pos0, numInEqCon)) = A.transpose();
+    B(0, 0) = pos0;
+    B(_(begin, numVar), _(pos0, numInEqCon)) = A.transpose();
     // A(_, _(pos0, end)).transpose();
-    V(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) = E.transpose();
+    B(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) = E.transpose();
 
     numEquations = numInEqCon + numEqCon;
     for (size_t j = 0; j < numInEqCon; ++j) {
-      V(j + numVar, j) = -1;
-      V(j + numVar, j + numEquations) = 1;
+      B(j + numVar, j) = -1;
+      B(j + numVar, j + numEquations) = 1;
     }
     initCore();
   }
   // sets U, V, and d.
   // needs to also set their size, which is only determined here.
-
   void initCore() {
     // numVar + numInEq x 2*numInEq + numEq
-    auto &&V = getV();
-    Row R = V.numRow();
+    auto &&B = getV();
+    Row R = B.numRow();
     auto &&U = getU(); // numVar + numInEq x numVar + numInEq
     U.extendOrAssertSize(R, Col{size_t(R)});
     U = 0;
     U.diag() = 1;
     // We will have query of the form Ax = q;
-    NormalForm::simplifySystemImpl(NormalForm::solvePair(V, U));
-    while ((R) && allZero(V(R - 1, _))) --R;
-    V.truncate(R);
+    NormalForm::simplifySystemImpl(NormalForm::solvePair(B, U));
+    while ((R) && allZero(B(R - 1, _))) --R;
+    setURank(R);
     // upper bounded by numVar + numInEq x numVar + numInEq
-    U.truncate(R);
-    auto &d = getD();
-    if (V.isSquare()) {
-      d.clear();
-      return;
-    }
+    // if V is square, it is full rank and there is 1 solution
+    // if V has fewer rows, there are infinitely many solutions
+    if (B.isSquare()) return;
     // H (aliasing V and A) copied
-    auto Vt = IntMatrix::identity(size_t(V.numCol()));
-    IntMatrix Ht = V.transpose();
+    // R = B.numRow() < B.numCol()
+    auto Vt = IntMatrix::identity(size_t(B.numCol()));
+    // Ht.numRow() > Ht.numCol() = R
+    // (2*numInEq + numEq) x R
+    IntMatrix Ht = B.transpose();
     NormalForm::solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
+    // rows/cols, but of rank R
     // smaller based on rank
-    d = Ht.diag();
+    getD(R) = Ht.diag(); // d.size() == R
     // upper bounded by 2*numInEq + numEq x 2*numInEq + numEq
     // fewer cols based on rank?
-    V = Vt.transpose();
+    getV() = Vt.transpose();
   }
 
   // Note that this is only valid when the comparator was constructed
@@ -410,14 +430,13 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     auto &&V = getV();
     auto &&U = getU();
     auto &&d = getD();
-    StridedVector<int64_t> b{StridedVector<int64_t>(U(_, 0))};
+    StridedVector<int64_t> b{U(_, 0)};
     if (d.size() == 0) {
-      for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b[i]) return false;
-      auto H = V;
-      Col oldn = H.numCol();
-      H.resize(oldn + 1);
-      for (size_t i = 0; i < H.numRow(); ++i) H(i, oldn) = -b[i];
+      if (!allZero(b[_(V.numRow(), end)])) return false;
+      Col oldn = V.numCol();
+      IntMatrix H{V.numRow(), oldn + 1};
+      H(_, _(0, oldn)) = V;
+      H(_, oldn) = -b;
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -426,7 +445,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     }
     // Column rank deficient case
     else {
-      size_t numSlack = size_t(V.numRow()) - numEquations;
+      Row numSlack = V.numRow() - numEquations;
       // Vector<int64_t> dinv = d; // copy
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
@@ -438,7 +457,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       // expand W stores [c -JV2 JV2]
       //  we use simplex to solve [-JV2 JV2][y2+ y2-]' <= JV1D^(-1)Uq
       // where y2 = y2+ - y2-
-      IntMatrix expandW(Row{numSlack}, NSdim * 2 + 1);
+      IntMatrix expandW(numSlack, NSdim * 2 + 1);
       for (size_t i = 0; i < numSlack; ++i) {
         expandW(i, 0) = c[i];
         // expandW(i, 0) *= Dlcm;
@@ -448,7 +467,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
           expandW(i, NSdim + 1 + j) = val;
         }
       }
-      IntMatrix Wcouple{Row{0}, Col{expandW.numCol()}};
+      IntMatrix Wcouple{Row{0}, expandW.numCol()};
       std::optional<Simplex> optS{Simplex::positiveVariables(expandW, Wcouple)};
       return optS.has_value();
     }
@@ -461,8 +480,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     Vector<int64_t> b = U(_, _(begin, query.size())) * query;
     // Full column rank case
     if (d.size() == 0) {
-      for (size_t i = size_t(V.numRow()); i < b.size(); ++i)
-        if (b[i]) return false;
+      if (!allZero(b[_(V.numRow(), end)])) return false;
       auto H = V;
       Col oldn = H.numCol();
       H.resize(oldn + 1);
@@ -474,7 +492,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       return true;
     } else {
       // Column rank deficient case
-      size_t numSlack = size_t(V.numRow()) - numEquations;
+      Row numSlack = V.numRow() - numEquations;
       Vector<int64_t> dinv = d; // copy
       // We represent D martix as a vector, and multiply the lcm to the
       // linear equation to avoid store D^(-1) as rational type
@@ -508,6 +526,8 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
 };
 struct LinearSymbolicComparator
   : public BaseSymbolicComparator<LinearSymbolicComparator> {
+  using Base = BaseSymbolicComparator<LinearSymbolicComparator>;
+  using Base::init;
   [[no_unique_address]] IntMatrix U;
   [[no_unique_address]] IntMatrix V;
   [[no_unique_address]] Vector<int64_t> d;
@@ -515,16 +535,27 @@ struct LinearSymbolicComparator
   constexpr auto getVImpl() -> IntMatrix & { return V; }
   constexpr auto getDImpl() -> Vector<int64_t> & { return d; }
 
-  auto getUImpl(Row r, Col c) -> IntMatrix & {
+  void setURankImpl(Row r) {
+    V.truncate(r);
+    U.truncate(r);
+  }
+  // void setURankImpl(Row r) {
+  //   U.truncate(r);
+  // }
+  // void setUColImpl(Col c) { colU = unsigned(c); }
+  // void setVDimImpl(size_t x) { dimV = unsigned(x); }
+  // void setDDimImpl(size_t x) { dimD = unsigned(x); }
+
+  auto getUImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
     U.resizeForOverwrite(r, c);
     return U;
   }
-  auto getVImpl(Row r, Col c) -> IntMatrix & {
-    V.resizeForOverwrite(r, c);
+  auto getVImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+    V.setSize(r, c);
     return V;
   }
-  auto getDImpl(size_t N) -> Vector<int64_t> & {
-    d.resizeForOverwrite(N);
+  auto getDImpl(Row N) -> MutPtrVector<int64_t> {
+    d.resizeForOverwrite(size_t(N));
     return d;
   }
   static auto construct(PtrMatrix<int64_t> Ap,
@@ -545,53 +576,80 @@ struct LinearSymbolicComparator
     return cmp;
   };
 };
-struct SymbolicComparator : public BaseSymbolicComparator<SymbolicComparator> {
+struct PtrSymbolicComparator
+  : public BaseSymbolicComparator<PtrSymbolicComparator> {
+  using Base = BaseSymbolicComparator<PtrSymbolicComparator>;
+  using Base::init;
+  int64_t *mem;
+  // unsigned int numVar;
+  // unsigned int numInEq;
+  // unsigned int numEq;
+  unsigned int rankU;
+  unsigned int colU;
+  unsigned int dimV;
+  int dimD;
+  void setURankImpl(Row r) { rankU = unsigned(r); }
+  void setUColImpl(Col c) { colU = unsigned(c); }
+  void setVDimImpl(size_t d) { dimV = unsigned(d); }
+  void setDDimImpl(size_t d) { dimD = int(d); }
 
-  int64_t mem[1]; // NOLINT(modernize-avoid-c-arrays)
   // R x numVar + numInEq
-  constexpr auto getUImpl() -> MutPtrMatrix<int64_t> {
-    return {mem, numVar + numInEqCon};
+  // [[nodiscard]] constexpr auto colU() const -> unsigned {
+  //   return numVar + numInEq;
+  // }
+  // [[nodiscard]] constexpr auto dimV() const -> unsigned {
+  //   return 2 * numInEq + numEq;
+  // }
+  constexpr auto getUImpl() -> DenseMutPtrMatrix<int64_t> {
+    return {mem, rankU, colU};
   }
   // offset by (numVar + numInEq)*(numVar + numInEq)
-  constexpr auto getVImpl() -> MutPtrMatrix<int64_t> {
+  constexpr auto getVImpl() -> DenseMutPtrMatrix<int64_t> {
     // A = V
     // H = A
     // H.truncate(Row());
     // size is H.numCol() * H.numCol()
-    Col numCol = 2 * numInEqCon + numEqCon;
-    return {mem, Row{numVar + numInEqCon}, numCol, numCol};
+    return {getUImpl().end(), dimD <= 0 ? -dimD : dimV, dimV};
   }
   // size D
   constexpr auto getDImpl() -> MutPtrVector<int64_t> {
     // d = Ht.diag()
-    return {mem, numVar + numCon};
+    return {getVImpl().end(), unsigned(std::max(dimD, 0))};
   }
-  constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
-  constexpr auto getVImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
-  constexpr auto getDImpl(size_t N) -> MutPtrVector<int64_t> {
-    // d = Ht.diag()
-    return {mem, numVar + numCon};
+  // constexpr auto getUImpl(Row r, Col c) -> MutPtrMatrix<int64_t> {}
+  constexpr auto getVImpl(Row r, Col c) -> DenseMutPtrMatrix<int64_t> {
+    auto rows = size_t(r);
+    dimD = -int(rows);
+    invariant(dimD <= 0);
+    dimV = unsigned(c);
+    return getVImpl();
   }
-  static auto construct(PtrMatrix<int64_t> Ap,
+  constexpr auto getDImpl(Row r) -> MutPtrVector<int64_t> {
+    dimD = int(size_t(r));
+    invariant(dimD > 0);
+    return getDImpl();
+  }
+  static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
                         EmptyMatrix<int64_t> = EmptyMatrix<int64_t>{},
-                        bool pos0 = true) -> LinearSymbolicComparator {
-    LinearSymbolicComparator cmp;
+                        bool pos0 = true) -> PtrSymbolicComparator {
+    PtrSymbolicComparator cmp;
     cmp.init(Ap, EmptyMatrix<int64_t>{}, pos0);
     return cmp;
   };
-  static auto construct(PtrMatrix<int64_t> Ap, bool pos0)
-    -> LinearSymbolicComparator {
-    return construct(Ap, EmptyMatrix<int64_t>{}, pos0);
+  static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap, bool pos0)
+    -> PtrSymbolicComparator {
+    return construct(alloc, Ap, EmptyMatrix<int64_t>{}, pos0);
   };
-  static auto construct(PtrMatrix<int64_t> Ap, PtrMatrix<int64_t> Ep,
-                        bool pos0 = true) -> LinearSymbolicComparator {
-    LinearSymbolicComparator cmp;
+  static auto construct(BumpAlloc<> &alloc, PtrMatrix<int64_t> Ap,
+                        PtrMatrix<int64_t> Ep, bool pos0 = true)
+    -> PtrSymbolicComparator {
+    PtrSymbolicComparator cmp;
     cmp.init(Ap, Ep, pos0);
     return cmp;
   };
 };
 
-static_assert(Comparator<SymbolicComparator>);
+static_assert(Comparator<PtrSymbolicComparator>);
 static_assert(Comparator<LinearSymbolicComparator>);
 
 static constexpr void moveEqualities(IntMatrix &, EmptyMatrix<int64_t> &,

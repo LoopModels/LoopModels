@@ -189,6 +189,9 @@ constexpr auto operator*(size_t x, RowStride y) -> RowStride {
   return RowStride{x * size_t(y)};
 }
 
+constexpr auto max(Row M, Col N) -> size_t {
+  return std::max(size_t(M), size_t(N));
+}
 constexpr auto max(Col N, RowStride X) -> RowStride {
   return RowStride{std::max(size_t(N), size_t(X))};
 }
