@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['wbumpalloc_203',['WBumpAlloc',['../structWBumpAlloc.html',1,'']]]
+  ['wbumpalloc_204',['WBumpAlloc',['../classWBumpAlloc.html',1,'']]]
 ];

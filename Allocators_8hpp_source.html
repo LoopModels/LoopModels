@@ -422,49 +422,46 @@ $(function() {
 <div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="comment">// `std::allocator`.</span></div>
 <div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keywordtype">size_t</span> SlabSize = 16384, <span class="keywordtype">bool</span> BumpUp = <span class="keyword">false</span>,</div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;          <span class="keywordtype">size_t</span> MinAlignment = <span class="keyword">alignof</span>(std::max_align_t)&gt;</div>
-<div class="line"><a name="l00359"></a><span class="lineno"><a class="line" href="structWBumpAlloc.html">  359</a></span>&#160;<span class="keyword">struct</span> <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a> {</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBumpAlloc.html">Alloc</a> = <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
+<div class="line"><a name="l00359"></a><span class="lineno"><a class="line" href="classWBumpAlloc.html">  359</a></span>&#160;<span class="keyword">class</span> <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a> {</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="keyword">using</span> <a class="code" href="structBumpAlloc.html">Alloc</a> = <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a>;</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> A;</div>
 <div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160; </div>
 <div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  <span class="keyword">using</span> value_type = T;</div>
 <div class="line"><a name="l00365"></a><span class="lineno"><a class="line" href="structWBumpAlloc_1_1rebind.html">  365</a></span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U&gt; <span class="keyword">struct </span><a class="code" href="structWBumpAlloc_1_1rebind.html">rebind</a> {</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">using</span> <a class="code" href="structWBumpAlloc.html">other</a> = <a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;U&gt;</a>;</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">using</span> <a class="code" href="classWBumpAlloc.html">other</a> = <a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;U&gt;</a>;</div>
 <div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  };</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structBumpAlloc.html">Alloc</a> &amp;alloc) : A(&amp;alloc) {}</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> alloc) : A(alloc) {}</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a>(<span class="keyword">const</span> <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a> &amp;other) : A(other.A) {}</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structBumpAlloc.html">Alloc</a> &amp;alloc) : A(&amp;alloc) {}</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> alloc) : A(alloc) {}</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<span class="keyword">const</span> <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a> &amp;other) : A(other.A) {}</div>
 <div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span> U&gt;</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <a class="code" href="structWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;U&gt;</a> other) : A(other.get_allocator()) {}</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <a class="code" href="classWBumpAlloc.html">WBumpAlloc</a>(<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;U&gt;</a> other) : A(other.get_allocator()) {}</div>
 <div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> get_allocator() -&gt; <a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> { <span class="keywordflow">return</span> A; }</div>
 <div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="keywordtype">void</span> deallocate(T *p, <span class="keywordtype">size_t</span> n) { A-&gt;deallocate(p, n); }</div>
 <div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  [[gnu::returns_nonnull]] <span class="keyword">auto</span> allocate(<span class="keywordtype">size_t</span> n) -&gt; T * {</div>
 <div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keywordflow">return</span> A-&gt;template allocate&lt;T&gt;(n);</div>
 <div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  }</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160; </div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  <a class="code" href="structNotNull.html">NotNull&lt;Alloc&gt;</a> A;</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;};</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;static_assert(std::same_as&lt;</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;              std::allocator_traits&lt;<a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;int64_t *&gt;</a>&gt;::size_type, <span class="keywordtype">size_t</span>&gt;);</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;static_assert(</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  std::same_as&lt;std::allocator_traits&lt;<a class="code" href="structWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>&gt;::pointer, int64_t *&gt;);</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160; </div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="keyword">auto</span> <span class="keyword">operator</span> <span class="keyword">new</span>(<span class="keywordtype">size_t</span> Size, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;Alloc)</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  -&gt; <span class="keywordtype">void</span> * {</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keywordflow">return</span> Alloc.allocate(Size, std::min&lt;size_t&gt;(llvm::NextPowerOf2(Size),</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;                                               <span class="keyword">alignof</span>(std::max_align_t)));</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;}</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160; </div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="keywordtype">void</span> <span class="keyword">operator</span> <span class="keyword">delete</span>(<span class="keywordtype">void</span> *, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;) {}</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;};</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;static_assert(std::same_as&lt;</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;              std::allocator_traits&lt;<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t *&gt;</a>&gt;::size_type, <span class="keywordtype">size_t</span>&gt;);</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;static_assert(</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  std::same_as&lt;std::allocator_traits&lt;<a class="code" href="classWBumpAlloc.html">WBumpAlloc&lt;int64_t&gt;</a>&gt;::pointer, int64_t *&gt;);</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160; </div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;<span class="keyword">auto</span> <span class="keyword">operator</span> <span class="keyword">new</span>(<span class="keywordtype">size_t</span> Size, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;Alloc)</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  -&gt; <span class="keywordtype">void</span> * {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keywordflow">return</span> Alloc.allocate(Size, std::min&lt;size_t&gt;(llvm::NextPowerOf2(Size),</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;                                               <span class="keyword">alignof</span>(std::max_align_t)));</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;}</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="keyword">template</span> &lt;<span class="keywordtype">size_t</span> SlabSize, <span class="keywordtype">bool</span> BumpUp, <span class="keywordtype">size_t</span> MinAlignment&gt;</div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;<span class="keywordtype">void</span> <span class="keyword">operator</span> <span class="keyword">delete</span>(<span class="keywordtype">void</span> *, <a class="code" href="structBumpAlloc.html">BumpAlloc&lt;SlabSize, BumpUp, MinAlignment&gt;</a> &amp;) {}</div>
 <div class="ttc" id="aclassBumpAlloc_1_1CheckPoint_html"><div class="ttname"><a href="classBumpAlloc_1_1CheckPoint.html">BumpAlloc::CheckPoint</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:203</div></div>
+<div class="ttc" id="aclassWBumpAlloc_html"><div class="ttname"><a href="classWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:359</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:24</div></div>
 <div class="ttc" id="astructBumpAlloc_html_a6a76e6f7de9051fea00955773e11a61b"><div class="ttname"><a href="structBumpAlloc.html#a6a76e6f7de9051fea00955773e11a61b">BumpAlloc::reallocate</a></div><div class="ttdeci">auto reallocate(std::byte *Ptr, size_t OldSize, size_t NewSize, size_t Align) -&gt; void *</div><div class="ttdef"><b>Definition:</b> Allocators.hpp:134</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 <div class="ttc" id="astructWBumpAlloc_1_1rebind_html"><div class="ttname"><a href="structWBumpAlloc_1_1rebind.html">WBumpAlloc::rebind</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:365</div></div>
-<div class="ttc" id="astructWBumpAlloc_html"><div class="ttname"><a href="structWBumpAlloc.html">WBumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:359</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
