@@ -526,6 +526,10 @@ struct SquarePtrMatrix : ConstMatrixCore<T, SquarePtrMatrix<T>> {
 template <typename T>
 struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   using Base = MutMatrixCore<T, MutSquarePtrMatrix<T>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
   using eltype = std::remove_reference_t<T>;
   static_assert(!std::is_const_v<T>, "T should not be const");
   [[no_unique_address]] T *const mem;
@@ -810,7 +814,7 @@ static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
 template <typename T>
 inline auto matrix(std::allocator<T>, size_t M, size_t N)
   -> Matrix<T, 0, 0, 64> {
-  return Matrix<T, 0, 0, 64>(M, N);
+  return Matrix<T, 0, 0, 64>::undef(M, N);
 }
 template <typename T>
 constexpr auto matrix(WBumpAlloc<T> alloc, size_t M, size_t N)
@@ -821,6 +825,22 @@ template <typename T>
 constexpr auto matrix(BumpAlloc<> &alloc, size_t M, size_t N)
   -> DenseMutPtrMatrix<T> {
   return {alloc.allocate<T>(M * N), M, N};
+}
+template <typename T>
+inline auto identity(std::allocator<T>, size_t M) -> Matrix<T, 0, 0, 64> {
+  return SquareMatrix<T>::identity(M);
+}
+template <typename T>
+constexpr auto identity(WBumpAlloc<T> alloc, size_t M)
+  -> MutSquarePtrMatrix<T> {
+  MutSquarePtrMatrix<T> A = {alloc.allocate(M * M), M};
+  A = 0;
+  A.diag() = 1;
+  return A;
+}
+template <typename T>
+constexpr auto identity(BumpAlloc<> &alloc, size_t M) -> MutSquarePtrMatrix<T> {
+  return identity(WBumpAlloc<T>(alloc), M);
 }
 
 } // namespace LinearAlgebra

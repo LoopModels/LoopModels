@@ -798,4 +798,5 @@ using LinearAlgebra::AbstractVector, LinearAlgebra::AbstractMatrix,
   LinearAlgebra::MutSquarePtrMatrix, LinearAlgebra::begin, LinearAlgebra::end,
   LinearAlgebra::swap, LinearAlgebra::SquarePtrMatrix, LinearAlgebra::Row,
   LinearAlgebra::RowStride, LinearAlgebra::Col, LinearAlgebra::CarInd,
-  LinearAlgebra::last, LinearAlgebra::DenseMutPtrMatrix;
+  LinearAlgebra::last, LinearAlgebra::DenseMutPtrMatrix, LinearAlgebra::matrix,
+  LinearAlgebra::identity;

@@ -1,8 +1,11 @@
 #pragma once
 #include "Math/Indexing.hpp"
 #include "TypePromotion.hpp"
+#include "Utilities/Allocators.hpp"
 #include "Utilities/Valid.hpp"
+#include <cstddef>
 #include <llvm/ADT/ArrayRef.h>
+#include <llvm/ADT/SmallVector.h>
 
 namespace LinearAlgebra {
 template <typename T>
@@ -237,9 +240,17 @@ template <typename T> struct MutPtrVector {
 #endif
 };
 
-template <typename T> struct Vector {
+template <typename T> consteval auto PreAllocStorage() -> size_t {
+  constexpr size_t TotalBytes = 128;
+  constexpr size_t RemainingBytes =
+    TotalBytes - sizeof(llvm::SmallVector<T, 0>);
+  constexpr size_t N = RemainingBytes / sizeof(T);
+  return std::max<size_t>(1, N);
+}
+
+template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   using eltype = T;
-  [[no_unique_address]] llvm::SmallVector<T, 16> data;
+  [[no_unique_address]] llvm::SmallVector<T, Stack> data;
 
   Vector(int N) : data(llvm::SmallVector<T, 16>(N)){};
   Vector(size_t N = 0) : data(llvm::SmallVector<T, 16>(N)){};
@@ -705,5 +716,18 @@ static_assert(
   "failed random access iterator");
 static_assert(AbstractVector<StridedVector<int64_t>>);
 static_assert(std::is_trivially_copyable_v<StridedVector<int64_t>>);
+
+template <typename T>
+inline auto vector(std::allocator<T>, size_t M) -> Vector<T> {
+  return Vector<T>(M);
+}
+template <typename T>
+constexpr auto vector(WBumpAlloc<T> alloc, size_t M) -> MutPtrVector<T> {
+  return {alloc.allocate(M), M};
+}
+template <typename T>
+constexpr auto matrix(BumpAlloc<> &alloc, size_t M) -> MutPtrVector<T> {
+  return {alloc.allocate<T>(M), M};
+}
 
 } // namespace LinearAlgebra
