@@ -169,9 +169,9 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     assert(k == B.nonZeros.size());
     return *this;
   }
-  [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
-    return copyto(*this, PtrMatrix<T>(B));
-  }
+  // [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
+  //   return copyto(*this, PtrMatrix<T>(B));
+  // }
   [[gnu::flatten]] auto operator=(const AbstractMatrix auto &B)
     -> MutPtrMatrix<T> {
     return copyto(*this, B);
@@ -267,18 +267,25 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
-  [[no_unique_address]] T *const mem;
+  [[no_unique_address]] T *mem;
   [[no_unique_address]] unsigned int M, N, X;
   // [[no_unique_address]] Col N;
   // [[no_unique_address]] RowStride X;
   [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
-    return copyto(*this, PtrMatrix<T>(B));
+    mem = B.mem;
+    M = B.M;
+    N = B.N;
+    X = B.X;
+    return *this;
+    // return copyto(*this, PtrMatrix<T>(B));
   }
-  [[gnu::flatten]] auto operator=(AbstractMatrix auto B) -> MutPtrMatrix<T> {
-    return copyto(*this, PtrMatrix<T>(B));
-  }
+  // [[gnu::flatten]] auto operator=(AbstractMatrix auto B) -> MutPtrMatrix<T> {
+  //   return copyto(*this, PtrMatrix<T>(B));
+  // }
 
   [[nodiscard]] constexpr auto data() -> T * { return mem; }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
@@ -313,6 +320,14 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
 #else
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
+  constexpr void truncate(Row r) {
+    assert(r <= M);
+    M = unsigned(r);
+  }
+  constexpr void truncate(Col c) {
+    assert(c <= N);
+    N = unsigned(c);
+  }
 };
 template <typename T>
 struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
@@ -321,7 +336,9 @@ struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *const mem;
   [[no_unique_address]] unsigned int M, N;
@@ -362,6 +379,10 @@ struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
 #else
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
+  constexpr void truncate(Row r) {
+    assert(r <= M);
+    M = unsigned(r);
+  }
 };
 template <typename T> constexpr auto ptrVector(T *p, size_t M) {
   if constexpr (std::is_const_v<T>)
@@ -444,6 +465,12 @@ static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
 template <typename T, size_t M = 0, size_t N = 0, size_t S = 64>
 struct Matrix : public MutMatrixCore<T, Matrix<T, M, N, S>> {
   using Base = MutMatrixCore<T, Matrix<T, M, N, S>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
 
   // using eltype = std::remove_cv_t<T>;
   using eltype = std::remove_reference_t<T>;
@@ -463,6 +490,13 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, M, N, S>> {
 template <typename T, size_t M, size_t S>
 struct Matrix<T, M, 0, S> : public MutMatrixCore<T, Matrix<T, M, 0, S>> {
   using Base = MutMatrixCore<T, Matrix<T, M, 0, S>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
+
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
   [[no_unique_address]] size_t N, X;
@@ -487,6 +521,13 @@ struct Matrix<T, M, 0, S> : public MutMatrixCore<T, Matrix<T, M, 0, S>> {
 template <typename T, size_t N, size_t S>
 struct Matrix<T, 0, N, S> : public MutMatrixCore<T, Matrix<T, 0, N, S>> {
   using Base = MutMatrixCore<T, Matrix<T, 0, N, S>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
+
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
   [[no_unique_address]] size_t M;
@@ -529,7 +570,9 @@ struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
   using eltype = std::remove_reference_t<T>;
   static_assert(!std::is_const_v<T>, "T should not be const");
   [[no_unique_address]] T *const mem;
@@ -553,6 +596,13 @@ struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
 template <typename T, unsigned STORAGE = 8>
 struct SquareMatrix : public MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
   using Base = MutMatrixCore<T, SquareMatrix<T, STORAGE>>;
+  using Base::diag, Base::antiDiag,
+    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
+    Base::operator ::LinearAlgebra::PtrMatrix<T>,
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
+
   using eltype = std::remove_reference_t<T>;
   static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
   [[no_unique_address]] llvm::SmallVector<T, TOTALSTORAGE> mem;
@@ -622,7 +672,9 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>, Base::operator=;
+    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
+    Base::operator/=;
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
   [[no_unique_address]] unsigned int M = 0, N = 0, X = 0;

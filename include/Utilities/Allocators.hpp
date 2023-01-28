@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #define BUMP_ALLOC_LLVM_USE_ALLOCATOR
 /// The motivation of this file is to support realloc, allowing us to reasonably
 /// use this allocator to back containers.
@@ -358,21 +359,21 @@ template <typename T, size_t SlabSize = 16384, bool BumpUp = false,
           size_t MinAlignment = alignof(std::max_align_t)>
 class WBumpAlloc {
   using Alloc = BumpAlloc<SlabSize, BumpUp, MinAlignment>;
-  NotNull<Alloc> A;
+  [[no_unique_address]] NotNull<Alloc> A;
 
 public:
   using value_type = T;
   template <typename U> struct rebind {
-    using other = WBumpAlloc<U>;
+    using other = WBumpAlloc<U, SlabSize, BumpUp, MinAlignment>;
   };
-  WBumpAlloc(Alloc &alloc) : A(&alloc) {}
-  WBumpAlloc(NotNull<Alloc> alloc) : A(alloc) {}
-  WBumpAlloc(const WBumpAlloc &other) : A(other.A) {}
+  constexpr WBumpAlloc(Alloc &alloc) : A(&alloc) {}
+  constexpr WBumpAlloc(NotNull<Alloc> alloc) : A(alloc) {}
+  constexpr WBumpAlloc(const WBumpAlloc &other) = default;
   template <typename U>
-  WBumpAlloc(WBumpAlloc<U> other) : A(other.get_allocator()) {}
-  [[nodiscard]] auto get_allocator() -> NotNull<Alloc> { return A; }
-  void deallocate(T *p, size_t n) { A->deallocate(p, n); }
-  [[gnu::returns_nonnull]] auto allocate(size_t n) -> T * {
+  constexpr WBumpAlloc(WBumpAlloc<U> other) : A(other.get_allocator()) {}
+  [[nodiscard]] constexpr auto get_allocator() -> NotNull<Alloc> { return A; }
+  constexpr void deallocate(T *p, size_t n) { A->deallocate(p, n); }
+  [[gnu::returns_nonnull]] constexpr auto allocate(size_t n) -> T * {
     return A->template allocate<T>(n);
   }
 };
@@ -380,6 +381,9 @@ static_assert(std::same_as<
               std::allocator_traits<WBumpAlloc<int64_t *>>::size_type, size_t>);
 static_assert(
   std::same_as<std::allocator_traits<WBumpAlloc<int64_t>>::pointer, int64_t *>);
+
+static_assert(std::is_trivially_copyable_v<NotNull<BumpAlloc<>>>);
+static_assert(std::is_trivially_copyable_v<WBumpAlloc<int64_t>>);
 
 template <size_t SlabSize, bool BumpUp, size_t MinAlignment>
 auto operator new(size_t Size, BumpAlloc<SlabSize, BumpUp, MinAlignment> &Alloc)
@@ -390,3 +394,18 @@ auto operator new(size_t Size, BumpAlloc<SlabSize, BumpUp, MinAlignment> &Alloc)
 
 template <size_t SlabSize, bool BumpUp, size_t MinAlignment>
 void operator delete(void *, BumpAlloc<SlabSize, BumpUp, MinAlignment> &) {}
+
+template <typename A>
+concept Allocator =
+  requires(A a) {
+    typename A::value_type;
+    {
+      a.allocate(1)
+      } -> std::same_as<typename std::allocator_traits<A>::pointer>;
+    {
+      a.deallocate(std::declval<typename std::allocator_traits<A>::pointer>(),
+                   1)
+    };
+  };
+static_assert(Allocator<WBumpAlloc<int64_t>>);
+static_assert(Allocator<std::allocator<int64_t>>);

@@ -4,8 +4,10 @@
 #include "Math/Constraints.hpp"
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
+#include "Math/Matrix.hpp"
 #include "Math/NormalForm.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
+#include "Utilities/Allocators.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -58,50 +60,61 @@ inline auto printPositive(llvm::raw_ostream &os, size_t stop)
 /// We have `A.numRow()` inequality constraints and `E.numRow()` equality
 /// constraints.
 ///
-template <MaybeMatrix<int64_t> I64Matrix, Comparator CmptrType,
-          MaybeVector<const llvm::SCEV *> SymbolVec, bool NonNegative>
+template <bool HasEqualities, bool HasSymbols, bool NonNegative, typename P>
 struct BasePolyhedra {
   // order of vars:
   // constants, loop vars, symbolic vars
   // this is because of hnf prioritizing diagonalizing leading rows
   // empty fields sorted first to make it easier for compiler to alias them
-  [[no_unique_address]] I64Matrix E{};
-  [[no_unique_address]] SymbolVec S{};
-  [[no_unique_address]] IntMatrix A{};
-  [[no_unique_address]] CmptrType C{};
 
-  static constexpr bool hasEqualities =
-    !std::is_same_v<I64Matrix, EmptyMatrix<int64_t>>;
-
-  BasePolyhedra() = default;
-  BasePolyhedra(IntMatrix Ain)
-    : A(std::move(Ain)), C(LinearSymbolicComparator::construct(A)){};
-  BasePolyhedra(IntMatrix Ain, I64Matrix Ein)
-    : E(std::move(Ein)), A(std::move(Ain)),
-      C(LinearSymbolicComparator::construct(A)){};
-  BasePolyhedra(IntMatrix Ain, SymbolVec SV)
-    : S(std::move(SV)), A(std::move(Ain)),
-      C(LinearSymbolicComparator::construct(A)){};
-  BasePolyhedra(IntMatrix Ain, I64Matrix Ein, SymbolVec SV)
-    : E(std::move(Ein)), S(std::move(SV)), A(std::move(Ain)),
-      C(LinearSymbolicComparator::construct(A)){};
-
-  inline void initializeComparator() {
-    if constexpr (NonNegative) C.initNonNegative(A, E, getNumDynamic());
-    else C.init(A, E);
+  auto getA() -> DenseMutPtrMatrix<int64_t> {
+    return *static_cast<P *>(this)->getAImpl();
   }
-  auto calcIsEmpty() -> bool { return C.isEmpty(); }
+  auto getE() -> DenseMutPtrMatrix<int64_t> {
+    static_assert(HasEqualities);
+    return *static_cast<P *>(this)->getAImpl();
+  }
+  auto getSyms() -> llvm::MutableArrayRef<const llvm::SCEV *> {
+    static_assert(HasSymbols);
+    return *static_cast<P *>(this)->getSymsImpl();
+  }
+
+  inline auto initializeComparator() -> comparator::LinearSymbolicComparator {
+    if constexpr (HasEqualities)
+      if constexpr (NonNegative)
+        return comparator::linearNonNegative(getA(), getE(), getNumDynamic());
+      else return comparator::linear(getA(), getE(), true);
+    else if constexpr (NonNegative)
+      return comparator::linearNonNegative(getA(), getNumDynamic());
+    else return comparator::linear(getA(), true);
+  }
+  inline auto initializeComparator(BumpAlloc<> &alloc)
+    -> comparator::PtrSymbolicComparator {
+    if constexpr (HasEqualities)
+      if constexpr (NonNegative)
+        return comparator::linearNonNegative(alloc, getA(), getE(),
+                                             getNumDynamic());
+      else return comparator::linear(alloc, getA(), getE(), true);
+    else if constexpr (NonNegative)
+      return comparator::linearNonNegative(alloc, getA(), getNumDynamic());
+    else return comparator::linear(alloc, getA(), true);
+  }
+  auto calcIsEmpty() -> bool { return initializeComparator().isEmpty(); }
+  auto calcIsEmpty(BumpAlloc<> &alloc) -> bool {
+    return initializeComparator(alloc).isEmpty();
+  }
   void pruneBounds() {
     if (calcIsEmpty()) {
-      A.truncate(Row{0});
-      if constexpr (hasEqualities) E.truncate(Row{0});
+      getA().truncate(Row{0});
+      if constexpr (HasEqualities) getE().truncate(Row{0});
     } else pruneBoundsUnchecked();
   }
   void pruneBoundsUnchecked() {
     const size_t dyn = getNumDynamic();
-    Vector<int64_t> diff{size_t(A.numCol())};
-    if constexpr (hasEqualities) removeRedundantRows(A, E);
-    for (auto j = size_t(A.numRow()); j;) {
+
+    Vector<int64_t> diff{size_t(getA().numCol())};
+    if constexpr (HasEqualities) removeRedundantRows(getA(), getE());
+    for (auto j = size_t(getA().numRow()); j;) {
       bool broke = false;
       for (size_t i = --j; i;) {
         if (A.numRow() <= 1) return;
@@ -131,12 +144,13 @@ struct BasePolyhedra {
         }
       }
     }
-    if constexpr (hasEqualities)
+    if constexpr (HasEqualities)
       for (size_t i = 0; i < E.numRow(); ++i) normalizeByGCD(E(i, _));
   }
 
   [[nodiscard]] constexpr auto getNumSymbols() const -> size_t {
-    return 1 + S.size();
+    if constexpr (HasSymbols) return 1 + getSyms().size();
+    else return 1;
   }
   [[nodiscard]] constexpr auto getNumDynamic() const -> size_t {
     return size_t(A.numCol()) - getNumSymbols();
@@ -189,7 +203,7 @@ struct BasePolyhedra {
   // E'x = 0
   // removes variable `i` from system
   void removeVariable(const size_t i) {
-    if constexpr (hasEqualities) {
+    if constexpr (HasEqualities) {
       if (substituteEquality(A, E, i)) {
         if constexpr (NonNegative) fourierMotzkinNonNegative(A, i);
         else fourierMotzkin(A, i);
@@ -206,7 +220,7 @@ struct BasePolyhedra {
 
   void dropEmptyConstraints() {
     dropEmptyConstraints(A);
-    if constexpr (hasEqualities) dropEmptyConstraints(E);
+    if constexpr (HasEqualities) dropEmptyConstraints(E);
   }
 
   friend inline auto operator<<(llvm::raw_ostream &os, const BasePolyhedra &p)
@@ -214,7 +228,7 @@ struct BasePolyhedra {
     auto &&os2 =
       printConstraints(os << "\n", p.A, llvm::ArrayRef<const llvm::SCEV *>());
     if constexpr (NonNegative) printPositive(os2, p.getNumDynamic());
-    if constexpr (hasEqualities)
+    if constexpr (HasEqualities)
       return printConstraints(os2, p.E, llvm::ArrayRef<const llvm::SCEV *>(),
                               false);
     return os2;
@@ -230,7 +244,7 @@ struct BasePolyhedra {
     // return false;
   }
   void truncateVars(size_t numVar) {
-    if constexpr (hasEqualities) E.truncate(Col{numVar});
+    if constexpr (HasEqualities) E.truncate(Col{numVar});
     A.truncate(Col{numVar});
   }
 };

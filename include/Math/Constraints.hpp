@@ -3,6 +3,7 @@
 
 #include "Math/EmptyArrays.hpp"
 #include "Math/Math.hpp"
+#include "Math/Matrix.hpp"
 #include "Math/NormalForm.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -65,16 +66,20 @@ inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
   return os;
 }
 
-inline void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
+constexpr void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
   const Row lastRow = A.numRow() - 1;
   assert(lastRow >= i);
   if (lastRow != i) A(i, _) = A(lastRow, _);
 }
-inline void eraseConstraint(IntMatrix &A, Row i) {
+[[nodiscard]] constexpr auto eraseConstraint(MutPtrMatrix<int64_t> A, Row i)
+  -> MutPtrMatrix<int64_t> {
   eraseConstraintImpl(A, i);
-  A.truncate(Row{A.numRow() - 1});
+  A.truncate(A.numRow() - 1);
+  return A;
 }
-inline void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
+[[nodiscard]] constexpr auto eraseConstraint(MutPtrMatrix<int64_t> A, size_t _i,
+                                             size_t _j)
+  -> MutPtrMatrix<int64_t> {
   assert(_i != _j);
   Row i = std::min(_i, _j);
   Row j = std::max(_i, _j);
@@ -83,7 +88,7 @@ inline void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
   const Row penuRow = lastRow - 1;
   if (j == penuRow) {
     // then we only need to copy one column (i to lastCol)
-    eraseConstraint(A, i);
+    eraseConstraintImpl(A, i);
   } else if ((i != penuRow) && (i != lastRow)) {
     // if i == penuCol, then j == lastCol
     // and we thus don't need to copy
@@ -92,7 +97,12 @@ inline void eraseConstraint(IntMatrix &A, size_t _i, size_t _j) {
       A(j, n) = A(lastRow, n);
     }
   }
-  A.truncate(Row{penuRow});
+  A.truncate(penuRow);
+  return A;
+}
+
+constexpr void eraseConstraint(IntMatrix &A, Row i) {
+  A.truncate(eraseConstraint(MutPtrMatrix<int64_t>(A), i).numRow());
 }
 
 inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> Row {
@@ -368,22 +378,27 @@ inline void eliminateVariable(IntMatrix &A, EmptyMatrix<int64_t>, size_t v) {
 inline void eliminateVariable(IntMatrix &A, IntMatrix &E, size_t v) {
   if (substituteEquality(A, E, v)) fourierMotzkin(A, v);
 }
-inline void removeZeroRows(IntMatrix &A) {
+/// Checks all rows, dropping those that are 0.
+[[nodiscard]] constexpr auto removeZeroRows(MutPtrMatrix<int64_t> A)
+  -> MutPtrMatrix<int64_t> {
   for (Row i = A.numRow(); i;)
-    if (allZero(A(--i, _))) eraseConstraint(A, i);
+    if (allZero(A(--i, _))) A = eraseConstraint(A, i);
+  return A;
 }
 
-// A is an inequality matrix, A*x >= 0
-// B is an equality matrix, E*x == 0
-// Use the equality matrix B to remove redundant constraints both matrices
-//
-inline void removeRedundantRows(IntMatrix &A, IntMatrix &B) {
+/// A is an inequality matrix, A*x >= 0
+/// B is an equality matrix, E*x == 0
+/// Use the equality matrix B to remove redundant constraints both matrices
+[[nodiscard]] constexpr auto removeRedundantRows(MutPtrMatrix<int64_t> A,
+                                                 MutPtrMatrix<int64_t> B)
+  -> std::array<MutPtrMatrix<int64_t>, 2> {
   auto [M, N] = B.size();
   for (size_t r = 0, c = 0; c < N && r < M; ++c)
     if (!NormalForm::pivotRows(B, c, M, r))
       NormalForm::reduceColumnStack(A, B, c, r++);
-  removeZeroRows(A);
-  NormalForm::removeZeroRows(B);
+  A = removeZeroRows(A);
+  B = NormalForm::removeZeroRows(B);
+  return {A, B};
 }
 
 inline void dropEmptyConstraints(IntMatrix &A) {
