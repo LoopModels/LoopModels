@@ -3,6 +3,7 @@
 #include "Math/EmptyArrays.hpp"
 #include "Math/GreatestCommonDivisor.hpp"
 #include "Math/Math.hpp"
+#include "Math/Matrix.hpp"
 #include "Math/VectorGreatestCommonDivisor.hpp"
 #include <concepts>
 #include <cstddef>
@@ -317,13 +318,17 @@ inline void reduceColumnStack(MutPtrMatrix<int64_t> A, MutPtrMatrix<int64_t> B,
 /// numNonZeroRows(PtrMatrix<int64_t> A) -> Row
 /// Assumes some number of the trailing rows have been
 /// zeroed out.  Returns the number of rows that are remaining.
-inline auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
+constexpr auto numNonZeroRows(PtrMatrix<int64_t> A) -> Row {
   Row Mnew = A.numRow();
   while (Mnew && allZero(A(Mnew - 1, _))) --Mnew;
   return Mnew;
 }
 // NormalForm version assumes zero rows are sorted to end due to pivoting
 inline void removeZeroRows(IntMatrix &A) { A.truncate(numNonZeroRows(A)); }
+[[nodiscard]] constexpr auto removeZeroRows(MutPtrMatrix<int64_t> A)
+  -> MutPtrMatrix<int64_t> {
+  return A.truncate(numNonZeroRows(A));
+}
 
 inline auto simplifySystemImpl(MutPtrMatrix<int64_t> A, size_t colInit = 0)
   -> Row {
@@ -585,8 +590,8 @@ inline void solveSystem(MutPtrMatrix<int64_t> A) {
 inline void nullSpace11(IntMatrix &B, IntMatrix &A) {
   const Row M = A.numRow();
   B.resizeForOverwrite(M, Col{size_t(M)});
-  B = 0;
-  B.diag() = 1;
+  B << 0;
+  B.diag() << 1;
   solveSystem(A, B);
   Row R = numNonZeroRows(A);
   // slice B[_(R,end), :]

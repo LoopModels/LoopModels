@@ -19,7 +19,7 @@ TEST(SparseIndexingTest, BasicAssertions) {
   {
     IntMatrix A2(Row{3}, Col{4});
     MutPtrMatrix MA2 = A2;
-    MA2 = Asparse;
+    MA2 << Asparse;
     EXPECT_EQ(A, A2);
   }
   for (size_t i = 0; i < 3; ++i)
@@ -69,8 +69,8 @@ TEST(SparseIndexingTest, BasicAssertions) {
   IntMatrix C2{A * B};
   llvm::errs() << "C=\n" << C << "\nC2=\n" << C2 << "\n";
   EXPECT_TRUE(C == C2);
-  IntMatrix At = A.transpose();
-  IntMatrix Bt = B.transpose();
+  IntMatrix At << A.transpose();
+  IntMatrix Bt << B.transpose();
   C2 += At.transpose() * Bt.transpose();
   EXPECT_TRUE(C * 2 == C2);
   EXPECT_TRUE(C == At.transpose() * B);
@@ -92,8 +92,8 @@ TEST(ExpressionTemplateTest, BasicAssertions) {
     "-20 0 40 -16 20 -12]"_mat};
   // IntMatrix B{A*4};
   auto A4tmplate{A * 4};
-  IntMatrix C = A4tmplate;
-  IntMatrix B = A * 4;
+  IntMatrix C << A4tmplate;
+  IntMatrix B << A * 4;
   EXPECT_EQ(A4, B);
   EXPECT_EQ(A4, C);
   IntMatrix Z = A * 4 - A4;

@@ -118,7 +118,7 @@ struct BasePolyhedra {
       bool broke = false;
       for (size_t i = --j; i;) {
         if (A.numRow() <= 1) return;
-        diff = A(--i, _) - A(j, _);
+        diff << A(--i, _) - A(j, _);
         if (C.greaterEqual(diff)) {
           eraseConstraint(A, i);
           initializeComparator();

@@ -150,7 +150,7 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     return MutPtrMatrix<T>{ptr, numRow(), numCol(), rowStride()};
   }
 
-  [[gnu::flatten]] auto operator=(const SmallSparseMatrix<T> &B)
+  [[gnu::flatten]] auto operator<<(const SmallSparseMatrix<T> &B)
     -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
@@ -169,14 +169,14 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     assert(k == B.nonZeros.size());
     return *this;
   }
-  // [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
+  // [[gnu::flatten]] auto operator<<(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
   //   return copyto(*this, PtrMatrix<T>(B));
   // }
-  [[gnu::flatten]] auto operator=(const AbstractMatrix auto &B)
+  [[gnu::flatten]] auto operator<<(const AbstractMatrix auto &B)
     -> MutPtrMatrix<T> {
     return copyto(*this, B);
   }
-  [[gnu::flatten]] auto operator=(const std::integral auto b)
+  [[gnu::flatten]] auto operator<<(const std::integral auto b)
     -> MutPtrMatrix<T> {
     for (size_t r = 0; r < numRow(); ++r)
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) = b;
@@ -268,14 +268,14 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *mem;
   [[no_unique_address]] unsigned int M, N, X;
   // [[no_unique_address]] Col N;
   // [[no_unique_address]] RowStride X;
-  [[gnu::flatten]] auto operator=(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
+  [[gnu::flatten]] auto operator<<(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
     mem = B.mem;
     M = B.M;
     N = B.N;
@@ -283,7 +283,8 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
     return *this;
     // return copyto(*this, PtrMatrix<T>(B));
   }
-  // [[gnu::flatten]] auto operator=(AbstractMatrix auto B) -> MutPtrMatrix<T> {
+  // [[gnu::flatten]] auto operator<<(AbstractMatrix auto B) -> MutPtrMatrix<T>
+  // {
   //   return copyto(*this, PtrMatrix<T>(B));
   // }
 
@@ -305,9 +306,10 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
     : mem(pt), M(MM), N(NN), X(NN){};
   constexpr MutPtrMatrix(T *pt, Row MM, Col NN, RowStride XX)
     : mem(pt), M(MM), N(NN), X(XX){};
-  template <typename ARM>
-  constexpr MutPtrMatrix(ARM &A)
+  constexpr MutPtrMatrix(AbstractMatrixCore auto &A)
     : mem(A.data()), M(A.numRow()), N(A.numCol()), X(A.rowStride()) {}
+  constexpr auto operator=(const MutPtrMatrix<T> &A)
+    -> MutPtrMatrix<T> & = default;
 
   [[nodiscard]] constexpr auto isSquare() const -> bool {
     return size_t(M) == size_t(N);
@@ -320,13 +322,15 @@ struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
 #else
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
-  constexpr void truncate(Row r) {
+  constexpr auto truncate(Row r) -> MutPtrMatrix<T> {
     assert(r <= M);
     M = unsigned(r);
+    return *this;
   }
-  constexpr void truncate(Col c) {
+  constexpr auto truncate(Col c) -> MutPtrMatrix<T> {
     assert(c <= N);
     N = unsigned(c);
+    return *this;
   }
 };
 template <typename T>
@@ -337,8 +341,8 @@ struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *const mem;
   [[no_unique_address]] unsigned int M, N;
@@ -469,8 +473,8 @@ struct Matrix : public MutMatrixCore<T, Matrix<T, M, N, S>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
 
   // using eltype = std::remove_cv_t<T>;
   using eltype = std::remove_reference_t<T>;
@@ -494,8 +498,8 @@ struct Matrix<T, M, 0, S> : public MutMatrixCore<T, Matrix<T, M, 0, S>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
 
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
@@ -525,8 +529,8 @@ struct Matrix<T, 0, N, S> : public MutMatrixCore<T, Matrix<T, 0, N, S>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
 
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
@@ -571,8 +575,8 @@ struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
   static_assert(!std::is_const_v<T>, "T should not be const");
   [[no_unique_address]] T *const mem;
@@ -600,8 +604,8 @@ struct SquareMatrix : public MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
 
   using eltype = std::remove_reference_t<T>;
   static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
@@ -673,8 +677,8 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
     Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator+=, Base::operator-=, Base::operator*=,
-    Base::operator/=;
+    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
+    Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
   [[no_unique_address]] llvm::SmallVector<T, S> mem;
   [[no_unique_address]] unsigned int M = 0, N = 0, X = 0;
@@ -886,8 +890,8 @@ template <typename T>
 constexpr auto identity(WBumpAlloc<T> alloc, size_t M)
   -> MutSquarePtrMatrix<T> {
   MutSquarePtrMatrix<T> A = {alloc.allocate(M * M), M};
-  A = 0;
-  A.diag() = 1;
+  A << 0;
+  A.diag() << 1;
   return A;
 }
 template <typename T>

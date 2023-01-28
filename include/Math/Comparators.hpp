@@ -311,7 +311,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A_0'  0  0
     //      A_1'  I  0
     //      S_0  S_1 I]
-    B(_(begin, numVar), _(1, numConExplicit)) = A.transpose();
+    B(_(begin, numVar), _(1, numConExplicit)) << A.transpose();
     for (size_t j = 0; j < numNonNegative; ++j)
       B(j + numVar - numNonNegative, numConExplicit + j) = 1;
     for (size_t j = 0; j < numConTotal; ++j) {
@@ -343,13 +343,14 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     //      A_1'  I  E_1' 0
     //      S_0  S_1  0   I]
     numEquations = numInEqConTotal + numEqCon;
-    B(_(begin, numVar), _(1, numInEqConExplicit)) = A.transpose();
-    B(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon)) =
-      E.transpose();
+    B(_(begin, numVar), _(1, numInEqConExplicit)) << A.transpose();
+    B(_(begin, numVar), _(numInEqConTotal, numInEqConTotal + numEqCon))
+      << E.transpose();
     if (numNonNegative)
       B(_(numVar - numNonNegative, numVar),
         _(numInEqConExplicit, numInEqConExplicit + numNonNegative))
-        .diag() = 1;
+          .diag()
+        << 1;
     for (size_t j = 0; j < numInEqConTotal; ++j) {
       B(j + numVar, j) = -1;
       B(j + numVar, j + numEquations) = 1;
@@ -392,7 +393,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     B(0, 0) = pos0;
     // V = [A' 0
     //      S  I]
-    B(_(begin, numVar), _(pos0, numCon)) = A.transpose();
+    B(_(begin, numVar), _(pos0, numCon)) << A.transpose();
     for (size_t j = 0; j < numCon; ++j) {
       B(j + numVar, j) = -1;
       B(j + numVar, j + numCon) = 1;
@@ -440,9 +441,9 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // V = [A' E' 0
     //      S  0  I]
     B(0, 0) = pos0;
-    B(_(begin, numVar), _(pos0, numInEqCon)) = A.transpose();
+    B(_(begin, numVar), _(pos0, numInEqCon)) << A.transpose();
     // A(_, _(pos0, end)).transpose();
-    B(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) = E.transpose();
+    B(_(begin, numVar), _(numInEqCon, numInEqCon + numEqCon)) << E.transpose();
 
     numEquations = numInEqCon + numEqCon;
     for (size_t j = 0; j < numInEqCon; ++j) {
@@ -458,7 +459,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     auto B = getV();
     Row R = B.numRow();
     auto U = getU(); // numVar + numInEq x numVar + numInEq
-    U.diag() = 1;
+    U.diag() << 1;
     // We will have query of the form Ax = q;
     NormalForm::simplifySystemImpl(NormalForm::solvePair(B, U));
     while ((R) && allZero(B(R - 1, _))) --R;
@@ -474,15 +475,15 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
     // Ht.numRow() > Ht.numCol() = R
     // (2*numInEq + numEq) x R
     auto Ht = matrix(alloc, numColB, size_t(R));
-    Ht = B(_(0, R), _).transpose();
+    Ht << B(_(0, R), _).transpose();
     NormalForm::solveSystem(Ht, Vt);
     // upper bounded by numVar + numInEq
     // rows/cols, but of rank R
     // smaller based on rank
-    getD(R) = Ht.diag(); // d.size() == R
+    getD(R) << Ht.diag(); // d.size() == R
     // upper bounded by 2*numInEq + numEq x 2*numInEq + numEq
     // fewer cols based on rank?
-    getV() = Vt.transpose();
+    getV() << Vt.transpose();
   }
 
   // Note that this is only valid when the comparator was constructed
@@ -497,7 +498,7 @@ struct BaseSymbolicComparator : BaseComparator<BaseSymbolicComparator<T>> {
       Col oldn = V.numCol();
       IntMatrix H{V.numRow(), oldn + 1};
       H(_, _(0, oldn)) = V;
-      H(_, oldn) = -b;
+      H(_, oldn) << -b;
       NormalForm::solveSystem(H);
       for (size_t i = numEquations; i < H.numRow(); ++i)
         if (auto rhs = H(i, oldn))
@@ -699,7 +700,7 @@ struct PtrSymbolicComparator
     rankU = unsigned(r);
     colU = rankU;
     dimV = unsigned(c);
-    getUImpl() = 0;
+    getUImpl() << 0;
     dimD = 0;
     return getVImpl();
   }

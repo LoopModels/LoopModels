@@ -69,7 +69,7 @@ inline auto printConstraints(llvm::raw_ostream &os, EmptyMatrix<int64_t>,
 constexpr void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
   const Row lastRow = A.numRow() - 1;
   assert(lastRow >= i);
-  if (lastRow != i) A(i, _) = A(lastRow, _);
+  if (lastRow != i) A(i, _) << A(lastRow, _);
 }
 [[nodiscard]] constexpr auto eraseConstraint(MutPtrMatrix<int64_t> A, Row i)
   -> MutPtrMatrix<int64_t> {
@@ -100,6 +100,9 @@ constexpr void eraseConstraintImpl(MutPtrMatrix<int64_t> A, Row i) {
   A.truncate(penuRow);
   return A;
 }
+constexpr void eraseConstraint(IntMatrix &A, size_t i, size_t j) {
+  A.truncate(eraseConstraint(MutPtrMatrix<int64_t>(A), i, j).numRow());
+}
 
 constexpr void eraseConstraint(IntMatrix &A, Row i) {
   A.truncate(eraseConstraint(MutPtrMatrix<int64_t>(A), i).numRow());
@@ -127,14 +130,14 @@ inline auto substituteEqualityImpl(IntMatrix &E, const size_t i) -> Row {
   if (constexpr_abs(Eis) == 1) {
     for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero) continue;
-      if (int64_t Eij = E(j, i)) E(j, _) = Eis * E(j, _) - Eij * Es;
+      if (int64_t Eij = E(j, i)) E(j, _) << Eis * E(j, _) - Eij * Es;
     }
   } else {
     for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero) continue;
       if (int64_t Eij = E(j, i)) {
         int64_t g = gcd(Eij, Eis);
-        E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
+        E(j, _) << (Eis / g) * E(j, _) - (Eij / g) * Es;
       }
     }
   }
@@ -172,10 +175,11 @@ inline auto substituteEqualityImpl(
   // of terms.
   if (constexpr_abs(Eis) == 1) {
     for (Row j = 0; j < A.numRow(); ++j)
-      if (int64_t Aij = A(j, i)) A(j, _) = (s * Eis) * A(j, _) - (s * Aij) * Es;
+      if (int64_t Aij = A(j, i))
+        A(j, _) << (s * Eis) * A(j, _) - (s * Aij) * Es;
     for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero) continue;
-      if (int64_t Eij = E(j, i)) E(j, _) = Eis * E(j, _) - Eij * Es;
+      if (int64_t Eij = E(j, i)) E(j, _) << Eis * E(j, _) - Eij * Es;
     }
   } else {
     for (Row j = 0; j < A.numRow(); ++j) {
@@ -183,14 +187,14 @@ inline auto substituteEqualityImpl(
         int64_t g = gcd(Aij, Eis);
         assert(g > 0);
         // `A` contains inequalities; flipping signs is illegal
-        A(j, _) = ((s * Eis) / g) * A(j, _) - ((s * Aij) / g) * Es;
+        A(j, _) << ((s * Eis) / g) * A(j, _) - ((s * Aij) / g) * Es;
       }
     }
     for (Row j = 0; j < numConstraints; ++j) {
       if (j == rowMinNonZero) continue;
       if (int64_t Eij = E(j, i)) {
         int64_t g = gcd(Eij, Eis);
-        E(j, _) = (Eis / g) * E(j, _) - (Eij / g) * Es;
+        E(j, _) << (Eis / g) * E(j, _) - (Eij / g) * Es;
       }
     }
   }
@@ -225,14 +229,14 @@ inline void slackEqualityConstraints(MutPtrMatrix<int64_t> C,
   assert(size_t(C.numCol()) == slackAndVar);
   // [I A]
   for (size_t s = 0; s < numSlack; ++s) {
-    C(s, _(begin, numSlack)) = 0;
+    C(s, _(begin, numSlack)) << 0;
     C(s, s) = 1;
-    C(s, _(numSlack, slackAndVar)) = A(s, _(begin, numVar));
+    C(s, _(numSlack, slackAndVar)) << A(s, _(begin, numVar));
   }
   // [0 B]
   for (Row s = 0; s < numStrict; ++s) {
-    C(s + numSlack, _(begin, numSlack)) = 0;
-    C(s + numSlack, _(numSlack, slackAndVar)) = B(s, _(begin, numVar));
+    C(s + numSlack, _(begin, numSlack)) << 0;
+    C(s + numSlack, _(numSlack, slackAndVar)) << B(s, _(begin, numVar));
   }
 }
 // counts how many negative and positive elements there are in row `i`.

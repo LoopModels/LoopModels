@@ -24,7 +24,7 @@ template <typename T> struct PtrVector {
   static_assert(!std::is_const_v<T>, "const T is redundant");
   using eltype = T;
   [[no_unique_address]] NotNull<const T> mem;
-  [[no_unique_address]] const size_t N;
+  [[no_unique_address]] size_t N;
   auto operator==(AbstractVector auto &x) -> bool {
     if (N != x.size()) return false;
     for (size_t n = 0; n < N; ++n)
@@ -175,17 +175,17 @@ template <typename T> struct MutPtrVector {
     return llvm::ArrayRef<T>(*this) == x;
   }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> { return *this; };
-  [[gnu::flatten]] auto operator=(PtrVector<T> x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator<<(PtrVector<T> x) -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  [[gnu::flatten]] auto operator=(MutPtrVector<T> x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator<<(MutPtrVector<T> x) -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  [[gnu::flatten]] auto operator=(const AbstractVector auto &x)
+  [[gnu::flatten]] auto operator<<(const AbstractVector auto &x)
     -> MutPtrVector<T> {
     return copyto(*this, x);
   }
-  [[gnu::flatten]] auto operator=(std::integral auto x) -> MutPtrVector<T> {
+  [[gnu::flatten]] auto operator<<(std::integral auto x) -> MutPtrVector<T> {
     for (auto &&y : *this) y = x;
     return *this;
   }
@@ -325,13 +325,12 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   constexpr operator llvm::ArrayRef<T>() const {
     return llvm::ArrayRef<T>{data.data(), data.size()};
   }
-  // MutPtrVector<T> operator=(AbstractVector auto &x) {
-  auto operator=(const T &x) -> Vector<T> & {
+  auto operator<<(const T &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y = x;
     return *this;
   }
-  auto operator=(AbstractVector auto &x) -> Vector<T> & {
+  auto operator<<(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y = x;
     return *this;
@@ -632,15 +631,15 @@ template <typename T> struct MutStridedVector {
   [[nodiscard]] constexpr auto view() const -> StridedVector<T> {
     return StridedVector<T>{.d = d, .N = N, .x = x};
   }
-  [[gnu::flatten]] auto operator=(const T &y) -> MutStridedVector<T> & {
+  [[gnu::flatten]] auto operator<<(const T &y) -> MutStridedVector<T> & {
     for (size_t i = 0; i < N; ++i) d[size_t(x * i)] = y;
     return *this;
   }
-  [[gnu::flatten]] auto operator=(const AbstractVector auto &a)
+  [[gnu::flatten]] auto operator<<(const AbstractVector auto &a)
     -> MutStridedVector<T> & {
     return copyto(*this, a);
   }
-  [[gnu::flatten]] auto operator=(const MutStridedVector<T> &a)
+  [[gnu::flatten]] auto operator<<(const MutStridedVector<T> &a)
     -> MutStridedVector<T> & {
     if (this == &a) return *this;
     return copyto(*this, a);
