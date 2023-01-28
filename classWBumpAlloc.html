@@ -84,28 +84,28 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>value_type</b> = T</
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ae03f5dd54d4dcbc6f070747c3325c7b2"><td class="memItemLeft" align="right" valign="top"><a id="ae03f5dd54d4dcbc6f070747c3325c7b2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="structBumpAlloc.html">Alloc</a> &amp;alloc)</td></tr>
-<tr class="separator:ae03f5dd54d4dcbc6f070747c3325c7b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5066546fdd2461a8c7969367724e71ff"><td class="memItemLeft" align="right" valign="top"><a id="a5066546fdd2461a8c7969367724e71ff"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structBumpAlloc.html">Alloc</a> &gt; alloc)</td></tr>
-<tr class="separator:a5066546fdd2461a8c7969367724e71ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab2b7f4c094f24a06c8302c73a0a82f08"><td class="memItemLeft" align="right" valign="top"><a id="ab2b7f4c094f24a06c8302c73a0a82f08"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (const <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a> &amp;other)</td></tr>
-<tr class="separator:ab2b7f4c094f24a06c8302c73a0a82f08"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87d50d795c2c09241f4765f7c10eba86"><td class="memTemplParams" colspan="2"><a id="a87d50d795c2c09241f4765f7c10eba86"></a>
+<tr class="memitem:a5e46aa38888d75852055a75a1f7f970d"><td class="memItemLeft" align="right" valign="top"><a id="a5e46aa38888d75852055a75a1f7f970d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="structBumpAlloc.html">Alloc</a> &amp;alloc)</td></tr>
+<tr class="separator:a5e46aa38888d75852055a75a1f7f970d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2f31e4cd09f5d93779e6795e72a86977"><td class="memItemLeft" align="right" valign="top"><a id="a2f31e4cd09f5d93779e6795e72a86977"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structBumpAlloc.html">Alloc</a> &gt; alloc)</td></tr>
+<tr class="separator:a2f31e4cd09f5d93779e6795e72a86977"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b6d550048c9d740bdb121940af4f5bd"><td class="memItemLeft" align="right" valign="top"><a id="a3b6d550048c9d740bdb121940af4f5bd"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>WBumpAlloc</b> (const <a class="el" href="classWBumpAlloc.html">WBumpAlloc</a> &amp;other)=default</td></tr>
+<tr class="separator:a3b6d550048c9d740bdb121940af4f5bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e2986d6590f3217ef50e79fb0534c16"><td class="memTemplParams" colspan="2"><a id="a3e2986d6590f3217ef50e79fb0534c16"></a>
 template&lt;typename U &gt; </td></tr>
-<tr class="memitem:a87d50d795c2c09241f4765f7c10eba86"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; U &gt; other)</td></tr>
-<tr class="separator:a87d50d795c2c09241f4765f7c10eba86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a982bdf462a66c0283c9c09b7a8cae256"><td class="memItemLeft" align="right" valign="top"><a id="a982bdf462a66c0283c9c09b7a8cae256"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structBumpAlloc.html">Alloc</a> &gt;</td></tr>
-<tr class="separator:a982bdf462a66c0283c9c09b7a8cae256"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f521e1f38a1cb83d485d7e084ace56a"><td class="memItemLeft" align="right" valign="top"><a id="a8f521e1f38a1cb83d485d7e084ace56a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>deallocate</b> (T *p, size_t n)</td></tr>
-<tr class="separator:a8f521e1f38a1cb83d485d7e084ace56a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a528c200022d907cb5a302ce3e9216700"><td class="memItemLeft" align="right" valign="top"><a id="a528c200022d907cb5a302ce3e9216700"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (size_t n) -&gt; T *</td></tr>
-<tr class="separator:a528c200022d907cb5a302ce3e9216700"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e2986d6590f3217ef50e79fb0534c16"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>WBumpAlloc</b> (<a class="el" href="classWBumpAlloc.html">WBumpAlloc</a>&lt; U &gt; other)</td></tr>
+<tr class="separator:a3e2986d6590f3217ef50e79fb0534c16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a612038201d0053fc2168fae826735d65"><td class="memItemLeft" align="right" valign="top"><a id="a612038201d0053fc2168fae826735d65"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get_allocator</b> () -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; <a class="el" href="structBumpAlloc.html">Alloc</a> &gt;</td></tr>
+<tr class="separator:a612038201d0053fc2168fae826735d65"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43080701597f0f4983f3efa4257a6d8a"><td class="memItemLeft" align="right" valign="top"><a id="a43080701597f0f4983f3efa4257a6d8a"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>deallocate</b> (T *p, size_t n)</td></tr>
+<tr class="separator:a43080701597f0f4983f3efa4257a6d8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aefaad82943f677c87569cf9c687a86fb"><td class="memItemLeft" align="right" valign="top"><a id="aefaad82943f677c87569cf9c687a86fb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>allocate</b> (size_t n) -&gt; T *</td></tr>
+<tr class="separator:aefaad82943f677c87569cf9c687a86fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/Utilities/<a class="el" href="Allocators_8hpp_source.html">Allocators.hpp</a></li>

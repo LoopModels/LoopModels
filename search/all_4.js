@@ -4,7 +4,7 @@ var searchData=
   ['elementwiseunaryop_49',['ElementwiseUnaryOp',['../structLinearAlgebra_1_1ElementwiseUnaryOp.html',1,'LinearAlgebra']]],
   ['elementwiseunaryop_3c_20op_2c_20a_20_3e_50',['ElementwiseUnaryOp&lt; Op, A &gt;',['../structLinearAlgebra_1_1ElementwiseUnaryOp_3_01Op_00_01A_01_4.html',1,'LinearAlgebra']]],
   ['elementwisevectorbinaryop_51',['ElementwiseVectorBinaryOp',['../structLinearAlgebra_1_1ElementwiseVectorBinaryOp.html',1,'LinearAlgebra']]],
-  ['emptycomparator_52',['EmptyComparator',['../structEmptyComparator.html',1,'']]],
+  ['emptycomparator_52',['EmptyComparator',['../structcomparator_1_1EmptyComparator.html',1,'comparator']]],
   ['emptymask_53',['emptyMask',['../structPredicate_1_1Intersection.html#aa490ae09b4cd35d39a821182dbcc9348',1,'Predicate::Intersection']]],
   ['emptymatrix_54',['EmptyMatrix',['../structEmptyMatrix.html',1,'']]],
   ['emptyvector_55',['EmptyVector',['../structEmptyVector.html',1,'']]],
