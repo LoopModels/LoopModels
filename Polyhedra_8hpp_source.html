@@ -154,7 +154,7 @@ $(function() {
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;      <span class="keywordtype">bool</span> broke = <span class="keyword">false</span>;</div>
 <div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = --j; i;) {</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;        <span class="keywordflow">if</span> (A.numRow() &lt;= 1) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        diff = A(--i, _) - A(j, _);</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        diff &lt;&lt; A(--i, _) - A(j, _);</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="keywordflow">if</span> (C.greaterEqual(diff)) {</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;          eraseConstraint(A, i);</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;          initializeComparator();</div>
@@ -299,10 +299,10 @@ $(function() {
 <div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;                llvm::SmallVector&lt;const llvm::SCEV *&gt;, <span class="keyword">true</span>&gt;;</div>
 <div class="ttc" id="astructBasePolyhedra_html"><div class="ttname"><a href="structBasePolyhedra.html">BasePolyhedra</a></div><div class="ttdef"><b>Definition:</b> Polyhedra.hpp:64</div></div>
 <div class="ttc" id="astructBumpAlloc_html"><div class="ttname"><a href="structBumpAlloc.html">BumpAlloc</a></div><div class="ttdef"><b>Definition:</b> Allocators.hpp:25</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1DenseMutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">LinearAlgebra::DenseMutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:333</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1DenseMutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1DenseMutPtrMatrix.html">LinearAlgebra::DenseMutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:337</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:251</div></div>
-<div class="ttc" id="astructcomparator_1_1LinearSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:589</div></div>
-<div class="ttc" id="astructcomparator_1_1PtrSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:657</div></div>
+<div class="ttc" id="astructcomparator_1_1LinearSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:590</div></div>
+<div class="ttc" id="astructcomparator_1_1PtrSymbolicComparator_html"><div class="ttname"><a href="structcomparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></div><div class="ttdef"><b>Definition:</b> Comparators.hpp:658</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
