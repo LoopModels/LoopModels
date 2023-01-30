@@ -10,6 +10,7 @@ var searchData=
   ['bitset_20',['BitSet',['../structBitSet.html',1,'']]],
   ['bitsetiterator_21',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
   ['bitsliceview_22',['BitSliceView',['../structBitSliceView.html',1,'']]],
-  ['bumpalloc_23',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
-  ['bumpptrvector_24',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
+  ['buffer_23',['Buffer',['../structBuffer.html',1,'']]],
+  ['bumpalloc_24',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
+  ['bumpptrvector_25',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
 ];
