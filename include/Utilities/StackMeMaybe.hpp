@@ -8,28 +8,26 @@
 /// Thus struct's alignment determines initial alignment
 /// of the stack memory.
 /// Information related to size is then grouped next to the pointer.
-template <typename T, size_t N, typename P, typename A> struct Memory {
+template <typename T, size_t N, typename S, typename A> struct Buffer {
   static_assert(std::is_trivially_destructible_v<T>);
-  std::array<T, N> memory;
   [[no_unique_address]] NotNull<T> pointer;
   [[no_unique_address]] unsigned capacity{N};
+  [[no_unique_address]] S size{};
   [[no_unique_address]] A allocator;
-  constexpr bool isSmall(){
-    return pointer == memory.data();
+  std::array<T, N> memory;
+  constexpr auto isSmall() -> bool { return pointer == memory.data(); }
+  constexpr void maybeDeallocate() {
+    if (!isSmall()) allocator.deallocate(pointer);
   }
-  constexpr void maybeDeallocate(){
-    if (!isSmall()){
-      allocator.deallocate(pointer);
-    }
-  }
-  constexpr void grow(size_t M){
+  constexpr void grow(size_t M) {
     if (M <= capacity) return;
     maybeDeallocate();
-    M += M; // double
     pointer = allocator.allocate(M);
     capacity = M;
   }
-  ~Memory(){
-    maybeDeallocate();
-  }
+
+  // constexpr unsigned growSize(unsigned N){
+  //   return N > capacity ? N : capacity;
+  // }
+  ~Memory() { maybeDeallocate(); }
 };
