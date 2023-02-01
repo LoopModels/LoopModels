@@ -82,22 +82,54 @@ $(function() {
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  [[no_unique_address]] S size{};</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  [[no_unique_address]] A allocator;</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  std::array&lt;T, N&gt; memory;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  constexpr <span class="keyword">auto</span> isSmall() -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> pointer == memory.data(); }</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate() {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordflow">if</span> (!isSmall()) allocator.deallocate(pointer);</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  }</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  constexpr <span class="keywordtype">void</span> grow(<span class="keywordtype">size_t</span> M) {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keywordflow">if</span> (M &lt;= capacity) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    maybeDeallocate();</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    pointer = allocator.allocate(M);</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    capacity = M;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#pragma GCC diagnostic push</span></div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#pragma GCC diagnostic ignored &quot;-Wuninitialized&quot;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <a class="code" href="structBuffer.html">Buffer</a>() : pointer{memory.data()}, capacity{N} {}</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#pragma GCC diagnostic pop</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;  <span class="comment">// Buffer() : capacity{N} { pointer = memory.data(); }</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  constexpr <span class="keyword">auto</span> isSmall() -&gt; <span class="keywordtype">bool</span> { <span class="keywordflow">return</span> pointer == memory.data(); }</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  constexpr <span class="keywordtype">void</span> maybeDeallocate() {</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keywordflow">if</span> (!isSmall()) allocator.deallocate(pointer, capacity);</div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  }</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="comment">// constexpr unsigned growSize(unsigned N){</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="comment">//   return N &gt; capacity ? N : capacity;</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  ~Memory() { maybeDeallocate(); }</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;};</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  constexpr <span class="keywordtype">void</span> grow(<span class="keywordtype">size_t</span> M) {</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordflow">if</span> (M &lt;= capacity) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    maybeDeallocate();</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    pointer = allocator.allocate(M);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    capacity = M;</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  }</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keyword">template</span> &lt;<span class="keyword">typename</span>... Args&gt; constexpr <span class="keyword">auto</span> emplace_back(Args &amp;&amp;...args) {</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordflow">if</span> (size == capacity) grow(capacity * 2);</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <span class="keyword">new</span> (pointer + size++) T(std::forward&lt;Args&gt;(args)...);</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  }</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  constexpr <span class="keywordtype">void</span> push_back(T value) {</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keywordflow">if</span> (size == capacity) grow(capacity * 2);</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keyword">new</span> (pointer + size++) T(std::move(value));</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;  }</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  constexpr <span class="keywordtype">void</span> pop_back() {</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keywordflow">if</span> (size) pointer[--size].~T();</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  }</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  constexpr <span class="keywordtype">void</span> resize(<span class="keywordtype">size_t</span> M) {</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keywordflow">if</span> (M &gt; size) {</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;      grow(M);</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = size; i &lt; M; ++i) <span class="keyword">new</span> (pointer + i) T();</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> constexpr (!std::is_trivially_destructible_v&lt;T&gt;) {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = M; i &lt; size; ++i) pointer[i].~T();</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    }</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    size = M;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  }</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  constexpr <span class="keywordtype">void</span> resizeForOverwrite(<span class="keywordtype">size_t</span> M) {</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">if</span> (M &gt; size) grow(M);</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordflow">else</span> <span class="keywordflow">if</span> constexpr (!std::is_trivially_destructible_v&lt;T&gt;)</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = M; i &lt; size; ++i) pointer[i].~T();</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    size = M;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  <span class="comment">// constexpr unsigned growSize(unsigned N){</span></div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  <span class="comment">//   return N &gt; capacity ? N : capacity;</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  ~<a class="code" href="structBuffer.html">Buffer</a>() { maybeDeallocate(); }</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;};</div>
 <div class="ttc" id="astructBuffer_html"><div class="ttname"><a href="structBuffer.html">Buffer</a></div><div class="ttdef"><b>Definition:</b> StackMeMaybe.hpp:11</div></div>
 <div class="ttc" id="astructNotNull_html"><div class="ttname"><a href="structNotNull.html">NotNull</a></div><div class="ttdef"><b>Definition:</b> Valid.hpp:7</div></div>
 </div><!-- fragment --></div><!-- contents -->

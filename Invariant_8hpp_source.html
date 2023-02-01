@@ -70,21 +70,22 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160; </div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;constexpr <span class="keywordtype">void</span> invariant(<span class="keywordtype">bool</span> condition) {</div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;  assert(condition &amp;&amp; <span class="stringliteral">&quot;invariant violation&quot;</span>);</div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;  <span class="keywordflow">if</span> (!condition) {</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#if __cplusplus &gt;= 202202L</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;    std::unreachable();</div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#ifdef __has_builtin</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#if __has_builtin(__builtin_unreachable)</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;    __builtin_unreachable();</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &lt;cassert&gt;</span></div>
+<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;constexpr <span class="keywordtype">void</span> invariant(<span class="keywordtype">bool</span> condition) {</div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;  assert(condition &amp;&amp; <span class="stringliteral">&quot;invariant violation&quot;</span>);</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;  <span class="keywordflow">if</span> (!condition) {</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#if __cplusplus &gt;= 202202L</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;    std::unreachable();</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#ifdef __has_builtin</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#if __has_builtin(__builtin_unreachable)</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    __builtin_unreachable();</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  }</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;}</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  }</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;}</div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

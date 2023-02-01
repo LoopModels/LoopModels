@@ -121,17 +121,17 @@ $(function() {
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  }</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;  <span class="keyword">auto</span> addConstraint() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    tableau.resize(tableau.numRow() + 1, tableau.numCol(), tableau.rowStride());</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    tableau(last, _) = 0;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    tableau(last, _) &lt;&lt; 0;</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordflow">return</span> tableau(last, _(numExtraCols, end));</div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  }</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  <span class="keyword">auto</span> addConstraintAndVar() -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    tableau(last, _) = 0;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    tableau(last, _) &lt;&lt; 0;</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keywordflow">return</span> tableau(last, _(numExtraCols, end));</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keyword">auto</span> addConstraintsAndVars(<span class="keywordtype">size_t</span> i) -&gt; <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> {</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    tableau.resize(tableau.numRow() + i, tableau.numCol() + i);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    tableau(_(last - i, end), _) = 0;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    tableau(_(last - i, end), _) &lt;&lt; 0;</div>
 <div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="keywordflow">return</span> tableau(_(last - i, end), _(numExtraCols, end));</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  }</div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;  <span class="keywordtype">void</span> reserve(<span class="keywordtype">size_t</span> numCon, <span class="keywordtype">size_t</span> numVar) {</div>
@@ -302,7 +302,7 @@ $(function() {
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;    <span class="keyword">const</span> <span class="keyword">auto</span> numVar = ptrdiff_t(getNumVar());</div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C{getConstraints()};</div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicCons{getBasicConstraints()};</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    basicCons = -2;</div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;    basicCons &lt;&lt; -2;</div>
 <div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;    <span class="comment">// first pass, we make sure the equalities are &gt;= 0</span></div>
 <div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    <span class="comment">// and we eagerly try and find columns with</span></div>
 <div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    <span class="comment">// only a single non-0 element.</span></div>
@@ -332,7 +332,7 @@ $(function() {
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="comment">// now fill basicVars.</span></div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;    <span class="comment">//</span></div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">auto</span> basicVars{getBasicVariables()};</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    basicVars = -1;</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    basicVars &lt;&lt; -1;</div>
 <div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t v = 1; v &lt; numVar; ++v) {</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;      int64_t r = basicCons[v];</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;      <span class="keywordflow">if</span> (r &gt;= 0) {</div>
@@ -368,7 +368,7 @@ $(function() {
 <div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutStridedVector.html">MutStridedVector&lt;int64_t&gt;</a> basicVars{getBasicVariables()};</div>
 <div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicCons{getBasicConstraints()};</div>
 <div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> costs{getCost()};</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    tableau(1, _) = 0;</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;    tableau(1, _) &lt;&lt; 0;</div>
 <div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keywordflow">for</span> (ptrdiff_t i = 0; i &lt; ptrdiff_t(augmentVars.size()); ++i) {</div>
 <div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;      ptrdiff_t a = augmentVars[i];</div>
 <div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;      basicVars[a] = i + numVar;</div>
@@ -563,8 +563,8 @@ $(function() {
 <div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;    <span class="comment">// implicitly, set cost to -1, and then see if we can make it</span></div>
 <div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;    <span class="comment">// basic</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;    C(0, 0) = -C(++c, 0);</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    C(0, _(1, v + 1)) = 0;</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    C(0, _(v + 1, end)) = -C(c, _(v + 1, end));</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;    C(0, _(1, v + 1)) &lt;&lt; 0;</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;    C(0, _(v + 1, end)) &lt;&lt; -C(c, _(v + 1, end));</div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;    assert((C(c, v) != 0) || (C(c, 0) == 0));</div>
 <div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;    assert(allZero(C(_(1, c), v)));</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;    assert(allZero(C(_(c + 1, end), v)));</div>
@@ -610,10 +610,10 @@ $(function() {
 <div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrMatrix.html">MutPtrMatrix&lt;int64_t&gt;</a> C{getCostsAndConstraints()};</div>
 <div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;    <a class="code" href="structLinearAlgebra_1_1MutPtrVector.html">MutPtrVector&lt;int64_t&gt;</a> basicConstraints{getBasicConstraints()};</div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    C(0, _) = 0;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;    C(0, _) &lt;&lt; 0;</div>
 <div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    <span class="comment">// for (size_t v = l; v &lt; u; ++v)</span></div>
 <div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;    <span class="comment">//     C(0, v) = (u - l) + u - v;</span></div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    C(0, _(l, u)) = 1;</div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;    C(0, _(l, u)) &lt;&lt; 1;</div>
 <div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> v = l; v &lt; u; ++v) {</div>
 <div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;      int64_t c = basicConstraints[v];</div>
 <div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;      <span class="keywordflow">if</span> (c &gt;= 0) NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);</div>
@@ -741,12 +741,12 @@ $(function() {
 <div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;    subSimp.tableau(0, 1) = 0;</div>
 <div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;    <span class="keyword">auto</span> fC{getCostsAndConstraints()};</div>
 <div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;    <span class="keyword">auto</span> sC{subSimp.getCostsAndConstraints()};</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;    sC(_, 0) = fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;    sC(_, 0) &lt;&lt; fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;</div>
 <div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;    <span class="comment">// sC(_, 0) = fC(_, 0);</span></div>
 <div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;    <span class="comment">// for (size_t i = 0; i &lt; numFix; ++i)</span></div>
 <div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    <span class="comment">//     sC(_, 0) -= x(i) * fC(_, i + 1 + off);</span></div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));</div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    sC(_, _(1, 1 + off)) &lt;&lt; fC(_, _(1, 1 + off));</div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    sC(_, _(1 + off, end)) &lt;&lt; fC(_, _(1 + off + numFix, end));</div>
 <div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="comment">// returns `true` if unsatisfiable</span></div>
 <div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    <span class="keywordflow">return</span> subSimp.initiateFeasible();</div>
 <div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;  }</div>
@@ -775,12 +775,12 @@ $(function() {
 <div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;    <span class="comment">// auto sC{subSimp.getCostsAndConstraints()};</span></div>
 <div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    <span class="keyword">auto</span> fC{getConstraints()};</div>
 <div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;    <span class="keyword">auto</span> sC{subSimp.getConstraints()};</div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    sC(_, 0) = fC(_(begin, numRow), 0) -</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;               fC(_(begin, numRow), _(1 + off, 1 + off + numFix)) * x;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;    sC(_, 0) &lt;&lt; fC(_(begin, numRow), 0) -</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;                  fC(_(begin, numRow), _(1 + off, 1 + off + numFix)) * x;</div>
 <div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;    <span class="comment">// sC(_, 0) = fC(_, 0);</span></div>
 <div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;    <span class="comment">// for (size_t i = 0; i &lt; numFix; ++i)</span></div>
 <div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;    <span class="comment">//     sC(_, 0) -= x(i) * fC(_, i + 1 + off);</span></div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    sC(_, _(1, 1 + off)) = fC(_(begin, numRow), _(1, 1 + off));</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;    sC(_, _(1, 1 + off)) &lt;&lt; fC(_(begin, numRow), _(1, 1 + off));</div>
 <div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));</div>
 <div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;    <span class="keywordflow">return</span> subSimp.initiateFeasible();</div>
 <div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;  }</div>
@@ -1064,11 +1064,11 @@ $(function() {
 <div class="line"><a name="l00997"></a><span class="lineno">  997</span>&#160;};</div>
 <div class="line"><a name="l00998"></a><span class="lineno">  998</span>&#160;static_assert(AbstractVector&lt;Simplex::Solution&gt;);</div>
 <div class="ttc" id="astructLinearAlgebra_1_1AxisInt_html"><div class="ttname"><a href="structLinearAlgebra_1_1AxisInt.html">LinearAlgebra::AxisInt&lt; AxisType::RowStride &gt;</a></div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:470</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:264</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1Matrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1Matrix.html">LinearAlgebra::Matrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:480</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1MutPtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrMatrix.html">LinearAlgebra::MutPtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:274</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutPtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutPtrVector.html">LinearAlgebra::MutPtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:89</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1MutStridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1MutStridedVector.html">LinearAlgebra::MutStridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:504</div></div>
-<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:216</div></div>
+<div class="ttc" id="astructLinearAlgebra_1_1PtrMatrix_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrMatrix.html">LinearAlgebra::PtrMatrix</a></div><div class="ttdef"><b>Definition:</b> Matrix.hpp:226</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1PtrVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1PtrVector.html">LinearAlgebra::PtrVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:23</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1StridedVector_html"><div class="ttname"><a href="structLinearAlgebra_1_1StridedVector.html">LinearAlgebra::StridedVector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:389</div></div>
 <div class="ttc" id="astructLinearAlgebra_1_1Vector_html"><div class="ttname"><a href="structLinearAlgebra_1_1Vector.html">LinearAlgebra::Vector</a></div><div class="ttdef"><b>Definition:</b> Vector.hpp:251</div></div>
