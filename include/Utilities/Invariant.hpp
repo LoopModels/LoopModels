@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 
 constexpr void invariant(bool condition) {
   assert(condition && "invariant violation");

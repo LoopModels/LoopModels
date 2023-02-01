@@ -50,7 +50,7 @@ static void BM_NullSpace2000(benchmark::State &state) {
     A(i, i - 1) = -1;
   }
   for (size_t j = 0; j < N; j += 8) {
-    A(j, _) = 0;
+    A(j, _) << 0;
     for (size_t i = 0; i < N; i += 7) A(j, _) += ((i & 1) ? 1 : -1) * A(i, _);
   }
 

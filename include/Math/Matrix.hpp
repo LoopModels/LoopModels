@@ -6,6 +6,7 @@
 #include "Utilities/Allocators.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
+#include <type_traits>
 
 namespace LinearAlgebra {
 template <typename T>
@@ -125,6 +126,7 @@ template <typename T, typename A> struct ConstMatrixCore {
 };
 template <typename T> struct SmallSparseMatrix;
 template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
+  using eltype = std::remove_reference_t<T>;
   using CMC = ConstMatrixCore<T, A>;
   using CMC::data, CMC::numRow, CMC::numCol, CMC::rowStride,
     CMC::operator(), CMC::size, CMC::diag, CMC::antiDiag,
@@ -211,6 +213,14 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     return *this;
   }
   [[nodiscard]] constexpr auto transpose() const { return Transpose(view()); }
+#ifndef NDEBUG
+  void extendOrAssertSize(Row MM, Col NN) const {
+    assert(MM == numRow());
+    assert(NN == numCol());
+  }
+#else
+  static constexpr void extendOrAssertSize(Row, Col) {}
+#endif
 };
 
 template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
@@ -806,7 +816,7 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     Row Mold = M;
     M = *MM;
     if (rowStride() * M > mem.size()) mem.resize(X * M);
-    if (M > Mold) (*this)(_(Mold, M), _) = 0;
+    if (M > Mold) (*this)(_(Mold, M), _) << 0;
   }
   void resizeForOverwrite(Row MM) {
     if (rowStride() * MM > mem.size()) mem.resize_for_overwrite(X * M);

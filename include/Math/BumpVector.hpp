@@ -199,8 +199,11 @@ template <typename T> struct BumpPtrVector {
   void extendOrAssertSize(size_t N) {
     if (N != Size) resizeForOverwrite(N);
   }
-  [[nodiscard]] auto get_allocator() -> WBumpAlloc<T> { return Alloc; }
-  template <typename... Args> auto emplace_back(Args &&...args) -> T & {
+  [[nodiscard]] constexpr auto get_allocator() -> WBumpAlloc<T> {
+    return Alloc;
+  }
+  template <typename... Args>
+  constexpr auto emplace_back(Args &&...args) -> T & {
     size_t offset = Size++;
     if (Size > Capacity) [[unlikely]]
       reserve(Size + Size);

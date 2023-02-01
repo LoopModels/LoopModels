@@ -54,17 +54,17 @@ struct Simplex {
   }
   auto addConstraint() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol(), tableau.rowStride());
-    tableau(last, _) = 0;
+    tableau(last, _) << 0;
     return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintAndVar() -> MutPtrVector<int64_t> {
     tableau.resize(tableau.numRow() + 1, tableau.numCol() + 1);
-    tableau(last, _) = 0;
+    tableau(last, _) << 0;
     return tableau(last, _(numExtraCols, end));
   }
   auto addConstraintsAndVars(size_t i) -> MutPtrMatrix<int64_t> {
     tableau.resize(tableau.numRow() + i, tableau.numCol() + i);
-    tableau(_(last - i, end), _) = 0;
+    tableau(_(last - i, end), _) << 0;
     return tableau(_(last - i, end), _(numExtraCols, end));
   }
   void reserve(size_t numCon, size_t numVar) {
@@ -235,7 +235,7 @@ struct Simplex {
     const auto numVar = ptrdiff_t(getNumVar());
     MutPtrMatrix<int64_t> C{getConstraints()};
     MutPtrVector<int64_t> basicCons{getBasicConstraints()};
-    basicCons = -2;
+    basicCons << -2;
     // first pass, we make sure the equalities are >= 0
     // and we eagerly try and find columns with
     // only a single non-0 element.
@@ -265,7 +265,7 @@ struct Simplex {
     // now fill basicVars.
     //
     auto basicVars{getBasicVariables()};
-    basicVars = -1;
+    basicVars << -1;
     for (ptrdiff_t v = 1; v < numVar; ++v) {
       int64_t r = basicCons[v];
       if (r >= 0) {
@@ -301,7 +301,7 @@ struct Simplex {
     MutStridedVector<int64_t> basicVars{getBasicVariables()};
     MutPtrVector<int64_t> basicCons{getBasicConstraints()};
     MutPtrVector<int64_t> costs{getCost()};
-    tableau(1, _) = 0;
+    tableau(1, _) << 0;
     for (ptrdiff_t i = 0; i < ptrdiff_t(augmentVars.size()); ++i) {
       ptrdiff_t a = augmentVars[i];
       basicVars[a] = i + numVar;
@@ -496,8 +496,8 @@ struct Simplex {
     // implicitly, set cost to -1, and then see if we can make it
     // basic
     C(0, 0) = -C(++c, 0);
-    C(0, _(1, v + 1)) = 0;
-    C(0, _(v + 1, end)) = -C(c, _(v + 1, end));
+    C(0, _(1, v + 1)) << 0;
+    C(0, _(v + 1, end)) << -C(c, _(v + 1, end));
     assert((C(c, v) != 0) || (C(c, 0) == 0));
     assert(allZero(C(_(1, c), v)));
     assert(allZero(C(_(c + 1, end), v)));
@@ -543,10 +543,10 @@ struct Simplex {
 #endif
     MutPtrMatrix<int64_t> C{getCostsAndConstraints()};
     MutPtrVector<int64_t> basicConstraints{getBasicConstraints()};
-    C(0, _) = 0;
+    C(0, _) << 0;
     // for (size_t v = l; v < u; ++v)
     //     C(0, v) = (u - l) + u - v;
-    C(0, _(l, u)) = 1;
+    C(0, _(l, u)) << 1;
     for (size_t v = l; v < u; ++v) {
       int64_t c = basicConstraints[v];
       if (c >= 0) NormalForm::zeroWithRowOperation(C, 0, ++c, v, 0);
@@ -674,12 +674,12 @@ struct Simplex {
     subSimp.tableau(0, 1) = 0;
     auto fC{getCostsAndConstraints()};
     auto sC{subSimp.getCostsAndConstraints()};
-    sC(_, 0) = fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;
+    sC(_, 0) << fC(_, 0) - fC(_, _(1 + off, 1 + off + numFix)) * x;
     // sC(_, 0) = fC(_, 0);
     // for (size_t i = 0; i < numFix; ++i)
     //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
-    sC(_, _(1, 1 + off)) = fC(_, _(1, 1 + off));
-    sC(_, _(1 + off, end)) = fC(_, _(1 + off + numFix, end));
+    sC(_, _(1, 1 + off)) << fC(_, _(1, 1 + off));
+    sC(_, _(1 + off, end)) << fC(_, _(1 + off + numFix, end));
     // returns `true` if unsatisfiable
     return subSimp.initiateFeasible();
   }
@@ -708,12 +708,12 @@ struct Simplex {
     // auto sC{subSimp.getCostsAndConstraints()};
     auto fC{getConstraints()};
     auto sC{subSimp.getConstraints()};
-    sC(_, 0) = fC(_(begin, numRow), 0) -
-               fC(_(begin, numRow), _(1 + off, 1 + off + numFix)) * x;
+    sC(_, 0) << fC(_(begin, numRow), 0) -
+                  fC(_(begin, numRow), _(1 + off, 1 + off + numFix)) * x;
     // sC(_, 0) = fC(_, 0);
     // for (size_t i = 0; i < numFix; ++i)
     //     sC(_, 0) -= x(i) * fC(_, i + 1 + off);
-    sC(_, _(1, 1 + off)) = fC(_(begin, numRow), _(1, 1 + off));
+    sC(_, _(1, 1 + off)) << fC(_(begin, numRow), _(1, 1 + off));
     assert(sC(_, _(1, 1 + off)) == fC(_(begin, numRow), _(1, 1 + off)));
     return subSimp.initiateFeasible();
   }

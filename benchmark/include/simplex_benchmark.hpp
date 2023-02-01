@@ -918,7 +918,7 @@ static void BM_Simplex0(benchmark::State &state) {
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "
     "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1]"_mat};
 
-  tableau(_(0, 2), _) = -5859553999884210514;
+  tableau(_(0, 2), _) << -5859553999884210514;
   Simplex simpBackup{tableau};
   bool fail = simpBackup.initiateFeasible();
   assert(!fail);
