@@ -2,6 +2,8 @@
 #include "Math/Indexing.hpp"
 #include "TypePromotion.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
+#include "Utilities/StackMeMaybe.hpp"
 #include "Utilities/Valid.hpp"
 #include <cstddef>
 #include <llvm/ADT/ArrayRef.h>
@@ -250,136 +252,139 @@ template <typename T> consteval auto PreAllocStorage() -> size_t {
 
 template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   using eltype = T;
-  [[no_unique_address]] llvm::SmallVector<T, Stack> data;
+  Buffer<T, Stack, unsigned> buf;
 
-  Vector(int N) : data(llvm::SmallVector<T, 16>(N)){};
-  Vector(size_t N = 0) : data(llvm::SmallVector<T, 16>(N)){};
-  Vector(llvm::SmallVector<T, 16> A) : data(std::move(A)){};
+  constexpr Vector(unsigned N) : buf(N){};
+  constexpr Vector(Buffer<T, Stack, unsigned> b) : buf(std::move(b)){};
 
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
-    return data[canonicalize(i, data.size())];
+    size_t j = canonicalize(i, buf.size());
+    invariant(j < buf.size());
+    return buf.data()[j];
   }
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) const
     -> const T & {
-    return data[canonicalize(i, data.size())];
+    size_t j = canonicalize(i, buf.size());
+    invariant(j < buf.size());
+    return buf.data()[j];
   }
   [[gnu::flatten]] constexpr auto operator[](Range<size_t, size_t> i)
     -> MutPtrVector<T> {
-    assert(i.b <= i.e);
-    assert(i.e <= data.size());
-    return MutPtrVector<T>{data.data() + i.b, i.e - i.b};
+    invariant(i.b <= i.e);
+    invariant(i.e <= buf.size());
+    return MutPtrVector<T>{buf.data() + i.b, i.e - i.b};
   }
   [[gnu::flatten]] constexpr auto operator[](Range<size_t, size_t> i) const
     -> PtrVector<T> {
-    assert(i.b <= i.e);
-    assert(i.e <= data.size());
-    return PtrVector<T>{data.data() + i.b, i.e - i.b};
+    invariant(i.b <= i.e);
+    invariant(i.e <= buf.size());
+    return PtrVector<T>{buf.data() + i.b, i.e - i.b};
   }
   template <typename F, typename L>
   [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) -> MutPtrVector<T> {
-    return (*this)[canonicalizeRange(i, data.size())];
+    return (*this)[canonicalizeRange(i, buf.size())];
   }
   template <typename F, typename L>
   [[gnu::flatten]] constexpr auto operator[](Range<F, L> i) const
     -> PtrVector<T> {
-    return (*this)[canonicalizeRange(i, data.size())];
+    return (*this)[canonicalizeRange(i, buf.size())];
   }
-  [[gnu::flatten]] constexpr auto operator[](size_t i) -> T & {
-    return data[i];
-  }
+  [[gnu::flatten]] constexpr auto operator[](size_t i) -> T & { return buf[i]; }
   [[gnu::flatten]] constexpr auto operator[](size_t i) const -> const T & {
-    return data[i];
+    return buf[i];
   }
   // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
-  constexpr auto begin() { return data.begin(); }
-  constexpr auto end() { return data.end(); }
-  [[nodiscard]] constexpr auto begin() const { return data.begin(); }
-  [[nodiscard]] constexpr auto end() const { return data.end(); }
-  [[nodiscard]] constexpr auto size() const -> size_t { return data.size(); }
+  [[nodiscard]] constexpr auto begin() { return buf.data(); }
+  [[nodiscard]] constexpr auto end() { return buf.data() + buf.size(); }
+  [[nodiscard]] constexpr auto begin() const { return buf.data(); }
+  [[nodiscard]] constexpr auto end() const { return buf.data() + buf.size(); }
+  [[nodiscard]] constexpr auto size() const -> size_t { return buf.size(); }
   [[nodiscard]] constexpr auto view() const -> PtrVector<T> {
-    return PtrVector<T>{data.data(), data.size()};
+    return PtrVector<T>{buf.data(), buf.size()};
   };
-  template <typename A> void push_back(A &&x) {
-    data.push_back(std::forward<A>(x));
+  template <typename A> constexpr void push_back(A &&x) {
+    buf.push_back(std::forward<A>(x));
   }
-  template <typename... A> void emplace_back(A &&...x) {
-    data.emplace_back(std::forward<A>(x)...);
+  template <typename A> constexpr void pushBack(A &&x) {
+    buf.push_back(std::forward<A>(x));
   }
-  Vector(const AbstractVector auto &x) : data(llvm::SmallVector<T, 16>{}) {
-    const size_t N = x.size();
-    data.resize_for_overwrite(N);
-    for (size_t n = 0; n < N; ++n) data[n] = x[n];
+  template <typename... A> constexpr void emplace_back(A &&...x) {
+    buf.emplace_back(std::forward<A>(x)...);
   }
-  void resize(size_t N) { data.resize(N); }
-  void resizeForOverwrite(size_t N) { data.resize_for_overwrite(N); }
+  constexpr Vector(const AbstractVector auto &x) : buf(x.size()) {
+    for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
+  }
+  constexpr void resize(size_t N) { buf.resize(N); }
+  constexpr void resizeForOverwrite(size_t N) { buf.resize_for_overwrite(N); }
 
   constexpr operator MutPtrVector<T>() {
-    return MutPtrVector<T>{data.data(), data.size()};
+    return MutPtrVector<T>{buf.data(), buf.size()};
   }
   constexpr operator PtrVector<T>() const {
-    return PtrVector<T>{data.data(), data.size()};
+    return PtrVector<T>{buf.data(), buf.size()};
   }
   constexpr operator llvm::MutableArrayRef<T>() {
-    return llvm::MutableArrayRef<T>{data.data(), data.size()};
+    return llvm::MutableArrayRef<T>{buf.data(), buf.size()};
   }
   constexpr operator llvm::ArrayRef<T>() const {
-    return llvm::ArrayRef<T>{data.data(), data.size()};
+    return llvm::ArrayRef<T>{buf.data(), buf.size()};
   }
-  auto operator<<(const T &x) -> Vector<T> & {
+  constexpr auto operator<<(const T &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y = x;
     return *this;
   }
-  auto operator<<(AbstractVector auto &x) -> Vector<T> & {
+  constexpr auto operator<<(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y = x;
     return *this;
   }
-  auto operator+=(AbstractVector auto &x) -> Vector<T> & {
+  constexpr auto operator+=(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y += x;
     return *this;
   }
-  auto operator-=(AbstractVector auto &x) -> Vector<T> & {
+  constexpr auto operator-=(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y -= x;
     return *this;
   }
-  auto operator*=(AbstractVector auto &x) -> Vector<T> & {
+  constexpr auto operator*=(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y *= x;
     return *this;
   }
-  auto operator/=(AbstractVector auto &x) -> Vector<T> & {
+  constexpr auto operator/=(AbstractVector auto &x) -> Vector<T> & {
     MutPtrVector<T> y{*this};
     y /= x;
     return *this;
   }
-  auto operator+=(const std::integral auto x) -> Vector<T> & {
-    for (auto &&y : data) y += x;
+  constexpr auto operator+=(const std::integral auto x) -> Vector<T> & {
+    for (auto &&y : (*this)) y += x;
     return *this;
   }
-  auto operator-=(const std::integral auto x) -> Vector<T> & {
-    for (auto &&y : data) y -= x;
+  constexpr auto operator-=(const std::integral auto x) -> Vector<T> & {
+    for (auto &&y : (*this)) y -= x;
     return *this;
   }
-  auto operator*=(const std::integral auto x) -> Vector<T> & {
-    for (auto &&y : data) y *= x;
+  constexpr auto operator*=(const std::integral auto x) -> Vector<T> & {
+    for (auto &&y : (*this)) y *= x;
     return *this;
   }
-  auto operator/=(const std::integral auto x) -> Vector<T> & {
-    for (auto &&y : data) y /= x;
+  constexpr auto operator/=(const std::integral auto x) -> Vector<T> & {
+    for (auto &&y : (*this)) y /= x;
     return *this;
   }
-  template <typename... Ts> Vector(Ts... inputs) : data{inputs...} {}
-  void clear() { data.clear(); }
-  void extendOrAssertSize(size_t N) {
-    if (N != data.size()) data.resize_for_overwrite(N);
+  // template <typename... Ts> constexpr Vector(Ts... inputs) : data{inputs...}
+  // {}
+  constexpr void clear() { buf.clear(); }
+  constexpr void extendOrAssertSize(size_t N) {
+    if (N != buf.size()) buf.resizeForOverwrite(N);
   }
-  auto operator==(const Vector<T> &x) const -> bool {
-    return llvm::ArrayRef<T>(*this) == llvm::ArrayRef<T>(x);
+  constexpr auto operator==(const Vector<T> &x) const -> bool {
+    return std::equal(begin(), end(), x.begin(), x.end());
+    // return allMatch(*this, x);
   }
-  void pushBack(T x) { data.push_back(std::move(x)); }
 };
 
 static_assert(std::copyable<Vector<intptr_t>>);
