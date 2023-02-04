@@ -83,15 +83,12 @@ using&#160;</td><td class="memItemRight" valign="bottom"><b>eltype</b> = T</td><
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:aadf0e1471e4564276e60bc7db16902ec"><td class="memItemLeft" align="right" valign="top"><a id="aadf0e1471e4564276e60bc7db16902ec"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (int N)</td></tr>
-<tr class="separator:aadf0e1471e4564276e60bc7db16902ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad59712df939c278c9e8901bdb2819092"><td class="memItemLeft" align="right" valign="top"><a id="ad59712df939c278c9e8901bdb2819092"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (size_t N=0)</td></tr>
-<tr class="separator:ad59712df939c278c9e8901bdb2819092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e3d1320b9d20d5a2c3fce1841dbb4b0"><td class="memItemLeft" align="right" valign="top"><a id="a5e3d1320b9d20d5a2c3fce1841dbb4b0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (llvm::SmallVector&lt; T, 16 &gt; A)</td></tr>
-<tr class="separator:a5e3d1320b9d20d5a2c3fce1841dbb4b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a157d2921bd9e2e21123fa4ad4b67789d"><td class="memItemLeft" align="right" valign="top"><a id="a157d2921bd9e2e21123fa4ad4b67789d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (unsigned N)</td></tr>
+<tr class="separator:a157d2921bd9e2e21123fa4ad4b67789d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcc37dcfdab3ce00c25f9bb463cded0c"><td class="memItemLeft" align="right" valign="top"><a id="afcc37dcfdab3ce00c25f9bb463cded0c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (<a class="el" href="structBuffer.html">Buffer</a>&lt; T, Stack, unsigned &gt; b)</td></tr>
+<tr class="separator:afcc37dcfdab3ce00c25f9bb463cded0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc1fa48518b3e67e32da21cf7868e4b0"><td class="memItemLeft" align="right" valign="top"><a id="afc1fa48518b3e67e32da21cf7868e4b0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) -&gt; T &amp;</td></tr>
 <tr class="separator:afc1fa48518b3e67e32da21cf7868e4b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -136,23 +133,27 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> ()
 <tr class="memitem:a5d6b0ec86b11b6e5e2a022a7d12da17c"><td class="memItemLeft" align="right" valign="top"><a id="a5d6b0ec86b11b6e5e2a022a7d12da17c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>view</b> () const -&gt; <a class="el" href="structLinearAlgebra_1_1PtrVector.html">PtrVector</a>&lt; T &gt;</td></tr>
 <tr class="separator:a5d6b0ec86b11b6e5e2a022a7d12da17c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8bc8cd8ad20f50e2133da5121bc917a9"><td class="memTemplParams" colspan="2"><a id="a8bc8cd8ad20f50e2133da5121bc917a9"></a>
+<tr class="memitem:a254496a6304b20185599733ff308ede3"><td class="memTemplParams" colspan="2"><a id="a254496a6304b20185599733ff308ede3"></a>
 template&lt;typename A &gt; </td></tr>
-<tr class="memitem:a8bc8cd8ad20f50e2133da5121bc917a9"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>push_back</b> (A &amp;&amp;x)</td></tr>
-<tr class="separator:a8bc8cd8ad20f50e2133da5121bc917a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84b434a97dac47e5deef008442263a01"><td class="memTemplParams" colspan="2"><a id="a84b434a97dac47e5deef008442263a01"></a>
+<tr class="memitem:a254496a6304b20185599733ff308ede3"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>push_back</b> (A &amp;&amp;x)</td></tr>
+<tr class="separator:a254496a6304b20185599733ff308ede3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a90eec734e2a53ab16a3b225f5ecd74d2"><td class="memTemplParams" colspan="2"><a id="a90eec734e2a53ab16a3b225f5ecd74d2"></a>
+template&lt;typename A &gt; </td></tr>
+<tr class="memitem:a90eec734e2a53ab16a3b225f5ecd74d2"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>pushBack</b> (A &amp;&amp;x)</td></tr>
+<tr class="separator:a90eec734e2a53ab16a3b225f5ecd74d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5400badaf459c3b73cdaf037e7d3e8d4"><td class="memTemplParams" colspan="2"><a id="a5400badaf459c3b73cdaf037e7d3e8d4"></a>
 template&lt;typename... A&gt; </td></tr>
-<tr class="memitem:a84b434a97dac47e5deef008442263a01"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (A &amp;&amp;...x)</td></tr>
-<tr class="separator:a84b434a97dac47e5deef008442263a01"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b18d6fa082f5b9617fdd2f595842697"><td class="memItemLeft" align="right" valign="top"><a id="a7b18d6fa082f5b9617fdd2f595842697"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const AbstractVector auto &amp;x)</td></tr>
-<tr class="separator:a7b18d6fa082f5b9617fdd2f595842697"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3601bc510386e894f252e93b6e22931f"><td class="memItemLeft" align="right" valign="top"><a id="a3601bc510386e894f252e93b6e22931f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N)</td></tr>
-<tr class="separator:a3601bc510386e894f252e93b6e22931f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7638a17b9038ed0f196cb2b0f74a4ed"><td class="memItemLeft" align="right" valign="top"><a id="af7638a17b9038ed0f196cb2b0f74a4ed"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t N)</td></tr>
-<tr class="separator:af7638a17b9038ed0f196cb2b0f74a4ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5400badaf459c3b73cdaf037e7d3e8d4"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (A &amp;&amp;...x)</td></tr>
+<tr class="separator:a5400badaf459c3b73cdaf037e7d3e8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01b9d2fa40cdafc3a57515b81290c875"><td class="memItemLeft" align="right" valign="top"><a id="a01b9d2fa40cdafc3a57515b81290c875"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const AbstractVector auto &amp;x)</td></tr>
+<tr class="separator:a01b9d2fa40cdafc3a57515b81290c875"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa57b2d41e6276738fd3df3e589eca601"><td class="memItemLeft" align="right" valign="top"><a id="aa57b2d41e6276738fd3df3e589eca601"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N)</td></tr>
+<tr class="separator:aa57b2d41e6276738fd3df3e589eca601"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a845042df17b4f97325bda1642d55f9ed"><td class="memItemLeft" align="right" valign="top"><a id="a845042df17b4f97325bda1642d55f9ed"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t N)</td></tr>
+<tr class="separator:a845042df17b4f97325bda1642d55f9ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a12dd10f43bee7b27ac7f74035f95f24e"><td class="memItemLeft" align="right" valign="top"><a id="a12dd10f43bee7b27ac7f74035f95f24e"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator MutPtrVector&lt; T &gt;</b> ()</td></tr>
 <tr class="separator:a12dd10f43bee7b27ac7f74035f95f24e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,58 +166,51 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::M
 <tr class="memitem:a3eec13f46e0d5f9750d4743b7d11b239"><td class="memItemLeft" align="right" valign="top"><a id="a3eec13f46e0d5f9750d4743b7d11b239"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator llvm::ArrayRef&lt; T &gt;</b> () const</td></tr>
 <tr class="separator:a3eec13f46e0d5f9750d4743b7d11b239"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91639e8c1ad98f763b63ba92270f8bf7"><td class="memItemLeft" align="right" valign="top"><a id="a91639e8c1ad98f763b63ba92270f8bf7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const T &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a91639e8c1ad98f763b63ba92270f8bf7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae873ee509697aaf24e69ce96c3262926"><td class="memItemLeft" align="right" valign="top"><a id="ae873ee509697aaf24e69ce96c3262926"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:ae873ee509697aaf24e69ce96c3262926"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7fba5cf01b73edf123015d4e4b9bad6e"><td class="memItemLeft" align="right" valign="top"><a id="a7fba5cf01b73edf123015d4e4b9bad6e"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a7fba5cf01b73edf123015d4e4b9bad6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a570597f8c1e99fd6c82be1f1929fe06a"><td class="memItemLeft" align="right" valign="top"><a id="a570597f8c1e99fd6c82be1f1929fe06a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a570597f8c1e99fd6c82be1f1929fe06a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1f9d13c639f60d30e62144fb30bd6251"><td class="memItemLeft" align="right" valign="top"><a id="a1f9d13c639f60d30e62144fb30bd6251"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a1f9d13c639f60d30e62144fb30bd6251"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f9e6d5bc19336100ec092561fff7628"><td class="memItemLeft" align="right" valign="top"><a id="a6f9e6d5bc19336100ec092561fff7628"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a6f9e6d5bc19336100ec092561fff7628"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19c233fad92a3df2a9d0e215183da79c"><td class="memItemLeft" align="right" valign="top"><a id="a19c233fad92a3df2a9d0e215183da79c"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a19c233fad92a3df2a9d0e215183da79c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a012a3a0ec653d6f5551c122e2d71b605"><td class="memItemLeft" align="right" valign="top"><a id="a012a3a0ec653d6f5551c122e2d71b605"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a012a3a0ec653d6f5551c122e2d71b605"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca946bcf84f57419c2b056bb74d2b6e4"><td class="memItemLeft" align="right" valign="top"><a id="aca946bcf84f57419c2b056bb74d2b6e4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:aca946bcf84f57419c2b056bb74d2b6e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b571973c3985601527eb4e857260179"><td class="memItemLeft" align="right" valign="top"><a id="a7b571973c3985601527eb4e857260179"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
-<tr class="separator:a7b571973c3985601527eb4e857260179"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a588d7a4574bdcdd3a7d28900af0aa127"><td class="memTemplParams" colspan="2"><a id="a588d7a4574bdcdd3a7d28900af0aa127"></a>
-template&lt;typename... Ts&gt; </td></tr>
-<tr class="memitem:a588d7a4574bdcdd3a7d28900af0aa127"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Vector</b> (Ts... inputs)</td></tr>
-<tr class="separator:a588d7a4574bdcdd3a7d28900af0aa127"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f9a8d2201e43092e8a58f3f83d529d4"><td class="memItemLeft" align="right" valign="top"><a id="a9f9a8d2201e43092e8a58f3f83d529d4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
-<tr class="separator:a9f9a8d2201e43092e8a58f3f83d529d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aae3856280104b51b0e069db2408a2ae1"><td class="memItemLeft" align="right" valign="top"><a id="aae3856280104b51b0e069db2408a2ae1"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (size_t N)</td></tr>
-<tr class="separator:aae3856280104b51b0e069db2408a2ae1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8ff07ba4828a4fcf7ed82989b380409"><td class="memItemLeft" align="right" valign="top"><a id="af8ff07ba4828a4fcf7ed82989b380409"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;x) const -&gt; bool</td></tr>
-<tr class="separator:af8ff07ba4828a4fcf7ed82989b380409"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11d7bd057438cff8033c20d7de88c0e4"><td class="memItemLeft" align="right" valign="top"><a id="a11d7bd057438cff8033c20d7de88c0e4"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>pushBack</b> (T x)</td></tr>
-<tr class="separator:a11d7bd057438cff8033c20d7de88c0e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae206453d2f5e3cf9d03a8df11e569a5a"><td class="memItemLeft" align="right" valign="top"><a id="ae206453d2f5e3cf9d03a8df11e569a5a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (const T &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:ae206453d2f5e3cf9d03a8df11e569a5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec7cf05089be668b3b091ce57a58f267"><td class="memItemLeft" align="right" valign="top"><a id="aec7cf05089be668b3b091ce57a58f267"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:aec7cf05089be668b3b091ce57a58f267"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02e924da21adc11482493ed2542708a4"><td class="memItemLeft" align="right" valign="top"><a id="a02e924da21adc11482493ed2542708a4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:a02e924da21adc11482493ed2542708a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0011528a9fda8d364886eaaa109285bb"><td class="memItemLeft" align="right" valign="top"><a id="a0011528a9fda8d364886eaaa109285bb"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:a0011528a9fda8d364886eaaa109285bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3a18a48096d4de56e4a02cdfcd730df"><td class="memItemLeft" align="right" valign="top"><a id="af3a18a48096d4de56e4a02cdfcd730df"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:af3a18a48096d4de56e4a02cdfcd730df"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab3b53ec341a036d81bbb04c5888f75b4"><td class="memItemLeft" align="right" valign="top"><a id="ab3b53ec341a036d81bbb04c5888f75b4"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (AbstractVector auto &amp;x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:ab3b53ec341a036d81bbb04c5888f75b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae886f6d62315359f6cca2b9bd841a77a"><td class="memItemLeft" align="right" valign="top"><a id="ae886f6d62315359f6cca2b9bd841a77a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator+=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:ae886f6d62315359f6cca2b9bd841a77a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7accd105b956ad481541064a487b4c93"><td class="memItemLeft" align="right" valign="top"><a id="a7accd105b956ad481541064a487b4c93"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator-=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:a7accd105b956ad481541064a487b4c93"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac44d954edb5e2d944c84fd345d973f46"><td class="memItemLeft" align="right" valign="top"><a id="ac44d954edb5e2d944c84fd345d973f46"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator*=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:ac44d954edb5e2d944c84fd345d973f46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afca1aedae68f1c64dbd304941009e4fa"><td class="memItemLeft" align="right" valign="top"><a id="afca1aedae68f1c64dbd304941009e4fa"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator/=</b> (const std::integral auto x) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;</td></tr>
+<tr class="separator:afca1aedae68f1c64dbd304941009e4fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21979b4d7edcdd52afe353e160eb1cd5"><td class="memItemLeft" align="right" valign="top"><a id="a21979b4d7edcdd52afe353e160eb1cd5"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
+<tr class="separator:a21979b4d7edcdd52afe353e160eb1cd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afaf819e4d79ff5ebe002dc4fbf0b1420"><td class="memItemLeft" align="right" valign="top"><a id="afaf819e4d79ff5ebe002dc4fbf0b1420"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAssertSize</b> (size_t N)</td></tr>
+<tr class="separator:afaf819e4d79ff5ebe002dc4fbf0b1420"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02de90918726f73ce8585e51e78e561e"><td class="memItemLeft" align="right" valign="top"><a id="a02de90918726f73ce8585e51e78e561e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;x) const -&gt; bool</td></tr>
+<tr class="separator:a02de90918726f73ce8585e51e78e561e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a0bfdb5311a86684da28f1f4ca178e089"><td class="memItemLeft" align="right" valign="top"><a id="a0bfdb5311a86684da28f1f4ca178e089"></a>
-llvm::SmallVector&lt; T, Stack &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>data</b></td></tr>
-<tr class="separator:a0bfdb5311a86684da28f1f4ca178e089"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62c2447e56deedb386fa1e7bb7af8b20"><td class="memItemLeft" align="right" valign="top"><a id="a62c2447e56deedb386fa1e7bb7af8b20"></a>
+<a class="el" href="structBuffer.html">Buffer</a>&lt; T, Stack, unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>buf</b></td></tr>
+<tr class="separator:a62c2447e56deedb386fa1e7bb7af8b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Vector_8hpp_source.html">Vector.hpp</a></li>

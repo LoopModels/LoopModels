@@ -11,6 +11,7 @@ var searchData=
   ['bitsetiterator_21',['BitSetIterator',['../structBitSetIterator.html',1,'']]],
   ['bitsliceview_22',['BitSliceView',['../structBitSliceView.html',1,'']]],
   ['buffer_23',['Buffer',['../structBuffer.html',1,'']]],
-  ['bumpalloc_24',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
-  ['bumpptrvector_25',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
+  ['buffer_3c_20t_2c_20preallocstorage_3c_20t_20_3e_28_29_2c_20unsigned_20_3e_24',['Buffer&lt; T, PreAllocStorage&lt; T &gt;(), unsigned &gt;',['../structBuffer.html',1,'']]],
+  ['bumpalloc_25',['BumpAlloc',['../structBumpAlloc.html',1,'']]],
+  ['bumpptrvector_26',['BumpPtrVector',['../structLinearAlgebra_1_1BumpPtrVector.html',1,'LinearAlgebra']]]
 ];

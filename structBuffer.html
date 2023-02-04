@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: Buffer&lt; T, N, S, A &gt; Struct Template Reference</title>
+<title>LoopModels: Buffer&lt; T, N, S, A, U &gt; Struct Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,10 +63,9 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structBuffer-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Buffer&lt; T, N, S, A &gt; Struct Template Reference</div>  </div>
+<div class="title">Buffer&lt; T, N, S, A, U &gt; Struct Template Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -74,53 +73,44 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a24cd200e9d09cb11686ea9bb5abc219f"><td class="memItemLeft" align="right" valign="top"><a id="a24cd200e9d09cb11686ea9bb5abc219f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSmall</b> () -&gt; bool</td></tr>
-<tr class="separator:a24cd200e9d09cb11686ea9bb5abc219f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87ae27ec778b0d1619bbc2316be75268"><td class="memItemLeft" align="right" valign="top"><a id="a87ae27ec778b0d1619bbc2316be75268"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>maybeDeallocate</b> ()</td></tr>
-<tr class="separator:a87ae27ec778b0d1619bbc2316be75268"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62bb0daa959ecf0b001484df2de19f56"><td class="memItemLeft" align="right" valign="top"><a id="a62bb0daa959ecf0b001484df2de19f56"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>grow</b> (size_t M)</td></tr>
-<tr class="separator:a62bb0daa959ecf0b001484df2de19f56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac09f5d3145191b5c0bcfc27d1741d039"><td class="memTemplParams" colspan="2"><a id="ac09f5d3145191b5c0bcfc27d1741d039"></a>
+<tr class="memitem:adfb54225438ad738efccfe9d370bf78d"><td class="memItemLeft" align="right" valign="top"><a id="adfb54225438ad738efccfe9d370bf78d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (S s) noexcept</td></tr>
+<tr class="separator:adfb54225438ad738efccfe9d370bf78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad010632630c8c29dcb8a82eb72fe47ce"><td class="memItemLeft" align="right" valign="top"><a id="ad010632630c8c29dcb8a82eb72fe47ce"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (<a class="el" href="structBuffer.html">Buffer</a> &amp;&amp;b) noexcept</td></tr>
+<tr class="separator:ad010632630c8c29dcb8a82eb72fe47ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1074ef4d561b44309b68c63a621457e5"><td class="memItemLeft" align="right" valign="top"><a id="a1074ef4d561b44309b68c63a621457e5"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () noexcept -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;</td></tr>
+<tr class="separator:a1074ef4d561b44309b68c63a621457e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad420cc7564c4890748b27b71cee150ec"><td class="memItemLeft" align="right" valign="top"><a id="ad420cc7564c4890748b27b71cee150ec"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const noexcept -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; const T &gt;</td></tr>
+<tr class="separator:ad420cc7564c4890748b27b71cee150ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d54eb5209ee03aefed712e016cd7cfc"><td class="memTemplParams" colspan="2"><a id="a4d54eb5209ee03aefed712e016cd7cfc"></a>
 template&lt;typename... Args&gt; </td></tr>
-<tr class="memitem:ac09f5d3145191b5c0bcfc27d1741d039"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args)</td></tr>
-<tr class="separator:ac09f5d3145191b5c0bcfc27d1741d039"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a82176cc91104dc08455a54a4709dfa3a"><td class="memItemLeft" align="right" valign="top"><a id="a82176cc91104dc08455a54a4709dfa3a"></a>
+<tr class="memitem:a4d54eb5209ee03aefed712e016cd7cfc"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (Args &amp;&amp;...args)</td></tr>
+<tr class="separator:a4d54eb5209ee03aefed712e016cd7cfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a660a90304256735c47382d494b1943bc"><td class="memItemLeft" align="right" valign="top"><a id="a660a90304256735c47382d494b1943bc"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>push_back</b> (T value)</td></tr>
-<tr class="separator:a82176cc91104dc08455a54a4709dfa3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97e592d6e865d57e4af66cbabe13f407"><td class="memItemLeft" align="right" valign="top"><a id="a97e592d6e865d57e4af66cbabe13f407"></a>
+<tr class="separator:a660a90304256735c47382d494b1943bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fc7b26b1ad3accae82e26a08723fb11"><td class="memItemLeft" align="right" valign="top"><a id="a2fc7b26b1ad3accae82e26a08723fb11"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>pop_back</b> ()</td></tr>
-<tr class="separator:a97e592d6e865d57e4af66cbabe13f407"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31ed4ffdfe35318d11dd8d836c781905"><td class="memItemLeft" align="right" valign="top"><a id="a31ed4ffdfe35318d11dd8d836c781905"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t M)</td></tr>
-<tr class="separator:a31ed4ffdfe35318d11dd8d836c781905"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1b2dbb282aa6c6be592bbda4afd03336"><td class="memItemLeft" align="right" valign="top"><a id="a1b2dbb282aa6c6be592bbda4afd03336"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (size_t M)</td></tr>
-<tr class="separator:a1b2dbb282aa6c6be592bbda4afd03336"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a539547cfcd46b575323195c0f24bc55c"><td class="memItemLeft" align="right" valign="top"><a id="a539547cfcd46b575323195c0f24bc55c"></a>
-<a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>pointer</b></td></tr>
-<tr class="separator:a539547cfcd46b575323195c0f24bc55c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acbd28623a6385dc47e662dd243b4721a"><td class="memItemLeft" align="right" valign="top"><a id="acbd28623a6385dc47e662dd243b4721a"></a>
-unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>capacity</b> {N}</td></tr>
-<tr class="separator:acbd28623a6385dc47e662dd243b4721a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e5134b29ebf65b0fc5f0b06f7cd3976"><td class="memItemLeft" align="right" valign="top"><a id="a8e5134b29ebf65b0fc5f0b06f7cd3976"></a>
-S&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> {}</td></tr>
-<tr class="separator:a8e5134b29ebf65b0fc5f0b06f7cd3976"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b9e4ec7da9bd0b89f4eead0e8fb3558"><td class="memItemLeft" align="right" valign="top"><a id="a0b9e4ec7da9bd0b89f4eead0e8fb3558"></a>
-A&#160;</td><td class="memItemRight" valign="bottom"><b>allocator</b></td></tr>
-<tr class="separator:a0b9e4ec7da9bd0b89f4eead0e8fb3558"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6b17c0f6b9a6d6be21eb4e4d423058e"><td class="memItemLeft" align="right" valign="top"><a id="ac6b17c0f6b9a6d6be21eb4e4d423058e"></a>
-std::array&lt; T, N &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>memory</b></td></tr>
-<tr class="separator:ac6b17c0f6b9a6d6be21eb4e4d423058e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a2fc7b26b1ad3accae82e26a08723fb11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0e60fb70a52dff27d40c2fc740d03ea"><td class="memItemLeft" align="right" valign="top"><a id="af0e60fb70a52dff27d40c2fc740d03ea"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (S M)</td></tr>
+<tr class="separator:af0e60fb70a52dff27d40c2fc740d03ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a14715da2ac1429ad7c8f6bcbe4e36859"><td class="memItemLeft" align="right" valign="top"><a id="a14715da2ac1429ad7c8f6bcbe4e36859"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resizeForOverwrite</b> (S M)</td></tr>
+<tr class="separator:a14715da2ac1429ad7c8f6bcbe4e36859"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73e5fe7fd42ba6e343723c20c9dc75fc"><td class="memItemLeft" align="right" valign="top"><a id="a73e5fe7fd42ba6e343723c20c9dc75fc"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const noexcept -&gt; S</td></tr>
+<tr class="separator:a73e5fe7fd42ba6e343723c20c9dc75fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad832740d44fcd7ecee36dc5018f13aaa"><td class="memItemLeft" align="right" valign="top"><a id="ad832740d44fcd7ecee36dc5018f13aaa"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
+<tr class="separator:ad832740d44fcd7ecee36dc5018f13aaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename T, size_t N, typename S, typename A&gt;<br />
-struct Buffer&lt; T, N, S, A &gt;</h3>
+<div class="textblock"><h3>template&lt;typename T, size_t N, typename S, typename A = std::allocator&lt;T&gt;, std::unsigned_integral U = DefaultCapacityType_t&lt;S&gt;&gt;<br />
+struct Buffer&lt; T, N, S, A, U &gt;</h3>
 
 <p>Stores memory, then pointer. Thus struct's alignment determines initial alignment of the stack memory. Information related to size is then grouped next to the pointer. </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
