@@ -327,7 +327,7 @@ $(function() {
 <div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160; </div>
 <div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector</a>(<span class="keywordtype">unsigned</span> N) : buf(N){};</div>
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector</a>(<a class="code" href="structBuffer.html">Buffer&lt;T, Stack, unsigned&gt;</a> b) : buf(std::move(b)){};</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160; </div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  constexpr <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector</a>(<span class="keyword">const</span> <a class="code" href="structLinearAlgebra_1_1Vector.html">Vector</a> &amp;) = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  [[gnu::flatten]] constexpr <span class="keyword">auto</span> operator[](<span class="keyword">const</span> ScalarIndex <span class="keyword">auto</span> i) -&gt; T &amp; {</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;    <span class="keywordtype">size_t</span> j = canonicalize(i, buf.size());</div>
 <div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;    invariant(j &lt; buf.size());</div>
