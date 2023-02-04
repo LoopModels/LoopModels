@@ -69,8 +69,9 @@ TEST(SparseIndexingTest, BasicAssertions) {
   IntMatrix C2{A * B};
   llvm::errs() << "C=\n" << C << "\nC2=\n" << C2 << "\n";
   EXPECT_TRUE(C == C2);
-  IntMatrix At << A.transpose();
-  IntMatrix Bt << B.transpose();
+  IntMatrix At{A.transpose()}, Bt{B.transpose()};
+  // At << A.transpose();
+  // Bt << B.transpose();
   C2 += At.transpose() * Bt.transpose();
   EXPECT_TRUE(C * 2 == C2);
   EXPECT_TRUE(C == At.transpose() * B);

@@ -10,19 +10,21 @@
 /// For assignments that copy the underlying data, use `<<`
 /// E.g., `A << B + C;`
 /// Updating assignment operators like `+=`, `-=`, and, `*=` are supported.
-/// 
+///
 /// The choice of `<<` over `=` for copying data is so that `operator=`
 /// can be the usual copy assignment operator, which is useful to use when
 /// we pass arrays/pointers by value to functions that truncate their size.
 ///
 /// Operations like `+` and `-` are elementwise, while `*` performs matrix
-/// multiplication. All operations are lazy, building up expression templates that are evaluated upon assignments, e.g. `<<` or `+=`.
+/// multiplication. All operations are lazy, building up expression templates
+/// that are evaluated upon assignments, e.g. `<<` or `+=`.
 ///
 /// All the PtrVector/PtrMatrix types are trivially destructible, copyable, etc
-/// Their lifetimes are governed by the BumpAlloc or RAII type used to back them.
+/// Their lifetimes are governed by the BumpAlloc or RAII type used to back
+/// them.
 namespace LinearAlgebra {
- enum class AxisType {
-      Row,
+enum class AxisType {
+  Row,
   Column,
   RowStride,
 };

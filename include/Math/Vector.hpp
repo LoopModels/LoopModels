@@ -252,11 +252,19 @@ template <typename T> consteval auto PreAllocStorage() -> size_t {
 
 template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   using eltype = T;
-  Buffer<T, Stack, unsigned> buf;
-
+  constexpr Vector() : buf{} {};
   constexpr Vector(unsigned N) : buf(N){};
   constexpr Vector(Buffer<T, Stack, unsigned> b) : buf(std::move(b)){};
   constexpr Vector(const Vector &) = default;
+  constexpr Vector(Vector &&) noexcept = default;
+  [[gnu::flatten]] constexpr Vector(const AbstractVector auto &x)
+    : buf(x.size()) {
+    for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
+  }
+  constexpr Vector(const std::initializer_list<T> &x) : buf(x.size()) {
+    for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
+  }
+  constexpr auto operator=(const Vector &) -> Vector & = default;
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     size_t j = canonicalize(i, buf.size());
     invariant(j < buf.size());
@@ -293,7 +301,6 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   [[gnu::flatten]] constexpr auto operator[](size_t i) const -> const T & {
     return buf[i];
   }
-  // bool operator==(Vector<T, 0> x0) const { return allMatch(*this, x0); }
   [[nodiscard]] constexpr auto begin() { return buf.data(); }
   [[nodiscard]] constexpr auto end() { return buf.data() + buf.size(); }
   [[nodiscard]] constexpr auto begin() const { return buf.data(); }
@@ -310,9 +317,6 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
   }
   template <typename... A> constexpr void emplace_back(A &&...x) {
     buf.emplace_back(std::forward<A>(x)...);
-  }
-  constexpr Vector(const AbstractVector auto &x) : buf(x.size()) {
-    for (size_t n = 0, N = x.size(); n < N; ++n) buf.data()[n] = x[n];
   }
   constexpr void resize(size_t N) { buf.resize(N); }
   constexpr void resizeForOverwrite(size_t N) { buf.resize_for_overwrite(N); }
@@ -375,16 +379,16 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
     for (auto &&y : (*this)) y /= x;
     return *this;
   }
-  // template <typename... Ts> constexpr Vector(Ts... inputs) : data{inputs...}
-  // {}
   constexpr void clear() { buf.clear(); }
   constexpr void extendOrAssertSize(size_t N) {
     if (N != buf.size()) buf.resizeForOverwrite(N);
   }
   constexpr auto operator==(const Vector<T> &x) const -> bool {
     return std::equal(begin(), end(), x.begin(), x.end());
-    // return allMatch(*this, x);
   }
+
+private:
+  Buffer<T, Stack, unsigned> buf;
 };
 
 static_assert(std::copyable<Vector<intptr_t>>);

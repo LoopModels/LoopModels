@@ -37,54 +37,64 @@ struct Buffer {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  constexpr Buffer() noexcept : ptr{memory.data()}, capacity{N} {}
-  constexpr Buffer(S s) noexcept : ptr{memory.data()}, capacity{N} {
+  constexpr Buffer() noexcept : ptr{memory}, capacity{N} {}
+  constexpr Buffer(S s) noexcept : ptr{memory}, capacity{N} {
     sz = s;
     U len = sz;
     if (len <= N) return;
     ptr = allocator.allocate(len);
     capacity = len;
   }
+  constexpr Buffer(S s, T x) noexcept : ptr{memory}, capacity{N} {
+    sz = s;
+    U len = sz;
+    if (len > N) {
+      ptr = allocator.allocate(len);
+      capacity = len;
+    }
+    std::fill_n(ptr, len, x);
+  }
 #pragma GCC diagnostic pop
-  constexpr Buffer(Buffer &&b) noexcept
+  template <typename D, std::unsigned_integral I>
+  constexpr Buffer(Buffer<T, N, D, A, I> &&b) noexcept
     : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
     if (b.isSmall()) {
-      memory = std::move(b.memory);
-      ptr = memory.data();
+      ptr = memory;
+      std::copy_n(b.data(), N, ptr);
     }
     b.resetNoFree();
   }
-  constexpr Buffer(const Buffer &b) noexcept
-    : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
-    if (b.isSmall()) {
-      memory = b.memory;
-      ptr = memory.data();
-    } else {
-      ptr = allocator.allocate(capacity);
-      std::copy(b.ptr, b.ptr + size_t(sz), ptr);
-    }
+  template <typename D, std::unsigned_integral I>
+  constexpr Buffer(const Buffer<T, N, D, A, I> &b) noexcept
+    : ptr{memory}, sz{b.sz}, capacity{N}, allocator{b.allocator} {
+    U len = sz;
+    grow(len);
+    std::copy_n(b.data(), len, ptr);
   }
-  constexpr auto operator=(const Buffer &b) noexcept -> Buffer & {
+  template <typename D, std::unsigned_integral I>
+  constexpr auto operator=(const Buffer<T, N, D, A, I> &b) noexcept
+    -> Buffer & {
     if (this == &b) return *this;
     sz = b.size();
-    size_t bSize = size_t(sz);
-    grow(bSize);
-    std::copy(b.ptr, b.ptr + bSize, ptr);
+    U len = sz;
+    grow(len);
+    std::copy_n(b.data(), len, ptr);
     return *this;
   }
-  constexpr auto operator=(Buffer &&b) noexcept -> Buffer & {
+  template <typename D, std::unsigned_integral I>
+  constexpr auto operator=(Buffer<T, N, D, A, I> &&b) noexcept -> Buffer & {
     if (this == &b) return *this;
     // here, we commandeer `b`'s memory
     sz = b.size();
+    allocator = std::move(b.allocator);
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::copy(b.ptr, b.ptr + size_t(sz), ptr);
+      std::copy_n(b.data(), size_t(sz), ptr);
     } else {
       // otherwise, we take its pointer
       maybeDeallocate();
       ptr = b.ptr;
-      allocator = b.allocator;
       capacity = b.capacity;
     }
     b.resetNoFree();
@@ -133,16 +143,14 @@ private:
   [[no_unique_address]] U capacity{N};
   [[no_unique_address]] S sz{};
   [[no_unique_address]] A allocator{};
-  std::array<T, N> memory;
+  T memory[N]; // NOLINT (modernize-avoid-c-style-arrays)
 
-  // Buffer() : capacity{N} { pointer = memory.data(); }
-
-  constexpr auto isSmall() -> bool { return ptr == memory.data(); }
+  constexpr auto isSmall() -> bool { return ptr == memory; }
   constexpr void maybeDeallocate() {
     if (!isSmall()) allocator.deallocate(ptr, capacity);
   }
   constexpr void resetNoFree() {
-    ptr = memory.data();
+    ptr = memory;
     sz = S{};
     capacity = N;
   }
@@ -154,4 +162,5 @@ private:
   }
 };
 
+static_assert(std::move_constructible<Buffer<intptr_t, 14, unsigned>>);
 static_assert(std::copyable<Buffer<intptr_t, 14, unsigned>>);

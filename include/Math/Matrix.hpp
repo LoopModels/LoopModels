@@ -1,6 +1,7 @@
 #pragma once
 #include "Math/AxisTypes.hpp"
 #include "Math/Indexing.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
 #include "Utilities/Allocators.hpp"
@@ -690,20 +691,19 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
     Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
-  [[no_unique_address]] llvm::SmallVector<T, S> mem;
-  [[no_unique_address]] unsigned int M = 0, N = 0, X = 0;
+
+  [[no_unique_address]] Buffer<int64_t, 64, StridedDims, std::allocator<T>> buf;
   // [[no_unique_address]] Row M;
   // [[no_unique_address]] Col N;
   // [[no_unique_address]] RowStride X;
 
-  constexpr auto data() -> T * { return mem.data(); }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem.data(); }
-  Matrix(llvm::SmallVector<T, S> content, Row MM, Col NN)
-    : mem(std::move(content)), M(MM), N(NN), X(RowStride(*NN)){};
+  constexpr auto data() -> T * { return buf.data(); }
+  [[nodiscard]] constexpr auto data() const -> const T * { return buf.data(); }
+  // Matrix(llvm::SmallVector<T, S> content, Row MM, Col NN)
+  //   : mem(std::move(content)), M(MM), N(NN), X(RowStride(*NN)){};
 
-  Matrix(Row MM, Col NN)
-    : mem(llvm::SmallVector<T, S>(MM * NN)), M(MM), N(NN), X(RowStride(*NN)){};
-
+  Matrix(Row M, Col N) : buf(StridedDims{M, N}){};
+  Matrix(Row M, Col N, T init) : buf(StridedDims{M, N}, init){};
   Matrix() = default;
   Matrix(SquareMatrix<T> &&A) : mem(std::move(A.mem)), M(A.M), N(A.M), X(A.M){};
   Matrix(const SquareMatrix<T> &A)
