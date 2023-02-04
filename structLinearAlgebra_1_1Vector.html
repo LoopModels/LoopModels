@@ -68,7 +68,6 @@ $(function() {
   <div class="summary">
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structLinearAlgebra_1_1Vector-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">LinearAlgebra::Vector&lt; T, Stack &gt; Struct Template Reference</div>  </div>
@@ -92,6 +91,18 @@ constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (<a c
 <tr class="memitem:aeef025df53a32ed94eafebbd53bf6a52"><td class="memItemLeft" align="right" valign="top"><a id="aeef025df53a32ed94eafebbd53bf6a52"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a> &amp;)=default</td></tr>
 <tr class="separator:aeef025df53a32ed94eafebbd53bf6a52"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac54b0822a8f61bce69ff3815450cc4b7"><td class="memItemLeft" align="right" valign="top"><a id="ac54b0822a8f61bce69ff3815450cc4b7"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (<a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a> &amp;&amp;) noexcept=default</td></tr>
+<tr class="separator:ac54b0822a8f61bce69ff3815450cc4b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01b9d2fa40cdafc3a57515b81290c875"><td class="memItemLeft" align="right" valign="top"><a id="a01b9d2fa40cdafc3a57515b81290c875"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const AbstractVector auto &amp;x)</td></tr>
+<tr class="separator:a01b9d2fa40cdafc3a57515b81290c875"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeef98637185dd52f5d74a895eb97a389"><td class="memItemLeft" align="right" valign="top"><a id="aeef98637185dd52f5d74a895eb97a389"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const std::initializer_list&lt; T &gt; &amp;x)</td></tr>
+<tr class="separator:aeef98637185dd52f5d74a895eb97a389"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bbff998025608fca9e557fb11a5fd49"><td class="memItemLeft" align="right" valign="top"><a id="a9bbff998025608fca9e557fb11a5fd49"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a> &amp;) -&gt; <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a> &amp;=default</td></tr>
+<tr class="separator:a9bbff998025608fca9e557fb11a5fd49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc1fa48518b3e67e32da21cf7868e4b0"><td class="memItemLeft" align="right" valign="top"><a id="afc1fa48518b3e67e32da21cf7868e4b0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (const ScalarIndex auto i) -&gt; T &amp;</td></tr>
 <tr class="separator:afc1fa48518b3e67e32da21cf7868e4b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -148,9 +159,6 @@ template&lt;typename A &gt; </td></tr>
 template&lt;typename... A&gt; </td></tr>
 <tr class="memitem:a5400badaf459c3b73cdaf037e7d3e8d4"><td class="memTemplItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memTemplItemRight" valign="bottom"><b>emplace_back</b> (A &amp;&amp;...x)</td></tr>
 <tr class="separator:a5400badaf459c3b73cdaf037e7d3e8d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01b9d2fa40cdafc3a57515b81290c875"><td class="memItemLeft" align="right" valign="top"><a id="a01b9d2fa40cdafc3a57515b81290c875"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Vector</b> (const AbstractVector auto &amp;x)</td></tr>
-<tr class="separator:a01b9d2fa40cdafc3a57515b81290c875"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa57b2d41e6276738fd3df3e589eca601"><td class="memItemLeft" align="right" valign="top"><a id="aa57b2d41e6276738fd3df3e589eca601"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>resize</b> (size_t N)</td></tr>
 <tr class="separator:aa57b2d41e6276738fd3df3e589eca601"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -208,12 +216,6 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>extendOrAss
 <tr class="memitem:a02de90918726f73ce8585e51e78e561e"><td class="memItemLeft" align="right" valign="top"><a id="a02de90918726f73ce8585e51e78e561e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="structLinearAlgebra_1_1Vector.html">Vector</a>&lt; T &gt; &amp;x) const -&gt; bool</td></tr>
 <tr class="separator:a02de90918726f73ce8585e51e78e561e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a62c2447e56deedb386fa1e7bb7af8b20"><td class="memItemLeft" align="right" valign="top"><a id="a62c2447e56deedb386fa1e7bb7af8b20"></a>
-<a class="el" href="structBuffer.html">Buffer</a>&lt; T, Stack, unsigned &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>buf</b></td></tr>
-<tr class="separator:a62c2447e56deedb386fa1e7bb7af8b20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Vector_8hpp_source.html">Vector.hpp</a></li>

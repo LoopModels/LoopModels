@@ -76,18 +76,25 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:adfb54225438ad738efccfe9d370bf78d"><td class="memItemLeft" align="right" valign="top"><a id="adfb54225438ad738efccfe9d370bf78d"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (S s) noexcept</td></tr>
 <tr class="separator:adfb54225438ad738efccfe9d370bf78d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad010632630c8c29dcb8a82eb72fe47ce"><td class="memItemLeft" align="right" valign="top"><a id="ad010632630c8c29dcb8a82eb72fe47ce"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (<a class="el" href="structBuffer.html">Buffer</a> &amp;&amp;b) noexcept</td></tr>
-<tr class="separator:ad010632630c8c29dcb8a82eb72fe47ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6d31561a8bdf5d95ba8e1e3d73f194eb"><td class="memItemLeft" align="right" valign="top"><a id="a6d31561a8bdf5d95ba8e1e3d73f194eb"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (const <a class="el" href="structBuffer.html">Buffer</a> &amp;b) noexcept</td></tr>
-<tr class="separator:a6d31561a8bdf5d95ba8e1e3d73f194eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2964b4dcc09bee7270967fda721d4dfc"><td class="memItemLeft" align="right" valign="top"><a id="a2964b4dcc09bee7270967fda721d4dfc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structBuffer.html">Buffer</a> &amp;b) noexcept -&gt; <a class="el" href="structBuffer.html">Buffer</a> &amp;</td></tr>
-<tr class="separator:a2964b4dcc09bee7270967fda721d4dfc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7056ef0e7ebb8d0456f7f3e47831f44c"><td class="memItemLeft" align="right" valign="top"><a id="a7056ef0e7ebb8d0456f7f3e47831f44c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structBuffer.html">Buffer</a> &amp;&amp;b) noexcept -&gt; <a class="el" href="structBuffer.html">Buffer</a> &amp;</td></tr>
-<tr class="separator:a7056ef0e7ebb8d0456f7f3e47831f44c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e0a2292c8764801a6e22db28128a82d"><td class="memItemLeft" align="right" valign="top"><a id="a2e0a2292c8764801a6e22db28128a82d"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Buffer</b> (S s, T x) noexcept</td></tr>
+<tr class="separator:a2e0a2292c8764801a6e22db28128a82d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab37cc03c17f5070474a180ccf2a11767"><td class="memTemplParams" colspan="2"><a id="ab37cc03c17f5070474a180ccf2a11767"></a>
+template&lt;typename D , std::unsigned_integral I&gt; </td></tr>
+<tr class="memitem:ab37cc03c17f5070474a180ccf2a11767"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Buffer</b> (<a class="el" href="structBuffer.html">Buffer</a>&lt; T, N, D, A, I &gt; &amp;&amp;b) noexcept</td></tr>
+<tr class="separator:ab37cc03c17f5070474a180ccf2a11767"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7e8c764b73d2f5b9575533c2998b9a19"><td class="memTemplParams" colspan="2"><a id="a7e8c764b73d2f5b9575533c2998b9a19"></a>
+template&lt;typename D , std::unsigned_integral I&gt; </td></tr>
+<tr class="memitem:a7e8c764b73d2f5b9575533c2998b9a19"><td class="memTemplItemLeft" align="right" valign="top">constexpr&#160;</td><td class="memTemplItemRight" valign="bottom"><b>Buffer</b> (const <a class="el" href="structBuffer.html">Buffer</a>&lt; T, N, D, A, I &gt; &amp;b) noexcept</td></tr>
+<tr class="separator:a7e8c764b73d2f5b9575533c2998b9a19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbe4d09e19ccdbd5b1a10ef9cf0602bb"><td class="memTemplParams" colspan="2"><a id="abbe4d09e19ccdbd5b1a10ef9cf0602bb"></a>
+template&lt;typename D , std::unsigned_integral I&gt; </td></tr>
+<tr class="memitem:abbe4d09e19ccdbd5b1a10ef9cf0602bb"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structBuffer.html">Buffer</a>&lt; T, N, D, A, I &gt; &amp;b) noexcept -&gt; <a class="el" href="structBuffer.html">Buffer</a> &amp;</td></tr>
+<tr class="separator:abbe4d09e19ccdbd5b1a10ef9cf0602bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60abb8f8a0f05125a793ce2ace1f161e"><td class="memTemplParams" colspan="2"><a id="a60abb8f8a0f05125a793ce2ace1f161e"></a>
+template&lt;typename D , std::unsigned_integral I&gt; </td></tr>
+<tr class="memitem:a60abb8f8a0f05125a793ce2ace1f161e"><td class="memTemplItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memTemplItemRight" valign="bottom"><b>operator=</b> (<a class="el" href="structBuffer.html">Buffer</a>&lt; T, N, D, A, I &gt; &amp;&amp;b) noexcept -&gt; <a class="el" href="structBuffer.html">Buffer</a> &amp;</td></tr>
+<tr class="separator:a60abb8f8a0f05125a793ce2ace1f161e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1074ef4d561b44309b68c63a621457e5"><td class="memItemLeft" align="right" valign="top"><a id="a1074ef4d561b44309b68c63a621457e5"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () noexcept -&gt; <a class="el" href="structNotNull.html">NotNull</a>&lt; T &gt;</td></tr>
 <tr class="separator:a1074ef4d561b44309b68c63a621457e5"><td class="memSeparator" colspan="2">&#160;</td></tr>

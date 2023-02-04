@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>LoopModels: DenseDims Struct Reference</title>
+<title>LoopModels: LinearAlgebra::StridedDims Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -59,34 +59,50 @@ $(function() {
 </iframe>
 </div>
 
+<div id="nav-path" class="navpath">
+  <ul>
+<li class="navelem"><a class="el" href="namespaceLinearAlgebra.html">LinearAlgebra</a></li><li class="navelem"><a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a></li>  </ul>
+</div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="structDenseDims-members.html">List of all members</a>  </div>
+<a href="structLinearAlgebra_1_1StridedDims-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">DenseDims Struct Reference</div>  </div>
+<div class="title">LinearAlgebra::StridedDims Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9617130b27e90c631c2dc15d82416b83"><td class="memItemLeft" align="right" valign="top"><a id="a9617130b27e90c631c2dc15d82416b83"></a>
+<tr class="memitem:a1cde237e9920c31805e74c9cf89d68b6"><td class="memItemLeft" align="right" valign="top"><a id="a1cde237e9920c31805e74c9cf89d68b6"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>StridedDims</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
+<tr class="separator:a1cde237e9920c31805e74c9cf89d68b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cd2fb7e36f5fe6d64f691e4c5d3fe3c"><td class="memItemLeft" align="right" valign="top"><a id="a6cd2fb7e36f5fe6d64f691e4c5d3fe3c"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>StridedDims</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">RowStride</a> X)</td></tr>
+<tr class="separator:a6cd2fb7e36f5fe6d64f691e4c5d3fe3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d096f62de36d090a6b2fbae46abd174"><td class="memItemLeft" align="right" valign="top"><a id="a5d096f62de36d090a6b2fbae46abd174"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator unsigned int</b> () const</td></tr>
-<tr class="separator:a9617130b27e90c631c2dc15d82416b83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ec089234bad1a4fd38187b700133d0c"><td class="memItemLeft" align="right" valign="top"><a id="a4ec089234bad1a4fd38187b700133d0c"></a>
-constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator StridedDims</b> () const</td></tr>
-<tr class="separator:a4ec089234bad1a4fd38187b700133d0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a5d096f62de36d090a6b2fbae46abd174"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26a3d18239d694813e67113be628988a"><td class="memItemLeft" align="right" valign="top"><a id="a26a3d18239d694813e67113be628988a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</b> (const <a class="el" href="structLinearAlgebra_1_1DenseDims.html">DenseDims</a> &amp;D) -&gt; <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a> &amp;</td></tr>
+<tr class="separator:a26a3d18239d694813e67113be628988a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a712d23baefc9398783e6adf988026cab"><td class="memItemLeft" align="right" valign="top"><a id="a712d23baefc9398783e6adf988026cab"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator CarInd</b> () const</td></tr>
+<tr class="separator:a712d23baefc9398783e6adf988026cab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:ab9e49544551576b9cb78c02b84ba9beb"><td class="memItemLeft" align="right" valign="top"><a id="ab9e49544551576b9cb78c02b84ba9beb"></a>
+<tr class="memitem:ae30c5a7b81aaecf330bd198890f733c2"><td class="memItemLeft" align="right" valign="top"><a id="ae30c5a7b81aaecf330bd198890f733c2"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>M</b></td></tr>
-<tr class="separator:ab9e49544551576b9cb78c02b84ba9beb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad772c9a9b8b3abae7a10fbae56fa7bbb"><td class="memItemLeft" align="right" valign="top"><a id="ad772c9a9b8b3abae7a10fbae56fa7bbb"></a>
+<tr class="separator:ae30c5a7b81aaecf330bd198890f733c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c462c87881154b450b1371a0b1bf8a1"><td class="memItemLeft" align="right" valign="top"><a id="a8c462c87881154b450b1371a0b1bf8a1"></a>
 unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>N</b></td></tr>
-<tr class="separator:ad772c9a9b8b3abae7a10fbae56fa7bbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a8c462c87881154b450b1371a0b1bf8a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7edfe43b8f4754e8771ac818c0c0c11f"><td class="memItemLeft" align="right" valign="top"><a id="a7edfe43b8f4754e8771ac818c0c0c11f"></a>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>strideM</b></td></tr>
+<tr class="separator:a7edfe43b8f4754e8771ac818c0c0c11f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="MatrixDimensions_8hpp_source.html">MatrixDimensions.hpp</a></li>

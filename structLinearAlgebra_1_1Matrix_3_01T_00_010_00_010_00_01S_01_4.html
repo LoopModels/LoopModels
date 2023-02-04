@@ -110,12 +110,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> ()
 <tr class="memitem:a5b33fda76cb3f4c5d2900de21d2ff04e"><td class="memItemLeft" align="right" valign="top"><a id="a5b33fda76cb3f4c5d2900de21d2ff04e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>data</b> () const -&gt; const T *</td></tr>
 <tr class="separator:a5b33fda76cb3f4c5d2900de21d2ff04e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff2bb975787b687ea360aab280cfb976"><td class="memItemLeft" align="right" valign="top"><a id="aff2bb975787b687ea360aab280cfb976"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (llvm::SmallVector&lt; T, S &gt; content, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN)</td></tr>
-<tr class="separator:aff2bb975787b687ea360aab280cfb976"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2b5144c6e1211747e8f3548fdfa11d9"><td class="memItemLeft" align="right" valign="top"><a id="ac2b5144c6e1211747e8f3548fdfa11d9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> MM, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> NN)</td></tr>
-<tr class="separator:ac2b5144c6e1211747e8f3548fdfa11d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa52fb7940d707142fd1349c0562f2a86"><td class="memItemLeft" align="right" valign="top"><a id="aa52fb7940d707142fd1349c0562f2a86"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N)</td></tr>
+<tr class="separator:aa52fb7940d707142fd1349c0562f2a86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af59f3caad6f833bdf8ce5c201cc2e044"><td class="memItemLeft" align="right" valign="top"><a id="af59f3caad6f833bdf8ce5c201cc2e044"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structLinearAlgebra_1_1AxisInt.html">Row</a> M, <a class="el" href="structLinearAlgebra_1_1AxisInt.html">Col</a> N, T init)</td></tr>
+<tr class="separator:af59f3caad6f833bdf8ce5c201cc2e044"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0409c73a45b5a0e0b14dab6bce5acef8"><td class="memItemLeft" align="right" valign="top"><a id="a0409c73a45b5a0e0b14dab6bce5acef8"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> (<a class="el" href="structLinearAlgebra_1_1SquareMatrix.html">SquareMatrix</a>&lt; T &gt; &amp;&amp;A)</td></tr>
 <tr class="separator:a0409c73a45b5a0e0b14dab6bce5acef8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -361,18 +361,9 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>identity</b> (
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5d79da553791f76ae5070ddd1a3dbd86"><td class="memItemLeft" align="right" valign="top"><a id="a5d79da553791f76ae5070ddd1a3dbd86"></a>
-llvm::SmallVector&lt; T, S &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>mem</b></td></tr>
-<tr class="separator:a5d79da553791f76ae5070ddd1a3dbd86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a662308aef579097bcc0c6a2d3db79214"><td class="memItemLeft" align="right" valign="top"><a id="a662308aef579097bcc0c6a2d3db79214"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>M</b> = 0</td></tr>
-<tr class="separator:a662308aef579097bcc0c6a2d3db79214"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a535670d35f48495da1ebb8f3d9f09e45"><td class="memItemLeft" align="right" valign="top"><a id="a535670d35f48495da1ebb8f3d9f09e45"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>N</b> = 0</td></tr>
-<tr class="separator:a535670d35f48495da1ebb8f3d9f09e45"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbcfd15e797b636a535992edf8eafce6"><td class="memItemLeft" align="right" valign="top"><a id="afbcfd15e797b636a535992edf8eafce6"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>X</b> = 0</td></tr>
-<tr class="separator:afbcfd15e797b636a535992edf8eafce6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac00767093cb9736d1565a1667661e087"><td class="memItemLeft" align="right" valign="top"><a id="ac00767093cb9736d1565a1667661e087"></a>
+<a class="el" href="structBuffer.html">Buffer</a>&lt; int64_t, 64, <a class="el" href="structLinearAlgebra_1_1StridedDims.html">StridedDims</a>, std::allocator&lt; T &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>buf</b></td></tr>
+<tr class="separator:ac00767093cb9736d1565a1667661e087"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Math/<a class="el" href="Matrix_8hpp_source.html">Matrix.hpp</a></li>
