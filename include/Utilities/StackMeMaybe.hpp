@@ -37,46 +37,82 @@ struct Buffer {
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-  constexpr Buffer() noexcept : pointer{memory.data()}, capacity{N} {}
-  constexpr Buffer(S s) noexcept : pointer{memory.data()}, capacity{N} {
+  constexpr Buffer() noexcept : ptr{memory.data()}, capacity{N} {}
+  constexpr Buffer(S s) noexcept : ptr{memory.data()}, capacity{N} {
     sz = s;
     U len = sz;
     if (len <= N) return;
-    pointer = allocator.allocate(len);
+    ptr = allocator.allocate(len);
     capacity = len;
   }
 #pragma GCC diagnostic pop
   constexpr Buffer(Buffer &&b) noexcept
-    : pointer{b.pointer}, sz{b.sz}, capacity{b.capacity} {
+    : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
     if (b.isSmall()) {
       memory = std::move(b.memory);
-      pointer = memory.data();
+      ptr = memory.data();
     }
-    b.pointer = b.memory.data();
-    b.sz = 0;
-    b.capacity = N;
+    b.resetNoFree();
   }
-  constexpr auto data() noexcept -> NotNull<T> { return pointer; }
-  constexpr auto data() const noexcept -> NotNull<const T> { return pointer; }
+  constexpr Buffer(const Buffer &b) noexcept
+    : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
+    if (b.isSmall()) {
+      memory = b.memory;
+      ptr = memory.data();
+    } else {
+      ptr = allocator.allocate(capacity);
+      std::copy(b.ptr, b.ptr + size_t(sz), ptr);
+    }
+  }
+  constexpr auto operator=(const Buffer &b) noexcept -> Buffer & {
+    if (this == &b) return *this;
+    sz = b.size();
+    size_t bSize = size_t(sz);
+    grow(bSize);
+    std::copy(b.ptr, b.ptr + bSize, ptr);
+    return *this;
+  }
+  constexpr auto operator=(Buffer &&b) noexcept -> Buffer & {
+    if (this == &b) return *this;
+    // here, we commandeer `b`'s memory
+    sz = b.size();
+    if (b.isSmall()) {
+      // if `b` is small, we need to copy memory
+      // no need to shrink our capacity
+      std::copy(b.ptr, b.ptr + size_t(sz), ptr);
+    } else {
+      // otherwise, we take its pointer
+      maybeDeallocate();
+      ptr = b.ptr;
+      allocator = b.allocator;
+      capacity = b.capacity;
+    }
+    b.resetNoFree();
+    return *this;
+  }
+  [[nodiscard]] constexpr auto data() noexcept -> NotNull<T> { return ptr; }
+  [[nodiscard]] constexpr auto data() const noexcept -> NotNull<const T> {
+    return ptr;
+  }
 
   template <typename... Args> constexpr auto emplace_back(Args &&...args) {
     if (sz == capacity) grow(capacity * 2);
-    new (pointer + sz++) T(std::forward<Args>(args)...);
+    new (ptr + sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
     if (sz == capacity) grow(capacity * 2);
-    new (pointer + sz++) T(std::move(value));
+    new (ptr + sz++) T(std::move(value));
   }
   constexpr void pop_back() {
-    if (sz) pointer[--sz].~T();
+    if (sz) ptr[--sz].~T();
   }
   constexpr void resize(S M) {
     U L = M;
     if (L > sz) {
       grow(L);
-      for (size_t i = sz; i < L; ++i) new (pointer + i) T();
+      for (size_t i = sz; i < L; ++i) new (ptr + i) T();
     } else if constexpr (!std::is_trivially_destructible_v<T>) {
-      for (size_t i = L; i < sz; ++i) pointer[i].~T();
+      for (size_t i = L; i < sz; ++i) ptr[i].~T();
     }
     sz = M;
   }
@@ -84,16 +120,16 @@ struct Buffer {
     U L = M;
     if (L > sz) grow(L);
     else if constexpr (!std::is_trivially_destructible_v<T>)
-      for (size_t i = L; i < sz; ++i) pointer[i].~T();
+      for (size_t i = L; i < sz; ++i) ptr[i].~T();
     sz = M;
   }
   constexpr ~Buffer() { maybeDeallocate(); }
-  constexpr auto size() const noexcept -> S { return sz; }
+  [[nodiscard]] constexpr auto size() const noexcept -> S { return sz; }
   // does not free memory, leaving capacity unchanged
   constexpr void clear() { sz = S{}; }
 
 private:
-  [[no_unique_address]] NotNull<T> pointer;
+  [[no_unique_address]] NotNull<T> ptr;
   [[no_unique_address]] U capacity{N};
   [[no_unique_address]] S sz{};
   [[no_unique_address]] A allocator{};
@@ -101,14 +137,21 @@ private:
 
   // Buffer() : capacity{N} { pointer = memory.data(); }
 
-  constexpr auto isSmall() -> bool { return pointer == memory.data(); }
+  constexpr auto isSmall() -> bool { return ptr == memory.data(); }
   constexpr void maybeDeallocate() {
-    if (!isSmall()) allocator.deallocate(pointer, capacity);
+    if (!isSmall()) allocator.deallocate(ptr, capacity);
+  }
+  constexpr void resetNoFree() {
+    ptr = memory.data();
+    sz = S{};
+    capacity = N;
   }
   constexpr void grow(U M) {
     if (M <= capacity) return;
     maybeDeallocate();
-    pointer = allocator.allocate(M);
+    ptr = allocator.allocate(M);
     capacity = M;
   }
 };
+
+static_assert(std::copyable<Buffer<intptr_t, 14, unsigned>>);

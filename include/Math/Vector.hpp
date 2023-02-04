@@ -256,7 +256,7 @@ template <typename T, size_t Stack = PreAllocStorage<T>()> struct Vector {
 
   constexpr Vector(unsigned N) : buf(N){};
   constexpr Vector(Buffer<T, Stack, unsigned> b) : buf(std::move(b)){};
-
+  constexpr Vector(const Vector &) = default;
   [[gnu::flatten]] constexpr auto operator[](const ScalarIndex auto i) -> T & {
     size_t j = canonicalize(i, buf.size());
     invariant(j < buf.size());
