@@ -5,6 +5,7 @@
 #include "Utilities/Invariant.hpp"
 #include "Utilities/StackMeMaybe.hpp"
 #include "Utilities/Valid.hpp"
+#include <concepts>
 #include <cstddef>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/ADT/SmallVector.h>
@@ -391,6 +392,8 @@ private:
   Buffer<T, Stack, unsigned> buf;
 };
 
+static_assert(std::move_constructible<Vector<intptr_t>>);
+static_assert(std::copy_constructible<Vector<intptr_t>>);
 static_assert(std::copyable<Vector<intptr_t>>);
 static_assert(AbstractVector<Vector<int64_t>>);
 static_assert(!AbstractVector<int64_t>);

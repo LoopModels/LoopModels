@@ -1,5 +1,6 @@
 #pragma once
 #include "Math/AxisTypes.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Utilities/Iterators.hpp"
 #include "Utilities/Valid.hpp"
 
@@ -148,8 +149,8 @@ template <typename T> struct PtrVector;
 template <typename T> struct MutPtrVector;
 template <typename T> struct StridedVector;
 template <typename T> struct MutStridedVector;
-template <typename T> struct PtrMatrix;
-template <typename T> struct MutPtrMatrix;
+template <typename T, MatrixDimension D = StridedDims> struct PtrMatrix;
+template <typename T, MatrixDimension D = StridedDims> struct MutPtrMatrix;
 
 template <typename T>
 concept AbstractSlice = requires(T t, size_t M) {

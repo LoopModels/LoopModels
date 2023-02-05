@@ -5,8 +5,11 @@
 #include "Math/Vector.hpp"
 #include "TypePromotion.hpp"
 #include "Utilities/Allocators.hpp"
+#include "Utilities/Invariant.hpp"
 #include "Utilities/Optional.hpp"
 #include "Utilities/Valid.hpp"
+#include <concepts>
+#include <memory>
 #include <type_traits>
 
 namespace LinearAlgebra {
@@ -17,6 +20,7 @@ concept AbstractMatrixCore =
                     { t.numRow() } -> std::same_as<Row>;
                     { t.numCol() } -> std::same_as<Col>;
                     { t.size() } -> std::same_as<std::pair<Row, Col>>;
+                    { t.dim() } -> std::convertible_to<StridedDims>;
                     // {
                     //     std::remove_reference_t<T>::canResize
                     //     } -> std::same_as<const bool &>;
@@ -37,8 +41,9 @@ concept AbstractRowMajorMatrix =
 constexpr auto isSquare(const AbstractMatrix auto &A) -> bool {
   return A.numRow() == A.numCol();
 }
-template <typename T> struct PtrMatrix;
-template <typename T> struct MutPtrMatrix;
+
+template <typename T, MatrixDimension D> struct PtrMatrix;
+template <typename T, MatrixDimension D> struct MutPtrMatrix;
 template <typename T> struct Transpose;
 
 template <typename T>
@@ -59,6 +64,14 @@ constexpr auto antiDiag(PtrMatrix<T> A) -> StridedVector<T> {
                           (A.rowStride() - 1)};
 }
 
+template <typename T, MatrixDimension D>
+PtrMatrix(NotNull<T>, D) -> PtrMatrix<T, D>;
+template <typename T, MatrixDimension D> PtrMatrix(T *, D) -> PtrMatrix<T, D>;
+template <typename T, MatrixDimension D>
+PtrMatrix(NotNull<const T>, D) -> PtrMatrix<T, D>;
+template <typename T, MatrixDimension D>
+PtrMatrix(const T *, D) -> PtrMatrix<T, D>;
+
 /// A CRTP type defining const methods for matrices.
 template <typename T, typename A> struct ConstMatrixCore {
   [[nodiscard]] constexpr auto data() const -> NotNull<const T> {
@@ -72,6 +85,9 @@ template <typename T, typename A> struct ConstMatrixCore {
   }
   [[nodiscard]] constexpr auto rowStride() const -> RowStride {
     return static_cast<const A *>(this)->rowStride();
+  }
+  [[nodiscard]] constexpr auto dim() const {
+    return static_cast<const A *>(this)->dim();
   }
 
   [[gnu::flatten]] constexpr auto operator()(auto m, auto n) const
@@ -100,16 +116,11 @@ template <typename T, typename A> struct ConstMatrixCore {
   }
   constexpr operator PtrMatrix<T>() const {
     const T *ptr = data();
-    return PtrMatrix<T>(ptr, numRow(), numCol(), rowStride());
+    return PtrMatrix<T>(ptr, dim());
   }
-  [[nodiscard]] constexpr auto view() const -> PtrMatrix<T> {
-    const T *ptr = data();
-    return PtrMatrix<T>(ptr, numRow(), numCol(), rowStride());
-  }
-  [[nodiscard]] constexpr auto transpose() const -> Transpose<PtrMatrix<T>> {
-    return Transpose<PtrMatrix<eltype_t<A>>>{view()};
-  }
-  [[nodiscard]] auto isExchangeMatrix() const -> bool {
+  [[nodiscard]] constexpr auto view() const { return PtrMatrix(data(), dim()); }
+  [[nodiscard]] constexpr auto transpose() const { return Transpose{view()}; }
+  [[nodiscard]] constexpr auto isExchangeMatrix() const -> bool {
     size_t N = size_t(numRow());
     if (N != size_t(numCol())) return false;
     A &M = *static_cast<A *>(this);
@@ -118,7 +129,7 @@ template <typename T, typename A> struct ConstMatrixCore {
         if (A(i, j) != (i + j == N - 1)) return false;
     }
   }
-  [[nodiscard]] auto isDiagonal() const -> bool {
+  [[nodiscard]] constexpr auto isDiagonal() const -> bool {
     for (Row r = 0; r < numRow(); ++r)
       for (Col c = 0; c < numCol(); ++c)
         if (r != c && (*this)(r, c) != 0) return false;
@@ -135,6 +146,9 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
     CMC::isSquare, CMC::minRowCol;
 
   constexpr auto data() -> NotNull<T> { return static_cast<A *>(this)->data(); }
+  [[nodiscard]] constexpr auto dim() const {
+    return static_cast<const A *>(this)->dim();
+  }
 
   [[gnu::flatten]] constexpr auto operator()(auto m, auto n) -> decltype(auto) {
     return matrixGet(data(), numRow(), numCol(), rowStride(), m, n);
@@ -145,15 +159,11 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
   constexpr auto antiDiag() {
     return LinearAlgebra::antiDiag(MutPtrMatrix<T>(*static_cast<A *>(this)));
   }
-  constexpr operator MutPtrMatrix<T>() {
-    return MutPtrMatrix<T>{data(), numRow(), numCol(), rowStride()};
-  }
-  [[nodiscard]] constexpr auto view() -> MutPtrMatrix<T> {
-    T *ptr = data();
-    return MutPtrMatrix<T>{ptr, numRow(), numCol(), rowStride()};
+  template <MatrixDimension D> constexpr operator MutPtrMatrix<T, D>() {
+    return MutPtrMatrix<T, D>{data(), dim()};
   }
 
-  [[gnu::flatten]] auto operator<<(const SmallSparseMatrix<T> &B)
+  [[gnu::flatten]] constexpr auto operator<<(const SmallSparseMatrix<T> &B)
     -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
@@ -175,17 +185,17 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
   // [[gnu::flatten]] auto operator<<(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
   //   return copyto(*this, PtrMatrix<T>(B));
   // }
-  [[gnu::flatten]] auto operator<<(const AbstractMatrix auto &B)
+  [[gnu::flatten]] constexpr auto operator<<(const AbstractMatrix auto &B)
     -> MutPtrMatrix<T> {
     return copyto(*this, B);
   }
-  [[gnu::flatten]] auto operator<<(const std::integral auto b)
+  [[gnu::flatten]] constexpr auto operator<<(const std::integral auto b)
     -> MutPtrMatrix<T> {
     for (size_t r = 0; r < numRow(); ++r)
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) = b;
     return *this;
   }
-  [[gnu::flatten]] auto operator+=(const AbstractMatrix auto &B)
+  [[gnu::flatten]] constexpr auto operator+=(const AbstractMatrix auto &B)
     -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
@@ -193,7 +203,7 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) += B(r, c);
     return *this;
   }
-  [[gnu::flatten]] auto operator-=(const AbstractMatrix auto &B)
+  [[gnu::flatten]] constexpr auto operator-=(const AbstractMatrix auto &B)
     -> MutPtrMatrix<T> {
     assert(numRow() == B.numRow());
     assert(numCol() == B.numCol());
@@ -201,13 +211,13 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) -= B(r, c);
     return *this;
   }
-  [[gnu::flatten]] auto operator*=(const std::integral auto b)
+  [[gnu::flatten]] constexpr auto operator*=(const std::integral auto b)
     -> MutPtrMatrix<T> {
     for (size_t r = 0; r < numRow(); ++r)
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) *= b;
     return *this;
   }
-  [[gnu::flatten]] auto operator/=(const std::integral auto b)
+  [[gnu::flatten]] constexpr auto operator/=(const std::integral auto b)
     -> MutPtrMatrix<T> {
     for (size_t r = 0; r < numRow(); ++r)
       for (size_t c = 0; c < numCol(); ++c) (*this)(r, c) /= b;
@@ -224,45 +234,41 @@ template <typename T, typename A> struct MutMatrixCore : ConstMatrixCore<T, A> {
 #endif
 };
 
-template <typename T> struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T>> {
-  using ConstMatrixCore<T, PtrMatrix<T>>::size,
-    ConstMatrixCore<T, PtrMatrix<T>>::diag,
-    ConstMatrixCore<T, PtrMatrix<T>>::antiDiag,
-    ConstMatrixCore<T, PtrMatrix<T>>::operator();
+template <typename T, MatrixDimension D>
+struct PtrMatrix : ConstMatrixCore<T, PtrMatrix<T, D>> {
+  using BaseT = ConstMatrixCore<T, PtrMatrix<T, D>>;
+  using BaseT::size, BaseT::diag, BaseT::antiDiag,
+    BaseT::operator(), BaseT::isSquare;
 
   using eltype = std::remove_reference_t<T>;
   static_assert(!std::is_const_v<T>, "const T is redundant");
 
   [[no_unique_address]] NotNull<const T> mem;
-  [[no_unique_address]] unsigned int M, N, X;
-  // [[no_unique_address]] Row M;
-  // [[no_unique_address]] Col N;
-  // [[no_unique_address]] RowStride X;
+  [[no_unique_address]] D dims;
 
   [[nodiscard]] constexpr auto data() const -> NotNull<const T> { return mem; }
-  [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
-  [[nodiscard]] constexpr auto isSquare() const -> bool {
-    return size_t(M) == size_t(N);
-  }
-  [[nodiscard]] constexpr inline auto view() const -> PtrMatrix<T> {
+  [[nodiscard]] constexpr auto numRow() const -> Row { return dims; }
+  [[nodiscard]] constexpr auto numCol() const -> Col { return dims; }
+  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return dims; }
+  [[nodiscard]] constexpr inline auto view() const -> PtrMatrix<T, D> {
     return *this;
   };
-  [[nodiscard]] constexpr auto transpose() const -> Transpose<PtrMatrix<T>> {
-    return Transpose<PtrMatrix<T>>{*this};
+  [[nodiscard]] constexpr auto transpose() const -> Transpose<PtrMatrix<T, D>> {
+    return Transpose<PtrMatrix<T, D>>{*this};
   }
-  constexpr PtrMatrix(const T *const pt, const Row MM, const Col NN,
-                      const RowStride XX)
-    : mem(pt), M(MM), N(NN), X(XX) {}
+  constexpr PtrMatrix(NotNull<const T> mem, D dims) : mem{mem}, dims{dims} {}
+  // constexpr PtrMatrix(const T *const pt, const Row M, const Col N,
+  //                     const RowStride X)
+  //   : mem(pt), dims{M, N, X} {}
 #ifndef NDEBUG
-  void extendOrAssertSize(Row MM, Col NN) const {
-    assert(MM == M);
-    assert(NN == N);
+  constexpr void extendOrAssertSize(Row M, Col N) const {
+    assert(Row{dims} == M);
+    assert(Col{dims} == N);
   }
 #else
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
+  [[nodiscard]] constexpr auto dim() const -> D { return dims; }
 };
 static_assert(std::same_as<PtrMatrix<int64_t>::eltype, int64_t>);
 static_assert(HasEltype<PtrMatrix<int64_t>>);
@@ -271,132 +277,57 @@ static_assert(
     PtrMatrix<int64_t>::eltype,
     std::decay_t<decltype(std::declval<PtrMatrix<int64_t>>()(0, 0))>>);
 
-template <typename T>
-struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T>> {
+template <typename T, MatrixDimension D>
+struct MutPtrMatrix : public MutMatrixCore<T, MutPtrMatrix<T, D>> {
   using eltype = std::remove_reference_t<T>;
-  using Base = MutMatrixCore<T, MutPtrMatrix<T>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
+  using BaseT = MutMatrixCore<T, MutPtrMatrix<T, D>>;
+  using BaseT::diag, BaseT::antiDiag,
+    BaseT::operator(), BaseT::size, BaseT::view, BaseT::isSquare,
+    BaseT::transpose, BaseT::operator ::LinearAlgebra::PtrMatrix<T>,
+    BaseT::operator ::LinearAlgebra::MutPtrMatrix<T>,
+    BaseT::operator=, BaseT::operator<<, BaseT::operator+=, BaseT::operator-=,
+    BaseT::operator*=, BaseT::operator/=;
   static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
   [[no_unique_address]] T *mem;
-  [[no_unique_address]] unsigned int M, N, X;
-  // [[no_unique_address]] Col N;
-  // [[no_unique_address]] RowStride X;
-  [[gnu::flatten]] auto operator<<(MutPtrMatrix<T> B) -> MutPtrMatrix<T> {
-    mem = B.mem;
-    M = B.M;
-    N = B.N;
-    X = B.X;
-    return *this;
-    // return copyto(*this, PtrMatrix<T>(B));
-  }
-  // [[gnu::flatten]] auto operator<<(AbstractMatrix auto B) -> MutPtrMatrix<T>
-  // {
-  //   return copyto(*this, PtrMatrix<T>(B));
-  // }
+  [[no_unique_address]] D dims;
 
   [[nodiscard]] constexpr auto data() -> T * { return mem; }
   [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
-  [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
+  [[nodiscard]] constexpr auto numRow() const -> Row { return dims; }
+  [[nodiscard]] constexpr auto numCol() const -> Col { return dims; }
+  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return dims; }
   [[nodiscard]] constexpr auto view() const -> PtrMatrix<T> {
-    return {data(), numRow(), numCol(), rowStride()};
+    return {data(), dims};
   };
-  constexpr operator PtrMatrix<T>() const {
-    return {data(), numRow(), numCol(), rowStride()};
+  [[nodiscard]] constexpr auto dim() const -> D { return dims; }
+  template <typename M> constexpr operator PtrMatrix<T, M>() const {
+    return {data(), dims};
   }
 
   // rule of 5 requires...
   constexpr MutPtrMatrix(const MutPtrMatrix<T> &A) = default;
-  constexpr MutPtrMatrix(T *pt, Row MM, Col NN)
-    : mem(pt), M(MM), N(NN), X(NN){};
-  constexpr MutPtrMatrix(T *pt, Row MM, Col NN, RowStride XX)
-    : mem(pt), M(MM), N(NN), X(XX){};
+  constexpr MutPtrMatrix(T *pt, Row M, Col N)
+    : mem(pt), dims{M, N, RowStride{size_t(N)}} {};
+  constexpr MutPtrMatrix(T *pt, Row M, Col N, RowStride X)
+    : mem(pt), dims{M, N, X} {};
   constexpr MutPtrMatrix(AbstractMatrixCore auto &A)
-    : mem(A.data()), M(A.numRow()), N(A.numCol()), X(A.rowStride()) {}
+    : mem(A.data()), dims(A.dim()) {}
   constexpr auto operator=(const MutPtrMatrix<T> &A)
     -> MutPtrMatrix<T> & = default;
 
-  [[nodiscard]] constexpr auto isSquare() const -> bool {
-    return size_t(M) == size_t(N);
-  }
 #ifndef NDEBUG
-  void extendOrAssertSize(Row MM, Col NN) const {
+  constexpr void extendOrAssertSize(Row MM, Col NN) const {
     assert(numRow() == MM);
     assert(numCol() == NN);
   }
 #else
   static constexpr void extendOrAssertSize(Row, Col) {}
 #endif
-  constexpr auto truncate(Row r) -> MutPtrMatrix<T> {
-    assert(r <= M);
-    M = unsigned(r);
-    return *this;
+  [[nodiscard]] constexpr auto truncate(Row r) {
+    return MutPtrMatrix(data(), dims.truncate(r));
   }
-  constexpr auto truncate(Col c) -> MutPtrMatrix<T> {
-    assert(c <= N);
-    N = unsigned(c);
-    return *this;
-  }
-};
-template <typename T>
-struct DenseMutPtrMatrix : public MutMatrixCore<T, DenseMutPtrMatrix<T>> {
-  using eltype = std::remove_reference_t<T>;
-  using Base = MutMatrixCore<T, DenseMutPtrMatrix<T>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
-  static_assert(!std::is_const_v<T>, "MutPtrMatrix should never have const T");
-  [[no_unique_address]] T *const mem;
-  [[no_unique_address]] unsigned int M, N;
-  // [[no_unique_address]] Col N;
-  // [[no_unique_address]] RowStride X;
-
-  [[nodiscard]] constexpr auto data() -> T * { return mem; }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
-  [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return N; }
-  [[nodiscard]] constexpr auto view() const -> PtrMatrix<T> {
-    return {data(), numRow(), numCol(), rowStride()};
-  };
-  constexpr operator PtrMatrix<T>() const {
-    return {data(), numRow(), numCol(), rowStride()};
-  }
-
-  // rule of 5 requires...
-  constexpr DenseMutPtrMatrix(const DenseMutPtrMatrix<T> &A) = default;
-  constexpr DenseMutPtrMatrix(T *pt, Row MM, Col NN) : mem(pt), M(MM), N(NN){};
-  template <typename ARM>
-  constexpr DenseMutPtrMatrix(ARM &A)
-    : mem(A.data()), M(A.numRow()), N(A.numCol()) {
-    assert(A.numCol() == A.rowStride());
-  }
-
-  [[nodiscard]] constexpr auto isSquare() const -> bool {
-    return size_t(M) == size_t(N);
-  }
-  [[nodiscard]] constexpr auto begin() -> T * { return mem; }
-  [[nodiscard]] constexpr auto end() -> T * { return mem + M * N; }
-#ifndef NDEBUG
-  void extendOrAssertSize(Row MM, Col NN) const {
-    assert(numRow() == MM);
-    assert(numCol() == NN);
-  }
-#else
-  static constexpr void extendOrAssertSize(Row, Col) {}
-#endif
-  constexpr void truncate(Row r) {
-    assert(r <= M);
-    M = unsigned(r);
+  [[nodiscard]] constexpr auto truncate(Col c) {
+    return MutPtrMatrix(data(), dims.truncate(c));
   }
 };
 template <typename T> constexpr auto ptrVector(T *p, size_t M) {
@@ -477,213 +408,10 @@ static_assert(!AbstractMatrix<const MutPtrVector<int64_t>>,
 //
 // Matrix
 //
-template <typename T, size_t M = 0, size_t N = 0, size_t S = 64>
-struct Matrix : public MutMatrixCore<T, Matrix<T, M, N, S>> {
-  using Base = MutMatrixCore<T, Matrix<T, M, N, S>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
 
-  // using eltype = std::remove_cv_t<T>;
-  using eltype = std::remove_reference_t<T>;
-  // static_assert(M * N == S,
-  //               "if specifying non-zero M and N, we should have M*N == S");
-  T mem[S]; // NOLINT(*-avoid-c-arrays)
-  static constexpr auto numRow() -> Row { return Row{M}; }
-  static constexpr auto numCol() -> Col { return Col{N}; }
-  static constexpr auto rowStride() -> RowStride { return RowStride{N}; }
-
-  [[nodiscard]] constexpr auto data() -> T * { return mem; }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
-
-  static constexpr auto getConstCol() -> size_t { return N; }
-};
-
-template <typename T, size_t M, size_t S>
-struct Matrix<T, M, 0, S> : public MutMatrixCore<T, Matrix<T, M, 0, S>> {
-  using Base = MutMatrixCore<T, Matrix<T, M, 0, S>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
-
-  using eltype = std::remove_reference_t<T>;
-  [[no_unique_address]] llvm::SmallVector<T, S> mem;
-  [[no_unique_address]] size_t N, X;
-
-  Matrix(size_t n) : mem(llvm::SmallVector<T, S>(M * n)), N(n), X(n){};
-
-  [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return Col{N}; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride {
-    return RowStride{X};
-  }
-
-  constexpr auto data() -> T * { return mem.data(); }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem.data(); }
-  void resizeForOverwrite(Col NN, RowStride XX) {
-    N = size_t(NN);
-    X = size_t(XX);
-    mem.resize_for_overwrite(XX * M);
-  }
-  void resizeForOverwrite(Col NN) { resizeForOverwrite(NN, NN); }
-};
-template <typename T, size_t N, size_t S>
-struct Matrix<T, 0, N, S> : public MutMatrixCore<T, Matrix<T, 0, N, S>> {
-  using Base = MutMatrixCore<T, Matrix<T, 0, N, S>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
-
-  using eltype = std::remove_reference_t<T>;
-  [[no_unique_address]] llvm::SmallVector<T, S> mem;
-  [[no_unique_address]] size_t M;
-
-  Matrix(size_t m) : mem(llvm::SmallVector<T, S>(m * N)), M(m){};
-
-  [[nodiscard]] constexpr inline auto numRow() const -> Row { return Row{M}; }
-  static constexpr auto numCol() -> Col { return Col{N}; }
-  static constexpr auto rowStride() -> RowStride { return RowStride{N}; }
-  static constexpr auto getConstCol() -> size_t { return N; }
-
-  constexpr auto data() -> T * { return mem.data(); }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem.data(); }
-};
-
-template <typename T>
-struct SquarePtrMatrix : ConstMatrixCore<T, SquarePtrMatrix<T>> {
-  using Base = ConstMatrixCore<T, SquarePtrMatrix<T>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>;
-  using eltype = std::remove_reference_t<T>;
-  static_assert(!std::is_const_v<T>, "const T is redundant");
-  [[no_unique_address]] const T *const mem;
-  [[no_unique_address]] const size_t M;
-  constexpr SquarePtrMatrix(const T *const pt, size_t MM) : mem(pt), M(MM){};
-
-  [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return Col{M}; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride {
-    return RowStride{M};
-  }
-  constexpr auto data() -> const T * { return mem; }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
-};
-
-template <typename T>
-struct MutSquarePtrMatrix : public MutMatrixCore<T, MutSquarePtrMatrix<T>> {
-  using Base = MutMatrixCore<T, MutSquarePtrMatrix<T>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
-  using eltype = std::remove_reference_t<T>;
-  static_assert(!std::is_const_v<T>, "T should not be const");
-  [[no_unique_address]] T *const mem;
-  [[no_unique_address]] const size_t M;
-
-  [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return Col{M}; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride {
-    return RowStride{M};
-  }
-  constexpr MutSquarePtrMatrix(T *pt, size_t MM) : mem(pt), M(MM){};
-  constexpr auto data() -> T * { return mem; }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem; }
-  constexpr operator SquarePtrMatrix<T>() const {
-    return SquarePtrMatrix<T>{mem, M};
-  }
-  constexpr auto begin() -> T * { return mem; }
-  constexpr auto end() -> T * { return mem + M * M; }
-};
-
-template <typename T, unsigned STORAGE = 8>
-struct SquareMatrix : public MutMatrixCore<T, SquareMatrix<T, STORAGE>> {
-  using Base = MutMatrixCore<T, SquareMatrix<T, STORAGE>>;
-  using Base::diag, Base::antiDiag,
-    Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
-    Base::operator ::LinearAlgebra::PtrMatrix<T>,
-    Base::operator ::LinearAlgebra::MutPtrMatrix<T>,
-    Base::operator=, Base::operator<<, Base::operator+=, Base::operator-=,
-    Base::operator*=, Base::operator/=;
-
-  using eltype = std::remove_reference_t<T>;
-  static constexpr unsigned TOTALSTORAGE = STORAGE * STORAGE;
-  [[no_unique_address]] llvm::SmallVector<T, TOTALSTORAGE> mem;
-  [[no_unique_address]] size_t M;
-
-  SquareMatrix(size_t m)
-    : mem(llvm::SmallVector<T, TOTALSTORAGE>(m * m)), M(m){};
-
-  SquareMatrix(AbstractMatrix auto A) {
-    M = size_t(A.numRow());
-    mem.resize_for_overwrite(M * M);
-    copyto(*this, A);
-  }
-
-  [[nodiscard]] constexpr auto numRow() const -> Row { return Row{M}; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return Col{M}; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride {
-    return RowStride{M};
-  }
-
-  constexpr auto data() -> T * { return mem.data(); }
-  [[nodiscard]] constexpr auto data() const -> const T * { return mem.data(); }
-
-  constexpr auto begin() -> T * { return data(); }
-  constexpr auto end() -> T * { return data() + M * M; }
-  [[nodiscard]] constexpr auto begin() const -> const T * { return data(); }
-  [[nodiscard]] constexpr auto end() const -> const T * {
-    return data() + M * M;
-  }
-  auto operator[](size_t i) -> T & { return mem[i]; }
-  auto operator[](size_t i) const -> const T & { return mem[i]; }
-
-  static auto identity(size_t N) -> SquareMatrix<T, STORAGE> {
-    SquareMatrix<T, STORAGE> A(N);
-    for (size_t r = 0; r < N; ++r) A(r, r) = 1;
-    return A;
-  }
-  inline static auto identity(Row N) -> SquareMatrix<T, STORAGE> {
-    return identity(size_t(N));
-  }
-  inline static auto identity(Col N) -> SquareMatrix<T, STORAGE> {
-    return identity(size_t(N));
-  }
-  constexpr operator MutSquarePtrMatrix<T>() {
-    return MutSquarePtrMatrix<T>(mem.data(), size_t(M));
-  }
-  constexpr operator SquarePtrMatrix<T>() const {
-    return SquarePtrMatrix<T>(mem.data(), M);
-  }
-#ifndef NDEBUG
-  void extendOrAssertSize(Row R, Col C) {
-    assert(R == C && "Matrix must be square");
-    M = size_t(R);
-    mem.resize_for_overwrite(M * M);
-  }
-#else
-  void extendOrAssertSize(Row R, Col) {
-    M = size_t(R);
-    mem.resize_for_overwrite(M * M);
-  }
-#endif
-};
-
-template <typename T, size_t S>
-struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
-  using Base = MutMatrixCore<T, Matrix<T, 0, 0, S>>;
+template <typename T, MatrixDimension D, size_t S = 64>
+struct Matrix : public MutMatrixCore<T, Matrix<T, D, S>> {
+  using Base = MutMatrixCore<T, Matrix<T, D, S>>;
   using Base::diag, Base::antiDiag,
     Base::operator(), Base::size, Base::view, Base::isSquare, Base::transpose,
     Base::operator ::LinearAlgebra::PtrMatrix<T>,
@@ -692,220 +420,178 @@ struct Matrix<T, 0, 0, S> : public MutMatrixCore<T, Matrix<T, 0, 0, S>> {
     Base::operator*=, Base::operator/=;
   using eltype = std::remove_reference_t<T>;
 
-  [[no_unique_address]] Buffer<int64_t, 64, StridedDims, std::allocator<T>> buf;
-  // [[no_unique_address]] Row M;
-  // [[no_unique_address]] Col N;
-  // [[no_unique_address]] RowStride X;
+  [[no_unique_address]] Buffer<int64_t, 64, D, std::allocator<T>> buf;
 
   constexpr auto data() -> T * { return buf.data(); }
   [[nodiscard]] constexpr auto data() const -> const T * { return buf.data(); }
   // Matrix(llvm::SmallVector<T, S> content, Row MM, Col NN)
   //   : mem(std::move(content)), M(MM), N(NN), X(RowStride(*NN)){};
 
-  Matrix(Row M, Col N) : buf(StridedDims{M, N}){};
-  Matrix(Row M, Col N, T init) : buf(StridedDims{M, N}, init){};
-  Matrix() = default;
-  Matrix(SquareMatrix<T> &&A) : mem(std::move(A.mem)), M(A.M), N(A.M), X(A.M){};
-  Matrix(const SquareMatrix<T> &A)
-    : mem(A.begin(), A.end()), M(A.M), N(A.M), X(A.M){};
-  Matrix(const AbstractMatrix auto &A)
-    : mem(llvm::SmallVector<T>{}), M(A.numRow()), N(A.numCol()), X(A.numCol()) {
-    mem.resize_for_overwrite(M * N);
-    for (size_t m = 0; m < M; ++m)
-      for (size_t n = 0; n < N; ++n) mem[size_t(X * m + n)] = A(m, n);
+  constexpr Matrix(Row M, Col N) : buf(DenseDims{M, N}){};
+  constexpr Matrix(Row M, Col N, T init) : buf(DenseDims{M, N}, init){};
+  constexpr Matrix() = default;
+  template <typename M, size_t L>
+  constexpr Matrix(Matrix<T, M, L> &&A) : buf(std::move(A.buf)){};
+  template <typename M, size_t L>
+  constexpr Matrix(const Matrix<T, M, L> &A) : buf(A.buf){};
+  [[gnu::flatten]] constexpr Matrix(const AbstractMatrix auto &A)
+    : buf(A.size()) {
+    for (size_t m = 0; m < numRow(); ++m)
+      for (size_t n = 0; n < numCol(); ++n)
+        buf[size_t(rowStride() * m + n)] = A(m, n);
   }
-  [[nodiscard]] constexpr auto begin() { return mem.begin(); }
-  [[nodiscard]] constexpr auto end() { return mem.begin() + rowStride() * M; }
-  [[nodiscard]] constexpr auto begin() const { return mem.begin(); }
-  [[nodiscard]] constexpr auto end() const {
-    return mem.begin() + rowStride() * M;
+  [[nodiscard]] constexpr auto begin() -> T * { return buf.begin(); }
+  [[nodiscard]] constexpr auto end() -> T * {
+    return buf.begin() + rowStride() * numRow();
   }
-  [[nodiscard]] constexpr auto numRow() const -> Row { return M; }
-  [[nodiscard]] constexpr auto numCol() const -> Col { return N; }
-  [[nodiscard]] constexpr auto rowStride() const -> RowStride { return X; }
+  [[nodiscard]] constexpr auto begin() const -> const T * {
+    return buf.begin();
+  }
+  [[nodiscard]] constexpr auto end() const -> const T * {
+    return buf.begin() + rowStride() * numRow();
+  }
+  [[nodiscard]] constexpr auto numRow() const -> Row { return buf.size(); }
+  [[nodiscard]] constexpr auto numCol() const -> Col { return buf.size(); }
+  [[nodiscard]] constexpr auto rowStride() const -> RowStride {
+    return buf.size();
+  }
 
-  static auto uninitialized(Row MM, Col NN) -> Matrix<T, 0, 0, S> {
-    Matrix<T, 0, 0, S> A(0, 0);
+  [[nodiscard]] static constexpr auto uninitialized(Row MM, Col NN)
+    -> Matrix<T, D, S> {
+    Matrix<T, D, S> A(0, 0);
     A.M = MM;
     A.X = A.N = NN;
     A.mem.resize_for_overwrite(MM * NN);
     return A;
   }
-  static auto identity(size_t MM) -> Matrix<T, 0, 0, S> {
-    Matrix<T, 0, 0, S> A(MM, MM);
+  [[nodiscard]] static constexpr auto identity(size_t MM) -> Matrix<T, D, S> {
+    Matrix<T, D, S> A(MM, MM, T{0});
     A.diag() = 1;
     return A;
   }
-  inline static auto identity(Row N) -> Matrix<T, 0, 0, S> {
+  [[nodiscard]] static constexpr auto identity(Row N) -> Matrix<T, D, S> {
     return identity(size_t(N));
   }
-  inline static auto identity(Col N) -> Matrix<T, 0, 0, S> {
+  static constexpr auto identity(Col N) -> Matrix<T, D, S> {
     return identity(size_t(N));
   }
-  void clear() {
-    M = N = X = 0;
-    mem.clear();
-  }
+  constexpr void clear() { buf.clear(); }
 
-  void resize(Row MM, Col NN, RowStride XX) {
-    mem.resize(XX * MM);
-    size_t minMMM = std::min(size_t(M), size_t(MM));
-    if ((XX > X) && M && N)
-      // need to copy
-      for (size_t m = minMMM - 1; m > 0; --m)
-        for (auto n = size_t(N); n-- > 0;)
-          mem[size_t(XX * m + n)] = mem[size_t(X * m + n)];
-    // zero
-    for (size_t m = 0; m < minMMM; ++m)
-      for (auto n = size_t(N); n < size_t(NN); ++n) mem[size_t(XX * m + n)] = 0;
-    for (size_t m = minMMM; m < size_t(MM); ++m)
-      for (size_t n = 0; n < size_t(NN); ++n) mem[size_t(XX * m + n)] = 0;
-    X = *XX;
-    M = *MM;
-    N = *NN;
-  }
-  void insertZero(Col i) {
-    Col NN = N + 1;
-    auto XX = RowStride(std::max(size_t(X), size_t(NN)));
-    mem.resize(XX * M);
-    size_t nLower = (XX > X) ? size_t(0) : size_t(i);
-    if (M && N)
-      // need to copy
-      for (auto m = size_t(M); m-- > 0;)
-        for (auto n = size_t(N); n-- > nLower;)
-          mem[size_t(XX * m + n) + (n >= size_t(i))] = mem[size_t(X * m + n)];
-    // zero
-    for (size_t m = 0; m < M; ++m) mem[size_t(XX * m) + size_t(i)] = 0;
-    X = *XX;
-    N = *NN;
-  }
+  constexpr void resize(D newDims) { buf.resize(newDims); }
+  constexpr void resizeForOverwrite(D d) { buf.resizeForOverwrite(d); }
   // set size and 0.
-  void setSize(Row r, Col c) {
-    M = *r;
-    N = *c;
-    X = *c;
-    mem.clear();
-    mem.resize(X * M);
+  constexpr void setSize(Row r, Col c) {
+    buf.resizeForOverwrite({r, c});
+    buf.fill(0);
   }
-  void resize(Row MM, Col NN) { resize(MM, NN, max(NN, X)); }
-  void reserve(Row MM, Col NN) { reserve(MM, max(NN, X)); }
-  void reserve(Row MM, RowStride NN) { mem.reserve(NN * MM); }
-  void clearReserve(Row MM, Col NN) { clearReserve(MM, RowStride(*NN)); }
-  void clearReserve(Row MM, RowStride XX) {
+  constexpr void resize(Row MM, Col NN) { resize({MM, NN}); }
+  constexpr void reserve(Row M, Col N) {
+    if constexpr (std::is_same_v<D, StridedDims>)
+      reserve({M, N, max(N, RowStride{buf.size()})});
+    else if constexpr (std::is_same_v<D, SquareDims>)
+      reserve({std::max(*M, *N)});
+    else reserve({M, N});
+  }
+  constexpr void reserve(Row M, RowStride X) {
+    if constexpr (std::is_same_v<D, StridedDims>) reserve({*M, *X, *X});
+    else if constexpr (std::is_same_v<D, SquareDims>)
+      reserve({std::max(*M, *X)});
+    else reserve({*M, *X});
+  }
+  constexpr void clearReserve(Row M, Col N) {
     clear();
-    mem.reserve(XX * MM);
+    reserve({M, N});
   }
-  void clearReserve(size_t L) {
+  constexpr void clearReserve(Row M, RowStride X) {
     clear();
-    mem.reserve(L);
+    reserve({M, X});
   }
-  void resizeForOverwrite(Row MM, Col NN, RowStride XX) {
-    assert(XX >= NN);
-    M = *MM;
-    N = *NN;
-    X = *XX;
-    if (X * M > mem.size()) mem.resize_for_overwrite(X * M);
+  constexpr void resizeForOverwrite(Row M, Col N, RowStride X) {
+    invariant(X >= N);
+    if constexpr (std::is_same_v<D, StridedDims>) resizeForOverwrite({M, N, X});
+    else if constexpr (std::is_same_v<D, SquareDims>) {
+      invariant(*M == *N);
+      resizeForOverwrite({*M});
+    } else resizeForOverwrite({*M, *N});
   }
-  void resizeForOverwrite(Row MM, Col NN) {
-    M = *MM;
-    N = X = *NN;
-    if (X * M > mem.size()) mem.resize_for_overwrite(X * M);
+  constexpr void resizeForOverwrite(Row M, Col N) {
+    if constexpr (std::is_same_v<D, StridedDims>)
+      resizeForOverwrite({M, N, *N});
+    else if constexpr (std::is_same_v<D, SquareDims>) {
+      invariant(*M == *N);
+      resizeForOverwrite({*M});
+    } else resizeForOverwrite({*M, *N});
   }
 
-  void resize(Row MM) {
-    Row Mold = M;
-    M = *MM;
-    if (rowStride() * M > mem.size()) mem.resize(X * M);
-    if (M > Mold) (*this)(_(Mold, M), _) << 0;
-  }
-  void resizeForOverwrite(Row MM) {
-    if (rowStride() * MM > mem.size()) mem.resize_for_overwrite(X * M);
-    M = *MM;
-  }
-  void resize(Col NN) { resize(M, NN); }
-  void resizeForOverwrite(Col NN) {
-    if (X < NN) {
-      X = *NN;
-      mem.resize_for_overwrite(X * M);
-    }
-    N = *NN;
-  }
-  void extendOrAssertSize(Row R, Col C) { resizeForOverwrite(R, C); }
-  void erase(Col i) {
-    assert(i < N);
-    for (size_t m = 0; m < M; ++m)
-      for (auto n = size_t(i); n < N - 1; ++n)
-        (*this)(m, n) = (*this)(m, n + 1);
-    --N;
-  }
-  void erase(Row i) {
-    assert(i < M);
-    auto it = mem.begin() + X * i;
-    mem.erase(it, it + X);
-    --M;
-  }
-  constexpr void truncate(Col NN) {
-    assert(NN <= N);
-    N = *NN;
-  }
-  constexpr void truncate(Row MM) {
-    assert(MM <= M);
-    M = *MM;
-  }
-  void moveLast(Col j) {
-    if (j == N) return;
-    for (size_t m = 0; m < M; ++m) {
+  constexpr void resize(Row r) { buf.resize(r); }
+  constexpr void resizeForOverwrite(Row r) { buf.resizeForOverwrite(r); }
+  constexpr void resize(Col c) { buf.resize(c); }
+  constexpr void resizeForOverwrite(Col c) { buf.resizeForOverwrite(c); }
+
+  constexpr void extendOrAssertSize(Row R, Col C) { resizeForOverwrite(R, C); }
+  constexpr void erase(Col c) { buf.erase(c); }
+  constexpr void erase(Row r) { buf.erase(r); }
+  constexpr void truncate(Col c) { buf.truncate(c); }
+  constexpr void truncate(Row r) { buf.truncate(r); }
+  constexpr void moveLast(Col j) {
+    if (j == numCol()) return;
+    Col Nm1 = numCol() - 1;
+    for (size_t m = 0; m < numRow(); ++m) {
       auto x = (*this)(m, j);
-      for (auto n = size_t(j); n < N - 1;) {
-        size_t o = n++;
+      for (Col n = j; n < Nm1;) {
+        Col o = n++;
         (*this)(m, o) = (*this)(m, n);
       }
-      (*this)(m, N - 1) = x;
+      (*this)(m, Nm1) = x;
     }
   }
-  [[nodiscard]] auto deleteCol(size_t c) const -> Matrix<T, 0, 0, S> {
-    Matrix<T, 0, 0, S> A(M, N - 1);
-    for (size_t m = 0; m < M; ++m) {
+  [[nodiscard]] constexpr auto deleteCol(size_t c) const -> Matrix<T, D, S> {
+    auto newDim = buf.size().similar(numRow() - 1);
+    Matrix<T, decltype(newDim), S> A(newDim);
+    for (size_t m = 0; m < numRow(); ++m) {
       A(m, _(0, c)) = (*this)(m, _(0, c));
       A(m, _(c, LinearAlgebra::end)) = (*this)(m, _(c + 1, LinearAlgebra::end));
     }
     return A;
   }
+  [[nodiscard]] constexpr auto dim() const -> D { return buf.size(); }
 };
-using IntMatrix = Matrix<int64_t>;
+using IntMatrix = Matrix<int64_t, StridedDims, 64>;
 static_assert(std::same_as<IntMatrix::eltype, int64_t>);
 static_assert(AbstractMatrix<IntMatrix>);
-static_assert(std::same_as<eltype_t<Matrix<int64_t>>, int64_t>);
+static_assert(std::copyable<IntMatrix>);
+static_assert(std::same_as<eltype_t<Matrix<int64_t, StridedDims>>, int64_t>);
 
 template <typename T>
 inline auto matrix(std::allocator<T>, size_t M, size_t N)
-  -> Matrix<T, 0, 0, 64> {
-  return Matrix<T, 0, 0, 64>::undef(M, N);
+  -> Matrix<T, DenseDims> {
+  return Matrix<T, DenseDims, 64>::undef(M, N);
 }
 template <typename T>
 constexpr auto matrix(WBumpAlloc<T> alloc, size_t M, size_t N)
-  -> DenseMutPtrMatrix<T> {
+  -> MutPtrMatrix<T, DenseDims> {
   return {alloc.allocate(M * N), M, N};
 }
 template <typename T>
 constexpr auto matrix(BumpAlloc<> &alloc, size_t M, size_t N)
-  -> DenseMutPtrMatrix<T> {
+  -> MutPtrMatrix<T, DenseDims> {
   return {alloc.allocate<T>(M * N), M, N};
 }
 template <typename T>
-inline auto identity(std::allocator<T>, size_t M) -> Matrix<T, 0, 0, 64> {
-  return SquareMatrix<T>::identity(M);
+inline auto identity(std::allocator<T>, size_t M) -> Matrix<T, SquareDims> {
+  return Matrix<T, SquareDims>::identity(M);
 }
 template <typename T>
 constexpr auto identity(WBumpAlloc<T> alloc, size_t M)
-  -> MutSquarePtrMatrix<T> {
-  MutSquarePtrMatrix<T> A = {alloc.allocate(M * M), M};
+  -> MutPtrMatrix<T, SquareDims> {
+  MutPtrMatrix<T, SquareDims> A = {alloc.allocate(M * M), M};
   A << 0;
   A.diag() << 1;
   return A;
 }
 template <typename T>
-constexpr auto identity(BumpAlloc<> &alloc, size_t M) -> MutSquarePtrMatrix<T> {
+constexpr auto identity(BumpAlloc<> &alloc, size_t M)
+  -> MutPtrMatrix<T, SquareDims> {
   return identity(WBumpAlloc<T>(alloc), M);
 }
 

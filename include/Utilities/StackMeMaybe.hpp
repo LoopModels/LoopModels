@@ -1,10 +1,15 @@
 #pragma once
 
+#include "Math/AxisTypes.hpp"
+#include "Math/MatrixDimensions.hpp"
 #include "Utilities/Valid.hpp"
+#include <algorithm>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <type_traits>
+#include <utility>
 
 template <typename T>
 concept SizeMultiple8 = sizeof(T)
@@ -52,7 +57,7 @@ struct Buffer {
       ptr = allocator.allocate(len);
       capacity = len;
     }
-    std::fill_n(ptr, len, x);
+    std::uninitialized_fill_n(ptr, len, x);
   }
 #pragma GCC diagnostic pop
   template <typename D, std::unsigned_integral I>
@@ -60,7 +65,7 @@ struct Buffer {
     : ptr{b.ptr}, sz{b.sz}, capacity{b.capacity}, allocator{b.allocator} {
     if (b.isSmall()) {
       ptr = memory;
-      std::copy_n(b.data(), N, ptr);
+      std::uninitialized_copy_n(b.data(), N, ptr);
     }
     b.resetNoFree();
   }
@@ -68,8 +73,8 @@ struct Buffer {
   constexpr Buffer(const Buffer<T, N, D, A, I> &b) noexcept
     : ptr{memory}, sz{b.sz}, capacity{N}, allocator{b.allocator} {
     U len = sz;
-    grow(len);
-    std::copy_n(b.data(), len, ptr);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, ptr);
   }
   template <typename D, std::unsigned_integral I>
   constexpr auto operator=(const Buffer<T, N, D, A, I> &b) noexcept
@@ -77,8 +82,8 @@ struct Buffer {
     if (this == &b) return *this;
     sz = b.size();
     U len = sz;
-    grow(len);
-    std::copy_n(b.data(), len, ptr);
+    growUndef(len);
+    std::uninitialized_copy_n(b.data(), len, ptr);
     return *this;
   }
   template <typename D, std::unsigned_integral I>
@@ -90,7 +95,7 @@ struct Buffer {
     if (b.isSmall()) {
       // if `b` is small, we need to copy memory
       // no need to shrink our capacity
-      std::copy_n(b.data(), size_t(sz), ptr);
+      std::uninitialized_copy_n(b.data(), size_t(sz), ptr);
     } else {
       // otherwise, we take its pointer
       maybeDeallocate();
@@ -106,37 +111,242 @@ struct Buffer {
   }
 
   template <typename... Args> constexpr auto emplace_back(Args &&...args) {
-    if (sz == capacity) grow(capacity * 2);
+    static_assert(std::is_integral_v<S>, "emplace_back requires integral size");
+    if (sz == capacity) resize(capacity + capacity);
     new (ptr + sz++) T(std::forward<Args>(args)...);
   }
   constexpr void push_back(T value) {
-    if (sz == capacity) grow(capacity * 2);
+    static_assert(std::is_integral_v<S>, "push_back requires integral size");
+    if (sz == capacity) resize(capacity + capacity);
     new (ptr + sz++) T(std::move(value));
   }
   constexpr void pop_back() {
+    static_assert(std::is_integral_v<S>, "pop_back requires integral size");
     if (sz) ptr[--sz].~T();
   }
-  constexpr void resize(S M) {
-    U L = M;
-    if (L > sz) {
-      grow(L);
-      for (size_t i = sz; i < L; ++i) new (ptr + i) T();
-    } else if constexpr (!std::is_trivially_destructible_v<T>) {
-      for (size_t i = L; i < sz; ++i) ptr[i].~T();
+  // behavior
+  // if S is StridedDims, then we copy data.
+  // If the new dims are larger in rows or cols, we fill with 0.
+  // If the new dims are smaller in rows or cols, we truncate.
+  // New memory outside of dims (i.e., stride larger), we leave uninitialized.
+  //
+  constexpr void resize(S nz) {
+    if constexpr (std::integral<S>) {
+      if (nz <= capacity) return;
+      U newCapacity = nz;
+      T *newPtr = allocator.allocate(newCapacity);
+      std::uninitialized_copy_n(ptr, sz, newPtr);
+      maybeDeallocate();
+      ptr = newPtr;
+      capacity = newCapacity;
+      sz = nz;
+    } else {
+      static_assert(LinearAlgebra::MatrixDimension<S>,
+                    "Can only resize 1 or 2d containers.");
+      auto newX = unsigned{LinearAlgebra::RowStride{nz}},
+           oldX = unsigned{LinearAlgebra::RowStride{sz}},
+           newN = unsigned{LinearAlgebra::Col{nz}},
+           oldN = unsigned{LinearAlgebra::Col{sz}},
+           newM = unsigned{LinearAlgebra::Row{nz}},
+           oldM = unsigned{LinearAlgebra::Row{sz}};
+      U len = nz;
+      bool newAlloc = U(len) > capacity;
+      T *npt = newAlloc ? allocator.allocate(len) : ptr;
+      // we can copy forward so long as the new stride is smaller
+      // so that the start of the dst range is outside of the src range
+      // we can also safely forward copy if we allocated a new ptr
+      bool forwardCopy = (newX <= oldX) || newAlloc;
+      unsigned colsToCopy = std::min(oldN, newN);
+      // we only need to copy if memory shifts position
+      bool copyCols = newAlloc || ((colsToCopy > 0) && (newX != oldX));
+      unsigned rowsToCopy = std::min(oldM, newM);
+      unsigned fillCount = newN - colsToCopy;
+      if (copyCols || fillCount) {
+        if (forwardCopy) {
+          // truncation, we need to copy rows to increase stride
+          for (size_t m = 1; m < rowsToCopy; ++m) {
+            T *src = ptr + m * oldX;
+            T *dst = npt + m * newX;
+            if (copyCols) std::copy(src, src + colsToCopy, dst);
+            if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
+          }
+        } else /* [[unlikely]] */ {
+          // backwards copy, only needed when we increasing stride but not
+          // reallocating, which should be comparatively uncommon.
+          // Should probably benchmark or determine actual frequency
+          // before adding `[[unlikely]]`.
+          for (size_t m = rowsToCopy; --m != 0;) {
+            T *src = ptr + m * oldX;
+            T *dst = npt + m * newX;
+            if (colsToCopy) std::copy_backward(src, src + colsToCopy, dst);
+            if (fillCount) std::fill_n(dst + colsToCopy, fillCount, T{});
+          }
+        }
+      }
+      // zero init remaining rows
+      for (size_t m = oldM; m < newM; ++m)
+        std::fill_n(npt + m * newX, newN, T{});
+      sz = nz;
+      if (newAlloc) {
+        capacity = len;
+        maybeDeallocate();
+        ptr = npt;
+      }
     }
-    sz = M;
+  }
+  constexpr void resize(LinearAlgebra::Row r) {
+    if constexpr (std::integral<S>) {
+      return resize(S(r));
+    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+      S nz = sz;
+      return resize(nz.setRow(r));
+    }
   }
   constexpr void resizeForOverwrite(S M) {
     U L = M;
-    if (L > sz) grow(L);
-    else if constexpr (!std::is_trivially_destructible_v<T>)
-      for (size_t i = L; i < sz; ++i) ptr[i].~T();
+    if (L > sz) growUndef(L);
     sz = M;
   }
+  constexpr void resizeForOverwrite(LinearAlgebra::Row r) {
+    if constexpr (std::integral<S>) {
+      return resizeForOverwrite(S(r));
+    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+      S nz = sz;
+      return resizeForOverwrite(nz.set(r));
+    }
+  }
+  constexpr void resizeForOverwrite(LinearAlgebra::Col c) {
+    if constexpr (std::integral<S>) {
+      return resizeForOverwrite(S(c));
+    } else if constexpr (LinearAlgebra::MatrixDimension<S>) {
+      S nz = sz;
+      return resizeForOverwrite(nz.set(c));
+    }
+  }
+  constexpr void erase(S i) {
+    static_assert(std::integral<S>, "erase requires integral size");
+    S oldLen = sz--;
+    if (i < sz) std::copy(ptr + i + 1, ptr + oldLen, ptr + i);
+  }
+  constexpr void erase(LinearAlgebra::Row r) {
+    if constexpr (std::integral<S>) {
+      return erase(S(r));
+    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
+
+      auto stride = unsigned{LinearAlgebra::RowStride{sz}},
+           col = unsigned{LinearAlgebra::Col{sz}},
+           newRow = unsigned{LinearAlgebra::Row{sz}} - 1;
+      sz.set(LinearAlgebra::Row{newRow});
+      if ((col == 0) || (r == newRow)) return;
+      invariant(col <= stride);
+      if ((col + (512 / (sizeof(T)))) <= stride) {
+        T *dst = ptr + r * stride;
+        for (size_t m = *r; m < newRow; ++m) {
+          T *src = dst + stride;
+          std::copy_n(src, col, dst);
+          dst = src;
+        }
+      } else {
+        T *dst = ptr + r * stride;
+        std::copy_n(dst + stride, (newRow - unsigned(r)) * stride, dst);
+      }
+    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
+      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+                    "if erasing a row, matrix must be strided or dense.");
+      auto col = unsigned{LinearAlgebra::Col{sz}},
+           newRow = unsigned{LinearAlgebra::Row{sz}} - 1;
+      sz.set(LinearAlgebra::Row{newRow});
+      if ((col == 0) || (r == newRow)) return;
+      T *dst = ptr + r * col;
+      std::copy_n(dst + col, (newRow - unsigned(r)) * col, dst);
+    }
+  }
+  constexpr void erase(LinearAlgebra::Col c) {
+    if constexpr (std::integral<S>) {
+      return erase(S(c));
+    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
+      auto stride = unsigned{LinearAlgebra::RowStride{sz}},
+           newCol = unsigned{LinearAlgebra::Col{sz}} - 1,
+           row = unsigned{LinearAlgebra::Row{sz}};
+      sz.set(LinearAlgebra::Col{newCol});
+      unsigned colsToCopy = newCol - unsigned(c);
+      if ((colsToCopy == 0) || (row == 0)) return;
+      // we only need to copy if memory shifts position
+      for (size_t m = 0; m < row; ++m) {
+        T *dst = ptr + m * stride + unsigned(c);
+        std::copy_n(dst + 1, colsToCopy, dst);
+      }
+    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
+      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+                    "if erasing a col, matrix must be strided or dense.");
+      auto newCol = unsigned{LinearAlgebra::Col{sz}}, oldCol = newCol--,
+           row = unsigned{LinearAlgebra::Row{sz}};
+      sz.set(LinearAlgebra::Col{newCol});
+      unsigned colsToCopy = newCol - unsigned(c);
+      if ((colsToCopy == 0) || (row == 0)) return;
+      // we only need to copy if memory shifts position
+      for (size_t m = 0; m < row; ++m) {
+        T *dst = ptr + m * newCol + unsigned(c);
+        T *src = ptr + m * oldCol + unsigned(c) + 1;
+        std::copy_n(src, colsToCopy, dst);
+      }
+    }
+  }
+  constexpr void truncate(S newLen) {
+    invariant(U(newLen) <= capacity);
+    sz = newLen;
+  }
+  constexpr void truncate(LinearAlgebra::Row r) {
+    if constexpr (std::integral<S>) {
+      return truncate(S(r));
+    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
+      invariant(r < LinearAlgebra::Row{sz});
+      sz.set(r);
+    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
+      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+                    "if truncating a row, matrix must be strided or dense.");
+      invariant(r < LinearAlgebra::Row{sz});
+      LinearAlgebra::DenseDims newSz = sz;
+      resize(newSz.set(r));
+    }
+  }
+  constexpr void truncate(LinearAlgebra::Col c) {
+    if constexpr (std::integral<S>) {
+      return truncate(S(c));
+    } else if constexpr (std::is_same_v<S, LinearAlgebra::StridedDims>) {
+      invariant(c < LinearAlgebra::Col{sz});
+      sz.set(c);
+    } else { // if constexpr (std::is_same_v<S, LinearAlgebra::DenseDims>) {
+      static_assert(std::is_same_v<S, LinearAlgebra::DenseDims>,
+                    "if truncating a col, matrix must be strided or dense.");
+      invariant(c < LinearAlgebra::Col{sz});
+      LinearAlgebra::DenseDims newSz = sz;
+      resize(newSz.set(c));
+    }
+  }
+
   constexpr ~Buffer() { maybeDeallocate(); }
   [[nodiscard]] constexpr auto size() const noexcept -> S { return sz; }
   // does not free memory, leaving capacity unchanged
   constexpr void clear() { sz = S{}; }
+  constexpr auto operator[](size_t i) noexcept -> T & {
+    invariant(i < size_t(size()));
+    return ptr[i];
+  }
+  constexpr auto operator[](size_t i) const noexcept -> const T & {
+    invariant(i < size_t(size()));
+    return ptr[i];
+  }
+  constexpr void fill(T value) { std::fill_n(ptr, size_t(size()), value); }
+  constexpr void reserve(S nz) {
+    U newCapacity = nz;
+    if (newCapacity <= capacity) return;
+    // allocate new, copy, deallocate old
+    T *newPtr = allocator.allocate(newCapacity);
+    if (U oldLen = sz) std::uninitialized_copy_n(ptr, oldLen, newPtr);
+    maybeDeallocate();
+    ptr = newPtr;
+  }
 
 private:
   [[no_unique_address]] NotNull<T> ptr;
@@ -154,7 +364,8 @@ private:
     sz = S{};
     capacity = N;
   }
-  constexpr void grow(U M) {
+  // grow, discarding old data
+  constexpr void growUndef(U M) {
     if (M <= capacity) return;
     maybeDeallocate();
     ptr = allocator.allocate(M);
@@ -164,3 +375,19 @@ private:
 
 static_assert(std::move_constructible<Buffer<intptr_t, 14, unsigned>>);
 static_assert(std::copyable<Buffer<intptr_t, 14, unsigned>>);
+// Check that `[[no_unique_address]]` is working.
+// sizes should be:
+// [ptr, capacity, dims, allocator, array]
+// 8 + 4 + 3*4 + 0 + 64*8 = 24 + 512 = 536
+static_assert(sizeof(Buffer<int64_t, 64, LinearAlgebra::StridedDims,
+                            std::allocator<int64_t>>) == 536);
+// sizes should be:
+// [ptr, capacity, dims, allocator, array]
+// 8 + 8 + 2*4 + 0 + 64*8 = 24 + 512 = 536
+static_assert(sizeof(Buffer<int64_t, 64, LinearAlgebra::DenseDims,
+                            std::allocator<int64_t>>) == 536);
+// sizes should be:
+// [ptr, capacity, dims, allocator, array]
+// 8 + 4 + 1*4 + 0 + 64*8 = 16 + 512 = 528
+static_assert(sizeof(Buffer<int64_t, 64, LinearAlgebra::SquareDims,
+                            std::allocator<int64_t>>) == 528);
